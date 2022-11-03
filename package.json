@@ -1,0 +1,29 @@
+{
+  "name": "dota2-twitch-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node -r dotenv/config src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.5",
+    "@twurple/api": "^5.2.5",
+    "@twurple/auth": "^5.2.5",
+    "@twurple/chat": "^5.2.5",
+    "dota2-api": "^0.2.1",
+    "dota2-gsi": "^1.0.2",
+    "dotenv": "^16.0.3",
+    "tmi.js": "^1.8.5"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0 || ^8.2.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.25.2",
+    "prettier": "^2.7.1"
+  }
+}
