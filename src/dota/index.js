@@ -15,35 +15,33 @@ const io = new Server(httpServer, {
   },
 })
 
-app.set('socketio', io)
-
-function emitAll(prefix, obj, socketid) {
+function emitAll(prefix, obj, socketids) {
   Object.keys(obj).forEach((key) => {
     // For scanning keys and testing
     // emitter.emit("key", ""+prefix+key);
     // console.log("Emitting '"+prefix+key+"' - " + obj[key]);
-    io.to(socketid).emit(prefix + key, obj[key])
+    io.to(socketids).emit(prefix + key, obj[key])
   })
 }
 
-function recursiveEmit(prefix, changed, body, socketid) {
+function recursiveEmit(prefix, changed, body, socketids) {
   Object.keys(changed).forEach((key) => {
     if (typeof changed[key] === 'object') {
       if (body[key] != null) {
         // safety check
-        recursiveEmit(`${prefix + key}:`, changed[key], body[key], socketid)
+        recursiveEmit(`${prefix + key}:`, changed[key], body[key], socketids)
       }
     } else if (body[key] != null) {
       // Got a key
       if (typeof body[key] === 'object') {
         // Edge case on added:item/ability:x where added shows true at the top level
         // and doesn't contain each of the child keys
-        emitAll(`${prefix + key}:`, body[key], socketid)
+        emitAll(`${prefix + key}:`, body[key], socketids)
       } else {
         // For scanning keys and testing
         // emitter.emit("key", ""+prefix+key);
         // console.log("Emitting '"+prefix+key+"' - " + body[key]);
-        io.to(socketid).emit(prefix + key, body[key])
+        io.to(socketids).emit(prefix + key, body[key])
       }
     }
   })
@@ -53,7 +51,7 @@ function processChanges(section) {
   return function handle(req, res, next) {
     if (req.body[section]) {
       // console.log("Starting recursive emit for '" + section + "'");
-      recursiveEmit('', req.body[section], req.body, req.client.socketid)
+      recursiveEmit('', req.body[section], req.body, req.client.socketinfo.sockets)
     }
     next()
   }
@@ -64,8 +62,8 @@ function updateGamestate(req, res, next) {
   next()
 }
 
-function newData(req, res, next) {
-  io.to(req.client.socketid).emit('state', req.body?.map?.game_state || 'DISCONNECTED')
+function newData(req, res) {
+  io.to(req.client.socketinfo.sockets).emit('state', req.body?.map?.game_state || 'DISCONNECTED')
   res.end()
 }
 
@@ -76,10 +74,7 @@ async function checkAuth(req, res, next) {
 
   const foundUser = dotaGSIClients.findIndex((client) => client.token === token)
   if (foundUser !== -1) {
-    req.client.name = dotaGSIClients[foundUser].name
-    req.client.socketid = dotaGSIClients[foundUser].socketid
-    req.client.token = token
-
+    req.client.socketinfo = dotaGSIClients[foundUser]
     next()
     return
   }
@@ -94,9 +89,13 @@ async function checkAuth(req, res, next) {
       .single()
 
     if (!error) {
-      req.client.name = user.name
-      req.client.token = token
-      dotaGSIClients.push({ ...user, token })
+      req.client.socketinfo = {
+        name: user.name,
+        token,
+      }
+
+      // sockets[] to be filled in by socket connection
+      dotaGSIClients.push({ ...user, token, sockets: [] })
       next()
       return
     }
@@ -121,7 +120,7 @@ app.post(
 )
 
 // No main page
-app.get('/', (req, res, next) => {
+app.get('/', (req, res) => {
   res.status(401).json({
     error: new Error('Invalid request!'),
   })
@@ -134,8 +133,16 @@ httpServer.listen(3000, () => {
 /// IO
 io.use(async (socket, next) => {
   const { token } = socket.handshake.auth
+  const connectedGSIClient = dotaGSIClients.findIndex((client) => client.token === token)
 
-  // Get latest twitch access token that isn't expired
+  // Cache to prevent a supabase lookup on every message for username & token validation
+  if (connectedGSIClient !== -1) {
+    // eslint-disable-next-line no-param-reassign
+    socket.data = dotaGSIClients[connectedGSIClient]
+    dotaGSIClients[connectedGSIClient].sockets.push(socket.id)
+    return next()
+  }
+
   const { data: user, error } = await supabase
     .from('users')
     .select('name')
@@ -149,22 +156,27 @@ io.use(async (socket, next) => {
   }
 
   // eslint-disable-next-line no-param-reassign
-  socket.user = user
+  socket.data.name = user.name
   // eslint-disable-next-line no-param-reassign
-  socket.user.token = token
-
-  const connectedGSIClient = dotaGSIClients.findIndex((client) => client.token === token)
-  if (connectedGSIClient !== -1) {
-    dotaGSIClients[connectedGSIClient].socketid = socket.id
-  }
+  socket.data.token = token
 
   return next()
 })
 
-io.on('map:clock_time', (time) => {
-  console.log(time)
+io.on('connection', (socket) => {
+  console.log('a user connected: ', socket.data.name, socket.id)
+
+  socket.on('disconnect', () => {
+    console.log('a user disconnected: ', socket.data.name, socket.id)
+
+    const connectedGSIClient = dotaGSIClients.findIndex(
+      (client) => client.token === socket.data.token,
+    )
+    if (connectedGSIClient !== -1) {
+      dotaGSIClients[connectedGSIClient].sockets = dotaGSIClients[
+        connectedGSIClient
+      ].sockets.filter((socketid) => socketid !== socket.id)
+    }
+  })
 })
 
-io.on('connection', (socket) => {
-  console.log('a user connected: ', socket.user.name, socket.id)
-})
