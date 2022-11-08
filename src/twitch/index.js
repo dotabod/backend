@@ -15,22 +15,22 @@ const apiDota = dota2Api.create(process.env.STEAM_WEB_API)
 //   .then((response) => response.json())
 //   .then((data) => console.log(data))
 
-fetch(`https://api.opendota.com/api/players/${playerId}/matches?date=1&game_mode=22`)
-  .then((response) => response.json())
-  .then((data) => console.log(data))
+// fetch(`https://api.opendota.com/api/players/${playerId}/matches?date=1&game_mode=22`)
+//   .then((response) => response.json())
+//   .then((data) => console.log(data))
 
-try {
-  apiDota.getMatchDetails({ match_id: randomMatch }).then(
-    ({ result }) => {
-      console.log(JSON.stringify(result))
-    },
-    (e) => {
-      console.log('Game coordinator is down probably. Check again later')
-    },
-  )
-} catch (e) {
-  console.log('Game coordinator is down probably. Check again later')
-}
+// try {
+//   apiDota.getMatchDetails({ match_id: randomMatch }).then(
+//     ({ result }) => {
+//       console.log(JSON.stringify(result))
+//     },
+//     (e) => {
+//       console.log('Game coordinator is down probably. Check again later')
+//     },
+//   )
+// } catch (e) {
+//   console.log('Game coordinator is down probably. Check again later')
+// }
 
 await chatClient.connect()
 chatClient.onMessage((channel, user, text, msg) => {
