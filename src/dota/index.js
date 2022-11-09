@@ -20,7 +20,9 @@ function emitAll(prefix, obj, socketids) {
     // For scanning keys and testing
     // emitter.emit("key", ""+prefix+key);
     // console.log("Emitting '"+prefix+key+"' - " + obj[key]);
-    io.to(socketids).emit(prefix + key, obj[key])
+    if (socketids.length) {
+      io.to(socketids).emit(prefix + key, obj[key])
+    }
   })
 }
 
@@ -37,7 +39,7 @@ function recursiveEmit(prefix, changed, body, socketids) {
         // Edge case on added:item/ability:x where added shows true at the top level
         // and doesn't contain each of the child keys
         emitAll(`${prefix + key}:`, body[key], socketids)
-      } else {
+      } else if (socketids.length) {
         // For scanning keys and testing
         // emitter.emit("key", ""+prefix+key);
         // console.log("Emitting '"+prefix+key+"' - " + body[key]);
@@ -49,6 +51,9 @@ function recursiveEmit(prefix, changed, body, socketids) {
 
 function processChanges(section) {
   return function handle(req, res, next) {
+    if (!req?.client?.socketinfo?.sockets || req?.client?.socketinfo?.sockets?.length === 0) {
+      return next()
+    }
     if (req.body[section]) {
       // console.log("Starting recursive emit for '" + section + "'");
       recursiveEmit('', req.body[section], req.body, req.client.socketinfo.sockets)
@@ -60,11 +65,16 @@ function processChanges(section) {
 function updateGamestate(req, res, next) {
   req.client.gamestate = req.body
 
+  const players = Object.keys(req?.body?.player || [])
+
   const isSpectating =
-    req?.body?.player?.team_name === 'spectator' || Object.keys(req?.body?.hero || {}).length === 2
+    req?.body?.player?.team_name === 'spectator' ||
+    (players.length > 0 && Object.keys(req?.body?.player[players[0]])[0] === 'player0')
 
   if (isSpectating) {
-    io.to(req.client.socketinfo.sockets).emit('state', 'DISCONNECTED')
+    if (req?.client?.socketinfo?.sockets?.length) {
+      // io.to(req.client.socketinfo.sockets).emit('state', 'DISCONNECTED')
+    }
 
     res.end()
     return
@@ -74,20 +84,32 @@ function updateGamestate(req, res, next) {
 }
 
 function newData(req, res) {
-  io.to(req.client.socketinfo.sockets).emit('state', req.body?.map?.game_state || 'DISCONNECTED')
+  if (!req.body?.map?.game_state) {
+    // console.log(req.body, req.client.socketinfo)
+  } else {
+    // console.log(req.client.socketinfo.sockets)
+  }
+  if (req?.client?.socketinfo?.sockets?.length) {
+    io.to(req.client.socketinfo.sockets).emit('state', req.body?.map?.game_state || 'DISCONNECTED')
+  }
   res.end()
 }
 
 const dotaGSIClients = []
+
+function findUser(token) {
+  const user = dotaGSIClients.findIndex((client) => client.token === token)
+  return user !== -1 ? dotaGSIClients[user] : null
+}
+
 async function checkAuth(req, res, next) {
   // Sent from dota gsi config file
   const token = req.body?.auth?.token
 
   // Our local memory cache of clients to sockets
-  const foundUser = dotaGSIClients.findIndex((client) => client.token === token)
-
-  if (foundUser !== -1) {
-    req.client.socketinfo = dotaGSIClients[foundUser]
+  const foundUser = findUser(token)
+  if (foundUser) {
+    req.client.socketinfo = foundUser
     next()
     return
   }
@@ -146,13 +168,13 @@ httpServer.listen(3000, () => {
 /// IO
 io.use(async (socket, next) => {
   const { token } = socket.handshake.auth
-  const connectedGSIClient = dotaGSIClients.findIndex((client) => client.token === token)
+  const connectedGSIClient = findUser(token)
 
   // Cache to prevent a supabase lookup on every message for username & token validation
-  if (connectedGSIClient !== -1) {
+  if (connectedGSIClient) {
     // eslint-disable-next-line no-param-reassign
-    socket.data = dotaGSIClients[connectedGSIClient]
-    dotaGSIClients[connectedGSIClient].sockets.push(socket.id)
+    socket.data = connectedGSIClient
+    connectedGSIClient.sockets.push(socket.id)
     return next()
   }
 
@@ -184,13 +206,12 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('a user disconnected: ', socket.data.name, socket.id)
 
-    const connectedGSIClient = dotaGSIClients.findIndex(
-      (client) => client.token === socket.data.token,
-    )
-    if (connectedGSIClient !== -1) {
-      dotaGSIClients[connectedGSIClient].sockets = dotaGSIClients[
-        connectedGSIClient
-      ].sockets.filter((socketid) => socketid !== socket.id)
+    const connectedGSIClient = findUser(socket.data.token)
+
+    if (connectedGSIClient) {
+      connectedGSIClient.sockets = connectedGSIClient.sockets.filter(
+        (socketid) => socketid !== socket.id,
+      )
     }
   })
 })
