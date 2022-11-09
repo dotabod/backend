@@ -69,21 +69,15 @@ function newData(req, res) {
 
 const dotaGSIClients = []
 async function checkAuth(req, res, next) {
-  console.log('All users:', dotaGSIClients)
-
   // Sent from dota gsi config file
   const token = req.body?.auth?.token
-  console.log('Checking auth token', token)
 
   const foundUser = dotaGSIClients.findIndex((client) => client.token === token)
   if (foundUser !== -1) {
-    console.log('Found user', foundUser)
     req.client.socketinfo = dotaGSIClients[foundUser]
     next()
     return
   }
-
-  console.log('All all all users:', dotaGSIClients)
 
   if (token) {
     const { data: user, error } = await supabase
@@ -93,8 +87,6 @@ async function checkAuth(req, res, next) {
       .order('id', { ascending: false })
       .limit(1)
       .single()
-
-    console.log('User:', user, error)
 
     if (!error) {
       req.client.socketinfo = {
