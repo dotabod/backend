@@ -63,14 +63,19 @@ function updateGamestate(req, res, next) {
 }
 
 function newData(req, res) {
-  console.log(!req.body, req.client.socketinfo)
-
   io.to(req.client.socketinfo.sockets).emit('state', req.body?.map?.game_state || 'DISCONNECTED')
   res.end()
 }
 
 const dotaGSIClients = []
 async function checkAuth(req, res, next) {
+  if (req?.body?.player?.team_name === 'spectator') {
+    res.status(401).json({
+      error: new Error('Invalid request!'),
+    })
+    return
+  }
+
   // Sent from dota gsi config file
   const token = req.body?.auth?.token
 
