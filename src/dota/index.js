@@ -69,6 +69,8 @@ function newData(req, res) {
 
 const dotaGSIClients = []
 async function checkAuth(req, res, next) {
+  console.log('All users:', dotaGSIClients)
+
   // Sent from dota gsi config file
   const token = req.body?.auth?.token
   console.log('Checking auth token', token)
@@ -81,7 +83,7 @@ async function checkAuth(req, res, next) {
     return
   }
 
-  console.log('All users:', dotaGSIClients)
+  console.log('All all all users:', dotaGSIClients)
 
   if (token) {
     const { data: user, error } = await supabase
