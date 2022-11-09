@@ -60,14 +60,15 @@ function processChanges(section) {
 function updateGamestate(req, res, next) {
   req.client.gamestate = req.body
 
-  if (req?.body?.player?.team_name === 'spectator') {
+  const isSpectating =
+    req?.body?.player?.team_name === 'spectator' || Object.keys(req?.body?.hero || {}).length === 2
+
+  if (isSpectating) {
     io.to(req.client.socketinfo.sockets).emit('state', 'DISCONNECTED')
 
     res.end()
     return
   }
-
-  console.log(req?.body)
 
   next()
 }
