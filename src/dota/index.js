@@ -63,7 +63,9 @@ function updateGamestate(req, res, next) {
 }
 
 function newData(req, res) {
-  console.log(req.body?.map?.game_state)
+  const token = req.body?.auth?.token
+  console.log(!req.body?.map?.game_state ? req.body : req.body?.map?.game_state, token)
+
   io.to(req.client.socketinfo.sockets).emit('state', req.body?.map?.game_state || 'DISCONNECTED')
   res.end()
 }
