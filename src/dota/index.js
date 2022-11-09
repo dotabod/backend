@@ -83,9 +83,9 @@ async function checkAuth(req, res, next) {
   // Sent from dota gsi config file
   const token = req.body?.auth?.token
 
+  // Our local memory cache of clients to sockets
   const foundUser = dotaGSIClients.findIndex((client) => client.token === token)
 
-  console.log(foundUser, token, dotaGSIClients)
   if (foundUser !== -1) {
     req.client.socketinfo = dotaGSIClients[foundUser]
     next()
@@ -172,6 +172,8 @@ io.use(async (socket, next) => {
   socket.data.name = user.name
   // eslint-disable-next-line no-param-reassign
   socket.data.token = token
+  // In case the socket is connected before the GSI client has!
+  dotaGSIClients.push({ ...user, token, sockets: [socket.id] })
 
   return next()
 })
