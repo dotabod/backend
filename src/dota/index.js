@@ -84,6 +84,8 @@ async function checkAuth(req, res, next) {
   const token = req.body?.auth?.token
 
   const foundUser = dotaGSIClients.findIndex((client) => client.token === token)
+
+  console.log(foundUser, token, dotaGSIClients)
   if (foundUser !== -1) {
     req.client.socketinfo = dotaGSIClients[foundUser]
     next()
