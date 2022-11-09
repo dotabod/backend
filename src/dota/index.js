@@ -10,7 +10,7 @@ const httpServer = http.createServer(app)
 
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:3001',
+    origin: process.env.CORS_URL_ALLOWED,
     methods: ['GET', 'POST'],
   },
 })
