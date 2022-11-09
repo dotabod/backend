@@ -63,11 +63,11 @@ function updateGamestate(req, res, next) {
   if (req?.body?.player?.team_name === 'spectator') {
     io.to(req.client.socketinfo.sockets).emit('state', 'DISCONNECTED')
 
-    res.status(401).json({
-      error: new Error('Invalid request!'),
-    })
+    res.end()
     return
   }
+
+  console.log(req?.body)
 
   next()
 }
