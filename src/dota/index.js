@@ -10,7 +10,12 @@ const httpServer = http.createServer(app)
 
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_URL_ALLOWED,
+    origin: [
+      'http://localhost:3000',
+      'https://dotabod.com',
+      'https://dotabod.vercel.app',
+      'https://dotabot.vercel.app',
+    ],
     methods: ['GET', 'POST'],
   },
 })
@@ -161,8 +166,8 @@ app.get('/', (req, res) => {
   })
 })
 
-httpServer.listen(3000, () => {
-  console.log('listening on *:3000')
+httpServer.listen(process.env.MAIN_PORT || 3000, () => {
+  console.log(`listening on *:${process.env.MAIN_PORT || 3000}`)
 })
 
 /// IO
