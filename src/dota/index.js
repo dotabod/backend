@@ -151,7 +151,7 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
 app.post(
-  '/gsi',
+  '/',
   checkAuth,
   updateGamestate,
   processChanges('previously'),
