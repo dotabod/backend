@@ -1,17 +1,15 @@
-import checkHealth from './checkHealth.js'
 import checkMidas from './checkMidas.js'
 import findUser from './dotaGSIClients.js'
 import server from './lib/server.js'
 import { minimapStates, pickSates } from './trackingConsts.js'
 
-function stopWin() {}
-
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
 function setupMainEvents(connectedSocketClient) {
   let betsExist = false
-  let passiveMidas = 0
-  const recentHealth = Array(25)
+  const passiveMidas = { counter: 0 }
+
+  // const recentHealth = Array(25) // TODO: #HEALTH
 
   const client = connectedSocketClient.gsi
 
@@ -106,19 +104,20 @@ function setupMainEvents(connectedSocketClient) {
 
     // User is dead
     if (data.hero?.respawn_seconds > 0) {
-      recentHealth.fill(100)
-      passiveMidas = -25
+      // recentHealth.fill(100) // TODO: #HEALTH
+      passiveMidas.counter = -25
       return
     }
 
+    // TODO: #HEALTH. Find a better way. Dont think this really works
+    // const isHealingALot = checkHealth(data, recentHealth)
+    // if (isHealingALot) {
+    //   console.log('Big heeeeal', { token: client.token })
+    // }
+
     const isMidasPassive = checkMidas(data, passiveMidas)
     if (isMidasPassive) {
-      console.log('isMidasPassive', isMidasPassive, { token: client.token })
-    }
-
-    const isHealingALot = checkHealth(data, recentHealth)
-    if (isHealingALot) {
-      console.log('isHealingALot', isHealingALot, { token: client.token })
+      console.log('Passive Midas!', { token: client.token })
     }
   })
 

@@ -1,26 +1,47 @@
+// Stash is fountain stash
+// Slots 0-5 are the backpack
+// Slots 6-8 are the backpack stashed items
 export default function checkMidas(data, passiveMidas) {
   if (!data?.items) return false
 
-  let ready = false
+  const midas = 'item_hand_of_midas'
 
-  for (const [slot, item] of Object.entries(data.items)) {
-    // Skip if not midas
-    if (item.name !== 'item_hand_of_midas') {
-      continue
-    }
-    // Skip stash/if midas is on cooldown
-    if (!slot.startsWith('slot') || item.cooldown > 0) {
-      passiveMidas = 0
-      continue
-    }
+  // Should always be 17 unless they're disconnected or something
+  if (Object.keys(data.items).length !== 17) return false
 
-    if (passiveMidas == 25) {
-      console.log('Midas is ready to be used!')
-      passiveMidas = -50
-      ready = true
+  // This checks backpack only, not fountain stash cause maybe courrier is bringing it
+  const slots = [...Array(9).keys()]
+  let midasSlot = null
+
+  // Find the slot the midas is sitting in
+  // TODO: Extract to a function to find an item?
+  slots.some((slotKey) => {
+    if (data.items[`slot${slotKey}`].name === midas) {
+      midasSlot = slotKey
+      return true
     }
-    passiveMidas += 1
+    return false
+  })
+
+  // Doesn't have a midas
+  if (!midasSlot) return false
+
+  const midasItem = data.items[`slot${midasSlot}`]
+
+  // Midas was used recently, wait for it to be off CD
+  if (midasItem?.cooldown > 0) {
+    passiveMidas.counter = 0
+    return false
   }
 
-  return ready
+  // +1 second each iteration, waiting for it to be off cd
+  passiveMidas.counter += 1
+
+  // Now its been 25s AFTER it was last used, very passive midas >:(
+  if (passiveMidas.counter === 25) {
+    passiveMidas.counter = -50
+    return true
+  }
+
+  return false
 }
