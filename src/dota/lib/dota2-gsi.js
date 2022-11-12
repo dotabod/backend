@@ -165,10 +165,6 @@ const D2GSI = function main() {
     console.log(`Dota 2 GSI listening on *:${process.env.MAIN_PORT || 3000}`)
   })
 
-  events.on('new-socket-client', (client) => {
-    // console.log('new socket client', client)
-  })
-
   this.events = events
   this.app = app
   this.httpServer = httpServer

@@ -49,7 +49,7 @@ server.io.use(async (socket, next) => {
 
 // Cleanup the memory cache of sockets when they disconnect
 server.io.on('connection', (socket) => {
-  // Socket connected event?
+  // Socket connected event, used to connect GSI to a socket
   const connectedSocketClient = findUser(socket.data.token)
   server.events.emit('new-socket-client', { client: connectedSocketClient, socketId: socket.id })
 

@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "nodemon -r dotenv/config src/index.js",
     "start": "node -r dotenv/config src/index.js",
+    "update": "git pull && systemctl restart nodeapp",
+    "logs": "journalctl -xefu nodeapp",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

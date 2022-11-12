@@ -199,9 +199,10 @@ function setupMainEvents(connectedSocketClient) {
 }
 
 server.events.on('new-socket-client', ({ client, socketId }) => {
-  // Hopefully there's a GSI already saved for this user?
+  // Hopefully there's a GSI already saved for this user
   const connectedSocketClient = findUser(client.token)
 
+  // Guess not lol, will be handled by `new-gsi-client` event
   if (!connectedSocketClient?.gsi) {
     console.log('Waiting for GSI after socket connection', { token: client.token })
     return
