@@ -1,4 +1,4 @@
-import { gsiClients, socketClients } from './trackingConsts.js'
+import { socketClients } from './trackingConsts.js'
 
 // Return: { name: string, token: string, sockets: [], gsi: {} }
 function findUser(token) {

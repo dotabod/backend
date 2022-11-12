@@ -95,10 +95,6 @@ function setupMainEvents(connectedSocketClient) {
     setupOBSBlockers(state)
   })
 
-  client.on('abilities:ability0:can_cast', (canCast) => {
-    if (canCast) console.log('Ability0 off cooldown!')
-  })
-
   // Catch all
   client.on('newdata', (data) => {
     if ('team2' in data.player) {
@@ -183,7 +179,7 @@ function setupMainEvents(connectedSocketClient) {
 
     // Skip pregame
     if ((time + 30) % 300 === 0 && time + 30 > 0) {
-      console.log('First runes? 5 minutes passed?')
+      console.log('Runes coming soon, its currently x:30 minutes')
     }
 
     if (
@@ -192,6 +188,8 @@ function setupMainEvents(connectedSocketClient) {
       client.gamestate.map.name === 'start' &&
       client.gamestate.map.game_state === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS'
     ) {
+      // This runs at 0:00 right after bounty runes spawn I think
+
       // TODO: Twitch bot
       console.log({
         event: 'lock_bets',
