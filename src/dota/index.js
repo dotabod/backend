@@ -201,12 +201,6 @@ function setupMainEvents(connectedSocketClient) {
   })
 }
 
-// How to check if a client connects multiple times
-// Are events already setup? via setupMainEvents()
-function checkIfClientIsAlreadySetup(client) {
-  return client.events.length > 0
-}
-
 server.events.on('new-socket-client', ({ client, socketId }) => {
   // Hopefully there's a GSI already saved for this user?
   const connectedSocketClient = findUser(client.token)
