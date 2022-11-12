@@ -1,6 +1,5 @@
 import { ApiClient } from '@twurple/api'
 import dota2Api from 'dota2-api'
-import valveSteamApi from 'valve-steam-web-api'
 import chatClient, { authProvider } from './chatClient.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import supabase from '../db/supabase.js'

@@ -13,5 +13,6 @@ module.exports = {
     'import/extensions': 0,
     semi: ['error', 'never'],
     'linebreak-style': 0,
+    'operator-linebreak': ['error', 'after'],
   },
 }
