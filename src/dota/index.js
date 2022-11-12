@@ -4,9 +4,7 @@ import findUser from './dotaGSIClients.js'
 import server from './lib/server.js'
 import { minimapStates, pickSates } from './trackingConsts.js'
 
-function stopWin() {
-  console.log('win_percent_close')
-}
+function stopWin() {}
 
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
@@ -28,7 +26,7 @@ function setupMainEvents(connectedSocketClient) {
     connectedSocketClient.sockets.forEach((socketId) => {
       // Sending a msg to just this socket
       if (!blockingMinimap[socketId] && minimapStates.includes(state)) {
-        console.log('Block minimap')
+        console.log('Block minimap', { token: client.token })
         blockingMinimap[socketId] = true
 
         server.io
@@ -37,12 +35,14 @@ function setupMainEvents(connectedSocketClient) {
       }
 
       if (blockingMinimap[socketId] && !minimapStates.includes(state)) {
-        console.log('Unblock minimap')
+        console.log('Unblock minimap', { token: client.token })
         blockingMinimap[socketId] = false
       }
 
       if (!blockingPicks[socketId] && pickSates.includes(state)) {
-        console.log('Block hero picks for team', client.gamestate.player?.team_name)
+        console.log('Block hero picks for team', client.gamestate.player?.team_name, {
+          token: client.token,
+        })
         blockingPicks[socketId] = true
 
         server.io
@@ -51,12 +51,12 @@ function setupMainEvents(connectedSocketClient) {
       }
 
       if (blockingPicks[socketId] && !pickSates.includes(state)) {
-        console.log('Unblock picks')
+        console.log('Unblock picks', { token: client.token })
         blockingPicks[socketId] = false
       }
 
       if (!blockingMinimap[socketId] && !blockingPicks[socketId]) {
-        console.log('Unblock all OBS layers')
+        console.log('Unblock all OBS layers', { token: client.token })
 
         server.io
           .to(socketId)
@@ -88,7 +88,7 @@ function setupMainEvents(connectedSocketClient) {
 
   client.on('hero:name', (name) => {
     const heroName = name.substr(14)
-    console.log(`Playing hero ${heroName}`)
+    console.log(`Playing hero ${heroName}`, { token: client.token })
   })
 
   client.on('map:game_state', (state) => {
@@ -113,18 +113,18 @@ function setupMainEvents(connectedSocketClient) {
 
     const isMidasPassive = checkMidas(data, passiveMidas)
     if (isMidasPassive) {
-      console.log('isMidasPassive', isMidasPassive)
+      console.log('isMidasPassive', isMidasPassive, { token: client.token })
     }
 
     const isHealingALot = checkHealth(data, recentHealth)
     if (isHealingALot) {
-      console.log('isHealingALot', isHealingALot)
+      console.log('isHealingALot', isHealingALot, { token: client.token })
     }
   })
 
   client.on('map:paused', (isPaused) => {
     if (isPaused) {
-      console.log('Map is paused, send pauseChamp', isPaused)
+      console.log('Map is paused, send pauseChamp', isPaused, { token: client.token })
     }
   })
 
@@ -137,18 +137,17 @@ function setupMainEvents(connectedSocketClient) {
     // Keep in mind this activates when a match is started too
     if (isAlive && Math.floor(Math.random() * 3) === 1) {
       setTimeout(() => {
-        console.log('In 3s after spawning?')
+        console.log('In 3s after spawning?', { token: client.token })
       }, 3000)
     }
 
     if (!isAlive && Math.floor(Math.random() * 16) === 1) {
-      console.log('after dying')
+      console.log('after dying', { token: client.token })
     }
   })
 
   client.on('map:win_team', (team) => {
-    console.log('Winning team: ', team)
-    stopWin()
+    console.log('Winning team: ', team, { token: client.token })
 
     // TODO: Dont forget to check for spectate mode in other gsi events too
     if (client.gamestate.map.customgamename !== '' || 'team2' in client.gamestate.player) {
@@ -156,9 +155,9 @@ function setupMainEvents(connectedSocketClient) {
     }
 
     if (client.gamestate.player.team_name === team) {
-      console.log("We won! Let's gooooo")
+      console.log('We won! Lets gooooo', { token: client.token })
     } else {
-      console.log('We lost :(')
+      console.log('We lost :(', { token: client.token })
     }
 
     console.log({
@@ -179,7 +178,7 @@ function setupMainEvents(connectedSocketClient) {
 
     // Skip pregame
     if ((time + 30) % 300 === 0 && time + 30 > 0) {
-      console.log('Runes coming soon, its currently x:30 minutes')
+      console.log('Runes coming soon, its currently x:30 minutes', { token: client.token })
     }
 
     if (
@@ -204,7 +203,7 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
   const connectedSocketClient = findUser(client.token)
 
   if (!connectedSocketClient?.gsi) {
-    console.log('Waiting for GSI after socket connection')
+    console.log('Waiting for GSI after socket connection', { token: client.token })
     return
   }
 
@@ -212,29 +211,33 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
   if (count) {
     // So the backend GSI events for twitch bot etc are setup
     // But for this new socketid, we should setup the OBS layer events
-    console.log('Already setup event listeners for this client, lets setup OBS events', socketId)
+    console.log('Already setup event listeners for this client, lets setup OBS events', socketId, {
+      token: client.token,
+    })
     return
   }
 
   // Main events were never setup, so do it now that the socket is online
   // Setup main events with the GSI client, assuming it already connected
-  console.log('GSI is connected, and now so is OBS for user:', connectedSocketClient.token)
+  console.log('GSI is connected, and now so is OBS for user:', {
+    token: client.token,
+  })
   setupMainEvents(connectedSocketClient)
 })
 
-server.events.on('new-gsi-client', (gsiClient) => {
-  if (!gsiClient.token) return
+server.events.on('new-gsi-client', (client) => {
+  if (!client.token) return
 
-  const connectedSocketClient = findUser(gsiClient.token)
+  const connectedSocketClient = findUser(client.token)
 
   // Only setup main events if the OBS socket has connected
   if (!connectedSocketClient?.sockets?.length) {
-    console.log('Waiting for OBS', gsiClient.token)
+    console.log('Waiting for OBS', { token: client.token })
     return
   }
 
   // This means OBS layer is available, but GSI connected AFTER
-  console.log('Socket is connected', connectedSocketClient?.token)
+  console.log('Socket is connected', { token: client.token })
 
   setupMainEvents(connectedSocketClient)
 })
