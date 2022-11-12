@@ -3,6 +3,16 @@ import findUser from './dotaGSIClients.js'
 import server from './lib/server.js'
 import { minimapStates, pickSates } from './trackingConsts.js'
 
+function isCustomGame(client) {
+  // Custom game name can be specified for things like hero demo mode,
+  // or overthrow / other arcade games
+  if (client.gamestate?.map?.customgamename !== '' || 'team2' in (client.gamestate?.player || {})) {
+    return true
+  }
+
+  return false
+}
+
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
 function setupMainEvents(connectedSocketClient) {
@@ -64,9 +74,7 @@ function setupMainEvents(connectedSocketClient) {
   }
 
   client.on('player:activity', (activity) => {
-    if (client.gamestate.map.customgamename !== '' || 'team2' in client.gamestate.player) {
-      return
-    }
+    if (isCustomGame(client)) return
 
     if (activity === 'playing') {
       if (client.gamestate.map.game_time < 20 && client.gamestate.map.name === 'start') {
@@ -85,19 +93,21 @@ function setupMainEvents(connectedSocketClient) {
   })
 
   client.on('hero:name', (name) => {
+    if (isCustomGame(client)) return
+
     const heroName = name.substr(14)
     console.log(`Playing hero ${heroName}`, { token: client.token })
   })
 
   client.on('map:game_state', (state) => {
+    if (isCustomGame(client)) return
+
     setupOBSBlockers(state)
   })
 
   // Catch all
   client.on('newdata', (data) => {
-    if ('team2' in data.player) {
-      return
-    }
+    if (isCustomGame(client)) return
 
     // In case they connect to a game in progress and we missed the start event
     setupOBSBlockers(data?.map?.game_state)
@@ -122,15 +132,17 @@ function setupMainEvents(connectedSocketClient) {
   })
 
   client.on('map:paused', (isPaused) => {
+    if (isCustomGame(client)) return
+
     if (isPaused) {
-      console.log('Map is paused, send pauseChamp', isPaused, { token: client.token })
+      console.log('Map is paused, send pauseChamp', { token: client.token })
+    } else {
+      console.log('Map unpaused?', { token: client.token })
     }
   })
 
   client.on('hero:alive', (isAlive) => {
-    if (client.gamestate.map.customgamename !== '' || 'team2' in client.gamestate.player) {
-      return
-    }
+    if (isCustomGame(client)) return
 
     // A random alive message
     // Keep in mind this activates when a match is started too
@@ -146,12 +158,9 @@ function setupMainEvents(connectedSocketClient) {
   })
 
   client.on('map:win_team', (team) => {
-    console.log('Winning team: ', team, { token: client.token })
+    if (isCustomGame(client)) return
 
-    // TODO: Dont forget to check for spectate mode in other gsi events too
-    if (client.gamestate.map.customgamename !== '' || 'team2' in client.gamestate.player) {
-      return
-    }
+    console.log('Winning team: ', team, { token: client.token })
 
     if (client.gamestate.player.team_name === team) {
       console.log('We won! Lets gooooo', { token: client.token })
@@ -171,9 +180,7 @@ function setupMainEvents(connectedSocketClient) {
   })
 
   client.on('map:clock_time', (time) => {
-    if (client.gamestate.map.customgamename !== '' || 'team2' in client.gamestate.player) {
-      return
-    }
+    if (isCustomGame(client)) return
 
     // Skip pregame
     if ((time + 30) % 300 === 0 && time + 30 > 0) {
