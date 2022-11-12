@@ -62,6 +62,10 @@ server.io.on('connection', (socket) => {
       // Let's also remove all the events we setup from the client for this socket
       // That way a new socket will get the GSI events again
       if (!connectedSocketClient.sockets.length) {
+        console.log(
+          'No more sockets connected, removing all events for',
+          connectedSocketClient.token,
+        )
         // There's no socket connected so let's remove all GSI events
         connectedSocketClient.gsi?.removeAllListeners()
       }
