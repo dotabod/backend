@@ -70,8 +70,6 @@ function setupMainEvents(connectedSocketClient) {
             player_team: client.gamestate.player.team_name,
           },
         })
-
-        console.log(client.gamestate)
       }
     }
   })
@@ -126,6 +124,9 @@ function setupMainEvents(connectedSocketClient) {
     if (client.gamestate.map.customgamename !== '' || 'team2' in client.gamestate.player) {
       return
     }
+
+    // A random alive message
+    // Keep in mind this activates when a match is started too
     if (isAlive && Math.floor(Math.random() * 3) === 1) {
       setTimeout(() => {
         console.log('In 3s after spawning?')
@@ -213,7 +214,7 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
 
   // Main events were never setup, so do it now that the socket is online
   // Setup main events with the GSI client, assuming it already connected
-  console.log('GSI is connected, and now so are sockets!', connectedSocketClient.token)
+  console.log('GSI is connected, and now so is OBS for user:', connectedSocketClient.token)
   setupMainEvents(connectedSocketClient)
 })
 
