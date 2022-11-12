@@ -110,7 +110,7 @@ async function checkAuth(req, res, next) {
     return
   }
 
-  console.log('Havent cached user token yet, checking db')
+  console.log('Havent cached user token yet, checking db', { token })
 
   const { data: user, error } = await supabase
     .from('users')
