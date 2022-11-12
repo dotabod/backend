@@ -30,25 +30,37 @@ function setupMainEvents(connectedSocketClient) {
       if (!blockingMinimap[socketId] && minimapStates.includes(state)) {
         console.log('Block minimap')
         blockingMinimap[socketId] = true
-        server.io.to(socketId).emit('block-minimap', true)
+
+        server.io
+          .to(socketId)
+          .emit('block', { type: 'minimap', team: client.gamestate.player?.team_name })
       }
 
       if (blockingMinimap[socketId] && !minimapStates.includes(state)) {
         console.log('Unblock minimap')
         blockingMinimap[socketId] = false
-        server.io.to(socketId).emit('block-minimap', false)
       }
 
       if (!blockingPicks[socketId] && pickSates.includes(state)) {
         console.log('Block hero picks for team', client.gamestate.player?.team_name)
         blockingPicks[socketId] = true
-        server.io.to(socketId).emit('block-picks', { team: client.gamestate.player?.team_name })
+
+        server.io
+          .to(socketId)
+          .emit('block', { type: 'picks', team: client.gamestate.player?.team_name })
       }
 
       if (blockingPicks[socketId] && !pickSates.includes(state)) {
         console.log('Unblock picks')
         blockingPicks[socketId] = false
-        server.io.to(socketId).emit('block-picks', { team: null })
+      }
+
+      if (!blockingMinimap[socketId] && !blockingPicks[socketId]) {
+        console.log('Unblock all OBS layers')
+
+        server.io
+          .to(socketId)
+          .emit('block', { type: null, team: client.gamestate.player?.team_name })
       }
     })
   }
