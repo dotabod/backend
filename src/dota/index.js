@@ -28,8 +28,17 @@ function isCustomGame(client) {
 function setupMainEvents(connectedSocketClient) {
   let betsExist = false
   const passiveMidas = { counter: 0 }
+  // const recentHealth = Array(25) // TODO: #HEALTH
+  const client = connectedSocketClient.gsi
 
-  function openBets(client) {
+  // This array of socket ids is who we want to emit events to:
+  // console.log({ sockets: connectedSocketClient.sockets })
+
+  // We want to reset this to false when a new socket connects?
+  const blockingMinimap = {}
+  const blockingPicks = {}
+
+  function openBets() {
     if (betsExist) return
 
     console.log(client.gamestate?.map?.game_time, client.gamestate?.map?.name)
@@ -51,16 +60,33 @@ function setupMainEvents(connectedSocketClient) {
     }
   }
 
-  // const recentHealth = Array(25) // TODO: #HEALTH
+  function endBets(winningTeam = null) {
+    if (!betsExist) return
 
-  const client = connectedSocketClient.gsi
+    console.log('Winning team: ', winningTeam, client.gamestate?.map?.win_team, {
+      token: client.token,
+    })
 
-  // This array of socket ids is who we want to emit events to:
-  // console.log({ sockets: connectedSocketClient.sockets })
+    const localWinner = winningTeam || client.gamestate?.map?.win_team
 
-  // We want to reset this to false when a new socket connects?
-  const blockingMinimap = {}
-  const blockingPicks = {}
+    if (client.gamestate?.player?.team_name === localWinner) {
+      console.log('We won! Lets gooooo', { token: client.token })
+    } else {
+      console.log('We lost :(', { token: client.token })
+    }
+
+    console.log({
+      event: 'end_bets',
+      data: {
+        token: client.token,
+        winning_team: localWinner,
+        player_team: client.gamestate?.player?.team_name,
+        didWin: client.gamestate?.player?.team_name === localWinner,
+      },
+    })
+
+    betsExist = false
+  }
 
   function setupOBSBlockers(state) {
     connectedSocketClient.sockets.forEach((socketId) => {
@@ -111,7 +137,7 @@ function setupMainEvents(connectedSocketClient) {
     // Just started a game
     if (activity === 'playing') {
       console.log('Open bets from playing activity', { token: client.token })
-      openBets(client)
+      openBets()
     }
   })
 
@@ -130,7 +156,9 @@ function setupMainEvents(connectedSocketClient) {
 
     // Sometimes the gamestate player:activity doesn't trigger
     // Idk when that is yet, so gotta call here too
-    openBets(client)
+    openBets()
+
+    endBets()
 
     setupOBSBlockers(state)
   })
@@ -189,26 +217,10 @@ function setupMainEvents(connectedSocketClient) {
 
   // if they click disconnect and dont wait for it to end
   // this wont get triggered
-  client.on('map:win_team', (team) => {
+  client.on('map:win_team', (winningTeam) => {
     if (isCustomGame(client)) return
 
-    console.log('Winning team: ', team, { token: client.token })
-
-    if (client.gamestate.player.team_name === team) {
-      console.log('We won! Lets gooooo', { token: client.token })
-    } else {
-      console.log('We lost :(', { token: client.token })
-    }
-
-    console.log({
-      event: 'end_bets',
-      data: {
-        token: client.token,
-        winning_team: team,
-        player_team: client.gamestate.player.team_name,
-      },
-    })
-    betsExist = false
+    endBets(winningTeam)
   })
 
   client.on('map:clock_time', (time) => {
