@@ -14,5 +14,6 @@ module.exports = {
     semi: ['error', 'never'],
     'linebreak-style': 0,
     'operator-linebreak': ['error', 'after'],
+    'no-console': 'off',
   },
 }

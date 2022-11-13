@@ -40,6 +40,18 @@ function setupMainEvents(connectedSocketClient) {
   // We want to reset this to false when a new socket connects?
   const blockingMinimap = {}
   const blockingPicks = {}
+  const allUnblocked = {}
+
+  function lockBets() {
+    // TODO: Twitch bot
+    console.log({
+      event: 'lock_bets',
+      data: {
+        token: client.token,
+        matchId: client.gamestate?.map?.matchid,
+      },
+    })
+  }
 
   function openBets() {
     // The bet was already made
@@ -59,7 +71,7 @@ function setupMainEvents(connectedSocketClient) {
     // that way its always in sync
     // but how to get match id to the twitch prediction?
     // a db to store the match id and the prediction id? with results updated after?
-    console.log(client.gamestate?.map?.game_time, client.gamestate?.map?.name)
+    // console.log(client.gamestate?.map?.game_time, client.gamestate?.map?.name)
 
     // TODO: REMOVE !betsExist this is dev logic only for when the server restarts
     // the DB check earlier should take care of this edge case
@@ -77,7 +89,7 @@ function setupMainEvents(connectedSocketClient) {
         data: {
           matchId: client.gamestate?.map?.matchid,
           user: client.token,
-          player_team: client.gamestate.player.team_name,
+          player_team: client.gamestate?.player?.team_name,
         },
       })
     }
@@ -95,6 +107,12 @@ function setupMainEvents(connectedSocketClient) {
 
     // Both or one undefined
     if (!localWinner || !myTeam) return
+
+    if (winningTeam === null) {
+      console.log('Running end bets from newdata', { token: client.token })
+    } else {
+      console.log('Running end bets from map:win_team', { token: client.token })
+    }
 
     if (myTeam === localWinner) {
       console.log('We won! Lets gooooo', { token: client.token })
@@ -122,6 +140,7 @@ function setupMainEvents(connectedSocketClient) {
       if (!blockingMinimap[socketId] && minimapStates.includes(state)) {
         console.log('Block minimap', { token: client.token })
         blockingMinimap[socketId] = true
+        allUnblocked[socketId] = false
 
         server.io
           .to(socketId)
@@ -138,6 +157,7 @@ function setupMainEvents(connectedSocketClient) {
           token: client.token,
         })
         blockingPicks[socketId] = true
+        allUnblocked[socketId] = false
 
         server.io
           .to(socketId)
@@ -149,8 +169,10 @@ function setupMainEvents(connectedSocketClient) {
         blockingPicks[socketId] = false
       }
 
-      if (!blockingMinimap[socketId] && !blockingPicks[socketId]) {
+      // Only send unblocker once per socket
+      if (!blockingMinimap[socketId] && !blockingPicks[socketId] && !allUnblocked[socketId]) {
         console.log('Unblock all OBS layers', { token: client.token })
+        allUnblocked[socketId] = true
 
         server.io
           .to(socketId)
@@ -164,7 +186,7 @@ function setupMainEvents(connectedSocketClient) {
 
     // Just started a game
     if (activity === 'playing') {
-      console.log('Open bets from playing activity', { token: client.token })
+      console.log('Open bets from player:activity', { token: client.token })
       openBets()
     }
   })
@@ -174,8 +196,8 @@ function setupMainEvents(connectedSocketClient) {
 
     const heroName = name.substr(14)
 
-    // TODO: We could run the bet opening here instead
-    // The open_bets doesn't always work sometimes
+    // Hero name is empty when you first pick
+    // It gets filled out after its locked in and no longer bannable
     console.log(`Playing hero ${heroName}`, { token: client.token })
   })
 
@@ -219,24 +241,24 @@ function setupMainEvents(connectedSocketClient) {
     }
   })
 
-  client.on('hero:alive', (isAlive) => {
-    if (isCustomGame(client)) return
+  // Nah not now, disabled
+  // client.on('hero:alive', (isAlive) => {
+  //   if (isCustomGame(client)) return
 
-    // A random alive message
-    // Keep in mind this activates when a match is started too
-    if (isAlive && Math.floor(Math.random() * 3) === 1) {
-      setTimeout(() => {
-        console.log('In 3s after spawning?', { token: client.token })
-      }, 3000)
-    }
+  // A random alive message
+  // Keep in mind this activates when a match is started too
+  // if (isAlive && Math.floor(Math.random() * 3) === 1) {
+  //   setTimeout(() => {
+  //     console.log('In 3s after spawning?', { token: client.token })
+  //   }, 3000)
+  // }
 
-    if (!isAlive && Math.floor(Math.random() * 16) === 1) {
-      console.log('after dying', { token: client.token })
-    }
-  })
+  // if (!isAlive && Math.floor(Math.random() * 16) === 1) {
+  //   console.log('after dying', { token: client.token })
+  // }
+  // })
 
-  // if they click disconnect and dont wait for it to end
-  // this wont get triggered
+  // This wont get triggered if they click disconnect and dont wait for the ancient to go to 0
   client.on('map:win_team', (winningTeam) => {
     if (isCustomGame(client)) return
 
@@ -247,29 +269,25 @@ function setupMainEvents(connectedSocketClient) {
     if (isCustomGame(client)) return
 
     // Skip pregame
-    if ((time + 30) % 300 === 0 && time + 30 > 0) {
-      console.log('Runes coming soon, its currently x:30 minutes', { token: client.token })
-    }
+    // if ((time + 30) % 300 === 0 && time + 30 > 0) {
+    //   console.log('Runes coming soon, its currently x:30 minutes', { token: client.token })
+    // }
 
+    // This runs at 0:15 right after bounty runes spawn
+    // 4 minutes 45 seconds after a game is created
     if (
       time === 15 &&
-      client.gamestate.previously.map.clock_time < 15 &&
-      client.gamestate.map.name === 'start' &&
-      client.gamestate.map.game_state === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS'
+      client.gamestate.previously?.map?.clock_time < 15 &&
+      client.gamestate.map?.name === 'start' &&
+      client.gamestate.map?.game_state === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS'
     ) {
-      // This runs at 0:00 right after bounty runes spawn I think
-
-      // TODO: Twitch bot
-      console.log({
-        event: 'lock_bets',
-        data: {
-          token: client.token,
-          matchId: client.gamestate?.map?.matchid,
-        },
-      })
+      lockBets()
     }
   })
 }
+
+// These next two events basically just check if Dota or OBS is opened first
+// It then has to act appropriately and just call when both are ready
 
 server.events.on('new-socket-client', ({ client, socketId }) => {
   // Hopefully there's a GSI already saved for this user
