@@ -26,7 +26,10 @@ function isCustomGame(client) {
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
 function setupMainEvents(connectedSocketClient) {
+  // Need to do a DB lookup here instead.
+  // Server could reboot and lose this in memory
   let betsExist = false
+
   const passiveMidas = { counter: 0 }
   // const recentHealth = Array(25) // TODO: #HEALTH
   const client = connectedSocketClient.gsi
@@ -63,13 +66,14 @@ function setupMainEvents(connectedSocketClient) {
   function endBets(winningTeam = null) {
     if (!betsExist) return
 
-    console.log('Winning team: ', winningTeam, client.gamestate?.map?.win_team, {
-      token: client.token,
-    })
+    // "none"? Must mean the game hasn't ended yet
+    // Would be undefined otherwise if there is no game
+    if (!winningTeam && client.gamestate?.map?.win_team === 'none') return
 
     const localWinner = winningTeam || client.gamestate?.map?.win_team
+    const myTeam = client.gamestate?.player?.team_name
 
-    if (client.gamestate?.player?.team_name === localWinner) {
+    if (myTeam === localWinner) {
       console.log('We won! Lets gooooo', { token: client.token })
     } else {
       console.log('We lost :(', { token: client.token })
@@ -80,8 +84,8 @@ function setupMainEvents(connectedSocketClient) {
       data: {
         token: client.token,
         winning_team: localWinner,
-        player_team: client.gamestate?.player?.team_name,
-        didWin: client.gamestate?.player?.team_name === localWinner,
+        player_team: myTeam,
+        didWin: myTeam === localWinner,
       },
     })
 
