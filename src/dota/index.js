@@ -42,14 +42,21 @@ function setupMainEvents(connectedSocketClient) {
   const blockingPicks = {}
 
   function openBets() {
+    // The bet was already made
     if (betsExist) return
 
+    // TODO: do a DB lookup here to see if a bet does exist before continuing
     console.log(client.gamestate?.map?.game_time, client.gamestate?.map?.name)
 
-    if (client.gamestate?.map?.game_time < 20 && client.gamestate?.map?.name === 'start') {
+    // TODO: REMOVE !betsExist this is dev logic only for when the server restarts
+    // the DB check earlier should take care of this edge case
+    if (
+      !betsExist ||
+      (client.gamestate?.map?.game_time < 20 && client.gamestate?.map?.name === 'start')
+    ) {
       betsExist = true
 
-      // check if map.matchid exists, >0 ?
+      // check if map.matchid exists, > 0 ?
 
       // TODO: Twitch bot
       console.log({
@@ -155,24 +162,16 @@ function setupMainEvents(connectedSocketClient) {
     console.log(`Playing hero ${heroName}`, { token: client.token })
   })
 
-  client.on('map:game_state', (state) => {
-    if (isCustomGame(client)) return
-
-    // Sometimes the gamestate player:activity doesn't trigger
-    // Idk when that is yet, so gotta call here too
-    openBets()
-
-    endBets()
-
-    setupOBSBlockers(state)
-  })
-
   // Catch all
   client.on('newdata', (data) => {
     if (isCustomGame(client)) return
 
     // In case they connect to a game in progress and we missed the start event
     setupOBSBlockers(data?.map?.game_state)
+
+    openBets()
+
+    endBets()
 
     // User is dead
     if (data.hero?.respawn_seconds > 0) {
