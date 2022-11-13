@@ -105,6 +105,7 @@ function setupMainEvents(connectedSocketClient) {
     console.log({
       event: 'end_bets',
       data: {
+        matchId: client.gamestate?.map?.matchid,
         token: client.token,
         winning_team: localWinner,
         player_team: myTeam,
@@ -261,7 +262,10 @@ function setupMainEvents(connectedSocketClient) {
       // TODO: Twitch bot
       console.log({
         event: 'lock_bets',
-        data: { token: client.token },
+        data: {
+          token: client.token,
+          matchId: client.gamestate?.map?.matchid,
+        },
       })
     }
   })
