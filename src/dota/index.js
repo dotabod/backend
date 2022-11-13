@@ -48,7 +48,17 @@ function setupMainEvents(connectedSocketClient) {
     // why open if not playing?
     if (client?.gamestate?.player?.activity !== 'playing') return
 
+    // why open if won?
+    if (client.gamestate?.map?.win_team !== 'none') return
+
     // TODO: do a DB lookup here to see if a bet does exist before continuing
+    // check match id to match current match id. if they mismatch,
+    // close the last one by checking steam results, and open this one if you can
+
+    // what if a mod ends a bet by themselves? maybe the db can be just a twitch lookup?
+    // that way its always in sync
+    // but how to get match id to the twitch prediction?
+    // a db to store the match id and the prediction id? with results updated after?
     console.log(client.gamestate?.map?.game_time, client.gamestate?.map?.name)
 
     // TODO: REMOVE !betsExist this is dev logic only for when the server restarts
