@@ -45,6 +45,9 @@ function setupMainEvents(connectedSocketClient) {
     // The bet was already made
     if (betsExist) return
 
+    // why open if not playing?
+    if (client?.gamestate?.player?.activity !== 'playing') return
+
     // TODO: do a DB lookup here to see if a bet does exist before continuing
     console.log(client.gamestate?.map?.game_time, client.gamestate?.map?.name)
 
@@ -79,6 +82,9 @@ function setupMainEvents(connectedSocketClient) {
 
     const localWinner = winningTeam || client.gamestate?.map?.win_team
     const myTeam = client.gamestate?.player?.team_name
+
+    // Both or one undefined
+    if (!localWinner || !myTeam) return
 
     if (myTeam === localWinner) {
       console.log('We won! Lets gooooo', { token: client.token })
