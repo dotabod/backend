@@ -40,6 +40,15 @@ chatClient.onMessage((channel, user, text, msg) => {
 
   const args = text.slice(1).split(' ')
 
+  // pleb command
+  // let one free chatter in during sub only mode lol
+  // turn sub only mode back on when they're in
+
+  // mod only command
+  // only allow mods to post lol, delete anyone else
+
+  // non followers only LUL
+
   switch (args[1]) {
     case 'ping':
       chatClient.say(channel, 'Pong EZ Clap')

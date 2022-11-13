@@ -29,6 +29,28 @@ function setupMainEvents(connectedSocketClient) {
   let betsExist = false
   const passiveMidas = { counter: 0 }
 
+  function openBets(client) {
+    if (betsExist) return
+
+    console.log(client.gamestate?.map?.game_time, client.gamestate?.map?.name)
+
+    if (client.gamestate?.map?.game_time < 20 && client.gamestate?.map?.name === 'start') {
+      betsExist = true
+
+      // check if map.matchid exists, >0 ?
+
+      // TODO: Twitch bot
+      console.log({
+        event: 'open_bets',
+        data: {
+          matchId: client.gamestate?.map?.matchid,
+          user: client.token,
+          player_team: client.gamestate.player.team_name,
+        },
+      })
+    }
+  }
+
   // const recentHealth = Array(25) // TODO: #HEALTH
 
   const client = connectedSocketClient.gsi
@@ -86,19 +108,10 @@ function setupMainEvents(connectedSocketClient) {
   client.on('player:activity', (activity) => {
     if (isCustomGame(client)) return
 
+    // Just started a game
     if (activity === 'playing') {
-      if (client.gamestate.map.game_time < 20 && client.gamestate.map.name === 'start') {
-        betsExist = true
-
-        // TODO: Twitch bot
-        console.log({
-          event: 'open_bets',
-          data: {
-            user: client.token,
-            player_team: client.gamestate.player.team_name,
-          },
-        })
-      }
+      console.log('Open bets from playing activity', { token: client.token })
+      openBets(client)
     }
   })
 
@@ -106,11 +119,18 @@ function setupMainEvents(connectedSocketClient) {
     if (isCustomGame(client)) return
 
     const heroName = name.substr(14)
+
+    // TODO: We could run the bet opening here instead
+    // The open_bets doesn't always work sometimes
     console.log(`Playing hero ${heroName}`, { token: client.token })
   })
 
   client.on('map:game_state', (state) => {
     if (isCustomGame(client)) return
+
+    // Sometimes the gamestate player:activity doesn't trigger
+    // Idk when that is yet, so gotta call here too
+    openBets(client)
 
     setupOBSBlockers(state)
   })
@@ -167,6 +187,8 @@ function setupMainEvents(connectedSocketClient) {
     }
   })
 
+  // if they click disconnect and dont wait for it to end
+  // this wont get triggered
   client.on('map:win_team', (team) => {
     if (isCustomGame(client)) return
 
