@@ -1,6 +1,7 @@
 import { ChatClient } from '@twurple/chat'
 import { RefreshingAuthProvider } from '@twurple/auth'
 import supabase from '../db/supabase'
+import { getActiveUsers } from '../dota/dotaGSIClients'
 
 // Get latest twitch access token that isn't expired
 const { data: twitchTokens, error } = await supabase
@@ -12,8 +13,8 @@ const { data: twitchTokens, error } = await supabase
 
 export const authProvider = new RefreshingAuthProvider(
   {
-    clientId: process.env.TWITCH_CLIENT_ID,
-    clientSecret: process.env.TWITCH_CLIENT_SECRET,
+    clientId: process.env.TWITCH_CLIENT_ID as string,
+    clientSecret: process.env.TWITCH_CLIENT_SECRET as string,
     onRefresh: async ({ refreshToken, accessToken }) => {
       await supabase.from('twitch_tokens').upsert({ refreshToken, accessToken }).select()
 
@@ -21,34 +22,24 @@ export const authProvider = new RefreshingAuthProvider(
     },
   },
   {
-    accessToken: twitchTokens.accessToken || process.env.TWITCH_ACCESS_TOKEN,
-    refreshToken: twitchTokens.refreshToken || process.env.TWITCH_REFRESH_TOKEN,
+    accessToken: twitchTokens.accessToken || (process.env.TWITCH_ACCESS_TOKEN as string),
+    refreshToken: twitchTokens.refreshToken || (process.env.TWITCH_REFRESH_TOKEN as string),
   },
 )
 
-async function getChannels() {
-  const names = await supabase.from('users').select('name')
-  const channels = []
-  if (names?.data) {
-    const namesArray = names.data.map((user) => user.name)
-    channels.push(...namesArray)
-  }
-
-  return channels
-}
-
 const chatClient = new ChatClient({
   authProvider,
-  channels: getChannels,
+  channels: () => getActiveUsers().map((user) => user.name),
 })
 
+// Actually no \/ bot should only join channels that have OBS and GSI open
 // When a new user registers and the server is still alive, make the chat client join their channel
-const channel = supabase.channel('db-changes')
-channel
-  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
-    console.log('New user to send bot to: ', payload)
-    chatClient.join(payload.new.name)
-  })
-  .subscribe()
+// const channel = supabase.channel('db-changes')
+// channel
+//   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
+//     console.log('New user to send bot to: ', payload)
+//     chatClient.join(payload.new.name)
+//   })
+//   .subscribe()
 
 export default chatClient

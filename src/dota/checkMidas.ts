@@ -1,7 +1,11 @@
 // Stash is fountain stash
 // Slots 0-5 are the backpack
+
+import { SlotsIds } from 'dotagsi/types/dota2'
+import { Dota2 } from '../../types'
+
 // Slots 6-8 are the backpack stashed items
-export default function checkMidas(data, passiveMidas) {
+export default function checkMidas(data: Dota2) {
   if (!data?.items) return false
 
   const midas = 'item_hand_of_midas'
@@ -16,8 +20,8 @@ export default function checkMidas(data, passiveMidas) {
   // Find the slot the midas is sitting in
   // TODO: Extract to a function to find an item?
   slots.some((slotKey) => {
-    if (data.items[`slot${slotKey}`].name === midas) {
-      midasSlot = slotKey
+    if (data?.items?.[`slot${slotKey as SlotsIds}`]?.name === midas) {
+      midasSlot = slotKey as SlotsIds
       return true
     }
     return false

@@ -1,4 +1,10 @@
-export default function checkHealth(data, recentHealth) {
+export default function checkHealth(
+  data: {
+    hero: { health_percent: any; health: number }
+    previously: { hero: { health: number; health_percent: number } }
+  },
+  recentHealth: number[],
+) {
   if (!data?.hero?.health_percent) return false
 
   const healthPct = data.hero.health_percent

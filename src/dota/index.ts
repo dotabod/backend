@@ -1,3 +1,5 @@
+import { Dota2 } from 'dotagsi'
+import supabase from '../db/supabase'
 import chatClient from '../twitch/chatClient'
 import checkMidas from './checkMidas'
 import findUser from './dotaGSIClients'
@@ -30,8 +32,15 @@ function isCustomGame(client) {
 
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
-function setupMainEvents(connectedSocketClient) {
-  console.log('twitch isRegistered', chatClient.isRegistered)
+function setupMainEvents(connectedSocketClient: {
+  gsi: any
+  name: string
+  token?: string
+  sockets: string[]
+}) {
+  console.log('twitch chat isRegistered', chatClient.isRegistered)
+  chatClient.join(connectedSocketClient.name)
+
   // Need to do a DB lookup here instead.
   // Server could reboot and lose this in memory
   let betsExist = false
@@ -44,9 +53,9 @@ function setupMainEvents(connectedSocketClient) {
   // console.log({ sockets: connectedSocketClient.sockets })
 
   // We want to reset this to false when a new socket connects?
-  const blockingMinimap = {}
-  const blockingPicks = {}
-  const allUnblocked = {}
+  const blockingMinimap: { [key: string]: boolean } = {}
+  const blockingPicks: { [key: string]: boolean } = {}
+  const allUnblocked: { [key: string]: boolean } = {}
 
   function lockBets() {
     // TODO: Twitch bot
@@ -93,10 +102,30 @@ function setupMainEvents(connectedSocketClient) {
 
       // check if map.matchid exists, > 0 ?
 
+      const channel = connectedSocketClient.name
+
       // TODO: Twitch bot
       if (chatClient.isConnected && chatClient.isRegistered) {
-        chatClient.say(connectedSocketClient.name, `modCheck Open bets peepoGamble`)
+        chatClient.say(channel, `modCheck Open bets peepoGamble`)
       }
+
+      supabase
+        .from('bets')
+        .insert({
+          matchId: client.gamestate?.map?.matchid,
+          userId: client.token,
+          myTeam: client.gamestate?.player?.team,
+        })
+        .select()
+        .then(({ data, error }) => {
+          if (!error) {
+            chatClient.say(channel, `Added owner to ${channel} channel`)
+          } else if (error.message.includes('duplicate')) {
+            console.log(channel, `Owner already exists on ${channel} channel`)
+          } else {
+            console.log(channel, `Could not add owner to ${channel} channel`)
+          }
+        })
 
       console.log({
         event: 'open_bets',
@@ -109,7 +138,7 @@ function setupMainEvents(connectedSocketClient) {
     }
   }
 
-  function endBets(winningTeam = null) {
+  function endBets(winningTeam: 'radiant' | 'dire' | null) {
     if (!betsExist) return
 
     // "none"? Must mean the game hasn't ended yet
@@ -158,8 +187,8 @@ function setupMainEvents(connectedSocketClient) {
     betsExist = false
   }
 
-  function setupOBSBlockers(state) {
-    connectedSocketClient.sockets.forEach((socketId) => {
+  function setupOBSBlockers(state: string) {
+    connectedSocketClient.sockets.forEach((socketId: string) => {
       // Sending a msg to just this socket
       if (!blockingMinimap[socketId] && minimapStates.includes(state)) {
         console.log('Block minimap', { token: client.token })
@@ -205,7 +234,7 @@ function setupMainEvents(connectedSocketClient) {
     })
   }
 
-  client.on('player:activity', (activity) => {
+  client.on('player:activity', (activity: string) => {
     if (isCustomGame(client)) return
 
     // Just started a game
@@ -215,7 +244,7 @@ function setupMainEvents(connectedSocketClient) {
     }
   })
 
-  client.on('hero:name', (name) => {
+  client.on('hero:name', (name: string) => {
     if (isCustomGame(client)) return
 
     const heroName = name.substr(14)
@@ -226,7 +255,7 @@ function setupMainEvents(connectedSocketClient) {
   })
 
   // Catch all
-  client.on('newdata', (data) => {
+  client.on('newdata', (data: Dota2) => {
     if (isCustomGame(client)) return
 
     // In case they connect to a game in progress and we missed the start event
@@ -234,7 +263,7 @@ function setupMainEvents(connectedSocketClient) {
 
     openBets()
 
-    endBets()
+    endBets(null)
 
     // User is dead
     if (data.hero?.respawn_seconds > 0) {
@@ -255,7 +284,7 @@ function setupMainEvents(connectedSocketClient) {
     }
   })
 
-  client.on('map:paused', (isPaused) => {
+  client.on('map:paused', (isPaused: boolean) => {
     if (isCustomGame(client)) return
 
     if (isPaused) {
@@ -283,13 +312,13 @@ function setupMainEvents(connectedSocketClient) {
   // })
 
   // This wont get triggered if they click disconnect and dont wait for the ancient to go to 0
-  client.on('map:win_team', (winningTeam) => {
+  client.on('map:win_team', (winningTeam: 'radiant' | 'dire') => {
     if (isCustomGame(client)) return
 
     endBets(winningTeam)
   })
 
-  client.on('map:clock_time', (time) => {
+  client.on('map:clock_time', (time: number) => {
     if (isCustomGame(client)) return
 
     // Skip pregame
@@ -343,7 +372,7 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
   setupMainEvents(connectedSocketClient)
 })
 
-server.events.on('new-gsi-client', (client) => {
+server.events.on('new-gsi-client', (client: { token: string }) => {
   if (!client.token) return
 
   const connectedSocketClient = findUser(client.token)

@@ -1,3 +1,5 @@
+import { NextFunction, Response, Request } from 'express'
+import { Socket } from 'socket.io'
 import supabase from '../../db/supabase'
 import findUser from '../dotaGSIClients'
 import { socketClients } from '../trackingConsts'
@@ -6,14 +8,14 @@ import D2GSI from './dota2-gsi'
 const server = new D2GSI()
 
 // No main page
-server.app.get('/', (req, res) => {
+server.app.get('/', (req: Request, res: Response) => {
   res.status(401).json({
     error: new Error('Invalid request!'),
   })
 })
 
 // IO auth & client setup so we can send this socket messages
-server.io.use(async (socket, next) => {
+server.io.use(async (socket: Socket, next: NextFunction) => {
   const { token } = socket.handshake.auth
   const connectedSocketClient = findUser(token)
 
@@ -48,7 +50,7 @@ server.io.use(async (socket, next) => {
 })
 
 // Cleanup the memory cache of sockets when they disconnect
-server.io.on('connection', (socket) => {
+server.io.on('connection', (socket: Socket) => {
   // Socket connected event, used to connect GSI to a socket
   const connectedSocketClient = findUser(socket.data.token)
   server.events.emit('new-socket-client', { client: connectedSocketClient, socketId: socket.id })

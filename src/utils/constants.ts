@@ -36,11 +36,11 @@ export const ranks = [
   { range: [5420, 5760], title: 'Divine☆5', image: '75.png' },
 ]
 
-export function getRankDetail(param) {
+export function getRankDetail(param: any) {
   const mmr = Number(param)
 
   if (mmr < 0) return { myRank: null }
-  if (mmr > ranks[ranks.length - 1].range[1]) return 'Immortal'
+  if (mmr > ranks[ranks.length - 1].range[1]) return { myRank: { title: 'Immortal' } }
 
   const [myRank, nextRank] = ranks.filter((rank) => mmr <= rank.range[1])
 
@@ -59,17 +59,17 @@ export function getRankDetail(param) {
   }
 }
 
-export function getRankDescription(param) {
+export function getRankDescription(param: any) {
   const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = getRankDetail(param)
 
   const nextAt = ` | Next rank at ${nextMMR}`
   const nextIn = ` in ${winsToNextRank} wins`
-  const oneMore = mmrToNextRank <= 30 ? ' | One more win peepoClap' : ''
+  const oneMore = mmrToNextRank || 31 <= 30 ? ' | One more win peepoClap' : ''
 
-  return `${myRank.title}${nextAt}${oneMore || nextIn}`
+  return `${myRank?.title}${nextAt}${oneMore || nextIn}`
 }
 
-export function getRankImage(mmr) {
+export function getRankImage(mmr: any) {
   const rank = getRankDetail(mmr)
 
   return rank.myRank?.image

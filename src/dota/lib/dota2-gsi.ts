@@ -1,24 +1,34 @@
 import http from 'http'
-import express from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 import bodyParser from 'body-parser'
 import { EventEmitter } from 'events'
 import { Server } from 'socket.io'
 import supabase from '../../db/supabase'
 import findUser from '../dotaGSIClients'
 import { gsiClients, socketClients } from '../trackingConsts'
+import { Dota2 } from 'dotagsi'
 
 export const events = new EventEmitter()
 
-function GSIClient(ip, auth) {
-  this.ip = ip
-  this.auth = auth
-  this.token = auth?.token
-  this.gamestate = {}
+export class GSIClient extends EventEmitter {
+  ip: string
+  auth: { token: string }
+  token: string
+  gamestate?: Dota2
+
+  constructor(ip: string, auth: { token: string }) {
+    super()
+
+    this.ip = ip
+    this.auth = auth
+    this.token = auth?.token
+  }
 }
 
-GSIClient.prototype.__proto__ = EventEmitter.prototype
+// TODO: Check. Maybe extending class removes this need
+// GSIClient.prototype.__proto__ = EventEmitter.prototype
 
-function checkClient(req, res, next) {
+function checkClient(req: Request, res: Response, next: NextFunction) {
   let localUser = gsiClients.find((client) => client.token === req.body.auth.token)
   if (localUser) {
     // in the event socket connects after gsi
@@ -37,19 +47,32 @@ function checkClient(req, res, next) {
   req.client.gamestate = req.body
   gsiClients.push(localUser)
 
-  findUser(localUser.token).gsi = localUser
+  // TODO: check if this actually sets GSI by ref
+  const usr = findUser(localUser?.token)
+  if (usr) {
+    usr.gsi = localUser
+  }
 
   events.emit('new-gsi-client', localUser)
   next()
 }
 
-function emitAll(prefix, obj, emitter) {
+function emitAll(
+  prefix: string,
+  obj: { [x: string]: any },
+  emitter: { emit: (arg0: string, arg1: any) => void },
+) {
   Object.keys(obj).forEach((key) => {
     emitter.emit(prefix + key, obj[key])
   })
 }
 
-function recursiveEmit(prefix, changed, body, emitter) {
+function recursiveEmit(
+  prefix: string,
+  changed: { [x: string]: any },
+  body: { [x: string]: any },
+  emitter: { emit: (arg0: string, arg1: any) => void },
+) {
   Object.keys(changed).forEach((key) => {
     if (typeof changed[key] === 'object') {
       if (body[key] != null) {
@@ -71,8 +94,8 @@ function recursiveEmit(prefix, changed, body, emitter) {
   })
 }
 
-function processChanges(section) {
-  return function handle(req, res, next) {
+function processChanges(section: string) {
+  return function handle(req: Request, res: Response, next: NextFunction) {
     if (req.body[section]) {
       recursiveEmit('', req.body[section], req.body, req.client)
     }
@@ -80,18 +103,18 @@ function processChanges(section) {
   }
 }
 
-function updateGameState(req, res, next) {
+function updateGameState(req: Request, res: Response, next: NextFunction) {
   req.client.gamestate = req.body
   next()
 }
 
-function newData(req, res) {
+function newData(req: Request, res: Response) {
   req.client.emit('newdata', req.body)
   res.end()
 }
 
-const invalidTokens = []
-async function checkAuth(req, res, next) {
+const invalidTokens: any[] = []
+async function checkAuth(req: Request, res: Response, next: NextFunction) {
   // Sent from dota gsi config file
   const token = req.body?.auth?.token
   if (invalidTokens.includes(token)) {
@@ -110,7 +133,6 @@ async function checkAuth(req, res, next) {
   // Our local memory cache of clients to sockets
   const connectedSocketClient = findUser(token)
   if (connectedSocketClient) {
-    req.socketinfo = connectedSocketClient
     next()
     return
   }
@@ -126,11 +148,6 @@ async function checkAuth(req, res, next) {
     .single()
 
   if (!error) {
-    req.socketinfo = {
-      name: user.name,
-      token,
-    }
-
     // sockets[] to be filled in by socket connection
     socketClients.push({ ...user, token, sockets: [] })
     next()
@@ -144,43 +161,49 @@ async function checkAuth(req, res, next) {
   })
 }
 
-const D2GSI = function main() {
-  const app = express()
-  const httpServer = http.createServer(app)
-  const io = new Server(httpServer, {
-    cors: {
-      origin: [
-        'http://localhost:3000',
-        'https://dotabod.com',
-        'https://dotabod.vercel.app',
-        'https://dotabot.vercel.app',
-      ],
-      methods: ['GET', 'POST'],
-    },
-  })
+class D2GSI {
+  app: express.Application
+  events: EventEmitter
+  io: Server
+  httpServer: http.Server
 
-  app.use(bodyParser.json())
-  app.use(bodyParser.urlencoded({ extended: true }))
+  constructor() {
+    const app = express()
+    const httpServer = http.createServer(app)
+    const io = new Server(httpServer, {
+      cors: {
+        origin: [
+          'http://localhost:3000',
+          'https://dotabod.com',
+          'https://dotabod.vercel.app',
+          'https://dotabot.vercel.app',
+        ],
+        methods: ['GET', 'POST'],
+      },
+    })
 
-  app.post(
-    '/',
-    checkAuth,
-    checkClient,
-    updateGameState,
-    processChanges('previously'),
-    processChanges('added'),
-    newData,
-  )
+    app.use(bodyParser.json())
+    app.use(bodyParser.urlencoded({ extended: true }))
 
-  httpServer.listen(process.env.MAIN_PORT || 3000, () => {
-    console.log(`Dota 2 GSI listening on *:${process.env.MAIN_PORT || 3000}`)
-  })
+    app.post(
+      '/',
+      checkAuth,
+      checkClient,
+      updateGameState,
+      processChanges('previously'),
+      processChanges('added'),
+      newData,
+    )
 
-  this.events = events
-  this.app = app
-  this.httpServer = httpServer
-  this.io = io
-  return this
+    httpServer.listen(process.env.MAIN_PORT || 3000, () => {
+      console.log(`Dota 2 GSI listening on *:${process.env.MAIN_PORT || 3000}`)
+    })
+
+    this.events = events
+    this.app = app
+    this.httpServer = httpServer
+    this.io = io
+  }
 }
 
 export default D2GSI
