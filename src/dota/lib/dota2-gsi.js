@@ -131,6 +131,10 @@ async function checkAuth(req, res, next) {
     next()
     return
   }
+
+  res.status(401).json({
+    error: new Error('Invalid auth'),
+  })
 }
 
 const D2GSI = function main() {
