@@ -97,6 +97,38 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     })
   }
 
+  function adjustMMR(increase: boolean) {
+    supabase
+      .from('users')
+      .select('mmr')
+      .eq('id', connectedSocketClient.token)
+      .limit(1)
+      .single()
+      .then(({ data, error }) => {
+        if (error) {
+          console.log('mmr SELECT error', error)
+          return
+        }
+
+        const newMMR = data?.mmr + (increase ? 30 : -30)
+
+        supabase
+          .from('users')
+          .update({ mmr: newMMR })
+          .eq('id', connectedSocketClient.token)
+          .then(({ data, error }) => {
+            if (!error) {
+              chatClient.say(
+                connectedSocketClient.name,
+                `MMR ${increase ? 'increased' : 'decreased'} 30`,
+              )
+            } else {
+              console.log('mmr UPDATE error', error)
+            }
+          })
+      })
+  }
+
   async function openBets() {
     // The bet was already made
     if (betExists) return
@@ -115,10 +147,12 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!isLiveMatch) return
 
-    // TODO: Find bets that are won = null that don't equal this match id and close them
+    // TODO: Find bets that are open and don't equal this match id and close them
     // Next, check if the prediction is still open
     // If it is, steam dota2 api result of match
     // Then, tell twitch to close bets based on win result
+
+    // Check if this bet for this match id already exists, dont continue if it does
     const { data: bet, error } = await supabase
       .from('bets')
       .select()
@@ -129,6 +163,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       .single()
 
     // This really should only show if there was a mistake in my query selector above
+    // We -want- it to contain 0 rows (its an error if its > 0)
     if (error && !error.details.includes('contain 0 rows')) {
       console.log(
         'ERROR: Getting bet from database',
@@ -223,6 +258,8 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       .eq('userId', client.token)
       .eq('matchId', client.gamestate?.map?.matchid)
       .is('won', null)
+
+    adjustMMR(won)
   }
 
   function setupOBSBlockers(state: string) {
