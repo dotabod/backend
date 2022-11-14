@@ -93,7 +93,12 @@ export async function getRankDescription(param: any, playerId?: number) {
 
   // Immortal rankers don't have a nextRank
   if (!('nextRank' in deets)) {
-    return `${param} MMR | Immortal #${deets.standing}`
+    // If mmr === standing that means we couldn't find a playerID, so wasn't looked up on Opendota
+    const standingDesc =
+      deets.standing !== param && deets.standing !== null
+        ? ` | Immortal #${deets.standing}`
+        : ` | Could not find standing`
+    return `${param} MMR${standingDesc}`
   }
 
   const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = deets

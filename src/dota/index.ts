@@ -5,6 +5,7 @@ import checkMidas from './checkMidas'
 import findUser from './dotaGSIClients'
 import D2GSI, { GSIClient } from './lib/dota2-gsi'
 import { minimapStates, pickSates } from './trackingConsts'
+import { steamID64toSteamID32 } from '../utils'
 
 // TODO: We shouldn't use await beyond the getChatClient(), it slows down the server I think
 
@@ -93,6 +94,35 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     })
   }
 
+  function updatePlayerId() {
+    supabase
+      .from('users')
+      .select('playerId')
+      .eq('id', connectedSocketClient.token)
+      .is('playerId', null)
+      .limit(1)
+      .single()
+      .then(({ data, error }) => {
+        // User already has a playerId
+        if (data?.playerId) return
+
+        const playerId = steamID64toSteamID32(client?.gamestate?.player?.steamid)
+
+        supabase
+          .from('users')
+          .update({ playerId: playerId })
+          .eq('id', connectedSocketClient.token)
+          .is('playerId', null)
+          .then(() => {
+            if (connectedSocketClient.sockets.length) {
+              console.log('Emitting mmr update', { token: connectedSocketClient.token })
+
+              server.io.to(connectedSocketClient.sockets).emit('update-medal')
+            }
+          })
+      })
+  }
+
   function adjustMMR(increase: boolean) {
     supabase
       .from('users')
@@ -177,6 +207,11 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     if (!isOpenBetGameCondition) {
       return
     }
+
+    // Make sure user has a playerId saved in the database
+    // This runs once per every match but its just one DB query so hopefully it's fine
+    // In the future I'd like to remove this and maybe have FE ask them to enter their steamid?
+    updatePlayerId()
 
     supabase
       .from('bets')
