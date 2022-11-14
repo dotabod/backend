@@ -140,6 +140,8 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
     // Saving to local memory so we don't have to query the db again
     if (bet && bet?.id) {
+      console.log('Found a bet in the database', bet?.id)
+
       betExists = true
       return
     }
