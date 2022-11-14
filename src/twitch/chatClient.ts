@@ -41,7 +41,7 @@ async function getChatClient() {
   })
 
   await chatClient.connect()
-  console.log('Connected to chat client')
+  console.log('Connected to chat client', chatClient.isConnected)
 
   return chatClient
 }

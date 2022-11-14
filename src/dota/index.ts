@@ -3,11 +3,14 @@ import getChatClient from '../twitch/chatClient'
 import { SocketClient, Dota2 } from '../types'
 import checkMidas from './checkMidas'
 import findUser from './dotaGSIClients'
-import { GSIClient } from './lib/dota2-gsi'
-import server from './lib/server'
+import D2GSI, { GSIClient } from './lib/dota2-gsi'
 import { minimapStates, pickSates } from './trackingConsts'
 
+// Setup twitch chat bot client first
 const chatClient = await getChatClient()
+
+// Then setup the dota gsi server & websocket server
+const server = new D2GSI()
 
 // spectator = watching a friend live
 // team2 = watching replay or live match
