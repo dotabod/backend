@@ -249,6 +249,13 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       .eq('userId', client.token)
       .eq('matchId', client.gamestate?.map?.matchid)
       .is('won', null)
+      .then(({ data, error }) => {
+        console.log(data, error, 'game won not updating?')
+
+        if (error) {
+          console.log('game won not updating? ERROR', error)
+        }
+      })
 
     adjustMMR(won)
   }
