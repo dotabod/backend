@@ -139,7 +139,7 @@ function setupMainEvents(connectedSocketClient) {
       chatClient.say(
         connectedSocketClient.name,
         `modCheck Close bets peepoGamble | ${
-          myTeam === localWinner ? 'Did not win Sadge' : 'Won peepoHappy'
+          myTeam !== localWinner ? 'Did not win Sadge' : 'Won peepoHappy'
         }`,
       )
     }
