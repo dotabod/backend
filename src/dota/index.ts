@@ -41,9 +41,29 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   if (client === undefined) return
 
   console.log('twitch chat isRegistered', chatClient.isRegistered)
-  chatClient.join(connectedSocketClient.name).then(() => {
-    console.log('twitch chat channel joined', connectedSocketClient.name)
-  })
+  if (!chatClient.isRegistered) {
+    chatClient.onRegister(() => {
+      chatClient
+        .join(connectedSocketClient.name)
+        .then(() => {
+          console.log('twitch chat channel joined', connectedSocketClient.name)
+        })
+        .catch((e) => {
+          console.log('Supposedly didnt join', e)
+        })
+      console.log('Trying onRegister event: twitch chat isRegistered', chatClient.isRegistered)
+    })
+  } else {
+    chatClient
+      .join(connectedSocketClient.name)
+      .then(() => {
+        console.log('twitch chat channel joined', connectedSocketClient.name)
+      })
+      .catch((e) => {
+        console.log('Supposedly didnt join', e)
+      })
+  }
+
 
   // Server could reboot and lose this in memory
   // But that's okay because we'll just do a db call once in openBets()
