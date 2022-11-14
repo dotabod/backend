@@ -168,6 +168,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
     const localWinner = winningTeam || client.gamestate?.map?.win_team
     const myTeam = client.gamestate?.player?.team_name
+    const won = myTeam === localWinner
 
     // Both or one undefined
     if (!localWinner || !myTeam) return
@@ -178,17 +179,10 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       console.log('Running end bets from map:win_team', { token: client.token })
     }
 
-    if (myTeam === localWinner) {
-      console.log('We won! Lets gooooo', { token: client.token })
-    } else {
-      console.log('We lost :(', { token: client.token })
-    }
+    betExists = false
 
-    // TODO: Twitch bot
-    chatClient.say(
-      connectedSocketClient.name,
-      `Close bets peepoGamble | ${myTeam !== localWinner ? 'Lost' : 'Won'}`,
-    )
+    // TODO: Twitch api prediction
+    chatClient.say(connectedSocketClient.name, `Close bets peepoGamble | ${won ? 'Won' : 'Lost'}`)
 
     console.log({
       event: 'end_bets',
@@ -197,15 +191,13 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
         token: client.token,
         winning_team: localWinner,
         player_team: myTeam,
-        didWin: myTeam === localWinner,
+        didWin: won,
       },
     })
 
-    betExists = false
-
     supabase
       .from('bets')
-      .update({ won: myTeam === localWinner })
+      .update({ won: won })
       .eq('userId', client.token)
       .eq('matchId', client.gamestate?.map?.matchid)
       .is('won', null)
