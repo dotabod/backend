@@ -2,7 +2,7 @@ import { GSIClient } from '@/dota/lib/dota2-gsi'
 import { Dota2, Hero } from 'dotagsi'
 import { Slots, ItemRaw } from 'dotagsi/types/dota2'
 
-global {
+declare global {
   namespace Express {
     interface Request {
       client: Context

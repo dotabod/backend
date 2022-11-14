@@ -1,8 +1,11 @@
+// @ts-ignore
+import Dota2Api from 'dota2-api'
+
 // Just used for testing
 const randomMatch = '6862608251'
-const playerId = '849473199'
+const playerId = '161444478' // draskyl
 
-const apiDota = dota2Api.create(process.env.STEAM_WEB_API)
+const apiDota = Dota2Api.create(process.env.STEAM_WEB_API)
 
 // const channel = supabase.channel('db-changes')
 // channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
@@ -23,20 +26,24 @@ const apiDota = dota2Api.create(process.env.STEAM_WEB_API)
 //   .then((response) => response.json())
 //   .then((data) => console.log(data))
 
+// fetch(`https://api.opendota.com/api/players/${playerId}`)
+//   .then((response) => response.json())
+//   .then((data) => console.log(data?.leaderboard_rank))
+
 // radiant_win: false || true
 // json returned + undefined radiant_win = not scored, refund bets
 // {"error":"Match ID not found"} = ongoing match
-// function getMatch(id) {
-// try {
-//   apiDota.getMatchDetails({ match_id: id }).then(
-//     ({ result }) => {
-//       console.log(JSON.stringify(result))
-//     },
-//     (e) => {
-//       console.log('Game coordinator is down probably. Check again later')
-//     },
-//   )
-// } catch (e) {
-//   console.log('Game coordinator is down probably. Check again later')
-// }
+// function getMatch(id: string) {
+//   try {
+//     apiDota.getMatchDetails({ match_id: id }).then(
+//       (response) => {
+//         console.log(response)
+//       },
+//       () => {
+//         console.log('Game coordinator is down probably. Check again later')
+//       },
+//     )
+//   } catch (e) {
+//     console.log('Game coordinator is down probably. Check again later')
+//   }
 // }
