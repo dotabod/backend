@@ -34,17 +34,18 @@ export const ranks = [
   { range: [5020, 5219], title: 'Divine☆3', image: '73.png' },
   { range: [5220, 5419], title: 'Divine☆4', image: '74.png' },
   { range: [5420, 5760], title: 'Divine☆5', image: '75.png' },
+  { range: [5761, 20000], title: 'Immortal', image: '80.png' },
 ]
 
 export function getRankDetail(param: any) {
   const mmr = Number(param)
 
-  if (mmr < 0) return { myRank: null }
-  if (mmr > ranks[ranks.length - 1].range[1]) return { myRank: { title: 'Immortal' } }
+  if (mmr < 0) return null
+
+  // Max mmr just returning highest rank idk
+  // if (mmr > ranks[ranks.length - 1].range[1]) return { myRank: { title: 'Immortal' } }
 
   const [myRank, nextRank] = ranks.filter((rank) => mmr <= rank.range[1])
-
-  if (!myRank) return { myRank: null }
 
   const nextMMR = nextRank?.range[0] || myRank?.range[1]
   const mmrToNextRank = nextMMR - mmr
@@ -60,17 +61,22 @@ export function getRankDetail(param: any) {
 }
 
 export function getRankDescription(param: any) {
-  const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = getRankDetail(param)
+  const deets = getRankDetail(param)
 
+  if (!deets) return 'Unknown'
+
+  const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = deets
   const nextAt = ` | Next rank at ${nextMMR}`
   const nextIn = ` in ${winsToNextRank} wins`
-  const oneMore = mmrToNextRank || 31 <= 30 ? ' | One more win peepoClap' : ''
+  const oneMore = mmrToNextRank <= 30 ? ' | One more win peepoClap' : ''
 
   return `${param} | ${myRank?.title}${nextAt}${oneMore || nextIn}`
 }
 
-// export function getRankImage(mmr: any) {
-//   const rank = getRankDetail(mmr)
+export function getRankImage(mmr: any) {
+  const rank = getRankDetail(mmr)
 
-//   return rank.myRank?.image
-// }
+  if (!rank) return '0.png'
+
+  return rank.myRank?.image
+}
