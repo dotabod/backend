@@ -3,9 +3,9 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import { EventEmitter } from 'events'
 import { Server } from 'socket.io'
-import supabase from '../../db/supabase.js'
-import findUser from '../dotaGSIClients.js'
-import { gsiClients, socketClients } from '../trackingConsts.js'
+import supabase from '../../db/supabase'
+import findUser from '../dotaGSIClients'
+import { gsiClients, socketClients } from '../trackingConsts'
 
 export const events = new EventEmitter()
 

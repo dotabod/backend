@@ -1,1 +1,1 @@
-import './dota/index.js'
+import './dota/index'

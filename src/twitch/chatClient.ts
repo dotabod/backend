@@ -1,6 +1,6 @@
 import { ChatClient } from '@twurple/chat'
 import { RefreshingAuthProvider } from '@twurple/auth'
-import supabase from '../db/supabase.js'
+import supabase from '../db/supabase'
 
 // Get latest twitch access token that isn't expired
 const { data: twitchTokens, error } = await supabase

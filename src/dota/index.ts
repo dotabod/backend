@@ -1,8 +1,8 @@
-import chatClient from '../twitch/chatClient.js'
-import checkMidas from './checkMidas.js'
-import findUser from './dotaGSIClients.js'
-import server from './lib/server.js'
-import { minimapStates, pickSates } from './trackingConsts.js'
+import chatClient from '../twitch/chatClient'
+import checkMidas from './checkMidas'
+import findUser from './dotaGSIClients'
+import server from './lib/server'
+import { minimapStates, pickSates } from './trackingConsts'
 
 chatClient.connect().then(() => {
   console.log('Connected to chat client')

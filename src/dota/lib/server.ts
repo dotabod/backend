@@ -1,7 +1,7 @@
-import supabase from '../../db/supabase.js'
-import findUser from '../dotaGSIClients.js'
-import { socketClients } from '../trackingConsts.js'
-import D2GSI from './dota2-gsi.js'
+import supabase from '../../db/supabase'
+import findUser from '../dotaGSIClients'
+import { socketClients } from '../trackingConsts'
+import D2GSI from './dota2-gsi'
 
 const server = new D2GSI()
 
