@@ -1,6 +1,5 @@
 import { ChatClient } from '@twurple/chat'
 import { RefreshingAuthProvider } from '@twurple/auth'
-import { mainChannel } from '../utils/constants.js'
 import supabase from '../db/supabase.js'
 
 // Get latest twitch access token that isn't expired
@@ -41,6 +40,19 @@ async function getChannels() {
 const chatClient = new ChatClient({
   authProvider,
   channels: getChannels,
+})
+
+// When a new user registers and the server is still alive, make the chat client join their channel
+const channel = supabase.channel('db-changes')
+channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
+  console.log('New user to send bot to: ', payload)
+  chatClient.join(payload.new.name)
+})
+
+channel.subscribe(async (status) => {
+  if (status === 'SUBSCRIBED') {
+    console.log('Ready to receive database changes!')
+  }
 })
 
 export default chatClient

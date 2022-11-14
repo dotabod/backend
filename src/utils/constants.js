@@ -1,5 +1,3 @@
-export const mainChannel = 'techleed'
-
 export const ranks = [
   { range: [0, 153], title: 'Herald☆1', image: '11.png' },
   { range: [154, 307], title: 'Herald☆2', image: '12.png' },
