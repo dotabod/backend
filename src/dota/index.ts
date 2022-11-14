@@ -112,11 +112,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
           .from('users')
           .update({ mmr: newMMR })
           .eq('id', connectedSocketClient.token)
-          .then(({ data, error }) => {
-           if (error) {
-             console.log('mmr UPDATE error', error)
-           }
-          })
+          .then(() => {})
       })
   }
 
@@ -249,13 +245,8 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       .eq('userId', client.token)
       .eq('matchId', client.gamestate?.map?.matchid)
       .is('won', null)
-      .then(({ data, error }) => {
-        console.log(data, error, 'game won not updating?')
-
-        if (error) {
-          console.log('game won not updating? ERROR', error)
-        }
-      })
+      .then(() => {}) // weird bug it only updates if you pass a .then()?
+    // i think the function is resolving too quick and it discards this promise?
 
     adjustMMR(won)
   }
