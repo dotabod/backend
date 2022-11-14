@@ -4,7 +4,9 @@ import findUser from './dotaGSIClients.js'
 import server from './lib/server.js'
 import { minimapStates, pickSates } from './trackingConsts.js'
 
-await chatClient.connect()
+chatClient.connect().then(() => {
+  console.log('Connected to chat client')
+})
 
 // spectator = watching a friend live
 // team2 = watching replay or live match
@@ -48,7 +50,9 @@ function setupMainEvents(connectedSocketClient) {
 
   function lockBets() {
     // TODO: Twitch bot
-    chatClient.say(connectedSocketClient.name, `modCheck Lock bets peepoGamble`)
+    if (chatClient.isConnected && chatClient.isRegistered) {
+      chatClient.say(connectedSocketClient.name, `modCheck Lock bets peepoGamble`)
+    }
 
     console.log({
       event: 'lock_bets',
@@ -90,7 +94,9 @@ function setupMainEvents(connectedSocketClient) {
       // check if map.matchid exists, > 0 ?
 
       // TODO: Twitch bot
-      chatClient.say(connectedSocketClient.name, `modCheck Open bets peepoGamble`)
+      if (chatClient.isConnected && chatClient.isRegistered) {
+        chatClient.say(connectedSocketClient.name, `modCheck Open bets peepoGamble`)
+      }
 
       console.log({
         event: 'open_bets',
@@ -129,12 +135,14 @@ function setupMainEvents(connectedSocketClient) {
     }
 
     // TODO: Twitch bot
-    chatClient.say(
-      connectedSocketClient.name,
-      `modCheck Close bets peepoGamble | ${
-        myTeam === localWinner ? 'Did not win Sadge' : 'Won peepoHappy'
-      }`,
-    )
+    if (chatClient.isConnected && chatClient.isRegistered) {
+      chatClient.say(
+        connectedSocketClient.name,
+        `modCheck Close bets peepoGamble | ${
+          myTeam === localWinner ? 'Did not win Sadge' : 'Won peepoHappy'
+        }`,
+      )
+    }
 
     console.log({
       event: 'end_bets',
