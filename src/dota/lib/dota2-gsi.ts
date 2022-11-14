@@ -2,11 +2,11 @@ import http from 'http'
 import express, { Request, Response, NextFunction } from 'express'
 import bodyParser from 'body-parser'
 import { EventEmitter } from 'events'
-import { Server } from 'socket.io'
-import supabase from '../../db/supabase'
+import { Server, Socket } from 'socket.io'
+import supabase from '../../db'
 import findUser from '../dotaGSIClients'
 import { gsiClients, socketClients } from '../trackingConsts'
-import { Dota2 } from 'dotagsi'
+import { Dota2 } from '../../types'
 
 export const events = new EventEmitter()
 
@@ -199,10 +199,85 @@ class D2GSI {
       console.log(`Dota 2 GSI listening on *:${process.env.MAIN_PORT || 3000}`)
     })
 
+    // No main page
+    app.get('/', (req: Request, res: Response) => {
+      res.status(401).json({
+        error: new Error('Invalid request!'),
+      })
+    })
+
+    // IO auth & client setup so we can send this socket messages
+    io.use(async (socket, next) => {
+      const { token } = socket.handshake.auth
+      const connectedSocketClient = findUser(token)
+
+      // Cache to prevent a supabase lookup on every message for username & token validation
+      if (connectedSocketClient) {
+        // eslint-disable-next-line no-param-reassign
+        socket.data = connectedSocketClient
+        connectedSocketClient.sockets.push(socket.id)
+        return next()
+      }
+
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', token)
+        .order('id', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error) {
+        return next(new Error('authentication error'))
+      }
+
+      // eslint-disable-next-line no-param-reassign
+      socket.data.name = user.name
+      // eslint-disable-next-line no-param-reassign
+      socket.data.token = token
+      // In case the socket is connected before the GSI client has!
+      socketClients.push({ ...user, token, sockets: [socket.id] })
+
+      return next()
+    })
+
+    // Cleanup the memory cache of sockets when they disconnect
+    io.on('connection', (socket: Socket) => {
+      // Socket connected event, used to connect GSI to a socket
+      const connectedSocketClient = findUser(socket.data.token)
+      events.emit('new-socket-client', {
+        client: connectedSocketClient,
+        socketId: socket.id,
+      })
+
+      socket.on('disconnect', () => {
+        if (connectedSocketClient) {
+          connectedSocketClient.sockets = connectedSocketClient.sockets.filter(
+            (socketid) => socketid !== socket.id,
+          )
+
+          // Let's also remove all the events we setup from the client for this socket
+          // That way a new socket will get the GSI events again
+          if (!connectedSocketClient.sockets.length) {
+            console.log(
+              'No more sockets connected, removing all events for',
+              connectedSocketClient.token,
+            )
+            // There's no socket connected so let's remove all GSI events
+            connectedSocketClient.gsi?.removeAllListeners()
+          }
+        }
+      })
+    })
+
     this.events = events
     this.app = app
     this.httpServer = httpServer
     this.io = io
+  }
+
+  async init() {
+    return this
   }
 }
 

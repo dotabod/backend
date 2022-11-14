@@ -2,7 +2,7 @@ import { ApiClient } from '@twurple/api'
 import dota2Api from 'dota2-api'
 import chatClient, { authProvider } from './chatClient'
 import { steamID64toSteamID32 } from '../utils/index'
-import supabase from '../db/supabase'
+import supabase from '../db'
 
 // const channel = supabase.channel('db-changes')
 // channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {

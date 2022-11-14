@@ -1,1 +1,1 @@
-import './dota/index'
+import './dota/index.ts'

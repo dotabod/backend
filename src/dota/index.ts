@@ -1,19 +1,18 @@
-import { Dota2 } from 'dotagsi'
-import supabase from '../db/supabase'
-import chatClient from '../twitch/chatClient'
+import supabase from '../db'
+import getChatClient from '../twitch/chatClient'
+import { SocketClient, Dota2 } from '../types'
 import checkMidas from './checkMidas'
 import findUser from './dotaGSIClients'
+import { GSIClient } from './lib/dota2-gsi'
 import server from './lib/server'
 import { minimapStates, pickSates } from './trackingConsts'
 
-chatClient.connect().then(() => {
-  console.log('Connected to chat client')
-})
+const chatClient = await getChatClient()
 
 // spectator = watching a friend live
 // team2 = watching replay or live match
 // customgamename = playing arcade or hero demo
-function isCustomGame(client) {
+function isCustomGame(client: GSIClient) {
   // undefined means the client is disconnected from a game
   // so we want to run our obs stuff to unblock anything
   const isArcade =
@@ -32,12 +31,10 @@ function isCustomGame(client) {
 
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
-function setupMainEvents(connectedSocketClient: {
-  gsi: any
-  name: string
-  token?: string
-  sockets: string[]
-}) {
+function setupMainEvents(connectedSocketClient: SocketClient) {
+  const client = connectedSocketClient.gsi
+  if (client === undefined) return
+
   console.log('twitch chat isRegistered', chatClient.isRegistered)
   chatClient.join(connectedSocketClient.name)
 
@@ -47,7 +44,6 @@ function setupMainEvents(connectedSocketClient: {
 
   const passiveMidas = { counter: 0 }
   // const recentHealth = Array(25) // TODO: #HEALTH
-  const client = connectedSocketClient.gsi
 
   // This array of socket ids is who we want to emit events to:
   // console.log({ sockets: connectedSocketClient.sockets })
@@ -58,6 +54,8 @@ function setupMainEvents(connectedSocketClient: {
   const allUnblocked: { [key: string]: boolean } = {}
 
   function lockBets() {
+    if (!client) return
+
     // TODO: Twitch bot
     if (chatClient.isConnected && chatClient.isRegistered) {
       chatClient.say(connectedSocketClient.name, `modCheck Lock bets peepoGamble`)
@@ -114,7 +112,7 @@ function setupMainEvents(connectedSocketClient: {
         .insert({
           matchId: client.gamestate?.map?.matchid,
           userId: client.token,
-          myTeam: client.gamestate?.player?.team,
+          myTeam: client.gamestate?.player?.team_name,
         })
         .select()
         .then(({ data, error }) => {
@@ -140,6 +138,7 @@ function setupMainEvents(connectedSocketClient: {
 
   function endBets(winningTeam: 'radiant' | 'dire' | null) {
     if (!betsExist) return
+    if (!client) return
 
     // "none"? Must mean the game hasn't ended yet
     // Would be undefined otherwise if there is no game
@@ -188,6 +187,8 @@ function setupMainEvents(connectedSocketClient: {
   }
 
   function setupOBSBlockers(state: string) {
+    if (!client) return
+
     connectedSocketClient.sockets.forEach((socketId: string) => {
       // Sending a msg to just this socket
       if (!blockingMinimap[socketId] && minimapStates.includes(state)) {
@@ -197,7 +198,7 @@ function setupMainEvents(connectedSocketClient: {
 
         server.io
           .to(socketId)
-          .emit('block', { type: 'minimap', team: client.gamestate.player?.team_name })
+          .emit('block', { type: 'minimap', team: client.gamestate?.player?.team_name })
       }
 
       if (blockingMinimap[socketId] && !minimapStates.includes(state)) {
@@ -206,7 +207,7 @@ function setupMainEvents(connectedSocketClient: {
       }
 
       if (!blockingPicks[socketId] && pickSates.includes(state)) {
-        console.log('Block hero picks for team', client.gamestate.player?.team_name, {
+        console.log('Block hero picks for team', client.gamestate?.player?.team_name, {
           token: client.token,
         })
         blockingPicks[socketId] = true
@@ -214,7 +215,7 @@ function setupMainEvents(connectedSocketClient: {
 
         server.io
           .to(socketId)
-          .emit('block', { type: 'picks', team: client.gamestate.player?.team_name })
+          .emit('block', { type: 'picks', team: client.gamestate?.player?.team_name })
       }
 
       if (blockingPicks[socketId] && !pickSates.includes(state)) {
@@ -229,7 +230,7 @@ function setupMainEvents(connectedSocketClient: {
 
         server.io
           .to(socketId)
-          .emit('block', { type: null, team: client.gamestate.player?.team_name })
+          .emit('block', { type: null, team: client.gamestate?.player?.team_name })
       }
     })
   }
@@ -266,7 +267,7 @@ function setupMainEvents(connectedSocketClient: {
     endBets(null)
 
     // User is dead
-    if (data.hero?.respawn_seconds > 0) {
+    if (Number(data.hero?.respawn_seconds) > 0) {
       // recentHealth.fill(100) // TODO: #HEALTH
       passiveMidas.counter = -25
       return
@@ -330,9 +331,10 @@ function setupMainEvents(connectedSocketClient: {
     // 4 minutes 45 seconds after a game is created
     if (
       time === 15 &&
-      client.gamestate.previously?.map?.clock_time < 15 &&
-      client.gamestate.map?.name === 'start' &&
-      client.gamestate.map?.game_state === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS'
+      client.gamestate?.previously &&
+      client.gamestate?.previously?.map?.clock_time < 15 &&
+      client.gamestate?.map?.name === 'start' &&
+      client.gamestate?.map?.game_state === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS'
     ) {
       lockBets()
     }

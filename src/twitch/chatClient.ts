@@ -1,36 +1,50 @@
 import { ChatClient } from '@twurple/chat'
 import { RefreshingAuthProvider } from '@twurple/auth'
-import supabase from '../db/supabase'
+import supabase from '../db'
 import { getActiveUsers } from '../dota/dotaGSIClients'
 
-// Get latest twitch access token that isn't expired
-const { data: twitchTokens, error } = await supabase
-  .from('twitch_tokens')
-  .select()
-  .order('id', { ascending: false })
-  .limit(1)
-  .single()
+async function getChatClient() {
+  if (!process.env.TWITCH_ACCESS_TOKEN || !process.env.TWITCH_REFRESH_TOKEN) {
+    throw new Error('Missing twitch tokens')
+  }
 
-export const authProvider = new RefreshingAuthProvider(
-  {
-    clientId: process.env.TWITCH_CLIENT_ID as string,
-    clientSecret: process.env.TWITCH_CLIENT_SECRET as string,
-    onRefresh: async ({ refreshToken, accessToken }) => {
-      await supabase.from('twitch_tokens').upsert({ refreshToken, accessToken }).select()
+  // Get latest twitch access token that isn't expired
+  const { data: twitchTokens, error } = await supabase
+    .from('twitch_tokens')
+    .select()
+    .order('id', { ascending: false })
+    .limit(1)
+    .single()
 
-      console.log('Refreshed twitch access token')
+  const authProvider = new RefreshingAuthProvider(
+    {
+      clientId: process.env.TWITCH_CLIENT_ID as string,
+      clientSecret: process.env.TWITCH_CLIENT_SECRET as string,
+      onRefresh: async ({ refreshToken, accessToken }) => {
+        await supabase.from('twitch_tokens').upsert({ refreshToken, accessToken }).select()
+
+        console.log('Refreshed twitch access token')
+      },
     },
-  },
-  {
-    accessToken: twitchTokens.accessToken || (process.env.TWITCH_ACCESS_TOKEN as string),
-    refreshToken: twitchTokens.refreshToken || (process.env.TWITCH_REFRESH_TOKEN as string),
-  },
-)
+    {
+      expiresIn: 86400, // 1 day
+      obtainmentTimestamp: Date.now(),
+      accessToken: twitchTokens.accessToken || process.env.TWITCH_ACCESS_TOKEN,
+      refreshToken: twitchTokens.refreshToken || process.env.TWITCH_REFRESH_TOKEN,
+    },
+  )
+  console.log('Retrieved twitch access tokens')
 
-const chatClient = new ChatClient({
-  authProvider,
-  channels: () => getActiveUsers().map((user) => user.name),
-})
+  const chatClient = new ChatClient({
+    authProvider,
+    channels: () => getActiveUsers().map((user) => user.name),
+  })
+
+  await chatClient.connect()
+  console.log('Connected to chat client')
+
+  return chatClient
+}
 
 // Actually no \/ bot should only join channels that have OBS and GSI open
 // When a new user registers and the server is still alive, make the chat client join their channel
@@ -42,4 +56,4 @@ const chatClient = new ChatClient({
 //   })
 //   .subscribe()
 
-export default chatClient
+export default getChatClient
