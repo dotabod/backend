@@ -112,7 +112,13 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
           .from('users')
           .update({ mmr: newMMR })
           .eq('id', connectedSocketClient.token)
-          .then(() => {})
+          .then(() => {
+            if (connectedSocketClient.sockets.length) {
+              console.log('Emitting mmr update', { token: connectedSocketClient.token })
+
+              server.io.to(connectedSocketClient.sockets).emit('update-medal')
+            }
+          })
       })
   }
 
