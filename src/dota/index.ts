@@ -113,14 +113,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
           .update({ mmr: newMMR })
           .eq('id', connectedSocketClient.token)
           .then(({ data, error }) => {
-            if (!error) {
-              chatClient.say(
-                connectedSocketClient.name,
-                `MMR ${increase ? 'increased' : 'decreased'} 30`,
-              )
-            } else {
-              console.log('mmr UPDATE error', error)
-            }
+           if (error) {
+             console.log('mmr UPDATE error', error)
+           }
           })
       })
   }
