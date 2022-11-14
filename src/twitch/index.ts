@@ -2,6 +2,7 @@ import { steamID64toSteamID32 } from '../utils/index'
 import supabase from '../db'
 import getChatClient from './chatClient'
 import { getRankDescription } from '../utils/constants'
+import { toUserName } from '@twurple/chat'
 
 // TODO: Create predictions using API
 // const api = new ApiClient({ authProvider })
@@ -19,7 +20,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       supabase
         .from('users')
         .select('mmr')
-        .ilike('name', channel.slice(1))
+        .ilike('name', toUserName(channel))
         .limit(1)
         .single()
         .then(({ data, error }) => {
