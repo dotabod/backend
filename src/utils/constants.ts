@@ -66,11 +66,11 @@ export function getRankDescription(param: any) {
   const nextIn = ` in ${winsToNextRank} wins`
   const oneMore = mmrToNextRank || 31 <= 30 ? ' | One more win peepoClap' : ''
 
-  return `${myRank?.title}${nextAt}${oneMore || nextIn}`
+  return `${param} | ${myRank?.title}${nextAt}${oneMore || nextIn}`
 }
 
-export function getRankImage(mmr: any) {
-  const rank = getRankDetail(mmr)
+// export function getRankImage(mmr: any) {
+//   const rank = getRankDetail(mmr)
 
-  return rank.myRank?.image
-}
+//   return rank.myRank?.image
+// }

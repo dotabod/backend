@@ -1,5 +1,5 @@
+import { chatClient } from '../twitch'
 import supabase from '../db'
-import getChatClient from '../twitch/chatClient'
 import { SocketClient, Dota2 } from '../types'
 import checkMidas from './checkMidas'
 import findUser from './dotaGSIClients'
@@ -7,9 +7,6 @@ import D2GSI, { GSIClient } from './lib/dota2-gsi'
 import { minimapStates, pickSates } from './trackingConsts'
 
 // TODO: We shouldn't use await beyond the getChatClient(), it slows down the server I think
-
-// Setup twitch chat bot client first
-const chatClient = await getChatClient()
 
 // Then setup the dota gsi server & websocket server
 const server = new D2GSI()
@@ -63,7 +60,6 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
         console.log('Supposedly didnt join', e)
       })
   }
-
 
   // Server could reboot and lose this in memory
   // But that's okay because we'll just do a db call once in openBets()
