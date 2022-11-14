@@ -90,9 +90,14 @@ function newData(req, res) {
   res.end()
 }
 
+const invalidTokens = []
 async function checkAuth(req, res, next) {
   // Sent from dota gsi config file
   const token = req.body?.auth?.token
+  if (invalidTokens.includes(token)) {
+    res.status(401).send('Invalid token')
+    return
+  }
 
   if (!token) {
     console.log(`Dropping message from IP: ${req.ip}, no valid auth token`)
@@ -131,6 +136,8 @@ async function checkAuth(req, res, next) {
     next()
     return
   }
+
+  invalidTokens.push(token)
 
   res.status(401).json({
     error: new Error('Invalid auth'),
