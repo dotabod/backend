@@ -10,6 +10,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    printWidth: 100,
     'import/extensions': 0,
     semi: ['error', 'never'],
     'linebreak-style': 0,

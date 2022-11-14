@@ -1,7 +1,10 @@
+import chatClient from '../twitch/chatClient.js'
 import checkMidas from './checkMidas.js'
 import findUser from './dotaGSIClients.js'
 import server from './lib/server.js'
 import { minimapStates, pickSates } from './trackingConsts.js'
+
+await chatClient.connect()
 
 // spectator = watching a friend live
 // team2 = watching replay or live match
@@ -26,6 +29,7 @@ function isCustomGame(client) {
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
 function setupMainEvents(connectedSocketClient) {
+  console.log('twitch isRegistered', chatClient.isRegistered)
   // Need to do a DB lookup here instead.
   // Server could reboot and lose this in memory
   let betsExist = false
@@ -44,6 +48,11 @@ function setupMainEvents(connectedSocketClient) {
 
   function lockBets() {
     // TODO: Twitch bot
+    chatClient.say(
+      connectedSocketClient.name,
+      `lock_bets | user ${connectedSocketClient.name} and match_id ${client.gamestate?.map?.matchid}`,
+    )
+
     console.log({
       event: 'lock_bets',
       data: {
@@ -84,6 +93,11 @@ function setupMainEvents(connectedSocketClient) {
       // check if map.matchid exists, > 0 ?
 
       // TODO: Twitch bot
+      chatClient.say(
+        connectedSocketClient.name,
+        `open_bets | user ${connectedSocketClient.name} and match_id ${client.gamestate?.map?.matchid}`,
+      )
+
       console.log({
         event: 'open_bets',
         data: {
@@ -119,6 +133,14 @@ function setupMainEvents(connectedSocketClient) {
     } else {
       console.log('We lost :(', { token: client.token })
     }
+
+    // TODO: Twitch bot
+    chatClient.say(
+      connectedSocketClient.name,
+      `end_bets | did win? ${myTeam === localWinner} for user ${
+        connectedSocketClient.name
+      } and match_id ${client.gamestate?.map?.matchid}`,
+    )
 
     console.log({
       event: 'end_bets',
