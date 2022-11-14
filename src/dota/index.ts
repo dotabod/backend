@@ -325,9 +325,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     if (isCustomGame(client)) return
 
     if (isPaused) {
-      console.log('Map is paused, send pauseChamp', { token: client.token })
-    } else {
-      console.log('Map unpaused?', { token: client.token })
+      chatClient.say(connectedSocketClient.name, `PauseChamp`)
     }
   })
 
