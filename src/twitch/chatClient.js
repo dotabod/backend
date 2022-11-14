@@ -44,15 +44,11 @@ const chatClient = new ChatClient({
 
 // When a new user registers and the server is still alive, make the chat client join their channel
 const channel = supabase.channel('db-changes')
-channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
-  console.log('New user to send bot to: ', payload)
-  chatClient.join(payload.new.name)
-})
-
-channel.subscribe(async (status) => {
-  if (status === 'SUBSCRIBED') {
-    console.log('Ready to receive database changes!')
-  }
-})
+channel
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
+    console.log('New user to send bot to: ', payload)
+    chatClient.join(payload.new.name)
+  })
+  .subscribe()
 
 export default chatClient
