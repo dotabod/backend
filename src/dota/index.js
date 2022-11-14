@@ -48,10 +48,7 @@ function setupMainEvents(connectedSocketClient) {
 
   function lockBets() {
     // TODO: Twitch bot
-    chatClient.say(
-      connectedSocketClient.name,
-      `lock_bets | user ${connectedSocketClient.name} and match_id ${client.gamestate?.map?.matchid}`,
-    )
+    chatClient.say(connectedSocketClient.name, `modCheck Lock bets peepoGamble`)
 
     console.log({
       event: 'lock_bets',
@@ -93,10 +90,7 @@ function setupMainEvents(connectedSocketClient) {
       // check if map.matchid exists, > 0 ?
 
       // TODO: Twitch bot
-      chatClient.say(
-        connectedSocketClient.name,
-        `open_bets | user ${connectedSocketClient.name} and match_id ${client.gamestate?.map?.matchid}`,
-      )
+      chatClient.say(connectedSocketClient.name, `modCheck Open bets peepoGamble`)
 
       console.log({
         event: 'open_bets',
@@ -137,9 +131,9 @@ function setupMainEvents(connectedSocketClient) {
     // TODO: Twitch bot
     chatClient.say(
       connectedSocketClient.name,
-      `end_bets | did win? ${myTeam === localWinner} for user ${
-        connectedSocketClient.name
-      } and match_id ${client.gamestate?.map?.matchid}`,
+      `modCheck Close bets peepoGamble | ${
+        myTeam === localWinner ? 'Did not win Sadge' : 'Won peepoHappy'
+      }`,
     )
 
     console.log({
