@@ -93,7 +93,7 @@ export async function getRankDescription(param: any, playerId?: number) {
 
   // Immortal rankers don't have a nextRank
   if (!('nextRank' in deets)) {
-    return `${param} | Immortal #${deets.standing}`
+    return `${param} MMR | Immortal #${deets.standing}`
   }
 
   const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = deets
