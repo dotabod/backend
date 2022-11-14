@@ -25,9 +25,6 @@ export class GSIClient extends EventEmitter {
   }
 }
 
-// TODO: Check. Maybe extending class removes this need
-// GSIClient.prototype.__proto__ = EventEmitter.prototype
-
 function checkClient(req: Request, res: Response, next: NextFunction) {
   let localUser = gsiClients.find((client) => client.token === req.body.auth.token)
   if (localUser) {
@@ -47,7 +44,6 @@ function checkClient(req: Request, res: Response, next: NextFunction) {
   req.client.gamestate = req.body
   gsiClients.push(localUser)
 
-  // TODO: check if this actually sets GSI by ref
   const usr = findUser(localUser?.token)
   if (usr) {
     usr.gsi = localUser

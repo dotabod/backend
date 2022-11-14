@@ -21,7 +21,7 @@ async function getChatClient() {
       clientId: process.env.TWITCH_CLIENT_ID as string,
       clientSecret: process.env.TWITCH_CLIENT_SECRET as string,
       onRefresh: async ({ refreshToken, accessToken }) => {
-        await supabase.from('twitch_tokens').upsert({ refreshToken, accessToken }).select()
+        await supabase.from('twitch_tokens').upsert({ refreshToken, accessToken })
 
         console.log('Refreshed twitch access token')
       },

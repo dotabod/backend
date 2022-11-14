@@ -6,6 +6,8 @@ import findUser from './dotaGSIClients'
 import D2GSI, { GSIClient } from './lib/dota2-gsi'
 import { minimapStates, pickSates } from './trackingConsts'
 
+// TODO: We shouldn't use await beyond the getChatClient(), it slows down the server I think
+
 // Setup twitch chat bot client first
 const chatClient = await getChatClient()
 
@@ -34,16 +36,17 @@ function isCustomGame(client: GSIClient) {
 
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
-function setupMainEvents(connectedSocketClient: SocketClient) {
+async function setupMainEvents(connectedSocketClient: SocketClient) {
   const client = connectedSocketClient.gsi
   if (client === undefined) return
 
   console.log('twitch chat isRegistered', chatClient.isRegistered)
-  chatClient.join(connectedSocketClient.name)
+  await chatClient.join(connectedSocketClient.name)
+  console.log('twitch chat channel joined', connectedSocketClient.name)
 
-  // Need to do a DB lookup here instead.
   // Server could reboot and lose this in memory
-  let betsExist = false
+  // But that's okay because we'll just do a db call once in openBets()
+  let betExists = false
 
   const passiveMidas = { counter: 0 }
   // const recentHealth = Array(25) // TODO: #HEALTH
@@ -73,9 +76,9 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
     })
   }
 
-  function openBets() {
+  async function openBets() {
     // The bet was already made
-    if (betsExist) return
+    if (betExists) return
 
     // why open if not playing?
     if (client?.gamestate?.player?.activity !== 'playing') return
@@ -83,51 +86,16 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
     // why open if won?
     if (client.gamestate?.map?.win_team !== 'none') return
 
-    // TODO: do a DB lookup here to see if a bet does exist before continuing
-    // check match id to match current match id. if they mismatch,
-    // close the last one by checking steam results, and open this one if you can
+    const channel = connectedSocketClient.name
+    const isLiveMatch = client.gamestate?.map?.matchid && client.gamestate?.map?.matchid !== '0'
+    const isOpenBetGameCondition =
+      client.gamestate?.map?.game_time < 20 && client.gamestate?.map?.name === 'start'
 
-    // what if a mod ends a bet by themselves? maybe the db can be just a twitch lookup?
-    // that way its always in sync
-    // but how to get match id to the twitch prediction?
-    // a db to store the match id and the prediction id? with results updated after?
-    // console.log(client.gamestate?.map?.game_time, client.gamestate?.map?.name)
-
-    // TODO: REMOVE !betsExist this is dev logic only for when the server restarts
-    // the DB check earlier should take care of this edge case
-    if (
-      !betsExist ||
-      (client.gamestate?.map?.game_time < 20 && client.gamestate?.map?.name === 'start')
-    ) {
-      betsExist = true
-
-      // check if map.matchid exists, > 0 ?
-
-      const channel = connectedSocketClient.name
-
-      // TODO: Twitch bot
-      if (chatClient.isConnected && chatClient.isRegistered) {
-        chatClient.say(channel, `modCheck Open bets peepoGamble`)
-      }
-
-      supabase
-        .from('bets')
-        .insert({
-          matchId: client.gamestate?.map?.matchid,
-          userId: client.token,
-          myTeam: client.gamestate?.player?.team_name,
-        })
-        .select()
-        .then(({ data, error }) => {
-          if (!error) {
-            chatClient.say(channel, `Added owner to ${channel} channel`)
-          } else if (error.message.includes('duplicate')) {
-            console.log(channel, `Owner already exists on ${channel} channel`)
-          } else {
-            console.log(channel, `Could not add owner to ${channel} channel`)
-          }
-        })
-
+    // A list of accounts that can test in demo mode
+    const isDevMatch = ['techleed'].includes(channel)
+    if (isDevMatch) {
+      // Marking as a valid bet anyway, but will let chat know its fake
+      chatClient.say(channel, `This is where bets would open if it was a real match peepoGamble`)
       console.log({
         event: 'open_bets',
         data: {
@@ -136,11 +104,76 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
           player_team: client.gamestate?.player?.team_name,
         },
       })
+      betExists = true
+      return
     }
+
+    // It's not a live game, so we don't want to open bets nor save it to DB
+    if (!isLiveMatch) return
+
+    // TODO: Find bets that are won = null that don't equal this match id and close them
+    // Next, check if the prediction is still open
+    // If it is, steam dota2 api result of match
+    // Then, tell twitch to close bets based on win result
+    const { data: bet, error } = await supabase
+      .from('bets')
+      .select()
+      .eq('userId', client.token)
+      .eq('matchId', client.gamestate?.map?.matchid)
+      .is('won', null)
+      .limit(1)
+      .single()
+
+    // This really should only show if there was a mistake in my query selector above
+    if (error) {
+      console.log(
+        'ERROR: Getting bet from database',
+        error,
+        client.token,
+        client.gamestate?.map?.matchid,
+      )
+    }
+
+    // Saving to local memory so we don't have to query the db again
+    if (bet && bet?.id) {
+      betExists = true
+      return
+    }
+
+    if (!isOpenBetGameCondition) return
+
+    supabase
+      .from('bets')
+      .insert({
+        // TODO: Replace prediction id with the twitch api bet id result
+        predictionId: client.gamestate?.map?.matchid,
+        matchId: client.gamestate?.map?.matchid,
+        userId: client.token,
+        myTeam: client.gamestate?.player?.team_name,
+      })
+      .then(({ data, error }) => {
+        if (!error) {
+          chatClient.say(channel, `Bets open peepoGamble`)
+          betExists = true
+
+          console.log({
+            event: 'open_bets',
+            data: {
+              matchId: client.gamestate?.map?.matchid,
+              user: client.token,
+              player_team: client.gamestate?.player?.team_name,
+            },
+          })
+        } else if (error.message.includes('duplicate')) {
+          console.log(channel, `Bet already exists on ${channel} channel`, error)
+        } else {
+          console.log(channel, `Could not add bet to ${channel} channel`, error)
+        }
+      })
   }
 
   function endBets(winningTeam: 'radiant' | 'dire' | null) {
-    if (!betsExist) return
+    if (!betExists) return
     if (!client) return
 
     // "none"? Must mean the game hasn't ended yet
@@ -186,7 +219,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
       },
     })
 
-    betsExist = false
+    betExists = false
   }
 
   function setupOBSBlockers(state: string) {
