@@ -223,9 +223,6 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       .eq('userId', client.token)
       .eq('matchId', client.gamestate?.map?.matchid)
       .is('won', null)
-      .then(({ data, error }) => {
-        console.log(data, error)
-      })
   }
 
   function setupOBSBlockers(state: string) {
