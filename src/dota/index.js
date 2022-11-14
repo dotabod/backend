@@ -326,7 +326,9 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
   const count = connectedSocketClient.gsi.listenerCount('map:clock_time')
   if (count) {
     // So the backend GSI events for twitch bot etc are setup
-    // But for this new socketid, we should setup the OBS layer events
+    // The new socketid will automatically get all new events to it as well
+    // This usually only happens if they open two browser sources or add it multiple times
+    // to obs for some reason
     console.log('Already setup event listeners for this client, lets setup OBS events', socketId, {
       token: client.token,
     })
