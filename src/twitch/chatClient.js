@@ -27,16 +27,20 @@ export const authProvider = new RefreshingAuthProvider(
   },
 )
 
-const names = await supabase.from('users').select('name')
-const channels = []
-if (names?.data) {
-  const namesArray = names.data.map((user) => user.name)
-  channels.push(...namesArray)
+async function getChannels() {
+  const names = await supabase.from('users').select('name')
+  const channels = []
+  if (names?.data) {
+    const namesArray = names.data.map((user) => user.name)
+    channels.push(...namesArray)
+  }
+
+  return channels
 }
 
 const chatClient = new ChatClient({
   authProvider,
-  channels,
+  channels: getChannels,
 })
 
 export default chatClient
