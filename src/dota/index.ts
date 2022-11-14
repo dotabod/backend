@@ -41,8 +41,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   if (client === undefined) return
 
   console.log('twitch chat isRegistered', chatClient.isRegistered)
-  await chatClient.join(connectedSocketClient.name)
-  console.log('twitch chat channel joined', connectedSocketClient.name)
+  chatClient.join(connectedSocketClient.name).then(() => {
+    console.log('twitch chat channel joined', connectedSocketClient.name)
+  })
 
   // Server could reboot and lose this in memory
   // But that's okay because we'll just do a db call once in openBets()
@@ -64,7 +65,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
     // TODO: Twitch bot
     if (chatClient.isConnected && chatClient.isRegistered) {
-      chatClient.say(connectedSocketClient.name, `modCheck Lock bets peepoGamble`)
+      chatClient.say(connectedSocketClient.name, `Bets are locked peepoGamble`)
     }
 
     console.log({
@@ -89,24 +90,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     const channel = connectedSocketClient.name
     const isLiveMatch = client.gamestate?.map?.matchid && client.gamestate?.map?.matchid !== '0'
     const isOpenBetGameCondition =
-      client.gamestate?.map?.game_time < 20 && client.gamestate?.map?.name === 'start'
-
-    // A list of accounts that can test in demo mode
-    const isDevMatch = ['techleed'].includes(channel)
-    if (isDevMatch) {
-      // Marking as a valid bet anyway, but will let chat know its fake
-      chatClient.say(channel, `This is where bets would open if it was a real match peepoGamble`)
-      console.log({
-        event: 'open_bets',
-        data: {
-          matchId: client.gamestate?.map?.matchid,
-          user: client.token,
-          player_team: client.gamestate?.player?.team_name,
-        },
-      })
-      betExists = true
-      return
-    }
+      client.gamestate?.map?.clock_time < 20 && client.gamestate?.map?.name === 'start'
 
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!isLiveMatch) return
@@ -125,7 +109,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       .single()
 
     // This really should only show if there was a mistake in my query selector above
-    if (error) {
+    if (error && !error.details.includes('contain 0 rows')) {
       console.log(
         'ERROR: Getting bet from database',
         error,
@@ -140,7 +124,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       return
     }
 
-    if (!isOpenBetGameCondition) return
+    if (!isOpenBetGameCondition) {
+      return
+    }
 
     supabase
       .from('bets')
@@ -410,6 +396,8 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
 
 server.events.on('new-gsi-client', (client: { token: string }) => {
   if (!client.token) return
+
+  console.log('Connecting new GSI client', { token: client.token })
 
   const connectedSocketClient = findUser(client.token)
 
