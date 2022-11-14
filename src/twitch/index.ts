@@ -19,7 +19,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     case 'mmr':
       supabase
         .from('users')
-        .select('mmr')
+        .select('mmr, playerId')
         .ilike('name', toUserName(channel))
         .limit(1)
         .single()
@@ -29,7 +29,9 @@ chatClient.onMessage(function (channel, user, text, msg) {
             return
           }
 
-          chatClient.say(channel, getRankDescription(data.mmr))
+          getRankDescription(data.mmr, data?.playerId).then((description) => {
+            chatClient.say(channel, description)
+          })
         })
       break
     case 'ping':
