@@ -185,14 +185,10 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     }
 
     // TODO: Twitch bot
-    if (chatClient.isConnected && chatClient.isRegistered) {
-      chatClient.say(
-        connectedSocketClient.name,
-        `modCheck Close bets peepoGamble | ${
-          myTeam !== localWinner ? 'Did not win Sadge' : 'Won peepoHappy'
-        }`,
-      )
-    }
+    chatClient.say(
+      connectedSocketClient.name,
+      `Close bets peepoGamble | ${myTeam !== localWinner ? 'Lost' : 'Won'}`,
+    )
 
     console.log({
       event: 'end_bets',
@@ -206,6 +202,16 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     })
 
     betExists = false
+
+    supabase
+      .from('bets')
+      .update({ won: myTeam === localWinner })
+      .eq('userId', client.token)
+      .eq('matchId', client.gamestate?.map?.matchid)
+      .is('won', null)
+      .then(({ data, error }) => {
+        console.log(data, error)
+      })
   }
 
   function setupOBSBlockers(state: string) {
