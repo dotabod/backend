@@ -21,6 +21,7 @@ specifiers:
   socket.io: ^4.5.3
   tmi.js: ^1.8.5
   ts-node: ^10.9.1
+  tsconfig-paths: ^4.1.0
   typescript: ^4.8.4
 
 dependencies:
@@ -46,6 +47,7 @@ devDependencies:
   nodemon: 2.0.20
   prettier: 2.7.1
   ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
+  tsconfig-paths: 4.1.0
   typescript: 4.8.4
 
 packages:
@@ -1713,6 +1715,12 @@ packages:
       minimist: 1.2.7
     dev: true
 
+  /json5/2.2.1:
+    resolution: {integrity: sha512-1hqLFMSrGHRHxav9q9gNjJ5EXznIxGVO09xQRrwplcS8qs28pZ8s8hupZAmqDwZUmVZ2Qb2jnyPOWcDH8m8dlA==}
+    engines: {node: '>=6'}
+    hasBin: true
+    dev: true
+
   /klona/2.0.5:
     resolution: {integrity: sha512-pJiBpiXMbt7dkzXe8Ghj/u4FfXOOa98fPW+bihOJ4SjnoijweJrNThJfd3ifXpXhREjpoF2mZVH1GfS9LV3kHQ==}
     engines: {node: '>= 8'}
@@ -2349,6 +2357,15 @@ packages:
     dependencies:
       '@types/json5': 0.0.29
       json5: 1.0.1
+      minimist: 1.2.7
+      strip-bom: 3.0.0
+    dev: true
+
+  /tsconfig-paths/4.1.0:
+    resolution: {integrity: sha512-AHx4Euop/dXFC+Vx589alFba8QItjF+8hf8LtmuiCwHyI4rHXQtOOENaM8kvYf5fR0dRChy3wzWIZ9WbB7FWow==}
+    engines: {node: '>=6'}
+    dependencies:
+      json5: 2.2.1
       minimist: 1.2.7
       strip-bom: 3.0.0
     dev: true

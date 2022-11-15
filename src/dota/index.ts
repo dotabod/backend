@@ -1,4 +1,3 @@
-import { chatClient } from '../twitch'
 import supabase from '../db'
 import { SocketClient, Dota2 } from '../types'
 import checkMidas from './checkMidas'
@@ -6,6 +5,8 @@ import findUser from './dotaGSIClients'
 import D2GSI, { GSIClient } from './lib/dota2-gsi'
 import { minimapStates, pickSates } from './trackingConsts'
 import { steamID64toSteamID32 } from '../utils'
+import { closeTwitchBet, openTwitchBet } from '../twitch/predictions'
+import { chatClient } from '../twitch/commands'
 
 // TODO: We shouldn't use await beyond the getChatClient(), it slows down the server I think
 
@@ -80,7 +81,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   function lockBets() {
     if (!client) return
 
-    // TODO: Twitch bot
+    // TODO: Check if bets get locked at the same time this gets posted
     if (chatClient.isConnected && chatClient.isRegistered) {
       chatClient.say(connectedSocketClient.name, `Bets are locked peepoGamble`)
     }
@@ -94,6 +95,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     })
   }
 
+  // Make sure user has a playerId saved in the database
+  // This runs once per every match start but its just one DB query so hopefully it's fine
+  // In the future I'd like to remove this and maybe have FE ask them to enter their steamid?
   function updatePlayerId() {
     supabase
       .from('users')
@@ -106,7 +110,8 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
         // User already has a playerId
         if (data?.playerId) return
 
-        const playerId = steamID64toSteamID32(client?.gamestate?.player?.steamid)
+        const playerId = steamID64toSteamID32(client?.gamestate?.player?.steamid || '')
+        if (!playerId) return
 
         supabase
           .from('users')
@@ -152,14 +157,19 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       })
   }
 
+  // TODO: CRON Job
+  // 1 Find bets that are open and don't equal this match id and close them
+  // 2 Next, check if the prediction is still open
+  // 3 If it is, steam dota2 api result of match
+  // 4 Then, tell twitch to close bets based on win result
   async function openBets() {
     // The bet was already made
     if (betExists) return
 
-    // why open if not playing?
+    // Why open if not playing?
     if (client?.gamestate?.player?.activity !== 'playing') return
 
-    // why open if won?
+    // Why open if won?
     if (client.gamestate?.map?.win_team !== 'none') return
 
     const channel = connectedSocketClient.name
@@ -169,11 +179,6 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!isLiveMatch) return
-
-    // TODO: Find bets that are open and don't equal this match id and close them
-    // Next, check if the prediction is still open
-    // If it is, steam dota2 api result of match
-    // Then, tell twitch to close bets based on win result
 
     // Check if this bet for this match id already exists, dont continue if it does
     const { data: bet, error } = await supabase
@@ -208,10 +213,8 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       return
     }
 
-    // Make sure user has a playerId saved in the database
-    // This runs once per every match but its just one DB query so hopefully it's fine
-    // In the future I'd like to remove this and maybe have FE ask them to enter their steamid?
     updatePlayerId()
+    betExists = true
 
     supabase
       .from('bets')
@@ -224,17 +227,21 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       })
       .then(({ data, error }) => {
         if (!error) {
-          chatClient.say(channel, `Bets open peepoGamble`)
-          betExists = true
-
-          console.log({
-            event: 'open_bets',
-            data: {
-              matchId: client.gamestate?.map?.matchid,
-              user: client.token,
-              player_team: client.gamestate?.player?.team_name,
-            },
-          })
+          openTwitchBet(channel, client.token)
+            .then(() => {
+              chatClient.say(channel, `Bets open peepoGamble`)
+              console.log({
+                event: 'open_bets',
+                data: {
+                  matchId: client.gamestate?.map?.matchid,
+                  user: client.token,
+                  player_team: client.gamestate?.player?.team_name,
+                },
+              })
+            })
+            .catch(() => {
+              console.log('Error opening twitch bet', channel)
+            })
         } else if (error.message.includes('duplicate')) {
           console.log(channel, `Bet already exists on ${channel} channel`, error)
         } else {
@@ -265,28 +272,36 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     }
 
     betExists = false
-
-    // TODO: Twitch api prediction
-    chatClient.say(connectedSocketClient.name, `Close bets peepoGamble | ${won ? 'Won' : 'Lost'}`)
-
-    console.log({
-      event: 'end_bets',
-      data: {
-        matchId: client.gamestate?.map?.matchid,
-        token: client.token,
-        winning_team: localWinner,
-        player_team: myTeam,
-        didWin: won,
-      },
-    })
-
+    const channel = connectedSocketClient.name
     supabase
       .from('bets')
       .update({ won: won })
       .eq('userId', client.token)
       .eq('matchId', client.gamestate?.map?.matchid)
       .is('won', null)
-      .then(() => {}) // weird bug it only updates if you pass a .then()?
+      .then(() => {
+        closeTwitchBet(channel, won, client.token)
+          .then(() => {
+            chatClient.say(
+              connectedSocketClient.name,
+              `Bets closed, we have ${won ? 'won' : 'lost'}`,
+            )
+
+            console.log({
+              event: 'end_bets',
+              data: {
+                matchId: client.gamestate?.map?.matchid,
+                token: client.token,
+                winning_team: localWinner,
+                player_team: myTeam,
+                didWin: won,
+              },
+            })
+          })
+          .catch(() => {
+            console.log('Error closing twitch bet', channel)
+          })
+      }) // weird bug it only updates if you pass a .then()?
     // i think the function is resolving too quick and it discards this promise?
 
     adjustMMR(won)
@@ -423,26 +438,27 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     endBets(winningTeam)
   })
 
-  client.on('map:clock_time', (time: number) => {
-    if (isCustomGame(client)) return
+  // client.on('map:clock_time', (time: number) => {
+  //   if (isCustomGame(client)) return
 
-    // Skip pregame
-    // if ((time + 30) % 300 === 0 && time + 30 > 0) {
-    //   console.log('Runes coming soon, its currently x:30 minutes', { token: client.token })
-    // }
+  //   // Skip pregame
+  //   // if ((time + 30) % 300 === 0 && time + 30 > 0) {
+  //   //   console.log('Runes coming soon, its currently x:30 minutes', { token: client.token })
+  //   // }
 
-    // This runs at 0:15 right after bounty runes spawn
-    // 4 minutes 45 seconds after a game is created
-    if (
-      time === 15 &&
-      client.gamestate?.previously &&
-      client.gamestate?.previously?.map?.clock_time < 15 &&
-      client.gamestate?.map?.name === 'start' &&
-      client.gamestate?.map?.game_state === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS'
-    ) {
-      lockBets()
-    }
-  })
+  //   // This runs at 0:15 right after bounty runes spawn
+  //   // 4 minutes 45 seconds after a game is created
+  //   if (
+  //     time === 15 &&
+  //     client.gamestate?.previously &&
+  //     client.gamestate?.previously?.map?.clock_time < 15 &&
+  //     client.gamestate?.map?.name === 'start' &&
+  //     client.gamestate?.map?.game_state === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS'
+  //   ) {
+  //     // Maybe let bets lock by themselves
+  //     // lockBets()
+  //   }
+  // })
 }
 
 // These next two events basically just check if Dota or OBS is opened first

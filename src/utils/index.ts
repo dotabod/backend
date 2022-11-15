@@ -1,4 +1,5 @@
 export function steamID64toSteamID32(steamID64: string) {
+  if (!steamID64) return null
   return Number(steamID64.substr(-16, 16)) - 6561197960265728
 }
 
