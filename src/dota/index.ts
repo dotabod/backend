@@ -241,8 +241,8 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
                 },
               })
             })
-            .catch(() => {
-              console.log('Error opening twitch bet', channel)
+            .catch((e) => {
+              console.log('Error opening twitch bet', channel, e)
             })
         } else if (error.message.includes('duplicate')) {
           console.log(channel, `Bet already exists on ${channel} channel`, error)
