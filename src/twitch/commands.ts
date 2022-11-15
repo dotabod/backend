@@ -2,19 +2,33 @@ import supabase from '../db'
 import { getChatClient } from './setup'
 import { getRankDescription } from '../utils/constants'
 import { toUserName } from '@twurple/chat'
-import heroes from 'dotabase/json/heroes.json'
-
-// Only mods or owner can run commands
-//   if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return
+// import heroes from 'dotabase/json/heroes.json'
 
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
 
+let plebMode: { [n: string]: boolean } = {}
 chatClient.onMessage(function (channel, user, text, msg) {
+  // Letting one pleb in
+  if (plebMode[channel] && !msg.userInfo.isSubscriber) {
+    plebMode[channel] = false
+    chatClient.say(channel, '/subscribers')
+    chatClient.say(channel, `${user} EZ Clap`)
+    return
+  }
+
   if (!text.startsWith('!')) return
   const args = text.slice(1).split('!')
 
   switch (args[0]) {
+    case 'pleb':
+      // Only mod or owner
+      if (!msg.userInfo.isBroadcaster || !msg.userInfo.isMod) return
+
+      plebMode[channel] = true
+      chatClient.say(channel, '/subscribersoff')
+      chatClient.say(channel, 'One pleb IN 👇')
+      break
     // Return channel owners mmr if its in the db
     case 'hero':
       // coming soon from dotabase
@@ -62,7 +76,8 @@ Commands coming soon:
 
 Commands that are fun:
   !modsonly = enable submode and delete chatters that arent mods
-  !plebs = if submode, disable submode, wait for 1 pleb chatter, then enable sub mode
   !nonfollowersonly = can only chat if you're not a follower xd
+
+When hero alch, show GPM
 
 */
