@@ -10,6 +10,7 @@ specifiers:
   '@types/node': ^18.11.9
   body-parser: ^1.20.1
   dota2-api: ^0.2.1
+  dotabase: github:mdiller/dotabase
   dotagsi: ^1.1.4
   dotenv: ^16.0.3
   eslint: ^7.32.0 || ^8.2.0
@@ -31,6 +32,7 @@ dependencies:
   '@twurple/chat': 5.2.5_@twurple+auth@5.2.5
   body-parser: 1.20.1
   dota2-api: 0.2.1
+  dotabase: github.com/mdiller/dotabase/6826d4f8596da7db38292e53019c128ecb590005
   dotagsi: 1.1.4
   dotenv: 16.0.3
   express: 4.18.2
@@ -2561,3 +2563,9 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
     dev: true
+
+  github.com/mdiller/dotabase/6826d4f8596da7db38292e53019c128ecb590005:
+    resolution: {tarball: https://codeload.github.com/mdiller/dotabase/tar.gz/6826d4f8596da7db38292e53019c128ecb590005}
+    name: dotabase
+    version: 0.0.0
+    dev: false

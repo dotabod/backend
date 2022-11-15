@@ -168,8 +168,6 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     // The bet was already made
     if (betExists !== -1) return
 
-    if (isCustomGame(client)) return
-
     // Why open if not playing?
     if (client?.gamestate?.player?.activity !== 'playing') return
 

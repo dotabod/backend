@@ -2,6 +2,10 @@ import supabase from '../db'
 import { getChatClient } from './setup'
 import { getRankDescription } from '../utils/constants'
 import { toUserName } from '@twurple/chat'
+import heroes from 'dotabase/json/heroes.json'
+
+// Only mods or owner can run commands
+//   if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return
 
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
@@ -12,6 +16,9 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
   switch (args[0]) {
     // Return channel owners mmr if its in the db
+    case 'hero':
+      // coming soon from dotabase
+      break
     case 'mmr':
       supabase
         .from('users')
@@ -40,16 +47,22 @@ chatClient.onMessage(function (channel, user, text, msg) {
   }
 })
 
-// ideas
+/*
+  Required emotes:
 
-// pleb command
-// let one free chatter in during sub only mode lol
-// turn sub only mode back on when they're in
+  EZ
+  Clap
+  peepoGamble
+  PauseChamp
 
-// mod only command
-// only allow mods to post lol, delete anyone else
+Commands coming soon:
+  !dotabod to show all commands
+  !mmr= to set mmr manually
+  !hero to show hero aliases
 
-// non followers only LUL
+Commands that are fun:
+  !modsonly = enable submode and delete chatters that arent mods
+  !plebs = if submode, disable submode, wait for 1 pleb chatter, then enable sub mode
+  !nonfollowersonly = can only chat if you're not a follower xd
 
-// Only mods or owner can run commands
-//   if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return
+*/

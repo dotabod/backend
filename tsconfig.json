@@ -19,6 +19,7 @@
     "allowJs": true,
     "checkJs": true,
     "outDir": "./dist",
+    "resolveJsonModule": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
