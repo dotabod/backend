@@ -44,7 +44,7 @@ export async function closeTwitchBet(channel: string, won: boolean, userId: stri
   //   return
   // }
 
-  return await api.predictions.resolvePrediction(
+  return api.predictions.resolvePrediction(
     providerAccountId || '',
     predictions[0].id,
     won ? wonOutcome.id : lossOutcome.id,
