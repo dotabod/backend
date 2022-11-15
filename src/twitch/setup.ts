@@ -79,10 +79,22 @@ export async function getChannelAuthProvider(channel: string, userId: string) {
   return { providerAccountId: twitchTokens?.providerAccountId, authProvider }
 }
 
+async function getChannels() {
+  // getActiveUsers().map((user) => user.name)
+  const names = await supabase.from('users').select('name')
+  const channels = []
+  if (names?.data) {
+    const namesArray = names.data.map((user) => user.name)
+    channels.push(...namesArray)
+  }
+
+  return channels
+}
+
 export async function getChatClient() {
   const chatClient = new ChatClient({
     authProvider: await getAuthProvider(),
-    channels: () => getActiveUsers().map((user) => user.name),
+    channels: getChannels,
   })
 
   await chatClient.connect()
