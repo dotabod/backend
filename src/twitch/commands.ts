@@ -23,7 +23,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
   switch (args[0]) {
     case 'pleb':
       // Only mod or owner
-      if (!msg.userInfo.isBroadcaster || !msg.userInfo.isMod) return
+      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return
 
       plebMode[channel] = true
       chatClient.say(channel, '/subscribersoff')
