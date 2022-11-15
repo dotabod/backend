@@ -65,7 +65,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
   // Server could reboot and lose this in memory
   // But that's okay because we'll just do a db call once in openBets()
-  let betExists = false
+  let betExists = -1
 
   const passiveMidas = { counter: 0 }
   // const recentHealth = Array(25) // TODO: #HEALTH
@@ -166,7 +166,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   // 4 Then, tell twitch to close bets based on win result
   async function openBets() {
     // The bet was already made
-    if (betExists) return
+    if (betExists !== -1) return
 
     // Why open if not playing?
     if (client?.gamestate?.player?.activity !== 'playing') return
@@ -207,7 +207,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     if (bet && bet?.id) {
       console.log('Found a bet in the database', bet?.id)
 
-      betExists = true
+      betExists = client.gamestate?.map?.matchid
       return
     }
 
@@ -216,7 +216,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     }
 
     updatePlayerId()
-    betExists = true
+    betExists = client.gamestate?.map?.matchid
 
     supabase
       .from('bets')
@@ -252,8 +252,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       })
   }
 
+  let endingBets = false
   function endBets(winningTeam: 'radiant' | 'dire' | null) {
-    if (!betExists) return
+    if (betExists === -1 || endingBets) return
     if (!client) return
 
     // "none"? Must mean the game hasn't ended yet
@@ -273,7 +274,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       console.log('Running end bets from map:win_team', { token: client.token })
     }
 
-    betExists = false
+    endingBets = true
     const channel = connectedSocketClient.name
     supabase
       .from('bets')
@@ -284,6 +285,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       .then(() => {
         closeTwitchBet(channel, won, client.token)
           .then(() => {
+            betExists = -1
+            endingBets = false
+
             chatClient.say(
               connectedSocketClient.name,
               `Bets closed, we have ${won ? 'won' : 'lost'}`,
@@ -301,6 +305,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
             })
           })
           .catch(() => {
+            endingBets = false
             console.log('Error closing twitch bet', channel)
           })
       }) // weird bug it only updates if you pass a .then()?
