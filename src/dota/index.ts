@@ -120,7 +120,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
           .is('playerId', null)
           .then(() => {
             if (connectedSocketClient.sockets.length) {
-              console.log('Emitting mmr update', { token: connectedSocketClient.token })
+              console.log('Updated player ID, emitting badge overlay update', {
+                token: connectedSocketClient.token,
+              })
 
               server.io.to(connectedSocketClient.sockets).emit('update-medal')
             }
