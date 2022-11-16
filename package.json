@@ -15,7 +15,6 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^4.6.1",
-    "@supabase/supabase-js": "^2.1.0",
     "@twurple/api": "^5.2.7",
     "@twurple/auth": "^5.2.7",
     "@twurple/chat": "^5.2.7",

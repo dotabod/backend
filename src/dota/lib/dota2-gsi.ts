@@ -3,10 +3,10 @@ import express, { Request, Response, NextFunction } from 'express'
 import bodyParser from 'body-parser'
 import { EventEmitter } from 'events'
 import { Server, Socket } from 'socket.io'
-import supabase from '../../db'
 import findUser from '../dotaGSIClients'
 import { gsiClients, socketClients } from '../trackingConsts'
 import { Dota2 } from '../../types'
+import { getDBUser } from '../../db/getDBUser'
 
 export const events = new EventEmitter()
 
@@ -135,15 +135,8 @@ async function checkAuth(req: Request, res: Response, next: NextFunction) {
 
   console.log('[GSI]', 'Havent cached user token yet, checking db', { token })
 
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('id, name, playerId, mmr, accounts(refresh_token, access_token, providerAccountId)')
-    .eq('id', token)
-    .order('id', { ascending: false })
-    .limit(1)
-    .single()
-
-  if (!error) {
+  const user = await getDBUser(token)
+  if (user?.id) {
     // sockets[] to be filled in by socket connection
     socketClients.push({ ...user, token, sockets: [] })
     next()
@@ -215,14 +208,8 @@ class D2GSI {
         return next()
       }
 
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('id, name, playerId, mmr, accounts(refresh_token, access_token, providerAccountId)')
-        .eq('id', token)
-        .limit(1)
-        .single()
-
-      if (error) {
+      const user = await getDBUser(token)
+      if (!user) {
         return next(new Error('authentication error'))
       }
 
@@ -231,7 +218,11 @@ class D2GSI {
       // eslint-disable-next-line no-param-reassign
       socket.data.token = token
       // In case the socket is connected before the GSI client has!
-      socketClients.push({ ...user, token, sockets: [socket.id] })
+      socketClients.push({
+        ...user,
+        token,
+        sockets: [socket.id],
+      })
 
       return next()
     })

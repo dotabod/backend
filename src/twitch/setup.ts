@@ -1,23 +1,12 @@
 import { ChatClient } from '@twurple/chat'
 import { RefreshingAuthProvider } from '@twurple/auth'
-import supabase from '../db'
+import findUser from '../dota/dotaGSIClients'
+import prisma from '../db/prisma'
 
 export async function getAuthProvider() {
   if (!process.env.TWITCH_ACCESS_TOKEN || !process.env.TWITCH_REFRESH_TOKEN) {
     throw new Error('Missing twitch tokens')
   }
-
-  let twitchTokens
-  // Get latest twitch access token that isn't expired
-  const { data, error } = await supabase
-    .from('twitch_tokens')
-    .select()
-    .order('id', { ascending: false })
-    .limit(1)
-    .single()
-  twitchTokens = data
-
-  console.log('[TWITCHSETUP]', 'Retrieved twitch access tokens', twitchTokens)
 
   const authProvider = new RefreshingAuthProvider(
     {
@@ -27,8 +16,8 @@ export async function getAuthProvider() {
     {
       expiresIn: 86400, // 1 day
       obtainmentTimestamp: Date.now(),
-      accessToken: twitchTokens.access_token || process.env.TWITCH_ACCESS_TOKEN,
-      refreshToken: twitchTokens.refresh_token || process.env.TWITCH_REFRESH_TOKEN,
+      accessToken: process.env.TWITCH_ACCESS_TOKEN,
+      refreshToken: process.env.TWITCH_REFRESH_TOKEN,
     },
   )
 
@@ -40,14 +29,9 @@ export async function getChannelAuthProvider(channel: string, userId: string) {
     throw new Error('Missing TWITCH_CLIENT_ID or TWITCH_CLIENT_SECRET')
   }
 
-  const { data: twitchTokens } = await supabase
-    .from('accounts')
-    .select('refresh_token, access_token, providerAccountId')
-    .eq('userId', userId)
-    .limit(1)
-    .single()
+  const twitchTokens = findUser(userId)
 
-  if (!twitchTokens?.access_token || !twitchTokens?.refresh_token) {
+  if (!twitchTokens?.account?.access_token || !twitchTokens?.account?.refresh_token) {
     console.log('[TWITCHSETUP]', 'Missing twitch tokens', channel)
     return {}
   }
@@ -70,24 +54,18 @@ export async function getChannelAuthProvider(channel: string, userId: string) {
       ],
       expiresIn: 86400, // 1 day
       obtainmentTimestamp: Date.now(),
-      accessToken: twitchTokens.access_token,
-      refreshToken: twitchTokens.refresh_token,
+      accessToken: twitchTokens.account.access_token,
+      refreshToken: twitchTokens.account.refresh_token,
     },
   )
 
-  return { providerAccountId: twitchTokens?.providerAccountId, authProvider }
+  return { providerAccountId: twitchTokens.account.providerAccountId, authProvider }
 }
 
 async function getChannels() {
   // getActiveUsers().map((user) => user.name)
-  const names = await supabase.from('users').select('name')
-  const channels = []
-  if (names?.data) {
-    const namesArray = names.data.map((user) => user.name)
-    channels.push(...namesArray)
-  }
-
-  return channels
+  const names = await prisma.user.findMany({ select: { name: true } })
+  return names.map((user) => user.name)
 }
 
 export async function getChatClient() {

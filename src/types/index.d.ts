@@ -22,8 +22,13 @@ type Dota2 = Dota2 & {
 type SocketClient = {
   gsi?: GSIClient
   name: string
-  playerId?: string
+  playerId: number | null
   mmr: number
   token: string
+  account: {
+    refresh_token: string
+    access_token: string
+    providerAccountId: string
+  }
   sockets: string[]
 }

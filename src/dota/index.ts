@@ -1,4 +1,3 @@
-import supabase from '../db'
 import { SocketClient, Dota2 } from '../types'
 import checkMidas from './checkMidas'
 import findUser from './dotaGSIClients'
@@ -7,6 +6,7 @@ import { minimapStates, pickSates } from './trackingConsts'
 import { steamID64toSteamID32 } from '../utils'
 import { closeTwitchBet, openTwitchBet } from '../twitch/predictions'
 import { chatClient } from '../twitch/commands'
+import prisma from '../db/prisma'
 
 // TODO: We shouldn't use await beyond the getChatClient(), it slows down the server I think
 
@@ -76,43 +76,43 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   // In the future I'd like to remove this and maybe have FE ask them to enter their steamid?
   function updatePlayerId() {
     // User already has a playerId
-    if (connectedSocketClient?.playerId) return
+    if (connectedSocketClient.playerId) return
 
-    supabase
-      .from('users')
-      .select('playerId')
-      .eq('id', connectedSocketClient.token)
-      .is('playerId', null)
-      .limit(1)
-      .single()
-      .then(({ data, error }) => {
-        const playerId = steamID64toSteamID32(client?.gamestate?.player?.steamid || '')
-        if (!playerId) return
+    const playerId = steamID64toSteamID32(client?.gamestate?.player?.steamid || '')
+    if (!playerId) return
 
-        supabase
-          .from('users')
-          .update({ playerId: playerId })
-          .eq('id', connectedSocketClient.token)
-          .is('playerId', null)
-          .then(() => {
-            if (connectedSocketClient.sockets.length) {
-              console.log('[PLAYERID]', 'Updated player ID, emitting badge overlay update', {
-                token: connectedSocketClient.token,
-              })
-
-              server.io.to(connectedSocketClient.sockets).emit('update-medal')
-            }
+    prisma.user
+      .update({
+        data: {
+          playerId,
+        },
+        where: {
+          id: connectedSocketClient.token,
+        },
+      })
+      .then(() => {
+        if (connectedSocketClient.sockets.length) {
+          console.log('[PLAYERID]', 'Updated player ID, emitting badge overlay update', {
+            token: connectedSocketClient.token,
           })
+
+          server.io.to(connectedSocketClient.sockets).emit('update-medal')
+        }
       })
   }
 
   function adjustMMR(increase: boolean) {
     const newMMR = connectedSocketClient.mmr + (increase ? 30 : -30)
 
-    supabase
-      .from('users')
-      .update({ mmr: newMMR })
-      .eq('id', connectedSocketClient.token)
+    prisma.user
+      .update({
+        data: {
+          mmr: newMMR,
+        },
+        where: {
+          id: connectedSocketClient.token,
+        },
+      })
       .then(() => {
         connectedSocketClient.mmr = newMMR
 
@@ -148,71 +148,64 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     if (!isLiveMatch) return
 
     // Check if this bet for this match id already exists, dont continue if it does
-    const { data: bet, error } = await supabase
-      .from('bets')
-      .select()
-      .eq('userId', client.token)
-      .eq('matchId', client.gamestate?.map?.matchid)
-      .is('won', null)
-      .limit(1)
-      .single()
-
-    // This really should only show if there was a mistake in my query selector above
-    // We -want- it to contain 0 rows (its an error if its > 0)
-    if (error && !error.details.includes('contain 0 rows')) {
-      console.log(
-        '[BETS]',
-        'ERROR: Getting bet from database',
-        client.token,
-        client.gamestate?.map?.matchid,
-      )
-    }
-
-    // Saving to local memory so we don't have to query the db again
-    if (bet && bet?.id) {
-      console.log('[BETS]', 'Found a bet in the database', bet?.id)
-
-      betExists = client.gamestate?.map?.matchid
-      return
-    }
-
-    if (!isOpenBetGameCondition) {
-      return
-    }
-
-    betExists = client.gamestate?.map?.matchid
-    updatePlayerId()
-
-    supabase
-      .from('bets')
-      .insert({
-        // TODO: Replace prediction id with the twitch api bet id result
-        predictionId: client.gamestate?.map?.matchid,
-        matchId: client.gamestate?.map?.matchid,
-        userId: client.token,
-        myTeam: client.gamestate?.player?.team_name,
+    prisma.bet
+      .findFirst({
+        select: {
+          id: true,
+        },
+        where: {
+          userId: connectedSocketClient.token,
+          matchId: client.gamestate?.map?.matchid,
+          won: null,
+        },
       })
-      .then(({ data, error }) => {
-        if (!error) {
-          openTwitchBet(channel, client.token)
-            .then(() => {
-              chatClient.say(channel, `Bets open peepoGamble`)
-              console.log('[BETS]', {
-                event: 'open_bets',
-                data: {
-                  matchId: client.gamestate?.map?.matchid,
-                  user: client.token,
-                  player_team: client.gamestate?.player?.team_name,
-                },
-              })
-            })
-            .catch((e) => {
-              console.log('[BETS]', 'Error opening twitch bet', channel, e)
-            })
-        } else if (error.message.includes('duplicate')) {
-          console.log('[BETS]', channel, `Bet already exists on ${channel} channel`)
+      .then((bet) => {
+        // Saving to local memory so we don't have to query the db again
+        if (bet && bet?.id) {
+          console.log('[BETS]', 'Found a bet in the database', bet?.id)
+          betExists = client.gamestate?.map?.matchid
         } else {
-          console.log('[BETS]', channel, `Could not add bet to ${channel} channel`, error)
+          if (!isOpenBetGameCondition) {
+            return
+          }
+
+          betExists = client.gamestate?.map?.matchid
+          updatePlayerId()
+
+          prisma.bet
+            .create({
+              data: {
+                // TODO: Replace prediction id with the twitch api bet id result
+                predictionId: client.gamestate?.map?.matchid,
+                matchId: client.gamestate?.map?.matchid,
+                userId: client.token,
+                myTeam: client.gamestate?.player?.team_name,
+              },
+            })
+            .then(() => {
+              openTwitchBet(channel, client.token)
+                .then(() => {
+                  chatClient.say(channel, `Bets open peepoGamble`)
+                  console.log('[BETS]', {
+                    event: 'open_bets',
+                    data: {
+                      matchId: client.gamestate?.map?.matchid,
+                      user: client.token,
+                      player_team: client.gamestate?.player?.team_name,
+                    },
+                  })
+                })
+                .catch((e) => {
+                  console.log('[BETS]', 'Error opening twitch bet', channel, e)
+                })
+            })
+            .catch((error) => {
+              if (error.message.includes('duplicate')) {
+                console.log('[BETS]', channel, `Bet already exists on ${channel} channel`)
+              } else {
+                console.log('[BETS]', channel, `Could not add bet to ${channel} channel`, error)
+              }
+            })
         }
       })
   }
@@ -241,12 +234,19 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
     endingBets = true
     const channel = connectedSocketClient.name
-    supabase
-      .from('bets')
-      .update({ won: won })
-      .eq('userId', client.token)
-      .eq('matchId', client.gamestate?.map?.matchid)
-      .is('won', null)
+
+    prisma.bet
+      .update({
+        data: {
+          won,
+        },
+        where: {
+          matchId_userId: {
+            userId: client.token,
+            matchId: client.gamestate?.map?.matchid,
+          },
+        },
+      })
       .then(() => {
         closeTwitchBet(channel, won, client.token)
           .then(() => {
@@ -274,8 +274,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
             endingBets = false
             console.log('[BETS]', 'Error closing twitch bet', channel, e)
           })
-      }) // weird bug it only updates if you pass a .then()?
-    // i think the function is resolving too quick and it discards this promise?
+      })
 
     adjustMMR(won)
   }
@@ -476,7 +475,6 @@ server.events.on('new-gsi-client', (client: { token: string }) => {
   if (!client.token) return
 
   console.log('[GSI]', 'Connecting new GSI client', { token: client.token })
-
   const connectedSocketClient = findUser(client.token)
 
   // Only setup main events if the OBS socket has connected

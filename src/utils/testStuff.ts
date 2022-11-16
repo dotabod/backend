@@ -1,8 +1,5 @@
 // @ts-ignore
 import Dota2Api from 'dota2-api'
-import { getAuthProvider, getChannelAuthProvider } from '../twitch/setup'
-import supabase from '../db'
-import { ApiClient } from '@twurple/api'
 
 // Just used for testing
 const randomMatch = '6862608251'

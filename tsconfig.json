@@ -9,7 +9,6 @@
     "sourceMap": true,
     "strictNullChecks": true,
     "moduleResolution": "Node",
-    "baseUrl": "./src",
     "typeRoots": [
       "./src/types"
     ],

@@ -1,7 +1,7 @@
-import supabase from '../db'
 import { getChatClient } from './setup'
 import { getRankDescription } from '../utils/constants'
 import { toUserName } from '@twurple/chat'
+import prisma from '../db/prisma'
 // import heroes from 'dotabase/json/heroes.json'
 
 // Setup twitch chat bot client first
@@ -34,29 +34,28 @@ chatClient.onMessage(function (channel, user, text, msg) {
       // coming soon from dotabase
       break
     case 'mmr':
-      supabase
-        .from('users')
-        .select('mmr, playerId')
-        .ilike('name', toUserName(channel))
-        .limit(1)
-        .single()
-        .then(({ data, error }) => {
-          if (error) {
-            console.log('[COMMANDS]', 'mmr SELECT error', error)
-            return
-          }
-
-          getRankDescription(data.mmr, data?.playerId).then((description) => {
+      prisma.user
+        .findFirst({
+          select: {
+            mmr: true,
+            playerId: true,
+          },
+          where: {
+            name: toUserName(channel),
+          },
+        })
+        .then((user) => {
+          if (!user) return
+          getRankDescription(user.mmr, user?.playerId || 0).then((description) => {
             chatClient.say(channel, description)
           })
         })
+
       break
     case 'ping':
       chatClient.say(channel, 'Pong EZ Clap')
       break
     default:
-      // dont spam and say anything
-      //   chatClient.say(channel, 'Unrecognized command')
       break
   }
 })
