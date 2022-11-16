@@ -6,6 +6,7 @@
   "type": "module",
   "exports": "./dist/index.js",
   "scripts": {
+    "start": "node --experimental-specifier-resolution=node --loader ts-node/esm -r dotenv/config src/index.js",
     "dev": "nodemon src/index.ts",
     "pull": "git pull && systemctl restart nodeapp",
     "log": "journalctl -xefu nodeapp",
