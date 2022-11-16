@@ -1,6 +1,5 @@
 import { getChatClient } from './setup'
 import { getRankDescription } from '../utils/constants'
-import { toUserName } from '@twurple/chat'
 import prisma from '../db/prisma'
 // import heroes from 'dotabase/json/heroes.json'
 
@@ -18,10 +17,12 @@ chatClient.onMessage(function (channel, user, text, msg) {
   }
 
   if (!text.startsWith('!')) return
-  const args = text.slice(1).split('!')
+  const args = text.split(' ')
 
-  switch (args[0]) {
-    case 'pleb':
+  console.log(args, text)
+
+  switch (args[0].toLowerCase()) {
+    case '!pleb':
       // Only mod or owner
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return
 
@@ -30,29 +31,69 @@ chatClient.onMessage(function (channel, user, text, msg) {
       chatClient.say(channel, 'One pleb IN 👇')
       break
     // Return channel owners mmr if its in the db
-    case 'hero':
+    case '!hero':
       // coming soon from dotabase
+      console.log('!hero')
       break
-    case 'mmr':
-      prisma.user
-        .findFirst({
-          select: {
-            mmr: true,
-            playerId: true,
+    case '!mmr=':
+      // Only mod or owner
+      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return
+
+      const mmr = args[1]
+
+      if (!mmr || !Number(mmr)) {
+        console.log('Invalid mmr', mmr, channel)
+
+        return
+      }
+      prisma.account
+        .update({
+          data: {
+            user: {
+              update: {
+                mmr: Number(mmr),
+              },
+            },
           },
           where: {
-            name: toUserName(channel),
+            provider_providerAccountId: {
+              provider: 'twitch',
+              providerAccountId: msg.userInfo.userId,
+            },
           },
         })
-        .then((user) => {
-          if (!user || !user.mmr || !user.playerId) return
-          getRankDescription(user.mmr, user?.playerId || 0).then((description) => {
+        .then(() => {
+          chatClient.say(channel, `Updated MMR to ${mmr}`)
+        })
+        .catch(() => {
+          chatClient.say(channel, `Failed to update MMR to ${mmr}`)
+        })
+
+      break
+    case '!mmr':
+      prisma.account
+        .findFirst({
+          select: {
+            user: {
+              select: {
+                mmr: true,
+                playerId: true,
+              },
+            },
+          },
+          where: {
+            providerAccountId: msg.channelId as string,
+          },
+        })
+        .then((account) => {
+          if (!account || !account?.user?.mmr || !account?.user?.playerId) return
+          getRankDescription(account.user.mmr, account.user.playerId).then((description) => {
             chatClient.say(channel, description)
           })
         })
 
       break
-    case 'ping':
+    case '!ping':
       chatClient.say(channel, 'Pong EZ Clap')
       break
     default:
