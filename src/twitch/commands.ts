@@ -4,7 +4,7 @@ import prisma from '../db/prisma'
 import { findUserByName } from '../dota/dotaGSIClients'
 import { server } from '../dota'
 import { toUserName } from '@twurple/chat'
-// import heroes from 'dotabase/json/heroes.json'
+import heroes from 'dotabase/json/heroes.json'
 
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
@@ -33,8 +33,17 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     // Return channel owners mmr if its in the db
     case '!hero':
-      // coming soon from dotabase
-      console.log('!hero')
+      const connectedSocketClient = findUserByName(toUserName(channel))
+      if (!connectedSocketClient || !connectedSocketClient?.gsi?.gamestate?.hero?.name) {
+        chatClient.say(channel, 'Not playing PauseChamp')
+        return
+      }
+
+      const hero = heroes.find(
+        (hero) => hero.name === connectedSocketClient?.gsi?.gamestate?.hero?.name,
+      )
+
+      chatClient.say(channel, `Playing ${hero?.localized_name} aka ${hero?.aliases}`)
       break
     case '!mmr=':
       // Only mod or owner
@@ -117,8 +126,6 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
 Commands coming soon:
   !dotabod to show all commands
-  !mmr= to set mmr manually
-  !hero to show hero aliases
 
 Commands that are fun:
   !modsonly = enable submode and delete chatters that arent mods
