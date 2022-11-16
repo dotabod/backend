@@ -19,8 +19,6 @@ chatClient.onMessage(function (channel, user, text, msg) {
   if (!text.startsWith('!')) return
   const args = text.split(' ')
 
-  console.log(args, text)
-
   switch (args[0].toLowerCase()) {
     case '!pleb':
       // Only mod or owner
