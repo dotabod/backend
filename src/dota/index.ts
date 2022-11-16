@@ -39,30 +39,6 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   const client = connectedSocketClient.gsi
   if (client === undefined) return
 
-  console.log('twitch chat isRegistered', chatClient.isRegistered)
-  if (!chatClient.isRegistered) {
-    chatClient.onRegister(() => {
-      chatClient
-        .join(connectedSocketClient.name)
-        .then(() => {
-          console.log('twitch chat channel joined', connectedSocketClient.name)
-        })
-        .catch((e) => {
-          console.log('Supposedly didnt join', e)
-        })
-      console.log('Trying onRegister event: twitch chat isRegistered', chatClient.isRegistered)
-    })
-  } else {
-    chatClient
-      .join(connectedSocketClient.name)
-      .then(() => {
-        console.log('twitch chat channel joined', connectedSocketClient.name)
-      })
-      .catch((e) => {
-        console.log('Supposedly didnt join', e)
-      })
-  }
-
   // Server could reboot and lose this in memory
   // But that's okay because we'll just do a db call once in openBets()
   let betExists = -1
@@ -71,7 +47,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   // const recentHealth = Array(25) // TODO: #HEALTH
 
   // This array of socket ids is who we want to emit events to:
-  // console.log({ sockets: connectedSocketClient.sockets })
+  // console.log("[SETUP]",{ sockets: connectedSocketClient.sockets })
 
   // We want to reset this to false when a new socket connects?
   const blockingMinimap: { [key: string]: boolean } = {}
@@ -86,7 +62,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       chatClient.say(connectedSocketClient.name, `Bets are locked peepoGamble`)
     }
 
-    console.log({
+    console.log('[BETS]', {
       event: 'lock_bets',
       data: {
         token: client.token,
@@ -99,6 +75,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   // This runs once per every match start but its just one DB query so hopefully it's fine
   // In the future I'd like to remove this and maybe have FE ask them to enter their steamid?
   function updatePlayerId() {
+    // User already has a playerId
+    if (connectedSocketClient?.playerId) return
+
     supabase
       .from('users')
       .select('playerId')
@@ -107,9 +86,6 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       .limit(1)
       .single()
       .then(({ data, error }) => {
-        // User already has a playerId
-        if (data?.playerId) return
-
         const playerId = steamID64toSteamID32(client?.gamestate?.player?.steamid || '')
         if (!playerId) return
 
@@ -120,7 +96,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
           .is('playerId', null)
           .then(() => {
             if (connectedSocketClient.sockets.length) {
-              console.log('Updated player ID, emitting badge overlay update', {
+              console.log('[PLAYERID]', 'Updated player ID, emitting badge overlay update', {
                 token: connectedSocketClient.token,
               })
 
@@ -131,31 +107,20 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   }
 
   function adjustMMR(increase: boolean) {
+    const newMMR = connectedSocketClient.mmr + (increase ? 30 : -30)
+
     supabase
       .from('users')
-      .select('mmr')
+      .update({ mmr: newMMR })
       .eq('id', connectedSocketClient.token)
-      .limit(1)
-      .single()
-      .then(({ data, error }) => {
-        if (error) {
-          console.log('mmr SELECT error', error)
-          return
+      .then(() => {
+        connectedSocketClient.mmr = newMMR
+
+        if (connectedSocketClient.sockets.length) {
+          console.log('[MMR]', 'Emitting mmr update', { token: connectedSocketClient.token })
+
+          server.io.to(connectedSocketClient.sockets).emit('update-medal')
         }
-
-        const newMMR = data?.mmr + (increase ? 30 : -30)
-
-        supabase
-          .from('users')
-          .update({ mmr: newMMR })
-          .eq('id', connectedSocketClient.token)
-          .then(() => {
-            if (connectedSocketClient.sockets.length) {
-              console.log('Emitting mmr update', { token: connectedSocketClient.token })
-
-              server.io.to(connectedSocketClient.sockets).emit('update-medal')
-            }
-          })
       })
   }
 
@@ -196,8 +161,8 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     // We -want- it to contain 0 rows (its an error if its > 0)
     if (error && !error.details.includes('contain 0 rows')) {
       console.log(
+        '[BETS]',
         'ERROR: Getting bet from database',
-        error,
         client.token,
         client.gamestate?.map?.matchid,
       )
@@ -205,7 +170,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
     // Saving to local memory so we don't have to query the db again
     if (bet && bet?.id) {
-      console.log('Found a bet in the database', bet?.id)
+      console.log('[BETS]', 'Found a bet in the database', bet?.id)
 
       betExists = client.gamestate?.map?.matchid
       return
@@ -215,8 +180,8 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       return
     }
 
-    updatePlayerId()
     betExists = client.gamestate?.map?.matchid
+    updatePlayerId()
 
     supabase
       .from('bets')
@@ -232,7 +197,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
           openTwitchBet(channel, client.token)
             .then(() => {
               chatClient.say(channel, `Bets open peepoGamble`)
-              console.log({
+              console.log('[BETS]', {
                 event: 'open_bets',
                 data: {
                   matchId: client.gamestate?.map?.matchid,
@@ -242,12 +207,12 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
               })
             })
             .catch((e) => {
-              console.log('Error opening twitch bet', channel, e)
+              console.log('[BETS]', 'Error opening twitch bet', channel, e)
             })
         } else if (error.message.includes('duplicate')) {
-          console.log(channel, `Bet already exists on ${channel} channel`, error)
+          console.log('[BETS]', channel, `Bet already exists on ${channel} channel`)
         } else {
-          console.log(channel, `Could not add bet to ${channel} channel`, error)
+          console.log('[BETS]', channel, `Could not add bet to ${channel} channel`, error)
         }
       })
   }
@@ -269,9 +234,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     if (!localWinner || !myTeam) return
 
     if (winningTeam === null) {
-      console.log('Running end bets from newdata', { token: client.token })
+      console.log('[BETS]', 'Running end bets from newdata', { token: client.token })
     } else {
-      console.log('Running end bets from map:win_team', { token: client.token })
+      console.log('[BETS]', 'Running end bets from map:win_team', { token: client.token })
     }
 
     endingBets = true
@@ -293,7 +258,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
               `Bets closed, we have ${won ? 'won' : 'lost'}`,
             )
 
-            console.log({
+            console.log('[BETS]', {
               event: 'end_bets',
               data: {
                 matchId: client.gamestate?.map?.matchid,
@@ -307,7 +272,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
           .catch((e) => {
             betExists = -1
             endingBets = false
-            console.log('Error closing twitch bet', channel, e)
+            console.log('[BETS]', 'Error closing twitch bet', channel, e)
           })
       }) // weird bug it only updates if you pass a .then()?
     // i think the function is resolving too quick and it discards this promise?
@@ -321,7 +286,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     connectedSocketClient.sockets.forEach((socketId: string) => {
       // Sending a msg to just this socket
       if (!blockingMinimap[socketId] && minimapStates.includes(state)) {
-        console.log('Block minimap', { token: client.token })
+        console.log('[OBS]', 'Block minimap', { token: client.token })
         blockingMinimap[socketId] = true
         allUnblocked[socketId] = false
 
@@ -331,12 +296,12 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       }
 
       if (blockingMinimap[socketId] && !minimapStates.includes(state)) {
-        console.log('Unblock minimap', { token: client.token })
+        console.log('[OBS]', 'Unblock minimap', { token: client.token })
         blockingMinimap[socketId] = false
       }
 
       if (!blockingPicks[socketId] && pickSates.includes(state)) {
-        console.log('Block hero picks for team', client.gamestate?.player?.team_name, {
+        console.log('[OBS]', 'Block hero picks for team', client.gamestate?.player?.team_name, {
           token: client.token,
         })
         blockingPicks[socketId] = true
@@ -348,13 +313,13 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       }
 
       if (blockingPicks[socketId] && !pickSates.includes(state)) {
-        console.log('Unblock picks', { token: client.token })
+        console.log('[OBS]', 'Unblock picks', { token: client.token })
         blockingPicks[socketId] = false
       }
 
       // Only send unblocker once per socket
       if (!blockingMinimap[socketId] && !blockingPicks[socketId] && !allUnblocked[socketId]) {
-        console.log('Unblock all OBS layers', { token: client.token })
+        console.log('[OBS]', 'Unblock all OBS layers', { token: client.token })
         allUnblocked[socketId] = true
 
         server.io
@@ -381,7 +346,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
     // Hero name is empty when you first pick
     // It gets filled out after its locked in and no longer bannable
-    console.log(`Playing hero ${heroName}`, { token: client.token })
+    console.log('[HERO]', `Playing hero ${heroName}`, { token: client.token })
   })
 
   // Catch all
@@ -410,7 +375,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
     const isMidasPassive = checkMidas(data, passiveMidas)
     if (isMidasPassive) {
-      console.log('Passive Midas!', { token: client.token })
+      console.log('[MIDAS]', 'Passive Midas!', { token: client.token })
     }
   })
 
@@ -478,7 +443,7 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
 
   // Guess not lol, will be handled by `new-gsi-client` event
   if (!connectedSocketClient?.gsi) {
-    console.log('Waiting for GSI after socket connection', { token: client.token })
+    console.log('[SOCKET]', 'Waiting for GSI after socket connection', { token: client.token })
     return
   }
 
@@ -488,15 +453,20 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
     // The new socketid will automatically get all new events to it as well
     // This usually only happens if they open two browser sources or add it multiple times
     // to obs for some reason
-    console.log('Already setup event listeners for this client, lets setup OBS events', socketId, {
-      token: client.token,
-    })
+    console.log(
+      '[SOCKET]',
+      'Already setup event listeners for this client, lets setup OBS events',
+      socketId,
+      {
+        token: client.token,
+      },
+    )
     return
   }
 
   // Main events were never setup, so do it now that the socket is online
   // Setup main events with the GSI client, assuming it already connected
-  console.log('GSI is connected, and now so is OBS for user:', {
+  console.log('[SOCKET]', 'GSI is connected, and now so is OBS for user:', {
     token: client.token,
   })
   setupMainEvents(connectedSocketClient)
@@ -505,18 +475,18 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
 server.events.on('new-gsi-client', (client: { token: string }) => {
   if (!client.token) return
 
-  console.log('Connecting new GSI client', { token: client.token })
+  console.log('[GSI]', 'Connecting new GSI client', { token: client.token })
 
   const connectedSocketClient = findUser(client.token)
 
   // Only setup main events if the OBS socket has connected
   if (!connectedSocketClient?.sockets?.length) {
-    console.log('Waiting for OBS', { token: client.token })
+    console.log('[GSI]', 'Waiting for OBS', { token: client.token })
     return
   }
 
   // This means OBS layer is available, but GSI connected AFTER
-  console.log('Socket is connected', { token: client.token })
+  console.log('[GSI]', 'Socket is connected', { token: client.token })
 
   setupMainEvents(connectedSocketClient)
 })

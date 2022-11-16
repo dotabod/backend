@@ -42,7 +42,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
         .single()
         .then(({ data, error }) => {
           if (error) {
-            console.log('mmr SELECT error', error)
+            console.log('[COMMANDS]', 'mmr SELECT error', error)
             return
           }
 

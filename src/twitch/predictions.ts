@@ -5,7 +5,7 @@ async function getChannelAPI(channel: string, userId: string) {
   const { providerAccountId, authProvider } = await getChannelAuthProvider(channel, userId)
 
   if (!providerAccountId || !authProvider) {
-    console.log('Missing providerAccountId or authProvider', channel)
+    console.log('[PREDICT]', 'Missing providerAccountId or authProvider', channel)
     throw new Error('Missing providerAccountId or authProvider')
   }
 
@@ -14,13 +14,13 @@ async function getChannelAPI(channel: string, userId: string) {
     throw new Error('No channel api')
   }
 
-  console.log('Retrieved twitch api', channel)
+  console.log('[PREDICT]', 'Retrieved twitch api', channel)
 
   return { api, providerAccountId }
 }
 
 export async function openTwitchBet(channel: string, userId: string) {
-  console.log('[BETS] Opening twitch bet', channel)
+  console.log('[PREDICT]', '[BETS] Opening twitch bet', channel)
 
   const { api, providerAccountId } = await getChannelAPI(channel, userId)
 
@@ -40,7 +40,7 @@ export async function closeTwitchBet(channel: string, won: boolean, userId: stri
   const [wonOutcome, lossOutcome] = predictions[0].outcomes
 
   // if (predictions[0].status !== 'LOCKED') {
-  //   console.log('[BETS] Bet is not locked', channel)
+  //   console.log('[PREDICT]','[BETS] Bet is not locked', channel)
   //   return
   // }
 

@@ -1,7 +1,6 @@
 import { ChatClient } from '@twurple/chat'
-import { AuthProvider, RefreshingAuthProvider } from '@twurple/auth'
+import { RefreshingAuthProvider } from '@twurple/auth'
 import supabase from '../db'
-import { getActiveUsers } from '../dota/dotaGSIClients'
 
 export async function getAuthProvider() {
   if (!process.env.TWITCH_ACCESS_TOKEN || !process.env.TWITCH_REFRESH_TOKEN) {
@@ -18,7 +17,7 @@ export async function getAuthProvider() {
     .single()
   twitchTokens = data
 
-  console.log('Retrieved twitch access tokens', twitchTokens)
+  console.log('[TWITCHSETUP]', 'Retrieved twitch access tokens', twitchTokens)
 
   const authProvider = new RefreshingAuthProvider(
     {
@@ -49,11 +48,11 @@ export async function getChannelAuthProvider(channel: string, userId: string) {
     .single()
 
   if (!twitchTokens?.access_token || !twitchTokens?.refresh_token) {
-    console.log('Missing twitch tokens', channel)
+    console.log('[TWITCHSETUP]', 'Missing twitch tokens', channel)
     return {}
   }
 
-  console.log('Retrieved twitch access tokens', channel)
+  console.log('[TWITCHSETUP]', 'Retrieved twitch access tokens', channel)
 
   const authProvider = new RefreshingAuthProvider(
     {
@@ -98,7 +97,7 @@ export async function getChatClient() {
   })
 
   await chatClient.connect()
-  console.log('Connected to chat client', chatClient.isConnected)
+  console.log('[TWITCHSETUP]', 'Connected to chat client', chatClient.isConnected)
 
   return chatClient
 }
@@ -108,7 +107,7 @@ export async function getChatClient() {
 // const channel = supabase.channel('db-changes')
 // channel
 //   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
-//     console.log('New user to send bot to: ', payload)
+//     console.log('[TWITCHSETUP]','New user to send bot to: ', payload)
 //     chatClient.join(payload.new.name)
 //   })
 //   .subscribe()
