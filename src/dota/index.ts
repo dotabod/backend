@@ -304,9 +304,10 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
               },
             })
           })
-          .catch(() => {
+          .catch((e) => {
+            betExists = -1
             endingBets = false
-            console.log('Error closing twitch bet', channel)
+            console.log('Error closing twitch bet', channel, e)
           })
       }) // weird bug it only updates if you pass a .then()?
     // i think the function is resolving too quick and it discards this promise?
