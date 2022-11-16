@@ -9,11 +9,11 @@ import { toUserName } from '@twurple/chat'
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
 
-let plebMode: { [n: string]: boolean } = {}
+let plebMode = new Set()
 chatClient.onMessage(function (channel, user, text, msg) {
   // Letting one pleb in
-  if (plebMode[channel] && !msg.userInfo.isSubscriber) {
-    plebMode[channel] = false
+  if (plebMode.has(channel) && !msg.userInfo.isSubscriber) {
+    plebMode.delete(channel)
     chatClient.say(channel, '/subscribers')
     chatClient.say(channel, `${user} EZ Clap`)
     return
@@ -27,7 +27,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       // Only mod or owner
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return
 
-      plebMode[channel] = true
+      plebMode.add(channel)
       chatClient.say(channel, '/subscribersoff')
       chatClient.say(channel, 'One pleb IN 👇')
       break
