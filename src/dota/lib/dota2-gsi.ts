@@ -31,7 +31,7 @@ function checkClient(req: Request, res: Response, next: NextFunction) {
     // in the event socket connects after gsi
     // calling this will add it to the socket
     // findUser(req.body.auth.token)
-    // console.log(`Adding new userGSI for IP: ${req.ip}`)
+    // console.log('[GSI]',`Adding new userGSI for IP: ${req.ip}`)
     req.client = localUser
     req.client.gamestate = req.body
 
@@ -119,7 +119,7 @@ async function checkAuth(req: Request, res: Response, next: NextFunction) {
   }
 
   if (!token) {
-    console.log(`Dropping message from IP: ${req.ip}, no valid auth token`)
+    console.log('[GSI]', `Dropping message from IP: ${req.ip}, no valid auth token`)
     res.status(401).json({
       error: new Error('Invalid request!'),
     })
@@ -133,11 +133,11 @@ async function checkAuth(req: Request, res: Response, next: NextFunction) {
     return
   }
 
-  console.log('Havent cached user token yet, checking db', { token })
+  console.log('[GSI]', 'Havent cached user token yet, checking db', { token })
 
   const { data: user, error } = await supabase
     .from('users')
-    .select('name')
+    .select('id, name, playerId, mmr, accounts(refresh_token, access_token, providerAccountId)')
     .eq('id', token)
     .order('id', { ascending: false })
     .limit(1)
@@ -192,7 +192,7 @@ class D2GSI {
     )
 
     httpServer.listen(process.env.MAIN_PORT || 3000, () => {
-      console.log(`Dota 2 GSI listening on *:${process.env.MAIN_PORT || 3000}`)
+      console.log('[GSI]', `Dota 2 GSI listening on *:${process.env.MAIN_PORT || 3000}`)
     })
 
     // No main page
@@ -217,9 +217,8 @@ class D2GSI {
 
       const { data: user, error } = await supabase
         .from('users')
-        .select('name')
+        .select('id, name, playerId, mmr, accounts(refresh_token, access_token, providerAccountId)')
         .eq('id', token)
-        .order('id', { ascending: false })
         .limit(1)
         .single()
 
@@ -256,6 +255,7 @@ class D2GSI {
           // That way a new socket will get the GSI events again
           if (!connectedSocketClient.sockets.length) {
             console.log(
+              '[GSI]',
               'No more sockets connected, removing all events for',
               connectedSocketClient.token,
             )
