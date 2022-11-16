@@ -45,7 +45,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
           },
         })
         .then((user) => {
-          if (!user) return
+          if (!user || !user.mmr || !user.playerId) return
           getRankDescription(user.mmr, user?.playerId || 0).then((description) => {
             chatClient.say(channel, description)
           })
