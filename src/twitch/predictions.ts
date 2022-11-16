@@ -37,6 +37,12 @@ export async function closeTwitchBet(channel: string, won: boolean, userId: stri
   const { data: predictions } = await api.predictions.getPredictions(providerAccountId, {
     limit: 1,
   })
+
+  if(!Array.isArray(predictions) || !predictions.length) {
+    console.log('[PREDICT]', 'No predictions found', predictions)
+    return
+  }
+
   const [wonOutcome, lossOutcome] = predictions[0].outcomes
 
   // if (predictions[0].status !== 'LOCKED') {
