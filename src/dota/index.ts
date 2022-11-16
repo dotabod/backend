@@ -328,15 +328,15 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     })
   }
 
-  client.on('player:activity', (activity: string) => {
-    if (isCustomGame(client)) return
+  // client.on('player:activity', (activity: string) => {
+  //   if (isCustomGame(client)) return
 
-    // Just started a game
-    if (activity === 'playing') {
-      console.log('Open bets from player:activity', { token: client.token })
-      openBets()
-    }
-  })
+  //   // Just started a game
+  //   if (activity === 'playing') {
+  //     console.log('[BETS]','Open bets from player:activity', { token: client.token })
+  //     openBets()
+  //   }
+  // })
 
   client.on('hero:name', (name: string) => {
     if (isCustomGame(client)) return
