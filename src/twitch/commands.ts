@@ -1,6 +1,9 @@
 import { getChatClient } from './setup'
 import { getRankDescription } from '../utils/constants'
 import prisma from '../db/prisma'
+import { findUserByName } from '../dota/dotaGSIClients'
+import { server } from '../dota'
+import { toUserName } from '@twurple/chat'
 // import heroes from 'dotabase/json/heroes.json'
 
 // Setup twitch chat bot client first
@@ -62,6 +65,11 @@ chatClient.onMessage(function (channel, user, text, msg) {
         })
         .then(() => {
           chatClient.say(channel, `Updated MMR to ${mmr}`)
+
+          const connectedSocketClient = findUserByName(toUserName(channel))
+          if (connectedSocketClient && connectedSocketClient.sockets.length) {
+            server.io.to(connectedSocketClient.sockets).emit('update-medal')
+          }
         })
         .catch(() => {
           chatClient.say(channel, `Failed to update MMR to ${mmr}`)

@@ -11,7 +11,7 @@ import prisma from '../db/prisma'
 // TODO: We shouldn't use await beyond the getChatClient(), it slows down the server I think
 
 // Then setup the dota gsi server & websocket server
-const server = new D2GSI()
+export const server = new D2GSI()
 
 // spectator = watching a friend live
 // team2 = watching replay or live match
