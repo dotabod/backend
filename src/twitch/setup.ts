@@ -74,7 +74,13 @@ export async function getChatClient() {
     channels: getChannels,
   })
 
+
   await chatClient.connect()
+
+  chatClient.onJoinFailure((channel, reason) => {
+    console.log('[TWITCHSETUP]', 'Failed to join channel', channel, reason)
+  })
+
   console.log('[TWITCHSETUP]', 'Connected to chat client', chatClient.isConnected)
 
   return chatClient
