@@ -50,7 +50,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       chatClient.say(
         channel,
-        `Playing ${hero?.localized_name}. ${hero?.hype.replace(/<\/?[^>]+(>|$)/g, '')}`,
+        `Playing ${hero?.real_name} aka ${hero?.localized_name}. Primary attribute: ${hero?.attr_primary}`,
       )
       break
     case '!mmr=':
