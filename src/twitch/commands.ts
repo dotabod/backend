@@ -17,7 +17,10 @@ const CooldownManager = {
   canUse: function (commandName: string) {
     // Check if the last time you've used the command + 30 seconds has passed
     // (because the value is less then the current time)
-    return this.store.get(commandName) + this.cooldownTime < Date.now()
+    const lastUsed = this.store.get(commandName)
+    if (!lastUsed) return true
+
+    return lastUsed + this.cooldownTime < Date.now()
   },
 
   touch: function (commandName: string) {
