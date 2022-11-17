@@ -7,6 +7,7 @@ import { steamID64toSteamID32 } from '../utils'
 import { closeTwitchBet, openTwitchBet } from '../twitch/predictions'
 import { chatClient } from '../twitch/commands'
 import prisma from '../db/prisma'
+import { getRankDescription } from '../utils/constants'
 
 // TODO: We shouldn't use await beyond the getChatClient(), it slows down the server I think
 
@@ -118,6 +119,13 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
         if (connectedSocketClient.sockets.length) {
           console.log('[MMR]', 'Emitting mmr update', { token: connectedSocketClient.token })
+
+          getRankDescription(
+            connectedSocketClient.mmr,
+            connectedSocketClient?.playerId || undefined,
+          ).then((description) => {
+            chatClient.say(connectedSocketClient.name, description)
+          })
 
           server.io.to(connectedSocketClient.sockets).emit('update-medal')
         }
