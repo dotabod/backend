@@ -9,6 +9,23 @@ import heroes from 'dotabase/json/heroes.json' assert { type: 'json' }
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
 
+const CooldownManager = {
+  // 30 seconds
+  cooldownTime: 30 * 1000,
+  store: new Map(),
+
+  canUse: function (commandName: string) {
+    // Check if the last time you've used the command + 30 seconds has passed
+    // (because the value is less then the current time)
+    return this.store.get(commandName) + this.cooldownTime < Date.now()
+  },
+
+  touch: function (commandName: string) {
+    // Store the current timestamp in the store based on the current commandName
+    this.store.set(commandName, Date.now())
+  },
+}
+
 let plebMode = new Set()
 const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping', '!help', '!camps']
 chatClient.onMessage(function (channel, user, text, msg) {
@@ -23,64 +40,66 @@ chatClient.onMessage(function (channel, user, text, msg) {
   if (!text.startsWith('!')) return
 
   const args = text.split(' ')
-  if (!commands.includes(args[0].toLowerCase())) return
+  const command = args[0].toLowerCase()
+  if (!commands.includes(command)) return
+  if (!CooldownManager.canUse(command)) return
 
   const connectedSocketClient = findUserByName(toUserName(channel))
 
-  switch (args[0].toLowerCase()) {
+  switch (command) {
     case '!help':
       chatClient.say(channel, commands.join(' '))
       break
     case '!pleb':
       // Only mod or owner
-      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return
+      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
 
       plebMode.add(channel)
       chatClient.say(channel, '/subscribersoff')
       chatClient.say(channel, 'One pleb IN 👇')
       break
     case '!camps':
-      if (!connectedSocketClient?.gsi) return
-      if (isCustomGame(connectedSocketClient?.gsi)) return
+      if (!connectedSocketClient?.gsi) break
+      if (isCustomGame(connectedSocketClient?.gsi)) break
 
       const camps = connectedSocketClient?.gsi?.gamestate?.player?.camps_stacked
 
       if (camps === 0) {
         chatClient.say(channel, 'No camps stacked')
-        return
+        break
       }
 
       if (!connectedSocketClient || !camps) {
         chatClient.say(channel, 'Not playing PauseChamp')
-        return
+        break
       }
 
       chatClient.say(channel, `Camps stacked: ${camps}`)
       break
     case '!gpm':
-      if (!connectedSocketClient?.gsi) return
-      if (isCustomGame(connectedSocketClient?.gsi)) return
+      if (!connectedSocketClient?.gsi) break
+      if (isCustomGame(connectedSocketClient?.gsi)) break
 
       const gpm = connectedSocketClient?.gsi?.gamestate?.player?.gpm
 
       if (gpm === 0) {
         chatClient.say(channel, 'Live GPM: 0')
-        return
+        break
       }
 
       if (!connectedSocketClient || !gpm) {
         chatClient.say(channel, 'Not playing PauseChamp')
-        return
+        break
       }
 
       chatClient.say(channel, `Live GPM: ${gpm}`)
       break
     case '!hero':
-      if (!connectedSocketClient?.gsi) return
-      if (isCustomGame(connectedSocketClient?.gsi)) return
+      if (!connectedSocketClient?.gsi) break
+      if (isCustomGame(connectedSocketClient?.gsi)) break
       if (!connectedSocketClient || !connectedSocketClient?.gsi?.gamestate?.hero?.name) {
         chatClient.say(channel, 'Not playing PauseChamp')
-        return
+        break
       }
 
       const hero = heroes.find(
@@ -89,7 +108,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       if (!hero) {
         chatClient.say(channel, "Couldn't find hero Sadge")
-        return
+        break
       }
 
       chatClient.say(
@@ -102,14 +121,14 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     case '!mmr=':
       // Only mod or owner
-      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return
+      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
 
       const mmr = args[1]
 
       if (!mmr || !Number(mmr)) {
         console.log('Invalid mmr', mmr, channel)
 
-        return
+        break
       }
       prisma.account
         .update({
@@ -168,6 +187,8 @@ chatClient.onMessage(function (channel, user, text, msg) {
     default:
       break
   }
+
+  CooldownManager.touch(command)
 })
 
 /*
