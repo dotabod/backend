@@ -10,6 +10,7 @@ import heroes from 'dotabase/json/heroes.json' assert { type: 'json' }
 export const chatClient = await getChatClient()
 
 let plebMode = new Set()
+const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr', '!ping']
 chatClient.onMessage(function (channel, user, text, msg) {
   // Letting one pleb in
   if (plebMode.has(channel) && !msg.userInfo.isSubscriber) {
@@ -20,7 +21,11 @@ chatClient.onMessage(function (channel, user, text, msg) {
   }
 
   if (!text.startsWith('!')) return
+
   const args = text.split(' ')
+  if (!commands.includes(args[0].toLowerCase())) return
+
+  const connectedSocketClient = findUserByName(toUserName(channel))
 
   switch (args[0].toLowerCase()) {
     case '!pleb':
@@ -31,9 +36,15 @@ chatClient.onMessage(function (channel, user, text, msg) {
       chatClient.say(channel, '/subscribersoff')
       chatClient.say(channel, 'One pleb IN 👇')
       break
-    // Return channel owners mmr if its in the db
+    case '!gpm':
+      if (!connectedSocketClient || !connectedSocketClient?.gsi?.gamestate?.player?.gpm) {
+        chatClient.say(channel, 'Not playing PauseChamp')
+        return
+      }
+
+      chatClient.say(channel, `Live GPM: ${connectedSocketClient?.gsi?.gamestate?.player?.gpm}`)
+      break
     case '!hero':
-      const connectedSocketClient = findUserByName(toUserName(channel))
       if (!connectedSocketClient || !connectedSocketClient?.gsi?.gamestate?.hero?.name) {
         chatClient.say(channel, 'Not playing PauseChamp')
         return
@@ -86,7 +97,6 @@ chatClient.onMessage(function (channel, user, text, msg) {
         .then(() => {
           chatClient.say(channel, `Updated MMR to ${mmr}`)
 
-          const connectedSocketClient = findUserByName(toUserName(channel))
           if (connectedSocketClient && connectedSocketClient.sockets.length) {
             server.io.to(connectedSocketClient.sockets).emit('update-medal')
           }
