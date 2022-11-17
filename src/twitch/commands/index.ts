@@ -66,7 +66,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       const camps = connectedSocketClient?.gsi?.gamestate?.player?.camps_stacked
 
-      if (camps === 0) {
+      if (camps === 0 || camps === '0') {
         chatClient.say(channel, 'No camps stacked')
         break
       }
