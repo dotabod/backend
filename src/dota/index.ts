@@ -378,6 +378,14 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     }
   })
 
+  client.on('hero:smoked', (isSmoked: boolean) => {
+    if (isCustomGame(client)) return
+
+    if (isSmoked) {
+      chatClient.say(connectedSocketClient.name, `🚬 💣 Shush`)
+    }
+  })
+
   client.on('map:paused', (isPaused: boolean) => {
     if (isCustomGame(client)) return
 
