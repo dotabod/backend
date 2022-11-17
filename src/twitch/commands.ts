@@ -10,7 +10,7 @@ import heroes from 'dotabase/json/heroes.json' assert { type: 'json' }
 export const chatClient = await getChatClient()
 
 let plebMode = new Set()
-const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping']
+const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping', '!help']
 chatClient.onMessage(function (channel, user, text, msg) {
   // Letting one pleb in
   if (plebMode.has(channel) && !msg.userInfo.isSubscriber) {
@@ -28,6 +28,9 @@ chatClient.onMessage(function (channel, user, text, msg) {
   const connectedSocketClient = findUserByName(toUserName(channel))
 
   switch (args[0].toLowerCase()) {
+    case '!help':
+      chatClient.say(channel, commands.join(' '))
+      break
     case '!pleb':
       // Only mod or owner
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return
