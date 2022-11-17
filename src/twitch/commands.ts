@@ -50,7 +50,9 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       chatClient.say(
         channel,
-        `Playing ${hero?.real_name} aka ${hero?.localized_name}. Primary attribute: ${hero?.attr_primary}`,
+        `Playing ${hero?.real_name} aka ${hero?.localized_name}. Primary attribute: ${
+          hero?.attr_primary
+        }. ${hero?.aliases.includes('|') ? hero?.aliases : ''}`,
       )
       break
     case '!mmr=':
