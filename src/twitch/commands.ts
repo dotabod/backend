@@ -2,7 +2,7 @@ import { getChatClient } from './setup'
 import { getRankDescription } from '../utils/constants'
 import prisma from '../db/prisma'
 import { findUserByName } from '../dota/dotaGSIClients'
-import { server } from '../dota'
+import { isCustomGame, server } from '../dota'
 import { toUserName } from '@twurple/chat'
 import heroes from 'dotabase/json/heroes.json' assert { type: 'json' }
 
@@ -10,7 +10,7 @@ import heroes from 'dotabase/json/heroes.json' assert { type: 'json' }
 export const chatClient = await getChatClient()
 
 let plebMode = new Set()
-const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping', '!help']
+const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping', '!help', '!camps']
 chatClient.onMessage(function (channel, user, text, msg) {
   // Letting one pleb in
   if (plebMode.has(channel) && !msg.userInfo.isSubscriber) {
@@ -39,15 +39,45 @@ chatClient.onMessage(function (channel, user, text, msg) {
       chatClient.say(channel, '/subscribersoff')
       chatClient.say(channel, 'One pleb IN 👇')
       break
-    case '!gpm':
-      if (!connectedSocketClient || !connectedSocketClient?.gsi?.gamestate?.player?.gpm) {
+    case '!camps':
+      if (!connectedSocketClient?.gsi) return
+      if (isCustomGame(connectedSocketClient?.gsi)) return
+
+      const camps = connectedSocketClient?.gsi?.gamestate?.player?.camps_stacked
+
+      if (camps === 0) {
+        chatClient.say(channel, 'No camps stacked')
+        return
+      }
+
+      if (!connectedSocketClient || !camps) {
         chatClient.say(channel, 'Not playing PauseChamp')
         return
       }
 
-      chatClient.say(channel, `Live GPM: ${connectedSocketClient?.gsi?.gamestate?.player?.gpm}`)
+      chatClient.say(channel, `Camps stacked: ${camps}`)
+      break
+    case '!gpm':
+      if (!connectedSocketClient?.gsi) return
+      if (isCustomGame(connectedSocketClient?.gsi)) return
+
+      const gpm = connectedSocketClient?.gsi?.gamestate?.player?.gpm
+
+      if (gpm === 0) {
+        chatClient.say(channel, 'Live GPM: 0')
+        return
+      }
+
+      if (!connectedSocketClient || !gpm) {
+        chatClient.say(channel, 'Not playing PauseChamp')
+        return
+      }
+
+      chatClient.say(channel, `Live GPM: ${gpm}`)
       break
     case '!hero':
+      if (!connectedSocketClient?.gsi) return
+      if (isCustomGame(connectedSocketClient?.gsi)) return
       if (!connectedSocketClient || !connectedSocketClient?.gsi?.gamestate?.hero?.name) {
         chatClient.say(channel, 'Not playing PauseChamp')
         return

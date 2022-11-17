@@ -16,7 +16,7 @@ export const server = new D2GSI()
 // spectator = watching a friend live
 // team2 = watching replay or live match
 // customgamename = playing arcade or hero demo
-function isCustomGame(client: GSIClient) {
+export function isCustomGame(client: GSIClient) {
   // undefined means the client is disconnected from a game
   // so we want to run our obs stuff to unblock anything
   const isArcade =
