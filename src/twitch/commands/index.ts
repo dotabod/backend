@@ -127,7 +127,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       const mmr = args[1]
 
-      if (!mmr || !Number(mmr)) {
+      if (!mmr || !Number(mmr) || Number(mmr) > 20000) {
         console.log('Invalid mmr', mmr, channel)
 
         break
