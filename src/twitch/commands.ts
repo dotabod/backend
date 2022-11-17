@@ -50,7 +50,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       chatClient.say(
         channel,
-        `${hero?.aliases}. Primary attribute: ${hero?.attr_primary}. ${hero?.roles.replace(
+        `${hero?.aliases}. Primary attribute: ${hero?.attr_primary}. ${hero?.roles.replaceAll(
           '|',
           ', ',
         )}`.toLowerCase(),
