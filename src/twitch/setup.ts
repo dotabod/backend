@@ -1,6 +1,6 @@
 import { ChatClient } from '@twurple/chat'
 import { RefreshingAuthProvider } from '@twurple/auth'
-import findUser from '../dota/dotaGSIClients'
+import findUser, { getActiveUsers } from '../dota/dotaGSIClients'
 import prisma from '../db/prisma'
 
 export async function getAuthProvider() {
@@ -63,9 +63,11 @@ export async function getChannelAuthProvider(channel: string, userId: string) {
 }
 
 async function getChannels() {
-  // getActiveUsers().map((user) => user.name)
-  const names = await prisma.user.findMany({ select: { name: true } })
-  return names.map((user) => user.name)
+  console.log('Running getChannels')
+
+  return prisma.user
+    .findMany({ select: { name: true } })
+    .then((users) => users.map((user) => user.name))
 }
 
 export async function getChatClient() {

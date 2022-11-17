@@ -3,26 +3,30 @@ import prisma from './prisma'
 export async function getDBUser(token: string) {
   // Finding `account` because `user` is required there
   // But if we find `user`, `account` is optional? Idk why, something schema maybe
-  const account = await prisma.account.findFirst({
-    select: {
-      refresh_token: true,
-      access_token: true,
-      providerAccountId: true,
-      user: {
-        select: {
-          id: true,
-          mmr: true,
-          playerId: true,
-          name: true,
+  const account = await prisma.account
+    .findFirst({
+      select: {
+        refresh_token: true,
+        access_token: true,
+        providerAccountId: true,
+        user: {
+          select: {
+            id: true,
+            mmr: true,
+            playerId: true,
+            name: true,
+          },
         },
       },
-    },
-    where: {
-      user: {
-        id: token,
+      where: {
+        user: {
+          id: token,
+        },
       },
-    },
-  })
+    })
+    .catch((e) => {
+      return null
+    })
 
   return !account
     ? null

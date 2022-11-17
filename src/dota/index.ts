@@ -41,7 +41,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
   // Server could reboot and lose this in memory
   // But that's okay because we'll just do a db call once in openBets()
-  let betExists = -1
+  let betExists: string | null = null
 
   const passiveMidas = { counter: 0 }
   // const recentHealth = Array(25) // TODO: #HEALTH
@@ -131,7 +131,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   // 4 Then, tell twitch to close bets based on win result
   async function openBets() {
     // The bet was already made
-    if (betExists !== -1) return
+    if (betExists !== null) return
 
     // Why open if not playing?
     if (client?.gamestate?.player?.activity !== 'playing') return
@@ -163,23 +163,23 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
         // Saving to local memory so we don't have to query the db again
         if (bet && bet?.id) {
           console.log('[BETS]', 'Found a bet in the database', bet?.id)
-          betExists = client.gamestate?.map?.matchid
+          betExists = client.gamestate?.map?.matchid || null
         } else {
           if (!isOpenBetGameCondition) {
             return
           }
 
-          betExists = client.gamestate?.map?.matchid
+          betExists = client.gamestate?.map?.matchid || null
           updatePlayerId()
 
           prisma.bet
             .create({
               data: {
                 // TODO: Replace prediction id with the twitch api bet id result
-                predictionId: client.gamestate?.map?.matchid,
-                matchId: client.gamestate?.map?.matchid,
+                predictionId: client.gamestate?.map?.matchid as string,
+                matchId: client.gamestate?.map?.matchid as string,
                 userId: client.token,
-                myTeam: client.gamestate?.player?.team_name,
+                myTeam: client.gamestate?.player?.team_name as string,
               },
             })
             .then(() => {
@@ -212,7 +212,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
   let endingBets = false
   function endBets(winningTeam: 'radiant' | 'dire' | null) {
-    if (betExists === -1 || endingBets) return
+    if (betExists === null || endingBets) return
     if (!client) return
 
     // "none"? Must mean the game hasn't ended yet
@@ -243,14 +243,14 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
         where: {
           matchId_userId: {
             userId: client.token,
-            matchId: client.gamestate?.map?.matchid,
+            matchId: client.gamestate?.map?.matchid as string,
           },
         },
       })
       .then(() => {
         closeTwitchBet(channel, won, client.token)
           .then(() => {
-            betExists = -1
+            betExists = null
             endingBets = false
 
             chatClient.say(
@@ -270,7 +270,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
             })
           })
           .catch((e) => {
-            betExists = -1
+            betExists = null
             endingBets = false
             console.log('[BETS]', 'Error closing twitch bet', channel, e)
           })
