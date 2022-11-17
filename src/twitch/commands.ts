@@ -4,7 +4,7 @@ import prisma from '../db/prisma'
 import { findUserByName } from '../dota/dotaGSIClients'
 import { server } from '../dota'
 import { toUserName } from '@twurple/chat'
-import heroes from 'dotabase/json/heroes.json'
+import heroes from 'dotabase/json/heroes.json' assert { type: 'json' }
 
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
@@ -40,10 +40,18 @@ chatClient.onMessage(function (channel, user, text, msg) {
       }
 
       const hero = heroes.find(
-        (hero) => hero.name === connectedSocketClient?.gsi?.gamestate?.hero?.name,
+        (hero) => hero.full_name === connectedSocketClient?.gsi?.gamestate?.hero?.name,
       )
 
-      chatClient.say(channel, `Playing ${hero?.localized_name} aka ${hero?.aliases}`)
+      if (!hero) {
+        chatClient.say(channel, "Couldn't find hero Sadge")
+        return
+      }
+
+      chatClient.say(
+        channel,
+        `Playing ${hero?.localized_name}. ${hero?.hype.replace(/<\/?[^>]+(>|$)/g, '')}`,
+      )
       break
     case '!mmr=':
       // Only mod or owner
@@ -119,6 +127,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 /*
   Required emotes:
 
+  Sadge
   EZ
   Clap
   peepoGamble
