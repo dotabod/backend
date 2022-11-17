@@ -150,9 +150,12 @@ chatClient.onMessage(function (channel, user, text, msg) {
         })
         .then(() => {
           chatClient.say(channel, `Updated MMR to ${mmr}`)
+          if (connectedSocketClient) {
+            connectedSocketClient.mmr = Number(mmr)
 
-          if (connectedSocketClient && connectedSocketClient.sockets.length) {
-            server.io.to(connectedSocketClient.sockets).emit('update-medal')
+            if (connectedSocketClient.sockets.length) {
+              server.io.to(connectedSocketClient.sockets).emit('update-medal')
+            }
           }
         })
         .catch(() => {
@@ -161,6 +164,18 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       break
     case '!mmr':
+      // If connected, we can just respond with the cached MMR
+      if (connectedSocketClient) {
+        getRankDescription(
+          connectedSocketClient.mmr,
+          connectedSocketClient?.playerId || undefined,
+        ).then((description) => {
+          chatClient.say(channel, description)
+        })
+        return
+      }
+
+      // Do a DB lookup if the streamer is offline from OBS or Dota
       prisma.account
         .findFirst({
           select: {
@@ -176,10 +191,12 @@ chatClient.onMessage(function (channel, user, text, msg) {
           },
         })
         .then((account) => {
-          if (!account || !account?.user?.mmr || !account?.user?.playerId) return
-          getRankDescription(account.user.mmr, account.user.playerId).then((description) => {
-            chatClient.say(channel, description)
-          })
+          if (!account || !account?.user?.mmr) return
+          getRankDescription(account.user.mmr, account.user.playerId || undefined).then(
+            (description) => {
+              chatClient.say(channel, description)
+            },
+          )
         })
 
       break
