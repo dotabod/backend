@@ -1,3 +1,4 @@
+import { DirectConnectionAdapter, EventSubListener } from '@twurple/eventsub'
 import http from 'http'
 import express, { Request, Response, NextFunction } from 'express'
 import bodyParser from 'body-parser'
@@ -7,6 +8,7 @@ import findUser from '../dotaGSIClients'
 import { gsiClients, socketClients } from '../trackingConsts'
 import { Dota2 } from '../../types'
 import { getDBUser } from '../../db/getDBUser'
+import { getBotAPI } from '../../twitch/predictions'
 
 export const events = new EventEmitter()
 

@@ -1,8 +1,8 @@
-import { getChatClient } from './setup'
-import { getRankDescription } from '../utils/constants'
-import prisma from '../db/prisma'
-import { findUserByName } from '../dota/dotaGSIClients'
-import { isCustomGame, server } from '../dota'
+import { getChatClient } from '../setup'
+import { getRankDescription } from '../../utils/constants'
+import prisma from '../../db/prisma'
+import { findUserByName } from '../../dota/dotaGSIClients'
+import { isCustomGame, server } from '../../dota'
 import { toUserName } from '@twurple/chat'
 import heroes from 'dotabase/json/heroes.json' assert { type: 'json' }
 

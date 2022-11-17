@@ -14,6 +14,7 @@ declare global {
       STEAM_WEB_API: string
       MAIN_PORT: string
       GITHUB_AUTH_TOKEN: string
+      TWITCH_EVENTS_SECRET: string
       NODE_ENV: 'development' | 'production'
     }
   }

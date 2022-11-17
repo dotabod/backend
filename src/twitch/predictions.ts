@@ -1,4 +1,4 @@
-import { getChannelAuthProvider } from './setup'
+import { getAuthProvider, getChannelAuthProvider } from './setup'
 import { ApiClient } from '@twurple/api'
 
 async function getChannelAPI(channel: string, userId: string) {
@@ -17,6 +17,23 @@ async function getChannelAPI(channel: string, userId: string) {
   console.log('[PREDICT]', 'Retrieved twitch api', channel)
 
   return { api, providerAccountId }
+}
+
+export async function getBotAPI() {
+  const authProvider = await getAuthProvider()
+
+  if (!authProvider) {
+    throw new Error('Missing authProvider')
+  }
+
+  const api = new ApiClient({ authProvider })
+  if (!api) {
+    throw new Error('No bot api')
+  }
+
+  console.log('[BOT]', 'Retrieved twitch bot api')
+
+  return api
 }
 
 export async function openTwitchBet(channel: string, userId: string) {
@@ -38,7 +55,7 @@ export async function closeTwitchBet(channel: string, won: boolean, userId: stri
     limit: 1,
   })
 
-  if(!Array.isArray(predictions) || !predictions.length) {
+  if (!Array.isArray(predictions) || !predictions.length) {
     console.log('[PREDICT]', 'No predictions found', predictions)
     return
   }

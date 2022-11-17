@@ -59,3 +59,19 @@ const apiDota = Dota2Api.create(process.env.STEAM_WEB_API)
 //     console.log('Game coordinator is down probably. Check again later')
 //   }
 // }
+
+// const secret = 'thisShouldBeARandomlyGeneratedFixedString'
+// const api = await getBotAPI()
+// const adapter = new DirectConnectionAdapter({
+//   hostName: 'gsi.dotabod.com',
+//   sslCert: {
+//     key: 'aaaaaaaaaaaaaaa',
+//     cert: 'bbbbbbbbbbbbbbb',
+//   },
+// })
+// const listener = new EventSubListener({
+//   apiClient: api,
+//   adapter,
+//   secret: process.env.TWITCH_EVENTS_SECRET,
+// })
+// await listener.listen()
