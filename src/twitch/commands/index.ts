@@ -29,7 +29,7 @@ const CooldownManager = {
 }
 
 let plebMode = new Set()
-const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping', '!help', '!camps']
+const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping', '!help', '!xpm']
 chatClient.onMessage(function (channel, user, text, msg) {
   // Letting one pleb in
   if (plebMode.has(channel) && !msg.userInfo.isSubscriber) {
@@ -60,23 +60,23 @@ chatClient.onMessage(function (channel, user, text, msg) {
       chatClient.say(channel, '/subscribersoff')
       chatClient.say(channel, 'One pleb IN 👇')
       break
-    case '!camps':
+    case '!xpm':
       if (!connectedSocketClient?.gsi) break
       if (isCustomGame(connectedSocketClient?.gsi)) break
 
-      const camps = connectedSocketClient?.gsi?.gamestate?.player?.camps_stacked
+      const xpm = connectedSocketClient?.gsi?.gamestate?.player?.xpm
 
-      if (camps === 0) {
-        chatClient.say(channel, 'No camps stacked')
+      if (xpm === 0) {
+        chatClient.say(channel, 'No xpm')
         break
       }
 
-      if (!connectedSocketClient || !camps) {
+      if (!connectedSocketClient || !xpm) {
         chatClient.say(channel, 'Not playing PauseChamp')
         break
       }
 
-      chatClient.say(channel, `Camps stacked: ${camps}`)
+      chatClient.say(channel, `Live XPM: ${xpm}`)
       break
     case '!gpm':
       if (!connectedSocketClient?.gsi) break
