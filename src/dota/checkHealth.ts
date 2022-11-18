@@ -1,6 +1,6 @@
 export default function checkHealth(
   data: {
-    hero: { health_percent: any; health: number }
+    hero: { health_percent: number; health: number }
     previously: { hero: { health: number; health_percent: number } }
   },
   recentHealth: number[],
