@@ -166,14 +166,20 @@ chatClient.onMessage(function (channel, user, text, msg) {
     case '!mmr':
       // If connected, we can just respond with the cached MMR
       if (connectedSocketClient) {
+        console.log('[MMR] Responding with cached MMR', connectedSocketClient.mmr)
+
         getRankDescription(
           connectedSocketClient.mmr,
           connectedSocketClient?.playerId || undefined,
         ).then((description) => {
+          console.log('[MMR] Responding with cached MMR', description)
+
           chatClient.say(channel, description)
         })
         return
       }
+
+      console.log('[MMR] Fetching MMR from database')
 
       // Do a DB lookup if the streamer is offline from OBS or Dota
       prisma.account
@@ -191,12 +197,18 @@ chatClient.onMessage(function (channel, user, text, msg) {
           },
         })
         .then((account) => {
-          if (!account || !account?.user?.mmr) return
+          if (!account || !account?.user?.mmr) {
+            console.log('[MMR] No MMR found in database', account)
+            return
+          }
           getRankDescription(account.user.mmr, account.user.playerId || undefined).then(
             (description) => {
               chatClient.say(channel, description)
             },
           )
+        })
+        .catch((e) => {
+          console.log('[MMR] Error fetching MMR from database', e)
         })
 
       break
