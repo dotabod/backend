@@ -102,7 +102,34 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       })
   }
 
-  function adjustMMR(increase: boolean) {
+  function adjustMMR(increase: boolean, matchId: string) {
+    // Do lookup at steam API for this match and figure out lobby type
+    fetch(
+      `https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/?key=${process.env.STEAM_WEB_API}&match_id=${matchId}`,
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        // lobby_type
+        // -1 - Invalid
+        // 0 - Public matchmaking
+        // 1 - Practise
+        // 2 - Tournament
+        // 3 - Tutorial
+        // 4 - Co-op with bots.
+        // 5 - Team match
+        // 6 - Solo Queue
+        // 7 - Ranked
+        // 8 - 1v1 Mid
+        console.log('[MMR]', { data }, { matchId })
+        return console.log(data)
+      })
+      .catch((e) => {
+        console.log('[MMR]', 'Error fetching match details', { matchId, error: e })
+      })
+      .finally(() => {
+        // Always run
+      })
+
     const newMMR = connectedSocketClient.mmr + (increase ? 30 : -30)
 
     prisma.user
@@ -242,6 +269,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
     endingBets = true
     const channel = connectedSocketClient.name
+    adjustMMR(won, betExists)
 
     prisma.bet
       .update({
@@ -283,8 +311,6 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
             console.log('[BETS]', 'Error closing twitch bet', channel, e)
           })
       })
-
-    adjustMMR(won)
   }
 
   function setupOBSBlockers(state: string) {
