@@ -23,7 +23,7 @@ export class GSIClient extends EventEmitter {
 
     this.ip = ip
     this.auth = auth
-    this.token = auth?.token
+    this.token = auth.token
   }
 }
 
@@ -46,7 +46,7 @@ function checkClient(req: Request, res: Response, next: NextFunction) {
   req.client.gamestate = req.body
   gsiClients.push(localUser)
 
-  const usr = findUser(localUser?.token)
+  const usr = findUser(localUser.token)
   if (usr) {
     usr.gsi = localUser
   }
@@ -57,7 +57,7 @@ function checkClient(req: Request, res: Response, next: NextFunction) {
 
 function emitAll(
   prefix: string,
-  obj: { [x: string]: any },
+  obj: Record<string, any>,
   emitter: { emit: (arg0: string, arg1: any) => void },
 ) {
   Object.keys(obj).forEach((key) => {
@@ -67,8 +67,8 @@ function emitAll(
 
 function recursiveEmit(
   prefix: string,
-  changed: { [x: string]: any },
-  body: { [x: string]: any },
+  changed: Record<string, any>,
+  body: Record<string, any>,
   emitter: { emit: (arg0: string, arg1: any) => void },
 ) {
   Object.keys(changed).forEach((key) => {

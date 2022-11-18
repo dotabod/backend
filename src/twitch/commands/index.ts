@@ -63,9 +63,9 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     case '!xpm':
       if (!connectedSocketClient?.gsi) break
-      if (isCustomGame(connectedSocketClient?.gsi)) break
+      if (isCustomGame(connectedSocketClient.gsi)) break
 
-      const xpm = connectedSocketClient?.gsi?.gamestate?.player?.xpm
+      const xpm = connectedSocketClient.gsi.gamestate?.player?.xpm
 
       if (xpm === 0) {
         chatClient.say(channel, 'No xpm')
@@ -81,9 +81,9 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     case '!gpm':
       if (!connectedSocketClient?.gsi) break
-      if (isCustomGame(connectedSocketClient?.gsi)) break
+      if (isCustomGame(connectedSocketClient.gsi)) break
 
-      const gpm = connectedSocketClient?.gsi?.gamestate?.player?.gpm
+      const gpm = connectedSocketClient.gsi.gamestate?.player?.gpm
 
       if (gpm === 0) {
         chatClient.say(channel, 'Live GPM: 0')
@@ -99,13 +99,13 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     case '!hero':
       if (!connectedSocketClient?.gsi) break
-      if (isCustomGame(connectedSocketClient?.gsi)) break
-      if (!connectedSocketClient || !connectedSocketClient?.gsi?.gamestate?.hero?.name) {
+      if (isCustomGame(connectedSocketClient.gsi)) break
+      if (!connectedSocketClient || !connectedSocketClient.gsi.gamestate?.hero?.name) {
         chatClient.say(channel, 'Not playing PauseChamp')
         break
       }
 
-      const hero = findHero(connectedSocketClient?.gsi?.gamestate?.hero?.name || '')
+      const hero = findHero(connectedSocketClient.gsi.gamestate.hero.name || '')
 
       if (!hero) {
         chatClient.say(channel, "Couldn't find hero Sadge")
@@ -114,7 +114,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       chatClient.say(
         channel,
-        `${hero?.aliases}. Primary attribute: ${hero?.attr_primary}. ${hero?.roles.replaceAll(
+        `${hero.aliases}. Primary attribute: ${hero.attr_primary}. ${hero.roles.replaceAll(
           '|',
           ', ',
         )}`.toLowerCase(),
@@ -143,7 +143,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
           where: {
             provider_providerAccountId: {
               provider: 'twitch',
-              providerAccountId: msg.channelId as string,
+              providerAccountId: msg.channelId!,
             },
           },
         })
@@ -162,7 +162,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
               server.io
                 .to(connectedSocketClient.sockets)
-                .emit('update-medal', { mmr, steam32Id: msg.channelId as string })
+                .emit('update-medal', { mmr, steam32Id: msg.channelId! })
             } else {
               console.log('[MMR] No sockets found to send update to', channel)
             }
@@ -180,7 +180,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
         getRankDescription(
           connectedSocketClient.mmr,
-          connectedSocketClient?.steam32Id || undefined,
+          connectedSocketClient.steam32Id || undefined,
         ).then((description) => {
           console.log('[MMR] Responding with cached MMR', description, channel)
 
@@ -203,11 +203,11 @@ chatClient.onMessage(function (channel, user, text, msg) {
             },
           },
           where: {
-            providerAccountId: msg.channelId as string,
+            providerAccountId: msg.channelId!,
           },
         })
         .then((account) => {
-          if (!account || !account?.user?.mmr) {
+          if (!account || !account.user.mmr) {
             console.log('[MMR] No MMR found in database', account, channel)
             return
           }

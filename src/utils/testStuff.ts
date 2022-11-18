@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-expect-error
 // Just used for testing
 const randomMatch = '6862608251'
 const steam32Id = '161444478' // draskyl

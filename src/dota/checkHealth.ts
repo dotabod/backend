@@ -5,7 +5,7 @@ export default function checkHealth(
   },
   recentHealth: number[],
 ) {
-  if (!data?.hero?.health_percent) return false
+  if (!data.hero.health_percent) return false
 
   const healthPct = data.hero.health_percent
   recentHealth.shift()
@@ -15,10 +15,10 @@ export default function checkHealth(
   const randomNumber = Math.floor(Math.random() * 3) === 1
 
   if (
-    data.hero?.health - data.previously?.hero?.health > 200 &&
+    data.hero.health - data.previously.hero.health > 200 &&
     randomNumber &&
-    data.previously?.hero?.health !== 0 &&
-    healthPct - data.previously?.hero?.health_percent > 5
+    data.previously.hero.health !== 0 &&
+    healthPct - data.previously.hero.health_percent > 5
   ) {
     return true
   }

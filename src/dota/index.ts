@@ -24,8 +24,8 @@ export function isCustomGame(client: GSIClient) {
   // undefined means the client is disconnected from a game
   // so we want to run our obs stuff to unblock anything
   const isArcade =
-    client.gamestate?.map?.customgamename !== '' &&
-    client.gamestate?.map?.customgamename !== undefined
+    client.gamestate?.map.customgamename !== '' &&
+    client.gamestate?.map.customgamename !== undefined
   if (
     client.gamestate?.player?.team_name === 'spectator' ||
     isArcade ||
@@ -54,9 +54,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   // console.log("[SETUP]",{ sockets: connectedSocketClient.sockets })
 
   // We want to reset this to false when a new socket connects?
-  const blockingMinimap: { [key: string]: boolean } = {}
-  const blockingPicks: { [key: string]: boolean } = {}
-  const allUnblocked: { [key: string]: boolean } = {}
+  const blockingMinimap: Record<string, boolean> = {}
+  const blockingPicks: Record<string, boolean> = {}
+  const allUnblocked: Record<string, boolean> = {}
 
   // Make sure user has a steam32Id saved in the database
   // This runs once per every match start but its just one DB query so hopefully it's fine
@@ -112,7 +112,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
           getRankDescription(
             connectedSocketClient.mmr,
-            connectedSocketClient?.steam32Id || undefined,
+            connectedSocketClient.steam32Id || undefined,
           ).then((description) => {
             chatClient.say(connectedSocketClient.name, description)
           })
@@ -191,17 +191,17 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     if (client?.gamestate?.player?.activity !== 'playing') return
 
     // Why open if won?
-    if (client.gamestate?.map?.win_team !== 'none') return
+    if (client.gamestate.map.win_team !== 'none') return
 
     // We at least want the hero name so it can go in the twitch bet title
-    if (!client.gamestate?.hero?.name || !client.gamestate?.hero?.name.length) return
+    if (!client.gamestate.hero?.name || !client.gamestate.hero.name.length) return
 
     // It's not a live game, so we don't want to open bets nor save it to DB
-    if (!client.gamestate?.map?.matchid || client.gamestate?.map?.matchid === '0') return
+    if (!client.gamestate.map.matchid || client.gamestate.map.matchid === '0') return
 
     const channel = connectedSocketClient.name
     const isOpenBetGameCondition =
-      client.gamestate?.map?.clock_time < 20 && client.gamestate?.map?.name === 'start'
+      client.gamestate.map.clock_time < 20 && client.gamestate.map.name === 'start'
 
     // Check if this bet for this match id already exists, dont continue if it does
     prisma.bet
@@ -211,35 +211,35 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
         },
         where: {
           userId: connectedSocketClient.token,
-          matchId: client.gamestate?.map?.matchid,
+          matchId: client.gamestate.map.matchid,
           won: null,
         },
       })
       .then((bet) => {
         // Saving to local memory so we don't have to query the db again
-        if (bet && bet?.id) {
-          console.log('[BETS]', 'Found a bet in the database', bet?.id)
-          betExists = client.gamestate?.map?.matchid || null
+        if (bet && bet.id) {
+          console.log('[BETS]', 'Found a bet in the database', bet.id)
+          betExists = client.gamestate?.map.matchid || null
         } else {
           if (!isOpenBetGameCondition) {
             return
           }
 
-          betExists = client.gamestate?.map?.matchid || null
+          betExists = client.gamestate?.map.matchid || null
           updateSteam32Id()
 
           prisma.bet
             .create({
               data: {
                 // TODO: Replace prediction id with the twitch api bet id result
-                predictionId: client.gamestate?.map?.matchid as string,
-                matchId: client.gamestate?.map?.matchid as string,
+                predictionId: client.gamestate?.map.matchid!,
+                matchId: client.gamestate?.map.matchid!,
                 userId: client.token,
-                myTeam: client.gamestate?.player?.team_name as string,
+                myTeam: client.gamestate?.player?.team_name!,
               },
             })
             .then(() => {
-              const hero = findHero(client?.gamestate?.hero?.name || '')
+              const hero = findHero(client.gamestate?.hero?.name || '')
 
               openTwitchBet(channel, client.token, hero?.localized_name)
                 .then(() => {
@@ -247,7 +247,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
                   console.log('[BETS]', {
                     event: 'open_bets',
                     data: {
-                      matchId: client.gamestate?.map?.matchid,
+                      matchId: client.gamestate?.map.matchid,
                       user: client.token,
                       player_team: client.gamestate?.player?.team_name,
                     },
@@ -275,9 +275,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
     // "none"? Must mean the game hasn't ended yet
     // Would be undefined otherwise if there is no game
-    if (!winningTeam && client.gamestate?.map?.win_team === 'none') return
+    if (!winningTeam && client.gamestate?.map.win_team === 'none') return
 
-    const localWinner = winningTeam || client.gamestate?.map?.win_team
+    const localWinner = winningTeam || client.gamestate?.map.win_team
     const myTeam = client.gamestate?.player?.team_name
     const won = myTeam === localWinner
 
@@ -302,7 +302,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
         where: {
           matchId_userId: {
             userId: client.token,
-            matchId: client.gamestate?.map?.matchid as string,
+            matchId: client.gamestate?.map.matchid!,
           },
         },
       })
@@ -320,7 +320,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
             console.log('[BETS]', {
               event: 'end_bets',
               data: {
-                matchId: client.gamestate?.map?.matchid,
+                matchId: client.gamestate?.map.matchid,
                 token: client.token,
                 winning_team: localWinner,
                 player_team: myTeam,
@@ -410,7 +410,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     if (isCustomGame(client)) return
 
     // In case they connect to a game in progress and we missed the start event
-    setupOBSBlockers(data?.map?.game_state)
+    setupOBSBlockers(data.map.game_state)
 
     openBets()
 
@@ -543,7 +543,7 @@ server.events.on('new-gsi-client', (client: { token: string }) => {
   const connectedSocketClient = findUser(client.token)
 
   // Only setup main events if the OBS socket has connected
-  if (!connectedSocketClient?.sockets?.length) {
+  if (!connectedSocketClient?.sockets.length) {
     console.log('[GSI]', 'Waiting for OBS', { token: client.token })
     return
   }

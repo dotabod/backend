@@ -4,7 +4,7 @@ import { Dota2, SlotsIds } from '../types'
 // Slots 0-5 are the backpack
 // Slots 6-8 are the backpack stashed items
 export default function checkMidas(data: Dota2, passiveMidas: { counter: number }) {
-  if (!data?.items) return false
+  if (!data.items) return false
 
   const midas = 'item_hand_of_midas'
 
@@ -18,7 +18,7 @@ export default function checkMidas(data: Dota2, passiveMidas: { counter: number 
   // Find the slot the midas is sitting in
   // TODO: Extract to a function to find an item?
   midasSlot = slots.find((slotKey: number) => {
-    if (data?.items?.[`slot${slotKey as SlotsIds}`]?.name === midas) {
+    if (data.items?.[`slot${slotKey as SlotsIds}`]?.name === midas) {
       midasSlot = slotKey as SlotsIds
       return slotKey as SlotsIds
     }

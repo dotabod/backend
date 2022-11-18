@@ -78,7 +78,7 @@ export function getRankDetail(param: any, steam32Id?: number) {
 
   const [myRank, nextRank] = ranks.filter((rank) => mmr <= rank.range[1])
 
-  const nextMMR = nextRank?.range[0] || myRank?.range[1]
+  const nextMMR = nextRank.range[0] || myRank.range[1]
   const mmrToNextRank = nextMMR - mmr
   const winsToNextRank = Math.ceil(mmrToNextRank / 30)
 
@@ -112,5 +112,5 @@ export async function getRankDescription(param: any, steam32Id?: number) {
   const nextIn = ` in ${winsToNextRank} wins`
   const oneMore = mmrToNextRank <= 30 ? ' | One more win peepoClap' : ''
 
-  return `${param} | ${myRank?.title}${nextAt}${oneMore || nextIn}`
+  return `${param} | ${myRank.title}${nextAt}${oneMore || nextIn}`
 }

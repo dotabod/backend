@@ -34,7 +34,7 @@ type Dota2 = Dota2 & {
   added?: Dota2
 }
 
-type SocketClient = {
+interface SocketClient {
   gsi?: GSIClient
   name: string
   steam32Id: number | null

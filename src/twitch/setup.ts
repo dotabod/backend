@@ -32,7 +32,7 @@ export async function getChannelAuthProvider(channel: string, userId: string) {
 
   const twitchTokens = findUser(userId)
 
-  if (!twitchTokens?.account?.access_token || !twitchTokens?.account?.refresh_token) {
+  if (!twitchTokens?.account.access_token || !twitchTokens.account.refresh_token) {
     console.log('[TWITCHSETUP]', 'Missing twitch tokens', channel)
     return {}
   }
@@ -67,7 +67,7 @@ async function getChannels() {
   console.log('Running getChannels')
 
   if (process.env.NODE_ENV === 'development') {
-    return process.env.DEV_CHANNELS?.split(',') || []
+    return process.env.DEV_CHANNELS.split(',') || []
   }
 
   return prisma.user
