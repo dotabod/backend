@@ -1,4 +1,4 @@
-import { Dota2, Hero } from 'dotagsi'
+import { Building, Draft, Hero, Map, Player, Provider } from 'dotagsi'
 
 import { GSIClient } from '../dota/lib/dota2-gsi'
 
@@ -27,11 +27,16 @@ type Slots<Type extends string, N> = {
 
 type Items = Slots<'slot' | 'stash' | 'teleport' | 'neutral', ItemRaw>
 
-type Dota2 = Dota2 & {
-  items?: Items
-  hero?: Hero
-  previously?: Dota2
+interface Dota2 {
   added?: Dota2
+  buildings?: Building[]
+  draft?: Draft
+  hero?: Hero
+  items?: Items
+  map?: Map
+  player?: Player | null
+  previously?: Dota2
+  provider?: Provider
 }
 
 interface SocketClient {

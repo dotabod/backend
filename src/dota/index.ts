@@ -39,7 +39,7 @@ export function isCustomGame(client: GSIClient) {
 
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
-async function setupMainEvents(connectedSocketClient: SocketClient) {
+function setupMainEvents(connectedSocketClient: SocketClient) {
   const client = connectedSocketClient.gsi
   if (client === undefined) return
 
@@ -183,7 +183,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   // 2 Next, check if the prediction is still open
   // 3 If it is, steam dota2 api result of match
   // 4 Then, tell twitch to close bets based on win result
-  async function openBets() {
+  function openBets() {
     // The bet was already made
     if (betExists !== null) return
 

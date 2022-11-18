@@ -198,41 +198,40 @@ class D2GSI {
     })
 
     // IO auth & client setup so we can send this socket messages
-    io.use(async (socket, next) => {
+    io.use((socket, next) => {
       const { token } = socket.handshake.auth
       const connectedSocketClient = findUser(token)
 
       // Cache to prevent a supabase lookup on every message for username & token validation
       if (connectedSocketClient) {
-        // eslint-disable-next-line no-param-reassign
-        socket.data = connectedSocketClient
         connectedSocketClient.sockets.push(socket.id)
-        return next()
+        next()
+        return
       }
 
-      const user = await getDBUser(token)
-      if (!user) {
-        return next(new Error('authentication error'))
-      }
+      const user = getDBUser(token).then((user) => {
+        if (!user) {
+          next(new Error('authentication error'))
+          return
+        }
 
-      // eslint-disable-next-line no-param-reassign
-      socket.data.name = user.name
-      // eslint-disable-next-line no-param-reassign
-      socket.data.token = token
-      // In case the socket is connected before the GSI client has!
-      socketClients.push({
-        ...user,
-        token,
-        sockets: [socket.id],
+        // In case the socket is connected before the GSI client has!
+        socketClients.push({
+          ...user,
+          token,
+          sockets: [socket.id],
+        })
+
+        next()
       })
-
-      return next()
     })
 
     // Cleanup the memory cache of sockets when they disconnect
     io.on('connection', (socket: Socket) => {
+      const { token } = socket.handshake.auth
+
       // Socket connected event, used to connect GSI to a socket
-      const connectedSocketClient = findUser(socket.data.token)
+      const connectedSocketClient = findUser(token)
       events.emit('new-socket-client', {
         client: connectedSocketClient,
         socketId: socket.id,
@@ -265,7 +264,7 @@ class D2GSI {
     this.io = io
   }
 
-  async init() {
+  init() {
     return this
   }
 }
