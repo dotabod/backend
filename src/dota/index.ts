@@ -73,20 +73,20 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     })
   }
 
-  // Make sure user has a playerId saved in the database
+  // Make sure user has a steam32Id saved in the database
   // This runs once per every match start but its just one DB query so hopefully it's fine
   // In the future I'd like to remove this and maybe have FE ask them to enter their steamid?
-  function updatePlayerId() {
-    // User already has a playerId
-    if (connectedSocketClient.playerId) return
+  function updateSteam32Id() {
+    // User already has a steam32Id
+    if (connectedSocketClient.steam32Id) return
 
-    const playerId = steamID64toSteamID32(client?.gamestate?.player?.steamid || '')
-    if (!playerId) return
+    const steam32Id = steamID64toSteamID32(client?.gamestate?.player?.steamid || '')
+    if (!steam32Id) return
 
     prisma.user
       .update({
         data: {
-          playerId,
+          steam32Id,
         },
         where: {
           id: connectedSocketClient.token,
@@ -94,13 +94,13 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       })
       .then(() => {
         if (connectedSocketClient.sockets.length) {
-          console.log('[PLAYERID]', 'Updated player ID, emitting badge overlay update', {
+          console.log('[STEAM32ID]', 'Updated player ID, emitting badge overlay update', {
             token: connectedSocketClient.token,
           })
 
           server.io
             .to(connectedSocketClient.sockets)
-            .emit('update-medal', { mmr: connectedSocketClient.mmr, playerId })
+            .emit('update-medal', { mmr: connectedSocketClient.mmr, steam32Id })
         }
       })
   }
@@ -124,14 +124,14 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
           getRankDescription(
             connectedSocketClient.mmr,
-            connectedSocketClient?.playerId || undefined,
+            connectedSocketClient?.steam32Id || undefined,
           ).then((description) => {
             chatClient.say(connectedSocketClient.name, description)
           })
 
           server.io
             .to(connectedSocketClient.sockets)
-            .emit('update-medal', { mmr: newMMR, playerId: connectedSocketClient.playerId })
+            .emit('update-medal', { mmr: newMMR, steam32Id: connectedSocketClient.steam32Id })
         }
       })
 
@@ -216,7 +216,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
           }
 
           betExists = client.gamestate?.map?.matchid || null
-          updatePlayerId()
+          updateSteam32Id()
 
           prisma.bet
             .create({

@@ -46,14 +46,14 @@ export const leaderRanks = [
   { range: [1001, 100000], image: '80.png', sparklingEffect: false },
 ]
 
-export async function lookupLeaderRank(mmr: number, playerId?: number) {
+export async function lookupLeaderRank(mmr: number, steam32Id?: number) {
   let standing = mmr
 
-  // Not everyone has a playerID saved yet
+  // Not everyone has a steam32Id saved yet
   // The dota2gsi should save one for us
-  if (playerId) {
+  if (steam32Id) {
     try {
-      standing = await axios(`https://api.opendota.com/api/players/${playerId}`).then(
+      standing = await axios(`https://api.opendota.com/api/players/${steam32Id}`).then(
         ({ data }) => data?.leaderboard_rank as number,
       )
     } catch (e) {
@@ -66,14 +66,14 @@ export async function lookupLeaderRank(mmr: number, playerId?: number) {
   return { ...myRank, standing }
 }
 
-export function getRankDetail(param: any, playerId?: number) {
+export function getRankDetail(param: any, steam32Id?: number) {
   const mmr = Number(param)
 
   if (!mmr || mmr < 0) return null
 
   // Higher than max mmr? Lets check leaderboards
   if (mmr > ranks[ranks.length - 1].range[1]) {
-    return lookupLeaderRank(mmr, playerId)
+    return lookupLeaderRank(mmr, steam32Id)
   }
 
   const [myRank, nextRank] = ranks.filter((rank) => mmr <= rank.range[1])
@@ -92,14 +92,14 @@ export function getRankDetail(param: any, playerId?: number) {
 }
 
 // Used for chatting !mmr
-export async function getRankDescription(param: any, playerId?: number) {
-  const deets = await getRankDetail(param, playerId)
+export async function getRankDescription(param: any, steam32Id?: number) {
+  const deets = await getRankDetail(param, steam32Id)
 
   if (!deets) return 'Unknown'
 
   // Immortal rankers don't have a nextRank
   if (!('nextRank' in deets)) {
-    // If mmr === standing that means we couldn't find a playerID, so wasn't looked up on Opendota
+    // If mmr === standing that means we couldn't find a steam32Id, so wasn't looked up on Opendota
     const standingDesc =
       deets.standing !== param && deets.standing !== null
         ? ` | Immortal #${deets.standing}`

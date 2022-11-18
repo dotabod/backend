@@ -13,7 +13,7 @@ export async function getDBUser(token: string) {
           select: {
             id: true,
             mmr: true,
-            playerId: true,
+            steam32Id: true,
             name: true,
           },
         },

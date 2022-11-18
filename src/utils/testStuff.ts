@@ -1,7 +1,7 @@
 // @ts-ignore
 // Just used for testing
 const randomMatch = '6862608251'
-const playerId = '161444478' // draskyl
+const steam32Id = '161444478' // draskyl
 
 // const apiDota = Dota2Api.create(process.env.STEAM_WEB_API)
 
@@ -32,11 +32,11 @@ const playerId = '161444478' // draskyl
 //   .then((response) => response.json())
 //   .then((data) => console.log(data))
 
-// fetch(`https://api.opendota.com/api/players/${playerId}/matches?date=1&game_mode=22`)
+// fetch(`https://api.opendota.com/api/players/${steam32Id}/matches?date=1&game_mode=22`)
 //   .then((response) => response.json())
 //   .then((data) => console.log(data))
 
-// fetch(`https://api.opendota.com/api/players/${playerId}`)
+// fetch(`https://api.opendota.com/api/players/${steam32Id}`)
 //   .then((response) => response.json())
 //   .then((data) => console.log(data?.leaderboard_rank))
 

@@ -22,7 +22,7 @@ type Dota2 = Dota2 & {
 type SocketClient = {
   gsi?: GSIClient
   name: string
-  playerId: number | null
+  steam32Id: number | null
   mmr: number
   token: string
   account: {

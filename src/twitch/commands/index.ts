@@ -163,7 +163,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
               server.io
                 .to(connectedSocketClient.sockets)
-                .emit('update-medal', { mmr, playerId: msg.channelId as string })
+                .emit('update-medal', { mmr, steam32Id: msg.channelId as string })
             } else {
               console.log('[MMR] No sockets found to send update to', channel)
             }
@@ -181,7 +181,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
         getRankDescription(
           connectedSocketClient.mmr,
-          connectedSocketClient?.playerId || undefined,
+          connectedSocketClient?.steam32Id || undefined,
         ).then((description) => {
           console.log('[MMR] Responding with cached MMR', description, channel)
 
@@ -199,7 +199,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
             user: {
               select: {
                 mmr: true,
-                playerId: true,
+                steam32Id: true,
               },
             },
           },
@@ -212,7 +212,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
             console.log('[MMR] No MMR found in database', account, channel)
             return
           }
-          getRankDescription(account.user.mmr, account.user.playerId || undefined).then(
+          getRankDescription(account.user.mmr, account.user.steam32Id || undefined).then(
             (description) => {
               chatClient.say(channel, description)
             },
