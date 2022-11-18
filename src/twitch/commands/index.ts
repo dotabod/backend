@@ -14,17 +14,17 @@ const CooldownManager = {
   cooldownTime: 30 * 1000,
   store: new Map(),
 
-  canUse: function (commandName: string) {
+  canUse: function (channel: string, commandName: string) {
     // Check if the last time you've used the command + 30 seconds has passed
     // (because the value is less then the current time)
-    if (!this.store.has(commandName)) return true
+    if (!this.store.has(`${channel}.${commandName}`)) return true
 
-    return this.store.get(commandName) + this.cooldownTime < Date.now()
+    return this.store.get(`${channel}.${commandName}`) + this.cooldownTime < Date.now()
   },
 
-  touch: function (commandName: string) {
+  touch: function (channel: string, commandName: string) {
     // Store the current timestamp in the store based on the current commandName
-    this.store.set(commandName, Date.now())
+    this.store.set(`${channel}.${commandName}`, Date.now())
   },
 }
 
@@ -44,7 +44,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
   const args = text.split(' ')
   const command = args[0].toLowerCase()
   if (!commands.includes(command)) return
-  if (!CooldownManager.canUse(command)) return
+  if (!CooldownManager.canUse(channel, command)) return
 
   const connectedSocketClient = findUserByName(toUserName(channel))
 
@@ -219,7 +219,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
   }
 
-  CooldownManager.touch(command)
+  CooldownManager.touch(channel, command)
 })
 
 /*
