@@ -355,7 +355,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
 
     connectedSocketClient.sockets.forEach((socketId: string) => {
       // Sending a msg to just this socket
-      if (!blockingMinimap[socketId] && minimapStates.includes(state)) {
+      if (!blockingMinimap[socketId] && minimapStates.includes(state ?? '')) {
         console.log('[OBS]', 'Block minimap', { token: client.token })
         blockingMinimap[socketId] = true
         allUnblocked[socketId] = false
@@ -365,12 +365,12 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
           .emit('block', { type: 'minimap', team: client.gamestate?.player?.team_name })
       }
 
-      if (blockingMinimap[socketId] && !minimapStates.includes(state)) {
+      if (blockingMinimap[socketId] && !minimapStates.includes(state ?? '')) {
         console.log('[OBS]', 'Unblock minimap', { token: client.token })
         blockingMinimap[socketId] = false
       }
 
-      if (!blockingPicks[socketId] && pickSates.includes(state)) {
+      if (!blockingPicks[socketId] && pickSates.includes(state ?? '')) {
         console.log('[OBS]', 'Block hero picks for team', client.gamestate?.player?.team_name, {
           token: client.token,
         })
@@ -382,7 +382,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
           .emit('block', { type: 'picks', team: client.gamestate?.player?.team_name })
       }
 
-      if (blockingPicks[socketId] && !pickSates.includes(state)) {
+      if (blockingPicks[socketId] && !pickSates.includes(state ?? '')) {
         console.log('[OBS]', 'Unblock picks', { token: client.token })
         blockingPicks[socketId] = false
       }
