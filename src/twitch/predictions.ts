@@ -1,5 +1,6 @@
-import { getAuthProvider, getChannelAuthProvider } from './setup'
 import { ApiClient } from '@twurple/api'
+
+import { getAuthProvider, getChannelAuthProvider } from './setup'
 
 async function getChannelAPI(channel: string, userId: string) {
   const { providerAccountId, authProvider } = await getChannelAuthProvider(channel, userId)

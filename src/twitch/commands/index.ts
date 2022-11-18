@@ -1,11 +1,12 @@
-import { getChatClient } from '../setup'
-import { getRankDescription } from '../../utils/constants'
-import prisma from '../../db/prisma'
-import { findUserByName } from '../../dota/dotaGSIClients'
-import { isCustomGame, server } from '../../dota'
 import { toUserName } from '@twurple/chat'
 import heroes from 'dotabase/json/heroes.json' assert { type: 'json' }
+
 import { findHero } from '../../db/getHero'
+import prisma from '../../db/prisma'
+import { isCustomGame, server } from '../../dota'
+import { findUserByName } from '../../dota/dotaGSIClients'
+import { getRankDescription } from '../../utils/constants'
+import { getChatClient } from '../setup'
 
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
@@ -29,7 +30,7 @@ const CooldownManager = {
   },
 }
 
-let plebMode = new Set()
+const plebMode = new Set()
 const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping', '!help', '!xpm']
 chatClient.onMessage(function (channel, user, text, msg) {
   // Letting one pleb in

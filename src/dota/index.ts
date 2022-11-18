@@ -1,15 +1,16 @@
 import axios from 'axios'
-import { SocketClient, Dota2 } from '../types'
+
+import { findHero } from '../db/getHero'
+import prisma from '../db/prisma'
+import { chatClient } from '../twitch/commands'
+import { closeTwitchBet, openTwitchBet } from '../twitch/predictions'
+import { Dota2, SocketClient } from '../types'
+import { steamID64toSteamID32 } from '../utils'
+import { getRankDescription } from '../utils/constants'
 import checkMidas from './checkMidas'
 import findUser from './dotaGSIClients'
 import D2GSI, { GSIClient } from './lib/dota2-gsi'
 import { minimapStates, pickSates } from './trackingConsts'
-import { steamID64toSteamID32 } from '../utils'
-import { closeTwitchBet, openTwitchBet } from '../twitch/predictions'
-import { chatClient } from '../twitch/commands'
-import prisma from '../db/prisma'
-import { getRankDescription } from '../utils/constants'
-import { findHero } from '../db/getHero'
 
 // TODO: We shouldn't use await beyond the getChatClient(), it slows down the server I think
 
@@ -56,23 +57,6 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   const blockingMinimap: { [key: string]: boolean } = {}
   const blockingPicks: { [key: string]: boolean } = {}
   const allUnblocked: { [key: string]: boolean } = {}
-
-  function lockBets() {
-    if (!client) return
-
-    // TODO: Check if bets get locked at the same time this gets posted
-    if (chatClient.isConnected && chatClient.isRegistered) {
-      chatClient.say(connectedSocketClient.name, `Bets are locked peepoGamble`)
-    }
-
-    console.log('[BETS]', {
-      event: 'lock_bets',
-      data: {
-        token: client.token,
-        matchId: client.gamestate?.map?.matchid,
-      },
-    })
-  }
 
   // Make sure user has a steam32Id saved in the database
   // This runs once per every match start but its just one DB query so hopefully it's fine

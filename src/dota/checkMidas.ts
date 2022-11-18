@@ -1,9 +1,7 @@
+import { Dota2, SlotsIds } from '../types'
+
 // Stash is fountain stash
 // Slots 0-5 are the backpack
-
-import { ItemRaw, SlotsIds } from 'dotagsi/types/dota2'
-import { Dota2 } from '../types'
-
 // Slots 6-8 are the backpack stashed items
 export default function checkMidas(data: Dota2, passiveMidas: { counter: number }) {
   if (!data?.items) return false

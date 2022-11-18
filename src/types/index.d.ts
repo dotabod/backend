@@ -1,5 +1,5 @@
 import { Dota2, Hero } from 'dotagsi'
-import { Slots, ItemRaw } from 'dotagsi/types/dota2'
+
 import { GSIClient } from '../dota/lib/dota2-gsi'
 
 declare global {
@@ -8,6 +8,21 @@ declare global {
       client: Context
     }
   }
+}
+
+interface ItemRaw {
+  name: string
+  purchaser?: number | null
+  can_cast?: boolean | null
+  cooldown?: number | null
+  passive?: boolean | null
+  charges?: number | null
+}
+
+type SlotsIds = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
+
+type Slots<Type extends string, N> = {
+  [x in `${Type}${SlotsIds}`]?: N
 }
 
 type Items = Slots<'slot' | 'stash' | 'teleport' | 'neutral', ItemRaw>
