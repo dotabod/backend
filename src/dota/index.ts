@@ -9,6 +9,7 @@ import { closeTwitchBet, openTwitchBet } from '../twitch/predictions'
 import { chatClient } from '../twitch/commands'
 import prisma from '../db/prisma'
 import { getRankDescription } from '../utils/constants'
+import { findHero } from '../db/getHero'
 
 // TODO: We shouldn't use await beyond the getChatClient(), it slows down the server I think
 
@@ -208,13 +209,15 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
     // Why open if won?
     if (client.gamestate?.map?.win_team !== 'none') return
 
-    const channel = connectedSocketClient.name
-    const isLiveMatch = client.gamestate?.map?.matchid && client.gamestate?.map?.matchid !== '0'
-    const isOpenBetGameCondition =
-      client.gamestate?.map?.clock_time < 20 && client.gamestate?.map?.name === 'start'
+    // We at least want the hero name so it can go in the twitch bet title
+    if (!client.gamestate?.hero?.name || !client.gamestate?.hero?.name.length) return
 
     // It's not a live game, so we don't want to open bets nor save it to DB
-    if (!isLiveMatch) return
+    if (!client.gamestate?.map?.matchid || client.gamestate?.map?.matchid === '0') return
+
+    const channel = connectedSocketClient.name
+    const isOpenBetGameCondition =
+      client.gamestate?.map?.clock_time < 20 && client.gamestate?.map?.name === 'start'
 
     // Check if this bet for this match id already exists, dont continue if it does
     prisma.bet
@@ -252,7 +255,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
               },
             })
             .then(() => {
-              openTwitchBet(channel, client.token)
+              const hero = findHero(client?.gamestate?.hero?.name || '')
+
+              openTwitchBet(channel, client.token, hero?.localized_name)
                 .then(() => {
                   chatClient.say(channel, `Bets open peepoGamble`)
                   console.log('[BETS]', {

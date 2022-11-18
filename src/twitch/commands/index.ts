@@ -5,6 +5,7 @@ import { findUserByName } from '../../dota/dotaGSIClients'
 import { isCustomGame, server } from '../../dota'
 import { toUserName } from '@twurple/chat'
 import heroes from 'dotabase/json/heroes.json' assert { type: 'json' }
+import { findHero } from '../../db/getHero'
 
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
@@ -104,9 +105,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
         break
       }
 
-      const hero = heroes.find(
-        (hero) => hero.full_name === connectedSocketClient?.gsi?.gamestate?.hero?.name,
-      )
+      const hero = findHero(connectedSocketClient?.gsi?.gamestate?.hero?.name || '')
 
       if (!hero) {
         chatClient.say(channel, "Couldn't find hero Sadge")
