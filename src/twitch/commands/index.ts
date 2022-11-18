@@ -1,5 +1,4 @@
 import { toUserName } from '@twurple/chat'
-import heroes from 'dotabase/json/heroes.json' assert { type: 'json' }
 
 import { findHero } from '../../db/getHero'
 import prisma from '../../db/prisma'

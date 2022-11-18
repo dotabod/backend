@@ -1,13 +1,11 @@
 import { EventEmitter } from 'events'
 import http from 'http'
 
-import { DirectConnectionAdapter, EventSubListener } from '@twurple/eventsub'
 import bodyParser from 'body-parser'
 import express, { NextFunction, Request, Response } from 'express'
 import { Server, Socket } from 'socket.io'
 
 import { getDBUser } from '../../db/getDBUser'
-import { getBotAPI } from '../../twitch/predictions'
 import { Dota2 } from '../../types'
 import findUser from '../dotaGSIClients'
 import { gsiClients, socketClients } from '../trackingConsts'

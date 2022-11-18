@@ -2,7 +2,7 @@ import { RefreshingAuthProvider } from '@twurple/auth'
 import { ChatClient } from '@twurple/chat'
 
 import prisma from '../db/prisma'
-import findUser, { getActiveUsers } from '../dota/dotaGSIClients'
+import findUser from '../dota/dotaGSIClients'
 
 export async function getAuthProvider() {
   if (!process.env.TWITCH_ACCESS_TOKEN || !process.env.TWITCH_REFRESH_TOKEN) {
