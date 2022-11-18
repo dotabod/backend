@@ -2,45 +2,31 @@ import { ApiClient } from '@twurple/api'
 
 import { getAuthProvider, getChannelAuthProvider } from './setup'
 
-async function getChannelAPI(channel: string, userId: string) {
-  const { providerAccountId, authProvider } = await getChannelAuthProvider(channel, userId)
+function getChannelAPI(channel: string, userId: string) {
+  const { providerAccountId, authProvider } = getChannelAuthProvider(channel, userId)
 
-  if (!providerAccountId || !authProvider) {
-    console.log('[PREDICT]', 'Missing providerAccountId or authProvider', channel)
-    throw new Error('Missing providerAccountId or authProvider')
+  if (!providerAccountId) {
+    console.log('[PREDICT]', 'Missing providerAccountId', channel)
+    throw new Error('Missing providerAccountId')
   }
 
   const api = new ApiClient({ authProvider })
-  if (!api) {
-    throw new Error('No channel api')
-  }
-
   console.log('[PREDICT]', 'Retrieved twitch api', channel)
 
   return { api, providerAccountId }
 }
 
-export async function getBotAPI() {
-  const authProvider = await getAuthProvider()
-
-  if (!authProvider) {
-    throw new Error('Missing authProvider')
-  }
-
+export function getBotAPI() {
+  const authProvider = getAuthProvider()
   const api = new ApiClient({ authProvider })
-  if (!api) {
-    throw new Error('No bot api')
-  }
-
   console.log('[BOT]', 'Retrieved twitch bot api')
-
   return api
 }
 
 export async function openTwitchBet(channel: string, userId: string, heroName?: string) {
   console.log('[PREDICT]', '[BETS] Opening twitch bet', channel)
 
-  const { api, providerAccountId } = await getChannelAPI(channel, userId)
+  const { api, providerAccountId } = getChannelAPI(channel, userId)
 
   const title = heroName
     ? `Will ${channel} win with ${heroName}?`
@@ -54,7 +40,7 @@ export async function openTwitchBet(channel: string, userId: string, heroName?: 
 }
 
 export async function closeTwitchBet(channel: string, won: boolean, userId: string) {
-  const { api, providerAccountId } = await getChannelAPI(channel, userId)
+  const { api, providerAccountId } = getChannelAPI(channel, userId)
 
   const { data: predictions } = await api.predictions.getPredictions(providerAccountId, {
     limit: 1,

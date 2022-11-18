@@ -4,30 +4,36 @@ import { ChatClient } from '@twurple/chat'
 import prisma from '../db/prisma'
 import findUser from '../dota/dotaGSIClients'
 
-export async function getAuthProvider() {
-  if (!process.env.TWITCH_ACCESS_TOKEN || !process.env.TWITCH_REFRESH_TOKEN) {
+const hasTokens =
+  process.env.TWITCH_ACCESS_TOKEN &&
+  process.env.TWITCH_REFRESH_TOKEN &&
+  process.env.TWITCH_CLIENT_ID &&
+  process.env.TWITCH_CLIENT_SECRET
+
+export function getAuthProvider() {
+  if (!hasTokens) {
     throw new Error('Missing twitch tokens')
   }
 
   const authProvider = new RefreshingAuthProvider(
     {
-      clientId: process.env.TWITCH_CLIENT_ID,
-      clientSecret: process.env.TWITCH_CLIENT_SECRET,
+      clientId: process.env.TWITCH_CLIENT_ID ?? '',
+      clientSecret: process.env.TWITCH_CLIENT_SECRET ?? '',
     },
     {
       expiresIn: 86400, // 1 day
       obtainmentTimestamp: Date.now(),
-      accessToken: process.env.TWITCH_ACCESS_TOKEN,
-      refreshToken: process.env.TWITCH_REFRESH_TOKEN,
+      accessToken: process.env.TWITCH_ACCESS_TOKEN ?? '',
+      refreshToken: process.env.TWITCH_REFRESH_TOKEN ?? '',
     },
   )
 
   return authProvider
 }
 
-export async function getChannelAuthProvider(channel: string, userId: string) {
-  if (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET) {
-    throw new Error('Missing TWITCH_CLIENT_ID or TWITCH_CLIENT_SECRET')
+export function getChannelAuthProvider(channel: string, userId: string) {
+  if (!hasTokens) {
+    throw new Error('Missing twitch tokens')
   }
 
   const twitchTokens = findUser(userId)
@@ -41,8 +47,8 @@ export async function getChannelAuthProvider(channel: string, userId: string) {
 
   const authProvider = new RefreshingAuthProvider(
     {
-      clientId: process.env.TWITCH_CLIENT_ID,
-      clientSecret: process.env.TWITCH_CLIENT_SECRET,
+      clientId: process.env.TWITCH_CLIENT_ID ?? '',
+      clientSecret: process.env.TWITCH_CLIENT_SECRET ?? '',
     },
     {
       scope: [
@@ -67,7 +73,7 @@ async function getChannels() {
   console.log('Running getChannels')
 
   if (process.env.NODE_ENV === 'development') {
-    return process.env.DEV_CHANNELS.split(',') || []
+    return process.env.DEV_CHANNELS?.split(',') ?? []
   }
 
   return prisma.user
@@ -77,7 +83,7 @@ async function getChannels() {
 
 export async function getChatClient() {
   const chatClient = new ChatClient({
-    authProvider: await getAuthProvider(),
+    authProvider: getAuthProvider(),
     channels: getChannels,
   })
 
