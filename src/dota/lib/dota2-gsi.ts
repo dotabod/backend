@@ -111,8 +111,8 @@ function newData(req: Request, res: Response) {
   res.end()
 }
 
-const invalidTokens: any[] = []
-async function checkAuth(req: Request, res: Response, next: NextFunction) {
+const invalidTokens: string[] = []
+function checkAuth(req: Request, res: Response, next: NextFunction) {
   // Sent from dota gsi config file
   const token = req.body?.auth?.token
   if (invalidTokens.includes(token)) {
@@ -137,19 +137,23 @@ async function checkAuth(req: Request, res: Response, next: NextFunction) {
 
   console.log('[GSI]', 'Havent cached user token yet, checking db', { token })
 
-  const user = await getDBUser(token)
-  if (user?.id) {
-    // sockets[] to be filled in by socket connection
-    socketClients.push({ ...user, token, sockets: [] })
-    next()
-    return
-  }
+  getDBUser(token)
+    .then((user) => {
+      if (user?.id) {
+        // sockets[] to be filled in by socket connection
+        socketClients.push({ ...user, token, sockets: [] })
+        next()
+        return
+      }
 
-  invalidTokens.push(token)
-
-  res.status(401).json({
-    error: new Error('Invalid auth'),
-  })
+      console.log('[GSI]', 'Invalid token', { token })
+      invalidTokens.push(token)
+      res.status(401).send('Invalid token')
+    })
+    .catch((e) => {
+      console.log('[GSI]', 'Error checking auth', { token, e })
+      res.status(500).send('Error checking auth')
+    })
 }
 
 class D2GSI {
@@ -209,21 +213,26 @@ class D2GSI {
         return
       }
 
-      const user = getDBUser(token).then((user) => {
-        if (!user) {
-          next(new Error('authentication error'))
-          return
-        }
+      getDBUser(token)
+        .then((user) => {
+          if (!user) {
+            next(new Error('authentication error'))
+            return
+          }
 
-        // In case the socket is connected before the GSI client has!
-        socketClients.push({
-          ...user,
-          token,
-          sockets: [socket.id],
+          // In case the socket is connected before the GSI client has!
+          socketClients.push({
+            ...user,
+            token,
+            sockets: [socket.id],
+          })
+
+          next()
         })
-
-        next()
-      })
+        .catch((e) => {
+          console.log('[GSI]', 'Error checking auth', { token, e })
+          next(new Error('authentication error'))
+        })
     })
 
     // Cleanup the memory cache of sockets when they disconnect

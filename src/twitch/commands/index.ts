@@ -13,14 +13,16 @@ export const chatClient = await getChatClient()
 const CooldownManager = {
   // 30 seconds
   cooldownTime: 30 * 1000,
-  store: new Map(),
+  store: new Map<string, number>(),
 
   canUse: function (channel: string, commandName: string) {
     // Check if the last time you've used the command + 30 seconds has passed
     // (because the value is less then the current time)
     if (!this.store.has(`${channel}.${commandName}`)) return true
 
-    return this.store.get(`${channel}.${commandName}`) + this.cooldownTime < Date.now()
+    return (
+      (this.store.get(`${channel}.${commandName}`) ?? Date.now()) + this.cooldownTime < Date.now()
+    )
   },
 
   touch: function (channel: string, commandName: string) {
@@ -35,8 +37,8 @@ chatClient.onMessage(function (channel, user, text, msg) {
   // Letting one pleb in
   if (plebMode.has(channel) && !msg.userInfo.isSubscriber) {
     plebMode.delete(channel)
-    chatClient.say(channel, '/subscribers')
-    chatClient.say(channel, `${user} EZ Clap`)
+    void chatClient.say(channel, '/subscribers')
+    void chatClient.say(channel, `${user} EZ Clap`)
     return
   }
 
@@ -51,68 +53,70 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
   switch (command) {
     case '!help':
-      chatClient.say(channel, commands.join(' '))
+      void chatClient.say(channel, commands.join(' '))
       break
     case '!pleb':
       // Only mod or owner
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
 
       plebMode.add(channel)
-      chatClient.say(channel, '/subscribersoff')
-      chatClient.say(channel, 'One pleb IN 👇')
+      void chatClient.say(channel, '/subscribersoff')
+      void chatClient.say(channel, 'One pleb IN 👇')
       break
-    case '!xpm':
+    case '!xpm': {
       if (!connectedSocketClient?.gsi) break
       if (isCustomGame(connectedSocketClient.gsi)) break
 
       const xpm = connectedSocketClient.gsi.gamestate?.player?.xpm
 
       if (xpm === 0) {
-        chatClient.say(channel, 'No xpm')
+        void chatClient.say(channel, 'No xpm')
         break
       }
 
       if (!connectedSocketClient || !xpm) {
-        chatClient.say(channel, 'Not playing PauseChamp')
+        void chatClient.say(channel, 'Not playing PauseChamp')
         break
       }
 
-      chatClient.say(channel, `Live XPM: ${xpm}`)
+      void chatClient.say(channel, `Live XPM: ${xpm}`)
       break
-    case '!gpm':
+    }
+    case '!gpm': {
       if (!connectedSocketClient?.gsi) break
       if (isCustomGame(connectedSocketClient.gsi)) break
 
       const gpm = connectedSocketClient.gsi.gamestate?.player?.gpm
 
       if (gpm === 0) {
-        chatClient.say(channel, 'Live GPM: 0')
+        void chatClient.say(channel, 'Live GPM: 0')
         break
       }
 
       if (!connectedSocketClient || !gpm) {
-        chatClient.say(channel, 'Not playing PauseChamp')
+        void chatClient.say(channel, 'Not playing PauseChamp')
         break
       }
 
-      chatClient.say(channel, `Live GPM: ${gpm}`)
+      void chatClient.say(channel, `Live GPM: ${gpm}`)
       break
-    case '!hero':
+    }
+    case '!hero': {
       if (!connectedSocketClient?.gsi) break
       if (isCustomGame(connectedSocketClient.gsi)) break
       if (!connectedSocketClient || !connectedSocketClient.gsi.gamestate?.hero?.name) {
-        chatClient.say(channel, 'Not playing PauseChamp')
+        void chatClient.say(channel, 'Not playing PauseChamp')
         break
       }
 
       const hero = findHero(connectedSocketClient.gsi.gamestate.hero.name || '')
 
       if (!hero) {
-        chatClient.say(channel, "Couldn't find hero Sadge")
+        void chatClient.say(channel, "Couldn't find hero Sadge")
         break
       }
 
-      chatClient.say(
+      void chatClient.say(
         channel,
         `${hero.aliases}. Primary attribute: ${hero.attr_primary}. ${hero.roles.replaceAll(
           '|',
@@ -120,7 +124,8 @@ chatClient.onMessage(function (channel, user, text, msg) {
         )}`.toLowerCase(),
       )
       break
-    case '!mmr=':
+    }
+    case '!mmr=': {
       // Only mod or owner
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
 
@@ -148,7 +153,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
           },
         })
         .then(() => {
-          chatClient.say(channel, `Updated MMR to ${mmr}`)
+          void chatClient.say(channel, `Updated MMR to ${mmr}`)
           if (connectedSocketClient) {
             connectedSocketClient.mmr = Number(mmr)
 
@@ -169,23 +174,25 @@ chatClient.onMessage(function (channel, user, text, msg) {
           }
         })
         .catch(() => {
-          chatClient.say(channel, `Failed to update MMR to ${mmr}`)
+          void chatClient.say(channel, `Failed to update MMR to ${mmr}`)
         })
 
       break
+    }
     case '!mmr':
       // If connected, we can just respond with the cached MMR
       if (connectedSocketClient) {
         console.log('[MMR] Responding with cached MMR', connectedSocketClient.mmr, channel)
 
-        getRankDescription(
-          connectedSocketClient.mmr,
-          connectedSocketClient.steam32Id || undefined,
-        ).then((description) => {
-          console.log('[MMR] Responding with cached MMR', description, channel)
+        getRankDescription(connectedSocketClient.mmr, connectedSocketClient.steam32Id ?? undefined)
+          .then((description) => {
+            console.log('[MMR] Responding with cached MMR', description, channel)
 
-          chatClient.say(channel, description)
-        })
+            void chatClient.say(channel, description)
+          })
+          .catch((e) => {
+            console.log('[MMR] Failed to get rank description', e, channel)
+          })
         return
       }
 
@@ -207,15 +214,17 @@ chatClient.onMessage(function (channel, user, text, msg) {
           },
         })
         .then((account) => {
-          if (!account || !account.user.mmr) {
+          if (!account?.user.mmr) {
             console.log('[MMR] No MMR found in database', account, channel)
             return
           }
-          getRankDescription(account.user.mmr, account.user.steam32Id || undefined).then(
-            (description) => {
-              chatClient.say(channel, description)
-            },
-          )
+          getRankDescription(account.user.mmr, account.user.steam32Id ?? undefined)
+            .then((description) => {
+              void chatClient.say(channel, description)
+            })
+            .catch((e) => {
+              console.log('[MMR] Failed to get rank description', e, channel)
+            })
         })
         .catch((e) => {
           console.log('[MMR] Error fetching MMR from database', e, channel)
@@ -223,7 +232,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       break
     case '!ping':
-      chatClient.say(channel, 'Pong EZ Clap')
+      void chatClient.say(channel, 'Pong EZ Clap')
       break
     default:
       break

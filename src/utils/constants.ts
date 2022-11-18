@@ -66,7 +66,7 @@ export async function lookupLeaderRank(mmr: number, steam32Id?: number) {
   return { ...myRank, standing }
 }
 
-export function getRankDetail(param: any, steam32Id?: number) {
+export function getRankDetail(param: string | number, steam32Id?: number) {
   const mmr = Number(param)
 
   if (!mmr || mmr < 0) return null
@@ -92,7 +92,7 @@ export function getRankDetail(param: any, steam32Id?: number) {
 }
 
 // Used for chatting !mmr
-export async function getRankDescription(param: any, steam32Id?: number) {
+export async function getRankDescription(param: string | number, steam32Id?: number) {
   const deets = await getRankDetail(param, steam32Id)
 
   if (!deets) return 'Unknown'
@@ -101,7 +101,7 @@ export async function getRankDescription(param: any, steam32Id?: number) {
   if (!('nextRank' in deets)) {
     // If mmr === standing that means we couldn't find a steam32Id, so wasn't looked up on Opendota
     const standingDesc =
-      deets.standing !== param && deets.standing !== null
+      deets.standing !== param && deets.standing
         ? ` | Immortal #${deets.standing}`
         : ` | Could not find standing`
     return `${param} MMR${standingDesc}`

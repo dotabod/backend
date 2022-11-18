@@ -24,8 +24,8 @@ export function isCustomGame(client: GSIClient) {
   // undefined means the client is disconnected from a game
   // so we want to run our obs stuff to unblock anything
   const isArcade =
-    client.gamestate?.map.customgamename !== '' &&
-    client.gamestate?.map.customgamename !== undefined
+    client.gamestate?.map?.customgamename !== '' &&
+    client.gamestate?.map?.customgamename !== undefined
   if (
     client.gamestate?.player?.team_name === 'spectator' ||
     isArcade ||
@@ -88,6 +88,9 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
             .emit('update-medal', { mmr: connectedSocketClient.mmr, steam32Id })
         }
       })
+      .catch((e) => {
+        console.error('[STEAM32ID]', 'Error updating steam32Id', e)
+      })
   }
 
   function updateMMR(increase: boolean) {
@@ -112,15 +115,22 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
 
           getRankDescription(
             connectedSocketClient.mmr,
-            connectedSocketClient.steam32Id || undefined,
-          ).then((description) => {
-            chatClient.say(connectedSocketClient.name, description)
-          })
+            connectedSocketClient.steam32Id ?? undefined,
+          )
+            .then((description) => {
+              void chatClient.say(connectedSocketClient.name, description)
+            })
+            .catch((e) => {
+              console.error('[MMR]', 'Error getting rank description', e)
+            })
 
           server.io
             .to(connectedSocketClient.sockets)
             .emit('update-medal', { mmr: newMMR, steam32Id: connectedSocketClient.steam32Id })
         }
+      })
+      .catch((e) => {
+        console.error('[MMR]', 'Error updating mmr', e)
       })
   }
 
@@ -191,7 +201,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
     if (client?.gamestate?.player?.activity !== 'playing') return
 
     // Why open if won?
-    if (client.gamestate.map.win_team !== 'none') return
+    if (client.gamestate.map?.win_team !== 'none') return
 
     // We at least want the hero name so it can go in the twitch bet title
     if (!client.gamestate.hero?.name || !client.gamestate.hero.name.length) return
@@ -219,35 +229,35 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
         // Saving to local memory so we don't have to query the db again
         if (bet && bet.id) {
           console.log('[BETS]', 'Found a bet in the database', bet.id)
-          betExists = client.gamestate?.map.matchid || null
+          betExists = client.gamestate?.map?.matchid ?? null
         } else {
           if (!isOpenBetGameCondition) {
             return
           }
 
-          betExists = client.gamestate?.map.matchid || null
+          betExists = client.gamestate?.map?.matchid ?? null
           updateSteam32Id()
 
           prisma.bet
             .create({
               data: {
                 // TODO: Replace prediction id with the twitch api bet id result
-                predictionId: client.gamestate?.map.matchid!,
-                matchId: client.gamestate?.map.matchid!,
+                predictionId: client.gamestate?.map?.matchid ?? '',
+                matchId: client.gamestate?.map?.matchid ?? '',
                 userId: client.token,
-                myTeam: client.gamestate?.player?.team_name!,
+                myTeam: client.gamestate?.player?.team_name ?? '',
               },
             })
             .then(() => {
-              const hero = findHero(client.gamestate?.hero?.name || '')
+              const hero = findHero(client.gamestate?.hero?.name ?? '')
 
               openTwitchBet(channel, client.token, hero?.localized_name)
                 .then(() => {
-                  chatClient.say(channel, `Bets open peepoGamble`)
+                  void chatClient.say(channel, `Bets open peepoGamble`)
                   console.log('[BETS]', {
                     event: 'open_bets',
                     data: {
-                      matchId: client.gamestate?.map.matchid,
+                      matchId: client.gamestate?.map?.matchid,
                       user: client.token,
                       player_team: client.gamestate?.player?.team_name,
                     },
@@ -258,13 +268,12 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
                 })
             })
             .catch((error) => {
-              if (error.message.includes('duplicate')) {
-                console.log('[BETS]', channel, `Bet already exists on ${channel} channel`)
-              } else {
-                console.log('[BETS]', channel, `Could not add bet to ${channel} channel`, error)
-              }
+              console.log('[BETS]', channel, `Could not add bet to ${channel} channel`, error)
             })
         }
+      })
+      .catch((e) => {
+        console.log('[BETS]', 'Error opening bet', e)
       })
   }
 
@@ -275,9 +284,9 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
 
     // "none"? Must mean the game hasn't ended yet
     // Would be undefined otherwise if there is no game
-    if (!winningTeam && client.gamestate?.map.win_team === 'none') return
+    if (!winningTeam && client.gamestate?.map?.win_team === 'none') return
 
-    const localWinner = winningTeam || client.gamestate?.map.win_team
+    const localWinner = winningTeam || client.gamestate?.map?.win_team
     const myTeam = client.gamestate?.player?.team_name
     const won = myTeam === localWinner
 
@@ -302,7 +311,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
         where: {
           matchId_userId: {
             userId: client.token,
-            matchId: client.gamestate?.map.matchid!,
+            matchId: client.gamestate?.map?.matchid ?? '',
           },
         },
       })
@@ -312,7 +321,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
             betExists = null
             endingBets = false
 
-            chatClient.say(
+            void chatClient.say(
               connectedSocketClient.name,
               `Bets closed, we have ${won ? 'won' : 'lost'}`,
             )
@@ -320,7 +329,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
             console.log('[BETS]', {
               event: 'end_bets',
               data: {
-                matchId: client.gamestate?.map.matchid,
+                matchId: client.gamestate?.map?.matchid,
                 token: client.token,
                 winning_team: localWinner,
                 player_team: myTeam,
@@ -334,9 +343,14 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
             console.log('[BETS]', 'Error closing twitch bet', channel, e)
           })
       })
+      .catch((e) => {
+        betExists = null
+        endingBets = false
+        console.log('[BETS]', 'Error closing bet', e)
+      })
   }
 
-  function setupOBSBlockers(state: string) {
+  function setupOBSBlockers(state?: string) {
     if (!client) return
 
     connectedSocketClient.sockets.forEach((socketId: string) => {
@@ -410,7 +424,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
     if (isCustomGame(client)) return
 
     // In case they connect to a game in progress and we missed the start event
-    setupOBSBlockers(data.map.game_state)
+    setupOBSBlockers(data?.map?.game_state ?? '')
 
     openBets()
 
@@ -439,7 +453,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
     if (isCustomGame(client)) return
 
     if (isSmoked) {
-      chatClient.say(connectedSocketClient.name, `🚬 💣 Shush`)
+      void chatClient.say(connectedSocketClient.name, `🚬 💣 Shush`)
     }
   })
 
@@ -447,7 +461,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
     if (isCustomGame(client)) return
 
     if (isPaused) {
-      chatClient.say(connectedSocketClient.name, `PauseChamp`)
+      void chatClient.say(connectedSocketClient.name, `PauseChamp`)
     }
   })
 

@@ -5,7 +5,7 @@ import { GSIClient } from '../dota/lib/dota2-gsi'
 declare global {
   namespace Express {
     interface Request {
-      client: Context
+      client: GSIClient
     }
   }
 }
