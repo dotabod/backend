@@ -10,7 +10,9 @@
     "dev": "nodemon src/index.ts",
     "pull": "git pull && systemctl restart nodeapp",
     "log": "journalctl -xefu nodeapp",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "lint": "eslint --ext .ts ./src",
+    "lint:fix": "npm run lint -- --fix"
   },
   "author": "",
   "license": "ISC",
@@ -38,6 +40,8 @@
     "dotenv": "^16.0.3",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
+    "eslint-import-resolver-typescript": "^3.5.2",
+    "eslint-plugin-import": "^2.26.0",
     "nodemon": "^2.0.20",
     "prettier": "^2.7.1",
     "prisma": "^4.6.1",
