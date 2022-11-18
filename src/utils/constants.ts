@@ -77,8 +77,10 @@ export function getRankDetail(param: string | number, steam32Id?: number) {
   }
 
   const [myRank, nextRank] = ranks.filter((rank) => mmr <= rank.range[1])
-
-  const nextMMR = nextRank.range[0] || myRank.range[1]
+  let nextMMR = myRank.range[1]
+  if (nextRank) {
+    nextMMR = nextRank.range[0]
+  }
   const mmrToNextRank = nextMMR - mmr
   const winsToNextRank = Math.ceil(mmrToNextRank / 30)
 
