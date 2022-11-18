@@ -1,3 +1,5 @@
+import axios from 'axios'
+
 export const ranks = [
   { range: [0, 153], title: 'Herald☆1', image: '11.png' },
   { range: [154, 307], title: 'Herald☆2', image: '12.png' },
@@ -50,9 +52,13 @@ export async function lookupLeaderRank(mmr: number, playerId?: number) {
   // Not everyone has a playerID saved yet
   // The dota2gsi should save one for us
   if (playerId) {
-    standing = await fetch(`https://api.opendota.com/api/players/${playerId}`)
-      .then((response) => response.json())
-      .then((data) => data?.leaderboard_rank as number)
+    try {
+      standing = await axios(`https://api.opendota.com/api/players/${playerId}`).then(
+        ({ data }) => data?.leaderboard_rank as number,
+      )
+    } catch (e) {
+      console.error('[lookupLeaderRank] Error fetching leaderboard rank', e)
+    }
   }
 
   const [myRank] = leaderRanks.filter((rank) => standing <= rank.range[1])
