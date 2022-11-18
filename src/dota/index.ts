@@ -98,7 +98,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
             token: connectedSocketClient.token,
           })
 
-          server.io.to(connectedSocketClient.sockets).emit('update-medal')
+          server.io
+            .to(connectedSocketClient.sockets)
+            .emit('update-medal', { mmr: connectedSocketClient.mmr, playerId })
         }
       })
   }
@@ -127,7 +129,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
             chatClient.say(connectedSocketClient.name, description)
           })
 
-          server.io.to(connectedSocketClient.sockets).emit('update-medal')
+          server.io
+            .to(connectedSocketClient.sockets)
+            .emit('update-medal', { mmr: newMMR, playerId: connectedSocketClient.playerId })
         }
       })
 
@@ -155,7 +159,6 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
         // Ranked
         if (data?.result?.lobby_type === 7) {
-          // Doesn't work
         }
         console.log('[MMR]', data, { matchId })
       })
