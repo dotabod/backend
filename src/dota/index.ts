@@ -120,42 +120,47 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
         // 6 - Solo Queue
         // 7 - Ranked
         // 8 - 1v1 Mid
-        console.log('[MMR]', { data }, { matchId })
-        return console.log(data)
+        if (data?.result?.error) {
+          console.log('[MMR]', 'Error getting match details', { error: data.result.error })
+          return
+        }
+
+        // Ranked
+        if (data?.result?.lobby_type === 7) {
+          const newMMR = connectedSocketClient.mmr + (increase ? 30 : -30)
+          prisma.user
+            .update({
+              data: {
+                mmr: newMMR,
+              },
+              where: {
+                id: connectedSocketClient.token,
+              },
+            })
+            .then(() => {
+              connectedSocketClient.mmr = newMMR
+
+              if (connectedSocketClient.sockets.length) {
+                console.log('[MMR]', 'Emitting mmr update', { token: connectedSocketClient.token })
+
+                getRankDescription(
+                  connectedSocketClient.mmr,
+                  connectedSocketClient?.playerId || undefined,
+                ).then((description) => {
+                  chatClient.say(connectedSocketClient.name, description)
+                })
+
+                server.io.to(connectedSocketClient.sockets).emit('update-medal')
+              }
+            })
+        }
+        console.log('[MMR]', data, { matchId })
       })
       .catch((e) => {
         console.log('[MMR]', 'Error fetching match details', { matchId, error: e })
       })
       .finally(() => {
         // Always run
-      })
-
-    const newMMR = connectedSocketClient.mmr + (increase ? 30 : -30)
-
-    prisma.user
-      .update({
-        data: {
-          mmr: newMMR,
-        },
-        where: {
-          id: connectedSocketClient.token,
-        },
-      })
-      .then(() => {
-        connectedSocketClient.mmr = newMMR
-
-        if (connectedSocketClient.sockets.length) {
-          console.log('[MMR]', 'Emitting mmr update', { token: connectedSocketClient.token })
-
-          getRankDescription(
-            connectedSocketClient.mmr,
-            connectedSocketClient?.playerId || undefined,
-          ).then((description) => {
-            chatClient.say(connectedSocketClient.name, description)
-          })
-
-          server.io.to(connectedSocketClient.sockets).emit('update-medal')
-        }
       })
   }
 
