@@ -144,7 +144,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
           where: {
             provider_providerAccountId: {
               provider: 'twitch',
-              providerAccountId: msg.userInfo.userId,
+              providerAccountId: msg.channelId as string,
             },
           },
         })
@@ -163,7 +163,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
               server.io
                 .to(connectedSocketClient.sockets)
-                .emit('update-medal', { mmr, playerId: msg.userInfo.userId })
+                .emit('update-medal', { mmr, playerId: msg.channelId as string })
             } else {
               console.log('[MMR] No sockets found to send update to', channel)
             }
