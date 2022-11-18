@@ -1,11 +1,9 @@
 // @ts-ignore
-import Dota2Api from 'dota2-api'
-
 // Just used for testing
 const randomMatch = '6862608251'
 const playerId = '161444478' // draskyl
 
-const apiDota = Dota2Api.create(process.env.STEAM_WEB_API)
+// const apiDota = Dota2Api.create(process.env.STEAM_WEB_API)
 
 // const {data: predictions} = await api.predictions.getPredictions(?.id || '', { limit: 1})
 // console.log(predictions[0].status)
