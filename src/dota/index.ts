@@ -104,6 +104,34 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
   }
 
   function adjustMMR(increase: boolean, matchId: string) {
+    const newMMR = connectedSocketClient.mmr + (increase ? 30 : -30)
+    prisma.user
+      .update({
+        data: {
+          mmr: newMMR,
+        },
+        where: {
+          id: connectedSocketClient.token,
+        },
+      })
+      .then(() => {
+        connectedSocketClient.mmr = newMMR
+
+        if (connectedSocketClient.sockets.length) {
+          console.log('[MMR]', 'Emitting mmr update', { token: connectedSocketClient.token })
+
+          getRankDescription(
+            connectedSocketClient.mmr,
+            connectedSocketClient?.playerId || undefined,
+          ).then((description) => {
+            chatClient.say(connectedSocketClient.name, description)
+          })
+
+          server.io.to(connectedSocketClient.sockets).emit('update-medal')
+        }
+      })
+
+    return
     // Do lookup at steam API for this match and figure out lobby type
     axios(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
       params: { key: process.env.STEAM_WEB_API, match_id: matchId },
@@ -121,38 +149,13 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
         // 7 - Ranked
         // 8 - 1v1 Mid
         if (data?.result?.error) {
-          console.log('[MMR]', 'Error getting match details', { error: data.result.error })
+          console.log('[MMR]', 'Error getting match details', { error: data.result.error, matchId })
           return
         }
 
         // Ranked
         if (data?.result?.lobby_type === 7) {
-          const newMMR = connectedSocketClient.mmr + (increase ? 30 : -30)
-          prisma.user
-            .update({
-              data: {
-                mmr: newMMR,
-              },
-              where: {
-                id: connectedSocketClient.token,
-              },
-            })
-            .then(() => {
-              connectedSocketClient.mmr = newMMR
-
-              if (connectedSocketClient.sockets.length) {
-                console.log('[MMR]', 'Emitting mmr update', { token: connectedSocketClient.token })
-
-                getRankDescription(
-                  connectedSocketClient.mmr,
-                  connectedSocketClient?.playerId || undefined,
-                ).then((description) => {
-                  chatClient.say(connectedSocketClient.name, description)
-                })
-
-                server.io.to(connectedSocketClient.sockets).emit('update-medal')
-              }
-            })
+          // Doesn't work
         }
         console.log('[MMR]', data, { matchId })
       })
