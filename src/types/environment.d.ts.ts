@@ -15,6 +15,7 @@ declare global {
       MAIN_PORT: string
       GITHUB_AUTH_TOKEN: string
       TWITCH_EVENTS_SECRET: string
+      DEV_CHANNELS: string
       NODE_ENV: 'development' | 'production'
     }
   }
