@@ -25,6 +25,7 @@ export async function getDBUser(token: string) {
       },
     })
     .catch((e) => {
+      console.log('[USER]', 'Error checking auth', { token, e })
       return null
     })
 

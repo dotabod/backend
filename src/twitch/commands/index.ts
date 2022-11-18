@@ -69,13 +69,8 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       const xpm = connectedSocketClient.gsi.gamestate?.player?.xpm
 
-      if (xpm === 0) {
+      if (!xpm) {
         void chatClient.say(channel, 'No xpm')
-        break
-      }
-
-      if (!connectedSocketClient || !xpm) {
-        void chatClient.say(channel, 'Not playing PauseChamp')
         break
       }
 
@@ -88,13 +83,8 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       const gpm = connectedSocketClient.gsi.gamestate?.player?.gpm
 
-      if (gpm === 0) {
-        void chatClient.say(channel, 'Live GPM: 0')
-        break
-      }
-
-      if (!connectedSocketClient || !gpm) {
-        void chatClient.say(channel, 'Not playing PauseChamp')
+      if (!gpm) {
+        void chatClient.say(channel, 'No GPM')
         break
       }
 
@@ -104,7 +94,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     case '!hero': {
       if (!connectedSocketClient?.gsi) break
       if (isCustomGame(connectedSocketClient.gsi)) break
-      if (!connectedSocketClient || !connectedSocketClient.gsi.gamestate?.hero?.name) {
+      if (!connectedSocketClient.gsi.gamestate?.hero?.name) {
         void chatClient.say(channel, 'Not playing PauseChamp')
         break
       }
@@ -148,7 +138,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
           where: {
             provider_providerAccountId: {
               provider: 'twitch',
-              providerAccountId: msg.channelId!,
+              providerAccountId: msg.channelId ?? '',
             },
           },
         })
@@ -167,7 +157,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
               server.io
                 .to(connectedSocketClient.sockets)
-                .emit('update-medal', { mmr, steam32Id: msg.channelId! })
+                .emit('update-medal', { mmr, steam32Id: msg.channelId })
             } else {
               console.log('[MMR] No sockets found to send update to', channel)
             }
@@ -210,7 +200,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
             },
           },
           where: {
-            providerAccountId: msg.channelId!,
+            providerAccountId: msg.channelId ?? '',
           },
         })
         .then((account) => {

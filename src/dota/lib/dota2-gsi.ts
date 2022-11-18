@@ -190,8 +190,8 @@ class D2GSI {
       newData,
     )
 
-    httpServer.listen(process.env.MAIN_PORT || 3000, () => {
-      console.log('[GSI]', `Dota 2 GSI listening on *:${process.env.MAIN_PORT || 3000}`)
+    httpServer.listen(process.env.MAIN_PORT ?? 3000, () => {
+      console.log('[GSI]', `Dota 2 GSI listening on *:${process.env.MAIN_PORT ?? 3000}`)
     })
 
     // No main page

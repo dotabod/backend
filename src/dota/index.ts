@@ -65,7 +65,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
     // User already has a steam32Id
     if (connectedSocketClient.steam32Id) return
 
-    const steam32Id = steamID64toSteamID32(client?.gamestate?.player?.steamid || '')
+    const steam32Id = steamID64toSteamID32(client?.gamestate?.player?.steamid ?? '')
     if (!steam32Id) return
 
     prisma.user
@@ -227,7 +227,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
       })
       .then((bet) => {
         // Saving to local memory so we don't have to query the db again
-        if (bet && bet.id) {
+        if (bet?.id) {
           console.log('[BETS]', 'Found a bet in the database', bet.id)
           betExists = client.gamestate?.map?.matchid ?? null
         } else {
@@ -286,7 +286,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
     // Would be undefined otherwise if there is no game
     if (!winningTeam && client.gamestate?.map?.win_team === 'none') return
 
-    const localWinner = winningTeam || client.gamestate?.map?.win_team
+    const localWinner = winningTeam ?? client.gamestate?.map?.win_team
     const myTeam = client.gamestate?.player?.team_name
     const won = myTeam === localWinner
 
@@ -424,7 +424,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
     if (isCustomGame(client)) return
 
     // In case they connect to a game in progress and we missed the start event
-    setupOBSBlockers(data?.map?.game_state ?? '')
+    setupOBSBlockers(data.map?.game_state ?? '')
 
     openBets()
 
