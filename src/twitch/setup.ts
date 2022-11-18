@@ -11,8 +11,8 @@ export async function getAuthProvider() {
 
   const authProvider = new RefreshingAuthProvider(
     {
-      clientId: process.env.TWITCH_CLIENT_ID as string,
-      clientSecret: process.env.TWITCH_CLIENT_SECRET as string,
+      clientId: process.env.TWITCH_CLIENT_ID,
+      clientSecret: process.env.TWITCH_CLIENT_SECRET,
     },
     {
       expiresIn: 86400, // 1 day
@@ -41,8 +41,8 @@ export async function getChannelAuthProvider(channel: string, userId: string) {
 
   const authProvider = new RefreshingAuthProvider(
     {
-      clientId: process.env.TWITCH_CLIENT_ID as string,
-      clientSecret: process.env.TWITCH_CLIENT_SECRET as string,
+      clientId: process.env.TWITCH_CLIENT_ID,
+      clientSecret: process.env.TWITCH_CLIENT_SECRET,
     },
     {
       scope: [
