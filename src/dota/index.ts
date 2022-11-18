@@ -105,7 +105,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
       })
   }
 
-  function adjustMMR(increase: boolean, matchId: string) {
+  function updateMMR(increase: boolean) {
     const newMMR = connectedSocketClient.mmr + (increase ? 30 : -30)
     prisma.user
       .update({
@@ -120,7 +120,10 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
         connectedSocketClient.mmr = newMMR
 
         if (connectedSocketClient.sockets.length) {
-          console.log('[MMR]', 'Emitting mmr update', { token: connectedSocketClient.token })
+          console.log('[MMR]', 'Emitting mmr update', {
+            token: connectedSocketClient.token,
+            channel: connectedSocketClient.name,
+          })
 
           getRankDescription(
             connectedSocketClient.mmr,
@@ -134,8 +137,9 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
             .emit('update-medal', { mmr: newMMR, steam32Id: connectedSocketClient.steam32Id })
         }
       })
+  }
 
-    return
+  function handleMMR(increase: boolean, matchId: string) {
     // Do lookup at steam API for this match and figure out lobby type
     axios(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
       params: { key: process.env.STEAM_WEB_API, match_id: matchId },
@@ -153,20 +157,39 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
         // 7 - Ranked
         // 8 - 1v1 Mid
         if (data?.result?.error) {
-          console.log('[MMR]', 'Error getting match details', { error: data.result.error, matchId })
+          console.log('[MMR]', 'Error getting match details', {
+            error: data.result.error,
+            matchId,
+            channel: connectedSocketClient.name,
+          })
+          // Force update when an error occurs and just let mods take care of the discrepancy
+          // We assume the match was ranked
+          updateMMR(increase)
           return
         }
 
         // Ranked
         if (data?.result?.lobby_type === 7) {
+          console.log('[MMR]', 'Match was ranked, updating mmr', {
+            matchId,
+            channel: connectedSocketClient.name,
+          })
+
+          updateMMR(increase)
+          return
         }
-        console.log('[MMR]', data, { matchId })
+
+        console.log('[MMR] Non-ranked game', data, { matchId, channel: connectedSocketClient.name })
       })
       .catch((e) => {
-        console.log('[MMR]', 'Error fetching match details', { matchId, error: e })
-      })
-      .finally(() => {
-        // Always run
+        console.log('[MMR]', 'Error fetching match details', {
+          matchId,
+          channel: connectedSocketClient.name,
+          error: e,
+        })
+        // Force update when an error occurs and just let mods take care of the discrepancy
+        // We assume the match was ranked
+        updateMMR(increase)
       })
   }
 
@@ -280,7 +303,7 @@ async function setupMainEvents(connectedSocketClient: SocketClient) {
 
     endingBets = true
     const channel = connectedSocketClient.name
-    adjustMMR(won, betExists)
+    handleMMR(won, betExists)
 
     prisma.bet
       .update({
