@@ -7,10 +7,11 @@
     "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
-        "plugin:prettier/recommended",
         "plugin:import/recommended",
         "plugin:import/typescript",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking"
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:@typescript-eslint/strict",
+        "plugin:prettier/recommended"
     ],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
@@ -23,9 +24,9 @@
     },
     "plugins": [
         "@typescript-eslint",
-        "prettier",
         "import",
-        "unused-imports"
+        "unused-imports",
+        "prettier"
     ],
     "rules": {
         "@typescript-eslint/no-unused-vars": "off", // or "@typescript-eslint/no-unused-vars": "off",
