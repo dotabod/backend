@@ -161,7 +161,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
                 channel,
               )
 
-              server.io.to(connectedSocketClient.sockets).emit('update-medal')
+              server.io.to(connectedSocketClient.sockets).emit('update-medal', mmr)
             } else {
               console.log('[MMR] No sockets found to send update to', channel)
             }
