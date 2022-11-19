@@ -39,28 +39,30 @@ export async function openTwitchBet(channel: string, userId: string, heroName?: 
   })
 }
 
-export async function closeTwitchBet(channel: string, won: boolean, userId: string) {
+export function closeTwitchBet(channel: string, won: boolean, userId: string) {
   const { api, providerAccountId } = getChannelAPI(channel, userId)
 
-  const { data: predictions } = await api.predictions.getPredictions(providerAccountId, {
-    limit: 1,
-  })
+  return api.predictions
+    .getPredictions(providerAccountId, {
+      limit: 1,
+    })
+    .then(({ data: predictions }) => {
+      if (!Array.isArray(predictions) || !predictions.length) {
+        console.log('[PREDICT]', 'No predictions found', predictions)
+        return
+      }
 
-  if (!Array.isArray(predictions) || !predictions.length) {
-    console.log('[PREDICT]', 'No predictions found', predictions)
-    return
-  }
+      const [wonOutcome, lossOutcome] = predictions[0].outcomes
 
-  const [wonOutcome, lossOutcome] = predictions[0].outcomes
+      // if (predictions[0].status !== 'LOCKED') {
+      //   console.log('[PREDICT]','[BETS] Bet is not locked', channel)
+      //   return
+      // }
 
-  // if (predictions[0].status !== 'LOCKED') {
-  //   console.log('[PREDICT]','[BETS] Bet is not locked', channel)
-  //   return
-  // }
-
-  return api.predictions.resolvePrediction(
-    providerAccountId || '',
-    predictions[0].id,
-    won ? wonOutcome.id : lossOutcome.id,
-  )
+      return api.predictions.resolvePrediction(
+        providerAccountId || '',
+        predictions[0].id,
+        won ? wonOutcome.id : lossOutcome.id,
+      )
+    })
 }
