@@ -20,7 +20,7 @@ export const server = new D2GSI()
 // spectator = watching a friend live
 // team2 = watching replay or live match
 // customgamename = playing arcade or hero demo
-export function isCustomGame(client: GSIClient) {
+export function isSpectator(client: GSIClient) {
   // undefined means the client is disconnected from a game
   // so we want to run our obs stuff to unblock anything
   const isArcade =
@@ -404,25 +404,15 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
     }
   }
 
-  // client.on('player:activity', (activity: string) => {
-  //   if (isCustomGame(client)) return
-
-  //   // Just started a game
-  //   if (activity === 'playing') {
-  //     console.log('[BETS]','Open bets from player:activity', { token: client.token })
-  //     openBets()
-  //   }
-  // })
-
   client.on('hero:name', (name: string) => {
-    if (isCustomGame(client)) return
+    if (isSpectator(client)) return
 
     currentHero = name
   })
 
   // Catch all
   client.on('newdata', (data: Dota2) => {
-    if (isCustomGame(client)) return
+    if (isSpectator(client)) return
 
     // In case they connect to a game in progress and we missed the start event
     setupOBSBlockers(data.map?.game_state ?? '')
@@ -444,7 +434,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
   })
 
   client.on('hero:smoked', (isSmoked: boolean) => {
-    if (isCustomGame(client)) return
+    if (isSpectator(client)) return
 
     if (isSmoked) {
       void chatClient.say(connectedSocketClient.name, `Shush`)
@@ -452,33 +442,16 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
   })
 
   client.on('map:paused', (isPaused: boolean) => {
-    if (isCustomGame(client)) return
+    if (isSpectator(client)) return
 
     if (isPaused) {
       void chatClient.say(connectedSocketClient.name, `PauseChamp`)
     }
   })
 
-  // Nah not now, disabled
-  // client.on('hero:alive', (isAlive) => {
-  //   if (isCustomGame(client)) return
-
-  // A random alive message
-  // Keep in mind this activates when a match is started too
-  // if (isAlive && Math.floor(Math.random() * 3) === 1) {
-  //   setTimeout(() => {
-  //     console.log('In 3s after spawning?', { token: client.token })
-  //   }, 3000)
-  // }
-
-  // if (!isAlive && Math.floor(Math.random() * 16) === 1) {
-  //   console.log('after dying', { token: client.token })
-  // }
-  // })
-
   // This wont get triggered if they click disconnect and dont wait for the ancient to go to 0
   client.on('map:win_team', (winningTeam: 'radiant' | 'dire') => {
-    if (isCustomGame(client)) return
+    if (isSpectator(client)) return
 
     endBets(winningTeam)
   })

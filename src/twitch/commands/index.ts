@@ -2,7 +2,7 @@ import { toUserName } from '@twurple/chat'
 
 import { findHero } from '../../db/getHero'
 import prisma from '../../db/prisma'
-import { isCustomGame, server } from '../../dota'
+import { isSpectator, server } from '../../dota'
 import { findUserByName } from '../../dota/dotaGSIClients'
 import { getRankDescription } from '../../utils/constants'
 import { getChatClient } from '../setup'
@@ -65,7 +65,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     case '!xpm': {
       if (!connectedSocketClient?.gsi) break
-      if (isCustomGame(connectedSocketClient.gsi)) break
+      if (isSpectator(connectedSocketClient.gsi)) break
 
       const xpm = connectedSocketClient.gsi.gamestate?.player?.xpm
 
@@ -79,7 +79,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     }
     case '!gpm': {
       if (!connectedSocketClient?.gsi) break
-      if (isCustomGame(connectedSocketClient.gsi)) break
+      if (isSpectator(connectedSocketClient.gsi)) break
 
       const gpm = connectedSocketClient.gsi.gamestate?.player?.gpm
 
@@ -102,7 +102,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     }
     case '!hero': {
       if (!connectedSocketClient?.gsi) break
-      if (isCustomGame(connectedSocketClient.gsi)) break
+      if (isSpectator(connectedSocketClient.gsi)) break
       if (!connectedSocketClient.gsi.gamestate?.hero?.name) {
         void chatClient.say(channel, 'Not playing PauseChamp')
         break
@@ -243,6 +243,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 /*
   Required emotes:
 
+  massivePIDAS
   Sadge
   EZ
   Clap
@@ -255,7 +256,4 @@ Commands coming soon:
 Commands that are fun:
   !modsonly = enable submode and delete chatters that arent mods
   !nonfollowersonly = can only chat if you're not a follower xd
-
-When hero alch, show GPM
-
 */
