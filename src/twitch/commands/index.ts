@@ -13,7 +13,7 @@ export const chatClient = await getChatClient()
 
 const CooldownManager = {
   // 30 seconds
-  cooldownTime: 30 * 1000,
+  cooldownTime: 15 * 1000,
   store: new Map<string, number>(),
 
   canUse: function (channel: string, commandName: string) {
