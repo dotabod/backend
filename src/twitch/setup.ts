@@ -1,7 +1,7 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
 import { ChatClient } from '@twurple/chat'
 
-import prisma from '../db/prisma'
+import { prisma } from '../db/prisma'
 import findUser from '../dota/dotaGSIClients'
 
 const hasTokens =

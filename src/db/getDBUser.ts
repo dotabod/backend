@@ -1,4 +1,4 @@
-import prisma from './prisma'
+import { prisma } from './prisma'
 
 export async function getDBUser(token: string) {
   // Finding `account` because `user` is required there

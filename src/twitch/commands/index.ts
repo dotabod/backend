@@ -1,9 +1,10 @@
 import { toUserName } from '@twurple/chat'
 
 import { findHero } from '../../db/getHero'
-import prisma from '../../db/prisma'
-import { isSpectator, server } from '../../dota'
+import { prisma } from '../../db/prisma'
+import { server } from '../../dota'
 import { findUserByName } from '../../dota/dotaGSIClients'
+import { isSpectator } from '../../dota/events'
 import { getRankDescription } from '../../utils/constants'
 import { getChatClient } from '../setup'
 
