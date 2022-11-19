@@ -78,6 +78,9 @@ export function getRankDetail(param: string | number, steam32Id?: number) {
 
   const [myRank, nextRank] = ranks.filter((rank) => mmr <= rank.range[1])
   let nextMMR = myRank.range[1]
+
+  // Its not always truthy, nextRank can be beyond the range
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (nextRank) {
     nextMMR = nextRank.range[0]
   }
