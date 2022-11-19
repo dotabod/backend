@@ -49,15 +49,9 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
   let currentHero: string | null = null
 
   const passiveMidas = { counter: 0 }
-  // const recentHealth = Array(25) // TODO: #HEALTH
 
   // This array of socket ids is who we want to emit events to:
-  // console.log("[SETUP]",{ sockets: connectedSocketClient.sockets })
-
-  // We want to reset this to false when a new socket connects?
-  const blockingMinimap: Record<string, boolean> = {}
-  const blockingPicks: Record<string, boolean> = {}
-  const allUnblocked: Record<string, boolean> = {}
+  // console.log("[SETUP]", { sockets: connectedSocketClient.sockets })
 
   // Make sure user has a steam32Id saved in the database
   // This runs once per every match start but its just one DB query so hopefully it's fine
@@ -439,20 +433,13 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
 
     // User is dead
     if (Number(data.hero?.respawn_seconds) > 0) {
-      // recentHealth.fill(100) // TODO: #HEALTH
       passiveMidas.counter = -25
       return
     }
 
-    // TODO: #HEALTH. Find a better way. Dont think this really works
-    // const isHealingALot = checkHealth(data, recentHealth)
-    // if (isHealingALot) {
-    //   console.log('Big heeeeal', { token: client.token })
-    // }
-
     const isMidasPassive = checkMidas(data, passiveMidas)
     if (isMidasPassive) {
-      console.log('[MIDAS]', 'Passive Midas!', { token: client.token })
+      void chatClient.say(connectedSocketClient.name, 'massivePIDAS')
     }
   })
 
@@ -460,7 +447,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
     if (isCustomGame(client)) return
 
     if (isSmoked) {
-      void chatClient.say(connectedSocketClient.name, `🚬 💣 Shush`)
+      void chatClient.say(connectedSocketClient.name, `Shush`)
     }
   })
 
