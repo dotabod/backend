@@ -193,7 +193,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
           .catch((e) => {
             console.log('[MMR] Failed to get rank description', e, channel)
           })
-        return
+        break
       }
 
       console.log('[MMR] Fetching MMR from database', channel)
