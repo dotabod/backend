@@ -1,12 +1,14 @@
 {
-  "name": "dota2-twitch-app",
+  "name": "dotabod-backend",
+  "description": "By leveraging insights from the Dota 2 official API, Dotabod will know exactly when to hide sensitive streamer information or engage with your Twitch audience.",
   "version": "1.0.0",
-  "description": "",
+  "license": "GNU GPLv3",
+  "author": "Geczy",
   "main": "src/index.ts",
-  "type": "module",
   "exports": "./dist/index.js",
+  "type": "module",
   "scripts": {
-    "start": "node --experimental-specifier-resolution=node --loader ts-node/esm -r dotenv/config src/index.js",
+    "start": "ts-node ./src/index.ts",
     "dev": "nodemon src/index.ts",
     "pull": "git pull && systemctl restart nodeapp",
     "log": "journalctl -xefu nodeapp",
@@ -14,8 +16,6 @@
     "lint": "eslint --ext .ts ./src",
     "lint:fix": "npm run lint -- --fix"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@prisma/client": "^4.6.1",
     "@twurple/api": "^5.2.7",
