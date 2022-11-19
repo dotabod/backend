@@ -33,7 +33,7 @@ const CooldownManager = {
 }
 
 const plebMode = new Set()
-const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping', '!help', '!xpm']
+const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping', '!xpm', '!apm', '!help']
 chatClient.onMessage(function (channel, user, text, msg) {
   // Letting one pleb in
   if (plebMode.has(channel) && !msg.userInfo.isSubscriber) {
@@ -48,7 +48,12 @@ chatClient.onMessage(function (channel, user, text, msg) {
   const args = text.split(' ')
   const command = args[0].toLowerCase()
   if (!commands.includes(command)) return
-  if (!CooldownManager.canUse(channel, command)) return
+  if (
+    !msg.userInfo.isBroadcaster &&
+    !msg.userInfo.isMod &&
+    !CooldownManager.canUse(channel, command)
+  )
+    return
 
   const connectedSocketClient = findUserByName(toUserName(channel))
 
@@ -76,6 +81,24 @@ chatClient.onMessage(function (channel, user, text, msg) {
       }
 
       void chatClient.say(channel, `Live XPM: ${xpm}`)
+      break
+    }
+    case '!apm': {
+      if (!connectedSocketClient?.gsi) break
+      if (isSpectator(connectedSocketClient.gsi)) break
+
+      const commandsIssued = connectedSocketClient.gsi.gamestate?.player?.commands_issued ?? 0
+
+      if (!commandsIssued) {
+        void chatClient.say(channel, 'No APM yet')
+        break
+      }
+
+      const gameTime = connectedSocketClient.gsi.gamestate?.map?.game_time ?? 1
+      const apm = Math.round(commandsIssued / (gameTime / 60))
+      console.log(gameTime, commandsIssued, apm)
+
+      void chatClient.say(channel, `Live APM: ${apm} Chatting`)
       break
     }
     case '!gpm': {
