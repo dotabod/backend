@@ -10,7 +10,7 @@ import { getRankDescription } from '../utils/constants'
 import checkMidas from './checkMidas'
 import findUser from './dotaGSIClients'
 import D2GSI, { GSIClient } from './lib/dota2-gsi'
-import { minimapStates, pickSates } from './trackingConsts'
+import { blockTypes, pickSates } from './trackingConsts'
 
 // TODO: We shouldn't use await beyond the getChatClient(), it slows down the server I think
 
@@ -46,6 +46,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
   // Server could reboot and lose this in memory
   // But that's okay because we'll just do a db call once in openBets()
   let betExists: string | null = null
+  let currentHero: string | null = null
 
   const passiveMidas = { counter: 0 }
   // const recentHealth = Array(25) // TODO: #HEALTH
@@ -300,6 +301,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
     }
 
     endingBets = true
+    currentHero = null
     const channel = connectedSocketClient.name
     handleMMR(won, betExists)
 
@@ -350,53 +352,62 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
       })
   }
 
+  // Initial cache setup for channels
+  const blockCache = new Map<string, string>()
   function setupOBSBlockers(state?: string) {
     if (!client) return
+    if (!connectedSocketClient.sockets.length) return
 
-    connectedSocketClient.sockets.forEach((socketId: string) => {
-      // Sending a msg to just this socket
-      if (!blockingMinimap[socketId] && minimapStates.includes(state ?? '')) {
-        console.log('[OBS]', 'Block minimap', { token: client.token })
-        blockingMinimap[socketId] = true
-        allUnblocked[socketId] = false
-
+    // Edge case:
+    // Send strat screen if the player has picked their hero and it's locked in
+    // Other players on their team could still be picking
+    if (
+      currentHero !== null &&
+      (currentHero === '' || currentHero.length) &&
+      pickSates.includes(state ?? '')
+    ) {
+      if (blockCache.get(connectedSocketClient.token) !== 'strategy') {
         server.io
-          .to(socketId)
-          .emit('block', { type: 'minimap', team: client.gamestate?.player?.team_name })
+          .to(connectedSocketClient.sockets)
+          .emit('block', { type: 'strategy', team: client.gamestate?.player?.team_name })
+
+        blockCache.set(connectedSocketClient.token, 'strategy')
       }
 
-      if (blockingMinimap[socketId] && !minimapStates.includes(state ?? '')) {
-        console.log('[OBS]', 'Unblock minimap', { token: client.token })
-        blockingMinimap[socketId] = false
+      return
+    }
+
+    // Check what needs to be blocked
+    const hasValidBlocker = blockTypes.some((blocker) => {
+      if (blocker.states.includes(state ?? '')) {
+        // Only send if not already what it is
+        if (blockCache.get(connectedSocketClient.token) !== blocker.type) {
+          blockCache.set(connectedSocketClient.token, blocker.type)
+
+          // Send the one blocker type
+          server.io.to(connectedSocketClient.sockets).emit('block', {
+            type: blockCache.get(connectedSocketClient.token),
+            team: client.gamestate?.player?.team_name,
+          })
+        }
+        return true
       }
 
-      if (!blockingPicks[socketId] && pickSates.includes(state ?? '')) {
-        console.log('[OBS]', 'Block hero picks for team', client.gamestate?.player?.team_name, {
-          token: client.token,
-        })
-        blockingPicks[socketId] = true
-        allUnblocked[socketId] = false
-
-        server.io
-          .to(socketId)
-          .emit('block', { type: 'picks', team: client.gamestate?.player?.team_name })
-      }
-
-      if (blockingPicks[socketId] && !pickSates.includes(state ?? '')) {
-        console.log('[OBS]', 'Unblock picks', { token: client.token })
-        blockingPicks[socketId] = false
-      }
-
-      // Only send unblocker once per socket
-      if (!blockingMinimap[socketId] && !blockingPicks[socketId] && !allUnblocked[socketId]) {
-        console.log('[OBS]', 'Unblock all OBS layers', { token: client.token })
-        allUnblocked[socketId] = true
-
-        server.io
-          .to(socketId)
-          .emit('block', { type: null, team: client.gamestate?.player?.team_name })
-      }
+      return false
     })
+
+    // No blocker changes, don't emit any socket message
+    if (!hasValidBlocker && !blockCache.has(connectedSocketClient.token)) {
+      return
+    }
+
+    // Unblock all
+    if (!hasValidBlocker && blockCache.has(connectedSocketClient.token)) {
+      blockCache.delete(connectedSocketClient.token)
+      server.io.to(connectedSocketClient.sockets).emit('block', { type: null })
+      currentHero = null
+      return
+    }
   }
 
   // client.on('player:activity', (activity: string) => {
@@ -412,11 +423,7 @@ function setupMainEvents(connectedSocketClient: SocketClient) {
   client.on('hero:name', (name: string) => {
     if (isCustomGame(client)) return
 
-    const heroName = name.substr(14)
-
-    // Hero name is empty when you first pick
-    // It gets filled out after its locked in and no longer bannable
-    console.log('[HERO]', `Playing hero ${heroName}`, { token: client.token })
+    currentHero = name
   })
 
   // Catch all
