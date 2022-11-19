@@ -409,12 +409,12 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
   client.on('hero:alive', (alive: boolean) => {
     // Just died
     if (!alive && client.gamestate?.previously?.hero?.alive) {
-      console.log('Just died')
+      // console.log('Just died')
     }
 
     // Just spawned (ignores game start spawn)
     if (alive && client.gamestate?.previously?.hero?.alive === false) {
-      console.log('Just spawned')
+      // console.log('Just spawned')
     }
   })
 
