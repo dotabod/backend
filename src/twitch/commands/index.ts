@@ -88,7 +88,16 @@ chatClient.onMessage(function (channel, user, text, msg) {
         break
       }
 
-      void chatClient.say(channel, `Live GPM: ${gpm}`)
+      const gold_from_hero_kills = connectedSocketClient.gsi.gamestate?.player?.gold_from_hero_kills
+      const gold_from_creep_kills =
+        connectedSocketClient.gsi.gamestate?.player?.gold_from_creep_kills
+
+      void chatClient.say(
+        channel,
+        `Live GPM: ${gpm}. ${gold_from_hero_kills ?? 0} from hero kills, ${
+          gold_from_creep_kills ?? 0
+        } from creep kills.`,
+      )
       break
     }
     case '!hero': {
