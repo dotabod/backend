@@ -6,6 +6,12 @@ import { Dota2, SlotsIds } from '../types'
 export default function checkMidas(data: Dota2, passiveMidas: { counter: number }) {
   if (!data.items) return false
 
+  // User is dead
+  if (data.hero?.alive === false) {
+    passiveMidas.counter = 0
+    return false
+  }
+
   const midas = 'item_hand_of_midas'
 
   // Should always be 17 unless they're disconnected or something
@@ -36,12 +42,12 @@ export default function checkMidas(data: Dota2, passiveMidas: { counter: number 
     return false
   }
 
-  // +1 second each iteration, waiting for it to be off cd
+  // +1 second each iteration
   passiveMidas.counter += 1
 
-  // Now its been 25s AFTER it was last used, very passive midas >:(
-  if (passiveMidas.counter === 25) {
-    passiveMidas.counter = -50
+  // Every 75s that it isn't used we say passive midas
+  if (passiveMidas.counter === 75) {
+    passiveMidas.counter = 0
     return true
   }
 

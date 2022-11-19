@@ -406,6 +406,18 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
     currentHero = name
   })
 
+  client.on('hero:alive', (alive: boolean) => {
+    // Just died
+    if (!alive && client.gamestate?.previously?.hero?.alive) {
+      console.log('Just died')
+    }
+
+    // Just spawned (ignores game start spawn)
+    if (alive && client.gamestate?.previously?.hero?.alive === false) {
+      console.log('Just spawned')
+    }
+  })
+
   // Catch all
   client.on('newdata', (data: Dota2) => {
     if (isSpectator(client)) return
@@ -417,14 +429,9 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
 
     endBets(null)
 
-    // User is dead
-    if (Number(data.hero?.respawn_seconds) > 0) {
-      passiveMidas.counter = -25
-      return
-    }
-
     const isMidasPassive = checkMidas(data, passiveMidas)
     if (isMidasPassive) {
+      console.log('[MIDAS]', 'Passive midas', { token: client.token })
       void chatClient.say(connectedSocketClient.name, 'massivePIDAS')
     }
   })
