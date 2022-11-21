@@ -14,6 +14,8 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
   // Guess not lol, will be handled by `new-gsi-client` event
   if (!connectedSocketClient?.gsi) {
     console.log('[SOCKET]', 'Waiting for GSI after socket connection', { token: client.token })
+
+    // server.io.to(socketId).emit('refresh')
     return
   }
 
