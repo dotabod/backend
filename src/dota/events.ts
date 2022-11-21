@@ -43,6 +43,8 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
   // But that's okay because we'll just do a db call once in openBets()
   let betExists: string | null = null
   let currentHero: string | null = null
+  let heroSlot: number | null = null
+  let endingBets = false
 
   const passiveMidas = { counter: 0 }
 
@@ -268,7 +270,6 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
       })
   }
 
-  let endingBets = false
   function endBets(winningTeam: 'radiant' | 'dire' | null) {
     if (betExists === null || endingBets) return
     if (!client) return
@@ -292,6 +293,9 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
 
     endingBets = true
     currentHero = null
+    passiveMidas.counter = 0
+    heroSlot = null
+
     const channel = connectedSocketClient.name
     handleMMR(won, betExists)
 
@@ -396,6 +400,9 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
       blockCache.delete(connectedSocketClient.token)
       server.io.to(connectedSocketClient.sockets).emit('block', { type: null })
       currentHero = null
+      heroSlot = null
+      passiveMidas.counter = 0
+      betExists = null
       return
     }
   }
@@ -433,6 +440,20 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
     if (isMidasPassive) {
       console.log('[MIDAS]', 'Passive midas', { token: client.token })
       void chatClient.say(connectedSocketClient.name, 'massivePIDAS')
+    }
+  })
+
+  client.on('player:commands_issued', (commands: number) => {
+    if (isSpectator(client)) return
+
+    console.log('[COMMANDS]', commands, { token: client.token })
+  })
+
+  client.on('items:teleport0:purchaser', (purchaser: number) => {
+    if (heroSlot === null) {
+      console.log('[SLOT]', 'Found hero slot at', purchaser, { token: client.token })
+      heroSlot = purchaser
+      return
     }
   })
 
