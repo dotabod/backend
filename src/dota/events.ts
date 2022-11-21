@@ -443,12 +443,6 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
     }
   })
 
-  client.on('player:commands_issued', (commands: number) => {
-    if (isSpectator(client)) return
-
-    console.log('[COMMANDS]', commands, { token: client.token })
-  })
-
   client.on('items:teleport0:purchaser', (purchaser: number) => {
     if (heroSlot === null) {
       console.log('[SLOT]', 'Found hero slot at', purchaser, { token: client.token })
