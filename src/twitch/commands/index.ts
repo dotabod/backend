@@ -48,12 +48,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
   const args = text.split(' ')
   const command = args[0].toLowerCase()
   if (!commands.includes(command)) return
-  if (
-    !msg.userInfo.isBroadcaster &&
-    !msg.userInfo.isMod &&
-    !CooldownManager.canUse(channel, command)
-  )
-    return
+  if (!CooldownManager.canUse(channel, command)) return
 
   const connectedSocketClient = findUserByName(toUserName(channel))
 
