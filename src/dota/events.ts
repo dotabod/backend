@@ -492,7 +492,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
     if ((time + 30) % 300 === 0 && time + 30 > 0) {
       // Open a poll to see if its top or bottom?
       // We might not find out the answer though
-      console.log('Runes coming soon, its currently n:30 minutes', { token: client.token })
+      // console.log('Runes coming soon, its currently n:30 minutes', { token: client.token })
     }
   })
 }
