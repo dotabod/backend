@@ -1,4 +1,5 @@
 import axios from 'axios'
+import axiosRetry from 'axios-retry'
 
 import { findHero } from '../db/getHero'
 import { prisma } from '../db/prisma'
@@ -12,6 +13,17 @@ import { GSIClient } from './lib/dota2-gsi'
 import { blockTypes, pickSates } from './trackingConsts'
 
 import { server } from '.'
+
+axiosRetry(axios, {
+  retries: 5, // number of retries
+  retryDelay: (retryCount) => {
+    console.log(`retry attempt: ${retryCount}`)
+    return retryCount * 4000 // time interval between retries
+  },
+  retryCondition: (error) => {
+    return error.response?.status !== 200
+  },
+})
 
 // spectator = watching a friend live
 // team2 = watching replay or live match
@@ -136,34 +148,12 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
   }
 
   function handleMMR(increase: boolean, matchId: string) {
-    // Do lookup at steam API for this match and figure out lobby type
+    // Do lookup at Opendota API for this match and figure out lobby type
+    // TODO: Get just lobby_type from opendota api? That way its a smaller json response
     axios(`https://api.opendota.com/api/matches/${matchId}`)
-      .then((data: any) => {
-        // lobby_type
-        // -1 - Invalid
-        // 0 - Public matchmaking
-        // 1 - Practise
-        // 2 - Tournament
-        // 3 - Tutorial
-        // 4 - Co-op with bots.
-        // 5 - Team match
-        // 6 - Solo Queue
-        // 7 - Ranked
-        // 8 - 1v1 Mid
-        if (data?.error) {
-          console.log('[MMR]', 'Error getting match details', {
-            error: data.error,
-            matchId,
-            channel: connectedSocketClient.name,
-          })
-          // Force update when an error occurs and just let mods take care of the discrepancy
-          // We assume the match was ranked
-          updateMMR(increase)
-          return
-        }
-
+      .then((response: any) => {
         // Ranked
-        if (data?.lobby_type === 7) {
+        if (response?.data?.lobby_type === 7) {
           console.log('[MMR]', 'Match was ranked, updating mmr', {
             matchId,
             channel: connectedSocketClient.name,
@@ -173,10 +163,13 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
           return
         }
 
-        console.log('[MMR] Non-ranked game', data, { matchId, channel: connectedSocketClient.name })
+        console.log('[MMR] Non-ranked game. Lobby type:', response?.data?.lobby_type, {
+          matchId,
+          channel: connectedSocketClient.name,
+        })
         updateMMR(increase, false)
       })
-      .catch((e) => {
+      .catch((e: any) => {
         console.log('[MMR]', 'Error fetching match details', {
           matchId,
           channel: connectedSocketClient.name,
@@ -280,6 +273,17 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
   function endBets(winningTeam: 'radiant' | 'dire' | null) {
     if (betExists === null || endingBets) return
     if (!client) return
+
+    // A fresh DC without waiting for ancient to blow up
+    if (
+      !winningTeam &&
+      client.gamestate?.previously?.map === true &&
+      !client.gamestate.map?.matchid
+    ) {
+      // Check with opendota to see if the match is over
+
+      return
+    }
 
     // "none"? Must mean the game hasn't ended yet
     // Would be undefined otherwise if there is no game
@@ -435,10 +439,6 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
   // Catch all
   client.on('newdata', (data: Packet) => {
     if (isSpectator(client)) return
-
-    if (Array.isArray(data.events) && data.events.length) {
-      // console.log('[NEWDATA]', data.events)
-    }
 
     // In case they connect to a game in progress and we missed the start event
     setupOBSBlockers(data.map?.game_state ?? '')
