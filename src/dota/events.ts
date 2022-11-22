@@ -136,10 +136,8 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
 
   function handleMMR(increase: boolean, matchId: string) {
     // Do lookup at steam API for this match and figure out lobby type
-    axios(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
-      params: { key: process.env.STEAM_WEB_API, match_id: matchId },
-    })
-      .then(({ data }) => {
+    axios(`https://api.opendota.com/api/matches/${matchId}`)
+      .then((data: any) => {
         // lobby_type
         // -1 - Invalid
         // 0 - Public matchmaking
@@ -151,9 +149,9 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
         // 6 - Solo Queue
         // 7 - Ranked
         // 8 - 1v1 Mid
-        if (data?.result?.error) {
+        if (data?.error) {
           console.log('[MMR]', 'Error getting match details', {
-            error: data.result.error,
+            error: data.error,
             matchId,
             channel: connectedSocketClient.name,
           })
@@ -164,7 +162,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
         }
 
         // Ranked
-        if (data?.result?.lobby_type === 7) {
+        if (data?.lobby_type === 7) {
           console.log('[MMR]', 'Match was ranked, updating mmr', {
             matchId,
             channel: connectedSocketClient.name,
