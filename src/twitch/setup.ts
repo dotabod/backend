@@ -70,7 +70,7 @@ export function getChannelAuthProvider(channel: string, userId: string) {
 }
 
 async function getChannels() {
-  console.log('Running getChannels')
+  console.log('[TWITCHSETUP] Running getChannels')
 
   if (process.env.NODE_ENV === 'development') {
     return process.env.DEV_CHANNELS?.split(',') ?? []
