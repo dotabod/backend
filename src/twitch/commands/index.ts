@@ -199,8 +199,6 @@ chatClient.onMessage(function (channel, user, text, msg) {
     case '!mmr':
       // If connected, we can just respond with the cached MMR
       if (connectedSocketClient) {
-        console.log('[MMR] Responding with cached MMR', connectedSocketClient.mmr, channel)
-
         getRankDescription(connectedSocketClient.mmr, connectedSocketClient.steam32Id ?? undefined)
           .then((description) => {
             console.log('[MMR] Responding with cached MMR', description, channel)
