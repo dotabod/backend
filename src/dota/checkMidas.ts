@@ -1,4 +1,4 @@
-import { Item, Items, Packet } from '../types'
+import { Item, Packet } from '../types'
 
 // Stash is fountain stash
 // Slots 0-5 are the backpack
@@ -19,15 +19,16 @@ export default function checkMidas(data: Packet, passiveMidas: { counter: number
 
   // This checks backpack only, not fountain stash cause maybe courrier is bringing it
   let midasItem: Item | undefined
-  let midasSlot: string | undefined
+  let midasSlot: number | undefined
 
   // Find the slot the midas is sitting in
   // TODO: Extract to a function to find an item?
-  const inv = Object.values(data.items) || []
-  inv.slice(0, 9).forEach(([slot, item]: [keyof Items, Item]) => {
+  const inv = Object.values(data.items)
+
+  inv.slice(0, 9).forEach((item: Item, i) => {
     if (item.name === midas) {
       midasItem = item
-      midasSlot = slot
+      midasSlot = i
     }
   })
 

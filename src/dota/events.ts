@@ -430,7 +430,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
     if (isSpectator(client)) return
 
     if (Array.isArray(data.events) && data.events.length) {
-      console.log('[NEWDATA]', data.events)
+      // console.log('[NEWDATA]', data.events)
     }
 
     // In case they connect to a game in progress and we missed the start event
