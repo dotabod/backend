@@ -1,7 +1,9 @@
-import heroes from 'dotabase/json/heroes.json' assert { type: 'json' }
+import heroes from 'dotaconstants/build/hero_names.json' assert { type: 'json' }
 import memoizee from 'memoizee'
 
-export const findHero = memoizee(function handleFindHero(name?: string) {
+export type HeroNames = keyof typeof heroes
+
+export const findHero = memoizee(function handleFindHero(name?: HeroNames) {
   if (!name || typeof name !== 'string' || name.length < 3) return null
-  return heroes.find((hero) => hero.full_name === name)
+  return heroes[name]
 })

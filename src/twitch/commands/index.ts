@@ -127,7 +127,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
         break
       }
 
-      const hero = findHero(connectedSocketClient.gsi.gamestate.hero.name || '')
+      const hero = findHero(connectedSocketClient.gsi.gamestate.hero.name)
 
       if (!hero) {
         void chatClient.say(channel, "Couldn't find hero Sadge")
@@ -136,8 +136,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       void chatClient.say(
         channel,
-        `${hero.aliases}. Primary attribute: ${hero.attr_primary}. ${hero.roles.replaceAll(
-          '|',
+        `${hero.localized_name}. Primary attribute: ${hero.primary_attr}. Roles: ${hero.roles.join(
           ', ',
         )}`.toLowerCase(),
       )

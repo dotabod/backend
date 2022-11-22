@@ -1,9 +1,9 @@
-import { Dota2, SlotsIds } from '../types'
+import { Item, Items, Packet } from '../types'
 
 // Stash is fountain stash
 // Slots 0-5 are the backpack
 // Slots 6-8 are the backpack stashed items
-export default function checkMidas(data: Dota2, passiveMidas: { counter: number }) {
+export default function checkMidas(data: Packet, passiveMidas: { counter: number }) {
   if (!data.items) return false
 
   // User is dead
@@ -18,23 +18,22 @@ export default function checkMidas(data: Dota2, passiveMidas: { counter: number 
   if (Object.keys(data.items).length !== 17) return false
 
   // This checks backpack only, not fountain stash cause maybe courrier is bringing it
-  const slots = [...Array(9).keys()] as SlotsIds[]
-  let midasSlot: SlotsIds | undefined
+  let midasItem: Item | undefined
+  let midasSlot: string | undefined
 
   // Find the slot the midas is sitting in
   // TODO: Extract to a function to find an item?
-  midasSlot = slots.find((slotKey: number) => {
-    if (data.items?.[`slot${slotKey as SlotsIds}`]?.name === midas) {
-      midasSlot = slotKey as SlotsIds
-      return slotKey as SlotsIds
-    }
-    return undefined
-  })
+  Object.values(data.items)
+    .slice(0, 9)
+    .forEach(([slot, item]: [keyof Items, Item]) => {
+      if (item.name === midas) {
+        midasItem = item
+        midasSlot = slot
+      }
+    })
 
   // Doesn't have a midas
   if (!midasSlot) return false
-
-  const midasItem = data.items[`slot${midasSlot}`]
 
   // Midas was used recently, wait for it to be off CD
   if (Number(midasItem?.cooldown) > 0) {

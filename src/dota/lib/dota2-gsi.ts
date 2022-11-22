@@ -6,7 +6,7 @@ import express, { NextFunction, Request, Response } from 'express'
 import { Server, Socket } from 'socket.io'
 
 import { getDBUser } from '../../db/getDBUser'
-import { Dota2 } from '../../types'
+import { Packet } from '../../types'
 import findUser from '../dotaGSIClients'
 import { gsiClients, socketClients } from '../trackingConsts'
 
@@ -16,7 +16,7 @@ export class GSIClient extends EventEmitter {
   ip: string
   auth: { token: string }
   token: string
-  gamestate?: Dota2
+  gamestate?: Packet
 
   constructor(ip: string, auth: { token: string }) {
     super()

@@ -4,7 +4,7 @@ import { findHero } from '../db/getHero'
 import { prisma } from '../db/prisma'
 import { chatClient } from '../twitch/commands'
 import { closeTwitchBet, openTwitchBet } from '../twitch/predictions'
-import { Dota2, SocketClient } from '../types'
+import { Packet, SocketClient } from '../types'
 import { steamID64toSteamID32 } from '../utils'
 import { getRankDescription } from '../utils/constants'
 import checkMidas from './checkMidas'
@@ -242,7 +242,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
               },
             })
             .then(() => {
-              const hero = findHero(client.gamestate?.hero?.name ?? '')
+              const hero = findHero(client.gamestate?.hero?.name)
 
               openTwitchBet(channel, client.token, hero?.localized_name)
                 .then(() => {
@@ -426,8 +426,12 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
   })
 
   // Catch all
-  client.on('newdata', (data: Dota2) => {
+  client.on('newdata', (data: Packet) => {
     if (isSpectator(client)) return
+
+    if (Array.isArray(data.events) && data.events.length) {
+      console.log('[NEWDATA]', data.events)
+    }
 
     // In case they connect to a game in progress and we missed the start event
     setupOBSBlockers(data.map?.game_state ?? '')
