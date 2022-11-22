@@ -54,6 +54,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
   // Server could reboot and lose this in memory
   // But that's okay because we'll just do a db call once in openBets()
   let betExists: string | null = null
+  let betMyTeam: 'radiant' | 'dire' | 'spectator' | null = null
   let currentHero: string | null = null
   let heroSlot: number | null = null
   let endingBets = false
@@ -223,12 +224,15 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
         if (bet?.id) {
           console.log('[BETS]', 'Found a bet in the database', bet.id)
           betExists = client.gamestate?.map?.matchid ?? null
+          betMyTeam = client.gamestate?.player?.team_name ?? null
         } else {
           if (!isOpenBetGameCondition) {
             return
           }
 
           betExists = client.gamestate?.map?.matchid ?? null
+          betMyTeam = client.gamestate?.player?.team_name ?? null
+
           updateSteam32Id()
 
           prisma.bet
@@ -270,9 +274,14 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
       })
   }
 
-  function endBets(winningTeam: 'radiant' | 'dire' | null) {
+  function endBets(
+    winningTeam: 'radiant' | 'dire' | null = null,
+    streamersTeam: 'radiant' | 'dire' | 'spectator' | null = null,
+  ) {
     if (betExists === null || endingBets) return
     if (!client) return
+
+    const matchId = betExists
 
     // A fresh DC without waiting for ancient to blow up
     if (
@@ -280,7 +289,26 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
       client.gamestate?.previously?.map === true &&
       !client.gamestate.map?.matchid
     ) {
+      console.log(client.gamestate)
+
+      console.log('[BETS]', 'Game ended without a winner', { token: client.token })
+
       // Check with opendota to see if the match is over
+      axios(`https://api.opendota.com/api/matches/${matchId}`)
+        .then((response: any) => {
+          if (response?.data?.radiant_win === true) {
+            endBets('radiant', betMyTeam)
+          } else if (response?.data?.radiant_win === false) {
+            endBets('dire', betMyTeam)
+          } else {
+            // ??? response was malformed from opendota
+          }
+        })
+        .catch((e: any) => {
+          betExists = null
+          betMyTeam = null
+          // its not over? just give up checking after this long
+        })
 
       return
     }
@@ -290,7 +318,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
     if (!winningTeam && client.gamestate?.map?.win_team === 'none') return
 
     const localWinner = winningTeam ?? client.gamestate?.map?.win_team
-    const myTeam = client.gamestate?.player?.team_name
+    const myTeam = streamersTeam ?? client.gamestate?.player?.team_name
     const won = myTeam === localWinner
 
     // Both or one undefined
@@ -299,7 +327,9 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
     if (winningTeam === null) {
       console.log('[BETS]', 'Running end bets from newdata', { token: client.token })
     } else {
-      console.log('[BETS]', 'Running end bets from map:win_team', { token: client.token })
+      console.log('[BETS]', 'Running end bets from map:win_team or custom match look-up', {
+        token: client.token,
+      })
     }
 
     endingBets = true
@@ -308,7 +338,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
     heroSlot = null
 
     const channel = connectedSocketClient.name
-    handleMMR(won, betExists)
+    handleMMR(won, matchId)
 
     prisma.bet
       .update({
@@ -318,7 +348,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
         where: {
           matchId_userId: {
             userId: client.token,
-            matchId: client.gamestate?.map?.matchid ?? '',
+            matchId: matchId,
           },
         },
       })
@@ -326,6 +356,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
         closeTwitchBet(channel, won, client.token)
           .then(() => {
             betExists = null
+            betMyTeam = null
             endingBets = false
 
             void chatClient.say(
@@ -336,7 +367,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
             console.log('[BETS]', {
               event: 'end_bets',
               data: {
-                matchId: client.gamestate?.map?.matchid,
+                matchId: matchId,
                 token: client.token,
                 winning_team: localWinner,
                 player_team: myTeam,
@@ -345,12 +376,14 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
             })
           })
           .catch((e) => {
+            betMyTeam = null
             betExists = null
             endingBets = false
             console.log('[BETS]', 'Error closing twitch bet', channel, e)
           })
       })
       .catch((e) => {
+        betMyTeam = null
         betExists = null
         endingBets = false
         console.log('[BETS]', 'Error closing bet', e)
@@ -413,7 +446,8 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
       currentHero = null
       heroSlot = null
       passiveMidas.counter = 0
-      betExists = null
+      // betExists = null
+      // betMyTeam = null
       return
     }
   }
@@ -445,7 +479,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
 
     openBets()
 
-    endBets(null)
+    endBets()
 
     const isMidasPassive = checkMidas(data, passiveMidas)
     if (isMidasPassive) {

@@ -59,7 +59,7 @@ export interface Player {
   kill_streak: number // 0,
   commands_issued: number // 0,
   kill_list: Record<string, number>
-  team_name: string // "radiant" or "dire"
+  team_name: 'spectator' | 'radiant' | 'dire'
   gold: number // 600,
   gold_reliable: number // 0,
   gold_unreliable: number //600,
