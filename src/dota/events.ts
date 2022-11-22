@@ -87,6 +87,13 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
   }
 
   function updateMMR(increase: boolean) {
+    if (!connectedSocketClient.mmr || connectedSocketClient.mmr <= 0) {
+      server.io
+        .to(connectedSocketClient.sockets)
+        .emit('update-medal', { mmr: 0, steam32Id: connectedSocketClient.steam32Id })
+      return
+    }
+
     const newMMR = connectedSocketClient.mmr + (increase ? 30 : -30)
     prisma.user
       .update({
