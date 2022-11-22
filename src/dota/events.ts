@@ -86,11 +86,12 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
       })
   }
 
-  function updateMMR(increase: boolean) {
-    if (!connectedSocketClient.mmr || connectedSocketClient.mmr <= 0) {
-      server.io
-        .to(connectedSocketClient.sockets)
-        .emit('update-medal', { mmr: 0, steam32Id: connectedSocketClient.steam32Id })
+  function updateMMR(increase: boolean, ranked = true) {
+    if (!ranked || !connectedSocketClient.mmr || connectedSocketClient.mmr <= 0) {
+      server.io.to(connectedSocketClient.sockets).emit('update-medal', {
+        mmr: connectedSocketClient.mmr,
+        steam32Id: connectedSocketClient.steam32Id,
+      })
       return
     }
 
@@ -173,6 +174,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
         }
 
         console.log('[MMR] Non-ranked game', data, { matchId, channel: connectedSocketClient.name })
+        updateMMR(increase, false)
       })
       .catch((e) => {
         console.log('[MMR]', 'Error fetching match details', {
