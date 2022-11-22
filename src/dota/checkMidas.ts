@@ -5,7 +5,6 @@ import { Item, Items, Packet } from '../types'
 // Slots 6-8 are the backpack stashed items
 export default function checkMidas(data: Packet, passiveMidas: { counter: number }) {
   if (!data.items) return false
-  return false
 
   // User is dead
   if (data.hero?.alive === false) {
@@ -24,14 +23,13 @@ export default function checkMidas(data: Packet, passiveMidas: { counter: number
 
   // Find the slot the midas is sitting in
   // TODO: Extract to a function to find an item?
-  Object.values(data.items)
-    .slice(0, 9)
-    .forEach(([slot, item]: [keyof Items, Item]) => {
-      if (item.name === midas) {
-        midasItem = item
-        midasSlot = slot
-      }
-    })
+  const inv = Object.values(data.items) || []
+  inv.slice(0, 9).forEach(([slot, item]: [keyof Items, Item]) => {
+    if (item.name === midas) {
+      midasItem = item
+      midasSlot = slot
+    }
+  })
 
   // Doesn't have a midas
   if (!midasSlot) return false
