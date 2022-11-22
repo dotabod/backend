@@ -27,7 +27,7 @@ interface Provider {
   name: string // "Dota 2"
   appid: number // 570 for Dota 2
   version: number // 5.11.2022 it was version 47
-  timestamt: number // Unix epoch time stamp in seconds of datapoint
+  timestamp: number // Unix epoch time stamp in seconds of datapoint
 }
 
 export interface MapData {
@@ -304,6 +304,6 @@ export interface Packet {
   }
   draft?: Draft
   events?: Event[]
-  previously?: Omit<Packet, 'previously'>
+  previously?: Omit<Packet, 'previously'> & { map: MapData | boolean }
   added?: Omit<Packet, 'added'> // it has the same structure as above, and has a value "true"
 }
