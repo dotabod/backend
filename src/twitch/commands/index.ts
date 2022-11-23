@@ -70,7 +70,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     case '!help':
       void chatClient.say(
         channel,
-        `"I'm an open source bot made by @techleed. More info: https://dotabod.com`,
+        `I'm an open source bot made by @techleed. More info: https://dotabod.com`,
       )
       break
     case '!wl':
