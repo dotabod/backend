@@ -45,6 +45,7 @@ const commands = [
   '!dotabod',
   '!help',
   '!pleb',
+  '!commands',
   '!mmr=',
 ]
 chatClient.onMessage(function (channel, user, text, msg) {
@@ -66,6 +67,9 @@ chatClient.onMessage(function (channel, user, text, msg) {
   const connectedSocketClient = findUserByName(toUserName(channel))
 
   switch (command) {
+    case '!commands':
+      void chatClient.say(channel, `Available commands: ${commands.join(' | ')}`)
+      break
     case '!dotabod':
     case '!help':
       void chatClient.say(
