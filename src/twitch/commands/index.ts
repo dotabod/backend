@@ -123,7 +123,6 @@ chatClient.onMessage(function (channel, user, text, msg) {
     case '!hero': {
       if (!connectedSocketClient?.gsi) break
       if (isSpectator(connectedSocketClient.gsi)) break
-      if (!msg.channelId) break
       if (!connectedSocketClient.gsi.gamestate?.hero?.name) {
         void chatClient.say(channel, 'Not playing PauseChamp')
         break
@@ -137,7 +136,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       }
 
       axios(
-        `https://api.opendota.com/api/players/${msg.channelId}/wl/?hero_id=${hero.id}&having=1&date=30`,
+        `https://api.opendota.com/api/players/${connectedSocketClient.steam32Id}/wl/?hero_id=${hero.id}&having=1&date=30`,
       )
         .then(({ data }: { data: { win: number; lose: number } }) => {
           if (data.win + data.lose === 0) {
@@ -193,7 +192,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
           where: {
             provider_providerAccountId: {
               provider: 'twitch',
-              providerAccountId: msg.channelId ?? '',
+              providerAccountId: msg.channelId,
             },
           },
         })
@@ -212,7 +211,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
               server.io
                 .to(connectedSocketClient.sockets)
-                .emit('update-medal', { mmr, steam32Id: msg.channelId })
+                .emit('update-medal', { mmr, steam32Id: connectedSocketClient.steam32Id })
             } else {
               console.log('[MMR] No sockets found to send update to', channel)
             }
