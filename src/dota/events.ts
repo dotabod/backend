@@ -174,7 +174,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
         console.log('[MMR]', 'Error fetching match details', {
           matchId,
           channel: connectedSocketClient.name,
-          error: e,
+          error: e?.response?.data,
         })
         // Force update when an error occurs and just let mods take care of the discrepancy
         // We assume the match was ranked
