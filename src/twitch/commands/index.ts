@@ -35,16 +35,17 @@ const CooldownManager = {
 
 const plebMode = new Set()
 const commands = [
-  '!pleb',
   '!gpm',
   '!hero',
   '!mmr',
-  '!mmr=',
   '!ping',
   '!xpm',
   '!apm',
   '!wl',
+  '!dotabod',
   '!help',
+  '!pleb',
+  '!mmr=',
 ]
 chatClient.onMessage(function (channel, user, text, msg) {
   // Letting one pleb in
@@ -65,8 +66,9 @@ chatClient.onMessage(function (channel, user, text, msg) {
   const connectedSocketClient = findUserByName(toUserName(channel))
 
   switch (command) {
+    case '!dotabod':
     case '!help':
-      void chatClient.say(channel, commands.join(' '))
+      void chatClient.say(channel, `"I'm a bot made by @techleed. More info: https://dotabod.com`)
       break
     case '!wl':
       if (!connectedSocketClient?.steam32Id) {
