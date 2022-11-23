@@ -74,7 +74,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
         break
       }
 
-      axios(`https://api.opendota.com/api/players/${connectedSocketClient?.steam32Id}/wl/?date=0.5`)
+      axios(`https://api.opendota.com/api/players/${connectedSocketClient.steam32Id}/wl/?date=0.5`)
         .then(({ data }: { data: { win: number; lose: number } }) => {
           void chatClient.say(channel, `W${data.win} L${data.lose} in last 12h`)
         })
