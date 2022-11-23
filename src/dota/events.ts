@@ -518,7 +518,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
     if (isSpectator(client)) return
 
     if (isPaused) {
-      void chatClient.say(connectedSocketClient.name, `PauseChamp`)
+      void chatClient.say(connectedSocketClient.name, `PauseChamp Who paused the game?`)
     }
   })
 
