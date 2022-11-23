@@ -289,9 +289,9 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
       client.gamestate?.previously?.map === true &&
       !client.gamestate.map?.matchid
     ) {
-      console.log(client.gamestate)
-
-      console.log('[BETS]', 'Game ended without a winner', { token: client.token })
+      console.log('[BETS]', 'Game ended without a winner, early DC probably', {
+        token: client.token,
+      })
 
       // Check with opendota to see if the match is over
       axios(`https://api.opendota.com/api/matches/${matchId}`)
