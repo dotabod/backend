@@ -73,21 +73,42 @@ chatClient.onMessage(function (channel, user, text, msg) {
         `I'm an open source bot made by @techleed. More info: https://dotabod.com`,
       )
       break
-    case '!wl':
+    case '!wl': {
       if (!connectedSocketClient?.steam32Id) {
-        void chatClient.say(channel, 'Not playing PauseChamp')
+        void chatClient.say(channel, 'Not live PauseChamp')
         break
       }
 
-      axios(`https://api.opendota.com/api/players/${connectedSocketClient.steam32Id}/wl/?date=0.5`)
-        .then(({ data }: { data: { win: number; lose: number } }) => {
-          void chatClient.say(channel, `W${data.win} L${data.lose} in last 12h`)
+      const promises = [
+        axios(
+          `https://api.opendota.com/api/players/${connectedSocketClient.steam32Id}/wl/?date=0.5&lobby_type=0`,
+        ),
+        axios(
+          `https://api.opendota.com/api/players/${connectedSocketClient.steam32Id}/wl/?date=0.5&lobby_type=7`,
+        ),
+      ]
+
+      Promise.all(promises)
+        .then((values: { data: { win: number; lose: number } }[]) => {
+          const [ranked, unranked] = values
+          const { win, lose } = ranked.data
+          const { win: unrankedWin, lose: unrankedLose } = unranked.data
+          const hasUnranked = unrankedWin + unrankedLose !== 0
+          const hasRanked = win + lose !== 0
+          const rankedMsg = `Ranked ${win} W ${lose} L`
+          const unrankedMsg = `Unranked ${unrankedWin} W ${unrankedLose} L`
+          const msg = []
+          if (hasRanked) msg.push(rankedMsg)
+          if (hasUnranked) msg.push(unrankedMsg)
+          void chatClient.say(channel, msg.join(' | '))
         })
         .catch((e) => {
           console.log(e)
           void chatClient.say(channel, 'Unknown WL')
         })
+
       break
+    }
     case '!pleb':
       // Only mod or owner
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
