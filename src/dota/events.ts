@@ -504,7 +504,13 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
     if (isSpectator(client)) return
 
     if (isSmoked) {
-      void chatClient.say(connectedSocketClient.name, `Shush`)
+      const hero = findHero(client.gamestate?.hero?.name)
+      if (!hero) {
+        void chatClient.say(connectedSocketClient.name, '🚬💣 Smoke!')
+        return
+      }
+
+      void chatClient.say(connectedSocketClient.name, `🚬💣 ${hero.localized_name} is smoked!`)
     }
   })
 
