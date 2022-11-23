@@ -288,6 +288,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 /*
   Required emotes:
 
+  Chatting
   massivePIDAS
   Sadge
   EZ

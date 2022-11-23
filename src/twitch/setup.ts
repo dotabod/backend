@@ -1,5 +1,6 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
 import { ChatClient } from '@twurple/chat'
+import memoizee from 'memoizee'
 
 import { prisma } from '../db/prisma'
 import findUser from '../dota/dotaGSIClients'
@@ -10,64 +11,70 @@ const hasTokens =
   process.env.TWITCH_CLIENT_ID &&
   process.env.TWITCH_CLIENT_SECRET
 
-export function getAuthProvider() {
-  if (!hasTokens) {
-    throw new Error('Missing twitch tokens')
-  }
+export const getAuthProvider = memoizee(
+  function () {
+    if (!hasTokens) {
+      throw new Error('Missing twitch tokens')
+    }
 
-  const authProvider = new RefreshingAuthProvider(
-    {
-      clientId: process.env.TWITCH_CLIENT_ID ?? '',
-      clientSecret: process.env.TWITCH_CLIENT_SECRET ?? '',
-    },
-    {
-      expiresIn: 86400, // 1 day
-      obtainmentTimestamp: Date.now(),
-      accessToken: process.env.TWITCH_ACCESS_TOKEN ?? '',
-      refreshToken: process.env.TWITCH_REFRESH_TOKEN ?? '',
-    },
-  )
+    const authProvider = new RefreshingAuthProvider(
+      {
+        clientId: process.env.TWITCH_CLIENT_ID ?? '',
+        clientSecret: process.env.TWITCH_CLIENT_SECRET ?? '',
+      },
+      {
+        expiresIn: 86400, // 1 day
+        obtainmentTimestamp: Date.now(),
+        accessToken: process.env.TWITCH_ACCESS_TOKEN ?? '',
+        refreshToken: process.env.TWITCH_REFRESH_TOKEN ?? '',
+      },
+    )
 
-  return authProvider
-}
+    return authProvider
+  },
+  { maxAge: 1000 * 60 * 60 * 6 }, // six hours
+)
 
-export function getChannelAuthProvider(channel: string, userId: string) {
-  if (!hasTokens) {
-    throw new Error('Missing twitch tokens')
-  }
+export const getChannelAuthProvider = memoizee(
+  function (channel: string, userId: string) {
+    if (!hasTokens) {
+      throw new Error('Missing twitch tokens')
+    }
 
-  const twitchTokens = findUser(userId)
+    const twitchTokens = findUser(userId)
 
-  if (!twitchTokens?.account.access_token || !twitchTokens.account.refresh_token) {
-    console.log('[TWITCHSETUP]', 'Missing twitch tokens', channel)
-    return {}
-  }
+    if (!twitchTokens?.account.access_token || !twitchTokens.account.refresh_token) {
+      console.log('[TWITCHSETUP]', 'Missing twitch tokens', channel)
+      return {}
+    }
 
-  console.log('[TWITCHSETUP]', 'Retrieved twitch access tokens', channel)
+    console.log('[TWITCHSETUP]', 'Retrieved twitch access tokens', channel)
 
-  const authProvider = new RefreshingAuthProvider(
-    {
-      clientId: process.env.TWITCH_CLIENT_ID ?? '',
-      clientSecret: process.env.TWITCH_CLIENT_SECRET ?? '',
-    },
-    {
-      scope: [
-        'openid',
-        'user:read:email',
-        'channel:manage:predictions',
-        'channel:manage:polls',
-        'channel:read:predictions',
-        'channel:read:polls',
-      ],
-      expiresIn: 86400, // 1 day
-      obtainmentTimestamp: Date.now(),
-      accessToken: twitchTokens.account.access_token,
-      refreshToken: twitchTokens.account.refresh_token,
-    },
-  )
+    const authProvider = new RefreshingAuthProvider(
+      {
+        clientId: process.env.TWITCH_CLIENT_ID ?? '',
+        clientSecret: process.env.TWITCH_CLIENT_SECRET ?? '',
+      },
+      {
+        scope: [
+          'openid',
+          'user:read:email',
+          'channel:manage:predictions',
+          'channel:manage:polls',
+          'channel:read:predictions',
+          'channel:read:polls',
+        ],
+        expiresIn: 86400, // 1 day
+        obtainmentTimestamp: Date.now(),
+        accessToken: twitchTokens.account.access_token,
+        refreshToken: twitchTokens.account.refresh_token,
+      },
+    )
 
-  return { providerAccountId: twitchTokens.account.providerAccountId, authProvider }
-}
+    return { providerAccountId: twitchTokens.account.providerAccountId, authProvider }
+  },
+  { maxAge: 1000 * 60 * 60 * 6 }, // six hours
+)
 
 async function getChannels() {
   console.log('[TWITCHSETUP] Running getChannels')

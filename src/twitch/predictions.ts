@@ -1,27 +1,34 @@
 import { ApiClient } from '@twurple/api'
+import memoizee from 'memoizee'
 
 import { getAuthProvider, getChannelAuthProvider } from './setup'
 
-function getChannelAPI(channel: string, userId: string) {
-  const { providerAccountId, authProvider } = getChannelAuthProvider(channel, userId)
+export const getChannelAPI = memoizee(
+  function (channel: string, userId: string) {
+    const { providerAccountId, authProvider } = getChannelAuthProvider(channel, userId)
 
-  if (!providerAccountId) {
-    console.log('[PREDICT]', 'Missing providerAccountId', channel)
-    throw new Error('Missing providerAccountId')
-  }
+    if (!providerAccountId) {
+      console.log('[PREDICT]', 'Missing providerAccountId', channel)
+      throw new Error('Missing providerAccountId')
+    }
 
-  const api = new ApiClient({ authProvider })
-  console.log('[PREDICT]', 'Retrieved twitch api', channel)
+    const api = new ApiClient({ authProvider })
+    console.log('[PREDICT]', 'Retrieved twitch api', channel)
 
-  return { api, providerAccountId }
-}
+    return { api, providerAccountId }
+  },
+  { maxAge: 1000 * 60 * 60 * 6 }, // six hours
+)
 
-export function getBotAPI() {
-  const authProvider = getAuthProvider()
-  const api = new ApiClient({ authProvider })
-  console.log('[BOT]', 'Retrieved twitch bot api')
-  return api
-}
+export const getBotAPI = memoizee(
+  function () {
+    const authProvider = getAuthProvider()
+    const api = new ApiClient({ authProvider })
+    console.log('[BOT]', 'Retrieved twitch bot api')
+    return api
+  },
+  { maxAge: 1000 * 60 * 60 * 6 }, // six hours
+)
 
 export async function openTwitchBet(channel: string, userId: string, heroName?: string) {
   console.log('[PREDICT]', '[BETS] Opening twitch bet', channel)
