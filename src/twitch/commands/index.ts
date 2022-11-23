@@ -95,8 +95,8 @@ chatClient.onMessage(function (channel, user, text, msg) {
           const { win: unrankedWin, lose: unrankedLose } = unranked.data
           const hasUnranked = unrankedWin + unrankedLose !== 0
           const hasRanked = win + lose !== 0
-          const rankedMsg = `Ranked ${win} W ${lose} L`
-          const unrankedMsg = `Unranked ${unrankedWin} W ${unrankedLose} L`
+          const rankedMsg = `Ranked ${win} W - ${lose} L`
+          const unrankedMsg = `Unranked ${unrankedWin} W - ${unrankedLose} L`
           const msg = []
           if (hasRanked) msg.push(rankedMsg)
           if (hasUnranked) msg.push(unrankedMsg)
