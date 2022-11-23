@@ -34,7 +34,18 @@ const CooldownManager = {
 }
 
 const plebMode = new Set()
-const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping', '!xpm', '!apm', '!help']
+const commands = [
+  '!pleb',
+  '!gpm',
+  '!hero',
+  '!mmr',
+  '!mmr=',
+  '!ping',
+  '!xpm',
+  '!apm',
+  '!wl',
+  '!help',
+]
 chatClient.onMessage(function (channel, user, text, msg) {
   // Letting one pleb in
   if (plebMode.has(channel) && !msg.userInfo.isSubscriber) {
@@ -56,6 +67,21 @@ chatClient.onMessage(function (channel, user, text, msg) {
   switch (command) {
     case '!help':
       void chatClient.say(channel, commands.join(' '))
+      break
+    case '!wl':
+      if (!connectedSocketClient?.steam32Id) {
+        void chatClient.say(channel, 'Not playing PauseChamp')
+        break
+      }
+
+      axios(`https://api.opendota.com/api/players/${connectedSocketClient?.steam32Id}/wl/?date=0.5`)
+        .then(({ data }: { data: { win: number; lose: number } }) => {
+          void chatClient.say(channel, `W${data.win} L${data.lose} in last 12h`)
+        })
+        .catch((e) => {
+          console.log(e)
+          void chatClient.say(channel, 'Unknown WL')
+        })
       break
     case '!pleb':
       // Only mod or owner
