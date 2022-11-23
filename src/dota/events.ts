@@ -474,6 +474,10 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
   client.on('newdata', (data: Packet) => {
     if (isSpectator(client)) return
 
+    if (Array.isArray(data.events) && data.events.length) {
+      console.log('[EVENT DATA]', data.events)
+    }
+
     // In case they connect to a game in progress and we missed the start event
     setupOBSBlockers(data.map?.game_state ?? '')
 
