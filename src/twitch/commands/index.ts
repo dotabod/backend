@@ -34,18 +34,7 @@ const CooldownManager = {
 }
 
 const plebMode = new Set()
-const commands = [
-  '!pleb',
-  '!gpm',
-  '!hero',
-  '!mmr',
-  '!mmr=',
-  '!ping',
-  '!xpm',
-  '!apm',
-  '!wl',
-  '!help',
-]
+const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping', '!xpm', '!apm', '!help']
 chatClient.onMessage(function (channel, user, text, msg) {
   // Letting one pleb in
   if (plebMode.has(channel) && !msg.userInfo.isSubscriber) {
@@ -134,6 +123,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     case '!hero': {
       if (!connectedSocketClient?.gsi) break
       if (isSpectator(connectedSocketClient.gsi)) break
+      if (!msg.channelId) break
       if (!connectedSocketClient.gsi.gamestate?.hero?.name) {
         void chatClient.say(channel, 'Not playing PauseChamp')
         break
@@ -182,6 +172,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     case '!mmr=': {
       // Only mod or owner
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
+      if (!msg.channelId) break
 
       const mmr = args[1]
 
@@ -234,6 +225,8 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     }
     case '!mmr':
+      if (!msg.channelId) break
+
       // If connected, we can just respond with the cached MMR
       if (connectedSocketClient) {
         getRankDescription(connectedSocketClient.mmr, connectedSocketClient.steam32Id ?? undefined)
@@ -262,7 +255,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
             },
           },
           where: {
-            providerAccountId: msg.channelId ?? '',
+            providerAccountId: msg.channelId,
           },
         })
         .then((account) => {
