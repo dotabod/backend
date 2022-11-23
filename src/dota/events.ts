@@ -488,7 +488,7 @@ export function setupMainEvents(connectedSocketClient: SocketClient) {
     const isMidasPassive = checkMidas(data, passiveMidas)
     if (isMidasPassive) {
       console.log('[MIDAS]', 'Passive midas', { token: client.token })
-      void chatClient.say(connectedSocketClient.name, 'massivePIDAS')
+      void chatClient.say(connectedSocketClient.name, 'massivePIDAS USE YOUR MIDAS')
     }
   })
 
