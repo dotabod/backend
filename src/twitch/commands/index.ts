@@ -68,7 +68,10 @@ chatClient.onMessage(function (channel, user, text, msg) {
   switch (command) {
     case '!dotabod':
     case '!help':
-      void chatClient.say(channel, `"I'm a bot made by @techleed. More info: https://dotabod.com`)
+      void chatClient.say(
+        channel,
+        `"I'm an open source bot made by @techleed. More info: https://dotabod.com`,
+      )
       break
     case '!wl':
       if (!connectedSocketClient?.steam32Id) {
