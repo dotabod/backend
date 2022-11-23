@@ -1,4 +1,5 @@
 import { toUserName } from '@twurple/chat'
+import axios from 'axios'
 
 import { findHero } from '../../db/getHero'
 import { prisma } from '../../db/prisma'
@@ -33,7 +34,18 @@ const CooldownManager = {
 }
 
 const plebMode = new Set()
-const commands = ['!pleb', '!gpm', '!hero', '!mmr', '!mmr=', '!ping', '!xpm', '!apm', '!help']
+const commands = [
+  '!pleb',
+  '!gpm',
+  '!hero',
+  '!mmr',
+  '!mmr=',
+  '!ping',
+  '!xpm',
+  '!apm',
+  '!wl',
+  '!help',
+]
 chatClient.onMessage(function (channel, user, text, msg) {
   // Letting one pleb in
   if (plebMode.has(channel) && !msg.userInfo.isSubscriber) {
@@ -134,12 +146,37 @@ chatClient.onMessage(function (channel, user, text, msg) {
         break
       }
 
-      void chatClient.say(
-        channel,
-        `${hero.localized_name}. Primary attribute: ${hero.primary_attr}. Roles: ${hero.roles.join(
-          ', ',
-        )}`.toLowerCase(),
+      axios(
+        `https://api.opendota.com/api/players/${msg.channelId}/wl/?hero_id=${hero.id}&having=1&date=30`,
       )
+        .then(({ data }: { data: { win: number; lose: number } }) => {
+          if (data.win + data.lose === 0) {
+            void chatClient.say(channel, `No matches played as ${hero.localized_name} in 30d.`)
+            return
+          }
+
+          // Divide by zero error
+          if (data.win === 0 && data.lose > 0) {
+            void chatClient.say(
+              channel,
+              `Winrate: 0% as ${hero.localized_name} in 30d of ${data.lose} matches.`,
+            )
+            return
+          }
+
+          const winrate = Math.round((data.win / (data.win + data.lose)) * 100)
+          void chatClient.say(
+            channel,
+            `Winrate: ${winrate}% as ${hero.localized_name} in 30d of ${
+              data.lose + data.win
+            } matches.`,
+          )
+        })
+        .catch((e) => {
+          void chatClient.say(channel, `Playing ${hero.localized_name}`)
+          console.log(e)
+        })
+
       break
     }
     case '!mmr=': {
