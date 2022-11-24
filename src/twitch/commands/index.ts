@@ -387,10 +387,6 @@ chatClient.onMessage(function (channel, user, text, msg) {
   peepoGamble
   PauseChamp
 
-Commands coming soon:
-  !dotabod to show all commands
-
 Commands that are fun:
-  !modsonly = enable submode and delete chatters that arent mods
   !nonfollowersonly = can only chat if you're not a follower xd
 */
