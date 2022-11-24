@@ -6,7 +6,7 @@ import { prisma } from '../../db/prisma'
 import { server } from '../../dota'
 import { findUserByName } from '../../dota/dotaGSIClients'
 import { isSpectator } from '../../dota/events'
-import { getRankDescription } from '../../utils/constants'
+import { getRankDescription } from '../../utils/ranks'
 import { getChatClient } from '../setup'
 
 // Setup twitch chat bot client first
