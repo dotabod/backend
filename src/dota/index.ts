@@ -41,7 +41,7 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
   console.log('[SOCKET]', 'GSI is connected, and now so is OBS for user:', {
     token: client.token,
   })
-  setupMainEvents(connectedSocketClient)
+  new setupMainEvents(connectedSocketClient)
 })
 
 server.events.on('new-gsi-client', (client: { token: string }) => {
@@ -57,7 +57,7 @@ server.events.on('new-gsi-client', (client: { token: string }) => {
   }
 
   // This means OBS layer is available, but GSI connected AFTER
-  console.log('[GSI]', 'Socket is connected', { token: client.token })
+  console.log('[GSI]', 'Socket is connected and so is GSI', { token: client.token })
 
-  setupMainEvents(connectedSocketClient)
+  new setupMainEvents(connectedSocketClient)
 })
