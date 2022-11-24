@@ -13,11 +13,14 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
 
   // Guess not lol, will be handled by `new-gsi-client` event
   if (!connectedSocketClient?.gsi) {
-    console.log('[SOCKET]', 'Waiting for GSI after socket connection', { token: client.token })
+    console.log('[SOCKET]', 'Waiting for GSI after socket connection', {
+      name: connectedSocketClient?.name,
+    })
     return
   }
 
   const count = connectedSocketClient.gsi.listenerCount('map:clock_time')
+
   if (count) {
     // So the backend GSI events for twitch bot etc are setup
     // The new socketid will automatically get all new events to it as well
@@ -28,7 +31,7 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
       'Already setup event listeners for this client, lets setup OBS events',
       socketId,
       {
-        token: client.token,
+        name: connectedSocketClient.name,
       },
     )
     return
@@ -37,7 +40,7 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
   // Main events were never setup, so do it now that the socket is online
   // Setup main events with the GSI client, assuming it already connected
   console.log('[SOCKET]', 'GSI is connected, and now so is OBS for user:', {
-    token: client.token,
+    name: connectedSocketClient.name,
   })
 
   new setupMainEvents(connectedSocketClient)
@@ -46,17 +49,17 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
 server.events.on('new-gsi-client', (client: { token: string }) => {
   if (!client.token) return
 
-  console.log('[GSI]', 'Connecting new GSI client', { token: client.token })
   const connectedSocketClient = findUser(client.token)
+  console.log('[GSI]', 'Connecting new GSI client', { name: connectedSocketClient?.name })
 
   // Only setup main events if the OBS socket has connected
   if (!connectedSocketClient?.sockets.length) {
-    console.log('[GSI]', 'Waiting for OBS', { token: client.token })
+    console.log('[GSI]', 'Waiting for OBS', { name: connectedSocketClient?.name })
     return
   }
 
   // This means OBS layer is available, but GSI connected AFTER
-  console.log('[GSI]', 'Socket is connected and so is GSI', { token: client.token })
+  console.log('[GSI]', 'Socket is connected and so is GSI', { name: connectedSocketClient.name })
 
   new setupMainEvents(connectedSocketClient)
 })
