@@ -82,6 +82,7 @@ async function getChannels() {
 
 export async function getChatClient() {
   const chatClient = new ChatClient({
+    isAlwaysMod: true,
     authProvider: getAuthProvider(),
     channels: getChannels,
   })
