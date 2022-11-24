@@ -89,12 +89,12 @@ export class setupMainEvents {
     this.gsi.on('hero:alive', (alive: boolean) => {
       // Just died
       if (!alive && this.gsi.gamestate?.previously?.hero?.alive) {
-        console.log('Just died')
+        // console.log('Just died')
       }
 
       // Just spawned (ignores game start spawn)
       if (alive && this.gsi.gamestate?.previously?.hero?.alive === false) {
-        console.log('Just spawned')
+        // console.log('Just spawned')
       }
     })
 
