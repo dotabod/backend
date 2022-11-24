@@ -21,7 +21,7 @@ export class setupMainEvents {
   betMyTeam: 'radiant' | 'dire' | 'spectator' | undefined | null
   blockCache = new Map<string, string>()
   gsi: GSIClient
-  connectedSocketClient: SocketClient
+  client: SocketClient
   currentHero: string | undefined | null
   endingBets = false
   heroSlot: number | undefined | null
@@ -32,7 +32,7 @@ export class setupMainEvents {
 
   constructor(connectedSocketClient: SocketClient) {
     this.gsi = connectedSocketClient.gsi!
-    this.connectedSocketClient = connectedSocketClient
+    this.client = connectedSocketClient
 
     this.setupEvents()
   }
@@ -53,8 +53,8 @@ export class setupMainEvents {
 
       const isMidasPassive = checkMidas(data, this.passiveMidas)
       if (isMidasPassive) {
-        console.log('[MIDAS]', 'Passive midas', { name: this.connectedSocketClient.name })
-        void chatClient.say(this.connectedSocketClient.name, 'massivePIDAS Use your midas')
+        console.log('[MIDAS]', 'Passive midas', { name: this.client.name })
+        void chatClient.say(this.client.name, 'massivePIDAS Use your midas')
       }
     })
 
@@ -85,7 +85,7 @@ export class setupMainEvents {
     this.gsi.on('items:teleport0:purchaser', (purchaser: number) => {
       if (this.heroSlot === null) {
         console.log('[SLOT]', 'Found hero slot at', purchaser, {
-          name: this.connectedSocketClient.name,
+          name: this.client.name,
         })
         this.heroSlot = purchaser
         return
@@ -98,14 +98,11 @@ export class setupMainEvents {
       if (isSmoked) {
         const hero = getHero(this.gsi.gamestate?.hero?.name)
         if (!hero) {
-          void chatClient.say(this.connectedSocketClient.name, '🚬💣 Smoke!')
+          void chatClient.say(this.client.name, '🚬💣 Smoke!')
           return
         }
 
-        void chatClient.say(
-          this.connectedSocketClient.name,
-          `🚬💣 ${hero.localized_name} is smoked!`,
-        )
+        void chatClient.say(this.client.name, `🚬💣 ${hero.localized_name} is smoked!`)
       }
     })
 
@@ -113,7 +110,7 @@ export class setupMainEvents {
       if (isSpectator(this.gsi)) return
 
       if (isPaused) {
-        void chatClient.say(this.connectedSocketClient.name, `PauseChamp Who paused the game?`)
+        void chatClient.say(this.client.name, `PauseChamp Who paused the game?`)
       }
     })
 
@@ -144,7 +141,7 @@ export class setupMainEvents {
   // In the future I'd like to remove this and maybe have FE ask them to enter their steamid?
   updateSteam32Id() {
     // User already has a steam32Id
-    if (this.connectedSocketClient.steam32Id) return
+    if (this.client.steam32Id) return
 
     const steam32Id = steamID64toSteamID32(this.gsi.gamestate?.player?.steamid ?? '')
     if (!steam32Id) return
@@ -155,18 +152,18 @@ export class setupMainEvents {
           steam32Id,
         },
         where: {
-          id: this.connectedSocketClient.token,
+          id: this.client.token,
         },
       })
       .then(() => {
-        if (this.connectedSocketClient.sockets.length) {
+        if (this.client.sockets.length) {
           console.log('[STEAM32ID]', 'Updated player ID, emitting badge overlay update', {
-            name: this.connectedSocketClient.name,
+            name: this.client.name,
           })
 
           server.io
-            .to(this.connectedSocketClient.sockets)
-            .emit('update-medal', { mmr: this.connectedSocketClient.mmr, steam32Id })
+            .to(this.client.sockets)
+            .emit('update-medal', { mmr: this.client.mmr, steam32Id })
         }
       })
       .catch((e: any) => {
@@ -175,47 +172,44 @@ export class setupMainEvents {
   }
 
   updateMMR(increase: boolean, ranked = true) {
-    if (!ranked || !this.connectedSocketClient.mmr || this.connectedSocketClient.mmr <= 0) {
-      server.io.to(this.connectedSocketClient.sockets).emit('update-medal', {
-        mmr: this.connectedSocketClient.mmr,
-        steam32Id: this.connectedSocketClient.steam32Id,
+    if (!ranked || !this.client.mmr || this.client.mmr <= 0) {
+      server.io.to(this.client.sockets).emit('update-medal', {
+        mmr: this.client.mmr,
+        steam32Id: this.client.steam32Id,
       })
       return
     }
 
-    const newMMR = this.connectedSocketClient.mmr + (increase ? 30 : -30)
+    const newMMR = this.client.mmr + (increase ? 30 : -30)
     prisma.user
       .update({
         data: {
           mmr: newMMR,
         },
         where: {
-          id: this.connectedSocketClient.token,
+          id: this.client.token,
         },
       })
       .then(() => {
-        this.connectedSocketClient.mmr = newMMR
+        this.client.mmr = newMMR
 
-        if (this.connectedSocketClient.sockets.length) {
+        if (this.client.sockets.length) {
           console.log('[MMR]', 'Emitting mmr update', {
-            name: this.connectedSocketClient.name,
-            channel: this.connectedSocketClient.name,
+            name: this.client.name,
+            channel: this.client.name,
           })
 
-          getRankDescription(
-            this.connectedSocketClient.mmr,
-            this.connectedSocketClient.steam32Id ?? undefined,
-          )
+          getRankDescription(this.client.mmr, this.client.steam32Id ?? undefined)
             .then((description) => {
-              void chatClient.say(this.connectedSocketClient.name, description)
+              void chatClient.say(this.client.name, description)
             })
             .catch((e: any) => {
               console.error('[MMR]', 'Error getting rank description', e)
             })
 
           server.io
-            .to(this.connectedSocketClient.sockets)
-            .emit('update-medal', { mmr: newMMR, steam32Id: this.connectedSocketClient.steam32Id })
+            .to(this.client.sockets)
+            .emit('update-medal', { mmr: newMMR, steam32Id: this.client.steam32Id })
         }
       })
       .catch((e: any) => {
@@ -232,7 +226,7 @@ export class setupMainEvents {
         if (response?.data?.lobby_type === 7) {
           console.log('[MMR]', 'Match was ranked, updating mmr', {
             matchId,
-            channel: this.connectedSocketClient.name,
+            channel: this.client.name,
           })
 
           this.updateMMR(increase)
@@ -241,14 +235,14 @@ export class setupMainEvents {
 
         console.log('[MMR] Non-ranked game. Lobby type:', response?.data?.lobby_type, {
           matchId,
-          channel: this.connectedSocketClient.name,
+          channel: this.client.name,
         })
         this.updateMMR(increase, false)
       })
       .catch((e: any) => {
         console.log('[MMR]', 'Error fetching match details', {
           matchId,
-          channel: this.connectedSocketClient.name,
+          channel: this.client.name,
           error: e?.response?.data,
         })
         // Force update when an error occurs and just let mods take care of the discrepancy
@@ -278,7 +272,7 @@ export class setupMainEvents {
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!this.gsi.gamestate.map.matchid || this.gsi.gamestate.map.matchid === '0') return
 
-    const channel = this.connectedSocketClient.name
+    const channel = this.client.name
     const isOpenBetGameCondition =
       this.gsi.gamestate.map.clock_time < 20 && this.gsi.gamestate.map.name === 'start'
 
@@ -289,7 +283,7 @@ export class setupMainEvents {
           id: true,
         },
         where: {
-          userId: this.connectedSocketClient.token,
+          userId: this.client.token,
           matchId: this.gsi.gamestate.map.matchid,
           won: null,
         },
@@ -316,21 +310,21 @@ export class setupMainEvents {
                 // TODO: Replace prediction id with the twitch api bet id result
                 predictionId: this.gsi.gamestate?.map?.matchid ?? '',
                 matchId: this.gsi.gamestate?.map?.matchid ?? '',
-                userId: this.connectedSocketClient.token,
+                userId: this.client.token,
                 myTeam: this.gsi.gamestate?.player?.team_name ?? '',
               },
             })
             .then(() => {
               const hero = getHero(this.gsi.gamestate?.hero?.name)
 
-              openTwitchBet(channel, this.connectedSocketClient.token, hero?.localized_name)
+              openTwitchBet(channel, this.client.token, hero?.localized_name)
                 .then(() => {
                   void chatClient.say(channel, `Bets open peepoGamble`)
                   console.log('[BETS]', {
                     event: 'open_bets',
                     data: {
                       matchId: this.gsi.gamestate?.map?.matchid,
-                      user: this.connectedSocketClient.token,
+                      user: this.client.token,
                       player_team: this.gsi.gamestate?.player?.team_name,
                     },
                   })
@@ -364,7 +358,7 @@ export class setupMainEvents {
       !this.gsi.gamestate.map?.matchid
     ) {
       console.log('[BETS]', 'Game ended without a winner, early DC probably', {
-        name: this.connectedSocketClient.name,
+        name: this.client.name,
       })
 
       // Check with opendota to see if the match is over
@@ -400,11 +394,11 @@ export class setupMainEvents {
 
     if (winningTeam === null) {
       console.log('[BETS]', 'Running end bets from newdata', {
-        name: this.connectedSocketClient.name,
+        name: this.client.name,
       })
     } else {
       console.log('[BETS]', 'Running end bets from map:win_team or custom match look-up', {
-        name: this.connectedSocketClient.name,
+        name: this.client.name,
       })
     }
 
@@ -413,7 +407,7 @@ export class setupMainEvents {
     this.passiveMidas.counter = 0
     this.heroSlot = null
 
-    const channel = this.connectedSocketClient.name
+    const channel = this.client.name
     this.handleMMR(won, matchId)
 
     prisma.bet
@@ -423,28 +417,25 @@ export class setupMainEvents {
         },
         where: {
           matchId_userId: {
-            userId: this.connectedSocketClient.token,
+            userId: this.client.token,
             matchId: matchId,
           },
         },
       })
       .then(() => {
-        closeTwitchBet(channel, won, this.connectedSocketClient.token)
+        closeTwitchBet(channel, won, this.client.token)
           .then(() => {
             this.betExists = null
             this.betMyTeam = null
             this.endingBets = false
 
-            void chatClient.say(
-              this.connectedSocketClient.name,
-              `Bets closed, we have ${won ? 'won' : 'lost'}`,
-            )
+            void chatClient.say(this.client.name, `Bets closed, we have ${won ? 'won' : 'lost'}`)
 
             console.log('[BETS]', {
               event: 'end_bets',
               data: {
                 matchId: matchId,
-                name: this.connectedSocketClient.name,
+                name: this.client.name,
                 winning_team: localWinner,
                 player_team: myTeam,
                 didWin: won,
@@ -467,7 +458,7 @@ export class setupMainEvents {
   }
 
   setupOBSBlockers(state?: string) {
-    if (!this.connectedSocketClient.sockets.length) return
+    if (!this.client.sockets.length) return
 
     // Edge case:
     // Send strat screen if the player has picked their hero and it's locked in
@@ -477,12 +468,12 @@ export class setupMainEvents {
       (this.currentHero === '' || this.currentHero.length) &&
       pickSates.includes(state ?? '')
     ) {
-      if (this.blockCache.get(this.connectedSocketClient.token) !== 'strategy') {
+      if (this.blockCache.get(this.client.token) !== 'strategy') {
         server.io
-          .to(this.connectedSocketClient.sockets)
+          .to(this.client.sockets)
           .emit('block', { type: 'strategy', team: this.gsi.gamestate?.player?.team_name })
 
-        this.blockCache.set(this.connectedSocketClient.token, 'strategy')
+        this.blockCache.set(this.client.token, 'strategy')
       }
 
       return
@@ -492,12 +483,12 @@ export class setupMainEvents {
     const hasValidBlocker = blockTypes.some((blocker) => {
       if (blocker.states.includes(state ?? '')) {
         // Only send if not already what it is
-        if (this.blockCache.get(this.connectedSocketClient.token) !== blocker.type) {
-          this.blockCache.set(this.connectedSocketClient.token, blocker.type)
+        if (this.blockCache.get(this.client.token) !== blocker.type) {
+          this.blockCache.set(this.client.token, blocker.type)
 
           // Send the one blocker type
-          server.io.to(this.connectedSocketClient.sockets).emit('block', {
-            type: this.blockCache.get(this.connectedSocketClient.token),
+          server.io.to(this.client.sockets).emit('block', {
+            type: this.blockCache.get(this.client.token),
             team: this.gsi.gamestate?.player?.team_name,
           })
         }
@@ -508,14 +499,14 @@ export class setupMainEvents {
     })
 
     // No blocker changes, don't emit any socket message
-    if (!hasValidBlocker && !this.blockCache.has(this.connectedSocketClient.token)) {
+    if (!hasValidBlocker && !this.blockCache.has(this.client.token)) {
       return
     }
 
     // Unblock all
-    if (!hasValidBlocker && this.blockCache.has(this.connectedSocketClient.token)) {
-      this.blockCache.delete(this.connectedSocketClient.token)
-      server.io.to(this.connectedSocketClient.sockets).emit('block', { type: null })
+    if (!hasValidBlocker && this.blockCache.has(this.client.token)) {
+      this.blockCache.delete(this.client.token)
+      server.io.to(this.client.sockets).emit('block', { type: null })
       this.currentHero = null
       this.heroSlot = null
       this.passiveMidas.counter = 0
