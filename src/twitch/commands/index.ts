@@ -1,11 +1,11 @@
 import { toUserName } from '@twurple/chat'
-import axios from 'axios'
 
 import { findHero } from '../../db/getHero'
 import { prisma } from '../../db/prisma'
 import { server } from '../../dota'
 import { findUserByName } from '../../dota/dotaGSIClients'
 import { isSpectator } from '../../dota/events'
+import axios from '../../utils/axios'
 import { getRankDescription } from '../../utils/ranks'
 import { getChatClient } from '../setup'
 

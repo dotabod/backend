@@ -1,29 +1,16 @@
-import axios from 'axios'
-import axiosRetry from 'axios-retry'
-
 import { findHero } from '../db/getHero'
 import { prisma } from '../db/prisma'
 import { chatClient } from '../twitch/commands'
 import { closeTwitchBet, openTwitchBet } from '../twitch/predictions'
 import { Event, Packet, SocketClient } from '../types'
 import { steamID64toSteamID32 } from '../utils'
+import axios from '../utils/axios'
 import { getRankDescription } from '../utils/ranks'
 import checkMidas from './checkMidas'
 import { GSIClient } from './lib/dota2-gsi'
 import { blockTypes, pickSates } from './trackingConsts'
 
 import { server } from '.'
-
-axiosRetry(axios, {
-  retries: 5, // number of retries
-  retryDelay: (retryCount) => {
-    console.log(`retry attempt: ${retryCount}`)
-    return retryCount * 4000 // time interval between retries
-  },
-  retryCondition: (error) => {
-    return error.response?.status !== 200
-  },
-})
 
 // spectator = watching a friend live
 // team2 = watching replay or live match
