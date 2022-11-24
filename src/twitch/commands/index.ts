@@ -96,14 +96,20 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     case '!refresh':
       // Only mod or owner
+      console.log('refresh cmd')
+
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
 
-      if (connectedSocketClient) {
-        if (connectedSocketClient.sockets.length) {
-          void chatClient.say(channel, 'Refreshing overlay...')
-          server.io.to(connectedSocketClient.sockets).emit('refresh')
-        }
+      console.log('is mod')
+
+      if (connectedSocketClient?.sockets.length) {
+        console.log('found sokcets')
+
+        void chatClient.say(channel, 'Refreshing overlay...')
+        server.io.to(connectedSocketClient.sockets).emit('refresh')
       }
+      console.log('finish')
+
       break
     case '!dotabod':
     case '!help':
