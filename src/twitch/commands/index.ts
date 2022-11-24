@@ -286,7 +286,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       if (connectedSocketClient) {
         getRankDescription(connectedSocketClient.mmr, connectedSocketClient.steam32Id ?? undefined)
           .then((description) => {
-            console.log('[MMR] Responding with cached MMR', description, channel)
+            // console.log('[MMR] Responding with cached MMR', description, channel)
 
             void chatClient.say(channel, description)
           })
