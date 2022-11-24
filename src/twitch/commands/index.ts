@@ -128,16 +128,16 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       Promise.all(promises)
         .then((values: { data: { win: number; lose: number } }[]) => {
-          const [ranked, unranked] = values
+          const [unranked, ranked] = values
           const { win, lose } = ranked.data
           const { win: unrankedWin, lose: unrankedLose } = unranked.data
-          const noUnranked = !(unrankedWin + unrankedLose)
-          const noRanked = !(win + lose)
+          const hasUnranked = unrankedWin + unrankedLose !== 0
+          const hasRanked = win + lose !== 0
           const rankedMsg = `Ranked ${win} W - ${lose} L`
           const unrankedMsg = `Unranked ${unrankedWin} W - ${unrankedLose} L`
           const msg = []
-          if (!noRanked) msg.push(rankedMsg)
-          if (!noUnranked) msg.push(unrankedMsg)
+          if (hasRanked) msg.push(rankedMsg)
+          if (hasUnranked) msg.push(unrankedMsg)
           void chatClient.say(channel, msg.join(' | '))
         })
         .catch((e) => {
