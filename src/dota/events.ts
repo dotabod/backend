@@ -17,14 +17,14 @@ import { server } from '.'
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
 export class setupMainEvents {
-  betExists: string | undefined | null
-  betMyTeam: 'radiant' | 'dire' | 'spectator' | undefined | null
+  betExists: string | undefined | null = null
+  betMyTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
   blockCache = new Map<string, string>()
   gsi: GSIClient
   client: SocketClient
-  currentHero: string | undefined | null
+  currentHero: string | undefined | null = null
   endingBets = false
-  heroSlot: number | undefined | null
+  heroSlot: number | undefined | null = null
 
   // Server could reboot and lose this in memory
   // But that's okay because we'll just do a db call once in openBets()
