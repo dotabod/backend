@@ -57,7 +57,6 @@ export class setupMainEvents {
     return this.client.steam32Id
   }
 
-  // TODO: Save this to the global var
   private setMmr(newMmr: number) {
     this.client.mmr = newMmr
   }
@@ -65,9 +64,6 @@ export class setupMainEvents {
   watchEvents() {
     // Catch all
     this.gsi.on('newdata', (data: Packet) => {
-      // TODO: Remove this and rely on the findUser global var
-      this.gsi.gamestate = data
-
       if (isSpectator(this.gsi)) return
 
       // In case they connect to a game in progress and we missed the start event
