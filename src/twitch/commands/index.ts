@@ -48,6 +48,7 @@ const commands = [
   '!pleb',
   '!commands',
   '!modsonly',
+  '!refresh',
   '!mmr=',
 ]
 chatClient.onMessage(function (channel, user, text, msg) {
@@ -76,6 +77,9 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
   switch (command) {
     case '!modsonly':
+      // Only mod or owner
+      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
+
       if (modMode.has(channel)) {
         void chatClient.say(channel, 'Mods only mode disabled Sadge')
         modMode.delete(channel)
@@ -89,6 +93,17 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     case '!commands':
       void chatClient.say(channel, `Available commands: ${commands.join(' | ')}`)
+      break
+    case '!refresh':
+      // Only mod or owner
+      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
+
+      if (connectedSocketClient) {
+        if (connectedSocketClient.sockets.length) {
+          void chatClient.say(channel, 'Refreshing overlay...')
+          server.io.to(connectedSocketClient.sockets).emit('refresh')
+        }
+      }
       break
     case '!dotabod':
     case '!help':
