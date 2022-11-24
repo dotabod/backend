@@ -38,6 +38,14 @@ export class setupMainEvents {
     this.watchEvents()
   }
 
+  private getMmr() {
+    return this.client.mmr
+  }
+
+  private getToken() {
+    return this.client.token
+  }
+
   private getSockets() {
     return this.client.sockets
   }
@@ -169,7 +177,7 @@ export class setupMainEvents {
           steam32Id,
         },
         where: {
-          id: this.client.token,
+          id: this.getToken(),
         },
       })
       .then(() => {
@@ -178,7 +186,7 @@ export class setupMainEvents {
             name: this.getChannel(),
           })
 
-          server.io.to(this.getSockets()).emit('update-medal', { mmr: this.client.mmr, steam32Id })
+          server.io.to(this.getSockets()).emit('update-medal', { mmr: this.getMmr(), steam32Id })
         }
       })
       .catch((e: any) => {
@@ -187,26 +195,26 @@ export class setupMainEvents {
   }
 
   updateMMR(increase: boolean, ranked = true) {
-    if (!ranked || !this.client.mmr || this.client.mmr <= 0) {
+    if (!ranked || !this.getMmr() || this.getMmr() <= 0) {
       server.io.to(this.getSockets()).emit('update-medal', {
-        mmr: this.client.mmr,
+        mmr: this.getMmr(),
         steam32Id: this.getSteam32(),
       })
       return
     }
 
-    const newMMR = this.client.mmr + (increase ? 30 : -30)
+    const newMMR = this.getMmr() + (increase ? 30 : -30)
     prisma.user
       .update({
         data: {
           mmr: newMMR,
         },
         where: {
-          id: this.client.token,
+          id: this.getToken(),
         },
       })
       .then(() => {
-        this.client.mmr = newMMR
+        this.getMmr() = newMMR
 
         if (this.getSockets().length) {
           console.log('[MMR]', 'Emitting mmr update', {
@@ -214,7 +222,7 @@ export class setupMainEvents {
             channel: this.getChannel(),
           })
 
-          getRankDescription(this.client.mmr, this.getSteam32() ?? undefined)
+          getRankDescription(this.getMmr(), this.getSteam32() ?? undefined)
             .then((description) => {
               void chatClient.say(this.getChannel(), description)
             })
@@ -298,7 +306,7 @@ export class setupMainEvents {
           id: true,
         },
         where: {
-          userId: this.client.token,
+          userId: this.getToken(),
           matchId: this.gsi.gamestate.map.matchid,
           won: null,
         },
@@ -325,21 +333,21 @@ export class setupMainEvents {
                 // TODO: Replace prediction id with the twitch api bet id result
                 predictionId: this.gsi.gamestate?.map?.matchid ?? '',
                 matchId: this.gsi.gamestate?.map?.matchid ?? '',
-                userId: this.client.token,
+                userId: this.getToken(),
                 myTeam: this.gsi.gamestate?.player?.team_name ?? '',
               },
             })
             .then(() => {
               const hero = getHero(this.gsi.gamestate?.hero?.name)
 
-              openTwitchBet(channel, this.client.token, hero?.localized_name)
+              openTwitchBet(channel, this.getToken(), hero?.localized_name)
                 .then(() => {
                   void chatClient.say(channel, `Bets open peepoGamble`)
                   console.log('[BETS]', {
                     event: 'open_bets',
                     data: {
                       matchId: this.gsi.gamestate?.map?.matchid,
-                      user: this.client.token,
+                      user: this.getToken(),
                       player_team: this.gsi.gamestate?.player?.team_name,
                     },
                   })
@@ -432,13 +440,13 @@ export class setupMainEvents {
         },
         where: {
           matchId_userId: {
-            userId: this.client.token,
+            userId: this.getToken(),
             matchId: matchId,
           },
         },
       })
       .then(() => {
-        closeTwitchBet(channel, won, this.client.token)
+        closeTwitchBet(channel, won, this.getToken())
           .then(() => {
             this.betExists = null
             this.betMyTeam = null
@@ -483,12 +491,12 @@ export class setupMainEvents {
       (this.currentHero === '' || this.currentHero.length) &&
       pickSates.includes(state ?? '')
     ) {
-      if (this.blockCache.get(this.client.token) !== 'strategy') {
+      if (this.blockCache.get(this.getToken()) !== 'strategy') {
         server.io
           .to(this.getSockets())
           .emit('block', { type: 'strategy', team: this.gsi.gamestate?.player?.team_name })
 
-        this.blockCache.set(this.client.token, 'strategy')
+        this.blockCache.set(this.getToken(), 'strategy')
       }
 
       return
@@ -498,12 +506,12 @@ export class setupMainEvents {
     const hasValidBlocker = blockTypes.some((blocker) => {
       if (blocker.states.includes(state ?? '')) {
         // Only send if not already what it is
-        if (this.blockCache.get(this.client.token) !== blocker.type) {
-          this.blockCache.set(this.client.token, blocker.type)
+        if (this.blockCache.get(this.getToken()) !== blocker.type) {
+          this.blockCache.set(this.getToken(), blocker.type)
 
           // Send the one blocker type
           server.io.to(this.getSockets()).emit('block', {
-            type: this.blockCache.get(this.client.token),
+            type: this.blockCache.get(this.getToken()),
             team: this.gsi.gamestate?.player?.team_name,
           })
         }
@@ -514,13 +522,13 @@ export class setupMainEvents {
     })
 
     // No blocker changes, don't emit any socket message
-    if (!hasValidBlocker && !this.blockCache.has(this.client.token)) {
+    if (!hasValidBlocker && !this.blockCache.has(this.getToken())) {
       return
     }
 
     // Unblock all
-    if (!hasValidBlocker && this.blockCache.has(this.client.token)) {
-      this.blockCache.delete(this.client.token)
+    if (!hasValidBlocker && this.blockCache.has(this.getToken())) {
+      this.blockCache.delete(this.getToken())
       server.io.to(this.getSockets()).emit('block', { type: null })
       this.currentHero = null
       this.heroSlot = null
