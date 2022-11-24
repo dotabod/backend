@@ -1,6 +1,6 @@
 import { prisma } from './prisma'
 
-export async function getDBUser(token: string) {
+export default async function getDBUser(token: string) {
   // Finding `account` because `user` is required there
   // But if we find `user`, `account` is optional? Idk why, something schema maybe
   const account = await prisma.account

@@ -1,5 +1,5 @@
-import { HeroNames } from '../db/getHero'
 import { GSIClient } from '../dota/lib/dota2-gsi'
+import { HeroNames } from '../dota/lib/getHero'
 
 declare global {
   namespace Express {

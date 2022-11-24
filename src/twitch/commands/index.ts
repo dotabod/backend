@@ -1,12 +1,12 @@
 import { toUserName } from '@twurple/chat'
 
-import { findHero } from '../../db/getHero'
 import { prisma } from '../../db/prisma'
 import { server } from '../../dota'
 import { findUserByName } from '../../dota/dotaGSIClients'
 import { isSpectator } from '../../dota/events'
+import { findHero } from '../../dota/lib/getHero'
+import { getRankDescription } from '../../dota/lib/ranks'
 import axios from '../../utils/axios'
-import { getRankDescription } from '../../utils/ranks'
 import { getChatClient } from '../setup'
 
 // Setup twitch chat bot client first
@@ -211,7 +211,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     }
     case '!hero': {
-      if (!connectedSocketClient?.gsi) break
+      if (!connectedSocketClient?.gsi || !connectedSocketClient?.steam32Id) break
       if (isSpectator(connectedSocketClient.gsi)) break
       if (!connectedSocketClient.gsi.gamestate?.hero?.name) {
         void chatClient.say(channel, 'Not playing PauseChamp')
