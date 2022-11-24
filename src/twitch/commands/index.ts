@@ -2,9 +2,9 @@ import { toUserName } from '@twurple/chat'
 
 import { prisma } from '../../db/prisma'
 import { server } from '../../dota'
-import { findUserByName } from '../../dota/dotaGSIClients'
-import { isSpectator } from '../../dota/events'
-import { findHero } from '../../dota/lib/getHero'
+import { findUserByName } from '../../dota/lib/connectedStreamers'
+import getHero from '../../dota/lib/getHero'
+import { isSpectator } from '../../dota/lib/isSpectator'
 import { getRankDescription } from '../../dota/lib/ranks'
 import axios from '../../utils/axios'
 import { getChatClient } from '../setup'
@@ -211,14 +211,14 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     }
     case '!hero': {
-      if (!connectedSocketClient?.gsi || !connectedSocketClient?.steam32Id) break
+      if (!connectedSocketClient?.gsi || !connectedSocketClient.steam32Id) break
       if (isSpectator(connectedSocketClient.gsi)) break
       if (!connectedSocketClient.gsi.gamestate?.hero?.name) {
         void chatClient.say(channel, 'Not playing PauseChamp')
         break
       }
 
-      const hero = findHero(connectedSocketClient.gsi.gamestate.hero.name)
+      const hero = getHero(connectedSocketClient.gsi.gamestate.hero.name)
 
       if (!hero) {
         void chatClient.say(channel, "Couldn't find hero Sadge")

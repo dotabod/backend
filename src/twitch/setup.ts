@@ -2,7 +2,7 @@ import { RefreshingAuthProvider } from '@twurple/auth'
 import { ChatClient } from '@twurple/chat'
 
 import { prisma } from '../db/prisma'
-import findUser from '../dota/dotaGSIClients'
+import findUser from '../dota/lib/connectedStreamers'
 
 const hasTokens =
   process.env.TWITCH_ACCESS_TOKEN &&

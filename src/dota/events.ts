@@ -4,33 +4,14 @@ import { closeTwitchBet, openTwitchBet } from '../twitch/predictions'
 import { Event, Packet, SocketClient } from '../types'
 import { steamID64toSteamID32 } from '../utils'
 import axios from '../utils/axios'
-import checkMidas from './checkMidas'
-import { GSIClient } from './lib/dota2-gsi'
-import { findHero } from './lib/getHero'
+import checkMidas from './lib/checkMidas'
+import getHero from './lib/getHero'
+import { isSpectator } from './lib/isSpectator'
 import { getRankDescription } from './lib/ranks'
-import { blockTypes, pickSates } from './trackingConsts'
+import { blockTypes, pickSates } from './lib/trackingConsts'
+import { GSIClient } from './server'
 
 import { server } from '.'
-
-// spectator = watching a friend live
-// team2 = watching replay or live match
-// customgamename = playing arcade or hero demo
-export function isSpectator(client: GSIClient) {
-  // undefined means the client is disconnected from a game
-  // so we want to run our obs stuff to unblock anything
-  const isArcade =
-    client.gamestate?.map?.customgamename !== '' &&
-    client.gamestate?.map?.customgamename !== undefined
-  if (
-    client.gamestate?.player?.team_name === 'spectator' ||
-    isArcade ||
-    'team2' in (client.gamestate?.player || {})
-  ) {
-    return true
-  }
-
-  return false
-}
 
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
@@ -110,7 +91,7 @@ export class setupMainEvents {
       if (isSpectator(this.client)) return
 
       if (isSmoked) {
-        const hero = findHero(this.client.gamestate?.hero?.name)
+        const hero = getHero(this.client.gamestate?.hero?.name)
         if (!hero) {
           void chatClient.say(this.connectedSocketClient.name, '🚬💣 Smoke!')
           return
@@ -335,7 +316,7 @@ export class setupMainEvents {
               },
             })
             .then(() => {
-              const hero = findHero(this.client.gamestate?.hero?.name)
+              const hero = getHero(this.client.gamestate?.hero?.name)
 
               openTwitchBet(channel, this.client.token, hero?.localized_name)
                 .then(() => {

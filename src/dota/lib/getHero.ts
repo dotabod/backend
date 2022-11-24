@@ -3,7 +3,7 @@ import memoizee from 'memoizee'
 
 export type HeroNames = keyof typeof heroes
 
-export const findHero = memoizee(function handleFindHero(name?: HeroNames) {
+export default memoizee(function handlegetHero(name?: HeroNames) {
   if (!name || typeof name !== 'string' || name.length < 3) return null
   return heroes[name]
 })

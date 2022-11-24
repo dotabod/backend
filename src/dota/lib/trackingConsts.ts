@@ -1,5 +1,5 @@
-import { SocketClient } from '../types'
-import { GSIClient } from './lib/dota2-gsi'
+import { SocketClient } from '../../types'
+import { GSIClient } from '../server'
 
 export const gsiClients: GSIClient[] = []
 export const socketClients: SocketClient[] = []
@@ -11,6 +11,8 @@ export const minimapStates = [
 
 export const pickSates = ['DOTA_GAMERULES_STATE_HERO_SELECTION']
 
+// We handle the case of streamer locking in their hero,
+// and this state being true in setupOBSBlockers()
 export const stratStates = ['DOTA_GAMERULES_STATE_STRATEGY_TIME']
 
 export const blockTypes = [

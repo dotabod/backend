@@ -1,4 +1,4 @@
-import { Item, Packet } from '../types'
+import { Item, Packet } from '../../types'
 
 // Stash is fountain stash
 // Slots 0-5 are the backpack

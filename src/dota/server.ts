@@ -5,10 +5,10 @@ import bodyParser from 'body-parser'
 import express, { NextFunction, Request, Response } from 'express'
 import { Server, Socket } from 'socket.io'
 
-import getDBUser from '../../db/getDBUser'
-import { Packet } from '../../types'
-import findUser from '../dotaGSIClients'
-import { gsiClients, socketClients } from '../trackingConsts'
+import getDBUser from '../db/getDBUser'
+import { Packet } from '../types'
+import findUser from './lib/connectedStreamers'
+import { gsiClients, socketClients } from './lib/trackingConsts'
 
 export const events = new EventEmitter()
 
