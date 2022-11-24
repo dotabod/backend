@@ -1,4 +1,4 @@
-import { socketClients } from './trackingConsts'
+import { socketClients } from './consts'
 
 function findUser(token: string) {
   if (!token) return null

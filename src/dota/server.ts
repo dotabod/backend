@@ -8,7 +8,7 @@ import { Server, Socket } from 'socket.io'
 import getDBUser from '../db/getDBUser'
 import { Packet } from '../types'
 import findUser from './lib/connectedStreamers'
-import { gsiClients, socketClients } from './lib/trackingConsts'
+import { gsiClients, socketClients } from './lib/consts'
 
 export const events = new EventEmitter()
 
