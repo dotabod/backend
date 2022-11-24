@@ -58,7 +58,7 @@ export class setupMainEvents {
   }
 
   // TODO: Save this to the global var
-  setMmr(newMmr: number) {
+  private setMmr(newMmr: number) {
     this.client.mmr = newMmr
   }
 
