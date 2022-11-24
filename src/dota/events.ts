@@ -38,6 +38,18 @@ export class setupMainEvents {
     this.watchEvents()
   }
 
+  private getSockets() {
+    return this.client.sockets
+  }
+
+  private getChannel() {
+    return this.client.name
+  }
+
+  private getSteam32() {
+    return this.client.steam32Id
+  }
+
   watchEvents() {
     // Catch all
     this.gsi.on('newdata', (data: Packet) => {
@@ -55,8 +67,8 @@ export class setupMainEvents {
 
       const isMidasPassive = checkMidas(data, this.passiveMidas)
       if (isMidasPassive) {
-        console.log('[MIDAS]', 'Passive midas', { name: this.client.name })
-        void chatClient.say(this.client.name, 'massivePIDAS Use your midas')
+        console.log('[MIDAS]', 'Passive midas', { name: this.getChannel() })
+        void chatClient.say(this.getChannel(), 'massivePIDAS Use your midas')
       }
     })
 
@@ -90,7 +102,7 @@ export class setupMainEvents {
       // Can't just !this.heroSlot because it can be 0
       if (this.heroSlot === null) {
         console.log('[SLOT]', 'Found hero slot at', purchaser, {
-          name: this.client.name,
+          name: this.getChannel(),
         })
         this.heroSlot = purchaser
         return
@@ -103,11 +115,11 @@ export class setupMainEvents {
       if (isSmoked) {
         const hero = getHero(this.gsi.gamestate?.hero?.name)
         if (!hero) {
-          void chatClient.say(this.client.name, '🚬💣 Smoke!')
+          void chatClient.say(this.getChannel(), '🚬💣 Smoke!')
           return
         }
 
-        void chatClient.say(this.client.name, `🚬💣 ${hero.localized_name} is smoked!`)
+        void chatClient.say(this.getChannel(), `🚬💣 ${hero.localized_name} is smoked!`)
       }
     })
 
@@ -115,7 +127,7 @@ export class setupMainEvents {
       if (isSpectator(this.gsi)) return
 
       if (isPaused) {
-        void chatClient.say(this.client.name, `PauseChamp Who paused the game?`)
+        void chatClient.say(this.getChannel(), `PauseChamp Who paused the game?`)
       }
     })
 
@@ -139,14 +151,14 @@ export class setupMainEvents {
   }
 
   // This array of socket ids is who we want to emit events to:
-  // console.log("[SETUP]", { sockets: this.client.sockets })
+  // console.log("[SETUP]", { sockets: this.getSockets() })
 
   // Make sure user has a steam32Id saved in the database
   // This runs once per every match start but its just one DB query so hopefully it's fine
   // In the future I'd like to remove this and maybe have FE ask them to enter their steamid?
   updateSteam32Id() {
     // User already has a steam32Id
-    if (this.client.steam32Id) return
+    if (this.getSteam32()) return
 
     const steam32Id = steamID64toSteamID32(this.gsi.gamestate?.player?.steamid ?? '')
     if (!steam32Id) return
@@ -161,14 +173,12 @@ export class setupMainEvents {
         },
       })
       .then(() => {
-        if (this.client.sockets.length) {
+        if (this.getSockets().length) {
           console.log('[STEAM32ID]', 'Updated player ID, emitting badge overlay update', {
-            name: this.client.name,
+            name: this.getChannel(),
           })
 
-          server.io
-            .to(this.client.sockets)
-            .emit('update-medal', { mmr: this.client.mmr, steam32Id })
+          server.io.to(this.getSockets()).emit('update-medal', { mmr: this.client.mmr, steam32Id })
         }
       })
       .catch((e: any) => {
@@ -178,9 +188,9 @@ export class setupMainEvents {
 
   updateMMR(increase: boolean, ranked = true) {
     if (!ranked || !this.client.mmr || this.client.mmr <= 0) {
-      server.io.to(this.client.sockets).emit('update-medal', {
+      server.io.to(this.getSockets()).emit('update-medal', {
         mmr: this.client.mmr,
-        steam32Id: this.client.steam32Id,
+        steam32Id: this.getSteam32(),
       })
       return
     }
@@ -198,23 +208,23 @@ export class setupMainEvents {
       .then(() => {
         this.client.mmr = newMMR
 
-        if (this.client.sockets.length) {
+        if (this.getSockets().length) {
           console.log('[MMR]', 'Emitting mmr update', {
-            name: this.client.name,
-            channel: this.client.name,
+            name: this.getChannel(),
+            channel: this.getChannel(),
           })
 
-          getRankDescription(this.client.mmr, this.client.steam32Id ?? undefined)
+          getRankDescription(this.client.mmr, this.getSteam32() ?? undefined)
             .then((description) => {
-              void chatClient.say(this.client.name, description)
+              void chatClient.say(this.getChannel(), description)
             })
             .catch((e: any) => {
               console.error('[MMR]', 'Error getting rank description', e)
             })
 
           server.io
-            .to(this.client.sockets)
-            .emit('update-medal', { mmr: newMMR, steam32Id: this.client.steam32Id })
+            .to(this.getSockets())
+            .emit('update-medal', { mmr: newMMR, steam32Id: this.getSteam32() })
         }
       })
       .catch((e: any) => {
@@ -231,7 +241,7 @@ export class setupMainEvents {
         if (response?.data?.lobby_type === 7) {
           console.log('[MMR]', 'Match was ranked, updating mmr', {
             matchId,
-            channel: this.client.name,
+            channel: this.getChannel(),
           })
 
           this.updateMMR(increase)
@@ -240,14 +250,14 @@ export class setupMainEvents {
 
         console.log('[MMR] Non-ranked game. Lobby type:', response?.data?.lobby_type, {
           matchId,
-          channel: this.client.name,
+          channel: this.getChannel(),
         })
         this.updateMMR(increase, false)
       })
       .catch((e: any) => {
         console.log('[MMR]', 'Error fetching match details', {
           matchId,
-          channel: this.client.name,
+          channel: this.getChannel(),
           error: e?.response?.data,
         })
         // Force update when an error occurs and just let mods take care of the discrepancy
@@ -277,7 +287,7 @@ export class setupMainEvents {
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!this.gsi.gamestate.map.matchid || this.gsi.gamestate.map.matchid === '0') return
 
-    const channel = this.client.name
+    const channel = this.getChannel()
     const isOpenBetGameCondition =
       this.gsi.gamestate.map.clock_time < 20 && this.gsi.gamestate.map.name === 'start'
 
@@ -363,7 +373,7 @@ export class setupMainEvents {
       !this.gsi.gamestate.map?.matchid
     ) {
       console.log('[BETS]', 'Game ended without a winner, early DC probably', {
-        name: this.client.name,
+        name: this.getChannel(),
       })
 
       // Check with opendota to see if the match is over
@@ -399,11 +409,11 @@ export class setupMainEvents {
 
     if (winningTeam === null) {
       console.log('[BETS]', 'Running end bets from newdata', {
-        name: this.client.name,
+        name: this.getChannel(),
       })
     } else {
       console.log('[BETS]', 'Running end bets from map:win_team or custom match look-up', {
-        name: this.client.name,
+        name: this.getChannel(),
       })
     }
 
@@ -412,7 +422,7 @@ export class setupMainEvents {
     this.passiveMidas.counter = 0
     this.heroSlot = null
 
-    const channel = this.client.name
+    const channel = this.getChannel()
     this.handleMMR(won, matchId)
 
     prisma.bet
@@ -434,13 +444,13 @@ export class setupMainEvents {
             this.betMyTeam = null
             this.endingBets = false
 
-            void chatClient.say(this.client.name, `Bets closed, we have ${won ? 'won' : 'lost'}`)
+            void chatClient.say(this.getChannel(), `Bets closed, we have ${won ? 'won' : 'lost'}`)
 
             console.log('[BETS]', {
               event: 'end_bets',
               data: {
                 matchId: matchId,
-                name: this.client.name,
+                name: this.getChannel(),
                 winning_team: localWinner,
                 player_team: myTeam,
                 didWin: won,
@@ -463,7 +473,7 @@ export class setupMainEvents {
   }
 
   setupOBSBlockers(state?: string) {
-    if (!this.client.sockets.length) return
+    if (!this.getSockets().length) return
 
     // Edge case:
     // Send strat screen if the player has picked their hero and it's locked in
@@ -475,7 +485,7 @@ export class setupMainEvents {
     ) {
       if (this.blockCache.get(this.client.token) !== 'strategy') {
         server.io
-          .to(this.client.sockets)
+          .to(this.getSockets())
           .emit('block', { type: 'strategy', team: this.gsi.gamestate?.player?.team_name })
 
         this.blockCache.set(this.client.token, 'strategy')
@@ -492,7 +502,7 @@ export class setupMainEvents {
           this.blockCache.set(this.client.token, blocker.type)
 
           // Send the one blocker type
-          server.io.to(this.client.sockets).emit('block', {
+          server.io.to(this.getSockets()).emit('block', {
             type: this.blockCache.get(this.client.token),
             team: this.gsi.gamestate?.player?.team_name,
           })
@@ -511,7 +521,7 @@ export class setupMainEvents {
     // Unblock all
     if (!hasValidBlocker && this.blockCache.has(this.client.token)) {
       this.blockCache.delete(this.client.token)
-      server.io.to(this.client.sockets).emit('block', { type: null })
+      server.io.to(this.getSockets()).emit('block', { type: null })
       this.currentHero = null
       this.heroSlot = null
       this.passiveMidas.counter = 0
