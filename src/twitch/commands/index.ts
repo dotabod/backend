@@ -34,6 +34,7 @@ const CooldownManager = {
 }
 
 const plebMode = new Set()
+const modMode = new Set()
 const commands = [
   '!gpm',
   '!hero',
@@ -46,6 +47,7 @@ const commands = [
   '!help',
   '!pleb',
   '!commands',
+  '!modsonly',
   '!mmr=',
 ]
 chatClient.onMessage(function (channel, user, text, msg) {
@@ -54,6 +56,12 @@ chatClient.onMessage(function (channel, user, text, msg) {
     plebMode.delete(channel)
     void chatClient.say(channel, '/subscribers')
     void chatClient.say(channel, `${user} EZ Clap`)
+    return
+  }
+
+  // Letting one pleb in
+  if (modMode.has(channel) && !msg.userInfo.isMod && !msg.userInfo.isBroadcaster) {
+    void chatClient.deleteMessage(channel, msg)
     return
   }
 
@@ -67,6 +75,18 @@ chatClient.onMessage(function (channel, user, text, msg) {
   const connectedSocketClient = findUserByName(toUserName(channel))
 
   switch (command) {
+    case '!modsonly':
+      if (modMode.has(channel)) {
+        void chatClient.say(channel, 'Mods only mode disabled Sadge')
+        modMode.delete(channel)
+        break
+      }
+
+      // Delete all messages that are not from a mod
+      modMode.add(channel)
+      void chatClient.enableSubsOnly(channel)
+      void chatClient.say(channel, 'Mods only mode enabled BASED Clap')
+      break
     case '!commands':
       void chatClient.say(channel, `Available commands: ${commands.join(' | ')}`)
       break
@@ -344,6 +364,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 /*
   Required emotes:
 
+  BASED
   Chatting
   massivePIDAS
   Sadge
