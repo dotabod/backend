@@ -14,8 +14,6 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
   // Guess not lol, will be handled by `new-gsi-client` event
   if (!connectedSocketClient?.gsi) {
     console.log('[SOCKET]', 'Waiting for GSI after socket connection', { token: client.token })
-
-    // server.io.to(socketId).emit('refresh')
     return
   }
 
@@ -41,6 +39,7 @@ server.events.on('new-socket-client', ({ client, socketId }) => {
   console.log('[SOCKET]', 'GSI is connected, and now so is OBS for user:', {
     token: client.token,
   })
+
   new setupMainEvents(connectedSocketClient)
 })
 

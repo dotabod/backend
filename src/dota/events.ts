@@ -30,9 +30,8 @@ export class setupMainEvents {
   // But that's okay because we'll just do a db call once in openBets()
   passiveMidas = { counter: 0 }
 
-  // gsi will always be defined here, so remove the null check
-  constructor(client: SocketClient & { gsi: GSIClient }) {
-    this.gsi = client.gsi
+  constructor(client: SocketClient) {
+    this.gsi = client.gsi!
     this.client = client
 
     this.watchEvents()
@@ -56,6 +55,11 @@ export class setupMainEvents {
 
   private getSteam32() {
     return this.client.steam32Id
+  }
+
+  // TODO: Save this to the global var
+  setMmr(newMmr: number) {
+    this.client.mmr = newMmr
   }
 
   watchEvents() {
@@ -214,7 +218,7 @@ export class setupMainEvents {
         },
       })
       .then(() => {
-        this.getMmr() = newMMR
+        this.setMmr(newMMR)
 
         if (this.getSockets().length) {
           console.log('[MMR]', 'Emitting mmr update', {
