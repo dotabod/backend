@@ -60,7 +60,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
   }
 
   // Letting one pleb in
-  if (modMode.has(channel) && !msg.userInfo.isMod && !msg.userInfo.isBroadcaster) {
+  if (modMode.has(channel) && !(msg.userInfo.isMod || msg.userInfo.isBroadcaster)) {
     void chatClient.deleteMessage(channel, msg)
     return
   }
@@ -84,7 +84,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       // Delete all messages that are not from a mod
       modMode.add(channel)
-      void chatClient.enableSubsOnly(channel)
+      void chatClient.say(channel, '/subscribers')
       void chatClient.say(channel, 'Mods only mode enabled BASED Clap')
       break
     case '!commands':
