@@ -53,7 +53,7 @@ export class setupMainEvents {
 
       const isMidasPassive = checkMidas(data, this.passiveMidas)
       if (isMidasPassive) {
-        console.log('[MIDAS]', 'Passive midas', { token: this.connectedSocketClient.token })
+        console.log('[MIDAS]', 'Passive midas', { name: this.connectedSocketClient.name })
         void chatClient.say(this.connectedSocketClient.name, 'massivePIDAS Use your midas')
       }
     })
@@ -85,7 +85,7 @@ export class setupMainEvents {
     this.gsi.on('items:teleport0:purchaser', (purchaser: number) => {
       if (this.heroSlot === null) {
         console.log('[SLOT]', 'Found hero slot at', purchaser, {
-          token: this.connectedSocketClient.token,
+          name: this.connectedSocketClient.name,
         })
         this.heroSlot = purchaser
         return
@@ -161,7 +161,7 @@ export class setupMainEvents {
       .then(() => {
         if (this.connectedSocketClient.sockets.length) {
           console.log('[STEAM32ID]', 'Updated player ID, emitting badge overlay update', {
-            token: this.connectedSocketClient.token,
+            name: this.connectedSocketClient.name,
           })
 
           server.io
@@ -198,7 +198,7 @@ export class setupMainEvents {
 
         if (this.connectedSocketClient.sockets.length) {
           console.log('[MMR]', 'Emitting mmr update', {
-            token: this.connectedSocketClient.token,
+            name: this.connectedSocketClient.name,
             channel: this.connectedSocketClient.name,
           })
 
@@ -364,7 +364,7 @@ export class setupMainEvents {
       !this.gsi.gamestate.map?.matchid
     ) {
       console.log('[BETS]', 'Game ended without a winner, early DC probably', {
-        token: this.connectedSocketClient.token,
+        name: this.connectedSocketClient.name,
       })
 
       // Check with opendota to see if the match is over
@@ -400,11 +400,11 @@ export class setupMainEvents {
 
     if (winningTeam === null) {
       console.log('[BETS]', 'Running end bets from newdata', {
-        token: this.connectedSocketClient.token,
+        name: this.connectedSocketClient.name,
       })
     } else {
       console.log('[BETS]', 'Running end bets from map:win_team or custom match look-up', {
-        token: this.connectedSocketClient.token,
+        name: this.connectedSocketClient.name,
       })
     }
 
@@ -444,7 +444,7 @@ export class setupMainEvents {
               event: 'end_bets',
               data: {
                 matchId: matchId,
-                token: this.connectedSocketClient.token,
+                name: this.connectedSocketClient.name,
                 winning_team: localWinner,
                 player_team: myTeam,
                 didWin: won,
