@@ -96,19 +96,12 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     case '!refresh':
       // Only mod or owner
-      console.log('refresh cmd')
-
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
 
-      console.log('is mod')
-
       if (connectedSocketClient?.sockets.length) {
-        console.log('found sokcets')
-
         void chatClient.say(channel, 'Refreshing overlay...')
         server.io.to(connectedSocketClient.sockets).emit('refresh')
       }
-      console.log('finish')
 
       break
     case '!dotabod':
@@ -138,13 +131,13 @@ chatClient.onMessage(function (channel, user, text, msg) {
           const [ranked, unranked] = values
           const { win, lose } = ranked.data
           const { win: unrankedWin, lose: unrankedLose } = unranked.data
-          const hasUnranked = unrankedWin + unrankedLose !== 0
-          const hasRanked = win + lose !== 0
+          const noUnranked = !(unrankedWin + unrankedLose)
+          const noRanked = !(win + lose)
           const rankedMsg = `Ranked ${win} W - ${lose} L`
           const unrankedMsg = `Unranked ${unrankedWin} W - ${unrankedLose} L`
           const msg = []
-          if (hasRanked) msg.push(rankedMsg)
-          if (hasUnranked) msg.push(unrankedMsg)
+          if (!noRanked) msg.push(rankedMsg)
+          if (!noUnranked) msg.push(unrankedMsg)
           void chatClient.say(channel, msg.join(' | '))
         })
         .catch((e) => {
