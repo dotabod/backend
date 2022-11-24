@@ -30,16 +30,18 @@ export class setupMainEvents {
   // But that's okay because we'll just do a db call once in openBets()
   passiveMidas = { counter: 0 }
 
-  constructor(connectedSocketClient: SocketClient) {
-    this.gsi = connectedSocketClient.gsi!
-    this.client = connectedSocketClient
+  // gsi will always be defined here, so remove the null check
+  constructor(client: SocketClient & { gsi: GSIClient }) {
+    this.gsi = client.gsi
+    this.client = client
 
-    this.setupEvents()
+    this.watchEvents()
   }
 
-  setupEvents() {
+  watchEvents() {
     // Catch all
     this.gsi.on('newdata', (data: Packet) => {
+      // TODO: Remove this and rely on the findUser global var
       this.gsi.gamestate = data
 
       if (isSpectator(this.gsi)) return
@@ -76,13 +78,16 @@ export class setupMainEvents {
       }
     })
 
+    // TODO: This isn't getting called
     this.gsi.on('events', (events: Event[]) => {
       if (Array.isArray(events) && events.length) {
         console.log('[EVENT DATA]', events)
       }
     })
 
+    // Can use this to get hero slot when the hero first spawns at match start
     this.gsi.on('items:teleport0:purchaser', (purchaser: number) => {
+      // Can't just !this.heroSlot because it can be 0
       if (this.heroSlot === null) {
         console.log('[SLOT]', 'Found hero slot at', purchaser, {
           name: this.client.name,
@@ -134,7 +139,7 @@ export class setupMainEvents {
   }
 
   // This array of socket ids is who we want to emit events to:
-  // console.log("[SETUP]", { sockets: connectedSocketClient.sockets })
+  // console.log("[SETUP]", { sockets: this.client.sockets })
 
   // Make sure user has a steam32Id saved in the database
   // This runs once per every match start but its just one DB query so hopefully it's fine
