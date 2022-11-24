@@ -7,7 +7,7 @@ import getHero from '../../dota/lib/getHero'
 import { isSpectator } from '../../dota/lib/isSpectator'
 import { getRankDescription } from '../../dota/lib/ranks'
 import axios from '../../utils/axios'
-import { getChatClient } from '../setup'
+import { getChatClient } from '../lib/getChatClient'
 
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
