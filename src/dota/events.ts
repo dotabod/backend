@@ -64,10 +64,10 @@ export class setupMainEvents {
   watchEvents() {
     // Catch all
     this.gsi.on('newdata', (data: Packet) => {
-      if (isSpectator(this.gsi)) return
-
       // In case they connect to a game in progress and we missed the start event
       this.setupOBSBlockers(data.map?.game_state ?? '')
+
+      if (isSpectator(this.gsi)) return
 
       this.openBets()
 
@@ -482,6 +482,15 @@ export class setupMainEvents {
 
   setupOBSBlockers(state?: string) {
     if (!this.getSockets().length) return
+
+    if (isSpectator(this.gsi)) {
+      if (this.blockCache.get(this.getToken()) !== 'spectator') {
+        server.io.to(this.getSockets()).emit('block', { type: 'spectator' })
+        this.blockCache.set(this.getToken(), 'spectator')
+
+        return
+      }
+    }
 
     // Edge case:
     // Send strat screen if the player has picked their hero and it's locked in
