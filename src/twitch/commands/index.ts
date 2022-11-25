@@ -4,7 +4,7 @@ import { prisma } from '../../db/prisma'
 import { server } from '../../dota'
 import { findUserByName } from '../../dota/lib/connectedStreamers'
 import getHero from '../../dota/lib/getHero'
-import { isSpectator } from '../../dota/lib/isSpectator'
+import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
 import { getRankDescription } from '../../dota/lib/ranks'
 import axios from '../../utils/axios'
 import { getChatClient } from '../lib/getChatClient'
@@ -157,7 +157,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     case '!xpm': {
       if (!connectedSocketClient?.gsi) break
-      if (isSpectator(connectedSocketClient.gsi)) break
+      if (!isPlayingMatch(connectedSocketClient.gsi)) break
 
       const xpm = connectedSocketClient.gsi.gamestate?.player?.xpm
 
@@ -171,7 +171,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     }
     case '!apm': {
       if (!connectedSocketClient?.gsi) break
-      if (isSpectator(connectedSocketClient.gsi)) break
+      if (!isPlayingMatch(connectedSocketClient.gsi)) break
 
       const commandsIssued = connectedSocketClient.gsi.gamestate?.player?.commands_issued ?? 0
 
@@ -189,7 +189,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     }
     case '!gpm': {
       if (!connectedSocketClient?.gsi) break
-      if (isSpectator(connectedSocketClient.gsi)) break
+      if (!isPlayingMatch(connectedSocketClient.gsi)) break
 
       const gpm = connectedSocketClient.gsi.gamestate?.player?.gpm
 
@@ -212,7 +212,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     }
     case '!hero': {
       if (!connectedSocketClient?.gsi || !connectedSocketClient.steam32Id) break
-      if (isSpectator(connectedSocketClient.gsi)) break
+      if (!isPlayingMatch(connectedSocketClient.gsi)) break
       if (!connectedSocketClient.gsi.gamestate?.hero?.name) {
         void chatClient.say(channel, 'Not playing PauseChamp')
         break

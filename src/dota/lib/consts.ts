@@ -18,5 +18,5 @@ export const stratStates = ['DOTA_GAMERULES_STATE_STRATEGY_TIME']
 export const blockTypes = [
   { type: 'picks', states: pickSates },
   { type: 'playing', states: playingStates },
-  // { type: 'strategy', states: stratStates },
+  { type: 'strategy', states: stratStates },
 ]

@@ -8,6 +8,8 @@ import axios from '../utils/axios'
 import checkMidas from './lib/checkMidas'
 import { blockTypes, pickSates } from './lib/consts'
 import getHero from './lib/getHero'
+import { isArcade } from './lib/isArcade'
+import { isPlayingMatch } from './lib/isPlayingMatch'
 import { isSpectator } from './lib/isSpectator'
 import { getRankDescription } from './lib/ranks'
 import { GSIClient } from './server'
@@ -67,7 +69,7 @@ export class setupMainEvents {
       // In case they connect to a game in progress and we missed the start event
       this.setupOBSBlockers(data.map?.game_state ?? '')
 
-      if (isSpectator(this.gsi)) return
+      if (!isPlayingMatch(this.gsi)) return
 
       this.openBets()
 
@@ -81,7 +83,7 @@ export class setupMainEvents {
     })
 
     this.gsi.on('hero:name', (name: string) => {
-      if (isSpectator(this.gsi)) return
+      if (!isPlayingMatch(this.gsi)) return
 
       this.currentHero = name
     })
@@ -118,7 +120,7 @@ export class setupMainEvents {
     })
 
     this.gsi.on('hero:smoked', (isSmoked: boolean) => {
-      if (isSpectator(this.gsi)) return
+      if (!isPlayingMatch(this.gsi)) return
 
       if (isSmoked) {
         const hero = getHero(this.gsi.gamestate?.hero?.name)
@@ -132,7 +134,7 @@ export class setupMainEvents {
     })
 
     this.gsi.on('map:paused', (isPaused: boolean) => {
-      if (isSpectator(this.gsi)) return
+      if (!isPlayingMatch(this.gsi)) return
 
       if (isPaused) {
         void chatClient.say(this.getChannel(), `PauseChamp Who paused the game?`)
@@ -141,13 +143,13 @@ export class setupMainEvents {
 
     // This wont get triggered if they click disconnect and dont wait for the ancient to go to 0
     this.gsi.on('map:win_team', (winningTeam: 'radiant' | 'dire') => {
-      if (isSpectator(this.gsi)) return
+      if (!isPlayingMatch(this.gsi)) return
 
       this.endBets(winningTeam)
     })
 
     this.gsi.on('map:clock_time', (time: number) => {
-      if (isSpectator(this.gsi)) return
+      if (!isPlayingMatch(this.gsi)) return
 
       // Skip pregame
       if ((time + 30) % 300 === 0 && time + 30 > 0) {
@@ -487,6 +489,15 @@ export class setupMainEvents {
       if (this.blockCache.get(this.getToken()) !== 'spectator') {
         server.io.to(this.getSockets()).emit('block', { type: 'spectator' })
         this.blockCache.set(this.getToken(), 'spectator')
+      }
+
+      return
+    }
+
+    if (isArcade(this.gsi)) {
+      if (this.blockCache.get(this.getToken()) !== 'arcade') {
+        server.io.to(this.getSockets()).emit('block', { type: 'arcade' })
+        this.blockCache.set(this.getToken(), 'arcade')
       }
 
       return
