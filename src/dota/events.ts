@@ -487,9 +487,9 @@ export class setupMainEvents {
       if (this.blockCache.get(this.getToken()) !== 'spectator') {
         server.io.to(this.getSockets()).emit('block', { type: 'spectator' })
         this.blockCache.set(this.getToken(), 'spectator')
-
-        return
       }
+
+      return
     }
 
     // Edge case:
