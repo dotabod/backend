@@ -4,7 +4,7 @@ import { GSIClient } from '../server'
 export const gsiClients: GSIClient[] = []
 export const socketClients: SocketClient[] = []
 
-export const minimapStates = [
+export const playingStates = [
   'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
   'DOTA_GAMERULES_STATE_PRE_GAME',
 ]
@@ -17,6 +17,6 @@ export const stratStates = ['DOTA_GAMERULES_STATE_STRATEGY_TIME']
 
 export const blockTypes = [
   { type: 'picks', states: pickSates },
-  { type: 'minimap', states: minimapStates },
+  { type: 'playing', states: playingStates },
   // { type: 'strategy', states: stratStates },
 ]
