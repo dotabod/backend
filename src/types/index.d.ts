@@ -256,9 +256,17 @@ interface TeamDraft {
   ban6_class: string // e.g.,  ''
 }
 
-export interface Event {
+export const enum DotaEventTypes {
+  RoshanKilled = 'roshan_killed',
+  AegisPickedUp = 'aegis_picked_up',
+  Tip = 'tip',
+  BountyPickup = 'bounty_rune_pickup',
+  CourierKilled = 'courier_killed',
+}
+
+export interface DotaEvent {
   game_time: number // 810,
-  event_type: string // 'tip', 'courier_killed', 'bounty_rune_pickup', 'roshan_killed', 'aegis_picked_up'
+  event_type: DotaEventTypes
 
   // Event 'tip'
   sender_player_id: number // 7,
@@ -303,7 +311,7 @@ export interface Packet {
     dire?: Buildings
   }
   draft?: Draft
-  events?: Event[]
+  events?: DotaEvent[]
   previously?: Omit<Packet, 'previously'> & { map: MapData | boolean }
   added?: Omit<Packet, 'added'> // it has the same structure as above, and has a value "true"
 }
