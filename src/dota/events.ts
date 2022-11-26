@@ -21,7 +21,7 @@ import { server } from '.'
 export class setupMainEvents {
   // Server could reboot and lose these in memory
   // But that's okay they will get reset based on current match state
-  aegisPickedUp?: DotaEvent
+  aegisPickedUp?: { playerId: number; expireTime: string; expireDate: Date }
   betExists: string | undefined | null = null
   betMyTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
   blockCache = new Map<string, string>()
@@ -32,7 +32,12 @@ export class setupMainEvents {
   gsi: GSIClient
   heroSlot: number | undefined | null = null
   passiveMidas = { counter: 0 }
-  roshanKilled?: DotaEvent
+  roshanKilled?: {
+    minTime: string
+    maxTime: string
+    minDate: Date
+    maxDate: Date
+  }
 
   constructor(client: SocketClient) {
     this.gsi = client.gsi!
@@ -88,8 +93,6 @@ export class setupMainEvents {
 
   watchEvents() {
     this.gsi.on(DotaEventTypes.RoshanKilled, (event: DotaEvent) => {
-      this.roshanKilled = event
-
       // doing map gametime - event gametime in case the user reconnects to a match,
       // and the gametime is over the event gametime
       const gameTimeDiff = (this.gsi.gamestate?.map?.game_time ?? event.game_time) - event.game_time
@@ -113,13 +116,12 @@ export class setupMainEvents {
         maxDate,
       }
 
+      this.roshanKilled = res
       server.io.to(this.getSockets()).emit('roshan-killed', res)
       console.log('[ROSHAN]', 'Roshan killed, setting timer', res, { name: this.getChannel() })
     })
 
     this.gsi.on(DotaEventTypes.AegisPickedUp, (event: DotaEvent) => {
-      this.aegisPickedUp = event
-
       const gameTimeDiff = (this.gsi.gamestate?.map?.game_time ?? event.game_time) - event.game_time
 
       // expire for aegis in 5 minutes
@@ -134,6 +136,8 @@ export class setupMainEvents {
         expireTime: fmtMSS(expireTime),
         expireDate,
       }
+
+      this.aegisPickedUp = res
 
       server.io.to(this.getSockets()).emit('aegis-picked-up', res)
       console.log('[ROSHAN]', 'Aegis picked up, setting timer', res, { name: this.getChannel() })
@@ -583,6 +587,14 @@ export class setupMainEvents {
             type: blocker.type,
             team: this.gsi.gamestate?.player?.team_name,
           })
+
+          if (this.aegisPickedUp?.playerId) {
+            server.io.to(this.getSockets()).emit('aegis-picked-up', this.aegisPickedUp)
+          }
+
+          if (this.roshanKilled?.minTime) {
+            server.io.to(this.getSockets()).emit('roshan-killed', this.roshanKilled)
+          }
         }
         return true
       }
