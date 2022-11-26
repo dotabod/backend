@@ -26,11 +26,11 @@ export async function openTwitchBet(channel: string, userId: string, heroName?: 
           disabledBets.add(channel)
         } else {
           console.log('[BETS]', 'Error opening twitch bet', channel, e)
+          throw e
         }
       } catch (e) {
         console.log('[BETS]', 'Error opening twitch bet', channel, e)
+        throw e
       }
-
-      throw e
     })
 }
