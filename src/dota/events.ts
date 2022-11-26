@@ -90,12 +90,16 @@ export class setupMainEvents {
     this.gsi.on(DotaEventTypes.RoshanKilled, (event: DotaEvent) => {
       this.roshanKilled = event
 
+      // doing map gametime - event gametime in case the user reconnects to a match,
+      // and the gametime is over the event gametime
+      const gameTimeDiff = (this.gsi.gamestate?.map?.game_time ?? event.game_time) - event.game_time
+
       // min spawn for rosh in 5 + 3 minutes
-      const minS = 5 * 60 + 3 * 60
+      const minS = 5 * 60 + 3 * 60 - gameTimeDiff
       const minTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + minS
 
       // max spawn for rosh in 5 + 3 + 3 minutes
-      const maxS = 5 * 60 + 3 * 60 + 3 * 60
+      const maxS = 5 * 60 + 3 * 60 + 3 * 60 - gameTimeDiff
       const maxTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + maxS
 
       // server time
@@ -116,14 +120,17 @@ export class setupMainEvents {
     this.gsi.on(DotaEventTypes.AegisPickedUp, (event: DotaEvent) => {
       this.aegisPickedUp = event
 
+      const gameTimeDiff = (this.gsi.gamestate?.map?.game_time ?? event.game_time) - event.game_time
+
       // expire for aegis in 5 minutes
-      const expireS = 5 * 60
+      const expireS = 5 * 60 - gameTimeDiff
       const expireTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + expireS
 
       // server time
       const expireDate = this.addSecondsToNow(expireS)
 
       const res = {
+        playerId: event.player_id,
         expireTime: fmtMSS(expireTime),
         expireDate,
       }

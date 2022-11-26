@@ -273,9 +273,13 @@ export interface DotaEvent {
   // Event 'roshan_killed'
   killed_by_team: 'dire'
   //killer_player_id: 7;
+
   // Event 'aegis_picked_up'
   //player_id: 7;
   snatched: false
+
+  // Event 'aegis_denied'
+  //player_id: 7;
 }
 /**
  *
