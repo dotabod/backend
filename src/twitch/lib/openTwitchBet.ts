@@ -30,5 +30,7 @@ export async function openTwitchBet(channel: string, userId: string, heroName?: 
       } catch (e) {
         console.log('[BETS]', 'Error opening twitch bet', channel, e)
       }
+
+      throw e
     })
 }
