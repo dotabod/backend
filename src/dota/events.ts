@@ -2,7 +2,7 @@ import { prisma } from '../db/prisma'
 import { chatClient } from '../twitch/commands'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet'
-import { Event, Packet, SocketClient } from '../types'
+import { DotaEvent, DotaEventTypes, Packet, SocketClient } from '../types/index'
 import { steamID64toSteamID32 } from '../utils'
 import axios from '../utils/axios'
 import checkMidas from './lib/checkMidas'
@@ -27,10 +27,13 @@ export class setupMainEvents {
   currentHero: string | undefined | null = null
   endingBets = false
   heroSlot: number | undefined | null = null
+  events: DotaEvent[] = []
 
   // Server could reboot and lose this in memory
   // But that's okay because we'll just do a db call once in openBets()
   passiveMidas = { counter: 0 }
+  roshanKilled?: DotaEvent
+  aegisPickedUp?: DotaEvent
 
   constructor(client: SocketClient) {
     this.gsi = client.gsi!
@@ -64,12 +67,42 @@ export class setupMainEvents {
   }
 
   watchEvents() {
+    this.gsi.on(DotaEventTypes.RoshanKilled, (event: DotaEvent) => {
+      this.roshanKilled = event
+
+      // min spawn for rosh in 5 + 3 minutes
+      const minTime = event.game_time + 5 * 60 + 3 * 60
+
+      // max spawn for rosh in 5 + 3 + 3 minutes
+      const maxTime = event.game_time + 5 * 60 + 3 * 60 + 3 * 60
+    })
+
+    this.gsi.on(DotaEventTypes.AegisPickedUp, (event: DotaEvent) => {
+      this.aegisPickedUp = event
+
+      // expire for aegis in 5 minutes
+      const expireTime = event.game_time + 5 * 60
+    })
+
     // Catch all
     this.gsi.on('newdata', (data: Packet) => {
       // In case they connect to a game in progress and we missed the start event
       this.setupOBSBlockers(data.map?.game_state ?? '')
 
       if (!isPlayingMatch(this.gsi)) return
+
+      if (Array.isArray(data.events) && data.events.length) {
+        data.events.forEach((event) => {
+          if (
+            !this.events.some(
+              (e) => e.game_time === event.game_time && e.event_type === event.event_type,
+            )
+          ) {
+            this.events.push(event)
+            this.gsi.emit(event.event_type, event)
+          }
+        })
+      }
 
       this.openBets()
 
@@ -101,10 +134,8 @@ export class setupMainEvents {
     })
 
     // TODO: This isn't getting called
-    this.gsi.on('events', (events: Event[]) => {
-      if (Array.isArray(events) && events.length) {
-        console.log('[EVENT DATA]', events)
-      }
+    this.gsi.on('events:0', (event: DotaEvent) => {
+      console.log('[EVENT DATA]', event)
     })
 
     // Can use this to get hero slot when the hero first spawns at match start
@@ -531,7 +562,7 @@ export class setupMainEvents {
 
           // Send the one blocker type
           server.io.to(this.getSockets()).emit('block', {
-            type: this.blockCache.get(this.getToken()),
+            type: blocker.type,
             team: this.gsi.gamestate?.player?.team_name,
           })
         }
