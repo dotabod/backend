@@ -19,21 +19,20 @@ import { server } from '.'
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
 export class setupMainEvents {
+  // Server could reboot and lose these in memory
+  // But that's okay they will get reset based on current match state
+  aegisPickedUp?: DotaEvent
   betExists: string | undefined | null = null
   betMyTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
   blockCache = new Map<string, string>()
-  gsi: GSIClient
   client: SocketClient
   currentHero: string | undefined | null = null
   endingBets = false
-  heroSlot: number | undefined | null = null
   events: DotaEvent[] = []
-
-  // Server could reboot and lose this in memory
-  // But that's okay because we'll just do a db call once in openBets()
+  gsi: GSIClient
+  heroSlot: number | undefined | null = null
   passiveMidas = { counter: 0 }
   roshanKilled?: DotaEvent
-  aegisPickedUp?: DotaEvent
 
   constructor(client: SocketClient) {
     this.gsi = client.gsi!
@@ -66,28 +65,71 @@ export class setupMainEvents {
     this.client.mmr = newMmr
   }
 
+  private addSecondsToNow(seconds: number) {
+    return new Date(new Date().getTime() + seconds * 1000)
+  }
+
+  // reset vars when a new match begins
+  private newMatchNewVars(resetBets = false) {
+    this.currentHero = null
+    this.heroSlot = null
+    this.events = []
+    this.roshanKilled = undefined
+    this.aegisPickedUp = undefined
+    this.passiveMidas = { counter: 0 }
+
+    // Bet stuff should be closed by endBets()
+    if (resetBets) {
+      this.endingBets = false
+      this.betExists = null
+      this.betMyTeam = null
+    }
+  }
+
   watchEvents() {
     this.gsi.on(DotaEventTypes.RoshanKilled, (event: DotaEvent) => {
       this.roshanKilled = event
 
       // min spawn for rosh in 5 + 3 minutes
-      const minTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + (5 * 60 + 3 * 60)
+      const minS = 5 * 60 + 3 * 60
+      const minTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + minS
 
       // max spawn for rosh in 5 + 3 + 3 minutes
-      const maxTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + (5 * 60 + 3 * 60 + 3 * 60)
+      const maxS = 5 * 60 + 3 * 60 + 3 * 60
+      const maxTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + maxS
 
-      console.log('[ROSHAN]', 'Roshan killed, setting timer', {
+      // server time
+      const minDate = this.addSecondsToNow(minS)
+      const maxDate = this.addSecondsToNow(maxS)
+
+      const res = {
         minTime: fmtMSS(minTime),
         maxTime: fmtMSS(maxTime),
-      })
+        minDate,
+        maxDate,
+      }
+
+      server.io.to(this.getSockets()).emit('roshan-killed', res)
+      console.log('[ROSHAN]', 'Roshan killed, setting timer', res)
     })
 
     this.gsi.on(DotaEventTypes.AegisPickedUp, (event: DotaEvent) => {
       this.aegisPickedUp = event
 
       // expire for aegis in 5 minutes
-      const expireTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + 5 * 60
-      console.log('[ROSHAN]', 'Aegis picked up, setting timer', { expireTime: fmtMSS(expireTime) })
+      const expireS = 5 * 60
+      const expireTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + expireS
+
+      // server time
+      const expireDate = this.addSecondsToNow(expireS)
+
+      const res = {
+        expireTime: fmtMSS(expireTime),
+        expireDate,
+      }
+
+      server.io.to(this.getSockets()).emit('aegis-picked-up', res)
+      console.log('[ROSHAN]', 'Aegis picked up, setting timer', res)
     })
 
     // Catch all
@@ -439,9 +481,8 @@ export class setupMainEvents {
           }
         })
         .catch((e: any) => {
-          this.betExists = null
-          this.betMyTeam = null
           // its not over? just give up checking after this long
+          this.newMatchNewVars(true)
         })
 
       return
@@ -469,10 +510,6 @@ export class setupMainEvents {
     }
 
     this.endingBets = true
-    this.currentHero = null
-    this.passiveMidas.counter = 0
-    this.heroSlot = null
-
     const channel = this.getChannel()
     this.handleMMR(won, matchId)
 
@@ -491,10 +528,6 @@ export class setupMainEvents {
       .then(() => {
         closeTwitchBet(channel, won, this.getToken())
           .then(() => {
-            this.betExists = null
-            this.betMyTeam = null
-            this.endingBets = false
-
             void chatClient.say(this.getChannel(), `Bets closed, we have ${won ? 'won' : 'lost'}`)
 
             console.log('[BETS]', {
@@ -509,16 +542,15 @@ export class setupMainEvents {
             })
           })
           .catch((e: any) => {
-            this.betMyTeam = null
-            this.betExists = null
-            this.endingBets = false
             console.log('[BETS]', 'Error closing twitch bet', channel, e)
+          })
+          // Always
+          .finally(() => {
+            this.newMatchNewVars(true)
           })
       })
       .catch((e: any) => {
-        this.betMyTeam = null
-        this.betExists = null
-        this.endingBets = false
+        this.newMatchNewVars(true)
         console.log('[BETS]', 'Error closing bet', e)
       })
   }
@@ -587,15 +619,11 @@ export class setupMainEvents {
       return
     }
 
-    // Unblock all
+    // Unblock all, we are disconnected from the match
     if (!hasValidBlocker && this.blockCache.has(this.getToken())) {
       this.blockCache.delete(this.getToken())
       server.io.to(this.getSockets()).emit('block', { type: null })
-      this.currentHero = null
-      this.heroSlot = null
-      this.passiveMidas.counter = 0
-      // betExists = null
-      // betMyTeam = null
+      this.newMatchNewVars()
       return
     }
   }
