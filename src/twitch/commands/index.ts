@@ -1,16 +1,36 @@
 import { toUserName } from '@twurple/chat'
 
 import { prisma } from '../../db/prisma'
+import supabase from '../../db/supabase'
 import { server } from '../../dota'
-import { findUserByName } from '../../dota/lib/connectedStreamers'
+import { findUserByName, findUserByTwitchId } from '../../dota/lib/connectedStreamers'
 import getHero from '../../dota/lib/getHero'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
 import { getRankDescription } from '../../dota/lib/ranks'
 import axios from '../../utils/axios'
 import { getChatClient } from '../lib/getChatClient'
 
+/*
+Commands that are fun for future:
+  !nonfollowersonly = can only chat if you're not a follower xd
+*/
+
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
+
+const channel = supabase.channel('db-changes')
+channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
+  console.log('[SUPABASE]', 'New user to send bot to: ', payload.new.name)
+  chatClient.join(payload.new.name).catch((e) => {
+    console.error('[SUPABASE]', 'Error joining channel', e)
+  })
+})
+
+channel.subscribe((status) => {
+  if (status === 'SUBSCRIBED') {
+    console.log('[SUPABASE]', 'Ready to receive database changes!')
+  }
+})
 
 const CooldownManager = {
   // 30 seconds
@@ -263,53 +283,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
       if (!msg.channelId) break
 
-      const mmr = args[1]
-
-      if (!mmr || !Number(mmr) || Number(mmr) > 20000) {
-        console.log('Invalid mmr', mmr, channel)
-
-        break
-      }
-      prisma.account
-        .update({
-          data: {
-            user: {
-              update: {
-                mmr: Number(mmr),
-              },
-            },
-          },
-          where: {
-            provider_providerAccountId: {
-              provider: 'twitch',
-              providerAccountId: msg.channelId,
-            },
-          },
-        })
-        .then(() => {
-          void chatClient.say(channel, `Updated MMR to ${mmr}`)
-          if (connectedSocketClient) {
-            connectedSocketClient.mmr = Number(mmr)
-
-            if (connectedSocketClient.sockets.length) {
-              console.log(
-                '[MMR] Sending mmr to socket',
-                connectedSocketClient.mmr,
-                connectedSocketClient.sockets,
-                channel,
-              )
-
-              server.io
-                .to(connectedSocketClient.sockets)
-                .emit('update-medal', { mmr, steam32Id: connectedSocketClient.steam32Id })
-            } else {
-              console.log('[MMR] No sockets found to send update to', channel)
-            }
-          }
-        })
-        .catch(() => {
-          void chatClient.say(channel, `Failed to update MMR to ${mmr}`)
-        })
+      updateMmr(args[1], msg.channelId, channel)
 
       break
     }
@@ -375,18 +349,47 @@ chatClient.onMessage(function (channel, user, text, msg) {
   CooldownManager.touch(channel, command)
 })
 
-/*
-  Required emotes:
+export function updateMmr(mmr: string | number, channelId: string, channel: string) {
+  if (!channel) return
 
-  BASED
-  Chatting
-  massivePIDAS
-  Sadge
-  EZ
-  Clap
-  peepoGamble
-  PauseChamp
+  if (!mmr || !Number(mmr) || Number(mmr) > 20000) {
+    console.log('Invalid mmr', mmr, channel)
 
-Commands that are fun:
-  !nonfollowersonly = can only chat if you're not a follower xd
-*/
+    return
+  }
+
+  prisma.account
+    .update({
+      data: {
+        user: {
+          update: {
+            mmr: Number(mmr),
+          },
+        },
+      },
+      where: {
+        provider_providerAccountId: {
+          provider: 'twitch',
+          providerAccountId: channelId,
+        },
+      },
+    })
+    .then(() => {
+      void chatClient.say(channel, `Updated MMR to ${mmr}`)
+      const client = findUserByTwitchId(channelId)
+
+      if (client) {
+        client.mmr = Number(mmr)
+
+        if (client.sockets.length) {
+          console.log('[MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
+          server.io.to(client.sockets).emit('update-medal', { mmr, steam32Id: client.steam32Id })
+        } else {
+          console.log('[MMR] No sockets found to send update to', channel)
+        }
+      }
+    })
+    .catch(() => {
+      void chatClient.say(channel, `Failed to update MMR to ${mmr}`)
+    })
+}

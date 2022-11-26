@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@prisma/client": "^4.6.1",
+    "@supabase/supabase-js": "^2.1.1",
     "@twurple/api": "^5.2.7",
     "@twurple/auth": "^5.2.7",
     "@twurple/chat": "^5.2.7",

@@ -1,5 +1,5 @@
 import { prisma } from '../db/prisma'
-import { chatClient } from '../twitch/commands'
+import { chatClient, updateMmr } from '../twitch/commands'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet'
 import { DotaEvent, DotaEventTypes, Packet, SocketClient } from '../types'
@@ -12,7 +12,6 @@ import getHero from './lib/getHero'
 import { isArcade } from './lib/isArcade'
 import { isPlayingMatch } from './lib/isPlayingMatch'
 import { isSpectator } from './lib/isSpectator'
-import { getRankDescription } from './lib/ranks'
 
 import { server } from '.'
 
@@ -280,7 +279,9 @@ export class setupMainEvents {
   }
 
   updateMMR(increase: boolean, ranked = true) {
-    if (!ranked || !this.getMmr() || this.getMmr() <= 0) {
+    // This updates WL for the unranked matches
+    // TODO: Make a new event for 'update-wl'
+    if (!ranked) {
       server.io.to(this.getSockets()).emit('update-medal', {
         mmr: this.getMmr(),
         steam32Id: this.getSteam32(),
@@ -289,40 +290,7 @@ export class setupMainEvents {
     }
 
     const newMMR = this.getMmr() + (increase ? 30 : -30)
-    prisma.user
-      .update({
-        data: {
-          mmr: newMMR,
-        },
-        where: {
-          id: this.getToken(),
-        },
-      })
-      .then(() => {
-        this.setMmr(newMMR)
-
-        if (this.getSockets().length) {
-          console.log('[MMR]', 'Emitting mmr update', {
-            name: this.getChannel(),
-            channel: this.getChannel(),
-          })
-
-          getRankDescription(this.getMmr(), this.getSteam32() ?? undefined)
-            .then((description) => {
-              void chatClient.say(this.getChannel(), description)
-            })
-            .catch((e: any) => {
-              console.error('[MMR]', 'Error getting rank description', e)
-            })
-
-          server.io
-            .to(this.getSockets())
-            .emit('update-medal', { mmr: newMMR, steam32Id: this.getSteam32() })
-        }
-      })
-      .catch((e: any) => {
-        console.error('[MMR]', 'Error updating mmr', e)
-      })
+    updateMmr(newMMR, this.client.account.providerAccountId, this.client.name)
   }
 
   handleMMR(increase: boolean, matchId: string) {
