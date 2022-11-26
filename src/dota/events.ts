@@ -110,7 +110,7 @@ export class setupMainEvents {
       }
 
       server.io.to(this.getSockets()).emit('roshan-killed', res)
-      console.log('[ROSHAN]', 'Roshan killed, setting timer', res)
+      console.log('[ROSHAN]', 'Roshan killed, setting timer', res, { name: this.getChannel() })
     })
 
     this.gsi.on(DotaEventTypes.AegisPickedUp, (event: DotaEvent) => {
@@ -129,7 +129,7 @@ export class setupMainEvents {
       }
 
       server.io.to(this.getSockets()).emit('aegis-picked-up', res)
-      console.log('[ROSHAN]', 'Aegis picked up, setting timer', res)
+      console.log('[ROSHAN]', 'Aegis picked up, setting timer', res, { name: this.getChannel() })
     })
 
     // Catch all
