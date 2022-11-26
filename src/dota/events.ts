@@ -1,5 +1,5 @@
 import { prisma } from '../db/prisma'
-import { chatClient, updateMmr } from '../twitch/commands'
+import { chatClient } from '../twitch/commands'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet'
 import { DotaEvent, DotaEventTypes, Packet, SocketClient } from '../types'
@@ -12,6 +12,7 @@ import getHero from './lib/getHero'
 import { isArcade } from './lib/isArcade'
 import { isPlayingMatch } from './lib/isPlayingMatch'
 import { isSpectator } from './lib/isSpectator'
+import { updateMmr } from './lib/updateMmr'
 
 import { server } from '.'
 

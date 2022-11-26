@@ -3,10 +3,11 @@ import { toUserName } from '@twurple/chat'
 import { prisma } from '../../db/prisma'
 import supabase from '../../db/supabase'
 import { server } from '../../dota'
-import { findUserByName, findUserByTwitchId } from '../../dota/lib/connectedStreamers'
+import findUser, { findUserByName } from '../../dota/lib/connectedStreamers'
 import getHero from '../../dota/lib/getHero'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
 import { getRankDescription } from '../../dota/lib/ranks'
+import { updateMmr } from '../../dota/lib/updateMmr'
 import axios from '../../utils/axios'
 import { getChatClient } from '../lib/getChatClient'
 
@@ -24,6 +25,26 @@ channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user
   chatClient.join(payload.new.name).catch((e) => {
     console.error('[SUPABASE]', 'Error joining channel', e)
   })
+})
+
+// When a user updates MMR from dashboard and they have client open
+channel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
+  console.log('[SUPABASE]', 'New user update: ', payload.new.name)
+
+  const client = findUser(payload.new.id)
+  if (payload.old.mmr !== payload.new.mmr && client && client.mmr !== payload.new.mmr) {
+    client.mmr = payload.new.mmr
+    if (client.sockets.length) {
+      console.log('[MMR] Sending mmr to socket')
+      void chatClient.say(client.name, `Updated MMR to ${client.mmr}`)
+
+      server.io
+        .to(client.sockets)
+        .emit('update-medal', { mmr: client.mmr, steam32Id: client.steam32Id })
+    }
+
+    console.log('Updated cached mmr for', payload.new.name, payload.new.mmr)
+  }
 })
 
 channel.subscribe((status) => {
@@ -348,48 +369,3 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
   CooldownManager.touch(channel, command)
 })
-
-export function updateMmr(mmr: string | number, channelId: string, channel: string) {
-  if (!channel) return
-
-  if (!mmr || !Number(mmr) || Number(mmr) > 20000) {
-    console.log('Invalid mmr', mmr, channel)
-
-    return
-  }
-
-  prisma.account
-    .update({
-      data: {
-        user: {
-          update: {
-            mmr: Number(mmr),
-          },
-        },
-      },
-      where: {
-        provider_providerAccountId: {
-          provider: 'twitch',
-          providerAccountId: channelId,
-        },
-      },
-    })
-    .then(() => {
-      void chatClient.say(channel, `Updated MMR to ${mmr}`)
-      const client = findUserByTwitchId(channelId)
-
-      if (client) {
-        client.mmr = Number(mmr)
-
-        if (client.sockets.length) {
-          console.log('[MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
-          server.io.to(client.sockets).emit('update-medal', { mmr, steam32Id: client.steam32Id })
-        } else {
-          console.log('[MMR] No sockets found to send update to', channel)
-        }
-      }
-    })
-    .catch(() => {
-      void chatClient.say(channel, `Failed to update MMR to ${mmr}`)
-    })
-}
