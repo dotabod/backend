@@ -6,26 +6,17 @@ import express, { NextFunction, Request, Response } from 'express'
 import { Server, Socket } from 'socket.io'
 
 import getDBUser from '../db/getDBUser'
-import { Packet } from '../types'
+import { GSIClient } from './GSIClient'
 import findUser from './lib/connectedStreamers'
 import { gsiClients, socketClients } from './lib/consts'
 
-export const events = new EventEmitter()
-
-export class GSIClient extends EventEmitter {
-  ip: string
-  auth: { token: string }
-  token: string
-  gamestate?: Packet
-
-  constructor(ip: string, auth: { token: string }) {
-    super()
-
-    this.ip = ip
-    this.auth = auth
-    this.token = auth.token
+declare module 'express-serve-static-core' {
+  interface Request {
+    client: GSIClient
   }
 }
+
+export const events = new EventEmitter()
 
 function checkClient(req: Request, res: Response, next: NextFunction) {
   let localUser = gsiClients.find((client) => client.token === req.body.auth.token)

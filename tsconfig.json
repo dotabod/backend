@@ -13,9 +13,6 @@
     "outDir": "./dist",
     "sourceMap": true,
     "strictNullChecks": true,
-    "typeRoots": [
-      "./src/types"
-    ],
     "types": [
       "node"
     ],

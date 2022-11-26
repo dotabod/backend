@@ -2,9 +2,10 @@ import { prisma } from '../db/prisma'
 import { chatClient } from '../twitch/commands'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet'
-import { DotaEvent, DotaEventTypes, Packet, SocketClient } from '../types/index'
-import { steamID64toSteamID32 } from '../utils'
+import { DotaEvent, DotaEventTypes, Packet, SocketClient } from '../types'
+import { fmtMSS, steamID64toSteamID32 } from '../utils'
 import axios from '../utils/axios'
+import { GSIClient } from './GSIClient'
 import checkMidas from './lib/checkMidas'
 import { blockTypes, pickSates } from './lib/consts'
 import getHero from './lib/getHero'
@@ -12,7 +13,6 @@ import { isArcade } from './lib/isArcade'
 import { isPlayingMatch } from './lib/isPlayingMatch'
 import { isSpectator } from './lib/isSpectator'
 import { getRankDescription } from './lib/ranks'
-import { GSIClient } from './server'
 
 import { server } from '.'
 
@@ -71,17 +71,23 @@ export class setupMainEvents {
       this.roshanKilled = event
 
       // min spawn for rosh in 5 + 3 minutes
-      const minTime = event.game_time + 5 * 60 + 3 * 60
+      const minTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + (5 * 60 + 3 * 60)
 
       // max spawn for rosh in 5 + 3 + 3 minutes
-      const maxTime = event.game_time + 5 * 60 + 3 * 60 + 3 * 60
+      const maxTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + (5 * 60 + 3 * 60 + 3 * 60)
+
+      console.log('[ROSHAN]', 'Roshan killed, setting timer', {
+        minTime: fmtMSS(minTime),
+        maxTime: fmtMSS(maxTime),
+      })
     })
 
     this.gsi.on(DotaEventTypes.AegisPickedUp, (event: DotaEvent) => {
       this.aegisPickedUp = event
 
       // expire for aegis in 5 minutes
-      const expireTime = event.game_time + 5 * 60
+      const expireTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + 5 * 60
+      console.log('[ROSHAN]', 'Aegis picked up, setting timer', { expireTime: fmtMSS(expireTime) })
     })
 
     // Catch all
@@ -100,6 +106,10 @@ export class setupMainEvents {
           ) {
             this.events.push(event)
             this.gsi.emit(event.event_type, event)
+
+            if (!Object.values(DotaEventTypes).includes(event.event_type)) {
+              console.log('[NEWEVENT]', event)
+            }
           }
         })
       }

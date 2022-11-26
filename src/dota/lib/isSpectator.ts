@@ -1,4 +1,4 @@
-import { GSIClient } from '../server'
+import { GSIClient } from '../GSIClient'
 
 export function isSpectator(client: GSIClient) {
   return (

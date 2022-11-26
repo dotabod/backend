@@ -1,4 +1,4 @@
-import { GSIClient } from '../server'
+import { GSIClient } from '../GSIClient'
 import { isArcade } from './isArcade'
 import { isSpectator } from './isSpectator'
 

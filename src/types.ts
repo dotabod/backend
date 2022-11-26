@@ -1,15 +1,7 @@
-import { HeroNames } from '../dota/lib/getHero'
-import { GSIClient } from '../dota/server'
+import { GSIClient } from './dota/GSIClient'
+import { HeroNames } from './dota/lib/getHero'
 
-declare global {
-  namespace Express {
-    interface Request {
-      client: GSIClient
-    }
-  }
-}
-
-interface SocketClient {
+export interface SocketClient {
   gsi?: GSIClient
   name: string
   steam32Id: number | null
@@ -22,7 +14,6 @@ interface SocketClient {
   }
   sockets: string[]
 }
-
 interface Provider {
   name: string // "Dota 2"
   appid: number // 570 for Dota 2
@@ -148,7 +139,6 @@ export interface Abilities {
   ability18?: Ability
   ability19?: Ability
 }
-
 interface Ability {
   name: string // e.g. "antimage_mana_break" or "seasonal_ti11_balloon"
   level: number // e.g. 1,
@@ -182,8 +172,7 @@ export interface Items {
   teleport0?: Item
   neutral0?: Item
 }
-
-interface Item {
+export interface Item {
   name: string // e.g. item_power_treads or "empty"
   purchaser?: number // 5,
   can_cast?: boolean // e.g. true,
@@ -191,7 +180,6 @@ interface Item {
   passive: boolean // e.g. true for item_paladin_sword
   charges?: number // e.g. 2
 }
-
 interface Buildings {
   dota_badguys_tower1_top: Building
   dota_badguys_tower2_top: Building
@@ -212,12 +200,10 @@ interface Buildings {
   bad_rax_range_bot: Building
   dota_badguys_fort: Building
 }
-
 interface Building {
   health: number // e.g. 1800
   max_health: number // e.g. 1800
 }
-
 interface Draft {
   // Undefined in player games, but provided in watching replays
   activeteam: number // 2 (radiant) or 3 (dire)
@@ -228,7 +214,6 @@ interface Draft {
   team2: TeamDraft
   team3: TeamDraft
 }
-
 interface TeamDraft {
   pick0_id: number // e.g.,  0,
   pick0_class: string // e.g.,  '',
@@ -256,9 +241,10 @@ interface TeamDraft {
   ban6_class: string // e.g.,  ''
 }
 
-export const enum DotaEventTypes {
+export enum DotaEventTypes {
   RoshanKilled = 'roshan_killed',
   AegisPickedUp = 'aegis_picked_up',
+  AegisDenied = 'aegis_denied',
   Tip = 'tip',
   BountyPickup = 'bounty_rune_pickup',
   CourierKilled = 'courier_killed',
@@ -287,17 +273,16 @@ export interface DotaEvent {
   // Event 'roshan_killed'
   killed_by_team: 'dire'
   //killer_player_id: 7;
-
   // Event 'aegis_picked_up'
   //player_id: 7;
   snatched: false
 }
-
 /**
  *
  * Dump elements that are not matching data structure....
  *
  */
+
 export interface Packet {
   provider: Provider
   map?: MapData

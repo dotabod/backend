@@ -1,5 +1,5 @@
 import { SocketClient } from '../../types'
-import { GSIClient } from '../server'
+import { GSIClient } from '../GSIClient'
 
 export const gsiClients: GSIClient[] = []
 export const socketClients: SocketClient[] = []

@@ -1,7 +1,8 @@
-import { Item, Packet } from '../../types'
-
 // Stash is fountain stash
 // Slots 0-5 are the backpack
+
+import { Item, Packet } from '../../types'
+
 // Slots 6-8 are the backpack stashed items
 export default function checkMidas(data: Packet, passiveMidas: { counter: number }) {
   if (!data.items) return false
