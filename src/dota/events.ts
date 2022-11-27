@@ -113,6 +113,8 @@ export class setupMainEvents {
       const maxDate = this.addSecondsToNow(maxS)
 
       const res = {
+        minS,
+        maxS,
         minTime: fmtMSS(minTime),
         maxTime: fmtMSS(maxTime),
         minDate,
@@ -137,6 +139,7 @@ export class setupMainEvents {
       const expireDate = this.addSecondsToNow(expireS)
 
       const res = {
+        expireS,
         playerId: event.player_id,
         expireTime: fmtMSS(expireTime),
         expireDate,
