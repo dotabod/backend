@@ -268,11 +268,12 @@ export class setupMainEvents {
   // This runs once per every match start but its just one DB query so hopefully it's fine
   // In the future I'd like to remove this and maybe have FE ask them to enter their steamid?
   updateSteam32Id() {
-    // User already has a steam32Id
-    if (this.getSteam32()) return
-
     const steam32Id = steamID64toSteamID32(this.gsi.gamestate?.player?.steamid ?? '')
     if (!steam32Id) return
+
+    // User already has a steam32Id
+    // But still continue if they logged into a new acocunt (smurfs vs mains)
+    if (this.getSteam32() !== steam32Id) return
 
     this.client.steam32Id = steam32Id
 
