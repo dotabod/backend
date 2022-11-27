@@ -66,10 +66,6 @@ export class setupMainEvents {
     return this.client.steam32Id
   }
 
-  private setMmr(newMmr: number) {
-    this.client.mmr = newMmr
-  }
-
   private addSecondsToNow(seconds: number) {
     return new Date(new Date().getTime() + seconds * 1000)
   }
@@ -266,6 +262,8 @@ export class setupMainEvents {
 
     const steam32Id = steamID64toSteamID32(this.gsi.gamestate?.player?.steamid ?? '')
     if (!steam32Id) return
+
+    this.client.steam32Id = steam32Id
 
     prisma.user
       .update({
