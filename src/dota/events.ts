@@ -237,6 +237,11 @@ export class setupMainEvents {
     this.gsi.on('map:paused', (isPaused: boolean) => {
       if (!isPlayingMatch(this.gsi)) return
 
+      // Necessary to let the frontend know, so we can pause any rosh / aegis / etc timers
+      if (this.getSockets().length) {
+        server.io.to(this.getSockets()).emit('paused', isPaused)
+      }
+
       if (isPaused) {
         void chatClient.say(this.getChannel(), `PauseChamp Who paused the game?`)
       }
