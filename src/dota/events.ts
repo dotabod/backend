@@ -608,11 +608,11 @@ export class setupMainEvents {
             team: this.gsi.gamestate?.player?.team_name,
           })
 
-          if (this.aegisPickedUp?.playerId) {
+          if (this.aegisPickedUp?.expireDate) {
             server.io.to(this.getSockets()).emit('aegis-picked-up', this.aegisPickedUp)
           }
 
-          if (this.roshanKilled?.minTime) {
+          if (this.roshanKilled?.maxDate) {
             server.io.to(this.getSockets()).emit('roshan-killed', this.roshanKilled)
           }
         }
