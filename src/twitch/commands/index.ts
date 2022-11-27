@@ -20,17 +20,22 @@ Commands that are fun for future:
 export const chatClient = await getChatClient()
 
 const channel = supabase.channel('db-changes')
-channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
-  console.log('[SUPABASE]', 'New user to send bot to: ', payload.new.name)
-  chatClient.join(payload.new.name).catch((e) => {
-    console.error('[SUPABASE]', 'Error joining channel', e)
-  })
-})
+
+if (process.env.NODE_ENV !== 'production') {
+  channel.on(
+    'postgres_changes',
+    { event: 'INSERT', schema: 'public', table: 'users' },
+    (payload) => {
+      console.log('[SUPABASE]', 'New user to send bot to: ', payload.new.name)
+      chatClient.join(payload.new.name).catch((e) => {
+        console.error('[SUPABASE]', 'Error joining channel', e)
+      })
+    },
+  )
+}
 
 // When a user updates MMR from dashboard and they have client open
 channel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
-  console.log('[SUPABASE]', 'New user update: ', payload.new.name)
-
   const client = findUser(payload.new.id)
   if (payload.old.mmr !== payload.new.mmr && client && client.mmr !== payload.new.mmr) {
     client.mmr = payload.new.mmr

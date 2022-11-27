@@ -18,6 +18,10 @@
   },
   "dependencies": {
     "@prisma/client": "^4.6.1",
+    "@sentry/integrations": "^7.21.1",
+    "@sentry/node": "^7.21.1",
+    "@sentry/profiling-node": "^0.0.12",
+    "@sentry/tracing": "^7.21.1",
     "@supabase/supabase-js": "^2.1.1",
     "@twurple/api": "^5.2.7",
     "@twurple/auth": "^5.2.7",

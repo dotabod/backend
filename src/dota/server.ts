@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events'
 import http from 'http'
 
+import * as Sentry from '@sentry/node'
 import bodyParser from 'body-parser'
 import express, { NextFunction, Request, Response } from 'express'
 import { Server, Socket } from 'socket.io'
@@ -168,6 +169,9 @@ class D2GSI {
       },
     })
 
+    // The request handler must be the first middleware on the app
+    app.use(Sentry.Handlers.requestHandler())
+
     app.use(bodyParser.json())
     app.use(bodyParser.urlencoded({ extended: true }))
 
@@ -181,15 +185,22 @@ class D2GSI {
       newData,
     )
 
-    httpServer.listen(process.env.MAIN_PORT ?? 3000, () => {
-      console.log('[GSI]', `Dota 2 GSI listening on *:${process.env.MAIN_PORT ?? 3000}`)
-    })
-
     // No main page
     app.get('/', (req: Request, res: Response) => {
       res.status(401).json({
         error: new Error('Invalid request!'),
       })
+    })
+
+    app.get('/debug-sentry', function mainHandler(req, res) {
+      throw new Error('My first Sentry error!')
+    })
+
+    // The error handler must be before any other error middleware and after all controllers
+    app.use(Sentry.Handlers.errorHandler())
+
+    httpServer.listen(process.env.MAIN_PORT ?? 3000, () => {
+      console.log('[GSI]', `Dota 2 GSI listening on *:${process.env.MAIN_PORT ?? 3000}`)
     })
 
     // IO auth & client setup so we can send this socket messages
