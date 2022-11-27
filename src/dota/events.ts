@@ -75,15 +75,22 @@ export class setupMainEvents {
     this.currentHero = null
     this.heroSlot = null
     this.events = []
-    this.roshanKilled = undefined
-    this.aegisPickedUp = undefined
     this.passiveMidas = { counter: 0 }
 
     // Bet stuff should be closed by endBets()
+    // This should mean an entire match is over
     if (resetBets) {
       this.endingBets = false
       this.betExists = null
       this.betMyTeam = null
+
+      this.roshanKilled = undefined
+      this.aegisPickedUp = undefined
+
+      if (this.getSockets().length) {
+        server.io.to(this.getSockets()).emit('aegis-picked-up', {})
+        server.io.to(this.getSockets()).emit('roshan-killed', {})
+      }
     }
   }
 
@@ -113,7 +120,9 @@ export class setupMainEvents {
       }
 
       this.roshanKilled = res
-      server.io.to(this.getSockets()).emit('roshan-killed', res)
+      if (this.getSockets().length) {
+        server.io.to(this.getSockets()).emit('roshan-killed', res)
+      }
       console.log('[ROSHAN]', 'Roshan killed, setting timer', res, { name: this.getChannel() })
     })
 
@@ -135,7 +144,9 @@ export class setupMainEvents {
 
       this.aegisPickedUp = res
 
-      server.io.to(this.getSockets()).emit('aegis-picked-up', res)
+      if (this.getSockets().length) {
+        server.io.to(this.getSockets()).emit('aegis-picked-up', res)
+      }
       console.log('[ROSHAN]', 'Aegis picked up, setting timer', res, { name: this.getChannel() })
     })
 
@@ -292,10 +303,12 @@ export class setupMainEvents {
     // This updates WL for the unranked matches
     // TODO: Make a new event for 'update-wl'
     if (!ranked) {
-      server.io.to(this.getSockets()).emit('update-medal', {
-        mmr: this.getMmr(),
-        steam32Id: this.getSteam32(),
-      })
+      if (this.getSockets().length) {
+        server.io.to(this.getSockets()).emit('update-medal', {
+          mmr: this.getMmr(),
+          steam32Id: this.getSteam32(),
+        })
+      }
       return
     }
 
