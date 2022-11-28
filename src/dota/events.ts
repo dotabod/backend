@@ -277,7 +277,7 @@ export class setupMainEvents {
   // console.log("[SETUP]", { sockets: this.getSockets() })
   emitBadgeUpdate() {
     if (this.getSockets().length) {
-      console.log('[STEAM32ID]', 'Updated player ID, emitting badge overlay update', {
+      console.log('[STEAM32ID]', 'Emitting badge overlay update', {
         name: this.getChannel(),
       })
 
@@ -296,10 +296,11 @@ export class setupMainEvents {
     if (!steam32Id) return
 
     // User already has a steam32Id and its saved to the new table
-    if (
-      this.getSteam32() === steam32Id &&
-      this.client.SteamAccount.find((act) => act.steam32Id === this.getSteam32())
-    ) {
+    const foundAct = this.client.SteamAccount.find((act) => act.steam32Id === this.getSteam32())
+    if (this.getSteam32() === steam32Id && foundAct) {
+      if (this.getMmr() !== foundAct.mmr) {
+        this.client.mmr = foundAct.mmr
+      }
       return
     }
 
@@ -649,6 +650,8 @@ export class setupMainEvents {
             type: blocker.type,
             team: this.gsi.gamestate?.player?.team_name,
           })
+
+          this.emitBadgeUpdate()
 
           if (this.aegisPickedUp?.expireDate) {
             server.io.to(this.getSockets()).emit('aegis-picked-up', this.aegisPickedUp)

@@ -10,6 +10,7 @@ import { getRankDescription } from '../../dota/lib/ranks'
 import { updateMmr } from '../../dota/lib/updateMmr'
 import axios from '../../utils/axios'
 import { getChatClient } from '../lib/getChatClient'
+import { CooldownManager } from './CooldownManager'
 
 /*
 Commands that are fun for future:
@@ -18,27 +19,6 @@ Commands that are fun for future:
 
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
-
-const CooldownManager = {
-  // 30 seconds
-  cooldownTime: 15 * 1000,
-  store: new Map<string, number>(),
-
-  canUse: function (channel: string, commandName: string) {
-    // Check if the last time you've used the command + 30 seconds has passed
-    // (because the value is less then the current time)
-    if (!this.store.has(`${channel}.${commandName}`)) return true
-
-    return (
-      (this.store.get(`${channel}.${commandName}`) ?? Date.now()) + this.cooldownTime < Date.now()
-    )
-  },
-
-  touch: function (channel: string, commandName: string) {
-    // Store the current timestamp in the store based on the current commandName
-    this.store.set(`${channel}.${commandName}`, Date.now())
-  },
-}
 
 const plebMode = new Set()
 const modMode = new Set()
@@ -51,11 +31,11 @@ const commands = [
   '!apm',
   '!wl',
   '!dotabod',
-  '!help',
   '!pleb',
   '!commands',
   '!modsonly',
   '!refresh',
+  '!steam',
   '!mmr=',
 ]
 chatClient.onMessage(function (channel, user, text, msg) {
@@ -112,7 +92,6 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       break
     case '!dotabod':
-    case '!help':
       void chatClient.say(
         channel,
         `I'm an open source bot made by @techleed. More info: https://dotabod.com`,
@@ -320,7 +299,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       // TODO: whispers do not work via chatClient, have to use helix api
       // helix api rate limits you to 40 unique whispers a day though ?? so just not gonna do it
-      void chatClient.whisper(
+      void chatClient.say(
         msg.userInfo.userName,
         `${channel} steam32id: https://steamid.xyz/${
           connectedSocketClient?.steam32Id ?? ' Unknown'

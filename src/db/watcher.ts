@@ -26,21 +26,21 @@ channel
     const oldObj = payload.old as User
     const client = findUser(newObj.id)
     if (client && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
-      client.mmr = newObj.mmr
-      const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === client.steam32Id)
-      if (currentSteam >= 0) {
-        client.SteamAccount[currentSteam].mmr = Number(newObj.mmr)
+      // dont overwrite with 0 because we use this variable to track currently logged in mmr
+      if (newObj.mmr !== 0) {
+        client.mmr = newObj.mmr
+        console.log('[WATCHER] Updated cached mmr for', newObj.name, newObj.mmr)
       }
       if (client.sockets.length) {
-        console.log('[MMR] Sending mmr to socket')
-        void chatClient.say(client.name, `Updated MMR to ${client.mmr}`)
+        if (newObj.mmr !== 0) {
+          console.log('[WATCHER MMR] Sending mmr to socket')
+          void chatClient.say(client.name, `Updated MMR to ${client.mmr}`)
 
-        server.io
-          .to(client.sockets)
-          .emit('update-medal', { mmr: client.mmr, steam32Id: client.steam32Id })
+          server.io
+            .to(client.sockets)
+            .emit('update-medal', { mmr: client.mmr, steam32Id: client.steam32Id })
+        }
       }
-
-      console.log('Updated cached mmr for', newObj.name, newObj.mmr)
     }
   })
   .on(

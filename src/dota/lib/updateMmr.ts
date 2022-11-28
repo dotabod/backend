@@ -6,26 +6,30 @@ import { chatClient } from '../../twitch/commands'
 import { findUserByName } from './connectedStreamers'
 
 export function updateMmr(
-  mmr: string | number,
+  newMmr: string | number,
   steam32Id: number,
   channel: string,
   channelId?: string | null,
 ) {
-  if (!mmr || !Number(mmr) || Number(mmr) > 20000) {
-    console.log('Invalid mmr', mmr, steam32Id)
-
-    return
+  let mmr = newMmr
+  if (!mmr || !Number(mmr) || Number(mmr) > 20000 || mmr < 0) {
+    console.log('Invalid mmr, forcing to 0', { channel, mmr })
+    mmr = 0
   }
 
   if (!steam32Id) {
     if (!channelId) {
-      console.log('[MMR]', 'No channel id provided, will not update user table', { channel })
+      console.log('[UPDATE MMR]', 'No channel id provided, will not update user table', { channel })
       return
     }
 
-    console.log('[MMR]', 'No steam32Id provided, will update the users table until they get one', {
-      channel,
-    })
+    console.log(
+      '[UPDATE MMR]',
+      'No steam32Id provided, will update the users table until they get one',
+      {
+        channel,
+      },
+    )
 
     // Have to lookup by channel id because name is case sensitive in the db
     // Not sure if twitch returns channel names or display names
@@ -46,7 +50,7 @@ export function updateMmr(
         },
       })
       .catch((e) => {
-        console.log('[MMR]', 'Error updating user table', { channel, e })
+        console.log('[UPDATE MMR]', 'Error updating user table', { channel, e })
         void chatClient.say(channel, `Error updating mmr for ${channel}`)
       })
 
@@ -79,10 +83,10 @@ export function updateMmr(
         }
 
         if (client.sockets.length) {
-          console.log('[MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
+          console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
           server.io.to(client.sockets).emit('update-medal', { mmr, steam32Id: client.steam32Id })
         } else {
-          console.log('[MMR] No sockets found to send update to', channel)
+          console.log('[UPDATE MMR] No sockets found to send update to', channel)
         }
       }
     })
