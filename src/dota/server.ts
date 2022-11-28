@@ -133,7 +133,7 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
     .then((user) => {
       if (user?.id) {
         // sockets[] to be filled in by socket connection, so will steamid
-        socketClients.push({ ...user, token, sockets: [], steam32Id: 0, mmr: 0 })
+        socketClients.push({ ...user, token, sockets: [] })
         next()
         return
       }

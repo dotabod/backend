@@ -1,15 +1,54 @@
-import { toUserName } from '@twurple/chat/lib'
+import { toUserName } from '@twurple/chat'
 
 import { server } from '..'
 import { prisma } from '../../db/prisma'
 import { chatClient } from '../../twitch/commands'
 import { findUserByName } from './connectedStreamers'
 
-export function updateMmr(mmr: string | number, steam32Id: number, channel: string) {
-  if (!steam32Id) return
-
+export function updateMmr(
+  mmr: string | number,
+  steam32Id: number,
+  channel: string,
+  channelId?: string | null,
+) {
   if (!mmr || !Number(mmr) || Number(mmr) > 20000) {
     console.log('Invalid mmr', mmr, steam32Id)
+
+    return
+  }
+
+  if (!steam32Id) {
+    if (!channelId) {
+      console.log('[MMR]', 'No channel id provided, will not update user table', { channel })
+      return
+    }
+
+    console.log('[MMR]', 'No steam32Id provided, will update the users table until they get one', {
+      channel,
+    })
+
+    // Have to lookup by channel id because name is case sensitive in the db
+    // Not sure if twitch returns channel names or display names
+    prisma.account
+      .update({
+        where: {
+          provider_providerAccountId: {
+            provider: 'twitch',
+            providerAccountId: channelId,
+          },
+        },
+        data: {
+          User: {
+            update: {
+              mmr: Number(mmr),
+            },
+          },
+        },
+      })
+      .catch((e) => {
+        console.log('[MMR]', 'Error updating user table', { channel, e })
+        void chatClient.say(channel, `Error updating mmr for ${channel}`)
+      })
 
     return
   }
@@ -17,6 +56,11 @@ export function updateMmr(mmr: string | number, steam32Id: number, channel: stri
   prisma.steamAccount
     .update({
       data: {
+        user: {
+          update: {
+            mmr: 0,
+          },
+        },
         mmr: Number(mmr),
       },
       where: {
@@ -29,6 +73,10 @@ export function updateMmr(mmr: string | number, steam32Id: number, channel: stri
 
       if (client) {
         client.mmr = Number(mmr)
+        const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === steam32Id)
+        if (currentSteam >= 0) {
+          client.SteamAccount[currentSteam].mmr = Number(mmr)
+        }
 
         if (client.sockets.length) {
           console.log('[MMR] Sending mmr to socket', client.mmr, client.sockets, channel)

@@ -20,6 +20,8 @@ export default async function getDBUser(token: string) {
         },
         id: true,
         name: true,
+        mmr: true,
+        steam32Id: true,
       },
       where: {
         id: token,

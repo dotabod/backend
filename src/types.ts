@@ -5,7 +5,7 @@ export interface SocketClient {
   gsi?: GSIClient
   name: string
   token: string
-  steam32Id: number // currently connected steam id
+  steam32Id: number | null // currently connected steam id
   mmr: number // currently connected mmr
   Account: {
     refresh_token: string

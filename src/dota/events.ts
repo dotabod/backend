@@ -96,6 +96,8 @@ export class setupMainEvents {
 
   watchEvents() {
     this.gsi.on(DotaEventTypes.RoshanKilled, (event: DotaEvent) => {
+      if (!isPlayingMatch(this.gsi)) return
+
       // doing map gametime - event gametime in case the user reconnects to a match,
       // and the gametime is over the event gametime
       const gameTimeDiff = (this.gsi.gamestate?.map?.game_time ?? event.game_time) - event.game_time
@@ -129,6 +131,8 @@ export class setupMainEvents {
     })
 
     this.gsi.on(DotaEventTypes.AegisPickedUp, (event: DotaEvent) => {
+      if (!isPlayingMatch(this.gsi)) return
+
       const gameTimeDiff = (this.gsi.gamestate?.map?.game_time ?? event.game_time) - event.game_time
 
       // expire for aegis in 5 minutes
@@ -157,6 +161,9 @@ export class setupMainEvents {
     this.gsi.on('newdata', (data: Packet) => {
       // In case they connect to a game in progress and we missed the start event
       this.setupOBSBlockers(data.map?.game_state ?? '')
+
+      // New users who dont have a steamaccount saved yet
+      this.updateSteam32Id()
 
       if (!isPlayingMatch(this.gsi)) return
 
@@ -206,13 +213,10 @@ export class setupMainEvents {
       }
     })
 
-    // TODO: This isn't getting called
-    this.gsi.on('events:0', (event: DotaEvent) => {
-      console.log('[EVENT DATA]', event)
-    })
-
     // Can use this to get hero slot when the hero first spawns at match start
     this.gsi.on('items:teleport0:purchaser', (purchaser: number) => {
+      if (!isPlayingMatch(this.gsi)) return
+
       // Can't just !this.heroSlot because it can be 0
       if (this.heroSlot === null) {
         console.log('[SLOT]', 'Found hero slot at', purchaser, {
@@ -271,43 +275,73 @@ export class setupMainEvents {
 
   // This array of socket ids is who we want to emit events to:
   // console.log("[SETUP]", { sockets: this.getSockets() })
+  emitBadgeUpdate() {
+    if (this.getSockets().length) {
+      console.log('[STEAM32ID]', 'Updated player ID, emitting badge overlay update', {
+        name: this.getChannel(),
+      })
+
+      server.io
+        .to(this.getSockets())
+        .emit('update-medal', { mmr: this.getMmr(), steam32Id: this.getSteam32() })
+    }
+  }
 
   // Make sure user has a steam32Id saved in the database
   // This runs once per every match start
   updateSteam32Id() {
-    const steam32Id = steamID64toSteamID32(this.gsi.gamestate?.player?.steamid ?? '')
+    if (!this.gsi.gamestate?.player?.steamid) return
+
+    const steam32Id = steamID64toSteamID32(this.gsi.gamestate.player.steamid)
     if (!steam32Id) return
 
-    // User already has a steam32Id but they logged into a new account (smurfs vs mains)
-    if (this.getSteam32() !== steam32Id) return
+    // User already has a steam32Id and its saved to the new table
+    if (
+      this.getSteam32() === steam32Id &&
+      this.client.SteamAccount.find((act) => act.steam32Id === this.getSteam32())
+    ) {
+      return
+    }
 
+    console.log('[STEAM32ID]', 'Updating steam32Id', { name: this.getChannel() })
+
+    // Logged into a new account (smurfs vs mains)
     this.client.steam32Id = steam32Id
 
-    prisma.steamAccount
-      .upsert({
-        where: {
-          steam32Id: steam32Id,
-        },
-        update: {
-          steam32Id,
-        },
-        create: {
-          steam32Id,
-          userId: this.getToken(),
-          name: this.gsi.gamestate?.player?.name,
-        },
-      })
-      .then(() => {
-        if (this.getSockets().length) {
-          console.log('[STEAM32ID]', 'Updated player ID, emitting badge overlay update', {
-            name: this.getChannel(),
-          })
+    // Default to the mmr from `users` table for this brand new steam account
+    const mmr = this.client.SteamAccount.length ? 0 : this.getMmr()
 
-          server.io.to(this.getSockets()).emit('update-medal', { mmr: this.getMmr(), steam32Id })
+    // Get mmr from database for this steamid
+    prisma.steamAccount
+      .findFirst({ where: { steam32Id } })
+      .then((res) => {
+        // not found
+        if (!res?.id) {
+          prisma.steamAccount
+            .create({
+              data: {
+                mmr,
+                steam32Id,
+                userId: this.getToken(),
+                name: this.gsi.gamestate?.player?.name,
+              },
+            })
+            .then((res) => {
+              this.client.mmr = mmr
+              this.client.SteamAccount.push({
+                name: res.name,
+                mmr,
+                steam32Id: res.steam32Id,
+              })
+              this.emitBadgeUpdate()
+            })
+            .catch((e: any) => {
+              console.error('[STEAM32ID]', 'Error updating steam32Id', e)
+            })
         }
       })
-      .catch((e: any) => {
-        console.error('[STEAM32ID]', 'Error updating steam32Id', e)
+      .catch((e) => {
+        console.log('[DATABASE ERROR]', e)
       })
   }
 
@@ -315,17 +349,14 @@ export class setupMainEvents {
     // This updates WL for the unranked matches
     // TODO: Make a new event for 'update-wl'
     if (!ranked) {
-      if (this.getSockets().length) {
-        server.io.to(this.getSockets()).emit('update-medal', {
-          mmr: this.getMmr(),
-          steam32Id: this.getSteam32(),
-        })
-      }
+      this.emitBadgeUpdate()
       return
     }
 
     const newMMR = this.getMmr() + (increase ? 30 : -30)
-    updateMmr(newMMR, this.client.steam32Id, this.client.name)
+    if (this.client.steam32Id) {
+      updateMmr(newMMR, this.client.steam32Id, this.client.name)
+    }
   }
 
   handleMMR(increase: boolean, matchId: string) {
@@ -380,12 +411,12 @@ export class setupMainEvents {
     // We at least want the hero name so it can go in the twitch bet title
     if (!this.gsi.gamestate.hero?.name || !this.gsi.gamestate.hero.name.length) return
 
-    // It's not a live game, so we don't want to open bets nor save it to DB
-    if (!this.gsi.gamestate.map.matchid || this.gsi.gamestate.map.matchid === '0') return
-
     const channel = this.getChannel()
     const isOpenBetGameCondition =
       this.gsi.gamestate.map.clock_time < 20 && this.gsi.gamestate.map.name === 'start'
+
+    // It's not a live game, so we don't want to open bets nor save it to DB
+    if (!this.gsi.gamestate.map.matchid || this.gsi.gamestate.map.matchid === '0') return
 
     // Check if this bet for this match id already exists, dont continue if it does
     prisma.bet
@@ -410,10 +441,14 @@ export class setupMainEvents {
             return
           }
 
+          // Doing this here instead of on(player:steamid)
+          // it wasnt always called for some streamers when connecting to match
+          // the user may have a steam account saved, but not this one for this match
+          // so add to their list of steam accounts
+          this.updateSteam32Id()
+
           this.betExists = this.gsi.gamestate?.map?.matchid ?? null
           this.betMyTeam = this.gsi.gamestate?.player?.team_name ?? null
-
-          this.updateSteam32Id()
 
           prisma.bet
             .create({
@@ -485,6 +520,8 @@ export class setupMainEvents {
         })
         .catch((e: any) => {
           // its not over? just give up checking after this long
+          // TODO: if its a close client & open client, mayb dont pass true here
+          // confirm this scenario
           this.newMatchNewVars(true)
         })
 
@@ -578,6 +615,8 @@ export class setupMainEvents {
 
       return
     }
+
+    // TODO: if the game is matchid 0 also dont show these? ie bot match. hero demo are type 'arcde'
 
     // Edge case:
     // Send strat screen if the player has picked their hero and it's locked in

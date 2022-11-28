@@ -1,3 +1,4 @@
+import { SteamAccount, User } from '@prisma/client'
 import { toUserName } from '@twurple/chat'
 
 import { getSteamByTwitchId } from '../../db/getDBUser'
@@ -22,7 +23,7 @@ export const chatClient = await getChatClient()
 
 const channel = supabase.channel('db-changes')
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV === 'production') {
   channel.on(
     'postgres_changes',
     { event: 'INSERT', schema: 'public', table: 'users' },
@@ -36,28 +37,75 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // When a user updates MMR from dashboard and they have client open
-channel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
-  const client = findUser(payload.new.id)
-  if (payload.old.mmr !== payload.new.mmr && client && client.mmr !== payload.new.mmr) {
-    client.mmr = payload.new.mmr
-    if (client.sockets.length) {
-      console.log('[MMR] Sending mmr to socket')
-      void chatClient.say(client.name, `Updated MMR to ${client.mmr}`)
+channel
+  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
+    const newObj = payload.new as User
+    const oldObj = payload.old as User
+    const client = findUser(newObj.id)
+    if (client && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
+      client.mmr = newObj.mmr
+      const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === client.steam32Id)
+      if (currentSteam >= 0) {
+        client.SteamAccount[currentSteam].mmr = Number(newObj.mmr)
+      }
+      if (client.sockets.length) {
+        console.log('[MMR] Sending mmr to socket')
+        void chatClient.say(client.name, `Updated MMR to ${client.mmr}`)
 
-      server.io
-        .to(client.sockets)
-        .emit('update-medal', { mmr: client.mmr, steam32Id: client.steam32Id })
+        server.io
+          .to(client.sockets)
+          .emit('update-medal', { mmr: client.mmr, steam32Id: client.steam32Id })
+      }
+
+      console.log('Updated cached mmr for', newObj.name, newObj.mmr)
     }
+  })
+  .on(
+    'postgres_changes',
+    { event: 'UPDATE', schema: 'public', table: 'steam_accounts' },
+    (payload) => {
+      const newObj = payload.new as SteamAccount
+      const client = findUser(newObj.userId)
 
-    console.log('Updated cached mmr for', payload.new.name, payload.new.mmr)
-  }
-})
+      // Just here to update local memory
+      if (!client) return
 
-channel.subscribe((status) => {
-  if (status === 'SUBSCRIBED') {
-    console.log('[SUPABASE]', 'Ready to receive database changes!')
-  }
-})
+      const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === newObj.steam32Id)
+      if (currentSteam >= 0) {
+        // update from dashboard
+        if (client.SteamAccount[currentSteam].mmr !== newObj.mmr) {
+          client.SteamAccount[currentSteam].mmr = newObj.mmr
+
+          if (client.steam32Id === newObj.steam32Id) {
+            void chatClient.say(client.name, `Updated MMR to ${newObj.mmr}`)
+
+            client.mmr = newObj.mmr
+            server.io
+              .to(client.sockets)
+              .emit('update-medal', { mmr: newObj.mmr, steam32Id: client.steam32Id })
+          }
+
+          return
+        }
+      }
+
+      // TODO: Supabase only sends the ID of the row, not steam32id
+      // Would only need this for freeing up memory i guess; not important
+      // if (payload.eventType === 'DELETE') {
+      //   // delete steam account
+      //   console.log(payload)
+
+      //   client.SteamAccount.splice(currentSteam, 1)
+      //   return
+      // }
+      return
+    },
+  )
+  .subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log('[SUPABASE]', 'Ready to receive database changes!')
+    }
+  })
 
 const CooldownManager = {
   // 30 seconds
@@ -326,36 +374,30 @@ chatClient.onMessage(function (channel, user, text, msg) {
             const steamAccounts = res?.SteamAccount ?? []
 
             if (steamAccounts.length === 0) {
-              void chatClient.say(
-                channel,
-                'No steam account linked to channel. Play one match to auto-link',
-              )
+              // Sends a `0` steam32id so we can save it to the db,
+              // but server will update with steam later when they join a match
+              updateMmr(mmr, Number(steam32Id), channel, msg.channelId)
             } else if (steamAccounts.length === 1) {
-              updateMmr(mmr, steamAccounts[0].steam32Id, channel)
+              updateMmr(mmr, steamAccounts[0].steam32Id, channel, msg.channelId)
             } else {
               if (!steam32Id) {
                 void chatClient.say(
                   channel,
-                  `Multiple steam accounts linked to channel. Please specify steam32Id. !mmr= ${mmr} steam32Id-goes-here`,
+                  `Multiple steam accounts linked to channel. Please specify steam32Id. !mmr= ${mmr} id_goes_here`,
                 )
               }
             }
           })
           .catch((e) => {
-            void chatClient.say(
-              channel,
-              'No steam account linked to channel. Play one match to auto-link',
-            )
+            // Sends a `0` steam32id so we can save it to the `user` db, but update `steamaccount` later when they join a match
+            updateMmr(mmr, Number(steam32Id), channel, msg.channelId)
           })
       } else if (!Number(steam32Id)) {
-        void chatClient.say(
-          channel,
-          `Invalid steam32Id specified. !mmr= ${mmr} steam32Id-goes-here`,
-        )
+        void chatClient.say(channel, `Invalid steam32Id specified. !mmr= ${mmr} id_goes_here`)
         break
+      } else {
+        updateMmr(mmr, Number(steam32Id), channel, msg.channelId)
       }
-
-      updateMmr(mmr, Number(steam32Id), channel)
 
       break
     }
@@ -380,21 +422,48 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       // If connected, we can just respond with the cached MMR
       if (connectedSocketClient) {
-        getRankDescription(connectedSocketClient.mmr, connectedSocketClient.steam32Id ?? undefined)
-          .then((description) => {
-            // console.log('[MMR] Responding with cached MMR', description, channel)
+        // Didn't have a new account made yet on the new steamaccount table
+        if (!connectedSocketClient.SteamAccount.length) {
+          if (connectedSocketClient.mmr === 0) {
+            void chatClient.say(
+              channel,
+              `I don't know ${toUserName(
+                channel,
+              )}'s MMR yet. Mods have to !mmr= 1234 or set it in dotabod.com/dashboard/features`,
+            )
+            break
+          }
 
-            void chatClient.say(channel, description)
-          })
-          .catch((e) => {
-            console.log('[MMR] Failed to get rank description', e, channel)
-          })
+          getRankDescription(
+            connectedSocketClient.mmr,
+            connectedSocketClient.steam32Id ?? undefined,
+          )
+            .then((description) => {
+              void chatClient.say(channel, description)
+            })
+            .catch((e) => {
+              console.log('[MMR] Failed to get rank description', e, channel)
+            })
+          break
+        }
+
+        connectedSocketClient.SteamAccount.forEach((act) => {
+          getRankDescription(act.mmr, act.steam32Id)
+            .then((description) => {
+              void chatClient.say(channel, description)
+            })
+            .catch((e) => {
+              console.log('[MMR] Failed to get rank description', e, channel)
+            })
+        })
+
         break
       }
 
       console.log('[MMR] Fetching MMR from database', channel)
 
       // Do a DB lookup if the streamer is offline from OBS or Dota
+      // TODO: Multiple steam accounts? Find first may only return first one
       prisma.user
         .findFirst({
           select: {
@@ -424,7 +493,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
             return
           }
           res.SteamAccount.forEach((steamA) => {
-            getRankDescription(steamA.mmr, steamA.steam32Id ?? undefined)
+            getRankDescription(steamA.mmr, steamA.steam32Id)
               .then((description) => {
                 void chatClient.say(channel, description)
               })
