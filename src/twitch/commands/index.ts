@@ -95,6 +95,7 @@ const commands = [
   '!commands',
   '!modsonly',
   '!refresh',
+  '!steam',
   '!mmr=',
 ]
 chatClient.onMessage(function (channel, user, text, msg) {
@@ -163,6 +164,8 @@ chatClient.onMessage(function (channel, user, text, msg) {
         break
       }
 
+      console.log('[WL] Checking WL for steam32Id', connectedSocketClient.steam32Id)
+
       const promises = [
         axios(
           `https://api.opendota.com/api/players/${connectedSocketClient.steam32Id}/wl/?date=0.5&lobby_type=0`,
@@ -184,6 +187,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
           const msg = []
           if (hasRanked) msg.push(rankedMsg)
           if (hasUnranked) msg.push(unrankedMsg)
+          if (!hasRanked && !hasUnranked) msg.push('0 W - 0 L')
           void chatClient.say(channel, msg.join(' | '))
         })
         .catch((e) => {
@@ -310,6 +314,18 @@ chatClient.onMessage(function (channel, user, text, msg) {
       if (!msg.channelId) break
 
       updateMmr(args[1], msg.channelId, channel)
+
+      break
+    }
+    case '!steam': {
+      // Only mod or owner
+      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
+      if (!msg.channelId) break
+
+      void chatClient.whisper(
+        msg.userInfo.userName,
+        `${channel} steam32id: https://steamid.xyz/${connectedSocketClient?.steam32Id ?? ' Unknown'}`,
+      )
 
       break
     }
