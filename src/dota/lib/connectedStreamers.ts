@@ -12,7 +12,7 @@ function findUser(token: string) {
 export function findUserByTwitchId(twitchId: string) {
   if (!twitchId) return null
 
-  const user = socketClients.findIndex((client) => client.account.providerAccountId === twitchId)
+  const user = socketClients.findIndex((client) => client.Account.providerAccountId === twitchId)
   if (user === -1) return null
 
   return socketClients[user]

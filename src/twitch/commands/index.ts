@@ -1,5 +1,6 @@
 import { toUserName } from '@twurple/chat'
 
+import { getSteamByTwitchId } from '../../db/getDBUser'
 import { prisma } from '../../db/prisma'
 import supabase from '../../db/supabase'
 import { server } from '../../dota'
@@ -95,7 +96,6 @@ const commands = [
   '!commands',
   '!modsonly',
   '!refresh',
-  '!steam',
   '!mmr=',
 ]
 chatClient.onMessage(function (channel, user, text, msg) {
@@ -313,7 +313,49 @@ chatClient.onMessage(function (channel, user, text, msg) {
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
       if (!msg.channelId) break
 
-      updateMmr(args[1], msg.channelId, channel)
+      const [, mmr, steam32Id] = args
+
+      if (!mmr || !Number(mmr) || Number(mmr) > 20000 || Number(mmr) < 0) {
+        void chatClient.say(channel, 'Invalid MMR specified')
+        break
+      }
+
+      if (!steam32Id) {
+        getSteamByTwitchId(msg.channelId)
+          .then((res) => {
+            const steamAccounts = res?.SteamAccount ?? []
+
+            if (steamAccounts.length === 0) {
+              void chatClient.say(
+                channel,
+                'No steam account linked to channel. Play one match to auto-link',
+              )
+            } else if (steamAccounts.length === 1) {
+              updateMmr(mmr, steamAccounts[0].steam32Id, channel)
+            } else {
+              if (!steam32Id) {
+                void chatClient.say(
+                  channel,
+                  `Multiple steam accounts linked to channel. Please specify steam32Id. !mmr= ${mmr} steam32Id-goes-here`,
+                )
+              }
+            }
+          })
+          .catch((e) => {
+            void chatClient.say(
+              channel,
+              'No steam account linked to channel. Play one match to auto-link',
+            )
+          })
+      } else if (!Number(steam32Id)) {
+        void chatClient.say(
+          channel,
+          `Invalid steam32Id specified. !mmr= ${mmr} steam32Id-goes-here`,
+        )
+        break
+      }
+
+      updateMmr(mmr, Number(steam32Id), channel)
 
       break
     }
@@ -322,9 +364,13 @@ chatClient.onMessage(function (channel, user, text, msg) {
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
       if (!msg.channelId) break
 
+      // TODO: whispers do not work via chatClient, have to use helix api
+      // helix api rate limits you to 40 unique whispers a day though ?? so just not gonna do it
       void chatClient.whisper(
         msg.userInfo.userName,
-        `${channel} steam32id: https://steamid.xyz/${connectedSocketClient?.steam32Id ?? ' Unknown'}`,
+        `${channel} steam32id: https://steamid.xyz/${
+          connectedSocketClient?.steam32Id ?? ' Unknown'
+        }`,
       )
 
       break
@@ -349,32 +395,43 @@ chatClient.onMessage(function (channel, user, text, msg) {
       console.log('[MMR] Fetching MMR from database', channel)
 
       // Do a DB lookup if the streamer is offline from OBS or Dota
-      prisma.account
+      prisma.user
         .findFirst({
           select: {
-            user: {
+            SteamAccount: {
               select: {
                 mmr: true,
                 steam32Id: true,
+                name: true,
               },
             },
           },
           where: {
-            providerAccountId: msg.channelId,
+            Account: {
+              providerAccountId: msg.channelId,
+            },
           },
         })
-        .then((account) => {
-          if (!account?.user.mmr) {
-            console.log('[MMR] No MMR found in database', account, channel)
+        .then((res) => {
+          if (!res?.SteamAccount[0]?.mmr) {
+            void chatClient.say(
+              channel,
+              `I don't know ${toUserName(
+                channel,
+              )}'s MMR yet. Mods have to !mmr= 1234 or set it in dotabod.com/dashboard/features`,
+            )
+            console.log('[MMR] No MMR found in database', res, channel)
             return
           }
-          getRankDescription(account.user.mmr, account.user.steam32Id ?? undefined)
-            .then((description) => {
-              void chatClient.say(channel, description)
-            })
-            .catch((e) => {
-              console.log('[MMR] Failed to get rank description', e, channel)
-            })
+          res.SteamAccount.forEach((steamA) => {
+            getRankDescription(steamA.mmr, steamA.steam32Id ?? undefined)
+              .then((description) => {
+                void chatClient.say(channel, description)
+              })
+              .catch((e) => {
+                console.log('[MMR] Failed to get rank description', e, channel)
+              })
+          })
         })
         .catch((e) => {
           console.log('[MMR] Error fetching MMR from database', e, channel)

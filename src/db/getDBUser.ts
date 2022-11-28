@@ -1,17 +1,42 @@
 import { prisma } from './prisma'
 
 export default async function getDBUser(token: string) {
-  // Finding `account` because `user` is required there
-  // But if we find `user`, `account` is optional? Idk why, something schema maybe
-  const account = await prisma.account
+  return await prisma.user
     .findFirst({
       select: {
-        refresh_token: true,
-        access_token: true,
-        providerAccountId: true,
-        user: {
+        Account: {
           select: {
-            id: true,
+            refresh_token: true,
+            access_token: true,
+            providerAccountId: true,
+          },
+        },
+        SteamAccount: {
+          select: {
+            mmr: true,
+            steam32Id: true,
+            name: true,
+          },
+        },
+        id: true,
+        name: true,
+      },
+      where: {
+        id: token,
+      },
+    })
+    .catch((e) => {
+      console.log('[USER]', 'Error checking auth', { token, e })
+      return null
+    })
+}
+
+export async function getSteamByTwitchId(twitchId: string) {
+  return await prisma.user
+    .findFirst({
+      select: {
+        SteamAccount: {
+          select: {
             mmr: true,
             steam32Id: true,
             name: true,
@@ -19,24 +44,13 @@ export default async function getDBUser(token: string) {
         },
       },
       where: {
-        user: {
-          id: token,
+        Account: {
+          providerAccountId: twitchId,
         },
       },
     })
     .catch((e) => {
-      console.log('[USER]', 'Error checking auth', { token, e })
+      console.log('[USER]', 'Error checking auth', { twitchId, e })
       return null
     })
-
-  return !account
-    ? null
-    : {
-        ...account.user,
-        account: {
-          refresh_token: account.refresh_token,
-          access_token: account.access_token,
-          providerAccountId: account.providerAccountId,
-        },
-      }
 }

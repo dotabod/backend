@@ -1,36 +1,31 @@
+import { toUserName } from '@twurple/chat/lib'
+
 import { server } from '..'
 import { prisma } from '../../db/prisma'
 import { chatClient } from '../../twitch/commands'
-import { findUserByTwitchId } from './connectedStreamers'
+import { findUserByName } from './connectedStreamers'
 
-export function updateMmr(mmr: string | number, channelId: string, channel: string) {
-  if (!channel) return
+export function updateMmr(mmr: string | number, steam32Id: number, channel: string) {
+  if (!steam32Id) return
 
   if (!mmr || !Number(mmr) || Number(mmr) > 20000) {
-    console.log('Invalid mmr', mmr, channel)
+    console.log('Invalid mmr', mmr, steam32Id)
 
     return
   }
 
-  prisma.account
+  prisma.steamAccount
     .update({
       data: {
-        user: {
-          update: {
-            mmr: Number(mmr),
-          },
-        },
+        mmr: Number(mmr),
       },
       where: {
-        provider_providerAccountId: {
-          provider: 'twitch',
-          providerAccountId: channelId,
-        },
+        steam32Id,
       },
     })
     .then(() => {
       void chatClient.say(channel, `Updated MMR to ${mmr}`)
-      const client = findUserByTwitchId(channelId)
+      const client = findUserByName(toUserName(channel))
 
       if (client) {
         client.mmr = Number(mmr)

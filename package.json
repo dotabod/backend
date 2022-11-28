@@ -13,6 +13,7 @@
     "pull": "git pull && systemctl restart nodeapp",
     "log": "journalctl -xefu nodeapp",
     "postinstall": "prisma generate",
+    "type-check": "tsc --noEmit",
     "lint": "eslint --ext .ts ./src",
     "lint:fix": "npm run lint -- --fix"
   },
