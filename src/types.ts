@@ -17,6 +17,10 @@ export interface SocketClient {
     name: string | null
     steam32Id: number
   }[]
+  settings: {
+    key: string
+    value: any
+  }[]
   sockets: string[]
 }
 interface Provider {

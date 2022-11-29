@@ -4,6 +4,9 @@ export const CooldownManager = {
   store: new Map<string, number>(),
 
   canUse: function (channel: string, commandName: string) {
+    // no cd in dev
+    if (process.env.NODE_ENV === 'development') return true
+
     // Check if the last time you've used the command + 30 seconds has passed
     // (because the value is less then the current time)
     if (!this.store.has(`${channel}.${commandName}`)) return true

@@ -1,4 +1,4 @@
-import { SteamAccount, User } from '@prisma/client'
+import { Setting, SteamAccount, User } from '@prisma/client'
 
 import { server } from '../dota'
 import findUser from '../dota/lib/connectedStreamers'
@@ -40,6 +40,25 @@ channel
             .to(client.sockets)
             .emit('update-medal', { mmr: client.mmr, steam32Id: client.steam32Id })
         }
+      }
+    }
+  })
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, (payload) => {
+    const newObj = payload.new as Setting
+    const client = findUser(newObj.userId)
+
+    // replace the new setting with the one we have saved in cache
+    if (client) {
+      const setting = client.settings.find((s) => s.key === newObj.key)
+      if (setting) {
+        setting.value = newObj.value
+      } else {
+        client.settings.push({ key: newObj.key, value: newObj.value })
+      }
+
+      if (client.sockets.length) {
+        console.log('[WATCHER SETTING] Sending new setting value to socket')
+        server.io.to(client.sockets).emit('refresh-settings')
       }
     }
   })

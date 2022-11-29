@@ -2,6 +2,7 @@ import { toUserName } from '@twurple/chat'
 
 import { getSteamByTwitchId } from '../../db/getDBUser'
 import { prisma } from '../../db/prisma'
+import { DBSettings, getValueOrDefault } from '../../db/settings'
 import { server } from '../../dota'
 import { findUserByName } from '../../dota/lib/connectedStreamers'
 import getHero from '../../dota/lib/getHero'
@@ -60,7 +61,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
   if (!commands.includes(command)) return
   if (!CooldownManager.canUse(channel, command)) return
 
-  const connectedSocketClient = findUserByName(toUserName(channel))
+  const client = findUserByName(toUserName(channel))
 
   switch (command) {
     case '!modsonly':
@@ -85,9 +86,9 @@ chatClient.onMessage(function (channel, user, text, msg) {
       // Only mod or owner
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
 
-      if (connectedSocketClient?.sockets.length) {
+      if (client?.sockets.length) {
         void chatClient.say(channel, 'Refreshing overlay...')
-        server.io.to(connectedSocketClient.sockets).emit('refresh')
+        server.io.to(client.sockets).emit('refresh')
       }
 
       break
@@ -98,20 +99,16 @@ chatClient.onMessage(function (channel, user, text, msg) {
       )
       break
     case '!wl': {
-      if (!connectedSocketClient?.steam32Id) {
+      if (!client?.steam32Id) {
         void chatClient.say(channel, 'Not live PauseChamp')
         break
       }
 
-      console.log('[WL] Checking WL for steam32Id', connectedSocketClient.steam32Id)
+      console.log('[WL] Checking WL for steam32Id', client.steam32Id)
 
       const promises = [
-        axios(
-          `https://api.opendota.com/api/players/${connectedSocketClient.steam32Id}/wl/?date=0.5&lobby_type=0`,
-        ),
-        axios(
-          `https://api.opendota.com/api/players/${connectedSocketClient.steam32Id}/wl/?date=0.5&lobby_type=7`,
-        ),
+        axios(`https://api.opendota.com/api/players/${client.steam32Id}/wl/?date=0.5&lobby_type=0`),
+        axios(`https://api.opendota.com/api/players/${client.steam32Id}/wl/?date=0.5&lobby_type=7`),
       ]
 
       Promise.all(promises)
@@ -145,10 +142,10 @@ chatClient.onMessage(function (channel, user, text, msg) {
       void chatClient.say(channel, 'One pleb IN 👇')
       break
     case '!xpm': {
-      if (!connectedSocketClient?.gsi) break
-      if (!isPlayingMatch(connectedSocketClient.gsi)) break
+      if (!client?.gsi) break
+      if (!isPlayingMatch(client.gsi)) break
 
-      const xpm = connectedSocketClient.gsi.gamestate?.player?.xpm
+      const xpm = client.gsi.gamestate?.player?.xpm
 
       if (!xpm) {
         void chatClient.say(channel, 'No xpm')
@@ -159,17 +156,17 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     }
     case '!apm': {
-      if (!connectedSocketClient?.gsi) break
-      if (!isPlayingMatch(connectedSocketClient.gsi)) break
+      if (!client?.gsi) break
+      if (!isPlayingMatch(client.gsi)) break
 
-      const commandsIssued = connectedSocketClient.gsi.gamestate?.player?.commands_issued ?? 0
+      const commandsIssued = client.gsi.gamestate?.player?.commands_issued ?? 0
 
       if (!commandsIssued) {
         void chatClient.say(channel, 'No APM yet')
         break
       }
 
-      const gameTime = connectedSocketClient.gsi.gamestate?.map?.game_time ?? 1
+      const gameTime = client.gsi.gamestate?.map?.game_time ?? 1
       const apm = Math.round(commandsIssued / (gameTime / 60))
       console.log(gameTime, commandsIssued, apm)
 
@@ -177,19 +174,18 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     }
     case '!gpm': {
-      if (!connectedSocketClient?.gsi) break
-      if (!isPlayingMatch(connectedSocketClient.gsi)) break
+      if (!client?.gsi) break
+      if (!isPlayingMatch(client.gsi)) break
 
-      const gpm = connectedSocketClient.gsi.gamestate?.player?.gpm
+      const gpm = client.gsi.gamestate?.player?.gpm
 
       if (!gpm) {
         void chatClient.say(channel, 'No GPM')
         break
       }
 
-      const gold_from_hero_kills = connectedSocketClient.gsi.gamestate?.player?.gold_from_hero_kills
-      const gold_from_creep_kills =
-        connectedSocketClient.gsi.gamestate?.player?.gold_from_creep_kills
+      const gold_from_hero_kills = client.gsi.gamestate?.player?.gold_from_hero_kills
+      const gold_from_creep_kills = client.gsi.gamestate?.player?.gold_from_creep_kills
 
       void chatClient.say(
         channel,
@@ -200,14 +196,14 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     }
     case '!hero': {
-      if (!connectedSocketClient?.gsi || !connectedSocketClient.steam32Id) break
-      if (!isPlayingMatch(connectedSocketClient.gsi)) break
-      if (!connectedSocketClient.gsi.gamestate?.hero?.name) {
+      if (!client?.gsi || !client.steam32Id) break
+      if (!isPlayingMatch(client.gsi)) break
+      if (!client.gsi.gamestate?.hero?.name) {
         void chatClient.say(channel, 'Not playing PauseChamp')
         break
       }
 
-      const hero = getHero(connectedSocketClient.gsi.gamestate.hero.name)
+      const hero = getHero(client.gsi.gamestate.hero.name)
 
       if (!hero) {
         void chatClient.say(channel, "Couldn't find hero Sadge")
@@ -215,7 +211,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       }
 
       axios(
-        `https://api.opendota.com/api/players/${connectedSocketClient.steam32Id}/wl/?hero_id=${hero.id}&having=1&date=30`,
+        `https://api.opendota.com/api/players/${client.steam32Id}/wl/?hero_id=${hero.id}&having=1&date=30`,
       )
         .then(({ data }: { data: { win: number; lose: number } }) => {
           if (data.win + data.lose === 0) {
@@ -301,9 +297,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       // helix api rate limits you to 40 unique whispers a day though ?? so just not gonna do it
       void chatClient.say(
         msg.userInfo.userName,
-        `${channel} steam32id: https://steamid.xyz/${
-          connectedSocketClient?.steam32Id ?? ' Unknown'
-        }`,
+        `${channel} steam32id: https://steamid.xyz/${client?.steam32Id ?? ' Unknown'}`,
       )
 
       break
@@ -312,10 +306,13 @@ chatClient.onMessage(function (channel, user, text, msg) {
       if (!msg.channelId) break
 
       // If connected, we can just respond with the cached MMR
-      if (connectedSocketClient) {
+      if (client) {
+        const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
+        if (!mmrEnabled) break
+
         // Didn't have a new account made yet on the new steamaccount table
-        if (!connectedSocketClient.SteamAccount.length) {
-          if (connectedSocketClient.mmr === 0) {
+        if (!client.SteamAccount.length) {
+          if (client.mmr === 0) {
             void chatClient.say(
               channel,
               `I don't know ${toUserName(
@@ -325,10 +322,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
             break
           }
 
-          getRankDescription(
-            connectedSocketClient.mmr,
-            connectedSocketClient.steam32Id ?? undefined,
-          )
+          getRankDescription(client.mmr, client.steam32Id ?? undefined)
             .then((description) => {
               void chatClient.say(channel, description)
             })
@@ -338,7 +332,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
           break
         }
 
-        connectedSocketClient.SteamAccount.forEach((act) => {
+        client.SteamAccount.forEach((act) => {
           getRankDescription(act.mmr, act.steam32Id)
             .then((description) => {
               void chatClient.say(channel, description)
@@ -358,6 +352,12 @@ chatClient.onMessage(function (channel, user, text, msg) {
       prisma.user
         .findFirst({
           select: {
+            settings: {
+              select: {
+                key: true,
+                value: true,
+              },
+            },
             SteamAccount: {
               select: {
                 mmr: true,
@@ -370,9 +370,17 @@ chatClient.onMessage(function (channel, user, text, msg) {
             Account: {
               providerAccountId: msg.channelId,
             },
+            settings: {
+              some: {
+                key: DBSettings.mmrTracker,
+              },
+            },
           },
         })
         .then((res) => {
+          const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, res?.settings)
+          if (!mmrEnabled) return
+
           if (!res?.SteamAccount[0]?.mmr) {
             void chatClient.say(
               channel,
