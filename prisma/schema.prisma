@@ -41,7 +41,7 @@ model Account {
   session_state     String?
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @default(now()) @map("updated_at")
-  User              User?
+  user              User?
 
   @@unique([provider, providerAccountId])
   @@map("accounts")

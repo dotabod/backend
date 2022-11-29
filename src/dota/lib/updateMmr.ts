@@ -42,7 +42,7 @@ export function updateMmr(
           },
         },
         data: {
-          User: {
+          user: {
             update: {
               mmr: Number(mmr),
             },
