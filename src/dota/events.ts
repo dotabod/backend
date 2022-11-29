@@ -469,6 +469,9 @@ export class setupMainEvents {
               },
             })
             .then(() => {
+              const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
+              if (!betsEnabled) return
+
               const hero = getHero(this.gsi.gamestate?.hero?.name)
 
               openTwitchBet(channel, this.getToken(), hero?.localized_name)
@@ -574,6 +577,12 @@ export class setupMainEvents {
         },
       })
       .then(() => {
+        const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
+        if (!betsEnabled) {
+          this.newMatchNewVars(true)
+          return
+        }
+
         closeTwitchBet(channel, won, this.getToken())
           .then(() => {
             void chatClient.say(this.getChannel(), `Bets closed, we have ${won ? 'won' : 'lost'}`)
