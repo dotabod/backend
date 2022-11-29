@@ -189,10 +189,13 @@ export class setupMainEvents {
 
       this.endBets()
 
-      const isMidasPassive = checkMidas(data, this.passiveMidas)
-      if (isMidasPassive) {
-        console.log('[MIDAS]', 'Passive midas', { name: this.getChannel() })
-        void chatClient.say(this.getChannel(), 'massivePIDAS Use your midas')
+      const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
+      if (chatterEnabled) {
+        const isMidasPassive = checkMidas(data, this.passiveMidas)
+        if (isMidasPassive) {
+          console.log('[MIDAS]', 'Passive midas', { name: this.getChannel() })
+          void chatClient.say(this.getChannel(), 'massivePIDAS Use your midas')
+        }
       }
     })
 
@@ -230,6 +233,8 @@ export class setupMainEvents {
 
     this.gsi.on('hero:smoked', (isSmoked: boolean) => {
       if (!isPlayingMatch(this.gsi)) return
+      const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
+      if (!chatterEnabled) return
 
       if (isSmoked) {
         const hero = getHero(this.gsi.gamestate?.hero?.name)
@@ -244,6 +249,8 @@ export class setupMainEvents {
 
     this.gsi.on('map:paused', (isPaused: boolean) => {
       if (!isPlayingMatch(this.gsi)) return
+      const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
+      if (!chatterEnabled) return
 
       // Necessary to let the frontend know, so we can pause any rosh / aegis / etc timers
       if (this.getSockets().length) {
