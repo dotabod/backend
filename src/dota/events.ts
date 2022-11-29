@@ -2,7 +2,7 @@ import { prisma } from '../db/prisma'
 import { DBSettings, getValueOrDefault } from '../db/settings'
 import { chatClient } from '../twitch/commands'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet'
-import { openTwitchBet } from '../twitch/lib/openTwitchBet'
+import { disabledBets, openTwitchBet } from '../twitch/lib/openTwitchBet'
 import { DotaEvent, DotaEventTypes, Packet, SocketClient } from '../types'
 import { fmtMSS, steamID64toSteamID32 } from '../utils'
 import axios from '../utils/axios'
@@ -494,7 +494,37 @@ export class setupMainEvents {
                   })
                 })
                 .catch((e: any) => {
-                  console.log('[BETS]', 'Error opening twitch bet', channel, e)
+                  if (disabledBets.has(channel)) {
+                    // disable the bet in settings for this user
+                    prisma.setting
+                      .upsert({
+                        where: {
+                          key_userId: {
+                            key: DBSettings.bets,
+                            userId: this.getToken(),
+                          },
+                        },
+                        create: {
+                          userId: this.getToken(),
+                          key: DBSettings.bets,
+                          value: false,
+                        },
+                        update: {
+                          value: false,
+                        },
+                      })
+                      .then((r) => {
+                        disabledBets.delete(channel)
+                        console.log('[BETS]', 'Disabled bets for user', {
+                          channel,
+                        })
+                      })
+                      .catch((e) => {
+                        console.log('[BETS]', 'Error disabling bets', e)
+                      })
+                  } else {
+                    console.log('[BETS]', 'Error opening twitch bet', channel, e)
+                  }
                 })
             })
             .catch((e: any) => {
@@ -606,7 +636,37 @@ export class setupMainEvents {
             })
           })
           .catch((e: any) => {
-            console.log('[BETS]', 'Error closing twitch bet', channel, e)
+            if (disabledBets.has(channel)) {
+              // disable the bet in settings for this user
+              prisma.setting
+                .upsert({
+                  where: {
+                    key_userId: {
+                      key: DBSettings.bets,
+                      userId: this.getToken(),
+                    },
+                  },
+                  create: {
+                    userId: this.getToken(),
+                    key: DBSettings.bets,
+                    value: false,
+                  },
+                  update: {
+                    value: false,
+                  },
+                })
+                .then((r) => {
+                  console.log('[BETS]', 'Disabled bets for user', {
+                    channel,
+                  })
+                  disabledBets.delete(channel)
+                })
+                .catch((e) => {
+                  console.log('[BETS]', 'Error disabling bets', e)
+                })
+            } else {
+              console.log('[BETS]', 'Error closing twitch bet', channel, e)
+            }
           })
           // Always
           .finally(() => {

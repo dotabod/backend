@@ -3,7 +3,9 @@ import { getChannelAPI } from './getChannelAPI'
 export const disabledBets = new Set()
 
 export async function openTwitchBet(channel: string, userId: string, heroName?: string) {
-  if (disabledBets.has(channel)) throw new Error('Bets not enabled')
+  if (disabledBets.has(channel)) {
+    throw new Error('Bets not enabled')
+  }
 
   console.log('[PREDICT]', '[BETS] Opening twitch bet', channel)
 
@@ -23,7 +25,7 @@ export async function openTwitchBet(channel: string, userId: string, heroName?: 
       if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {
         console.log('[PREDICT]', '[BETS] Channel points not enabled for', channel)
         disabledBets.add(channel)
-        return
+        throw new Error('Bets not enabled')
       }
 
       throw e
