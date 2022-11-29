@@ -10,7 +10,7 @@ export const getChannelAuthProvider = function (channel: string, userId: string)
 
   const twitchTokens = findUser(userId)
 
-  if (!twitchTokens?.Account.access_token || !twitchTokens.Account.refresh_token) {
+  if (!twitchTokens?.Account?.access_token || !twitchTokens.Account.refresh_token) {
     console.log('[TWITCHSETUP]', 'Missing twitch tokens', channel)
     return {}
   }

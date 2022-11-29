@@ -7,11 +7,11 @@ export interface SocketClient {
   token: string
   steam32Id: number | null // currently connected steam id
   mmr: number // currently connected mmr
-  Account: {
+  Account?: {
     refresh_token: string
     access_token: string
     providerAccountId: string
-  }
+  } | null
   SteamAccount: {
     mmr: number
     name: string | null

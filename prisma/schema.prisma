@@ -41,7 +41,7 @@ model Account {
   session_state     String?
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @default(now()) @map("updated_at")
-  user              User?
+  user              User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -67,11 +67,11 @@ model User {
   updatedAt     DateTime       @default(now()) @map("updated_at")
   mmr           Int            @default(0) @db.SmallInt
   steam32Id     Int?           @unique(map: "users_playerId_key")
-  Account       Account        @relation(fields: [id], references: [userId])
   Bet           Bet[]
   Session       Session[]
   settings      Setting[]
   SteamAccount  SteamAccount[]
+  Account       Account?
 
   @@map("users")
 }
