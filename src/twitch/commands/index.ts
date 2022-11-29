@@ -306,7 +306,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       if (!msg.channelId) break
 
       // If connected, we can just respond with the cached MMR
-      if (client?.sockets.length) {
+      if (client) {
         const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
         if (!mmrEnabled) break
 
