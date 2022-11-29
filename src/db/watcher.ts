@@ -82,8 +82,6 @@ channel
           client.SteamAccount[currentSteam].mmr = newObj.mmr
 
           if (client.steam32Id === newObj.steam32Id) {
-            void chatClient.say(client.name, `Updated MMR to ${newObj.mmr}`)
-
             client.mmr = newObj.mmr
             server.io
               .to(client.sockets)

@@ -1,4 +1,5 @@
 import { prisma } from '../db/prisma'
+import { DBSettings, getValueOrDefault } from '../db/settings'
 import { chatClient } from '../twitch/commands'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet'
@@ -350,6 +351,12 @@ export class setupMainEvents {
     // This updates WL for the unranked matches
     // TODO: Make a new event for 'update-wl'
     if (!ranked) {
+      this.emitBadgeUpdate()
+      return
+    }
+
+    const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, this.client.settings)
+    if (!mmrEnabled) {
       this.emitBadgeUpdate()
       return
     }
