@@ -20,17 +20,12 @@ export async function openTwitchBet(channel: string, userId: string, heroName?: 
       autoLockAfter: 4 * 60, // 4 minutes
     })
     .catch((e: any) => {
-      try {
-        if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {
-          console.log('[PREDICT]', '[BETS] Channel points not enabled for', channel)
-          disabledBets.add(channel)
-        } else {
-          console.log('[BETS]', 'Error opening twitch bet', channel, e)
-          throw e
-        }
-      } catch (e) {
-        console.log('[BETS]', 'Error opening twitch bet', channel, e)
-        throw e
+      if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {
+        console.log('[PREDICT]', '[BETS] Channel points not enabled for', channel)
+        disabledBets.add(channel)
+        return
       }
+
+      throw e
     })
 }

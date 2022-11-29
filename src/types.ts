@@ -4,14 +4,19 @@ import { HeroNames } from './dota/lib/getHero'
 export interface SocketClient {
   gsi?: GSIClient
   name: string
-  steam32Id: number | null
-  mmr: number
   token: string
-  account: {
+  steam32Id: number | null // currently connected steam id
+  mmr: number // currently connected mmr
+  Account: {
     refresh_token: string
     access_token: string
     providerAccountId: string
   }
+  SteamAccount: {
+    mmr: number
+    name: string | null
+    steam32Id: number
+  }[]
   sockets: string[]
 }
 interface Provider {

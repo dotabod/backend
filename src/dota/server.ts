@@ -132,7 +132,7 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
   getDBUser(token)
     .then((user) => {
       if (user?.id) {
-        // sockets[] to be filled in by socket connection
+        // sockets[] to be filled in by socket connection, so will steamid
         socketClients.push({ ...user, token, sockets: [] })
         next()
         return

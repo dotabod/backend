@@ -2,7 +2,7 @@ import axios from 'axios'
 import axiosRetry from 'axios-retry'
 
 axiosRetry(axios, {
-  retries: 7, // number of retries
+  retries: process.env.NODE_ENV === 'development' ? 1 : 7, // number of retries
   retryDelay: (retryCount) => {
     return retryCount * 4000 // time interval between retries
   },

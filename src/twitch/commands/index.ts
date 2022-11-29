@@ -1,15 +1,16 @@
 import { toUserName } from '@twurple/chat'
 
+import { getSteamByTwitchId } from '../../db/getDBUser'
 import { prisma } from '../../db/prisma'
-import supabase from '../../db/supabase'
 import { server } from '../../dota'
-import findUser, { findUserByName } from '../../dota/lib/connectedStreamers'
+import { findUserByName } from '../../dota/lib/connectedStreamers'
 import getHero from '../../dota/lib/getHero'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
 import { getRankDescription } from '../../dota/lib/ranks'
 import { updateMmr } from '../../dota/lib/updateMmr'
 import axios from '../../utils/axios'
 import { getChatClient } from '../lib/getChatClient'
+import { CooldownManager } from './CooldownManager'
 
 /*
 Commands that are fun for future:
@@ -18,66 +19,6 @@ Commands that are fun for future:
 
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
-
-const channel = supabase.channel('db-changes')
-
-if (process.env.NODE_ENV !== 'production') {
-  channel.on(
-    'postgres_changes',
-    { event: 'INSERT', schema: 'public', table: 'users' },
-    (payload) => {
-      console.log('[SUPABASE]', 'New user to send bot to: ', payload.new.name)
-      chatClient.join(payload.new.name).catch((e) => {
-        console.error('[SUPABASE]', 'Error joining channel', e)
-      })
-    },
-  )
-}
-
-// When a user updates MMR from dashboard and they have client open
-channel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
-  const client = findUser(payload.new.id)
-  if (payload.old.mmr !== payload.new.mmr && client && client.mmr !== payload.new.mmr) {
-    client.mmr = payload.new.mmr
-    if (client.sockets.length) {
-      console.log('[MMR] Sending mmr to socket')
-      void chatClient.say(client.name, `Updated MMR to ${client.mmr}`)
-
-      server.io
-        .to(client.sockets)
-        .emit('update-medal', { mmr: client.mmr, steam32Id: client.steam32Id })
-    }
-
-    console.log('Updated cached mmr for', payload.new.name, payload.new.mmr)
-  }
-})
-
-channel.subscribe((status) => {
-  if (status === 'SUBSCRIBED') {
-    console.log('[SUPABASE]', 'Ready to receive database changes!')
-  }
-})
-
-const CooldownManager = {
-  // 30 seconds
-  cooldownTime: 15 * 1000,
-  store: new Map<string, number>(),
-
-  canUse: function (channel: string, commandName: string) {
-    // Check if the last time you've used the command + 30 seconds has passed
-    // (because the value is less then the current time)
-    if (!this.store.has(`${channel}.${commandName}`)) return true
-
-    return (
-      (this.store.get(`${channel}.${commandName}`) ?? Date.now()) + this.cooldownTime < Date.now()
-    )
-  },
-
-  touch: function (channel: string, commandName: string) {
-    // Store the current timestamp in the store based on the current commandName
-    this.store.set(`${channel}.${commandName}`, Date.now())
-  },
-}
 
 const plebMode = new Set()
 const modMode = new Set()
@@ -90,7 +31,6 @@ const commands = [
   '!apm',
   '!wl',
   '!dotabod',
-  '!help',
   '!pleb',
   '!commands',
   '!modsonly',
@@ -152,7 +92,6 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       break
     case '!dotabod':
-    case '!help':
       void chatClient.say(
         channel,
         `I'm an open source bot made by @techleed. More info: https://dotabod.com`,
@@ -313,7 +252,43 @@ chatClient.onMessage(function (channel, user, text, msg) {
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
       if (!msg.channelId) break
 
-      updateMmr(args[1], msg.channelId, channel)
+      const [, mmr, steam32Id] = args
+
+      if (!mmr || !Number(mmr) || Number(mmr) > 20000 || Number(mmr) < 0) {
+        void chatClient.say(channel, 'Invalid MMR specified')
+        break
+      }
+
+      if (!steam32Id) {
+        getSteamByTwitchId(msg.channelId)
+          .then((res) => {
+            const steamAccounts = res?.SteamAccount ?? []
+
+            if (steamAccounts.length === 0) {
+              // Sends a `0` steam32id so we can save it to the db,
+              // but server will update with steam later when they join a match
+              updateMmr(mmr, Number(steam32Id), channel, msg.channelId)
+            } else if (steamAccounts.length === 1) {
+              updateMmr(mmr, steamAccounts[0].steam32Id, channel, msg.channelId)
+            } else {
+              if (!steam32Id) {
+                void chatClient.say(
+                  channel,
+                  `Multiple steam accounts linked to channel. Please specify steam32Id. !mmr= ${mmr} id_goes_here`,
+                )
+              }
+            }
+          })
+          .catch((e) => {
+            // Sends a `0` steam32id so we can save it to the `user` db, but update `steamaccount` later when they join a match
+            updateMmr(mmr, Number(steam32Id), channel, msg.channelId)
+          })
+      } else if (!Number(steam32Id)) {
+        void chatClient.say(channel, `Invalid steam32Id specified. !mmr= ${mmr} id_goes_here`)
+        break
+      } else {
+        updateMmr(mmr, Number(steam32Id), channel, msg.channelId)
+      }
 
       break
     }
@@ -322,9 +297,13 @@ chatClient.onMessage(function (channel, user, text, msg) {
       if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
       if (!msg.channelId) break
 
-      void chatClient.whisper(
+      // TODO: whispers do not work via chatClient, have to use helix api
+      // helix api rate limits you to 40 unique whispers a day though ?? so just not gonna do it
+      void chatClient.say(
         msg.userInfo.userName,
-        `${channel} steam32id: https://steamid.xyz/${connectedSocketClient?.steam32Id ?? ' Unknown'}`,
+        `${channel} steam32id: https://steamid.xyz/${
+          connectedSocketClient?.steam32Id ?? ' Unknown'
+        }`,
       )
 
       break
@@ -334,47 +313,85 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       // If connected, we can just respond with the cached MMR
       if (connectedSocketClient) {
-        getRankDescription(connectedSocketClient.mmr, connectedSocketClient.steam32Id ?? undefined)
-          .then((description) => {
-            // console.log('[MMR] Responding with cached MMR', description, channel)
-
-            void chatClient.say(channel, description)
-          })
-          .catch((e) => {
-            console.log('[MMR] Failed to get rank description', e, channel)
-          })
-        break
-      }
-
-      console.log('[MMR] Fetching MMR from database', channel)
-
-      // Do a DB lookup if the streamer is offline from OBS or Dota
-      prisma.account
-        .findFirst({
-          select: {
-            user: {
-              select: {
-                mmr: true,
-                steam32Id: true,
-              },
-            },
-          },
-          where: {
-            providerAccountId: msg.channelId,
-          },
-        })
-        .then((account) => {
-          if (!account?.user.mmr) {
-            console.log('[MMR] No MMR found in database', account, channel)
-            return
+        // Didn't have a new account made yet on the new steamaccount table
+        if (!connectedSocketClient.SteamAccount.length) {
+          if (connectedSocketClient.mmr === 0) {
+            void chatClient.say(
+              channel,
+              `I don't know ${toUserName(
+                channel,
+              )}'s MMR yet. Mods have to !mmr= 1234 or set it in dotabod.com/dashboard/features`,
+            )
+            break
           }
-          getRankDescription(account.user.mmr, account.user.steam32Id ?? undefined)
+
+          getRankDescription(
+            connectedSocketClient.mmr,
+            connectedSocketClient.steam32Id ?? undefined,
+          )
             .then((description) => {
               void chatClient.say(channel, description)
             })
             .catch((e) => {
               console.log('[MMR] Failed to get rank description', e, channel)
             })
+          break
+        }
+
+        connectedSocketClient.SteamAccount.forEach((act) => {
+          getRankDescription(act.mmr, act.steam32Id)
+            .then((description) => {
+              void chatClient.say(channel, description)
+            })
+            .catch((e) => {
+              console.log('[MMR] Failed to get rank description', e, channel)
+            })
+        })
+
+        break
+      }
+
+      console.log('[MMR] Fetching MMR from database', channel)
+
+      // Do a DB lookup if the streamer is offline from OBS or Dota
+      // TODO: Multiple steam accounts? Find first may only return first one
+      prisma.user
+        .findFirst({
+          select: {
+            SteamAccount: {
+              select: {
+                mmr: true,
+                steam32Id: true,
+                name: true,
+              },
+            },
+          },
+          where: {
+            Account: {
+              providerAccountId: msg.channelId,
+            },
+          },
+        })
+        .then((res) => {
+          if (!res?.SteamAccount[0]?.mmr) {
+            void chatClient.say(
+              channel,
+              `I don't know ${toUserName(
+                channel,
+              )}'s MMR yet. Mods have to !mmr= 1234 or set it in dotabod.com/dashboard/features`,
+            )
+            console.log('[MMR] No MMR found in database', res, channel)
+            return
+          }
+          res.SteamAccount.forEach((steamA) => {
+            getRankDescription(steamA.mmr, steamA.steam32Id)
+              .then((description) => {
+                void chatClient.say(channel, description)
+              })
+              .catch((e) => {
+                console.log('[MMR] Failed to get rank description', e, channel)
+              })
+          })
         })
         .catch((e) => {
           console.log('[MMR] Error fetching MMR from database', e, channel)

@@ -35,3 +35,4 @@ Sentry.init({
 })
 
 import './twitch/index.ts'
+import './db/watcher.ts'
