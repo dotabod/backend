@@ -56,6 +56,9 @@ channel
       const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === newObj.steam32Id)
       if (currentSteam >= 0) {
         // update from dashboard
+        if (client.SteamAccount[currentSteam].name !== newObj.name) {
+          client.SteamAccount[currentSteam].name = newObj.name
+        }
         if (client.SteamAccount[currentSteam].mmr !== newObj.mmr) {
           client.SteamAccount[currentSteam].mmr = newObj.mmr
 
