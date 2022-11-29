@@ -370,11 +370,6 @@ chatClient.onMessage(function (channel, user, text, msg) {
             Account: {
               providerAccountId: msg.channelId,
             },
-            settings: {
-              some: {
-                key: DBSettings.mmrTracker,
-              },
-            },
           },
         })
         .then((res) => {
