@@ -99,6 +99,8 @@ chatClient.onMessage(function (channel, user, text, msg) {
       )
       break
     case '!wl': {
+      if (!msg.channelId) break
+
       if (!client?.steam32Id) {
         void chatClient.say(channel, 'Not live PauseChamp')
         break
@@ -106,20 +108,55 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       console.log('[WL] Checking WL for steam32Id', client.steam32Id)
 
-      const promises = [
-        axios(`https://api.opendota.com/api/players/${client.steam32Id}/wl/?date=0.5&lobby_type=0`),
-        axios(`https://api.opendota.com/api/players/${client.steam32Id}/wl/?date=0.5&lobby_type=7`),
-      ]
+      prisma.bet
+        .groupBy({
+          by: ['won', 'lobby_type'],
+          _count: {
+            won: true,
+          },
+          where: {
+            won: {
+              not: null,
+            },
+            lobby_type: {
+              not: null,
+              in: [0, 7],
+            },
+            user: {
+              Account: {
+                provider: 'twitch',
+                providerAccountId: '48371942', // 48371942 32474777
+              },
+            },
+            createdAt: {
+              gte: new Date(new Date().getTime() - 12 * 60 * 60 * 1000),
+            },
+          },
+        })
+        .then((r) => {
+          const ranked: { win: number; lose: number } = { win: 0, lose: 0 }
+          const unranked: { win: number; lose: number } = { win: 0, lose: 0 }
 
-      Promise.all(promises)
-        .then((values: { data: { win: number; lose: number } }[]) => {
-          const [unranked, ranked] = values
-          const { win, lose } = ranked.data
-          const { win: unrankedWin, lose: unrankedLose } = unranked.data
-          const hasUnranked = unrankedWin + unrankedLose !== 0
-          const hasRanked = win + lose !== 0
-          const rankedMsg = `Ranked ${win} W - ${lose} L`
-          const unrankedMsg = `Unranked ${unrankedWin} W - ${unrankedLose} L`
+          r.forEach((match) => {
+            if (match.lobby_type === 7) {
+              if (match.won) {
+                ranked.win += match._count.won
+              } else {
+                ranked.lose += match._count.won
+              }
+            } else {
+              if (match.won) {
+                unranked.win += match._count.won
+              } else {
+                unranked.lose += match._count.won
+              }
+            }
+          })
+
+          const hasUnranked = unranked.win + unranked.lose !== 0
+          const hasRanked = ranked.win + ranked.lose !== 0
+          const rankedMsg = `Ranked ${ranked.win} W - ${ranked.lose} L`
+          const unrankedMsg = `Unranked ${unranked.win} W - ${unranked.lose} L`
           const msg = []
           if (hasRanked) msg.push(rankedMsg)
           if (hasUnranked) msg.push(unrankedMsg)
