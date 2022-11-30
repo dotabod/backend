@@ -345,7 +345,11 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
           getRankDescription(act.mmr, act.steam32Id)
             .then((description) => {
-              void chatClient.say(channel, description)
+              const say =
+                client.SteamAccount.length > 1 && act.name
+                  ? `${act.name}: ${description}`
+                  : description
+              void chatClient.say(channel, say)
             })
             .catch((e) => {
               console.log('[MMR] Failed to get rank description', e, channel)
