@@ -337,7 +337,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
             void chatClient.say(
               channel,
               `I don't know ${
-                act.name || toUserName(channel)
+                act.name ?? toUserName(channel)
               }'s MMR yet. Mods have to !mmr= 1234 or set it in dotabod.com/dashboard/features`,
             )
             return
