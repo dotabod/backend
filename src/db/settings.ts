@@ -13,6 +13,8 @@ export enum DBSettings {
   bp = 'battlepass',
   bets = 'bets',
   chatter = 'chatter',
+  rosh = 'rosh',
+  aegis = 'aegis',
 }
 
 export const defaultSettings = {
@@ -30,6 +32,8 @@ export const defaultSettings = {
   [DBSettings.bp]: false,
   [DBSettings.bets]: true,
   [DBSettings.chatter]: false,
+  [DBSettings.rosh]: true,
+  [DBSettings.aegis]: true,
 }
 
 export const getValueOrDefault = (key: DBSettings, data?: { key: string; value: any }[]) => {
