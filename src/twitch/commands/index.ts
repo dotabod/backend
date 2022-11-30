@@ -333,6 +333,16 @@ chatClient.onMessage(function (channel, user, text, msg) {
         }
 
         client.SteamAccount.forEach((act) => {
+          if (act.mmr === 0) {
+            void chatClient.say(
+              channel,
+              `I don't know ${
+                act.name || toUserName(channel)
+              }'s MMR yet. Mods have to !mmr= 1234 or set it in dotabod.com/dashboard/features`,
+            )
+            return
+          }
+
           getRankDescription(act.mmr, act.steam32Id)
             .then((description) => {
               void chatClient.say(channel, description)
