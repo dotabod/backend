@@ -13,7 +13,7 @@ axios.interceptors.response.use((response) => {
     return response
   }
 
-  const err = new Error(response.data?.result?.error)
+  const err = new Error(response.data?.result?.error || !response.data?.error)
   // @ts-expect-error axios-retry using this
   err.config = response.config
   // @ts-expect-error optional, if you need for retry condition
