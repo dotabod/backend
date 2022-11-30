@@ -1,18 +1,19 @@
 import axios from 'axios'
 import axiosRetry from 'axios-retry'
 
-axios.interceptors.response.use(async (response) => {
-  if (response.status === 200) {
-    if (response.data?.result?.error) {
-      const err = new Error(response.data?.result?.error)
-      // @ts-expect-error axios-retry using this
-      err.config = response.config
-      // @ts-expect-error optional, if you need for retry condition
-      err.response = response
-      throw err
-    }
+axios.interceptors.response.use((response) => {
+  // opendota is data.error
+  // steam is data.result.error
+  if (response.status === 200 && !response.data?.result?.error && !response.data?.error) {
+    return response
   }
-  return response
+
+  const err = new Error(response.data?.result?.error)
+  // @ts-expect-error axios-retry using this
+  err.config = response.config
+  // @ts-expect-error optional, if you need for retry condition
+  err.response = response
+  throw err
 })
 
 axiosRetry(axios, {
@@ -21,7 +22,8 @@ axiosRetry(axios, {
     return retryCount * 4000 // time interval between retries
   },
   retryCondition: (error) => {
-    return error.response?.status !== 200
+    console.log('retryCondition')
+    return false
   },
 })
 
