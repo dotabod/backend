@@ -125,7 +125,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
             user: {
               Account: {
                 provider: 'twitch',
-                providerAccountId: '48371942', // 48371942 32474777
+                providerAccountId: msg.channelId,
               },
             },
             createdAt: {
