@@ -296,7 +296,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       // TODO: whispers do not work via chatClient, have to use helix api
       // helix api rate limits you to 40 unique whispers a day though ?? so just not gonna do it
       void chatClient.say(
-        msg.userInfo.userName,
+        channel,
         `${channel} steam32id: https://steamid.xyz/${client?.steam32Id ?? ' Unknown'}`,
       )
 
