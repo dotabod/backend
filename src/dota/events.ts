@@ -355,9 +355,23 @@ export class setupMainEvents {
       })
   }
 
-  updateMMR(increase: boolean, ranked = true) {
-    // This updates WL for the unranked matches
-    // TODO: Make a new event for 'update-wl'
+  updateMMR(increase: boolean, lobbyType: number, matchId: string) {
+    const ranked = lobbyType === 7
+
+    // This also updates WL for the unranked matches
+    void prisma.bet.update({
+      where: {
+        matchId_userId: {
+          matchId: matchId,
+          userId: this.getToken(),
+        },
+      },
+      data: {
+        won: increase,
+        lobby_type: lobbyType,
+      },
+    })
+
     if (!ranked) {
       this.emitBadgeUpdate()
       return
@@ -365,6 +379,7 @@ export class setupMainEvents {
 
     const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, this.client.settings)
     if (!mmrEnabled) {
+      // TODO: Make a new event for 'update-wl'
       this.emitBadgeUpdate()
       return
     }
@@ -377,20 +392,11 @@ export class setupMainEvents {
 
   handleMMR(increase: boolean, matchId: string, lobby_type?: number) {
     if (lobby_type !== undefined) {
-      const ranked = lobby_type === 7
-      void prisma.bet.update({
-        where: {
-          matchId_userId: {
-            matchId: matchId,
-            userId: this.getToken(),
-          },
-        },
-        data: {
-          won: increase,
-          lobby_type: lobby_type,
-        },
+      console.log('[MMR]', 'lobby_type passed in from early dc', {
+        lobby_type,
+        name: this.getChannel(),
       })
-      this.updateMMR(increase, ranked)
+      this.updateMMR(increase, lobby_type, matchId)
       return
     }
 
@@ -400,21 +406,7 @@ export class setupMainEvents {
       params: { key: process.env.STEAM_WEB_API, match_id: matchId },
     })
       .then((response: any) => {
-        void prisma.bet.update({
-          where: {
-            matchId_userId: {
-              matchId: matchId,
-              userId: this.getToken(),
-            },
-          },
-          data: {
-            won: increase,
-            lobby_type: response?.data?.result?.lobby_type,
-          },
-        })
-
-        const ranked = response?.data?.result?.lobby_type === 7
-        this.updateMMR(increase, ranked)
+        this.updateMMR(increase, response?.data?.result?.lobby_type as number, matchId)
       })
       .catch((e: any) => {
         console.log('[MMR]', 'Error fetching match details', {
@@ -424,7 +416,7 @@ export class setupMainEvents {
         })
         // Force update when an error occurs and just let mods take care of the discrepancy
         // We assume the match was ranked
-        this.updateMMR(increase)
+        this.updateMMR(increase, 0, matchId)
       })
   }
 
