@@ -308,6 +308,7 @@ export class setupMainEvents {
     if (this.getSteam32() === steam32Id && foundAct) {
       if (this.getMmr() !== foundAct.mmr) {
         this.client.mmr = foundAct.mmr
+        this.emitBadgeUpdate()
       }
       return
     }
