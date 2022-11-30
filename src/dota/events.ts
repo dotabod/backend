@@ -377,10 +377,12 @@ export class setupMainEvents {
   handleMMR(increase: boolean, matchId: string) {
     // Do lookup at Opendota API for this match and figure out lobby type
     // TODO: Get just lobby_type from opendota api? That way its a smaller json response
-    axios(`https://api.opendota.com/api/matches/${matchId}`)
+    axios(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
+      params: { key: process.env.STEAM_WEB_API, match_id: matchId },
+    })
       .then((response: any) => {
         // Ranked
-        if (response?.data?.lobby_type === 7) {
+        if (response?.data?.result?.lobby_type === 7) {
           console.log('[MMR]', 'Match was ranked, updating mmr', {
             matchId,
             channel: this.getChannel(),
@@ -390,7 +392,7 @@ export class setupMainEvents {
           return
         }
 
-        console.log('[MMR] Non-ranked game. Lobby type:', response?.data?.lobby_type, {
+        console.log('[MMR] Non-ranked game. Lobby type:', response?.data?.result?.lobby_type, {
           matchId,
           channel: this.getChannel(),
         })
@@ -556,11 +558,13 @@ export class setupMainEvents {
       })
 
       // Check with opendota to see if the match is over
-      axios(`https://api.opendota.com/api/matches/${matchId}`)
+      axios(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
+        params: { key: process.env.STEAM_WEB_API, match_id: matchId },
+      })
         .then((response: any) => {
-          if (response?.data?.radiant_win === true) {
+          if (response?.data?.result?.radiant_win === true) {
             this.endBets('radiant', this.betMyTeam)
-          } else if (response?.data?.radiant_win === false) {
+          } else if (response?.data?.result?.radiant_win === false) {
             this.endBets('dire', this.betMyTeam)
           } else {
             // ??? response was malformed from opendota
