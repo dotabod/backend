@@ -359,18 +359,25 @@ export class setupMainEvents {
     const ranked = lobbyType === 7
 
     // This also updates WL for the unranked matches
-    void prisma.bet.update({
-      where: {
-        matchId_userId: {
-          matchId: matchId,
-          userId: this.getToken(),
+    prisma.bet
+      .update({
+        where: {
+          matchId_userId: {
+            matchId: matchId,
+            userId: this.getToken(),
+          },
         },
-      },
-      data: {
-        won: increase,
-        lobby_type: lobbyType,
-      },
-    })
+        data: {
+          won: increase,
+          lobby_type: lobbyType,
+        },
+      })
+      .then(() => {
+        // Update mmr for ranked matches
+      })
+      .catch((e) => {
+        console.error('[DATABASE ERROR MMR]', e)
+      })
 
     if (!ranked) {
       this.emitBadgeUpdate()
@@ -406,17 +413,25 @@ export class setupMainEvents {
       params: { key: process.env.STEAM_WEB_API, match_id: matchId },
     })
       .then((response: any) => {
+        console.log(response?.data)
+
         this.updateMMR(increase, response?.data?.result?.lobby_type as number, matchId)
       })
       .catch((e: any) => {
+        // Force update when an error occurs and just let mods take care of the discrepancy
+        if (
+          e?.response?.data?.result?.error ===
+          'Practice matches are not available via GetMatchDetails'
+        ) {
+          // We assume the match was ranked
+          this.updateMMR(increase, 7, matchId)
+        }
+
         console.log('[MMR]', 'Error fetching match details', {
           matchId,
           channel: this.getChannel(),
           error: e?.response?.data,
         })
-        // Force update when an error occurs and just let mods take care of the discrepancy
-        // We assume the match was ranked
-        this.updateMMR(increase, 0, matchId)
       })
   }
 
