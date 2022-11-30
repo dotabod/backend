@@ -40,7 +40,7 @@ model Account {
   id_token          String?
   session_state     String?
   createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @default(now()) @map("updated_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
   user              User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([provider, providerAccountId])
@@ -64,7 +64,7 @@ model User {
   emailVerified DateTime?
   image         String?
   createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @default(now()) @map("updated_at")
+  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at")
   mmr           Int            @default(0) @db.SmallInt
   steam32Id     Int?           @unique(map: "users_playerId_key")
   Account       Account?
@@ -88,7 +88,7 @@ model VerificationToken {
 model Setting {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
   key       String
   value     Json?
   userId    String
@@ -101,7 +101,7 @@ model Setting {
 model SteamAccount {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
   steam32Id Int      @unique
   userId    String
   name      String?
@@ -114,7 +114,7 @@ model SteamAccount {
 model Bet {
   id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @default(now()) @map("updated_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
   matchId      String
   predictionId String
   won          Boolean?
