@@ -413,8 +413,6 @@ export class setupMainEvents {
       params: { key: process.env.STEAM_WEB_API, match_id: matchId },
     })
       .then((response: any) => {
-        console.log(response?.data)
-
         this.updateMMR(increase, response?.data?.result?.lobby_type as number, matchId)
       })
       .catch((e: any) => {
