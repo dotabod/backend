@@ -2,6 +2,11 @@ import axios from 'axios'
 import axiosRetry from 'axios-retry'
 
 axios.interceptors.response.use((response) => {
+  // not an error
+  if (response.data?.result?.error === 'Practice matches are not available via GetMatchDetails') {
+    return response
+  }
+
   // opendota is data.error
   // steam is data.result.error
   if (response.status === 200 && !response.data?.result?.error && !response.data?.error) {
