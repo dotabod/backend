@@ -121,6 +121,7 @@ model Bet {
   myTeam       String
   userId       String
   lobby_type   Int?     @db.SmallInt
+  steam32Id    BigInt?
   user         User     @relation(fields: [userId], references: [id])
 
   @@unique([matchId, userId])

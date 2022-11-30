@@ -500,6 +500,7 @@ export class setupMainEvents {
                 matchId: this.gsi.gamestate?.map?.matchid ?? '',
                 userId: this.getToken(),
                 myTeam: this.gsi.gamestate?.player?.team_name ?? '',
+                steam32Id: this.getSteam32(),
               },
             })
             .then(() => {
