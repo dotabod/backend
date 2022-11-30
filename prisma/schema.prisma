@@ -120,8 +120,6 @@ model Bet {
   won          Boolean?
   myTeam       String
   userId       String
-  outcomeNoId  String?
-  outcomeYesId String?
   lobby_type   Int?     @db.SmallInt
   user         User     @relation(fields: [userId], references: [id])
 
