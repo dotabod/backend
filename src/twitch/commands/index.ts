@@ -263,7 +263,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
             if (steamAccounts.length === 0) {
               // Sends a `0` steam32id so we can save it to the db,
               // but server will update with steam later when they join a match
-              updateMmr(mmr, Number(steam32Id), channel, msg.channelId)
+              updateMmr(mmr, Number(client?.steam32Id), channel, msg.channelId)
             } else if (steamAccounts.length === 1) {
               updateMmr(mmr, steamAccounts[0].steam32Id, channel, msg.channelId)
             } else {
@@ -297,7 +297,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       // helix api rate limits you to 40 unique whispers a day though ?? so just not gonna do it
       void chatClient.say(
         channel,
-        `${channel} steam32id: https://steamid.xyz/${client?.steam32Id ?? ' Unknown'}`,
+        `${channel} steam32id: 165972190 https://steamid.xyz/${client?.steam32Id ?? ' Unknown'}`,
       )
 
       break
