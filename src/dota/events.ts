@@ -375,29 +375,46 @@ export class setupMainEvents {
     }
   }
 
-  handleMMR(increase: boolean, matchId: string) {
+  handleMMR(increase: boolean, matchId: string, lobby_type?: number) {
+    if (lobby_type !== undefined) {
+      const ranked = lobby_type === 7
+      void prisma.bet.update({
+        where: {
+          matchId_userId: {
+            matchId: matchId,
+            userId: this.getToken(),
+          },
+        },
+        data: {
+          won: increase,
+          lobby_type: lobby_type,
+        },
+      })
+      this.updateMMR(increase, ranked)
+      return
+    }
+
     // Do lookup at Opendota API for this match and figure out lobby type
     // TODO: Get just lobby_type from opendota api? That way its a smaller json response
     axios(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
       params: { key: process.env.STEAM_WEB_API, match_id: matchId },
     })
       .then((response: any) => {
-        // Ranked
-        if (response?.data?.result?.lobby_type === 7) {
-          console.log('[MMR]', 'Match was ranked, updating mmr', {
-            matchId,
-            channel: this.getChannel(),
-          })
-
-          this.updateMMR(increase)
-          return
-        }
-
-        console.log('[MMR] Non-ranked game. Lobby type:', response?.data?.result?.lobby_type, {
-          matchId,
-          channel: this.getChannel(),
+        void prisma.bet.update({
+          where: {
+            matchId_userId: {
+              matchId: matchId,
+              userId: this.getToken(),
+            },
+          },
+          data: {
+            won: increase,
+            lobby_type: response?.data?.result?.lobby_type,
+          },
         })
-        this.updateMMR(increase, false)
+
+        const ranked = response?.data?.result?.lobby_type === 7
+        this.updateMMR(increase, ranked)
       })
       .catch((e: any) => {
         console.log('[MMR]', 'Error fetching match details', {
@@ -543,6 +560,7 @@ export class setupMainEvents {
   endBets(
     winningTeam: 'radiant' | 'dire' | null = null,
     streamersTeam: 'radiant' | 'dire' | 'spectator' | null = null,
+    lobby_type?: number,
   ) {
     if (!this.betExists || this.endingBets) return
 
@@ -563,13 +581,10 @@ export class setupMainEvents {
         params: { key: process.env.STEAM_WEB_API, match_id: matchId },
       })
         .then((response: any) => {
-          if (response?.data?.result?.radiant_win === true) {
-            this.endBets('radiant', this.betMyTeam)
-          } else if (response?.data?.result?.radiant_win === false) {
-            this.endBets('dire', this.betMyTeam)
-          } else {
-            // ??? response was malformed from opendota
-          }
+          if (!response.data.result.radiant_win) return
+
+          const team = response.data.result.radiant_win ? 'radiant' : 'dire'
+          this.endBets(team, this.betMyTeam, response?.data?.result?.lobby_type)
         })
         .catch((e: any) => {
           // its not over? just give up checking after this long
@@ -604,83 +619,65 @@ export class setupMainEvents {
 
     this.endingBets = true
     const channel = this.getChannel()
-    this.handleMMR(won, matchId)
+    this.handleMMR(won, matchId, lobby_type)
 
-    prisma.bet
-      .update({
-        data: {
-          won,
-        },
-        where: {
-          matchId_userId: {
-            userId: this.getToken(),
-            matchId: matchId,
-          },
-        },
-      })
+    const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
+    if (!betsEnabled) {
+      this.newMatchNewVars(true)
+      return
+    }
+
+    closeTwitchBet(channel, won, this.getToken())
       .then(() => {
-        const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
-        if (!betsEnabled) {
-          this.newMatchNewVars(true)
-          return
-        }
+        void chatClient.say(this.getChannel(), `Bets closed, we have ${won ? 'won' : 'lost'}`)
 
-        closeTwitchBet(channel, won, this.getToken())
-          .then(() => {
-            void chatClient.say(this.getChannel(), `Bets closed, we have ${won ? 'won' : 'lost'}`)
-
-            console.log('[BETS]', {
-              event: 'end_bets',
-              data: {
-                matchId: matchId,
-                name: this.getChannel(),
-                winning_team: localWinner,
-                player_team: myTeam,
-                didWin: won,
-              },
-            })
-          })
-          .catch((e: any) => {
-            if (disabledBets.has(channel)) {
-              // disable the bet in settings for this user
-              prisma.setting
-                .upsert({
-                  where: {
-                    key_userId: {
-                      key: DBSettings.bets,
-                      userId: this.getToken(),
-                    },
-                  },
-                  create: {
-                    userId: this.getToken(),
-                    key: DBSettings.bets,
-                    value: false,
-                  },
-                  update: {
-                    value: false,
-                  },
-                })
-                .then((r) => {
-                  console.log('[BETS]', 'Disabled bets for user', {
-                    channel,
-                  })
-                  disabledBets.delete(channel)
-                })
-                .catch((e) => {
-                  console.log('[BETS]', 'Error disabling bets', e)
-                })
-            } else {
-              console.log('[BETS]', 'Error closing twitch bet', channel, e)
-            }
-          })
-          // Always
-          .finally(() => {
-            this.newMatchNewVars(true)
-          })
+        console.log('[BETS]', {
+          event: 'end_bets',
+          data: {
+            matchId: matchId,
+            name: this.getChannel(),
+            winning_team: localWinner,
+            player_team: myTeam,
+            didWin: won,
+          },
+        })
       })
       .catch((e: any) => {
+        if (disabledBets.has(channel)) {
+          // disable the bet in settings for this user
+          prisma.setting
+            .upsert({
+              where: {
+                key_userId: {
+                  key: DBSettings.bets,
+                  userId: this.getToken(),
+                },
+              },
+              create: {
+                userId: this.getToken(),
+                key: DBSettings.bets,
+                value: false,
+              },
+              update: {
+                value: false,
+              },
+            })
+            .then((r) => {
+              console.log('[BETS]', 'Disabled bets for user', {
+                channel,
+              })
+              disabledBets.delete(channel)
+            })
+            .catch((e) => {
+              console.log('[BETS]', 'Error disabling bets', e)
+            })
+        } else {
+          console.log('[BETS]', 'Error closing twitch bet', channel, e)
+        }
+      })
+      // Always
+      .finally(() => {
         this.newMatchNewVars(true)
-        console.log('[BETS]', 'Error closing bet', e)
       })
   }
 

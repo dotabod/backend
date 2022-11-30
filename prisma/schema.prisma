@@ -67,11 +67,11 @@ model User {
   updatedAt     DateTime       @default(now()) @map("updated_at")
   mmr           Int            @default(0) @db.SmallInt
   steam32Id     Int?           @unique(map: "users_playerId_key")
+  Account       Account?
   Bet           Bet[]
   Session       Session[]
   settings      Setting[]
   SteamAccount  SteamAccount[]
-  Account       Account?
 
   @@map("users")
 }
@@ -122,6 +122,7 @@ model Bet {
   userId       String
   outcomeNoId  String?
   outcomeYesId String?
+  lobby_type   Int?     @db.SmallInt
   user         User     @relation(fields: [userId], references: [id])
 
   @@unique([matchId, userId])
