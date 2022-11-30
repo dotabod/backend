@@ -418,14 +418,16 @@ export class setupMainEvents {
         this.updateMMR(increase, response?.data?.result?.lobby_type as number, matchId)
       })
       .catch((e: any) => {
+        let lobbyType = 7
         // Force update when an error occurs and just let mods take care of the discrepancy
         if (
           e?.response?.data?.result?.error ===
           'Practice matches are not available via GetMatchDetails'
         ) {
-          // We assume the match was ranked
-          this.updateMMR(increase, 7, matchId)
+          lobbyType = 1
         }
+
+        this.updateMMR(increase, lobbyType, matchId)
 
         console.log('[MMR]', 'Error fetching match details', {
           matchId,
