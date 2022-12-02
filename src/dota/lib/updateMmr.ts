@@ -4,6 +4,7 @@ import { server } from '..'
 import { prisma } from '../../db/prisma'
 import { chatClient } from '../../twitch/commands'
 import { findUserByName } from './connectedStreamers'
+import { getRankDetail } from './ranks'
 
 export function updateMmr(
   newMmr: string | number,
@@ -84,7 +85,7 @@ export function updateMmr(
 
         if (client.sockets.length) {
           console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
-          server.io.to(client.sockets).emit('update-medal', { mmr, steam32Id: client.steam32Id })
+          server.io.to(client.sockets).emit('update-medal', getRankDetail(mmr, client.steam32Id))
         } else {
           console.log('[UPDATE MMR] No sockets found to send update to', channel)
         }

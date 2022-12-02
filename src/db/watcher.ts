@@ -2,6 +2,7 @@ import { Setting, SteamAccount, User } from '@prisma/client'
 
 import { server } from '../dota'
 import findUser from '../dota/lib/connectedStreamers'
+import { getRankDetail } from '../dota/lib/ranks'
 import { chatClient } from '../twitch/commands/index'
 import supabase from './supabase'
 
@@ -38,7 +39,7 @@ channel
 
           server.io
             .to(client.sockets)
-            .emit('update-medal', { mmr: client.mmr, steam32Id: client.steam32Id })
+            .emit('update-medal', getRankDetail(client.mmr, client.steam32Id))
         }
       }
     }
@@ -85,7 +86,7 @@ channel
             client.mmr = newObj.mmr
             server.io
               .to(client.sockets)
-              .emit('update-medal', { mmr: newObj.mmr, steam32Id: client.steam32Id })
+              .emit('update-medal', getRankDetail(newObj.mmr, client.steam32Id))
           }
 
           return

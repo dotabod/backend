@@ -1,4 +1,4 @@
-import { dota } from '../../steam'
+import { server } from '..'
 
 export const ranks = [
   { range: [0, 153], title: 'Herald☆1', image: '11.png' },
@@ -53,7 +53,9 @@ export async function lookupLeaderRank(mmr: number, steam32Id?: number | null) {
   // The dota2gsi should save one for us
   if (steam32Id) {
     try {
-      standing = await dota.getCard(steam32Id).then((data) => data?.leaderboard_rank as number)
+      standing = await server.dota
+        .getCard(steam32Id)
+        .then((data) => data?.leaderboard_rank as number)
     } catch (e) {
       console.error('[lookupLeaderRank] Error fetching leaderboard rank', e)
     }

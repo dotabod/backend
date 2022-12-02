@@ -7,6 +7,7 @@ import express, { NextFunction, Request, Response } from 'express'
 import { Server, Socket } from 'socket.io'
 
 import getDBUser from '../db/getDBUser'
+import Dota from '../steam'
 import { GSIClient } from './GSIClient'
 import findUser from './lib/connectedStreamers'
 import { gsiClients, socketClients } from './lib/consts'
@@ -153,8 +154,10 @@ class D2GSI {
   events: EventEmitter
   io: Server
   httpServer: http.Server
+  dota: Dota
 
   constructor() {
+    this.dota = new Dota()
     const app = express()
     const httpServer = http.createServer(app)
     const io = new Server(httpServer, {

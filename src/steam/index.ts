@@ -39,12 +39,16 @@ class Dota {
     }
 
     // Load in server list if we've saved one before
-    if (fs.existsSync('./volumes/servers.json')) {
-      Steam.servers = JSON.parse(fs.readFileSync('./volumes/servers.json').toString())
+    if (fs.existsSync('./src/steam/volumes/servers.json')) {
+      try {
+        Steam.servers = JSON.parse(fs.readFileSync('./src/steam/volumes/servers.json').toString())
+      } catch (e) {
+        // Ignore
+      }
     }
 
-    if (fs.existsSync('./volumes/sentry')) {
-      const sentry = fs.readFileSync('./volumes/sentry')
+    if (fs.existsSync('./src/steam/volumes/sentry')) {
+      const sentry = fs.readFileSync('./src/steam/volumes/sentry')
       if (sentry.length) details.sha_sentryfile = sentry
     }
 
@@ -82,14 +86,14 @@ class Dota {
       this.steamClient.connect()
     })
     this.steamClient.on('servers', (servers: { host: string; port: number }) => {
-      fs.writeFileSync('./volumes/servers.json', JSON.stringify(servers))
+      fs.writeFileSync('./src/steam/volumes/servers.json', JSON.stringify(servers))
     })
 
     this.steamUser.on(
       'updateMachineAuth',
       (sentry: { bytes: crypto.BinaryLike }, callback: (arg0: { sha_file: Buffer }) => void) => {
         const hashedSentry = crypto.createHash('sha1').update(sentry.bytes).digest()
-        fs.writeFileSync('./volumes/sentry', hashedSentry)
+        fs.writeFileSync('./src/steam/volumes/sentry', hashedSentry)
         console.log('sentryfile saved')
 
         callback({ sha_file: hashedSentry })
@@ -127,4 +131,4 @@ class Dota {
   }
 }
 
-export const dota = new Dota()
+export default Dota
