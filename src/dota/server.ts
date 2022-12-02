@@ -258,7 +258,7 @@ class D2GSI {
             console.log(
               '[GSI]',
               'No more sockets connected, removing all events for',
-              connectedSocketClient.token,
+              connectedSocketClient.name,
             )
             // There's no socket connected so let's remove all GSI events
             connectedSocketClient.gsi?.removeAllListeners()
