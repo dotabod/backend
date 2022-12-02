@@ -1,4 +1,4 @@
-import { toUserName } from '@twurple/chat'
+import { ChatUser, toUserName } from '@twurple/chat'
 
 import { getSteamByTwitchId } from '../../db/getDBUser'
 import { prisma } from '../../db/prisma'
@@ -20,6 +20,14 @@ Commands that are fun for future:
 
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
+
+function isRegularUser(userInfo: ChatUser) {
+  return (
+    !userInfo.isBroadcaster &&
+    !userInfo.isMod &&
+    !process.env.ADMIN_USERS?.split(',')?.includes(userInfo.userName)
+  )
+}
 
 const plebMode = new Set()
 const modMode = new Set()
@@ -66,7 +74,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
   switch (command) {
     case '!modsonly':
       // Only mod or owner
-      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
+      if (isRegularUser(msg.userInfo)) break
 
       if (modMode.has(channel)) {
         void chatClient.say(channel, 'Mods only mode disabled Sadge')
@@ -84,7 +92,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     case '!refresh':
       // Only mod or owner
-      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
+      if (isRegularUser(msg.userInfo)) break
 
       if (client?.sockets.length) {
         void chatClient.say(channel, 'Refreshing overlay...')
@@ -172,7 +180,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     }
     case '!pleb':
       // Only mod or owner
-      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
+      if (isRegularUser(msg.userInfo)) break
 
       plebMode.add(channel)
       void chatClient.say(channel, '/subscribersoff')
@@ -282,7 +290,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     }
     case '!mmr=': {
       // Only mod or owner
-      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
+      if (isRegularUser(msg.userInfo)) break
       if (!msg.channelId) break
 
       const [, mmr, steam32Id] = args
@@ -327,7 +335,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     }
     case '!steam': {
       // Only mod or owner
-      if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) break
+      if (isRegularUser(msg.userInfo)) break
       if (!msg.channelId) break
 
       // TODO: whispers do not work via chatClient, have to use helix api
@@ -459,5 +467,6 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
   }
 
+  // TODO: fix this touching if its not a mod for a mod command
   CooldownManager.touch(channel, command)
 })
