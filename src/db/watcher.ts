@@ -34,7 +34,7 @@ channel
       }
       if (client.sockets.length) {
         if (newObj.mmr !== 0) {
-          console.log('[WATCHER MMR] Sending mmr to socket')
+          console.log('[WATCHER MMR] Sending mmr to socket', client.name)
           void chatClient.say(client.name, `Updated MMR to ${client.mmr}`)
 
           server.io
@@ -58,7 +58,7 @@ channel
       }
 
       if (client.sockets.length) {
-        console.log('[WATCHER SETTING] Sending new setting value to socket')
+        console.log('[WATCHER SETTING] Sending new setting value to socket', client.name)
         server.io.to(client.sockets).emit('refresh-settings')
       }
     }
