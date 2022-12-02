@@ -37,9 +37,13 @@ channel
           console.log('[WATCHER MMR] Sending mmr to socket', client.name)
           void chatClient.say(client.name, `Updated MMR to ${client.mmr}`)
 
-          server.io
-            .to(client.sockets)
-            .emit('update-medal', getRankDetail(client.mmr, client.steam32Id))
+          getRankDetail(client.mmr, client.steam32Id)
+            .then((deets) => {
+              server.io.to(client.sockets).emit('update-medal', deets)
+            })
+            .catch((e) => {
+              console.error('[WATCHER MMR] Error getting rank detail', e)
+            })
         }
       }
     }
@@ -84,9 +88,13 @@ channel
 
           if (client.steam32Id === newObj.steam32Id) {
             client.mmr = newObj.mmr
-            server.io
-              .to(client.sockets)
-              .emit('update-medal', getRankDetail(newObj.mmr, client.steam32Id))
+            getRankDetail(newObj.mmr, client.steam32Id)
+              .then((deets) => {
+                server.io.to(client.sockets).emit('update-medal', deets)
+              })
+              .catch((e) => {
+                console.error('[WATCHER MMR] postgres_changes Error getting rank detail', e)
+              })
           }
 
           return

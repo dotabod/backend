@@ -3514,6 +3514,11 @@ steam-crypto@^0.0:
   resolved "https://registry.yarnpkg.com/steam-crypto/-/steam-crypto-0.0.1.tgz#0477b182a2b1fdd941893dbcc22e0e93b14abb7f"
   integrity sha512-N8pVbZ0xkYeTnoUDepgf29zO1+XimIZMsY7QedDHUWMJ5mvBYMVhhxPwrlM/c72lMnyRCTVsEWG/EmYv7h5b9Q==
 
+steam-errors@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/steam-errors/-/steam-errors-1.0.0.tgz#214799171ac1c927d333a9521e7e3a9f6516f349"
+  integrity sha512-F+HchY0CtuCWCJHJRdAV9rb5tcJo1kBhgARS2AW0d8GFIywRmGUc4ZxTrkNsEANlgwFpdbhyKvmjfVx6RwnFfA==
+
 "steam-resources@github:odota/node-steam-resources":
   version "1.2.2"
   resolved "https://codeload.github.com/odota/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45"

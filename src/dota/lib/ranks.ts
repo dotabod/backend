@@ -58,15 +58,20 @@ export async function lookupLeaderRank(mmr: number, steam32Id?: number | null) {
         .then((data) => data?.leaderboard_rank as number)
     } catch (e) {
       console.error('[lookupLeaderRank] Error fetching leaderboard rank', e)
+      return {
+        myRank: leaderRanks[leaderRanks.length - 1],
+        standing: null,
+        mmr,
+      }
     }
   }
 
   const [myRank] = leaderRanks.filter((rank) => standing <= rank.range[1])
 
-  return { ...myRank, mmr, standing }
+  return { myRank, mmr, standing }
 }
 
-export function getRankDetail(mmr: string | number, steam32Id?: number | null) {
+export async function getRankDetail(mmr: string | number, steam32Id?: number | null) {
   const mmrNum = Number(mmr)
 
   if (!mmrNum || mmrNum < 0) return null
@@ -100,13 +105,8 @@ export async function getRankDescription(mmr: string | number, steam32Id?: numbe
 
   if (!deets) return 'Unknown'
 
-  // Immortal rankers don't have a nextRank
-  if (!('nextRank' in deets)) {
-    // If mmr === standing that means we couldn't find a steam32Id, so wasn't looked up on Opendota
-    const standingDesc =
-      deets.standing !== mmr && deets.standing
-        ? ` | Immortal #${deets.standing}`
-        : ` | Could not find standing`
+  if ('standing' in deets) {
+    const standingDesc = ` | Immortal ${deets.standing ? `#${deets.standing}` : deets.mmr}`
     return `${mmr} MMR${standingDesc}`
   }
 

@@ -85,7 +85,13 @@ export function updateMmr(
 
         if (client.sockets.length) {
           console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
-          server.io.to(client.sockets).emit('update-medal', getRankDetail(mmr, client.steam32Id))
+          getRankDetail(mmr, client.steam32Id)
+            .then((deets) => {
+              server.io.to(client.sockets).emit('update-medal', deets)
+            })
+            .catch((e) => {
+              console.error('[MMR] !mmr= Error getting rank detail', e)
+            })
         } else {
           console.log('[UPDATE MMR] No sockets found to send update to', channel)
         }

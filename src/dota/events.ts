@@ -289,10 +289,13 @@ export class setupMainEvents {
       console.log('[STEAM32ID]', 'Emitting badge overlay update', {
         name: this.getChannel(),
       })
-
-      server.io
-        .to(this.getSockets())
-        .emit('update-medal', getRankDetail(this.getMmr(), this.getSteam32()))
+      getRankDetail(this.getMmr(), this.getSteam32())
+        .then((deets) => {
+          server.io.to(this.getSockets()).emit('update-medal', deets)
+        })
+        .catch((e) => {
+          console.error('[MMR] emitBadgeUpdate Error getting rank detail', e)
+        })
     }
   }
 

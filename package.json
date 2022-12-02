@@ -41,7 +41,8 @@
     "long": "^5.2.1",
     "memoizee": "^0.4.15",
     "socket.io": "^4.5.3",
-    "steam": "https://github.com/odota/node-steam"
+    "steam": "https://github.com/odota/node-steam",
+    "steam-errors": "^1.0.0"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.2",

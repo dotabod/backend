@@ -4,6 +4,8 @@ import fs from 'fs'
 // @ts-expect-error ???
 import Dota2 from 'dota2'
 import Steam from 'steam'
+// @ts-expect-error ???
+import steamErrors from 'steam-errors'
 
 import CustomError from '../utils/customError.js'
 import { promiseTimeout } from '../utils/index.js'
@@ -62,6 +64,14 @@ class Dota {
         console.log('Logged on.')
 
         this.dota2.launch()
+      } else {
+        try {
+          steamErrors(logonResp.eresult, (err: any, errorObject: any) => {
+            console.log(errorObject, err)
+          })
+        } catch (e) {
+          //
+        }
       }
     })
 
@@ -76,14 +86,23 @@ class Dota {
     })
     this.steamClient.on('loggedOff', (eresult: any) => {
       // @ts-expect-error connect is there i swear
-      this.steamClient.connect()
-      console.log('Logged off from Steam.')
+      if (process.env.NODE_ENV === 'production') this.steamClient.connect()
+      console.log('Logged off from Steam.', eresult)
+
+      try {
+        steamErrors(eresult, (err: any, errorObject: any) => {
+          console.log(errorObject, err)
+        })
+      } catch (e) {
+        //
+      }
     })
 
     this.steamClient.on('error', (error: any) => {
       console.log(`steam error`, error)
+      if (process.env.NODE_ENV !== 'production') this.exit()
       // @ts-expect-error connect is there i swear
-      this.steamClient.connect()
+      if (process.env.NODE_ENV === 'production') this.steamClient.connect()
     })
     this.steamClient.on('servers', (servers: { host: string; port: number }) => {
       fs.writeFileSync('./src/steam/volumes/servers.json', JSON.stringify(servers))
@@ -128,6 +147,19 @@ class Dota {
       1000,
       'Error getting medal',
     )
+  }
+
+  public exit() {
+    // clearInterval(this.interval)
+    console.log('Clearing getting matches interval')
+    this.dota2.exit()
+    console.log('Manually closed dota')
+    // @ts-expect-error disconnect is there
+    this.steamClient.disconnect()
+    console.log('Manually closed steam')
+    this.steamClient.removeAllListeners()
+    this.dota2.removeAllListeners()
+    console.log('Removed all listeners from dota and steam')
   }
 }
 
