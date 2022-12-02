@@ -13,6 +13,7 @@ import getHero from './lib/getHero'
 import { isArcade } from './lib/isArcade'
 import { isPlayingMatch } from './lib/isPlayingMatch'
 import { isSpectator } from './lib/isSpectator'
+import { getRankDetail } from './lib/ranks'
 import { updateMmr } from './lib/updateMmr'
 
 import { server } from '.'
@@ -291,7 +292,7 @@ export class setupMainEvents {
 
       server.io
         .to(this.getSockets())
-        .emit('update-medal', { mmr: this.getMmr(), steam32Id: this.getSteam32() })
+        .emit('update-medal', getRankDetail(this.getMmr(), this.getSteam32()))
     }
   }
 

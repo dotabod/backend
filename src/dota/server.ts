@@ -159,12 +159,7 @@ class D2GSI {
     const httpServer = http.createServer(app)
     const io = new Server(httpServer, {
       cors: {
-        origin: [
-          'http://localhost:3000',
-          'https://dotabod.com',
-          'https://dotabod.vercel.app',
-          'https://dotabot.vercel.app',
-        ],
+        origin: ['http://localhost:3000', 'http://localhost:3001', 'https://dotabod.com'],
         methods: ['GET', 'POST'],
       },
     })

@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { dota } from '../../steam'
 
 export const ranks = [
   { range: [0, 153], title: 'Herald☆1', image: '11.png' },
@@ -46,16 +46,14 @@ export const leaderRanks = [
   { range: [1001, 100000], image: '80.png', sparklingEffect: false },
 ]
 
-export async function lookupLeaderRank(mmr: number, steam32Id?: number) {
+export async function lookupLeaderRank(mmr: number, steam32Id?: number | null) {
   let standing = mmr
 
   // Not everyone has a steam32Id saved yet
   // The dota2gsi should save one for us
   if (steam32Id) {
     try {
-      standing = await axios(`https://api.opendota.com/api/players/${steam32Id}`).then(
-        ({ data }) => data?.leaderboard_rank as number,
-      )
+      standing = await dota.getCard(steam32Id).then((data) => data?.leaderboard_rank as number)
     } catch (e) {
       console.error('[lookupLeaderRank] Error fetching leaderboard rank', e)
     }
@@ -63,28 +61,29 @@ export async function lookupLeaderRank(mmr: number, steam32Id?: number) {
 
   const [myRank] = leaderRanks.filter((rank) => standing <= rank.range[1])
 
-  return { ...myRank, standing }
+  return { ...myRank, mmr, standing }
 }
 
-export function getRankDetail(param: string | number, steam32Id?: number) {
-  const mmr = Number(param)
+export function getRankDetail(mmr: string | number, steam32Id?: number | null) {
+  const mmrNum = Number(mmr)
 
-  if (!mmr || mmr < 0) return null
+  if (!mmrNum || mmrNum < 0) return null
 
   // Higher than max mmr? Lets check leaderboards
-  if (mmr > ranks[ranks.length - 1].range[1]) {
-    return lookupLeaderRank(mmr, steam32Id)
+  if (mmrNum > ranks[ranks.length - 1].range[1]) {
+    return lookupLeaderRank(mmrNum, steam32Id)
   }
 
-  const [myRank, nextRank] = ranks.filter((rank) => mmr <= rank.range[1])
+  const [myRank, nextRank] = ranks.filter((rank) => mmrNum <= rank.range[1])
 
   // Its not always truthy, nextRank can be beyond the range
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const nextMMR = nextRank?.range[0] || myRank?.range[1]
-  const mmrToNextRank = nextMMR - mmr
+  const mmrToNextRank = nextMMR - mmrNum
   const winsToNextRank = Math.ceil(mmrToNextRank / 30)
 
   return {
+    mmr: mmrNum,
     myRank,
     nextRank,
     nextMMR,
@@ -94,8 +93,8 @@ export function getRankDetail(param: string | number, steam32Id?: number) {
 }
 
 // Used for chatting !mmr
-export async function getRankDescription(param: string | number, steam32Id?: number) {
-  const deets = await getRankDetail(param, steam32Id)
+export async function getRankDescription(mmr: string | number, steam32Id?: number) {
+  const deets = await getRankDetail(mmr, steam32Id)
 
   if (!deets) return 'Unknown'
 
@@ -103,10 +102,10 @@ export async function getRankDescription(param: string | number, steam32Id?: num
   if (!('nextRank' in deets)) {
     // If mmr === standing that means we couldn't find a steam32Id, so wasn't looked up on Opendota
     const standingDesc =
-      deets.standing !== param && deets.standing
+      deets.standing !== mmr && deets.standing
         ? ` | Immortal #${deets.standing}`
         : ` | Could not find standing`
-    return `${param} MMR${standingDesc}`
+    return `${mmr} MMR${standingDesc}`
   }
 
   const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = deets
@@ -114,5 +113,5 @@ export async function getRankDescription(param: string | number, steam32Id?: num
   const nextIn = ` in ${winsToNextRank} wins`
   const oneMore = mmrToNextRank <= 30 ? ' | One more win peepoClap' : ''
 
-  return `${param} | ${myRank.title}${nextAt}${oneMore || nextIn}`
+  return `${mmr} | ${myRank.title}${nextAt}${oneMore || nextIn}`
 }
