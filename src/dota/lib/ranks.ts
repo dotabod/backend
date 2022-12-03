@@ -57,12 +57,20 @@ export async function lookupLeaderRank(mmr: number, steam32Id?: number | null) {
         .getCard(steam32Id)
         .then((data) => data?.leaderboard_rank as number)
     } catch (e) {
-      console.error('[lookupLeaderRank] Error fetching leaderboard rank', e)
+      console.error('[lookupLeaderRank] Error fetching leaderboard rank', steam32Id)
       return {
         myRank: leaderRanks[leaderRanks.length - 1],
         standing: null,
         mmr,
       }
+    }
+  }
+
+  if (!standing) {
+    return {
+      myRank: leaderRanks[leaderRanks.length - 1],
+      standing: null,
+      mmr,
     }
   }
 
@@ -106,8 +114,8 @@ export async function getRankDescription(mmr: string | number, steam32Id?: numbe
   if (!deets) return 'Unknown'
 
   if ('standing' in deets) {
-    const standingDesc = ` | Immortal ${deets.standing ? `#${deets.standing}` : deets.mmr}`
-    return `${mmr} MMR${standingDesc}`
+    const standingDesc = `Immortal${deets.standing ? ` #${deets.standing}` : ''}`
+    return `${mmr} MMR | ${standingDesc}`
   }
 
   const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = deets
