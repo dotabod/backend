@@ -36,13 +36,3 @@ Sentry.init({
 
 import './twitch/index.ts'
 import './db/watcher.ts'
-
-process.on('uncaughtException', (err) => {
-  Sentry.captureException(err)
-})
-
-process.on('SIGTERM', () => {
-  console.log('Received SIGTERM')
-  server.dota.exit()
-  process.exit(0)
-})

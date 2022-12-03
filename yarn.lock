@@ -1373,9 +1373,9 @@ doctrine@^3.0.0:
   dependencies:
     esutils "^2.0.2"
 
-"dota2@https://github.com/odota/node-dota2.git":
+"dota2@https://github.com/dotabod/node-dota2.git":
   version "7.0.3"
-  resolved "https://github.com/odota/node-dota2.git#76b9fe35a7058fe0156e2e3e9c81cbc3b92a5224"
+  resolved "https://github.com/dotabod/node-dota2.git#8c9f6301d81184568c983dab051c9ae5cb992dc8"
   dependencies:
     deferred "^0.7.10"
     long "^4.0.0"
@@ -3546,9 +3546,9 @@ steam@^1.4.1:
     steam-crypto "^0.0"
     steam-resources "github:seishun/node-steam-resources#v1.2.0"
 
-"steam@https://github.com/odota/node-steam":
+"steam@https://github.com/dotabod/node-steam":
   version "1.4.1"
-  resolved "https://github.com/odota/node-steam#2ec120baea7b53857b243e5a7e3f16d1839467e4"
+  resolved "https://github.com/dotabod/node-steam#2ec120baea7b53857b243e5a7e3f16d1839467e4"
   dependencies:
     adm-zip "^0.4"
     buffer-crc32 "^0.2"

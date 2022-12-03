@@ -34,14 +34,14 @@
     "axios": "1.2.0-alpha.1",
     "axios-retry": "^3.3.1",
     "body-parser": "^1.20.1",
-    "dota2": "https://github.com/odota/node-dota2.git",
+    "dota2": "https://github.com/dotabod/node-dota2.git",
     "dotaconstants": "https://github.com/odota/dotaconstants",
     "express": "^4.18.2",
     "git": "^0.1.5",
     "long": "^5.2.1",
     "memoizee": "^0.4.15",
     "socket.io": "^4.5.3",
-    "steam": "https://github.com/odota/node-steam",
+    "steam": "https://github.com/dotabod/node-steam",
     "steam-errors": "^1.0.0"
   },
   "devDependencies": {
