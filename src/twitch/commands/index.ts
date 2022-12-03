@@ -21,12 +21,10 @@ Commands that are fun for future:
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
 
+const ADMIN_CHANNELS = (process.env.CHANNELS ?? '').split(',')
+
 function isRegularUser(userInfo: ChatUser) {
-  return (
-    !userInfo.isBroadcaster &&
-    !userInfo.isMod &&
-    !process.env.ADMIN_USERS?.split(',')?.includes(userInfo.userName)
-  )
+  return !userInfo.isBroadcaster && !userInfo.isMod && !ADMIN_CHANNELS.includes(userInfo.userName)
 }
 
 const plebMode = new Set()
