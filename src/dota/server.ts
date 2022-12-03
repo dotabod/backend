@@ -134,7 +134,13 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
     .then((user) => {
       if (user?.id) {
         // sockets[] to be filled in by socket connection, so will steamid
-        socketClients.push({ ...user, token, sockets: [] })
+        socketClients.push({
+          ...user,
+          mmr: user.mmr || user.SteamAccount[0]?.mmr,
+          steam32Id: user.steam32Id ?? user.SteamAccount[0]?.steam32Id,
+          token,
+          sockets: [],
+        })
         next()
         return
       }
@@ -223,6 +229,8 @@ class D2GSI {
           // In case the socket is connected before the GSI client has!
           socketClients.push({
             ...user,
+            mmr: user.mmr || user.SteamAccount[0]?.mmr,
+            steam32Id: user.steam32Id ?? user.SteamAccount[0]?.steam32Id,
             token,
             sockets: [socket.id],
           })

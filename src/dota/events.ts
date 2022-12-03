@@ -161,11 +161,12 @@ export class setupMainEvents {
 
     // Catch all
     this.gsi.on('newdata', (data: Packet) => {
+      // New users who dont have a steamaccount saved yet
+      // This needs to run first so we have client.steamid on multiple acts
+      this.updateSteam32Id()
+
       // In case they connect to a game in progress and we missed the start event
       this.setupOBSBlockers(data.map?.game_state ?? '')
-
-      // New users who dont have a steamaccount saved yet
-      this.updateSteam32Id()
 
       if (!isPlayingMatch(this.gsi)) return
 
@@ -289,6 +290,7 @@ export class setupMainEvents {
       console.log('[STEAM32ID]', 'Emitting badge overlay update', {
         name: this.getChannel(),
       })
+
       getRankDetail(this.getMmr(), this.getSteam32())
         .then((deets) => {
           server.io.to(this.getSockets()).emit('update-medal', deets)
@@ -341,6 +343,14 @@ export class setupMainEvents {
               },
             })
             .then((res) => {
+              prisma.user
+                .update({ where: { id: this.getToken() }, data: { mmr: 0 } })
+                .then(() => {
+                  //
+                })
+                .catch((e) => {
+                  //
+                })
               this.client.mmr = mmr
               this.client.SteamAccount.push({
                 name: res.name,
