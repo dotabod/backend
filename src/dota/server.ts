@@ -163,7 +163,7 @@ class D2GSI {
   dota: Dota
 
   constructor() {
-    this.dota = new Dota()
+    this.dota = Dota.getInstance()
     const app = express()
     const httpServer = http.createServer(app)
     const io = new Server(httpServer, {

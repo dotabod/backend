@@ -131,6 +131,11 @@ class Dota {
     this.steamClient.connect()
   }
 
+  public static getInstance(): Dota {
+    if (!Dota.instance) Dota.instance = new Dota()
+    return Dota.instance
+  }
+
   public getCard(account: any): Promise<any> {
     return promiseTimeout(
       new Promise((resolve, reject) => {
