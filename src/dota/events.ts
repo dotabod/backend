@@ -733,11 +733,11 @@ export class setupMainEvents {
     // Edge case:
     // Send strat screen if the player has picked their hero and it's locked in
     // Other players on their team could still be picking
-    if (
-      typeof this.currentHero === 'string' &&
-      (this.currentHero === '' || this.currentHero.length) &&
-      pickSates.includes(state ?? '')
-    ) {
+    // -1 is the id of your hero if it gets ban picked when you pick first
+    // the id is your hero if you pick last, and strategy screen is shown, but
+    // the map state can still be hero selection
+    // name is empty if your hero is not locked in
+    if ((this.gsi.gamestate?.hero?.id ?? -1) >= 0 && pickSates.includes(state ?? '')) {
       if (this.blockCache.get(this.getToken()) !== 'strategy') {
         server.io
           .to(this.getSockets())
