@@ -1,6 +1,6 @@
 import { socketClients } from './consts'
 
-function findUser(token: string) {
+function findUser(token?: string) {
   if (!token) return null
 
   const user = socketClients.findIndex((client) => client.token === token)

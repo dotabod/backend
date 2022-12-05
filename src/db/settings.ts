@@ -15,6 +15,14 @@ export enum DBSettings {
   chatter = 'chatter',
   rosh = 'rosh',
   aegis = 'aegis',
+  minimapRight = 'minimapRight',
+  commandWL = 'commandWL',
+  commandXPM = 'commandXPM',
+  commandGPM = 'commandGPM',
+  commandAPM = 'commandAPM',
+  commandPleb = 'commandPleb',
+  commandModsonly = 'commandModsonly',
+  commandHero = 'commandHero',
 }
 
 export const defaultSettings = {
@@ -34,6 +42,14 @@ export const defaultSettings = {
   [DBSettings.chatter]: false,
   [DBSettings.rosh]: true,
   [DBSettings.aegis]: true,
+  [DBSettings.minimapRight]: false,
+  [DBSettings.commandWL]: true,
+  [DBSettings.commandXPM]: true,
+  [DBSettings.commandGPM]: true,
+  [DBSettings.commandAPM]: true,
+  [DBSettings.commandPleb]: true,
+  [DBSettings.commandModsonly]: true,
+  [DBSettings.commandHero]: true,
 }
 
 export const getValueOrDefault = (key: DBSettings, data?: { key: string; value: any }[]) => {

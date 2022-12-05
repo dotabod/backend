@@ -1,14 +1,15 @@
 import { ChatUser, toUserName } from '@twurple/chat'
+import { TwitchPrivateMessage } from '@twurple/chat/lib/commands/TwitchPrivateMessage'
 
-import { getSteamByTwitchId } from '../../db/getDBUser'
+import getDBUser, { getSteamByTwitchId } from '../../db/getDBUser'
 import { prisma } from '../../db/prisma'
 import { DBSettings, getValueOrDefault } from '../../db/settings'
 import { server } from '../../dota'
-import { findUserByName } from '../../dota/lib/connectedStreamers'
 import getHero from '../../dota/lib/getHero'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
 import { getRankDescription } from '../../dota/lib/ranks'
 import { updateMmr } from '../../dota/lib/updateMmr'
+import { SocketClient } from '../../types'
 import axios from '../../utils/axios'
 import { getChatClient } from '../lib/getChatClient'
 import { CooldownManager } from './CooldownManager'
@@ -21,7 +22,7 @@ Commands that are fun for future:
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
 
-const ADMIN_CHANNELS = (process.env.CHANNELS ?? '').split(',')
+const ADMIN_CHANNELS = (process.env.ADMIN_CHANNELS ?? '').split(',')
 
 function isRegularUser(userInfo: ChatUser) {
   return !userInfo.isBroadcaster && !userInfo.isMod && !ADMIN_CHANNELS.includes(userInfo.userName)
@@ -60,6 +61,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
     return
   }
 
+  if (!msg.channelId) return
   if (!text.startsWith('!')) return
 
   const args = text.split(' ')
@@ -67,7 +69,31 @@ chatClient.onMessage(function (channel, user, text, msg) {
   if (!commands.includes(command)) return
   if (!CooldownManager.canUse(channel, command)) return
 
-  const client = findUserByName(toUserName(channel))
+  // So we can get the users settings cuz some commands are disabled
+  // This runs every command, but its cached so no hit on db
+  getDBUser(undefined, msg.channelId)
+    .then((client) => {
+      if (!client) return
+
+      // Execute command checking
+      handleCommand(client, channel, msg, command, args)
+
+      // TODO: fix this touching if its not a mod for a mod command
+      CooldownManager.touch(channel, command)
+    })
+    .catch((e) => {
+      //
+    })
+})
+
+function handleCommand(
+  client: SocketClient,
+  channel: string,
+  msg: TwitchPrivateMessage,
+  command: string,
+  args: string[],
+) {
+  if (!msg.channelId) return
 
   switch (command) {
     case '!modsonly':
@@ -80,10 +106,15 @@ chatClient.onMessage(function (channel, user, text, msg) {
         break
       }
 
+      if (!getValueOrDefault(DBSettings.commandModsonly, client.settings)) {
+        return
+      }
+
       // Delete all messages that are not from a mod
       modMode.add(channel)
       void chatClient.say(channel, '/subscribers')
       void chatClient.say(channel, 'Mods only mode enabled BASED Clap')
+
       break
     case '!commands':
       void chatClient.say(channel, `Available commands: ${commands.join(' | ')}`)
@@ -92,7 +123,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
       // Only mod or owner
       if (isRegularUser(msg.userInfo)) break
 
-      if (client?.sockets.length) {
+      if (client.sockets.length) {
         void chatClient.say(channel, 'Refreshing overlay...')
         server.io.to(client.sockets).emit('refresh')
       }
@@ -105,9 +136,11 @@ chatClient.onMessage(function (channel, user, text, msg) {
       )
       break
     case '!wl': {
-      if (!msg.channelId) break
+      if (!getValueOrDefault(DBSettings.commandWL, client.settings)) {
+        return
+      }
 
-      if (!client?.steam32Id) {
+      if (!client.steam32Id) {
         void chatClient.say(channel, 'Not live PauseChamp')
         break
       }
@@ -177,6 +210,10 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     }
     case '!pleb':
+      if (!getValueOrDefault(DBSettings.commandPleb, client.settings)) {
+        return
+      }
+
       // Only mod or owner
       if (isRegularUser(msg.userInfo)) break
 
@@ -185,7 +222,10 @@ chatClient.onMessage(function (channel, user, text, msg) {
       void chatClient.say(channel, 'One pleb IN 👇')
       break
     case '!xpm': {
-      if (!client?.gsi) break
+      if (!getValueOrDefault(DBSettings.commandXPM, client.settings)) {
+        return
+      }
+      if (!client.gsi) break
       if (!isPlayingMatch(client.gsi)) break
 
       const xpm = client.gsi.gamestate?.player?.xpm
@@ -199,7 +239,10 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     }
     case '!apm': {
-      if (!client?.gsi) break
+      if (!getValueOrDefault(DBSettings.commandAPM, client.settings)) {
+        return
+      }
+      if (!client.gsi) break
       if (!isPlayingMatch(client.gsi)) break
 
       const commandsIssued = client.gsi.gamestate?.player?.commands_issued ?? 0
@@ -211,13 +254,15 @@ chatClient.onMessage(function (channel, user, text, msg) {
 
       const gameTime = client.gsi.gamestate?.map?.game_time ?? 1
       const apm = Math.round(commandsIssued / (gameTime / 60))
-      console.log(gameTime, commandsIssued, apm)
 
       void chatClient.say(channel, `Live APM: ${apm} Chatting`)
       break
     }
     case '!gpm': {
-      if (!client?.gsi) break
+      if (!getValueOrDefault(DBSettings.commandGPM, client.settings)) {
+        return
+      }
+      if (!client.gsi) break
       if (!isPlayingMatch(client.gsi)) break
 
       const gpm = client.gsi.gamestate?.player?.gpm
@@ -239,7 +284,10 @@ chatClient.onMessage(function (channel, user, text, msg) {
       break
     }
     case '!hero': {
-      if (!client?.gsi || !client.steam32Id) break
+      if (!getValueOrDefault(DBSettings.commandHero, client.settings)) {
+        return
+      }
+      if (!client.gsi || !client.steam32Id) break
       if (!isPlayingMatch(client.gsi)) break
       if (!client.gsi.gamestate?.hero?.name) {
         void chatClient.say(channel, 'Not playing PauseChamp')
@@ -289,7 +337,6 @@ chatClient.onMessage(function (channel, user, text, msg) {
     case '!mmr=': {
       // Only mod or owner
       if (isRegularUser(msg.userInfo)) break
-      if (!msg.channelId) break
 
       const [, mmr, steam32Id] = args
 
@@ -306,7 +353,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
             if (steamAccounts.length === 0) {
               // Sends a `0` steam32id so we can save it to the db,
               // but server will update with steam later when they join a match
-              updateMmr(mmr, Number(client?.steam32Id), channel, msg.channelId)
+              updateMmr(mmr, Number(client.steam32Id), channel, msg.channelId)
             } else if (steamAccounts.length === 1) {
               updateMmr(mmr, steamAccounts[0].steam32Id, channel, msg.channelId)
             } else {
@@ -334,20 +381,17 @@ chatClient.onMessage(function (channel, user, text, msg) {
     case '!steam': {
       // Only mod or owner
       if (isRegularUser(msg.userInfo)) break
-      if (!msg.channelId) break
 
       // TODO: whispers do not work via chatClient, have to use helix api
       // helix api rate limits you to 40 unique whispers a day though ?? so just not gonna do it
       void chatClient.say(
         channel,
-        `${channel} steam32id: 165972190 https://steamid.xyz/${client?.steam32Id ?? ' Unknown'}`,
+        `${channel} steam32id: 165972190 https://steamid.xyz/${client.steam32Id ?? ' Unknown'}`,
       )
 
       break
     }
     case '!mmr':
-      if (!msg.channelId) break
-
       // If connected, we can just respond with the cached MMR
       if (client) {
         const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
@@ -464,7 +508,4 @@ chatClient.onMessage(function (channel, user, text, msg) {
     default:
       break
   }
-
-  // TODO: fix this touching if its not a mod for a mod command
-  CooldownManager.touch(channel, command)
-})
+}

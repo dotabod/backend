@@ -6,11 +6,11 @@ import bodyParser from 'body-parser'
 import express, { NextFunction, Request, Response } from 'express'
 import { Server, Socket } from 'socket.io'
 
-import getDBUser from '../db/getDBUser'
+import getDBUser, { invalidTokens } from '../db/getDBUser'
 import Dota from '../steam'
 import { GSIClient } from './GSIClient'
 import findUser from './lib/connectedStreamers'
-import { gsiClients, socketClients } from './lib/consts'
+import { gsiClients } from './lib/consts'
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -104,16 +104,16 @@ function newData(req: Request, res: Response) {
   res.end()
 }
 
-const invalidTokens: string[] = []
 function checkAuth(req: Request, res: Response, next: NextFunction) {
   // Sent from dota gsi config file
   const token = req.body?.auth?.token
-  if (invalidTokens.includes(token)) {
-    res.status(401).send('Invalid token')
+  if (invalidTokens.has(token)) {
+    res.status(401).send('Invalid token, skipping auth check')
     return
   }
 
   if (!token) {
+    invalidTokens.add(token)
     console.log('[GSI]', `Dropping message from IP: ${req.ip}, no valid auth token`)
     res.status(401).json({
       error: new Error('Invalid request!'),
@@ -121,32 +121,13 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
     return
   }
 
-  // Our local memory cache of clients to sockets
-  const connectedSocketClient = findUser(token)
-  if (connectedSocketClient) {
-    next()
-    return
-  }
-
-  console.log('[GSI]', 'Havent cached user token yet, checking db', { token })
-
   getDBUser(token)
     .then((user) => {
-      if (user?.id) {
-        // sockets[] to be filled in by socket connection, so will steamid
-        socketClients.push({
-          ...user,
-          mmr: user.mmr || user.SteamAccount[0]?.mmr,
-          steam32Id: user.steam32Id ?? user.SteamAccount[0]?.steam32Id,
-          token,
-          sockets: [],
-        })
+      if (user?.token) {
         next()
         return
       }
 
-      console.log('[GSI]', 'Invalid token', { token })
-      invalidTokens.push(token)
       res.status(401).send('Invalid token')
     })
     .catch((e) => {
@@ -210,32 +191,16 @@ class D2GSI {
     // IO auth & client setup so we can send this socket messages
     io.use((socket, next) => {
       const { token } = socket.handshake.auth
-      const connectedSocketClient = findUser(token)
-
-      // Cache to prevent a supabase lookup on every message for username & token validation
-      if (connectedSocketClient) {
-        connectedSocketClient.sockets.push(socket.id)
-        next()
-        return
-      }
 
       getDBUser(token)
-        .then((user) => {
-          if (!user) {
-            next(new Error('authentication error'))
+        .then((client) => {
+          if (client?.token) {
+            client.sockets.push(socket.id)
+            next()
             return
           }
 
-          // In case the socket is connected before the GSI client has!
-          socketClients.push({
-            ...user,
-            mmr: user.mmr || user.SteamAccount[0]?.mmr,
-            steam32Id: user.steam32Id ?? user.SteamAccount[0]?.steam32Id,
-            token,
-            sockets: [socket.id],
-          })
-
-          next()
+          next(new Error('authentication error'))
         })
         .catch((e) => {
           console.log('[GSI]', 'Error checking auth', { token, e })
