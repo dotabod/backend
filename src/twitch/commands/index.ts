@@ -231,7 +231,7 @@ function handleCommand(
       const xpm = client.gsi.gamestate?.player?.xpm
 
       if (!xpm) {
-        void chatClient.say(channel, 'No xpm')
+        void chatClient.say(channel, 'Live XPM: 0')
         break
       }
 
@@ -248,7 +248,7 @@ function handleCommand(
       const commandsIssued = client.gsi.gamestate?.player?.commands_issued ?? 0
 
       if (!commandsIssued) {
-        void chatClient.say(channel, 'No APM yet')
+        void chatClient.say(channel, 'Live APM: 0 Chatting')
         break
       }
 
@@ -268,7 +268,7 @@ function handleCommand(
       const gpm = client.gsi.gamestate?.player?.gpm
 
       if (!gpm) {
-        void chatClient.say(channel, 'No GPM')
+        void chatClient.say(channel, 'Live GPM: 0')
         break
       }
 
