@@ -12,8 +12,8 @@ export function updateMmr(
   channel: string,
   channelId?: string | null,
 ) {
-  let mmr = newMmr
-  if (!mmr || !Number(mmr) || Number(mmr) > 20000 || mmr < 0) {
+  let mmr = Number(newMmr)
+  if (!newMmr || !mmr || mmr > 20000 || mmr < 0) {
     console.log('Invalid mmr, forcing to 0', { channel, mmr })
     mmr = 0
   }
@@ -45,10 +45,35 @@ export function updateMmr(
         data: {
           user: {
             update: {
-              mmr: Number(mmr),
+              mmr: mmr,
             },
           },
         },
+      })
+      .then(() => {
+        void chatClient.say(channel, `Updated MMR to ${mmr}`)
+        const client = findUserByName(toUserName(channel))
+
+        if (client) {
+          client.mmr = mmr
+          const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === steam32Id)
+          if (currentSteam >= 0) {
+            client.SteamAccount[currentSteam].mmr = mmr
+          }
+
+          if (client.sockets.length) {
+            console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
+            getRankDetail(mmr, client.steam32Id)
+              .then((deets) => {
+                server.io.to(client.sockets).emit('update-medal', deets)
+              })
+              .catch((e) => {
+                console.error('[MMR] !mmr= Error getting rank detail', e)
+              })
+          } else {
+            console.log('[UPDATE MMR] No sockets found to send update to', channel)
+          }
+        }
       })
       .catch((e) => {
         console.log('[UPDATE MMR]', 'Error updating user table', { channel, e })
@@ -66,7 +91,7 @@ export function updateMmr(
             mmr: 0,
           },
         },
-        mmr: Number(mmr),
+        mmr: mmr,
       },
       where: {
         steam32Id,
@@ -77,10 +102,10 @@ export function updateMmr(
       const client = findUserByName(toUserName(channel))
 
       if (client) {
-        client.mmr = Number(mmr)
+        client.mmr = mmr
         const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === steam32Id)
         if (currentSteam >= 0) {
-          client.SteamAccount[currentSteam].mmr = Number(mmr)
+          client.SteamAccount[currentSteam].mmr = mmr
         }
 
         if (client.sockets.length) {
