@@ -9,11 +9,9 @@
   "type": "module",
   "scripts": {
     "start": "ts-node ./src/index.ts",
-    "dev": "nodemon --watch 'src/**' --ext 'ts' src/index.ts",
-    "pull": "git pull && systemctl restart nodeapp",
-    "log": "journalctl -xefu nodeapp",
+    "dev": "nodemon --ext ts ./src/index.ts",
     "postinstall": "prisma generate",
-    "steam": "nodemon --watch 'src/**' --ext 'ts' ./src/steam/index.ts",
+    "steam": "nodemon --ext ts ./src/steam/index.ts",
     "tc": "tsc --noEmit",
     "lint": "eslint --ext .ts ./src",
     "lint:fix": "npm run lint -- --fix"
