@@ -241,11 +241,11 @@ export class setupMainEvents {
       if (isSmoked) {
         const hero = getHero(this.gsi.gamestate?.hero?.name)
         if (!hero) {
-          void chatClient.say(this.getChannel(), '🚬💣 Smoke!')
+          void chatClient.say(this.getChannel(), 'Shush Smoked!')
           return
         }
 
-        void chatClient.say(this.getChannel(), `🚬💣 ${hero.localized_name} is smoked!`)
+        void chatClient.say(this.getChannel(), `Shush ${hero.localized_name} is smoked!`)
       }
     })
 
