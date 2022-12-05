@@ -398,13 +398,6 @@ export class setupMainEvents {
       return
     }
 
-    const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, this.client.settings)
-    if (!mmrEnabled) {
-      // TODO: Make a new event for 'update-wl'
-      this.emitBadgeUpdate()
-      return
-    }
-
     const newMMR = this.getMmr() + (increase ? 30 : -30)
     if (this.client.steam32Id) {
       updateMmr(newMMR, this.client.steam32Id, this.client.name)

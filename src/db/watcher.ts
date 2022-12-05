@@ -39,7 +39,9 @@ channel
 
           getRankDetail(client.mmr, client.steam32Id)
             .then((deets) => {
-              server.io.to(client.sockets).emit('update-medal', deets)
+              if (client.sockets.length) {
+                server.io.to(client.sockets).emit('update-medal', deets)
+              }
             })
             .catch((e) => {
               console.error('[WATCHER MMR] Error getting rank detail', e)
@@ -54,6 +56,7 @@ channel
 
     // replace the new setting with the one we have saved in cache
     if (client) {
+      console.log('[WATCHER SETTING] Updating setting for', client.name, newObj.key)
       const setting = client.settings.find((s) => s.key === newObj.key)
       if (setting) {
         setting.value = newObj.value
@@ -77,6 +80,8 @@ channel
       // Just here to update local memory
       if (!client) return
 
+      console.log('[WATCHER MMR] Updating setting for', client.name)
+
       const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === newObj.steam32Id)
       if (currentSteam >= 0) {
         // update from dashboard
@@ -90,7 +95,9 @@ channel
             client.mmr = newObj.mmr
             getRankDetail(newObj.mmr, client.steam32Id)
               .then((deets) => {
-                server.io.to(client.sockets).emit('update-medal', deets)
+                if (client.sockets.length) {
+                  server.io.to(client.sockets).emit('update-medal', deets)
+                }
               })
               .catch((e) => {
                 console.error('[WATCHER MMR] postgres_changes Error getting rank detail', e)

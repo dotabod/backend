@@ -2,6 +2,7 @@ import { toUserName } from '@twurple/chat'
 
 import { server } from '..'
 import { prisma } from '../../db/prisma'
+import { DBSettings, getValueOrDefault } from '../../db/settings'
 import { chatClient } from '../../twitch/commands'
 import { findUserByName } from './connectedStreamers'
 import { getRankDetail } from './ranks'
@@ -51,10 +52,12 @@ export function updateMmr(
         },
       })
       .then(() => {
-        void chatClient.say(channel, `Updated MMR to ${mmr}`)
         const client = findUserByName(toUserName(channel))
 
         if (client) {
+          const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
+          if (mmrEnabled) void chatClient.say(channel, `Updated MMR to ${mmr}`)
+
           client.mmr = mmr
           const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === steam32Id)
           if (currentSteam >= 0) {
@@ -77,7 +80,6 @@ export function updateMmr(
       })
       .catch((e) => {
         console.log('[UPDATE MMR]', 'Error updating user table', { channel, e })
-        void chatClient.say(channel, `Error updating mmr for ${channel}`)
       })
 
     return
@@ -98,10 +100,12 @@ export function updateMmr(
       },
     })
     .then(() => {
-      void chatClient.say(channel, `Updated MMR to ${mmr}`)
       const client = findUserByName(toUserName(channel))
 
       if (client) {
+        const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
+        if (mmrEnabled) void chatClient.say(channel, `Updated MMR to ${mmr}`)
+
         client.mmr = mmr
         const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === steam32Id)
         if (currentSteam >= 0) {
@@ -122,7 +126,7 @@ export function updateMmr(
         }
       }
     })
-    .catch(() => {
-      void chatClient.say(channel, `Failed to update MMR to ${mmr}`)
+    .catch((e) => {
+      console.log('[UPDATE MMR]', 'Error updating account table', { channel, e })
     })
 }
