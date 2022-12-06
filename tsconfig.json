@@ -18,7 +18,7 @@
     ],
     "allowJs": true,
     "checkJs": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,

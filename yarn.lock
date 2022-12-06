@@ -1384,10 +1384,6 @@ doctrine@^3.0.0:
     steam-resources "github:odota/node-steam-resources"
     winston "^3.2.1"
 
-"dotaconstants@https://github.com/odota/dotaconstants":
-  version "7.14.0"
-  resolved "https://github.com/odota/dotaconstants#17069491ad1d70d284cc21031b2ea8cf9262635a"
-
 dotenv@^16.0.3:
   version "16.0.3"
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.0.3.tgz#115aec42bac5053db3c456db30cc243a5a836a07"
