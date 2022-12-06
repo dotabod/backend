@@ -1,11 +1,11 @@
 import { toUserName } from '@twurple/chat'
 
-import { server } from '..'
-import { prisma } from '../../db/prisma'
-import { DBSettings, getValueOrDefault } from '../../db/settings'
-import { chatClient } from '../../twitch/commands'
-import { findUserByName } from './connectedStreamers'
-import { getRankDetail } from './ranks'
+import { server } from '../index.js'
+import { prisma } from '../../db/prisma.js'
+import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { chatClient } from '../../twitch/commands/index.js'
+import { findUserByName } from './connectedStreamers.js'
+import { getRankDetail } from './ranks.js'
 
 export function updateMmr(
   newMmr: string | number,

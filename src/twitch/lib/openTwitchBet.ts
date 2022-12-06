@@ -1,4 +1,4 @@
-import { getChannelAPI } from './getChannelAPI'
+import { getChannelAPI } from './getChannelAPI.js'
 
 export const disabledBets = new Set()
 

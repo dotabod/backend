@@ -1,5 +1,5 @@
-import { GSIClient } from './dota/GSIClient'
-import { HeroNames } from './dota/lib/getHero'
+import { GSIClient } from './dota/GSIClient.js'
+import { HeroNames } from './dota/lib/getHero.js'
 
 export interface SocketClient {
   gsi?: GSIClient

@@ -1,7 +1,7 @@
 import { ChatClient } from '@twurple/chat'
 
-import { getAuthProvider } from './getAuthProvider'
-import { getChannels } from './getChannels'
+import { getAuthProvider } from './getAuthProvider.js'
+import { getChannels } from './getChannels.js'
 
 export async function getChatClient() {
   const chatClient = new ChatClient({

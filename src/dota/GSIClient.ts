@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-import { Packet } from '../types'
+import { Packet } from '../types.js'
 
 export class GSIClient extends EventEmitter {
   ip: string

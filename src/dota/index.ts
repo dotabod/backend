@@ -1,6 +1,6 @@
-import { setupMainEvents } from './events'
-import findUser from './lib/connectedStreamers'
-import D2GSI from './server'
+import { setupMainEvents } from './events.js'
+import findUser from './lib/connectedStreamers.js'
+import D2GSI from './server.js'
 
 // Then setup the dota gsi server & websocket server
 export const server = new D2GSI()

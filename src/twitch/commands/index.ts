@@ -1,19 +1,18 @@
 import { ChatUser, toUserName } from '@twurple/chat'
-import { TwitchPrivateMessage } from '@twurple/chat/lib/commands/TwitchPrivateMessage'
 
-import getDBUser, { getSteamByTwitchId } from '../../db/getDBUser'
-import { getWL } from '../../db/getWL'
-import { prisma } from '../../db/prisma'
-import { DBSettings, getValueOrDefault } from '../../db/settings'
-import { server } from '../../dota'
-import getHero from '../../dota/lib/getHero'
-import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
-import { getRankDescription } from '../../dota/lib/ranks'
-import { updateMmr } from '../../dota/lib/updateMmr'
-import { SocketClient } from '../../types'
-import axios from '../../utils/axios'
-import { getChatClient } from '../lib/getChatClient'
-import { CooldownManager } from './CooldownManager'
+import getDBUser, { getSteamByTwitchId } from '../../db/getDBUser.js'
+import { getWL } from '../../db/getWL.js'
+import { prisma } from '../../db/prisma.js'
+import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { server } from '../../dota/index.js'
+import getHero from '../../dota/lib/getHero.js'
+import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
+import { getRankDescription } from '../../dota/lib/ranks.js'
+import { updateMmr } from '../../dota/lib/updateMmr.js'
+import { SocketClient } from '../../types.js'
+import axios from '../../utils/axios.js'
+import { getChatClient } from '../lib/getChatClient.js'
+import { CooldownManager } from './CooldownManager.js'
 
 /*
 Commands that are fun for future:
@@ -91,7 +90,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
 function handleCommand(
   client: SocketClient,
   channel: string,
-  msg: TwitchPrivateMessage,
+  msg: any,
   command: string,
   args: string[],
 ) {

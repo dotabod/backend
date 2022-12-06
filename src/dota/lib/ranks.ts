@@ -1,4 +1,4 @@
-import { server } from '..'
+import { server } from '../index.js'
 
 export const ranks = [
   { range: [0, 153], title: 'Herald☆1', image: '11.png' },

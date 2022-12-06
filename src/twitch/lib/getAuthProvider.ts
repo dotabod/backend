@@ -1,6 +1,6 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
 
-import { hasTokens } from './hasTokens'
+import { hasTokens } from './hasTokens.js'
 
 export const getAuthProvider = function () {
   if (!hasTokens) {

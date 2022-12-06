@@ -1,6 +1,6 @@
-import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers'
-import { socketClients } from '../dota/lib/consts'
-import { prisma } from './prisma'
+import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
+import { socketClients } from '../dota/lib/consts.js'
+import { prisma } from './prisma.js'
 
 export const invalidTokens = new Set()
 

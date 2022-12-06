@@ -1,10 +1,10 @@
 import { Setting, SteamAccount, User } from '@prisma/client'
 
-import { server } from '../dota'
-import findUser from '../dota/lib/connectedStreamers'
-import { getRankDetail } from '../dota/lib/ranks'
-import { chatClient } from '../twitch/commands/index'
-import supabase from './supabase'
+import { server } from '../dota/index.js'
+import findUser from '../dota/lib/connectedStreamers.js'
+import { getRankDetail } from '../dota/lib/ranks.js'
+import { chatClient } from '../twitch/commands/index.js'
+import supabase from './supabase.js'
 
 const channel = supabase.channel('db-changes')
 if (process.env.NODE_ENV === 'production') {

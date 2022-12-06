@@ -1,4 +1,4 @@
-import { GSIClient } from '../GSIClient'
+import { GSIClient } from '../GSIClient.js'
 
 export function isArcade(client: GSIClient) {
   return (

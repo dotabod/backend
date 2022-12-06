@@ -6,11 +6,11 @@ import bodyParser from 'body-parser'
 import express, { NextFunction, Request, Response } from 'express'
 import { Server, Socket } from 'socket.io'
 
-import getDBUser, { invalidTokens } from '../db/getDBUser'
-import Dota from '../steam'
-import { GSIClient } from './GSIClient'
-import findUser from './lib/connectedStreamers'
-import { gsiClients } from './lib/consts'
+import getDBUser, { invalidTokens } from '../db/getDBUser.js'
+import Dota from '../steam/index.js'
+import { GSIClient } from './GSIClient.js'
+import findUser from './lib/connectedStreamers.js'
+import { gsiClients } from './lib/consts.js'
 
 declare module 'express-serve-static-core' {
   interface Request {

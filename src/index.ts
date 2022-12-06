@@ -4,8 +4,8 @@ import '@sentry/tracing'
 import { ProfilingIntegration } from '@sentry/profiling-node'
 import * as Tracing from '@sentry/tracing'
 
-import { prisma } from './db/prisma'
-import { server } from './dota'
+import { prisma } from './db/prisma.js'
+import { server } from './dota/index.js'
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,

@@ -1,6 +1,6 @@
 import { ApiClient } from '@twurple/api'
 
-import { getChannelAuthProvider } from './getChannelAuthProvider'
+import { getChannelAuthProvider } from './getChannelAuthProvider.js'
 
 export const getChannelAPI = function (channel: string, userId: string) {
   const { providerAccountId, authProvider } = getChannelAuthProvider(channel, userId)

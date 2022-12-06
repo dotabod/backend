@@ -1,4 +1,4 @@
-import CustomError from './customError'
+import CustomError from './customError.js'
 
 export function steamID64toSteamID32(steamID64: string) {
   if (!steamID64) return null

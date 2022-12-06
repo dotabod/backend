@@ -1,6 +1,6 @@
-import { GSIClient } from '../GSIClient'
-import { isArcade } from './isArcade'
-import { isSpectator } from './isSpectator'
+import { GSIClient } from '../GSIClient.js'
+import { isArcade } from './isArcade.js'
+import { isSpectator } from './isSpectator.js'
 
 // spectator = watching a friend live
 // team2 = watching replay or live match

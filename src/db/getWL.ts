@@ -1,5 +1,5 @@
-import { getBotAPI } from '../twitch/lib/getBotAPI'
-import { prisma } from './prisma'
+import { getBotAPI } from '../twitch/lib/getBotAPI.js'
+import { prisma } from './prisma.js'
 
 export async function getWL(channelId: string) {
   if (!channelId) {

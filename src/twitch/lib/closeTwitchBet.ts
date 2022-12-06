@@ -1,5 +1,5 @@
-import { getChannelAPI } from './getChannelAPI'
-import { disabledBets } from './openTwitchBet'
+import { getChannelAPI } from './getChannelAPI.js'
+import { disabledBets } from './openTwitchBet.js'
 
 export function closeTwitchBet(channel: string, won: boolean, userId: string) {
   if (disabledBets.has(channel)) throw new Error('Bets not enabled')

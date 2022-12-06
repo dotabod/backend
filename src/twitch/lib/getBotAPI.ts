@@ -1,6 +1,6 @@
 import { ApiClient } from '@twurple/api'
 
-import { getAuthProvider } from './getAuthProvider'
+import { getAuthProvider } from './getAuthProvider.js'
 
 export const getBotAPI = function () {
   const authProvider = getAuthProvider()

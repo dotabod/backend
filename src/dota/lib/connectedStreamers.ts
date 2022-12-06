@@ -1,4 +1,4 @@
-import { socketClients } from './consts'
+import { socketClients } from './consts.js'
 
 function findUser(token?: string) {
   if (!token) return null

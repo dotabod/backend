@@ -1,7 +1,7 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
 
-import findUser from '../../dota/lib/connectedStreamers'
-import { hasTokens } from './hasTokens'
+import findUser from '../../dota/lib/connectedStreamers.js'
+import { hasTokens } from './hasTokens.js'
 
 export const getChannelAuthProvider = function (channel: string, userId: string) {
   if (!hasTokens) {
