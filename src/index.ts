@@ -34,5 +34,5 @@ Sentry.init({
   profilesSampleRate: 1.0,
 })
 
-import './twitch/index.ts'
-import './db/watcher.ts'
+import './twitch/index.js'
+import './db/watcher.js'
