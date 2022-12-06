@@ -1,9 +1,13 @@
+import { getBotAPI } from '../twitch/lib/getBotAPI'
 import { prisma } from './prisma'
 
-export function getWL(channelId?: string, token?: string) {
-  if (!channelId && !token) {
+export async function getWL(channelId: string) {
+  if (!channelId) {
     return Promise.resolve({ record: [{ win: 0, lose: 0, type: 'U' }], msg: null })
   }
+
+  const botApi = getBotAPI()
+  const stream = await botApi.streams.getStreamByUserId(channelId)
 
   return prisma.bet
     .groupBy({
@@ -20,14 +24,13 @@ export function getWL(channelId?: string, token?: string) {
           in: [0, 7],
         },
         user: {
-          id: token,
           Account: {
             provider: 'twitch',
             providerAccountId: channelId,
           },
         },
         createdAt: {
-          gte: new Date(new Date().getTime() - 12 * 60 * 60 * 1000),
+          gte: stream?.startDate ?? new Date(new Date().getTime() - 12 * 60 * 60 * 1000),
         },
       },
     })

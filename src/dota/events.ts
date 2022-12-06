@@ -69,6 +69,10 @@ export class setupMainEvents {
     return this.client.steam32Id
   }
 
+  private getChannelId(): string {
+    return this.client.Account?.providerAccountId ?? ''
+  }
+
   private addSecondsToNow(seconds: number) {
     return new Date(new Date().getTime() + seconds * 1000)
   }
@@ -290,7 +294,7 @@ export class setupMainEvents {
         name: this.getChannel(),
       })
 
-      getWL(undefined, this.getToken())
+      getWL(this.getChannelId())
         .then(({ record }) => {
           server.io.to(this.getSockets()).emit('update-wl', record)
         })
@@ -299,6 +303,7 @@ export class setupMainEvents {
         })
     }
   }
+
 
   // This array of socket ids is who we want to emit events to:
   // console.log("[SETUP]", { sockets: this.getSockets() })

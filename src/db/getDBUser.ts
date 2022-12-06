@@ -7,11 +7,13 @@ export const invalidTokens = new Set()
 export default async function getDBUser(token?: string, twitchId?: string) {
   if (invalidTokens.has(token || twitchId)) return null
 
+  // Cache check
   if (token) {
     const client = findUser(token || twitchId)
     if (client) return client
   }
 
+  // Cache check
   if (twitchId) {
     const client = findUserByTwitchId(twitchId)
     if (client) return client
