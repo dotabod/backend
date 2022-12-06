@@ -12,7 +12,10 @@ import { updateMmr } from '../../dota/lib/updateMmr.js'
 import { SocketClient } from '../../types.js'
 import axios from '../../utils/axios.js'
 import { getChatClient } from '../lib/getChatClient.js'
-import { CooldownManager } from './CooldownManager.js'
+import commandHandler from './CommandHandler.js'
+
+import './ping.js'
+import './gpm.js'
 
 /*
 Commands that are fun for future:
@@ -21,12 +24,6 @@ Commands that are fun for future:
 
 // Setup twitch chat bot client first
 export const chatClient = await getChatClient()
-
-const ADMIN_CHANNELS = (process.env.ADMIN_CHANNELS ?? '').split(',')
-
-function isRegularUser(userInfo: ChatUser) {
-  return !userInfo.isBroadcaster && !userInfo.isMod && !ADMIN_CHANNELS.includes(userInfo.userName)
-}
 
 const plebMode = new Set()
 const modMode = new Set()
@@ -47,7 +44,11 @@ const commands = [
   '!steam',
   '!mmr=',
 ]
+
 chatClient.onMessage(function (channel, user, text, msg) {
+  if (!msg.channelId) return
+  if (!text.startsWith('!')) return
+
   // Letting one pleb in
   if (plebMode.has(channel) && !msg.userInfo.isSubscriber) {
     plebMode.delete(channel)
@@ -56,36 +57,42 @@ chatClient.onMessage(function (channel, user, text, msg) {
     return
   }
 
-  // Letting one pleb in
+  // Don't allow non mods to message
   if (modMode.has(channel) && !(msg.userInfo.isMod || msg.userInfo.isBroadcaster)) {
     void chatClient.deleteMessage(channel, msg)
     return
   }
 
-  if (!msg.channelId) return
-  if (!text.startsWith('!')) return
-
-  const args = text.split(' ')
-  const command = args[0].toLowerCase()
-  if (!commands.includes(command)) return
-  if (!CooldownManager.canUse(channel, command)) return
-
   // So we can get the users settings cuz some commands are disabled
   // This runs every command, but its cached so no hit on db
   getDBUser(undefined, msg.channelId)
     .then((client) => {
-      if (!client) return
+      if (!client || !msg.channelId) return
 
-      // Execute command checking
-      handleCommand(client, channel, msg, command, args)
-
-      // TODO: fix this touching if its not a mod for a mod command
-      CooldownManager.touch(channel, command)
+      // Handle the incoming message using the command handler
+      commandHandler.handleMessage({
+        channel: { name: channel, id: msg.channelId, client },
+        user: {
+          name: user,
+          permission: msg.userInfo.isSubscriber
+            ? 1
+            : msg.userInfo.isMod
+            ? 2
+            : msg.userInfo.isBroadcaster
+            ? 3
+            : 0,
+        },
+        content: text,
+      })
     })
     .catch((e) => {
       //
     })
 })
+
+function isRegularUser(userInfo: ChatUser) {
+  return !userInfo.isBroadcaster && !userInfo.isMod
+}
 
 function handleCommand(
   client: SocketClient,
@@ -206,31 +213,6 @@ function handleCommand(
       const apm = Math.round(commandsIssued / (gameTime / 60))
 
       void chatClient.say(channel, `Live APM: ${apm} Chatting`)
-      break
-    }
-    case '!gpm': {
-      if (!getValueOrDefault(DBSettings.commandGPM, client.settings)) {
-        return
-      }
-      if (!client.gsi) break
-      if (!isPlayingMatch(client.gsi)) break
-
-      const gpm = client.gsi.gamestate?.player?.gpm
-
-      if (!gpm) {
-        void chatClient.say(channel, 'Live GPM: 0')
-        break
-      }
-
-      const gold_from_hero_kills = client.gsi.gamestate?.player?.gold_from_hero_kills
-      const gold_from_creep_kills = client.gsi.gamestate?.player?.gold_from_creep_kills
-
-      void chatClient.say(
-        channel,
-        `Live GPM: ${gpm}. ${gold_from_hero_kills ?? 0} from hero kills, ${
-          gold_from_creep_kills ?? 0
-        } from creep kills.`,
-      )
       break
     }
     case '!hero': {
@@ -448,9 +430,6 @@ function handleCommand(
           console.log('[MMR] Error fetching MMR from database', e, channel)
         })
 
-      break
-    case '!ping':
-      void chatClient.say(channel, 'Pong EZ Clap')
       break
     default:
       break
