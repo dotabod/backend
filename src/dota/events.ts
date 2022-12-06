@@ -304,7 +304,6 @@ export class setupMainEvents {
     }
   }
 
-
   // This array of socket ids is who we want to emit events to:
   // console.log("[SETUP]", { sockets: this.getSockets() })
   emitBadgeUpdate() {

@@ -8,10 +8,10 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "Node16",
     "rootDir": "./",
     "outDir": "./dist",
-    "sourceMap": true,
+    "sourceMap": false,
     "strictNullChecks": true,
     "types": [
       "node"
@@ -28,7 +28,6 @@
   "ts-node": {
     "esm": true,
     "pretty": true,
-    "experimentalSpecifierResolution": "node",
     "require": [
       "dotenv/config",
       "tsconfig-paths/register"
