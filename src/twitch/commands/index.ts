@@ -2,6 +2,7 @@ import { ChatUser, toUserName } from '@twurple/chat'
 import { TwitchPrivateMessage } from '@twurple/chat/lib/commands/TwitchPrivateMessage'
 
 import getDBUser, { getSteamByTwitchId } from '../../db/getDBUser'
+import { getWL } from '../../db/getWL'
 import { prisma } from '../../db/prisma'
 import { DBSettings, getValueOrDefault } from '../../db/settings'
 import { server } from '../../dota'
@@ -34,14 +35,15 @@ const commands = [
   '!gpm',
   '!hero',
   '!mmr',
-  '!ping',
   '!xpm',
   '!apm',
   '!wl',
-  '!dotabod',
   '!pleb',
   '!commands',
   '!modsonly',
+  // more
+  '!ping',
+  '!dotabod',
   '!refresh',
   '!steam',
   '!mmr=',
@@ -147,60 +149,9 @@ function handleCommand(
 
       console.log('[WL] Checking WL for steam32Id', client.steam32Id)
 
-      prisma.bet
-        .groupBy({
-          by: ['won', 'lobby_type'],
-          _count: {
-            won: true,
-          },
-          where: {
-            won: {
-              not: null,
-            },
-            lobby_type: {
-              not: null,
-              in: [0, 7],
-            },
-            user: {
-              Account: {
-                provider: 'twitch',
-                providerAccountId: msg.channelId,
-              },
-            },
-            createdAt: {
-              gte: new Date(new Date().getTime() - 12 * 60 * 60 * 1000),
-            },
-          },
-        })
-        .then((r) => {
-          const ranked: { win: number; lose: number } = { win: 0, lose: 0 }
-          const unranked: { win: number; lose: number } = { win: 0, lose: 0 }
-
-          r.forEach((match) => {
-            if (match.lobby_type === 7) {
-              if (match.won) {
-                ranked.win += match._count.won
-              } else {
-                ranked.lose += match._count.won
-              }
-            } else {
-              if (match.won) {
-                unranked.win += match._count.won
-              } else {
-                unranked.lose += match._count.won
-              }
-            }
-          })
-
-          const hasUnranked = unranked.win + unranked.lose !== 0
-          const hasRanked = ranked.win + ranked.lose !== 0
-          const rankedMsg = `Ranked ${ranked.win} W - ${ranked.lose} L`
-          const unrankedMsg = `Unranked ${unranked.win} W - ${unranked.lose} L`
-          const msg = []
-          if (hasRanked) msg.push(rankedMsg)
-          if (hasUnranked) msg.push(unrankedMsg)
-          if (!hasRanked && !hasUnranked) msg.push('0 W - 0 L')
-          void chatClient.say(channel, msg.join(' | '))
+      getWL(msg.channelId)
+        .then(({ msg }) => {
+          void chatClient.say(channel, msg || 'Unknown WL')
         })
         .catch((e) => {
           console.log(e)
@@ -384,10 +335,7 @@ function handleCommand(
 
       // TODO: whispers do not work via chatClient, have to use helix api
       // helix api rate limits you to 40 unique whispers a day though ?? so just not gonna do it
-      void chatClient.say(
-        channel,
-        `${channel} steam32id: 165972190 https://steamid.xyz/${client.steam32Id ?? ' Unknown'}`,
-      )
+      void chatClient.say(channel, `https://steamid.xyz/${client.steam32Id ?? ' Unknown'}`)
 
       break
     }

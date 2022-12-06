@@ -1,3 +1,4 @@
+import { getWL } from '../db/getWL'
 import { prisma } from '../db/prisma'
 import { DBSettings, getValueOrDefault } from '../db/settings'
 import { chatClient } from '../twitch/commands'
@@ -283,6 +284,22 @@ export class setupMainEvents {
     })
   }
 
+  emitWLUpdate() {
+    if (this.getSockets().length) {
+      console.log('[STEAM32ID]', 'Emitting WL overlay update', {
+        name: this.getChannel(),
+      })
+
+      getWL(undefined, this.getToken())
+        .then(({ record }) => {
+          server.io.to(this.getSockets()).emit('update-wl', record)
+        })
+        .catch((e) => {
+          console.error('[MMR] emitWLUpdate Error getting WL', e)
+        })
+    }
+  }
+
   // This array of socket ids is who we want to emit events to:
   // console.log("[SETUP]", { sockets: this.getSockets() })
   emitBadgeUpdate() {
@@ -393,8 +410,9 @@ export class setupMainEvents {
         console.error('[DATABASE ERROR MMR]', e)
       })
 
+    this.emitWLUpdate()
+
     if (!ranked) {
-      this.emitBadgeUpdate()
       return
     }
 
