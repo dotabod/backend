@@ -442,9 +442,19 @@ export class setupMainEvents {
       params: { key: process.env.STEAM_WEB_API, match_id: matchId },
     })
       .then((response: any) => {
-        this.updateMMR(increase, response?.data?.result?.lobby_type as number, matchId)
+        let lobbyType = response?.data?.result?.lobby_type
+        // Force update when an error occurs and just let mods take care of the discrepancy
+        if (
+          response?.data?.result?.error === 'Practice matches are not available via GetMatchDetails'
+        ) {
+          lobbyType = 1
+        }
+
+        this.updateMMR(increase, lobbyType, matchId)
       })
       .catch((e: any) => {
+        console.log(e, 'E')
+
         let lobbyType = 7
         // Force update when an error occurs and just let mods take care of the discrepancy
         if (
