@@ -720,6 +720,7 @@ export class setupMainEvents {
     if (isSpectator(this.gsi)) {
       if (this.blockCache.get(this.getToken()) !== 'spectator') {
         this.emitBadgeUpdate()
+        this.emitWLUpdate()
 
         server.io.to(this.getSockets()).emit('block', { type: 'spectator' })
         this.blockCache.set(this.getToken(), 'spectator')
@@ -731,6 +732,7 @@ export class setupMainEvents {
     if (isArcade(this.gsi)) {
       if (this.blockCache.get(this.getToken()) !== 'arcade') {
         this.emitBadgeUpdate()
+        this.emitWLUpdate()
 
         server.io.to(this.getSockets()).emit('block', { type: 'arcade' })
         this.blockCache.set(this.getToken(), 'arcade')
@@ -773,7 +775,10 @@ export class setupMainEvents {
             team: this.gsi.gamestate?.player?.team_name,
           })
 
-          this.emitBadgeUpdate()
+          if (blocker.type === 'playing') {
+            this.emitBadgeUpdate()
+            this.emitWLUpdate()
+          }
 
           if (this.aegisPickedUp?.expireDate) {
             server.io.to(this.getSockets()).emit('aegis-picked-up', this.aegisPickedUp)
