@@ -19,7 +19,7 @@ channel
     chatClient
       .join(payload.new.name)
       .then((res) => {
-        console.log('[SUPABASE]', 'Joined channel', res)
+        console.log('[SUPABASE]', 'Joined channel', payload.new.name)
       })
       .catch((e) => {
         console.error('[SUPABASE]', 'Error joining channel', e)
