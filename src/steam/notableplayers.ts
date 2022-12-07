@@ -45,5 +45,5 @@ export async function notablePlayers(steam32Id: number): Promise<string> {
 
   const players = result.map((m) => `${m.name} (${m.heroName})`).join(' · ')
 
-  return `${mode?.name} [${game.average_mmr} avg MMR]: ${players}`
+  return `${mode?.name} [${game.average_mmr} avg MMR]: ${players || 'No notable players'}`
 }

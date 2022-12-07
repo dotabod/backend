@@ -1,4 +1,3 @@
-import { gameMedals } from '../../steam/medals.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
 
