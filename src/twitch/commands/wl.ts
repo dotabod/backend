@@ -5,7 +5,7 @@ import commandHandler, { MessageType } from './CommandHandler.js'
 import { chatClient } from './index.js'
 
 commandHandler.registerCommand('wl', {
-  aliases: ['score', 'winrate'],
+  aliases: ['score', 'winrate', 'wr'],
   permission: 0,
   cooldown: 15000,
   handler: (message: MessageType, args: string[]) => {
