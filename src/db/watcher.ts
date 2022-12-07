@@ -16,9 +16,14 @@ channel
     }
 
     console.log('[SUPABASE]', 'New user to send bot to: ', payload.new.name)
-    chatClient.join(payload.new.name).catch((e) => {
-      console.error('[SUPABASE]', 'Error joining channel', e)
-    })
+    chatClient
+      .join(payload.new.name)
+      .then((res) => {
+        console.log('[SUPABASE]', 'Joined channel', res)
+      })
+      .catch((e) => {
+        console.error('[SUPABASE]', 'Error joining channel', e)
+      })
   })
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
     const newObj = payload.new as User
