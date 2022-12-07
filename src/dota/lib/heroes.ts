@@ -494,7 +494,7 @@ const heroes = {
 }
 
 export function getHeroNameById(id: number) {
-  return Object.values(heroes).find((h) => h.id === id)?.localized_name ?? 'Unknown'
+  return Object.values(heroes).find((h) => h.id === id)?.localized_name ?? '-'
 }
 
 export default heroes

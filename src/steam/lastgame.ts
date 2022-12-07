@@ -10,7 +10,9 @@ export default async function lastgame(steam32Id: number) {
   const db = await mongo.db
   const channelQuery = { accounts: [steam32Id] }
   const game = await Dota.findGame(channelQuery)
-  if (!game) throw new CustomError("Game wasn't found")
+
+  if (!game._id) throw new CustomError("Game wasn't found")
+
   const gameHistory = await db
     .collection('gameHistory')
     .find(
@@ -25,18 +27,19 @@ export default async function lastgame(steam32Id: number) {
   if (!gameHistory.length) throw new CustomError("Game wasn't found")
   // eslint-disable-next-line prefer-const
   let [currentGame, oldGame] = gameHistory
-  if (currentGame.match_id !== game.match_id) oldGame = currentGame
-  if (!oldGame) throw new CustomError("Game wasn't found")
+  if (!oldGame._id) throw new CustomError("Game wasn't found")
   const playersFromLastGame = []
-  for (let i = 0; i < game.players.length; i += 1) {
-    if (!channelQuery.accounts.some((account: number) => account === game.players[i].account_id)) {
+  for (const [i, currentGamePlayer] of currentGame.players.entries()) {
+    if (
+      !channelQuery.accounts.some((account: number) => account === currentGamePlayer.account_id)
+    ) {
       const lastGamePlayer = oldGame.players.find(
-        (player: { account_id: number }) => player.account_id === game.players[i].account_id,
+        (player: { account_id: number }) => player.account_id === currentGamePlayer.account_id,
       )
       if (lastGamePlayer) {
         playersFromLastGame.push({
           old: lastGamePlayer,
-          current: game.players[i],
+          current: currentGamePlayer,
           currentIndex: i,
           oldIndex: oldGame.players.indexOf(lastGamePlayer),
         })

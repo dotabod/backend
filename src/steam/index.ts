@@ -345,6 +345,7 @@ class Dota {
             weekend_tourney_skill_level: match.weekend_tourney_skill_level,
             createdAt: time,
           }))
+          // removes duplicates from this array
           .filter(
             (match: { match_id: Long }, index: number, self: { match_id: Long }[]) =>
               index ===
@@ -398,11 +399,9 @@ class Dota {
         }
         const filteredGames = games.filter(
           (game: { match_id: Long }) =>
-            // @ts-expect-error asdf
-            !gamesHistoryQuery.some((historyGame: { match_id: Long }) =>
-              game.match_id.equals(historyGame.match_id),
-            ),
+            !gamesHistoryQuery.some((historyGame) => game.match_id.equals(historyGame.match_id)),
         )
+
         if (filteredGames.length) {
           await db.collection('gameHistory').insertMany(filteredGames)
         }
