@@ -7,21 +7,19 @@ import { chatClient } from '../twitch/commands/index.js'
 import supabase from './supabase.js'
 
 const channel = supabase.channel('db-changes')
-if (process.env.NODE_ENV === 'production') {
-  channel.on(
-    'postgres_changes',
-    { event: 'INSERT', schema: 'public', table: 'users' },
-    (payload) => {
-      console.log('[SUPABASE]', 'New user to send bot to: ', payload.new.name)
-      chatClient.join(payload.new.name).catch((e) => {
-        console.error('[SUPABASE]', 'Error joining channel', e)
-      })
-    },
-  )
-}
 
 // When a user updates MMR from dashboard and they have client open
 channel
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
+    if (process.env.NODE_ENV !== 'production') {
+      return
+    }
+
+    console.log('[SUPABASE]', 'New user to send bot to: ', payload.new.name)
+    chatClient.join(payload.new.name).catch((e) => {
+      console.error('[SUPABASE]', 'Error joining channel', e)
+    })
+  })
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
     const newObj = payload.new as User
     const oldObj = payload.old as User
