@@ -18,11 +18,11 @@ commandHandler.registerCommand('wl', {
     }
 
     if (!client.steam32Id) {
-      void chatClient.say(channel, 'Not live PauseChamp')
+      void chatClient.say(channel, 'Begin a match to save your account to Dotabod.')
       return
     }
 
-    console.log('[WL] Checking WL for steam32Id', client.steam32Id)
+    console.log('[WL] Checking WL for steam32Id', client.steam32Id, client.name)
 
     getWL(channelId)
       .then(({ msg }) => {

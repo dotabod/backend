@@ -11,11 +11,11 @@ commandHandler.registerCommand('modsonly', {
   cooldown: 15000,
   handler: (message: MessageType, args: string[]) => {
     const {
-      channel: { name: channel, client },
+      channel: { name: channel, id: channelId, client },
     } = message
-    if (modMode.has(channel)) {
+    if (modMode.has(channelId)) {
       void chatClient.say(channel, 'Mods only mode disabled Sadge')
-      modMode.delete(channel)
+      modMode.delete(channelId)
       return
     }
 
@@ -24,7 +24,7 @@ commandHandler.registerCommand('modsonly', {
     }
 
     // Delete all messages that are not from a mod
-    modMode.add(channel)
+    modMode.add(channelId)
     void chatClient.say(channel, '/subscribers')
     void chatClient.say(channel, 'Mods only mode enabled BASED Clap')
   },

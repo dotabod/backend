@@ -20,21 +20,20 @@ commandHandler.registerCommand('mmr', {
     const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
     if (!mmrEnabled) return
 
+    const unknownMsg = `I don't know ${toUserName(
+      channel,
+    )}'s MMR yet. Mods have to !mmr= 1234 or set it in dotabod dashboard.`
+
     // Didn't have a new account made yet on the new steamaccount table
     if (!client.SteamAccount.length) {
       if (client.mmr === 0) {
-        void chatClient.say(
-          channel,
-          `I don't know ${toUserName(
-            channel,
-          )}'s MMR yet. Mods have to !mmr= 1234 or set it in dotabod.com/dashboard/features`,
-        )
+        void chatClient.say(channel, unknownMsg)
         return
       }
 
       getRankDescription(client.mmr, client.steam32Id ?? undefined)
         .then((description) => {
-          void chatClient.say(channel, description)
+          void chatClient.say(channel, description ?? unknownMsg)
         })
         .catch((e) => {
           console.log('[MMR] Failed to get rank description', e, channel)
@@ -43,20 +42,12 @@ commandHandler.registerCommand('mmr', {
     }
 
     client.SteamAccount.forEach((act) => {
-      if (act.mmr === 0) {
-        void chatClient.say(
-          channel,
-          `I don't know ${
-            act.name ?? toUserName(channel)
-          }'s MMR yet. Mods have to !mmr= 1234 or set it in dotabod.com/dashboard/features`,
-        )
-        return
-      }
-
       getRankDescription(act.mmr, act.steam32Id)
         .then((description) => {
           const say =
-            client.SteamAccount.length > 1 && act.name ? `${act.name}: ${description}` : description
+            client.SteamAccount.length > 1 && act.name
+              ? `${act.name}: ${description ?? unknownMsg}`
+              : description ?? unknownMsg
           void chatClient.say(channel, say)
         })
         .catch((e) => {

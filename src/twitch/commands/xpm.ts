@@ -15,10 +15,12 @@ commandHandler.registerCommand('xpm', {
     if (!getValueOrDefault(DBSettings.commandXPM, client.settings)) {
       return
     }
-    if (!client.gsi) return
-    if (!isPlayingMatch(client.gsi)) return
+    if (!client.gsi?.gamestate?.hero?.name || !isPlayingMatch(client.gsi)) {
+      void chatClient.say(channel, 'Not playing PauseChamp')
+      return
+    }
 
-    const xpm = client.gsi.gamestate?.player?.xpm
+    const xpm = client.gsi.gamestate.player?.xpm
 
     if (!xpm) {
       void chatClient.say(channel, 'Live XPM: 0')

@@ -14,7 +14,7 @@ commandHandler.registerCommand('mmr=', {
     const {
       channel: { name: channel, client, id: channelId },
     } = message
-    const [, mmr, steam32Id] = args
+    const [mmr, steam32Id] = args
 
     if (!mmr || !Number(mmr) || Number(mmr) > 20000 || Number(mmr) < 0) {
       void chatClient.say(channel, 'Invalid MMR specified')

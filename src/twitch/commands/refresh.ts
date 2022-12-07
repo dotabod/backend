@@ -14,6 +14,8 @@ commandHandler.registerCommand('refresh', {
     if (client.sockets.length) {
       void chatClient.say(channel, 'Refreshing overlay...')
       server.io.to(client.sockets).emit('refresh')
+    } else {
+      void chatClient.say(channel, 'Not live PauseChamp')
     }
   },
 })

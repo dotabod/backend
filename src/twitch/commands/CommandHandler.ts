@@ -90,7 +90,8 @@ class CommandHandler {
   // Function for parsing a Twitch chat message to extract the command and its arguments
   parseMessage(message: MessageType) {
     // Use a regular expression to match the command and its arguments
-    const match = message.content.match(/^!(\w+)\s*(.*)/)
+    const match = message.content.match(/^!(\w+=?)\s*(.*)/)
+
     if (!match) {
       return [] // Return an empty array if the message is not a command
     }

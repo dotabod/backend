@@ -13,6 +13,9 @@ commandHandler.registerCommand('steam', {
 
     // TODO: whispers do not work via chatClient, have to use helix api
     // helix api rate limits you to 40 unique whispers a day though ?? so just not gonna do it
-    void chatClient.say(channel, `https://steamid.xyz/${client.steam32Id ?? ' Unknown'}`)
+    void chatClient.say(
+      channel,
+      `https://steamid.xyz/${client.steam32Id ?? ' Unknown steam ID. Play a match first!'}`,
+    )
   },
 })

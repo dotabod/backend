@@ -25,15 +25,18 @@ chatClient.onMessage(function (channel, user, text, msg) {
   if (!msg.channelId) return
 
   // Letting one pleb in
-  if (plebMode.has(channel) && !msg.userInfo.isSubscriber) {
-    plebMode.delete(channel)
+  if (
+    plebMode.has(msg.channelId) &&
+    !(msg.userInfo.isMod || msg.userInfo.isBroadcaster || msg.userInfo.isSubscriber)
+  ) {
+    plebMode.delete(msg.channelId)
     void chatClient.say(channel, '/subscribers')
     void chatClient.say(channel, `${user} EZ Clap`)
     return
   }
 
   // Don't allow non mods to message
-  if (modMode.has(channel) && !(msg.userInfo.isMod || msg.userInfo.isBroadcaster)) {
+  if (modMode.has(msg.channelId) && !(msg.userInfo.isMod || msg.userInfo.isBroadcaster)) {
     void chatClient.deleteMessage(channel, msg)
     return
   }

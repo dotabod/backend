@@ -11,13 +11,13 @@ commandHandler.registerCommand('pleb', {
   cooldown: 15000,
   handler: (message: MessageType, args: string[]) => {
     const {
-      channel: { name: channel, client },
+      channel: { name: channel, id: channelId, client },
     } = message
     if (!getValueOrDefault(DBSettings.commandPleb, client.settings)) {
       return
     }
 
-    plebMode.add(channel)
+    plebMode.add(channelId)
     void chatClient.say(channel, '/subscribersoff')
     void chatClient.say(channel, 'One pleb IN 👇')
     return

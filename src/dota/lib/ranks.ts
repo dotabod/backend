@@ -111,7 +111,7 @@ export async function getRankDetail(mmr: string | number, steam32Id?: number | n
 export async function getRankDescription(mmr: string | number, steam32Id?: number) {
   const deets = await getRankDetail(mmr, steam32Id)
 
-  if (!deets) return 'Unknown'
+  if (!deets) return null
 
   if ('standing' in deets) {
     const standingDesc = `Immortal${deets.standing ? ` #${deets.standing}` : ''}`
