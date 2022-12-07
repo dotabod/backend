@@ -99,22 +99,20 @@ class Dota {
       if (sentry.length) details.sha_sentryfile = sentry
     }
 
-    if (process.env.NODE_ENV === 'production') {
-      prisma.steamAccount
-        .findMany({ select: { steam32Id: true } })
-        .then((account) => {
-          const ids = account.map(
-            ({ steam32Id }) => this.dota2.ToSteamID(steam32Id).toString() as string,
-          )
+    prisma.steamAccount
+      .findMany({ select: { steam32Id: true } })
+      .then((account) => {
+        const ids = account.map(
+          ({ steam32Id }) => this.dota2.ToSteamID(steam32Id).toString() as string,
+        )
 
-          this.interval = setInterval(() => {
-            this.getRichPresence(ids)
-          }, 30000)
-        })
-        .catch((e) => {
-          console.log(e)
-        })
-    }
+        this.interval = setInterval(() => {
+          this.getRichPresence(ids)
+        }, 30000)
+      })
+      .catch((e) => {
+        console.log(e)
+      })
 
     this.steamClient.on('connected', () => {
       this.steamUser.logOn(details)
@@ -236,7 +234,9 @@ class Dota {
       const db = await mongo.db
 
       if (rps.length) {
-        await db.collection('rps').insertMany(rps)
+        if (process.env.NODE_ENV === 'production') {
+          await db.collection('rps').insertMany(rps)
+        }
 
         rps
           .filter((rp) => rp.WatchableGameID)
@@ -353,7 +353,9 @@ class Dota {
                 tempMatch.match_id.equals(match.match_id),
               ),
           )
-        await db.collection('games').insertMany(games)
+        if (process.env.NODE_ENV === 'production') {
+          await db.collection('games').insertMany(games)
+        }
         const gamesHistoryQuery = (
           await db
             .collection('gameHistory')
@@ -403,7 +405,9 @@ class Dota {
         )
 
         if (filteredGames.length) {
-          await db.collection('gameHistory').insertMany(filteredGames)
+          if (process.env.NODE_ENV === 'production') {
+            await db.collection('gameHistory').insertMany(filteredGames)
+          }
         }
       })
       .catch((e) => {
@@ -667,4 +671,4 @@ process
         console.log(e)
       })
   })
-  .on('uncaughtException', () => console.log('uncaughtException'))
+  .on('uncaughtException', (e) => console.log('uncaughtException', e))
