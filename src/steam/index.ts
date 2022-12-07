@@ -109,12 +109,6 @@ class Dota {
 
           this.interval = setInterval(() => {
             this.getRichPresence(ids)
-              .then((res) => {
-                //
-              })
-              .catch((e) => {
-                //
-              })
           }, 30000)
         })
         .catch((e) => {
@@ -248,14 +242,14 @@ class Dota {
           .filter((rp) => rp.WatchableGameID)
           .forEach((rp) => lobbyIds.add(rp.WatchableGameID as Long))
 
-        await this.getGames(Array.from(lobbyIds), now)
+        this.getGames(Array.from(lobbyIds), now)
       }
     })
 
     this.steamRichPresence.request(accounts)
   }
 
-  private async getGames(lobbyIds: Long[], time: Date) {
+  private getGames(lobbyIds: Long[], time: Date) {
     // @ts-expect-error asdf
     if (!this.dota2._gcReady || !this.steamClient.loggedOn) return
 
