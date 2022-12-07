@@ -1,4 +1,4 @@
-export default {
+const heroes = {
   npc_dota_hero_antimage: {
     id: 1,
     localized_name: 'Anti-Mage',
@@ -492,3 +492,9 @@ export default {
     localized_name: 'Primal Beast',
   },
 }
+
+export function getHeroNameById(id: number) {
+  return Object.values(heroes).find((h) => h.id === id)?.localized_name ?? 'Unknown'
+}
+
+export default heroes
