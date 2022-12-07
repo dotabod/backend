@@ -27,7 +27,7 @@ export default async function lastgame(steam32Id: number) {
   if (!gameHistory.length) throw new CustomError("Game wasn't found")
   // eslint-disable-next-line prefer-const
   let [currentGame, oldGame] = gameHistory
-  if (!oldGame._id) throw new CustomError("Game wasn't found")
+  if (!oldGame || !oldGame._id) throw new CustomError("Game wasn't found")
   const playersFromLastGame = []
   for (const [i, currentGamePlayer] of currentGame.players.entries()) {
     if (
