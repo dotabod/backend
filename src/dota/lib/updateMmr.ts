@@ -1,9 +1,9 @@
 import { toUserName } from '@twurple/chat'
 
-import { server } from '../index.js'
 import { prisma } from '../../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { chatClient } from '../../twitch/commands/index.js'
+import { server } from '../index.js'
 import { findUserByName } from './connectedStreamers.js'
 import { getRankDetail } from './ranks.js'
 
@@ -56,13 +56,16 @@ export function updateMmr(
 
         if (client) {
           const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
-          if (mmrEnabled) void chatClient.say(channel, `Updated MMR to ${mmr}`)
 
+          let oldMmr = client.mmr
           client.mmr = mmr
           const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === steam32Id)
           if (currentSteam >= 0) {
+            oldMmr = client.SteamAccount[currentSteam].mmr
             client.SteamAccount[currentSteam].mmr = mmr
           }
+
+          if (mmrEnabled) void chatClient.say(channel, `Updated MMR to ${mmr}, ${mmr - oldMmr}`)
 
           if (client.sockets.length) {
             console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
@@ -104,13 +107,16 @@ export function updateMmr(
 
       if (client) {
         const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
-        if (mmrEnabled) void chatClient.say(channel, `Updated MMR to ${mmr}`)
 
+        let oldMmr = client.mmr
         client.mmr = mmr
         const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === steam32Id)
         if (currentSteam >= 0) {
+          oldMmr = client.SteamAccount[currentSteam].mmr
           client.SteamAccount[currentSteam].mmr = mmr
         }
+
+        if (mmrEnabled) void chatClient.say(channel, `Updated MMR to ${mmr}, ${mmr - oldMmr}`)
 
         if (client.sockets.length) {
           console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)

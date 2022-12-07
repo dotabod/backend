@@ -391,7 +391,7 @@ export class setupMainEvents {
       })
   }
 
-  updateMMR(increase: boolean, lobbyType: number, matchId: string) {
+  updateMMR(increase: boolean, lobbyType: number, matchId: string, isParty?: boolean) {
     const ranked = lobbyType === 7
 
     // This also updates WL for the unranked matches
@@ -421,13 +421,14 @@ export class setupMainEvents {
       return
     }
 
-    const newMMR = this.getMmr() + (increase ? 30 : -30)
+    const mmrSize = isParty ? 20 : 30
+    const newMMR = this.getMmr() + (increase ? mmrSize : -mmrSize)
     if (this.client.steam32Id) {
       updateMmr(newMMR, this.client.steam32Id, this.client.name)
     }
   }
 
-  handleMMR(increase: boolean, matchId: string, lobby_type?: number) {
+  handleMMR(increase: boolean, matchId: string, lobby_type?: number, heroSlot?: number | null) {
     if (lobby_type !== undefined) {
       console.log('[MMR]', 'lobby_type passed in from early dc', {
         lobby_type,
@@ -439,22 +440,29 @@ export class setupMainEvents {
 
     // Do lookup at Opendota API for this match and figure out lobby type
     // TODO: Get just lobby_type from opendota api? That way its a smaller json response
-    axios(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
-      params: { key: process.env.STEAM_WEB_API, match_id: matchId },
-    })
+    axios(`https://api.opendota.com/api/matches/${matchId}`)
       .then((response: any) => {
-        let lobbyType = response?.data?.result?.lobby_type
+        let lobbyType = response?.data?.lobby_type
         // Force update when an error occurs and just let mods take care of the discrepancy
         if (
+          // This is just for the steampowered api, not opendota
           response?.data?.result?.error === 'Practice matches are not available via GetMatchDetails'
         ) {
           lobbyType = 1
         }
 
-        this.updateMMR(increase, lobbyType, matchId)
+        let isParty = false
+        if (Array.isArray(response?.data?.players) && typeof heroSlot === 'number') {
+          const size = response?.data?.players[heroSlot]?.party_size
+          if (typeof size === 'number' && size > 1) {
+            isParty = true
+          }
+        }
+
+        this.updateMMR(increase, lobbyType, matchId, isParty)
       })
       .catch((e: any) => {
-        console.log(e, 'E')
+        console.log(e, 'ERROR handling mmr lookup')
 
         let lobbyType = 7
         // Force update when an error occurs and just let mods take care of the discrepancy
@@ -625,14 +633,12 @@ export class setupMainEvents {
       })
 
       // Check with opendota to see if the match is over
-      axios(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
-        params: { key: process.env.STEAM_WEB_API, match_id: matchId },
-      })
+      axios(`https://api.opendota.com/api/matches/${matchId}`)
         .then((response: any) => {
-          if (!response.data.result.radiant_win) return
+          if (typeof response.data.radiant_win !== 'boolean') return
 
-          const team = response.data.result.radiant_win ? 'radiant' : 'dire'
-          this.endBets(team, this.betMyTeam, response?.data?.result?.lobby_type)
+          const team = response.data.radiant_win ? 'radiant' : 'dire'
+          this.endBets(team, this.betMyTeam, response?.data?.lobby_type)
         })
         .catch((e: any) => {
           // its not over? just give up checking after this long
@@ -667,7 +673,7 @@ export class setupMainEvents {
 
     this.endingBets = true
     const channel = this.getChannel()
-    this.handleMMR(won, matchId, lobby_type)
+    this.handleMMR(won, matchId, lobby_type, this.heroSlot)
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
     if (!betsEnabled) {
