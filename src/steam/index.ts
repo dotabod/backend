@@ -99,26 +99,28 @@ class Dota {
       if (sentry.length) details.sha_sentryfile = sentry
     }
 
-    prisma.steamAccount
-      .findMany({ select: { steam32Id: true } })
-      .then((account) => {
-        const ids = account.map(
-          ({ steam32Id }) => this.dota2.ToSteamID(steam32Id).toString() as string,
-        )
+    if (process.env.NODE_ENV === 'production') {
+      prisma.steamAccount
+        .findMany({ select: { steam32Id: true } })
+        .then((account) => {
+          const ids = account.map(
+            ({ steam32Id }) => this.dota2.ToSteamID(steam32Id).toString() as string,
+          )
 
-        this.interval = setInterval(() => {
-          this.getRichPresence(ids)
-            .then((res) => {
-              //
-            })
-            .catch((e) => {
-              //
-            })
-        }, 30000)
-      })
-      .catch((e) => {
-        console.log(e)
-      })
+          this.interval = setInterval(() => {
+            this.getRichPresence(ids)
+              .then((res) => {
+                //
+              })
+              .catch((e) => {
+                //
+              })
+          }, 30000)
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+    }
 
     this.steamClient.on('connected', () => {
       this.steamUser.logOn(details)
@@ -197,7 +199,7 @@ class Dota {
     this.steamClient.connect()
   }
 
-  private async getRichPresence(accounts: string[]) {
+  private getRichPresence(accounts: string[]) {
     // @ts-expect-error asdf
     if (!this.dota2._gcReady || !this.steamClient.loggedOn) return
 
@@ -227,7 +229,7 @@ class Dota {
           rps.push({
             status: rp.status,
             WatchableGameID: rp.WatchableGameID,
-            WatchableGameIDStr: rp.WatchableGameID.toString(),
+            WatchableGameIDStr: rp.WatchableGameID?.toString(),
             watching_server: rp.watching_server,
             steam_id: rp.steam_id,
             createdAt: rp.createdAt,
