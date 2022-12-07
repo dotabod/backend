@@ -424,7 +424,7 @@ class Dota {
   ) {
     const db = await mongo.db
     if (!channelQuery.accounts?.length) throw new CustomError('No accounts connected')
-    const seconds: number = channelQuery.delay?.enabled ? channelQuery.delay.seconds || 30 : 0
+    const seconds: number = channelQuery.delay?.enabled ? channelQuery.delay.seconds ?? 30 : 0
     const [gamesQuery, rpsQuery] = await Promise.all([
       db
         .collection('games')

@@ -1,10 +1,10 @@
-import { gameMedals } from '../../steam/medals.js'
+import lastgame from '../../steam/lastgame.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
 
 import { chatClient } from './index.js'
 
-commandHandler.registerCommand('gm', {
-  aliases: ['medals', 'ranks'],
+commandHandler.registerCommand('lg', {
+  aliases: ['lastgame'],
   permission: 0,
   cooldown: 0,
   handler: (message: MessageType, args: string[]) => {
@@ -12,7 +12,7 @@ commandHandler.registerCommand('gm', {
       void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')
       return
     }
-    gameMedals(message.channel.client.steam32Id)
+    lastgame(message.channel.client.steam32Id)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })
