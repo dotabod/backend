@@ -65,7 +65,11 @@ export function updateMmr(
             client.SteamAccount[currentSteam].mmr = mmr
           }
 
-          if (mmrEnabled) void chatClient.say(channel, `Updated MMR to ${mmr}, ${mmr - oldMmr}`)
+          if (mmrEnabled)
+            void chatClient.say(
+              channel,
+              `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
+            )
 
           if (client.sockets.length) {
             console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
@@ -116,7 +120,11 @@ export function updateMmr(
           client.SteamAccount[currentSteam].mmr = mmr
         }
 
-        if (mmrEnabled) void chatClient.say(channel, `Updated MMR to ${mmr}, ${mmr - oldMmr}`)
+        if (mmrEnabled)
+          void chatClient.say(
+            channel,
+            `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
+          )
 
         if (client.sockets.length) {
           console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
