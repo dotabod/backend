@@ -453,8 +453,9 @@ export class setupMainEvents {
 
         let isParty = false
         if (Array.isArray(response?.data?.players) && typeof heroSlot === 'number') {
-          const size = response?.data?.players[heroSlot]?.party_size
-          if (typeof size === 'number' && size > 1) {
+          const partySize = response?.data?.players[heroSlot]?.party_size
+          if (typeof partySize === 'number' && partySize > 1) {
+            console.log('[MMR]', 'Party match detected', this.client.name)
             isParty = true
           }
         }
