@@ -18,6 +18,7 @@ import './wl.js'
 import './xpm.js'
 import './gm.js'
 import './lg.js'
+import './np.js'
 
 // Setup twitch chat bot client first
 // TODO: Think about whether await is necessary here

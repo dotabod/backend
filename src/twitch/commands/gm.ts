@@ -6,7 +6,7 @@ import { chatClient } from './index.js'
 commandHandler.registerCommand('gm', {
   aliases: ['medals', 'ranks'],
   permission: 0,
-  cooldown: 0,
+  cooldown: 15000,
   handler: (message: MessageType, args: string[]) => {
     if (!message.channel.client.steam32Id) {
       void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')

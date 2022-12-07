@@ -1,10 +1,11 @@
-import lastgame from '../../steam/lastgame.js'
+import { gameMedals } from '../../steam/medals.js'
+import { notablePlayers } from '../../steam/notableplayers.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
 
 import { chatClient } from './index.js'
 
-commandHandler.registerCommand('lg', {
-  aliases: ['lastgame'],
+commandHandler.registerCommand('np', {
+  aliases: ['players', 'who'],
   permission: 0,
   cooldown: 15000,
   handler: (message: MessageType, args: string[]) => {
@@ -13,7 +14,7 @@ commandHandler.registerCommand('lg', {
       return
     }
 
-    lastgame(message.channel.client.steam32Id)
+    notablePlayers(message.channel.client.steam32Id)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })
