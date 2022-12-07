@@ -53,9 +53,10 @@ export default async function lastgame(steam32Id: number) {
 
   return playersFromLastGame
     .map(
-      (player) =>
+      (player, i) =>
         `${getHeroNameById(player.current.hero_id)} played as ${getHeroNameById(
           player.old.hero_id,
+          i,
         )}`,
     )
     .join(', ')

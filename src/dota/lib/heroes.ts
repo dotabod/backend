@@ -493,8 +493,14 @@ const heroes = {
   },
 }
 
-export function getHeroNameById(id: number) {
-  return Object.values(heroes).find((h) => h.id === id)?.localized_name ?? '-'
+const heroColors = 'Blue,Teal,Purple,Yellow,Orange,Pink,Olive,Light Blue,Green,Brown'.split(',')
+export function getHeroNameById(id: number, index?: number) {
+  const name = Object.values(heroes).find((h) => h.id === id)?.localized_name
+  if (!name && typeof index === 'number') {
+    return heroColors[index]
+  }
+
+  return name ?? 'Unknown'
 }
 
 export default heroes
