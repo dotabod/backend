@@ -3,7 +3,7 @@ import commandHandler, { MessageType } from './CommandHandler.js'
 import { chatClient } from './index.js'
 
 commandHandler.registerCommand('steam', {
-  aliases: [],
+  aliases: ['steamid', 'account'],
   permission: 2,
   cooldown: 15000,
   handler: (message: MessageType, args: string[]) => {
