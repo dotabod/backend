@@ -54,12 +54,12 @@ chatClient.onMessage(function (channel, user, text, msg) {
         channel: { name: channel, id: msg.channelId, client },
         user: {
           name: user,
-          permission: msg.userInfo.isSubscriber
-            ? 1
+          permission: msg.userInfo.isBroadcaster
+            ? 3
             : msg.userInfo.isMod
             ? 2
-            : msg.userInfo.isBroadcaster
-            ? 3
+            : msg.userInfo.isSubscriber
+            ? 1
             : 0,
         },
         content: text,
