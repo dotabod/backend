@@ -154,6 +154,11 @@ class CommandHandler {
 
   // Function for checking if a user has the required permission for a command
   hasPermission(user: UserType, permission: number) {
+    // Check if the user is on the list of users that are allowed to bypass any restriction
+    if (this.bypassCooldownUsers.includes(user.name.toLowerCase())) {
+      return true
+    }
+
     // Check if the user has the required permission level
     if (user.permission >= permission) {
       return true // The user has the required permission
