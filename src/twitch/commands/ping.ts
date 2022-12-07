@@ -9,6 +9,6 @@ commandHandler.registerCommand('ping', {
   cooldown: 15000, // The "ping" command has a cooldown of 15 seconds
   handler: (message: MessageType, args: string[]) => {
     // Send a "pong" message to the chat
-    void chatClient.say(message.channel.name, 'Pong EZ Clap (new)')
+    void chatClient.say(message.channel.name, 'Pong EZ Clap')
   },
 })

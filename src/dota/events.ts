@@ -299,7 +299,8 @@ export class setupMainEvents {
           server.io.to(this.getSockets()).emit('update-wl', record)
         })
         .catch((e) => {
-          console.error('[MMR] emitWLUpdate Error getting WL', e)
+          // Stream not live
+          // console.error('[MMR] emitWLUpdate Error getting WL', e)
         })
     }
   }

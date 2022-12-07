@@ -1,7 +1,12 @@
 import { SocketClient } from '../../types.js'
 
+export interface UserType {
+  permission: number
+  name: string
+}
+
 export interface MessageType {
-  user: { permission: number; name: string }
+  user: UserType
   content: string
   channel: { name: string; id: string; client: SocketClient }
 }
@@ -22,9 +27,9 @@ class CommandHandler {
   // Function for adding a user to the list of users that are allowed to bypass the cooldown
   addUserToBypassList(username: string | string[]) {
     if (Array.isArray(username)) {
-      this.bypassCooldownUsers.push(...username)
+      this.bypassCooldownUsers.push(...username.map((u) => u.toLowerCase()))
     } else {
-      this.bypassCooldownUsers.push(username)
+      this.bypassCooldownUsers.push(username.toLowerCase())
     }
   }
 
@@ -66,12 +71,12 @@ class CommandHandler {
     if (!options) return
 
     // Check if the command is on cooldown
-    if (this.isOnCooldown(commandName, options.cooldown, message.user)) {
+    if (this.isOnCooldown(commandName, options.cooldown, message.user, message.channel.id)) {
       return // Skip commands that are on cooldown
     }
 
     // Update the command cooldown
-    this.updateCooldown(commandName, options.cooldown)
+    this.updateCooldown(commandName, options.cooldown, message.channel.id)
 
     // Check if the user has the required permissions
     if (!this.hasPermission(message.user, options.permission)) {
@@ -108,9 +113,9 @@ class CommandHandler {
   }
 
   // Function for checking if a command is on cooldown
-  isOnCooldown(command: string, cooldown: number, user: { name: string }) {
+  isOnCooldown(command: string, cooldown: number, user: UserType, channelId: string) {
     // Check if the user is on the list of users that are allowed to bypass the cooldown
-    if (this.bypassCooldownUsers.includes(user.name)) {
+    if (this.bypassCooldownUsers.includes(user.name.toLowerCase())) {
       return false // The command is not on cooldown for users that are allowed to bypass the cooldown
     }
 
@@ -120,15 +125,15 @@ class CommandHandler {
     }
 
     // Check if the command has been used recently
-    if (!this.cooldowns.has(command)) {
-      this.cooldowns.set(command, Date.now()) // Set the initial cooldown time
+    if (!this.cooldowns.has(`${channelId}.${command}`)) {
+      this.cooldowns.set(`${channelId}.${command}`, Date.now()) // Set the initial cooldown time
       return false // The command is not on cooldown if it has not been used before
     }
 
     // Check if the command cooldown has expired
-    const timeDiff = Date.now() - this.cooldowns.get(command)
+    const timeDiff = Date.now() - this.cooldowns.get(`${channelId}.${command}`)
     if (timeDiff >= cooldown) {
-      this.cooldowns.set(command, Date.now()) // Update the cooldown time
+      this.cooldowns.set(`${channelId}.${command}`, Date.now()) // Update the cooldown time
       return false // The command is not on cooldown if its cooldown has expired
     }
 
@@ -136,18 +141,18 @@ class CommandHandler {
   }
 
   // Function for updating the cooldown time for a command
-  updateCooldown(command: string, cooldown: number) {
+  updateCooldown(command: string, cooldown: number, channelId: string) {
     // Check if the command has a cooldown
     if (cooldown === 0) {
       return // Do not update the cooldown for commands with a cooldown of 0
     }
 
     // Update the command cooldown time
-    this.cooldowns.set(command, Date.now())
+    this.cooldowns.set(`${channelId}.${command}`, Date.now())
   }
 
   // Function for checking if a user has the required permission for a command
-  hasPermission(user: { permission: number }, permission: number) {
+  hasPermission(user: UserType, permission: number) {
     // Check if the user has the required permission level
     if (user.permission >= permission) {
       return true // The user has the required permission

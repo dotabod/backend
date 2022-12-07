@@ -9,6 +9,10 @@ export async function getWL(channelId: string) {
   const botApi = getBotAPI()
   const stream = await botApi.streams.getStreamByUserId(channelId)
 
+  if (!stream?.startDate) {
+    throw new Error('Stream not live')
+  }
+
   return prisma.bet
     .groupBy({
       by: ['won', 'lobby_type'],
@@ -30,7 +34,7 @@ export async function getWL(channelId: string) {
           },
         },
         createdAt: {
-          gte: stream?.startDate ?? new Date(new Date().getTime() - 12 * 60 * 60 * 1000),
+          gte: stream.startDate,
         },
       },
     })
