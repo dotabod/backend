@@ -16,6 +16,7 @@ import './refresh.js'
 import './steam.js'
 import './wl.js'
 import './xpm.js'
+import './gm.js'
 
 // Setup twitch chat bot client first
 // TODO: Think about whether await is necessary here
