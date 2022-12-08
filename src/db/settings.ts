@@ -26,6 +26,7 @@ export enum DBSettings {
   commandNP = 'commandNP',
   commandGM = 'commandGM',
   commandLG = 'commandLG',
+  commandSmurfs = 'commandSmurfs',
 }
 
 export const defaultSettings = {
@@ -56,6 +57,7 @@ export const defaultSettings = {
   [DBSettings.commandNP]: true,
   [DBSettings.commandGM]: true,
   [DBSettings.commandLG]: true,
+  [DBSettings.commandSmurfs]: true,
 }
 
 export const getValueOrDefault = (key: DBSettings, data?: { key: string; value: any }[]) => {
