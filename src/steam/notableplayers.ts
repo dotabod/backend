@@ -1,3 +1,6 @@
+// @ts-expect-error ???
+import { countryCodeEmoji } from 'country-code-emoji'
+
 import { getHeroNameById } from '../dota/lib/heroes.js'
 import Mongo from './mongo.js'
 
@@ -26,24 +29,30 @@ export async function notablePlayers(steam32Id: number): Promise<string> {
           _id: 0,
           account_id: 1,
           name: 1,
-          personaname: 1,
-          team_tag: 1,
-          team_name: 1,
           country_code: 1,
         },
       },
     )
     .toArray()
 
-  const result: { heroName: string; name: string }[] = []
+  const result: { heroName: string; name: string; country_code: string }[] = []
   game.players.forEach((player: Player, i: number) => {
     const np = nps.find((np) => np.account_id === player.account_id)
     if (np) {
-      result.push({ heroName: getHeroNameById(player.hero_id, i), name: np.name })
+      result.push({
+        heroName: getHeroNameById(player.hero_id, i),
+        name: np.name,
+        country_code: np.country_code,
+      })
     }
   })
 
-  const players = result.map((m) => `${m.name} (${m.heroName})`).join(' · ')
+  const players = result
+    .map((m) => {
+      const country: string = m.country_code ? countryCodeEmoji(m.country_code) : ''
+      return `${country}${m.name} (${m.heroName})`
+    })
+    .join(' · ')
 
   return `${mode?.name} [${game.average_mmr} avg]: ${players || 'No notable players'}`
 }
