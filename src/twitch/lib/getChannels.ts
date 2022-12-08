@@ -8,6 +8,15 @@ export async function getChannels() {
   }
 
   return prisma.user
-    .findMany({ select: { name: true } })
+    .findMany({
+      select: { name: true },
+      where: {
+        NOT: {
+          name: {
+            in: process.env.DEV_CHANNELS?.split(',') ?? [],
+          },
+        },
+      },
+    })
     .then((users) => users.map((user) => user.name))
 }
