@@ -12,7 +12,7 @@ export async function smurfs(steam32Id: number): Promise<string> {
     game.lobby_id,
   )
 
-  const result: { heroName: string; lifetime_games: number }[] = []
+  const result: { heroName: string; lifetime_games?: number }[] = []
   game.players.forEach((player: { hero_id: number; account_id: number }, i: number) => {
     result.push({
       heroName: getHeroNameById(player.hero_id, i),
@@ -20,7 +20,12 @@ export async function smurfs(steam32Id: number): Promise<string> {
     })
   })
   const results = result
-    .map((m) => `${m.heroName}: ${m.lifetime_games.toLocaleString()}`)
+    .map((m) =>
+      typeof m.lifetime_games === 'number'
+        ? `${m.heroName}: ${m.lifetime_games.toLocaleString()}`
+        : undefined,
+    )
+    .filter(Boolean)
     .join(' · ')
-  return `Lifetime games: ${results}`
+  return `Lifetime games: ${results || 'Unknown'}`
 }
