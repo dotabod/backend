@@ -74,5 +74,5 @@ export async function gameMedals(steam32Id: number): Promise<string> {
   game.players.forEach((player: { hero_id: number; account_id: number }, i: number) => {
     result.push({ heroName: getHeroNameById(player.hero_id, i), medal: medals[i] })
   })
-  return result.map((m) => `${m.heroName}: ${m.medal}`).join(', ')
+  return result.map((m) => `${m.heroName}: ${m.medal}`).join(' · ')
 }

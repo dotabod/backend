@@ -23,6 +23,9 @@ export enum DBSettings {
   commandPleb = 'commandPleb',
   commandModsonly = 'commandModsonly',
   commandHero = 'commandHero',
+  commandNP = 'commandNP',
+  commandGM = 'commandGM',
+  commandLG = 'commandLG',
 }
 
 export const defaultSettings = {
@@ -50,6 +53,9 @@ export const defaultSettings = {
   [DBSettings.commandPleb]: true,
   [DBSettings.commandModsonly]: true,
   [DBSettings.commandHero]: true,
+  [DBSettings.commandNP]: true,
+  [DBSettings.commandGM]: true,
+  [DBSettings.commandLG]: true,
 }
 
 export const getValueOrDefault = (key: DBSettings, data?: { key: string; value: any }[]) => {

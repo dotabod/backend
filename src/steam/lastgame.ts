@@ -59,5 +59,5 @@ export default async function lastgame(steam32Id: number) {
           i,
         )}`,
     )
-    .join(', ')
+    .join(' · ')
 }
