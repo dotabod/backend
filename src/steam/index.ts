@@ -584,6 +584,7 @@ class Dota {
       createdAt: Date
       rank_tier: number
       leaderboard_rank: number
+      lifetime_games: number
     }[]
   > {
     return Promise.resolve().then(async () => {
@@ -620,6 +621,7 @@ class Dota {
               .catch(() => ({ rank_tier: -10, leaderboard_rank: 0 }))
               .then(async (temporaryCard) => {
                 arr[i] = {
+                  ...temporaryCard,
                   id: accounts[i],
                   lobby_id: lobbyId,
                   createdAt: new Date(),
@@ -634,6 +636,7 @@ class Dota {
                     },
                     {
                       $set: {
+                        ...temporaryCard,
                         id: accounts[i],
                         lobby_id: lobbyId,
                         createdAt: new Date(),
