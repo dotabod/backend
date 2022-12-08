@@ -73,6 +73,6 @@ export async function getWL(channelId: string) {
       if (hasRanked) msg.push(rankedMsg)
       if (hasUnranked) msg.push(unrankedMsg)
       if (!hasRanked && !hasUnranked) msg.push('0 W - 0 L')
-      return { record, msg: msg.join(' | ') }
+      return { record, msg: msg.join(' · ') }
     })
 }
