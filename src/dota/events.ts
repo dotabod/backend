@@ -447,7 +447,7 @@ export class setupMainEvents {
       if (Array.isArray(body.match?.players)) {
         lobbyType = body.match.lobby_type
         const party_size = body.match.players.find(
-          (p: any) => p.account_id === 342094098,
+          (p: any) => p.account_id === this.client.steam32Id,
         )?.party_size
         isParty = typeof party_size === 'number' && party_size > 1
       } else {
