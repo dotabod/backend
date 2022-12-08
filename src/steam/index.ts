@@ -191,6 +191,32 @@ class Dota {
     this.steamClient.connect()
   }
 
+  public getGcMatchData(matchId: number | string, cb: (err: any, body: any) => void) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this.dota2.requestMatchDetails(Number(matchId), (err: any, body: any) => {
+      if (body?.match?.players) {
+        body.match.players = body?.match?.players.map((p: any) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return {
+            ...p,
+            party_size: body.match.players.filter(
+              (matchPlayer: any) => matchPlayer.party_id?.low === p.party_id?.low,
+            ).length,
+          }
+        })
+      }
+
+      if (body.result === 15) {
+        // Valve is blocking GC access to this match, probably a community prediction match
+        // Return a 200 success code with specific format, so we treat it as an unretryable error
+        return cb(null, { result: { status: body.result } })
+      }
+
+      console.log('received match', matchId)
+      return cb(err, body)
+    })
+  }
+
   private getRichPresence(accounts: string[]) {
     // @ts-expect-error asdf
     if (!this.dota2._gcReady || !this.steamClient.loggedOn) return
