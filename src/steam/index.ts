@@ -5,6 +5,7 @@ import { ID } from '@node-steam/id'
 // @ts-expect-error ???
 import Dota2 from 'dota2'
 import Long from 'long'
+import retry from 'retry'
 import Steam from 'steam'
 // @ts-expect-error ???
 import steamErrors from 'steam-errors'
@@ -51,10 +52,10 @@ const generateRP = (txt: string) => {
   return temp
 }
 
-const wait = (time: number) => new Promise((resolve) => setTimeout(resolve, time || 0))
-const retry = (cont: number, fn: () => Promise<any>, delay: number): Promise<any> =>
+const waitCustom = (time: number) => new Promise((resolve) => setTimeout(resolve, time || 0))
+const retryCustom = (cont: number, fn: () => Promise<any>, delay: number): Promise<any> =>
   fn().catch((err) =>
-    cont > 0 ? wait(delay).then(() => retry(cont - 1, fn, delay)) : Promise.reject(err),
+    cont > 0 ? waitCustom(delay).then(() => retryCustom(cont - 1, fn, delay)) : Promise.reject(err),
   )
 
 const mongo = Mongo.getInstance()
@@ -192,28 +193,42 @@ class Dota {
   }
 
   public getGcMatchData(matchId: number | string, cb: (err: any, body: any) => void) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this.dota2.requestMatchDetails(Number(matchId), (err: any, body: any) => {
-      if (body?.match?.players) {
-        body.match.players = body?.match?.players.map((p: any) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-          return {
-            ...p,
-            party_size: body.match.players.filter(
-              (matchPlayer: any) => matchPlayer.party_id?.low === p.party_id?.low,
-            ).length,
-          }
-        })
-      }
+    const operation = retry.operation({
+      retries: 5,
+      factor: 2,
+      randomize: true,
+      minTimeout: 1 * 1000,
+      maxTimeout: 60 * 1000,
+    })
 
-      if (body.result === 15) {
-        // Valve is blocking GC access to this match, probably a community prediction match
-        // Return a 200 success code with specific format, so we treat it as an unretryable error
-        return cb(null, { result: { status: body.result } })
-      }
+    operation.attempt((currentAttempt: number) => {
+      console.log('retrying ', currentAttempt)
 
-      console.log('received match', matchId)
-      return cb(err, body)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return this.dota2.requestMatchDetails(Number(matchId), (err: any, body: any) => {
+        let arr: Error | undefined
+        if (body?.match?.players) {
+          body.match.players = body?.match?.players.map((p: any) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            return {
+              ...p,
+              party_size: body.match.players.filter(
+                (matchPlayer: any) => matchPlayer.party_id?.low === p.party_id?.low,
+              ).length,
+            }
+          })
+
+          console.log('received match', matchId)
+        } else {
+          arr = new Error('Match not found')
+        }
+
+        if (operation.retry(arr)) {
+          return
+        }
+
+        cb(arr ? arr : null, body)
+      })
     })
   }
 
@@ -601,7 +616,7 @@ class Dota {
         }
         if (needToGetCard) {
           promises.push(
-            retry(10, () => this.getCard(accounts[i]), 100)
+            retryCustom(10, () => this.getCard(accounts[i]), 100)
               .catch(() => ({ rank_tier: -10, leaderboard_rank: 0 }))
               .then(async (temporaryCard) => {
                 arr[i] = {

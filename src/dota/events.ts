@@ -453,9 +453,7 @@ export class setupMainEvents {
       } else {
         // TODO: retry this several times in case early dc
         console.log(err, 'ERROR handling getGcMatchData', matchId, this.getChannel())
-
         lobbyType = 1 // force to practice lobby
-        this.updateMMR(increase, lobbyType, matchId)
       }
 
       this.updateMMR(increase, lobbyType, matchId, isParty)
