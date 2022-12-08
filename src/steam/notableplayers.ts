@@ -49,7 +49,7 @@ export async function notablePlayers(steam32Id: number): Promise<string> {
 
   const players = result
     .map((m) => {
-      const country: string = m.country_code ? countryCodeEmoji(m.country_code) : ''
+      const country: string = m.country_code ? `${countryCodeEmoji(m.country_code) as string} ` : ''
       return `${country}${m.name} (${m.heroName})`
     })
     .join(' · ')
