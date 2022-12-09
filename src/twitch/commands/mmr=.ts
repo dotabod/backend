@@ -7,7 +7,7 @@ import { chatClient } from './index.js'
 export const plebMode = new Set()
 
 commandHandler.registerCommand('mmr=', {
-  aliases: [],
+  aliases: ['setmmr', 'mmrset'],
   permission: 2,
   cooldown: 15000,
   handler: (message: MessageType, args: string[]) => {
