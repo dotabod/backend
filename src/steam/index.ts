@@ -196,9 +196,7 @@ class Dota {
     const operation = retry.operation({
       retries: 8,
       factor: 2,
-      randomize: true,
       minTimeout: 1 * 1000,
-      maxTimeout: 60 * 1000,
     })
 
     operation.attempt((currentAttempt: number) => {
