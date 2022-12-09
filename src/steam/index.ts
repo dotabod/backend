@@ -194,7 +194,7 @@ class Dota {
 
   public getGcMatchData(matchId: number | string, cb: (err: any, body: any) => void) {
     const operation = retry.operation({
-      retries: 5,
+      retries: 8,
       factor: 2,
       randomize: true,
       minTimeout: 1 * 1000,
@@ -220,6 +220,7 @@ class Dota {
 
           console.log('received match', matchId)
         } else {
+          console.log(err, 'match not found')
           arr = new Error('Match not found')
         }
 
