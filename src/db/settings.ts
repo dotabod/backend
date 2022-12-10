@@ -75,6 +75,11 @@ export const getValueOrDefault = (key: DBSettings, data?: { key: string; value: 
     return defaultSettings[key]
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return dbVal
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return JSON.parse(dbVal)
+  } catch {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return dbVal
+  }
 }

@@ -61,6 +61,7 @@ channel
     if (client) {
       console.log('[WATCHER SETTING] Updating setting for', client.name, newObj.key)
       const setting = client.settings.find((s) => s.key === newObj.key)
+
       if (setting) {
         setting.value = newObj.value
       } else {
