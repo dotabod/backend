@@ -11,9 +11,7 @@ export async function openTwitchBet(channel: string, userId: string, heroName?: 
 
   const { api, providerAccountId } = getChannelAPI(channel, userId)
 
-  const title = heroName
-    ? `Will ${channel} win with ${heroName}?`
-    : `Will ${channel} win this match?`
+  const title = heroName ? `Will we win with ${heroName}?` : `Will we win this match?`
 
   return api.predictions
     .createPrediction(providerAccountId || '', {
