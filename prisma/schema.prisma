@@ -89,7 +89,7 @@ model Setting {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
   key       String
-  value     String?  @db.VarChar
+  value     Json?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
