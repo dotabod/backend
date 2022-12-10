@@ -1,5 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -89,7 +89,7 @@ model Setting {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
   key       String
-  value     Json?
+  value     String?  @db.VarChar
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
