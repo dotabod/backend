@@ -108,7 +108,11 @@ export async function getRankDetail(mmr: string | number, steam32Id?: number | n
 }
 
 // Used for chatting !mmr
-export async function getRankDescription(mmr: string | number, steam32Id?: number) {
+export async function getRankDescription(
+  mmr: string | number,
+  customMmr: string,
+  steam32Id?: number,
+) {
   const deets = await getRankDetail(mmr, steam32Id)
 
   if (!deets) return null
@@ -118,10 +122,17 @@ export async function getRankDescription(mmr: string | number, steam32Id?: numbe
     return `${mmr} MMR | ${standingDesc}`
   }
 
+  // [currentmmr] [currentrank] [nextmmr] [wins]
+
   const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = deets
-  const nextAt = ` | Next rank at ${nextMMR}`
   const nextIn = ` in ${winsToNextRank} wins`
   const oneMore = mmrToNextRank <= 30 ? ' | One more win peepoClap' : ''
 
-  return `${mmr} | ${myRank.title}${nextAt}${oneMore || nextIn}`
+  const msg = customMmr
+    .replace('[currentmmr]', `${mmr}`)
+    .replace('[currentrank]', myRank.title)
+    .replace('[nextmmr]', `${nextMMR}`)
+    .replace('[wins]', `${oneMore || nextIn}`)
+
+  return msg
 }

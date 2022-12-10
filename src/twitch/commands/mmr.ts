@@ -20,6 +20,8 @@ commandHandler.registerCommand('mmr', {
     const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
     if (!mmrEnabled) return
 
+    const customMmr = getValueOrDefault(DBSettings.customMmr, client.settings)
+
     const unknownMsg = `I don't know ${toUserName(
       channel,
     )}'s MMR yet. Mods have to !mmr= 1234 or set it in dotabod dashboard.`
@@ -31,7 +33,7 @@ commandHandler.registerCommand('mmr', {
         return
       }
 
-      getRankDescription(client.mmr, client.steam32Id ?? undefined)
+      getRankDescription(client.mmr, customMmr, client.steam32Id ?? undefined)
         .then((description) => {
           void chatClient.say(channel, description ?? unknownMsg)
         })
@@ -42,7 +44,7 @@ commandHandler.registerCommand('mmr', {
     }
 
     client.SteamAccount.forEach((act) => {
-      getRankDescription(act.mmr, act.steam32Id)
+      getRankDescription(act.mmr, customMmr, act.steam32Id)
         .then((description) => {
           const say =
             client.SteamAccount.length > 1 && act.name
