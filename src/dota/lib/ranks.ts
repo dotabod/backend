@@ -107,6 +107,7 @@ export async function getRankDetail(mmr: string | number, steam32Id?: number | n
   }
 }
 
+// Variables: [currentmmr] [currentrank] [nextmmr] [wins]
 // Used for chatting !mmr
 export async function getRankDescription(
   mmr: string | number,
@@ -122,11 +123,9 @@ export async function getRankDescription(
     return `${mmr} MMR | ${standingDesc}`
   }
 
-  // [currentmmr] [currentrank] [nextmmr] [wins]
-
   const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = deets
-  const nextIn = ` in ${winsToNextRank} wins`
-  const oneMore = mmrToNextRank <= 30 ? ' | One more win peepoClap' : ''
+  const nextIn = `in ${winsToNextRank} wins`
+  const oneMore = mmrToNextRank <= 30 ? '| One more win peepoClap' : ''
 
   const msg = customMmr
     .replace('[currentmmr]', `${mmr}`)
