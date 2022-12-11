@@ -1,29 +1,64 @@
 // @ts-expect-error ???
 import { countryCodeEmoji } from 'country-code-emoji'
 
+import { server } from '../dota/index.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
+import CustomError from '../utils/customError.js'
 import Mongo from './mongo.js'
-
-import Dota from './index.js'
 
 const mongo = Mongo.getInstance()
 
 export interface Player {
-  account_id: number
-  hero_id: number
+  accountid: number
+  heroid: number
 }
 
 export async function notablePlayers(steam32Id: number): Promise<string> {
   const db = await mongo.db
-  const channelQuery = { accounts: [steam32Id] }
-  const game = await Dota.findGame(channelQuery, true)
+
+  const steamserverid = await server.dota.getUserSteamServer(steam32Id)
+  let response = await db
+    .collection('delayedGames')
+    .findOne({ 'match.server_steam_id': steamserverid })
+
+  if (!response) {
+    // @ts-expect-error asdf
+    response = await server.dota.getDelayedMatchData(steamserverid)
+    if (!response) throw new CustomError("Game wasn't found")
+
+    await db.collection('delayedGames').updateOne(
+      {
+        matchid: response.match?.match_id,
+      },
+      {
+        $set: { ...response, createdAt: new Date() },
+      },
+      {
+        upsert: true,
+      },
+    )
+  }
+
+  console.log(response)
+
+  if (!response) throw new CustomError("Game wasn't found")
+  const matchPlayers = [
+    ...response.teams[0].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
+    ...response.teams[1].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
+  ]
+
   const mode = await db
     .collection('gameModes')
-    .findOne({ id: game.game_mode }, { projection: { _id: 0, name: 1 } })
+    .findOne({ id: response.match.game_mode }, { projection: { _id: 0, name: 1 } })
+
   const nps = await db
     .collection('notablePlayers')
     .find(
-      { account_id: { $in: game.players.map((player: Player) => player.account_id) } },
+      {
+        account_id: {
+          $in: matchPlayers.map((player: Player) => player.accountid),
+        },
+      },
       {
         projection: {
           _id: 0,
@@ -36,11 +71,11 @@ export async function notablePlayers(steam32Id: number): Promise<string> {
     .toArray()
 
   const result: { heroName: string; name: string; country_code: string }[] = []
-  game.players.forEach((player: Player, i: number) => {
-    const np = nps.find((np) => np.account_id === player.account_id)
+  matchPlayers.forEach((player: Player, i: number) => {
+    const np = nps.find((np) => np.account_id === player.accountid)
     if (np) {
       result.push({
-        heroName: getHeroNameById(player.hero_id, i),
+        heroName: getHeroNameById(player.heroid, i),
         name: np.name,
         country_code: np.country_code,
       })
@@ -54,5 +89,5 @@ export async function notablePlayers(steam32Id: number): Promise<string> {
     })
     .join(' · ')
 
-  return `${mode?.name} [${game.average_mmr} avg]: ${players || 'No notable players'}`
+  return `${mode?.name}: ${players || 'No notable players'}`
 }

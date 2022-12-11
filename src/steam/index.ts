@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import fs from 'fs'
 
 import { ID } from '@node-steam/id'
+import axios from 'axios'
 // @ts-expect-error ???
 import Dota2 from 'dota2'
 import Long from 'long'
@@ -14,6 +15,38 @@ import { prisma } from '../db/prisma.js'
 import CustomError from '../utils/customError.js'
 import { promiseTimeout } from '../utils/index.js'
 import Mongo from './mongo.js'
+
+function onGCSpectateFriendGameResponse(message: any, callback: any) {
+  const response: { server_steamid: Long; watch_live_result: number } =
+    Dota2.schema.CMsgSpectateFriendGameResponse.decode(message)
+  if (callback !== undefined) {
+    callback(response)
+  }
+}
+
+Dota2.Dota2Client.prototype.spectateFriendGame = function (
+  friend: { steam_id: number; live: boolean },
+  callback: any,
+) {
+  callback = callback || null
+  if (!this._gcReady) {
+    console.log("GC not ready, please listen for the 'ready' event.")
+    return null
+  }
+  console.log('looking up friend game', friend)
+  // CMsgSpectateFriendGame
+  const payload = new Dota2.schema.CMsgSpectateFriendGame(friend)
+  this.sendToGC(
+    Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGame,
+    payload,
+    onGCSpectateFriendGameResponse,
+    callback,
+  )
+}
+
+const handlers = Dota2.Dota2Client.prototype._handlers
+handlers[Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGameResponse] =
+  onGCSpectateFriendGameResponse
 
 interface Game {
   average_mmr: number
@@ -190,6 +223,69 @@ class Dota {
 
     // @ts-expect-error connect is there
     this.steamClient.connect()
+  }
+
+  // 2 minute delayed match data if its out of our region
+  public getDelayedMatchData = (server_steamid: number | string) => {
+    return new Promise((resolveOuter) => {
+      this.GetRealTimeStats(Number(server_steamid), (err, response) => {
+        resolveOuter(response)
+      })
+    })
+  }
+
+  public getUserSteamServer = (steam32Id: number) => {
+    return new Promise((resolveOuter) => {
+      this.dota2.spectateFriendGame(
+        { steam_id: this.dota2.ToSteamID(steam32Id) },
+        (response: any, err: any) => {
+          resolveOuter(response?.server_steamid?.toString())
+        },
+      )
+    })
+  }
+
+  public GetRealTimeStats = (steam_server_id: number, cb: (err: any, body: any) => void) => {
+    if (!steam_server_id) {
+      return cb(new Error('Match not found'), null)
+    }
+
+    const operation = retry.operation({
+      retries: 8,
+      factor: 2,
+      minTimeout: 1 * 1000,
+    })
+
+    operation.attempt((currentAttempt: number) => {
+      console.log('retrying ', currentAttempt)
+      axios(
+        `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steam_server_id}`,
+      )
+        .then((response) => {
+          let arr: Error | undefined
+
+          if (!response.data.match) {
+            arr = new Error('Match not found')
+          }
+
+          if (operation.retry(arr)) {
+            return
+          }
+
+          cb(arr ? arr : null, response.data)
+        })
+        .catch((e) => {
+          const arr = new Error('Match not found')
+
+          if (operation.retry(arr)) {
+            return
+          }
+
+          cb(arr, null)
+        })
+    })
+
+    // return Promise.reject(new CustomError("Game wasn't found"))
   }
 
   public getGcMatchData(matchId: number | string, cb: (err: any, body: any) => void) {
@@ -573,10 +669,7 @@ class Dota {
     return Dota.instance
   }
 
-  public getCards(
-    accounts: number[],
-    lobbyId: Long,
-  ): Promise<
+  public getCards(accounts: number[]): Promise<
     {
       id: number
       lobby_id: number
@@ -591,29 +684,15 @@ class Dota {
       const promises = []
       const cards = await db
         .collection('cards')
-        .find({ id: { $in: accounts }, lobby_id: { $in: [0, lobbyId] } })
+        .find({ id: { $in: accounts } })
         .sort({ createdAt: -1 })
         .toArray()
       const arr: any[] = []
       for (let i = 0; i < accounts.length; i += 1) {
         let needToGetCard = false
-        if (lobbyId === Long.fromNumber(0)) {
-          const card: any = cards.find(
-            (tempCard) =>
-              tempCard.id === accounts[i] &&
-              tempCard.lobby_id === 0 &&
-              new Date(card.createdAt).valueOf() < Date.now() - 1.8e6,
-          )
-          if (!card) needToGetCard = true
-          else arr[i] = card
-        } else {
-          const card: any = cards.find(
-            (tempCard) =>
-              tempCard.id === accounts[i] && tempCard.lobby_id.toString() === lobbyId.toString(),
-          )
-          if (!card || typeof card.rank_tier !== 'number') needToGetCard = true
-          else arr[i] = card
-        }
+        const card: any = cards.find((tempCard) => tempCard.id === accounts[i])
+        if (!card || typeof card.rank_tier !== 'number') needToGetCard = true
+        else arr[i] = card
         if (needToGetCard) {
           promises.push(
             retryCustom(10, () => this.getCard(accounts[i]), 100)
@@ -622,7 +701,6 @@ class Dota {
                 arr[i] = {
                   ...temporaryCard,
                   id: accounts[i],
-                  lobby_id: lobbyId,
                   createdAt: new Date(),
                   rank_tier: temporaryCard.rank_tier || 0,
                   leaderboard_rank: temporaryCard.leaderboard_rank || 0,
@@ -631,13 +709,11 @@ class Dota {
                   await db.collection('cards').updateOne(
                     {
                       id: accounts[i],
-                      lobby_id: lobbyId,
                     },
                     {
                       $set: {
                         ...temporaryCard,
                         id: accounts[i],
-                        lobby_id: lobbyId,
                         createdAt: new Date(),
                         rank_tier: temporaryCard.rank_tier || 0,
                         leaderboard_rank: temporaryCard.leaderboard_rank || 0,

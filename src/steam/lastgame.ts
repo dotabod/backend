@@ -2,24 +2,15 @@ import { getHeroNameById } from '../dota/lib/heroes.js'
 import CustomError from '../utils/customError.js'
 import Mongo from './mongo.js'
 
-import Dota from './index.js'
-
 const mongo = Mongo.getInstance()
 
 export default async function lastgame(steam32Id: number) {
   const db = await mongo.db
-  const channelQuery = { accounts: [steam32Id] }
-  const game = await Dota.findGame(channelQuery)
-
-  if (!game._id) throw new CustomError("Game wasn't found")
-
   const gameHistory = await db
-    .collection('gameHistory')
+    .collection('delayedGames')
     .find(
       {
-        'players.account_id': {
-          $in: channelQuery.accounts,
-        },
+        'teams.players.accountid': steam32Id,
       },
       { sort: { createdAt: -1 }, limit: 2 },
     )
@@ -28,22 +19,34 @@ export default async function lastgame(steam32Id: number) {
   // eslint-disable-next-line prefer-const
   let [currentGame, oldGame] = gameHistory
   if (!oldGame || !oldGame._id) throw new CustomError("Game wasn't found")
+
+  const oldMatchPlayers = [
+    ...oldGame.teams[0].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
+    ...oldGame.teams[1].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
+  ]
+
+  const newMatchPlayers = [
+    ...currentGame.teams[0].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
+    ...currentGame.teams[1].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
+  ]
+
   const playersFromLastGame = []
-  for (const [i, currentGamePlayer] of currentGame.players.entries()) {
-    if (
-      !channelQuery.accounts.some((account: number) => account === currentGamePlayer.account_id)
-    ) {
-      const lastGamePlayer = oldGame.players.find(
-        (player: { account_id: number }) => player.account_id === currentGamePlayer.account_id,
-      )
-      if (lastGamePlayer) {
-        playersFromLastGame.push({
-          old: lastGamePlayer,
-          current: currentGamePlayer,
-          currentIndex: i,
-          oldIndex: oldGame.players.indexOf(lastGamePlayer),
-        })
-      }
+  for (const [i, currentGamePlayer] of newMatchPlayers.entries()) {
+    if (steam32Id === currentGamePlayer.accountid) {
+      continue
+    }
+
+    const lastGamePlayer = oldMatchPlayers.find(
+      (player: { accountid: number }) => player.accountid === currentGamePlayer.accountid,
+    )
+
+    if (lastGamePlayer) {
+      playersFromLastGame.push({
+        old: lastGamePlayer,
+        current: currentGamePlayer,
+        currentIndex: i,
+        oldIndex: oldMatchPlayers.indexOf(lastGamePlayer),
+      })
     }
   }
 
@@ -54,8 +57,8 @@ export default async function lastgame(steam32Id: number) {
   return playersFromLastGame
     .map(
       (player, i) =>
-        `${getHeroNameById(player.current.hero_id)} played as ${getHeroNameById(
-          player.old.hero_id,
+        `${getHeroNameById(player.current.heroid)} played as ${getHeroNameById(
+          player.old.heroid,
           i,
         )}`,
     )

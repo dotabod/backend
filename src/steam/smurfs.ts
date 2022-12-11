@@ -1,21 +1,53 @@
+import { server } from '../dota/index.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
+import CustomError from '../utils/customError.js'
+import Mongo from './mongo.js'
 
 import Dota from './index.js'
 
 const dota = Dota.getInstance()
+const mongo = Mongo.getInstance()
 
 export async function smurfs(steam32Id: number): Promise<string> {
-  const channelQuery = { accounts: [steam32Id] }
-  const game = await Dota.findGame(channelQuery, true)
+  const db = await mongo.db
+
+  const steamserverid = await server.dota.getUserSteamServer(steam32Id)
+  let response = await db
+    .collection('delayedGames')
+    .findOne({ 'match.server_steam_id': steamserverid })
+
+  if (!response) {
+    // @ts-expect-error asdf
+    response = await server.dota.getDelayedMatchData(steamserverid)
+    if (!response) throw new CustomError("Game wasn't found")
+
+    await db.collection('delayedGames').updateOne(
+      {
+        matchid: response.match?.match_id,
+      },
+      {
+        $set: { ...response, createdAt: new Date() },
+      },
+      {
+        upsert: true,
+      },
+    )
+  }
+
+  if (!response) throw new CustomError("Game wasn't found")
+  const matchPlayers = [
+    ...response.teams[0].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
+    ...response.teams[1].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
+  ]
+
   const cards = await dota.getCards(
-    game.players.map((player: { account_id: number }) => player.account_id),
-    game.lobby_id,
+    matchPlayers.map((player: { accountid: number }) => player.accountid),
   )
 
   const result: { heroName: string; lifetime_games?: number }[] = []
-  game.players.forEach((player: { hero_id: number; account_id: number }, i: number) => {
+  matchPlayers.forEach((player: { heroid: number; accountid: number }, i: number) => {
     result.push({
-      heroName: getHeroNameById(player.hero_id, i),
+      heroName: getHeroNameById(player.heroid, i),
       lifetime_games: cards[i]?.lifetime_games,
     })
   })
