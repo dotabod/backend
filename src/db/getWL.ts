@@ -68,7 +68,7 @@ export async function getWL(channelId: string) {
 
       const msg = []
       const mmrGainOrLoss = (ranked.win - ranked.lose) * 30
-      const mmrMsg = ` | ${mmrGainOrLoss} MMR`
+      const mmrMsg = ` | ${mmrGainOrLoss >= 0 ? '+' : ''}${mmrGainOrLoss} MMR`
       const rankedMsg = `Ranked ${ranked.win} W - ${ranked.lose} L${mmrMsg}`
       const unrankedMsg = `Unranked ${unranked.win} W - ${unranked.lose} L`
 
