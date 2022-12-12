@@ -18,7 +18,7 @@ export default async function lastgame(steam32Id: number) {
   if (!gameHistory.length) throw new CustomError("Game wasn't found")
   // eslint-disable-next-line prefer-const
   let [currentGame, oldGame] = gameHistory
-  if (!oldGame || !oldGame._id) throw new CustomError("Game wasn't found")
+  if (!oldGame || !oldGame._id) throw new CustomError('No last game found')
 
   const oldMatchPlayers = [
     ...oldGame.teams[0].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),

@@ -1,6 +1,7 @@
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '../db/settings.js'
+import Mongo from '../steam/mongo.js'
 import { chatClient } from '../twitch/commands/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { disabledBets, openTwitchBet } from '../twitch/lib/openTwitchBet.js'
@@ -18,6 +19,8 @@ import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
 
 import { server } from './index.js'
+
+const mongo = Mongo.getInstance()
 
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
@@ -98,6 +101,57 @@ export class setupMainEvents {
         server.io.to(this.getSockets()).emit('aegis-picked-up', {})
         server.io.to(this.getSockets()).emit('roshan-killed', {})
       }
+    }
+  }
+
+  async saveMatchData() {
+    if (!this.client.steam32Id || !this.client.gsi?.gamestate?.map?.matchid) return
+
+    try {
+      console.log('Saving match data', this.client.name, this.client.gsi.gamestate.map.matchid)
+
+      const db = await mongo.db
+      let response = await db
+        .collection('delayedGames')
+        .findOne({ 'match.match_id': this.client.gsi.gamestate.map.matchid })
+
+      if (!response) {
+        console.log(
+          'No match data for user, checking from steam',
+          this.client.name,
+          this.client.gsi.gamestate.map.matchid,
+        )
+
+        const steamserverid = await server.dota.getUserSteamServer(this.client.steam32Id)
+        // @ts-expect-error asdf
+        response = await server.dota.getDelayedMatchData(steamserverid)
+        if (!response) {
+          console.log(
+            'No match data found!',
+            this.client.name,
+            this.client.gsi.gamestate.map.matchid,
+          )
+          return
+        }
+
+        console.log('Saving match data', this.client.name, this.client.gsi.gamestate.map.matchid)
+
+        await db
+          .collection('delayedGames')
+          .updateOne(
+            { matchid: response.match?.match_id },
+            { $set: { ...response, createdAt: new Date() } },
+            { upsert: true },
+          )
+      } else {
+        console.log(
+          'Match data already found',
+          this.client.name,
+          this.client.gsi.gamestate.map.matchid,
+        )
+      }
+    } catch (e) {
+      console.log(e, 'saving match data failed', this.client.name)
     }
   }
 
@@ -234,6 +288,7 @@ export class setupMainEvents {
           name: this.getChannel(),
         })
         this.heroSlot = purchaser
+        void this.saveMatchData()
         return
       }
     })

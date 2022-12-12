@@ -1,7 +1,6 @@
 import crypto from 'crypto'
 import fs from 'fs'
 
-import { ID } from '@node-steam/id'
 import axios from 'axios'
 // @ts-expect-error ???
 import Dota2 from 'dota2'
@@ -11,7 +10,6 @@ import Steam from 'steam'
 // @ts-expect-error ???
 import steamErrors from 'steam-errors'
 
-import { prisma } from '../db/prisma.js'
 import CustomError from '../utils/customError.js'
 import { promiseTimeout } from '../utils/index.js'
 import Mongo from './mongo.js'
@@ -33,7 +31,6 @@ Dota2.Dota2Client.prototype.spectateFriendGame = function (
     console.log("GC not ready, please listen for the 'ready' event.")
     return null
   }
-  console.log('looking up friend game', friend)
   // CMsgSpectateFriendGame
   const payload = new Dota2.schema.CMsgSpectateFriendGame(friend)
   this.sendToGC(
@@ -68,23 +65,6 @@ interface steamUserDetails {
   sha_sentryfile?: Buffer
 }
 
-const generateRP = (txt: string) => {
-  const temp: Record<string, any> = {}
-  txt.replace(
-    // eslint-disable-next-line no-control-regex
-    /(?:^\x00([^\x00]*)\x00(.*)\x08$|\x01([^\x00]*)\x00([^\x00]*)\x00)/gm,
-    (_match, ...args) => {
-      if (args[0]) {
-        temp[args[0]] = generateRP(args[1])
-      } else if (args[2]) {
-        ;[, , , temp[args[2]]] = args
-      }
-      return ''
-    },
-  )
-  return temp
-}
-
 const waitCustom = (time: number) => new Promise((resolve) => setTimeout(resolve, time || 0))
 const retryCustom = (cont: number, fn: () => Promise<any>, delay: number): Promise<any> =>
   fn().catch((err) =>
@@ -100,8 +80,6 @@ class Dota {
 
   private steamUser
 
-  private steamRichPresence
-
   public dota2
 
   private interval?: NodeJS.Timer
@@ -110,8 +88,6 @@ class Dota {
     this.steamClient = new Steam.SteamClient()
     // @ts-expect-error ???
     this.steamUser = new Steam.SteamUser(this.steamClient)
-    // @ts-expect-error ???
-    this.steamRichPresence = new Steam.SteamRichPresence(this.steamClient, 570)
     this.dota2 = new Dota2.Dota2Client(this.steamClient, false, false)
 
     const details: steamUserDetails = {
@@ -132,21 +108,6 @@ class Dota {
       const sentry = fs.readFileSync('./src/steam/volumes/sentry')
       if (sentry.length) details.sha_sentryfile = sentry
     }
-
-    prisma.steamAccount
-      .findMany({ select: { steam32Id: true } })
-      .then((account) => {
-        const ids = account.map(
-          ({ steam32Id }) => this.dota2.ToSteamID(steam32Id).toString() as string,
-        )
-
-        this.interval = setInterval(() => {
-          this.getRichPresence(ids)
-        }, 30000)
-      })
-      .catch((e) => {
-        console.log(e)
-      })
 
     this.steamClient.on('connected', () => {
       this.steamUser.logOn(details)
@@ -226,26 +187,28 @@ class Dota {
   }
 
   // 2 minute delayed match data if its out of our region
-  public getDelayedMatchData = (server_steamid: number | string) => {
+  public getDelayedMatchData = (server_steamid: string) => {
     return new Promise((resolveOuter) => {
-      this.GetRealTimeStats(Number(server_steamid), (err, response) => {
+      this.GetRealTimeStats(server_steamid, (err, response) => {
         resolveOuter(response)
       })
     })
   }
 
-  public getUserSteamServer = (steam32Id: number) => {
+  public getUserSteamServer = (steam32Id: number | string) => {
     return new Promise((resolveOuter) => {
       this.dota2.spectateFriendGame(
-        { steam_id: this.dota2.ToSteamID(steam32Id) },
+        { steam_id: this.dota2.ToSteamID(Number(steam32Id)) },
         (response: any, err: any) => {
+          console.log('response', response, err)
+
           resolveOuter(response?.server_steamid?.toString())
         },
       )
     })
   }
 
-  public GetRealTimeStats = (steam_server_id: number, cb: (err: any, body: any) => void) => {
+  public GetRealTimeStats = (steam_server_id: string, cb: (err: any, body: any) => void) => {
     if (!steam_server_id) {
       return cb(new Error('Match not found'), null)
     }
@@ -264,7 +227,7 @@ class Dota {
         .then((response) => {
           let arr: Error | undefined
 
-          if (!response.data.match) {
+          if (!response.data?.teams?.[0]?.players?.[0]?.accountid) {
             arr = new Error('Match not found')
           }
 
@@ -325,343 +288,6 @@ class Dota {
         cb(arr ? arr : null, body)
       })
     })
-  }
-
-  private getRichPresence(accounts: string[]) {
-    // @ts-expect-error asdf
-    if (!this.dota2._gcReady || !this.steamClient.loggedOn) return
-
-    this.steamRichPresence.once('info', async (data: { rich_presence: string | any[] }) => {
-      const rps = []
-      const now = new Date()
-      for (const pres of data.rich_presence) {
-        const temp = pres.rich_presence_kv?.toString()
-        if (!temp?.length) continue
-        const object = generateRP(temp)
-        if (!object.RP) continue
-
-        const rp = object.RP
-        rp.steam_id = Long.fromString(pres.steamid_user)
-        if (rp.watching_server) {
-          rp.watching_server = Long.fromString(new ID(rp.watching_server).getSteamID64())
-        }
-
-        if (rp.WatchableGameID === '0') {
-          delete rp.WatchableGameID
-        } else if (rp.WatchableGameID) {
-          rp.WatchableGameID = Long.fromString(rp.WatchableGameID)
-        }
-
-        rp.createdAt = now
-        if (!['#DOTA_RP_INIT', '#DOTA_RP_IDLE'].includes(rp.status)) {
-          rps.push({
-            status: rp.status,
-            WatchableGameID: rp.WatchableGameID,
-            WatchableGameIDStr: rp.WatchableGameID?.toString(),
-            watching_server: rp.watching_server,
-            steam_id: rp.steam_id,
-            createdAt: rp.createdAt,
-            param0: rp.param0,
-          })
-        }
-      }
-
-      const lobbyIds = new Set<Long>()
-      const db = await mongo.db
-
-      if (rps.length) {
-        if (process.env.NODE_ENV === 'production') {
-          await db.collection('rps').insertMany(rps)
-        }
-
-        rps
-          .filter((rp) => rp.WatchableGameID)
-          .forEach((rp) => lobbyIds.add(rp.WatchableGameID as Long))
-
-        this.getGames(Array.from(lobbyIds), now)
-      }
-    })
-
-    this.steamRichPresence.request(accounts)
-  }
-
-  private getGames(lobbyIds: Long[], time: Date) {
-    // @ts-expect-error asdf
-    if (!this.dota2._gcReady || !this.steamClient.loggedOn) return
-
-    new Promise((resolve, reject) => {
-      // @ts-expect-error asdf
-      if (!this.dota2._gcReady || !this.steamClient.loggedOn) return
-      let games: any = []
-      let count = 0
-      const start_game = 90
-      const callbackSpecificGames = (data: {
-        specific_games: boolean
-        game_list: any[]
-        start_game: number
-      }) => {
-        if (data.specific_games) {
-          games = games.concat(
-            data.game_list.filter((game) => game.players && game.players.length > 0),
-          )
-          count -= 1
-          if (count === 0) {
-            this.dota2.removeListener('sourceTVGamesData', callbackSpecificGames)
-            resolve(
-              games.filter(
-                (game: { lobby_id: Long }, index: number) =>
-                  games.findIndex((g: { lobby_id: Long }) => g.lobby_id === game.lobby_id) ===
-                  index,
-              ),
-            )
-          }
-        }
-      }
-      const callbackNotSpecificGames = (data: {
-        specific_games: boolean
-        game_list: any[]
-        league_id: number
-        start_game: number
-      }) => {
-        if (!data.specific_games) {
-          games = games.concat(
-            data.game_list.filter((game: { players: string | any[] }) => game.players.length > 0),
-          )
-          if (data.league_id === 0 && start_game === data.start_game) {
-            this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
-            if (lobbyIds.length) {
-              this.dota2.on('sourceTVGamesData', callbackSpecificGames)
-              while (lobbyIds.length > 0) {
-                count += 1
-                const tempLobbyIds = lobbyIds
-                  .splice(0, 20)
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                  .map((lobbyId) => new Long(lobbyId.getLowBits(), lobbyId.getHighBits()))
-                setTimeout(() => {
-                  this.dota2.requestSourceTVGames({ lobby_ids: tempLobbyIds, start_game: 0 })
-                }, 100 * (count - 1))
-              }
-            } else {
-              resolve(
-                games.filter(
-                  (game: { lobby_id: Long }, index: number) =>
-                    games.findIndex((g: { lobby_id: Long }) => g.lobby_id === game.lobby_id) ===
-                    index,
-                ),
-              )
-            }
-          }
-        }
-      }
-      this.dota2.on('sourceTVGamesData', callbackNotSpecificGames)
-      this.dota2.requestSourceTVGames({ start_game: 90 })
-    })
-      .then(async (games: any) => {
-        const db = await mongo.db
-
-        // eslint-disable-next-line no-param-reassign
-        games = games
-          .map((match: Game) => ({
-            average_mmr: match.average_mmr,
-            game_mode: match.game_mode,
-            league_id: match.league_id,
-            lobbyId: new Long(match.lobby_id.low, match.lobby_id.high).toString(),
-            matchId: new Long(match.match_id.low, match.match_id.high).toString(),
-            match_id: new Long(match.match_id.low, match.match_id.high),
-            lobby_id: new Long(match.lobby_id.low, match.lobby_id.high),
-            lobby_type: match.lobby_type,
-            players: match.players
-              ? match.players.map((player: { account_id: number; hero_id: number }) => ({
-                  account_id: player.account_id,
-                  hero_id: player.hero_id,
-                }))
-              : null,
-            server_steam_id: new Long(match.server_steam_id.low, match.server_steam_id.high),
-            weekend_tourney_bracket_round: match.weekend_tourney_bracket_round,
-            weekend_tourney_skill_level: match.weekend_tourney_skill_level,
-            createdAt: time,
-          }))
-          // removes duplicates from this array
-          .filter(
-            (match: { match_id: Long }, index: number, self: { match_id: Long }[]) =>
-              index ===
-              self.findIndex((tempMatch: { match_id: Long }) =>
-                tempMatch.match_id.equals(match.match_id),
-              ),
-          )
-        if (process.env.NODE_ENV === 'production') {
-          await db.collection('games').insertMany(games)
-        }
-        const gamesHistoryQuery = (
-          await db
-            .collection('gameHistory')
-            .find(
-              { match_id: { $in: games.map((game: { match_id: Long }) => game.match_id) } },
-              { projection: { match_id: 1, players: 1 } },
-            )
-            .toArray()
-        ).map((match) => {
-          if (typeof match.match_id === 'number') {
-            // eslint-disable-next-line no-param-reassign
-            match.match_id = Long.fromNumber(match.match_id)
-          }
-          return match
-        })
-        const updateGamesHistoryArray = []
-        for (const history of gamesHistoryQuery) {
-          const game = games.find((g: { match_id: Long }) => g.match_id.equals(history.match_id))
-          if (game) {
-            let updated = false
-            for (const gamePlayer of game.players) {
-              const p = history.players.find(
-                (player: { account_id: number }) => player.account_id === gamePlayer.account_id,
-              )
-              if (p !== undefined && p.hero_id === 0) {
-                updated = true
-                p.hero_id = gamePlayer.hero_id
-              }
-            }
-            if (updated)
-              updateGamesHistoryArray.push({
-                updateOne: {
-                  filter: { match_id: game.match_id },
-                  update: { $set: { players: history.players } },
-                },
-              })
-          } else {
-            // console.log(`game not found?? ${history.match_id}`);
-          }
-        }
-        if (updateGamesHistoryArray.length) {
-          await db.collection('gameHistory').bulkWrite(updateGamesHistoryArray)
-        }
-        const filteredGames = games.filter(
-          (game: { match_id: Long }) =>
-            !gamesHistoryQuery.some((historyGame) => game.match_id.equals(historyGame.match_id)),
-        )
-
-        if (filteredGames.length) {
-          if (process.env.NODE_ENV === 'production') {
-            await db.collection('gameHistory').insertMany(filteredGames)
-          }
-        }
-      })
-      .catch((e) => {
-        console.log(e)
-      })
-  }
-
-  public static async findGame(
-    channelQuery: {
-      accounts?: number[]
-      delay?: {
-        enabled: boolean
-        seconds?: number
-      }
-    },
-    allowSpectating = false,
-  ) {
-    const db = await mongo.db
-    if (!channelQuery.accounts?.length) throw new CustomError('No accounts connected')
-    const seconds: number = channelQuery.delay?.enabled ? channelQuery.delay.seconds ?? 30 : 0
-    const [gamesQuery, rpsQuery] = await Promise.all([
-      db
-        .collection('games')
-        .aggregate(
-          [
-            { $match: { createdAt: { $gte: new Date(new Date().getTime() - 900000) } } },
-            { $group: { _id: '$createdAt' } },
-            { $sort: { _id: -1 } },
-            { $skip: seconds / 30 },
-            { $limit: 1 },
-            {
-              $lookup: {
-                from: 'games',
-                localField: '_id',
-                foreignField: 'createdAt',
-                as: 'matches',
-              },
-            },
-            { $unwind: '$matches' },
-            { $replaceRoot: { newRoot: '$matches' } },
-            { $match: { 'players.account_id': { $in: channelQuery.accounts } } },
-          ],
-          { allowDiskUse: true },
-        )
-        .toArray(),
-      db
-        .collection('rps')
-        .aggregate(
-          [
-            { $match: { createdAt: { $gte: new Date(new Date().getTime() - 900000) } } },
-            { $group: { _id: '$createdAt' } },
-            { $sort: { _id: -1 } },
-            { $skip: seconds / 30 },
-            { $limit: 1 },
-            {
-              $lookup: {
-                from: 'rps',
-                localField: '_id',
-                foreignField: 'createdAt',
-                as: 'rps',
-              },
-            },
-            { $unwind: '$rps' },
-            { $replaceRoot: { newRoot: '$rps' } },
-            {
-              $match: {
-                steam_id: {
-                  $in: channelQuery.accounts.map((account) => {
-                    const id = this.getInstance().dota2.ToSteamID(account)
-                    id._bsontype = 'Long'
-                    return id
-                  }),
-                },
-              },
-            },
-          ],
-          { allowDiskUse: true },
-        )
-        .toArray(),
-    ])
-    if (gamesQuery.length === 0 || gamesQuery[0] === undefined) {
-      if (rpsQuery.length === 0 || !allowSpectating) throw new CustomError("Game wasn't found")
-      if (rpsQuery[0].watching_server || rpsQuery[0].WatchableGameID) {
-        const match = rpsQuery[0].WatchableGameID
-          ? { lobby_id: rpsQuery[0].WatchableGameID }
-          : { server_steam_id: rpsQuery[0].watching_server }
-        const spectatedGames = await db
-          .collection('games')
-          .aggregate(
-            [
-              { $match: { createdAt: { $gte: new Date(new Date().getTime() - 900000) } } },
-              { $group: { _id: '$createdAt' } },
-              { $sort: { _id: -1 } },
-              { $skip: seconds / 30 },
-              { $limit: 1 },
-              {
-                $lookup: {
-                  from: 'games',
-                  localField: '_id',
-                  foreignField: 'createdAt',
-                  as: 'matches',
-                },
-              },
-              { $unwind: '$matches' },
-              { $replaceRoot: { newRoot: '$matches' } },
-              { $match: match },
-            ],
-            { allowDiskUse: true },
-          )
-          .toArray()
-        if (spectatedGames.length) {
-          if (spectatedGames[0] === undefined) throw new CustomError("Game wasn't found")
-          return spectatedGames[0]
-        }
-      }
-    }
-    if (gamesQuery[0] === undefined) throw new CustomError("Game wasn't found")
-    return gamesQuery[0]
   }
 
   public static getInstance(): Dota {

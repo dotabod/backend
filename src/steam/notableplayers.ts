@@ -1,7 +1,6 @@
 // @ts-expect-error ???
 import { countryCodeEmoji } from 'country-code-emoji'
 
-import { server } from '../dota/index.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
 import CustomError from '../utils/customError.js'
 import Mongo from './mongo.js'
@@ -13,35 +12,13 @@ export interface Player {
   heroid: number
 }
 
-export async function notablePlayers(steam32Id: number): Promise<string> {
+export async function notablePlayers(matchId?: string): Promise<string> {
   const db = await mongo.db
 
-  const steamserverid = await server.dota.getUserSteamServer(steam32Id)
-  let response = await db
-    .collection('delayedGames')
-    .findOne({ 'match.server_steam_id': steamserverid })
-
-  if (!response) {
-    // @ts-expect-error asdf
-    response = await server.dota.getDelayedMatchData(steamserverid)
-    if (!response) throw new CustomError("Game wasn't found")
-
-    await db.collection('delayedGames').updateOne(
-      {
-        matchid: response.match?.match_id,
-      },
-      {
-        $set: { ...response, createdAt: new Date() },
-      },
-      {
-        upsert: true,
-      },
-    )
-  }
-
-  console.log(response)
-
+  if (!matchId) throw new CustomError("Game wasn't found")
+  const response = await db.collection('delayedGames').findOne({ 'match.match_id': matchId })
   if (!response) throw new CustomError("Game wasn't found")
+
   const matchPlayers = [
     ...response.teams[0].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
     ...response.teams[1].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),

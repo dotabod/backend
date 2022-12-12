@@ -20,7 +20,7 @@ commandHandler.registerCommand('np', {
       return
     }
 
-    notablePlayers(message.channel.client.steam32Id)
+    notablePlayers(message.channel.client.gsi?.gamestate?.map?.matchid)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })

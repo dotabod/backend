@@ -20,7 +20,7 @@ commandHandler.registerCommand('smurfs', {
       void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')
       return
     }
-    smurfs(message.channel.client.steam32Id)
+    smurfs(message.channel.client.gsi?.gamestate?.map?.matchid)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })
