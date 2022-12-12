@@ -108,7 +108,7 @@ export class setupMainEvents {
     if (!this.client.steam32Id || !this.client.gsi?.gamestate?.map?.matchid) return
 
     try {
-      console.log('Saving match data', this.client.name, this.client.gsi.gamestate.map.matchid)
+      console.log('Start match data', this.client.name, this.client.gsi.gamestate.map.matchid)
 
       const db = await mongo.db
       let response = await db
