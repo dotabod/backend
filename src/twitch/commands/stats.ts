@@ -49,8 +49,6 @@ commandHandler.registerCommand('stats', {
       return
     }
 
-    console.log(args)
-
     profileLink(client.gsi.gamestate.map.matchid, args[0])
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
