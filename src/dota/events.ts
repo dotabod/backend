@@ -483,7 +483,12 @@ export class setupMainEvents {
     }
   }
 
-  handleMMR(increase: boolean, matchId: string, lobby_type?: number, heroSlot?: number | null) {
+  async handleMMR(
+    increase: boolean,
+    matchId: string,
+    lobby_type?: number,
+    heroSlot?: number | null,
+  ) {
     if (lobby_type !== undefined) {
       console.log('[MMR]', 'lobby_type passed in from early dc', {
         lobby_type,
@@ -494,25 +499,22 @@ export class setupMainEvents {
     }
 
     // Do lookup at Opendota API for this match and figure out lobby type
-    // TODO: Get just lobby_type from opendota api? That way its a smaller json response
+    // TODO: Party size mmr
 
-    server.dota.getGcMatchData(matchId, (err, body) => {
-      let isParty = false
-      let lobbyType = 1
-      if (Array.isArray(body.match?.players)) {
-        lobbyType = body.match.lobby_type
-        const party_size = body.match.players.find(
-          (p: any) => p.account_id === this.client.steam32Id,
-        )?.party_size
-        isParty = typeof party_size === 'number' && party_size > 1
-      } else {
-        // TODO: retry this several times in case early dc
-        console.log(err, 'ERROR handling getGcMatchData', matchId, this.getChannel())
-        lobbyType = 1 // force to practice lobby
-      }
+    const db = await mongo.db
+    const response = await db.collection('delayedGames').findOne(
+      { 'match.match_id': matchId },
+      {
+        projection: {
+          _id: 0,
+          'match.lobby_type': 1,
+        },
+      },
+    )
 
-      this.updateMMR(increase, lobbyType, matchId, isParty)
-    })
+    // Default ranked
+    const lobbyType = response?.match?.lobby_type || 7
+    this.updateMMR(increase, lobbyType, matchId)
   }
 
   // TODO: CRON Job
@@ -705,7 +707,7 @@ export class setupMainEvents {
 
     this.endingBets = true
     const channel = this.getChannel()
-    this.handleMMR(won, matchId, lobby_type, this.heroSlot)
+    void this.handleMMR(won, matchId, lobby_type, this.heroSlot)
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
     if (!betsEnabled) {
