@@ -513,7 +513,8 @@ export class setupMainEvents {
     )
 
     // Default ranked
-    const lobbyType = response?.match?.lobby_type || 7
+    const lobbyType =
+      typeof response?.match?.lobby_type !== 'number' ? 7 : response.match.lobby_type
     this.updateMMR(increase, lobbyType, matchId)
   }
 
