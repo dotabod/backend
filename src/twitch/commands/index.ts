@@ -21,6 +21,7 @@ import './lg.js'
 import './np.js'
 import './smurfs.js'
 import './match.js'
+import './stats.js'
 
 // Setup twitch chat bot client first
 // TODO: Think about whether await is necessary here
