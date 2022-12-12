@@ -67,7 +67,9 @@ export async function getWL(channelId: string) {
       if (!hasRanked && !hasUnranked) record.push({ win: 0, lose: 0, type: 'U' })
 
       const msg = []
-      const rankedMsg = `Ranked ${ranked.win} W - ${ranked.lose} L`
+      const mmrGainOrLoss = (ranked.win - ranked.lose) * 30
+      const mmrMsg = ` | ${mmrGainOrLoss} MMR`
+      const rankedMsg = `Ranked ${ranked.win} W - ${ranked.lose} L${mmrMsg}`
       const unrankedMsg = `Unranked ${unranked.win} W - ${unranked.lose} L`
 
       if (hasRanked) msg.push(rankedMsg)
