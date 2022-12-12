@@ -1,6 +1,5 @@
 import { heroColors } from '../../dota/lib/heroes.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
-import Dota from '../../steam/index.js'
 import Mongo from '../../steam/mongo.js'
 import CustomError from '../../utils/customError.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
@@ -8,7 +7,6 @@ import commandHandler, { MessageType } from './CommandHandler.js'
 import { chatClient } from './index.js'
 
 const mongo = Mongo.getInstance()
-const dota = Dota.getInstance()
 
 export async function profileLink(matchId: string, color: string) {
   if (!matchId) throw new CustomError("Game wasn't found")
@@ -25,12 +23,12 @@ export async function profileLink(matchId: string, color: string) {
   const response = await db.collection('delayedGames').findOne({ 'match.match_id': matchId })
   if (!response) throw new CustomError("Game wasn't found")
 
-  const matchPlayers: { heroid: number; accountid: number }[] = [
-    ...response.teams[0].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
-    ...response.teams[1].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
-  ]
+  const matchPlayers: { heroid: number; accountid: number }[] = response.teams.flatMap(
+    (team: { players: { heroid: number; accountid: number }[] }) => team.players,
+  )
+  const player = matchPlayers[heroKey]
 
-  return `dotabuff.com/players/${matchPlayers[heroKey].accountid}`
+  return `dotabuff.com/players/${player.accountid}`
 }
 
 commandHandler.registerCommand('stats', {
