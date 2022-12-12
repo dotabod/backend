@@ -227,7 +227,7 @@ class Dota {
         .then((response) => {
           let arr: Error | undefined
 
-          if (!response.data?.teams?.[0]?.players?.[0]?.accountid) {
+          if (!response.data?.teams?.[0]?.players?.[0]?.heroid) {
             arr = new Error('Match not found')
           }
 
