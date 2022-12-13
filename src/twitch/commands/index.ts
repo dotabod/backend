@@ -30,6 +30,18 @@ export const chatClient = await getChatClient()
 chatClient.onMessage(function (channel, user, text, msg) {
   if (!msg.channelId) return
 
+  async function handler() {
+    // const {
+    // client: { json: redis
+    // } = RedisClient.getInstance()
+    // const k = await client.json.get('key', { path: '$.test' })
+    // const value = await redis.get('key', { path: '$.test' })
+    // console.log(value)
+    // console.log(k, 'from handler')
+  }
+
+  void handler()
+
   // Letting one pleb in
   if (
     plebMode.has(msg.channelId) &&
@@ -53,6 +65,8 @@ chatClient.onMessage(function (channel, user, text, msg) {
   // This runs every command, but its cached so no hit on db
   getDBUser(undefined, msg.channelId)
     .then((client) => {
+      console.log(client)
+
       if (!client || !msg.channelId) return
 
       // Handle the incoming message using the command handler

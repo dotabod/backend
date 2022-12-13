@@ -52,7 +52,67 @@ export function updateMmr(
         },
       })
       .then(() => {
-        const client = findUserByName(toUserName(channel))
+        async function handler() {
+          const client = await findUserByName(toUserName(channel))
+
+          if (client) {
+            const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
+
+            let oldMmr = client.mmr
+            client.mmr = mmr
+            const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === steam32Id)
+            if (currentSteam >= 0) {
+              oldMmr = client.SteamAccount[currentSteam].mmr
+              client.SteamAccount[currentSteam].mmr = mmr
+            }
+
+            if (mmrEnabled)
+              void chatClient.say(
+                channel,
+                `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
+              )
+
+            if (client.sockets.length) {
+              console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
+              getRankDetail(mmr, client.steam32Id)
+                .then((deets) => {
+                  server.io.to(client.sockets).emit('update-medal', deets)
+                })
+                .catch((e) => {
+                  console.error('[MMR] !mmr= Error getting rank detail', e)
+                })
+            } else {
+              console.log('[UPDATE MMR] No sockets found to send update to', channel)
+            }
+          }
+        }
+
+        void handler()
+      })
+      .catch((e) => {
+        console.log('[UPDATE MMR]', 'Error updating user table', { channel, e })
+      })
+
+    return
+  }
+
+  prisma.steamAccount
+    .update({
+      data: {
+        user: {
+          update: {
+            mmr: 0,
+          },
+        },
+        mmr: mmr,
+      },
+      where: {
+        steam32Id,
+      },
+    })
+    .then(() => {
+      async function handler() {
+        const client = await findUserByName(toUserName(channel))
 
         if (client) {
           const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
@@ -84,61 +144,9 @@ export function updateMmr(
             console.log('[UPDATE MMR] No sockets found to send update to', channel)
           }
         }
-      })
-      .catch((e) => {
-        console.log('[UPDATE MMR]', 'Error updating user table', { channel, e })
-      })
-
-    return
-  }
-
-  prisma.steamAccount
-    .update({
-      data: {
-        user: {
-          update: {
-            mmr: 0,
-          },
-        },
-        mmr: mmr,
-      },
-      where: {
-        steam32Id,
-      },
-    })
-    .then(() => {
-      const client = findUserByName(toUserName(channel))
-
-      if (client) {
-        const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
-
-        let oldMmr = client.mmr
-        client.mmr = mmr
-        const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === steam32Id)
-        if (currentSteam >= 0) {
-          oldMmr = client.SteamAccount[currentSteam].mmr
-          client.SteamAccount[currentSteam].mmr = mmr
-        }
-
-        if (mmrEnabled)
-          void chatClient.say(
-            channel,
-            `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
-          )
-
-        if (client.sockets.length) {
-          console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
-          getRankDetail(mmr, client.steam32Id)
-            .then((deets) => {
-              server.io.to(client.sockets).emit('update-medal', deets)
-            })
-            .catch((e) => {
-              console.error('[MMR] !mmr= Error getting rank detail', e)
-            })
-        } else {
-          console.log('[UPDATE MMR] No sockets found to send update to', channel)
-        }
       }
+
+      void handler()
     })
     .catch((e) => {
       console.log('[UPDATE MMR]', 'Error updating account table', { channel, e })

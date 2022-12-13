@@ -3,12 +3,12 @@ import { RefreshingAuthProvider } from '@twurple/auth'
 import findUser from '../../dota/lib/connectedStreamers.js'
 import { hasTokens } from './hasTokens.js'
 
-export const getChannelAuthProvider = function (channel: string, userId: string) {
+export const getChannelAuthProvider = async function (channel: string, userId: string) {
   if (!hasTokens) {
     throw new Error('Missing twitch tokens')
   }
 
-  const twitchTokens = findUser(userId)
+  const twitchTokens = await findUser(userId)
 
   if (!twitchTokens?.Account?.access_token || !twitchTokens.Account.refresh_token) {
     console.log('[TWITCHSETUP]', 'Missing twitch tokens', channel)

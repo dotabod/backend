@@ -1,6 +1,9 @@
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
-import { socketClients } from '../dota/lib/consts.js'
+import { SocketClient } from '../types.js'
 import { prisma } from './prisma.js'
+import RedisClient from './redis.js'
+
+const { client: redis } = RedisClient.getInstance()
 
 export const invalidTokens = new Set()
 
@@ -9,13 +12,13 @@ export default async function getDBUser(token?: string, twitchId?: string) {
 
   // Cache check
   if (token) {
-    const client = findUser(token || twitchId)
+    const client = await findUser(token)
     if (client) return client
   }
 
   // Cache check
   if (twitchId) {
-    const client = findUserByTwitchId(twitchId)
+    const client = await findUserByTwitchId(twitchId)
     if (client) return client
   }
 
@@ -56,26 +59,34 @@ export default async function getDBUser(token?: string, twitchId?: string) {
         id: token,
       },
     })
-    .then((user) => {
+    .then(async (user) => {
       if (!user?.id) {
         console.log('Invalid token', { token })
         invalidTokens.add(token)
         return null
       }
 
-      const client = findUser(user.id)
+      const client = await findUser(user.id)
       if (client) return client
 
-      const arrayLength = socketClients.push({
+      const theUser = {
         ...user,
         mmr: user.mmr || user.SteamAccount[0]?.mmr,
         steam32Id: user.steam32Id ?? user.SteamAccount[0]?.steam32Id,
         token: user.id,
         // sockets[] to be filled in by socket connection, so will steamid
         sockets: [],
-      })
+      }
 
-      return socketClients[arrayLength - 1]
+      await redis.json.set(
+        `users:${user.id}`,
+        '$',
+        theUser as typeof theUser & {
+          settings: { key: string; value: string | boolean }[]
+        },
+      )
+
+      return theUser as SocketClient
     })
     .catch((e) => {
       console.log('[USER]', 'Error checking auth', { token, e })

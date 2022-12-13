@@ -39,6 +39,7 @@
     "long": "5.0.1",
     "memoizee": "^0.4.15",
     "mongodb": "^4.12.1",
+    "redis": "^4.5.1",
     "retry": "^0.13.1",
     "socket.io": "^4.5.4",
     "steam": "https://github.com/dotabod/node-steam",

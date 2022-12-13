@@ -1,35 +1,32 @@
-import { socketClients } from './consts.js'
+import RedisClient from '../../db/redis.js'
+import { SocketClient } from '../../types.js'
 
-function findUser(token?: string) {
+const { client } = RedisClient.getInstance()
+
+// await redis.set('key', '$', { test: 'values' })
+
+export default async function findUser(token?: string) {
   if (!token) return null
 
-  const user = socketClients.findIndex((client) => client.token === token)
-  if (user === -1) return null
-
-  return socketClients[user]
+  const user = (await client.json.get(`users:${token}`)) as unknown as SocketClient
+  return user
 }
 
-export function findUserByTwitchId(twitchId: string) {
+export async function findUserByTwitchId(twitchId: string) {
   if (!twitchId) return null
 
-  const user = socketClients.findIndex((client) => client.Account?.providerAccountId === twitchId)
-  if (user === -1) return null
-
-  return socketClients[user]
+  const doc = await client.ft.search(`idx:users`, `@twitchId:(${twitchId})`)
+  if (!doc.total) return null
+  const user = doc.documents[0].value as unknown as SocketClient
+  return user
 }
 
-export function findUserByName(name: string) {
+export async function findUserByName(name: string) {
   if (!name) return null
 
-  const user = socketClients.findIndex((client) => client.name.toLowerCase() === name.toLowerCase())
-  if (user === -1) return null
-
-  return socketClients[user]
+  // TODO: check lowercase name if needed
+  const doc = await client.ft.search(`idx:users`, `@name:(${name})`)
+  if (!doc.total) return null
+  const user = doc.documents[0].value as unknown as SocketClient
+  return user
 }
-
-// This will update often
-export function getActiveUsers() {
-  return socketClients.filter((client) => client.sockets.length > 0 && client.gsi)
-}
-
-export default findUser

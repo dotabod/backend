@@ -220,6 +220,8 @@ export class setupMainEvents {
 
     // Catch all
     this.gsi.on('newdata', (data: Packet) => {
+      console.log(data)
+
       // New users who dont have a steamaccount saved yet
       // This needs to run first so we have client.steamid on multiple acts
       this.updateSteam32Id()

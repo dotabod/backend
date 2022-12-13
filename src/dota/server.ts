@@ -7,6 +7,7 @@ import express, { NextFunction, Request, Response } from 'express'
 import { Server, Socket } from 'socket.io'
 
 import getDBUser, { invalidTokens } from '../db/getDBUser.js'
+import RedisClient from '../db/redis.js'
 import Dota from '../steam/index.js'
 import { GSIClient } from './GSIClient.js'
 import findUser from './lib/connectedStreamers.js'
@@ -17,6 +18,8 @@ declare module 'express-serve-static-core' {
     client: GSIClient
   }
 }
+
+const { client: redis } = RedisClient.getInstance()
 
 export const events = new EventEmitter()
 
@@ -39,13 +42,17 @@ function checkClient(req: Request, res: Response, next: NextFunction) {
   req.client.gamestate = req.body
   gsiClients.push(localUser)
 
-  const usr = findUser(localUser.token)
-  if (usr) {
-    usr.gsi = localUser
+  async function handler() {
+    const client = await findUser(localUser?.token)
+    if (client) {
+      await redis.json.set(`users:${client?.token}`, '$.gsi', JSON.stringify(localUser) || {})
+    }
+
+    events.emit('new-gsi-client', localUser?.token)
+    next()
   }
 
-  events.emit('new-gsi-client', localUser)
-  next()
+  void handler()
 }
 
 function emitAll(
@@ -131,7 +138,7 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
       res.status(401).send('Invalid token')
     })
     .catch((e) => {
-      console.log('[GSI]', 'Error checking auth', { token, e })
+      console.log('[GSI]', 'checkAuth Error checking auth', { token, e })
       res.status(500).send('Error checking auth')
     })
 }
@@ -193,9 +200,9 @@ class D2GSI {
       const { token } = socket.handshake.auth
 
       getDBUser(token)
-        .then((client) => {
+        .then(async (client) => {
           if (client?.token) {
-            client.sockets.push(socket.id)
+            await redis.json.arrAppend(`users:${client.token}`, '$.sockets', socket.id)
             next()
             return
           }
@@ -203,7 +210,7 @@ class D2GSI {
           next(new Error('authentication error'))
         })
         .catch((e) => {
-          console.log('[GSI]', 'Error checking auth', { token, e })
+          console.log('[GSI]', 'io.use Error checking auth', { token, e })
           next(new Error('authentication error'))
         })
     })
@@ -212,31 +219,45 @@ class D2GSI {
     io.on('connection', (socket: Socket) => {
       const { token } = socket.handshake.auth
 
-      // Socket connected event, used to connect GSI to a socket
-      const connectedSocketClient = findUser(token)
-      events.emit('new-socket-client', {
-        client: connectedSocketClient,
-        socketId: socket.id,
-      })
+      async function handler() {
+        const client = await findUser(token)
+
+        // Socket connected event, used to connect GSI to a socket
+        // TODO: dont emit full client, just emit token and find client with redis later
+        events.emit('new-socket-client', {
+          token: client?.token,
+          socketId: socket.id,
+        })
+      }
+
+      void handler()
 
       socket.on('disconnect', () => {
-        if (connectedSocketClient) {
-          connectedSocketClient.sockets = connectedSocketClient.sockets.filter(
-            (socketid) => socketid !== socket.id,
-          )
+        console.log('Disconnecting user', socket.id)
+        async function handler() {
+          const client = await findUser(token)
+          if (client) {
+            console.log({ sockets: client.sockets })
+            const newSockets = client.sockets.filter((socketid) => socketid !== socket.id)
+            console.log({ newSockets })
 
-          // Let's also remove all the events we setup from the client for this socket
-          // That way a new socket will get the GSI events again
-          if (!connectedSocketClient.sockets.length) {
-            console.log(
-              '[GSI]',
-              'No more sockets connected, removing all events for',
-              connectedSocketClient.name,
-            )
-            // There's no socket connected so let's remove all GSI events
-            connectedSocketClient.gsi?.removeAllListeners()
+            await redis.json.set(`users:${client.token}`, '$.sockets', newSockets)
+
+            // Let's also remove all the events we setup from the client for this socket
+            // That way a new socket will get the GSI events again
+            if (!newSockets.length) {
+              console.log(
+                '[GSI]',
+                'No more sockets connected, removing all events for',
+                client.name,
+              )
+              // There's no socket connected so let's remove all GSI events
+              client.gsi?.removeAllListeners()
+            }
           }
         }
+
+        void handler()
       })
     })
 
