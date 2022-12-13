@@ -19,7 +19,7 @@ commandHandler.registerCommand('gm', {
       void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')
       return
     }
-    gameMedals(message.channel.client.gsi??.map?.matchid)
+    gameMedals(message.channel.client.gsi?.map?.matchid)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })

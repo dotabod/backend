@@ -10,7 +10,7 @@ commandHandler.registerCommand('match', {
     const {
       channel: { name: channel, client },
     } = message
-    const matchid = client.gsi??.map?.matchid
+    const matchid = client.gsi?.map?.matchid
 
     if (!matchid) {
       void chatClient.say(channel, 'Match ID: Unknown')

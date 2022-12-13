@@ -42,7 +42,7 @@ commandHandler.registerCommand('stats', {
     // if (!getValueOrDefault(DBSettings.commandStats, client.settings)) {
     //   return
     // }
-    if (!client.gsi??.map?.matchid || !isPlayingMatch(client.gsi)) {
+    if (!client.gsi?.map?.matchid || !isPlayingMatch(client.gsi)) {
       void chatClient.say(channel, 'Not playing PauseChamp')
       return
     }

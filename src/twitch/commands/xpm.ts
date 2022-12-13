@@ -15,7 +15,7 @@ commandHandler.registerCommand('xpm', {
     if (!getValueOrDefault(DBSettings.commandXPM, client.settings)) {
       return
     }
-    if (!client.gsi??.hero?.name || !isPlayingMatch(client.gsi)) {
+    if (!client.gsi?.hero?.name || !isPlayingMatch(client.gsi)) {
       void chatClient.say(channel, 'Not playing PauseChamp')
       return
     }

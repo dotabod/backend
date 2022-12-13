@@ -17,7 +17,7 @@ commandHandler.registerCommand('hero', {
     if (!getValueOrDefault(DBSettings.commandHero, client.settings)) {
       return
     }
-    if (!client.steam32Id || !client.gsi??.hero?.name || !isPlayingMatch(client.gsi)) {
+    if (!client.steam32Id || !client.gsi?.hero?.name || !isPlayingMatch(client.gsi)) {
       void chatClient.say(channel, 'Not playing PauseChamp')
       return
     }

@@ -6,7 +6,7 @@ export class GSIClient {
   ip: string
   auth: { token: string }
   token: string
-  gamestate?: Packet
+  gsi?: Packet
 
   constructor(ip: string, auth: { token: string }) {
     this.ip = ip

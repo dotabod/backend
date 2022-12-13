@@ -1,9 +1,11 @@
+import RedisClient from '../db/redis.js'
 import { setupMainEvents } from './events.js'
 import findUser from './lib/connectedStreamers.js'
 import D2GSI from './server.js'
 
 // Then setup the dota gsi server & websocket server
 export const server = new D2GSI()
+const { client: redis } = RedisClient.getInstance()
 
 // These next two events basically just check if Dota or OBS is opened first
 // It then has to act appropriately and just call when both are ready
@@ -20,11 +22,8 @@ server.events.on('new-socket-client', ({ token, socketId }) => {
       return
     }
 
-    // TODO: get total count of listeners using redis somehow
-    // const count = connectedSocketClient.gsi.listenerCount('map:clock_time')
-    const count = 0
-
-    if (count) {
+    const channels = await redis.pubSubChannels('gsievents:clbd1klbv0000i708ynp6b9y4*')
+    if (channels.length) {
       // So the backend GSI events for twitch bot etc are setup
       // The new socketid will automatically get all new events to it as well
       // This usually only happens if they open two browser sources or add it multiple times
@@ -69,7 +68,6 @@ server.events.on('new-gsi-client', (token) => {
     // This means OBS layer is available, but GSI connected AFTER
     console.log('[GSI]', 'Socket is connected and so is GSI', { name: connectedSocketClient.name })
 
-    // TODO: do a redis pub sub here instead
     new setupMainEvents(connectedSocketClient)
   }
 

@@ -19,9 +19,7 @@ declare module 'express-serve-static-core' {
   }
 }
 
-const { client: redis } = RedisClient.getInstance()
-
-await redis.publish('dota:status', 'online')
+const { client: redis, subscriber } = RedisClient.getInstance()
 
 export const events = new EventEmitter()
 
@@ -33,7 +31,7 @@ function checkClient(req: Request, res: Response, next: NextFunction) {
     // findUser(req.body.auth.token)
     // console.log('[GSI]',`Adding new userGSI for IP: ${req.ip}`)
     req.client = localUser
-    req.client.gamestate = req.body
+    req.client.gsi = req.body
 
     next()
     return
@@ -41,7 +39,7 @@ function checkClient(req: Request, res: Response, next: NextFunction) {
 
   localUser = new GSIClient(req.ip, req.body.auth)
   req.client = localUser
-  req.client.gamestate = req.body
+  req.client.gsi = req.body
   gsiClients.push(localUser)
 
   async function handler() {
@@ -104,7 +102,7 @@ function processChanges(section: string) {
 }
 
 function updateGameState(req: Request, res: Response, next: NextFunction) {
-  req.client.gamestate = req.body
+  req.client.gsi = req.body
   next()
 }
 
@@ -240,23 +238,15 @@ class D2GSI {
           const client = await findUser(token)
           if (client) {
             console.log({ sockets: client.sockets })
-            const newSockets = client.sockets.filter((socketid) => socketid !== socket.id)
-            console.log({ newSockets })
-
-            await redis.json.set(`users:${client.token}`, '$.sockets', newSockets)
+            await redis.json.set(`users:${client.token}`, '$.sockets', [])
 
             // Let's also remove all the events we setup from the client for this socket
             // That way a new socket will get the GSI events again
-            if (!newSockets.length) {
-              console.log(
-                '[GSI]',
-                'No more sockets connected, removing all events for',
-                client.name,
-              )
-              // TODO: remove subs to this user in redis
-              // if needed idk
-              // There's no socket connected so let's remove all GSI events
-              // client.gsi?.removeAllListeners()
+            console.log('[GSI]', 'Removing all events for', client.name, `gsievents:${client.token}:*`)
+            try {
+              await subscriber.pUnsubscribe(`gsievents:${client.token}:*`)
+            } catch (e) {
+              console.log('[GSI]', 'Error removing events', e)
             }
           }
         }
