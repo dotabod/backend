@@ -16,20 +16,20 @@ commandHandler.registerCommand('gpm', {
       return
     }
 
-    if (!client.gsi?.gamestate?.hero?.name || !isPlayingMatch(client.gsi)) {
+    if (!client.gsi??.hero?.name || !isPlayingMatch(client.gsi)) {
       void chatClient.say(channel, 'Not playing PauseChamp')
       return
     }
 
-    const gpm = client.gsi.gamestate.player?.gpm
+    const gpm = client.gsi.player?.gpm
 
     if (!gpm) {
       void chatClient.say(channel, 'Live GPM: 0')
       return
     }
 
-    const gold_from_hero_kills = client.gsi.gamestate.player?.gold_from_hero_kills
-    const gold_from_creep_kills = client.gsi.gamestate.player?.gold_from_creep_kills
+    const gold_from_hero_kills = client.gsi.player?.gold_from_hero_kills
+    const gold_from_creep_kills = client.gsi.player?.gold_from_creep_kills
 
     void chatClient.say(
       channel,
