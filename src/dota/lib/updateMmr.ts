@@ -63,9 +63,6 @@ export function updateMmr(
           },
         },
       })
-      .then(async () => {
-        await tellChatNewMMR(channel, mmr)
-      })
       .catch((e) => {
         console.log('[UPDATE MMR]', 'Error updating user table', { channel, e })
       })
@@ -86,9 +83,6 @@ export function updateMmr(
       where: {
         steam32Id,
       },
-    })
-    .then(async () => {
-      await tellChatNewMMR(channel, mmr)
     })
     .catch((e) => {
       console.log('[UPDATE MMR]', 'Error updating account table', { channel, e })
