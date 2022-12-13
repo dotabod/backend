@@ -1,5 +1,6 @@
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
+import RedisClient from '../db/redis.js'
 import { DBSettings, getValueOrDefault } from '../db/settings.js'
 import Mongo from '../steam/mongo.js'
 import { chatClient } from '../twitch/commands/index.js'
@@ -21,6 +22,7 @@ import { updateMmr } from './lib/updateMmr.js'
 import { server } from './index.js'
 
 const mongo = Mongo.getInstance()
+const { client: redis, subscriber } = RedisClient.getInstance()
 
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
@@ -49,7 +51,7 @@ export class setupMainEvents {
     this.gsi = client.gsi!
     this.client = client
 
-    this.watchEvents()
+    void this.watchEvents()
   }
 
   private getMmr() {
@@ -155,72 +157,82 @@ export class setupMainEvents {
     }
   }
 
-  watchEvents() {
-    this.gsi.on(DotaEventTypes.RoshanKilled, (event: DotaEvent) => {
-      if (!isPlayingMatch(this.gsi)) return
+  async watchEvents() {
+    await subscriber.subscribe(
+      `gsievents:${this.getToken()}:${DotaEventTypes.RoshanKilled}`,
+      (serialized: string) => {
+        const event = JSON.parse(serialized) as DotaEvent
+        if (!isPlayingMatch(this.gsi)) return
 
-      // doing map gametime - event gametime in case the user reconnects to a match,
-      // and the gametime is over the event gametime
-      const gameTimeDiff = (this.gsi.gamestate?.map?.game_time ?? event.game_time) - event.game_time
+        // doing map gametime - event gametime in case the user reconnects to a match,
+        // and the gametime is over the event gametime
+        const gameTimeDiff =
+          (this.gsi.gamestate?.map?.game_time ?? event.game_time) - event.game_time
 
-      // min spawn for rosh in 5 + 3 minutes
-      const minS = 5 * 60 + 3 * 60 - gameTimeDiff
-      const minTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + minS
+        // min spawn for rosh in 5 + 3 minutes
+        const minS = 5 * 60 + 3 * 60 - gameTimeDiff
+        const minTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + minS
 
-      // max spawn for rosh in 5 + 3 + 3 minutes
-      const maxS = 5 * 60 + 3 * 60 + 3 * 60 - gameTimeDiff
-      const maxTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + maxS
+        // max spawn for rosh in 5 + 3 + 3 minutes
+        const maxS = 5 * 60 + 3 * 60 + 3 * 60 - gameTimeDiff
+        const maxTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + maxS
 
-      // server time
-      const minDate = this.addSecondsToNow(minS)
-      const maxDate = this.addSecondsToNow(maxS)
+        // server time
+        const minDate = this.addSecondsToNow(minS)
+        const maxDate = this.addSecondsToNow(maxS)
 
-      const res = {
-        minS,
-        maxS,
-        minTime: fmtMSS(minTime),
-        maxTime: fmtMSS(maxTime),
-        minDate,
-        maxDate,
-      }
+        const res = {
+          minS,
+          maxS,
+          minTime: fmtMSS(minTime),
+          maxTime: fmtMSS(maxTime),
+          minDate,
+          maxDate,
+        }
 
-      this.roshanKilled = res
-      if (this.getSockets().length) {
-        server.io.to(this.getSockets()).emit('roshan-killed', res)
-      }
-      console.log('[ROSHAN]', 'Roshan killed, setting timer', res, { name: this.getChannel() })
-    })
+        this.roshanKilled = res
+        if (this.getSockets().length) {
+          server.io.to(this.getSockets()).emit('roshan-killed', res)
+        }
+        console.log('[ROSHAN]', 'Roshan killed, setting timer', res, { name: this.getChannel() })
+      },
+    )
 
-    this.gsi.on(DotaEventTypes.AegisPickedUp, (event: DotaEvent) => {
-      if (!isPlayingMatch(this.gsi)) return
+    await subscriber.subscribe(
+      `gsievents:${this.getToken()}:${DotaEventTypes.AegisPickedUp}`,
+      (serialized: string) => {
+        const event = JSON.parse(serialized) as DotaEvent
+        if (!isPlayingMatch(this.gsi)) return
 
-      const gameTimeDiff = (this.gsi.gamestate?.map?.game_time ?? event.game_time) - event.game_time
+        const gameTimeDiff =
+          (this.gsi.gamestate?.map?.game_time ?? event.game_time) - event.game_time
 
-      // expire for aegis in 5 minutes
-      const expireS = 5 * 60 - gameTimeDiff
-      const expireTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + expireS
+        // expire for aegis in 5 minutes
+        const expireS = 5 * 60 - gameTimeDiff
+        const expireTime = (this.gsi.gamestate?.map?.clock_time ?? 0) + expireS
 
-      // server time
-      const expireDate = this.addSecondsToNow(expireS)
+        // server time
+        const expireDate = this.addSecondsToNow(expireS)
 
-      const res = {
-        expireS,
-        playerId: event.player_id,
-        expireTime: fmtMSS(expireTime),
-        expireDate,
-      }
+        const res = {
+          expireS,
+          playerId: event.player_id,
+          expireTime: fmtMSS(expireTime),
+          expireDate,
+        }
 
-      this.aegisPickedUp = res
+        this.aegisPickedUp = res
 
-      if (this.getSockets().length) {
-        server.io.to(this.getSockets()).emit('aegis-picked-up', res)
-      }
-      console.log('[ROSHAN]', 'Aegis picked up, setting timer', res, { name: this.getChannel() })
-    })
+        if (this.getSockets().length) {
+          server.io.to(this.getSockets()).emit('aegis-picked-up', res)
+        }
+        console.log('[ROSHAN]', 'Aegis picked up, setting timer', res, { name: this.getChannel() })
+      },
+    )
 
     // Catch all
-    this.gsi.on('newdata', (data: Packet) => {
-      console.log(data)
+    await subscriber.subscribe(`gsievents:${this.getToken()}:newdata`, (serialized: string) => {
+      const data: Packet = JSON.parse(serialized)
 
       // New users who dont have a steamaccount saved yet
       // This needs to run first so we have client.steamid on multiple acts
@@ -239,7 +251,10 @@ export class setupMainEvents {
             )
           ) {
             this.events.push(event)
-            this.gsi.emit(event.event_type, event)
+            void redis.publish(
+              `gsievents:${this.getToken()}:${event.event_type}`,
+              JSON.stringify(event),
+            )
 
             if (!Object.values(DotaEventTypes).includes(event.event_type)) {
               console.log('[NEWEVENT]', event)
@@ -262,13 +277,15 @@ export class setupMainEvents {
       }
     })
 
-    this.gsi.on('hero:name', (name: string) => {
+    await subscriber.subscribe(`gsievents:${this.getToken()}:hero:name`, (serialized: string) => {
+      const name: string = JSON.parse(serialized)
       if (!isPlayingMatch(this.gsi)) return
 
       this.currentHero = name
     })
 
-    this.gsi.on('hero:alive', (alive: boolean) => {
+    await subscriber.subscribe(`gsievents:${this.getToken()}:hero:alive`, (serialized: string) => {
+      const alive: boolean = JSON.parse(serialized)
       // Just died
       if (!alive && this.gsi.gamestate?.previously?.hero?.alive) {
         // console.log('Just died')
@@ -281,21 +298,26 @@ export class setupMainEvents {
     })
 
     // Can use this to get hero slot when the hero first spawns at match start
-    this.gsi.on('items:teleport0:purchaser', (purchaser: number) => {
-      if (!isPlayingMatch(this.gsi)) return
+    await subscriber.subscribe(
+      `gsievents:${this.getToken()}:items:teleport0:purchaser`,
+      (serialized: string) => {
+        const purchaser: number = JSON.parse(serialized)
+        if (!isPlayingMatch(this.gsi)) return
 
-      // Can't just !this.heroSlot because it can be 0
-      if (this.heroSlot === null) {
-        console.log('[SLOT]', 'Found hero slot at', purchaser, {
-          name: this.getChannel(),
-        })
-        this.heroSlot = purchaser
-        void this.saveMatchData()
-        return
-      }
-    })
+        // Can't just !this.heroSlot because it can be 0
+        if (this.heroSlot === null) {
+          console.log('[SLOT]', 'Found hero slot at', purchaser, {
+            name: this.getChannel(),
+          })
+          this.heroSlot = purchaser
+          void this.saveMatchData()
+          return
+        }
+      },
+    )
 
-    this.gsi.on('hero:smoked', (isSmoked: boolean) => {
+    await subscriber.subscribe(`gsievents:${this.getToken()}:hero:smoked`, (serialized: string) => {
+      const isSmoked: boolean = JSON.parse(serialized)
       if (!isPlayingMatch(this.gsi)) return
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
       if (!chatterEnabled) return
@@ -311,7 +333,8 @@ export class setupMainEvents {
       }
     })
 
-    this.gsi.on('map:paused', (isPaused: boolean) => {
+    await subscriber.subscribe(`gsievents:${this.getToken()}:map:paused`, (serialized: string) => {
+      const isPaused: boolean = JSON.parse(serialized)
       if (!isPlayingMatch(this.gsi)) return
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
       if (!chatterEnabled) return
@@ -327,22 +350,31 @@ export class setupMainEvents {
     })
 
     // This wont get triggered if they click disconnect and dont wait for the ancient to go to 0
-    this.gsi.on('map:win_team', (winningTeam: 'radiant' | 'dire') => {
-      if (!isPlayingMatch(this.gsi)) return
+    type TeamTypes = 'radiant' | 'dire'
+    await subscriber.subscribe(
+      `gsievents:${this.getToken()}:map:win_team`,
+      (serialized: string) => {
+        const winningTeam: TeamTypes = JSON.parse(serialized)
+        if (!isPlayingMatch(this.gsi)) return
 
-      this.endBets(winningTeam)
-    })
+        this.endBets(winningTeam)
+      },
+    )
 
-    this.gsi.on('map:clock_time', (time: number) => {
-      if (!isPlayingMatch(this.gsi)) return
+    await subscriber.subscribe(
+      `gsievents:${this.getToken()}:map:clock_time`,
+      (serialized: string) => {
+        const time: number = JSON.parse(serialized)
+        if (!isPlayingMatch(this.gsi)) return
 
-      // Skip pregame
-      if ((time + 30) % 300 === 0 && time + 30 > 0) {
-        // Open a poll to see if its top or bottom?
-        // We might not find out the answer though
-        // console.log('Runes coming soon, its currently n:30 minutes', { token: client.token })
-      }
-    })
+        // Skip pregame
+        if ((time + 30) % 300 === 0 && time + 30 > 0) {
+          // Open a poll to see if its top or bottom?
+          // We might not find out the answer though
+          // console.log('Runes coming soon, its currently n:30 minutes', { token: client.token })
+        }
+      },
+    )
   }
 
   emitWLUpdate() {

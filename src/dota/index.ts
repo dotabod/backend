@@ -20,7 +20,9 @@ server.events.on('new-socket-client', ({ token, socketId }) => {
       return
     }
 
-    const count = connectedSocketClient.gsi.listenerCount('map:clock_time')
+    // TODO: get total count of listeners using redis somehow
+    // const count = connectedSocketClient.gsi.listenerCount('map:clock_time')
+    const count = 0
 
     if (count) {
       // So the backend GSI events for twitch bot etc are setup
@@ -67,6 +69,7 @@ server.events.on('new-gsi-client', (token) => {
     // This means OBS layer is available, but GSI connected AFTER
     console.log('[GSI]', 'Socket is connected and so is GSI', { name: connectedSocketClient.name })
 
+    // TODO: do a redis pub sub here instead
     new setupMainEvents(connectedSocketClient)
   }
 

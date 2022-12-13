@@ -3,6 +3,7 @@ import { SchemaFieldTypes, createClient } from 'redis'
 export default class RedisClient {
   private static instance: RedisClient
   public client: ReturnType<typeof createClient>
+  public subscriber: ReturnType<typeof createClient>
 
   private constructor() {
     const client = createClient()
@@ -41,6 +42,10 @@ export default class RedisClient {
 
     void handler()
 
+    const subscriber = client.duplicate()
+    void subscriber.connect()
+
+    this.subscriber = subscriber
     this.client = client
   }
 

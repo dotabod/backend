@@ -21,6 +21,8 @@ declare module 'express-serve-static-core' {
 
 const { client: redis } = RedisClient.getInstance()
 
+await redis.publish('dota:status', 'online')
+
 export const events = new EventEmitter()
 
 function checkClient(req: Request, res: Response, next: NextFunction) {
@@ -45,7 +47,7 @@ function checkClient(req: Request, res: Response, next: NextFunction) {
   async function handler() {
     const client = await findUser(localUser?.token)
     if (client) {
-      await redis.json.set(`users:${client?.token}`, '$.gsi', JSON.stringify(localUser) || {})
+      await redis.json.set(`users:${client.token}`, '$.gsi', req.body)
     }
 
     events.emit('new-gsi-client', localUser?.token)
@@ -58,10 +60,10 @@ function checkClient(req: Request, res: Response, next: NextFunction) {
 function emitAll(
   prefix: string,
   obj: Record<string, any>,
-  emitter: { emit: (arg0: string, arg1: any) => void },
+  emit: (event: string, data: string) => void,
 ) {
   Object.keys(obj).forEach((key) => {
-    emitter.emit(prefix + key, obj[key])
+    emit(prefix + key, obj[key])
   })
 }
 
@@ -69,13 +71,13 @@ function recursiveEmit(
   prefix: string,
   changed: Record<string, any>,
   body: Record<string, any>,
-  emitter: { emit: (arg0: string, arg1: any) => void },
+  emit: (event: string, data: string) => void,
 ) {
   Object.keys(changed).forEach((key) => {
     if (typeof changed[key] === 'object') {
       if (body[key] != null) {
         // safety check
-        recursiveEmit(`${prefix + key}:`, changed[key], body[key], emitter)
+        recursiveEmit(`${prefix + key}:`, changed[key], body[key], emit)
       }
     } else {
       // Got a key
@@ -83,9 +85,9 @@ function recursiveEmit(
         if (typeof body[key] === 'object') {
           // Edge case on added:item/ability:x where added shows true at the top level
           // and doesn't contain each of the child keys
-          emitAll(`${prefix + key}:`, body[key], emitter)
+          emitAll(`${prefix + key}:`, body[key], emit)
         } else {
-          emitter.emit(prefix + key, body[key])
+          emit(prefix + key, body[key])
         }
       }
     }
@@ -95,7 +97,7 @@ function recursiveEmit(
 function processChanges(section: string) {
   return function handle(req: Request, res: Response, next: NextFunction) {
     if (req.body[section]) {
-      recursiveEmit('', req.body[section], req.body, req.client)
+      recursiveEmit('', req.body[section], req.body, req.client.emit)
     }
     next()
   }
@@ -251,8 +253,10 @@ class D2GSI {
                 'No more sockets connected, removing all events for',
                 client.name,
               )
+              // TODO: remove subs to this user in redis
+              // if needed idk
               // There's no socket connected so let's remove all GSI events
-              client.gsi?.removeAllListeners()
+              // client.gsi?.removeAllListeners()
             }
           }
         }
