@@ -3,10 +3,14 @@ import { Setting, SteamAccount, User } from '@prisma/client'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
+import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { chatClient } from '../twitch/commands/index.js'
+import RedisClient from './redis.js'
 import supabase from './supabase.js'
 
 const channel = supabase.channel('db-changes')
+
+const { client: redis } = RedisClient.getInstance()
 
 // When a user updates MMR from dashboard and they have client open
 channel
@@ -30,24 +34,14 @@ channel
       const newObj = payload.new as User
       const oldObj = payload.old as User
       const client = await findUser(newObj.id)
-      if (client && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
+      if (newObj.mmr !== 0 && client && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
         // dont overwrite with 0 because we use this variable to track currently logged in mmr
-        if (newObj.mmr !== 0) {
-          client.mmr = newObj.mmr
-          console.log('[WATCHER] Updated cached mmr for', newObj.name, newObj.mmr)
-        }
-        if (newObj.mmr !== 0) {
-          console.log('[WATCHER MMR] Sending mmr to socket', client.name)
-          void chatClient.say(client.name, `Updated MMR to ${client.mmr}`)
+        console.log('[WATCHER MMR] Sending mmr to socket', client.name)
+        void redis.json.set(`users:${client.token}`, '$.mmr', newObj.mmr)
+        void tellChatNewMMR(client.name, newObj.mmr)
 
-          getRankDetail(client.mmr, client.steam32Id)
-            .then((deets) => {
-              server.io.to(client.token).emit('update-medal', deets)
-            })
-            .catch((e) => {
-              console.error('[WATCHER MMR] Error getting rank detail', e)
-            })
-        }
+        const deets = await getRankDetail(newObj.mmr, client.steam32Id)
+        server.io.to(client.token).emit('update-medal', deets)
       }
     }
 
@@ -69,7 +63,7 @@ channel
           client.settings.push({ key: newObj.key, value: newObj.value })
         }
 
-        console.log('[WATCHER SETTING] Sending new setting value to socket', client.name)
+        void redis.json.set(`users:${client.token}`, '$.settings', client.settings)
         server.io.to(client.token).emit('refresh-settings')
       }
     }
@@ -82,46 +76,30 @@ channel
     (payload) => {
       async function handler() {
         const newObj = payload.new as SteamAccount
-
         const client = await findUser(newObj.userId)
+
         // Just here to update local memory
         if (!client) return
 
-        console.log('[WATCHER MMR] Updating setting for', client.name)
-
+        console.log('[WATCHER STEAM] Updating steam accounts for', client.name)
         const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === newObj.steam32Id)
-        if (currentSteam >= 0) {
-          // update from dashboard
-          if (client.SteamAccount[currentSteam].name !== newObj.name) {
-            client.SteamAccount[currentSteam].name = newObj.name
-          }
-          if (client.SteamAccount[currentSteam].mmr !== newObj.mmr) {
-            client.SteamAccount[currentSteam].mmr = newObj.mmr
-
-            if (client.steam32Id === newObj.steam32Id) {
-              client.mmr = newObj.mmr
-              getRankDetail(newObj.mmr, client.steam32Id)
-                .then((deets) => {
-                  server.io.to(client.token).emit('update-medal', deets)
-                })
-                .catch((e) => {
-                  console.error('[WATCHER MMR] postgres_changes Error getting rank detail', e)
-                })
-            }
-
-            return
-          }
+        if (currentSteam === -1) {
+          return
         }
 
-        // TODO: Supabase only sends the ID of the row, not steam32id
-        // Would only need this for freeing up memory i guess; not important
-        // if (payload.eventType === 'DELETE') {
-        //   // delete steam account
-        //   console.log(payload)
-        //   client.SteamAccount.splice(currentSteam, 1)
-        //   return
-        // }
-        return
+        // Name change from dashboard
+        client.SteamAccount[currentSteam].name = newObj.name
+        client.SteamAccount[currentSteam].mmr = newObj.mmr
+
+        void redis.json.set(`users:${client.token}`, '$.SteamAccount', client.SteamAccount)
+
+        // Push an mmr update to overlay since it's the steam account rn
+        if (client.steam32Id === newObj.steam32Id) {
+          void redis.json.set(`users:${client.token}`, '$.mmr', newObj.mmr)
+          void tellChatNewMMR(client.name, newObj.mmr)
+          const deets = await getRankDetail(newObj.mmr, newObj.steam32Id)
+          server.io.to(client.token).emit('update-medal', deets)
+        }
       }
 
       void handler()

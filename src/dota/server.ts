@@ -19,7 +19,7 @@ declare module 'express-serve-static-core' {
   }
 }
 
-const { client: redis, subscriber } = RedisClient.getInstance()
+const { client: redis } = RedisClient.getInstance()
 
 export const events = new EventEmitter()
 
