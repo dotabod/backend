@@ -1,3 +1,4 @@
+import { Socket } from 'socket.io'
 import getDBUser from '../db/getDBUser.js'
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
@@ -7,7 +8,7 @@ import Mongo from '../steam/mongo.js'
 import { chatClient } from '../twitch/commands/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { disabledBets, openTwitchBet } from '../twitch/lib/openTwitchBet.js'
-import { DotaEvent, DotaEventTypes, Packet, SocketClient } from '../types.js'
+import { DotaEvent, DotaEventTypes, MapData, Packet, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
 import { fmtMSS, steamID64toSteamID32 } from '../utils/index.js'
 import checkMidas from './lib/checkMidas.js'
@@ -33,11 +34,10 @@ export class setupMainEvents {
   betExists: string | undefined | null = null
   betMyTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
   blockCache = new Map<string, string>()
-  client: SocketClient
   currentHero: string | undefined | null = null
   endingBets = false
   events: DotaEvent[] = []
-  gsi: Packet
+  gsi?: Packet
   heroSlot: number | undefined | null = null
   passiveMidas = { counter: 0 }
   roshanKilled?: {
@@ -46,48 +46,61 @@ export class setupMainEvents {
     minDate: Date
     maxDate: Date
   }
+  token: string
 
-  constructor(client: SocketClient) {
-    console.log('Instantiating a new client', client.name)
-    this.gsi = client.gsi!
-    this.client = client
+  constructor(token: SocketClient['token']) {
+    console.log('Instantiating a new client', token)
 
-    void subscriber.subscribe(`update:${client.token}`, (serialized: string) => {
-      const event = JSON.parse(serialized) as DotaEvent
+    this.token = token
+
+    server.io.on('connection', (socket: Socket) => {
+      // This triggers a resend of obs blockers
+      const { token } = socket.handshake.auth
+      this.blockCache.delete(token)
     })
 
     void this.watchEvents()
   }
 
-  private async getClient() {
-    // it wont be null if this class is created
-    const user = await getDBUser(this.client.token)!
-    return user!
+  private async getMmr() {
+    const res = await redis.json.get(`users:${this.getToken()}`, { path: '.mmr' })
+    return res as SocketClient['mmr']
   }
 
-  private async getMmr() {
-    const user = await this.getClient()
-    return user.mmr
+  private async getSteamAccounts() {
+    const res = await redis.json.get(`users:${this.getToken()}`, { path: '.SteamAccount' })
+    return res as SocketClient['SteamAccount']
+  }
+
+  private async getSettings() {
+    const res = await redis.json.get(`users:${this.getToken()}`, { path: '.settings' })
+    return res as SocketClient['settings']
   }
 
   private getToken() {
-    return this.client.token
+    return this.token
   }
 
-  private getSockets() {
-    return this.client.sockets
+  private async getChannel() {
+    const res = await redis.json.get(`users:${this.getToken()}`, { path: '.name' })
+    return res as SocketClient['name']
   }
 
-  private getChannel() {
-    return this.client.name
+  private async getSteam32() {
+    const res = await redis.json.get(`users:${this.getToken()}`, { path: '.steam32Id' })
+    return res as SocketClient['steam32Id']
   }
 
-  private getSteam32() {
-    return this.client.steam32Id
+  private async getMatchId() {
+    const res = await redis.json.get(`users:${this.getToken()}`, { path: '.gsi.map.matchid' })
+    return res as MapData['matchid']
   }
 
-  private getChannelId(): string {
-    return this.client.Account?.providerAccountId ?? ''
+  private async getChannelId() {
+    const res = await redis.json.get(`users:${this.getToken()}`, {
+      path: '.Account.providerAccountId',
+    })
+    return res as string
   }
 
   private addSecondsToNow(seconds: number) {
@@ -111,40 +124,34 @@ export class setupMainEvents {
       this.roshanKilled = undefined
       this.aegisPickedUp = undefined
 
-      if (this.getSockets().length) {
-        server.io.to(this.getSockets()).emit('aegis-picked-up', {})
-        server.io.to(this.getSockets()).emit('roshan-killed', {})
-      }
+      server.io.to(this.getToken()).emit('aegis-picked-up', {})
+      server.io.to(this.getToken()).emit('roshan-killed', {})
     }
   }
 
   async saveMatchData() {
-    if (!this.client.steam32Id || !this.client.gsi?.map?.matchid) return
+    const steam32Id = await this.getSteam32()
+    const matchId = await this.getMatchId()
+    if (!steam32Id || !matchId) return
 
     try {
-      console.log('Start match data', this.client.name, this.client.gsi.map.matchid)
+      console.log('Start match data', await this.getChannel(), matchId)
 
       const db = await mongo.db
-      let response = await db
-        .collection('delayedGames')
-        .findOne({ 'match.match_id': this.client.gsi.map.matchid })
+      let response = await db.collection('delayedGames').findOne({ 'match.match_id': matchId })
 
       if (!response) {
-        console.log(
-          'No match data for user, checking from steam',
-          this.client.name,
-          this.client.gsi.map.matchid,
-        )
+        console.log('No match data for user, checking from steam', await this.getChannel(), matchId)
 
-        const steamserverid = await server.dota.getUserSteamServer(this.client.steam32Id)
+        const steamserverid = await server.dota.getUserSteamServer(steam32Id)
         // @ts-expect-error asdf
         response = await server.dota.getDelayedMatchData(steamserverid)
         if (!response) {
-          console.log('No match data found!', this.client.name, this.client.gsi.map.matchid)
+          console.log('No match data found!', await this.getChannel(), matchId)
           return
         }
 
-        console.log('Saving match data', this.client.name, this.client.gsi.map.matchid)
+        console.log('Saving match data', await this.getChannel(), matchId)
 
         await db
           .collection('delayedGames')
@@ -154,31 +161,31 @@ export class setupMainEvents {
             { upsert: true },
           )
       } else {
-        console.log('Match data already found', this.client.name, this.client.gsi.map.matchid)
+        console.log('Match data already found', await this.getChannel(), matchId)
       }
     } catch (e) {
-      console.log(e, 'saving match data failed', this.client.name)
+      console.log(e, 'saving match data failed', await this.getChannel())
     }
   }
 
   async watchEvents() {
     await subscriber.subscribe(
       `gsievents:${this.getToken()}:${DotaEventTypes.RoshanKilled}`,
-      (serialized: string) => {
+      async (serialized: string) => {
         const event = JSON.parse(serialized) as DotaEvent
         if (!isPlayingMatch(this.gsi)) return
 
         // doing map gametime - event gametime in case the user reconnects to a match,
         // and the gametime is over the event gametime
-        const gameTimeDiff = (this.gsi.map?.game_time ?? event.game_time) - event.game_time
+        const gameTimeDiff = (this.gsi?.map?.game_time ?? event.game_time) - event.game_time
 
         // min spawn for rosh in 5 + 3 minutes
         const minS = 5 * 60 + 3 * 60 - gameTimeDiff
-        const minTime = (this.gsi.map?.clock_time ?? 0) + minS
+        const minTime = (this.gsi?.map?.clock_time ?? 0) + minS
 
         // max spawn for rosh in 5 + 3 + 3 minutes
         const maxS = 5 * 60 + 3 * 60 + 3 * 60 - gameTimeDiff
-        const maxTime = (this.gsi.map?.clock_time ?? 0) + maxS
+        const maxTime = (this.gsi?.map?.clock_time ?? 0) + maxS
 
         // server time
         const minDate = this.addSecondsToNow(minS)
@@ -194,24 +201,24 @@ export class setupMainEvents {
         }
 
         this.roshanKilled = res
-        if (this.getSockets().length) {
-          server.io.to(this.getSockets()).emit('roshan-killed', res)
-        }
-        console.log('[ROSHAN]', 'Roshan killed, setting timer', res, { name: this.getChannel() })
+        server.io.to(this.getToken()).emit('roshan-killed', res)
+        console.log('[ROSHAN]', 'Roshan killed, setting timer', res, {
+          name: await this.getChannel(),
+        })
       },
     )
 
     await subscriber.subscribe(
       `gsievents:${this.getToken()}:${DotaEventTypes.AegisPickedUp}`,
-      (serialized: string) => {
+      async (serialized: string) => {
         const event = JSON.parse(serialized) as DotaEvent
         if (!isPlayingMatch(this.gsi)) return
 
-        const gameTimeDiff = (this.gsi.map?.game_time ?? event.game_time) - event.game_time
+        const gameTimeDiff = (this.gsi?.map?.game_time ?? event.game_time) - event.game_time
 
         // expire for aegis in 5 minutes
         const expireS = 5 * 60 - gameTimeDiff
-        const expireTime = (this.gsi.map?.clock_time ?? 0) + expireS
+        const expireTime = (this.gsi?.map?.clock_time ?? 0) + expireS
 
         // server time
         const expireDate = this.addSecondsToNow(expireS)
@@ -225,10 +232,10 @@ export class setupMainEvents {
 
         this.aegisPickedUp = res
 
-        if (this.getSockets().length) {
-          server.io.to(this.getSockets()).emit('aegis-picked-up', res)
-        }
-        console.log('[ROSHAN]', 'Aegis picked up, setting timer', res, { name: this.getChannel() })
+        server.io.to(this.getToken()).emit('aegis-picked-up', res)
+        console.log('[ROSHAN]', 'Aegis picked up, setting timer', res, {
+          name: await this.getChannel(),
+        })
       },
     )
 
@@ -236,19 +243,14 @@ export class setupMainEvents {
     await subscriber.subscribe(
       `gsievents:${this.getToken()}:newdata`,
       async (serialized: string) => {
-        console.log(this.getSockets())
-
-        if (!this.getSockets().length) {
-          console.log('unsubbing events')
-
-          await subscriber.pUnsubscribe(`gsievents:${this.getToken()}:*`)
-        }
-
-        const data: Packet = JSON.parse(serialized)
+        const gsi = JSON.parse(serialized)
+        const data: Packet = gsi
+        this.gsi = data
+        await redis.json.set(`users:${this.getToken()}`, `$.gsi`, gsi)
 
         // New users who dont have a steamaccount saved yet
         // This needs to run first so we have client.steamid on multiple acts
-        this.updateSteam32Id()
+        void this.updateSteam32Id()
 
         // In case they connect to a game in progress and we missed the start event
         this.setupOBSBlockers(data.map?.game_state ?? '')
@@ -275,16 +277,18 @@ export class setupMainEvents {
           })
         }
 
-        this.openBets()
+        void this.openBets()
 
-        this.endBets()
+        void this.endBets()
 
-        const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
+        const chatterEnabled = getValueOrDefault(DBSettings.chatter, await this.getSettings())
         if (chatterEnabled) {
           const isMidasPassive = checkMidas(data, this.passiveMidas)
           if (isMidasPassive) {
-            console.log('[MIDAS]', 'Passive midas', { name: this.getChannel() })
-            void chatClient.say(this.getChannel(), 'massivePIDAS Use your midas')
+            const channel = await this.getChannel()
+
+            console.log('[MIDAS]', 'Passive midas', { name: await this.getChannel() })
+            void chatClient.say(channel, 'massivePIDAS Use your midas')
           }
         }
       },
@@ -300,12 +304,12 @@ export class setupMainEvents {
     await subscriber.subscribe(`gsievents:${this.getToken()}:hero:alive`, (serialized: string) => {
       const alive: boolean = JSON.parse(serialized)
       // Just died
-      if (!alive && this.gsi.previously?.hero?.alive) {
+      if (!alive && this.gsi?.previously?.hero?.alive) {
         // console.log('Just died')
       }
 
       // Just spawned (ignores game start spawn)
-      if (alive && this.gsi.previously?.hero?.alive === false) {
+      if (alive && this.gsi?.previously?.hero?.alive === false) {
         // console.log('Just spawned')
       }
     })
@@ -313,14 +317,14 @@ export class setupMainEvents {
     // Can use this to get hero slot when the hero first spawns at match start
     await subscriber.subscribe(
       `gsievents:${this.getToken()}:items:teleport0:purchaser`,
-      (serialized: string) => {
+      async (serialized: string) => {
         const purchaser: number = JSON.parse(serialized)
         if (!isPlayingMatch(this.gsi)) return
 
         // Can't just !this.heroSlot because it can be 0
         if (this.heroSlot === null) {
           console.log('[SLOT]', 'Found hero slot at', purchaser, {
-            name: this.getChannel(),
+            name: await this.getChannel(),
           })
           this.heroSlot = purchaser
           void this.saveMatchData()
@@ -329,38 +333,43 @@ export class setupMainEvents {
       },
     )
 
-    await subscriber.subscribe(`gsievents:${this.getToken()}:hero:smoked`, (serialized: string) => {
-      const isSmoked: boolean = JSON.parse(serialized)
-      if (!isPlayingMatch(this.gsi)) return
-      const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-      if (!chatterEnabled) return
+    await subscriber.subscribe(
+      `gsievents:${this.getToken()}:hero:smoked`,
+      async (serialized: string) => {
+        const isSmoked: boolean = JSON.parse(serialized)
+        if (!isPlayingMatch(this.gsi)) return
+        const chatterEnabled = getValueOrDefault(DBSettings.chatter, await this.getSettings())
+        if (!chatterEnabled) return
 
-      if (isSmoked) {
-        const hero = getHero(this.gsi.hero?.name)
-        if (!hero) {
-          void chatClient.say(this.getChannel(), 'Shush Smoked!')
-          return
+        if (isSmoked) {
+          const channel = await this.getChannel()
+          const hero = getHero(this.gsi?.hero?.name)
+          if (!hero) {
+            void chatClient.say(channel, 'Shush Smoked!')
+            return
+          }
+
+          void chatClient.say(channel, `Shush ${hero.localized_name} is smoked!`)
         }
+      },
+    )
 
-        void chatClient.say(this.getChannel(), `Shush ${hero.localized_name} is smoked!`)
-      }
-    })
+    await subscriber.subscribe(
+      `gsievents:${this.getToken()}:map:paused`,
+      async (serialized: string) => {
+        const isPaused: boolean = JSON.parse(serialized)
+        if (!isPlayingMatch(this.gsi)) return
+        const chatterEnabled = getValueOrDefault(DBSettings.chatter, await this.getSettings())
+        if (!chatterEnabled) return
 
-    await subscriber.subscribe(`gsievents:${this.getToken()}:map:paused`, (serialized: string) => {
-      const isPaused: boolean = JSON.parse(serialized)
-      if (!isPlayingMatch(this.gsi)) return
-      const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-      if (!chatterEnabled) return
+        // Necessary to let the frontend know, so we can pause any rosh / aegis / etc timers
+        server.io.to(this.getToken()).emit('paused', isPaused)
 
-      // Necessary to let the frontend know, so we can pause any rosh / aegis / etc timers
-      if (this.getSockets().length) {
-        server.io.to(this.getSockets()).emit('paused', isPaused)
-      }
-
-      if (isPaused) {
-        void chatClient.say(this.getChannel(), `PauseChamp Who paused the game?`)
-      }
-    })
+        if (isPaused) {
+          void chatClient.say(await this.getChannel(), `PauseChamp Who paused the game?`)
+        }
+      },
+    )
 
     // This wont get triggered if they click disconnect and dont wait for the ancient to go to 0
     type TeamTypes = 'radiant' | 'dire'
@@ -370,7 +379,7 @@ export class setupMainEvents {
         const winningTeam: TeamTypes = JSON.parse(serialized)
         if (!isPlayingMatch(this.gsi)) return
 
-        this.endBets(winningTeam)
+        void this.endBets(winningTeam)
       },
     )
 
@@ -390,66 +399,63 @@ export class setupMainEvents {
     )
   }
 
-  emitWLUpdate() {
-    if (this.getSockets().length) {
-      console.log('[STEAM32ID]', 'Emitting WL overlay update', {
-        name: this.getChannel(),
-      })
+  async emitWLUpdate() {
+    console.log('[STEAM32ID]', 'Emitting WL overlay update', {
+      name: await this.getChannel(),
+    })
 
-      getWL(this.getChannelId())
-        .then(({ record }) => {
-          server.io.to(this.getSockets()).emit('update-wl', record)
-        })
-        .catch((e) => {
-          // Stream not live
-          // console.error('[MMR] emitWLUpdate Error getting WL', e)
-        })
-    }
+    getWL(await this.getChannelId())
+      .then(({ record }) => {
+        server.io.to(this.getToken()).emit('update-wl', record)
+      })
+      .catch((e) => {
+        // Stream not live
+        // console.error('[MMR] emitWLUpdate Error getting WL', e)
+      })
   }
 
-  // This array of socket ids is who we want to emit events to:
-  // console.log("[SETUP]", { sockets: this.getSockets() })
-  emitBadgeUpdate() {
-    if (this.getSockets().length) {
-      console.log('[STEAM32ID]', 'Emitting badge overlay update', {
-        name: this.getChannel(),
-      })
+  async emitBadgeUpdate() {
+    console.log('[STEAM32ID]', 'Emitting badge overlay update', {
+      name: await this.getChannel(),
+    })
 
-      getRankDetail(this.getMmr(), this.getSteam32())
-        .then((deets) => {
-          server.io.to(this.getSockets()).emit('update-medal', deets)
-        })
-        .catch((e) => {
-          console.error('[MMR] emitBadgeUpdate Error getting rank detail', e)
-        })
-    }
+    getRankDetail(await this.getMmr(), await this.getSteam32())
+      .then((deets) => {
+        server.io.to(this.getToken()).emit('update-medal', deets)
+      })
+      .catch((e) => {
+        console.error('[MMR] emitBadgeUpdate Error getting rank detail', e)
+      })
   }
 
   // Make sure user has a steam32Id saved in the database
   // This runs once per every match start
-  updateSteam32Id() {
-    if (!this.gsi.player?.steamid) return
+  async updateSteam32Id() {
+    if (!this.gsi?.player?.steamid) return
 
     const steam32Id = steamID64toSteamID32(this.gsi.player.steamid)
     if (!steam32Id) return
 
+    const currentSteam32Id = await this.getSteam32()
     // User already has a steam32Id and its saved to the new table
-    const foundAct = this.client.SteamAccount.find((act) => act.steam32Id === this.getSteam32())
-    if (this.getSteam32() === steam32Id && foundAct) {
-      if (this.getMmr() !== foundAct.mmr) {
-        this.client.mmr = foundAct.mmr
-        this.emitBadgeUpdate()
+    const foundAct = (await this.getSteamAccounts()).find(
+      (act) => act.steam32Id === currentSteam32Id,
+    )
+    if (currentSteam32Id === steam32Id && foundAct) {
+      if ((await this.getMmr()) !== foundAct.mmr) {
+        await redis.json.set(`users:${this.getToken()}`, `$.mmr`, foundAct.mmr)
+        void this.emitBadgeUpdate()
       }
       return
     }
 
-    console.log('[STEAM32ID]', 'Updating steam32Id', { name: this.getChannel() })
+    console.log('[STEAM32ID]', 'Updating steam32Id', { name: await this.getChannel() })
 
     // Logged into a new account (smurfs vs mains)
-    this.client.steam32Id = steam32Id
+    await redis.json.set(`users:${this.getToken()}`, `$.steam32Id`, steam32Id)
 
     // Default to the mmr from `users` table for this brand new steam account
-    const mmr = this.client.SteamAccount.length ? 0 : this.getMmr()
+    const mmr = (await this.getSteamAccounts()).length ? 0 : await this.getMmr()
 
     // Get mmr from database for this steamid
     prisma.steamAccount
@@ -463,7 +469,7 @@ export class setupMainEvents {
                 mmr,
                 steam32Id,
                 userId: this.getToken(),
-                name: this.gsi.player?.name,
+                name: this.gsi?.player?.name,
               },
             })
             .then((res) => {
@@ -475,13 +481,14 @@ export class setupMainEvents {
                 .catch((e) => {
                   //
                 })
-              this.client.mmr = mmr
-              this.client.SteamAccount.push({
+              void redis.json.set(`users:${this.getToken()}`, `$.mmr`, mmr)
+              void redis.json.arrAppend(`users:${this.getToken()}`, `$.SteamAccount`, {
                 name: res.name,
                 mmr,
                 steam32Id: res.steam32Id,
               })
-              this.emitBadgeUpdate()
+
+              void this.emitBadgeUpdate()
             })
             .catch((e: any) => {
               console.error('[STEAM32ID]', 'Error updating steam32Id', e)
@@ -493,7 +500,7 @@ export class setupMainEvents {
       })
   }
 
-  updateMMR(increase: boolean, lobbyType: number, matchId: string, isParty?: boolean) {
+  async updateMMR(increase: boolean, lobbyType: number, matchId: string, isParty?: boolean) {
     const ranked = lobbyType === 7
 
     // This also updates WL for the unranked matches
@@ -517,16 +524,17 @@ export class setupMainEvents {
         console.error('[DATABASE ERROR MMR]', e)
       })
 
-    this.emitWLUpdate()
+    void this.emitWLUpdate()
 
     if (!ranked) {
       return
     }
 
     const mmrSize = isParty ? 20 : 30
-    const newMMR = this.getMmr() + (increase ? mmrSize : -mmrSize)
-    if (this.client.steam32Id) {
-      updateMmr(newMMR, this.client.steam32Id, this.client.name)
+    const newMMR = (await this.getMmr()) + (increase ? mmrSize : -mmrSize)
+    const steam32Id = await this.getSteam32()
+    if (steam32Id) {
+      updateMmr(newMMR, steam32Id, await this.getChannel())
     }
   }
 
@@ -539,9 +547,9 @@ export class setupMainEvents {
     if (lobby_type !== undefined) {
       console.log('[MMR]', 'lobby_type passed in from early dc', {
         lobby_type,
-        name: this.getChannel(),
+        name: await this.getChannel(),
       })
-      this.updateMMR(increase, lobby_type, matchId)
+      void this.updateMMR(increase, lobby_type, matchId)
       return
     }
 
@@ -562,7 +570,7 @@ export class setupMainEvents {
     // Default ranked
     const lobbyType =
       typeof response?.match?.lobby_type !== 'number' ? 7 : response.match.lobby_type
-    this.updateMMR(increase, lobbyType, matchId)
+    void this.updateMMR(increase, lobbyType, matchId)
   }
 
   // TODO: CRON Job
@@ -570,12 +578,12 @@ export class setupMainEvents {
   // 2 Next, check if the prediction is still open
   // 3 If it is, steam dota2 api result of match
   // 4 Then, tell twitch to close bets based on win result
-  openBets() {
+  async openBets() {
     // The bet was already made
     if (this.betExists !== null) return
 
     // Why open if not playing?
-    if (this.gsi.player?.activity !== 'playing') return
+    if (this.gsi?.player?.activity !== 'playing') return
 
     // Why open if won?
     if (this.gsi.map?.win_team !== 'none') return
@@ -583,7 +591,7 @@ export class setupMainEvents {
     // We at least want the hero name so it can go in the twitch bet title
     if (!this.gsi.hero?.name || !this.gsi.hero.name.length) return
 
-    const channel = this.getChannel()
+    const channel = await this.getChannel()
     const isOpenBetGameCondition = this.gsi.map.clock_time < 20 && this.gsi.map.name === 'start'
 
     // It's not a live game, so we don't want to open bets nor save it to DB
@@ -601,12 +609,12 @@ export class setupMainEvents {
           won: null,
         },
       })
-      .then((bet: { id: string } | null) => {
+      .then(async (bet: { id: string } | null) => {
         // Saving to local memory so we don't have to query the db again
         if (bet?.id) {
           console.log('[BETS]', 'Found a bet in the database', bet.id)
-          this.betExists = this.gsi.map?.matchid ?? null
-          this.betMyTeam = this.gsi.player?.team_name ?? null
+          this.betExists = this.gsi?.map?.matchid ?? null
+          this.betMyTeam = this.gsi?.player?.team_name ?? null
         } else {
           if (!isOpenBetGameCondition) {
             return
@@ -616,27 +624,27 @@ export class setupMainEvents {
           // it wasnt always called for some streamers when connecting to match
           // the user may have a steam account saved, but not this one for this match
           // so add to their list of steam accounts
-          this.updateSteam32Id()
+          void this.updateSteam32Id()
 
-          this.betExists = this.gsi.map?.matchid ?? null
-          this.betMyTeam = this.gsi.player?.team_name ?? null
+          this.betExists = this.gsi?.map?.matchid ?? null
+          this.betMyTeam = this.gsi?.player?.team_name ?? null
 
           prisma.bet
             .create({
               data: {
                 // TODO: Replace prediction id with the twitch api bet id result
-                predictionId: this.gsi.map?.matchid ?? '',
-                matchId: this.gsi.map?.matchid ?? '',
+                predictionId: this.gsi?.map?.matchid ?? '',
+                matchId: this.gsi?.map?.matchid ?? '',
                 userId: this.getToken(),
-                myTeam: this.gsi.player?.team_name ?? '',
-                steam32Id: this.getSteam32(),
+                myTeam: this.gsi?.player?.team_name ?? '',
+                steam32Id: await this.getSteam32(),
               },
             })
-            .then(() => {
-              const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
+            .then(async () => {
+              const betsEnabled = getValueOrDefault(DBSettings.bets, await this.getSettings())
               if (!betsEnabled) return
 
-              const hero = getHero(this.gsi.hero?.name)
+              const hero = getHero(this.gsi?.hero?.name)
 
               openTwitchBet(channel, this.getToken(), hero?.localized_name)
                 .then(() => {
@@ -644,9 +652,9 @@ export class setupMainEvents {
                   console.log('[BETS]', {
                     event: 'open_bets',
                     data: {
-                      matchId: this.gsi.map?.matchid,
+                      matchId: this.gsi?.map?.matchid,
                       user: this.getToken(),
-                      player_team: this.gsi.player?.team_name,
+                      player_team: this.gsi?.player?.team_name,
                     },
                   })
                 })
@@ -694,7 +702,7 @@ export class setupMainEvents {
       })
   }
 
-  endBets(
+  async endBets(
     winningTeam: 'radiant' | 'dire' | null = null,
     streamersTeam: 'radiant' | 'dire' | 'spectator' | null = null,
     lobby_type?: number,
@@ -704,9 +712,9 @@ export class setupMainEvents {
     const matchId = this.betExists
 
     // A fresh DC without waiting for ancient to blow up
-    if (!winningTeam && this.gsi.previously?.map === true && !this.gsi.map?.matchid) {
+    if (!winningTeam && this.gsi?.previously?.map === true && !this.gsi.map?.matchid) {
       console.log('[BETS]', 'Game ended without a winner, early DC probably', {
-        name: this.getChannel(),
+        name: await this.getChannel(),
       })
 
       // Check with opendota to see if the match is over
@@ -715,7 +723,7 @@ export class setupMainEvents {
           if (typeof response.data.radiant_win !== 'boolean') return
 
           const team = response.data.radiant_win ? 'radiant' : 'dire'
-          this.endBets(team, this.betMyTeam, response?.data?.lobby_type)
+          void this.endBets(team, this.betMyTeam, response?.data?.lobby_type)
         })
         .catch((e: any) => {
           // its not over? just give up checking after this long
@@ -729,10 +737,10 @@ export class setupMainEvents {
 
     // "none"? Must mean the game hasn't ended yet
     // Would be undefined otherwise if there is no game
-    if (!winningTeam && this.gsi.map?.win_team === 'none') return
+    if (!winningTeam && this.gsi?.map?.win_team === 'none') return
 
-    const localWinner = winningTeam ?? this.gsi.map?.win_team
-    const myTeam = streamersTeam ?? this.gsi.player?.team_name
+    const localWinner = winningTeam ?? this.gsi?.map?.win_team
+    const myTeam = streamersTeam ?? this.gsi?.player?.team_name
     const won = myTeam === localWinner
 
     // Both or one undefined
@@ -740,33 +748,33 @@ export class setupMainEvents {
 
     if (winningTeam === null) {
       console.log('[BETS]', 'Running end bets from newdata', {
-        name: this.getChannel(),
+        name: await this.getChannel(),
       })
     } else {
       console.log('[BETS]', 'Running end bets from map:win_team or custom match look-up', {
-        name: this.getChannel(),
+        name: await this.getChannel(),
       })
     }
 
     this.endingBets = true
-    const channel = this.getChannel()
+    const channel = await this.getChannel()
     void this.handleMMR(won, matchId, lobby_type, this.heroSlot)
 
-    const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
+    const betsEnabled = getValueOrDefault(DBSettings.bets, await this.getSettings())
     if (!betsEnabled) {
       this.newMatchNewVars(true)
       return
     }
 
     closeTwitchBet(channel, won, this.getToken())
-      .then(() => {
-        void chatClient.say(this.getChannel(), `Bets closed, we have ${won ? 'won' : 'lost'}`)
+      .then(async () => {
+        void chatClient.say(await this.getChannel(), `Bets closed, we have ${won ? 'won' : 'lost'}`)
 
         console.log('[BETS]', {
           event: 'end_bets',
           data: {
             matchId: matchId,
-            name: this.getChannel(),
+            name: await this.getChannel(),
             winning_team: localWinner,
             player_team: myTeam,
             didWin: won,
@@ -812,15 +820,13 @@ export class setupMainEvents {
       })
   }
 
-  setupOBSBlockers(state?: string) {
-    if (!this.getSockets().length) return
-
+  setupOBSBlockers(state: string) {
     if (isSpectator(this.gsi)) {
       if (this.blockCache.get(this.getToken()) !== 'spectator') {
-        this.emitBadgeUpdate()
-        this.emitWLUpdate()
+        void this.emitBadgeUpdate()
+        void this.emitWLUpdate()
 
-        server.io.to(this.getSockets()).emit('block', { type: 'spectator' })
+        server.io.to(this.getToken()).emit('block', { type: 'spectator' })
         this.blockCache.set(this.getToken(), 'spectator')
       }
 
@@ -829,10 +835,10 @@ export class setupMainEvents {
 
     if (isArcade(this.gsi)) {
       if (this.blockCache.get(this.getToken()) !== 'arcade') {
-        this.emitBadgeUpdate()
-        this.emitWLUpdate()
+        void this.emitBadgeUpdate()
+        void this.emitWLUpdate()
 
-        server.io.to(this.getSockets()).emit('block', { type: 'arcade' })
+        server.io.to(this.getToken()).emit('block', { type: 'arcade' })
         this.blockCache.set(this.getToken(), 'arcade')
       }
 
@@ -848,11 +854,11 @@ export class setupMainEvents {
     // the id is your hero if you pick last, and strategy screen is shown, but
     // the map state can still be hero selection
     // name is empty if your hero is not locked in
-    if ((this.gsi.hero?.id ?? -1) >= 0 && pickSates.includes(state ?? '')) {
+    if ((this.gsi?.hero?.id ?? -1) >= 0 && pickSates.includes(state)) {
       if (this.blockCache.get(this.getToken()) !== 'strategy') {
         server.io
-          .to(this.getSockets())
-          .emit('block', { type: 'strategy', team: this.gsi.player?.team_name })
+          .to(this.getToken())
+          .emit('block', { type: 'strategy', team: this.gsi?.player?.team_name })
 
         this.blockCache.set(this.getToken(), 'strategy')
       }
@@ -862,28 +868,28 @@ export class setupMainEvents {
 
     // Check what needs to be blocked
     const hasValidBlocker = blockTypes.some((blocker) => {
-      if (blocker.states.includes(state ?? '')) {
+      if (blocker.states.includes(state)) {
         // Only send if not already what it is
         if (this.blockCache.get(this.getToken()) !== blocker.type) {
           this.blockCache.set(this.getToken(), blocker.type)
 
           // Send the one blocker type
-          server.io.to(this.getSockets()).emit('block', {
+          server.io.to(this.getToken()).emit('block', {
             type: blocker.type,
-            team: this.gsi.player?.team_name,
+            team: this.gsi?.player?.team_name,
           })
 
           if (blocker.type === 'playing') {
-            this.emitBadgeUpdate()
-            this.emitWLUpdate()
+            void this.emitBadgeUpdate()
+            void this.emitWLUpdate()
           }
 
           if (this.aegisPickedUp?.expireDate) {
-            server.io.to(this.getSockets()).emit('aegis-picked-up', this.aegisPickedUp)
+            server.io.to(this.getToken()).emit('aegis-picked-up', this.aegisPickedUp)
           }
 
           if (this.roshanKilled?.maxDate) {
-            server.io.to(this.getSockets()).emit('roshan-killed', this.roshanKilled)
+            server.io.to(this.getToken()).emit('roshan-killed', this.roshanKilled)
           }
         }
         return true
@@ -892,7 +898,7 @@ export class setupMainEvents {
       return false
     })
 
-    // No blocker changes, don't emit any socket message
+    // No blocker changes, don't emit any this.getToken() message
     if (!hasValidBlocker && !this.blockCache.has(this.getToken())) {
       return
     }
@@ -900,7 +906,7 @@ export class setupMainEvents {
     // Unblock all, we are disconnected from the match
     if (!hasValidBlocker && this.blockCache.has(this.getToken())) {
       this.blockCache.delete(this.getToken())
-      server.io.to(this.getSockets()).emit('block', { type: null })
+      server.io.to(this.getToken()).emit('block', { type: null })
       this.newMatchNewVars()
       return
     }

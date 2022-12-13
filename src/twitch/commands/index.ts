@@ -65,8 +65,6 @@ chatClient.onMessage(function (channel, user, text, msg) {
   // This runs every command, but its cached so no hit on db
   getDBUser(undefined, msg.channelId)
     .then((client) => {
-      console.log(client)
-
       if (!client || !msg.channelId) return
 
       // Handle the incoming message using the command handler

@@ -42,17 +42,9 @@ function checkClient(req: Request, res: Response, next: NextFunction) {
   req.client.gsi = req.body
   gsiClients.push(localUser)
 
-  async function handler() {
-    const client = await findUser(localUser?.token)
-    if (client) {
-      await redis.json.set(`users:${client.token}`, '$.gsi', req.body)
-    }
-
-    events.emit('new-gsi-client', localUser?.token)
-    next()
-  }
-
-  void handler()
+  void redis.json.set(`users:${localUser.token}`, '$.gsi', req.body)
+  events.emit('new-gsi-client', localUser.token)
+  next()
 }
 
 function emitAll(
@@ -200,9 +192,8 @@ class D2GSI {
       const { token } = socket.handshake.auth
 
       getDBUser(token)
-        .then(async (client) => {
+        .then((client) => {
           if (client?.token) {
-            await redis.json.arrAppend(`users:${client.token}`, '$.sockets', socket.id)
             next()
             return
           }
@@ -215,43 +206,19 @@ class D2GSI {
         })
     })
 
-    // Cleanup the memory cache of sockets when they disconnect
-    io.on('connection', (socket: Socket) => {
+    io.on('connection', async (socket: Socket) => {
       const { token } = socket.handshake.auth
 
-      async function handler() {
-        const client = await findUser(token)
+      const client = await findUser(token)
+      if (!client?.token) return
 
-        // Socket connected event, used to connect GSI to a socket
-        // TODO: dont emit full client, just emit token and find client with redis later
-        events.emit('new-socket-client', {
-          token: client?.token,
-          socketId: socket.id,
-        })
-      }
+      // Their own personal room xdd
+      void socket.join(client.token)
 
-      void handler()
-
-      socket.on('disconnect', () => {
-        console.log('Disconnecting user', socket.id)
-        async function handler() {
-          const client = await findUser(token)
-          if (client) {
-            console.log({ sockets: client.sockets })
-            await redis.json.set(`users:${client.token}`, '$.sockets', [])
-
-            // Let's also remove all the events we setup from the client for this socket
-            // That way a new socket will get the GSI events again
-            console.log('[GSI]', 'Removing all events for', client.name, `gsievents:${client.token}:*`)
-            try {
-              await subscriber.pUnsubscribe(`gsievents:${client.token}:*`)
-            } catch (e) {
-              console.log('[GSI]', 'Error removing events', e)
-            }
-          }
-        }
-
-        void handler()
+      // Socket connected event, used to connect GSI to a socket
+      // TODO: remove this and use io.on connection
+      events.emit('new-socket-client', {
+        token: client.token,
       })
     })
 

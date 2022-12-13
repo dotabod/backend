@@ -20,7 +20,6 @@ export interface SocketClient {
     key: string
     value: any
   }[]
-  sockets: string[]
 }
 interface Provider {
   name: string // "Dota 2"

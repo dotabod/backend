@@ -72,18 +72,14 @@ export function updateMmr(
                 `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
               )
 
-            if (client.sockets.length) {
-              console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
-              getRankDetail(mmr, client.steam32Id)
-                .then((deets) => {
-                  server.io.to(client.sockets).emit('update-medal', deets)
-                })
-                .catch((e) => {
-                  console.error('[MMR] !mmr= Error getting rank detail', e)
-                })
-            } else {
-              console.log('[UPDATE MMR] No sockets found to send update to', channel)
-            }
+            console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.token, channel)
+            getRankDetail(mmr, client.steam32Id)
+              .then((deets) => {
+                server.io.to(client.token).emit('update-medal', deets)
+              })
+              .catch((e) => {
+                console.error('[MMR] !mmr= Error getting rank detail', e)
+              })
           }
         }
 
@@ -131,18 +127,14 @@ export function updateMmr(
               `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
             )
 
-          if (client.sockets.length) {
-            console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
-            getRankDetail(mmr, client.steam32Id)
-              .then((deets) => {
-                server.io.to(client.sockets).emit('update-medal', deets)
-              })
-              .catch((e) => {
-                console.error('[MMR] !mmr= Error getting rank detail', e)
-              })
-          } else {
-            console.log('[UPDATE MMR] No sockets found to send update to', channel)
-          }
+          console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.token, channel)
+          getRankDetail(mmr, client.steam32Id)
+            .then((deets) => {
+              server.io.to(client.token).emit('update-medal', deets)
+            })
+            .catch((e) => {
+              console.error('[MMR] !mmr= Error getting rank detail', e)
+            })
         }
       }
 

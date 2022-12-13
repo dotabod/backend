@@ -36,21 +36,17 @@ channel
           client.mmr = newObj.mmr
           console.log('[WATCHER] Updated cached mmr for', newObj.name, newObj.mmr)
         }
-        if (client.sockets.length) {
-          if (newObj.mmr !== 0) {
-            console.log('[WATCHER MMR] Sending mmr to socket', client.name)
-            void chatClient.say(client.name, `Updated MMR to ${client.mmr}`)
+        if (newObj.mmr !== 0) {
+          console.log('[WATCHER MMR] Sending mmr to socket', client.name)
+          void chatClient.say(client.name, `Updated MMR to ${client.mmr}`)
 
-            getRankDetail(client.mmr, client.steam32Id)
-              .then((deets) => {
-                if (client.sockets.length) {
-                  server.io.to(client.sockets).emit('update-medal', deets)
-                }
-              })
-              .catch((e) => {
-                console.error('[WATCHER MMR] Error getting rank detail', e)
-              })
-          }
+          getRankDetail(client.mmr, client.steam32Id)
+            .then((deets) => {
+              server.io.to(client.token).emit('update-medal', deets)
+            })
+            .catch((e) => {
+              console.error('[WATCHER MMR] Error getting rank detail', e)
+            })
         }
       }
     }
@@ -73,10 +69,8 @@ channel
           client.settings.push({ key: newObj.key, value: newObj.value })
         }
 
-        if (client.sockets.length) {
-          console.log('[WATCHER SETTING] Sending new setting value to socket', client.name)
-          server.io.to(client.sockets).emit('refresh-settings')
-        }
+        console.log('[WATCHER SETTING] Sending new setting value to socket', client.name)
+        server.io.to(client.token).emit('refresh-settings')
       }
     }
 
@@ -108,9 +102,7 @@ channel
               client.mmr = newObj.mmr
               getRankDetail(newObj.mmr, client.steam32Id)
                 .then((deets) => {
-                  if (client.sockets.length) {
-                    server.io.to(client.sockets).emit('update-medal', deets)
-                  }
+                  server.io.to(client.token).emit('update-medal', deets)
                 })
                 .catch((e) => {
                   console.error('[WATCHER MMR] postgres_changes Error getting rank detail', e)

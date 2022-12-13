@@ -74,8 +74,6 @@ export default async function getDBUser(token?: string, twitchId?: string) {
         mmr: user.mmr || user.SteamAccount[0]?.mmr,
         steam32Id: user.steam32Id ?? user.SteamAccount[0]?.steam32Id,
         token: user.id,
-        // sockets[] to be filled in by socket connection, so will steamid
-        sockets: [],
       }
 
       await redis.json.set(
