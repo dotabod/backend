@@ -1,8 +1,7 @@
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import lastgame from '../../steam/lastgame.js'
+import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
-
-import { chatClient } from './index.js'
 
 commandHandler.registerCommand('lg', {
   aliases: ['lastgame'],

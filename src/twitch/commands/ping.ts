@@ -1,6 +1,5 @@
+import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
-
-import { chatClient } from './index.js'
 
 // Register a "ping" command that sends a "pong" message to the chat
 commandHandler.registerCommand('ping', {

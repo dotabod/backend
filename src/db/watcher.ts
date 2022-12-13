@@ -4,7 +4,7 @@ import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
-import { chatClient } from '../twitch/commands/index.js'
+import { chatClient } from '../twitch/index.js'
 import RedisClient from './redis.js'
 import supabase from './supabase.js'
 

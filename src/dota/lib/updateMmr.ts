@@ -1,7 +1,6 @@
-
 import { prisma } from '../../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
-import { chatClient } from '../../twitch/commands/index.js'
+import { chatClient } from '../../twitch/index.js'
 import findUser from './connectedStreamers.js'
 
 export async function tellChatNewMMR(token: string, mmr: number) {

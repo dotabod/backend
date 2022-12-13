@@ -1,8 +1,7 @@
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { gameMedals } from '../../steam/medals.js'
+import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
-
-import { chatClient } from './index.js'
 
 commandHandler.registerCommand('gm', {
   aliases: ['medals', 'ranks'],

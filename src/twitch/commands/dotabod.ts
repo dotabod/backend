@@ -1,6 +1,5 @@
+import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
-
-import { chatClient } from './index.js'
 
 commandHandler.registerCommand('dotabod', {
   aliases: [],
