@@ -54,5 +54,3 @@ export default class RedisClient {
     return RedisClient.instance
   }
 }
-
-// await client.json.set('key', '$', { test: 'value' })

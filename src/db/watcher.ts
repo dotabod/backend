@@ -70,41 +70,40 @@ channel
 
     void handler()
   })
-  .on(
-    'postgres_changes',
-    { event: 'UPDATE', schema: 'public', table: 'steam_accounts' },
-    (payload) => {
-      async function handler() {
-        const newObj = payload.new as SteamAccount
-        const client = await findUser(newObj.userId)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'steam_accounts' }, (payload) => {
+    async function handler() {
+      const newObj = payload.new as SteamAccount
+      const client = await findUser(newObj.userId)
 
-        // Just here to update local memory
-        if (!client) return
+      // Just here to update local memory
+      if (!client) return
 
-        console.log('[WATCHER STEAM] Updating steam accounts for', client.name)
-        const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === newObj.steam32Id)
-        if (currentSteam === -1) {
-          return
-        }
-
-        // Name change from dashboard
+      console.log('[WATCHER STEAM] Updating steam accounts for', client.name)
+      const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === newObj.steam32Id)
+      if (currentSteam === -1) {
+        client.SteamAccount.push({
+          name: newObj.name,
+          mmr: newObj.mmr,
+          steam32Id: newObj.steam32Id,
+        })
+      } else {
         client.SteamAccount[currentSteam].name = newObj.name
         client.SteamAccount[currentSteam].mmr = newObj.mmr
-
-        void redis.json.set(`users:${client.token}`, '$.SteamAccount', client.SteamAccount)
-
-        // Push an mmr update to overlay since it's the steam account rn
-        if (client.steam32Id === newObj.steam32Id) {
-          void tellChatNewMMR(client.name, newObj.mmr)
-          void redis.json.set(`users:${client.token}`, '$.mmr', newObj.mmr)
-          const deets = await getRankDetail(newObj.mmr, newObj.steam32Id)
-          server.io.to(client.token).emit('update-medal', deets)
-        }
       }
 
-      void handler()
-    },
-  )
+      void redis.json.set(`users:${client.token}`, '$.SteamAccount', client.SteamAccount)
+
+      // Push an mmr update to overlay since it's the steam account rn
+      if (client.steam32Id === newObj.steam32Id) {
+        void tellChatNewMMR(client.name, newObj.mmr)
+        void redis.json.set(`users:${client.token}`, '$.mmr', newObj.mmr)
+        const deets = await getRankDetail(newObj.mmr, newObj.steam32Id)
+        server.io.to(client.token).emit('update-medal', deets)
+      }
+    }
+
+    void handler()
+  })
   .subscribe((status) => {
     if (status === 'SUBSCRIBED') {
       console.log('[SUPABASE]', 'Ready to receive database changes!')

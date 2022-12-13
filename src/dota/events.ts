@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io'
-import getDBUser from '../db/getDBUser.js'
+
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
 import RedisClient from '../db/redis.js'
@@ -246,7 +246,6 @@ export class setupMainEvents {
         const gsi = JSON.parse(serialized)
         const data: Packet = gsi
         this.gsi = data
-        await redis.json.set(`users:${this.getToken()}`, `$.gsi`, gsi)
 
         // New users who dont have a steamaccount saved yet
         // This needs to run first so we have client.steamid on multiple acts
@@ -458,46 +457,25 @@ export class setupMainEvents {
     const mmr = (await this.getSteamAccounts()).length ? 0 : await this.getMmr()
 
     // Get mmr from database for this steamid
-    prisma.steamAccount
-      .findFirst({ where: { steam32Id } })
-      .then((res) => {
-        // not found
-        if (!res?.id) {
-          prisma.steamAccount
-            .create({
-              data: {
-                mmr,
-                steam32Id,
-                userId: this.getToken(),
-                name: this.gsi?.player?.name,
-              },
-            })
-            .then((res) => {
-              prisma.user
-                .update({ where: { id: this.getToken() }, data: { mmr: 0 } })
-                .then(() => {
-                  //
-                })
-                .catch((e) => {
-                  //
-                })
-              void redis.json.set(`users:${this.getToken()}`, `$.mmr`, mmr)
-              void redis.json.arrAppend(`users:${this.getToken()}`, `$.SteamAccount`, {
-                name: res.name,
-                mmr,
-                steam32Id: res.steam32Id,
-              })
+    const res = await prisma.steamAccount.findFirst({ where: { steam32Id } })
+    if (!res?.id) {
+      void prisma.user.update({
+        where: { id: this.getToken() },
+        data: {
+          mmr: 0,
+          SteamAccount: {
+            create: {
+              mmr,
+              steam32Id,
+              name: this.gsi.player.name,
+            },
+          },
+        },
+      })
 
-              void this.emitBadgeUpdate()
-            })
-            .catch((e: any) => {
-              console.error('[STEAM32ID]', 'Error updating steam32Id', e)
-            })
-        }
-      })
-      .catch((e) => {
-        console.log('[DATABASE ERROR]', e)
-      })
+      void redis.json.set(`users:${this.getToken()}`, `$.mmr`, mmr)
+      void this.emitBadgeUpdate()
+    }
   }
 
   async updateMMR(increase: boolean, lobbyType: number, matchId: string, isParty?: boolean) {

@@ -31,18 +31,14 @@ function checkClient(req: Request, res: Response, next: NextFunction) {
     // findUser(req.body.auth.token)
     // console.log('[GSI]',`Adding new userGSI for IP: ${req.ip}`)
     req.client = localUser
-    req.client.gsi = req.body
-
     next()
     return
   }
 
   localUser = new GSIClient(req.ip, req.body.auth)
   req.client = localUser
-  req.client.gsi = req.body
   gsiClients.push(localUser)
 
-  void redis.json.set(`users:${localUser.token}`, '$.gsi', req.body)
   events.emit('new-gsi-client', localUser.token)
   next()
 }
@@ -94,7 +90,9 @@ function processChanges(section: string) {
 }
 
 function updateGameState(req: Request, res: Response, next: NextFunction) {
-  req.client.gsi = req.body
+  if (req?.body?.auth?.token) {
+    void redis.json.set(`users:${req.body.auth.token as string}`, '$.gsi', req.body)
+  }
   next()
 }
 

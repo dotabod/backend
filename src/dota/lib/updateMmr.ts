@@ -10,8 +10,8 @@ export async function tellChatNewMMR(channel: string, mmr: number) {
   if (!client) return
 
   const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
-  if (mmrEnabled) {
-    const oldMmr = client.mmr
+  const oldMmr = client.mmr
+  if (mmrEnabled && mmr - oldMmr !== 0) {
     void chatClient.say(
       channel,
       `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
