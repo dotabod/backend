@@ -35,7 +35,7 @@ export const ranks = [
   { range: [4820, 5019], title: 'Divine☆2', image: '72.png' },
   { range: [5020, 5219], title: 'Divine☆3', image: '73.png' },
   { range: [5220, 5419], title: 'Divine☆4', image: '74.png' },
-  { range: [5420, 5760], title: 'Divine☆5', image: '75.png' },
+  { range: [5420, 5629], title: 'Divine☆5', image: '75.png' },
 ]
 
 export const leaderRanks = [
