@@ -26,9 +26,6 @@ export const events = new EventEmitter()
 function checkClient(req: Request, res: Response, next: NextFunction) {
   let localUser = gsiClients.find((client) => client.token === req.body.auth.token)
   if (localUser) {
-    // in the event socket connects after gsi
-    // calling this will add it to the socket
-    // findUser(req.body.auth.token)
     // console.log('[GSI]',`Adding new userGSI for IP: ${req.ip}`)
     req.client = localUser
     next()
@@ -90,7 +87,7 @@ function processChanges(section: string) {
 }
 
 function updateGameState(req: Request, res: Response, next: NextFunction) {
-  if (req?.body?.auth?.token) {
+  if (req.body?.auth?.token) {
     void redis.json.set(`users:${req.body.auth.token as string}`, '$.gsi', req.body)
   }
   next()
@@ -212,12 +209,6 @@ class D2GSI {
 
       // Their own personal room xdd
       void socket.join(client.token)
-
-      // Socket connected event, used to connect GSI to a socket
-      // TODO: remove this and use io.on connection
-      events.emit('new-socket-client', {
-        token: client.token,
-      })
     })
 
     this.events = events

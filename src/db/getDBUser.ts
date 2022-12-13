@@ -71,8 +71,8 @@ export default async function getDBUser(token?: string, twitchId?: string) {
 
       const theUser = {
         ...user,
-        mmr: user.mmr || user.SteamAccount[0]?.mmr,
-        steam32Id: user.steam32Id ?? user.SteamAccount[0]?.steam32Id,
+        mmr: user.mmr || user.SteamAccount[0]?.mmr || 0,
+        steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
         token: user.id,
       }
 

@@ -459,7 +459,7 @@ export class setupMainEvents {
     // Get mmr from database for this steamid
     const res = await prisma.steamAccount.findFirst({ where: { steam32Id } })
     if (!res?.id) {
-      void prisma.user.update({
+      await prisma.user.update({
         where: { id: this.getToken() },
         data: {
           mmr: 0,

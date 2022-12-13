@@ -1,19 +1,18 @@
-import { toUserName } from '@twurple/chat'
 
 import { prisma } from '../../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { chatClient } from '../../twitch/commands/index.js'
-import { findUserByName } from './connectedStreamers.js'
+import findUser from './connectedStreamers.js'
 
-export async function tellChatNewMMR(channel: string, mmr: number) {
-  const client = await findUserByName(toUserName(channel))
+export async function tellChatNewMMR(token: string, mmr: number) {
+  const client = await findUser(token)
   if (!client) return
 
   const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
   const oldMmr = client.mmr
   if (mmrEnabled && mmr - oldMmr !== 0) {
     void chatClient.say(
-      channel,
+      client.name,
       `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
     )
   }

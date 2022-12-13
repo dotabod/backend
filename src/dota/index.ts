@@ -15,7 +15,7 @@ server.events.on('new-gsi-client', (token: string) => {
       return
     }
 
-    console.log('[GSI]', 'Connecting new GSI client', { name: connectedSocketClient?.name })
+    console.log('[GSI]', 'Connecting new GSI client', { name: connectedSocketClient.name })
 
     // Only setup main events if the OBS socket has connected
     const channels = await redis.pubSubChannels(`gsievents:${connectedSocketClient.token}*`)
