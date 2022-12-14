@@ -1,5 +1,3 @@
-import { Socket } from 'socket.io'
-
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
 import RedisClient from '../db/redis.js'
@@ -24,6 +22,7 @@ import { server } from './index.js'
 
 const mongo = Mongo.getInstance()
 const { client: redis, subscriber } = RedisClient.getInstance()
+export const blockCache = new Map<string, string>()
 
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
@@ -33,7 +32,6 @@ export class setupMainEvents {
   aegisPickedUp?: { playerId: number; expireTime: string; expireDate: Date }
   betExists: string | undefined | null = null
   betMyTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
-  blockCache = new Map<string, string>()
   currentHero: string | undefined | null = null
   endingBets = false
   events: DotaEvent[] = []
@@ -50,15 +48,7 @@ export class setupMainEvents {
 
   constructor(token: SocketClient['token']) {
     console.log('Instantiating a new client', token)
-
     this.token = token
-
-    server.io.on('connection', (socket: Socket) => {
-      // This triggers a resend of obs blockers
-      const { token } = socket.handshake.auth
-      this.blockCache.delete(token)
-    })
-
     void this.watchEvents()
   }
 
@@ -800,24 +790,24 @@ export class setupMainEvents {
 
   setupOBSBlockers(state: string) {
     if (isSpectator(this.gsi)) {
-      if (this.blockCache.get(this.getToken()) !== 'spectator') {
+      if (blockCache.get(this.getToken()) !== 'spectator') {
         void this.emitBadgeUpdate()
         void this.emitWLUpdate()
 
         server.io.to(this.getToken()).emit('block', { type: 'spectator' })
-        this.blockCache.set(this.getToken(), 'spectator')
+        blockCache.set(this.getToken(), 'spectator')
       }
 
       return
     }
 
     if (isArcade(this.gsi)) {
-      if (this.blockCache.get(this.getToken()) !== 'arcade') {
+      if (blockCache.get(this.getToken()) !== 'arcade') {
         void this.emitBadgeUpdate()
         void this.emitWLUpdate()
 
         server.io.to(this.getToken()).emit('block', { type: 'arcade' })
-        this.blockCache.set(this.getToken(), 'arcade')
+        blockCache.set(this.getToken(), 'arcade')
       }
 
       return
@@ -833,12 +823,12 @@ export class setupMainEvents {
     // the map state can still be hero selection
     // name is empty if your hero is not locked in
     if ((this.gsi?.hero?.id ?? -1) >= 0 && pickSates.includes(state)) {
-      if (this.blockCache.get(this.getToken()) !== 'strategy') {
+      if (blockCache.get(this.getToken()) !== 'strategy') {
         server.io
           .to(this.getToken())
           .emit('block', { type: 'strategy', team: this.gsi?.player?.team_name })
 
-        this.blockCache.set(this.getToken(), 'strategy')
+        blockCache.set(this.getToken(), 'strategy')
       }
 
       return
@@ -848,8 +838,8 @@ export class setupMainEvents {
     const hasValidBlocker = blockTypes.some((blocker) => {
       if (blocker.states.includes(state)) {
         // Only send if not already what it is
-        if (this.blockCache.get(this.getToken()) !== blocker.type) {
-          this.blockCache.set(this.getToken(), blocker.type)
+        if (blockCache.get(this.getToken()) !== blocker.type) {
+          blockCache.set(this.getToken(), blocker.type)
 
           // Send the one blocker type
           server.io.to(this.getToken()).emit('block', {
@@ -877,13 +867,13 @@ export class setupMainEvents {
     })
 
     // No blocker changes, don't emit any this.getToken() message
-    if (!hasValidBlocker && !this.blockCache.has(this.getToken())) {
+    if (!hasValidBlocker && !blockCache.has(this.getToken())) {
       return
     }
 
     // Unblock all, we are disconnected from the match
-    if (!hasValidBlocker && this.blockCache.has(this.getToken())) {
-      this.blockCache.delete(this.getToken())
+    if (!hasValidBlocker && blockCache.has(this.getToken())) {
+      blockCache.delete(this.getToken())
       server.io.to(this.getToken()).emit('block', { type: null })
       this.newMatchNewVars()
       return

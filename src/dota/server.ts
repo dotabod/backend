@@ -9,6 +9,7 @@ import { Server, Socket } from 'socket.io'
 import getDBUser, { invalidTokens } from '../db/getDBUser.js'
 import RedisClient from '../db/redis.js'
 import Dota from '../steam/index.js'
+import { blockCache } from './events.js'
 import { GSIClient } from './GSIClient.js'
 import findUser from './lib/connectedStreamers.js'
 import { gsiClients } from './lib/consts.js'
@@ -26,12 +27,12 @@ export const events = new EventEmitter()
 function checkClient(req: Request, res: Response, next: NextFunction) {
   let localUser = gsiClients.find((client) => client.token === req.body.auth.token)
   if (localUser) {
-    // console.log('[GSI]',`Adding new userGSI for IP: ${req.ip}`)
     req.client = localUser
     next()
     return
   }
 
+  console.log('[GSI]', `Adding new userGSI for IP: ${req.ip}`)
   localUser = new GSIClient(req.ip, req.body.auth)
   req.client = localUser
   gsiClients.push(localUser)
@@ -203,6 +204,9 @@ class D2GSI {
 
     io.on('connection', async (socket: Socket) => {
       const { token } = socket.handshake.auth
+
+      // This triggers a resend of obs blockers
+      blockCache.delete(token)
 
       const client = await findUser(token)
       if (!client?.token) return
