@@ -8,7 +8,7 @@
   "exports": "./dist/index.js",
   "type": "module",
   "scripts": {
-    "start": "node ./dist/src/index.js",
+    "start": "node --trace-warnings ./dist/src/index.js",
     "build": "tsc",
     "dev": "nodemon --ext ts ./src/index.ts",
     "postinstall": "prisma generate",
