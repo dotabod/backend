@@ -1,0 +1,17 @@
+services:
+  redis:
+    image: 'redis/redis-stack-server:latest'
+    ports:
+      - '6379:6379'
+  web:
+    build: ./web
+    hostname: web
+    ports:
+      - '81:5000'
+  nginx:
+    build: ./nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - web

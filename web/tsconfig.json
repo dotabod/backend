@@ -1,0 +1,37 @@
+{
+  "include": [
+    "src/**/*",
+    "newrelic.cjs"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node16",
+    "rootDir": "./",
+    "outDir": "./dist",
+    "sourceMap": false,
+    "strictNullChecks": true,
+    "types": [
+      "node"
+    ],
+    "allowJs": true,
+    "checkJs": true,
+    "resolveJsonModule": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "skipLibCheck": true
+  },
+  "ts-node": {
+    "esm": true,
+    "pretty": true,
+    "require": [
+      "dotenv/config",
+      "tsconfig-paths/register"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+services:
+  redis:
+    image: 'redis/redis-stack-server:latest'
+    ports:
+      - '6379:6379'
+  web:
+    build:
+      context: web
+      dockerfile: Dockerfile-debug
+    hostname: web
+    ports:
+      - '81:5000'
+      - '9229:9229'
+    env_file: .env
+    volumes:
+      - ./web/src:/app/src
+  nginx:
+    volumes:
+    - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
+    env_file: .env
+    build: ./nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - web
