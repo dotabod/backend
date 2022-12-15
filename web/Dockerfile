@@ -32,7 +32,7 @@ RUN yarn build
 ############
 ## RUNNER ##
 ############
-FROM node:16.2.0-alpine AS runner
+FROM node:16.2.0-alpine AS prod
 
 WORKDIR /app
 
@@ -44,3 +44,10 @@ COPY --from=builder /app/tsconfig.json ./
 RUN mkdir -p ./src/steam/volumes
 
 CMD ["yarn", "start"]
+
+
+############
+## Develp ##
+############
+from deps as dev
+CMD ["yarn", "dev"]
