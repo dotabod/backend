@@ -29,8 +29,6 @@ services:
     ports:
       - '80:80'
       - '443:443'
-    depends_on:
-      - web
     mem_limit: 128M
   mongodb:
     image: "mongo"

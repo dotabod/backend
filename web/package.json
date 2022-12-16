@@ -8,7 +8,7 @@
   "exports": "./dist/index.js",
   "type": "module",
   "scripts": {
-    "start": "node --inspect=0.0.0.0:9229 --trace-warnings ./src/index.js",
+    "start": "node --trace-warnings ./src/index.js",
     "build": "tsc",
     "debug": "nodemon --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
@@ -19,10 +19,6 @@
   "dependencies": {
     "@node-steam/id": "^1.2.0",
     "@prisma/client": "^4.7.1",
-    "@sentry/integrations": "^7.23.0",
-    "@sentry/node": "^7.23.0",
-    "@sentry/profiling-node": "^0.0.12",
-    "@sentry/tracing": "^7.23.0",
     "@supabase/supabase-js": "^2.1.1",
     "@twurple/api": "^5.2.7",
     "@twurple/auth": "^5.2.7",

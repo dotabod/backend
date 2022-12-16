@@ -50,7 +50,6 @@ export class setupMainEvents {
   constructor(token: SocketClient['token']) {
     console.log('Instantiating a new client', token)
     this.token = token
-    void this.watchEvents()
   }
 
   private async getMmr() {
@@ -161,7 +160,7 @@ export class setupMainEvents {
   }
 
   public async watchEvents() {
-    console.log('Setting up events', await this.getChannel());
+    console.log('Setting up events', await this.getChannel())
 
     await subscriber.subscribe(
       `gsievents:${this.getToken()}:${DotaEventTypes.RoshanKilled}`,
