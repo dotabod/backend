@@ -551,24 +551,42 @@ export class setupMainEvents {
   // 4 Then, tell twitch to close bets based on win result
   async openBets() {
     // The bet was already made
-    if (this.betExists !== null) return
-    if (this.openingBets) return
+    if (this.betExists !== null) {
+      // console.log('[BETS]', 'already betted')
+      return
+    }
+    if (this.openingBets) {
+      // console.log('[BETS]', 'already opening bets')
+      return
+    }
 
     // Why open if not playing?
-    if (this.gsi?.player?.activity !== 'playing') return
+    if (this.gsi?.player?.activity !== 'playing') {
+      // console.log('[BETS]', 'not opening because not playing')
+      return
+    }
 
     // Why open if won?
-    if (this.gsi.map?.win_team !== 'none') return
+    if (this.gsi.map?.win_team !== 'none') {
+      // console.log('[BETS]', 'not opening because won')
+      return
+    }
 
     // We at least want the hero name so it can go in the twitch bet title
-    if (!this.gsi.hero?.name || !this.gsi.hero.name.length) return
+    if (!this.gsi.hero?.name || !this.gsi.hero.name.length) {
+      // console.log('[BETS]', 'not opening because no hero name')
+      return
+    }
 
     this.openingBets = true
     const channel = await this.getChannel()
     const isOpenBetGameCondition = this.gsi.map.clock_time < 20 && this.gsi.map.name === 'start'
 
     // It's not a live game, so we don't want to open bets nor save it to DB
-    if (!this.gsi.map.matchid || this.gsi.map.matchid === '0') return
+    if (!this.gsi.map.matchid || this.gsi.map.matchid === '0') {
+      // console.log('[BETS]', 'not opening because no match id')
+      return
+    }
 
     // Check if this bet for this match id already exists, dont continue if it does
     prisma.bet
