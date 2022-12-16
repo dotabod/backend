@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node --inspect=0.0.0.0:9229 --trace-warnings ./src/index.js",
     "build": "tsc",
-    "debug": "nodemon --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register -r dotenv/config --loader ts-node/esm src/index.ts\"",
+    "debug": "nodemon --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
     "postinstall": "prisma generate",
     "lint": "eslint --ext .ts ./src",
@@ -39,7 +39,7 @@
     "long": "5.0.1",
     "memoizee": "^0.4.15",
     "mongodb": "^4.12.1",
-    "newrelic": "^9.7.3",
+    "newrelic": "^9.7.4",
     "redis": "^4.5.1",
     "retry": "^0.13.1",
     "socket.io": "^4.5.4",

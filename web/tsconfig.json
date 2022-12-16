@@ -1,7 +1,6 @@
 {
   "include": [
     "src/**/*",
-    "newrelic.cjs"
   ],
   "exclude": [
     "node_modules"
@@ -30,7 +29,8 @@
     "esm": true,
     "pretty": true,
     "require": [
-      "tsconfig-paths/register"
+      "tsconfig-paths/register",
+      "newrelic"
     ]
   }
 }
