@@ -50,4 +50,5 @@ CMD ["yarn", "start"]
 ## Develp ##
 ############
 from deps as dev
+COPY .eslintrc.json tsconfig.json ./
 CMD ["yarn", "dev"]

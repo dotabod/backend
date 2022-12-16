@@ -1,0 +1,38 @@
+name: App Release
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - 'main'
+
+jobs:
+  release:
+    if: (github.event.pull_request.merged == true) && (contains(github.head_ref, 'dependabot/github_actions/') == false) && (contains(github.head_ref, 'skip-release/') == false)
+    name: Github Release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      name: checkout
+      with:
+        fetch-depth: 0
+
+    - name: Determine new tag
+      id: new_tag
+      run: |
+        old_tag=$(git tag --list --sort=-v:refname | grep -v '-' | grep -v 'v' | head -n 1)
+        echo "::set-output name=new_tag::$old_tag"
+
+    - name: Generate Changelog
+      id: auto_tag_generation
+      uses: heinrichreimer/github-changelog-generator-action@v2.3
+      with:
+        token: ${{secrets.GITHUB_TOKEN}}
+
+    - name: Create a GitHub release
+      uses: ncipollo/release-action@v1
+      with:
+        prerelease: false
+        tag: ${{ steps.new_tag.outputs.new_tag }}
+        name: ${{ steps.new_tag.outputs.new_tag }}
+        body: ${{ steps.auto_tag_generation.outputs.changelog }}
+
