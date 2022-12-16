@@ -539,8 +539,10 @@ export class setupMainEvents {
     // We at least want the hero name so it can go in the twitch bet title
     if (!this.gsi.gamestate.hero?.name || !this.gsi.gamestate.hero.name.length) return
 
-    const channel = await this.getChannel()
-    const isOpenBetGameCondition = this.gsi.map.clock_time < 20 && this.gsi.map.name === 'start'
+    this.openingBets = true
+    const channel = this.getChannel()
+    const isOpenBetGameCondition =
+      this.gsi.gamestate.map.clock_time < 20 && this.gsi.gamestate.map.name === 'start'
 
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!this.gsi.gamestate.map.matchid || this.gsi.gamestate.map.matchid === '0') return
@@ -646,7 +648,13 @@ export class setupMainEvents {
         }
       })
       .catch((e: any) => {
-        console.log('[BETS]', 'Error opening bet', this.gsi?.map?.matchid ?? '', channel, e)
+        console.log(
+          '[BETS]',
+          'Error opening bet',
+          this.gsi?.gamestate?.map?.matchid ?? '',
+          channel,
+          e,
+        )
       })
   }
 
