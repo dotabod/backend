@@ -9,6 +9,7 @@
   "type": "module",
   "scripts": {
     "start": "node -r newrelic --trace-warnings ./src/index.js",
+    "test": "node -r ts-node/register -r dotenv/config --loader ts-node/esm src/test.ts dotenv_config_path=../.env.local",
     "build": "tsc",
     "debug": "nodemon --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
@@ -52,6 +53,7 @@
     "@types/steam": "^0.0.29",
     "@typescript-eslint/eslint-plugin": "^5.45.1",
     "@typescript-eslint/parser": "^5.45.1",
+    "dotenv": "^16.0.3",
     "eslint": "^8.29.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-import-resolver-typescript": "^3.5.2",

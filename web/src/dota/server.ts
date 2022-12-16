@@ -23,6 +23,45 @@ const { client: redis } = RedisClient.getInstance()
 
 export const events = new EventEmitter()
 
+const pendingAuthTokens = new Set<string>()
+function checkAuth(req: Request, res: Response, next: NextFunction) {
+  // Sent from dota gsi config file
+  const token = req.body?.auth?.token
+  if (invalidTokens.has(token) || pendingAuthTokens.has(token)) {
+    res.status(401).send('Invalid token, skipping auth check')
+    return
+  }
+
+  if (!token) {
+    invalidTokens.add(token)
+    console.log('[GSI]', `Dropping message from IP: ${req.ip}, no valid auth token`)
+    res.status(401).json({
+      error: new Error('Invalid request!'),
+    })
+    return
+  }
+
+  pendingAuthTokens.add(token)
+
+  // Only check redis cache for the token on checkAuth()
+  // It will exist if they connect the OBS overlay
+  getDBUser(token)
+    .then((client) => {
+      if (client?.token) {
+        pendingAuthTokens.delete(token)
+        next()
+        return
+      }
+
+      res.status(401).send('Invalid token')
+    })
+    .catch((e) => {
+      invalidTokens.add(token)
+      console.log('[GSI]', 'checkAuth Error checking auth', { token, e })
+      res.status(500).send('Error checking auth')
+    })
+}
+
 function checkClient(req: Request, res: Response, next: NextFunction) {
   let localUser = gsiClients.find((client) => client.token === req.body.auth.token)
   if (localUser) {
@@ -98,40 +137,6 @@ function newData(req: Request, res: Response) {
   res.end()
 }
 
-function checkAuth(req: Request, res: Response, next: NextFunction) {
-  // Sent from dota gsi config file
-  const token = req.body?.auth?.token
-  if (invalidTokens.has(token)) {
-    res.status(401).send('Invalid token, skipping auth check')
-    return
-  }
-
-  if (!token) {
-    invalidTokens.add(token)
-    console.log('[GSI]', `Dropping message from IP: ${req.ip}, no valid auth token`)
-    res.status(401).json({
-      error: new Error('Invalid request!'),
-    })
-    return
-  }
-
-  // Only check redis cache for the token on checkAuth()
-  // It will exist if they connect the OBS overlay
-  findUser(token)
-    .then((client) => {
-      if (client?.token) {
-        next()
-        return
-      }
-
-      res.status(401).send('Invalid token')
-    })
-    .catch((e) => {
-      console.log('[GSI]', 'checkAuth Error checking auth', { token, e })
-      res.status(500).send('Error checking auth')
-    })
-}
-
 class D2GSI {
   app: express.Application
   events: EventEmitter
@@ -178,6 +183,7 @@ class D2GSI {
     io.use((socket, next) => {
       const { token } = socket.handshake.auth
 
+      console.log('[IO]', 'Looking up user', token)
       getDBUser(token)
         .then((client) => {
           if (client?.token) {

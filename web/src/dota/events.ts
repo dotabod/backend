@@ -392,7 +392,7 @@ export class setupMainEvents {
   }
 
   async emitWLUpdate() {
-    console.log('[STEAM32ID]', 'Emitting WL overlay update', {
+    console.log('[OVERLAY]', 'Emitting WL overlay update', {
       name: await this.getChannel(),
     })
 
@@ -407,7 +407,7 @@ export class setupMainEvents {
   }
 
   async emitBadgeUpdate() {
-    console.log('[STEAM32ID]', 'Emitting badge overlay update', {
+    console.log('[OVERLAY]', 'Emitting badge overlay update', {
       name: await this.getChannel(),
     })
 

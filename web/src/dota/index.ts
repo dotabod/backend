@@ -1,6 +1,6 @@
-import getDBUser from '../db/getDBUser.js'
 import RedisClient from '../db/redis.js'
 import { setupMainEvents } from './events.js'
+import findUser from './lib/connectedStreamers.js'
 import D2GSI from './server.js'
 
 // Here's where we force wait for the redis to connect before starting the server
@@ -15,7 +15,7 @@ export const server = new D2GSI()
 
 server.events.on('new-gsi-client', (token: string) => {
   async function handler() {
-    const client = await getDBUser(token)
+    const client = await findUser(token)
     if (!client?.token) {
       console.log('[GSI]', 'Invalid user', { name: client?.name })
       return
