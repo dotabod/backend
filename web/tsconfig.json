@@ -30,6 +30,7 @@
     "pretty": true,
     "require": [
       "tsconfig-paths/register",
+      "newrelic"
     ]
   }
 }
