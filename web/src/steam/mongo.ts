@@ -7,8 +7,16 @@ export default class Mongo {
 
   private client: Promise<MongoClient>
 
-  private connect(): Promise<Db> {
-    return this.client.then((client) => client.db()).catch(() => this.connect())
+  private async connect(): Promise<Db> {
+    try {
+      const client = await MongoClient.connect(process.env.MONGO_URL!, {
+        serverApi: ServerApiVersion.v1,
+      })
+      return client.db()
+    } catch (error) {
+      console.error('MONGO CONNECT ERR', error)
+      throw error
+    }
   }
 
   private constructor() {
