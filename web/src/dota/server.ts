@@ -7,8 +7,8 @@ import { Server, Socket } from 'socket.io'
 
 import getDBUser, { invalidTokens } from '../db/getDBUser.js'
 import Dota from '../steam/index.js'
-import findUser from './lib/connectedStreamers.js'
 import { blockCache } from './events.js'
+import findUser from './lib/connectedStreamers.js'
 
 export const events = new EventEmitter()
 const pendingCheckAuth = new Set<string>()
