@@ -57,6 +57,7 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
     })
     .catch((e) => {
       invalidTokens.add(token)
+      pendingAuthTokens.delete(token)
       console.log('[GSI]', 'checkAuth Error checking auth', { token, e })
       res.status(500).send('Error checking auth')
     })
