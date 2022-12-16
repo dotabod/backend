@@ -240,10 +240,6 @@ export class setupMainEvents {
         const data: Packet = gsi
         this.gsi = data
 
-        // New users who dont have a steamaccount saved yet
-        // This needs to run first so we have client.steamid on multiple acts
-        void this.updateSteam32Id()
-
         // In case they connect to a game in progress and we missed the start event
         this.setupOBSBlockers(data.map?.game_state ?? '')
 
