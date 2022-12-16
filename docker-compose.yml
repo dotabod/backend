@@ -1,0 +1,47 @@
+services:
+  redis:
+    image: 'redis/redis-stack-server:latest'
+    ports:
+      - '6379:6379'
+    mem_limit: 128M
+  web:
+    build:
+      context: web
+      target: dev
+    hostname: web
+    ports:
+      - '81:5000'
+      - '9229:9229'
+    env_file: .env.local
+    volumes:
+      - ./web/src:/app/src
+      - steam_auth:/app/src/steam/volumes
+    deploy:
+        resources:
+            limits:
+              cpus: "1"
+              memory: 1024M
+  nginx:
+    volumes:
+    - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
+    env_file: .env.local
+    build: ./nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - web
+    mem_limit: 128M
+  mongodb:
+    image: "mongo"
+    ports:
+      - "27017:27017"
+    volumes:
+      - "mongodb_data:/data/db"
+      - ./mongodb/init.sh:/docker-entrypoint-initdb.d/init_mongo.js
+
+# Volumes are useful for data persistence, so the data will not be deleted
+# even later you call command docker-compose down.
+volumes:
+  mongodb_data:
+  steam_auth:

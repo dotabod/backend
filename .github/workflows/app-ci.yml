@@ -1,0 +1,30 @@
+name: App CI
+on:
+  pull_request:
+    types: [assigned, opened, edited, synchronize, reopened]
+    branches:
+      - 'stage'
+      - 'main'
+
+jobs:
+  CI:
+    if: (github.actor != 'dependabot[bot]') && (contains(github.head_ref, 'dependabot/') == false)
+    name: Test Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: setup docker compose
+        uses: KengoTODA/actions-setup-docker-compose@main
+        with:
+          version: '2.12.2'
+      - name: setup just
+        uses: extractions/setup-just@v1
+      - name: init env file
+        run: |
+          touch .env.local
+          echo -e "YOUR_ENV_VAR=VAL" >> .env.local
+      - name: test code
+        run: 'just test'
