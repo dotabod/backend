@@ -116,7 +116,7 @@ class Dota {
     this.steamClient.on('logOnResponse', (logonResp: { eresult: any }) => {
       // @ts-expect-error ???
       if (logonResp.eresult == Steam.EResult.OK) {
-        console.log('Logged on.')
+        console.log('[STEAM]', 'Logged on.')
 
         this.dota2.launch()
       } else {
