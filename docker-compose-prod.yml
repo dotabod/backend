@@ -8,6 +8,8 @@ services:
     build:
       context: web
       target: prod
+    volumes:
+      - steam_auth:/app/src/steam/volumes
     hostname: web
     ports:
       - '81:5000'
@@ -29,3 +31,8 @@ services:
       - web
     mem_limit: 128M
     env_file: .env
+
+# Volumes are useful for data persistence, so the data will not be deleted
+# even later you call command docker-compose down.
+volumes:
+  steam_auth:
