@@ -34,6 +34,7 @@ export class setupMainEvents {
   betMyTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
   currentHero: string | undefined | null = null
   endingBets = false
+  openingBets = false
   events: DotaEvent[] = []
   gsi?: Packet
   heroSlot: number | undefined | null = null
@@ -108,6 +109,7 @@ export class setupMainEvents {
     // This should mean an entire match is over
     if (resetBets) {
       this.endingBets = false
+      this.openingBets = false
       this.betExists = null
       this.betMyTeam = null
 
@@ -551,6 +553,7 @@ export class setupMainEvents {
   async openBets() {
     // The bet was already made
     if (this.betExists !== null) return
+    if (this.openingBets) return
 
     // Why open if not playing?
     if (this.gsi?.player?.activity !== 'playing') return
@@ -561,6 +564,7 @@ export class setupMainEvents {
     // We at least want the hero name so it can go in the twitch bet title
     if (!this.gsi.hero?.name || !this.gsi.hero.name.length) return
 
+    this.openingBets = true
     const channel = await this.getChannel()
     const isOpenBetGameCondition = this.gsi.map.clock_time < 20 && this.gsi.map.name === 'start'
 
@@ -668,7 +672,7 @@ export class setupMainEvents {
         }
       })
       .catch((e: any) => {
-        console.log('[BETS]', 'Error opening bet', e)
+        console.log('[BETS]', 'Error opening bet', this.gsi?.map?.matchid ?? '', channel, e)
       })
   }
 
