@@ -46,9 +46,10 @@ RUN mkdir -p ./src/steam/volumes
 CMD ["yarn", "start"]
 
 
-############
-## Develp ##
-############
-from deps as dev
+###########
+## DEBUG ##
+###########
+FROM deps as dev
+
 COPY .eslintrc.json tsconfig.json ./
 CMD ["yarn", "dev"]

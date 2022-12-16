@@ -1,5 +1,3 @@
-set shell := ["bash", "-uc"]
-
 # Lists Recipes
 default:
   @just --list
