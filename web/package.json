@@ -11,7 +11,7 @@
     "start": "node --trace-warnings ./src/index.js",
     "build": "tsc",
     "debug": "nodemon --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register -r dotenv/config --loader ts-node/esm src/index.ts\"",
-    "dev": "nodemon --ext ts ./src/index.ts",
+    "dev": "nodemon -L --ext ts ./src/index.ts",
     "postinstall": "prisma generate",
     "lint": "eslint --ext .ts ./src",
     "lint:fix": "npm run lint -- --fix"
