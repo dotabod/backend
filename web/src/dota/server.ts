@@ -31,8 +31,8 @@ function checkClient(req: Request, res: Response, next: NextFunction) {
     return
   }
 
-  console.log('[GSI]', `Adding new userGSI for IP: ${req.ip}`)
-  localUser = new GSIClient(req.ip, req.body.auth)
+  console.log('[GSI]', `Adding new userGSI for token:`, req.body.auth.token)
+  localUser = new GSIClient(req.body.auth)
   req.client = localUser
   gsiClients.push(localUser)
 

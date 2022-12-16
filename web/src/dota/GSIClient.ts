@@ -3,13 +3,11 @@ import { Packet } from '../types.js'
 const { client: redis } = RedisClient.getInstance()
 
 export class GSIClient {
-  ip: string
   auth: { token: string }
   token: string
   gsi?: Packet
 
-  constructor(ip: string, auth: { token: string }) {
-    this.ip = ip
+  constructor(auth: { token: string }) {
     this.auth = auth
     this.token = auth.token
   }
