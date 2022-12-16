@@ -32,6 +32,7 @@ server.events.on('new-gsi-client', (token: string) => {
 
     console.log('[GSI]', 'GSI connected', { name: connectedSocketClient.name })
     const gsi = new setupMainEvents(token)
+    await gsi.watchEvents()
   }
 
   void handler()
