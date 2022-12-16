@@ -24,7 +24,6 @@ const mongo = Mongo.getInstance()
 
 export const blockCache = new Map<string, string>()
 
-
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
 export class setupMainEvents {
@@ -516,8 +515,6 @@ export class setupMainEvents {
 
     this.openingBets = true
     const channel = this.getChannel()
-    const isOpenBetGameCondition =
-      this.client.gsi.map.clock_time < 20 && this.client.gsi.map.name === 'start'
 
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!this.client.gsi.map.matchid || this.client.gsi.map.matchid === '0') return
@@ -541,10 +538,6 @@ export class setupMainEvents {
           this.betExists = this.client.gsi?.map?.matchid ?? null
           this.betMyTeam = this.client.gsi?.player?.team_name ?? null
         } else {
-          if (!isOpenBetGameCondition) {
-            return
-          }
-
           // Doing this here instead of on(player:steamid)
           // it wasnt always called for some streamers when connecting to match
           // the user may have a steam account saved, but not this one for this match
