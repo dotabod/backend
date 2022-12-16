@@ -34,6 +34,7 @@ export class setupMainEvents {
   client: SocketClient
   currentHero: string | undefined | null = null
   endingBets = false
+  openingBets = false
   events: DotaEvent[] = []
   gsi: GSIClient
   heroSlot: number | undefined | null = null
@@ -91,6 +92,7 @@ export class setupMainEvents {
     // This should mean an entire match is over
     if (resetBets) {
       this.endingBets = false
+      this.openingBets = false
       this.betExists = null
       this.betMyTeam = null
 
@@ -526,6 +528,7 @@ export class setupMainEvents {
   openBets() {
     // The bet was already made
     if (this.betExists !== null) return
+    if (this.openingBets) return
 
     // Why open if not playing?
     if (this.gsi.gamestate?.player?.activity !== 'playing') return
@@ -536,9 +539,8 @@ export class setupMainEvents {
     // We at least want the hero name so it can go in the twitch bet title
     if (!this.gsi.gamestate.hero?.name || !this.gsi.gamestate.hero.name.length) return
 
-    const channel = this.getChannel()
-    const isOpenBetGameCondition =
-      this.gsi.gamestate.map.clock_time < 20 && this.gsi.gamestate.map.name === 'start'
+    const channel = await this.getChannel()
+    const isOpenBetGameCondition = this.gsi.map.clock_time < 20 && this.gsi.map.name === 'start'
 
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!this.gsi.gamestate.map.matchid || this.gsi.gamestate.map.matchid === '0') return
@@ -644,7 +646,7 @@ export class setupMainEvents {
         }
       })
       .catch((e: any) => {
-        console.log('[BETS]', 'Error opening bet', e)
+        console.log('[BETS]', 'Error opening bet', this.gsi?.map?.matchid ?? '', channel, e)
       })
   }
 
