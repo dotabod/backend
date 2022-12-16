@@ -15,7 +15,11 @@ services:
     env_file: .env
     volumes:
       - ./web/src:/app/src
-    mem_limit: 1024M
+    deploy:
+        resources:
+            limits:
+              cpus: "1"
+              memory: 1024M
   nginx:
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
