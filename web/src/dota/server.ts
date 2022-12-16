@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events'
 import http from 'http'
 
-import * as Sentry from '@sentry/node'
 import bodyParser from 'body-parser'
 import express, { NextFunction, Request, Response } from 'express'
 import { Server, Socket } from 'socket.io'
@@ -149,8 +148,6 @@ class D2GSI {
       },
     })
 
-    // The request handler must be the first middleware on the app
-    app.use(Sentry.Handlers.requestHandler())
 
     app.use(bodyParser.json())
     app.use(bodyParser.urlencoded({ extended: true }))
@@ -171,13 +168,6 @@ class D2GSI {
         error: new Error('Invalid request!'),
       })
     })
-
-    app.get('/debug-sentry', function mainHandler(req, res) {
-      throw new Error('My first Sentry error!')
-    })
-
-    // The error handler must be before any other error middleware and after all controllers
-    app.use(Sentry.Handlers.errorHandler())
 
     httpServer.listen(5000, () => {
       console.log('[GSI]', `Dota 2 GSI listening on *:${5000}`)
