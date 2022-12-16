@@ -8,7 +8,7 @@
   "exports": "./dist/index.js",
   "type": "module",
   "scripts": {
-    "start": "node --inspect=0.0.0.0:9229 --trace-warnings ./src/index.js",
+    "start": "node --trace-warnings ./src/index.js",
     "build": "tsc",
     "debug": "nodemon --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register -r dotenv/config --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
