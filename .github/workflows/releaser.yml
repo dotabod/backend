@@ -20,7 +20,29 @@ jobs:
       id: new_tag
       run: |
         old_tag=$(git tag --list --sort=-v:refname | grep -v '-' | grep -v 'v' | head -n 1)
-        echo "::set-output name=new_tag::$old_tag"
+        if [[ -z "$old_tag" ]]; then old_tag=0.0.0; fi
+        if [[ $HEAD_REF == *"release/"* ]]; then
+          new_tag=$(echo "$old_tag" | awk -F. '{print $1+1".0.0"}')
+        elif [[ $HEAD_REF == *"feat/"* ]]; then
+          new_tag=$(echo "$old_tag" | awk -F. '{print $1"."$2+1".0"}')
+        elif [[ $HEAD_REF == *"fix/"* || $HEAD_REF == *"dependabot/terraform/"* ]]; then
+          new_tag=$(echo "$old_tag" | awk -F. '{print $1"."$2"."$3+1}')
+        else
+          exit 1
+        fi
+        echo "::set-output name=new_tag::$new_tag"
+
+    - name: Bump version and push tag
+      id: auto_tag_generation
+      uses: mathieudutour/github-tag-action@v6.1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        release_branches: stage
+        pre_release_branches: develop
+        custom_tag: ${{ steps.new_tag.outputs.new_tag }}
+        default_prerelease_bump: false
+        default_bump: false
+        tag_prefix: ""
 
     - name: Generate Changelog
       id: auto_tag_generation
