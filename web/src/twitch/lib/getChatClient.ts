@@ -12,5 +12,6 @@ export async function getChatClient() {
 
   await chatClient.connect()
   console.log('[TWITCHSETUP]', 'Connected to chat client', chatClient.isConnected)
+
   return chatClient
 }

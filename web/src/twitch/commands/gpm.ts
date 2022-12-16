@@ -1,7 +1,8 @@
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
-import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
+
+import { chatClient } from './index.js'
 
 commandHandler.registerCommand('gpm', {
   aliases: [],
@@ -15,20 +16,20 @@ commandHandler.registerCommand('gpm', {
       return
     }
 
-    if (!client.gsi?.hero?.name || !isPlayingMatch(client.gsi)) {
+    if (!client.gsi?.gamestate?.hero?.name || !isPlayingMatch(client.gsi)) {
       void chatClient.say(channel, 'Not playing PauseChamp')
       return
     }
 
-    const gpm = client.gsi.player?.gpm
+    const gpm = client.gsi.gamestate.player?.gpm
 
     if (!gpm) {
       void chatClient.say(channel, 'Live GPM: 0')
       return
     }
 
-    const gold_from_hero_kills = client.gsi.player?.gold_from_hero_kills
-    const gold_from_creep_kills = client.gsi.player?.gold_from_creep_kills
+    const gold_from_hero_kills = client.gsi.gamestate.player?.gold_from_hero_kills
+    const gold_from_creep_kills = client.gsi.gamestate.player?.gold_from_creep_kills
 
     void chatClient.say(
       channel,

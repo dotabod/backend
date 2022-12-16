@@ -1,7 +1,8 @@
 import { getWL } from '../../db/getWL.js'
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
-import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
+
+import { chatClient } from './index.js'
 
 commandHandler.registerCommand('wl', {
   aliases: ['score', 'winrate', 'wr'],

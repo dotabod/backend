@@ -2,8 +2,9 @@ import { toUserName } from '@twurple/chat'
 
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { getRankDescription } from '../../dota/lib/ranks.js'
-import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
+
+import { chatClient } from './index.js'
 
 export const plebMode = new Set()
 

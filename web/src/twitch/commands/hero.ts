@@ -2,8 +2,9 @@ import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import getHero from '../../dota/lib/getHero.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import axios from '../../utils/axios.js'
-import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
+
+import { chatClient } from './index.js'
 
 commandHandler.registerCommand('hero', {
   aliases: [],
@@ -16,12 +17,12 @@ commandHandler.registerCommand('hero', {
     if (!getValueOrDefault(DBSettings.commandHero, client.settings)) {
       return
     }
-    if (!client.steam32Id || !client.gsi?.hero?.name || !isPlayingMatch(client.gsi)) {
+    if (!client.steam32Id || !client.gsi?.gamestate?.hero?.name || !isPlayingMatch(client.gsi)) {
       void chatClient.say(channel, 'Not playing PauseChamp')
       return
     }
 
-    const hero = getHero(client.gsi.hero.name)
+    const hero = getHero(client.gsi.gamestate.hero.name)
 
     if (!hero) {
       void chatClient.say(channel, "Couldn't find hero Sadge")

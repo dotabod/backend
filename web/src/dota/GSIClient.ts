@@ -1,20 +1,18 @@
-import RedisClient from '../db/redis.js'
-import { Packet } from '../types.js'
-const { client: redis } = RedisClient.getInstance()
+import { EventEmitter } from 'events'
 
-export class GSIClient {
+import { Packet } from '../types.js'
+
+export class GSIClient extends EventEmitter {
   ip: string
   auth: { token: string }
   token: string
-  gsi?: Packet
+  gamestate?: Packet
 
   constructor(ip: string, auth: { token: string }) {
+    super()
+
     this.ip = ip
     this.auth = auth
     this.token = auth.token
-  }
-
-  public emit = (event: string, data: any) => {
-    void redis.publish(`gsievents:${this.token}:${event}`, JSON.stringify(data))
   }
 }

@@ -9,9 +9,7 @@ export async function openTwitchBet(channel: string, userId: string, heroName?: 
 
   console.log('[PREDICT]', '[BETS] Opening twitch bet', channel)
 
-  const { api, providerAccountId } = await getChannelAPI(channel, userId)
-
-  console.log({ providerAccountId, channel, userId, heroName })
+  const { api, providerAccountId } = getChannelAPI(channel, userId)
 
   const title = heroName ? `Will we win with ${heroName}?` : `Will we win this match?`
 

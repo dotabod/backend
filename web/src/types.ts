@@ -1,7 +1,8 @@
+import { GSIClient } from './dota/GSIClient.js'
 import { HeroNames } from './dota/lib/getHero.js'
 
 export interface SocketClient {
-  gsi?: Packet
+  gsi?: GSIClient
   name: string
   token: string
   steam32Id: number | null // currently connected steam id
@@ -20,6 +21,7 @@ export interface SocketClient {
     key: string
     value: any
   }[]
+  sockets: string[]
 }
 interface Provider {
   name: string // "Dota 2"

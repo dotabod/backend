@@ -1,20 +1,35 @@
-import RedisClient from '../../db/redis.js'
-import { SocketClient } from '../../types.js'
+import { socketClients } from './consts.js'
 
-const { client: redis } = RedisClient.getInstance()
-
-export default async function findUser(token?: string) {
+function findUser(token?: string) {
   if (!token) return null
 
-  const user = (await redis.json.get(`users:${token}`)) as unknown as SocketClient
-  return user
+  const user = socketClients.findIndex((client) => client.token === token)
+  if (user === -1) return null
+
+  return socketClients[user]
 }
 
-export async function findUserByTwitchId(twitchId: string) {
+export function findUserByTwitchId(twitchId: string) {
   if (!twitchId) return null
 
-  const doc = await redis.ft.search(`idx:users`, `@twitchId:(${twitchId})`)
-  if (!doc.total) return null
-  const user = doc.documents[0].value as unknown as SocketClient
-  return user
+  const user = socketClients.findIndex((client) => client.Account?.providerAccountId === twitchId)
+  if (user === -1) return null
+
+  return socketClients[user]
 }
+
+export function findUserByName(name: string) {
+  if (!name) return null
+
+  const user = socketClients.findIndex((client) => client.name.toLowerCase() === name.toLowerCase())
+  if (user === -1) return null
+
+  return socketClients[user]
+}
+
+// This will update often
+export function getActiveUsers() {
+  return socketClients.filter((client) => client.sockets.length > 0 && client.gsi)
+}
+
+export default findUser

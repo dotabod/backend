@@ -1,7 +1,8 @@
 import { getSteamByTwitchId } from '../../db/getDBUser.js'
 import { updateMmr } from '../../dota/lib/updateMmr.js'
-import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
+
+import { chatClient } from './index.js'
 
 export const plebMode = new Set()
 

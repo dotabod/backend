@@ -1,7 +1,8 @@
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { smurfs } from '../../steam/smurfs.js'
-import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
+
+import { chatClient } from './index.js'
 
 commandHandler.registerCommand('smurfs', {
   aliases: ['lifetimes', 'totals'],
@@ -19,7 +20,7 @@ commandHandler.registerCommand('smurfs', {
       void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')
       return
     }
-    smurfs(message.channel.client.gsi?.map?.matchid)
+    smurfs(message.channel.client.gsi?.gamestate?.map?.matchid)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })

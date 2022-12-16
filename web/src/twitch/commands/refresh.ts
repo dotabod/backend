@@ -1,6 +1,7 @@
 import { server } from '../../dota/index.js'
-import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
+
+import { chatClient } from './index.js'
 
 commandHandler.registerCommand('refresh', {
   aliases: [],
@@ -10,7 +11,11 @@ commandHandler.registerCommand('refresh', {
     const {
       channel: { name: channel, client },
     } = message
-    void chatClient.say(channel, 'Refreshing overlay...')
-    server.io.to(client.token).emit('refresh')
+    if (client.sockets.length) {
+      void chatClient.say(channel, 'Refreshing overlay...')
+      server.io.to(client.sockets).emit('refresh')
+    } else {
+      void chatClient.say(channel, 'Not live PauseChamp')
+    }
   },
 })

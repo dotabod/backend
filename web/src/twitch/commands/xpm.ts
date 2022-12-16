@@ -1,7 +1,8 @@
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
-import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
+
+import { chatClient } from './index.js'
 
 commandHandler.registerCommand('xpm', {
   aliases: [],
@@ -14,12 +15,12 @@ commandHandler.registerCommand('xpm', {
     if (!getValueOrDefault(DBSettings.commandXPM, client.settings)) {
       return
     }
-    if (!client.gsi?.hero?.name || !isPlayingMatch(client.gsi)) {
+    if (!client.gsi?.gamestate?.hero?.name || !isPlayingMatch(client.gsi)) {
       void chatClient.say(channel, 'Not playing PauseChamp')
       return
     }
 
-    const xpm = client.gsi.player?.xpm
+    const xpm = client.gsi.gamestate.player?.xpm
 
     if (!xpm) {
       void chatClient.say(channel, 'Live XPM: 0')

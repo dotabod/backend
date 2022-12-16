@@ -1,6 +1,8 @@
-import { Packet } from '../../types.js'
+import { GSIClient } from '../GSIClient.js'
 
-export function isSpectator(gsi?: Packet) {
-  if (!gsi) return false
-  return gsi.player?.team_name === 'spectator' || 'team2' in (gsi.player ?? {})
+export function isSpectator(client: GSIClient) {
+  return (
+    client.gamestate?.player?.team_name === 'spectator' ||
+    'team2' in (client.gamestate?.player ?? {})
+  )
 }

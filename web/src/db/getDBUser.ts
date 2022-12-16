@@ -1,9 +1,6 @@
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
-import { SocketClient } from '../types.js'
+import { socketClients } from '../dota/lib/consts.js'
 import { prisma } from './prisma.js'
-import RedisClient from './redis.js'
-
-const { client: redis } = RedisClient.getInstance()
 
 export const invalidTokens = new Set()
 
@@ -12,13 +9,13 @@ export default async function getDBUser(token?: string, twitchId?: string) {
 
   // Cache check
   if (token) {
-    const client = await findUser(token)
+    const client = findUser(token || twitchId)
     if (client) return client
   }
 
   // Cache check
   if (twitchId) {
-    const client = await findUserByTwitchId(twitchId)
+    const client = findUserByTwitchId(twitchId)
     if (client) return client
   }
 
@@ -59,32 +56,26 @@ export default async function getDBUser(token?: string, twitchId?: string) {
         id: token,
       },
     })
-    .then(async (user) => {
+    .then((user) => {
       if (!user?.id) {
         console.log('Invalid token', { token })
         invalidTokens.add(token)
         return null
       }
 
-      const client = await findUser(user.id)
+      const client = findUser(user.id)
       if (client) return client
 
-      const theUser = {
+      const arrayLength = socketClients.push({
         ...user,
-        mmr: user.mmr || user.SteamAccount[0]?.mmr || 0,
-        steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
+        mmr: user.mmr || user.SteamAccount[0]?.mmr,
+        steam32Id: user.steam32Id ?? user.SteamAccount[0]?.steam32Id,
         token: user.id,
-      }
+        // sockets[] to be filled in by socket connection, so will steamid
+        sockets: [],
+      })
 
-      await redis.json.set(
-        `users:${user.id}`,
-        '$',
-        theUser as typeof theUser & {
-          settings: { key: string; value: string | boolean }[]
-        },
-      )
-
-      return theUser as SocketClient
+      return socketClients[arrayLength - 1]
     })
     .catch((e) => {
       console.log('[USER]', 'Error checking auth', { token, e })

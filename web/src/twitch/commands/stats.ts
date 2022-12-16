@@ -2,8 +2,9 @@ import { heroColors } from '../../dota/lib/heroes.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import Mongo from '../../steam/mongo.js'
 import CustomError from '../../utils/customError.js'
-import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
+
+import { chatClient } from './index.js'
 
 const mongo = Mongo.getInstance()
 
@@ -41,12 +42,12 @@ commandHandler.registerCommand('stats', {
     // if (!getValueOrDefault(DBSettings.commandStats, client.settings)) {
     //   return
     // }
-    if (!client.gsi?.map?.matchid || !isPlayingMatch(client.gsi)) {
+    if (!client.gsi?.gamestate?.map?.matchid || !isPlayingMatch(client.gsi)) {
       void chatClient.say(channel, 'Not playing PauseChamp')
       return
     }
 
-    profileLink(client.gsi.map.matchid, args[0])
+    profileLink(client.gsi.gamestate.map.matchid, args[0])
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })
