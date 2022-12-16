@@ -115,9 +115,11 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
     return
   }
 
-  getDBUser(token)
-    .then((user) => {
-      if (user?.token) {
+  // Only check redis cache for the token on checkAuth()
+  // It will exist if they connect the OBS overlay
+  findUser(token)
+    .then((client) => {
+      if (client?.token) {
         next()
         return
       }
@@ -147,7 +149,6 @@ class D2GSI {
         methods: ['GET', 'POST'],
       },
     })
-
 
     app.use(bodyParser.json())
     app.use(bodyParser.urlencoded({ extended: true }))

@@ -6,51 +6,64 @@ export default class RedisClient {
   public subscriber: ReturnType<typeof createClient>
 
   private constructor() {
-    const client = createClient({ url: 'redis://redis:6379' })
-    void client.connect()
-    client.on('error', (err: any) => console.log('Redis Client Error', err))
+    this.client = createClient({ url: 'redis://redis:6379' })
+    this.subscriber = this.client.duplicate()
 
-    async function handler() {
-      try {
-        await client.ft.create(
-          'idx:users',
-          {
-            '$.name': {
-              type: SchemaFieldTypes.TEXT,
-              AS: 'name',
-            },
-            '$.Account.providerAccountId': {
-              type: SchemaFieldTypes.TEXT,
-              AS: 'twitchId',
-            },
-          },
-          {
-            ON: 'JSON',
-            PREFIX: 'users',
-          },
-        )
-      } catch (e: any) {
-        if (e.message === 'Index already exists') {
-          console.log('Index exists already, skipped creation.')
-        } else {
-          // Something went wrong, perhaps RediSearch isn't installed...
-          console.error(e)
-          process.exit(1)
-        }
-      }
+    this.client.on('error', (err: any) => console.log('Redis Client Error', err))
+    this.client.once('connect', () => {
+      console.log('[REDIS]', 'Redis client connected')
+      void this.createIndex()
+    })
+  }
+
+  public connectClient() {
+    try {
+      return this.client.connect()
+    } catch (error) {
+      console.error('REDIS CONNECT ERR', error)
+      throw error
     }
+  }
 
-    void handler()
-
-    const subscriber = client.duplicate()
-    void subscriber.connect()
-
-    this.subscriber = subscriber
-    this.client = client
+  public connectSubscriber() {
+    try {
+      return this.subscriber.connect()
+    } catch (error) {
+      console.error('REDIS CONNECT ERR', error)
+      throw error
+    }
   }
 
   public static getInstance(): RedisClient {
     if (!RedisClient.instance) RedisClient.instance = new RedisClient()
     return RedisClient.instance
+  }
+
+  public async createIndex(): Promise<void> {
+    try {
+      await this.client.ft.create(
+        'idx:users',
+        {
+          '$.name': {
+            type: SchemaFieldTypes.TEXT,
+            AS: 'name',
+          },
+          '$.Account.providerAccountId': {
+            type: SchemaFieldTypes.TEXT,
+            AS: 'twitchId',
+          },
+        },
+        {
+          ON: 'JSON',
+          PREFIX: 'users',
+        },
+      )
+    } catch (e: any) {
+      if (e.message !== 'Index already exists') {
+        // Something went wrong, perhaps RediSearch isn't installed...
+        console.error(e)
+        process.exit(1)
+      }
+    }
   }
 }
