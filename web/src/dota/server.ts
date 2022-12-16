@@ -43,8 +43,6 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
 
   pendingAuthTokens.add(token)
 
-  // Only check redis cache for the token on checkAuth()
-  // It will exist if they connect the OBS overlay
   getDBUser(token)
     .then((client) => {
       if (client?.token) {

@@ -580,7 +580,6 @@ export class setupMainEvents {
 
     this.openingBets = true
     const channel = await this.getChannel()
-    const isOpenBetGameCondition = this.gsi.map.clock_time < 20 && this.gsi.map.name === 'start'
 
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!this.gsi.map.matchid || this.gsi.map.matchid === '0') {
@@ -607,10 +606,6 @@ export class setupMainEvents {
           this.betExists = this.gsi?.map?.matchid ?? null
           this.betMyTeam = this.gsi?.player?.team_name ?? null
         } else {
-          if (!isOpenBetGameCondition) {
-            return
-          }
-
           // Doing this here instead of on(player:steamid)
           // it wasnt always called for some streamers when connecting to match
           // the user may have a steam account saved, but not this one for this match
