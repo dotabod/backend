@@ -3,6 +3,7 @@ services:
     image: 'redis/redis-stack-server:latest'
     ports:
       - '6379:6379'
+    mem_limit: 128M
   web:
     build:
       context: web
@@ -14,6 +15,7 @@ services:
     env_file: .env
     volumes:
       - ./web/src:/app/src
+    mem_limit: 1024M
   nginx:
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
@@ -24,3 +26,4 @@ services:
       - '443:443'
     depends_on:
       - web
+    mem_limit: 128M
