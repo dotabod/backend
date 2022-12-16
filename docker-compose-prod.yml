@@ -14,7 +14,7 @@ services:
     ports:
       - '81:5000'
       - '9229:9229'
-    env_file: .env
+    env_file: .env.prod
     deploy:
         resources:
             limits:
@@ -30,7 +30,7 @@ services:
     depends_on:
       - web
     mem_limit: 128M
-    env_file: .env
+    env_file: .env.prod
 
 # Volumes are useful for data persistence, so the data will not be deleted
 # even later you call command docker-compose down.

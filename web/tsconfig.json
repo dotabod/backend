@@ -30,7 +30,6 @@
     "esm": true,
     "pretty": true,
     "require": [
-      "dotenv/config",
       "tsconfig-paths/register"
     ]
   }

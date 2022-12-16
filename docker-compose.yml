@@ -12,7 +12,7 @@ services:
     ports:
       - '81:5000'
       - '9229:9229'
-    env_file: .env
+    env_file: .env.local
     volumes:
       - ./web/src:/app/src
       - steam_auth:/app/src/steam/volumes
@@ -24,7 +24,7 @@ services:
   nginx:
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
-    env_file: .env
+    env_file: .env.local
     build: ./nginx
     ports:
       - '80:80'
