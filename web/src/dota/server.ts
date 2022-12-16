@@ -173,8 +173,8 @@ class D2GSI {
       })
     })
 
-    httpServer.listen(process.env.MAIN_PORT ?? 3000, () => {
-      console.log('[GSI]', `Dota 2 GSI listening on *:${process.env.MAIN_PORT ?? 3000}`)
+    httpServer.listen(5000, () => {
+      console.log('[GSI]', `Dota 2 GSI listening on *:${5000}`)
     })
 
     // IO auth & client setup so we can send this socket messages
