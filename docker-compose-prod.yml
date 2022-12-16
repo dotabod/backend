@@ -3,7 +3,6 @@ services:
     image: 'redis/redis-stack-server:latest'
     ports:
       - '6379:6379'
-    mem_limit: 128M
   web:
     build:
       context: web
@@ -15,11 +14,6 @@ services:
       - '81:5000'
       - '9229:9229'
     env_file: .env.prod
-    deploy:
-        resources:
-            limits:
-              cpus: "1"
-              memory: 1024M
   nginx:
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
@@ -27,9 +21,6 @@ services:
     ports:
       - '80:80'
       - '443:443'
-    depends_on:
-      - web
-    mem_limit: 128M
     env_file: .env.prod
 
 # Volumes are useful for data persistence, so the data will not be deleted
