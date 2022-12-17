@@ -470,32 +470,55 @@ export class setupMainEvents {
       return
     }
 
-    // Opendota API for this match to figure out party size
-    const opendotaMatch = await axios(`https://api.opendota.com/api/matches/${matchId}`)
-    let isParty = false
-    if (Array.isArray(opendotaMatch.data?.players) && typeof heroSlot === 'number') {
-      const partySize = opendotaMatch.data?.players[heroSlot]?.party_size
-      if (typeof partySize === 'number' && partySize > 1) {
-        console.log('[MMR]', 'Party match detected', this.client.name)
-        isParty = true
-      }
-    }
+    axios(`https://api.opendota.com/api/matches/${matchId}`)
+      .then(async (opendotaMatch: any) => {
+        let isParty = false
+        if (Array.isArray(opendotaMatch.data?.players) && typeof heroSlot === 'number') {
+          const partySize = opendotaMatch.data?.players[heroSlot]?.party_size
+          if (typeof partySize === 'number' && partySize > 1) {
+            console.log('[MMR]', 'Party match detected', this.client.name)
+            isParty = true
+          }
+        }
 
-    const db = await mongo.db
-    const response = await db.collection('delayedGames').findOne(
-      { 'match.match_id': matchId },
-      {
-        projection: {
-          _id: 0,
-          'match.lobby_type': 1,
-        },
-      },
-    )
+        const db = await mongo.db
+        const response = await db.collection('delayedGames').findOne(
+          { 'match.match_id': matchId },
+          {
+            projection: {
+              _id: 0,
+              'match.lobby_type': 1,
+            },
+          },
+        )
 
-    // Default ranked
-    const lobbyType =
-      typeof response?.match?.lobby_type !== 'number' ? 7 : response.match.lobby_type
-    this.updateMMR(increase, lobbyType, matchId, isParty)
+        // Default ranked
+        const lobbyType =
+          typeof response?.match?.lobby_type !== 'number' ? 7 : response.match.lobby_type
+        this.updateMMR(increase, lobbyType, matchId, isParty)
+
+        this.updateMMR(increase, lobbyType, matchId, isParty)
+      })
+      .catch((e: any) => {
+        console.log(e, 'ERROR handling mmr lookup')
+
+        let lobbyType = 7
+        // Force update when an error occurs and just let mods take care of the discrepancy
+        if (
+          e?.response?.data?.result?.error ===
+          'Practice matches are not available via GetMatchDetails'
+        ) {
+          lobbyType = 1
+        }
+
+        this.updateMMR(increase, lobbyType, matchId)
+
+        console.log('[MMR]', 'Error fetching match details', {
+          matchId,
+          channel: this.getChannel(),
+          error: e?.response?.data,
+        })
+      })
   }
 
   // TODO: CRON Job
