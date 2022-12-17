@@ -114,7 +114,6 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
 
 class D2GSI {
   app: express.Application
-  events: EventEmitter
   io: Server
   httpServer: http.Server
   dota: Dota
@@ -178,7 +177,6 @@ class D2GSI {
       void socket.join(client.token)
     })
 
-    this.events = events
     this.app = app
     this.httpServer = httpServer
     this.io = io
