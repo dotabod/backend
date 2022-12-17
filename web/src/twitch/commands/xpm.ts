@@ -14,11 +14,14 @@ commandHandler.registerCommand('xpm', {
     if (!getValueOrDefault(DBSettings.commandXPM, client.settings)) {
       return
     }
-    if (!client.gsi?.hero?.name || !isPlayingMatch(client.gsi)) {
+    if (!client.gsi?.hero?.name) {
+      void chatClient.say(channel, 'Hero not found')
+      return
+    }
+    if (!isPlayingMatch(client.gsi)) {
       void chatClient.say(channel, 'Not playing PauseChamp')
       return
     }
-
     const xpm = client.gsi.player?.xpm
 
     if (!xpm) {

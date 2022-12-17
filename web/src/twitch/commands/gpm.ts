@@ -15,7 +15,11 @@ commandHandler.registerCommand('gpm', {
       return
     }
 
-    if (!client.gsi?.hero?.name || !isPlayingMatch(client.gsi)) {
+    if (!client.gsi?.hero?.name) {
+      void chatClient.say(channel, 'No hero found')
+      return
+    }
+    if (!isPlayingMatch(client.gsi)) {
       void chatClient.say(channel, 'Not playing PauseChamp')
       return
     }
