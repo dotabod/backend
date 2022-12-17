@@ -470,8 +470,16 @@ export class setupMainEvents {
       return
     }
 
-    // Do lookup at Opendota API for this match and figure out lobby type
-    // TODO: Party size mmr
+    // Opendota API for this match to figure out party size
+    const opendotaMatch = await axios(`https://api.opendota.com/api/matches/${matchId}`)
+    let isParty = false
+    if (Array.isArray(opendotaMatch.data?.players) && typeof heroSlot === 'number') {
+      const partySize = opendotaMatch.data?.players[heroSlot]?.party_size
+      if (typeof partySize === 'number' && partySize > 1) {
+        console.log('[MMR]', 'Party match detected', this.client.name)
+        isParty = true
+      }
+    }
 
     const db = await mongo.db
     const response = await db.collection('delayedGames').findOne(
@@ -487,7 +495,7 @@ export class setupMainEvents {
     // Default ranked
     const lobbyType =
       typeof response?.match?.lobby_type !== 'number' ? 7 : response.match.lobby_type
-    this.updateMMR(increase, lobbyType, matchId)
+    this.updateMMR(increase, lobbyType, matchId, isParty)
   }
 
   // TODO: CRON Job
