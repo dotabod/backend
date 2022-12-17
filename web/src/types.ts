@@ -45,6 +45,8 @@ export interface MapData {
 }
 
 export interface Player {
+  team2?: { player0: Player; player1: Player; player2: Player; player3: Player; player4: Player }
+  team3?: { player5: Player; player6: Player; player7: Player; player8: Player; player9: Player }
   steamid: string // "76561198352664103",
   accountid: string //  "392398375",
   name: string // "Valhalla",
@@ -85,6 +87,8 @@ export interface Player {
 }
 
 export interface Hero {
+  team2?: { player0: Hero; player1: Hero; player2: Hero; player3: Hero; player4: Hero }
+  team3?: { player5: Hero; player6: Hero; player7: Hero; player8: Hero; player9: Hero }
   id: number // -1 if hero not yet set
   name?: HeroNames // e.g. 'npc_dota_hero_antimage' once set
   xpos?: number // -5422,

@@ -12,28 +12,44 @@ export interface Player {
   heroid: number
 }
 
-export async function notablePlayers(matchId?: string): Promise<string> {
+export async function notablePlayers(
+  matchId?: string,
+  players?: { heroid?: number; accountid?: number }[],
+): Promise<string> {
   const db = await mongo.db
 
   if (!matchId) throw new CustomError("Game wasn't found")
-  const response = await db.collection('delayedGames').findOne({ 'match.match_id': matchId })
-  if (!response) throw new CustomError("Game wasn't found")
+  const response =
+    !players?.length && (await db.collection('delayedGames').findOne({ 'match.match_id': matchId }))
+  if (!response && !players?.length) throw new CustomError("Game wasn't found")
 
-  const matchPlayers = [
-    ...response.teams[0].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
-    ...response.teams[1].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
-  ]
+  const matchPlayers = players?.length
+    ? players
+    : response
+    ? [
+        ...response.teams[0].players.map((a: any) => ({
+          heroid: a.heroid,
+          accountid: a.accountid,
+        })),
+        ...response.teams[1].players.map((a: any) => ({
+          heroid: a.heroid,
+          accountid: a.accountid,
+        })),
+      ]
+    : []
 
-  const mode = await db
-    .collection('gameModes')
-    .findOne({ id: response.match.game_mode }, { projection: { _id: 0, name: 1 } })
+  const mode = response
+    ? await db
+        .collection('gameModes')
+        .findOne({ id: response.match.game_mode }, { projection: { _id: 0, name: 1 } })
+    : { name: null }
 
   const nps = await db
     .collection('notablePlayers')
     .find(
       {
         account_id: {
-          $in: matchPlayers.map((player: Player) => player.accountid),
+          $in: matchPlayers.map((player: Player) => Number(player.accountid)),
         },
       },
       {
@@ -59,12 +75,13 @@ export async function notablePlayers(matchId?: string): Promise<string> {
     }
   })
 
-  const players = result
+  const playerList = result
     .map((m) => {
       const country: string = m.country_code ? `${countryCodeEmoji(m.country_code) as string} ` : ''
       return `${country}${m.name} (${m.heroName})`
     })
     .join(' · ')
 
-  return `${mode?.name}: ${players || 'No notable players'}`
+  const modeText = typeof mode?.name === 'string' ? `${mode.name}: ` : ''
+  return `${modeText}${playerList || 'No notable players'}`
 }

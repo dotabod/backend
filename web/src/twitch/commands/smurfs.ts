@@ -1,4 +1,5 @@
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { smurfs } from '../../steam/smurfs.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
@@ -19,7 +20,7 @@ commandHandler.registerCommand('smurfs', {
       void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')
       return
     }
-    smurfs(message.channel.client.gsi?.map?.matchid)
+    smurfs(message.channel.client.gsi?.map?.matchid, getCurrentMatchPlayers(client.gsi))
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })

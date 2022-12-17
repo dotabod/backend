@@ -1,4 +1,5 @@
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { gameMedals } from '../../steam/medals.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
@@ -18,7 +19,7 @@ commandHandler.registerCommand('gm', {
       void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')
       return
     }
-    gameMedals(message.channel.client.gsi?.map?.matchid)
+    gameMedals(message.channel.client.gsi?.map?.matchid, getCurrentMatchPlayers(client.gsi))
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })

@@ -7,17 +7,31 @@ import Dota from './index.js'
 const dota = Dota.getInstance()
 const mongo = Mongo.getInstance()
 
-export async function smurfs(matchId?: string): Promise<string> {
+export async function smurfs(
+  matchId?: string,
+  players?: { heroid?: number; accountid?: number }[],
+): Promise<string> {
   const db = await mongo.db
 
   if (!matchId) throw new CustomError("Game wasn't found")
-  const response = await db.collection('delayedGames').findOne({ 'match.match_id': matchId })
-  if (!response) throw new CustomError("Game wasn't found")
+  const response =
+    !players?.length && (await db.collection('delayedGames').findOne({ 'match.match_id': matchId }))
+  if (!response && !players?.length) throw new CustomError("Game wasn't found")
 
-  const matchPlayers = [
-    ...response.teams[0].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
-    ...response.teams[1].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
-  ]
+  const matchPlayers = players?.length
+    ? players
+    : response
+    ? [
+        ...response.teams[0].players.map((a: any) => ({
+          heroid: a.heroid,
+          accountid: a.accountid,
+        })),
+        ...response.teams[1].players.map((a: any) => ({
+          heroid: a.heroid,
+          accountid: a.accountid,
+        })),
+      ]
+    : []
 
   const cards = await dota.getCards(
     matchPlayers.map((player: { accountid: number }) => player.accountid),

@@ -1,4 +1,5 @@
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
@@ -14,12 +15,14 @@ commandHandler.registerCommand('np', {
     if (!getValueOrDefault(DBSettings.commandNP, client.settings)) {
       return
     }
-    if (!message.channel.client.steam32Id) {
+
+    if (!client.steam32Id) {
       void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')
       return
     }
 
-    notablePlayers(message.channel.client.gsi?.map?.matchid)
+    const matchPlayers = getCurrentMatchPlayers(client.gsi)
+    notablePlayers(client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })
