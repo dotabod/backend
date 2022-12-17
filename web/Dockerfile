@@ -1,19 +1,20 @@
 ##########
 ## DEPS ##
 ##########
-FROM node:slim AS deps
+FROM node:16.2.0-alpine AS deps
+
+RUN apk add yarn git
 
 WORKDIR /app
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 COPY prisma ./prisma
 
-RUN apt-get update && apt-get install yarn git make g++ -y
 RUN yarn --frozen-lockfile
 
 #############
 ## BUILDER ##
 #############
-FROM node:slim AS builder
+FROM node:16.2.0-alpine AS builder
 
 WORKDIR /app
 
@@ -26,7 +27,7 @@ RUN yarn build
 ############
 ## RUNNER ##
 ############
-FROM node:slim AS prod
+FROM node:16.2.0-alpine AS prod
 
 WORKDIR /app
 
