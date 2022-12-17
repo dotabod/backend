@@ -15,19 +15,19 @@ CHECK  := `/usr/bin/printf "\xE2\x9C\x94"`
 
 # Lints Web source code
 test: build
-    @docker compose -f {{dockerfile}} run web yarn lint
+    @docker-compose -f {{dockerfile}} run web yarn lint
     @echo -e " {{GREEN}}{{CHECK}} All tests passed! {{CHECK}} {{RESET}}"
 
 # Stops all containers
 down:
-    @docker compose -f {{dockerfile}} down
+    @docker-compose -f {{dockerfile}} down
 
 # Builds all images
 build:
-    @docker compose -f {{dockerfile}} build
+    @docker-compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
 
 # Builds and starts images
 up: build
-    @docker compose -f {{dockerfile}} up -d
+    @docker-compose -f {{dockerfile}} up -d
 
