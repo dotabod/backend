@@ -1,6 +1,6 @@
 import commandHandler, { MessageType } from './CommandHandler.js'
 
-import { chatClient } from './index.js'
+import { chatClient } from '../index.js'
 
 commandHandler.registerCommand('match', {
   aliases: ['matchid'],
@@ -10,7 +10,7 @@ commandHandler.registerCommand('match', {
     const {
       channel: { name: channel, client },
     } = message
-    const matchid = client.gsi?.gamestate?.map?.matchid
+    const matchid = client.gsi?.map?.matchid
 
     if (!matchid) {
       void chatClient.say(channel, 'Match ID: Unknown')

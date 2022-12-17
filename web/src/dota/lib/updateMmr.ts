@@ -1,11 +1,20 @@
-import { toUserName } from '@twurple/chat'
-
 import { prisma } from '../../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
-import { chatClient } from '../../twitch/commands/index.js'
-import { server } from '../index.js'
-import { findUserByName } from './connectedStreamers.js'
-import { getRankDetail } from './ranks.js'
+import { chatClient } from '../../twitch/index.js'
+import findUser from './connectedStreamers.js'
+
+export function tellChatNewMMR(token: string, mmr: number) {
+  const client = findUser(token)
+  if (!client) return
+  const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
+  const oldMmr = client.mmr
+  if (mmrEnabled && mmr - oldMmr !== 0) {
+    void chatClient.say(
+      client.name,
+      `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
+    )
+  }
+}
 
 export function updateMmr(
   newMmr: string | number,
@@ -51,40 +60,6 @@ export function updateMmr(
           },
         },
       })
-      .then(() => {
-        const client = findUserByName(toUserName(channel))
-
-        if (client) {
-          const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
-
-          let oldMmr = client.mmr
-          client.mmr = mmr
-          const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === steam32Id)
-          if (currentSteam >= 0) {
-            oldMmr = client.SteamAccount[currentSteam].mmr
-            client.SteamAccount[currentSteam].mmr = mmr
-          }
-
-          if (mmrEnabled)
-            void chatClient.say(
-              channel,
-              `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
-            )
-
-          if (client.sockets.length) {
-            console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
-            getRankDetail(mmr, client.steam32Id)
-              .then((deets) => {
-                server.io.to(client.sockets).emit('update-medal', deets)
-              })
-              .catch((e) => {
-                console.error('[MMR] !mmr= Error getting rank detail', e)
-              })
-          } else {
-            console.log('[UPDATE MMR] No sockets found to send update to', channel)
-          }
-        }
-      })
       .catch((e) => {
         console.log('[UPDATE MMR]', 'Error updating user table', { channel, e })
       })
@@ -105,40 +80,6 @@ export function updateMmr(
       where: {
         steam32Id,
       },
-    })
-    .then(() => {
-      const client = findUserByName(toUserName(channel))
-
-      if (client) {
-        const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
-
-        let oldMmr = client.mmr
-        client.mmr = mmr
-        const currentSteam = client.SteamAccount.findIndex((s) => s.steam32Id === steam32Id)
-        if (currentSteam >= 0) {
-          oldMmr = client.SteamAccount[currentSteam].mmr
-          client.SteamAccount[currentSteam].mmr = mmr
-        }
-
-        if (mmrEnabled)
-          void chatClient.say(
-            channel,
-            `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
-          )
-
-        if (client.sockets.length) {
-          console.log('[UPDATE MMR] Sending mmr to socket', client.mmr, client.sockets, channel)
-          getRankDetail(mmr, client.steam32Id)
-            .then((deets) => {
-              server.io.to(client.sockets).emit('update-medal', deets)
-            })
-            .catch((e) => {
-              console.error('[MMR] !mmr= Error getting rank detail', e)
-            })
-        } else {
-          console.log('[UPDATE MMR] No sockets found to send update to', channel)
-        }
-      }
     })
     .catch((e) => {
       console.log('[UPDATE MMR]', 'Error updating account table', { channel, e })

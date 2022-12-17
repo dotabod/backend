@@ -7,53 +7,15 @@ import { Server, Socket } from 'socket.io'
 
 import getDBUser, { invalidTokens } from '../db/getDBUser.js'
 import Dota from '../steam/index.js'
-import { GSIClient } from './GSIClient.js'
 import findUser from './lib/connectedStreamers.js'
-import { gsiClients } from './lib/consts.js'
-
-declare module 'express-serve-static-core' {
-  interface Request {
-    client: GSIClient
-  }
-}
+import { blockCache } from './events.js'
 
 export const events = new EventEmitter()
+const pendingCheckAuth = new Set<string>()
 
-function checkClient(req: Request, res: Response, next: NextFunction) {
-  let localUser = gsiClients.find((client) => client.token === req.body.auth.token)
-  if (localUser) {
-    // in the event socket connects after gsi
-    // calling this will add it to the socket
-    // findUser(req.body.auth.token)
-    // console.log('[GSI]',`Adding new userGSI for IP: ${req.ip}`)
-    req.client = localUser
-    req.client.gamestate = req.body
-
-    next()
-    return
-  }
-
-  localUser = new GSIClient(req.ip, req.body.auth)
-  req.client = localUser
-  req.client.gamestate = req.body
-  gsiClients.push(localUser)
-
-  const usr = findUser(localUser.token)
-  if (usr) {
-    usr.gsi = localUser
-  }
-
-  events.emit('new-gsi-client', localUser)
-  next()
-}
-
-function emitAll(
-  prefix: string,
-  obj: Record<string, any>,
-  emitter: { emit: (arg0: string, arg1: any) => void },
-) {
+function emitAll(prefix: string, obj: Record<string, any>, token: string) {
   Object.keys(obj).forEach((key) => {
-    emitter.emit(prefix + key, obj[key])
+    events.emit(`${token}:${prefix + key}`, obj[key])
   })
 }
 
@@ -61,13 +23,13 @@ function recursiveEmit(
   prefix: string,
   changed: Record<string, any>,
   body: Record<string, any>,
-  emitter: { emit: (arg0: string, arg1: any) => void },
+  token: string,
 ) {
   Object.keys(changed).forEach((key) => {
     if (typeof changed[key] === 'object') {
       if (body[key] != null) {
         // safety check
-        recursiveEmit(`${prefix + key}:`, changed[key], body[key], emitter)
+        recursiveEmit(`${prefix + key}:`, changed[key], body[key], token)
       }
     } else {
       // Got a key
@@ -75,9 +37,9 @@ function recursiveEmit(
         if (typeof body[key] === 'object') {
           // Edge case on added:item/ability:x where added shows true at the top level
           // and doesn't contain each of the child keys
-          emitAll(`${prefix + key}:`, body[key], emitter)
+          emitAll(`${prefix + key}:`, body[key], token)
         } else {
-          emitter.emit(prefix + key, body[key])
+          events.emit(`${token}:${prefix + key}`, body[key])
         }
       }
     }
@@ -87,25 +49,23 @@ function recursiveEmit(
 function processChanges(section: string) {
   return function handle(req: Request, res: Response, next: NextFunction) {
     if (req.body[section]) {
-      recursiveEmit('', req.body[section], req.body, req.client)
+      const token = req.body.auth.token as string
+      recursiveEmit('', req.body[section], req.body, token)
     }
     next()
   }
 }
 
-function updateGameState(req: Request, res: Response, next: NextFunction) {
-  req.client.gamestate = req.body
-  next()
-}
-
 function newData(req: Request, res: Response) {
-  req.client.emit('newdata', req.body)
+  const token = req.body.auth.token as string
+  events.emit(`${token}:newdata`, req.body)
   res.end()
 }
 
 function checkAuth(req: Request, res: Response, next: NextFunction) {
   // Sent from dota gsi config file
-  const token = req.body?.auth?.token
+  const token = req.body.auth.token as string | undefined
+
   if (invalidTokens.has(token)) {
     res.status(401).send('Invalid token, skipping auth check')
     return
@@ -120,18 +80,35 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
     return
   }
 
+  if (pendingCheckAuth.has(token)) {
+    res.status(401).send('Still validating token, skipping requests until auth')
+    return
+  }
+
+  pendingCheckAuth.add(token)
   getDBUser(token)
-    .then((user) => {
-      if (user?.token) {
+    .then((client) => {
+      if (client?.token) {
+        client.gsi = req.body
+        pendingCheckAuth.delete(token)
+
         next()
         return
       }
 
-      res.status(401).send('Invalid token')
+      pendingCheckAuth.delete(token)
+      next(new Error('authentication error'))
     })
     .catch((e) => {
-      console.log('[GSI]', 'Error checking auth', { token, e })
-      res.status(500).send('Error checking auth')
+      console.log('[GSI]', 'io.use Error checking auth', { token, e })
+      invalidTokens.add(token)
+      pendingCheckAuth.delete(token)
+      next(new Error('authentication error'))
+    })
+    // TODO: idk if finalyl runs when next() is called in a .then() earlier
+    // So adding the .deletes to .then and .catch until i figure that out lol
+    .finally(() => {
+      pendingCheckAuth.delete(token)
     })
 }
 
@@ -156,15 +133,7 @@ class D2GSI {
     app.use(bodyParser.json())
     app.use(bodyParser.urlencoded({ extended: true }))
 
-    app.post(
-      '/',
-      checkAuth,
-      checkClient,
-      updateGameState,
-      processChanges('previously'),
-      processChanges('added'),
-      newData,
-    )
+    app.post('/', checkAuth, processChanges('previously'), processChanges('added'), newData)
 
     // No main page
     app.get('/', (req: Request, res: Response) => {
@@ -184,7 +153,6 @@ class D2GSI {
       getDBUser(token)
         .then((client) => {
           if (client?.token) {
-            client.sockets.push(socket.id)
             next()
             return
           }
@@ -192,41 +160,22 @@ class D2GSI {
           next(new Error('authentication error'))
         })
         .catch((e) => {
-          console.log('[GSI]', 'Error checking auth', { token, e })
+          console.log('[GSI]', 'io.use Error checking auth', { token, e })
           next(new Error('authentication error'))
         })
     })
 
-    // Cleanup the memory cache of sockets when they disconnect
     io.on('connection', (socket: Socket) => {
       const { token } = socket.handshake.auth
+      // This triggers a resend of obs blockers
+      // TODO: should just send obs blockers regardless of blockcache somehow
+      blockCache.delete(token)
 
-      // Socket connected event, used to connect GSI to a socket
-      const connectedSocketClient = findUser(token)
-      events.emit('new-socket-client', {
-        client: connectedSocketClient,
-        socketId: socket.id,
-      })
+      const client = findUser(token)
+      if (!client?.token) return
 
-      socket.on('disconnect', () => {
-        if (connectedSocketClient) {
-          connectedSocketClient.sockets = connectedSocketClient.sockets.filter(
-            (socketid) => socketid !== socket.id,
-          )
-
-          // Let's also remove all the events we setup from the client for this socket
-          // That way a new socket will get the GSI events again
-          if (!connectedSocketClient.sockets.length) {
-            console.log(
-              '[GSI]',
-              'No more sockets connected, removing all events for',
-              connectedSocketClient.name,
-            )
-            // There's no socket connected so let's remove all GSI events
-            connectedSocketClient.gsi?.removeAllListeners()
-          }
-        }
-      })
+      // Their own personal room
+      void socket.join(client.token)
     })
 
     this.events = events

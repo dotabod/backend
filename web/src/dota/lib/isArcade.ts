@@ -1,8 +1,6 @@
-import { GSIClient } from '../GSIClient.js'
+import { Packet } from '../../types.js'
 
-export function isArcade(client: GSIClient) {
-  return (
-    client.gamestate?.map?.customgamename !== '' &&
-    client.gamestate?.map?.customgamename !== undefined
-  )
+export function isArcade(gsi?: Packet) {
+  if (!gsi) return false
+  return gsi.map?.customgamename !== '' && gsi.map?.customgamename !== undefined
 }

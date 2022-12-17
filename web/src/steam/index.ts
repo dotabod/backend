@@ -28,7 +28,7 @@ Dota2.Dota2Client.prototype.spectateFriendGame = function (
 ) {
   callback = callback || null
   if (!this._gcReady) {
-    console.log("GC not ready, please listen for the 'ready' event.")
+    console.log('[STEAM]', "GC not ready, please listen for the 'ready' event.")
     return null
   }
   // CMsgSpectateFriendGame
@@ -116,13 +116,13 @@ class Dota {
     this.steamClient.on('logOnResponse', (logonResp: { eresult: any }) => {
       // @ts-expect-error ???
       if (logonResp.eresult == Steam.EResult.OK) {
-        console.log('Logged on.')
+        console.log('[STEAM]', 'Logged on.')
 
         this.dota2.launch()
       } else {
         try {
           steamErrors(logonResp.eresult, (err: any, errorObject: any) => {
-            console.log(errorObject, err)
+            console.log('[STEAM]', errorObject, err)
           })
         } catch (e) {
           //
@@ -137,16 +137,16 @@ class Dota {
         // @ts-expect-error loggedOn is there i swear
         if (this.steamClient.loggedOn) this.dota2.launch()
       }, 30000)
-      console.log('hello time out!')
+      console.log('[STEAM]', 'hello time out!')
     })
     this.steamClient.on('loggedOff', (eresult: any) => {
       // @ts-expect-error connect is there i swear
       if (process.env.NODE_ENV === 'production') this.steamClient.connect()
-      console.log('Logged off from Steam.', eresult)
+      console.log('[STEAM]', 'Logged off from Steam.', eresult)
 
       try {
         steamErrors(eresult, (err: any, errorObject: any) => {
-          console.log(errorObject, err)
+          console.log('[STEAM]', errorObject, err)
         })
       } catch (e) {
         //
@@ -154,7 +154,7 @@ class Dota {
     })
 
     this.steamClient.on('error', (error: any) => {
-      console.log(`steam error`, error)
+      console.log('[STEAM]', `steam error`, error)
       if (process.env.NODE_ENV !== 'production') this.exit()
       // @ts-expect-error connect is there i swear
       if (process.env.NODE_ENV === 'production') this.steamClient.connect()
@@ -168,18 +168,18 @@ class Dota {
       (sentry: { bytes: crypto.BinaryLike }, callback: (arg0: { sha_file: Buffer }) => void) => {
         const hashedSentry = crypto.createHash('sha1').update(sentry.bytes).digest()
         fs.writeFileSync('./src/steam/volumes/sentry', hashedSentry)
-        console.log('sentryfile saved')
+        console.log('[STEAM]', 'sentryfile saved')
 
         callback({ sha_file: hashedSentry })
       },
     )
 
     this.dota2.on('ready', () => {
-      console.log('connected to dota game coordinator')
+      console.log('[STEAM]', 'connected to dota game coordinator')
     })
 
     this.dota2.on('unready', () => {
-      console.log('disconnected from dota game coordinator')
+      console.log('[STEAM]', 'disconnected from dota game coordinator')
     })
 
     // @ts-expect-error connect is there
@@ -200,7 +200,7 @@ class Dota {
       this.dota2.spectateFriendGame(
         { steam_id: this.dota2.ToSteamID(Number(steam32Id)) },
         (response: any, err: any) => {
-          console.log('response', response, err)
+          console.log('[STEAM]', 'response', response, err)
 
           resolveOuter(response?.server_steamid?.toString())
         },
@@ -220,7 +220,7 @@ class Dota {
     })
 
     operation.attempt((currentAttempt: number) => {
-      console.log('retrying ', currentAttempt)
+      console.log('[STEAM]', 'retrying ', currentAttempt)
       axios(
         `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steam_server_id}`,
       )
@@ -259,7 +259,7 @@ class Dota {
     })
 
     operation.attempt((currentAttempt: number) => {
-      console.log('retrying ', currentAttempt)
+      console.log('[STEAM]', 'retrying ', currentAttempt)
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return this.dota2.requestMatchDetails(Number(matchId), (err: any, body: any) => {
@@ -275,9 +275,9 @@ class Dota {
             }
           })
 
-          console.log('received match', matchId)
+          console.log('[STEAM]', 'received match', matchId)
         } else {
-          console.log(err, 'match not found')
+          console.log('[STEAM]', err, 'match not found')
           arr = new Error('Match not found')
         }
 
@@ -379,15 +379,15 @@ class Dota {
   public exit(): Promise<boolean> {
     return new Promise((resolve) => {
       clearInterval(this.interval)
-      console.log('Clearing getting matches interval')
+      console.log('[STEAM]', 'Clearing getting matches interval')
       this.dota2.exit()
-      console.log('Manually closed dota')
+      console.log('[STEAM]', 'Manually closed dota')
       // @ts-expect-error disconnect is there
       this.steamClient.disconnect()
-      console.log('Manually closed steam')
+      console.log('[STEAM]', 'Manually closed steam')
       this.steamClient.removeAllListeners()
       this.dota2.removeAllListeners()
-      console.log('Removed all listeners from dota and steam')
+      console.log('[STEAM]', 'Removed all listeners from dota and steam')
       resolve(true)
     })
   }
@@ -399,21 +399,21 @@ const dota = Dota.getInstance()
 
 process
   .on('SIGTERM', () => {
-    console.log('Received SIGTERM')
+    console.log('[STEAM]', 'Received SIGTERM')
 
     Promise.all([dota.exit()])
       .then(() => process.exit(0))
       .catch((e) => {
-        console.log(e)
+        console.log('[STEAM]', e)
       })
   })
   .on('SIGINT', () => {
-    console.log('Received SIGINT')
+    console.log('[STEAM]', 'Received SIGINT')
 
     Promise.all([dota.exit()])
       .then(() => process.exit(0))
       .catch((e) => {
-        console.log(e)
+        console.log('[STEAM]', e)
       })
   })
-  .on('uncaughtException', (e) => console.log('uncaughtException', e))
+  .on('uncaughtException', (e) => console.log('[STEAM]', 'uncaughtException', e))

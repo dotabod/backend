@@ -1,6 +1,6 @@
 import commandHandler, { MessageType } from './CommandHandler.js'
 
-import { chatClient } from './index.js'
+import { chatClient } from '../index.js'
 
 commandHandler.registerCommand('steam', {
   aliases: ['steamid', 'account'],

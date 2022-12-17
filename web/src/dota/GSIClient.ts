@@ -1,18 +1,17 @@
 import { EventEmitter } from 'events'
 
-import { Packet } from '../types.js'
+import { Packet, SocketClient } from '../types.js'
 
 export class GSIClient extends EventEmitter {
-  ip: string
-  auth: { token: string }
   token: string
   gamestate?: Packet
+  user?: SocketClient
 
-  constructor(ip: string, auth: { token: string }) {
+  constructor(gamestate: Packet, token: string, user: SocketClient) {
     super()
 
-    this.ip = ip
-    this.auth = auth
-    this.token = auth.token
+    this.gamestate = gamestate
+    this.token = token
+    this.user = user
   }
 }

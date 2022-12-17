@@ -1,10 +1,15 @@
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
-import { socketClients } from '../dota/lib/consts.js'
+import { gsiClients } from '../dota/lib/consts.js'
+import { events } from '../dota/server.js'
+import { SocketClient } from '../types.js'
 import { prisma } from './prisma.js'
 
 export const invalidTokens = new Set()
 
-export default async function getDBUser(token?: string, twitchId?: string) {
+export default async function getDBUser(
+  token?: string,
+  twitchId?: string,
+): Promise<SocketClient | null | undefined> {
   if (invalidTokens.has(token || twitchId)) return null
 
   // Cache check
@@ -66,16 +71,18 @@ export default async function getDBUser(token?: string, twitchId?: string) {
       const client = findUser(user.id)
       if (client) return client
 
-      const arrayLength = socketClients.push({
+      const theUser = {
         ...user,
-        mmr: user.mmr || user.SteamAccount[0]?.mmr,
-        steam32Id: user.steam32Id ?? user.SteamAccount[0]?.steam32Id,
+        mmr: user.mmr || user.SteamAccount[0]?.mmr || 0,
+        steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
         token: user.id,
-        // sockets[] to be filled in by socket connection, so will steamid
-        sockets: [],
-      })
+      }
 
-      return socketClients[arrayLength - 1]
+      gsiClients.push(theUser)
+
+      events.emit('new-gsi-client', token)
+
+      return theUser
     })
     .catch((e) => {
       console.log('[USER]', 'Error checking auth', { token, e })

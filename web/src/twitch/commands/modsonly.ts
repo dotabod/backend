@@ -1,7 +1,7 @@
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
 
-import { chatClient } from './index.js'
+import { chatClient } from '../index.js'
 
 export const modMode = new Set()
 

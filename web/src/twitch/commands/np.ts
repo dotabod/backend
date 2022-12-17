@@ -2,7 +2,7 @@ import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
 
-import { chatClient } from './index.js'
+import { chatClient } from '../index.js'
 
 commandHandler.registerCommand('np', {
   aliases: ['players', 'who'],
@@ -20,7 +20,7 @@ commandHandler.registerCommand('np', {
       return
     }
 
-    notablePlayers(message.channel.client.gsi?.gamestate?.map?.matchid)
+    notablePlayers(message.channel.client.gsi?.map?.matchid)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })
