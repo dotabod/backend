@@ -496,8 +496,6 @@ export class setupMainEvents {
         const lobbyType =
           typeof response?.match?.lobby_type !== 'number' ? 7 : response.match.lobby_type
         this.updateMMR(increase, lobbyType, matchId, isParty)
-
-        this.updateMMR(increase, lobbyType, matchId, isParty)
       })
       .catch((e: any) => {
         console.log(e, 'ERROR handling mmr lookup')
