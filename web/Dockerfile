@@ -1,15 +1,7 @@
-# change with the Node.js version of your choice
-ARG NODE_VERSION="18.12.1"
-
-# change with the Linux Alpine version of your choice
-ARG ALPINE_VERSION="3.17"
-
 ##########
 ## DEPS ##
 ##########
-FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS deps
-# install OpenSSL 1.1.x, needed for Linux Alpine 3.17+
-RUN apk update && apk add openssl1.1-compat
+FROM node:16.2.0-alpine AS deps
 
 RUN apk add yarn git
 
@@ -22,9 +14,7 @@ RUN yarn --frozen-lockfile
 #############
 ## BUILDER ##
 #############
-FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS builder
-# install OpenSSL 1.1.x, needed for Linux Alpine 3.17+
-RUN apk update && apk add openssl1.1-compat
+FROM node:16.2.0-alpine AS builder
 
 WORKDIR /app
 
@@ -37,9 +27,7 @@ RUN yarn build
 ############
 ## RUNNER ##
 ############
-FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS prod
-# install OpenSSL 1.1.x, needed for Linux Alpine 3.17+
-RUN apk update && apk add openssl1.1-compat
+FROM node:16.2.0-alpine AS prod
 
 WORKDIR /app
 
