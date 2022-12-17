@@ -1,7 +1,15 @@
+# change with the Node.js version of your choice
+ARG NODE_VERSION="18.12.1"
+
+# change with the Linux Alpine version of your choice
+ARG ALPINE_VERSION="3.17"
+
 ##########
 ## DEPS ##
 ##########
-FROM node:16.2.0-alpine AS deps
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS deps
+# install OpenSSL 1.1.x, needed for Linux Alpine 3.17+
+RUN apk update && apk add openssl1.1-compat
 
 RUN apk add yarn git
 
@@ -14,7 +22,9 @@ RUN yarn --frozen-lockfile
 #############
 ## BUILDER ##
 #############
-FROM node:16.2.0-alpine AS builder
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS builder
+# install OpenSSL 1.1.x, needed for Linux Alpine 3.17+
+RUN apk update && apk add openssl1.1-compat
 
 WORKDIR /app
 
@@ -27,7 +37,9 @@ RUN yarn build
 ############
 ## RUNNER ##
 ############
-FROM node:16.2.0-alpine AS prod
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS prod
+# install OpenSSL 1.1.x, needed for Linux Alpine 3.17+
+RUN apk update && apk add openssl1.1-compat
 
 WORKDIR /app
 
@@ -40,11 +52,10 @@ RUN mkdir -p ./src/steam/volumes
 
 CMD ["yarn", "start"]
 
-
 ###########
 ## DEBUG ##
 ###########
 FROM deps as dev
 
-COPY .eslintrc.json tsconfig.json ./
+COPY .eslintrc.cjs tsconfig.json ./
 CMD ["yarn", "dev"]
