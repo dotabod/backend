@@ -1,8 +1,7 @@
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
-import commandHandler, { MessageType } from './CommandHandler.js'
-
 import { chatClient } from '../index.js'
+import commandHandler, { MessageType } from './CommandHandler.js'
 
 commandHandler.registerCommand('np', {
   aliases: ['players', 'who'],

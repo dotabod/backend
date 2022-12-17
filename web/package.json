@@ -15,6 +15,7 @@
     "dev": "nodemon -L --ext ts ./src/index.ts",
     "postinstall": "prisma generate",
     "lint": "eslint --ext .ts ./src",
+    "prettier": "prettier --ext .ts ./src --write",
     "lint:fix": "npm run lint -- --fix"
   },
   "dependencies": {

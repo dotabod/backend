@@ -2,9 +2,8 @@ import { heroColors } from '../../dota/lib/heroes.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import Mongo from '../../steam/mongo.js'
 import CustomError from '../../utils/customError.js'
-import commandHandler, { MessageType } from './CommandHandler.js'
-
 import { chatClient } from '../index.js'
+import commandHandler, { MessageType } from './CommandHandler.js'
 
 const mongo = Mongo.getInstance()
 

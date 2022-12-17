@@ -1,8 +1,7 @@
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { smurfs } from '../../steam/smurfs.js'
-import commandHandler, { MessageType } from './CommandHandler.js'
-
 import { chatClient } from '../index.js'
+import commandHandler, { MessageType } from './CommandHandler.js'
 
 commandHandler.registerCommand('smurfs', {
   aliases: ['lifetimes', 'totals'],

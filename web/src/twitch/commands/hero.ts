@@ -2,9 +2,8 @@ import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import getHero from '../../dota/lib/getHero.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import axios from '../../utils/axios.js'
-import commandHandler, { MessageType } from './CommandHandler.js'
-
 import { chatClient } from '../index.js'
+import commandHandler, { MessageType } from './CommandHandler.js'
 
 commandHandler.registerCommand('hero', {
   aliases: [],
