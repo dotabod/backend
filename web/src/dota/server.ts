@@ -120,6 +120,7 @@ class D2GSI {
 
   constructor() {
     this.dota = Dota.getInstance()
+
     const app = express()
     const httpServer = http.createServer(app)
     const io = new Server(httpServer, {
@@ -131,8 +132,10 @@ class D2GSI {
 
     app.use(bodyParser.json())
     app.use(bodyParser.urlencoded({ extended: true }))
-
-    app.post('/', checkAuth, processChanges('previously'), processChanges('added'), newData)
+    this.dota.dota2.on('ready', () => {
+      console.log('[SERVER]', 'Connected to dota game coordinator')
+      app.post('/', checkAuth, processChanges('previously'), processChanges('added'), newData)
+    })
 
     // No main page
     app.get('/', (req: Request, res: Response) => {
