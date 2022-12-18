@@ -200,8 +200,6 @@ class Dota {
       this.dota2.spectateFriendGame(
         { steam_id: this.dota2.ToSteamID(Number(steam32Id)) },
         (response: any, err: any) => {
-          console.log('[STEAM]', 'response', response, err)
-
           resolveOuter(response?.server_steamid?.toString())
         },
       )

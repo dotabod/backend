@@ -2,6 +2,7 @@ import { HeroNames } from './dota/lib/getHero.js'
 
 export interface SocketClient {
   name: string
+  steamserverid?: string
   token: string
   steam32Id: number | null // currently connected steam id
   mmr: number // currently connected mmr

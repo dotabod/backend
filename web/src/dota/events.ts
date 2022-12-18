@@ -35,6 +35,8 @@ export class setupMainEvents {
   betExists: string | undefined | null = null
   betMyTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
   currentHero: string | undefined | null = null
+  savingSteamServerId = false
+  steamServerTries = 0
   endingBets = false
   openingBets = false
   events: DotaEvent[] = []
@@ -77,16 +79,19 @@ export class setupMainEvents {
   }
 
   // reset vars when a new match begins
-  private newMatchNewVars(resetBets = false) {
+  private resetClientState(resetBets = false) {
     console.log('newMatchNewVars', this.client.name)
     this.currentHero = null
     this.heroSlot = null
     this.events = []
     this.passiveMidas = { counter: 0 }
+    this.savingSteamServerId = false
+    this.steamServerTries = 0
 
     // Bet stuff should be closed by endBets()
     // This should mean an entire match is over
     if (resetBets) {
+      this.client.steamserverid = undefined
       this.endingBets = false
       this.openingBets = false
       this.betExists = null
@@ -100,11 +105,16 @@ export class setupMainEvents {
     }
   }
 
+  // Runs every gametick
   async saveMatchData() {
     if (!this.client.steam32Id || !this.client.gsi?.map?.matchid) return
+    if (!Number(this.client.gsi.map.matchid)) return
+    if (this.client.steamserverid) return
+    if (this.savingSteamServerId) return
 
+    this.savingSteamServerId = true
     try {
-      console.log('Start match data', this.client.name, this.client.gsi.map.matchid)
+      // console.log('Start match data', this.client.name, this.client.gsi.map.matchid)
 
       const db = await mongo.db
       let response = await db
@@ -112,13 +122,36 @@ export class setupMainEvents {
         .findOne({ 'match.match_id': this.client.gsi.map.matchid })
 
       if (!response) {
-        console.log(
-          'No match data for user, checking from steam',
-          this.client.name,
-          this.client.gsi.map.matchid,
-        )
+        // console.log(
+        //   'No match data for user, checking from steam',
+        //   this.client.name,
+        //   this.client.gsi.map.matchid,
+        // )
 
-        const steamserverid = await server.dota.getUserSteamServer(this.client.steam32Id)
+        const steamserverid = (await server.dota.getUserSteamServer(this.client.steam32Id)) as
+          | string
+          | undefined
+        if (!steamserverid) {
+          // 35 5s tries
+          // that's 3 minutes, should have full hero ids by then...right?
+          if (this.steamServerTries > 35) {
+            return
+          }
+          console.log(
+            'No match data found! Continue in 5s',
+            this.client.name,
+            this.client.gsi.map.matchid,
+          )
+          setTimeout(() => {
+            this.steamServerTries += 1
+            this.savingSteamServerId = false
+          }, 5000)
+          return
+        }
+
+        this.client.steamserverid = steamserverid
+        this.savingSteamServerId = false
+
         // @ts-expect-error asdf
         response = await server.dota.getDelayedMatchData(steamserverid)
         if (!response) {
@@ -144,6 +177,10 @@ export class setupMainEvents {
   }
 
   watchEvents() {
+    events.on(`${this.getToken()}:player:steamid`, (steamid: string) => {
+      this.updateSteam32Id()
+    })
+
     events.on(`${this.getToken()}:${DotaEventTypes.RoshanKilled}`, (event: DotaEvent) => {
       if (!isPlayingMatch(this.client.gsi)) return
 
@@ -209,6 +246,9 @@ export class setupMainEvents {
 
       if (!isPlayingMatch(this.client.gsi)) return
 
+      // Always runs but only until steam is found
+      void this.saveMatchData()
+
       // Can't just !this.heroSlot because it can be 0
       if (typeof this.heroSlot !== 'number') {
         const purchaser = this.client.gsi?.items?.teleport0?.purchaser
@@ -217,6 +257,7 @@ export class setupMainEvents {
           name: this.getChannel(),
         })
         this.heroSlot = purchaser
+        this.updateSteam32Id()
         void this.saveMatchData()
         return
       }
@@ -350,6 +391,8 @@ export class setupMainEvents {
 
   // Make sure user has a steam32Id saved in the database
   // This runs once per every match start
+  // the user may have a steam account saved, but not this one for this match
+  // so add to their list of steam accounts
   updateSteam32Id() {
     if (!this.client.gsi?.player?.steamid) return
 
@@ -557,12 +600,6 @@ export class setupMainEvents {
           this.betExists = this.client.gsi?.map?.matchid ?? null
           this.betMyTeam = this.client.gsi?.player?.team_name ?? null
         } else {
-          // Doing this here instead of on(player:steamid)
-          // it wasnt always called for some streamers when connecting to match
-          // the user may have a steam account saved, but not this one for this match
-          // so add to their list of steam accounts
-          this.updateSteam32Id()
-
           this.betExists = this.client.gsi?.map?.matchid ?? null
           this.betMyTeam = this.client.gsi?.player?.team_name ?? null
 
@@ -670,7 +707,7 @@ export class setupMainEvents {
           // its not over? just give up checking after this long
           // TODO: if its a close client & open client, mayb dont pass true here
           // confirm this scenario
-          this.newMatchNewVars(true)
+          this.resetClientState(true)
         })
 
       return
@@ -703,7 +740,7 @@ export class setupMainEvents {
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
     if (!betsEnabled) {
-      this.newMatchNewVars(true)
+      this.resetClientState(true)
       return
     }
 
@@ -757,7 +794,7 @@ export class setupMainEvents {
       })
       // Always
       .finally(() => {
-        this.newMatchNewVars(true)
+        this.resetClientState(true)
       })
   }
 
@@ -848,7 +885,7 @@ export class setupMainEvents {
     if (!hasValidBlocker && blockCache.has(this.getToken())) {
       blockCache.delete(this.getToken())
       server.io.to(this.getToken()).emit('block', { type: null })
-      this.newMatchNewVars()
+      this.resetClientState()
       return
     }
   }
