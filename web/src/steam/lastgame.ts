@@ -50,17 +50,18 @@ export default async function lastgame(steam32Id: number) {
     }
   }
 
-  if (!playersFromLastGame.length) {
-    return 'Not playing with anyone from last game'
+  let msg = 'Not playing with anyone from last game'
+  if (playersFromLastGame.length) {
+    msg = playersFromLastGame
+      .map(
+        (player, i) =>
+          `${getHeroNameById(player.current.heroid)} played as ${getHeroNameById(
+            player.old.heroid,
+            i,
+          )}`,
+      )
+      .join(' · ')
   }
 
-  return playersFromLastGame
-    .map(
-      (player, i) =>
-        `${getHeroNameById(player.current.heroid)} played as ${getHeroNameById(
-          player.old.heroid,
-          i,
-        )}`,
-    )
-    .join(' · ')
+  return `${msg}. Last game: https://www.dotabuff.com/matches/${oldGame.matchid as string}`
 }
