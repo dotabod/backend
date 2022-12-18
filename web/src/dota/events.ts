@@ -708,6 +708,14 @@ export class setupMainEvents {
         name: this.getChannel(),
       })
 
+      axios
+        .post(`https://api.opendota.com/api/request/${matchId}`)
+        .then((r) => {
+          console.log('mmr match request to opendota', r.data)
+        })
+        .catch((e) => {
+          console.log('Error mmr match request to opendota', e)
+        })
       // Check with opendota to see if the match is over
       axios(`https://api.opendota.com/api/matches/${matchId}`)
         .then((response: any) => {
