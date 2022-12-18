@@ -22,18 +22,15 @@ test: build
 down:
     @docker compose -f {{dockerfile}} down
 
-# Stops all containers
-restart:
-    git pull
-    @docker compose -f {{dockerfile}} down
-    @docker compose -f {{dockerfile}} up -d
-
 # Builds all images
 build:
     @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
 
 # Builds and starts images
-up: build
+up:
+    git pull
+    @docker compose -f {{dockerfile}} down
+    @docker compose -f {{dockerfile}} build
+    @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d
-
