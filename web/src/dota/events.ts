@@ -78,6 +78,7 @@ export class setupMainEvents {
 
   // reset vars when a new match begins
   private newMatchNewVars(resetBets = false) {
+    console.log('newMatchNewVars', this.client.name)
     this.currentHero = null
     this.heroSlot = null
     this.events = []
@@ -208,6 +209,18 @@ export class setupMainEvents {
 
       if (!isPlayingMatch(this.client.gsi)) return
 
+      // Can't just !this.heroSlot because it can be 0
+      if (typeof this.heroSlot !== 'number') {
+        const purchaser = this.client.gsi?.items?.teleport0?.purchaser
+        if (typeof purchaser !== 'number') return
+        console.log('[SLOT]', 'Found hero slot at', purchaser, {
+          name: this.getChannel(),
+        })
+        this.heroSlot = purchaser
+        void this.saveMatchData()
+        return
+      }
+
       // TODO: Move this to server.ts
       if (Array.isArray(data.events) && data.events.length) {
         data.events.forEach((event) => {
@@ -255,21 +268,6 @@ export class setupMainEvents {
       // Just spawned (ignores game start spawn)
       if (alive && this.client.gsi?.previously?.hero?.alive === false) {
         // console.log('Just spawned')
-      }
-    })
-
-    // Can use this to get hero slot when the hero first spawns at match start
-    events.on(`${this.getToken()}:items:teleport0:purchaser`, (purchaser: number) => {
-      if (!isPlayingMatch(this.client.gsi)) return
-
-      // Can't just !this.heroSlot because it can be 0
-      if (this.heroSlot === null) {
-        console.log('[SLOT]', 'Found hero slot at', purchaser, {
-          name: this.getChannel(),
-        })
-        this.heroSlot = purchaser
-        void this.saveMatchData()
-        return
       }
     })
 
@@ -455,12 +453,8 @@ export class setupMainEvents {
     }
   }
 
-  async handleMMR(
-    increase: boolean,
-    matchId: string,
-    lobby_type?: number,
-    heroSlot?: number | null,
-  ) {
+  handleMMR(increase: boolean, matchId: string, lobby_type?: number) {
+    const heroSlot = this.heroSlot
     if (lobby_type !== undefined) {
       console.log('[MMR]', 'lobby_type passed in from early dc', {
         lobby_type,
@@ -705,7 +699,7 @@ export class setupMainEvents {
 
     this.endingBets = true
     const channel = this.getChannel()
-    void this.handleMMR(won, matchId, lobby_type, this.heroSlot)
+    this.handleMMR(won, matchId, lobby_type)
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
     if (!betsEnabled) {
