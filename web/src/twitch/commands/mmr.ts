@@ -23,7 +23,7 @@ commandHandler.registerCommand('mmr', {
 
     const unknownMsg = `I don't know ${toUserName(
       channel,
-    )}'s MMR yet. Mods have to !setmmr 1234 or set it in dotabod dashboard.`
+    )}'s MMR yet. Mods have to !setmmr 1234 or set it in dotabod.com/dashboard/features`
 
     // Didn't have a new account made yet on the new steamaccount table
     if (!client.SteamAccount.length) {
@@ -42,18 +42,26 @@ commandHandler.registerCommand('mmr', {
       return
     }
 
+    const promises: Promise<string | void>[] = []
     client.SteamAccount.forEach((act) => {
-      getRankDescription(act.mmr, customMmr, act.steam32Id)
+      const prom = getRankDescription(act.mmr, customMmr, act.steam32Id)
         .then((description) => {
-          const say =
-            client.SteamAccount.length > 1 && act.name
-              ? `${act.name}: ${description ?? unknownMsg}`
-              : description ?? unknownMsg
-          void chatClient.say(channel, say)
+          let msg = act.name ? description ?? unknownMsg : ''
+          if (msg && client.SteamAccount.length > 1 && act.name) msg = `${act.name}: ${msg}`
+          return msg
         })
         .catch((e) => {
           console.log('[MMR] Failed to get rank description', e, channel)
         })
+      promises.push(prom)
     })
+
+    Promise.all(promises)
+      .then((messages) => {
+        void chatClient.say(channel, messages.join(' · ') || unknownMsg)
+      })
+      .catch((e) => {
+        //
+      })
   },
 })

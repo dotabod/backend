@@ -7,7 +7,7 @@ export function tellChatNewMMR(token: string, mmr: number, oldMmr: number) {
   const client = findUser(token)
   if (!client) return
   const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
-  if (mmrEnabled && mmr - oldMmr !== 0) {
+  if (mmrEnabled && mmr - oldMmr !== 0 && mmr !== 0) {
     void chatClient.say(
       client.name,
       `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
