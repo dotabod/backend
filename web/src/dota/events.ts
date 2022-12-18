@@ -509,7 +509,7 @@ export class setupMainEvents {
     axios
       .post(`https://api.opendota.com/api/request/${matchId}`)
       .then((r) => {
-        console.log('mmr match request to opendota', r)
+        console.log('mmr match request to opendota', r?.data)
       })
       .catch((e) => {
         console.log('Error mmr match request to opendota', e)

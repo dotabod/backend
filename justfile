@@ -22,6 +22,11 @@ test: build
 down:
     @docker compose -f {{dockerfile}} down
 
+# Stops all containers
+restart:
+    @docker compose -f {{dockerfile}} down
+    @docker compose -f {{dockerfile}} up -d
+
 # Builds all images
 build:
     @docker compose -f {{dockerfile}} build
