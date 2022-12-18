@@ -535,7 +535,7 @@ export class setupMainEvents {
         this.updateMMR(increase, lobbyType, matchId, isParty)
       })
       .catch((e: any) => {
-        console.log(e, 'ERROR handling mmr lookup')
+        console.log(e?.data, 'ERROR handling mmr lookup')
 
         let lobbyType = 7
         // Force update when an error occurs and just let mods take care of the discrepancy
