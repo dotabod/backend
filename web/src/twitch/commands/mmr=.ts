@@ -35,7 +35,7 @@ commandHandler.registerCommand('mmr=', {
             if (!steam32Id) {
               void chatClient.say(
                 channel,
-                `Multiple steam accounts linked to channel. Please specify steam32Id. !mmr= ${mmr} id_goes_here`,
+                `Multiple accounts linked to channel. Please specify steam32Id. !setmmr ${mmr} id`,
               )
             }
           }
@@ -45,7 +45,7 @@ commandHandler.registerCommand('mmr=', {
           updateMmr(mmr, Number(steam32Id), channel, channelId)
         })
     } else if (!Number(steam32Id)) {
-      void chatClient.say(channel, `Invalid steam32Id specified. !mmr= ${mmr} id_goes_here`)
+      void chatClient.say(channel, `Invalid steam32Id specified. !setmmr ${mmr} id`)
       return
     } else {
       updateMmr(mmr, Number(steam32Id), channel, channelId)

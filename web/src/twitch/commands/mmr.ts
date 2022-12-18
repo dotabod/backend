@@ -23,7 +23,7 @@ commandHandler.registerCommand('mmr', {
 
     const unknownMsg = `I don't know ${toUserName(
       channel,
-    )}'s MMR yet. Mods have to !mmr= 1234 or set it in dotabod dashboard.`
+    )}'s MMR yet. Mods have to !setmmr 1234 or set it in dotabod dashboard.`
 
     // Didn't have a new account made yet on the new steamaccount table
     if (!client.SteamAccount.length) {
