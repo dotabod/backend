@@ -138,7 +138,8 @@ export class setupMainEvents {
             return
           }
           console.log(
-            'No match data found! Continue in 5s',
+            'Retry steamserverid',
+            this.steamServerTries,
             this.client.name,
             this.client.gsi.map.matchid,
           )
@@ -211,7 +212,6 @@ export class setupMainEvents {
 
       this.roshanKilled = res
       server.io.to(this.getToken()).emit('roshan-killed', res)
-      console.log('[ROSHAN]', 'Roshan killed, setting timer', res, { name: this.getChannel() })
     })
 
     events.on(`${this.getToken()}:${DotaEventTypes.AegisPickedUp}`, (event: DotaEvent) => {
@@ -236,7 +236,6 @@ export class setupMainEvents {
       this.aegisPickedUp = res
 
       server.io.to(this.getToken()).emit('aegis-picked-up', res)
-      console.log('[ROSHAN]', 'Aegis picked up, setting timer', res, { name: this.getChannel() })
     })
 
     // Catch all
@@ -507,6 +506,15 @@ export class setupMainEvents {
       return
     }
 
+    axios
+      .post(`https://api.opendota.com/api/request/${matchId}`)
+      .then((r) => {
+        console.log('mmr match request to opendota', r)
+      })
+      .catch((e) => {
+        console.log('Error mmr match request to opendota', e)
+      })
+
     axios(`https://api.opendota.com/api/matches/${matchId}`)
       .then(async (opendotaMatch: any) => {
         let isParty = false
@@ -535,7 +543,7 @@ export class setupMainEvents {
         this.updateMMR(increase, lobbyType, matchId, isParty)
       })
       .catch((e: any) => {
-        console.log(e?.data, 'ERROR handling mmr lookup')
+        console.log(e?.data, 'ERROR handling mmr lookup', this.client.name)
 
         let lobbyType = 7
         // Force update when an error occurs and just let mods take care of the discrepancy
