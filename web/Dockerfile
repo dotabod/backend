@@ -34,6 +34,7 @@ WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./
 COPY --from=deps /app/package.json ./
+COPY --from=deps /prisma .
 COPY --from=builder /app/tsconfig.json ./
 
 RUN mkdir -p ./src/steam/volumes
