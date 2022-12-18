@@ -1,0 +1,269 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/mongoclient"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGO_URL")
+}
+
+type CardsFavoriteTeamPacked {
+  high     Int
+  low      Int
+  unsigned Boolean
+}
+
+type CardsLobbyId {
+  high     Int
+  low      Int
+  unsigned Boolean
+}
+
+type CardsRecentBattleCupVictory {
+  account_id    Int
+  division_id   Int
+  skill_level   Int
+  streak        Int
+  team_id       Int
+  tournament_id Int
+  trophy_id     Int
+  valid_until   Int
+  win_date      Int
+}
+
+type CardsSlots {
+  /// Could not determine type: the field only had null or empty values in the sample set.
+  emoticon Json?
+  hero     CardsSlotsHero?
+  item     CardsSlotsItem?
+  slot_id  Int
+  stat     CardsSlotsStat?
+  team     CardsSlotsTeam?
+  trophy   CardsSlotsTrophy?
+}
+
+type CardsSlotsHero {
+  hero_id     Int
+  hero_losses Int?
+  hero_wins   Int?
+}
+
+type CardsSlotsItem {
+  item_id         CardsSlotsItemItemId
+  serialized_item CardsSlotsItemSerializedItem
+}
+
+type CardsSlotsItemItemId {
+  high     Int
+  low      Int
+  unsigned Boolean
+}
+
+type CardsSlotsItemSerializedItem {
+  buffer       Bytes
+  limit        Int
+  littleEndian Boolean
+  markedOffset Int
+  noAssert     Boolean
+  offset       Int
+  /// Could not determine type: the field only had null or empty values in the sample set.
+  writeBytes   Json?
+}
+
+type CardsSlotsStat {
+  stat_id    Int
+  stat_score Int
+}
+
+type CardsSlotsTeam {
+  team_id Int
+}
+
+type CardsSlotsTrophy {
+  trophy_id    Int
+  trophy_score Int
+}
+
+type DelayedGamesBuildings {
+  destroyed Boolean
+  /// Multiple data types found: Float: 80.4%, Int: 19.6% out of 35334 sampled entries
+  heading   Json
+  lane      Int
+  team      Int
+  tier      Int
+  type      Int
+  /// Multiple data types found: Float: 99.6%, Int: 0.4% out of 35334 sampled entries
+  x         Json
+  /// Multiple data types found: Float: 99.6%, Int: 0.4% out of 35334 sampled entries
+  y         Json
+}
+
+type DelayedGamesGraphData {
+  graph_gold Int[]
+}
+
+type DelayedGamesMatch {
+  bans            DelayedGamesMatchBans[]
+  game_mode       Int
+  game_state      Int
+  game_time       Int
+  league_id       Int
+  league_node_id  Int
+  lobby_type      Int
+  match_id        String
+  picks           DelayedGamesMatchPicks[]
+  server_steam_id String
+  start_timestamp Int
+  timestamp       Int
+}
+
+type DelayedGamesMatchBans {
+  hero Int
+  team Int
+}
+
+type DelayedGamesMatchPicks {
+  hero Int
+  team Int
+}
+
+type DelayedGamesTeams {
+  net_worth     Int
+  players       DelayedGamesTeamsPlayers[]
+  score         Int
+  team_id       Int
+  team_logo     String
+  team_logo_url String
+  team_name     String
+  team_number   Int
+  team_tag      String
+}
+
+type DelayedGamesTeamsPlayers {
+  abilities     Int[]
+  accountid     Int
+  assists_count Int
+  death_count   Int
+  denies_count  Int
+  gold          Int
+  heroid        Int
+  items         Int[]
+  kill_count    Int
+  level         Int
+  lh_count      Int
+  name          String
+  net_worth     Int
+  playerid      Int
+  team          Int
+  /// Multiple data types found: Float: 98.2%, Int: 1.8% out of 9949 sampled entries
+  x             Json
+  /// Multiple data types found: Float: 98.2%, Int: 1.8% out of 9949 sampled entries
+  y             Json
+}
+
+model cards {
+  id                        String                       @id @default(auto()) @map("_id") @db.ObjectId
+  account_id                Int?
+  badge_points              Int?
+  createdAt                 DateTime                     @db.Date
+  event_id                  Int?
+  event_points              Int?
+  favorite_team_packed      CardsFavoriteTeamPacked?
+  id_                       Int                          @map("id")
+  is_plus_subscriber        Boolean?
+  leaderboard_rank          Int
+  /// Could not determine type: the field only had null or empty values in the sample set.
+  leaderboard_rank_core     Json?
+  lifetime_games            Int?
+  lobby_id                  CardsLobbyId?
+  plus_original_start_date  Int?
+  previous_rank_tier        Int?
+  rank_tier                 Int
+  /// Could not determine type: the field only had null or empty values in the sample set.
+  rank_tier_mmr_type        Json?
+  rank_tier_peak            Int?
+  /// Could not determine type: the field only had null or empty values in the sample set.
+  rank_tier_score           Json?
+  recent_battle_cup_victory CardsRecentBattleCupVictory?
+  slots                     CardsSlots[]
+  title                     Int?
+
+  @@index([id, lobby_id(sort: Desc)], map: "id_1_lobby_id_-1")
+}
+
+model delayedGames {
+  id          String                  @id @default(auto()) @map("_id") @db.ObjectId
+  buildings   DelayedGamesBuildings[]
+  createdAt   DateTime                @db.Date
+  delta_frame Boolean?
+  graph_data  DelayedGamesGraphData
+  match       DelayedGamesMatch
+  matchid     String
+  teams       DelayedGamesTeams[]
+
+  @@index([match.match_id], map: "match.match_id_1")
+  @@index([teams.players.accountid], map: "teams.players.accountid_1")
+  @@index([createdAt(sort: Desc)], map: "createdAt_-1")
+}
+
+model gameModes {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  id_  Int    @map("id")
+  name String
+
+  @@index([id], map: "id_1")
+}
+
+model heroes {
+  id             String @id @default(auto()) @map("_id") @db.ObjectId
+  id_            Int    @map("id")
+  localized_name String
+  /// Field referred in an index, but found no data to define the type.
+  custom         Json?
+
+  @@index([id], map: "id_1")
+  @@index([custom, localized_name], map: "custom_1_localized_name_1")
+}
+
+model medals {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  rank_tier Int
+
+  @@index([rank_tier], map: "rank_tier_1")
+}
+
+model notablePlayers {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  account_id        Int
+  avatar            String
+  avatarfull        String
+  avatarmedium      String
+  cheese            Int
+  country_code      String
+  fantasy_role      Int
+  fh_unavailable    Boolean?
+  full_history_time String?
+  is_locked         Boolean
+  is_pro            Boolean
+  last_login        String?
+  last_match_time   String
+  loccountrycode    String?
+  /// Could not determine type: the field only had null or empty values in the sample set.
+  locked_until      Json?
+  name              String
+  personaname       String
+  plus              Boolean?
+  profileurl        String
+  steamid           String
+  team_id           Int
+  team_name         String?
+  team_tag          String?
+  /// Field referred in an index, but found no data to define the type.
+  channel           Json?
+  /// Field referred in an index, but found no data to define the type.
+  enabled           Json?
+
+  @@index([id, channel, enabled], map: "id_1_channel_1_enabled_1")
+}

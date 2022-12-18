@@ -5,3 +5,4 @@ dist
 build
 config.js
 **/volumes
+prisma/generated

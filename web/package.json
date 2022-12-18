@@ -13,10 +13,11 @@
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "test": "node -r ts-node/register -r dotenv/config --loader ts-node/esm src/test.ts dotenv_config_path=../.env.local",
     "dev": "nodemon -L --ext ts ./src/index.ts",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate --schema ./prisma/mongo.prisma && prisma generate --schema ./prisma/postgres.prisma",
     "lint": "eslint --ext .ts ./src",
     "prettier": "prettier --ext .ts ./src --write",
-    "lint:fix": "npm run lint -- --fix"
+    "lint:fix": "npm run lint -- --fix",
+    "pull": "dotenv -e ../.env.local -e ../.env.prod -- prisma db pull --schema ./prisma/mongo.prisma --force && prisma db pull --schema ./prisma/postgres.prisma"
   },
   "dependencies": {
     "@node-steam/id": "^1.2.0",
@@ -54,6 +55,7 @@
     "@typescript-eslint/eslint-plugin": "^5.45.1",
     "@typescript-eslint/parser": "^5.45.1",
     "dotenv": "^16.0.3",
+    "dotenv-cli": "^6.0.0",
     "eslint": "^8.29.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-import-resolver-typescript": "^3.5.2",
