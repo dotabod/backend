@@ -11,7 +11,7 @@
     "start": "node -r newrelic --trace-warnings ./src/index.js",
     "build": "tsc",
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register --loader ts-node/esm src/index.ts\"",
-    "test": "node -r ts-node/register -r dotenv/config --loader ts-node/esm src/test.ts dotenv_config_path=../.env.local",
+    "test": "ts-node --project ./tsconfig.json -r ts-node/register -r dotenv/config src/test.ts dotenv_config_path=../.env.local",
     "dev": "nodemon -L --ext ts ./src/index.ts",
     "postinstall": "prisma generate --schema ./prisma/mongo.prisma && prisma generate --schema ./prisma/postgres.prisma",
     "lint": "eslint --ext .ts ./src",

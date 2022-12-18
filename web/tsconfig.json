@@ -4,6 +4,7 @@
     "./.eslintrc.cjs"
   ],
   "exclude": [
+    "prisma/generated",
     "node_modules"
   ],
   "compilerOptions": {
@@ -31,6 +32,10 @@
     "pretty": true,
     "require": [
       "tsconfig-paths/register",
+    ],
+    "ignore": [
+      "(?:^|/)node_modules/",
+      "(?:^|/)prisma/generated/",
     ]
   }
 }

@@ -64,8 +64,7 @@ async function fixWins() {
     where: {
       won: null,
     },
-    skip: 40,
-    take: 10,
+    take: 50,
     orderBy: {
       createdAt: 'desc',
     },
