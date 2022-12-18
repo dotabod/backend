@@ -44,7 +44,7 @@ export const defaultSettings = {
   [DBSettings.mmr]: null,
   [DBSettings.bp]: false,
   [DBSettings.bets]: true,
-  [DBSettings.chatter]: false,
+  [DBSettings.chatter]: true,
   [DBSettings.rosh]: true,
   [DBSettings.aegis]: true,
   [DBSettings.minimapRight]: false,
