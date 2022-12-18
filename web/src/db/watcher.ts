@@ -31,10 +31,10 @@ channel
       const newObj = payload.new as User
       const oldObj = payload.old as User
       const client = findUser(newObj.id)
+      // dont overwrite with 0 because we use this variable to track currently logged in mmr
       if (newObj.mmr !== 0 && client && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
-        // dont overwrite with 0 because we use this variable to track currently logged in mmr
         console.log('[WATCHER MMR] Sending mmr to socket', client.name)
-        tellChatNewMMR(client.token, newObj.mmr)
+        tellChatNewMMR(client.token, newObj.mmr, oldObj.mmr)
         client.mmr = newObj.mmr
 
         const deets = await getRankDetail(newObj.mmr, client.steam32Id)
@@ -95,7 +95,7 @@ channel
     // Push an mmr update to overlay since it's the steam account rn
     if (client.steam32Id === newObj.steam32Id) {
       client.mmr = newObj.mmr
-      tellChatNewMMR(client.token, newObj.mmr)
+      tellChatNewMMR(client.token, newObj.mmr, oldObj.mmr)
       getRankDetail(newObj.mmr, newObj.steam32Id)
         .then((deets) => {
           server.io.to(client.token).emit('update-medal', deets)

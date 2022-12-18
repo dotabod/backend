@@ -3,11 +3,10 @@ import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { chatClient } from '../../twitch/index.js'
 import findUser from './connectedStreamers.js'
 
-export function tellChatNewMMR(token: string, mmr: number) {
+export function tellChatNewMMR(token: string, mmr: number, oldMmr: number) {
   const client = findUser(token)
   if (!client) return
   const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
-  const oldMmr = client.mmr
   if (mmrEnabled && mmr - oldMmr !== 0) {
     void chatClient.say(
       client.name,
