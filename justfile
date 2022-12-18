@@ -24,6 +24,7 @@ down:
 
 # Stops all containers
 restart:
+    git pull
     @docker compose -f {{dockerfile}} down
     @docker compose -f {{dockerfile}} up -d
 
