@@ -1,7 +1,7 @@
 import { Setting, SteamAccount, User } from '@prisma/client'
 
 import { server } from '../dota/index.js'
-import findUser from '../dota/lib/connectedStreamers.js'
+import findUser, { deleteUser } from '../dota/lib/connectedStreamers.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { chatClient } from '../twitch/index.js'
@@ -25,6 +25,16 @@ channel
       .catch((e) => {
         console.error('[SUPABASE]', 'Error joining channel', e)
       })
+  })
+  .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'users' }, (payload) => {
+    console.log(payload, 'REMOVE')
+
+    const oldObj = payload.old as User
+    const client = findUser(oldObj.id)
+    if (client) {
+      console.log('[WATCHER USER] Deleting user', client.name)
+      deleteUser(client.token)
+    }
   })
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
     async function handler() {
@@ -75,6 +85,9 @@ channel
       console.log('[WATCHER STEAM] Deleting steam account for', client.name)
       const oldSteamIdx = client.SteamAccount.findIndex((s) => s.steam32Id === oldObj.steam32Id)
       client.SteamAccount.splice(oldSteamIdx, 1)
+      if (client.steam32Id === oldObj.steam32Id) {
+        client.steam32Id = null
+      }
       return
     }
 

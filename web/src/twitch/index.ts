@@ -53,7 +53,10 @@ chatClient.onMessage(function (channel, user, text, msg) {
   // This runs every command, but its cached so no hit on db
   getDBUser(undefined, msg.channelId)
     .then((client) => {
-      if (!client || !msg.channelId) return
+      if (!client || !msg.channelId) {
+        void chatClient.say(channel, 'User not found. Try logging out and in of dotabod.com')
+        return
+      }
 
       // Handle the incoming message using the command handler
       commandHandler.handleMessage({

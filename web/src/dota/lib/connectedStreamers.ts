@@ -9,6 +9,16 @@ function findUser(token?: string) {
   return gsiClients[user]
 }
 
+export function deleteUser(token?: string) {
+  if (!token) return false
+
+  const user = gsiClients.findIndex((client) => client.token === token)
+  if (user === -1) return false
+
+  gsiClients.splice(user, 1)
+  return true
+}
+
 export function findUserByTwitchId(twitchId: string) {
   if (!twitchId) return null
 

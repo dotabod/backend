@@ -63,8 +63,8 @@ export default async function getDBUser(
     })
     .then((user) => {
       if (!user?.id) {
-        console.log('Invalid token', { token })
-        invalidTokens.add(token)
+        console.log('Invalid token', { token: token ?? twitchId })
+        invalidTokens.add(token ?? twitchId)
         return null
       }
 
