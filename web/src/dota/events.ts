@@ -169,6 +169,11 @@ export class setupMainEvents {
             { $set: { ...response, createdAt: new Date() } },
             { upsert: true },
           )
+
+        void chatClient.say(
+          this.getChannel(),
+          'Match data found, !np !smurfs !gm !lg commands activated.',
+        )
       } else {
         console.log('Match data already found', this.client.name, this.client.gsi.map.matchid)
       }
@@ -509,7 +514,7 @@ export class setupMainEvents {
     axios
       .post(`https://api.opendota.com/api/request/${matchId}`)
       .then((r) => {
-        console.log('mmr match request to opendota', r?.data)
+        console.log('mmr match request to opendota', r.data)
       })
       .catch((e) => {
         console.log('Error mmr match request to opendota', e)
