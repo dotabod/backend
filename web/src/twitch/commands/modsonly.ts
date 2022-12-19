@@ -25,6 +25,9 @@ commandHandler.registerCommand('modsonly', {
     // Delete all messages that are not from a mod
     modMode.add(channelId)
     void chatClient.say(channel, '/subscribers')
-    void chatClient.say(channel, 'Mods only mode enabled BASED Clap')
+    void chatClient.say(
+      channel,
+      'Mods only mode enabled BASED Clap. Type !modsonly again to disable.',
+    )
   },
 })
