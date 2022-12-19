@@ -42,26 +42,22 @@ commandHandler.registerCommand('mmr', {
       return
     }
 
-    const promises: Promise<string | void>[] = []
-    client.SteamAccount.forEach((act) => {
-      const prom = getRankDescription(act.mmr, customMmr, act.steam32Id)
-        .then((description) => {
-          let msg = act.name ? description ?? unknownMsg : ''
-          if (msg && client.SteamAccount.length > 1 && act.name) msg = `${act.name}: ${msg}`
-          return msg
-        })
-        .catch((e) => {
-          console.log('[MMR] Failed to get rank description', e, channel)
-        })
-      promises.push(prom)
-    })
+    const act = client.SteamAccount.find((a) => a.steam32Id === client.steam32Id)
+    if (!act) {
+      void chatClient.say(
+        channel,
+        'Could not find steam account. Try playing a practice bot match first to save your account.',
+      )
+      return
+    }
 
-    Promise.all(promises)
-      .then((messages) => {
-        void chatClient.say(channel, messages.join(' · ') || unknownMsg)
+    getRankDescription(act.mmr, customMmr, act.steam32Id)
+      .then((description) => {
+        const msg = act.name ? description ?? unknownMsg : ''
+        void chatClient.say(channel, msg || unknownMsg)
       })
       .catch((e) => {
-        //
+        console.log('[MMR] Failed to get rank description', e, channel)
       })
   },
 })
