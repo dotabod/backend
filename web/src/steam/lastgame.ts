@@ -67,5 +67,5 @@ export default async function lastgame(steam32Id: number, currentMatchId?: strin
       .join(' · ')
   }
 
-  return `${msg}. Last game: https://www.dotabuff.com/matches/${oldGame.match.match_id}`
+  return `${msg}. Last game: dotabuff.com/matches/${oldGame.match.match_id}`
 }

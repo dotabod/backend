@@ -11,7 +11,7 @@ commandHandler.registerCommand('steam', {
     } = message
 
     if (client.steam32Id && Number(client.steam32Id)) {
-      void chatClient.say(channel, `https://steamid.xyz/${client.steam32Id.toString()}`)
+      void chatClient.say(channel, `steamid.xyz/${client.steam32Id.toString()}`)
       return
     }
 
