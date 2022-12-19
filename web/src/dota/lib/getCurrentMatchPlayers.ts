@@ -1,7 +1,7 @@
 import { Packet } from '../../types.js'
 
 export function getCurrentMatchPlayers(gsi?: Packet) {
-  let matchPlayers: { heroid?: number; accountid?: number }[] = []
+  let matchPlayers: { heroid: number; accountid: number }[] = []
   if (gsi?.hero?.team2 && gsi.hero.team3) {
     matchPlayers = [
       ...Object.keys(gsi.hero.team2).map((playerIdx: any) => ({

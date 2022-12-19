@@ -1,3 +1,5 @@
+import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
+import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
 import CustomError from '../utils/customError.js'
 import Mongo from './mongo.js'
@@ -9,7 +11,7 @@ const dota = Dota.getInstance()
 
 export async function gameMedals(
   matchId?: string,
-  players?: { heroid?: number; accountid?: number }[],
+  players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
   const db = await mongo.db
 
@@ -18,24 +20,12 @@ export async function gameMedals(
     !players?.length && (await db.collection('delayedGames').findOne({ 'match.match_id': matchId }))
   if (!response && !players?.length) throw new CustomError("Game wasn't found")
 
-  const matchPlayers = players?.length
-    ? players
-    : response
-    ? [
-        ...response.teams[0].players.map((a: any) => ({
-          heroid: a.heroid,
-          accountid: a.accountid,
-        })),
-        ...response.teams[1].players.map((a: any) => ({
-          heroid: a.heroid,
-          accountid: a.accountid,
-        })),
-      ]
-    : []
-
-  const cards = await dota.getCards(
-    matchPlayers.map((player: { accountid: number }) => player.accountid),
+  const { matchPlayers, accountIds } = getAccountsFromMatch(
+    response as unknown as delayedGames,
+    players,
   )
+
+  const cards = await dota.getCards(accountIds)
 
   const medalQuery = await db
     .collection('medals')

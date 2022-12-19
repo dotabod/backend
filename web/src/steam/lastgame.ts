@@ -1,3 +1,5 @@
+import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
+import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
 import CustomError from '../utils/customError.js'
 import Mongo from './mongo.js'
@@ -15,20 +17,14 @@ export default async function lastgame(steam32Id: number) {
       { sort: { createdAt: -1 }, limit: 2 },
     )
     .toArray()
+
   if (!gameHistory.length) throw new CustomError("Game wasn't found")
-  // eslint-disable-next-line prefer-const
-  let [currentGame, oldGame] = gameHistory
-  if (!oldGame || !oldGame._id) throw new CustomError('No last game found')
+  if (gameHistory.length !== 2) throw new CustomError('No last game found')
 
-  const oldMatchPlayers = [
-    ...oldGame.teams[0].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
-    ...oldGame.teams[1].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
-  ]
+  const [currentGame, oldGame] = gameHistory as unknown as delayedGames[]
 
-  const newMatchPlayers = [
-    ...currentGame.teams[0].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
-    ...currentGame.teams[1].players.map((a: any) => ({ heroid: a.heroid, accountid: a.accountid })),
-  ]
+  const { matchPlayers: newMatchPlayers } = getAccountsFromMatch(currentGame)
+  const { matchPlayers: oldMatchPlayers } = getAccountsFromMatch(oldGame)
 
   const playersFromLastGame = []
   for (const [i, currentGamePlayer] of newMatchPlayers.entries()) {
@@ -63,5 +59,5 @@ export default async function lastgame(steam32Id: number) {
       .join(' · ')
   }
 
-  return `${msg}. Last game: https://www.dotabuff.com/matches/${oldGame.matchid as string}`
+  return `${msg}. Last game: https://www.dotabuff.com/matches/${oldGame.matchid}`
 }

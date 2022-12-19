@@ -11,9 +11,9 @@ import Steam from 'steam'
 import steamErrors from 'steam-errors'
 
 import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
+import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import CustomError from '../utils/customError.js'
 import { promiseTimeout } from '../utils/index.js'
-import { getAccountsFromMatch } from './medals.js'
 import Mongo from './mongo.js'
 
 function onGCSpectateFriendGameResponse(message: any, callback: any) {
