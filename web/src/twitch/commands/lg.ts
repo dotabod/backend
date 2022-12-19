@@ -1,4 +1,5 @@
 import { DBSettings } from '../../db/settings.js'
+import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import lastgame from '../../steam/lastgame.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
@@ -9,15 +10,17 @@ commandHandler.registerCommand('lg', {
   cooldown: 15000,
   dbkey: DBSettings.commandLG,
   handler: (message: MessageType, args: string[]) => {
-    const {
-      channel: { client },
-    } = message
     if (!message.channel.client.steam32Id) {
       void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')
       return
     }
 
-    lastgame(message.channel.client.steam32Id)
+    if (!isPlayingMatch(message.channel.client.gsi)) {
+      void chatClient.say(message.channel.name, 'Not currently playing a match.')
+      return
+    }
+
+    lastgame(message.channel.client.steam32Id, message.channel.client.gsi?.map?.matchid)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })

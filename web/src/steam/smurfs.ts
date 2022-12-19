@@ -10,20 +10,24 @@ const dota = Dota.getInstance()
 const mongo = Mongo.getInstance()
 
 export async function smurfs(
-  matchId?: string,
+  currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
   const db = await mongo.db
 
-  if (!matchId) throw new CustomError("Game wasn't found")
+  if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
 
   // const steam32id = 1234
   // const steamserverid = (await server.dota.getUserSteamServer(steam32id)) as string | undefined
   // const responseTest = steamserverid && (await server.dota.getDelayedMatchData(steamserverid))
 
   const response =
-    !players?.length && (await db.collection('delayedGames').findOne({ 'match.match_id': matchId }))
-  if (!response && !players?.length) throw new CustomError("Game wasn't found")
+    !players?.length &&
+    (await db.collection('delayedGames').findOne({ 'match.match_id': currentMatchId }))
+
+  if (!response && !players?.length) {
+    throw new CustomError('Waiting for current match data PauseChamp')
+  }
 
   const { matchPlayers, accountIds } = getAccountsFromMatch(
     response as unknown as delayedGames,

@@ -15,15 +15,20 @@ export interface Player {
 }
 
 export async function notablePlayers(
-  matchId?: string,
+  currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
   const db = await mongo.db
 
-  if (!matchId) throw new CustomError("Game wasn't found")
+  if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
+
   const response =
-    !players?.length && (await db.collection('delayedGames').findOne({ 'match.match_id': matchId }))
-  if (!response && !players?.length) throw new CustomError("Game wasn't found")
+    !players?.length &&
+    (await db.collection('delayedGames').findOne({ 'match.match_id': currentMatchId }))
+
+  if (!response && !players?.length) {
+    throw new CustomError('Waiting for current match data PauseChamp')
+  }
 
   const { matchPlayers, accountIds } = getAccountsFromMatch(
     response as unknown as delayedGames,

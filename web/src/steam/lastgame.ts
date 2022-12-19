@@ -6,7 +6,9 @@ import Mongo from './mongo.js'
 
 const mongo = Mongo.getInstance()
 
-export default async function lastgame(steam32Id: number) {
+export default async function lastgame(steam32Id: number, currentMatchId?: string) {
+  if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
+
   const db = await mongo.db
   const gameHistory = await db
     .collection('delayedGames')
@@ -22,6 +24,10 @@ export default async function lastgame(steam32Id: number) {
   if (gameHistory.length !== 2) throw new CustomError('No last game found')
 
   const [currentGame, oldGame] = gameHistory as unknown as delayedGames[]
+
+  if (currentGame.match.match_id !== currentMatchId) {
+    throw new CustomError('Waiting for current match data PauseChamp')
+  }
 
   const { matchPlayers: newMatchPlayers } = getAccountsFromMatch(currentGame)
   const { matchPlayers: oldMatchPlayers } = getAccountsFromMatch(oldGame)
