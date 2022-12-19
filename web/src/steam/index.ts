@@ -13,6 +13,7 @@ import steamErrors from 'steam-errors'
 import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import CustomError from '../utils/customError.js'
 import { promiseTimeout } from '../utils/index.js'
+import { getAccountsFromMatch } from './medals.js'
 import Mongo from './mongo.js'
 
 function onGCSpectateFriendGameResponse(message: any, callback: any) {
@@ -186,9 +187,9 @@ class Dota {
   }
 
   // 2 minute delayed match data if its out of our region
-  public getDelayedMatchData = (server_steamid: string) => {
+  public getDelayedMatchData = (server_steamid: string, refetchCards = false) => {
     return new Promise((resolveOuter) => {
-      this.GetRealTimeStats(server_steamid, false, (err, response) => {
+      this.GetRealTimeStats(server_steamid, false, refetchCards, (err, response) => {
         resolveOuter(response)
       })
     })
@@ -208,6 +209,7 @@ class Dota {
   public GetRealTimeStats = (
     steam_server_id: string,
     waitForHeros: boolean,
+    refetchCards = false,
     cb?: (err: any, body: any) => void,
   ) => {
     if (!steam_server_id) {
@@ -264,7 +266,6 @@ class Dota {
                 { upsert: true },
               )
 
-            operation.retry()
             return
           }
 
@@ -279,6 +280,12 @@ class Dota {
                   { $set: { ...game, createdAt: new Date() } },
                   { upsert: true },
                 )
+
+              // Force get new medals for this match. They could have updated!
+              if (refetchCards) {
+                const { accountIds } = getAccountsFromMatch(game)
+                void this.getCards(accountIds, true)
+              }
             } catch (e) {
               console.log('mongo error saving match', e)
             }
@@ -290,7 +297,6 @@ class Dota {
             }
           }
 
-          operation.retry()
           cb?.(null, game)
         })
         .catch((e) => {
@@ -346,7 +352,10 @@ class Dota {
     return Dota.instance
   }
 
-  public getCards(accounts: number[]): Promise<
+  public getCards(
+    accounts: number[],
+    refetchCards = false,
+  ): Promise<
     {
       id: number
       lobby_id: number
@@ -368,7 +377,7 @@ class Dota {
       for (let i = 0; i < accounts.length; i += 1) {
         let needToGetCard = false
         const card: any = cards.find((tempCard) => tempCard.id === accounts[i])
-        if (!card || typeof card.rank_tier !== 'number') needToGetCard = true
+        if (refetchCards || !card || typeof card.rank_tier !== 'number') needToGetCard = true
         else arr[i] = card
         if (needToGetCard) {
           promises.push(

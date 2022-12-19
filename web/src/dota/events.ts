@@ -154,7 +154,7 @@ export class setupMainEvents {
         this.savingSteamServerId = false
 
         // @ts-expect-error asdf
-        response = await server.dota.getDelayedMatchData(steamserverid)
+        response = await server.dota.getDelayedMatchData(steamserverid, true)
         if (!response) {
           console.log('No match data found!', this.client.name, this.client.gsi.map.matchid)
           return
