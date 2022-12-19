@@ -45,6 +45,44 @@ export interface MapData {
   ward_purchase_cooldown: number // 0
 }
 
+/*
+Example player from spec mode
+  steamid: '76561198157081101',
+  accountid: '196815373',
+  name: 'fat',
+  activity: 'playing',
+  kills: 0,
+  deaths: 2,
+  assists: 1,
+  last_hits: 6,
+  denies: 2,
+  kill_streak: 0,
+  commands_issued: 1319,
+  kill_list: {},
+  team_name: 'radiant',
+  gold: 83,
+  gold_reliable: 83,
+  gold_unreliable: 0,
+  gold_from_hero_kills: 60,
+  gold_from_creep_kills: 0,
+  gold_from_income: 936,
+  gold_from_shared: 60,
+  gpm: 138,
+  xpm: 170,
+  net_worth: 1248,
+  hero_damage: 1705,
+  tower_damage: 0,
+  wards_purchased: 11,
+  wards_placed: 6,
+  wards_destroyed: 1,
+  runes_activated: 0,
+  camps_stacked: 0,
+  support_gold_spent: 200,
+  consumable_gold_spent: 985,
+  item_gold_spent: 950,
+  gold_lost_to_death: 26,
+  gold_spent_on_buybacks: 0
+*/
 export interface Player {
   team2?: { player0: Player; player1: Player; player2: Player; player3: Player; player4: Player }
   team3?: { player5: Player; player6: Player; player7: Player; player8: Player; player9: Player }
