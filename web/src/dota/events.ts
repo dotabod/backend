@@ -250,6 +250,10 @@ export class setupMainEvents {
 
       if (!isPlayingMatch(this.client.gsi)) return
 
+      // Everything below here requires an ongoing match, not a finished match
+      const hasWon = this.client.gsi?.map?.win_team && this.client.gsi.map.win_team !== 'none'
+      if (hasWon) return
+
       // Always runs but only until steam is found
       void this.saveMatchData()
 

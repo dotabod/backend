@@ -6,5 +6,6 @@ import { isSpectator } from './isSpectator.js'
 // customgamename = playing arcade or hero demo
 export function isPlayingMatch(gsi?: Packet) {
   if (!gsi) return false
+
   return !isSpectator(gsi) && !isArcade(gsi)
 }
