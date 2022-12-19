@@ -80,7 +80,7 @@ export class setupMainEvents {
 
   // reset vars when a new match begins
   private resetClientState(resetBets = false) {
-    console.log('newMatchNewVars', this.client.name)
+    console.log('newMatchNewVars', { resetBets }, this.client.name)
     this.currentHero = null
     this.heroSlot = null
     this.events = []
@@ -254,9 +254,8 @@ export class setupMainEvents {
       void this.saveMatchData()
 
       // Can't just !this.heroSlot because it can be 0
-      if (typeof this.heroSlot !== 'number') {
-        const purchaser = this.client.gsi?.items?.teleport0?.purchaser
-        if (typeof purchaser !== 'number') return
+      const purchaser = this.client.gsi?.items?.teleport0?.purchaser
+      if (typeof this.heroSlot !== 'number' && typeof purchaser === 'number') {
         console.log('[SLOT]', 'Found hero slot at', purchaser, {
           name: this.getChannel(),
         })
@@ -285,8 +284,6 @@ export class setupMainEvents {
       }
 
       this.openBets()
-
-      this.endBets()
 
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
       if (chatterEnabled) {
@@ -375,7 +372,7 @@ export class setupMainEvents {
       })
       .catch((e) => {
         // Stream not live
-        // console.error('[MMR] emitWLUpdate Error getting WL', e)
+        // console.error('[MMR] emitWLUpdate Error getting WL', e?.message || e)
       })
   }
 
@@ -389,7 +386,7 @@ export class setupMainEvents {
         server.io.to(this.getToken()).emit('update-medal', deets)
       })
       .catch((e) => {
-        console.error('[MMR] emitBadgeUpdate Error getting rank detail', e)
+        console.error('[MMR] emitBadgeUpdate Error getting rank detail', e?.message || e)
       })
   }
 
@@ -454,12 +451,12 @@ export class setupMainEvents {
               this.emitBadgeUpdate()
             })
             .catch((e: any) => {
-              console.error('[STEAM32ID]', 'Error updating steam32Id', e)
+              console.error('[STEAM32ID]', 'Error updating steam32Id', e?.message || e)
             })
         }
       })
       .catch((e) => {
-        console.log('[DATABASE ERROR]', e)
+        console.log('[DATABASE ERROR]', e?.message || e)
       })
   }
 
@@ -484,7 +481,7 @@ export class setupMainEvents {
         // Update mmr for ranked matches
       })
       .catch((e) => {
-        console.error('[DATABASE ERROR MMR]', e)
+        console.error('[DATABASE ERROR MMR]', e?.message || e)
       })
 
     this.emitWLUpdate()
@@ -505,6 +502,7 @@ export class setupMainEvents {
     if (lobby_type !== undefined) {
       console.log('[MMR]', 'lobby_type passed in from early dc', {
         lobby_type,
+        increase,
         name: this.getChannel(),
       })
       this.updateMMR(increase, lobby_type, matchId)
@@ -517,7 +515,7 @@ export class setupMainEvents {
         console.log('mmr match request to opendota', r.data)
       })
       .catch((e) => {
-        console.log('Error mmr match request to opendota', e)
+        console.log('Error mmr match request to opendota', e?.message || e)
       })
 
     axios(`https://api.opendota.com/api/matches/${matchId}`)
@@ -672,20 +670,31 @@ export class setupMainEvents {
                         })
                       })
                       .catch((e) => {
-                        console.log('[BETS]', 'Error disabling bets', e)
+                        console.log('[BETS]', 'Error disabling bets', e?.message || e)
                       })
                   } else {
-                    console.log('[BETS]', 'Error opening twitch bet', channel, e)
+                    console.log('[BETS]', 'Error opening twitch bet', channel, e?.message || e)
                   }
                 })
             })
             .catch((e: any) => {
-              console.log('[BETS]', channel, `Could not add bet to ${channel} channel`, e)
+              console.log(
+                '[BETS]',
+                channel,
+                `Could not add bet to ${channel} channel`,
+                e?.message || e,
+              )
             })
         }
       })
       .catch((e: any) => {
-        console.log('[BETS]', 'Error opening bet', this.client.gsi?.map?.matchid ?? '', channel, e)
+        console.log(
+          '[BETS]',
+          'Error opening bet',
+          this.client.gsi?.map?.matchid ?? '',
+          channel,
+          e?.message || e,
+        )
       })
   }
 
@@ -714,7 +723,7 @@ export class setupMainEvents {
           console.log('mmr match request to opendota', r.data)
         })
         .catch((e) => {
-          console.log('Error mmr match request to opendota', e)
+          console.log('Error mmr match request to opendota', e?.message || e)
         })
       // Check with opendota to see if the match is over
       axios(`https://api.opendota.com/api/matches/${matchId}`)
@@ -741,6 +750,7 @@ export class setupMainEvents {
     const localWinner = winningTeam ?? this.client.gsi?.map?.win_team
     const myTeam = streamersTeam ?? this.client.gsi?.player?.team_name
     const won = myTeam === localWinner
+    console.log({ localWinner, myTeam, won })
 
     // Both or one undefined
     if (!localWinner || !myTeam) return
@@ -807,10 +817,10 @@ export class setupMainEvents {
               disabledBets.delete(channel)
             })
             .catch((e) => {
-              console.log('[BETS]', 'Error disabling bets', e)
+              console.log('[BETS]', 'Error disabling bets', e?.message || e)
             })
         } else {
-          console.log('[BETS]', 'Error closing twitch bet', channel, e)
+          console.log('[BETS]', 'Error closing twitch bet', channel, e?.message || e)
         }
       })
       // Always
@@ -906,7 +916,7 @@ export class setupMainEvents {
     if (!hasValidBlocker && blockCache.has(this.getToken())) {
       blockCache.delete(this.getToken())
       server.io.to(this.getToken()).emit('block', { type: null })
-      this.resetClientState()
+      this.endBets()
       return
     }
   }
