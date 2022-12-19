@@ -254,9 +254,6 @@ export class setupMainEvents {
       const hasWon = this.client.gsi?.map?.win_team && this.client.gsi.map.win_team !== 'none'
       if (hasWon) return
 
-      // Always runs but only until steam is found
-      void this.saveMatchData()
-
       // Can't just !this.heroSlot because it can be 0
       const purchaser = this.client.gsi?.items?.teleport0?.purchaser
       if (typeof this.heroSlot !== 'number' && typeof purchaser === 'number') {
@@ -268,6 +265,9 @@ export class setupMainEvents {
         void this.saveMatchData()
         return
       }
+
+      // Always runs but only until steam is found
+      void this.saveMatchData()
 
       // TODO: Move this to server.ts
       if (Array.isArray(data.events) && data.events.length) {
