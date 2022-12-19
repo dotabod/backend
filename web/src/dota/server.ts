@@ -113,9 +113,7 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 class D2GSI {
-  app: express.Application
   io: Server
-  httpServer: http.Server
   dota: Dota
 
   constructor() {
@@ -123,7 +121,7 @@ class D2GSI {
 
     const app = express()
     const httpServer = http.createServer(app)
-    const io = new Server(httpServer, {
+    this.io = new Server(httpServer, {
       cors: {
         origin: ['http://localhost:3000', 'http://localhost:3001', 'https://dotabod.com'],
         methods: ['GET', 'POST'],
@@ -149,7 +147,7 @@ class D2GSI {
     })
 
     // IO auth & client setup so we can send this socket messages
-    io.use((socket, next) => {
+    this.io.use((socket, next) => {
       const { token } = socket.handshake.auth
 
       getDBUser(token)
@@ -167,7 +165,7 @@ class D2GSI {
         })
     })
 
-    io.on('connection', (socket: Socket) => {
+    this.io.on('connection', (socket: Socket) => {
       const { token } = socket.handshake.auth
       // This triggers a resend of obs blockers
       // TODO: should just send obs blockers regardless of blockcache somehow
@@ -179,10 +177,6 @@ class D2GSI {
       // Their own personal room
       void socket.join(client.token)
     })
-
-    this.app = app
-    this.httpServer = httpServer
-    this.io = io
   }
 
   init() {
