@@ -27,11 +27,11 @@ build:
     @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
 
-# Builds and starts images
+# Starts images
 up:
     @docker compose -f {{dockerfile}} up -d
 
-restart:
+update:
     git pull
     @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
