@@ -45,6 +45,7 @@ export async function smurfs(
     })
   })
   const results = result
+    .sort((a, b) => (a.lifetime_games ?? 0) - (b.lifetime_games ?? 0))
     .map((m) =>
       typeof m.lifetime_games === 'number'
         ? `${m.heroName}: ${m.lifetime_games.toLocaleString()}`
