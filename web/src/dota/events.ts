@@ -484,6 +484,7 @@ export class setupMainEvents {
         console.error('[DATABASE ERROR MMR]', e?.message || e)
       })
 
+    console.log('updateMMR emit wl update', { name: this.getChannel() })
     this.emitWLUpdate()
 
     if (!ranked) {
@@ -833,6 +834,7 @@ export class setupMainEvents {
     if (isSpectator(this.client.gsi)) {
       if (blockCache.get(this.getToken()) !== 'spectator') {
         this.emitBadgeUpdate()
+        console.log('setupOBSBlockers emit wl update', { name: this.getChannel() })
         this.emitWLUpdate()
 
         server.io.to(this.getToken()).emit('block', { type: 'spectator' })
@@ -844,6 +846,7 @@ export class setupMainEvents {
 
     if (isArcade(this.client.gsi)) {
       if (blockCache.get(this.getToken()) !== 'arcade') {
+        console.log('arcade emit wl update', { name: this.getChannel() })
         this.emitBadgeUpdate()
         this.emitWLUpdate()
 
@@ -889,6 +892,7 @@ export class setupMainEvents {
           })
 
           if (blocker.type === 'playing') {
+            console.log('playing emit wl update', { name: this.getChannel() })
             this.emitBadgeUpdate()
             this.emitWLUpdate()
           }
