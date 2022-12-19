@@ -29,11 +29,15 @@ export default async function lastgame(steam32Id: number, currentMatchId?: strin
     throw new CustomError('Waiting for current match data PauseChamp')
   }
 
+  if (oldGame.match.match_id === currentGame.match.match_id) {
+    throw new CustomError('Not playing with anyone from last game')
+  }
+
   const { matchPlayers: newMatchPlayers } = getAccountsFromMatch(currentGame)
   const { matchPlayers: oldMatchPlayers } = getAccountsFromMatch(oldGame)
 
   const playersFromLastGame = []
-  for (const [i, currentGamePlayer] of newMatchPlayers.entries()) {
+  for (const currentGamePlayer of newMatchPlayers) {
     if (steam32Id === currentGamePlayer.accountid) {
       continue
     }
@@ -46,8 +50,6 @@ export default async function lastgame(steam32Id: number, currentMatchId?: strin
       playersFromLastGame.push({
         old: lastGamePlayer,
         current: currentGamePlayer,
-        currentIndex: i,
-        oldIndex: oldMatchPlayers.indexOf(lastGamePlayer),
       })
     }
   }
