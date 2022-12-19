@@ -5,8 +5,8 @@ import commandHandler, { MessageType } from './CommandHandler.js'
 
 export const plebMode = new Set()
 
-commandHandler.registerCommand('mmr=', {
-  aliases: ['setmmr', 'mmrset'],
+commandHandler.registerCommand('setmmr', {
+  aliases: ['mmr=', 'mmrset'],
   permission: 2,
   cooldown: 15000,
   handler: (message: MessageType, args: string[]) => {
