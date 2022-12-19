@@ -261,7 +261,7 @@ class Dota {
             await db
               .collection('delayedGames')
               .updateOne(
-                { matchid: game.match.match_id },
+                { 'match.match_id': game.match.match_id },
                 { $set: { ...game, createdAt: new Date() } },
                 { upsert: true },
               )
@@ -276,7 +276,7 @@ class Dota {
               await db
                 .collection('delayedGames')
                 .updateOne(
-                  { matchid: game.match.match_id },
+                  { 'match.match_id': game.match.match_id },
                   { $set: { ...game, createdAt: new Date() } },
                   { upsert: true },
                 )
