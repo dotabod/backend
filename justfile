@@ -29,8 +29,10 @@ build:
 
 # Builds and starts images
 up:
+    @docker compose -f {{dockerfile}} up -d
+
+restart:
     git pull
-    @docker compose -f {{dockerfile}} down
     @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d
