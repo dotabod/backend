@@ -4,6 +4,7 @@ import http from 'http'
 import bodyParser from 'body-parser'
 import express, { NextFunction, Request, Response } from 'express'
 import { Server, Socket } from 'socket.io'
+import winston from 'winston'
 
 import getDBUser, { invalidTokens } from '../db/getDBUser.js'
 import Dota from '../steam/index.js'
@@ -11,6 +12,21 @@ import { blockCache } from './events.js'
 import findUser from './lib/connectedStreamers.js'
 
 export const events = new EventEmitter()
+
+const { combine, timestamp, printf, colorize, align } = winston.format
+export const logger = winston.createLogger({
+  level: 'info',
+  format: combine(
+    colorize({ all: true }),
+    timestamp({
+      format: 'YYYY-MM-DD hh:mm:ss.SSS A',
+    }),
+    align(),
+    printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`),
+  ),
+  transports: [new winston.transports.Console()],
+})
+
 const pendingCheckAuth = new Set<string>()
 
 function emitAll(prefix: string, obj: Record<string, any>, token: string) {

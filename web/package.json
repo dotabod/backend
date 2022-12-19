@@ -42,7 +42,8 @@
     "retry": "^0.13.1",
     "socket.io": "^4.5.4",
     "steam": "https://github.com/dotabod/node-steam",
-    "steam-errors": "^1.0.0"
+    "steam-errors": "^1.0.0",
+    "winston": "^3.8.2"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.2",
