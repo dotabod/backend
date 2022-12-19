@@ -1,4 +1,4 @@
-import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { DBSettings } from '../../db/settings.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
 import { chatClient } from '../index.js'
@@ -8,13 +8,11 @@ commandHandler.registerCommand('np', {
   aliases: ['players', 'who'],
   permission: 0,
   cooldown: 15000,
+  dbkey: DBSettings.commandNP,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { client },
     } = message
-    if (!getValueOrDefault(DBSettings.commandNP, client.settings)) {
-      return
-    }
 
     if (!client.steam32Id) {
       void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')

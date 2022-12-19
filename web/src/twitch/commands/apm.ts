@@ -1,4 +1,4 @@
-import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { DBSettings } from '../../db/settings.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
@@ -7,13 +7,11 @@ commandHandler.registerCommand('apm', {
   aliases: [],
   permission: 0,
   cooldown: 15000,
+  dbkey: DBSettings.commandAPM,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message
-    if (!getValueOrDefault(DBSettings.commandAPM, client.settings)) {
-      return
-    }
     if (!client.gsi?.hero?.name) {
       void chatClient.say(channel, 'No hero found')
       return

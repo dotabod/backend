@@ -1,4 +1,4 @@
-import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { DBSettings } from '../../db/settings.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { smurfs } from '../../steam/smurfs.js'
 import { chatClient } from '../index.js'
@@ -8,13 +8,11 @@ commandHandler.registerCommand('smurfs', {
   aliases: ['lifetimes', 'totals'],
   permission: 0,
   cooldown: 15000,
+  dbkey: DBSettings.commandSmurfs,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { client },
     } = message
-    if (!getValueOrDefault(DBSettings.commandSmurfs, client.settings)) {
-      return
-    }
 
     if (!message.channel.client.steam32Id) {
       void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')

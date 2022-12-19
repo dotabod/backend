@@ -1,5 +1,5 @@
 import { getWL } from '../../db/getWL.js'
-import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { DBSettings } from '../../db/settings.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
 
@@ -7,14 +7,11 @@ commandHandler.registerCommand('wl', {
   aliases: ['score', 'winrate', 'wr'],
   permission: 0,
   cooldown: 15000,
+  dbkey: DBSettings.commandWL,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, id: channelId, client },
     } = message
-
-    if (!getValueOrDefault(DBSettings.commandWL, client.settings)) {
-      return
-    }
 
     if (!client.steam32Id) {
       void chatClient.say(channel, 'Begin a match to save your account to Dotabod.')

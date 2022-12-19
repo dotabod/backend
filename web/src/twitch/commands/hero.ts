@@ -1,4 +1,4 @@
-import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { DBSettings } from '../../db/settings.js'
 import getHero from '../../dota/lib/getHero.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import axios from '../../utils/axios.js'
@@ -9,13 +9,11 @@ commandHandler.registerCommand('hero', {
   aliases: [],
   permission: 0,
   cooldown: 15000,
+  dbkey: DBSettings.commandHero,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message
-    if (!getValueOrDefault(DBSettings.commandHero, client.settings)) {
-      return
-    }
     if (!client.steam32Id) {
       void chatClient.say(channel, 'No steam32Id found')
       return

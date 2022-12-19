@@ -1,20 +1,29 @@
+import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { SocketClient } from '../../types.js'
 
 export interface UserType {
-  permission: number
   name: string
+  permission: number
+}
+
+interface ChannelType {
+  name: string
+  id: string
+  client: SocketClient
+  settings: SocketClient['settings']
 }
 
 export interface MessageType {
   user: UserType
   content: string
-  channel: { name: string; id: string; client: SocketClient }
+  channel: ChannelType
 }
 
 export interface CommandOptions {
   aliases: string[]
   permission: number
   cooldown: number
+  dbkey?: DBSettings
   handler: (message: MessageType, args: string[]) => void
 }
 
@@ -69,6 +78,9 @@ class CommandHandler {
 
     const options = this.commands.get(commandName)
     if (!options) return
+
+    // Check if the command is enabled
+    if (!this.isEnabled(message.channel.settings, options.dbkey)) return
 
     // Check if the command is on cooldown
     if (this.isOnCooldown(commandName, options.cooldown, message.user, message.channel.id)) {
@@ -139,6 +151,13 @@ class CommandHandler {
     }
 
     return true // The command is on cooldown if none of the above conditions are met
+  }
+
+  isEnabled(settings: SocketClient['settings'], dbkey?: DBSettings) {
+    // Default enabled if no dbkey is provided
+    if (!dbkey) return true
+
+    return !!getValueOrDefault(dbkey, settings)
   }
 
   // Function for updating the cooldown time for a command

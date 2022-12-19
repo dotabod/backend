@@ -1,4 +1,4 @@
-import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { DBSettings } from '../../db/settings.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from './CommandHandler.js'
 
@@ -8,6 +8,7 @@ commandHandler.registerCommand('modsonly', {
   aliases: [],
   permission: 2,
   cooldown: 15000,
+  dbkey: DBSettings.commandModsonly,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, id: channelId, client },
@@ -15,10 +16,6 @@ commandHandler.registerCommand('modsonly', {
     if (modMode.has(channelId)) {
       void chatClient.say(channel, 'Mods only mode disabled Sadge')
       modMode.delete(channelId)
-      return
-    }
-
-    if (!getValueOrDefault(DBSettings.commandModsonly, client.settings)) {
       return
     }
 
