@@ -3,7 +3,9 @@ import { server } from '../dota/index.js'
 import findUser, { deleteUser } from '../dota/lib/connectedStreamers.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
+import { toggleDotabod } from '../twitch/commands/toggle.js'
 import { chatClient } from '../twitch/index.js'
+import { DBSettings } from './settings.js'
 import supabase from './supabase.js'
 
 const channel = supabase.channel('db-changes')
@@ -66,6 +68,10 @@ channel
         setting.value = newObj.value
       } else {
         client.settings.push({ key: newObj.key, value: newObj.value })
+      }
+
+      if (newObj.key === DBSettings.commandDisable) {
+        toggleDotabod(client.token, !!newObj.value, client.name)
       }
 
       console.log('[WATCHER SETTING] Sending new setting value to socket', client.name)
