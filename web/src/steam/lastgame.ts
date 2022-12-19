@@ -14,7 +14,7 @@ export default async function lastgame(steam32Id: number, currentMatchId?: strin
     .collection('delayedGames')
     .find(
       {
-        'teams.players.accountid': steam32Id,
+        'teams.players.accountid': Number(steam32Id),
       },
       { sort: { createdAt: -1 }, limit: 2 },
     )
@@ -29,7 +29,7 @@ export default async function lastgame(steam32Id: number, currentMatchId?: strin
     throw new CustomError('Waiting for current match data PauseChamp')
   }
 
-  if (oldGame.match.match_id === currentGame.match.match_id) {
+  if (!oldGame.match.match_id || oldGame.match.match_id === currentGame.match.match_id) {
     throw new CustomError('Not playing with anyone from last game')
   }
 
@@ -67,5 +67,5 @@ export default async function lastgame(steam32Id: number, currentMatchId?: strin
       .join(' · ')
   }
 
-  return `${msg}. Last game: https://www.dotabuff.com/matches/${oldGame.matchid}`
+  return `${msg}. Last game: https://www.dotabuff.com/matches/${oldGame.match.match_id}`
 }
