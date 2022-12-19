@@ -7,27 +7,31 @@ import commandHandler, { MessageType } from './CommandHandler.js'
 
 const mongo = Mongo.getInstance()
 
-export async function profileLink(matchId: string, color: string) {
-  if (!matchId) throw new CustomError("Game wasn't found")
-  if (!color) throw new CustomError('Missing hero color')
+export async function profileLink(currentMatchId: string, color: string) {
+  if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
+  if (!color) throw new CustomError('Missing hero color. Try !stats blue')
 
   const heroKey = heroColors.findIndex(
     (heroColor) => heroColor.toLowerCase() === color.toLowerCase(),
   )
+
   if (heroKey === -1) {
     throw new CustomError(`Invalid hero color. Must be one of ${heroColors.join(' ')}`)
   }
 
   const db = await mongo.db
-  const response = await db.collection('delayedGames').findOne({ 'match.match_id': matchId })
-  if (!response) throw new CustomError("Game wasn't found")
+  const response = await db.collection('delayedGames').findOne({ 'match.match_id': currentMatchId })
+
+  if (!response) {
+    throw new CustomError('Waiting for current match data PauseChamp')
+  }
 
   const matchPlayers: { heroid: number; accountid: number }[] = response.teams.flatMap(
     (team: { players: { heroid: number; accountid: number }[] }) => team.players,
   )
   const player = matchPlayers[heroKey]
 
-  return `dotabuff.com/players/${player.accountid}`
+  return `Here's ${color}: dotabuff.com/players/${player.accountid}`
 }
 
 commandHandler.registerCommand('stats', {
