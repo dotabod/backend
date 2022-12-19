@@ -160,16 +160,6 @@ export class setupMainEvents {
           return
         }
 
-        console.log('Saving match data', this.client.name, this.client.gsi.map.matchid)
-
-        await db
-          .collection('delayedGames')
-          .updateOne(
-            { matchid: response.match?.match_id },
-            { $set: { ...response, createdAt: new Date() } },
-            { upsert: true },
-          )
-
         void chatClient.say(
           this.getChannel(),
           'Match data found, !np !smurfs !gm !lg commands activated.',

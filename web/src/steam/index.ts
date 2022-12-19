@@ -10,6 +10,7 @@ import Steam from 'steam'
 // @ts-expect-error ???
 import steamErrors from 'steam-errors'
 
+import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import CustomError from '../utils/customError.js'
 import { promiseTimeout } from '../utils/index.js'
 import Mongo from './mongo.js'
@@ -81,8 +82,6 @@ class Dota {
   private steamUser
 
   public dota2
-
-  private interval?: NodeJS.Timer
 
   constructor() {
     this.steamClient = new Steam.SteamClient()
@@ -189,7 +188,7 @@ class Dota {
   // 2 minute delayed match data if its out of our region
   public getDelayedMatchData = (server_steamid: string) => {
     return new Promise((resolveOuter) => {
-      this.GetRealTimeStats(server_steamid, (err, response) => {
+      this.GetRealTimeStats(server_steamid, false, (err, response) => {
         resolveOuter(response)
       })
     })
@@ -206,9 +205,13 @@ class Dota {
     })
   }
 
-  public GetRealTimeStats = (steam_server_id: string, cb: (err: any, body: any) => void) => {
+  public GetRealTimeStats = (
+    steam_server_id: string,
+    waitForHeros: boolean,
+    cb?: (err: any, body: any) => void,
+  ) => {
     if (!steam_server_id) {
-      return cb(new Error('Match not found'), null)
+      return cb?.(new Error('Match not found'), null)
     }
 
     const operation = retry.operation({
@@ -222,27 +225,77 @@ class Dota {
       axios(
         `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steam_server_id}`,
       )
-        .then((response) => {
-          let arr: Error | undefined
+        .then(async (response) => {
+          const game = response.data as delayedGames | undefined
+          const hasTeams = Array.isArray(game?.teams) && game?.teams.length === 2
+          const hasPlayers =
+            hasTeams &&
+            Array.isArray(game.teams[0].players) &&
+            Array.isArray(game.teams[1].players) &&
+            game.teams[0].players.length === 5 &&
+            game.teams[1].players.length === 5
+          const hasAccountIds =
+            hasPlayers &&
+            game.teams[0].players.every((player) => player.accountid) &&
+            game.teams[1].players.every((player) => player.accountid)
+          const hasHeroes =
+            hasPlayers &&
+            game.teams[0].players.every((player) => player.heroid) &&
+            game.teams[1].players.every((player) => player.heroid)
 
-          if (!response.data?.teams?.[0]?.players?.[0]?.heroid) {
-            arr = new Error('Match not found')
-          }
-
-          if (operation.retry(arr)) {
+          if (!hasAccountIds) {
+            operation.retry(new Error('Waiting for account ids'))
             return
           }
 
-          cb(arr ? arr : null, response.data)
+          if (waitForHeros && !hasHeroes) {
+            operation.retry(new Error('Match found, but waiting for hero ids'))
+            return
+          }
+
+          if (waitForHeros && hasHeroes) {
+            console.log('Saving match data with heroes', game.match.match_id)
+            const db = await mongo.db
+            await db
+              .collection('delayedGames')
+              .updateOne(
+                { matchid: game.match.match_id },
+                { $set: { ...game, createdAt: new Date() } },
+                { upsert: true },
+              )
+
+            operation.retry()
+            return
+          }
+
+          if (!waitForHeros) {
+            console.log('Saving match data', game.match.match_id, { hasHeroes })
+            try {
+              const db = await mongo.db
+              await db
+                .collection('delayedGames')
+                .updateOne(
+                  { matchid: game.match.match_id },
+                  { $set: { ...game, createdAt: new Date() } },
+                  { upsert: true },
+                )
+            } catch (e) {
+              console.log('mongo error saving match', e)
+            }
+
+            // Come back in 8 attempts to save the hero ids. With no cb()
+            if (!hasHeroes) {
+              console.log('Waiting for hero ids', game.match.match_id)
+              this.GetRealTimeStats(steam_server_id, true)
+            }
+          }
+
+          operation.retry()
+          cb?.(null, game)
         })
         .catch((e) => {
-          const arr = new Error('Match not found')
-
-          if (operation.retry(arr)) {
-            return
-          }
-
-          cb(arr, null)
+          console.log(e)
+          operation.retry(new Error('Match not found'))
         })
     })
 
@@ -376,8 +429,6 @@ class Dota {
 
   public exit(): Promise<boolean> {
     return new Promise((resolve) => {
-      clearInterval(this.interval)
-      console.log('[STEAM]', 'Clearing getting matches interval')
       this.dota2.exit()
       console.log('[STEAM]', 'Manually closed dota')
       // @ts-expect-error disconnect is there
