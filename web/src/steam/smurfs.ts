@@ -17,9 +17,9 @@ export async function smurfs(
 
   if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
 
-  // const steam32id = 1234
+  // const steam32id = 849473199 # grubby
   // const steamserverid = (await server.dota.getUserSteamServer(steam32id)) as string | undefined
-  // const responseTest = steamserverid && (await server.dota.getDelayedMatchData(steamserverid))
+  // const response = steamserverid && (await server.dota.getDelayedMatchData(steamserverid))
 
   const response =
     !players?.length &&
