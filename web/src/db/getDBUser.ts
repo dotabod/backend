@@ -3,6 +3,7 @@ import { gsiClients } from '../dota/lib/consts.js'
 import { events } from '../dota/server.js'
 import { SocketClient } from '../types.js'
 import { prisma } from './prisma.js'
+import { DBSettings, getValueOrDefault } from './settings.js'
 
 export const invalidTokens = new Set()
 
@@ -80,8 +81,13 @@ export default async function getDBUser(
 
       gsiClients.push(theUser)
 
-      events.emit('new-gsi-client', token)
+      const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, user.settings)
+      if (isBotDisabled) {
+        console.log('[GSI]', 'Bot is disabled for this user', { name: user.name })
+        return theUser
+      }
 
+      events.emit('new-gsi-client', user.id)
       return theUser
     })
     .catch((e) => {

@@ -1,4 +1,5 @@
 import getDBUser from '../db/getDBUser.js'
+import { DBSettings, getValueOrDefault } from '../db/settings.js'
 import commandHandler from './commands/CommandHandler.js'
 import { modMode } from './commands/modsonly.js'
 import { plebMode } from './commands/pleb.js'
@@ -22,6 +23,7 @@ import './commands/np.js'
 import './commands/smurfs.js'
 import './commands/match.js'
 import './commands/stats.js'
+import './commands/toggle.js'
 
 // Setup twitch chat bot client first
 // TODO: Think about whether await is necessary here
@@ -58,9 +60,18 @@ chatClient.onMessage(function (channel, user, text, msg) {
         return
       }
 
+      const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, client.settings)
+      const toggleCommand = commandHandler.commands.get('toggle')!
+      if (
+        isBotDisabled &&
+        !toggleCommand.aliases.includes(text.replace('!', '').split(' ')[0]) &&
+        text.split(' ')[0] !== '!toggle'
+      )
+        return
+
       // Handle the incoming message using the command handler
       commandHandler.handleMessage({
-        channel: { name: channel, id: msg.channelId, client },
+        channel: { name: channel, id: msg.channelId, client, settings: client.settings },
         user: {
           name: user,
           permission: msg.userInfo.isBroadcaster
