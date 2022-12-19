@@ -48,6 +48,16 @@ module.exports = {
         allowSeparatedGroups: true,
       },
     ],
+    'prefer-destructuring': [
+      'error',
+      {
+        array: true,
+        object: true,
+      },
+      {
+        enforceForRenamedProperties: false,
+      },
+    ],
     'import/no-unresolved': 'error',
     'import/order': [
       'error',

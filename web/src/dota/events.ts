@@ -503,7 +503,7 @@ export class setupMainEvents {
   }
 
   handleMMR(increase: boolean, matchId: string, lobby_type?: number) {
-    const heroSlot = this.heroSlot
+    const { heroSlot } = this
     if (lobby_type !== undefined) {
       console.log('[MMR]', 'lobby_type passed in from early dc', {
         lobby_type,
