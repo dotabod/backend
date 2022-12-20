@@ -1,6 +1,7 @@
+import axios from 'axios'
+
 import { prisma } from './db/prisma.js'
 import { getBotAPI } from './twitch/lib/getBotAPI.js'
-import axios from './utils/axios.js'
 
 async function getAccounts() {
   // const steam32id = 1234
@@ -35,8 +36,8 @@ async function getFollows() {
     where: {
       won: null,
     },
-    skip: 0,
-    take: 10,
+    skip: 10,
+    take: 50,
     orderBy: {
       createdAt: 'desc',
     },
@@ -65,6 +66,7 @@ async function getFollows() {
 }
 
 async function fixWins() {
+  console.log('fix wins')
   const bets = await prisma.bet.findMany({
     select: {
       id: true,
@@ -74,11 +76,14 @@ async function fixWins() {
     where: {
       won: null,
     },
-    take: 50,
+    skip: 110,
+    take: 80,
     orderBy: {
       createdAt: 'desc',
     },
   })
+
+  console.log('bets found')
 
   for (const bet of bets) {
     try {
@@ -106,5 +111,5 @@ async function fixWins() {
   }
 }
 
-// await fixWins()
+await fixWins()
 // await getFollows()
