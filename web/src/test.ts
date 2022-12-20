@@ -1,7 +1,17 @@
-import axios from 'axios'
-
 import { prisma } from './db/prisma.js'
 import { getBotAPI } from './twitch/lib/getBotAPI.js'
+import axios from './utils/axios.js'
+
+async function getAccounts() {
+  // const steam32id = 1234
+  // const steamserverid = (await server.dota.getUserSteamServer(steam32id)) as string | undefined
+  // const response = await axios(
+  //   `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamserverid}`,
+  // )
+  // console.log(steamserverid)
+}
+
+// await getAccounts()
 
 async function getFollows() {
   const twitchApi = getBotAPI()
