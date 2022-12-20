@@ -80,7 +80,7 @@ export class setupMainEvents {
 
   // reset vars when a new match begins
   private resetClientState(resetBets = false) {
-    console.log('newMatchNewVars', { resetBets }, this.client.name)
+    console.log('newMatchNewVars', { resetBets }, this.client.name, this.betExists)
     this.currentHero = null
     this.heroSlot = null
     this.events = []
@@ -719,6 +719,7 @@ export class setupMainEvents {
       console.log('[BETS]', 'Game ended without a winner, early DC probably', {
         name: this.getChannel(),
       })
+      this.endingBets = true
 
       axios
         .post(`https://api.opendota.com/api/request/${matchId}`)
@@ -731,9 +732,29 @@ export class setupMainEvents {
       // Check with opendota to see if the match is over
       axios(`https://api.opendota.com/api/matches/${matchId}`)
         .then((response: any) => {
-          if (typeof response.data.radiant_win !== 'boolean') return
+          // Not checking radiant_win because if its a non scored match itll be null
+          // Opendota only has finished matches in their database anyway
+          if (!response?.data?.match_id) {
+            this.resetClientState(true)
+            return
+          }
 
-          const team = response.data.radiant_win ? 'radiant' : 'dire'
+          let team: 'radiant' | 'dire' | null = null
+          if (response?.data?.radiant_win === true) {
+            team = 'radiant'
+          } else if (response?.data?.radiant_win === false) {
+            team = 'dire'
+          }
+
+          if (team === null) {
+            void chatClient.say(
+              channel,
+              `Match not scored D: Mods need to end bets manually. Not adding or removing MMR for match ${matchId}.`,
+            )
+            this.resetClientState(true)
+            return
+          }
+
           this.endBets(team, this.betMyTeam, response?.data?.lobby_type)
         })
         .catch((e: any) => {
