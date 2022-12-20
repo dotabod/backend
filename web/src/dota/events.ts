@@ -695,17 +695,19 @@ export class setupMainEvents {
       return
     }
 
-    if (!this.playingMatchId || this.endingBets) return
+    if (!this.playingMatchId || this.endingBets) {
+      console.log('not ending bets, not resetting vars', this.getChannel(), {
+        endingBets: this.endingBets,
+        playingMatchId: this.playingMatchId,
+      })
+      return
+    }
 
     const matchId = this.playingMatchId
 
     // An early without waiting for ancient to blow up
     // We have to check every few seconds on Opendota to see if the match is over
-    if (
-      !winningTeam &&
-      this.client.gsi?.previously?.map === true &&
-      !this.client.gsi.map?.matchid
-    ) {
+    if (!winningTeam) {
       console.log('[BETS]', 'Streamer exited the match before it ended with a winner', {
         name: this.getChannel(),
       })
@@ -764,6 +766,11 @@ export class setupMainEvents {
         })
         .catch((e: any) => {
           // this could mean match is not over yet. just give up checking after this long (like 3m)
+          // resetting vars will mean it will just grab it again on match load
+          console.log(
+            'not ending bets even tho early dc, match might still be going on',
+            this.getChannel(),
+          )
           this.resetClientState(true)
         })
 
@@ -772,41 +779,43 @@ export class setupMainEvents {
 
     // "none"? Must mean the game hasn't ended yet
     // Would be undefined otherwise if there is no game
-    if (!winningTeam && this.client.gsi?.map?.win_team === 'none') {
+    if (this.client.gsi?.map?.win_team === 'none') {
       console.log(
-        'did not find winningTeam and map.win_team was none, not continuing, not resetting vars. assuming match is still going on',
+        'map.win_team was "none". not continuing, not resetting vars. assuming same match is still going on',
         this.getChannel(),
+        { playingMatchId: this.playingMatchId, GSImatchId: this.client.gsi.map.matchid },
       )
       return
     }
 
-    const localWinner = winningTeam ?? this.client.gsi?.map?.win_team
+    const localWinner = winningTeam
     const myTeam = this.playingTeam ?? this.client.gsi?.player?.team_name
     const won = myTeam === localWinner
     console.log({ localWinner, myTeam, won, channel: this.getChannel() })
 
     // Both or one undefined
-    if (!localWinner || !myTeam) {
+    if (!myTeam) {
       console.log('trying to end bets but did not find localWinner or myTeam', this.getChannel())
       return
     }
 
-    if (winningTeam === null) {
-      console.log('[BETS]', 'Running end bets from newdata, winning team was null', {
-        name: this.getChannel(),
-      })
-    } else {
-      console.log('[BETS]', 'Running end bets from map:win_team or custom match look-up', {
-        name: this.getChannel(),
-      })
-    }
+    console.log('[BETS]', 'Running end bets to award mmr and close predictions', {
+      name: this.getChannel(),
+      matchid: this.playingMatchId,
+    })
 
+    // this was used when endBets() was still in 'newdata' event called every 0.5s
+    // TODO: remove endingBets and confirm if needed
     this.endingBets = true
     const channel = this.getChannel()
+
+    console.log('calling mmr update handler', this.getChannel(), { won, matchId })
     this.handleMMR(won, matchId)
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
     if (!betsEnabled) {
+      console.log('bets are not enabled, stopping here', this.getChannel())
+
       this.resetClientState(true)
       return
     }
