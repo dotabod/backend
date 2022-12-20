@@ -25,6 +25,7 @@ import './commands/match.js'
 import './commands/stats.js'
 import './commands/toggle.js'
 import './commands/ranked.js'
+import './commands/test.js'
 
 // Setup twitch chat bot client first
 // TODO: Think about whether await is necessary here
