@@ -6,6 +6,34 @@ import Mongo from './mongo.js'
 
 const mongo = Mongo.getInstance()
 
+const generateMessage = (
+  playersFromLastGame: {
+    old: {
+      heroid: number
+      accountid: number
+    }
+    current: {
+      heroid: number
+      accountid: number
+    }
+    currentIdx: number
+  }[],
+) => {
+  if (!playersFromLastGame.length) {
+    return 'Not playing with anyone from last game'
+  }
+
+  return playersFromLastGame
+    .map(
+      (player, i) =>
+        `${getHeroNameById(player.current.heroid, player.currentIdx)} played as ${getHeroNameById(
+          player.old.heroid,
+          i,
+        )}`,
+    )
+    .join(' · ')
+}
+
 export default async function lastgame(steam32Id: number, currentMatchId?: string) {
   if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
 
@@ -36,36 +64,23 @@ export default async function lastgame(steam32Id: number, currentMatchId?: strin
   const { matchPlayers: newMatchPlayers } = getAccountsFromMatch(currentGame)
   const { matchPlayers: oldMatchPlayers } = getAccountsFromMatch(oldGame)
 
-  const playersFromLastGame = []
-  for (const currentGamePlayer of newMatchPlayers) {
-    if (steam32Id === currentGamePlayer.accountid) {
-      continue
-    }
+  const playersFromLastGame = newMatchPlayers
+    .map((currentGamePlayer, i) => {
+      if (steam32Id === currentGamePlayer.accountid) {
+        return null
+      }
 
-    const lastGamePlayer = oldMatchPlayers.find(
-      (player: { accountid: number }) => player.accountid === currentGamePlayer.accountid,
-    )
+      const old = oldMatchPlayers.find((player) => player.accountid === currentGamePlayer.accountid)
+      if (!old) return null
 
-    if (lastGamePlayer) {
-      playersFromLastGame.push({
-        old: lastGamePlayer,
+      return {
+        old,
         current: currentGamePlayer,
-      })
-    }
-  }
+        currentIdx: i,
+      }
+    })
+    .flatMap((f) => f ?? [])
 
-  let msg = 'Not playing with anyone from last game'
-  if (playersFromLastGame.length) {
-    msg = playersFromLastGame
-      .map(
-        (player, i) =>
-          `${getHeroNameById(player.current.heroid)} played as ${getHeroNameById(
-            player.old.heroid,
-            i,
-          )}`,
-      )
-      .join(' · ')
-  }
-
+  const msg = generateMessage(playersFromLastGame)
   return `${msg}. Last game: dotabuff.com/matches/${oldGame.match.match_id}`
 }
