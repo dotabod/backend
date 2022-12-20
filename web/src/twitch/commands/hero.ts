@@ -62,7 +62,7 @@ commandHandler.registerCommand('hero', {
       })
       .catch((e) => {
         void chatClient.say(channel, `Playing ${hero.localized_name}`)
-        console.log(e)
+        console.log(e?.data)
       })
   },
 })

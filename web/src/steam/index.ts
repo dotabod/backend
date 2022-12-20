@@ -300,7 +300,7 @@ class Dota {
           cb?.(null, game)
         })
         .catch((e) => {
-          console.log(e)
+          console.log(e?.data)
           operation.retry(new Error('Match not found'))
         })
     })
