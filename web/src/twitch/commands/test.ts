@@ -26,6 +26,12 @@ commandHandler.registerCommand('test', {
       const steamserverid = (await server.dota.getUserSteamServer(
         steam32Id || client.steam32Id,
       )) as string | undefined
+
+      if (!steamserverid) {
+        void chatClient.say(channel, 'Match not found PauseChamp')
+        return
+      }
+
       console.log({ command: 'TEST', steam32Id: steam32Id || client.steam32Id, steamserverid })
 
       console.log(
