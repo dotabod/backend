@@ -107,6 +107,9 @@ export class setupMainEvents {
 
   // Runs every gametick
   async saveMatchData() {
+    // Not gonna save any when local. Assuming we're just testing in local lobbys
+    if (process.env.NODE_ENV === 'development') return
+
     if (!this.client.steam32Id || !this.client.gsi?.map?.matchid) return
     if (!Number(this.client.gsi.map.matchid)) return
     if (this.client.steamserverid) return
@@ -698,6 +701,11 @@ export class setupMainEvents {
     streamersTeam: 'radiant' | 'dire' | 'spectator' | null = null,
     lobby_type?: number,
   ) {
+    if (process.env.NODE_ENV === 'development') {
+      this.resetClientState(true)
+      return
+    }
+
     if (!this.betExists || this.endingBets) return
 
     const matchId = this.betExists
