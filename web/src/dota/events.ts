@@ -550,6 +550,8 @@ export class setupMainEvents {
 
         console.log('[MMR]', 'Error fetching match details', {
           matchId,
+          increase,
+          lobbyType,
           channel: this.getChannel(),
           error: e?.response?.data,
         })
