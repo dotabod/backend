@@ -29,16 +29,6 @@ model Account {
   @@map("accounts")
 }
 
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("sessions")
-}
-
 model User {
   id            String         @id @default(cuid())
   name          String         @unique
@@ -52,20 +42,10 @@ model User {
   followers     Int?
   Account       Account?
   Bet           Bet[]
-  Session       Session[]
   settings      Setting[]
   SteamAccount  SteamAccount[]
 
   @@map("users")
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-  @@map("verification_tokens")
 }
 
 model Setting {
