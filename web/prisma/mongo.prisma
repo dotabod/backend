@@ -87,15 +87,15 @@ type CardsSlotsTrophy {
 
 type DelayedGamesBuildings {
   destroyed Boolean
-  /// Multiple data types found: Float: 80.4%, Int: 19.6% out of 35334 sampled entries
+  /// Multiple data types found: Float: 78.4%, Int: 21.6% out of 34161 sampled entries
   heading   Json
   lane      Int
   team      Int
   tier      Int
   type      Int
-  /// Multiple data types found: Float: 99.6%, Int: 0.4% out of 35334 sampled entries
+  /// Multiple data types found: Float: 96.7%, Int: 3.3% out of 34161 sampled entries
   x         Json
-  /// Multiple data types found: Float: 99.6%, Int: 0.4% out of 35334 sampled entries
+  /// Multiple data types found: Float: 96.7%, Int: 3.3% out of 34161 sampled entries
   y         Json
 }
 
@@ -156,9 +156,9 @@ type DelayedGamesTeamsPlayers {
   net_worth     Int
   playerid      Int
   team          Int
-  /// Multiple data types found: Float: 98.2%, Int: 1.8% out of 9949 sampled entries
+  /// Multiple data types found: Float: 94.8%, Int: 5.2% out of 9933 sampled entries
   x             Json
-  /// Multiple data types found: Float: 98.2%, Int: 1.8% out of 9949 sampled entries
+  /// Multiple data types found: Float: 94.8%, Int: 5.2% out of 9933 sampled entries
   y             Json
 }
 
@@ -199,7 +199,7 @@ model delayedGames {
   delta_frame Boolean?
   graph_data  DelayedGamesGraphData
   match       DelayedGamesMatch
-  matchid     String
+  matchid     String?
   teams       DelayedGamesTeams[]
 
   @@index([match.match_id], map: "match.match_id_1")
