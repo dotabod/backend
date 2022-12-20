@@ -35,10 +35,8 @@ const generateMessage = (
 }
 
 export default async function lastgame(steam32Id: number, currentMatchId?: string) {
-  if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
-
   const db = await mongo.db
-  const gameHistory = await db
+  const gameHistory = (await db
     .collection('delayedGames')
     .find(
       {
@@ -46,7 +44,14 @@ export default async function lastgame(steam32Id: number, currentMatchId?: strin
       },
       { sort: { createdAt: -1 }, limit: 2 },
     )
-    .toArray()
+    .toArray()) as unknown as delayedGames[]
+
+  if (!currentMatchId) {
+    const msg = 'Not in a match rn PauseChamp'
+    return gameHistory[0]?.match?.match_id
+      ? `${msg}. Here's last game: dotabuff.com/matches/${gameHistory[0].match.match_id}`
+      : msg
+  }
 
   if (!gameHistory.length) throw new CustomError("Game wasn't found")
   if (gameHistory.length !== 2) throw new CustomError('No last game found')
