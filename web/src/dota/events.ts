@@ -5,7 +5,7 @@ import Mongo from '../steam/mongo.js'
 import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { disabledBets, openTwitchBet } from '../twitch/lib/openTwitchBet.js'
-import { DotaEvent, DotaEventTypes, Packet, SocketClient } from '../types.js'
+import { DotaEvent, DotaEventTypes, Packet, Player, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
 import { fmtMSS, steamID64toSteamID32 } from '../utils/index.js'
 import checkMidas from './lib/checkMidas.js'
@@ -32,15 +32,15 @@ export class setupMainEvents {
   // Server could reboot and lose these in memory
   // But that's okay they will get reset based on current match state
   aegisPickedUp?: { playerId: number; expireTime: string; expireDate: Date }
-  betExists: string | undefined | null = null
-  betMyTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
-  currentHero: string | undefined | null = null
+  playingMatchId: string | undefined | null = null
+  playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
+  playingHeroSlot: number | undefined | null = null
+  playingHero: string | undefined | null = null
   savingSteamServerId = false
   steamServerTries = 0
   endingBets = false
   openingBets = false
   events: DotaEvent[] = []
-  heroSlot: number | undefined | null = null
   passiveMidas = { counter: 0 }
   roshanKilled?: {
     minTime: string
@@ -80,9 +80,9 @@ export class setupMainEvents {
 
   // reset vars when a new match begins
   private resetClientState(resetBets = false) {
-    console.log('newMatchNewVars', { resetBets }, this.client.name, this.betExists)
-    this.currentHero = null
-    this.heroSlot = null
+    console.log('newMatchNewVars', { resetBets }, this.client.name, this.playingMatchId)
+    this.playingHero = null
+    this.playingHeroSlot = null
     this.events = []
     this.passiveMidas = { counter: 0 }
     this.savingSteamServerId = false
@@ -94,8 +94,8 @@ export class setupMainEvents {
       this.client.steamserverid = undefined
       this.endingBets = false
       this.openingBets = false
-      this.betExists = null
-      this.betMyTeam = null
+      this.playingMatchId = null
+      this.playingTeam = null
 
       this.roshanKilled = undefined
       this.aegisPickedUp = undefined
@@ -249,11 +249,11 @@ export class setupMainEvents {
 
       // Can't just !this.heroSlot because it can be 0
       const purchaser = this.client.gsi?.items?.teleport0?.purchaser
-      if (typeof this.heroSlot !== 'number' && typeof purchaser === 'number') {
+      if (typeof this.playingHeroSlot !== 'number' && typeof purchaser === 'number') {
         console.log('[SLOT]', 'Found hero slot at', purchaser, {
           name: this.getChannel(),
         })
-        this.heroSlot = purchaser
+        this.playingHeroSlot = purchaser
         this.updateSteam32Id()
         void this.saveMatchData()
         return
@@ -295,7 +295,7 @@ export class setupMainEvents {
     events.on(`${this.getToken()}:hero:name`, (name: string) => {
       if (!isPlayingMatch(this.client.gsi)) return
 
-      this.currentHero = name
+      this.playingHero = name
     })
 
     events.on(`${this.getToken()}:hero:alive`, (alive: boolean) => {
@@ -495,17 +495,8 @@ export class setupMainEvents {
     }
   }
 
-  handleMMR(increase: boolean, matchId: string, lobby_type?: number) {
-    const { heroSlot } = this
-    if (lobby_type !== undefined) {
-      console.log('[MMR]', 'lobby_type passed in from early dc', {
-        lobby_type,
-        increase,
-        name: this.getChannel(),
-      })
-      this.updateMMR(increase, lobby_type, matchId)
-      return
-    }
+  handleMMR(increase: boolean, matchId: string) {
+    const { playingHeroSlot: heroSlot } = this
 
     axios
       .post(`https://api.opendota.com/api/request/${matchId}`)
@@ -572,7 +563,7 @@ export class setupMainEvents {
   // 4 Then, tell twitch to close bets based on win result
   openBets() {
     // The bet was already made
-    if (this.betExists !== null) return
+    if (this.playingMatchId !== null) return
     if (this.openingBets) return
 
     // Why open if not playing?
@@ -595,6 +586,8 @@ export class setupMainEvents {
       .findFirst({
         select: {
           id: true,
+          myTeam: true,
+          matchId: true,
         },
         where: {
           userId: this.getToken(),
@@ -602,15 +595,15 @@ export class setupMainEvents {
           won: null,
         },
       })
-      .then((bet: { id: string } | null) => {
+      .then((bet) => {
         // Saving to local memory so we don't have to query the db again
         if (bet?.id) {
           console.log('[BETS]', 'Found a bet in the database', bet.id)
-          this.betExists = this.client.gsi?.map?.matchid ?? null
-          this.betMyTeam = this.client.gsi?.player?.team_name ?? null
+          this.playingMatchId = bet.matchId
+          this.playingTeam = bet.myTeam as Player['team_name']
         } else {
-          this.betExists = this.client.gsi?.map?.matchid ?? null
-          this.betMyTeam = this.client.gsi?.player?.team_name ?? null
+          this.playingMatchId = this.client.gsi?.map?.matchid ?? null
+          this.playingTeam = this.client.gsi?.player?.team_name ?? null
 
           prisma.bet
             .create({
@@ -696,30 +689,26 @@ export class setupMainEvents {
       })
   }
 
-  endBets(
-    winningTeam: 'radiant' | 'dire' | null = null,
-    streamersTeam: 'radiant' | 'dire' | 'spectator' | null = null,
-    lobby_type?: number,
-  ) {
+  endBets(winningTeam: 'radiant' | 'dire' | null = null) {
     if (process.env.NODE_ENV === 'development') {
       this.resetClientState(true)
       return
     }
 
-    if (!this.betExists || this.endingBets) return
+    if (!this.playingMatchId || this.endingBets) return
 
-    const matchId = this.betExists
+    const matchId = this.playingMatchId
 
-    // A fresh DC without waiting for ancient to blow up
+    // An early without waiting for ancient to blow up
+    // We have to check every few seconds on Opendota to see if the match is over
     if (
       !winningTeam &&
       this.client.gsi?.previously?.map === true &&
       !this.client.gsi.map?.matchid
     ) {
-      console.log('[BETS]', 'Game ended without a winner, early DC probably', {
+      console.log('[BETS]', 'Streamer exited the match before it ended with a winner', {
         name: this.getChannel(),
       })
-      this.endingBets = true
 
       axios
         .post(`https://api.opendota.com/api/request/${matchId}`)
@@ -732,21 +721,29 @@ export class setupMainEvents {
       // Check with opendota to see if the match is over
       axios(`https://api.opendota.com/api/matches/${matchId}`)
         .then((response: any) => {
-          // Not checking radiant_win because if its a non scored match itll be null
-          // Opendota only has finished matches in their database anyway
+          console.log('Found an early dc match data', matchId, this.getChannel())
+          // Not checking radiant_win because if its a non scored match that key will be null
+          // But if matchid is empty thats a problem because Opendota only has finished matches in their database
           if (!response?.data?.match_id) {
+            console.log(
+              'early dc match didnt have data in it',
+              response?.data,
+              this.getChannel(),
+              matchId,
+            )
             this.resetClientState(true)
             return
           }
 
-          let team: 'radiant' | 'dire' | null = null
+          let winningTeam: 'radiant' | 'dire' | null = null
           if (response?.data?.radiant_win === true) {
-            team = 'radiant'
+            winningTeam = 'radiant'
           } else if (response?.data?.radiant_win === false) {
-            team = 'dire'
+            winningTeam = 'dire'
           }
 
-          if (team === null) {
+          if (winningTeam === null) {
+            console.log('Early dc match wont be scored bc winner is null', this.getChannel())
             void chatClient.say(
               channel,
               `Match not scored D: Mods need to end bets manually. Not adding or removing MMR for match ${matchId}.`,
@@ -755,12 +752,18 @@ export class setupMainEvents {
             return
           }
 
-          this.endBets(team, this.betMyTeam, response?.data?.lobby_type)
+          console.log(
+            'Should be scoring early dc here soon and closing predictions',
+            this.getChannel(),
+            {
+              winningTeam,
+              matchId,
+            },
+          )
+          this.endBets(winningTeam)
         })
         .catch((e: any) => {
-          // its not over? just give up checking after this long
-          // TODO: if its a close client & open client, mayb dont pass true here
-          // confirm this scenario
+          // this could mean match is not over yet. just give up checking after this long (like 3m)
           this.resetClientState(true)
         })
 
@@ -769,18 +772,27 @@ export class setupMainEvents {
 
     // "none"? Must mean the game hasn't ended yet
     // Would be undefined otherwise if there is no game
-    if (!winningTeam && this.client.gsi?.map?.win_team === 'none') return
+    if (!winningTeam && this.client.gsi?.map?.win_team === 'none') {
+      console.log(
+        'did not find winningTeam and map.win_team was none, not continuing, not resetting vars. assuming match is still going on',
+        this.getChannel(),
+      )
+      return
+    }
 
     const localWinner = winningTeam ?? this.client.gsi?.map?.win_team
-    const myTeam = streamersTeam ?? this.client.gsi?.player?.team_name
+    const myTeam = this.playingTeam ?? this.client.gsi?.player?.team_name
     const won = myTeam === localWinner
-    console.log({ localWinner, myTeam, won })
+    console.log({ localWinner, myTeam, won, channel: this.getChannel() })
 
     // Both or one undefined
-    if (!localWinner || !myTeam) return
+    if (!localWinner || !myTeam) {
+      console.log('trying to end bets but did not find localWinner or myTeam', this.getChannel())
+      return
+    }
 
     if (winningTeam === null) {
-      console.log('[BETS]', 'Running end bets from newdata', {
+      console.log('[BETS]', 'Running end bets from newdata, winning team was null', {
         name: this.getChannel(),
       })
     } else {
@@ -791,7 +803,7 @@ export class setupMainEvents {
 
     this.endingBets = true
     const channel = this.getChannel()
-    this.handleMMR(won, matchId, lobby_type)
+    this.handleMMR(won, matchId)
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
     if (!betsEnabled) {
