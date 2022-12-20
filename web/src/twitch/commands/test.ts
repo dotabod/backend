@@ -18,13 +18,15 @@ commandHandler.registerCommand('test', {
 
     const [steam32Id] = args
     async function handler() {
-      if (!steam32Id) {
+      if (!steam32Id || !client.steam32Id) {
         void chatClient.say(channel, 'No steam32Id? PauseChamp')
         return
       }
 
-      const steamserverid = (await server.dota.getUserSteamServer(steam32Id)) as string | undefined
-      console.log({ steam32Id, steamserverid })
+      const steamserverid = (await server.dota.getUserSteamServer(
+        steam32Id || client.steam32Id,
+      )) as string | undefined
+      console.log({ command: 'TEST', steam32Id: steam32Id || client.steam32Id, steamserverid })
 
       console.log(
         `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamserverid}`,
