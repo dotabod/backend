@@ -25,10 +25,10 @@ const generateMessage = (
 
   return playersFromLastGame
     .map(
-      (player, i) =>
+      (player, oldIdx) =>
         `${getHeroNameById(player.current.heroid, player.currentIdx)} played as ${getHeroNameById(
           player.old.heroid,
-          i,
+          oldIdx,
         )}`,
     )
     .join(' · ')
