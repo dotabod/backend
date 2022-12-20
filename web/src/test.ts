@@ -17,52 +17,36 @@ async function getAccounts() {
 async function getFollows() {
   const twitchApi = getBotAPI()
 
-  const bets = await prisma.bet.findMany({
+  const users = await prisma.user.findMany({
     select: {
       id: true,
-      matchId: true,
-      myTeam: true,
-      user: {
+      Account: {
         select: {
-          Account: {
-            select: {
-              providerAccountId: true,
-            },
-          },
-          name: true,
+          providerAccountId: true,
         },
       },
     },
     where: {
-      won: null,
-    },
-    skip: 10,
-    take: 50,
-    orderBy: {
-      createdAt: 'desc',
+      followers: null,
     },
   })
 
-  // Currently live and streaming
-  const allFollow = []
-  for (const bet of bets) {
-    if (!bet.user.Account?.providerAccountId) continue
+  for (const user of users) {
+    if (!user.Account?.providerAccountId) continue
+    console.log('checking', user.id)
     const follows = twitchApi.users.getFollowsPaginated({
-      followedUser: bet.user.Account.providerAccountId,
+      followedUser: user.Account.providerAccountId,
     })
     const totalFollowerCount = await follows.getTotalCount()
-    allFollow.push({
-      name: bet.user.name,
-      follows: totalFollowerCount.toLocaleString(),
-      url: `https://twitch.tv/${bet.user.name}`,
+    await prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        followers: totalFollowerCount,
+      },
     })
   }
-
-  allFollow.sort((a, b) => {
-    return parseInt(b.follows.replace(/,/g, '')) - parseInt(a.follows.replace(/,/g, ''))
-  })
-
-  console.log(allFollow)
 }
 
 async function fixWins() {
@@ -111,5 +95,18 @@ async function fixWins() {
   }
 }
 
-await fixWins()
+// await fixWins()
 // await getFollows()
+
+const followers = await prisma.user.findMany({
+  select: {
+    name: true,
+    followers: true,
+  },
+  orderBy: {
+    followers: 'desc',
+  },
+  take: 20,
+})
+
+console.log(followers)
