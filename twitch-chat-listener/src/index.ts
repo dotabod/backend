@@ -37,9 +37,14 @@ chatClient.onMessage(function (channel, user, text, msg) {
   }
 
   const { channelId, userInfo, id: messageId } = msg
+  const { isMod, isBroadcaster, isSubscriber } = userInfo
 
   // forward the msg to dota node app
-  io.to('twitch-chat-messages').emit('msg', channel, user, text, { channelId, userInfo, messageId })
+  io.to('twitch-chat-messages').emit('msg', channel, user, text, {
+    channelId,
+    userInfo: { isMod, isBroadcaster, isSubscriber },
+    messageId,
+  })
 })
 
 export default io
