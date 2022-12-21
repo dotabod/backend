@@ -38,8 +38,6 @@ export class setupMainEvents {
   playingHero: string | undefined | null = null
   savingSteamServerId = false
   steamServerTries = 0
-  endingBets = false
-  openingBets = false
   events: DotaEvent[] = []
   passiveMidas = { counter: 0 }
   roshanKilled?: {
@@ -48,6 +46,8 @@ export class setupMainEvents {
     minDate: Date
     maxDate: Date
   }
+  endingBets = false
+  openingBets = false
 
   constructor(client: SocketClient) {
     this.client = client

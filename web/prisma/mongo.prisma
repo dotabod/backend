@@ -261,9 +261,9 @@ model notablePlayers {
   team_name         String?
   team_tag          String?
   /// Field referred in an index, but found no data to define the type.
-  channel           Json?
+  channel           String?
   /// Field referred in an index, but found no data to define the type.
-  enabled           Json?
+  enabled           Boolean?
 
   @@index([id, channel, enabled], map: "id_1_channel_1_enabled_1")
 }

@@ -1,8 +1,8 @@
 import getDBUser from '../db/getDBUser.js'
 import { DBSettings, getValueOrDefault } from '../db/settings.js'
-import commandHandler from './lib/CommandHandler.js'
 import { modMode } from './commands/modsonly.js'
 import { plebMode } from './commands/pleb.js'
+import commandHandler from './lib/CommandHandler.js'
 import { getChatClient } from './lib/getChatClient.js'
 
 import './commands/apm.js'

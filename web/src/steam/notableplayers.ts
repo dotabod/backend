@@ -15,6 +15,7 @@ export interface Player {
 }
 
 export async function notablePlayers(
+  twitchChannelId: string,
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
@@ -47,6 +48,9 @@ export async function notablePlayers(
       {
         account_id: {
           $in: accountIds,
+        },
+        channel: {
+          $in: [twitchChannelId, null],
         },
       },
       {
