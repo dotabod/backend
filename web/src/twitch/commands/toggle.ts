@@ -2,7 +2,7 @@ import { prisma } from '../../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { events } from '../../dota/server.js'
 import { chatClient } from '../index.js'
-import commandHandler, { MessageType } from './CommandHandler.js'
+import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 export function tellChatDotabodState(isDisabled: boolean, content: string) {
   const toggled = isDisabled ? 'disabled' : 'enabled'

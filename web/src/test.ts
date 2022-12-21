@@ -60,8 +60,8 @@ async function fixWins() {
     where: {
       won: null,
     },
-    skip: 110,
-    take: 80,
+    skip: 0,
+    take: 20,
     orderBy: {
       createdAt: 'desc',
     },
@@ -95,18 +95,18 @@ async function fixWins() {
   }
 }
 
-// await fixWins()
+await fixWins()
 // await getFollows()
 
-const followers = await prisma.user.findMany({
-  select: {
-    name: true,
-    followers: true,
-  },
-  orderBy: {
-    followers: 'desc',
-  },
-  take: 20,
-})
+// const followers = await prisma.user.findMany({
+//   select: {
+//     name: true,
+//     followers: true,
+//   },
+//   orderBy: {
+//     followers: 'desc',
+//   },
+//   take: 20,
+// })
 
-console.log(followers)
+// console.log(followers)

@@ -2,7 +2,7 @@ import { DBSettings } from '../../db/settings.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
 import { chatClient } from '../index.js'
-import commandHandler, { MessageType } from './CommandHandler.js'
+import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('np', {
   aliases: ['players', 'who'],

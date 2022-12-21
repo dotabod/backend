@@ -1,7 +1,7 @@
 import { DBSettings } from '../../db/settings.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import { chatClient } from '../index.js'
-import commandHandler, { MessageType } from './CommandHandler.js'
+import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('gpm', {
   aliases: [],

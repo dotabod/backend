@@ -1,6 +1,6 @@
 import { server } from '../../dota/index.js'
 import { chatClient } from '../index.js'
-import commandHandler, { MessageType } from './CommandHandler.js'
+import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('test', {
   aliases: [],

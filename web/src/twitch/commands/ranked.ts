@@ -2,7 +2,7 @@ import { delayedGames } from '../../../prisma/generated/mongoclient/index.js'
 import { DBSettings } from '../../db/settings.js'
 import Mongo from '../../steam/mongo.js'
 import { chatClient } from '../index.js'
-import commandHandler, { MessageType } from './CommandHandler.js'
+import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 const mongo = Mongo.getInstance()
 commandHandler.registerCommand('ranked', {
