@@ -54,7 +54,9 @@ commandHandler.registerCommand('np', {
           return
         }
 
-        await mongo.collection('notablePlayers').deleteOne({ account_id: Number(forSteam32Id) })
+        await mongo
+          .collection('notablePlayers')
+          .deleteOne({ channel: twitchChannelId, account_id: Number(forSteam32Id) })
         void chatClient.say(channel, `Removed ${forSteam32Id} from !np for this channel`)
         return
       }
