@@ -1,3 +1,5 @@
+import { io } from 'socket.io-client'
+
 import getDBUser from '../db/getDBUser.js'
 import { DBSettings, getValueOrDefault } from '../db/settings.js'
 import { modMode } from './commands/modsonly.js'
@@ -28,10 +30,16 @@ import './commands/ranked.js'
 import './commands/test.js'
 
 // Setup twitch chat bot client first
-// TODO: Think about whether await is necessary here
-export const chatClient = await getChatClient()
+export const chatClient = getChatClient()
 
-chatClient.onMessage(function (channel, user, text, msg) {
+// Our docker chat forwarder instance
+const socket = io('twitch-chat-listener:5005')
+
+socket.on('connect', () => {
+  console.log('We alive on dotabod chat server!')
+})
+
+socket.on('msg', function (channel: string, user: string, text: string, msg) {
   if (!msg.channelId) return
 
   // Letting one pleb in

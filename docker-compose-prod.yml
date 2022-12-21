@@ -1,4 +1,14 @@
 services:
+  twitch-chat-listener:
+      build:
+        context: twitch-chat-listener
+        target: prod
+      hostname: twitch-chat-listener
+      ports:
+        - '5005:5005'
+      env_file: .env.prod
+      environment:
+        - NEW_RELIC_APP_NAME="twitch chat listener"
   web:
     build:
       context: web

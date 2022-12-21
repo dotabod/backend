@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/postgresclient"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String
+  access_token      String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  email         String         @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at")
+  mmr           Int            @default(0) @db.SmallInt
+  steam32Id     Int?           @unique(map: "users_playerId_key")
+  followers     Int?
+  Account       Account?
+  Bet           Bet[]
+  settings      Setting[]
+  SteamAccount  SteamAccount[]
+
+  @@map("users")
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  key       String
+  value     Json?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([key, userId])
+  @@map("settings")
+}
+
+model SteamAccount {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  steam32Id Int      @unique
+  userId    String
+  name      String?
+  mmr       Int      @default(0) @db.SmallInt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("steam_accounts")
+}
+
+model Bet {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+  matchId      String
+  predictionId String
+  won          Boolean?
+  myTeam       String
+  userId       String
+  lobby_type   Int?     @db.SmallInt
+  steam32Id    BigInt?
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, userId])
+  @@map("bets")
+}

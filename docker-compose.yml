@@ -11,6 +11,18 @@ services:
     volumes:
       - ./web/src:/app/src
       - steam_auth:/app/src/steam/volumes
+  twitch-chat-listener:
+    build:
+      context: twitch-chat-listener
+      target: dev
+    hostname: twitch-chat-listener
+    ports:
+      - '5005:5005'
+    env_file: .env.local
+    environment:
+      - NEW_RELIC_APP_NAME="DEV twitch chat listener"
+    volumes:
+      - ./web/src:/app/src
   nginx:
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template

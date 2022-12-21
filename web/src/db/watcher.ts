@@ -4,7 +4,6 @@ import findUser, { deleteUser } from '../dota/lib/connectedStreamers.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { toggleDotabod } from '../twitch/commands/toggle.js'
-import { chatClient } from '../twitch/index.js'
 import { DBSettings } from './settings.js'
 import supabase from './supabase.js'
 
@@ -12,21 +11,6 @@ const channel = supabase.channel('db-changes')
 
 // When a user updates MMR from dashboard and they have client open
 channel
-  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
-    if (process.env.NODE_ENV !== 'production') {
-      return
-    }
-
-    console.log('[SUPABASE]', 'New user to send bot to: ', payload.new.name)
-    chatClient
-      .join(payload.new.name)
-      .then(() => {
-        console.log('[SUPABASE]', 'Joined channel', payload.new.name)
-      })
-      .catch((e) => {
-        console.error('[SUPABASE]', 'Error joining channel', e)
-      })
-  })
   .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'users' }, (payload) => {
     console.log(payload, 'REMOVE')
 
