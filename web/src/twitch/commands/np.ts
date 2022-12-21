@@ -54,10 +54,14 @@ commandHandler.registerCommand('np', {
           return
         }
 
-        await mongo
+        const removed = await mongo
           .collection('notablePlayers')
           .deleteOne({ channel: twitchChannelId, account_id: Number(forSteam32Id) })
-        void chatClient.say(channel, `Removed ${forSteam32Id} from !np for this channel`)
+        if (removed.deletedCount) {
+          void chatClient.say(channel, `Removed ${forSteam32Id} from !np for this channel`)
+        } else {
+          void chatClient.say(channel, `Could not find ${forSteam32Id} for this channel`)
+        }
         return
       }
     }
