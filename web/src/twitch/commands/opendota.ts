@@ -1,7 +1,7 @@
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-commandHandler.registerCommand('dotabuff', {
+commandHandler.registerCommand('opendota', {
   aliases: [],
   permission: 0,
   cooldown: 15000,
@@ -13,7 +13,7 @@ commandHandler.registerCommand('dotabuff', {
     if (client.steam32Id && Number(client.steam32Id)) {
       void chatClient.say(
         channel,
-        `Here's ${channel}: dotabuff.com/players/${client.steam32Id.toString()}`,
+        `Here's ${channel}: opendota.com/players/${client.steam32Id.toString()}`,
       )
       return
     }
