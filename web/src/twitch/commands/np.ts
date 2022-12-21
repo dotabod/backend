@@ -5,7 +5,7 @@ import { notablePlayers } from '../../steam/notableplayers.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-const mongo = Mongo.getInstance()
+const mongo = await Mongo.connect()
 
 commandHandler.registerCommand('np', {
   aliases: ['players', 'who'],
@@ -30,9 +30,8 @@ commandHandler.registerCommand('np', {
         return
       }
 
-      const db = await mongo.db
       if (addOrRemove === 'add') {
-        await db.collection('notablePlayers').updateOne(
+        await mongo.collection('notablePlayers').updateOne(
           { account_id: forSteam32Id },
           {
             $set: {
@@ -50,7 +49,7 @@ commandHandler.registerCommand('np', {
       }
 
       if (addOrRemove === 'remove') {
-        await db.collection('notablePlayers').deleteOne({ account_id: forSteam32Id })
+        await mongo.collection('notablePlayers').deleteOne({ account_id: forSteam32Id })
         void chatClient.say(channel, `Removed ${forName} from !np for this channel`)
         return
       }

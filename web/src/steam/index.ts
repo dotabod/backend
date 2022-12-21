@@ -73,7 +73,7 @@ const retryCustom = (cont: number, fn: () => Promise<any>, delay: number): Promi
     cont > 0 ? waitCustom(delay).then(() => retryCustom(cont - 1, fn, delay)) : Promise.reject(err),
   )
 
-const mongo = Mongo.getInstance()
+const mongo = await Mongo.connect()
 
 class Dota {
   private static instance: Dota
@@ -174,10 +174,6 @@ class Dota {
       },
     )
 
-    this.dota2.on('ready', () => {
-      console.log('[STEAM]', 'connected to dota game coordinator')
-    })
-
     this.dota2.on('unready', () => {
       console.log('[STEAM]', 'disconnected from dota game coordinator')
     })
@@ -257,8 +253,8 @@ class Dota {
 
           if (waitForHeros && hasHeroes) {
             console.log('Saving match data with heroes', game.match.match_id)
-            const db = await mongo.db
-            await db
+
+            await mongo
               .collection('delayedGames')
               .updateOne(
                 { 'match.match_id': game.match.match_id },
@@ -272,8 +268,7 @@ class Dota {
           if (!waitForHeros) {
             console.log('Saving match data', game.match.match_id, { hasHeroes })
             try {
-              const db = await mongo.db
-              await db
+              await mongo
                 .collection('delayedGames')
                 .updateOne(
                   { 'match.match_id': game.match.match_id },
@@ -366,9 +361,8 @@ class Dota {
     }[]
   > {
     return Promise.resolve().then(async () => {
-      const db = await mongo.db
       const promises = []
-      const cards = await db
+      const cards = await mongo
         .collection('cards')
         .find({ id: { $in: accounts } })
         .sort({ createdAt: -1 })
@@ -392,7 +386,7 @@ class Dota {
                   leaderboard_rank: temporaryCard.leaderboard_rank || 0,
                 }
                 if (temporaryCard.rank_tier !== -10) {
-                  await db.collection('cards').updateOne(
+                  await mongo.collection('cards').updateOne(
                     {
                       id: accounts[i],
                     },

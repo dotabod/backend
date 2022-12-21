@@ -4,7 +4,7 @@ import { getHeroNameById } from '../dota/lib/heroes.js'
 import CustomError from '../utils/customError.js'
 import Mongo from './mongo.js'
 
-const mongo = Mongo.getInstance()
+const mongo = await Mongo.connect()
 
 const generateMessage = (
   playersFromLastGame: {
@@ -35,8 +35,7 @@ const generateMessage = (
 }
 
 export default async function lastgame(steam32Id: number, currentMatchId?: string) {
-  const db = await mongo.db
-  const gameHistory = (await db
+  const gameHistory = (await mongo
     .collection('delayedGames')
     .find(
       {

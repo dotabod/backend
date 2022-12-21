@@ -1,55 +1,48 @@
-import { Db, MongoClient, ServerApiVersion } from 'mongodb'
+import { Db, MongoClient } from 'mongodb'
+import retry from 'retry'
 
-export default class Mongo {
-  private static instance: Mongo
+class MongoDBSingleton {
+  private clientPromise: Promise<Db> | null = null
 
-  public db: Promise<Db>
-
-  private client: Promise<MongoClient>
-
-  private async connect(): Promise<Db> {
-    try {
-      const client = await MongoClient.connect(process.env.MONGO_URL!, {
-        serverApi: ServerApiVersion.v1,
-      })
-      return client.db()
-    } catch (error) {
-      console.error('MONGO CONNECT ERR', error)
-      throw error
+  async connect(): Promise<Db> {
+    // If the client promise is already resolved, return it
+    if (this.clientPromise) {
+      return this.clientPromise
     }
-  }
 
-  private constructor() {
-    this.client = MongoClient.connect(process.env.MONGO_URL!, {
-      serverApi: ServerApiVersion.v1,
+    // Create a new promise that will be resolved with the MongoDB client
+    this.clientPromise = new Promise((resolve, reject) => {
+      // Set up the retry operation
+      const operation = retry.operation({
+        retries: 5, // Number of retries
+        factor: 3, // Exponential backoff factor
+        minTimeout: 1 * 1000, // Minimum retry timeout (1 second)
+        maxTimeout: 60 * 1000, // Maximum retry timeout (60 seconds)
+      })
+
+      // Attempt to connect to MongoDB with the retry operation
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      operation.attempt(async (currentAttempt) => {
+        console.log('Retrying mongo connection', currentAttempt)
+
+        try {
+          // Connect to MongoDB
+          const client = await MongoClient.connect(process.env.MONGO_URL!)
+
+          // Resolve the promise with the client
+          resolve(client.db())
+        } catch (error: any) {
+          // If the retry operation has been exhausted, reject the promise with the error
+          if (operation.retry(error)) {
+            return
+          }
+          reject(error)
+        }
+      })
     })
-    this.db = this.connect()
-  }
 
-  public static getInstance(): Mongo {
-    if (!Mongo.instance) Mongo.instance = new Mongo()
-    return Mongo.instance
-  }
-
-  public exit(): Promise<boolean> {
-    return new Promise((resolve) => {
-      this.client
-        .then((client) =>
-          setTimeout(() => {
-            client
-              .close()
-              .then(() => {
-                console.log('Manually disconnected from mongo')
-                resolve(true)
-              })
-              .catch((e) => {
-                console.log(e)
-              })
-          }, 3000),
-        )
-        .catch((e) => {
-          console.log(e)
-        })
-    })
+    return this.clientPromise
   }
 }
+
+export default new MongoDBSingleton()

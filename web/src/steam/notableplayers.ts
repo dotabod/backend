@@ -7,7 +7,7 @@ import { getHeroNameById } from '../dota/lib/heroes.js'
 import CustomError from '../utils/customError.js'
 import Mongo from './mongo.js'
 
-const mongo = Mongo.getInstance()
+const mongo = await Mongo.connect()
 
 export interface Player {
   accountid: number
@@ -19,13 +19,11 @@ export async function notablePlayers(
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
-  const db = await mongo.db
-
   if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
 
   const response =
     !players?.length &&
-    (await db.collection('delayedGames').findOne({ 'match.match_id': currentMatchId }))
+    (await mongo.collection('delayedGames').findOne({ 'match.match_id': currentMatchId }))
 
   if (!response && !players?.length) {
     throw new CustomError('Waiting for current match data PauseChamp')
@@ -37,12 +35,12 @@ export async function notablePlayers(
   )
 
   const mode = response
-    ? await db
+    ? await mongo
         .collection('gameModes')
         .findOne({ id: response.match.game_mode }, { projection: { _id: 0, name: 1 } })
     : { name: null }
 
-  const nps = await db
+  const nps = await mongo
     .collection('notablePlayers')
     .find(
       {

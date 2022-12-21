@@ -33,69 +33,72 @@ import './commands/test.js'
 export const chatClient = await getChatClient()
 
 // Our docker chat forwarder instance
-const socket = io('twitch-chat-listener:5005')
+const socket = io('ws://twitch-chat-listener:5005')
 
 socket.on('connect', () => {
   console.log('We alive on dotabod chat server!')
 })
 
-socket.on('msg', function (channel: string, user: string, text: string, msg) {
-  if (!msg.channelId) return
+socket.on(
+  'msg',
+  function (channel: string, user: string, text: string, { channelId, userInfo, messageId }: any) {
+    if (!channelId) return
 
-  // Letting one pleb in
-  if (
-    plebMode.has(msg.channelId) &&
-    !(msg.userInfo.isMod || msg.userInfo.isBroadcaster || msg.userInfo.isSubscriber)
-  ) {
-    plebMode.delete(msg.channelId)
-    void chatClient.say(channel, '/subscribers')
-    void chatClient.say(channel, `${user} EZ Clap`)
-    return
-  }
+    // Letting one pleb in
+    if (
+      plebMode.has(channelId) &&
+      !(userInfo.isMod || userInfo.isBroadcaster || userInfo.isSubscriber)
+    ) {
+      plebMode.delete(channelId)
+      void chatClient.say(channel, '/subscribers')
+      void chatClient.say(channel, `${user} EZ Clap`)
+      return
+    }
 
-  // Don't allow non mods to message
-  if (modMode.has(msg.channelId) && !(msg.userInfo.isMod || msg.userInfo.isBroadcaster)) {
-    void chatClient.deleteMessage(channel, msg)
-    return
-  }
+    // Don't allow non mods to message
+    if (modMode.has(channelId) && !(userInfo.isMod || userInfo.isBroadcaster)) {
+      void chatClient.deleteMessage(channel, messageId)
+      return
+    }
 
-  if (!text.startsWith('!')) return
+    if (!text.startsWith('!')) return
 
-  // So we can get the users settings cuz some commands are disabled
-  // This runs every command, but its cached so no hit on db
-  getDBUser(undefined, msg.channelId)
-    .then((client) => {
-      if (!client || !msg.channelId) {
-        void chatClient.say(channel, 'User not found. Try logging out and in of dotabod.com')
-        return
-      }
+    // So we can get the users settings cuz some commands are disabled
+    // This runs every command, but its cached so no hit on db
+    getDBUser(undefined, channelId)
+      .then((client) => {
+        if (!client || !channelId) {
+          void chatClient.say(channel, 'User not found. Try logging out and in of dotabod.com')
+          return
+        }
 
-      const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, client.settings)
-      const toggleCommand = commandHandler.commands.get('toggle')!
-      if (
-        isBotDisabled &&
-        !toggleCommand.aliases.includes(text.replace('!', '').split(' ')[0]) &&
-        text.split(' ')[0] !== '!toggle'
-      )
-        return
+        const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, client.settings)
+        const toggleCommand = commandHandler.commands.get('toggle')!
+        if (
+          isBotDisabled &&
+          !toggleCommand.aliases.includes(text.replace('!', '').split(' ')[0]) &&
+          text.split(' ')[0] !== '!toggle'
+        )
+          return
 
-      // Handle the incoming message using the command handler
-      commandHandler.handleMessage({
-        channel: { name: channel, id: msg.channelId, client, settings: client.settings },
-        user: {
-          name: user,
-          permission: msg.userInfo.isBroadcaster
-            ? 3
-            : msg.userInfo.isMod
-            ? 2
-            : msg.userInfo.isSubscriber
-            ? 1
-            : 0,
-        },
-        content: text,
+        // Handle the incoming message using the command handler
+        commandHandler.handleMessage({
+          channel: { name: channel, id: channelId, client, settings: client.settings },
+          user: {
+            name: user,
+            permission: userInfo.isBroadcaster
+              ? 3
+              : userInfo.isMod
+              ? 2
+              : userInfo.isSubscriber
+              ? 1
+              : 0,
+          },
+          content: text,
+        })
       })
-    })
-    .catch((e) => {
-      //
-    })
-})
+      .catch((e) => {
+        //
+      })
+  },
+)

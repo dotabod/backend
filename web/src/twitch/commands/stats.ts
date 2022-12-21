@@ -5,7 +5,7 @@ import CustomError from '../../utils/customError.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-const mongo = Mongo.getInstance()
+const mongo = await Mongo.connect()
 
 export async function profileLink(currentMatchId: string, color: string) {
   if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
@@ -19,8 +19,9 @@ export async function profileLink(currentMatchId: string, color: string) {
     throw new CustomError(`Invalid hero color. Must be one of ${heroColors.join(' ')}`)
   }
 
-  const db = await mongo.db
-  const response = await db.collection('delayedGames').findOne({ 'match.match_id': currentMatchId })
+  const response = await mongo
+    .collection('delayedGames')
+    .findOne({ 'match.match_id': currentMatchId })
 
   if (!response) {
     throw new CustomError('Waiting for current match data PauseChamp')
@@ -47,7 +48,7 @@ commandHandler.registerCommand('stats', {
     // }
 
     if (!client.gsi?.map?.matchid) {
-      void chatClient.say(channel, 'Match not found')
+      void chatClient.say(channel, 'Not in a match PauseChamp')
       return
     }
 

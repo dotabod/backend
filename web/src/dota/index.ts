@@ -17,7 +17,7 @@ events.on('new-gsi-client', (token: string) => {
     return
   }
 
-  console.log('[GSI]', 'Connecting new GSI client', { name: client.name })
+  console.log('[GSI]', 'Connecting new client', { name: client.name })
   new setupMainEvents(client)
 })
 

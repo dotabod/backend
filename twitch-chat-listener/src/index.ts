@@ -3,12 +3,13 @@ import { Server } from 'socket.io'
 import './db/watcher.js'
 import { getChatClient } from './twitch/lib/getChatClient.js'
 
-const io = new Server()
+const io = new Server(5005)
 
 let hasDotabodSocket = false
 io.on('connection', (socket) => {
   // dota node app just connected
   // make it join our room
+  console.log('Found a connection!')
   void socket.join('twitch-chat-messages')
   hasDotabodSocket = true
 
@@ -21,8 +22,6 @@ io.on('connection', (socket) => {
 io.on('say', function (channel: string, text: string) {
   void chatClient.say(channel, text)
 })
-
-io.listen(5005)
 
 // Setup twitch chat bot client
 export const chatClient = await getChatClient()
@@ -37,8 +36,10 @@ chatClient.onMessage(function (channel, user, text, msg) {
     return
   }
 
+  const { channelId, userInfo, id: messageId } = msg
+
   // forward the msg to dota node app
-  io.to('twitch-chat-messages').emit(channel, user, text, msg)
+  io.to('twitch-chat-messages').emit('msg', channel, user, text, { channelId, userInfo, messageId })
 })
 
 export default io

@@ -20,7 +20,7 @@ import { events } from './server.js'
 
 import { server } from './index.js'
 
-const mongo = Mongo.getInstance()
+const mongo = await Mongo.connect()
 
 export const blockCache = new Map<string, string>()
 
@@ -119,8 +119,7 @@ export class setupMainEvents {
     try {
       // console.log('Start match data', this.client.name, this.client.gsi.map.matchid)
 
-      const db = await mongo.db
-      let response = await db
+      const response = await mongo
         .collection('delayedGames')
         .findOne({ 'match.match_id': this.client.gsi.map.matchid })
 
@@ -156,9 +155,8 @@ export class setupMainEvents {
         this.client.steamserverid = steamserverid
         this.savingSteamServerId = false
 
-        // @ts-expect-error asdf
-        response = await server.dota.getDelayedMatchData(steamserverid, true)
-        if (!response) {
+        const delayedData = await server.dota.getDelayedMatchData(steamserverid, true)
+        if (!delayedData) {
           console.log('No match data found!', this.client.name, this.client.gsi.map.matchid)
           return
         }
@@ -518,8 +516,7 @@ export class setupMainEvents {
           }
         }
 
-        const db = await mongo.db
-        const response = await db.collection('delayedGames').findOne(
+        const response = await mongo.collection('delayedGames').findOne(
           { 'match.match_id': matchId },
           {
             projection: {

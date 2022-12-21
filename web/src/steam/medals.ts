@@ -6,20 +6,18 @@ import Mongo from './mongo.js'
 
 import Dota from './index.js'
 
-const mongo = Mongo.getInstance()
+const mongo = await Mongo.connect()
 const dota = Dota.getInstance()
 
 export async function gameMedals(
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
-  const db = await mongo.db
-
   if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
 
   const response =
     !players?.length &&
-    (await db.collection('delayedGames').findOne({ 'match.match_id': currentMatchId }))
+    (await mongo.collection('delayedGames').findOne({ 'match.match_id': currentMatchId }))
 
   if (!response && !players?.length) {
     throw new CustomError('Waiting for current match data PauseChamp')
@@ -32,7 +30,7 @@ export async function gameMedals(
 
   const cards = await dota.getCards(accountIds)
 
-  const medalQuery = await db
+  const medalQuery = await mongo
     .collection('medals')
     .find({ rank_tier: { $in: cards.map((card) => card.rank_tier) } })
     .toArray()

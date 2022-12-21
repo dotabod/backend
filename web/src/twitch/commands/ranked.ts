@@ -4,7 +4,7 @@ import Mongo from '../../steam/mongo.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-const mongo = Mongo.getInstance()
+const mongo = await Mongo.connect()
 commandHandler.registerCommand('ranked', {
   aliases: ['isranked'],
   permission: 0,
@@ -23,14 +23,12 @@ commandHandler.registerCommand('ranked', {
     const currentMatchId = client.gsi?.map?.matchid
 
     async function handler() {
-      const db = await mongo.db
-
       if (!currentMatchId) {
         void chatClient.say(channel, 'Not in a match PauseChamp')
         return
       }
 
-      const response = (await db
+      const response = (await mongo
         .collection('delayedGames')
         .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames | undefined
 

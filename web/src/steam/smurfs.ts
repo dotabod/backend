@@ -7,14 +7,12 @@ import Mongo from './mongo.js'
 import Dota from './index.js'
 
 const dota = Dota.getInstance()
-const mongo = Mongo.getInstance()
+const mongo = await Mongo.connect()
 
 export async function smurfs(
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
-  const db = await mongo.db
-
   if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
 
   // const steam32id = 849473199 # grubby
@@ -23,7 +21,7 @@ export async function smurfs(
 
   const response =
     !players?.length &&
-    (await db.collection('delayedGames').findOne({ 'match.match_id': currentMatchId }))
+    (await mongo.collection('delayedGames').findOne({ 'match.match_id': currentMatchId }))
 
   if (!response && !players?.length) {
     throw new CustomError('Waiting for current match data PauseChamp')
