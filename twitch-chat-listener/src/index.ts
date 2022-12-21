@@ -18,6 +18,10 @@ io.on('connection', (socket) => {
   })
 })
 
+io.on('say', function (channel: string, text: string) {
+  void chatClient.say(channel, text)
+})
+
 io.listen(5005)
 
 // Setup twitch chat bot client
@@ -25,8 +29,9 @@ export const chatClient = await getChatClient()
 
 chatClient.onMessage(function (channel, user, text, msg) {
   if (!hasDotabodSocket) {
-    if (text.startsWith('!')) {
-      void chatClient.say(channel, 'Dotabod offline PauseChamp must be rebooting...Hang tight')
+    // TODO: only commands that we register should be checked here
+    if (text.startsWith('!') && text.length > 1) {
+      void chatClient.say(channel, 'Servers are rebooting...Try again soon PauseChamp')
     }
 
     return
