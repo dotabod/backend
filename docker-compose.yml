@@ -22,7 +22,7 @@ services:
     environment:
       - NEW_RELIC_APP_NAME="DEV twitch chat listener"
     volumes:
-      - ./web/src:/app/src
+      - ./twitch-chat-listener/src:/app/src
   nginx:
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
