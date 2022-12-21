@@ -30,7 +30,7 @@ import './commands/ranked.js'
 import './commands/test.js'
 
 // Setup twitch chat bot client first
-export const chatClient = await ChatClientSingleton.connect()
+export const chatClient = await ChatClientSingleton.getInstance()
 
 // Our docker chat forwarder instance
 const socket = io('ws://twitch-chat-listener:5005')

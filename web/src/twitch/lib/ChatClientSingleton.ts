@@ -4,51 +4,48 @@ import retry from 'retry'
 import { getAuthProvider } from './getAuthProvider.js'
 
 class ChatClientSingleton {
-  private clientPromise: Promise<ChatClient> | null = null
+  static instance: ChatClient | null = null
 
-  async connect(): Promise<ChatClient> {
-    // If the client promise is already resolved, return it
-    if (this.clientPromise) {
-      return this.clientPromise
+  static async getInstance() {
+    if (ChatClientSingleton.instance) {
+      return ChatClientSingleton.instance
     }
 
-    // Create a new promise that will be resolved with the twitch client
-    this.clientPromise = new Promise((resolve, reject) => {
-      // Set up the retry operation
-      const operation = retry.operation({
-        retries: 5, // Number of retries
-        factor: 3, // Exponential backoff factor
-        minTimeout: 1 * 1000, // Minimum retry timeout (1 second)
-        maxTimeout: 60 * 1000, // Maximum retry timeout (60 seconds)
-      })
+    const chatClient = new ChatClient({
+      isAlwaysMod: true,
+      authProvider: getAuthProvider(),
+    })
 
-      // Attempt to connect to twitch with the retry operation
+    const operation = retry.operation({
+      retries: 5,
+      factor: 3,
+      minTimeout: 1 * 1000,
+      maxTimeout: 60 * 1000,
+    })
+
+    await new Promise((resolve, reject) => {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       operation.attempt(async (currentAttempt) => {
         try {
-          const chatClient = new ChatClient({
-            isAlwaysMod: true,
-            authProvider: getAuthProvider(),
-          })
-
-          // Connect to twitch
           await chatClient.connect()
-
-          // Resolve the promise with the client
           resolve(chatClient)
-        } catch (error: any) {
-          console.log('Retrying twitch chat connection', currentAttempt)
-          // If the retry operation has been exhausted, reject the promise with the error
-          if (operation.retry(error)) {
-            return
+        } catch (e: any) {
+          console.log(
+            `[TWITCHSETUP] Error connecting to chat client on attempt ${currentAttempt}: ${e}`,
+          )
+          if (!operation.retry(e)) {
+            reject(e)
           }
-          reject(error)
         }
       })
     })
 
-    return this.clientPromise
+    console.log('[TWITCHSETUP]', 'Connected to chat client', chatClient.isConnected)
+
+    ChatClientSingleton.instance = chatClient
+
+    return chatClient
   }
 }
 
-export default new ChatClientSingleton()
+export default ChatClientSingleton
