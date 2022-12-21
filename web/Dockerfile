@@ -1,7 +1,7 @@
 ##########
 ## DEPS ##
 ##########
-FROM node:16.2.0-alpine AS deps
+FROM --platform=linux/amd64 node:16.2.0-alpine AS deps
 
 RUN apk add yarn git
 
@@ -10,20 +10,32 @@ COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 COPY prisma ./prisma
 
 RUN yarn --frozen-lockfile
+
+#############
+## BUILDER ##
+#############
+FROM --platform=linux/amd64 node:16.2.0-alpine AS builder
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app .
+COPY . .
+
 RUN yarn build
 
 ############
 ## RUNNER ##
 ############
-FROM node:16.2.0-alpine AS prod
+FROM --platform=linux/amd64 node:16.2.0-alpine AS prod
 
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/dist ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/prisma ./prisma
-COPY --from=deps /app/tsconfig.json ./
+COPY --from=builder /app/tsconfig.json ./
 
 RUN mkdir -p ./src/steam/volumes
 
