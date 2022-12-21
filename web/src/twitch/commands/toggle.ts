@@ -18,19 +18,21 @@ export function tellChatDotabodState(isDisabled: boolean, content: string) {
   }`
 }
 
-export function toggleDotabod(
+export async function toggleDotabod(
   token: string,
   isBotDisabled: boolean,
   channel: string,
   content = '!toggle',
 ) {
+  await chatClient.say(channel, tellChatDotabodState(isBotDisabled, content))
+
   if (isBotDisabled) {
     events.emit('remove-gsi-client', token)
+    chatClient.part(channel)
   } else {
     events.emit('new-gsi-client', token)
+    await chatClient.join(channel)
   }
-
-  void chatClient.say(channel, tellChatDotabodState(isBotDisabled, content))
 }
 
 commandHandler.registerCommand('toggle', {

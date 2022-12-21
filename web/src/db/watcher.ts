@@ -55,7 +55,7 @@ channel
       }
 
       if (newObj.key === DBSettings.commandDisable) {
-        toggleDotabod(client.token, !!newObj.value, client.name)
+        void toggleDotabod(client.token, !!newObj.value, client.name)
       }
 
       console.log('[WATCHER SETTING] Sending new setting value to socket', client.name)
