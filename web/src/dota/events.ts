@@ -621,7 +621,7 @@ export class setupMainEvents {
 
               const hero = getHero(this.client.gsi?.hero?.name)
 
-              openTwitchBet(channel, this.getToken(), hero?.localized_name)
+              openTwitchBet(this.getToken(), hero?.localized_name)
                 .then(() => {
                   void chatClient.say(channel, `Bets open peepoGamble`)
                   console.log('[BETS]', {
@@ -634,7 +634,7 @@ export class setupMainEvents {
                   })
                 })
                 .catch((e: any) => {
-                  if (disabledBets.has(channel)) {
+                  if (disabledBets.has(this.getToken())) {
                     // disable the bet in settings for this user
                     prisma.setting
                       .upsert({
@@ -654,7 +654,7 @@ export class setupMainEvents {
                         },
                       })
                       .then((r) => {
-                        disabledBets.delete(channel)
+                        disabledBets.delete(this.getToken())
                         console.log('[BETS]', 'Disabled bets for user', {
                           channel,
                         })
@@ -819,7 +819,7 @@ export class setupMainEvents {
       return
     }
 
-    closeTwitchBet(channel, won, this.getToken())
+    closeTwitchBet(won, this.getToken())
       .then(() => {
         void chatClient.say(this.getChannel(), `Bets closed, we have ${won ? 'won' : 'lost'}`)
 
@@ -835,7 +835,7 @@ export class setupMainEvents {
         })
       })
       .catch((e: any) => {
-        if (disabledBets.has(channel)) {
+        if (disabledBets.has(this.getToken())) {
           // disable the bet in settings for this user
           prisma.setting
             .upsert({
@@ -858,7 +858,7 @@ export class setupMainEvents {
               console.log('[BETS]', 'Disabled bets for user', {
                 channel,
               })
-              disabledBets.delete(channel)
+              disabledBets.delete(this.getToken())
             })
             .catch((e) => {
               console.log('[BETS]', 'Error disabling bets', e?.message || e)
