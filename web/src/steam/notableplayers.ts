@@ -9,6 +9,13 @@ import Mongo from './mongo.js'
 
 const mongo = await Mongo.connect()
 
+type nps = {
+  account_id: number
+  heroName: string
+  name: string
+  country_code: string
+}[]
+
 export interface Player {
   accountid: number
   heroid: number
@@ -62,17 +69,28 @@ export async function notablePlayers(
     )
     .toArray()
 
-  const result: { heroName: string; name: string; country_code: string }[] = []
+  const notFoundNp: nps = []
+  const result: nps = []
   matchPlayers.forEach((player: Player, i: number) => {
     const np = nps.find((np) => np.account_id === player.accountid)
     if (np) {
       result.push({
+        account_id: player.accountid,
         heroName: getHeroNameById(player.heroid, i),
         name: np.name,
         country_code: np.country_code,
       })
+    } else {
+      notFoundNp.push({
+        account_id: player.accountid,
+        heroName: getHeroNameById(player.heroid, i),
+        name: `Player ${i + 1}`,
+        country_code: '',
+      })
     }
   })
+
+  console.log({ notFoundNp })
 
   const playerList = result
     .map((m) => {

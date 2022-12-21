@@ -25,17 +25,17 @@ commandHandler.registerCommand('np', {
     }
 
     async function addRemoveHandler() {
-      if (!forSteam32Id || !forName) {
-        void chatClient.say(channel, 'Try !np <add | remove> <steam32id> <playername>')
-        return
-      }
-
       if (addOrRemove === 'add') {
+        if (!Number(forSteam32Id) || !forName) {
+          void chatClient.say(channel, 'Try !np add <steam32id> <playername>')
+          return
+        }
+
         await mongo.collection('notablePlayers').updateOne(
           { account_id: forSteam32Id },
           {
             $set: {
-              account_id: forSteam32Id,
+              account_id: Number(forSteam32Id),
               name: forName,
               channel: twitchChannelId,
               addedBy: chatterName,
@@ -49,8 +49,13 @@ commandHandler.registerCommand('np', {
       }
 
       if (addOrRemove === 'remove') {
-        await mongo.collection('notablePlayers').deleteOne({ account_id: forSteam32Id })
-        void chatClient.say(channel, `Removed ${forName} from !np for this channel`)
+        if (!Number(forSteam32Id)) {
+          void chatClient.say(channel, 'Try !np remove <steam32id>')
+          return
+        }
+
+        await mongo.collection('notablePlayers').deleteOne({ account_id: Number(forSteam32Id) })
+        void chatClient.say(channel, `Removed ${forSteam32Id} from !np for this channel`)
         return
       }
     }
