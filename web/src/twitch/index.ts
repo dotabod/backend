@@ -29,6 +29,7 @@ import './commands/toggle.js'
 import './commands/ranked.js'
 import './commands/test.js'
 import './commands/dotabuff.js'
+import './commands/opendota.js'
 
 // Setup twitch chat bot client first
 export const chatClient = await ChatClientSingleton.getInstance()
