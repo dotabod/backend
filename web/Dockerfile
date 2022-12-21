@@ -3,7 +3,7 @@
 ##########
 FROM node:16.2.0-alpine AS deps
 
-RUN apk add yarn git python3 make g++
+RUN apk add yarn git
 
 WORKDIR /app
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./

@@ -15,6 +15,7 @@ services:
     build:
       context: twitch-chat-listener
       target: dev
+      dockerfile: ../web/Dockerfile # Reusing same nodejs dockerfile
     hostname: twitch-chat-listener
     ports:
       - '5005:5005'
