@@ -4,8 +4,8 @@ import getDBUser from '../db/getDBUser.js'
 import { DBSettings, getValueOrDefault } from '../db/settings.js'
 import { modMode } from './commands/modsonly.js'
 import { plebMode } from './commands/pleb.js'
+import ChatClientSingleton from './lib/ChatClientSingleton.js'
 import commandHandler from './lib/CommandHandler.js'
-import { getChatClient } from './lib/getChatClient.js'
 
 import './commands/apm.js'
 import './commands/commands.js'
@@ -30,7 +30,7 @@ import './commands/ranked.js'
 import './commands/test.js'
 
 // Setup twitch chat bot client first
-export const chatClient = await getChatClient()
+export const chatClient = await ChatClientSingleton.connect()
 
 // Our docker chat forwarder instance
 const socket = io('ws://twitch-chat-listener:5005')
