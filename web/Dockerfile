@@ -1,7 +1,7 @@
 ##########
 ## DEPS ##
 ##########
-FROM node:16.2.0-alpine AS deps
+FROM --platform=linux/amd64 node:16.2.0-alpine AS deps
 
 RUN apk add yarn git
 
@@ -14,7 +14,7 @@ RUN yarn --frozen-lockfile
 #############
 ## BUILDER ##
 #############
-FROM node:16.2.0-alpine AS builder
+FROM --platform=linux/amd64 node:16.2.0-alpine AS builder
 
 WORKDIR /app
 
@@ -27,7 +27,7 @@ RUN yarn build
 ############
 ## RUNNER ##
 ############
-FROM node:16.2.0-alpine AS prod
+FROM --platform=linux/amd64 node:16.2.0-alpine AS prod
 
 WORKDIR /app
 
