@@ -1,6 +1,6 @@
 {
-  "name": "dotabod-twitch-chat-server",
-  "description": "We forward twitch chat to dotabod.",
+  "name": "dotabod-twitch-eventsub-server",
+  "description": "We forward twitch events to dotabod.",
   "version": "1.0.0",
   "license": "GPL-3.0-or-later",
   "author": "Geczy",
@@ -12,23 +12,21 @@
     "build": "tsc",
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
-    "devnotdocker": "dotenv -e ../.env.local -e ../.env.prod -- nodemon -L --ext ts ./src/index.ts",
-    "postinstall": "prisma generate --schema ./prisma/mongo.prisma && prisma generate --schema ./prisma/postgres.prisma",
+    "devnotdocker": "dotenv -e ../.env.local -- nodemon -L --ext ts ./src/index.ts",
+    "postinstall": "prisma generate --schema ./prisma/postgres.prisma",
     "lint": "eslint --ext .ts ./src",
     "prettier": "prettier --ext .ts ./src --write",
     "lint:fix": "npm run lint -- --fix",
-    "pullmongo": "dotenv -e ../.env.local -e ../.env.prod -- prisma db pull --schema ./prisma/mongo.prisma --force",
     "pullpsql": "dotenv -e ../.env.local -e ../.env.prod -- prisma db pull --schema ./prisma/postgres.prisma"
   },
   "dependencies": {
     "@prisma/client": "4.8.0",
-    "@supabase/supabase-js": "^2.1.1",
     "@twurple/api": "^5.2.7",
     "@twurple/auth": "^5.2.7",
-    "@twurple/chat": "^5.2.7",
+    "@twurple/eventsub-base": "^5.3.0-pre.1",
+    "@twurple/eventsub-http": "^5.3.0-pre.1",
     "newrelic": "^9.7.4",
     "prisma": "^4.8.0",
-    "socket.io": "^4.5.4",
     "winston": "^3.8.2"
   },
   "devDependencies": {

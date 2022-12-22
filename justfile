@@ -36,3 +36,8 @@ update:
     @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d
+
+pullall:
+    cd ./web && yarn pullpsql && yarn postinstall
+    cd ./twitch-eventsub-listener && yarn pullpsql && yarn postinstall
+    cd ./twitch-chat-listener && yarn pullpsql && yarn postinstall

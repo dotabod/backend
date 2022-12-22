@@ -12,6 +12,20 @@ services:
       - NEW_RELIC_APP_NAME="DEV twitch chat listener"
     volumes:
       - ./twitch-chat-listener/src:/app/src
+  twitch-eventsub-listener:
+    build:
+      context: twitch-eventsub-listener
+      target: dev
+      dockerfile: ../web/Dockerfile # Reusing same nodejs dockerfile
+    hostname: twitch-eventsub-listener
+    ports:
+      - '82:5010'
+    env_file: .env.local
+    environment:
+      - NEW_RELIC_APP_NAME="DEV twitch eventsub listener"
+      - PORT=5010
+    volumes:
+      - ./twitch-eventsub-listener/src:/app/src
   web:
     build:
       context: web
