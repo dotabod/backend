@@ -13,7 +13,7 @@ commandHandler.registerCommand('opendota', {
     if (client.steam32Id && Number(client.steam32Id)) {
       void chatClient.say(
         channel,
-        `Here's ${channel}: opendota.com/players/${client.steam32Id.toString()}`,
+        `Here's ${client.name}: opendota.com/players/${client.steam32Id.toString()}`,
       )
       return
     }
