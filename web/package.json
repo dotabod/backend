@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@node-steam/id": "^1.2.0",
-    "@prisma/client": "^4.8.0",
+    "@prisma/client": "4.8.0",
     "@supabase/supabase-js": "^2.2.1",
     "@twurple/api": "^5.2.7",
     "@twurple/auth": "^5.2.7",

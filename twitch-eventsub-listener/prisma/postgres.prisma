@@ -30,21 +30,24 @@ model Account {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String         @unique
-  email         String         @unique
-  emailVerified DateTime?
-  image         String?
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at")
-  mmr           Int            @default(0) @db.SmallInt
-  steam32Id     Int?           @unique(map: "users_playerId_key")
-  followers     Int?
-  stream_delay  Int?           @default(0) @db.SmallInt
-  Account       Account?
-  Bet           Bet[]
-  settings      Setting[]
-  SteamAccount  SteamAccount[]
+  id                String         @id @default(cuid())
+  displayName       String?        @unique(map: "users_name_key")
+  email             String         @unique
+  image             String?
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @default(now()) @updatedAt @map("updated_at")
+  mmr               Int            @default(0) @db.SmallInt
+  steam32Id         Int?           @unique(map: "users_playerId_key")
+  followers         Int?
+  stream_delay      Int?           @default(0) @db.SmallInt
+  name              String         @unique(map: "users_username_key") @default("")
+  emailVerified     DateTime?
+  stream_online     Boolean        @default(false)
+  stream_start_date DateTime?      @db.Timestamp(6)
+  Account           Account?
+  Bet               Bet[]
+  settings          Setting[]
+  SteamAccount      SteamAccount[]
 
   @@map("users")
 }

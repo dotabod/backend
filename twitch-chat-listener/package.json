@@ -21,7 +21,7 @@
     "pullpsql": "dotenv -e ../.env.local -e ../.env.prod -- prisma db pull --schema ./prisma/postgres.prisma"
   },
   "dependencies": {
-    "@prisma/client": "^4.8.0",
+    "@prisma/client": "4.8.0",
     "@supabase/supabase-js": "^2.1.1",
     "@twurple/api": "^5.2.7",
     "@twurple/auth": "^5.2.7",

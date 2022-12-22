@@ -1,21 +1,30 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
 
-import findUser from '../../dota/lib/connectedStreamers.js'
+import { prisma } from '../../db/prisma.js'
 import { hasTokens } from './hasTokens.js'
 
-export const getChannelAuthProvider = function (userId: string) {
+export const getChannelAuthProvider = async function (twitchId: string) {
   if (!hasTokens) {
     throw new Error('Missing twitch tokens')
   }
 
-  const twitchTokens = findUser(userId)
+  const twitchTokens = await prisma.account.findFirst({
+    select: {
+      refresh_token: true,
+      access_token: true,
+    },
+    where: {
+      provider: 'twitch',
+      providerAccountId: twitchId,
+    },
+  })
 
-  if (!twitchTokens?.Account?.access_token || !twitchTokens.Account.refresh_token) {
-    console.log('[TWITCHSETUP]', 'Missing twitch tokens', userId)
+  if (!twitchTokens?.access_token || !twitchTokens.refresh_token) {
+    console.log('[TWITCHSETUP]', 'Missing twitch tokens', twitchId)
     return {}
   }
 
-  console.log('[TWITCHSETUP]', 'Retrieved twitch access tokens', twitchTokens.name)
+  console.log('[TWITCHSETUP]', 'Retrieved twitch access tokens', twitchId)
 
   const authProvider = new RefreshingAuthProvider(
     {
@@ -33,10 +42,10 @@ export const getChannelAuthProvider = function (userId: string) {
       ],
       expiresIn: 86400,
       obtainmentTimestamp: Date.now(),
-      accessToken: twitchTokens.Account.access_token,
-      refreshToken: twitchTokens.Account.refresh_token,
+      accessToken: twitchTokens.access_token,
+      refreshToken: twitchTokens.refresh_token,
     },
   )
 
-  return { providerAccountId: twitchTokens.Account.providerAccountId, authProvider }
+  return authProvider
 }

@@ -2,16 +2,16 @@ import { ApiClient } from '@twurple/api'
 
 import { getChannelAuthProvider } from './getChannelAuthProvider.js'
 
-export const getChannelAPI = function (userId: string) {
-  const { providerAccountId, authProvider } = getChannelAuthProvider(userId)
-
-  if (!providerAccountId) {
-    console.log('[PREDICT]', 'Missing providerAccountId', userId)
+export const getChannelAPI = async function (twitchId: string) {
+  if (!twitchId) {
+    console.log('[PREDICT]', 'Missing providerAccountId', twitchId)
     throw new Error('Missing providerAccountId')
   }
 
+  const authProvider = await getChannelAuthProvider(twitchId)
+  // @ts-expect-error asdf
   const api = new ApiClient({ authProvider })
-  console.log('[PREDICT]', 'Retrieved twitch api', userId)
+  console.log('[PREDICT]', 'Retrieved twitch api', twitchId)
 
-  return { api, providerAccountId }
+  return api
 }
