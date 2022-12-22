@@ -3,6 +3,58 @@ import axios from 'axios'
 import { prisma } from './db/prisma.js'
 import { getBotAPI } from './twitch/lib/getBotAPI.js'
 
+export async function updateUsernameForAll() {
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      Account: {
+        select: {
+          providerAccountId: true,
+        },
+      },
+    },
+    where: {
+      displayName: '',
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+    take: 100,
+  })
+
+  const providerIds: string[] = users
+    .map((user) => {
+      if (!user.Account?.providerAccountId) return null
+      return user.Account.providerAccountId as string
+    })
+    .flatMap((f) => f ?? [])
+
+  const twitchApi = getBotAPI()
+  const twitchUser = await twitchApi.users.getUsersByIds(providerIds)
+  // const complete = twitchUser.map((u) => ({ name: u.name, displayName: u.displayName }))
+
+  for (const user of twitchUser) {
+    if (!user.name || !user.displayName) continue
+    console.log('updating', user.name, user.displayName)
+    await prisma.account.update({
+      where: {
+        provider_providerAccountId: {
+          provider: 'twitch',
+          providerAccountId: user.id,
+        },
+      },
+      data: {
+        user: {
+          update: {
+            displayName: user.displayName,
+            name: user.name,
+          },
+        },
+      },
+    })
+  }
+}
+
 async function getAccounts() {
   // const steam32id = 1234
   // const steamserverid = (await server.dota.getUserSteamServer(steam32id)) as string | undefined
@@ -11,8 +63,6 @@ async function getAccounts() {
   // )
   // console.log(steamserverid)
 }
-
-// await getAccounts()
 
 async function getFollows() {
   const twitchApi = getBotAPI()
@@ -95,9 +145,6 @@ async function fixWins() {
   }
 }
 
-await fixWins()
-// await getFollows()
-
 // const followers = await prisma.user.findMany({
 //   select: {
 //     name: true,
@@ -110,3 +157,10 @@ await fixWins()
 // })
 
 // console.log(followers)
+
+
+
+// await updateUsernameForAll()
+// await getAccounts()
+// await fixWins()
+await getFollows()

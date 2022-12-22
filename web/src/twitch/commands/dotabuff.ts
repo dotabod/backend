@@ -13,7 +13,7 @@ commandHandler.registerCommand('dotabuff', {
     if (client.steam32Id && Number(client.steam32Id)) {
       void chatClient.say(
         channel,
-        `Here's ${channel}: dotabuff.com/players/${client.steam32Id.toString()}`,
+        `Here's ${client.name}: dotabuff.com/players/${client.steam32Id.toString()}`,
       )
       return
     }

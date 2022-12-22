@@ -31,9 +31,8 @@ model Account {
 
 model User {
   id            String         @id @default(cuid())
-  name          String         @unique
+  displayName   String?        @unique(map: "users_name_key")
   email         String         @unique
-  emailVerified DateTime?
   image         String?
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at")
@@ -41,6 +40,8 @@ model User {
   steam32Id     Int?           @unique(map: "users_playerId_key")
   followers     Int?
   stream_delay  Int?           @default(0) @db.SmallInt
+  name          String         @unique(map: "users_username_key") @default("")
+  emailVerified DateTime?
   Account       Account?
   Bet           Bet[]
   settings      Setting[]

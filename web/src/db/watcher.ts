@@ -9,7 +9,6 @@ import supabase from './supabase.js'
 
 const channel = supabase.channel('db-changes')
 
-// When a user updates MMR from dashboard and they have client open
 channel
   .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'users' }, (payload) => {
     console.log(payload, 'REMOVE')

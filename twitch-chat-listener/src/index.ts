@@ -29,7 +29,7 @@ export const chatClient = await getChatClient()
 chatClient.onMessage(function (channel, user, text, msg) {
   if (!hasDotabodSocket) {
     // TODO: only commands that we register should be checked here
-    if (text.startsWith('!') && text.length > 1) {
+    if (text === '!ping') {
       void chatClient.say(channel, 'Servers are rebooting...Try again soon PauseChamp')
     }
 
