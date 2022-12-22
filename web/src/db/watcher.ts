@@ -10,12 +10,6 @@ import supabase from './supabase.js'
 const channel = supabase.channel('db-changes')
 
 channel
-  .subscribe((status) => {
-    if (status === 'SUBSCRIBED') {
-      console.log('[SUPABASE]', 'Ready to receive database changes!')
-    }
-  })
-
   .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'users' }, (payload) => {
     console.log(payload, 'REMOVE')
 

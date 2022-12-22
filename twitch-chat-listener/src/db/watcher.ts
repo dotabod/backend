@@ -27,12 +27,6 @@ async function handleNewUser(user: User) {
 }
 
 channel
-  .subscribe((status, err) => {
-    console.log(status, err)
-    if (status === 'SUBSCRIBED') {
-      console.log('[SUPABASE]', 'Ready to receive database changes!')
-    }
-  })
   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
     if (process.env.NODE_ENV !== 'production') {
       return
@@ -41,4 +35,10 @@ channel
     const user = payload.new as User
     console.log('[SUPABASE]', 'New user to send bot to: ', user.name)
     void handleNewUser(user)
+  })
+  .subscribe((status, err) => {
+    console.log(status, err)
+    if (status === 'SUBSCRIBED') {
+      console.log('[SUPABASE]', 'Ready to receive database changes!')
+    }
   })
