@@ -1,4 +1,5 @@
 import { Setting, SteamAccount, User } from '../../prisma/generated/postgresclient/index.js'
+import { updateFollowForUser } from '../cron/update-follows.js'
 import { server } from '../dota/index.js'
 import findUser, { deleteUser } from '../dota/lib/connectedStreamers.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
@@ -9,8 +10,27 @@ import supabase from './supabase.js'
 
 const channel = supabase.channel('db-changes')
 
-// When a user updates MMR from dashboard and they have client open
 channel
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
+    if (process.env.NODE_ENV !== 'production') {
+      return
+    }
+
+    const user = payload.new as User
+    updateFollowForUser(user.id)
+      .then(() => {
+        console.log('Follows updated for new user')
+      })
+      .catch((e) => {
+        console.error('Error updating follows for new user', e)
+      })
+  })
+  .subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log('[SUPABASE]', 'Ready to receive database changes!')
+    }
+  })
+
   .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'users' }, (payload) => {
     console.log(payload, 'REMOVE')
 
