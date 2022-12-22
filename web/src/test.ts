@@ -55,8 +55,6 @@ export async function updateUsernameForAll() {
   }
 }
 
-await updateUsernameForAll()
-
 async function getAccounts() {
   // const steam32id = 1234
   // const steamserverid = (await server.dota.getUserSteamServer(steam32id)) as string | undefined
@@ -65,8 +63,6 @@ async function getAccounts() {
   // )
   // console.log(steamserverid)
 }
-
-// await getAccounts()
 
 async function getFollows() {
   const twitchApi = getBotAPI()
@@ -149,9 +145,6 @@ async function fixWins() {
   }
 }
 
-// await fixWins()
-// await getFollows()
-
 // const followers = await prisma.user.findMany({
 //   select: {
 //     name: true,
@@ -164,3 +157,10 @@ async function fixWins() {
 // })
 
 // console.log(followers)
+
+
+
+// await updateUsernameForAll()
+// await getAccounts()
+// await fixWins()
+await getFollows()
