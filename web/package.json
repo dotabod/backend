@@ -17,9 +17,9 @@
     "lint": "eslint --ext .ts ./src",
     "prettier": "prettier --ext .ts ./src --write",
     "lint:fix": "npm run lint -- --fix",
-    "update-np": "dotenv -e ../.env.local -e ../.env.prod -- bash ../mongodb/updatenps.sh",
-    "pullmongo": "dotenv -e ../.env.local -e ../.env.prod -- prisma db pull --schema ./prisma/mongo.prisma --force",
-    "pullpsql": "dotenv -e ../.env.local -e ../.env.prod -- prisma db pull --schema ./prisma/postgres.prisma"
+    "update-np": "dotenv -e ../.env.prod -e ../.env.local -- bash ../mongodb/updatenps.sh",
+    "pullmongo": "dotenv -e ../.env.prod -e ../.env.local -- prisma db pull --schema ./prisma/mongo.prisma --force",
+    "pullpsql": "dotenv -e ../.env.prod -e ../.env.local -- prisma db pull --schema ./prisma/postgres.prisma"
   },
   "dependencies": {
     "@node-steam/id": "^1.2.0",
