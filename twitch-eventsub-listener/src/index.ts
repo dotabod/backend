@@ -1,23 +1,7 @@
-import { EnvPortAdapter, EventSubHttpListener } from '@twurple/eventsub-http'
-
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
-import { getBotAPI } from './twitch/lib/getBotAPI.js'
+import { listener } from './twitch/lib/listener.js'
 import { offlineEvent } from './twitch/lib/offlineEvent.js'
 import { onlineEvent } from './twitch/lib/onlineEvent.js'
-
-const apiClient = getBotAPI()
-
-const listener = new EventSubHttpListener({
-  // @ts-expect-error why?
-  apiClient,
-  adapter: new EnvPortAdapter({
-    hostName: process.env.EVENTSUB_HOST!
-  }),
-  secret: process.env.TWITCH_EVENTSUB_SECRET!,
-  strictHostCheck: true,
-})
-
-await listener.start()
 
 const accountIds = await getAccountIds()
 
@@ -38,5 +22,3 @@ Promise.all(promises)
   .catch((e) => {
     console.log(e)
   })
-
-export default { listener }
