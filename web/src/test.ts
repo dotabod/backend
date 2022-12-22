@@ -14,7 +14,7 @@ export async function updateUsernameForAll() {
       },
     },
     where: {
-      username: '',
+      displayName: '',
     },
     orderBy: {
       createdAt: 'asc',

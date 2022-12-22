@@ -4,7 +4,7 @@ import supabase from './supabase.js'
 import { updateFollowForUser } from './update-follows.js'
 import { updateUsernameForId } from './update-username.js'
 
-const channel = supabase.channel('db-changes')
+const channel = supabase.channel('twitch-changes')
 
 async function handleNewUser(user: User) {
   try {
@@ -27,7 +27,8 @@ async function handleNewUser(user: User) {
 }
 
 channel
-  .subscribe((status) => {
+  .subscribe((status, err) => {
+    console.log(status, err)
     if (status === 'SUBSCRIBED') {
       console.log('[SUPABASE]', 'Ready to receive database changes!')
     }

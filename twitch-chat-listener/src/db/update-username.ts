@@ -42,5 +42,5 @@ export async function updateUsernameForId(userId: string) {
     },
   })
 
-  return twitchUser.name as string
+  return twitchUser.name
 }
