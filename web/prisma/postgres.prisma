@@ -41,7 +41,7 @@ model User {
   steam32Id     Int?           @unique(map: "users_playerId_key")
   followers     Int?
   stream_delay  Int?           @default(0) @db.SmallInt
-  username      String         @default("")
+  username      String         @unique @default("")
   Account       Account?
   Bet           Bet[]
   settings      Setting[]

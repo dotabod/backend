@@ -46,8 +46,8 @@ export async function updateUsernameForAll() {
       data: {
         user: {
           update: {
-            name: user.displayName,
-            username: user.name,
+            displayName: user.displayName,
+            name: user.name,
           },
         },
       },
