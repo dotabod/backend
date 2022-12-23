@@ -25,14 +25,20 @@ channel
       const newObj = payload.new as User
       const oldObj = payload.old as User
       const client = findUser(newObj.id)
+      if (!client) return
+
       // dont overwrite with 0 because we use this variable to track currently logged in mmr
-      if (newObj.mmr !== 0 && client && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
+      if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
         console.log('[WATCHER MMR] Sending mmr to socket', client.name)
         tellChatNewMMR(client.token, newObj.mmr, oldObj.mmr)
         client.mmr = newObj.mmr
 
         const deets = await getRankDetail(newObj.mmr, client.steam32Id)
         server.io.to(client.token).emit('update-medal', deets)
+      }
+      if (newObj.stream_online !== oldObj.stream_online) {
+        console.log('[WATCHER STREAM] Updating stream status of', client.name)
+        client.stream_online = newObj.stream_online
       }
     }
 

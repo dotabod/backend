@@ -281,7 +281,7 @@ export class setupMainEvents {
       this.openBets()
 
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-      if (chatterEnabled) {
+      if (chatterEnabled && this.client.stream_online) {
         const isMidasPassive = checkMidas(data, this.passiveMidas)
         if (isMidasPassive) {
           console.log('[MIDAS]', 'Passive midas', { name: this.getChannel() })
@@ -311,7 +311,7 @@ export class setupMainEvents {
     events.on(`${this.getToken()}:map:paused`, (isPaused: boolean) => {
       if (!isPlayingMatch(this.client.gsi)) return
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-      if (!chatterEnabled) return
+      if (!chatterEnabled || !this.client.stream_online) return
 
       // Necessary to let the frontend know, so we can pause any rosh / aegis / etc timers
       server.io.to(this.getToken()).emit('paused', isPaused)
@@ -601,6 +601,11 @@ export class setupMainEvents {
               const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
               if (!betsEnabled) return
 
+              if (!this.client.stream_online) {
+                console.log('[BETS]', 'Not opening bets bc stream is offline for', this.client.name)
+                return
+              }
+
               const hero = getHero(this.client.gsi?.hero?.name)
 
               openTwitchBet(this.getToken(), hero?.localized_name)
@@ -801,6 +806,12 @@ export class setupMainEvents {
     if (!betsEnabled) {
       console.log('bets are not enabled, stopping here', this.getChannel())
 
+      this.resetClientState(true)
+      return
+    }
+
+    if (!this.client.stream_online) {
+      console.log('[BETS]', 'Not closing bets bc stream is offline for', this.client.name)
       this.resetClientState(true)
       return
     }
