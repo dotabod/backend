@@ -308,22 +308,6 @@ export class setupMainEvents {
       }
     })
 
-    events.on(`${this.getToken()}:hero:smoked`, (isSmoked: boolean) => {
-      if (!isPlayingMatch(this.client.gsi)) return
-      const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-      if (!chatterEnabled) return
-
-      if (isSmoked) {
-        const hero = getHero(this.client.gsi?.hero?.name)
-        if (!hero) {
-          void chatClient.say(this.getChannel(), 'Shush Smoked!')
-          return
-        }
-
-        void chatClient.say(this.getChannel(), `Shush ${hero.localized_name} is smoked!`)
-      }
-    })
-
     events.on(`${this.getToken()}:map:paused`, (isPaused: boolean) => {
       if (!isPlayingMatch(this.client.gsi)) return
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
