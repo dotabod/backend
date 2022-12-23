@@ -5,6 +5,7 @@ commandHandler.registerCommand('match', {
   aliases: ['matchid'],
   permission: 0,
   cooldown: 15000,
+  onlyOnline: true,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },

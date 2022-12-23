@@ -1,15 +1,11 @@
-import { getBotAPI } from '../twitch/lib/getBotAPI.js'
 import { prisma } from './prisma.js'
 
-export async function getWL(channelId: string) {
+export async function getWL(channelId: string, startDate: Date | null) {
   if (!channelId) {
     return Promise.resolve({ record: [{ win: 0, lose: 0, type: 'U' }], msg: null })
   }
 
-  const botApi = getBotAPI()
-  const stream = await botApi.streams.getStreamByUserId(channelId)
-
-  if (!stream?.startDate) {
+  if (!startDate) {
     throw new Error('Stream not live')
   }
 
@@ -34,7 +30,7 @@ export async function getWL(channelId: string) {
           },
         },
         createdAt: {
-          gte: stream.startDate,
+          gte: startDate,
         },
       },
     })

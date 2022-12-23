@@ -7,6 +7,7 @@ commandHandler.registerCommand('xpm', {
   aliases: [],
   permission: 0,
   cooldown: 15000,
+  onlyOnline: true,
   dbkey: DBSettings.commandXPM,
   handler: (message: MessageType, args: string[]) => {
     const {

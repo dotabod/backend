@@ -5,6 +5,8 @@ export interface SocketClient {
   steamserverid?: string
   token: string
   stream_online: boolean
+  stream_start_date: Date | null
+  stream_delay: number | null
   steam32Id: number | null // currently connected steam id
   mmr: number // currently connected mmr
   gsi?: Packet

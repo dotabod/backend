@@ -5,9 +5,10 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('smurfs', {
-  aliases: ['lifetimes', 'totals'],
+  aliases: ['lifetimes', 'totals', 'games'],
   permission: 0,
   cooldown: 15000,
+  onlyOnline: true,
   dbkey: DBSettings.commandSmurfs,
   handler: (message: MessageType, args: string[]) => {
     const {

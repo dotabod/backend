@@ -9,6 +9,7 @@ commandHandler.registerCommand('ranked', {
   aliases: ['isranked'],
   permission: 0,
   cooldown: 15000,
+  onlyOnline: true,
   dbkey: DBSettings.commandRanked,
   handler: (message: MessageType, args: string[]) => {
     const {

@@ -7,6 +7,7 @@ commandHandler.registerCommand('gpm', {
   aliases: [],
   permission: 0,
   cooldown: 15000,
+  onlyOnline: true,
   dbkey: DBSettings.commandGPM,
   handler: (message: MessageType, args: string[]) => {
     const {

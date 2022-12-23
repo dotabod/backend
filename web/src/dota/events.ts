@@ -341,12 +341,11 @@ export class setupMainEvents {
   }
 
   emitWLUpdate() {
-    console.log('[STEAM32ID]', 'Emitting WL overlay update', {
-      name: this.getChannel(),
-    })
-
-    getWL(this.getChannelId())
+    getWL(this.getChannelId(), this.client.stream_start_date)
       .then(({ record }) => {
+        console.log('[STEAM32ID]', 'Emitting WL overlay update', {
+          name: this.getChannel(),
+        })
         server.io.to(this.getToken()).emit('update-wl', record)
       })
       .catch((e) => {
@@ -356,12 +355,11 @@ export class setupMainEvents {
   }
 
   emitBadgeUpdate() {
-    console.log('[STEAM32ID]', 'Emitting badge overlay update', {
-      name: this.getChannel(),
-    })
-
     getRankDetail(this.getMmr(), this.getSteam32())
       .then((deets) => {
+        console.log('[STEAM32ID]', 'Emitting badge overlay update', {
+          name: this.getChannel(),
+        })
         server.io.to(this.getToken()).emit('update-medal', deets)
       })
       .catch((e) => {

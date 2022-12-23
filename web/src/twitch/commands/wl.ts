@@ -7,6 +7,7 @@ commandHandler.registerCommand('wl', {
   aliases: ['score', 'winrate', 'wr'],
   permission: 0,
   cooldown: 15000,
+  onlyOnline: true,
   dbkey: DBSettings.commandWL,
   handler: (message: MessageType, args: string[]) => {
     const {
@@ -20,7 +21,7 @@ commandHandler.registerCommand('wl', {
 
     console.log('[WL] Checking WL for steam32Id', client.steam32Id, client.name)
 
-    getWL(channelId)
+    getWL(channelId, client.stream_start_date)
       .then(({ msg }) => {
         void chatClient.say(channel, msg ?? 'Unknown WL')
       })

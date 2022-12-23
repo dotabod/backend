@@ -55,6 +55,8 @@ export default async function getDBUser(
         mmr: true,
         steam32Id: true,
         stream_online: true,
+        stream_start_date: true,
+        stream_delay: true,
       },
       where: {
         Account: {

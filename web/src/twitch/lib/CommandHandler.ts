@@ -1,5 +1,6 @@
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { SocketClient } from '../../types.js'
+import { chatClient } from '../index.js'
 
 export interface UserType {
   name: string
@@ -23,6 +24,7 @@ export interface CommandOptions {
   aliases: string[]
   permission: number
   cooldown: number
+  onlyOnline?: boolean
   dbkey?: DBSettings
   handler: (message: MessageType, args: string[]) => void
 }
@@ -78,6 +80,11 @@ class CommandHandler {
 
     const options = this.commands.get(commandName)
     if (!options) return
+
+    if (options.onlyOnline && !message.channel.client.stream_online) {
+      void chatClient.say(message.channel.name, 'Stream not live PauseChamp')
+      return
+    }
 
     // Check if the command is enabled
     if (!this.isEnabled(message.channel.settings, options.dbkey)) return
