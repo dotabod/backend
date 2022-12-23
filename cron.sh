@@ -7,7 +7,7 @@ set -a; source .env.local; set +a
 # Automatic backup utility, run in cron job under postgres user
 # Example cron line:
 # cron every day
-# 0 0 * * * /path/to/backup/cron.sh
+# 0 0 * * * /bin/bash $HOME/dotabod/cron.sh
 
 # Set the number of backups to keep
 num_backups=24
