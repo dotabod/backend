@@ -46,9 +46,19 @@ export async function gameMedals(
       if (cards[i].leaderboard_rank > 0) medals[i] = `#${cards[i].leaderboard_rank}`
     }
   }
-  const result: { heroName: string; medal: string }[] = []
+  const result: { heroNames: string; medal: string }[] = []
+  const medalsToPlayers: Record<string, string[]> = {}
   matchPlayers.forEach((player: { heroid: number; accountid: number }, i: number) => {
-    result.push({ heroName: getHeroNameById(player.heroid, i), medal: medals[i] })
+    medalsToPlayers[medals[i]] = [
+      ...(medalsToPlayers[medals[i]] ?? []),
+      getHeroNameById(player.heroid, i),
+    ]
   })
-  return result.map((m) => `${m.heroName}: ${m.medal}`).join(' · ')
+
+  // Return Medal: heroname, heroname, heroname
+  Object.entries(medalsToPlayers).forEach(([medal, heroes]) => {
+    result.push({ heroNames: heroes.join(', '), medal })
+  })
+
+  return result.map((m) => `${m.medal}: ${m.heroNames}`).join(' · ')
 }
