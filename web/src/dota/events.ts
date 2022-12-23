@@ -48,6 +48,7 @@ export class setupMainEvents {
   }
   endingBets = false
   openingBets = false
+  creatingSteamAccount = false
 
   constructor(client: SocketClient) {
     this.client = client
@@ -174,10 +175,6 @@ export class setupMainEvents {
   }
 
   watchEvents() {
-    events.on(`${this.getToken()}:player:steamid`, (steamid: string) => {
-      this.updateSteam32Id()
-    })
-
     events.on(`${this.getToken()}:${DotaEventTypes.RoshanKilled}`, (event: DotaEvent) => {
       if (!isPlayingMatch(this.client.gsi)) return
 
@@ -236,6 +233,10 @@ export class setupMainEvents {
 
     // Catch all
     events.on(`${this.getToken()}:newdata`, (data: Packet) => {
+      // New users who dont have a steamaccount saved yet
+      // This needs to run first so we have client.steamid on multiple acts
+      this.updateSteam32Id()
+
       // In case they connect to a game in progress and we missed the start event
       this.setupOBSBlockers(data.map?.game_state ?? '')
 
@@ -252,7 +253,6 @@ export class setupMainEvents {
           name: this.getChannel(),
         })
         this.playingHeroSlot = purchaser
-        this.updateSteam32Id()
         void this.saveMatchData()
         return
       }
@@ -372,67 +372,65 @@ export class setupMainEvents {
   // the user may have a steam account saved, but not this one for this match
   // so add to their list of steam accounts
   updateSteam32Id() {
+    if (this.creatingSteamAccount) return
     if (!this.client.gsi?.player?.steamid) return
+    // TODO: Not sure if .accountid actually exists for a solo gsi in non spectate mode
+    if (this.getSteam32() === Number(this.client.gsi.player.accountid)) return
 
     const steam32Id = steamID64toSteamID32(this.client.gsi.player.steamid)
     if (!steam32Id) return
 
-    // User already has a steam32Id and its saved to the new table
-    const foundAct = this.client.SteamAccount.find((act) => act.steam32Id === this.getSteam32())
-    if (this.getSteam32() === steam32Id && foundAct) {
-      if (this.getMmr() !== foundAct.mmr) {
-        this.client.mmr = foundAct.mmr
-        this.emitBadgeUpdate()
-      }
-      return
-    }
+    // It's the same user, no need to create a new act
+    if (this.getSteam32() === steam32Id) return
 
-    console.log('[STEAM32ID]', 'Updating steam32Id', { name: this.getChannel() })
-
+    // User already has a steam32Id and its saved to the `steam_accounts` table
+    const foundAct = this.client.SteamAccount.find((act) => act.steam32Id === steam32Id)
     // Logged into a new account (smurfs vs mains)
-    this.client.steam32Id = steam32Id
+    if (foundAct) {
+      this.client.mmr = foundAct.mmr
+      this.client.steam32Id = steam32Id
+      this.emitBadgeUpdate()
+      return
+    } // else we create this act in db
 
     // Default to the mmr from `users` table for this brand new steam account
+    // this.getMmr() should return mmr from `user` table on new accounts without steam acts
     const mmr = this.client.SteamAccount.length ? 0 : this.getMmr()
 
+    console.log('[STEAM32ID]', 'Running steam account lookup to db', { name: this.getChannel() })
+
+    this.creatingSteamAccount = true
     // Get mmr from database for this steamid
     prisma.steamAccount
       .findFirst({ where: { steam32Id } })
-      .then((res) => {
-        // not found
+      .then(async (res) => {
+        // not found, need to make
         if (!res?.id) {
-          prisma.steamAccount
-            .create({
-              data: {
-                mmr,
-                steam32Id,
-                userId: this.getToken(),
-                name: this.client.gsi?.player?.name,
-              },
-            })
-            .then((res) => {
-              prisma.user
-                .update({ where: { id: this.getToken() }, data: { mmr: 0 } })
-                .then(() => {
-                  //
-                })
-                .catch((e) => {
-                  //
-                })
-              this.client.mmr = mmr
-              this.client.SteamAccount.push({
-                name: res.name,
-                mmr,
-                steam32Id: res.steam32Id,
-              })
-              this.emitBadgeUpdate()
-            })
-            .catch((e: any) => {
-              console.error('[STEAM32ID]', 'Error updating steam32Id', e?.message || e)
-            })
+          console.log('[STEAM32ID]', 'Adding steam32Id', { name: this.getChannel() })
+          await prisma.steamAccount.create({
+            data: {
+              mmr,
+              steam32Id,
+              userId: this.getToken(),
+              name: this.client.gsi?.player?.name,
+            },
+          })
+          await prisma.user.update({ where: { id: this.getToken() }, data: { mmr: 0 } })
+          // Logged into a new account (smurfs vs mains)
+          this.client.mmr = mmr
+          this.client.steam32Id = steam32Id
+          this.emitBadgeUpdate()
+        } else {
+          // We should never arrive here
+          console.log('ERROR We should never be here', { name: this.getChannel() })
+          this.client.mmr = res.mmr
+          this.client.steam32Id = steam32Id
         }
+
+        this.creatingSteamAccount = false
       })
       .catch((e) => {
+        this.creatingSteamAccount = false
         console.log('[DATABASE ERROR]', e?.message || e)
       })
   }
