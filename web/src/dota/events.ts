@@ -477,9 +477,7 @@ export class setupMainEvents {
     }
   }
 
-  handleMMR(increase: boolean, matchId: string) {
-    const { playingHeroSlot: heroSlot } = this
-
+  handleMMR(increase: boolean, matchId: string, heroSlot?: number | null) {
     axios
       .post(`https://api.opendota.com/api/request/${matchId}`)
       .then((r) => {
@@ -792,8 +790,12 @@ export class setupMainEvents {
     this.endingBets = true
     const channel = this.getChannel()
 
-    console.log('calling mmr update handler', this.getChannel(), { won, matchId })
-    this.handleMMR(won, matchId)
+    console.log('calling mmr update handler', this.getChannel(), {
+      won,
+      matchId,
+      heroSlot: this.playingHeroSlot,
+    })
+    this.handleMMR(won, matchId, this.playingHeroSlot)
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
     if (!betsEnabled) {
