@@ -25,7 +25,7 @@ export async function updateUsernameForAll() {
   const providerIds: string[] = users
     .map((user) => {
       if (!user.Account?.providerAccountId) return null
-      return user.Account.providerAccountId as string
+      return user.Account.providerAccountId
     })
     .flatMap((f) => f ?? [])
 
@@ -145,22 +145,25 @@ async function fixWins() {
   }
 }
 
-// const followers = await prisma.user.findMany({
-//   select: {
-//     name: true,
-//     followers: true,
-//   },
-//   orderBy: {
-//     followers: 'desc',
-//   },
-//   take: 20,
-// })
+const followers = await prisma.user.findMany({
+  select: {
+    name: true,
+    followers: true,
+  },
+  orderBy: {
+    followers: 'desc',
+  },
+  take: 30,
+})
 
-// console.log(followers)
-
-
+console.log(
+  followers
+    // @ts-expect-error asd
+    .sort((a, b) => b.followers - a.followers)
+    .map((f) => ({ ...f, followers: f.followers?.toLocaleString() })),
+)
 
 // await updateUsernameForAll()
 // await getAccounts()
 // await fixWins()
-await getFollows()
+// await getFollows()
