@@ -35,7 +35,9 @@ commandHandler.registerCommand('hero', {
     }
 
     axios(
-      `https://api.opendota.com/api/players/${client.steam32Id}/wl/?hero_id=${hero.id}&having=1&date=30`,
+      `https://api.opendota.com/api/players/${client.steam32Id}/wl/?hero_id=${hero.id}&having=1${
+        args[0] === 'all' ? '' : '&date=30'
+      }`,
     )
       .then(({ data }: { data: { win: number; lose: number } }) => {
         if (data.win + data.lose === 0) {
