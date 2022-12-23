@@ -9,6 +9,7 @@ commandHandler.registerCommand('hero', {
   aliases: [],
   permission: 0,
   cooldown: 15000,
+  onlyOnline: true,
   dbkey: DBSettings.commandHero,
   handler: (message: MessageType, args: string[]) => {
     const {
@@ -34,42 +35,34 @@ commandHandler.registerCommand('hero', {
       return
     }
 
+    const allTime = args[0] === 'all'
+
     axios(
       `https://api.opendota.com/api/players/${client.steam32Id}/wl/?hero_id=${hero.id}&having=1${
-        args[0] === 'all' ? '' : '&date=30'
+        allTime ? '' : '&date=30'
       }`,
     )
       .then(({ data }: { data: { win: number; lose: number } }) => {
-        if (data.win + data.lose === 0) {
+        const wl = data.win + data.lose
+        const winrate = !wl ? 0 : Math.round((data.win / wl) * 100)
+        const timePeriod = allTime ? 'in lifetime' : 'in 30d'
+
+        if (wl > 0) {
           void chatClient.say(
             channel,
-            `No matches played as ${hero.localized_name}${
-              args[0] === 'all' ? ' of all time' : ' in 30d'
-            }.`,
+            `Winrate: ${winrate}% as ${hero.localized_name} ${timePeriod} of ${wl} matches.`,
           )
           return
         }
 
-        // Divide by zero error
-        if (data.win === 0 && data.lose > 0) {
-          void chatClient.say(
-            channel,
-            `Winrate: 0% as ${hero.localized_name} in 30d of ${data.lose} matches.`,
-          )
+        if (!wl) {
+          void chatClient.say(channel, `No matches played as ${hero.localized_name} ${timePeriod}.`)
           return
         }
-
-        const winrate = Math.round((data.win / (data.win + data.lose)) * 100)
-        void chatClient.say(
-          channel,
-          `Winrate: ${winrate}% as ${hero.localized_name} in 30d of ${
-            data.lose + data.win
-          } matches.`,
-        )
       })
       .catch((e) => {
         void chatClient.say(channel, `Playing ${hero.localized_name}`)
-        console.log(e?.data)
+        console.log(e?.data, 'could not find wl, weirdge')
       })
   },
 })
