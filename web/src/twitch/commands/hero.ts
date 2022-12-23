@@ -41,7 +41,10 @@ commandHandler.registerCommand('hero', {
     )
       .then(({ data }: { data: { win: number; lose: number } }) => {
         if (data.win + data.lose === 0) {
-          void chatClient.say(channel, `No matches played as ${hero.localized_name} in 30d.`)
+          void chatClient.say(
+            channel,
+            `No matches played as ${hero.localized_name}${args[0] === 'all' ? '' : ' in 30d'}.`,
+          )
           return
         }
 
