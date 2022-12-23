@@ -6,7 +6,8 @@ set -a; source .env.local; set +a
 # PostgreSQL Backup util
 # Automatic backup utility, run in cron job under postgres user
 # Example cron line:
-# 0 * * * * /path/to/backup/cron.sh
+# cron every day
+# 0 0 * * * /path/to/backup/cron.sh
 
 # Set the number of backups to keep
 num_backups=24
