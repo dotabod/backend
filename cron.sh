@@ -9,10 +9,7 @@ set -a; source .env.local; set +a
 # 0 * * * * /path/to/backup/cron.sh
 
 # Set the number of backups to keep
-num_backups=1
-
-# Set the name of the database to back up
-db_name=dotabod
+num_backups=24
 
 # Set the directory to store the backups
 backup_dir="$HOME/psql_backups"
@@ -22,9 +19,10 @@ mkdir -p "$backup_dir"
 timestamp=$(date +%Y-%m-%d-%H-%M)
 
 # Create the backup file name
-backup_file="$backup_dir/$db_name-$timestamp.sql"
+backup_file="$backup_dir/$timestamp.sql"
 
 # Use pg_dump to create a backup of the database
+# Specific arguments just for supabase
 pg_dump -d "${DATABASE_URL%\?*}" \
     --no-comments \
     -N supabase_functions \
@@ -35,8 +33,15 @@ pg_dump -d "${DATABASE_URL%\?*}" \
 # Compress the backup file using gzip
 gzip -f "$backup_file"
 
-# Check if the number of backups in the directory exceeds the limit
-if [ "$(ls -1 "$backup_dir" | wc -l)" -gt $num_backups ]; then
+# Use the `aws` CLI to upload the backup file to S3
+aws s3 cp "$backup_file.gz" "s3://$AWS_BUCKET_NAME/$timestamp.sql.gz"
+
+# Delete the local backup file
+rm "$backup_file.gz"
+
+# Check if the number of backups in the S3 bucket exceeds the limit
+if [ "$(aws s3 ls "s3://$AWS_BUCKET_NAME" | wc -l)" -gt $num_backups ]; then
   # Remove the oldest backup
-  rm "$backup_dir/$(ls -1t "$backup_dir" | tail -1)"
+  oldest_backup=$(aws s3 ls "s3://$AWS_BUCKET_NAME" | sort | head -n 1 | awk '{print $4}')
+  aws s3 rm "s3://$AWS_BUCKET_NAME/$oldest_backup"
 fi
