@@ -43,7 +43,9 @@ commandHandler.registerCommand('hero', {
         if (data.win + data.lose === 0) {
           void chatClient.say(
             channel,
-            `No matches played as ${hero.localized_name}${args[0] === 'all' ? '' : ' in 30d'}.`,
+            `No matches played as ${hero.localized_name}${
+              args[0] === 'all' ? ' of all time' : ' in 30d'
+            }.`,
           )
           return
         }
