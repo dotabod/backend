@@ -9,6 +9,8 @@ dockerfile := if df == "" {
     "docker-compose-"+ df + ".yml"
 }
 
+app := ""
+
 GREEN  := "\\u001b[32m"
 RESET  := "\\u001b[0m"
 CHECK  := `/usr/bin/printf "\xE2\x9C\x94"`
@@ -32,6 +34,7 @@ logone:
 
 # Builds all images
 buildone:
+    @echo -e "Running for {{app}} on {{dockerfile}}"
     git pull
     @docker compose -f {{dockerfile}} build {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
