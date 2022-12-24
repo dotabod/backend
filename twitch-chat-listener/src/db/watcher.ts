@@ -37,7 +37,6 @@ channel
     void handleNewUser(user)
   })
   .subscribe((status, err) => {
-    console.log(status, err)
     if (status === 'SUBSCRIBED') {
       console.log('[SUPABASE]', 'Ready to receive database changes!')
     }

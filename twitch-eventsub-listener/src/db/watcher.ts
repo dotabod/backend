@@ -1,4 +1,5 @@
 import { User } from '../../prisma/generated/postgresclient/index.js'
+import { getBotAPI } from '../twitch/lib/getBotAPI.js'
 import { listener } from '../twitch/lib/listener.js'
 import { offlineEvent } from '../twitch/lib/offlineEvent.js'
 import { onlineEvent } from '../twitch/lib/onlineEvent.js'
@@ -20,6 +21,20 @@ async function handleNewUser(userId: string) {
   if (!user?.providerAccountId) return
 
   try {
+    const botApi = getBotAPI()
+    const stream = await botApi.streams.getStreamByUserId(user.providerAccountId)
+    if (stream?.startDate) {
+      // @ts-expect-error asdf
+      onlineEvent({
+        broadcasterId: user.providerAccountId,
+        startDate: stream.startDate,
+      })
+    }
+  } catch (e) {
+    console.log(e, 'error on getStreamByUserId')
+  }
+
+  try {
     await listener.subscribeToStreamOnlineEvents(user.providerAccountId, onlineEvent)
     await listener.subscribeToStreamOfflineEvents(user.providerAccountId, offlineEvent)
   } catch (e) {
@@ -38,7 +53,6 @@ channel
     void handleNewUser(user.id)
   })
   .subscribe((status, err) => {
-    console.log(status, err)
     if (status === 'SUBSCRIBED') {
       console.log('[SUPABASE]', 'Ready to receive database changes!')
     }
