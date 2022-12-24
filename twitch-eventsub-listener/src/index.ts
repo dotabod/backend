@@ -1,3 +1,4 @@
+import './db/watcher.js'
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
 import { listener } from './twitch/lib/listener.js'
 import { offlineEvent } from './twitch/lib/offlineEvent.js'
