@@ -20,9 +20,9 @@ export async function openTwitchBet(
 
   return api.predictions
     .createPrediction(providerAccountId || '', {
-      title: betsInfo.title.replace('[heroname]', heroName ?? ''),
-      outcomes: [betsInfo.yes, betsInfo.no],
-      autoLockAfter: betsInfo.duration, // 4 minutes
+      title: betsInfo.title.replace('[heroname]', heroName ?? '').substring(0, 45),
+      outcomes: [betsInfo.yes.substring(0, 25), betsInfo.no.substring(0, 25)],
+      autoLockAfter: betsInfo.duration >= 30 && betsInfo.duration <= 1800 ? betsInfo.duration : 240, // 4 min default
     })
     .catch((e: any) => {
       if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {
