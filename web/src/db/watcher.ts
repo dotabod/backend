@@ -12,7 +12,7 @@ const channel = supabase.channel('db-changes')
 
 channel
   .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'users' }, (payload) => {
-    logger.info(payload, 'REMOVE')
+    logger.info('Removing user', payload)
 
     const oldObj = payload.old as User
     const client = findUser(oldObj.id)

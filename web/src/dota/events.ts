@@ -170,7 +170,7 @@ export class setupMainEvents {
         logger.info('Match data already found', this.client.name, this.client.gsi.map.matchid)
       }
     } catch (e) {
-      logger.info(e, 'saving match data failed', this.client.name)
+      logger.info('saving match data failed', this.client.name, e)
     }
   }
 
