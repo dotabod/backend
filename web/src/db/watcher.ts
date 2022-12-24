@@ -38,8 +38,12 @@ channel
         server.io.to(client.token).emit('update-medal', deets)
       }
       if (newObj.stream_online !== oldObj.stream_online) {
-        logger.info('[WATCHER STREAM] Updating stream status of', client.name)
+        logger.info('[WATCHER STREAM] Updating stream status for', client.name)
         client.stream_online = newObj.stream_online
+      }
+      if (newObj.stream_start_date !== oldObj.stream_start_date) {
+        logger.info('[WATCHER STREAM] Updating stream start date for', client.name)
+        client.stream_start_date = newObj.stream_start_date
       }
     }
 
