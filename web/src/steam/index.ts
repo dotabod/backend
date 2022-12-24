@@ -122,7 +122,7 @@ class Dota {
       } else {
         try {
           steamErrors(logonResp.eresult, (err: any, errorObject: any) => {
-            logger.info('[STEAM]', errorObject, err)
+            logger.info('[STEAM]', { errorObject, err })
           })
         } catch (e) {
           //
@@ -142,7 +142,7 @@ class Dota {
     this.steamClient.on('loggedOff', (eresult: any) => {
       // @ts-expect-error connect is there i swear
       if (process.env.NODE_ENV === 'production') this.steamClient.connect()
-      logger.info('[STEAM] Logged off from Steam.', eresult)
+      logger.info('[STEAM] Logged off from Steam.', { eresult })
 
       try {
         steamErrors(eresult, (err: any, errorObject: any) => {
@@ -154,7 +154,7 @@ class Dota {
     })
 
     this.steamClient.on('error', (error: any) => {
-      logger.info('[STEAM]steam error', error)
+      logger.info('[STEAM]steam error', { error })
       if (process.env.NODE_ENV !== 'production') this.exit()
       // @ts-expect-error connect is there i swear
       if (process.env.NODE_ENV === 'production') this.steamClient.connect()
@@ -251,7 +251,7 @@ class Dota {
           }
 
           if (waitForHeros && hasHeroes) {
-            logger.info('Saving match data with heroes', game.match.match_id)
+            logger.info('Saving match data with heroes', { matchid: game.match.match_id })
 
             await mongo
               .collection('delayedGames')
@@ -281,12 +281,12 @@ class Dota {
                 void this.getCards(accountIds, true)
               }
             } catch (e) {
-              logger.info('mongo error saving match', e)
+              logger.info('mongo error saving match', { e })
             }
 
             // Come back in 8 attempts to save the hero ids. With no cb()
             if (!hasHeroes) {
-              logger.info('Waiting for hero ids', game.match.match_id)
+              logger.info('Waiting for hero ids', { matchid: game.match.match_id })
               this.GetRealTimeStats(steam_server_id, true)
             }
           }
@@ -324,9 +324,9 @@ class Dota {
             }
           })
 
-          logger.info('[STEAM] received match', matchId)
+          logger.info('[STEAM] received match', { matchId })
         } else {
-          logger.info('[STEAM] match not found', err)
+          logger.info('[STEAM] match not found', { err })
           arr = new Error('Match not found')
         }
 

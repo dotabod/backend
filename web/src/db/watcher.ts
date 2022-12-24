@@ -19,7 +19,7 @@ channel
     const oldObj = payload.old as User
     const client = findUser(oldObj.id)
     if (client) {
-      logger.info('[WATCHER USER] Deleting user', client.name)
+      logger.info('[WATCHER USER] Deleting user', { name: client.name })
       events.emit('remove-gsi-client', client.token)
       chatClient.part(client.name)
       deleteUser(client.token)
@@ -34,7 +34,7 @@ channel
 
       // dont overwrite with 0 because we use this variable to track currently logged in mmr
       if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
-        logger.info('[WATCHER MMR] Sending mmr to socket', client.name)
+        logger.info('[WATCHER MMR] Sending mmr to socket', { name: client.name })
         tellChatNewMMR(client.token, newObj.mmr, oldObj.mmr)
         client.mmr = newObj.mmr
 
@@ -42,11 +42,11 @@ channel
         server.io.to(client.token).emit('update-medal', deets)
       }
       if (newObj.stream_online !== oldObj.stream_online) {
-        logger.info('[WATCHER STREAM] Updating stream status for', client.name)
+        logger.info('[WATCHER STREAM] Updating stream status for', { name: client.name })
         client.stream_online = newObj.stream_online
       }
       if (newObj.stream_start_date !== oldObj.stream_start_date) {
-        logger.info('[WATCHER STREAM] Updating stream start date for', client.name)
+        logger.info('[WATCHER STREAM] Updating stream start date for', { name: client.name })
         client.stream_start_date = newObj.stream_start_date
       }
     }
@@ -72,7 +72,7 @@ channel
         void toggleDotabod(client.token, !!newObj.value, client.name)
       }
 
-      logger.info('[WATCHER SETTING] Sending new setting value to socket', client.name)
+      logger.info('[WATCHER SETTING] Sending new setting value to socket', { name: client.name })
       server.io.to(client.token).emit('refresh-settings')
     }
   })
@@ -85,7 +85,7 @@ channel
     if (!client) return
 
     if (payload.eventType === 'DELETE') {
-      logger.info('[WATCHER STEAM] Deleting steam account for', client.name)
+      logger.info('[WATCHER STEAM] Deleting steam account for', { name: client.name })
       const oldSteamIdx = client.SteamAccount.findIndex((s) => s.steam32Id === oldObj.steam32Id)
       client.SteamAccount.splice(oldSteamIdx, 1)
       if (client.steam32Id === oldObj.steam32Id) {
@@ -94,7 +94,7 @@ channel
       return
     }
 
-    logger.info('[WATCHER STEAM] Updating steam accounts for', client.name)
+    logger.info('[WATCHER STEAM] Updating steam accounts for', { name: client.name })
 
     const currentSteamIdx = client.SteamAccount.findIndex((s) => s.steam32Id === newObj.steam32Id)
     if (currentSteamIdx === -1) {

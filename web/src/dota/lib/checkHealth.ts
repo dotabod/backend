@@ -12,7 +12,7 @@ export default function checkHealth(
   const healthPct = data.hero.health_percent
   recentHealth.shift()
   recentHealth.push(healthPct)
-  logger.info('[HEALTH]', recentHealth)
+  logger.info('[HEALTH]', { recentHealth })
 
   const randomNumber = Math.floor(Math.random() * 3) === 1
 

@@ -360,7 +360,7 @@ export class setupMainEvents {
       })
       .catch((e) => {
         // Stream not live
-        // console.error('[MMR] emitWLUpdate Error getting WL', e?.message || e)
+        // console.error('[MMR] emitWLUpdate Error getting WL', {e: e?.message || e})
       })
   }
 
@@ -373,7 +373,7 @@ export class setupMainEvents {
         server.io.to(this.getToken()).emit('update-medal', deets)
       })
       .catch((e) => {
-        console.error('[MMR] emitBadgeUpdate Error getting rank detail', e?.message || e)
+        console.error('[MMR] emitBadgeUpdate Error getting rank detail', { e: e?.message || e })
       })
   }
 
@@ -441,7 +441,7 @@ export class setupMainEvents {
       })
       .catch((e) => {
         this.creatingSteamAccount = false
-        logger.info('[DATABASE ERROR]', e?.message || e)
+        logger.info('[DATABASE ERROR]', { e: e?.message || e })
       })
   }
 
@@ -466,7 +466,7 @@ export class setupMainEvents {
         // Update mmr for ranked matches
       })
       .catch((e) => {
-        console.error('[DATABASE ERROR MMR]', e?.message || e)
+        console.error('[DATABASE ERROR MMR]', { e: e?.message || e })
       })
 
     logger.info('updateMMR emit wl update', { name: this.getChannel() })
@@ -490,7 +490,7 @@ export class setupMainEvents {
         logger.info('mmr match request to opendota', r.data)
       })
       .catch((e) => {
-        logger.info('Error mmr match request to opendota', e?.message || e)
+        logger.info('Error mmr match request to opendota', { e: e?.message || e })
       })
 
     axios(`https://api.opendota.com/api/matches/${matchId}`)
@@ -499,7 +499,7 @@ export class setupMainEvents {
         if (Array.isArray(opendotaMatch.data?.players) && typeof heroSlot === 'number') {
           const partySize = opendotaMatch.data?.players[heroSlot]?.party_size
           if (typeof partySize === 'number' && partySize > 1) {
-            logger.info('[MMR] Party match detected', this.client.name)
+            logger.info('[MMR] Party match detected', { name: this.client.name })
             isParty = true
           }
         }
@@ -585,7 +585,7 @@ export class setupMainEvents {
       .then((bet) => {
         // Saving to local memory so we don't have to query the db again
         if (bet?.id) {
-          logger.info('[BETS] Found a bet in the database', bet.id)
+          logger.info('[BETS] Found a bet in the database', { id: bet.id })
           this.playingMatchId = bet.matchId
           this.playingTeam = bet.myTeam as Player['team_name']
         } else {
@@ -608,7 +608,9 @@ export class setupMainEvents {
               if (!betsEnabled) return
 
               if (!this.client.stream_online) {
-                logger.info('[BETS] Not opening bets bc stream is offline for', this.client.name)
+                logger.info('[BETS] Not opening bets bc stream is offline for', {
+                  name: this.client.name,
+                })
                 return
               }
 
@@ -653,7 +655,7 @@ export class setupMainEvents {
                         })
                       })
                       .catch((e) => {
-                        logger.info('[BETS] Error disabling bets', e?.message || e)
+                        logger.info('[BETS] Error disabling bets', { e: e?.message || e })
                       })
                   } else {
                     logger.info('[BETS] Error opening twitch bet', { channel, e: e?.message || e })
@@ -707,7 +709,7 @@ export class setupMainEvents {
           logger.info('mmr match request to opendota', r.data)
         })
         .catch((e) => {
-          logger.info('Error mmr match request to opendota', e?.message || e)
+          logger.info('Error mmr match request to opendota', { e: e?.message || e })
         })
       // Check with opendota to see if the match is over
       axios(`https://api.opendota.com/api/matches/${matchId}`)
@@ -733,7 +735,9 @@ export class setupMainEvents {
           }
 
           if (winningTeam === null) {
-            logger.info('Early dc match wont be scored bc winner is null', this.getChannel())
+            logger.info('Early dc match wont be scored bc winner is null', {
+              name: this.getChannel(),
+            })
             void chatClient.say(
               channel,
               `Match not scored D: Mods need to end bets manually. Not adding or removing MMR for match ${matchId}.`,
@@ -752,27 +756,12 @@ export class setupMainEvents {
         .catch((e: any) => {
           // this could mean match is not over yet. just give up checking after this long (like 3m)
           // resetting vars will mean it will just grab it again on match load
-          logger.info(
-            'not ending bets even tho early dc, match might still be going on',
-            this.getChannel(),
-          )
+          logger.info('not ending bets even tho early dc, match might still be going on', {
+            name: this.getChannel(),
+          })
           this.resetClientState(true)
         })
 
-      return
-    }
-
-    // "none"? Must mean the game hasn't ended yet
-    // Would be undefined otherwise if there is no game
-    if (this.client.gsi?.map?.win_team === 'none') {
-      logger.info(
-        'map.win_team was "none". not continuing, not resetting vars. assuming same match is still going on',
-        {
-          channel: this.getChannel(),
-          playingMatchId: this.playingMatchId,
-          GSImatchId: this.client.gsi.map.matchid,
-        },
-      )
       return
     }
 
@@ -807,14 +796,14 @@ export class setupMainEvents {
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
     if (!betsEnabled) {
-      logger.info('bets are not enabled, stopping here', this.getChannel())
+      logger.info('bets are not enabled, stopping here', { name: this.getChannel() })
 
       this.resetClientState(true)
       return
     }
 
     if (!this.client.stream_online) {
-      logger.info('[BETS] Not closing bets bc stream is offline for', this.client.name)
+      logger.info('[BETS] Not closing bets bc stream is offline for', { name: this.client.name })
       this.resetClientState(true)
       return
     }
@@ -861,7 +850,7 @@ export class setupMainEvents {
               disabledBets.delete(this.getToken())
             })
             .catch((e) => {
-              logger.info('[BETS] Error disabling bets', e?.message || e)
+              logger.info('[BETS] Error disabling bets', { e: e?.message || e })
             })
         } else {
           logger.info('[BETS] Error closing twitch bet', { channel, e: e?.message || e })
