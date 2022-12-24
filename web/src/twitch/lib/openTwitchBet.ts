@@ -1,24 +1,28 @@
+import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { SocketClient } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { getChannelAPI } from './getChannelAPI.js'
 
 export const disabledBets = new Set()
 
-export async function openTwitchBet(userId: string, heroName?: string) {
+export async function openTwitchBet(
+  userId: string,
+  heroName?: string,
+  settings?: SocketClient['settings'],
+) {
   if (disabledBets.has(userId)) {
     throw new Error('Bets not enabled')
   }
 
-  logger.info('[PREDICT] [BETS] Opening twitch bet', { userId })
-
   const { api, providerAccountId } = getChannelAPI(userId)
-
-  const title = heroName ? `Will we win with ${heroName}?` : `Will we win this match?`
+  const betsInfo = getValueOrDefault(DBSettings.betsInfo, settings)
+  logger.info('[PREDICT] [BETS] Opening twitch bet', { userId, betsInfo })
 
   return api.predictions
     .createPrediction(providerAccountId || '', {
-      title,
-      outcomes: ['Yes', 'No'],
-      autoLockAfter: 4 * 60, // 4 minutes
+      title: betsInfo.title.replace('[heroname]', heroName ?? ''),
+      outcomes: [betsInfo.yes, betsInfo.no],
+      autoLockAfter: betsInfo.duration, // 4 minutes
     })
     .catch((e: any) => {
       if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {

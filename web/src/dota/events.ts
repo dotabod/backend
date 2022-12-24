@@ -616,7 +616,7 @@ export class setupMainEvents {
 
               const hero = getHero(this.client.gsi?.hero?.name)
 
-              openTwitchBet(this.getToken(), hero?.localized_name)
+              openTwitchBet(this.getToken(), hero?.localized_name, this.client.settings)
                 .then(() => {
                   void chatClient.say(channel, `Bets open peepoGamble`)
                   logger.info('[BETS] open bets', {

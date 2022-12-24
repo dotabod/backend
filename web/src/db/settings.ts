@@ -31,6 +31,7 @@ export enum DBSettings {
   commandRanked = 'commandRanked',
   commandDisable = 'commandDisable',
   commandCommands = 'commandCommands',
+  betsInfo = 'betsInfo',
 }
 
 export const defaultSettings = {
@@ -66,6 +67,12 @@ export const defaultSettings = {
   [DBSettings.commandRanked]: true,
   [DBSettings.commandDisable]: false,
   [DBSettings.commandCommands]: true,
+  [DBSettings.betsInfo]: {
+    title: 'Will we win with [heroname]?',
+    yes: 'Yes',
+    no: 'No',
+    duration: 4 * 60,
+  },
 }
 
 export const getValueOrDefault = (key: DBSettings, data?: { key: string; value: any }[]) => {
