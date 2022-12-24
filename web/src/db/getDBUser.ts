@@ -2,6 +2,7 @@ import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
 import { gsiClients } from '../dota/lib/consts.js'
 import { events } from '../dota/server.js'
 import { SocketClient } from '../types.js'
+import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
 import { DBSettings, getValueOrDefault } from './settings.js'
 
@@ -25,7 +26,7 @@ export default async function getDBUser(
     if (client) return client
   }
 
-  console.log('[GSI]', 'Havent cached user token yet, checking db', { token: token ?? twitchId })
+  logger.info('[GSI]', 'Havent cached user token yet, checking db', { token: token ?? twitchId })
 
   return await prisma.user
     .findFirst({
@@ -67,7 +68,7 @@ export default async function getDBUser(
     })
     .then((user) => {
       if (!user?.id) {
-        console.log('Invalid token', { token: token ?? twitchId })
+        logger.info('Invalid token', { token: token ?? twitchId })
         invalidTokens.add(token ?? twitchId)
         return null
       }
@@ -86,7 +87,7 @@ export default async function getDBUser(
 
       const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, user.settings)
       if (isBotDisabled) {
-        console.log('[GSI]', 'Bot is disabled for this user', { name: user.name })
+        logger.info('[GSI]', 'Bot is disabled for this user', { name: user.name })
         return theUser
       }
 
@@ -94,7 +95,7 @@ export default async function getDBUser(
       return theUser
     })
     .catch((e) => {
-      console.log('[USER]', 'Error checking auth', { token, e })
+      logger.info('[USER]', 'Error checking auth', { token, e })
       return null
     })
 }
@@ -118,7 +119,7 @@ export async function getSteamByTwitchId(twitchId: string) {
       },
     })
     .catch((e) => {
-      console.log('[USER]', 'Error checking auth', { twitchId, e })
+      logger.info('[USER]', 'Error checking auth', { twitchId, e })
       return null
     })
 }

@@ -1,3 +1,5 @@
+import { logger } from "../../utils/logger.js";
+
 export default function checkHealth(
   data: {
     hero: { health_percent: number; health: number }
@@ -10,7 +12,7 @@ export default function checkHealth(
   const healthPct = data.hero.health_percent
   recentHealth.shift()
   recentHealth.push(healthPct)
-  console.log('[HEALTH]', recentHealth)
+  logger.info('[HEALTH]', recentHealth)
 
   const randomNumber = Math.floor(Math.random() * 3) === 1
 

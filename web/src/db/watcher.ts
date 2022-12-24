@@ -4,6 +4,7 @@ import findUser, { deleteUser } from '../dota/lib/connectedStreamers.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { toggleDotabod } from '../twitch/commands/toggle.js'
+import { logger } from '../utils/logger.js'
 import { DBSettings } from './settings.js'
 import supabase from './supabase.js'
 
@@ -11,12 +12,12 @@ const channel = supabase.channel('db-changes')
 
 channel
   .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'users' }, (payload) => {
-    console.log(payload, 'REMOVE')
+    logger.info(payload, 'REMOVE')
 
     const oldObj = payload.old as User
     const client = findUser(oldObj.id)
     if (client) {
-      console.log('[WATCHER USER] Deleting user', client.name)
+      logger.info('[WATCHER USER] Deleting user', client.name)
       deleteUser(client.token)
     }
   })
@@ -29,7 +30,7 @@ channel
 
       // dont overwrite with 0 because we use this variable to track currently logged in mmr
       if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
-        console.log('[WATCHER MMR] Sending mmr to socket', client.name)
+        logger.info('[WATCHER MMR] Sending mmr to socket', client.name)
         tellChatNewMMR(client.token, newObj.mmr, oldObj.mmr)
         client.mmr = newObj.mmr
 
@@ -37,7 +38,7 @@ channel
         server.io.to(client.token).emit('update-medal', deets)
       }
       if (newObj.stream_online !== oldObj.stream_online) {
-        console.log('[WATCHER STREAM] Updating stream status of', client.name)
+        logger.info('[WATCHER STREAM] Updating stream status of', client.name)
         client.stream_online = newObj.stream_online
       }
     }
@@ -50,7 +51,7 @@ channel
 
     // replace the new setting with the one we have saved in cache
     if (client) {
-      console.log('[WATCHER SETTING] Updating setting for', client.name, newObj.key)
+      logger.info('[WATCHER SETTING] Updating setting for', client.name, newObj.key)
       const setting = client.settings.find((s) => s.key === newObj.key)
 
       if (setting) {
@@ -63,7 +64,7 @@ channel
         void toggleDotabod(client.token, !!newObj.value, client.name)
       }
 
-      console.log('[WATCHER SETTING] Sending new setting value to socket', client.name)
+      logger.info('[WATCHER SETTING] Sending new setting value to socket', client.name)
       server.io.to(client.token).emit('refresh-settings')
     }
   })
@@ -76,7 +77,7 @@ channel
     if (!client) return
 
     if (payload.eventType === 'DELETE') {
-      console.log('[WATCHER STEAM] Deleting steam account for', client.name)
+      logger.info('[WATCHER STEAM] Deleting steam account for', client.name)
       const oldSteamIdx = client.SteamAccount.findIndex((s) => s.steam32Id === oldObj.steam32Id)
       client.SteamAccount.splice(oldSteamIdx, 1)
       if (client.steam32Id === oldObj.steam32Id) {
@@ -85,7 +86,7 @@ channel
       return
     }
 
-    console.log('[WATCHER STEAM] Updating steam accounts for', client.name)
+    logger.info('[WATCHER STEAM] Updating steam accounts for', client.name)
 
     const currentSteamIdx = client.SteamAccount.findIndex((s) => s.steam32Id === newObj.steam32Id)
     if (currentSteamIdx === -1) {
@@ -108,12 +109,12 @@ channel
           server.io.to(client.token).emit('update-medal', deets)
         })
         .catch((e) => {
-          console.log('[WATCHER STEAM] Error getting rank detail', e)
+          logger.info('[WATCHER STEAM] Error getting rank detail', e)
         })
     }
   })
   .subscribe((status) => {
     if (status === 'SUBSCRIBED') {
-      console.log('[SUPABASE]', 'Ready to receive database changes!')
+      logger.info('[SUPABASE]', 'Ready to receive database changes!')
     }
   })

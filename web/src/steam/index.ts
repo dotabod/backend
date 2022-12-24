@@ -15,6 +15,7 @@ import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import CustomError from '../utils/customError.js'
 import { promiseTimeout } from '../utils/index.js'
 import Mongo from './mongo.js'
+import { logger } from '../utils/logger.js'
 
 function onGCSpectateFriendGameResponse(message: any, callback: any) {
   const response: { server_steamid: Long; watch_live_result: number } =
@@ -30,7 +31,7 @@ Dota2.Dota2Client.prototype.spectateFriendGame = function (
 ) {
   callback = callback || null
   if (!this._gcReady) {
-    console.log('[STEAM]', "GC not ready, please listen for the 'ready' event.")
+    logger.info('[STEAM]', "GC not ready, please listen for the 'ready' event.")
     return null
   }
   // CMsgSpectateFriendGame
@@ -116,13 +117,13 @@ class Dota {
     this.steamClient.on('logOnResponse', (logonResp: { eresult: any }) => {
       // @ts-expect-error ???
       if (logonResp.eresult == Steam.EResult.OK) {
-        console.log('[STEAM]', 'Logged on.')
+        logger.info('[STEAM]', 'Logged on.')
 
         this.dota2.launch()
       } else {
         try {
           steamErrors(logonResp.eresult, (err: any, errorObject: any) => {
-            console.log('[STEAM]', errorObject, err)
+            logger.info('[STEAM]', errorObject, err)
           })
         } catch (e) {
           //
@@ -137,16 +138,16 @@ class Dota {
         // @ts-expect-error loggedOn is there i swear
         if (this.steamClient.loggedOn) this.dota2.launch()
       }, 30000)
-      console.log('[STEAM]', 'hello time out!')
+      logger.info('[STEAM]', 'hello time out!')
     })
     this.steamClient.on('loggedOff', (eresult: any) => {
       // @ts-expect-error connect is there i swear
       if (process.env.NODE_ENV === 'production') this.steamClient.connect()
-      console.log('[STEAM]', 'Logged off from Steam.', eresult)
+      logger.info('[STEAM]', 'Logged off from Steam.', eresult)
 
       try {
         steamErrors(eresult, (err: any, errorObject: any) => {
-          console.log('[STEAM]', errorObject, err)
+          logger.info('[STEAM]', errorObject, err)
         })
       } catch (e) {
         //
@@ -154,7 +155,7 @@ class Dota {
     })
 
     this.steamClient.on('error', (error: any) => {
-      console.log('[STEAM]', `steam error`, error)
+      logger.info('[STEAM]', `steam error`, error)
       if (process.env.NODE_ENV !== 'production') this.exit()
       // @ts-expect-error connect is there i swear
       if (process.env.NODE_ENV === 'production') this.steamClient.connect()
@@ -168,14 +169,14 @@ class Dota {
       (sentry: { bytes: crypto.BinaryLike }, callback: (arg0: { sha_file: Buffer }) => void) => {
         const hashedSentry = crypto.createHash('sha1').update(sentry.bytes).digest()
         fs.writeFileSync('./src/steam/volumes/sentry', hashedSentry)
-        console.log('[STEAM]', 'sentryfile saved')
+        logger.info('[STEAM]', 'sentryfile saved')
 
         callback({ sha_file: hashedSentry })
       },
     )
 
     this.dota2.on('unready', () => {
-      console.log('[STEAM]', 'disconnected from dota game coordinator')
+      logger.info('[STEAM]', 'disconnected from dota game coordinator')
     })
 
     // @ts-expect-error connect is there
@@ -251,7 +252,7 @@ class Dota {
           }
 
           if (waitForHeros && hasHeroes) {
-            console.log('Saving match data with heroes', game.match.match_id)
+            logger.info('Saving match data with heroes', game.match.match_id)
 
             await mongo
               .collection('delayedGames')
@@ -265,7 +266,7 @@ class Dota {
           }
 
           if (!waitForHeros) {
-            console.log('Saving match data', game.match.match_id, { hasHeroes })
+            logger.info('Saving match data', game.match.match_id, { hasHeroes })
             try {
               await mongo
                 .collection('delayedGames')
@@ -281,12 +282,12 @@ class Dota {
                 void this.getCards(accountIds, true)
               }
             } catch (e) {
-              console.log('mongo error saving match', e)
+              logger.info('mongo error saving match', e)
             }
 
             // Come back in 8 attempts to save the hero ids. With no cb()
             if (!hasHeroes) {
-              console.log('Waiting for hero ids', game.match.match_id)
+              logger.info('Waiting for hero ids', game.match.match_id)
               this.GetRealTimeStats(steam_server_id, true)
             }
           }
@@ -294,7 +295,7 @@ class Dota {
           cb?.(null, game)
         })
         .catch((e) => {
-          console.log(e?.data)
+          logger.info(e?.data)
           operation.retry(new Error('Match not found'))
         })
     })
@@ -324,9 +325,9 @@ class Dota {
             }
           })
 
-          console.log('[STEAM]', 'received match', matchId)
+          logger.info('[STEAM]', 'received match', matchId)
         } else {
-          console.log('[STEAM]', err, 'match not found')
+          logger.info('[STEAM]', err, 'match not found')
           arr = new Error('Match not found')
         }
 
@@ -430,13 +431,13 @@ class Dota {
   public exit(): Promise<boolean> {
     return new Promise((resolve) => {
       this.dota2.exit()
-      console.log('[STEAM]', 'Manually closed dota')
+      logger.info('[STEAM]', 'Manually closed dota')
       // @ts-expect-error disconnect is there
       this.steamClient.disconnect()
-      console.log('[STEAM]', 'Manually closed steam')
+      logger.info('[STEAM]', 'Manually closed steam')
       this.steamClient.removeAllListeners()
       this.dota2.removeAllListeners()
-      console.log('[STEAM]', 'Removed all listeners from dota and steam')
+      logger.info('[STEAM]', 'Removed all listeners from dota and steam')
       resolve(true)
     })
   }
@@ -448,21 +449,21 @@ const dota = Dota.getInstance()
 
 process
   .on('SIGTERM', () => {
-    console.log('[STEAM]', 'Received SIGTERM')
+    logger.info('[STEAM]', 'Received SIGTERM')
 
     Promise.all([dota.exit()])
       .then(() => process.exit(0))
       .catch((e) => {
-        console.log('[STEAM]', e)
+        logger.info('[STEAM]', e)
       })
   })
   .on('SIGINT', () => {
-    console.log('[STEAM]', 'Received SIGINT')
+    logger.info('[STEAM]', 'Received SIGINT')
 
     Promise.all([dota.exit()])
       .then(() => process.exit(0))
       .catch((e) => {
-        console.log('[STEAM]', e)
+        logger.info('[STEAM]', e)
       })
   })
-  .on('uncaughtException', (e) => console.log('[STEAM]', 'uncaughtException', e))
+  .on('uncaughtException', (e) => logger.info('[STEAM]', 'uncaughtException', e))

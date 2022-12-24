@@ -2,6 +2,7 @@ import { toUserName } from '@twurple/chat'
 
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { getRankDescription } from '../../dota/lib/ranks.js'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -37,7 +38,7 @@ commandHandler.registerCommand('mmr', {
           void chatClient.say(channel, description ?? unknownMsg)
         })
         .catch((e) => {
-          console.log('[MMR] Failed to get rank description', e, channel)
+          logger.info('[MMR] Failed to get rank description', e, channel)
         })
       return
     }
@@ -57,7 +58,7 @@ commandHandler.registerCommand('mmr', {
         void chatClient.say(channel, msg || unknownMsg)
       })
       .catch((e) => {
-        console.log('[MMR] Failed to get rank description', e, channel)
+        logger.info('[MMR] Failed to get rank description', e, channel)
       })
   },
 })

@@ -1,6 +1,7 @@
 import { prisma } from '../../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { chatClient } from '../../twitch/index.js'
+import { logger } from '../../utils/logger.js'
 import findUser from './connectedStreamers.js'
 
 export function tellChatNewMMR(token: string, mmr = 0, oldMmr = 0) {
@@ -23,17 +24,17 @@ export function updateMmr(
 ) {
   let mmr = Number(newMmr)
   if (!newMmr || !mmr || mmr > 20000 || mmr < 0) {
-    console.log('Invalid mmr, forcing to 0', { channel, mmr })
+    logger.info('Invalid mmr, forcing to 0', { channel, mmr })
     mmr = 0
   }
 
   if (!steam32Id) {
     if (!channelId) {
-      console.log('[UPDATE MMR]', 'No channel id provided, will not update user table', { channel })
+      logger.info('[UPDATE MMR]', 'No channel id provided, will not update user table', { channel })
       return
     }
 
-    console.log(
+    logger.info(
       '[UPDATE MMR]',
       'No steam32Id provided, will update the users table until they get one',
       {
@@ -60,7 +61,7 @@ export function updateMmr(
         },
       })
       .catch((e) => {
-        console.log('[UPDATE MMR]', 'Error updating user table', { channel, e })
+        logger.info('[UPDATE MMR]', 'Error updating user table', { channel, e })
       })
 
     return
@@ -81,6 +82,6 @@ export function updateMmr(
       },
     })
     .catch((e) => {
-      console.log('[UPDATE MMR]', 'Error updating account table', { channel, e })
+      logger.info('[UPDATE MMR]', 'Error updating account table', { channel, e })
     })
 }

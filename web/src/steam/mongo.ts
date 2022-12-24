@@ -1,5 +1,6 @@
 import { Db, MongoClient } from 'mongodb'
 import retry from 'retry'
+import { logger } from '../utils/logger.js'
 
 class MongoDBSingleton {
   private clientPromise: Promise<Db> | null = null
@@ -30,7 +31,7 @@ class MongoDBSingleton {
           // Resolve the promise with the client
           resolve(client.db())
         } catch (error: any) {
-          console.log('Retrying mongo connection', currentAttempt)
+          logger.info('Retrying mongo connection', currentAttempt)
           // If the retry operation has been exhausted, reject the promise with the error
           if (operation.retry(error)) {
             return

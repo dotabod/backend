@@ -2,6 +2,7 @@ import { DBSettings } from '../../db/settings.js'
 import getHero from '../../dota/lib/getHero.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import axios from '../../utils/axios.js'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -62,7 +63,7 @@ commandHandler.registerCommand('hero', {
       })
       .catch((e) => {
         void chatClient.say(channel, `Playing ${hero.localized_name}`)
-        console.log(e?.data, 'could not find wl, weirdge')
+        logger.info(e?.data, 'could not find wl, weirdge')
       })
   },
 })

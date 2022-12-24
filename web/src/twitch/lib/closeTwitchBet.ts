@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import { getChannelAPI } from './getChannelAPI.js'
 import { disabledBets } from './openTwitchBet.js'
 
@@ -12,14 +13,14 @@ export function closeTwitchBet(won: boolean, userId: string) {
     })
     .then(({ data: predictions }) => {
       if (!Array.isArray(predictions) || !predictions.length) {
-        console.log('[PREDICT]', 'No predictions found', predictions)
+        logger.info('[PREDICT]', 'No predictions found', predictions)
         return
       }
 
       const [wonOutcome, lossOutcome] = predictions[0].outcomes
 
       // if (predictions[0].status !== 'LOCKED') {
-      //   console.log('[PREDICT]','[BETS] Bet is not locked', channel)
+      //   logger.info('[PREDICT]','[BETS] Bet is not locked', channel)
       //   return
       // }
       return api.predictions.resolvePrediction(

@@ -1,5 +1,6 @@
 import { ChatClient } from '@twurple/chat'
 import retry from 'retry'
+import { logger } from '../../utils/logger.js'
 
 import { getAuthProvider } from './getAuthProvider.js'
 
@@ -30,7 +31,7 @@ class ChatClientSingleton {
           await chatClient.connect()
           resolve(chatClient)
         } catch (e: any) {
-          console.log(
+          logger.info(
             `[TWITCHSETUP] Error connecting to chat client on attempt ${currentAttempt}: ${e}`,
           )
           if (!operation.retry(e)) {
@@ -40,7 +41,7 @@ class ChatClientSingleton {
       })
     })
 
-    console.log('[TWITCHSETUP]', 'Connected to chat client', chatClient.isConnected)
+    logger.info('[TWITCHSETUP]', 'Connected to chat client', chatClient.isConnected)
 
     ChatClientSingleton.instance = chatClient
 

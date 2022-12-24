@@ -1,5 +1,6 @@
 import { getWL } from '../../db/getWL.js'
 import { DBSettings } from '../../db/settings.js'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -19,7 +20,7 @@ commandHandler.registerCommand('wl', {
       return
     }
 
-    console.log('[WL] Checking WL for steam32Id', client.steam32Id, client.name)
+    logger.info('[WL] Checking WL for steam32Id', client.steam32Id, client.name)
 
     getWL(channelId, client.stream_start_date)
       .then(({ msg }) => {

@@ -30,6 +30,7 @@ import './commands/ranked.js'
 import './commands/test.js'
 import './commands/dotabuff.js'
 import './commands/opendota.js'
+import { logger } from '../utils/logger.js'
 
 // Setup twitch chat bot client first
 export const chatClient = await ChatClientSingleton.getInstance()
@@ -38,7 +39,7 @@ export const chatClient = await ChatClientSingleton.getInstance()
 const socket = io('ws://twitch-chat-listener:5005')
 
 socket.on('connect', () => {
-  console.log('We alive on dotabod chat server!')
+  logger.info('We alive on dotabod chat server!')
 })
 
 socket.on(

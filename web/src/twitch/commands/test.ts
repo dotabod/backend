@@ -1,4 +1,5 @@
 import { server } from '../../dota/index.js'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -32,9 +33,9 @@ commandHandler.registerCommand('test', {
         return
       }
 
-      console.log({ command: 'TEST', steam32Id: steam32Id || client.steam32Id, steamserverid })
+      logger.info({ command: 'TEST', steam32Id: steam32Id || client.steam32Id, steamserverid })
 
-      console.log(
+      logger.info(
         `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamserverid}`,
       )
 

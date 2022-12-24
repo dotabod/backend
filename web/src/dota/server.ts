@@ -4,28 +4,14 @@ import http from 'http'
 import bodyParser from 'body-parser'
 import express, { NextFunction, Request, Response } from 'express'
 import { Server, Socket } from 'socket.io'
-import winston from 'winston'
 
 import getDBUser, { invalidTokens } from '../db/getDBUser.js'
 import Dota from '../steam/index.js'
+import { logger } from '../utils/logger.js'
 import { blockCache } from './events.js'
 import findUser from './lib/connectedStreamers.js'
 
 export const events = new EventEmitter()
-
-const { combine, timestamp, printf, colorize, align } = winston.format
-export const logger = winston.createLogger({
-  level: 'info',
-  format: combine(
-    colorize({ all: true }),
-    timestamp({
-      format: 'YYYY-MM-DD hh:mm:ss.SSS A',
-    }),
-    align(),
-    printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`),
-  ),
-  transports: [new winston.transports.Console()],
-})
 
 const pendingCheckAuth = new Set<string>()
 
@@ -89,7 +75,7 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
 
   if (!token) {
     invalidTokens.add(token)
-    console.log('[GSI]', `Dropping message from IP: ${req.ip}, no valid auth token`)
+    logger.info(`[GSI], Dropping message from IP: ${req.ip}, no valid auth token`)
     res.status(401).json({
       error: new Error('Invalid request!'),
     })
@@ -116,7 +102,7 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
       next(new Error('authentication error'))
     })
     .catch((e) => {
-      console.log('[GSI]', 'io.use Error checking auth', { token, e })
+      logger.info('[GSI] io.use Error checking auth', { token, e })
       invalidTokens.add(token)
       pendingCheckAuth.delete(token)
       next(new Error('authentication error'))
@@ -147,7 +133,7 @@ class D2GSI {
     app.use(bodyParser.json())
     app.use(bodyParser.urlencoded({ extended: true }))
     this.dota.dota2.on('ready', () => {
-      console.log('[SERVER]', 'Connected to dota game coordinator')
+      logger.info('[SERVER] Connected to dota game coordinator')
       app.post('/', checkAuth, processChanges('previously'), processChanges('added'), newData)
     })
 
@@ -159,7 +145,7 @@ class D2GSI {
     })
 
     httpServer.listen(5000, () => {
-      console.log('[GSI]', `Dota 2 GSI listening on *:${5000}`)
+      logger.info(`[GSI] Dota 2 GSI listening on *:${5000}`)
     })
 
     // IO auth & client setup so we can send this socket messages
@@ -176,7 +162,7 @@ class D2GSI {
           next(new Error('authentication error'))
         })
         .catch((e) => {
-          console.log('[GSI]', 'io.use Error checking auth', { token, e })
+          logger.info('[GSI] io.use Error checking auth', { token, e })
           next(new Error('authentication error'))
         })
     })

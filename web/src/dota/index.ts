@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger.js'
 import { setupMainEvents } from './events.js'
 import findUser from './lib/connectedStreamers.js'
 import D2GSI, { events } from './server.js'
@@ -7,33 +8,33 @@ export const server = new D2GSI()
 
 events.on('new-gsi-client', (token: string) => {
   if (!token) {
-    console.log('[GSI]', 'No token provided')
+    logger.info('[GSI]', 'No token provided')
     return
   }
 
   const client = findUser(token)
   if (!client) {
-    console.log('[GSI]', 'Could not find client', { token })
+    logger.info('[GSI]', 'Could not find client', { token })
     return
   }
 
-  console.log('[GSI]', 'Connecting new client', { name: client.name })
+  logger.info('[GSI]', 'Connecting new client', { name: client.name })
   new setupMainEvents(client)
 })
 
 events.on('remove-gsi-client', (token: string) => {
   if (!token) {
-    console.log('[REMOVE GSI]', 'No token provided')
+    logger.info('[REMOVE GSI]', 'No token provided')
     return
   }
 
   const client = findUser(token)
   if (!client) {
-    console.log('[REMOVE GSI]', 'Could not find client', { token })
+    logger.info('[REMOVE GSI]', 'Could not find client', { token })
     return
   }
 
-  console.log('[REMOVE GSI]', 'Removing GSI client', { name: client.name })
+  logger.info('[REMOVE GSI]', 'Removing GSI client', { name: client.name })
   events.eventNames().forEach((event) => {
     if (event.toString().includes(token)) {
       events.removeAllListeners(event)

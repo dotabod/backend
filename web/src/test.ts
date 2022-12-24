@@ -2,6 +2,7 @@ import axios from 'axios'
 
 import { prisma } from './db/prisma.js'
 import { getBotAPI } from './twitch/lib/getBotAPI.js'
+import { logger } from './utils/logger.js'
 
 export async function updateUsernameForAll() {
   const users = await prisma.user.findMany({
@@ -35,7 +36,7 @@ export async function updateUsernameForAll() {
 
   for (const user of twitchUser) {
     if (!user.name || !user.displayName) continue
-    console.log('updating', user.name, user.displayName)
+    logger.info('updating', user.name, user.displayName)
     await prisma.account.update({
       where: {
         provider_providerAccountId: {
@@ -61,7 +62,7 @@ async function getAccounts() {
   // const response = await axios(
   //   `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamserverid}`,
   // )
-  // console.log(steamserverid)
+  // logger.info(steamserverid)
 }
 
 async function getFollows() {
@@ -83,7 +84,7 @@ async function getFollows() {
 
   for (const user of users) {
     if (!user.Account?.providerAccountId) continue
-    console.log('checking', user.id)
+    logger.info('checking user id', user.id)
     const follows = twitchApi.users.getFollowsPaginated({
       followedUser: user.Account.providerAccountId,
     })
@@ -100,7 +101,7 @@ async function getFollows() {
 }
 
 async function fixWins() {
-  console.log('fix wins')
+  logger.info('fix wins')
   const bets = await prisma.bet.findMany({
     select: {
       id: true,
@@ -117,14 +118,14 @@ async function fixWins() {
     },
   })
 
-  console.log('bets found')
+  logger.info('bets found')
 
   for (const bet of bets) {
     try {
       const match = await axios('https://api.opendota.com/api/matches/' + bet.matchId)
       if (!match.data?.match_id) continue
 
-      console.log({
+      logger.info({
         matchid: match.data.match_id,
         lobbytype: match.data.lobby_type,
         won: match.data.radiant_win && bet.myTeam === 'radiant',
@@ -156,10 +157,9 @@ const followers = await prisma.user.findMany({
   take: 30,
 })
 
-console.log(
+logger.info(
   followers
-    // @ts-expect-error asd
-    .sort((a, b) => b.followers - a.followers)
+    .sort((a, b) => (b.followers ?? 0) - (a.followers ?? 0))
     .map((f) => ({ ...f, followers: f.followers?.toLocaleString() })),
 )
 
