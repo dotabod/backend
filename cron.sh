@@ -26,10 +26,9 @@ backup_file="$backup_dir/$timestamp.sql"
 # Specific arguments just for supabase
 pg_dump -d "${DATABASE_URL%\?*}" \
     --no-comments \
+    -F c \
     -N supabase_functions \
-    -N auth \
-    -N realtime \
-    > "$backup_file"
+    -f "$backup_file"
 
 # Compress the backup file using gzip
 gzip -f "$backup_file"
