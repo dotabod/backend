@@ -1,5 +1,6 @@
 import { Db, MongoClient } from 'mongodb'
 import retry from 'retry'
+
 import { logger } from '../utils/logger.js'
 
 class MongoDBSingleton {

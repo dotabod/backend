@@ -1,8 +1,7 @@
-import { EventEmitter } from 'events'
-import http from 'http'
-
 import bodyParser from 'body-parser'
+import { EventEmitter } from 'events'
 import express, { NextFunction, Request, Response } from 'express'
+import http from 'http'
 import { Server, Socket } from 'socket.io'
 
 import getDBUser, { invalidTokens } from '../db/getDBUser.js'

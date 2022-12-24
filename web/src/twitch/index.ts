@@ -1,12 +1,3 @@
-import { io } from 'socket.io-client'
-
-import getDBUser from '../db/getDBUser.js'
-import { DBSettings, getValueOrDefault } from '../db/settings.js'
-import { modMode } from './commands/modsonly.js'
-import { plebMode } from './commands/pleb.js'
-import ChatClientSingleton from './lib/ChatClientSingleton.js'
-import commandHandler from './lib/CommandHandler.js'
-
 import './commands/apm.js'
 import './commands/commands.js'
 import './commands/dotabod.js'
@@ -30,7 +21,16 @@ import './commands/ranked.js'
 import './commands/test.js'
 import './commands/dotabuff.js'
 import './commands/opendota.js'
+
+import { io } from 'socket.io-client'
+
+import getDBUser from '../db/getDBUser.js'
+import { DBSettings, getValueOrDefault } from '../db/settings.js'
 import { logger } from '../utils/logger.js'
+import { modMode } from './commands/modsonly.js'
+import { plebMode } from './commands/pleb.js'
+import ChatClientSingleton from './lib/ChatClientSingleton.js'
+import commandHandler from './lib/CommandHandler.js'
 
 // Setup twitch chat bot client first
 export const chatClient = await ChatClientSingleton.getInstance()

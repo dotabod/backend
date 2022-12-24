@@ -21,8 +21,10 @@ module.exports = {
     tsconfigRootDir: __dirname,
     project: './tsconfig.json',
   },
-  plugins: ['@typescript-eslint', 'import', 'unused-imports', 'prettier'],
+  plugins: ['@typescript-eslint', 'import', 'unused-imports', 'simple-import-sort', 'prettier'],
   rules: {
+    'simple-import-sort/imports': 'error',
+    'simple-import-sort/exports': 'error',
     '@typescript-eslint/no-unsafe-call': 'off',
     '@typescript-eslint/no-unsafe-assignment': 'off',
     '@typescript-eslint/no-unsafe-argument': 'off',
@@ -38,16 +40,6 @@ module.exports = {
         argsIgnorePattern: '^_',
       },
     ],
-    'sort-imports': [
-      'error',
-      {
-        ignoreCase: false,
-        ignoreDeclarationSort: true, // don"t want to sort import lines, use eslint-plugin-import instead
-        ignoreMemberSort: false,
-        memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
-        allowSeparatedGroups: true,
-      },
-    ],
     'prefer-destructuring': [
       'error',
       {
@@ -59,24 +51,6 @@ module.exports = {
       },
     ],
     'import/no-unresolved': 'error',
-    'import/order': [
-      'error',
-      {
-        groups: [
-          'builtin', // Built-in imports (come from NodeJS native) go first
-          'external', // <- External imports
-          'internal', // <- Absolute imports
-          ['sibling', 'parent'], // <- Relative imports, the sibling and parent types they can be mingled together
-          'index', // <- index imports
-          'unknown', // <- unknown
-        ],
-        'newlines-between': 'always',
-        alphabetize: {
-          order: 'asc',
-          caseInsensitive: true,
-        },
-      },
-    ],
   },
   settings: {
     'import/parsers': {

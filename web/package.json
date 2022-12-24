@@ -17,7 +17,7 @@
     "postinstall": "prisma generate --schema ./prisma/mongo.prisma && prisma generate --schema ./prisma/postgres.prisma",
     "lint": "eslint --ext .ts ./src",
     "prettier": "prettier --ext .ts ./src --write",
-    "lint:fix": "npm run lint -- --fix",
+    "lint:fix": "yarn lint -- --fix",
     "update-np": "dotenv -e -e ../.env.local -- bash ../mongodb/updatenps.sh",
     "pullmongo": "dotenv -e -e ../.env.local -- prisma db pull --schema ./prisma/mongo.prisma --force",
     "pullpsql": "dotenv -e -e ../.env.local -- prisma db pull --schema ./prisma/postgres.prisma"
@@ -64,6 +64,7 @@
     "eslint-import-resolver-typescript": "^3.5.2",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-simple-import-sort": "^8.0.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "nodemon": "^2.0.20",
     "prettier": "^2.8.0",

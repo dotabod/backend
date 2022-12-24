@@ -2,9 +2,8 @@ import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
 import CustomError from '../utils/customError.js'
-import Mongo from './mongo.js'
-
 import Dota from './index.js'
+import Mongo from './mongo.js'
 
 const mongo = await Mongo.connect()
 const dota = Dota.getInstance()

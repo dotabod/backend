@@ -8,6 +8,8 @@ import { disabledBets, openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { DotaEvent, DotaEventTypes, Packet, Player, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
 import { fmtMSS, steamID64toSteamID32 } from '../utils/index.js'
+import { logger } from '../utils/logger.js'
+import { server } from './index.js'
 import checkMidas from './lib/checkMidas.js'
 import { blockTypes, pickSates } from './lib/consts.js'
 import getHero from './lib/getHero.js'
@@ -17,9 +19,6 @@ import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
 import { events } from './server.js'
-
-import { server } from './index.js'
-import { logger } from '../utils/logger.js'
 
 const mongo = await Mongo.connect()
 

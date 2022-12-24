@@ -1,7 +1,7 @@
 import { ChatClient } from '@twurple/chat'
 import retry from 'retry'
-import { logger } from '../../utils/logger.js'
 
+import { logger } from '../../utils/logger.js'
 import { getAuthProvider } from './getAuthProvider.js'
 
 class ChatClientSingleton {
