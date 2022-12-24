@@ -27,6 +27,17 @@ build:
     @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
 
+logone:
+    @docker logs {{app}} -f
+
+# Builds all images
+buildone:
+    git pull
+    @docker compose -f {{dockerfile}} build {{app}}
+    @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
+    @docker compose -f {{dockerfile}} up -d {{app}}
+    @echo -e " {{GREEN}}{{CHECK}} Successfully ran! {{CHECK}} {{RESET}}"
+
 # Starts images
 up:
     @docker compose -f {{dockerfile}} up -d
