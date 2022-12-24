@@ -38,7 +38,7 @@ commandHandler.registerCommand('mmr', {
           void chatClient.say(channel, description ?? unknownMsg)
         })
         .catch((e) => {
-          logger.info('[MMR] Failed to get rank description', e, channel)
+          logger.info('[MMR] Failed to get rank description', { e, channel })
         })
       return
     }
@@ -58,7 +58,7 @@ commandHandler.registerCommand('mmr', {
         void chatClient.say(channel, msg || unknownMsg)
       })
       .catch((e) => {
-        logger.info('[MMR] Failed to get rank description', e, channel)
+        logger.info('[MMR] Failed to get rank description', { e, channel })
       })
   },
 })

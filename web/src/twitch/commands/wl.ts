@@ -20,7 +20,10 @@ commandHandler.registerCommand('wl', {
       return
     }
 
-    logger.info('[WL] Checking WL for steam32Id', client.steam32Id, client.name)
+    logger.info('[WL] Checking WL for steam32Id', {
+      steam32Id: client.steam32Id,
+      name: client.name,
+    })
 
     getWL(channelId, client.stream_start_date)
       .then(({ msg }) => {

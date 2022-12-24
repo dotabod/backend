@@ -49,11 +49,11 @@ channel
     }
 
     const user = payload.new as User
-    console.log('[SUPABASE]', 'New user to subscribe online events for: ', user.name)
+    console.log('[SUPABASE] New user to subscribe online events for: ', user.name)
     void handleNewUser(user.id)
   })
   .subscribe((status, err) => {
     if (status === 'SUBSCRIBED') {
-      console.log('[SUPABASE]', 'Ready to receive database changes!')
+      console.log('[SUPABASE] Ready to receive database changes!')
     }
   })

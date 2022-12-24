@@ -36,7 +36,7 @@ export async function updateUsernameForAll() {
 
   for (const user of twitchUser) {
     if (!user.name || !user.displayName) continue
-    logger.info('updating', user.name, user.displayName)
+    logger.info('updating', { name: user.name, displayName: user.displayName })
     await prisma.account.update({
       where: {
         provider_providerAccountId: {
@@ -84,7 +84,7 @@ async function getFollows() {
 
   for (const user of users) {
     if (!user.Account?.providerAccountId) continue
-    logger.info('checking user id', user.id)
+    logger.info('checking user id', { id: user.id })
     const follows = twitchApi.users.getFollowsPaginated({
       followedUser: user.Account.providerAccountId,
     })
@@ -125,7 +125,7 @@ async function fixWins() {
       const match = await axios('https://api.opendota.com/api/matches/' + bet.matchId)
       if (!match.data?.match_id) continue
 
-      logger.info({
+      logger.info('the bet found', {
         matchid: match.data.match_id,
         lobbytype: match.data.lobby_type,
         won: match.data.radiant_win && bet.myTeam === 'radiant',
@@ -158,6 +158,7 @@ const followers = await prisma.user.findMany({
 })
 
 logger.info(
+  'found follower data',
   followers
     .sort((a, b) => (b.followers ?? 0) - (a.followers ?? 0))
     .map((f) => ({ ...f, followers: f.followers?.toLocaleString() })),

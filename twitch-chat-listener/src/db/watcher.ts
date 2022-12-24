@@ -11,11 +11,11 @@ channel
     }
 
     const user = payload.new as User
-    console.log('[SUPABASE]', 'New user to send bot to: ', user.name)
+    console.log('[SUPABASE] New user to send bot to: ', user.name)
     void chatClient.join(user.name)
   })
   .subscribe((status, err) => {
     if (status === 'SUBSCRIBED') {
-      console.log('[SUPABASE]', 'Ready to receive database changes!')
+      console.log('[SUPABASE] Ready to receive database changes!')
     }
   })

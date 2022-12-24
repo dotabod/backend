@@ -81,7 +81,11 @@ export class setupMainEvents {
 
   // reset vars when a new match begins
   private resetClientState(resetBets = false) {
-    logger.info('newMatchNewVars', { resetBets }, this.client.name, this.playingMatchId)
+    logger.info('newMatchNewVars', {
+      resetBets,
+      name: this.client.name,
+      matchid: this.playingMatchId,
+    })
     this.playingHero = null
     this.playingHeroSlot = null
     this.events = []
@@ -140,12 +144,11 @@ export class setupMainEvents {
           if (this.steamServerTries > 35) {
             return
           }
-          logger.info(
-            'Retry steamserverid',
-            this.steamServerTries,
-            this.client.name,
-            this.client.gsi.map.matchid,
-          )
+          logger.info('Retry steamserverid', {
+            tries: this.steamServerTries,
+            channel: this.client.name,
+            matchid: this.client.gsi.map.matchid,
+          })
           setTimeout(() => {
             this.steamServerTries += 1
             this.savingSteamServerId = false
@@ -158,7 +161,10 @@ export class setupMainEvents {
 
         const delayedData = await server.dota.getDelayedMatchData(steamserverid, true)
         if (!delayedData) {
-          logger.info('No match data found!', this.client.name, this.client.gsi.map.matchid)
+          logger.info('No match data found!', {
+            name: this.client.name,
+            matchid: this.client.gsi.map.matchid,
+          })
           return
         }
 
@@ -167,10 +173,13 @@ export class setupMainEvents {
           'Match data found, !np !smurfs !gm !lg commands activated.',
         )
       } else {
-        logger.info('Match data already found', this.client.name, this.client.gsi.map.matchid)
+        logger.info('Match data already found', {
+          name: this.client.name,
+          matchid: this.client.gsi.map.matchid,
+        })
       }
     } catch (e) {
-      logger.info('saving match data failed', this.client.name, e)
+      logger.info('saving match data failed', { name: this.client.name, e })
     }
   }
 
@@ -249,7 +258,8 @@ export class setupMainEvents {
       // Can't just !this.heroSlot because it can be 0
       const purchaser = this.client.gsi?.items?.teleport0?.purchaser
       if (typeof this.playingHeroSlot !== 'number' && typeof purchaser === 'number') {
-        logger.info('[SLOT]', 'Found hero slot at', purchaser, {
+        logger.info('[SLOT] Found hero slot at', {
+          purchaser,
           name: this.getChannel(),
         })
         this.playingHeroSlot = purchaser
@@ -284,7 +294,7 @@ export class setupMainEvents {
       if (chatterEnabled && this.client.stream_online) {
         const isMidasPassive = checkMidas(data, this.passiveMidas)
         if (isMidasPassive) {
-          logger.info('[MIDAS]', 'Passive midas', { name: this.getChannel() })
+          logger.info('[MIDAS] Passive midas', { name: this.getChannel() })
           void chatClient.say(this.getChannel(), 'massivePIDAS Use your midas')
         }
       }
@@ -343,7 +353,7 @@ export class setupMainEvents {
   emitWLUpdate() {
     getWL(this.getChannelId(), this.client.stream_start_date)
       .then(({ record }) => {
-        logger.info('[STEAM32ID]', 'Emitting WL overlay update', {
+        logger.info('[STEAM32ID] Emitting WL overlay update', {
           name: this.getChannel(),
         })
         server.io.to(this.getToken()).emit('update-wl', record)
@@ -357,7 +367,7 @@ export class setupMainEvents {
   emitBadgeUpdate() {
     getRankDetail(this.getMmr(), this.getSteam32())
       .then((deets) => {
-        logger.info('[STEAM32ID]', 'Emitting badge overlay update', {
+        logger.info('[STEAM32ID] Emitting badge overlay update', {
           name: this.getChannel(),
         })
         server.io.to(this.getToken()).emit('update-medal', deets)
@@ -397,7 +407,7 @@ export class setupMainEvents {
     // this.getMmr() should return mmr from `user` table on new accounts without steam acts
     const mmr = this.client.SteamAccount.length ? 0 : this.getMmr()
 
-    logger.info('[STEAM32ID]', 'Running steam account lookup to db', { name: this.getChannel() })
+    logger.info('[STEAM32ID] Running steam account lookup to db', { name: this.getChannel() })
 
     this.creatingSteamAccount = true
     // Get mmr from database for this steamid
@@ -406,7 +416,7 @@ export class setupMainEvents {
       .then(async (res) => {
         // not found, need to make
         if (!res?.id) {
-          logger.info('[STEAM32ID]', 'Adding steam32Id', { name: this.getChannel() })
+          logger.info('[STEAM32ID] Adding steam32Id', { name: this.getChannel() })
           await prisma.steamAccount.create({
             data: {
               mmr,
@@ -489,7 +499,7 @@ export class setupMainEvents {
         if (Array.isArray(opendotaMatch.data?.players) && typeof heroSlot === 'number') {
           const partySize = opendotaMatch.data?.players[heroSlot]?.party_size
           if (typeof partySize === 'number' && partySize > 1) {
-            logger.info('[MMR]', 'Party match detected', this.client.name)
+            logger.info('[MMR] Party match detected', this.client.name)
             isParty = true
           }
         }
@@ -510,7 +520,7 @@ export class setupMainEvents {
         this.updateMMR(increase, lobbyType, matchId, isParty)
       })
       .catch((e: any) => {
-        logger.info(e?.data, 'ERROR handling mmr lookup', this.client.name)
+        logger.info('ERROR handling mmr lookup', { channel: this.client.name, e: e?.data })
 
         let lobbyType = 7
         // Force update when an error occurs and just let mods take care of the discrepancy
@@ -523,7 +533,7 @@ export class setupMainEvents {
 
         this.updateMMR(increase, lobbyType, matchId)
 
-        logger.info('[MMR]', 'Error fetching match details', {
+        logger.info('[MMR] Error fetching match details', {
           matchId,
           increase,
           lobbyType,
@@ -575,7 +585,7 @@ export class setupMainEvents {
       .then((bet) => {
         // Saving to local memory so we don't have to query the db again
         if (bet?.id) {
-          logger.info('[BETS]', 'Found a bet in the database', bet.id)
+          logger.info('[BETS] Found a bet in the database', bet.id)
           this.playingMatchId = bet.matchId
           this.playingTeam = bet.myTeam as Player['team_name']
         } else {
@@ -598,7 +608,7 @@ export class setupMainEvents {
               if (!betsEnabled) return
 
               if (!this.client.stream_online) {
-                logger.info('[BETS]', 'Not opening bets bc stream is offline for', this.client.name)
+                logger.info('[BETS] Not opening bets bc stream is offline for', this.client.name)
                 return
               }
 
@@ -607,7 +617,7 @@ export class setupMainEvents {
               openTwitchBet(this.getToken(), hero?.localized_name)
                 .then(() => {
                   void chatClient.say(channel, `Bets open peepoGamble`)
-                  logger.info('[BETS]', {
+                  logger.info('[BETS] open bets', {
                     event: 'open_bets',
                     data: {
                       matchId: this.client.gsi?.map?.matchid,
@@ -638,36 +648,32 @@ export class setupMainEvents {
                       })
                       .then((r) => {
                         disabledBets.delete(this.getToken())
-                        logger.info('[BETS]', 'Disabled bets for user', {
+                        logger.info('[BETS] Disabled bets for user', {
                           channel,
                         })
                       })
                       .catch((e) => {
-                        logger.info('[BETS]', 'Error disabling bets', e?.message || e)
+                        logger.info('[BETS] Error disabling bets', e?.message || e)
                       })
                   } else {
-                    logger.info('[BETS]', 'Error opening twitch bet', channel, e?.message || e)
+                    logger.info('[BETS] Error opening twitch bet', { channel, e: e?.message || e })
                   }
                 })
             })
             .catch((e: any) => {
-              logger.info(
-                '[BETS]',
-                channel,
-                `Could not add bet to ${channel} channel`,
-                e?.message || e,
-              )
+              logger.info(`[BETS] Could not add bet to channel`, {
+                channel: this.getChannel(),
+                e: e?.message || e,
+              })
             })
         }
       })
       .catch((e: any) => {
-        logger.info(
-          '[BETS]',
-          'Error opening bet',
-          this.client.gsi?.map?.matchid ?? '',
+        logger.info('[BETS] Error opening bet', {
+          matchId: this.client.gsi?.map?.matchid ?? '',
           channel,
-          e?.message || e,
-        )
+          e: e?.message || e,
+        })
       })
   }
 
@@ -678,7 +684,8 @@ export class setupMainEvents {
     }
 
     if (!this.playingMatchId || this.endingBets) {
-      logger.info('not ending bets, not resetting vars', this.getChannel(), {
+      logger.info('not ending bets, not resetting vars', {
+        channel: this.getChannel(),
         endingBets: this.endingBets,
         playingMatchId: this.playingMatchId,
       })
@@ -690,7 +697,7 @@ export class setupMainEvents {
     // An early without waiting for ancient to blow up
     // We have to check every few seconds on Opendota to see if the match is over
     if (!winningTeam) {
-      logger.info('[BETS]', 'Streamer exited the match before it ended with a winner', {
+      logger.info('[BETS] Streamer exited the match before it ended with a winner', {
         name: this.getChannel(),
       })
 
@@ -705,16 +712,15 @@ export class setupMainEvents {
       // Check with opendota to see if the match is over
       axios(`https://api.opendota.com/api/matches/${matchId}`)
         .then((response: any) => {
-          logger.info('Found an early dc match data', matchId, this.getChannel())
+          logger.info('Found an early dc match data', { matchId, channel: this.getChannel() })
           // Not checking radiant_win because if its a non scored match that key will be null
           // But if matchid is empty thats a problem because Opendota only has finished matches in their database
           if (!response?.data?.match_id) {
-            logger.info(
-              'early dc match didnt have data in it',
-              response?.data,
-              this.getChannel(),
+            logger.info('early dc match didnt have data in it', {
+              data: response?.data,
+              channel: this.getChannel(),
               matchId,
-            )
+            })
             this.resetClientState(true)
             return
           }
@@ -736,14 +742,11 @@ export class setupMainEvents {
             return
           }
 
-          logger.info(
-            'Should be scoring early dc here soon and closing predictions',
-            this.getChannel(),
-            {
-              winningTeam,
-              matchId,
-            },
-          )
+          logger.info('Should be scoring early dc here soon and closing predictions', {
+            channel: this.getChannel(),
+            winningTeam,
+            matchId,
+          })
           this.endBets(winningTeam)
         })
         .catch((e: any) => {
@@ -764,8 +767,11 @@ export class setupMainEvents {
     if (this.client.gsi?.map?.win_team === 'none') {
       logger.info(
         'map.win_team was "none". not continuing, not resetting vars. assuming same match is still going on',
-        this.getChannel(),
-        { playingMatchId: this.playingMatchId, GSImatchId: this.client.gsi.map.matchid },
+        {
+          channel: this.getChannel(),
+          playingMatchId: this.playingMatchId,
+          GSImatchId: this.client.gsi.map.matchid,
+        },
       )
       return
     }
@@ -773,7 +779,7 @@ export class setupMainEvents {
     const localWinner = winningTeam
     const myTeam = this.playingTeam ?? this.client.gsi?.player?.team_name
     const won = myTeam === localWinner
-    logger.info({ localWinner, myTeam, won, channel: this.getChannel() })
+    logger.info('end bets won data', { localWinner, myTeam, won, channel: this.getChannel() })
 
     // Both or one undefined
     if (!myTeam) {
@@ -781,7 +787,7 @@ export class setupMainEvents {
       return
     }
 
-    logger.info('[BETS]', 'Running end bets to award mmr and close predictions', {
+    logger.info('[BETS] Running end bets to award mmr and close predictions', {
       name: this.getChannel(),
       matchid: this.playingMatchId,
     })
@@ -791,8 +797,9 @@ export class setupMainEvents {
     this.endingBets = true
     const channel = this.getChannel()
 
-    logger.info('calling mmr update handler', this.getChannel(), {
+    logger.info('calling mmr update handler', {
       won,
+      channel: this.getChannel(),
       matchId,
       heroSlot: this.playingHeroSlot,
     })
@@ -807,7 +814,7 @@ export class setupMainEvents {
     }
 
     if (!this.client.stream_online) {
-      logger.info('[BETS]', 'Not closing bets bc stream is offline for', this.client.name)
+      logger.info('[BETS] Not closing bets bc stream is offline for', this.client.name)
       this.resetClientState(true)
       return
     }
@@ -816,7 +823,7 @@ export class setupMainEvents {
       .then(() => {
         void chatClient.say(this.getChannel(), `Bets closed, we have ${won ? 'won' : 'lost'}`)
 
-        logger.info('[BETS]', {
+        logger.info('[BETS] end bets', {
           event: 'end_bets',
           data: {
             matchId: matchId,
@@ -848,16 +855,16 @@ export class setupMainEvents {
               },
             })
             .then((r) => {
-              logger.info('[BETS]', 'Disabled bets for user', {
+              logger.info('[BETS] Disabled bets for user', {
                 channel,
               })
               disabledBets.delete(this.getToken())
             })
             .catch((e) => {
-              logger.info('[BETS]', 'Error disabling bets', e?.message || e)
+              logger.info('[BETS] Error disabling bets', e?.message || e)
             })
         } else {
-          logger.info('[BETS]', 'Error closing twitch bet', channel, e?.message || e)
+          logger.info('[BETS] Error closing twitch bet', { channel, e: e?.message || e })
         }
       })
       // Always

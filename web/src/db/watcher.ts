@@ -59,7 +59,7 @@ channel
 
     // replace the new setting with the one we have saved in cache
     if (client) {
-      logger.info('[WATCHER SETTING] Updating setting for', client.name, newObj.key)
+      logger.info('[WATCHER SETTING] Updating setting for', { name: client.name, key: newObj.key })
       const setting = client.settings.find((s) => s.key === newObj.key)
 
       if (setting) {
@@ -123,6 +123,6 @@ channel
   })
   .subscribe((status) => {
     if (status === 'SUBSCRIBED') {
-      logger.info('[SUPABASE]', 'Ready to receive database changes!')
+      logger.info('[SUPABASE] Ready to receive database changes!')
     }
   })

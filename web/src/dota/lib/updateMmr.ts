@@ -30,13 +30,12 @@ export function updateMmr(
 
   if (!steam32Id) {
     if (!channelId) {
-      logger.info('[UPDATE MMR]', 'No channel id provided, will not update user table', { channel })
+      logger.info('[UPDATE MMR] No channel id provided, will not update user table', { channel })
       return
     }
 
     logger.info(
-      '[UPDATE MMR]',
-      'No steam32Id provided, will update the users table until they get one',
+      '[UPDATE MMR] No steam32Id provided, will update the users table until they get one',
       {
         channel,
       },
@@ -61,7 +60,7 @@ export function updateMmr(
         },
       })
       .catch((e) => {
-        logger.info('[UPDATE MMR]', 'Error updating user table', { channel, e })
+        logger.info('[UPDATE MMR] Error updating user table', { channel, e })
       })
 
     return
@@ -82,6 +81,6 @@ export function updateMmr(
       },
     })
     .catch((e) => {
-      logger.info('[UPDATE MMR]', 'Error updating account table', { channel, e })
+      logger.info('[UPDATE MMR] Error updating account table', { channel, e })
     })
 }

@@ -12,11 +12,11 @@ export const getChannelAuthProvider = function (userId: string) {
   const twitchTokens = findUser(userId)
 
   if (!twitchTokens?.Account?.access_token || !twitchTokens.Account.refresh_token) {
-    logger.info('[TWITCHSETUP]', 'Missing twitch tokens', userId)
+    logger.info('[TWITCHSETUP] Missing twitch tokens', userId)
     return {}
   }
 
-  logger.info('[TWITCHSETUP]', 'Retrieved twitch access tokens', twitchTokens.name)
+  logger.info('[TWITCHSETUP] Retrieved twitch access tokens', twitchTokens.name)
 
   const authProvider = new RefreshingAuthProvider(
     {

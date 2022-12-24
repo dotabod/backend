@@ -41,7 +41,7 @@ class ChatClientSingleton {
       })
     })
 
-    logger.info('[TWITCHSETUP]', 'Connected to chat client', chatClient.isConnected)
+    logger.info('[TWITCHSETUP] Connected to chat client', chatClient.isConnected)
 
     ChatClientSingleton.instance = chatClient
 

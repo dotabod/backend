@@ -63,7 +63,7 @@ commandHandler.registerCommand('hero', {
       })
       .catch((e) => {
         void chatClient.say(channel, `Playing ${hero.localized_name}`)
-        logger.info(e?.data, 'could not find wl, weirdge')
+        logger.info('could not find wl, weirdge', e?.data)
       })
   },
 })

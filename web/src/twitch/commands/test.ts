@@ -33,7 +33,11 @@ commandHandler.registerCommand('test', {
         return
       }
 
-      logger.info({ command: 'TEST', steam32Id: steam32Id || client.steam32Id, steamserverid })
+      logger.info('test command', {
+        command: 'TEST',
+        steam32Id: steam32Id || client.steam32Id,
+        steamserverid,
+      })
 
       logger.info(
         `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamserverid}`,
