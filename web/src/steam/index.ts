@@ -219,7 +219,6 @@ class Dota {
     })
 
     operation.attempt((currentAttempt: number) => {
-      console.log('[STEAM]', 'retrying GetRealTimeStats', currentAttempt)
       axios(
         `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steam_server_id}`,
       )
@@ -311,8 +310,6 @@ class Dota {
     })
 
     operation.attempt((currentAttempt: number) => {
-      console.log('[STEAM]', 'retrying getGcMatchData', currentAttempt)
-
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return this.dota2.requestMatchDetails(Number(matchId), (err: any, body: any) => {
         let arr: Error | undefined
