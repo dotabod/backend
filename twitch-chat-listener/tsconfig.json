@@ -18,8 +18,8 @@
     "types": [
       "node"
     ],
-    "allowJs": true,
-    "checkJs": true,
+    "allowJs": false,
+    "checkJs": false,
     "resolveJsonModule": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
