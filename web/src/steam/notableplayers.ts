@@ -90,8 +90,6 @@ export async function notablePlayers(
     }
   })
 
-  console.log({ notFoundNp })
-
   const playerList = result
     .map((m) => {
       const country: string = m.country_code ? `${countryCodeEmoji(m.country_code) as string} ` : ''
