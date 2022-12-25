@@ -46,14 +46,6 @@ export async function gameMedals(
     }
   }
 
-  // sort medals by number, taking into account the # prefix
-  medals.sort((a, b) => {
-    const aNumber = Number(a.replace('#', ''))
-    const bNumber = Number(b.replace('#', ''))
-    if (aNumber && bNumber) return aNumber - bNumber
-    return a.localeCompare(b)
-  })
-
   const result: { heroNames: string; medal: string }[] = []
   const medalsToPlayers: Record<string, string[]> = {}
   matchPlayers.forEach((player: { heroid: number; accountid: number }, i: number) => {
