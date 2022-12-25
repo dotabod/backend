@@ -26,24 +26,28 @@ channel
     }
   })
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
+    const newObj = payload.new as User
+    const oldObj = payload.old as User
+    const client = findUser(newObj.id)
+    if (!client) return
+
+    client.stream_online = newObj.stream_online
+    client.stream_start_date = newObj.stream_start_date
+
     async function handler() {
-      const newObj = payload.new as User
-      const oldObj = payload.old as User
-      const client = findUser(newObj.id)
       if (!client) return
 
       // dont overwrite with 0 because we use this variable to track currently logged in mmr
       if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
+        client.mmr = newObj.mmr
+
+        if (!client.stream_online) return
         logger.info('[WATCHER MMR] Sending mmr to socket', { name: client.name })
         tellChatNewMMR(client.token, newObj.mmr, oldObj.mmr)
-        client.mmr = newObj.mmr
 
         const deets = await getRankDetail(newObj.mmr, client.steam32Id)
         server.io.to(client.token).emit('update-medal', deets)
       }
-
-      client.stream_online = newObj.stream_online
-      client.stream_start_date = newObj.stream_start_date
     }
 
     void handler()
@@ -67,6 +71,7 @@ channel
         void toggleDotabod(client.token, !!newObj.value, client.name)
       }
 
+      // Sending this one even when offline, cause they might be testing locally
       logger.info('[WATCHER SETTING] Sending new setting value to socket', { name: client.name })
       server.io.to(client.token).emit('refresh-settings')
     }
@@ -106,6 +111,8 @@ channel
     // Push an mmr update to overlay since it's the steam account rn
     if (client.steam32Id === newObj.steam32Id) {
       client.mmr = newObj.mmr
+
+      if (!client.stream_online) return
       tellChatNewMMR(client.token, newObj.mmr, oldObj.mmr)
       getRankDetail(newObj.mmr, newObj.steam32Id)
         .then((deets) => {

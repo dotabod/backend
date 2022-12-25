@@ -168,10 +168,12 @@ export class setupMainEvents {
           return
         }
 
-        void chatClient.say(
-          this.getChannel(),
-          'Match data found, !np !smurfs !gm !lg commands activated.',
-        )
+        if (this.client.stream_start_date) {
+          void chatClient.say(
+            this.getChannel(),
+            'Match data found, !np !smurfs !gm !lg commands activated.',
+          )
+        }
       } else {
         logger.info('Match data already found', {
           name: this.client.name,
@@ -323,6 +325,7 @@ export class setupMainEvents {
     })
 
     events.on(`${this.getToken()}:hero:smoked`, (isSmoked: boolean) => {
+      if (!this.client.stream_online) return
       if (!isPlayingMatch(this.client.gsi)) return
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
       if (!chatterEnabled) return
@@ -344,10 +347,10 @@ export class setupMainEvents {
     })
 
     events.on(`${this.getToken()}:map:paused`, (isPaused: boolean) => {
+      if (!this.client.stream_online) return
+
       if (!isPlayingMatch(this.client.gsi)) return
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-
-      if (!this.client.stream_online) return
 
       // Necessary to let the frontend know, so we can pause any rosh / aegis / etc timers
       server.io.to(this.getToken()).emit('paused', isPaused)
@@ -367,20 +370,11 @@ export class setupMainEvents {
 
       this.endBets(winningTeam)
     })
-
-    events.on(`${this.getToken()}:map:clock_time`, (time: number) => {
-      if (!isPlayingMatch(this.client.gsi)) return
-
-      // Skip pregame
-      if ((time + 30) % 300 === 0 && time + 30 > 0) {
-        // Open a poll to see if its top or bottom?
-        // We might not find out the answer though
-        // logger.info('Runes coming soon, its currently n:30 minutes', { token: client.token })
-      }
-    })
   }
 
   emitWLUpdate() {
+    if (!this.client.stream_online) return
+
     getWL(this.getChannelId(), this.client.stream_start_date)
       .then(({ record }) => {
         logger.info('[STEAM32ID] Emitting WL overlay update', {
@@ -395,6 +389,8 @@ export class setupMainEvents {
   }
 
   emitBadgeUpdate() {
+    if (!this.client.stream_online) return
+
     getRankDetail(this.getMmr(), this.getSteam32())
       .then((deets) => {
         logger.info('[STEAM32ID] Emitting badge overlay update', {

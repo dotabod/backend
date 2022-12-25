@@ -77,7 +77,7 @@ export async function getWL(channelId: string, startDate: Date | null) {
       return { record, msg: msg.join(' · ') }
     })
     .catch((e) => {
-      logger.info('[WL] Error getting WL', { error: e.message, channelId })
+      logger.info('[WL] Prisma Error getting WL', { error: e.message, channelId })
       return { record: [{ win: 0, lose: 0, type: 'U' }], msg: null }
     })
 }
