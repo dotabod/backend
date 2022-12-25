@@ -538,7 +538,7 @@ export class setupMainEvents {
         let isParty = false
         if (Array.isArray(opendotaMatch.data?.players) && typeof heroSlot === 'number') {
           const partySize = opendotaMatch.data?.players[heroSlot]?.party_size
-          if (typeof partySize === 'number' && partySize > 1) {
+          if (typeof partySize === 'number' && partySize >= 1) {
             logger.info('[MMR] Party match detected', { name: this.client.name })
             isParty = true
           }
@@ -549,7 +549,6 @@ export class setupMainEvents {
             increase,
             heroSlot,
             isParty,
-            playerSlot: opendotaMatch.data?.players[heroSlot],
           })
         }
 
