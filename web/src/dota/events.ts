@@ -397,7 +397,7 @@ export class setupMainEvents {
         server.io.to(this.getToken()).emit('update-medal', deets)
       })
       .catch((e) => {
-        console.error('[MMR] emitBadgeUpdate Error getting rank detail', { e: e?.message || e })
+        logger.error('[MMR] emitBadgeUpdate Error getting rank detail', { e: e?.message || e })
       })
   }
 
@@ -484,13 +484,20 @@ export class setupMainEvents {
         data: {
           won: increase,
           lobby_type: lobbyType,
+          is_party: isParty,
         },
       })
       .then(() => {
         // Update mmr for ranked matches
       })
       .catch((e) => {
-        console.error('[DATABASE ERROR MMR]', { e: e?.message || e })
+        logger.error('[DATABASE ERROR MMR]', {
+          e: e?.message || e,
+          matchId,
+          isParty,
+          increase,
+          lobbyType,
+        })
       })
 
     this.emitWLUpdate()

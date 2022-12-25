@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js'
 import { server } from '../index.js'
 
 export const ranks = [
@@ -57,7 +58,7 @@ export async function lookupLeaderRank(mmr: number, steam32Id?: number | null) {
         .getCard(steam32Id)
         .then((data) => data?.leaderboard_rank as number)
     } catch (e) {
-      console.error('[lookupLeaderRank] Error fetching leaderboard rank', steam32Id)
+      logger.error('[lookupLeaderRank] Error fetching leaderboard rank', steam32Id)
       return {
         myRank: leaderRanks[leaderRanks.length - 1],
         standing: null,
