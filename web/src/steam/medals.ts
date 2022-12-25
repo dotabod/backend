@@ -1,4 +1,4 @@
-import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
+import { delayedGames, medals } from '../../prisma/generated/mongoclient/index.js'
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
 import CustomError from '../utils/customError.js'
@@ -12,7 +12,9 @@ export async function gameMedals(
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
-  if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
+  if (!currentMatchId) {
+    throw new CustomError('Not in a match PauseChamp')
+  }
 
   const response =
     !players?.length &&
@@ -26,38 +28,45 @@ export async function gameMedals(
     response as unknown as delayedGames,
     players,
   )
-
   const cards = await dota.getCards(accountIds)
 
-  const medalQuery = await mongo
+  const medalQuery = (await mongo
     .collection('medals')
     .find({ rank_tier: { $in: cards.map((card) => card.rank_tier) } })
-    .toArray()
+    .toArray()) as unknown as medals[]
 
-  const medals: string[] = []
-  for (let i = 0; i < cards.length; i += 1) {
+  const medals = cards.map((card, i) => {
     const currentMedal = medalQuery.find(
-      (temporaryMedal) => temporaryMedal.rank_tier === cards[i].rank_tier,
+      (temporaryMedal) => temporaryMedal.rank_tier === card.rank_tier,
     )
-    if (!currentMedal) medals[i] = 'Unknown'
-    else {
-      medals[i] = currentMedal.name
-      if (cards[i].leaderboard_rank > 0) medals[i] = `#${cards[i].leaderboard_rank}`
-    }
-  }
+    if (!currentMedal) return 'Unknown'
+    if (card.leaderboard_rank > 0) return `#${card.leaderboard_rank}`
+    return currentMedal.name
+  })
 
   const result: { heroNames: string; medal: string }[] = []
   const medalsToPlayers: Record<string, string[]> = {}
   matchPlayers.forEach((player: { heroid: number; accountid: number }, i: number) => {
-    medalsToPlayers[medals[i]] = [
-      ...(medalsToPlayers[medals[i]] ?? []),
-      getHeroNameById(player.heroid, i),
-    ]
+    const heroName = getHeroNameById(player.heroid, i)
+    const medal = medals[i]
+    if (!medalsToPlayers[medal]) {
+      medalsToPlayers[medal] = [heroName]
+    } else {
+      medalsToPlayers[medal].push(heroName)
+    }
   })
 
-  // Return Medal: heroname, heroname, heroname
-  Object.entries(medalsToPlayers).forEach(([medal, heroes]) => {
-    result.push({ heroNames: heroes.join(', '), medal })
+  // Sort medals by number, taking into account the # prefix
+  const sortedMedals = Object.keys(medalsToPlayers).sort((a, b) => {
+    const aNumber = Number(a.replace('#', ''))
+    const bNumber = Number(b.replace('#', ''))
+    if (aNumber && bNumber) return aNumber - bNumber
+    return a.localeCompare(b)
+  })
+
+  // Build the result array, preserving the original order of the medals
+  sortedMedals.forEach((medal) => {
+    result.push({ heroNames: medalsToPlayers[medal].join(', '), medal })
   })
 
   return result
