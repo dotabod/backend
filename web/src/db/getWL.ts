@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
 
 export async function getWL(channelId: string, startDate: Date | null) {
@@ -6,7 +7,7 @@ export async function getWL(channelId: string, startDate: Date | null) {
   }
 
   if (!startDate) {
-    throw new Error('Stream not live')
+    logger.info('[WL] Stream not live??', { channelId, startDate })
   }
 
   return prisma.bet
@@ -30,7 +31,9 @@ export async function getWL(channelId: string, startDate: Date | null) {
           },
         },
         createdAt: {
-          gte: startDate,
+          // if its null then only the last 12 hours from now
+          // should never be null but just in case
+          gte: startDate ?? new Date(new Date().getTime() - 12 * 60 * 60 * 1000),
         },
       },
     })
@@ -72,5 +75,9 @@ export async function getWL(channelId: string, startDate: Date | null) {
       if (hasUnranked) msg.push(unrankedMsg)
       if (!hasRanked && !hasUnranked) msg.push('0 W - 0 L')
       return { record, msg: msg.join(' · ') }
+    })
+    .catch((e) => {
+      logger.info('[WL] Error getting WL', { error: e.message, channelId })
+      return { record: [{ win: 0, lose: 0, type: 'U' }], msg: null }
     })
 }
