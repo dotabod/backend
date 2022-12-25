@@ -65,7 +65,7 @@ function newData(req: Request, res: Response) {
 
 function checkAuth(req: Request, res: Response, next: NextFunction) {
   // Sent from dota gsi config file
-  const token = req.body.auth.token as string | undefined
+  const token = req.body?.auth?.token as string | undefined
 
   if (invalidTokens.has(token)) {
     res.status(401).send('Invalid token, skipping auth check')
