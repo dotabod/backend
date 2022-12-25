@@ -1,14 +1,11 @@
+set dotenv-load
+
 # Lists Recipes
 default:
+  @echo $NODE_ENV
   @just --list
 
-df := ""
-dockerfile := if df == "" {
-    "docker-compose.yml"
-} else {
-    "docker-compose-"+ df + ".yml"
-}
-
+dockerfile := if env_var("NODE_ENV") == "production" { "docker-compose-prod.yml" } else { "docker-compose.yml" }
 app := ""
 
 GREEN  := "\\u001b[32m"
@@ -43,6 +40,7 @@ buildone:
 
 # Starts images
 up:
+    @echo "Starting server with database $NODE_ENV at {{dockerfile}}"
     @docker compose -f {{dockerfile}} up -d
 
 update:
