@@ -89,6 +89,7 @@ model Bet {
   userId       String
   lobby_type   Int?     @db.SmallInt
   steam32Id    BigInt?
+  is_party     Boolean  @default(false)
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([matchId, userId])
