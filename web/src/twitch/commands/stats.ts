@@ -17,11 +17,11 @@ export async function profileLink(currentMatchId: string, colors: string[]) {
     throw new CustomError('Missing hero color. Try !stats blue')
   }
 
-  const color = colors[0].toLowerCase()
-  const colorTwo = colors.join(' ').toLowerCase()
-  const heroKey = heroColors.findIndex(
-    (heroColor) => heroColor.toLowerCase() === color || heroColor.toLowerCase() === colorTwo,
-  )
+  // light blue can be an option
+  const color = `${colors[0].toLowerCase().trim()}${
+    colors[1]?.toLowerCase() === 'blue' ? 'blue' : ''
+  }`
+  const heroKey = heroColors.findIndex((heroColor) => heroColor.toLowerCase() === color)
 
   if (heroKey === -1) {
     throw new CustomError(`Invalid hero color. Must be one of ${heroColors.join(' ')}`)
