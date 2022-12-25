@@ -45,6 +45,15 @@ export async function gameMedals(
       if (cards[i].leaderboard_rank > 0) medals[i] = `#${cards[i].leaderboard_rank}`
     }
   }
+
+  // sort medals by number, taking into account the # prefix
+  medals.sort((a, b) => {
+    const aNumber = Number(a.replace('#', ''))
+    const bNumber = Number(b.replace('#', ''))
+    if (aNumber && bNumber) return aNumber - bNumber
+    return a.localeCompare(b)
+  })
+
   const result: { heroNames: string; medal: string }[] = []
   const medalsToPlayers: Record<string, string[]> = {}
   matchPlayers.forEach((player: { heroid: number; accountid: number }, i: number) => {
@@ -59,5 +68,13 @@ export async function gameMedals(
     result.push({ heroNames: heroes.join(', '), medal })
   })
 
-  return result.map((m) => `${m.medal}: ${m.heroNames}`).join(' · ')
+  return result
+    .map((m) => {
+      if (m.medal.startsWith('#') && !m.heroNames.includes(',')) {
+        return `${m.heroNames} ${m.medal}`
+      }
+
+      return `${m.medal}: ${m.heroNames}`
+    })
+    .join(' · ')
 }
