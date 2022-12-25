@@ -12,7 +12,11 @@ channel
 
     const user = payload.new as User
     console.log('[SUPABASE] New user to send bot to: ', user.name)
-    void chatClient.join(user.name)
+    try {
+      void chatClient.join(user.name)
+    } catch (e) {
+      console.error('[SUPABASE] Error joining channel: ', e)
+    }
   })
   .subscribe((status, err) => {
     if (status === 'SUBSCRIBED') {
