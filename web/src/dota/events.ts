@@ -327,14 +327,19 @@ export class setupMainEvents {
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
       if (!chatterEnabled) return
 
+      const chatters = getValueOrDefault(
+        DBSettings.chatters,
+        this.client.settings,
+      ) as typeof defaultSettings['chatters']
+
+      if (!chatters.smoke.enabled) return
+
       if (isSmoked) {
         const hero = getHero(this.client.gsi?.hero?.name)
-        if (!hero) {
-          void chatClient.say(this.getChannel(), 'Shush Smoked!')
-          return
-        }
-
-        void chatClient.say(this.getChannel(), `Shush ${hero.localized_name} is smoked!`)
+        void chatClient.say(
+          this.getChannel(),
+          chatters.smoke.message.replace('[heroname]', hero?.localized_name ?? 'We'),
+        )
       }
     })
 
