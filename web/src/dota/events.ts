@@ -579,6 +579,15 @@ export class setupMainEvents {
   // 3 If it is, steam dota2 api result of match
   // 4 Then, tell twitch to close bets based on win result
   openBets() {
+    if (
+      !!this.playingMatchId &&
+      !!this.client.gsi?.map?.matchid &&
+      this.playingMatchId !== this.client.gsi.map.matchid
+    ) {
+      // We have the wrong matchid, reset vars and start over
+      this.resetClientState(true)
+    }
+
     // The bet was already made
     if (this.playingMatchId !== null) return
     if (this.openingBets) return
