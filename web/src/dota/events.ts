@@ -510,10 +510,20 @@ export class setupMainEvents {
     axios
       .post(`https://api.opendota.com/api/request/${matchId}`)
       .then((r) => {
-        logger.info('mmr match request to opendota', r.data)
+        logger.info('handler POST mmr match request to opendota', {
+          data: r.data,
+          matchId,
+          increase,
+          heroSlot,
+        })
       })
       .catch((e) => {
-        logger.info('Error mmr match request to opendota', { e: e?.message || e })
+        logger.info('Error POST handler mmr match POST request to opendota', {
+          e: e?.message || e,
+          matchId,
+          increase,
+          heroSlot,
+        })
       })
 
     axios(`https://api.opendota.com/api/matches/${matchId}`)
@@ -525,6 +535,15 @@ export class setupMainEvents {
             logger.info('[MMR] Party match detected', { name: this.client.name })
             isParty = true
           }
+
+          logger.info('[MMR] Match found in opendota', {
+            name: this.client.name,
+            matchId,
+            increase,
+            heroSlot,
+            isParty,
+            playerSlot: opendotaMatch.data?.players[heroSlot],
+          })
         }
 
         const response = await mongo.collection('delayedGames').findOne(
@@ -723,11 +742,6 @@ export class setupMainEvents {
     }
 
     if (!this.playingMatchId || this.endingBets) {
-      logger.info('not ending bets, not resetting vars', {
-        channel: this.getChannel(),
-        endingBets: this.endingBets,
-        playingMatchId: this.playingMatchId,
-      })
       return
     }
 
@@ -743,10 +757,16 @@ export class setupMainEvents {
       axios
         .post(`https://api.opendota.com/api/request/${matchId}`)
         .then((r) => {
-          logger.info('mmr match request to opendota', r.data)
+          logger.info('POST early mmr match request to opendota', {
+            data: r.data,
+            matchId,
+          })
         })
         .catch((e) => {
-          logger.info('Error mmr match request to opendota', { e: e?.message || e })
+          logger.info('Error POST early end mmr match request to opendota', {
+            e: e?.message || e,
+            matchId,
+          })
         })
       // Check with opendota to see if the match is over
       axios(`https://api.opendota.com/api/matches/${matchId}`)
