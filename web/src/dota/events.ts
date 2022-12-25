@@ -474,7 +474,7 @@ export class setupMainEvents {
     lobbyType: number,
     matchId: string,
     isParty?: boolean,
-    heroSlot?: number,
+    heroSlot?: number | null,
   ) {
     const ranked = lobbyType === 7
 
@@ -586,7 +586,7 @@ export class setupMainEvents {
           lobbyType = 1
         }
 
-        this.updateMMR(increase, lobbyType, matchId, heroSlot)
+        this.updateMMR(increase, lobbyType, matchId, false, heroSlot)
 
         logger.info('[MMR] Error fetching match details', {
           matchId,
