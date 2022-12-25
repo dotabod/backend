@@ -8,20 +8,20 @@
   "exports": "./dist/index.js",
   "type": "module",
   "scripts": {
-    "studio": "dotenv -e ../.env.local -- yarn prisma studio --schema ./prisma/postgres.prisma",
+    "studio": "dotenv -e ../.env -- yarn prisma studio --schema ./prisma/postgres.prisma",
     "start": "node -r newrelic --trace-warnings ./src/index.js",
     "build": "tsc",
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register --loader ts-node/esm src/index.ts\"",
-    "test": "ts-node --project ./tsconfig.json -r ts-node/register -r dotenv/config src/test.ts dotenv_config_path=../.env.local",
+    "test": "ts-node --project ./tsconfig.json -r ts-node/register -r dotenv/config src/test.ts dotenv_config_path=../.env",
     "dev": "nodemon -L --ext ts ./src/index.ts",
-    "devm1": "dotenv -e ../.env.local -- nodemon -L --ext ts ./src/index.ts",
+    "devm1": "dotenv -e ../.env -- nodemon -L --ext ts ./src/index.ts",
     "postinstall": "prisma generate --schema ./prisma/mongo.prisma && prisma generate --schema ./prisma/postgres.prisma",
     "lint": "eslint --ext .ts ./src",
     "prettier": "prettier --ext .ts ./src --write",
     "lint:fix": "yarn lint -- --fix",
-    "update-np": "dotenv -e ../.env.local -- bash ../mongodb/updatenps.sh",
-    "pullmongo": "dotenv -e ../.env.local -- prisma db pull --schema ./prisma/mongo.prisma --force",
-    "pullpsql": "dotenv -e ../.env.local -- prisma db pull --schema ./prisma/postgres.prisma"
+    "update-np": "dotenv -e ../.env -- bash ../mongodb/updatenps.sh",
+    "pullmongo": "dotenv -e ../.env -- prisma db pull --schema ./prisma/mongo.prisma --force",
+    "pullpsql": "dotenv -e ../.env -- prisma db pull --schema ./prisma/postgres.prisma"
   },
   "dependencies": {
     "@node-steam/id": "^1.2.0",

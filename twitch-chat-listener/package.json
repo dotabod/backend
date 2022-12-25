@@ -12,13 +12,13 @@
     "build": "tsc",
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
-    "devnotdocker": "dotenv -e ../.env.local -e ../.env.prod -- nodemon -L --ext ts ./src/index.ts",
+    "devnotdocker": "dotenv -e ../.env -- nodemon -L --ext ts ./src/index.ts",
     "postinstall": "prisma generate --schema ./prisma/mongo.prisma && prisma generate --schema ./prisma/postgres.prisma",
     "lint": "eslint --ext .ts ./src",
     "prettier": "prettier --ext .ts ./src --write",
     "lint:fix": "npm run lint -- --fix",
-    "pullmongo": "dotenv -e ../.env.local -e ../.env.prod -- prisma db pull --schema ./prisma/mongo.prisma --force",
-    "pullpsql": "dotenv -e ../.env.local -e ../.env.prod -- prisma db pull --schema ./prisma/postgres.prisma"
+    "pullmongo": "dotenv -e ../.env -- prisma db pull --schema ./prisma/mongo.prisma --force",
+    "pullpsql": "dotenv -e ../.env -- prisma db pull --schema ./prisma/postgres.prisma"
   },
   "dependencies": {
     "@prisma/client": "4.8.0",

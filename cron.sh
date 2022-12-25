@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -a; source .env.prod; set +a
-set -a; source .env.local; set +a
+set -a; source .env; set +a
 
 # PostgreSQL Backup util
 # Automatic backup utility, run in cron job under postgres user

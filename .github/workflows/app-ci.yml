@@ -24,7 +24,7 @@ jobs:
         uses: extractions/setup-just@v1
       - name: init env file
         run: |
-          touch .env.local
-          echo -e "YOUR_ENV_VAR=VAL" >> .env.local
+          touch .env
+          echo -e "YOUR_ENV_VAR=VAL" >> .env
       - name: test code
         run: 'just test'
