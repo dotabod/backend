@@ -12,9 +12,10 @@ export async function getWL(channelId: string, startDate: Date | null) {
 
   return prisma.bet
     .groupBy({
-      by: ['won', 'lobby_type'],
+      by: ['won', 'lobby_type', 'is_party'],
       _count: {
         won: true,
+        is_party: true,
       },
       where: {
         won: {
@@ -37,17 +38,18 @@ export async function getWL(channelId: string, startDate: Date | null) {
         },
       },
     })
-    .then((r) => {
-      const ranked: { win: number; lose: number } = { win: 0, lose: 0 }
+    .then((matches) => {
+      const ranked: { win: number; lose: number; mmr: number } = { win: 0, lose: 0, mmr: 0 }
       const unranked: { win: number; lose: number } = { win: 0, lose: 0 }
 
-      r.forEach((match) => {
+      matches.forEach((match) => {
         if (match.lobby_type === 7) {
           if (match.won) {
             ranked.win += match._count.won
           } else {
             ranked.lose += match._count.won
           }
+          ranked.mmr = (ranked.win - ranked.lose) * (match.is_party ? 20 : 30)
         } else {
           if (match.won) {
             unranked.win += match._count.won
@@ -66,8 +68,7 @@ export async function getWL(channelId: string, startDate: Date | null) {
       if (!hasRanked && !hasUnranked) record.push({ win: 0, lose: 0, type: 'U' })
 
       const msg = []
-      const mmrGainOrLoss = (ranked.win - ranked.lose) * 30
-      const mmrMsg = ` | ${mmrGainOrLoss >= 0 ? '+' : ''}${mmrGainOrLoss} MMR`
+      const mmrMsg = ` | ${ranked.mmr >= 0 ? '+' : ''}${ranked.mmr} MMR`
       const rankedMsg = `Ranked ${ranked.win} W - ${ranked.lose} L${mmrMsg}`
       const unrankedMsg = `Unranked ${unranked.win} W - ${unranked.lose} L`
 
