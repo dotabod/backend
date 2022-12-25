@@ -389,8 +389,6 @@ export class setupMainEvents {
   }
 
   emitBadgeUpdate() {
-    if (!this.client.stream_online) return
-
     getRankDetail(this.getMmr(), this.getSteam32())
       .then((deets) => {
         logger.info('[STEAM32ID] Emitting badge overlay update', {
@@ -495,7 +493,6 @@ export class setupMainEvents {
         console.error('[DATABASE ERROR MMR]', { e: e?.message || e })
       })
 
-    logger.info('updateMMR emit wl update', { name: this.getChannel() })
     this.emitWLUpdate()
 
     if (!ranked) {
@@ -906,7 +903,6 @@ export class setupMainEvents {
     if (isSpectator(this.client.gsi)) {
       if (blockCache.get(this.getToken()) !== 'spectator') {
         this.emitBadgeUpdate()
-        logger.info('setupOBSBlockers emit wl update', { name: this.getChannel() })
         this.emitWLUpdate()
 
         server.io.to(this.getToken()).emit('block', { type: 'spectator' })
@@ -918,7 +914,6 @@ export class setupMainEvents {
 
     if (isArcade(this.client.gsi)) {
       if (blockCache.get(this.getToken()) !== 'arcade') {
-        logger.info('arcade emit wl update', { name: this.getChannel() })
         this.emitBadgeUpdate()
         this.emitWLUpdate()
 
@@ -964,7 +959,6 @@ export class setupMainEvents {
           })
 
           if (blocker.type === 'playing') {
-            logger.info('playing emit wl update', { name: this.getChannel() })
             this.emitBadgeUpdate()
             this.emitWLUpdate()
           }
