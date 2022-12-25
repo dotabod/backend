@@ -41,14 +41,9 @@ channel
         const deets = await getRankDetail(newObj.mmr, client.steam32Id)
         server.io.to(client.token).emit('update-medal', deets)
       }
-      if (newObj.stream_online !== oldObj.stream_online) {
-        logger.info('[WATCHER STREAM] Updating stream status for', { name: client.name })
-        client.stream_online = newObj.stream_online
-      }
-      if (newObj.stream_start_date !== oldObj.stream_start_date) {
-        logger.info('[WATCHER STREAM] Updating stream start date for', { name: client.name })
-        client.stream_start_date = newObj.stream_start_date
-      }
+
+      client.stream_online = newObj.stream_online
+      client.stream_start_date = newObj.stream_start_date
     }
 
     void handler()
