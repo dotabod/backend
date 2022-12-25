@@ -30,7 +30,8 @@ commandHandler.registerCommand('wl', {
         void chatClient.say(channel, msg ?? 'Unknown WL')
       })
       .catch((e) => {
-        void chatClient.say(channel, 'Stream not live PauseChamp')
+        void chatClient.say(channel, 'Could not get data, try again later')
+        logger.error('[WL] Error getting WL', { error: e, channelId, name: client.name })
       })
   },
 })
