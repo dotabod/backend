@@ -585,6 +585,11 @@ export class setupMainEvents {
       this.playingMatchId !== this.client.gsi.map.matchid
     ) {
       // We have the wrong matchid, reset vars and start over
+      logger.info('openBets resetClientState because stuck on old match id', {
+        name: this.getChannel(),
+        playingMatchId: this.playingMatchId,
+        matchid: this.client.gsi.map.matchid,
+      })
       this.resetClientState(true)
     }
 
