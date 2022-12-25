@@ -1,4 +1,5 @@
-import { heroColors } from '../../dota/lib/heroes.js'
+import { delayedGames } from '../../../prisma/generated/mongoclient/index.js'
+import { getHeroNameById, heroColors } from '../../dota/lib/heroes.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import Mongo from '../../steam/mongo.js'
 import CustomError from '../../utils/customError.js'
@@ -7,32 +8,39 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 const mongo = await Mongo.connect()
 
-export async function profileLink(currentMatchId: string, color: string) {
-  if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
-  if (!color) throw new CustomError('Missing hero color. Try !stats blue')
+export async function profileLink(currentMatchId: string, colors: string[]) {
+  if (!currentMatchId) {
+    throw new CustomError('Not in a match PauseChamp')
+  }
 
+  if (!colors.length) {
+    throw new CustomError('Missing hero color. Try !stats blue')
+  }
+
+  const color = colors[0].toLowerCase()
+  const colorTwo = colors.join(' ').toLowerCase()
   const heroKey = heroColors.findIndex(
-    (heroColor) => heroColor.toLowerCase() === color.toLowerCase(),
+    (heroColor) => heroColor.toLowerCase() === color || heroColor.toLowerCase() === colorTwo,
   )
 
   if (heroKey === -1) {
     throw new CustomError(`Invalid hero color. Must be one of ${heroColors.join(' ')}`)
   }
 
-  const response = await mongo
+  const response = (await mongo
     .collection('delayedGames')
-    .findOne({ 'match.match_id': currentMatchId })
+    .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames
 
   if (!response) {
     throw new CustomError('Waiting for current match data PauseChamp')
   }
 
-  const matchPlayers: { heroid: number; accountid: number }[] = response.teams.flatMap(
-    (team: { players: { heroid: number; accountid: number }[] }) => team.players,
-  )
+  const matchPlayers = response.teams.flatMap((team) => team.players)
   const player = matchPlayers[heroKey]
 
-  return `Here's ${color}: dotabuff.com/players/${player.accountid}`
+  return `Here's ${getHeroNameById(player.heroid, heroKey)}: dotabuff.com/players/${
+    player.accountid
+  }`
 }
 
 commandHandler.registerCommand('stats', {
@@ -59,7 +67,7 @@ commandHandler.registerCommand('stats', {
     }
 
     // TODO: Add name and hero to !profile
-    profileLink(client.gsi.map.matchid, args.join(' '))
+    profileLink(client.gsi.map.matchid, args)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })
