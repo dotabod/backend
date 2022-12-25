@@ -1,6 +1,6 @@
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
-import { DBSettings, getValueOrDefault } from '../db/settings.js'
+import { DBSettings, defaultSettings, getValueOrDefault } from '../db/settings.js'
 import Mongo from '../steam/mongo.js'
 import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
@@ -291,11 +291,15 @@ export class setupMainEvents {
       this.openBets()
 
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-      if (chatterEnabled && this.client.stream_online) {
+      const chatters = getValueOrDefault(
+        DBSettings.chatters,
+        this.client.settings,
+      ) as typeof defaultSettings['chatters']
+      if (chatterEnabled && chatters.midas.enabled && this.client.stream_online) {
         const isMidasPassive = checkMidas(data, this.passiveMidas)
         if (isMidasPassive) {
           logger.info('[MIDAS] Passive midas', { name: this.getChannel() })
-          void chatClient.say(this.getChannel(), 'massivePIDAS Use your midas')
+          void chatClient.say(this.getChannel(), chatters.midas.message)
         }
       }
     })
@@ -321,13 +325,18 @@ export class setupMainEvents {
     events.on(`${this.getToken()}:map:paused`, (isPaused: boolean) => {
       if (!isPlayingMatch(this.client.gsi)) return
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-      if (!chatterEnabled || !this.client.stream_online) return
+
+      if (!this.client.stream_online) return
 
       // Necessary to let the frontend know, so we can pause any rosh / aegis / etc timers
       server.io.to(this.getToken()).emit('paused', isPaused)
 
-      if (isPaused) {
-        void chatClient.say(this.getChannel(), `PauseChamp Who paused the game?`)
+      const chatters = getValueOrDefault(
+        DBSettings.chatters,
+        this.client.settings,
+      ) as typeof defaultSettings['chatters']
+      if (isPaused && chatterEnabled && chatters.pause.enabled) {
+        void chatClient.say(this.getChannel(), chatters.pause.message)
       }
     })
 
