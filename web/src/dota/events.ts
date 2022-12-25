@@ -469,7 +469,13 @@ export class setupMainEvents {
       })
   }
 
-  updateMMR(increase: boolean, lobbyType: number, matchId: string, isParty?: boolean) {
+  updateMMR(
+    increase: boolean,
+    lobbyType: number,
+    matchId: string,
+    isParty?: boolean,
+    heroSlot?: number,
+  ) {
     const ranked = lobbyType === 7
 
     // This also updates WL for the unranked matches
@@ -484,6 +490,7 @@ export class setupMainEvents {
         data: {
           won: increase,
           lobby_type: lobbyType,
+          hero_slot: heroSlot,
           is_party: isParty,
         },
       })
@@ -565,7 +572,7 @@ export class setupMainEvents {
         // Default ranked
         const lobbyType =
           typeof response?.match?.lobby_type !== 'number' ? 7 : response.match.lobby_type
-        this.updateMMR(increase, lobbyType, matchId, isParty)
+        this.updateMMR(increase, lobbyType, matchId, isParty, heroSlot)
       })
       .catch((e: any) => {
         logger.info('ERROR handling mmr lookup', { channel: this.client.name, e: e?.data })
@@ -579,7 +586,7 @@ export class setupMainEvents {
           lobbyType = 1
         }
 
-        this.updateMMR(increase, lobbyType, matchId)
+        this.updateMMR(increase, lobbyType, matchId, heroSlot)
 
         logger.info('[MMR] Error fetching match details', {
           matchId,
