@@ -168,7 +168,7 @@ export class setupMainEvents {
           return
         }
 
-        if (this.client.stream_start_date) {
+        if (this.client.stream_online) {
           void chatClient.say(
             this.getChannel(),
             'Match data found, !np !smurfs !gm !lg commands activated.',
