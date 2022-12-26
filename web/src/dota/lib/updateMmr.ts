@@ -18,7 +18,7 @@ export function tellChatNewMMR(token: string, mmr = 0, oldMmr = 0) {
 
 export function updateMmr(
   newMmr: string | number,
-  steam32Id: number,
+  steam32Id: number | null | undefined,
   channel: string,
   channelId?: string | null,
 ) {
