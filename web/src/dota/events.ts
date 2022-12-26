@@ -816,8 +816,8 @@ export class setupMainEvents {
 
     // this was used when endBets() was still in 'newdata' event called every 0.5s
     // TODO: remove endingBets and confirm if needed
-    this.endingBets = true
     const channel = this.getChannel()
+    this.endingBets = true
 
     logger.info('calling mmr update handler', {
       won,
