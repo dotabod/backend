@@ -277,19 +277,21 @@ export class setupMainEvents {
       void this.saveMatchData()
 
       // TODO: Move this to server.ts
-      if (Array.isArray(data.events) && data.events.length) {
-        data.events.forEach((event) => {
-          if (
-            !this.events.some(
-              (e) => e.game_time === event.game_time && e.event_type === event.event_type,
-            )
-          ) {
-            this.events.push(event)
-            events.emit(`${this.getToken()}:${event.event_type}`, event)
+      const newEvents = data.events?.filter((event) => {
+        const existingEvent = this.events.find(
+          (e) => e.game_time === event.game_time && e.event_type === event.event_type,
+        )
+        return !existingEvent
+      })
 
-            if (!Object.values(DotaEventTypes).includes(event.event_type)) {
-              logger.info('[NEWEVENT]', event)
-            }
+      if (newEvents?.length) {
+        this.events = [...this.events, ...newEvents]
+
+        newEvents.forEach((event) => {
+          events.emit(`${this.getToken()}:${event.event_type}`, event)
+
+          if (!Object.values(DotaEventTypes).includes(event.event_type)) {
+            logger.info('[NEWEVENT]', event)
           }
         })
       }
