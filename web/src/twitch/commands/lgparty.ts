@@ -34,7 +34,9 @@ commandHandler.registerCommand('lgparty', {
 
       void chatClient.say(
         message.channel.name,
-        `Changing this match to ${bet.is_party ? 'solo' : 'party'} mmr: dotabuff.com/matches/${bet.matchId}`,
+        `Changing this match to ${bet.is_party ? 'solo' : 'party'} mmr: dotabuff.com/matches/${
+          bet.matchId
+        }`,
       )
 
       updateMmr(
