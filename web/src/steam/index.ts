@@ -47,20 +47,6 @@ const handlers = Dota2.Dota2Client.prototype._handlers
 handlers[Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGameResponse] =
   onGCSpectateFriendGameResponse
 
-interface Game {
-  average_mmr: number
-  game_mode: number
-  league_id: number
-  match_id: Long
-  lobby_id: Long
-  lobby_type: 0
-  players: { hero_id: number; account_id: number }[]
-  server_steam_id: Long
-  weekend_tourney_bracket_round: null
-  weekend_tourney_skill_level: null
-  createdAt: Date
-}
-
 interface steamUserDetails {
   account_name: string
   password: string
@@ -253,13 +239,18 @@ class Dota {
           if (waitForHeros && hasHeroes) {
             logger.info('Saving match data with heroes', { matchid: game.match.match_id })
 
-            await mongo
-              .collection('delayedGames')
-              .updateOne(
-                { 'match.match_id': game.match.match_id },
-                { $set: { ...game, createdAt: new Date() } },
-                { upsert: true },
-              )
+            await mongo.collection('delayedGames').updateOne(
+              { 'match.match_id': game.match.match_id },
+              {
+                $set: {
+                  matchid: game.matchid,
+                  match: game.match,
+                  teams: game.teams,
+                  createdAt: new Date(),
+                },
+              },
+              { upsert: true },
+            )
 
             return
           }
