@@ -17,7 +17,7 @@ commandHandler.registerCommand('lgparty', {
     async function handler() {
       const bet = await prisma.bet.findFirst({
         where: {
-          userId: message.channel.id,
+          userId: message.channel.client.token,
           won: {
             not: null,
           },
