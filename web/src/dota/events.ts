@@ -707,6 +707,8 @@ export class setupMainEvents {
           e: e?.message || e,
         })
       })
+
+    this.openingBets = false
   }
 
   endBets(winningTeam: 'radiant' | 'dire' | null = null) {
@@ -715,7 +717,7 @@ export class setupMainEvents {
       return
     }
 
-    if (!this.playingMatchId || this.endingBets) {
+    if (this.openingBets || !this.playingMatchId || this.endingBets) {
       return
     }
 
@@ -726,6 +728,9 @@ export class setupMainEvents {
     if (!winningTeam) {
       logger.info('[BETS] Streamer exited the match before it ended with a winner', {
         name: this.getChannel(),
+        matchId,
+        openingBets: this.openingBets,
+        endingBets: this.endingBets,
       })
 
       // Check with opendota to see if the match is over
