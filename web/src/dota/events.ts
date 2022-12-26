@@ -730,7 +730,7 @@ export class setupMainEvents {
         .then((response: { data: any }) => {
           logger.info('Found an early dc match data', { matchId, channel: this.getChannel() })
 
-          if (!response.data?.radiant_win) {
+          if (!response.data?.result?.radiant_win) {
             logger.error('early dc match didnt have data in it', {
               data: response.data,
               channel: this.getChannel(),
