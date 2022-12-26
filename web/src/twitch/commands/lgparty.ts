@@ -6,7 +6,7 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 function calculateMmr(currentMmr: number, wasParty: boolean, didWin: boolean) {
   const mmrChange = didWin ? 10 : -10
-  return wasParty ? currentMmr - mmrChange : currentMmr + mmrChange
+  return currentMmr + mmrChange * (wasParty ? 1 : -1)
 }
 
 commandHandler.registerCommand('lgparty', {
