@@ -7,6 +7,7 @@ import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { disabledBets, openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { DotaEvent, DotaEventTypes, Packet, Player, SocketClient } from '../types.js'
+import axios from '../utils/axios.js'
 import { fmtMSS, steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import { server } from './index.js'
@@ -534,29 +535,8 @@ export class setupMainEvents {
   ) {
     // Default ranked
     const localLobbyType = typeof lobbyType !== 'number' ? 7 : lobbyType
-    server.dota.getGcMatchData(matchId, (err, body) => {
-      let isParty = false
-      if (Array.isArray(body?.match?.players)) {
-        const party_size = body?.match?.players.find(
-          (p) => p.account_id === this.getSteam32(),
-        )?.party_size
-        isParty = typeof party_size === 'number' && party_size > 1
-      } else {
-        logger.error('ERROR handling getGcMatchData', { err, matchId, channel: this.getChannel() })
-      }
-
-      if (err) {
-        logger.error('[MMR] Error fetching match details', {
-          matchId,
-          increase,
-          localLobbyType,
-          channel: this.getChannel(),
-          err,
-        })
-      }
-
-      this.updateMMR(increase, localLobbyType, matchId, isParty, heroSlot)
-    })
+    const isParty = false
+    this.updateMMR(increase, localLobbyType, matchId, isParty, heroSlot)
   }
 
   // TODO: CRON Job
@@ -744,56 +724,57 @@ export class setupMainEvents {
       })
 
       // Check with opendota to see if the match is over
-      server.dota.getGcMatchData(matchId, (err, response) => {
-        logger.info('Found an early dc match data', { matchId, err, channel: this.getChannel() })
-        if (err) {
+      axios(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
+        params: { key: process.env.STEAM_WEB_API, match_id: matchId },
+      })
+        .then((response: { data: any }) => {
+          logger.info('Found an early dc match data', { matchId, channel: this.getChannel() })
+
+          if (!response.data?.radiant_win) {
+            logger.error('early dc match didnt have data in it', {
+              data: response.data,
+              channel: this.getChannel(),
+              matchId,
+              response,
+            })
+            this.resetClientState(true)
+            return
+          }
+
+          let winningTeam: 'radiant' | 'dire' | null = null
+          if (typeof response.data.result.radiant_win === 'boolean') {
+            winningTeam = response.data.result.radiant_win ? 'radiant' : 'dire'
+          }
+
+          if (winningTeam === null) {
+            logger.info('Early dc match wont be scored bc winner is null', {
+              name: this.getChannel(),
+            })
+            void chatClient.say(
+              channel,
+              `Match not scored D: Mods need to end bets manually. Not adding or removing MMR for match ${matchId}.`,
+            )
+            this.resetClientState(true)
+            return
+          }
+
+          logger.info('Should be scoring early dc here soon and closing predictions', {
+            channel: this.getChannel(),
+            winningTeam,
+            matchId,
+          })
+          this.endBets(winningTeam)
+        })
+        .catch((e) => {
           // this could mean match is not over yet. just give up checking after this long (like 3m)
           // resetting vars will mean it will just grab it again on match load
           logger.info('not ending bets even tho early dc, match might still be going on', {
             name: this.getChannel(),
+            e: e?.data,
           })
           this.resetClientState(true)
           return
-        }
-
-        if (!response?.match?.match_outcome) {
-          logger.error('early dc match didnt have data in it', {
-            data: response?.match,
-            channel: this.getChannel(),
-            matchId,
-            response,
-            err,
-          })
-          this.resetClientState(true)
-          return
-        }
-
-        let winningTeam: 'radiant' | 'dire' | null = null
-        if (response.match.match_outcome === 2) {
-          winningTeam = 'radiant'
-        } else if (response.match.match_outcome === 3) {
-          winningTeam = 'dire'
-        }
-
-        if (winningTeam === null) {
-          logger.info('Early dc match wont be scored bc winner is null', {
-            name: this.getChannel(),
-          })
-          void chatClient.say(
-            channel,
-            `Match not scored D: Mods need to end bets manually. Not adding or removing MMR for match ${matchId}.`,
-          )
-          this.resetClientState(true)
-          return
-        }
-
-        logger.info('Should be scoring early dc here soon and closing predictions', {
-          channel: this.getChannel(),
-          winningTeam,
-          matchId,
         })
-        this.endBets(winningTeam)
-      })
 
       return
     }
@@ -889,6 +870,8 @@ export class setupMainEvents {
         } else {
           logger.info('[BETS] Error closing twitch bet', { channel, e: e?.message || e })
         }
+
+        void chatClient.say(this.getChannel(), `We have ${won ? 'won' : 'lost'}`)
       })
       // Always
       .finally(() => {

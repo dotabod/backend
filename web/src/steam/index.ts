@@ -325,6 +325,7 @@ class Dota {
       return this.dota2.requestMatchDetails(
         Number(matchId),
         (err: number | null, body: GCMatchData | null) => {
+          err && logger.error(err)
           if (err) {
             operation.retry(new Error('Match not found'))
             return
