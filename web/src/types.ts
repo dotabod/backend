@@ -357,3 +357,161 @@ export interface Packet {
   previously?: Omit<Packet, 'previously'> & { map: MapData | boolean }
   added?: Omit<Packet, 'added'> // it has the same structure as above, and has a value "true"
 }
+
+export interface GCMatchData {
+  result: number
+  match?: Match
+  vote: number
+}
+
+export interface Match {
+  duration: number
+  starttime: number
+  players: Player[]
+  match_id: ID
+  tower_status: number[]
+  barracks_status: number[]
+  cluster: number
+  first_blood_time: number
+  replay_salt: number
+  server_ip: null
+  server_port: null
+  lobby_type: number
+  human_players: number
+  average_skill: null
+  game_balance: null
+  radiant_team_id: null
+  dire_team_id: null
+  leagueid: number
+  radiant_team_name: null
+  dire_team_name: null
+  radiant_team_logo: null
+  dire_team_logo: null
+  radiant_team_logo_url: null
+  dire_team_logo_url: null
+  radiant_team_complete: null
+  dire_team_complete: null
+  positive_votes: number
+  negative_votes: number
+  game_mode: number
+  picks_bans: any[]
+  match_seq_num: null
+  replay_state: number
+  radiant_guild_id: null
+  dire_guild_id: null
+  radiant_team_tag: null
+  dire_team_tag: null
+  series_id: number
+  series_type: number
+  broadcaster_channels: any[]
+  engine: number
+  custom_game_data: null
+  match_flags: number
+  private_metadata_key: null
+  radiant_team_score: number
+  dire_team_score: number
+  match_outcome: number
+  tournament_id: null
+  tournament_round: null
+  pre_game_duration: number
+  mvp_account_id: any[]
+  coaches: any[]
+  level: string
+  timestamp: string
+}
+
+export interface ID {
+  low: number
+  high: number
+  unsigned: boolean
+}
+
+export interface Player {
+  account_id: number
+  player_slot: number
+  hero_id: number
+  item_0: number
+  item_1: number
+  item_2: number
+  item_3: number
+  item_4: number
+  item_5: number
+  item_6: number
+  item_7: number
+  item_8: number
+  item_9: number
+  expected_team_contribution: null
+  scaled_metric: null
+  previous_rank: null
+  rank_change: null
+  mmr_type: number
+  rank_tier_updated: null
+  kills: number
+  deaths: number
+  assists: number
+  leaver_status: number
+  gold: number
+  last_hits: number
+  denies: number
+  gold_per_min: number
+  xp_per_min: number
+  gold_spent: number
+  hero_damage: number
+  tower_damage: number
+  hero_healing: number
+  level: number
+  time_last_seen: null
+  player_name: string
+  support_ability_value: null
+  feeding_detected: null
+  search_rank: null
+  search_rank_uncertainty: null
+  rank_uncertainty_change: null
+  hero_play_count: null
+  party_id: ID
+  scaled_hero_damage: number
+  scaled_tower_damage: number
+  scaled_hero_healing: number
+  scaled_kills: null
+  scaled_deaths: null
+  scaled_assists: null
+  claimed_farm_gold: null
+  support_gold: null
+  claimed_denies: null
+  claimed_misses: null
+  misses: null
+  ability_upgrades: any[]
+  additional_units_inventory: any[]
+  permanent_buffs: PermanentBuff[]
+  pro_name: null
+  real_name: null
+  custom_game_data: null
+  active_plus_subscription: boolean
+  net_worth: number
+  bot_difficulty: null
+  hero_pick_order: number
+  hero_was_randomed: boolean
+  hero_was_dota_plus_suggestion: boolean
+  hero_damage_received: HeroDamage[]
+  hero_damage_dealt: HeroDamage[]
+  seconds_dead: number
+  gold_lost_to_death: number
+  lane_selection_flags: number
+  bounty_runes: number
+  outposts_captured: number
+  team_number: number
+  team_slot: number
+  party_size: number
+}
+
+export interface HeroDamage {
+  pre_reduction: number
+  post_reduction: number
+  damage_type: number
+}
+
+export interface PermanentBuff {
+  permanent_buff: number
+  stack_count: number
+  grant_time: number
+}

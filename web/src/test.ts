@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 import { prisma } from './db/prisma.js'
+import { server } from './dota/index.js'
 import { getBotAPI } from './twitch/lib/getBotAPI.js'
 import { logger } from './utils/logger.js'
 
@@ -146,25 +147,37 @@ async function fixWins() {
   }
 }
 
-const followers = await prisma.user.findMany({
-  select: {
-    name: true,
-    followers: true,
-  },
-  orderBy: {
-    followers: 'desc',
-  },
-  take: 30,
-})
+const topFollowers = async () => {
+  const followers = await prisma.user.findMany({
+    select: {
+      name: true,
+      followers: true,
+    },
+    orderBy: {
+      followers: 'desc',
+    },
+    take: 30,
+  })
 
-logger.info(
-  'found follower data',
-  followers
-    .sort((a, b) => (b.followers ?? 0) - (a.followers ?? 0))
-    .map((f) => ({ ...f, followers: f.followers?.toLocaleString() })),
-)
+  logger.info(
+    'found follower data',
+    followers
+      .sort((a, b) => (b.followers ?? 0) - (a.followers ?? 0))
+      .map((f) => ({ ...f, followers: f.followers?.toLocaleString() })),
+  )
+}
 
 // await updateUsernameForAll()
 // await getAccounts()
 // await fixWins()
 // await getFollows()
+
+server.dota.dota2.on('ready', () => {
+  server.dota.getGcMatchData(69375017392, (err, response) => {
+    logger.info('getGcMatchData', { err, response: response?.match?.match_outcome })
+    //
+  })
+})
+
+// 2 = radiant
+// 3 = dire

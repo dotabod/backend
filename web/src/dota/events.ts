@@ -1,3 +1,4 @@
+import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
 import { DBSettings, defaultSettings, getValueOrDefault } from '../db/settings.js'
@@ -6,7 +7,6 @@ import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { disabledBets, openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { DotaEvent, DotaEventTypes, Packet, Player, SocketClient } from '../types.js'
-import axios from '../utils/axios.js'
 import { fmtMSS, steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import { server } from './index.js'
@@ -36,6 +36,7 @@ export class setupMainEvents {
   playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
   playingHeroSlot: number | undefined | null = null
   playingHero: string | undefined | null = null
+  playingLobbyType: number | undefined | null = null
   savingSteamServerId = false
   steamServerTries = 0
   events: DotaEvent[] = []
@@ -124,9 +125,9 @@ export class setupMainEvents {
     try {
       // logger.info('Start match data', this.client.name, this.client.gsi.map.matchid)
 
-      const response = await mongo
+      const response = (await mongo
         .collection('delayedGames')
-        .findOne({ 'match.match_id': this.client.gsi.map.matchid })
+        .findOne({ 'match.match_id': this.client.gsi.map.matchid })) as unknown as delayedGames
 
       if (!response) {
         // logger.info(
@@ -168,6 +169,8 @@ export class setupMainEvents {
           return
         }
 
+        this.playingLobbyType = delayedData.match.lobby_type
+
         if (this.client.stream_online) {
           void chatClient.say(
             this.getChannel(),
@@ -175,6 +178,7 @@ export class setupMainEvents {
           )
         }
       } else {
+        this.playingLobbyType = response.match.lobby_type
         logger.info('Match data already found', {
           name: this.client.name,
           matchid: this.client.gsi.map.matchid,
@@ -520,82 +524,37 @@ export class setupMainEvents {
     }
   }
 
-  handleMMR(increase: boolean, matchId: string, heroSlot?: number | null) {
-    axios
-      .post(`https://api.opendota.com/api/request/${matchId}`)
-      .then((r) => {
-        logger.info('handler POST mmr match request to opendota', {
-          data: r.data,
+  handleMMR(
+    increase: boolean,
+    matchId: string,
+    heroSlot?: number | null,
+    lobbyType?: number | null,
+  ) {
+    // Default ranked
+    const localLobbyType = typeof lobbyType !== 'number' ? 7 : lobbyType
+    server.dota.getGcMatchData(matchId, (err, body) => {
+      let isParty = false
+      if (Array.isArray(body?.match?.players)) {
+        const party_size = body?.match?.players.find(
+          (p) => p.account_id === this.getSteam32(),
+        )?.party_size
+        isParty = typeof party_size === 'number' && party_size > 1
+      } else {
+        logger.error('ERROR handling getGcMatchData', { err, matchId, channel: this.getChannel() })
+      }
+
+      if (err) {
+        logger.error('[MMR] Error fetching match details', {
           matchId,
           increase,
-          heroSlot,
-        })
-      })
-      .catch((e) => {
-        logger.info('Error POST handler mmr match POST request to opendota', {
-          e: e?.message || e,
-          matchId,
-          increase,
-          heroSlot,
-        })
-      })
-
-    axios(`https://api.opendota.com/api/matches/${matchId}`)
-      .then(async (opendotaMatch: any) => {
-        let isParty = false
-        if (Array.isArray(opendotaMatch.data?.players) && typeof heroSlot === 'number') {
-          const partySize = opendotaMatch.data?.players[heroSlot]?.party_size
-          if (typeof partySize === 'number' && partySize > 1) {
-            logger.info('[MMR] Party match detected', { name: this.client.name })
-            isParty = true
-          }
-
-          logger.info('[MMR] Match found in opendota', {
-            name: this.client.name,
-            matchId,
-            increase,
-            heroSlot,
-            isParty,
-          })
-        }
-
-        const response = await mongo.collection('delayedGames').findOne(
-          { 'match.match_id': matchId },
-          {
-            projection: {
-              _id: 0,
-              'match.lobby_type': 1,
-            },
-          },
-        )
-
-        // Default ranked
-        const lobbyType =
-          typeof response?.match?.lobby_type !== 'number' ? 7 : response.match.lobby_type
-        this.updateMMR(increase, lobbyType, matchId, isParty, heroSlot)
-      })
-      .catch((e: any) => {
-        logger.info('ERROR handling mmr lookup', { channel: this.client.name, e: e?.data })
-
-        let lobbyType = 7
-        // Force update when an error occurs and just let mods take care of the discrepancy
-        if (
-          e?.response?.data?.result?.error ===
-          'Practice matches are not available via GetMatchDetails'
-        ) {
-          lobbyType = 1
-        }
-
-        this.updateMMR(increase, lobbyType, matchId, false, heroSlot)
-
-        logger.info('[MMR] Error fetching match details', {
-          matchId,
-          increase,
-          lobbyType,
+          localLobbyType,
           channel: this.getChannel(),
-          error: e?.response?.data,
+          err,
         })
-      })
+      }
+
+      this.updateMMR(increase, localLobbyType, matchId, isParty, heroSlot)
+    })
   }
 
   // TODO: CRON Job
@@ -767,70 +726,57 @@ export class setupMainEvents {
         name: this.getChannel(),
       })
 
-      axios
-        .post(`https://api.opendota.com/api/request/${matchId}`)
-        .then((r) => {
-          logger.info('POST early mmr match request to opendota', {
-            data: r.data,
-            matchId,
-          })
-        })
-        .catch((e) => {
-          logger.info('Error POST early end mmr match request to opendota', {
-            e: e?.message || e,
-            matchId,
-          })
-        })
       // Check with opendota to see if the match is over
-      axios(`https://api.opendota.com/api/matches/${matchId}`)
-        .then((response: any) => {
-          logger.info('Found an early dc match data', { matchId, channel: this.getChannel() })
-          // Not checking radiant_win because if its a non scored match that key will be null
-          // But if matchid is empty thats a problem because Opendota only has finished matches in their database
-          if (!response?.data?.match_id) {
-            logger.info('early dc match didnt have data in it', {
-              data: response?.data,
-              channel: this.getChannel(),
-              matchId,
-            })
-            this.resetClientState(true)
-            return
-          }
-
-          let winningTeam: 'radiant' | 'dire' | null = null
-          if (response?.data?.radiant_win === true) {
-            winningTeam = 'radiant'
-          } else if (response?.data?.radiant_win === false) {
-            winningTeam = 'dire'
-          }
-
-          if (winningTeam === null) {
-            logger.info('Early dc match wont be scored bc winner is null', {
-              name: this.getChannel(),
-            })
-            void chatClient.say(
-              channel,
-              `Match not scored D: Mods need to end bets manually. Not adding or removing MMR for match ${matchId}.`,
-            )
-            this.resetClientState(true)
-            return
-          }
-
-          logger.info('Should be scoring early dc here soon and closing predictions', {
-            channel: this.getChannel(),
-            winningTeam,
-            matchId,
-          })
-          this.endBets(winningTeam)
-        })
-        .catch((e: any) => {
+      server.dota.getGcMatchData(matchId, (err, response) => {
+        logger.info('Found an early dc match data', { matchId, err, channel: this.getChannel() })
+        if (err) {
           // this could mean match is not over yet. just give up checking after this long (like 3m)
           // resetting vars will mean it will just grab it again on match load
           logger.info('not ending bets even tho early dc, match might still be going on', {
             name: this.getChannel(),
           })
           this.resetClientState(true)
+          return
+        }
+
+        if (!response?.match?.match_outcome) {
+          logger.error('early dc match didnt have data in it', {
+            data: response?.match,
+            channel: this.getChannel(),
+            matchId,
+            response,
+            err,
+          })
+          this.resetClientState(true)
+          return
+        }
+
+        let winningTeam: 'radiant' | 'dire' | null = null
+        if (response.match.match_outcome === 2) {
+          winningTeam = 'radiant'
+        } else if (response.match.match_outcome === 3) {
+          winningTeam = 'dire'
+        }
+
+        if (winningTeam === null) {
+          logger.info('Early dc match wont be scored bc winner is null', {
+            name: this.getChannel(),
+          })
+          void chatClient.say(
+            channel,
+            `Match not scored D: Mods need to end bets manually. Not adding or removing MMR for match ${matchId}.`,
+          )
+          this.resetClientState(true)
+          return
+        }
+
+        logger.info('Should be scoring early dc here soon and closing predictions', {
+          channel: this.getChannel(),
+          winningTeam,
+          matchId,
         })
+        this.endBets(winningTeam)
+      })
 
       return
     }
@@ -842,7 +788,7 @@ export class setupMainEvents {
 
     // Both or one undefined
     if (!myTeam) {
-      logger.info('trying to end bets but did not find localWinner or myTeam', this.getChannel())
+      logger.error('trying to end bets but did not find localWinner or myTeam', this.getChannel())
       return
     }
 
@@ -862,7 +808,8 @@ export class setupMainEvents {
       matchId,
       heroSlot: this.playingHeroSlot,
     })
-    this.handleMMR(won, matchId, this.playingHeroSlot)
+
+    this.handleMMR(won, matchId, this.playingHeroSlot, this.playingLobbyType)
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
     if (!betsEnabled) {

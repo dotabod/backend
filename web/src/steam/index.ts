@@ -11,6 +11,7 @@ import steamErrors from 'steam-errors'
 
 import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
+import { GCMatchData } from '../types.js'
 import CustomError from '../utils/customError.js'
 import { promiseTimeout } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
@@ -60,6 +61,21 @@ const retryCustom = (cont: number, fn: () => Promise<any>, delay: number): Promi
   )
 
 const mongo = await Mongo.connect()
+
+interface Match {
+  average_mmr: number
+  game_mode: number
+  radiant_win?: boolean
+  league_id: number
+  match_id: Long
+  lobby_id: Long
+  lobby_type: 0
+  players: { hero_id: number; account_id: number; party_size?: number }[]
+  server_steam_id: Long
+  weekend_tourney_bracket_round: null
+  weekend_tourney_skill_level: null
+  createdAt: Date
+}
 
 class Dota {
   private static instance: Dota
@@ -170,7 +186,7 @@ class Dota {
 
   // 2 minute delayed match data if its out of our region
   public getDelayedMatchData = (server_steamid: string, refetchCards = false) => {
-    return new Promise((resolveOuter) => {
+    return new Promise((resolveOuter: (response: delayedGames | null) => void) => {
       this.GetRealTimeStats(server_steamid, false, refetchCards, (err, response) => {
         resolveOuter(response)
       })
@@ -192,7 +208,7 @@ class Dota {
     steam_server_id: string,
     waitForHeros: boolean,
     refetchCards = false,
-    cb?: (err: any, body: any) => void,
+    cb?: (err: null | Error, body: delayedGames | null) => void,
   ) => {
     if (!steam_server_id) {
       return cb?.(new Error('Match not found'), null)
@@ -293,40 +309,51 @@ class Dota {
     // return Promise.reject(new CustomError("Game wasn't found"))
   }
 
-  public getGcMatchData(matchId: number | string, cb: (err: any, body: any) => void) {
+  public getGcMatchData(
+    matchId: number | string,
+    cb: (err: number | null, body: GCMatchData | null) => void,
+  ) {
     const operation = retry.operation({
       retries: 8,
       factor: 2,
-      minTimeout: 1 * 1000,
+      minTimeout: 2 * 1000,
     })
 
     operation.attempt((currentAttempt: number) => {
+      logger.info('[STEAM] requesting match', { matchId, currentAttempt })
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return this.dota2.requestMatchDetails(Number(matchId), (err: any, body: any) => {
-        let arr: Error | undefined
-        if (body?.match?.players) {
-          body.match.players = body?.match?.players.map((p: any) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            return {
-              ...p,
-              party_size: body.match.players.filter(
-                (matchPlayer: any) => matchPlayer.party_id?.low === p.party_id?.low,
-              ).length,
-            }
-          })
+      return this.dota2.requestMatchDetails(
+        Number(matchId),
+        (err: number | null, body: GCMatchData | null) => {
+          if (err) {
+            operation.retry(new Error('Match not found'))
+            return
+          }
 
-          logger.info('[STEAM] received match', { matchId })
-        } else {
-          logger.info('[STEAM] match not found', { err })
-          arr = new Error('Match not found')
-        }
+          let arr: Error | undefined
+          if (body?.match?.players) {
+            body.match.players = body.match.players.map((p: any) => {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+              return {
+                ...p,
+                party_size: body.match?.players.filter(
+                  (matchPlayer: any) => matchPlayer.party_id?.low === p.party_id?.low,
+                ).length,
+              }
+            })
 
-        if (operation.retry(arr)) {
-          return
-        }
+            logger.info('[STEAM] received match', { matchId })
+          } else {
+            arr = new Error('Match not found')
+          }
 
-        cb(arr ? arr : null, body)
-      })
+          if (operation.retry(arr)) {
+            return
+          }
+
+          cb(err, body)
+        },
+      )
     })
   }
 
