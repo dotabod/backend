@@ -1,5 +1,7 @@
 services:
   twitch-chat-listener:
+      restart: on-failure
+      restart-max-attempts: 5
       build:
         context: twitch-chat-listener
         target: prod
@@ -11,6 +13,8 @@ services:
       environment:
         - NEW_RELIC_APP_NAME="twitch chat listener"
   twitch-eventsub-listener:
+      restart: on-failure
+      restart-max-attempts: 5
       build:
         context: twitch-eventsub-listener
         target: prod
@@ -23,6 +27,8 @@ services:
         - NEW_RELIC_APP_NAME="twitch eventsub listener"
         - PORT=5010
   web:
+    restart: on-failure
+    restart-max-attempts: 5
     build:
       context: web
       target: prod
@@ -34,6 +40,8 @@ services:
       - '9229:9229'
     env_file: .env
   nginx:
+    restart: on-failure
+    restart-max-attempts: 5
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
     build: ./nginx
