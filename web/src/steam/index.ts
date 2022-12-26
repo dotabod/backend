@@ -483,4 +483,4 @@ process
         logger.info('[STEAM]', e)
       })
   })
-  .on('uncaughtException', (e) => logger.info('[STEAM] uncaughtException', e))
+  .on('uncaughtException', (e) => logger.error('uncaughtException', e))
