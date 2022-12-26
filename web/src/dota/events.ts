@@ -618,97 +618,107 @@ export class setupMainEvents {
           logger.info('[BETS] Found a bet in the database', { id: bet.id })
           this.playingMatchId = bet.matchId
           this.playingTeam = bet.myTeam as Player['team_name']
-        } else {
-          this.playingMatchId = this.client.gsi?.map?.matchid ?? null
-          this.playingTeam = this.client.gsi?.player?.team_name ?? null
-
-          prisma.bet
-            .create({
-              data: {
-                // TODO: Replace prediction id with the twitch api bet id result
-                predictionId: this.client.gsi?.map?.matchid ?? '',
-                matchId: this.client.gsi?.map?.matchid ?? '',
-                userId: this.getToken(),
-                myTeam: this.client.gsi?.player?.team_name ?? '',
-                steam32Id: this.getSteam32(),
-              },
-            })
-            .then(() => {
-              const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
-              if (!betsEnabled) return
-
-              if (!this.client.stream_online) {
-                logger.info('[BETS] Not opening bets bc stream is offline for', {
-                  name: this.client.name,
-                })
-                return
-              }
-
-              const hero = getHero(this.client.gsi?.hero?.name)
-
-              openTwitchBet(this.getToken(), hero?.localized_name, this.client.settings)
-                .then(() => {
-                  void chatClient.say(channel, `Bets open peepoGamble`)
-                  logger.info('[BETS] open bets', {
-                    event: 'open_bets',
-                    data: {
-                      matchId: this.client.gsi?.map?.matchid,
-                      user: this.getToken(),
-                      player_team: this.client.gsi?.player?.team_name,
-                    },
-                  })
-                })
-                .catch((e: any) => {
-                  if (disabledBets.has(this.getToken())) {
-                    // disable the bet in settings for this user
-                    prisma.setting
-                      .upsert({
-                        where: {
-                          key_userId: {
-                            key: DBSettings.bets,
-                            userId: this.getToken(),
-                          },
-                        },
-                        create: {
-                          userId: this.getToken(),
-                          key: DBSettings.bets,
-                          value: false,
-                        },
-                        update: {
-                          value: false,
-                        },
-                      })
-                      .then((r) => {
-                        disabledBets.delete(this.getToken())
-                        logger.info('[BETS] Disabled bets for user', {
-                          channel,
-                        })
-                      })
-                      .catch((e) => {
-                        logger.info('[BETS] Error disabling bets', { e: e?.message || e })
-                      })
-                  } else {
-                    logger.info('[BETS] Error opening twitch bet', { channel, e: e?.message || e })
-                  }
-                })
-            })
-            .catch((e: any) => {
-              logger.info(`[BETS] Could not add bet to channel`, {
-                channel: this.getChannel(),
-                e: e?.message || e,
-              })
-            })
+          this.openingBets = false
+          return
         }
+
+        this.playingMatchId = this.client.gsi?.map?.matchid ?? null
+        this.playingTeam = this.client.gsi?.player?.team_name ?? null
+
+        prisma.bet
+          .create({
+            data: {
+              // TODO: Replace prediction id with the twitch api bet id result
+              predictionId: this.client.gsi?.map?.matchid ?? '',
+              matchId: this.client.gsi?.map?.matchid ?? '',
+              userId: this.getToken(),
+              myTeam: this.client.gsi?.player?.team_name ?? '',
+              steam32Id: this.getSteam32(),
+            },
+          })
+          .then(() => {
+            const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
+            if (!betsEnabled) {
+              this.openingBets = false
+              return
+            }
+
+            if (!this.client.stream_online) {
+              logger.info('[BETS] Not opening bets bc stream is offline for', {
+                name: this.client.name,
+              })
+              this.openingBets = false
+              return
+            }
+
+            const hero = getHero(this.client.gsi?.hero?.name)
+
+            openTwitchBet(this.getToken(), hero?.localized_name, this.client.settings)
+              .then(() => {
+                void chatClient.say(channel, `Bets open peepoGamble`)
+                this.openingBets = false
+                logger.info('[BETS] open bets', {
+                  event: 'open_bets',
+                  data: {
+                    matchId: this.client.gsi?.map?.matchid,
+                    user: this.getToken(),
+                    player_team: this.client.gsi?.player?.team_name,
+                  },
+                })
+              })
+              .catch((e: any) => {
+                if (disabledBets.has(this.getToken())) {
+                  // disable the bet in settings for this user
+                  prisma.setting
+                    .upsert({
+                      where: {
+                        key_userId: {
+                          key: DBSettings.bets,
+                          userId: this.getToken(),
+                        },
+                      },
+                      create: {
+                        userId: this.getToken(),
+                        key: DBSettings.bets,
+                        value: false,
+                      },
+                      update: {
+                        value: false,
+                      },
+                    })
+                    .then((r) => {
+                      disabledBets.delete(this.getToken())
+                      logger.info('[BETS] Disabled bets for user', {
+                        channel,
+                      })
+                      this.openingBets = false
+                    })
+                    .catch((e) => {
+                      logger.info('[BETS] Error disabling bets', { e: e?.message || e })
+                      this.openingBets = false
+                    })
+                } else {
+                  logger.info('[BETS] Error opening twitch bet', { channel, e: e?.message || e })
+                  this.openingBets = false
+                }
+              })
+          })
+          .catch((e: any) => {
+            logger.error(`[BETS] Could not add bet to channel`, {
+              channel: this.getChannel(),
+              e: e?.message || e,
+            })
+            this.openingBets = false
+          })
       })
       .catch((e: any) => {
-        logger.info('[BETS] Error opening bet', {
+        logger.error('[BETS] Error opening bet', {
           matchId: this.client.gsi?.map?.matchid ?? '',
           channel,
           e: e?.message || e,
         })
+        this.openingBets = false
       })
-
-    this.openingBets = false
   }
 
   endBets(winningTeam: 'radiant' | 'dire' | null = null) {
