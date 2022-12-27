@@ -502,7 +502,12 @@ export class setupMainEvents {
         },
       })
       .then(() => {
-        // Update mmr for ranked matches
+        if (ranked) {
+          void chatClient.say(
+            this.getChannel(),
+            `If this match was a party game, type !fixparty to do 20 mmr instead of 30.`,
+          )
+        }
       })
       .catch((e) => {
         logger.error('[DATABASE ERROR MMR]', {
@@ -525,18 +530,6 @@ export class setupMainEvents {
     if (this.client.steam32Id) {
       updateMmr(newMMR, this.client.steam32Id, this.client.name)
     }
-  }
-
-  handleMMR(
-    increase: boolean,
-    matchId: string,
-    heroSlot?: number | null,
-    lobbyType?: number | null,
-  ) {
-    // Default ranked
-    const localLobbyType = typeof lobbyType !== 'number' ? 7 : lobbyType
-    const isParty = false
-    this.updateMMR(increase, localLobbyType, matchId, isParty, heroSlot)
   }
 
   // TODO: CRON Job
@@ -807,7 +800,10 @@ export class setupMainEvents {
       heroSlot: this.playingHeroSlot,
     })
 
-    this.handleMMR(won, matchId, this.playingHeroSlot, this.playingLobbyType)
+    // Default ranked
+    const localLobbyType = typeof this.playingLobbyType !== 'number' ? 7 : this.playingLobbyType
+    const isParty = false // sadge. opendota rate limited us
+    this.updateMMR(won, localLobbyType, matchId, isParty, this.playingHeroSlot)
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
     if (!betsEnabled) {
