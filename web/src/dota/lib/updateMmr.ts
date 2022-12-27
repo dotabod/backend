@@ -20,7 +20,7 @@ export function updateMmr(
   newMmr: string | number,
   steam32Id: number | null | undefined,
   channel: string,
-  channelId?: string | null,
+  token?: string | null,
 ) {
   let mmr = Number(newMmr)
   if (!newMmr || !mmr || mmr > 20000 || mmr < 0) {
@@ -29,8 +29,8 @@ export function updateMmr(
   }
 
   if (!steam32Id) {
-    if (!channelId) {
-      logger.info('[UPDATE MMR] No channel id provided, will not update user table', { channel })
+    if (!token) {
+      logger.info('[UPDATE MMR] No token id provided, will not update user table', { channel })
       return
     }
 
@@ -46,10 +46,7 @@ export function updateMmr(
     prisma.account
       .update({
         where: {
-          provider_providerAccountId: {
-            provider: 'twitch',
-            providerAccountId: channelId,
-          },
+          userId: token,
         },
         data: {
           user: {
@@ -81,6 +78,7 @@ export function updateMmr(
       },
     })
     .catch((e) => {
-      logger.info('[UPDATE MMR] Error updating account table', { channel, e })
+      logger.error('[UPDATE MMR] Error updating account table', { channel, e })
+      void chatClient.say(channel, `Invalid steam32Id specified. !setmmr ${mmr} <steamid>`)
     })
 }

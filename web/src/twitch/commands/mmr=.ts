@@ -38,6 +38,12 @@ commandHandler.registerCommand('setmmr', {
           )
           return
         } else {
+          void chatClient.say(
+            channel,
+            `Found multiple steam accounts, updating the one you are currently logged in with (${Number(
+              client.steam32Id,
+            )})`,
+          )
           updateMmr(mmr, Number(client.steam32Id), channel)
           return
         }
