@@ -32,11 +32,13 @@ commandHandler.registerCommand('setmmr', {
           } else if (steamAccounts.length === 1) {
             updateMmr(mmr, steamAccounts[0].steam32Id, channel, channelId)
           } else {
-            if (!steam32Id) {
+            if (!Number(client.steam32Id)) {
               void chatClient.say(
                 channel,
-                `Multiple accounts linked to channel. Please specify steam32Id. !setmmr ${mmr} id`,
+                `Did not find a steam account, try playing a practice bot match first.`,
               )
+            } else {
+              updateMmr(mmr, Number(client.steam32Id), channel, channelId)
             }
           }
         })
