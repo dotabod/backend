@@ -31,6 +31,8 @@ export enum DBSettings {
   commandRanked = 'commandRanked',
   commandDisable = 'commandDisable',
   commandCommands = 'commandCommands',
+  commandDotabuff = 'commandDotabuff',
+  commandOpendota = 'commandOpendota',
   betsInfo = 'betsInfo',
   chatters = 'chatters',
 }
@@ -68,6 +70,8 @@ export const defaultSettings = {
   [DBSettings.commandRanked]: true,
   [DBSettings.commandDisable]: false,
   [DBSettings.commandCommands]: true,
+  [DBSettings.commandOpendota]: true,
+  [DBSettings.commandDotabuff]: true,
   [DBSettings.chatters]: {
     midas: {
       description: 'If your midas is ready and unused for 30s',

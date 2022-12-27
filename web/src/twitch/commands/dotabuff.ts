@@ -1,3 +1,4 @@
+import { DBSettings } from '../../db/settings.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -5,6 +6,7 @@ commandHandler.registerCommand('dotabuff', {
   aliases: [],
   permission: 0,
   cooldown: 15000,
+  dbkey: DBSettings.commandDotabuff,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
