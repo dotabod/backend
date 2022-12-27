@@ -8,10 +8,12 @@ export function tellChatNewMMR(token: string, mmr = 0, oldMmr = 0) {
   const client = findUser(token)
   if (!client) return
   const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
-  if (mmrEnabled && mmr - oldMmr !== 0 && mmr !== 0) {
+  const newMmr = mmr - oldMmr
+  if (mmrEnabled && newMmr !== 0 && mmr !== 0) {
+    const partyMsg = Math.abs(mmr) === 30 ? '. Party match? Type !fixparty' : ''
     void chatClient.say(
       client.name,
-      `Updated MMR to ${mmr}, ${mmr - oldMmr > 0 ? '+' : ''}${mmr - oldMmr}`,
+      `Updated MMR to ${mmr}, ${newMmr > 0 ? '+' : ''}${newMmr}${partyMsg}`,
     )
   }
 }

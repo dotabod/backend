@@ -502,12 +502,7 @@ export class setupMainEvents {
         },
       })
       .then(() => {
-        if (ranked) {
-          void chatClient.say(
-            this.getChannel(),
-            `If this match was a party game, type !fixparty to do 20 mmr instead of 30.`,
-          )
-        }
+        //
       })
       .catch((e) => {
         logger.error('[DATABASE ERROR MMR]', {
