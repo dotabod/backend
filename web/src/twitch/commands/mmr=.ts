@@ -1,4 +1,3 @@
-import { getSteamByTwitchId } from '../../db/getDBUser.js'
 import { updateMmr } from '../../dota/lib/updateMmr.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
@@ -9,9 +8,10 @@ commandHandler.registerCommand('setmmr', {
   aliases: ['mmr=', 'mmrset'],
   permission: 2,
   cooldown: 15000,
+  onlyOnline: true,
   handler: (message: MessageType, args: string[]) => {
     const {
-      channel: { name: channel, client, id: channelId },
+      channel: { name: channel, client },
     } = message
     const [mmr, steam32Id] = args
 
@@ -20,39 +20,42 @@ commandHandler.registerCommand('setmmr', {
       return
     }
 
+    const accounts = client.SteamAccount
     if (!steam32Id) {
-      getSteamByTwitchId(channelId)
-        .then((res) => {
-          const steamAccounts = res?.SteamAccount ?? []
-
-          if (steamAccounts.length === 0) {
-            // Sends a `0` steam32id so we can save it to the db,
-            // but server will update with steam later when they join a match
-            updateMmr(mmr, Number(client.steam32Id), channel, channelId)
-          } else if (steamAccounts.length === 1) {
-            updateMmr(mmr, steamAccounts[0].steam32Id, channel, channelId)
-          } else {
-            if (!Number(client.steam32Id)) {
-              void chatClient.say(
-                channel,
-                `Did not find a steam account, try playing a practice bot match first.`,
-              )
-            } else {
-              updateMmr(mmr, Number(client.steam32Id), channel, channelId)
-            }
-          }
-        })
-        .catch((e) => {
-          // Sends a `0` steam32id so we can save it to the `user` db, but update `steamaccount` later when they join a match
-          updateMmr(mmr, Number(steam32Id), channel, channelId)
-        })
+      if (accounts.length === 0) {
+        // Sends a `0` steam32id so we can save it to the db,
+        // but server will update with steam later when they join a match
+        updateMmr(mmr, Number(client.steam32Id), channel, client.token)
+        return
+      } else if (accounts.length === 1) {
+        updateMmr(mmr, accounts[0].steam32Id, channel)
+        return
+      } else {
+        if (!Number(client.steam32Id)) {
+          void chatClient.say(
+            channel,
+            `Did not find a steam account, try playing a practice bot match first.`,
+          )
+          return
+        } else {
+          updateMmr(mmr, Number(client.steam32Id), channel)
+          return
+        }
+      }
     } else if (!Number(steam32Id)) {
-      void chatClient.say(channel, `Invalid steam32Id specified. !setmmr ${mmr} id`)
+      void chatClient.say(channel, `Invalid steam32Id specified. Try !setmmr ${mmr} <steamid>`)
       return
-    } else {
-      updateMmr(mmr, Number(steam32Id), channel, channelId)
     }
 
+    if (!accounts.find((a) => a.steam32Id === Number(steam32Id))) {
+      void chatClient.say(
+        channel,
+        `Could not find that steam account for this channel. Try playing a practice bot match first. Then you can !setmmr ${mmr}`,
+      )
+      return
+    }
+
+    updateMmr(mmr, Number(steam32Id), channel)
     return
   },
 })
