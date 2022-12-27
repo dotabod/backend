@@ -821,8 +821,6 @@ export class setupMainEvents {
 
     closeTwitchBet(won, this.getToken())
       .then(() => {
-        void chatClient.say(this.getChannel(), `Bets closed, we have ${won ? 'won' : 'lost'}`)
-
         logger.info('[BETS] end bets', {
           event: 'end_bets',
           data: {
