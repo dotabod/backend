@@ -1,28 +1,12 @@
-import { Item, Packet } from '../../types.js'
-
-const treads = 'item_power_treads'
-function findTreads(data?: Packet) {
-  if (!data?.items) return false
-
-  // Should always be 17 unless they're disconnected or something
-  if (Object.keys(data.items).length !== 17) return false
-
-  // This checks backpack only, not fountain stash cause maybe courrier is bringing it
-  const inv = Object.values(data.items)
-  const midasItem: Item | undefined = inv.slice(0, 6).find((item: Item) => item.name === treads)
-
-  // Doesn't have a midas
-  if (!midasItem) return false
-
-  return midasItem
-}
+import { Packet } from '../../types.js'
+import { findItem } from './findItem.js'
 
 export function calculateManaSaved(
   treadsData: { manaAtLastToggle: number; timeOfLastToggle: number },
   data?: Packet,
 ) {
   if (!data?.hero?.mana || !data.hero.max_mana) return 0
-  const hasPowerTreads = findTreads(data)
+  const hasPowerTreads = findItem('item_power_treads', false, data)
   if (!hasPowerTreads) return 0
 
   const maxMana = data.hero.max_mana

@@ -1,24 +1,11 @@
-import { Item, Packet } from '../../types.js';
+import { Item, Packet } from '../../types.js'
+import { findItem } from './findItem.js'
 
-const midas = 'item_hand_of_midas'
 export default function checkMidas(
   data: Packet,
   passiveMidas: { counter: number; used: number; timer: number },
 ) {
-  if (!data.items) return false
-
-  // User is dead
-  if (data.hero?.alive === false) {
-    resetPassiveMidas(passiveMidas)
-    return false
-  }
-
-  // Should always be 17 unless they're disconnected or something
-  if (Object.keys(data.items).length !== 17) return false
-
-  // This checks backpack only, not fountain stash cause maybe courrier is bringing it
-  const inv = Object.values(data.items)
-  const midasItem: Item | undefined = inv.slice(0, 9).find((item: Item) => item.name === midas)
+  const midasItem = findItem('item_hand_of_midas', true, data)
 
   // Doesn't have a midas
   if (!midasItem) return false
