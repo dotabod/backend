@@ -8,23 +8,28 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 const mongo = await Mongo.connect()
 
-export async function profileLink(currentMatchId: string, colors: string[]) {
+export async function profileLink(currentMatchId: string, args: string[]) {
   if (!currentMatchId) {
     throw new CustomError('Not in a match PauseChamp')
   }
 
-  if (!colors.length) {
+  if (!args.length) {
     throw new CustomError('Missing hero color. Try !stats blue')
   }
 
   // light blue can be an option
-  const color = `${colors[0].toLowerCase().trim()}${
-    colors[1]?.toLowerCase() === 'blue' ? ' blue' : ''
-  }`
-  const heroKey = heroColors.findIndex((heroColor) => heroColor.toLowerCase() === color)
+  const color = `${args[0].toLowerCase().trim()}${args[1]?.toLowerCase() === 'blue' ? ' blue' : ''}`
+  let heroKey = heroColors.findIndex((heroColor) => heroColor.toLowerCase() === color)
+
+  const colorKey = Number(args[0])
+  if (colorKey && colorKey >= 1 && colorKey <= 10) {
+    heroKey = colorKey - 1
+  }
 
   if (heroKey === -1) {
-    throw new CustomError(`Invalid hero color. Must be one of ${heroColors.join(' ')}`)
+    throw new CustomError(
+      `Invalid hero color or slot. Must be 1-10, or one of ${heroColors.join(' ')}`,
+    )
   }
 
   const response = (await mongo
