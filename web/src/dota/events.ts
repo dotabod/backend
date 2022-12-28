@@ -15,7 +15,9 @@ import checkMidas from './lib/checkMidas.js'
 import { calculateManaSaved } from './lib/checkTreadToggle.js'
 import { blockTypes, pickSates } from './lib/consts.js'
 import { findItem } from './lib/findItem.js'
+import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import getHero, { HeroNames } from './lib/getHero.js'
+import { getHeroNameById } from './lib/heroes.js'
 import { isArcade } from './lib/isArcade.js'
 import { isPlayingMatch } from './lib/isPlayingMatch.js'
 import { isSpectator } from './lib/isSpectator.js'
@@ -51,6 +53,7 @@ export class setupMainEvents {
   playingHeroSlot: number | undefined | null = null
   playingHero: HeroNames | undefined | null = null
   playingLobbyType: number | undefined | null = null
+  players: ReturnType<typeof getAccountsFromMatch> | undefined | null = null
   savingSteamServerId = false
   steamServerTries = 0
   events: DotaEvent[] = []
@@ -185,6 +188,7 @@ export class setupMainEvents {
         }
 
         this.playingLobbyType = delayedData.match.lobby_type
+        this.players = getAccountsFromMatch(delayedData)
 
         if (this.client.stream_online) {
           void chatClient.say(
@@ -235,6 +239,86 @@ export class setupMainEvents {
 
       this.roshanKilled = res
       server.io.to(this.getToken()).emit('roshan-killed', res)
+    })
+
+    // Event 'courier_killed'
+    // courier_team: string // 'dire',
+    // killer_player_id: number // 1,
+    // owning_player_id: number // 5
+    events.on(`${this.getToken()}:${DotaEventTypes.CourierKilled}`, (event: DotaEvent) => {
+      if (!isPlayingMatch(this.client.gsi)) return
+
+      const heroName = getHeroNameById(
+        this.players?.matchPlayers[event.killer_player_id].heroid ?? 0,
+        event.killer_player_id,
+      )
+
+      logger.info('COURIER EVENT', {
+        event,
+        client: this.getChannel(),
+        matchid: this.playingMatchId,
+        heroSlot: this.playingHeroSlot,
+        players: this.players,
+        heroName,
+      })
+
+      if (event.owning_player_id === this.playingHeroSlot) {
+        logger.info('STREAMERS COURIER!', { matchid: this.playingMatchId })
+
+        // void chatClient.say(this.getChannel(), `Courier micro ICANT why ${heroName}`)
+      }
+    })
+
+    events.on(`${this.getToken()}:${DotaEventTypes.Tip}`, (event: DotaEvent) => {
+      if (!isPlayingMatch(this.client.gsi)) return
+
+      const heroName = getHeroNameById(
+        this.players?.matchPlayers[event.sender_player_id].heroid ?? 0,
+        event.sender_player_id,
+      )
+
+      logger.info('TIP EVENT', {
+        event,
+        client: this.getChannel(),
+        matchid: this.playingMatchId,
+        heroSlot: this.playingHeroSlot,
+        players: this.players,
+        heroName,
+      })
+
+      if (event.receiver_player_id === this.playingHeroSlot) {
+        logger.info('TIPPED STREAMER!', { matchid: this.playingMatchId })
+
+        // void chatClient.say(this.getChannel(), `The tip from ${heroName} ICANT`)
+      }
+    })
+
+    events.on(`${this.getToken()}:${DotaEventTypes.BountyPickup}`, (event: DotaEvent) => {
+      if (!isPlayingMatch(this.client.gsi)) return
+
+      const heroName = getHeroNameById(
+        this.players?.matchPlayers[event.player_id].heroid ?? 0,
+        event.player_id,
+      )
+
+      logger.info('BOUNTY EVENT', {
+        event,
+        client: this.getChannel(),
+        matchid: this.playingMatchId,
+        heroSlot: this.playingHeroSlot,
+        players: this.players,
+        heroName,
+      })
+
+      if (event.team === this.playingTeam) {
+        logger.info('BOUNTY FOR OUR TEAM!', { matchid: this.playingMatchId })
+
+        // void chatClient.say(this.getChannel(), `Nice ${event.bounty_value} in bounty gold for ${this.playingTeam} EZ Clap Thanks ${heroName}`)
+      } else {
+        logger.info('BOUNTY FOR ENEMY TEAM!', { matchid: this.playingMatchId })
+
+        // void chatClient.say(this.getChannel(), `${event.bounty_value} in bounty gold for ${this.playingTeam} picked up by ${heroName} monkaS`)
+      }
     })
 
     events.on(`${this.getToken()}:${DotaEventTypes.AegisPickedUp}`, (event: DotaEvent) => {

@@ -497,6 +497,9 @@ export const heroColors = 'Blue,Teal,Purple,Yellow,Orange,Pink,Olive,Light Blue,
   ',',
 )
 export function getHeroNameById(id: number, index?: number) {
+  if (!id && typeof index === 'number') return heroColors[index]
+  if (!id) return 'Unknown'
+
   const name = Object.values(heroes).find((h) => h.id === id)?.localized_name
   if (!name && typeof index === 'number') {
     return heroColors[index]
