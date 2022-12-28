@@ -264,10 +264,13 @@ export class setupMainEvents {
         heroName,
       })
 
+      // beta opt in only
+      if (!this.client.beta_tester) return
+
       if (event.owning_player_id === this.playingHeroSlot) {
         logger.info('STREAMERS COURIER!', { matchid: this.playingMatchId })
 
-        // void chatClient.say(this.getChannel(), `Courier micro ICANT why ${heroName}`)
+        void chatClient.say(this.getChannel(), `Courier micro ICANT thanks ${heroName}`)
       }
     })
 
@@ -289,10 +292,13 @@ export class setupMainEvents {
         heroName,
       })
 
+      // beta opt in only
+      if (!this.client.beta_tester) return
+
       if (event.receiver_player_id === this.playingHeroSlot) {
         logger.info('TIPPED STREAMER!', { matchid: this.playingMatchId })
 
-        // void chatClient.say(this.getChannel(), `The tip from ${heroName} ICANT`)
+        void chatClient.say(this.getChannel(), `The tip from ${heroName} ICANT`)
       }
     })
 
@@ -314,14 +320,23 @@ export class setupMainEvents {
         heroName,
       })
 
+      // beta opt in only
+      if (!this.client.beta_tester) return
+
       if (event.team === this.playingTeam) {
         logger.info('BOUNTY FOR OUR TEAM!', { matchid: this.playingMatchId })
 
-        // void chatClient.say(this.getChannel(), `Nice ${event.bounty_value} in bounty gold for ${this.playingTeam} EZ Clap Thanks ${heroName}`)
+        void chatClient.say(
+          this.getChannel(),
+          `Nice ${event.team_gold} in bounty gold for ${this.playingTeam} EZ Clap Thanks ${heroName}`,
+        )
       } else {
         logger.info('BOUNTY FOR ENEMY TEAM!', { matchid: this.playingMatchId })
 
-        // void chatClient.say(this.getChannel(), `${event.bounty_value} in bounty gold for ${this.playingTeam} picked up by ${heroName} monkaS`)
+        void chatClient.say(
+          this.getChannel(),
+          `${event.team_gold} in bounty gold for ${event.team} picked up by ${heroName} monkaS`,
+        )
       }
     })
 
