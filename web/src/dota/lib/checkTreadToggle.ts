@@ -31,7 +31,8 @@ export function calculateManaSaved(
 
   // Check if the player has power treads and if they are currently
   // in the intelligence bonus
-  if (hasPowerTreads && player.powerTreadsBonus === 'intelligence') {
+  // TODO: check maxMana 120  && player.powerTreadsBonus === 'intelligence'
+  if (hasPowerTreads) {
     // Calculate the amount of time the player has spent in the intelligence
     // bonus by checking the current game time and the time the player
     // last toggled the power treads
