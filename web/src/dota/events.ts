@@ -177,7 +177,7 @@ export class setupMainEvents {
         if (this.client.stream_online) {
           void chatClient.say(
             this.getChannel(),
-            'Match data found, !np !smurfs !gm !lg commands activated.',
+            'Match data found !np · !smurfs · !gm · !lg · !avg commands activated.',
           )
         }
       } else {

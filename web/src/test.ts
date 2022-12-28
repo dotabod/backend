@@ -112,8 +112,8 @@ async function fixWins() {
     where: {
       won: null,
     },
-    skip: 40,
-    take: 40,
+    skip: 0,
+    take: 20,
     orderBy: {
       createdAt: 'desc',
     },
@@ -177,7 +177,7 @@ const topFollowers = async () => {
 // await updateUsernameForAll()
 // await getAccounts()
 // await fixWins()
-// await topFollowers()
+await topFollowers()
 
 // server.dota.dota2.on('ready', () => {
 //   server.dota.getGcMatchData(69375017392, (err, response) => {
