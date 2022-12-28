@@ -21,7 +21,7 @@ import './commands/ranked.js'
 import './commands/test.js'
 import './commands/dotabuff.js'
 import './commands/opendota.js'
-import './commands/lgparty.js'
+import './commands/fixparty.js'
 import './commands/avg.js'
 
 import { io } from 'socket.io-client'

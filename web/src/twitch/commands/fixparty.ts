@@ -9,8 +9,8 @@ function calculateMmr(currentMmr: number, wasParty: boolean, didWin: boolean) {
   return currentMmr + mmrChange * (wasParty ? 1 : -1)
 }
 
-commandHandler.registerCommand('lgparty', {
-  aliases: ['fixparty', 'fixsolo'],
+commandHandler.registerCommand('fixparty', {
+  aliases: ['fixsolo'],
   permission: 2,
   cooldown: 15000,
   handler: (message: MessageType, args: string[]) => {
@@ -58,7 +58,7 @@ commandHandler.registerCommand('lgparty', {
     try {
       void handler()
     } catch (e) {
-      logger.error('Error in lgparty command', e)
+      logger.error('Error in fixparty command', e)
     }
   },
 })
