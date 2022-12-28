@@ -18,7 +18,7 @@ export default function checkMidas(
 
   // This checks backpack only, not fountain stash cause maybe courrier is bringing it
   const inv = Object.values(data.items)
-  const midasItem = inv.slice(0, 9).find((item: Item) => item.name === midas)
+  const midasItem: Item | undefined = inv.slice(0, 9).find((item: Item) => item.name === midas)
 
   // Doesn't have a midas
   if (!midasItem) return false
