@@ -3,6 +3,7 @@ import { countryCodeEmoji } from 'country-code-emoji'
 
 import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
+import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
 import CustomError from '../utils/customError.js'
 import Mongo from './mongo.js'
@@ -26,25 +27,12 @@ export async function notablePlayers(
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
-  if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
+  const { matchPlayers, accountIds, gameMode } = await getPlayers(currentMatchId, players)
 
-  const response =
-    !players?.length &&
-    (await mongo.collection('delayedGames').findOne({ 'match.match_id': currentMatchId }))
-
-  if (!response && !players?.length) {
-    throw new CustomError('Waiting for current match data PauseChamp')
-  }
-
-  const { matchPlayers, accountIds } = getAccountsFromMatch(
-    response as unknown as delayedGames,
-    players,
-  )
-
-  const mode = response
+  const mode = gameMode
     ? await mongo
         .collection('gameModes')
-        .findOne({ id: response.match.game_mode }, { projection: { _id: 0, name: 1 } })
+        .findOne({ id: gameMode }, { projection: { _id: 0, name: 1 } })
     : { name: null }
 
   const nps = await mongo

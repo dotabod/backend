@@ -1,37 +1,11 @@
-import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
-import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
+import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
-import CustomError from '../utils/customError.js'
-import Dota from './index.js'
-import Mongo from './mongo.js'
-
-const dota = Dota.getInstance()
-const mongo = await Mongo.connect()
 
 export async function smurfs(
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
-  if (!currentMatchId) throw new CustomError('Not in a match PauseChamp')
-
-  // const steam32id = 849473199 # grubby
-  // const steamserverid = (await server.dota.getUserSteamServer(steam32id)) as string | undefined
-  // const response = steamserverid && (await server.dota.getDelayedMatchData(steamserverid))
-
-  const response =
-    !players?.length &&
-    (await mongo.collection('delayedGames').findOne({ 'match.match_id': currentMatchId }))
-
-  if (!response && !players?.length) {
-    throw new CustomError('Waiting for current match data PauseChamp')
-  }
-
-  const { matchPlayers, accountIds } = getAccountsFromMatch(
-    response as unknown as delayedGames,
-    players,
-  )
-
-  const cards = await dota.getCards(accountIds)
+  const { matchPlayers, cards } = await getPlayers(currentMatchId, players)
 
   const result: { heroName: string; lifetime_games?: number }[] = []
   matchPlayers.forEach((player: { heroid: number; accountid: number }, i: number) => {
