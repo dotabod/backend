@@ -260,7 +260,11 @@ export class setupMainEvents {
 
       const manaSaved = calculateManaSaved(this.treadsData, this.client.gsi)
       if (manaSaved) {
-        logger.info('[TREAD SWITCHER] Mana saved', { manaSaved })
+        logger.info('[TREAD SWITCHER] Mana saved', {
+          channel: this.getChannel(),
+          manaSaved,
+          matchid: this.client.gsi?.map?.matchid,
+        })
       }
 
       if (!isPlayingMatch(this.client.gsi)) return
