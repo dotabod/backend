@@ -19,7 +19,7 @@ export async function profileLink(currentMatchId: string, colors: string[]) {
 
   // light blue can be an option
   const color = `${colors[0].toLowerCase().trim()}${
-    colors[1]?.toLowerCase() === 'blue' ? 'blue' : ''
+    colors[1]?.toLowerCase() === 'blue' ? ' blue' : ''
   }`
   const heroKey = heroColors.findIndex((heroColor) => heroColor.toLowerCase() === color)
 
