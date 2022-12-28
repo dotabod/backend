@@ -11,7 +11,7 @@ import axios from '../utils/axios.js'
 import { fmtMSS, steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import { server } from './index.js'
-import checkMidas from './lib/checkMidas.js'
+import { calculateManaSaved } from './lib/checkTreadToggle.js'
 import { blockTypes, pickSates } from './lib/consts.js'
 import getHero from './lib/getHero.js'
 import { isArcade } from './lib/isArcade.js'
@@ -257,6 +257,11 @@ export class setupMainEvents {
       // In case they connect to a game in progress and we missed the start event
       this.setupOBSBlockers(data.map?.game_state ?? '')
 
+      const manaSaved = calculateManaSaved(this.treadsData, this.client.gsi)
+      if (manaSaved) {
+        logger.info('[TREAD SWITCHER] Mana saved', { manaSaved })
+      }
+
       if (!isPlayingMatch(this.client.gsi)) return
 
       // Everything below here requires an ongoing match, not a finished match
@@ -300,30 +305,25 @@ export class setupMainEvents {
 
       this.openBets()
 
-      // const manaSaved = calculateManaSaved(this.treadsData, this.client.gsi)
-      // if (manaSaved) {
-      //   logger.info('[TREAD SWITCHER] Mana saved', { manaSaved })
-      // }
-
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
       const chatters = getValueOrDefault(
         DBSettings.chatters,
         this.client.settings,
       ) as typeof defaultSettings['chatters']
-      if (chatterEnabled && chatters.midas.enabled && this.client.stream_online) {
-        const isMidasPassive = checkMidas(data, this.passiveMidas)
+      // if (chatterEnabled && chatters.midas.enabled && this.client.stream_online) {
+      //   const isMidasPassive = checkMidas(data, this.passiveMidas)
 
-        if (isMidasPassive === true) {
-          logger.info('[MIDAS] Passive midas', { name: this.getChannel() })
-          void chatClient.say(this.getChannel(), chatters.midas.message)
-        }
-        if (typeof isMidasPassive === 'number') {
-          void chatClient.say(
-            this.getChannel(),
-            `Midas was finally used, ${isMidasPassive} seconds late Madge`,
-          )
-        }
-      }
+      //   if (isMidasPassive === true) {
+      //     logger.info('[MIDAS] Passive midas', { name: this.getChannel() })
+      //     void chatClient.say(this.getChannel(), chatters.midas.message)
+      //   }
+      //   if (typeof isMidasPassive === 'number') {
+      //     void chatClient.say(
+      //       this.getChannel(),
+      //       `Midas was finally used, ${isMidasPassive} seconds late Madge`,
+      //     )
+      //   }
+      // }
     })
 
     events.on(`${this.getToken()}:hero:name`, (name: string) => {

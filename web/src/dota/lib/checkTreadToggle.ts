@@ -21,30 +21,29 @@ export function calculateManaSaved(
   treadsData: { manaAtLastToggle: number; timeOfLastToggle: number },
   data?: Packet,
 ) {
-  // Initialize variables to track the mana saved and the time spent
-  // in the intelligence bonus
-  let manaSaved = 0
-  let timeSpentInIntelligence = 0
-
+  if (!data?.hero?.mana || !data.hero.max_mana) return 0
   const hasPowerTreads = findTreads(data)
-  if (!data?.hero?.mana) return 0
+  if (!hasPowerTreads) return 0
 
-  // Check if the player has power treads and if they are currently
-  // in the intelligence bonus
-  // TODO: check maxMana 120  && player.powerTreadsBonus === 'intelligence'
-  if (hasPowerTreads) {
-    // Calculate the amount of time the player has spent in the intelligence
-    // bonus by checking the current game time and the time the player
-    // last toggled the power treads
-    timeSpentInIntelligence = Date.now() - treadsData.timeOfLastToggle
+  const maxMana = data.hero.max_mana
+  const prevMaxMana = data.previously?.hero?.max_mana ?? 0
 
-    // Calculate the amount of mana that has been regenerated while the
-    // player was in the intelligence bonus by using the hero's current
-    // mana and the time spent in the intelligence bonus to estimate the
-    // mana regeneration rate
-    manaSaved = (data.hero.mana - treadsData.manaAtLastToggle) / timeSpentInIntelligence
+  const didToggleToInt = maxMana - prevMaxMana === 120
+  const didToggleOffInt = maxMana - prevMaxMana === -120
+
+  if (didToggleToInt) {
+    treadsData.timeOfLastToggle = Date.now()
+    treadsData.manaAtLastToggle = data.hero.mana
+    // Come back when we toggle off int
+    return 0
   }
 
-  // Return the mana saved
-  return manaSaved
+  // Calculate total mana saved
+  if (didToggleOffInt) {
+    treadsData.timeOfLastToggle = 0
+    const diff = treadsData.manaAtLastToggle - data.hero.mana - 120
+    return diff > 0 ? diff : 0
+  }
+
+  return 0
 }
