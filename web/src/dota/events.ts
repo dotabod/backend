@@ -374,19 +374,24 @@ export class setupMainEvents {
         if (Array.isArray(couldHaveLivedWith) && couldHaveLivedWith.length) {
           // get a comma delimitted list of item names
           const itemNames = couldHaveLivedWith
-            .map(
-              (item) =>
-                passiveItemNames.find((i) => {
-                  if (i.name !== item.name) return false
+            .map((item) => {
+              const found = passiveItemNames.find((i) => {
+                if (i.name !== item.name) return false
 
-                  if (i.charges) {
-                    return Number(item.charges) > 0
-                  }
+                if (i.charges) {
+                  return Number(item.charges) > 0
+                }
 
-                  return true
-                })?.title ?? item.name,
-            )
+                return true
+              })
+              if (found) return found.title
+              return null
+            })
+            .flatMap((f) => f ?? [])
             .join(', ')
+
+          if (!itemNames) return
+
           const heroName =
             getHero(this.playingHero ?? this.client.gsi.hero?.name)?.localized_name ?? 'We'
 
