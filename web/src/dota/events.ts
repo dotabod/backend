@@ -332,13 +332,17 @@ export class setupMainEvents {
 
         if (isMidasPassive === true) {
           logger.info('[MIDAS] Passive midas', { name: this.getChannel() })
-          void chatClient.say(this.getChannel(), chatters.midas.message)
+          setTimeout(() => {
+            void chatClient.say(this.getChannel(), chatters.midas.message)
+          }, 7000)
         }
         if (typeof isMidasPassive === 'number') {
-          void chatClient.say(
-            this.getChannel(),
-            `Midas was finally used, ${isMidasPassive} seconds late Madge`,
-          )
+          setTimeout(() => {
+            void chatClient.say(
+              this.getChannel(),
+              `Midas was finally used, ${isMidasPassive} seconds late Madge`,
+            )
+          }, 7000)
         }
       }
     })
@@ -391,18 +395,14 @@ export class setupMainEvents {
           const heroName =
             getHero(this.playingHero ?? this.client.gsi.hero?.name)?.localized_name ?? 'We'
 
-          void chatClient.say(
-            this.getChannel(),
-            `${chatters.passiveDeath.message
-              .replace('[itemnames]', itemNames)
-              .replace('[heroname]', heroName)}`,
-          )
-          logger.info('Just died, but found an item you could have lived with', {
-            couldHaveLivedWith,
-            itemNames,
-            channel: this.getChannel(),
-            matchid: this.playingMatchId,
-          })
+          setTimeout(() => {
+            void chatClient.say(
+              this.getChannel(),
+              `${chatters.passiveDeath.message
+                .replace('[itemnames]', itemNames)
+                .replace('[heroname]', heroName)}`,
+            )
+          }, 7000)
         }
       }
     })
@@ -423,10 +423,12 @@ export class setupMainEvents {
       if (isSmoked) {
         const heroName =
           getHero(this.playingHero ?? this.client.gsi?.hero?.name)?.localized_name ?? 'We'
-        void chatClient.say(
-          this.getChannel(),
-          chatters.smoke.message.replace('[heroname]', heroName),
-        )
+        setTimeout(() => {
+          void chatClient.say(
+            this.getChannel(),
+            chatters.smoke.message.replace('[heroname]', heroName),
+          )
+        }, 7000)
       }
     })
 
@@ -444,7 +446,9 @@ export class setupMainEvents {
         this.client.settings,
       ) as typeof defaultSettings['chatters']
       if (isPaused && chatterEnabled && chatters.pause.enabled) {
-        void chatClient.say(this.getChannel(), chatters.pause.message)
+        setTimeout(() => {
+          void chatClient.say(this.getChannel(), chatters.pause.message)
+        }, 7000)
       }
     })
 
@@ -944,7 +948,9 @@ export class setupMainEvents {
           logger.info('[BETS] Error closing twitch bet', { channel, e: e?.message || e })
         }
 
-        void chatClient.say(this.getChannel(), `We have ${won ? 'won' : 'lost'}`)
+        setTimeout(() => {
+          void chatClient.say(this.getChannel(), `We have ${won ? 'won' : 'lost'}`)
+        }, 7000)
       })
       // Always
       .finally(() => {
