@@ -27,10 +27,12 @@ export default function checkMidas(
   if (isMidasOnCooldown(midasItem)) {
     // Tell chat it was used after x seconds
     if (passiveMidas.used) {
-      return Math.round((Date.now() - passiveMidas.used + 10000) / 1000)
+      const secondsToUse = Math.round((Date.now() - passiveMidas.used + 10000) / 1000)
+      passiveMidas.used = 0
+      return secondsToUse
     }
+
     resetPassiveMidas(passiveMidas)
-    passiveMidas.used = 0
     return false
   }
 

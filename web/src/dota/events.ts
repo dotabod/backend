@@ -11,6 +11,7 @@ import axios from '../utils/axios.js'
 import { fmtMSS, steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import { server } from './index.js'
+import checkMidas from './lib/checkMidas.js'
 import { calculateManaSaved } from './lib/checkTreadToggle.js'
 import { blockTypes, pickSates } from './lib/consts.js'
 import getHero from './lib/getHero.js'
@@ -310,20 +311,20 @@ export class setupMainEvents {
         DBSettings.chatters,
         this.client.settings,
       ) as typeof defaultSettings['chatters']
-      // if (chatterEnabled && chatters.midas.enabled && this.client.stream_online) {
-      //   const isMidasPassive = checkMidas(data, this.passiveMidas)
+      if (chatterEnabled && chatters.midas.enabled && this.client.stream_online) {
+        const isMidasPassive = checkMidas(data, this.passiveMidas)
 
-      //   if (isMidasPassive === true) {
-      //     logger.info('[MIDAS] Passive midas', { name: this.getChannel() })
-      //     void chatClient.say(this.getChannel(), chatters.midas.message)
-      //   }
-      //   if (typeof isMidasPassive === 'number') {
-      //     void chatClient.say(
-      //       this.getChannel(),
-      //       `Midas was finally used, ${isMidasPassive} seconds late Madge`,
-      //     )
-      //   }
-      // }
+        if (isMidasPassive === true) {
+          logger.info('[MIDAS] Passive midas', { name: this.getChannel() })
+          void chatClient.say(this.getChannel(), chatters.midas.message)
+        }
+        if (typeof isMidasPassive === 'number') {
+          void chatClient.say(
+            this.getChannel(),
+            `Midas was finally used, ${isMidasPassive} seconds late Madge`,
+          )
+        }
+      }
     })
 
     events.on(`${this.getToken()}:hero:name`, (name: string) => {
