@@ -51,6 +51,7 @@ export class setupMainEvents {
   endingBets = false
   openingBets = false
   creatingSteamAccount = false
+  treadsData = { manaAtLastToggle: 0, timeOfLastToggle: 0 }
 
   constructor(client: SocketClient) {
     this.client = client
@@ -298,6 +299,11 @@ export class setupMainEvents {
       }
 
       this.openBets()
+
+      // const manaSaved = calculateManaSaved(this.treadsData, this.client.gsi)
+      // if (manaSaved) {
+      //   logger.info('[TREAD SWITCHER] Mana saved', { manaSaved })
+      // }
 
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
       const chatters = getValueOrDefault(
@@ -707,6 +713,8 @@ export class setupMainEvents {
     }
 
     const matchId = this.playingMatchId
+    const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
+    const betsMessage = betsEnabled ? 'Mods need to end bets manually. ' : ''
 
     // An early without waiting for ancient to blow up
     // We have to check every few seconds on Opendota to see if the match is over
@@ -725,19 +733,8 @@ export class setupMainEvents {
         .then((response: { data: any }) => {
           logger.info('Found an early dc match data', { matchId, channel: this.getChannel() })
 
-          if (!response.data?.result?.radiant_win) {
-            logger.error('early dc match didnt have data in it', {
-              data: response.data,
-              channel: this.getChannel(),
-              matchId,
-              response,
-            })
-            this.resetClientState(true)
-            return
-          }
-
           let winningTeam: 'radiant' | 'dire' | null = null
-          if (typeof response.data.result.radiant_win === 'boolean') {
+          if (typeof response.data?.result?.radiant_win === 'boolean') {
             winningTeam = response.data.result.radiant_win ? 'radiant' : 'dire'
           }
 
@@ -745,10 +742,13 @@ export class setupMainEvents {
             logger.info('Early dc match wont be scored bc winner is null', {
               name: this.getChannel(),
             })
-            void chatClient.say(
-              channel,
-              `Match not scored D: Mods need to end bets manually. Not adding or removing MMR for match ${matchId}.`,
-            )
+
+            if (this.client.stream_online) {
+              void chatClient.say(
+                channel,
+                `Match not scored D: ${betsMessage}Not adding or removing MMR for match ${matchId}.`,
+              )
+            }
             this.resetClientState(true)
             return
           }
@@ -763,10 +763,18 @@ export class setupMainEvents {
         .catch((e) => {
           // this could mean match is not over yet. just give up checking after this long (like 3m)
           // resetting vars will mean it will just grab it again on match load
-          logger.info('not ending bets even tho early dc, match might still be going on', {
-            name: this.getChannel(),
-            e: e?.data,
+          logger.error('early dc match didnt have data in it, match still going on?', {
+            channel: this.getChannel(),
+            matchId,
+            e: e?.message || e?.result || e?.data || e,
           })
+
+          if (this.client.stream_online) {
+            void chatClient.say(
+              channel,
+              `Stopped searching for match result. Was this an abandon? ${betsMessage}Not adding or removing MMR for match ${matchId}.`,
+            )
+          }
           this.resetClientState(true)
           return
         })
@@ -807,7 +815,6 @@ export class setupMainEvents {
     const isParty = false // sadge. opendota rate limited us
     this.updateMMR(won, localLobbyType, matchId, isParty, this.playingHeroSlot)
 
-    const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
     if (!betsEnabled) {
       logger.info('bets are not enabled, stopping here', { name: this.getChannel() })
 
