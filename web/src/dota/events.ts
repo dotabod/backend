@@ -365,7 +365,6 @@ export class setupMainEvents {
 
       // Just died
       if (!alive && this.client.gsi?.previously?.hero?.alive) {
-        console.log(this.client.gsi)
         const couldHaveLivedWith = findItem(
           passiveItemNames.map((i) => i.name),
           false,
