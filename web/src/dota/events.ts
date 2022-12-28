@@ -211,6 +211,7 @@ export class setupMainEvents {
   watchEvents() {
     events.on(`${this.getToken()}:${DotaEventTypes.RoshanKilled}`, (event: DotaEvent) => {
       if (!isPlayingMatch(this.client.gsi)) return
+      if (!this.client.stream_online) return
 
       // doing map gametime - event gametime in case the user reconnects to a match,
       // and the gametime is over the event gametime
@@ -247,6 +248,7 @@ export class setupMainEvents {
     // owning_player_id: number // 5
     events.on(`${this.getToken()}:${DotaEventTypes.CourierKilled}`, (event: DotaEvent) => {
       if (!isPlayingMatch(this.client.gsi)) return
+      if (!this.client.stream_online) return
 
       const heroName = getHeroNameById(
         this.players?.matchPlayers[event.killer_player_id].heroid ?? 0,
@@ -271,6 +273,7 @@ export class setupMainEvents {
 
     events.on(`${this.getToken()}:${DotaEventTypes.Tip}`, (event: DotaEvent) => {
       if (!isPlayingMatch(this.client.gsi)) return
+      if (!this.client.stream_online) return
 
       const heroName = getHeroNameById(
         this.players?.matchPlayers[event.sender_player_id].heroid ?? 0,
@@ -295,6 +298,7 @@ export class setupMainEvents {
 
     events.on(`${this.getToken()}:${DotaEventTypes.BountyPickup}`, (event: DotaEvent) => {
       if (!isPlayingMatch(this.client.gsi)) return
+      if (!this.client.stream_online) return
 
       const heroName = getHeroNameById(
         this.players?.matchPlayers[event.player_id].heroid ?? 0,
@@ -323,6 +327,7 @@ export class setupMainEvents {
 
     events.on(`${this.getToken()}:${DotaEventTypes.AegisPickedUp}`, (event: DotaEvent) => {
       if (!isPlayingMatch(this.client.gsi)) return
+      if (!this.client.stream_online) return
 
       const gameTimeDiff = (this.client.gsi?.map?.game_time ?? event.game_time) - event.game_time
 
