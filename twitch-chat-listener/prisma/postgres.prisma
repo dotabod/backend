@@ -44,6 +44,7 @@ model User {
   emailVerified     DateTime?
   stream_online     Boolean        @default(false)
   stream_start_date DateTime?      @db.Timestamp(6)
+  beta_tester       Boolean        @default(false)
   Account           Account?
   Bet               Bet[]
   settings          Setting[]

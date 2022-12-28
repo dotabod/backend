@@ -58,6 +58,7 @@ export default async function getDBUser(
         stream_online: true,
         stream_start_date: true,
         stream_delay: true,
+        beta_tester: true,
       },
       where: {
         Account: {
