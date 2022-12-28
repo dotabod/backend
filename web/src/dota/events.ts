@@ -379,6 +379,7 @@ export class setupMainEvents {
             .map((item) => {
               const found = passiveItemNames.find((i) => {
                 if (i.name !== item.name) return false
+                if (Number(item.cooldown) > 0 || !item.can_cast) return false
                 if (i.charges) {
                   return Number(item.charges) > 0
                 }
