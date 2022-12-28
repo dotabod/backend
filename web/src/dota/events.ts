@@ -766,22 +766,31 @@ export class setupMainEvents {
           this.endBets(winningTeam)
         })
         .catch((e) => {
-          // this could mean match is not over yet. just give up checking after this long (like 3m)
-          // resetting vars will mean it will just grab it again on match load
-          logger.error('early dc match didnt have data in it, match still going on?', {
-            channel: this.getChannel(),
-            matchId,
-            e: e?.message || e?.result || e?.data || e,
-          })
+          try {
+            // this could mean match is not over yet. just give up checking after this long (like 3m)
+            // resetting vars will mean it will just grab it again on match load
+            logger.error('early dc match didnt have data in it, match still going on?', {
+              channel: this.getChannel(),
+              matchId,
+              e: e?.message || e?.result || e?.data || e,
+            })
 
-          if (this.client.stream_online) {
-            void chatClient.say(
-              channel,
-              `Stopped searching for match result. Was this an abandon? ${betsMessage}Not adding or removing MMR for match ${matchId}.`,
+            if (this.client.stream_online) {
+              // TODO: this is where sometimes there's an uncaught exception
+              // I have a feeling the timers continue running after the node app is restarted
+              // And they come back here too quick
+              void chatClient.say(
+                this.getChannel(),
+                `Stopped searching for match result. Was this an abandon? ${betsMessage}Not adding or removing MMR for match ${matchId}.`,
+              )
+            }
+            this.resetClientState(true)
+            return
+          } catch (e) {
+            logger.error(
+              'caught an error in axios retry. likely server rebooted and channel was inaccessible',
             )
           }
-          this.resetClientState(true)
-          return
         })
 
       return
