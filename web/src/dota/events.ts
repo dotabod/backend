@@ -14,6 +14,7 @@ import { server } from './index.js'
 import checkMidas from './lib/checkMidas.js'
 import { calculateManaSaved } from './lib/checkTreadToggle.js'
 import { blockTypes, pickSates } from './lib/consts.js'
+import { findItem } from './lib/findItem.js'
 import getHero from './lib/getHero.js'
 import { isArcade } from './lib/isArcade.js'
 import { isPlayingMatch } from './lib/isPlayingMatch.js'
@@ -340,7 +341,11 @@ export class setupMainEvents {
     events.on(`${this.getToken()}:hero:alive`, (alive: boolean) => {
       // Just died
       if (!alive && this.client.gsi?.previously?.hero?.alive) {
-        // logger.info('Just died')
+        const couldHaveLivedWith = findItem(
+          ['item_magic_stick', 'item_magic_wand', 'item_faerie_fire'],
+          false,
+          this.client.gsi,
+        )
       }
 
       // Just spawned (ignores game start spawn)
@@ -776,13 +781,10 @@ export class setupMainEvents {
             })
 
             if (this.client.stream_online) {
-              // TODO: this is where sometimes there's an uncaught exception
-              // I have a feeling the timers continue running after the node app is restarted
-              // And they come back here too quick
-              void chatClient.say(
-                this.getChannel(),
-                `Stopped searching for match result. Was this an abandon? ${betsMessage}Not adding or removing MMR for match ${matchId}.`,
-              )
+              // void chatClient.say(
+              //   this.getChannel(),
+              //   `Stopped searching for match result. Was this an abandon? ${betsMessage}Not adding or removing MMR for match ${matchId}.`,
+              // )
             }
             this.resetClientState(true)
             return
