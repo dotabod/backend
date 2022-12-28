@@ -1,55 +1,57 @@
-// Stash is fountain stash
-// Slots 0-5 are the backpack
-
 import { Item, Packet } from '../../types.js'
 
-// Slots 6-8 are the backpack stashed items
-export default function checkMidas(data: Packet, passiveMidas: { counter: number }) {
+const midas = 'item_hand_of_midas'
+export default function checkMidas(data: Packet, passiveMidas: { counter: number; timer: number }) {
   if (!data.items) return false
 
   // User is dead
   if (data.hero?.alive === false) {
-    passiveMidas.counter = 0
+    resetPassiveMidas(passiveMidas)
     return false
   }
-
-  const midas = 'item_hand_of_midas'
 
   // Should always be 17 unless they're disconnected or something
   if (Object.keys(data.items).length !== 17) return false
 
   // This checks backpack only, not fountain stash cause maybe courrier is bringing it
-  let midasItem: Item | undefined
-  let midasSlot: number | undefined
-
-  // Find the slot the midas is sitting in
-  // TODO: Extract to a function to find an item?
   const inv = Object.values(data.items)
-
-  inv.slice(0, 9).forEach((item: Item, i) => {
-    if (item.name === midas) {
-      midasItem = item
-      midasSlot = i
-    }
-  })
+  const midasItem = inv.slice(0, 9).find((item: Item) => item.name === midas)
 
   // Doesn't have a midas
-  if (!midasSlot) return false
+  if (!midasItem) return false
 
   // Midas was used recently, wait for it to be off CD
-  if (Number(midasItem?.cooldown) > 0) {
-    passiveMidas.counter = 0
+  if (isMidasOnCooldown(midasItem)) {
+    resetPassiveMidas(passiveMidas)
     return false
   }
 
-  // +1 second each iteration
-  passiveMidas.counter += 1
+  updatePassiveMidasTimer(passiveMidas)
 
-  // Every 75s that it isn't used we say passive midas
-  if (passiveMidas.counter === 75) {
-    passiveMidas.counter = 0
+  // Every n seconds that it isn't used we say passive midas
+  if (passiveMidas.timer >= 5000) {
+    resetPassiveMidas(passiveMidas)
     return true
   }
 
   return false
+}
+
+function isMidasOnCooldown(midasItem: Item): boolean {
+  return Number(midasItem.cooldown) > 0
+}
+
+function updatePassiveMidasTimer(passiveMidas: { counter: number; timer: number }): void {
+  const currentTime = Date.now()
+  if (passiveMidas.counter === 0) {
+    passiveMidas.counter = currentTime
+  } else {
+    passiveMidas.timer += currentTime - passiveMidas.counter
+    passiveMidas.counter = currentTime
+  }
+}
+
+function resetPassiveMidas(passiveMidas: { counter: number; timer: number }): void {
+  passiveMidas.counter = 0
+  passiveMidas.timer = 0
 }
