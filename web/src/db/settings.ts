@@ -118,15 +118,30 @@ export const getValueOrDefault = (key: DBSettings, data?: { key: string; value: 
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    const val = JSON.parse(dbVal) as unknown as any
-    if (typeof val === 'object' && typeof defaultSettings[key] === 'object') {
+    if (typeof dbVal === 'string') {
+      const val = JSON.parse(dbVal) as unknown as any
+      if (typeof val === 'object' && typeof defaultSettings[key] === 'object') {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return {
+          ...(defaultSettings[key] as any),
+          ...val,
+        }
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return val
+    }
+
+    if (typeof dbVal === 'object' && typeof defaultSettings[key] === 'object') {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return {
         ...(defaultSettings[key] as any),
-        ...val,
+        ...dbVal,
       }
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return dbVal
   } catch {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return dbVal
