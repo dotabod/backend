@@ -346,6 +346,14 @@ export class setupMainEvents {
           false,
           this.client.gsi,
         )
+
+        if (Array.isArray(couldHaveLivedWith) && couldHaveLivedWith.length) {
+          logger.info('Just died, but found an item you could have lived with', {
+            couldHaveLivedWith,
+            channel: this.getChannel(),
+            matchid: this.playingMatchId,
+          })
+        }
       }
 
       // Just spawned (ignores game start spawn)

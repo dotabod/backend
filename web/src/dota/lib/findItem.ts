@@ -18,5 +18,5 @@ export function findItem(itemName: string | string[], searchStashAlso: boolean, 
   // Doesn't have this item
   if (!items.length) return false
 
-  return items.length === 1 ? items[0] : items
+  return Array.isArray(itemName) ? items : items[0]
 }
