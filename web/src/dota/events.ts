@@ -98,6 +98,17 @@ export class setupMainEvents {
     return new Date(new Date().getTime() + seconds * 1000)
   }
 
+  private say(message: string, delay = true) {
+    if (!delay) {
+      void chatClient.say(this.getChannel(), message)
+      return
+    }
+
+    setTimeout(() => {
+      void chatClient.say(this.getChannel(), message)
+    }, 7000)
+  }
+
   // reset vars when a new match begins
   private resetClientState(resetBets = false) {
     logger.info('newMatchNewVars', {
@@ -191,13 +202,11 @@ export class setupMainEvents {
         this.players = getAccountsFromMatch(delayedData)
 
         if (this.client.stream_online) {
-          void chatClient.say(
-            this.getChannel(),
-            'Match data found !np · !smurfs · !gm · !lg · !avg commands activated.',
-          )
+          this.say('Match data found !np · !smurfs · !gm · !lg · !avg commands activated.', false)
         }
       } else {
         this.playingLobbyType = response.match.lobby_type
+        this.players = getAccountsFromMatch(response)
         logger.info('Match data already found', {
           name: this.client.name,
           matchid: this.client.gsi.map.matchid,
@@ -269,8 +278,7 @@ export class setupMainEvents {
 
       if (event.owning_player_id === this.playingHeroSlot) {
         logger.info('STREAMERS COURIER!', { matchid: this.playingMatchId })
-
-        void chatClient.say(this.getChannel(), `Courier micro ICANT thanks ${heroName}`)
+        this.say(`Courier micro ICANT thanks ${heroName}`)
       }
     })
 
@@ -297,8 +305,7 @@ export class setupMainEvents {
 
       if (event.receiver_player_id === this.playingHeroSlot) {
         logger.info('TIPPED STREAMER!', { matchid: this.playingMatchId })
-
-        void chatClient.say(this.getChannel(), `The tip from ${heroName} ICANT`)
+        this.say(`The tip from ${heroName} ICANT`)
       }
     })
 
@@ -326,15 +333,13 @@ export class setupMainEvents {
       if (event.team === this.playingTeam) {
         logger.info('BOUNTY FOR OUR TEAM!', { matchid: this.playingMatchId })
 
-        void chatClient.say(
-          this.getChannel(),
-          `Nice ${event.team_gold} in bounty gold for ${this.playingTeam} EZ Clap Thanks ${heroName}`,
+        this.say(
+          `Nice ${event.team_gold} in bounty gold for ${event.team} EZ Clap Thanks ${heroName}`,
         )
       } else {
         logger.info('BOUNTY FOR ENEMY TEAM!', { matchid: this.playingMatchId })
 
-        void chatClient.say(
-          this.getChannel(),
+        this.say(
           `${event.team_gold} in bounty gold for ${event.team} picked up by ${heroName} monkaS`,
         )
       }
@@ -374,15 +379,6 @@ export class setupMainEvents {
       // In case they connect to a game in progress and we missed the start event
       this.setupOBSBlockers(data.map?.game_state ?? '')
 
-      const manaSaved = calculateManaSaved(this.treadsData, this.client.gsi)
-      if (manaSaved) {
-        logger.info('[TREAD SWITCHER] Mana saved', {
-          channel: this.getChannel(),
-          manaSaved,
-          matchid: this.client.gsi?.map?.matchid,
-        })
-      }
-
       if (!isPlayingMatch(this.client.gsi)) return
 
       // Everything below here requires an ongoing match, not a finished match
@@ -399,6 +395,19 @@ export class setupMainEvents {
         this.playingHeroSlot = purchaser
         void this.saveMatchData()
         return
+      }
+
+      // beta testers only
+      if (this.client.beta_tester) {
+        const manaSaved = calculateManaSaved(this.treadsData, this.client.gsi)
+        if (manaSaved) {
+          this.say(`Mana saved by tread switching ${manaSaved} EZ Clap`)
+          logger.info('[TREAD SWITCHER] Mana saved', {
+            channel: this.getChannel(),
+            manaSaved,
+            matchid: this.client.gsi?.map?.matchid,
+          })
+        }
       }
 
       // Always runs but only until steam is found
@@ -436,17 +445,10 @@ export class setupMainEvents {
 
         if (isMidasPassive === true) {
           logger.info('[MIDAS] Passive midas', { name: this.getChannel() })
-          setTimeout(() => {
-            void chatClient.say(this.getChannel(), chatters.midas.message)
-          }, 7000)
+          this.say(chatters.midas.message)
         }
         if (typeof isMidasPassive === 'number') {
-          setTimeout(() => {
-            void chatClient.say(
-              this.getChannel(),
-              `Midas was finally used, ${isMidasPassive} seconds late Madge`,
-            )
-          }, 7000)
+          this.say(`Midas was finally used, ${isMidasPassive} seconds late Madge`)
         }
       }
     })
@@ -500,14 +502,11 @@ export class setupMainEvents {
           const heroName =
             getHero(this.playingHero ?? this.client.gsi.hero?.name)?.localized_name ?? 'We'
 
-          setTimeout(() => {
-            void chatClient.say(
-              this.getChannel(),
-              `${chatters.passiveDeath.message
-                .replace('[itemnames]', itemNames)
-                .replace('[heroname]', heroName)}`,
-            )
-          }, 7000)
+          this.say(
+            `${chatters.passiveDeath.message
+              .replace('[itemnames]', itemNames)
+              .replace('[heroname]', heroName)}`,
+          )
         }
       }
     })
@@ -528,12 +527,7 @@ export class setupMainEvents {
       if (isSmoked) {
         const heroName =
           getHero(this.playingHero ?? this.client.gsi?.hero?.name)?.localized_name ?? 'We'
-        setTimeout(() => {
-          void chatClient.say(
-            this.getChannel(),
-            chatters.smoke.message.replace('[heroname]', heroName),
-          )
-        }, 7000)
+        this.say(chatters.smoke.message.replace('[heroname]', heroName))
       }
     })
 
@@ -551,9 +545,7 @@ export class setupMainEvents {
         this.client.settings,
       ) as typeof defaultSettings['chatters']
       if (isPaused && chatterEnabled && chatters.pause.enabled) {
-        setTimeout(() => {
-          void chatClient.say(this.getChannel(), chatters.pause.message)
-        }, 7000)
+        this.say(chatters.pause.message)
       }
     })
 
@@ -809,7 +801,7 @@ export class setupMainEvents {
 
             openTwitchBet(this.getToken(), hero?.localized_name, this.client.settings)
               .then(() => {
-                void chatClient.say(channel, `Bets open peepoGamble`)
+                this.say(`Bets open peepoGamble`)
                 this.openingBets = false
                 logger.info('[BETS] open bets', {
                   event: 'open_bets',
@@ -917,8 +909,7 @@ export class setupMainEvents {
             })
 
             if (this.client.stream_online) {
-              void chatClient.say(
-                channel,
+              this.say(
                 `Match not scored D: ${betsMessage}Not adding or removing MMR for match ${matchId}.`,
               )
             }
@@ -943,12 +934,6 @@ export class setupMainEvents {
               e: e?.message || e?.result || e?.data || e,
             })
 
-            if (this.client.stream_online) {
-              // void chatClient.say(
-              //   this.getChannel(),
-              //   `Stopped searching for match result. Was this an abandon? ${betsMessage}Not adding or removing MMR for match ${matchId}.`,
-              // )
-            }
             this.resetClientState(true)
             return
           } catch (e) {
@@ -1053,9 +1038,7 @@ export class setupMainEvents {
           logger.info('[BETS] Error closing twitch bet', { channel, e: e?.message || e })
         }
 
-        setTimeout(() => {
-          void chatClient.say(this.getChannel(), `We have ${won ? 'won' : 'lost'}`)
-        }, 7000)
+        this.say(`We have ${won ? 'won' : 'lost'}`)
       })
       // Always
       .finally(() => {
