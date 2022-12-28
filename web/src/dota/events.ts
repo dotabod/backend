@@ -28,11 +28,11 @@ const mongo = await Mongo.connect()
 export const blockCache = new Map<string, string>()
 
 const passiveItemNames = [
-  { name: 'item_magic_stick', title: 'magic stick' },
-  { name: 'item_magic_wand', title: 'magic wand' },
+  { name: 'item_magic_stick', title: 'magic stick', charges: true },
+  { name: 'item_magic_wand', title: 'magic wand', charges: true },
   { name: 'item_faerie_fire', title: 'faerie fire' },
   { name: 'item_cheese', title: 'cheese' },
-  { name: 'item_holy_locket', title: 'holy locket' },
+  { name: 'item_holy_locket', title: 'holy locket', charges: true },
   { name: 'item_mekansm', title: 'mek' },
   { name: 'item_satanic', title: 'satanic' },
   { name: 'item_guardian_greaves', title: 'greaves' },
@@ -374,7 +374,18 @@ export class setupMainEvents {
         if (Array.isArray(couldHaveLivedWith) && couldHaveLivedWith.length) {
           // get a comma delimitted list of item names
           const itemNames = couldHaveLivedWith
-            .map((item) => passiveItemNames.find((i) => i.name === item.name)?.title ?? item.name)
+            .map(
+              (item) =>
+                passiveItemNames.find((i) => {
+                  if (i.name !== item.name) return false
+
+                  if (i.charges) {
+                    return Number(item.charges) > 0
+                  }
+
+                  return true
+                })?.title ?? item.name,
+            )
             .join(', ')
           const heroName =
             getHero(this.playingHero ?? this.client.gsi.hero?.name)?.localized_name ?? 'We'
