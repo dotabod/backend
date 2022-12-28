@@ -41,7 +41,7 @@ export class setupMainEvents {
   savingSteamServerId = false
   steamServerTries = 0
   events: DotaEvent[] = []
-  passiveMidas = { counter: 0 }
+  passiveMidas = { counter: 0, timer: 0, used: 0 }
   roshanKilled?: {
     minTime: string
     maxTime: string
@@ -91,7 +91,7 @@ export class setupMainEvents {
     this.playingHero = null
     this.playingHeroSlot = null
     this.events = []
-    this.passiveMidas = { counter: 0 }
+    this.passiveMidas = { counter: 0, timer: 0, used: 0 }
     this.savingSteamServerId = false
     this.steamServerTries = 0
 
@@ -306,9 +306,16 @@ export class setupMainEvents {
       ) as typeof defaultSettings['chatters']
       if (chatterEnabled && chatters.midas.enabled && this.client.stream_online) {
         const isMidasPassive = checkMidas(data, this.passiveMidas)
-        if (isMidasPassive) {
+
+        if (isMidasPassive === true) {
           logger.info('[MIDAS] Passive midas', { name: this.getChannel() })
           void chatClient.say(this.getChannel(), chatters.midas.message)
+        }
+        if (typeof isMidasPassive === 'number') {
+          void chatClient.say(
+            this.getChannel(),
+            `Midas was finally used, ${isMidasPassive} seconds late Madge`,
+          )
         }
       }
     })

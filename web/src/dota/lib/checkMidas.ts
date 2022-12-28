@@ -1,7 +1,10 @@
-import { Item, Packet } from '../../types.js'
+import { Item, Packet } from '../../types.js';
 
 const midas = 'item_hand_of_midas'
-export default function checkMidas(data: Packet, passiveMidas: { counter: number; timer: number }) {
+export default function checkMidas(
+  data: Packet,
+  passiveMidas: { counter: number; used: number; timer: number },
+) {
   if (!data.items) return false
 
   // User is dead
@@ -22,14 +25,20 @@ export default function checkMidas(data: Packet, passiveMidas: { counter: number
 
   // Midas was used recently, wait for it to be off CD
   if (isMidasOnCooldown(midasItem)) {
+    // Tell chat it was used after x seconds
+    if (passiveMidas.used) {
+      return Math.round((Date.now() - passiveMidas.used + 10000) / 1000)
+    }
     resetPassiveMidas(passiveMidas)
+    passiveMidas.used = 0
     return false
   }
 
   updatePassiveMidasTimer(passiveMidas)
 
   // Every n seconds that it isn't used we say passive midas
-  if (passiveMidas.timer >= 5000) {
+  if (passiveMidas.timer >= 10000 && !passiveMidas.used) {
+    passiveMidas.used = Date.now()
     resetPassiveMidas(passiveMidas)
     return true
   }
@@ -41,7 +50,11 @@ function isMidasOnCooldown(midasItem: Item): boolean {
   return Number(midasItem.cooldown) > 0
 }
 
-function updatePassiveMidasTimer(passiveMidas: { counter: number; timer: number }): void {
+function updatePassiveMidasTimer(passiveMidas: {
+  counter: number
+  used: number
+  timer: number
+}): void {
   const currentTime = Date.now()
   if (passiveMidas.counter === 0) {
     passiveMidas.counter = currentTime
@@ -51,7 +64,7 @@ function updatePassiveMidasTimer(passiveMidas: { counter: number; timer: number 
   }
 }
 
-function resetPassiveMidas(passiveMidas: { counter: number; timer: number }): void {
+function resetPassiveMidas(passiveMidas: { counter: number; used: number; timer: number }): void {
   passiveMidas.counter = 0
   passiveMidas.timer = 0
 }

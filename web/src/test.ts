@@ -1,7 +1,6 @@
 import axios from 'axios'
 
 import { prisma } from './db/prisma.js'
-import { server } from './dota/index.js'
 import { getBotAPI } from './twitch/lib/getBotAPI.js'
 import { logger } from './utils/logger.js'
 
@@ -113,7 +112,7 @@ async function fixWins() {
       won: null,
     },
     skip: 0,
-    take: 20,
+    take: 40,
     orderBy: {
       createdAt: 'desc',
     },
@@ -153,31 +152,38 @@ const topFollowers = async () => {
       name: true,
       followers: true,
     },
+    where: {
+      stream_online: true,
+    },
     orderBy: {
       followers: 'desc',
     },
     take: 30,
   })
 
-  logger.info(
+  console.info(
     'found follower data',
     followers
       .sort((a, b) => (b.followers ?? 0) - (a.followers ?? 0))
-      .map((f) => ({ ...f, followers: f.followers?.toLocaleString() })),
+      .map((f) => ({
+        ...f,
+        url: `https://twitch.tv/${f.name}`,
+        followers: f.followers?.toLocaleString(),
+      })),
   )
 }
 
 // await updateUsernameForAll()
 // await getAccounts()
 // await fixWins()
-// await getFollows()
+await topFollowers()
 
-server.dota.dota2.on('ready', () => {
-  server.dota.getGcMatchData(69375017392, (err, response) => {
-    logger.info('getGcMatchData', { err, response: response?.match?.match_outcome })
-    //
-  })
-})
+// server.dota.dota2.on('ready', () => {
+//   server.dota.getGcMatchData(69375017392, (err, response) => {
+//     logger.info('getGcMatchData', { err, response: response?.match?.match_outcome })
+//     //
+//   })
+// })
 
 // 2 = radiant
 // 3 = dire
