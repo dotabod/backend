@@ -10,7 +10,7 @@ function calculateMmr(currentMmr: number, wasParty: boolean, didWin: boolean) {
 }
 
 commandHandler.registerCommand('lgparty', {
-  aliases: ['fixparty'],
+  aliases: ['fixparty', 'fixsolo'],
   permission: 2,
   cooldown: 15000,
   handler: (message: MessageType, args: string[]) => {
@@ -36,7 +36,7 @@ commandHandler.registerCommand('lgparty', {
         message.channel.name,
         `Changing this match to ${bet.is_party ? 'solo' : 'party'} mmr: dotabuff.com/matches/${
           bet.matchId
-        }`,
+        } Type !fixsolo to undo`,
       )
 
       updateMmr(

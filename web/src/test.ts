@@ -1,5 +1,6 @@
 import axios from 'axios'
 
+import { getWL } from './db/getWL.js'
 import { prisma } from './db/prisma.js'
 import { getBotAPI } from './twitch/lib/getBotAPI.js'
 import { logger } from './utils/logger.js'
@@ -111,7 +112,7 @@ async function fixWins() {
     where: {
       won: null,
     },
-    skip: 0,
+    skip: 40,
     take: 40,
     orderBy: {
       createdAt: 'desc',
@@ -176,7 +177,7 @@ const topFollowers = async () => {
 // await updateUsernameForAll()
 // await getAccounts()
 // await fixWins()
-await topFollowers()
+// await topFollowers()
 
 // server.dota.dota2.on('ready', () => {
 //   server.dota.getGcMatchData(69375017392, (err, response) => {
@@ -187,3 +188,6 @@ await topFollowers()
 
 // 2 = radiant
 // 3 = dire
+
+const k = await getWL('67416440')
+console.log(k)
