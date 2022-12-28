@@ -363,7 +363,6 @@ export class setupMainEvents {
 
       if (!chatters.passiveDeath.enabled) return
 
-      // Just died
       if (!alive && this.client.gsi?.previously?.hero?.alive) {
         const couldHaveLivedWith = findItem(
           passiveItemNames.map((i) => i.name),
@@ -372,16 +371,13 @@ export class setupMainEvents {
         )
 
         if (Array.isArray(couldHaveLivedWith) && couldHaveLivedWith.length) {
-          // get a comma delimitted list of item names
           const itemNames = couldHaveLivedWith
             .map((item) => {
               const found = passiveItemNames.find((i) => {
                 if (i.name !== item.name) return false
-
                 if (i.charges) {
                   return Number(item.charges) > 0
                 }
-
                 return true
               })
               if (found) return found.title
@@ -408,11 +404,6 @@ export class setupMainEvents {
             matchid: this.playingMatchId,
           })
         }
-      }
-
-      // Just spawned (ignores game start spawn)
-      if (alive && this.client.gsi?.previously?.hero?.alive === false) {
-        // logger.info('Just spawned')
       }
     })
 
