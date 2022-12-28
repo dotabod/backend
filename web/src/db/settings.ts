@@ -90,6 +90,11 @@ export const defaultSettings = {
       enabled: true,
       message: 'Shush [heroname] is smoked!',
     },
+    passiveDeath: {
+      description: 'Whenever you die with passive stick / faerie / etc',
+      enabled: true,
+      message: '[heroname] died with passive [itemnames] ICANT',
+    },
   },
   [DBSettings.betsInfo]: {
     title: 'Will we win with [heroname]?',
@@ -114,7 +119,14 @@ export const getValueOrDefault = (key: DBSettings, data?: { key: string; value: 
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return JSON.parse(dbVal)
+    const val = JSON.parse(dbVal) as unknown as any
+    if (typeof val === 'object' && typeof defaultSettings[key] === 'object') {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return {
+        ...(defaultSettings[key] as any),
+        ...val,
+      }
+    }
   } catch {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return dbVal

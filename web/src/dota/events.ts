@@ -27,6 +27,17 @@ const mongo = await Mongo.connect()
 
 export const blockCache = new Map<string, string>()
 
+const passiveItemNames = [
+  { name: 'item_magic_stick', title: 'magic stick' },
+  { name: 'item_magic_wand', title: 'magic wand' },
+  { name: 'item_faerie_fire', title: 'faerie fire' },
+  { name: 'item_cheese', title: 'cheese' },
+  { name: 'item_holy_locket', title: 'holy locket' },
+  { name: 'item_mekansm', title: 'mek' },
+  { name: 'item_satanic', title: 'satanic' },
+  { name: 'item_guardian_greaves', title: 'greaves' },
+]
+
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
 export class setupMainEvents {
@@ -339,17 +350,35 @@ export class setupMainEvents {
     })
 
     events.on(`${this.getToken()}:hero:alive`, (alive: boolean) => {
+      if (!this.client.stream_online) return
+      if (!isPlayingMatch(this.client.gsi)) return
+
+      const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
+      if (!chatterEnabled) return
+
+      const chatters = getValueOrDefault(
+        DBSettings.chatters,
+        this.client.settings,
+      ) as typeof defaultSettings['chatters']
+
+      if (!chatters.passiveDeath.enabled) return
+
       // Just died
       if (!alive && this.client.gsi?.previously?.hero?.alive) {
         const couldHaveLivedWith = findItem(
-          ['item_magic_stick', 'item_magic_wand', 'item_faerie_fire'],
+          passiveItemNames.map((i) => i.name),
           false,
           this.client.gsi,
         )
 
         if (Array.isArray(couldHaveLivedWith) && couldHaveLivedWith.length) {
+          // get a comma delimitted list of item names
+          const itemNames = couldHaveLivedWith
+            .map((item) => passiveItemNames.find((i) => i.name === item.name)?.title ?? item.name)
+            .join(', ')
           logger.info('Just died, but found an item you could have lived with', {
             couldHaveLivedWith,
+            itemNames,
             channel: this.getChannel(),
             matchid: this.playingMatchId,
           })

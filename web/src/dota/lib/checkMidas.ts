@@ -8,10 +8,10 @@ export default function checkMidas(
   const midasItem = findItem('item_hand_of_midas', true, data)
 
   // Doesn't have a midas
-  if (!midasItem) return false
+  if (!midasItem || !midasItem[0]) return false
 
   // Midas was used recently, wait for it to be off CD
-  if (isMidasOnCooldown(midasItem)) {
+  if (isMidasOnCooldown(midasItem[0])) {
     // Tell chat it was used after x seconds
     if (passiveMidas.used) {
       const secondsToUse = Math.round((Date.now() - passiveMidas.used + 10000) / 1000)

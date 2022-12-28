@@ -7,7 +7,7 @@ export function calculateManaSaved(
 ) {
   if (!data?.hero?.mana || !data.hero.max_mana) return 0
   const hasPowerTreads = findItem('item_power_treads', false, data)
-  if (!hasPowerTreads) return 0
+  if (!hasPowerTreads || !hasPowerTreads[0]) return 0
 
   const maxMana = data.hero.max_mana
   const prevMaxMana = data.previously?.hero?.max_mana ?? 0
