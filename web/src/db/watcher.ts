@@ -33,12 +33,14 @@ channel
       const client = findUser(newObj.id)
       if (!client) return
 
+      client.beta_tester = newObj.beta_tester
       client.stream_online = newObj.stream_online
       if (typeof newObj.stream_start_date === 'string') {
         client.stream_start_date = new Date(newObj.stream_start_date)
       } else {
         client.stream_start_date = newObj.stream_start_date
       }
+
 
       // dont overwrite with 0 because we use this variable to track currently logged in mmr
       if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
