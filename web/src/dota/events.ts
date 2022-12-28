@@ -15,7 +15,7 @@ import checkMidas from './lib/checkMidas.js'
 import { calculateManaSaved } from './lib/checkTreadToggle.js'
 import { blockTypes, pickSates } from './lib/consts.js'
 import { findItem } from './lib/findItem.js'
-import getHero from './lib/getHero.js'
+import getHero, { HeroNames } from './lib/getHero.js'
 import { isArcade } from './lib/isArcade.js'
 import { isPlayingMatch } from './lib/isPlayingMatch.js'
 import { isSpectator } from './lib/isSpectator.js'
@@ -49,7 +49,7 @@ export class setupMainEvents {
   playingMatchId: string | undefined | null = null
   playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
   playingHeroSlot: number | undefined | null = null
-  playingHero: string | undefined | null = null
+  playingHero: HeroNames | undefined | null = null
   playingLobbyType: number | undefined | null = null
   savingSteamServerId = false
   steamServerTries = 0
@@ -343,7 +343,7 @@ export class setupMainEvents {
       }
     })
 
-    events.on(`${this.getToken()}:hero:name`, (name: string) => {
+    events.on(`${this.getToken()}:hero:name`, (name: HeroNames) => {
       if (!isPlayingMatch(this.client.gsi)) return
 
       this.playingHero = name
@@ -365,6 +365,7 @@ export class setupMainEvents {
 
       // Just died
       if (!alive && this.client.gsi?.previously?.hero?.alive) {
+        console.log(this.client.gsi)
         const couldHaveLivedWith = findItem(
           passiveItemNames.map((i) => i.name),
           false,
@@ -376,6 +377,15 @@ export class setupMainEvents {
           const itemNames = couldHaveLivedWith
             .map((item) => passiveItemNames.find((i) => i.name === item.name)?.title ?? item.name)
             .join(', ')
+          const heroName =
+            getHero(this.playingHero ?? this.client.gsi.hero?.name)?.localized_name ?? 'We'
+
+          void chatClient.say(
+            this.getChannel(),
+            `${chatters.passiveDeath.message
+              .replace('[itemnames]', itemNames)
+              .replace('[heroname]', heroName)}`,
+          )
           logger.info('Just died, but found an item you could have lived with', {
             couldHaveLivedWith,
             itemNames,
@@ -405,10 +415,11 @@ export class setupMainEvents {
       if (!chatters.smoke.enabled) return
 
       if (isSmoked) {
-        const hero = getHero(this.client.gsi?.hero?.name)
+        const heroName =
+          getHero(this.playingHero ?? this.client.gsi?.hero?.name)?.localized_name ?? 'We'
         void chatClient.say(
           this.getChannel(),
-          chatters.smoke.message.replace('[heroname]', hero?.localized_name ?? 'We'),
+          chatters.smoke.message.replace('[heroname]', heroName),
         )
       }
     })
