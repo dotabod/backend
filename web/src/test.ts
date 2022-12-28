@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-import { getWL } from './db/getWL.js'
 import { prisma } from './db/prisma.js'
+import { calculateAvg } from './dota/lib/calculateAvg.js'
 import { getBotAPI } from './twitch/lib/getBotAPI.js'
 import { logger } from './utils/logger.js'
 
@@ -188,6 +188,3 @@ const topFollowers = async () => {
 
 // 2 = radiant
 // 3 = dire
-
-const k = await getWL('67416440')
-console.log(k)

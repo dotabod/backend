@@ -47,6 +47,22 @@ export const leaderRanks = [
   { range: [1001, 100000], image: '80.png', sparklingEffect: false },
 ]
 
+export function rankTierToMmr(rankTier: string | number) {
+  if (!Number(rankTier)) {
+    return 0
+  }
+  const intRankTier = Number(rankTier)
+
+  // Floor to 5
+  const stars = intRankTier % 10 > 5 ? 5 : intRankTier % 10
+  const rank = ranks.find((rank) =>
+    rank.image.startsWith(`${Math.floor(Number(intRankTier / 10))}${stars}`),
+  )
+
+  // Middle of range
+  return ((rank?.range[0] ?? 0) + (rank?.range[1] ?? 0)) / 2
+}
+
 export async function lookupLeaderRank(mmr: number, steam32Id?: number | null) {
   let standing = mmr
 

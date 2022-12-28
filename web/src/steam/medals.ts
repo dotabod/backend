@@ -1,11 +1,9 @@
 import { medals } from '../../prisma/generated/mongoclient/index.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
-import Dota from './index.js'
 import Mongo from './mongo.js'
 
-export const mongo = await Mongo.connect()
-export const dota = Dota.getInstance()
+const mongo = await Mongo.connect()
 
 export async function gameMedals(
   currentMatchId?: string,
