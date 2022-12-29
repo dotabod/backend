@@ -4,9 +4,16 @@ import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-function calculateMmr(currentMmr: number, wasParty: boolean, didWin: boolean) {
-  const mmrChange = didWin ? 10 : -10
-  return currentMmr + mmrChange * (wasParty ? 1 : -1)
+function togglePartyMmr(
+  currentMmr: number,
+  wasParty: boolean,
+  didWin: boolean,
+  isDoubledown: boolean,
+) {
+  const newmmr = currentMmr
+  const baseDelta = isDoubledown ? 20 : 10
+  const delta = wasParty ? -baseDelta : baseDelta
+  return didWin ? newmmr + delta : newmmr - delta
 }
 
 commandHandler.registerCommand('fixparty', {
@@ -21,6 +28,13 @@ commandHandler.registerCommand('fixparty', {
           won: {
             not: null,
           },
+        },
+        select: {
+          matchId: true,
+          won: true,
+          is_party: true,
+          id: true,
+          is_doubledown: true,
         },
         orderBy: {
           createdAt: 'desc',
@@ -40,7 +54,7 @@ commandHandler.registerCommand('fixparty', {
       )
 
       updateMmr(
-        calculateMmr(message.channel.client.mmr, bet.is_party, !!bet.won),
+        togglePartyMmr(message.channel.client.mmr, bet.is_party, !!bet.won, bet.is_doubledown),
         message.channel.client.steam32Id,
         message.channel.name,
       )
