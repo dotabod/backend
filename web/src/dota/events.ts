@@ -505,7 +505,7 @@ export class setupMainEvents {
                 if (i.name !== item.name) return false
                 if (Number(item.cooldown) > 0 || !item.can_cast) return false
                 if (i.charges) {
-                  return Number(item.charges) > 0
+                  return Number(item.charges) >= 10
                 }
                 return true
               })
