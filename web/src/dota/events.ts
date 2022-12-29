@@ -295,16 +295,15 @@ export class setupMainEvents {
     })
 
     events.on(`${this.getToken()}:${DotaEventTypes.Tip}`, (event: DotaEvent) => {
-      if (!isPlayingMatch(this.client.gsi)) return
+      // beta opt in only
+      if (!this.client.beta_tester) return
       if (!this.client.stream_online) return
+      if (!isPlayingMatch(this.client.gsi)) return
 
       const heroName = getHeroNameById(
         this.players?.matchPlayers[event.sender_player_id].heroid ?? 0,
         event.sender_player_id,
       )
-
-      // beta opt in only
-      if (!this.client.beta_tester) return
 
       if (event.receiver_player_id === this.playingHeroSlot) {
         this.say(`The tip from ${heroName} ICANT`, { beta: true })
@@ -329,16 +328,12 @@ export class setupMainEvents {
         event.player_id,
       )
 
-      logger.info('BOUNTY EVENT', {
-        event,
-        client: this.getChannel(),
-        matchid: this.playingMatchId,
-        heroSlot: this.playingHeroSlot,
-        players: this.players,
-        heroName,
-      })
-
-      if (event.team === this.playingTeam) {
+      // 10 second buffer between event and map time
+      // I think we get this event message duplicated by gsi sometimes
+      if (
+        event.team === this.playingTeam &&
+        event.game_time + 10 >= Number(this.client.gsi?.map?.game_time)
+      ) {
         this.say(`+${event.bounty_value} gold from bounty EZ Clap Thanks ${heroName} SeemsGood`, {
           beta: true,
         })
