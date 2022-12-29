@@ -427,9 +427,11 @@ export class setupMainEvents {
       }
 
       // beta testers only
-      const manaSaved = calculateManaSaved(this.treadsData, this.client.gsi)
-      if (manaSaved) {
-        this.say(`Mana saved by tread switching ${manaSaved} EZ Clap`, { beta: true })
+      if (this.client.beta_tester) {
+        const manaSaved = calculateManaSaved(this.treadsData, this.client.gsi)
+        if (manaSaved >= 50) {
+          this.say(`Mana saved by tread switching ${manaSaved} EZ Clap`, { beta: true })
+        }
       }
 
       // Always runs but only until steam is found
