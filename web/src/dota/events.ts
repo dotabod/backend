@@ -263,6 +263,10 @@ export class setupMainEvents {
         maxDate,
       }
 
+      this.say(`Roshan killed! Next roshan between ${res.minTime} and ${res.maxTime}`, {
+        beta: true,
+      })
+
       this.roshanKilled = res
       server.io.to(this.getToken()).emit('roshan-killed', res)
     })
