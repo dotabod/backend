@@ -1,6 +1,7 @@
 import { medals } from '../../prisma/generated/mongoclient/index.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
+import { ranks } from '../dota/lib/ranks.js'
 import Mongo from './mongo.js'
 
 const mongo = await Mongo.connect()
@@ -45,18 +46,36 @@ export async function gameMedals(
     return a.localeCompare(b)
   })
 
+  // sort according to medal order
+  sortedMedals.sort((a, b) => {
+    if (a === 'Uncalibrated') return -1
+    if (b === 'Uncalibrated') return 1
+
+    const aMedal = a.split('☆')[0] || a
+    const bMedal = b.split('☆')[0] || b
+
+    const aIndex = ranks.findIndex((rank) => rank.title.startsWith(aMedal))
+    const bIndex = ranks.findIndex((rank) => rank.title.startsWith(bMedal))
+
+    if (aIndex !== -1 || bIndex !== -1) {
+      return bIndex - aIndex
+    }
+
+    if (a === 'Immortal' || b === 'Immortal') {
+      return -1
+    }
+
+    if (a.startsWith('#') || b.startsWith('#')) {
+      return parseInt(b.substring(1)) - parseInt(a.substring(1))
+    }
+
+    return 0
+  })
+
   // Build the result array, preserving the original order of the medals
   sortedMedals.forEach((medal) => {
     result.push({ heroNames: medalsToPlayers[medal].join(', '), medal })
   })
 
-  return result
-    .map((m) => {
-      if (m.medal.startsWith('#') && !m.heroNames.includes(',')) {
-        return `${m.heroNames} ${m.medal}`
-      }
-
-      return `${m.medal}: ${m.heroNames}`
-    })
-    .join(' · ')
+  return result.map((m) => `${m.heroNames}: ${m.medal}`).join(' · ')
 }
