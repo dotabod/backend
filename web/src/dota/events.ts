@@ -13,7 +13,7 @@ import { logger } from '../utils/logger.js'
 import { server } from './index.js'
 import checkMidas from './lib/checkMidas.js'
 import { calculateManaSaved } from './lib/checkTreadToggle.js'
-import { blockTypes, pickSates } from './lib/consts.js'
+import { blockTypes, GLOBAL_DELAY, pickSates } from './lib/consts.js'
 import { findItem } from './lib/findItem.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import getHero, { HeroNames } from './lib/getHero.js'
@@ -112,7 +112,7 @@ export class setupMainEvents {
 
     setTimeout(() => {
       void chatClient.say(this.getChannel(), msg)
-    }, 7000)
+    }, GLOBAL_DELAY)
   }
 
   // reset vars when a new match begins
@@ -822,55 +822,57 @@ export class setupMainEvents {
 
             const hero = getHero(this.client.gsi?.hero?.name)
 
-            openTwitchBet(this.getToken(), hero?.localized_name, this.client.settings)
-              .then(() => {
-                this.say(`Bets open peepoGamble`)
-                this.openingBets = false
-                logger.info('[BETS] open bets', {
-                  event: 'open_bets',
-                  data: {
-                    matchId: matchId,
-                    user: this.getToken(),
-                    player_team: this.client.gsi?.player?.team_name,
-                  },
-                })
-              })
-              .catch((e: any) => {
-                if (disabledBets.has(this.getToken())) {
-                  // disable the bet in settings for this user
-                  prisma.setting
-                    .upsert({
-                      where: {
-                        key_userId: {
-                          key: DBSettings.bets,
-                          userId: this.getToken(),
-                        },
-                      },
-                      create: {
-                        userId: this.getToken(),
-                        key: DBSettings.bets,
-                        value: false,
-                      },
-                      update: {
-                        value: false,
-                      },
-                    })
-                    .then((r) => {
-                      disabledBets.delete(this.getToken())
-                      logger.info('[BETS] Disabled bets for user', {
-                        channel,
-                      })
-                      this.openingBets = false
-                    })
-                    .catch((e) => {
-                      logger.info('[BETS] Error disabling bets', { e: e?.message || e })
-                      this.openingBets = false
-                    })
-                } else {
-                  logger.info('[BETS] Error opening twitch bet', { channel, e: e?.message || e })
+            setTimeout(() => {
+              openTwitchBet(this.getToken(), hero?.localized_name, this.client.settings)
+                .then(() => {
+                  this.say(`Bets open peepoGamble`, { delay: false })
                   this.openingBets = false
-                }
-              })
+                  logger.info('[BETS] open bets', {
+                    event: 'open_bets',
+                    data: {
+                      matchId: matchId,
+                      user: this.getToken(),
+                      player_team: this.client.gsi?.player?.team_name,
+                    },
+                  })
+                })
+                .catch((e: any) => {
+                  if (disabledBets.has(this.getToken())) {
+                    // disable the bet in settings for this user
+                    prisma.setting
+                      .upsert({
+                        where: {
+                          key_userId: {
+                            key: DBSettings.bets,
+                            userId: this.getToken(),
+                          },
+                        },
+                        create: {
+                          userId: this.getToken(),
+                          key: DBSettings.bets,
+                          value: false,
+                        },
+                        update: {
+                          value: false,
+                        },
+                      })
+                      .then((r) => {
+                        disabledBets.delete(this.getToken())
+                        logger.info('[BETS] Disabled bets for user', {
+                          channel,
+                        })
+                        this.openingBets = false
+                      })
+                      .catch((e) => {
+                        logger.info('[BETS] Error disabling bets', { e: e?.message || e })
+                        this.openingBets = false
+                      })
+                  } else {
+                    logger.info('[BETS] Error opening twitch bet', { channel, e: e?.message || e })
+                    this.openingBets = false
+                  }
+                })
+            }, GLOBAL_DELAY)
           })
           .catch((e: any) => {
             logger.error(`[BETS] Could not add bet to channel`, {
@@ -1015,58 +1017,60 @@ export class setupMainEvents {
       return
     }
 
-    closeTwitchBet(won, this.getToken())
-      .then(() => {
-        logger.info('[BETS] end bets', {
-          event: 'end_bets',
-          data: {
-            matchId: matchId,
-            name: this.getChannel(),
-            winning_team: localWinner,
-            player_team: myTeam,
-            didWin: won,
-          },
+    setTimeout(() => {
+      closeTwitchBet(won, this.getToken())
+        .then(() => {
+          logger.info('[BETS] end bets', {
+            event: 'end_bets',
+            data: {
+              matchId: matchId,
+              name: this.getChannel(),
+              winning_team: localWinner,
+              player_team: myTeam,
+              didWin: won,
+            },
+          })
         })
-      })
-      .catch((e: any) => {
-        if (disabledBets.has(this.getToken())) {
-          // disable the bet in settings for this user
-          prisma.setting
-            .upsert({
-              where: {
-                key_userId: {
-                  key: DBSettings.bets,
-                  userId: this.getToken(),
+        .catch((e: any) => {
+          if (disabledBets.has(this.getToken())) {
+            // disable the bet in settings for this user
+            prisma.setting
+              .upsert({
+                where: {
+                  key_userId: {
+                    key: DBSettings.bets,
+                    userId: this.getToken(),
+                  },
                 },
-              },
-              create: {
-                userId: this.getToken(),
-                key: DBSettings.bets,
-                value: false,
-              },
-              update: {
-                value: false,
-              },
-            })
-            .then((r) => {
-              logger.info('[BETS] Disabled bets for user', {
-                channel,
+                create: {
+                  userId: this.getToken(),
+                  key: DBSettings.bets,
+                  value: false,
+                },
+                update: {
+                  value: false,
+                },
               })
-              disabledBets.delete(this.getToken())
-            })
-            .catch((e) => {
-              logger.info('[BETS] Error disabling bets', { e: e?.message || e })
-            })
-        } else {
-          logger.info('[BETS] Error closing twitch bet', { channel, e: e?.message || e })
-        }
+              .then((r) => {
+                logger.info('[BETS] Disabled bets for user', {
+                  channel,
+                })
+                disabledBets.delete(this.getToken())
+              })
+              .catch((e) => {
+                logger.info('[BETS] Error disabling bets', { e: e?.message || e })
+              })
+          } else {
+            logger.info('[BETS] Error closing twitch bet', { channel, e: e?.message || e })
+          }
 
-        this.say(`We have ${won ? 'won' : 'lost'}`)
-      })
-      // Always
-      .finally(() => {
-        this.resetClientState(true)
-      })
+          this.say(`We have ${won ? 'won' : 'lost'}`, { delay: false })
+        })
+        // Always
+        .finally(() => {
+          this.resetClientState(true)
+        })
+    }, GLOBAL_DELAY)
   }
 
   setupOBSBlockers(state?: string) {

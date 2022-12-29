@@ -23,3 +23,5 @@ export const blockTypes = [
   // all blockers. Therefore removing this state from the list
   // { type: 'strategy', states: stratStates },
 ]
+
+export const GLOBAL_DELAY = 7000 // 7s
