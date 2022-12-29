@@ -336,6 +336,37 @@ export class setupMainEvents {
       }
     })
 
+    events.on(`${this.getToken()}:player:kill_streak`, (streak: number) => {
+      if (!isPlayingMatch(this.client.gsi)) return
+      if (!this.client.stream_online) return
+
+      const heroName =
+        getHero(this.playingHero ?? this.client.gsi?.hero?.name)?.localized_name ?? 'We'
+
+      const previousStreak = Number(this.client.gsi?.previously?.player?.kill_streak)
+      const lostStreak = previousStreak > 3 && streak <= 3
+      if (lostStreak) {
+        this.say(`${heroName} lost the ${previousStreak} kill streak BibleThump`, { beta: true })
+        return
+      }
+
+      if (streak <= 3) return
+
+      this.say(`${heroName} has a ${streak} kill streak POGGIES`, { beta: true })
+    })
+
+    events.on(`${this.getToken()}:${DotaEventTypes.AegisDenied}`, (event: DotaEvent) => {
+      if (!isPlayingMatch(this.client.gsi)) return
+      if (!this.client.stream_online) return
+
+      const heroName = getHeroNameById(
+        this.players?.matchPlayers[event.player_id].heroid ?? 0,
+        event.player_id,
+      )
+
+      this.say(`${heroName} denied the aegis ICANT`, { beta: true })
+    })
+
     events.on(`${this.getToken()}:${DotaEventTypes.AegisPickedUp}`, (event: DotaEvent) => {
       if (!isPlayingMatch(this.client.gsi)) return
       if (!this.client.stream_online) return
@@ -357,6 +388,13 @@ export class setupMainEvents {
       }
 
       this.aegisPickedUp = res
+
+      const heroName = getHeroNameById(
+        this.players?.matchPlayers[event.player_id].heroid ?? 0,
+        event.player_id,
+      )
+
+      this.say(`${heroName} picked up the aegis!`, { beta: true })
 
       server.io.to(this.getToken()).emit('aegis-picked-up', res)
     })
