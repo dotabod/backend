@@ -22,6 +22,7 @@ import './commands/test.js'
 import './commands/dotabuff.js'
 import './commands/opendota.js'
 import './commands/fixparty.js'
+import './commands/beta.js'
 import './commands/avg.js'
 
 import { io } from 'socket.io-client'
