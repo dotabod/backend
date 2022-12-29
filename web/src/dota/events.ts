@@ -98,14 +98,20 @@ export class setupMainEvents {
     return new Date(new Date().getTime() + seconds * 1000)
   }
 
-  private say(message: string, delay = true) {
+  private say(
+    message: string,
+    { delay = true, beta = false }: { delay?: boolean; beta?: boolean } = {},
+  ) {
+    if (beta && !this.client.beta_tester) return
+
+    const msg = beta ? `${message} [beta feature]` : message
     if (!delay) {
-      void chatClient.say(this.getChannel(), message)
+      void chatClient.say(this.getChannel(), msg)
       return
     }
 
     setTimeout(() => {
-      void chatClient.say(this.getChannel(), message)
+      void chatClient.say(this.getChannel(), msg)
     }, 7000)
   }
 
@@ -202,7 +208,9 @@ export class setupMainEvents {
         this.players = getAccountsFromMatch(delayedData)
 
         if (this.client.stream_online) {
-          this.say('Match data found !np · !smurfs · !gm · !lg · !avg commands activated.', false)
+          this.say('Match data found !np · !smurfs · !gm · !lg · !avg commands activated.', {
+            delay: false,
+          })
         }
       } else {
         this.playingLobbyType = response.match.lobby_type
@@ -278,7 +286,7 @@ export class setupMainEvents {
 
       if (event.owning_player_id === this.playingHeroSlot) {
         logger.info('STREAMERS COURIER!', { matchid: this.playingMatchId })
-        this.say(`Courier micro ICANT thanks ${heroName}`)
+        this.say(`Courier micro ICANT thanks ${heroName}`, { beta: true })
       }
     })
 
@@ -305,7 +313,7 @@ export class setupMainEvents {
 
       if (event.receiver_player_id === this.playingHeroSlot) {
         logger.info('TIPPED STREAMER!', { matchid: this.playingMatchId })
-        this.say(`The tip from ${heroName} ICANT`)
+        this.say(`The tip from ${heroName} ICANT`, { beta: true })
       }
     })
 
@@ -335,12 +343,14 @@ export class setupMainEvents {
 
         this.say(
           `Nice ${event.team_gold} in bounty gold for ${event.team} EZ Clap Thanks ${heroName}`,
+          { beta: true },
         )
       } else {
         logger.info('BOUNTY FOR ENEMY TEAM!', { matchid: this.playingMatchId })
 
         this.say(
           `${event.team_gold} in bounty gold for ${event.team} picked up by ${heroName} monkaS`,
+          { beta: true },
         )
       }
     })
@@ -401,7 +411,7 @@ export class setupMainEvents {
       if (this.client.beta_tester) {
         const manaSaved = calculateManaSaved(this.treadsData, this.client.gsi)
         if (manaSaved) {
-          this.say(`Mana saved by tread switching ${manaSaved} EZ Clap`)
+          this.say(`Mana saved by tread switching ${manaSaved} EZ Clap`, { beta: true })
           logger.info('[TREAD SWITCHER] Mana saved', {
             channel: this.getChannel(),
             manaSaved,
