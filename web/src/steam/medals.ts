@@ -1,7 +1,7 @@
 import { medals } from '../../prisma/generated/mongoclient/index.js'
+import { ranks } from '../dota/lib/consts.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
-import { ranks } from '../dota/lib/ranks.js'
 import Mongo from './mongo.js'
 
 const mongo = await Mongo.connect()
@@ -38,16 +38,8 @@ export async function gameMedals(
     }
   })
 
-  // Sort medals by number, taking into account the # prefix
-  const sortedMedals = Object.keys(medalsToPlayers).sort((a, b) => {
-    const aNumber = Number(a.replace('#', ''))
-    const bNumber = Number(b.replace('#', ''))
-    if (aNumber && bNumber) return aNumber - bNumber
-    return a.localeCompare(b)
-  })
-
   // sort according to medal order
-  sortedMedals.sort((a, b) => {
+  const sortedMedals = Object.keys(medalsToPlayers).sort((a, b) => {
     if (a === 'Uncalibrated') return -1
     if (b === 'Uncalibrated') return 1
 
@@ -57,12 +49,22 @@ export async function gameMedals(
     const aIndex = ranks.findIndex((rank) => rank.title.startsWith(aMedal))
     const bIndex = ranks.findIndex((rank) => rank.title.startsWith(bMedal))
 
-    if (aIndex !== -1 || bIndex !== -1) {
-      return bIndex - aIndex
+    if (aIndex !== -1 && bIndex !== -1) {
+      return aIndex - bIndex
     }
 
-    if (a === 'Immortal' || b === 'Immortal') {
+    if (aIndex !== -1) {
       return -1
+    }
+    if (bIndex !== -1) {
+      return 1
+    }
+
+    if (a === 'Immortal') {
+      return -1
+    }
+    if (b === 'Immortal') {
+      return 1
     }
 
     if (a.startsWith('#') || b.startsWith('#')) {
