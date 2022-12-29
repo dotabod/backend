@@ -51,9 +51,9 @@ export async function getWL(channelId: string, startDate: Date | null) {
             ranked.lose += match._count.won
           }
 
-          const mmr = ranked.win - ranked.lose
+          const wonMulti = match._count.won * (match.won ? 1 : -1)
           const multiplier = match.is_party ? 20 : 30
-          ranked.mmr = mmr * (match.is_doubledown ? multiplier * 2 : multiplier)
+          ranked.mmr += wonMulti * (match.is_doubledown ? multiplier * 2 : multiplier)
         } else {
           if (match.won) {
             unranked.win += match._count.won
