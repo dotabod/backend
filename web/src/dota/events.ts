@@ -195,6 +195,14 @@ export class setupMainEvents {
         this.client.steamserverid = steamserverid
         this.savingSteamServerId = false
 
+        // Only call once to update our local players variable with hero ids
+        events.once(
+          `delayedGameHeroes:${this.client.gsi.map.matchid}`,
+          (players: ReturnType<typeof getAccountsFromMatch>) => {
+            this.players = players
+          },
+        )
+
         const delayedData = await server.dota.getDelayedMatchData(steamserverid, true)
         if (!delayedData) {
           logger.info('No match data found!', {
@@ -754,6 +762,8 @@ export class setupMainEvents {
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!this.client.gsi.map.matchid || this.client.gsi.map.matchid === '0') return
 
+    const matchId = this.client.gsi.map.matchid
+
     // Check if this bet for this match id already exists, dont continue if it does
     prisma.bet
       .findFirst({
@@ -764,7 +774,7 @@ export class setupMainEvents {
         },
         where: {
           userId: this.getToken(),
-          matchId: this.client.gsi.map.matchid,
+          matchId: matchId,
           won: null,
         },
       })
@@ -778,15 +788,14 @@ export class setupMainEvents {
           return
         }
 
-        this.playingMatchId = this.client.gsi?.map?.matchid ?? null
+        this.playingMatchId = matchId
         this.playingTeam = this.client.gsi?.player?.team_name ?? null
 
         prisma.bet
           .create({
             data: {
-              // TODO: Replace prediction id with the twitch api bet id result
-              predictionId: this.client.gsi?.map?.matchid ?? '',
-              matchId: this.client.gsi?.map?.matchid ?? '',
+              predictionId: matchId,
+              matchId: matchId,
               userId: this.getToken(),
               myTeam: this.client.gsi?.player?.team_name ?? '',
               steam32Id: this.getSteam32(),
@@ -816,7 +825,7 @@ export class setupMainEvents {
                 logger.info('[BETS] open bets', {
                   event: 'open_bets',
                   data: {
-                    matchId: this.client.gsi?.map?.matchid,
+                    matchId: matchId,
                     user: this.getToken(),
                     player_team: this.client.gsi?.player?.team_name,
                   },
@@ -869,7 +878,7 @@ export class setupMainEvents {
       })
       .catch((e: any) => {
         logger.error('[BETS] Error opening bet', {
-          matchId: this.client.gsi?.map?.matchid ?? '',
+          matchId,
           channel,
           e: e?.message || e,
         })

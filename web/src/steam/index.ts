@@ -11,6 +11,7 @@ import steamErrors from 'steam-errors'
 
 import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
+import { events } from '../dota/server.js'
 import { GCMatchData } from '../types.js'
 import CustomError from '../utils/customError.js'
 import { promiseTimeout } from '../utils/index.js'
@@ -255,18 +256,22 @@ class Dota {
           if (waitForHeros && hasHeroes) {
             logger.info('Saving match data with heroes', { matchid: game.match.match_id })
 
+            const delayedData = {
+              matchid: game.matchid,
+              match: game.match,
+              teams: game.teams,
+              createdAt: new Date(),
+            } as delayedGames
             await mongo.collection('delayedGames').updateOne(
               { 'match.match_id': game.match.match_id },
               {
-                $set: {
-                  matchid: game.matchid,
-                  match: game.match,
-                  teams: game.teams,
-                  createdAt: new Date(),
-                },
+                $set: delayedData,
               },
               { upsert: true },
             )
+
+            const players = getAccountsFromMatch(delayedData)
+            events.emit(`delayedGameHeroes:${game.match.match_id}`, players)
 
             return
           }
