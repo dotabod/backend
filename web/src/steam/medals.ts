@@ -43,11 +43,8 @@ export async function gameMedals(
     if (a === 'Uncalibrated') return -1
     if (b === 'Uncalibrated') return 1
 
-    const aMedal = a.split('☆')[0] || a
-    const bMedal = b.split('☆')[0] || b
-
-    const aIndex = ranks.findIndex((rank) => rank.title.startsWith(aMedal))
-    const bIndex = ranks.findIndex((rank) => rank.title.startsWith(bMedal))
+    const aIndex = ranks.findIndex((rank) => rank.title.startsWith(a))
+    const bIndex = ranks.findIndex((rank) => rank.title.startsWith(b))
 
     if (aIndex !== -1 && bIndex !== -1) {
       return aIndex - bIndex
