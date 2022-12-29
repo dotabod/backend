@@ -15,7 +15,7 @@ export function toggleDoubledownMmr(
 }
 
 commandHandler.registerCommand('fixdbl', {
-  aliases: ['fixdd', 'fixsolo'],
+  aliases: ['fixdd'],
   permission: 2,
   cooldown: 15000,
   handler: (message: MessageType, args: string[]) => {
