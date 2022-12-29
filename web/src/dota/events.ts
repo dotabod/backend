@@ -289,11 +289,7 @@ export class setupMainEvents {
         heroName,
       })
 
-      // beta opt in only
-      if (!this.client.beta_tester) return
-
       if (event.owning_player_id === this.playingHeroSlot) {
-        logger.info('STREAMERS COURIER!', { matchid: this.playingMatchId })
         this.say(`Courier micro ICANT thanks ${heroName}`, { beta: true })
       }
     })
@@ -307,21 +303,20 @@ export class setupMainEvents {
         event.sender_player_id,
       )
 
-      logger.info('TIP EVENT', {
-        event,
-        client: this.getChannel(),
-        matchid: this.playingMatchId,
-        heroSlot: this.playingHeroSlot,
-        players: this.players,
-        heroName,
-      })
-
       // beta opt in only
       if (!this.client.beta_tester) return
 
       if (event.receiver_player_id === this.playingHeroSlot) {
-        logger.info('TIPPED STREAMER!', { matchid: this.playingMatchId })
         this.say(`The tip from ${heroName} ICANT`, { beta: true })
+      }
+
+      if (event.sender_player_id === this.playingHeroSlot) {
+        const toHero = getHeroNameById(
+          this.players?.matchPlayers[event.receiver_player_id].heroid ?? 0,
+          event.receiver_player_id,
+        )
+
+        this.say(`We tipping ${toHero} PepeLaugh`, { beta: true })
       }
     })
 
@@ -343,23 +338,10 @@ export class setupMainEvents {
         heroName,
       })
 
-      // beta opt in only
-      if (!this.client.beta_tester) return
-
       if (event.team === this.playingTeam) {
-        logger.info('BOUNTY FOR OUR TEAM!', { matchid: this.playingMatchId })
-
-        this.say(
-          `Nice ${event.team_gold} in bounty gold for ${event.team} EZ Clap Thanks ${heroName}`,
-          { beta: true },
-        )
-      } else {
-        logger.info('BOUNTY FOR ENEMY TEAM!', { matchid: this.playingMatchId })
-
-        this.say(
-          `${event.team_gold} in bounty gold for ${event.team} picked up by ${heroName} monkaS`,
-          { beta: true },
-        )
+        this.say(`+${event.bounty_value} gold from bounty EZ Clap Thanks ${heroName} SeemsGood`, {
+          beta: true,
+        })
       }
     })
 
@@ -406,26 +388,15 @@ export class setupMainEvents {
       // Can't just !this.heroSlot because it can be 0
       const purchaser = this.client.gsi?.items?.teleport0?.purchaser
       if (typeof this.playingHeroSlot !== 'number' && typeof purchaser === 'number') {
-        logger.info('[SLOT] Found hero slot at', {
-          purchaser,
-          name: this.getChannel(),
-        })
         this.playingHeroSlot = purchaser
         void this.saveMatchData()
         return
       }
 
       // beta testers only
-      if (this.client.beta_tester) {
-        const manaSaved = calculateManaSaved(this.treadsData, this.client.gsi)
-        if (manaSaved) {
-          this.say(`Mana saved by tread switching ${manaSaved} EZ Clap`, { beta: true })
-          logger.info('[TREAD SWITCHER] Mana saved', {
-            channel: this.getChannel(),
-            manaSaved,
-            matchid: this.client.gsi?.map?.matchid,
-          })
-        }
+      const manaSaved = calculateManaSaved(this.treadsData, this.client.gsi)
+      if (manaSaved) {
+        this.say(`Mana saved by tread switching ${manaSaved} EZ Clap`, { beta: true })
       }
 
       // Always runs but only until steam is found
