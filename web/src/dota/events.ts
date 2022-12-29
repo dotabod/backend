@@ -323,17 +323,13 @@ export class setupMainEvents {
       if (!isPlayingMatch(this.client.gsi)) return
       if (!this.client.stream_online) return
 
-      const heroName = getHeroNameById(
-        this.players?.matchPlayers[event.player_id].heroid ?? 0,
-        event.player_id,
-      )
+      // Only for first bounties
+      if (event.team === this.playingTeam && Number(this.client.gsi?.map?.clock_time) <= 120) {
+        const heroName = getHeroNameById(
+          this.players?.matchPlayers[event.player_id].heroid ?? 0,
+          event.player_id,
+        )
 
-      // 10 second buffer between event and map time
-      // I think we get this event message duplicated by gsi sometimes
-      if (
-        event.team === this.playingTeam &&
-        event.game_time + 10 >= Number(this.client.gsi?.map?.game_time)
-      ) {
         this.say(`+${event.bounty_value} gold from bounty EZ Clap Thanks ${heroName} SeemsGood`, {
           beta: true,
         })
