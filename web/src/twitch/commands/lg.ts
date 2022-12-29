@@ -16,11 +16,6 @@ commandHandler.registerCommand('lg', {
       return
     }
 
-    if (!isPlayingMatch(message.channel.client.gsi)) {
-      void chatClient.say(message.channel.name, 'Not currently playing a match.')
-      return
-    }
-
     lastgame(message.channel.client.steam32Id, message.channel.client.gsi?.map?.matchid)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
