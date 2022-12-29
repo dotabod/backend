@@ -12,10 +12,11 @@ export async function getWL(channelId: string, startDate: Date | null) {
 
   return prisma.bet
     .groupBy({
-      by: ['won', 'lobby_type', 'is_party'],
+      by: ['won', 'lobby_type', 'is_party', 'is_doubledown'],
       _count: {
         won: true,
         is_party: true,
+        is_doubledown: true,
       },
       where: {
         won: {
@@ -49,7 +50,10 @@ export async function getWL(channelId: string, startDate: Date | null) {
           } else {
             ranked.lose += match._count.won
           }
-          ranked.mmr = (ranked.win - ranked.lose) * (match.is_party ? 20 : 30)
+
+          const mmr = ranked.win - ranked.lose
+          const multiplier = match.is_party ? 20 : 30
+          ranked.mmr = mmr * (match.is_doubledown ? multiplier * 2 : multiplier)
         } else {
           if (match.won) {
             unranked.win += match._count.won
