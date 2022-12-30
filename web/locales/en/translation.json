@@ -1,4 +1,10 @@
 {
+  "chatters": {
+    "midas": "massivePIDAS Use your midas",
+    "pause": "PauseChamp Who paused the game?",
+    "smoke": "Shush {{heroName}} is smoked!",
+    "died": "{{heroName}} died with passive {{itemNames}} ICANT"
+  },
   "aegis": {
     "denied": "{{heroName}} denied the aegis {{emote}}",
     "pickup": "{{heroName}} picked up the aegis!"
@@ -10,6 +16,11 @@
   "betaTester": "",
   "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
+  "predictions": {
+    "title": "Will we win with {{heroName}}",
+    "yes": "Yes",
+    "no": "No"
+  },
   "bets": {
     "lost": "We have lost",
     "manual": "Mods need to end bets manually.",
@@ -64,6 +75,7 @@
   "pleb_off": "{{name}} EZ Clap nice job pleb",
   "profileUrl": "Here's {{channel}}: {{- url}}",
   "rank": {
+    "nextRankAt": "Next rank at",
     "nextRankIn_one": "One more win peepoClap",
     "nextRankIn_other": "in {{count}} wins"
   },

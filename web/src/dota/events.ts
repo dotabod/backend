@@ -483,7 +483,7 @@ export class setupMainEvents {
 
         if (isMidasPassive === true) {
           logger.info('[MIDAS] Passive midas', { name: this.getChannel() })
-          this.say(chatters.midas.message)
+          this.say(t('chatters.midas', { lng: this.client.locale }))
         }
         if (typeof isMidasPassive === 'number') {
           this.say(t('midasUsed', { lng: this.client.locale, seconds: isMidasPassive }))
@@ -538,13 +538,9 @@ export class setupMainEvents {
           if (!itemNames) return
 
           const heroName =
-            getHero(this.playingHero ?? this.client.gsi.hero?.name)?.localized_name ?? 'We'
+            getHero(this.playingHero ?? this.client.gsi.hero?.name)?.localized_name ?? ''
 
-          this.say(
-            `${chatters.passiveDeath.message
-              .replace('[itemnames]', itemNames)
-              .replace('[heroname]', heroName)}`,
-          )
+          this.say(t('chatters.died', { heroName, itemNames, lng: this.client.locale }))
         }
       }
     })
@@ -565,7 +561,8 @@ export class setupMainEvents {
       if (isSmoked) {
         const heroName =
           getHero(this.playingHero ?? this.client.gsi?.hero?.name)?.localized_name ?? 'We'
-        this.say(chatters.smoke.message.replace('[heroname]', heroName))
+
+        this.say(t('chatters.smoked', { heroName, lng: this.client.locale }))
       }
     })
 
@@ -583,7 +580,7 @@ export class setupMainEvents {
         this.client.settings,
       ) as typeof defaultSettings['chatters']
       if (isPaused && chatterEnabled && chatters.pause.enabled) {
-        this.say(chatters.pause.message)
+        this.say(t('chatters.pause', { lng: this.client.locale }))
       }
     })
 
@@ -839,7 +836,12 @@ export class setupMainEvents {
             const hero = getHero(this.client.gsi?.hero?.name)
 
             setTimeout(() => {
-              openTwitchBet(this.getToken(), hero?.localized_name, this.client.settings)
+              openTwitchBet(
+                this.client.locale,
+                this.getToken(),
+                hero?.localized_name,
+                this.client.settings,
+              )
                 .then(() => {
                   this.say(t('bets.open', { lng: this.client.locale }), { delay: false })
                   this.openingBets = false

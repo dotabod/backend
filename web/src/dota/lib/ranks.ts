@@ -109,6 +109,7 @@ export async function getRankDescription(
     .replace('[currentrank]', myRank.title)
     .replace('[nextmmr]', `${nextMMR}`)
     .replace('[wins]', `${nextIn}`)
+    .replace('Next rank at', t('rank.nextRankAt', { lng: locale }))
 
   return msg
 }

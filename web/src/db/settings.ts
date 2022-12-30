@@ -76,24 +76,16 @@ export const defaultSettings = {
   [DBSettings.commandDotabuff]: true,
   [DBSettings.chatters]: {
     midas: {
-      description: 'If your midas is ready and unused for 30s',
       enabled: true,
-      message: 'massivePIDAS Use your midas',
     },
     pause: {
-      description: 'As soon as anyone presses F9',
       enabled: true,
-      message: 'PauseChamp Who paused the game?',
     },
     smoke: {
-      description: 'Whenever your hero has smoke debuff',
       enabled: true,
-      message: 'Shush [heroname] is smoked!',
     },
     passiveDeath: {
-      description: 'Whenever you die with passive stick / faerie / etc',
       enabled: true,
-      message: '[heroname] died with passive [itemnames] ICANT',
     },
   },
   [DBSettings.betsInfo]: {
