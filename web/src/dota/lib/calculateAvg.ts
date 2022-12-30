@@ -11,7 +11,7 @@ export async function calculateAvg(
   const leaderranks: number[] = []
   cards.forEach((card) => {
     mmrs.push(rankTierToMmr(card.rank_tier))
-    leaderranks.push(rankTierToMmr(card.rank_tier))
+    leaderranks.push(card.leaderboard_rank)
   })
 
   // Get average of all numbers in mmrs array
