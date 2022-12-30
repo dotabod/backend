@@ -1,29 +1,8 @@
 {
-  "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
-  "tip": {
-    "from": "The tip from {{heroName}} ICANT",
-    "to": "We tipping {{heroName}} PepeLaugh"
-  },
-  "bountyPickup": "+{{bountyValue}} gold from bounty EZ Clap Thanks {{heroNames}} SeemsGood",
-  "killstreak": {
-    "lost": "{{heroName}} lost the ${killstreakCount} kill streak BibleThump",
-    "won": "{{heroName}} has a ${killstreakCount} kill streak POGGIES"
-  },
-  "treadsToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
-  "treadsToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
-  "bets": {
-    "won": "We have won",
-    "lost": "We have lost",
-    "manual": "Mods need to end bets manually.",
-    "open": "Bets open peepoGamble",
-    "notScored": "Match not scored D: Not adding or removing MMR for match {{matchId}}."
-  },
-  "midasUsed": "Midas was finally used, {{seconds}} seconds late Madge",
   "aegis": {
     "denied": "{{heroName}} denied the aegis ICANT",
     "pickup": "{{heroName}} picked up the aegis!"
   },
-  "matchFound": "Match data found {{commandList}} commands activated.",
   "apm_one": "Live APM: {{count}} Chatting",
   "apm_other": "Live APM: {{count}} Chatting",
   "averageRank": "Average rank this game",
@@ -31,6 +10,14 @@
   "betaTester": "",
   "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
+  "bets": {
+    "lost": "We have lost",
+    "manual": "Mods need to end bets manually.",
+    "notScored": "Match not scored D: Not adding or removing MMR for match {{matchId}}.",
+    "open": "Bets open peepoGamble",
+    "won": "We have won"
+  },
+  "bountyPickup": "+{{bountyValue}} gold from bounty EZ Clap Thanks {{heroNames}} SeemsGood",
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
@@ -41,6 +28,10 @@
   "gpm_other": "Live GPM: {{count}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "hero": "{{commandName}} command disabled because opendota blocked us for having too many users Sadge",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
+  "killstreak": {
+    "lost": "{{heroName}} lost the ${killstreakCount} kill streak BibleThump",
+    "won": "{{heroName}} has a ${killstreakCount} kill streak POGGIES"
+  },
   "lastgame": {
     "link": "Here's last game: {{- url}}",
     "none": "Not playing with anyone from last game",
@@ -50,7 +41,9 @@
   "lastgamescore_lost": "Last game: lost",
   "lastgamescore_won": "Last game: won",
   "lifetime": "Lifetime games",
+  "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
+  "midasUsed": "Midas was finally used, {{seconds}} seconds late Madge",
   "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "User not found. Try logging out and in of dotabod.com",
   "modsOnly_off": "Mods only mode is now off. Everyone can type.",
@@ -77,6 +70,11 @@
   "ranked_no": "Nope this game is not ranked",
   "ranked_yes": "Yes this game is ranked",
   "refresh": "Refreshing overlay...",
+  "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
+  "tip": {
+    "from": "The tip from {{heroName}} ICANT",
+    "to": "We tipping {{heroName}} PepeLaugh"
+  },
   "toggle": "",
   "toggle_disabled": "Dotabod is now disabled. Will no longer respond to commands nor watch game events. Type !toggle again to enable.",
   "toggle_enabled": "Dotabod is now enabled. Responding to commands again and watching game events. Type !toggle again to disable.",
@@ -85,6 +83,8 @@
   "toggleMatch_party": "Changing this match to party mmr: {{- url}} Type !fixparty to undo",
   "toggleMatch_single": "Changing this match to single down mmr: {{- url}} Type !fixdd to undo",
   "toggleMatch_solo": "Changing this match to solo mmr: {{- url}} Type !fixparty to undo",
+  "treadToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
+  "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
   "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",
   "unknown": "Unknown",
   "unknownSteam": "Could not find steam account. Try playing a practice bot match first to save your account to Dotabod!",

@@ -1,4 +1,8 @@
 {
+  "aegis": {
+    "denied": "",
+    "pickup": ""
+  },
   "apm_one": "",
   "apm_few": "",
   "apm_many": "",
@@ -6,6 +10,14 @@
   "averageRank": "",
   "betaFeature": "",
   "betaTester": "",
+  "bets": {
+    "lost": "",
+    "manual": "",
+    "notScored": "",
+    "open": "",
+    "won": ""
+  },
+  "bountyPickup": "",
   "commands_everyone": "",
   "commands_mods": "",
   "dotabod": "",
@@ -17,6 +29,10 @@
   "gpm_other": "",
   "hero": "",
   "invalidMmr": "",
+  "killstreak": {
+    "lost": "",
+    "won": ""
+  },
   "lastgame": {
     "link": "",
     "none": "",
@@ -24,7 +40,9 @@
   },
   "lastgamescore": "",
   "lifetime": "",
+  "matchFound": "",
   "matchId": "",
+  "midasUsed": "",
   "missingMatchData": "",
   "missingUser": "",
   "modsOnly_off": "",
@@ -53,9 +71,18 @@
   "ranked_no": "",
   "ranked_yes": "",
   "refresh": "",
+  "roshanKilled": "",
+  "tip": {
+    "from": "",
+    "to": ""
+  },
   "toggle": "",
   "toggle_toggled": "",
   "toggleMatch": "",
+  "treadToggle_one": "",
+  "treadToggle_few": "",
+  "treadToggle_many": "",
+  "treadToggle_other": "",
   "uknownMmr": "",
   "unknown": "",
   "unknownSteam": "",
