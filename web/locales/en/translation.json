@@ -13,10 +13,13 @@
   "gpm_one": "Live GPM: {{count}}",
   "gpm_other": "Live GPM: {{count}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "hero": "{{commandName}} command disabled because opendota blocked us for having too many users Sadge",
+  "invalidMmr": "Invalid command. Try !setmmr 1234",
   "lastgamescore": "",
   "lastgamescore_lost": "Last game: lost",
   "lastgamescore_won": "Last game: won",
   "matchId": "Match ID: {{matchId}}",
+  "modsOnly_off": "Mods only mode is now off. Everyone can type.",
+  "modsOnly_on": "Mods only mode is now on BASED Clap. Only mods can type.",
   "noHero": "No hero found",
   "noLastMatch": "Did not find a last match PauseChamp",
   "notPlaying": "Not playing PauseChamp",
@@ -27,11 +30,8 @@
   "toggleMatch_party": "Changing this match to party mmr: {{url}} Type !fixparty to undo",
   "toggleMatch_single": "Changing this match to single down mmr: {{url}} Type !fixdd to undo",
   "toggleMatch_solo": "Changing this match to solo mmr: {{url}} Type !fixparty to undo",
+  "uknownMmr": "",
   "unknownSteam": "Could not find steam account. Try playing a practice bot match first to save your account to Dotabod!",
   "unranked": "Not ranked",
-  "unknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{url}}",
-  "invalidMmr": "Invalid command. Try !setmmr 1234",
-  "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
-  "modsOnly_on": "Mods only mode is now on BASED Clap. Only mods can type.",
-  "modsOnly_off": "Mods only mode is now off. Everyone can type."
+  "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})"
 }
