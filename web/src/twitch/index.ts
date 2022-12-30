@@ -56,7 +56,7 @@ socket.on(
         const toggleCommand = commandHandler.commands.get('toggle')!
         if (
           isBotDisabled &&
-          !toggleCommand.aliases.includes(text.replace('!', '').split(' ')[0]) &&
+          !toggleCommand.aliases?.includes(text.replace('!', '').split(' ')[0]) &&
           text.split(' ')[0] !== '!toggle'
         )
           return

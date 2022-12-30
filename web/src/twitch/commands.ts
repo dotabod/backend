@@ -4,8 +4,9 @@ import path from 'path'
 type CommandMap = Record<string, any>
 const commands: CommandMap = {}
 
-fs.readdirSync(path.join(__dirname, './commands')).forEach((file) => {
-  if (file.endsWith('.ts')) {
+const dirname = path.dirname(new URL(import.meta.url).pathname)
+fs.readdirSync(path.join(dirname, './commands')).forEach((file) => {
+  if (file.endsWith('.js')) {
     const command = import(`./commands/${file}`)
     commands[file.slice(0, -3)] = command
   }
