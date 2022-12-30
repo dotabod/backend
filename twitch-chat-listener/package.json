@@ -26,6 +26,8 @@
     "@twurple/api": "^5.2.7",
     "@twurple/auth": "^5.2.7",
     "@twurple/chat": "^5.2.7",
+    "i18next": "^22.4.6",
+    "i18next-fs-backend": "^2.1.1",
     "newrelic": "^9.7.4",
     "prisma": "^4.8.0",
     "socket.io": "^4.5.4",
