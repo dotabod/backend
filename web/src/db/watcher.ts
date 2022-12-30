@@ -33,6 +33,7 @@ channel
       const client = findUser(newObj.id)
       if (!client) return
 
+      client.locale = newObj.locale
       client.beta_tester = newObj.beta_tester
       client.stream_online = newObj.stream_online
       if (typeof newObj.stream_start_date === 'string') {
