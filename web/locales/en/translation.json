@@ -29,8 +29,8 @@
   "hero": "{{commandName}} command disabled because opendota blocked us for having too many users Sadge",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "killstreak": {
-    "lost": "{{heroName}} lost the ${killstreakCount} kill streak BibleThump",
-    "won": "{{heroName}} has a ${killstreakCount} kill streak POGGIES"
+    "lost": "{{heroName}} lost the {{killstreakCount}} kill streak BibleThump",
+    "won": "{{heroName}} has a {{killstreakCount}} kill streak POGGIES"
   },
   "lastgame": {
     "link": "Here's last game: {{- url}}",
