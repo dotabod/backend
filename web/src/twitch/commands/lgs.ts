@@ -54,7 +54,9 @@ commandHandler.registerCommand('lgs', {
 
       void chatClient.say(
         message.channel.name,
-        `Last game: ${lg.won ? 'won' : 'lost'} ${additionals.join(' · ')}`,
+        `Last game: ${lg.won ? 'won' : 'lost'}${additionals.length ? ' · ' : ''}${additionals.join(
+          ' · ',
+        )}`,
       )
     }
 
