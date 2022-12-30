@@ -8,6 +8,7 @@ RUN apk add yarn git
 WORKDIR /app
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 COPY prisma ./prisma
+COPY locales ./locales
 
 RUN yarn --frozen-lockfile
 
@@ -35,6 +36,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./
 COPY --from=deps /app/package.json ./
 COPY --from=deps /app/prisma ./prisma
+COPY --from=deps /app/locales ./locales
 COPY --from=builder /app/tsconfig.json ./
 
 RUN mkdir -p ./src/steam/volumes

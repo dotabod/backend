@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { delayedGames } from '../../../prisma/generated/mongoclient/index.js'
 import { getHeroNameById, heroColors } from '../../dota/lib/heroes.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
@@ -77,7 +79,10 @@ commandHandler.registerCommand('stats', {
         void chatClient.say(message.channel.name, desc)
       })
       .catch((e) => {
-        void chatClient.say(message.channel.name, e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }))
+        void chatClient.say(
+          message.channel.name,
+          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        )
       })
   },
 })
