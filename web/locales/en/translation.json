@@ -33,5 +33,5 @@
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
   "modsOnly_on": "Mods only mode is now on BASED Clap. Only mods can type.",
-  "modsOnly_off": "Mods only mode is now off. Everyone can type.",
+  "modsOnly_off": "Mods only mode is now off. Everyone can type."
 }
