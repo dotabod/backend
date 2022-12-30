@@ -3,6 +3,7 @@ import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { chatClient } from '../../twitch/index.js'
 import { logger } from '../../utils/logger.js'
 import findUser from './connectedStreamers.js'
+import { GLOBAL_DELAY } from './consts.js'
 
 export function tellChatNewMMR(token: string, mmr = 0, oldMmr = 0) {
   const client = findUser(token)
@@ -10,11 +11,16 @@ export function tellChatNewMMR(token: string, mmr = 0, oldMmr = 0) {
   const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
   const newMmr = mmr - oldMmr
   if (mmrEnabled && newMmr !== 0 && mmr !== 0) {
-    const partyMsg =
-      Math.abs(newMmr) === 30 ? '. !fixparty for party and !fixdd for doubledown' : ''
-    void chatClient.say(
-      client.name,
-      `Updated MMR to ${mmr}, ${newMmr > 0 ? '+' : ''}${newMmr}${partyMsg}`,
+    const isAuto = Math.abs(newMmr) === 30
+    const partyMsg = isAuto ? '. !fixparty for party and !fixdd for doubledown' : ''
+    setTimeout(
+      () => {
+        void chatClient.say(
+          client.name,
+          `Updated MMR to ${mmr}, ${newMmr > 0 ? '+' : ''}${newMmr}${partyMsg}`,
+        )
+      },
+      isAuto ? GLOBAL_DELAY : 0,
     )
   }
 }
