@@ -30,6 +30,7 @@ commandHandler.registerCommand('lgs', {
           is_doubledown: true,
           matchId: true,
           lobby_type: true,
+          updatedAt: true,
         },
         orderBy: {
           createdAt: 'desc',
@@ -42,6 +43,10 @@ commandHandler.registerCommand('lgs', {
       }
 
       const additionals = []
+      additionals.push(
+        `Ended ${Math.floor((Date.now() - lg.updatedAt.getTime()) / 1000 / 60)}m ago`,
+      )
+
       if (lg.is_party) additionals.push('Party match')
       if (lg.is_doubledown) additionals.push('Double down')
       if (lg.lobby_type !== 7) additionals.push('Not ranked')
