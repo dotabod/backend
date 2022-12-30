@@ -340,9 +340,9 @@ export class setupMainEvents {
         bountyHeroNames.push(heroName)
         bountyTimeout = setTimeout(() => {
           this.say(
-            `+${event.bounty_value} gold from bounty EZ Clap Thanks ${bountyHeroNames.join(
-              ', ',
-            )} SeemsGood`,
+            `+${
+              event.bounty_value * bountyHeroNames.length
+            } gold from bounty EZ Clap Thanks ${bountyHeroNames.join(', ')} SeemsGood`,
             {
               beta: true,
             },
