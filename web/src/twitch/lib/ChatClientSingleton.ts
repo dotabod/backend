@@ -32,7 +32,8 @@ class ChatClientSingleton {
           resolve(chatClient)
         } catch (e: any) {
           logger.info(
-            `[TWITCHSETUP] Error connecting to chat client on attempt ${currentAttempt}: ${e}`,
+            `[TWITCHSETUP] Error connecting to chat client on attempt ${currentAttempt}`,
+            { e },
           )
           if (!operation.retry(e)) {
             reject(e)

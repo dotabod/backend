@@ -158,7 +158,7 @@ class Dota {
 
     this.steamClient.on('error', (error: any) => {
       logger.info('[STEAM]steam error', { error })
-      if (process.env.NODE_ENV !== 'production') this.exit()
+      if (process.env.NODE_ENV !== 'production') void this.exit()
       // @ts-expect-error connect is there i swear
       if (process.env.NODE_ENV === 'production') this.steamClient.connect()
     })
@@ -223,7 +223,8 @@ class Dota {
 
     operation.attempt((currentAttempt: number) => {
       axios(
-        `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steam_server_id}`,
+        `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env
+          .STEAM_WEB_API!}&server_steam_id=${steam_server_id}`,
       )
         .then(async (response) => {
           const game = response.data as delayedGames | undefined
@@ -388,7 +389,7 @@ class Dota {
         .find({ id: { $in: accounts } })
         .sort({ createdAt: -1 })
         .toArray()
-      const arr: any[] = []
+      const arr: any[] | PromiseLike<any[]> = []
       for (let i = 0; i < accounts.length; i += 1) {
         let needToGetCard = false
         const card: any = cards.find((tempCard) => tempCard.id === accounts[i])
@@ -429,6 +430,7 @@ class Dota {
           )
         }
       }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return Promise.all(promises).then(() => arr)
     })
   }

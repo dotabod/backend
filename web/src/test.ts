@@ -1,7 +1,6 @@
 import axios from 'axios'
 
 import { prisma } from './db/prisma.js'
-import { calculateAvg } from './dota/lib/calculateAvg.js'
 import { getBotAPI } from './twitch/lib/getBotAPI.js'
 import { logger } from './utils/logger.js'
 

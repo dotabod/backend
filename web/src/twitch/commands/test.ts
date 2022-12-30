@@ -39,7 +39,8 @@ commandHandler.registerCommand('test', {
       })
 
       logger.info(
-        `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamserverid}`,
+        `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env
+          .STEAM_WEB_API!}&server_steam_id=${steamserverid}`,
       )
 
       void chatClient.say(channel, 'Check console!')

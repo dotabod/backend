@@ -10,7 +10,7 @@ export const logger = createLogger({
     format.splat(),
     format.json(),
     format.printf(({ message, level, timestamp, ...rest }) => {
-      return `[${timestamp}] ${level}: ${message} ${JSON.stringify(rest)}`
+      return `[${timestamp as string}] ${level}: ${message as string} ${JSON.stringify(rest)}`
     }),
   ),
   transports: [new transports.Console()],
