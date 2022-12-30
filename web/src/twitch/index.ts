@@ -24,6 +24,7 @@ import './commands/opendota.js'
 import './commands/fixdbl.js'
 import './commands/fixparty.js'
 import './commands/beta.js'
+import './commands/lgs.js'
 import './commands/avg.js'
 
 import { io } from 'socket.io-client'
