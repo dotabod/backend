@@ -356,6 +356,7 @@ export class setupMainEvents {
       }
     })
 
+    let killstreakTimeout: NodeJS.Timeout
     events.on(`${this.getToken()}:player:kill_streak`, (streak: number) => {
       if (!isPlayingMatch(this.client.gsi)) return
       if (!this.client.stream_online) return
@@ -372,7 +373,10 @@ export class setupMainEvents {
 
       if (streak <= 3) return
 
-      this.say(`${heroName} has a ${streak} kill streak POGGIES`, { beta: true })
+      clearTimeout(killstreakTimeout)
+      killstreakTimeout = setTimeout(() => {
+        this.say(`${heroName} has a ${streak} kill streak POGGIES`, { beta: true })
+      }, 15000)
     })
 
     events.on(`${this.getToken()}:${DotaEventTypes.AegisDenied}`, (event: DotaEvent) => {
