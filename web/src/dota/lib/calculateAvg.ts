@@ -16,7 +16,8 @@ export async function calculateAvg(
   const avg = Math.round(mmrs.reduce((a, b) => a + b, 0) / mmrs.length)
   const avgMsg = ` - Average rank this game`
   const rank = await getRankDetail(avg)
-  if (!rank) return `${avg}${avgMsg}`
+
+  if (!rank) return `${avg || 'Immortal'}${avgMsg}`
 
   if ('standing' in rank) {
     return `Immortal${avgMsg}`
