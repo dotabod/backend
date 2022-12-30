@@ -14,14 +14,19 @@
   "gpm_many": "",
   "gpm_other": "",
   "hero": "",
+  "invalidMmr": "",
   "lastgamescore": "",
   "matchId": "",
+  "modsOnly_off": "",
+  "modsOnly_on": "",
   "noHero": "",
   "noLastMatch": "",
   "notPlaying": "",
   "party": "",
   "ping": "",
   "toggleMatch": "",
+  "uknownMmr": "",
   "unknownSteam": "",
-  "unranked": ""
+  "unranked": "",
+  "updateMmrMulti": ""
 }

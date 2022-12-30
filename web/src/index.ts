@@ -2,6 +2,7 @@ import { use } from 'i18next'
 import FsBackend, { FsBackendOptions } from 'i18next-fs-backend'
 
 await use(FsBackend).init<FsBackendOptions>({
+  initImmediate: false,
   lng: 'en',
   fallbackLng: 'en',
   preload: ['en', 'ru'],
