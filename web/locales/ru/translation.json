@@ -4,6 +4,8 @@
     "pickup": ""
   },
   "apm_one": "",
+  "apm_few": "",
+  "apm_many": "",
   "apm_other": "",
   "averageRank": "",
   "betaFeature": "",
@@ -18,6 +20,12 @@
     "won": ""
   },
   "bountyPickup": "",
+  "chatters": {
+    "died": "",
+    "midas": "",
+    "pause": "",
+    "smoked": ""
+  },
   "commands_everyone": "",
   "commands_mods": "",
   "dotabod": "",
@@ -25,6 +33,8 @@
   "gameNotFound": "",
   "gpm_zero": "",
   "gpm_one": "",
+  "gpm_few": "",
+  "gpm_many": "",
   "gpm_other": "",
   "hero": "",
   "invalidMmr": "",
@@ -62,9 +72,17 @@
   "ping": "",
   "pleb": "",
   "pleb_off": "",
+  "predictions": {
+    "no": "",
+    "title": "",
+    "yes": ""
+  },
   "profileUrl": "",
   "rank": {
+    "nextRankAt": "",
     "nextRankIn_one": "",
+    "nextRankIn_few": "",
+    "nextRankIn_many": "",
     "nextRankIn_other": ""
   },
   "ranked_no": "",
@@ -84,6 +102,8 @@
   "toggleMatch_single": "",
   "toggleMatch_solo": "",
   "treadToggle_one": "",
+  "treadToggle_few": "",
+  "treadToggle_many": "",
   "treadToggle_other": "",
   "uknownMmr": "",
   "unknown": "",
@@ -94,5 +114,7 @@
   "updateMmr_manual": "",
   "updateMmrMulti": "",
   "xpm_one": "",
+  "xpm_few": "",
+  "xpm_many": "",
   "xpm_other": ""
 }

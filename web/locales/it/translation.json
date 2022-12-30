@@ -4,7 +4,7 @@
     "pickup": "{{heroName}} ha preso l'egida"
   },
   "apm_one": "APM Live: {{count}} Chatting",
-  "apm_other": "APM Live: {{count}} Chatting",
+  "apm_many": "APM Live: {{count}} Chatting",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "",
@@ -18,6 +18,12 @@
     "won": "Abbiamo vinto"
   },
   "bountyPickup": "+{{bountyValue}} gold dalle bounty EZ Clap Grazie {{heroNames}} SeemsGood",
+  "chatters": {
+    "died": "",
+    "midas": "",
+    "pause": "",
+    "smoked": ""
+  },
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
@@ -25,7 +31,7 @@
   "gameNotFound": "La partita non è stata trovata",
   "gpm_zero": "GPM Live: {{count}}",
   "gpm_one": "GPM Live: {{count}}",
-  "gpm_other": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",
+  "gpm_many": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",
   "hero": "{{commandName}} comando disabilitato perchè opendota ci ha bloccato perchè abbiamo troppi utenti Sadge",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
@@ -62,10 +68,16 @@
   "ping": "Pong EZ Clap",
   "pleb": "Un plebeo scrive 👇",
   "pleb_off": "{{name}} EZ Clap bel lavoro plebeo",
+  "predictions": {
+    "no": "",
+    "title": "",
+    "yes": ""
+  },
   "profileUrl": "Qui c'è {{channel}}: {{- url}}",
   "rank": {
+    "nextRankAt": "",
     "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
-    "nextRankIn_other": "in {{count}} vittorie"
+    "nextRankIn_many": "in {{count}} vittorie"
   },
   "ranked_no": "No questa partita non è classificata",
   "ranked_yes": "Si questa partita è classificata",
@@ -84,7 +96,7 @@
   "toggleMatch_single": "Questo match verrá contato come standard mmr: {{- url}} Scrivi !fixdd per annullare",
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
   "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
-  "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
+  "treadToggle_many": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",
   "unknownSteam": "Impossibile trovare l'account Steam. Prova a giocare una partita di prova contro i bot per salvare il tuo account su Dotabod!",
@@ -94,5 +106,5 @@
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
   "xpm_one": "XPM Live: {{count}}",
-  "xpm_other": "XPM Live: {{count}}"
+  "xpm_many": "XPM Live: {{count}}"
 }

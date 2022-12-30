@@ -1,26 +1,15 @@
 {
-  "chatters": {
-    "midas": "massivePIDAS Use your midas",
-    "pause": "PauseChamp Who paused the game?",
-    "smoke": "Shush {{heroName}} is smoked!",
-    "died": "{{heroName}} died with passive {{itemNames}} ICANT"
-  },
   "aegis": {
     "denied": "{{heroName}} denied the aegis {{emote}}",
     "pickup": "{{heroName}} picked up the aegis!"
   },
   "apm_one": "Live APM: {{count}} Chatting",
-  "apm_other": "Live APM: {{count}} Chatting",
+  "apm_many": "Live APM: {{count}} Chatting",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
   "betaTester": "",
   "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
-  "predictions": {
-    "title": "Will we win with {{heroName}}",
-    "yes": "Yes",
-    "no": "No"
-  },
   "bets": {
     "lost": "We have lost",
     "manual": "Mods need to end bets manually.",
@@ -29,6 +18,12 @@
     "won": "We have won"
   },
   "bountyPickup": "+{{bountyValue}} gold from bounty EZ Clap Thanks {{heroNames}} SeemsGood",
+  "chatters": {
+    "died": "{{heroName}} died with passive {{itemNames}} ICANT",
+    "midas": "massivePIDAS Use your midas",
+    "pause": "PauseChamp Who paused the game?",
+    "smoked": "Shush {{heroName}} is smoked!"
+  },
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
@@ -36,7 +31,7 @@
   "gameNotFound": "Game was not found",
   "gpm_zero": "Live GPM: {{count}}",
   "gpm_one": "Live GPM: {{count}}",
-  "gpm_other": "Live GPM: {{count}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_many": "Live GPM: {{count}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "hero": "{{commandName}} command disabled because opendota blocked us for having too many users Sadge",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "killstreak": {
@@ -73,11 +68,16 @@
   "ping": "Pong EZ Clap",
   "pleb": "One pleb IN 👇",
   "pleb_off": "{{name}} EZ Clap nice job pleb",
+  "predictions": {
+    "no": "No",
+    "title": "Will we win with {{heroName}}",
+    "yes": "Yes"
+  },
   "profileUrl": "Here's {{channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Next rank at",
     "nextRankIn_one": "One more win peepoClap",
-    "nextRankIn_other": "in {{count}} wins"
+    "nextRankIn_many": "in {{count}} wins"
   },
   "ranked_no": "Nope this game is not ranked",
   "ranked_yes": "Yes this game is ranked",
@@ -96,7 +96,7 @@
   "toggleMatch_single": "Changing this match to single down mmr: {{- url}} Type !fixdd to undo",
   "toggleMatch_solo": "Changing this match to solo mmr: {{- url}} Type !fixparty to undo",
   "treadToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
-  "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
+  "treadToggle_many": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
   "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",
   "unknown": "Unknown",
   "unknownSteam": "Could not find steam account. Try playing a practice bot match first to save your account to Dotabod!",
@@ -106,5 +106,5 @@
   "updateMmr_manual": "Updated MMR to {{mmr}}",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
   "xpm_one": "Live XPM: {{count}}",
-  "xpm_other": "Live XPM: {{count}}"
+  "xpm_many": "Live XPM: {{count}}"
 }
