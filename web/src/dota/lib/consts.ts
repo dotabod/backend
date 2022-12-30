@@ -71,3 +71,6 @@ export const leaderRanks = [
   { range: [101, 1000], image: '80.png', sparklingEffect: true },
   { range: [1001, 100000], image: '80.png', sparklingEffect: false },
 ]
+
+export const plebMode = new Set()
+export const modMode = new Set()
