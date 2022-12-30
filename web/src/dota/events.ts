@@ -323,20 +323,32 @@ export class setupMainEvents {
       }
     })
 
+    let bountyTimeout: NodeJS.Timeout
+    let bountyHeroNames: string[] = []
+
     events.on(`${this.getToken()}:${DotaEventTypes.BountyPickup}`, (event: DotaEvent) => {
       if (!isPlayingMatch(this.client.gsi)) return
       if (!this.client.stream_online) return
 
       // Only for first bounties
       if (event.team === this.playingTeam && Number(this.client.gsi?.map?.clock_time) <= 120) {
+        clearTimeout(bountyTimeout)
         const heroName = getHeroNameById(
           this.players?.matchPlayers[event.player_id].heroid ?? 0,
           event.player_id,
         )
-
-        this.say(`+${event.bounty_value} gold from bounty EZ Clap Thanks ${heroName} SeemsGood`, {
-          beta: true,
-        })
+        bountyHeroNames.push(heroName)
+        bountyTimeout = setTimeout(() => {
+          this.say(
+            `+${event.bounty_value} gold from bounty EZ Clap Thanks ${bountyHeroNames.join(
+              ', ',
+            )} SeemsGood`,
+            {
+              beta: true,
+            },
+          )
+          bountyHeroNames = []
+        }, 15000)
       }
     })
 
