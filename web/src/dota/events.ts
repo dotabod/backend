@@ -53,6 +53,8 @@ export class setupMainEvents {
   playingHeroSlot: number | undefined | null = null
   playingHero: HeroNames | undefined | null = null
   playingLobbyType: number | undefined | null = null
+  manaSaved = 0
+  treadToggles = 0
   players: ReturnType<typeof getAccountsFromMatch> | undefined | null = null
   savingSteamServerId = false
   steamServerTries = 0
@@ -137,6 +139,8 @@ export class setupMainEvents {
       this.openingBets = false
       this.playingMatchId = null
       this.playingTeam = null
+      this.manaSaved = 0
+      this.treadToggles = 0
 
       this.roshanKilled = undefined
       this.aegisPickedUp = undefined
@@ -440,10 +444,9 @@ export class setupMainEvents {
 
       // beta testers only
       if (this.client.beta_tester) {
-        const manaSaved = calculateManaSaved(this.treadsData, this.client.gsi)
-        if (manaSaved >= 50) {
-          this.say(`Mana saved by tread switching ${manaSaved} EZ Clap`, { beta: true })
-        }
+        const mana = calculateManaSaved(this.treadsData, this.client.gsi)
+        this.manaSaved += mana
+        this.treadToggles += mana > 0 ? 1 : 0
       }
 
       // Always runs but only until steam is found
@@ -1006,17 +1009,17 @@ export class setupMainEvents {
     const channel = this.getChannel()
     this.endingBets = true
 
-    logger.info('calling mmr update handler', {
-      won,
-      channel: this.getChannel(),
-      matchId,
-      heroSlot: this.playingHeroSlot,
-    })
-
     // Default ranked
     const localLobbyType = typeof this.playingLobbyType !== 'number' ? 7 : this.playingLobbyType
     const isParty = false // sadge. opendota rate limited us
     this.updateMMR(won, localLobbyType, matchId, isParty, this.playingHeroSlot)
+
+    if (this.treadToggles > 0) {
+      this.say(
+        `We toggled treads ${this.treadToggles} times to save a total ${this.manaSaved} mana this match`,
+        { beta: true },
+      )
+    }
 
     if (!betsEnabled) {
       logger.info('bets are not enabled, stopping here', { name: this.getChannel() })
