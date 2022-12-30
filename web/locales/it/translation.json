@@ -5,6 +5,7 @@
   },
   "apm_one": "APM Live: {{count}} Chatting",
   "apm_many": "APM Live: {{count}} Chatting",
+  "apm_other": "APM Live: {{count}} Chatting",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "",
@@ -32,6 +33,7 @@
   "gpm_zero": "GPM Live: {{count}}",
   "gpm_one": "GPM Live: {{count}}",
   "gpm_many": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",
+  "gpm_other": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",
   "hero": "{{commandName}} comando disabilitato perchè opendota ci ha bloccato perchè abbiamo troppi utenti Sadge",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
@@ -77,7 +79,8 @@
   "rank": {
     "nextRankAt": "",
     "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
-    "nextRankIn_many": "in {{count}} vittorie"
+    "nextRankIn_many": "in {{count}} vittorie",
+    "nextRankIn_other": "in {{count}} vittorie"
   },
   "ranked_no": "No questa partita non è classificata",
   "ranked_yes": "Si questa partita è classificata",
@@ -97,6 +100,7 @@
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
   "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "treadToggle_many": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
+  "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",
   "unknownSteam": "Impossibile trovare l'account Steam. Prova a giocare una partita di prova contro i bot per salvare il tuo account su Dotabod!",
@@ -106,5 +110,6 @@
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
   "xpm_one": "XPM Live: {{count}}",
-  "xpm_many": "XPM Live: {{count}}"
+  "xpm_many": "XPM Live: {{count}}",
+  "xpm_other": "XPM Live: {{count}}"
 }

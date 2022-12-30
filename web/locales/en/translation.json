@@ -5,6 +5,7 @@
   },
   "apm_one": "Live APM: {{count}} Chatting",
   "apm_many": "Live APM: {{count}} Chatting",
+  "apm_other": "Live APM: {{count}} Chatting",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
   "betaTester": "",
@@ -32,6 +33,7 @@
   "gpm_zero": "Live GPM: {{count}}",
   "gpm_one": "Live GPM: {{count}}",
   "gpm_many": "Live GPM: {{count}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM: {{count}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "hero": "{{commandName}} command disabled because opendota blocked us for having too many users Sadge",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "killstreak": {
@@ -77,7 +79,8 @@
   "rank": {
     "nextRankAt": "Next rank at",
     "nextRankIn_one": "One more win peepoClap",
-    "nextRankIn_many": "in {{count}} wins"
+    "nextRankIn_many": "in {{count}} wins",
+    "nextRankIn_other": "in {{count}} wins"
   },
   "ranked_no": "Nope this game is not ranked",
   "ranked_yes": "Yes this game is ranked",
@@ -97,6 +100,7 @@
   "toggleMatch_solo": "Changing this match to solo mmr: {{- url}} Type !fixparty to undo",
   "treadToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
   "treadToggle_many": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
+  "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
   "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",
   "unknown": "Unknown",
   "unknownSteam": "Could not find steam account. Try playing a practice bot match first to save your account to Dotabod!",
@@ -106,5 +110,6 @@
   "updateMmr_manual": "Updated MMR to {{mmr}}",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
   "xpm_one": "Live XPM: {{count}}",
-  "xpm_many": "Live XPM: {{count}}"
+  "xpm_many": "Live XPM: {{count}}",
+  "xpm_other": "Live XPM: {{count}}"
 }
