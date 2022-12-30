@@ -21,7 +21,7 @@ commandHandler.registerCommand('test', {
     const [steam32Id] = args
     async function handler() {
       if (!steam32Id || !client.steam32Id) {
-        void chatClient.say(channel, 'No steam32Id? PauseChamp')
+        void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
         return
       }
 
@@ -30,7 +30,7 @@ commandHandler.registerCommand('test', {
       )) as string | undefined
 
       if (!steamserverid) {
-        void chatClient.say(channel, 'Match not found PauseChamp')
+        void chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
         return
       }
 
@@ -44,8 +44,6 @@ commandHandler.registerCommand('test', {
         `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env
           .STEAM_WEB_API!}&server_steam_id=${steamserverid}`,
       )
-
-      void chatClient.say(channel, 'Check console!')
     }
 
     void handler()

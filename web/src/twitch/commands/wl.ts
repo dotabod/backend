@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { getWL } from '../../db/getWL.js'
 import { DBSettings } from '../../db/settings.js'
 import { logger } from '../../utils/logger.js'
@@ -15,7 +17,7 @@ commandHandler.registerCommand('wl', {
     } = message
 
     if (!client.steam32Id) {
-      void chatClient.say(channel, 'Begin a match to save your account to Dotabod.')
+      void chatClient.say(channel, t('unknownSteam', { lng: client.locale }))
       return
     }
 
@@ -25,11 +27,12 @@ commandHandler.registerCommand('wl', {
     })
 
     getWL(channelId, client.stream_start_date)
-      .then(({ msg }) => {
-        void chatClient.say(channel, msg ?? 'Unknown WL')
+      .then((res: any) => {
+        if (res?.msg) {
+          void chatClient.say(channel, res.msg)
+        }
       })
       .catch((e) => {
-        void chatClient.say(channel, 'Could not get data, try again later')
         logger.error('[WL] Error getting WL', { error: e, channelId, name: client.name })
       })
   },

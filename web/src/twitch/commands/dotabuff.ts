@@ -14,7 +14,11 @@ commandHandler.registerCommand('dotabuff', {
     if (client.steam32Id && Number(client.steam32Id)) {
       void chatClient.say(
         channel,
-        `Here's ${client.name}: dotabuff.com/players/${client.steam32Id.toString()}`,
+        t('profileUrl', {
+          channel: client.name,
+          lng: message.channel.client.locale,
+          url: `dotabuff.com/players/${client.steam32Id.toString()}`,
+        }),
       )
       return
     }

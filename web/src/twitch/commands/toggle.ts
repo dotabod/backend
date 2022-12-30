@@ -1,35 +1,24 @@
+import { t } from 'i18next'
+
 import { prisma } from '../../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { events } from '../../dota/server.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-export function tellChatDotabodState(isDisabled: boolean, content: string) {
-  const toggled = isDisabled ? 'disabled' : 'enabled'
-
-  return `Dotabod is now ${toggled}. ${
-    isDisabled
-      ? `Will no longer watch game events nor respond to commands. Type ${
-          content.split(' ')[0]
-        } again to enable.`
-      : `Responding to commands again and watching game events. Type ${
-          content.split(' ')[0]
-        } again to disable.`
-  }`
-}
-
 export async function toggleDotabod(
   token: string,
   isBotDisabled: boolean,
   channel: string,
-  content = '!toggle',
+  lng = 'en',
 ) {
   if (!isBotDisabled) {
     events.emit('new-gsi-client', token)
     await chatClient.join(channel)
   }
 
-  await chatClient.say(channel, tellChatDotabodState(isBotDisabled, content))
+  const toggled = isBotDisabled ? 'disabled' : 'enabled'
+  await chatClient.say(channel, t('toggle', { context: toggled, lng }))
 
   if (isBotDisabled) {
     events.emit('remove-gsi-client', token)

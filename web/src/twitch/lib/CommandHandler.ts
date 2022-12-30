@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { SocketClient } from '../../types.js'
 import { chatClient } from '../index.js'
@@ -84,7 +86,10 @@ class CommandHandler {
     if (!options) return
 
     if (options.onlyOnline && !message.channel.client.stream_online) {
-      void chatClient.say(message.channel.name, 'Stream not live PauseChamp')
+      void chatClient.say(
+        message.channel.name,
+        t('notLive', { lng: message.channel.client.locale }),
+      )
       return
     }
 

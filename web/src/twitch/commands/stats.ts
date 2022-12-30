@@ -64,7 +64,7 @@ commandHandler.registerCommand('stats', {
     // }
 
     if (!client.gsi?.map?.matchid) {
-      void chatClient.say(channel, 'Not in a match PauseChamp')
+      void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
     }
 
@@ -73,7 +73,6 @@ commandHandler.registerCommand('stats', {
       return
     }
 
-    // TODO: Add name and hero to !profile
     profileLink(client.gsi.map.matchid, args)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)

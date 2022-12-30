@@ -1,5 +1,6 @@
 import './commands.js'
 
+import { t } from 'i18next'
 import { io } from 'socket.io-client'
 
 import getDBUser from '../db/getDBUser.js'
@@ -31,7 +32,7 @@ socket.on(
     ) {
       plebMode.delete(channelId)
       void chatClient.say(channel, '/subscribers')
-      void chatClient.say(channel, `${user} EZ Clap`)
+      void chatClient.say(channel, t('pleb', { context: 'off', lng: userInfo.locale }))
       return
     }
 
@@ -48,7 +49,7 @@ socket.on(
     getDBUser(undefined, channelId)
       .then((client) => {
         if (!client || !channelId) {
-          void chatClient.say(channel, 'User not found. Try logging out and in of dotabod.com')
+          void chatClient.say(channel, t('missingUser', { lng: userInfo.locale }))
           return
         }
 

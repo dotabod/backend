@@ -26,7 +26,7 @@ commandHandler.registerCommand('ranked', {
 
     async function handler() {
       if (!currentMatchId) {
-        void chatClient.say(channel, 'Not in a match PauseChamp')
+        void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
         return
       }
 
@@ -35,16 +35,22 @@ commandHandler.registerCommand('ranked', {
         .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames | undefined
 
       if (!response) {
-        void chatClient.say(channel, 'Waiting for current match data PauseChamp')
+        void chatClient.say(channel, t('missingMatchData', { lng: message.channel.client.locale }))
         return
       }
 
       if (response.match.lobby_type === 7) {
-        void chatClient.say(channel, 'Yes this game is ranked')
+        void chatClient.say(
+          channel,
+          t('ranked', { context: 'yes', lng: message.channel.client.locale }),
+        )
         return
       }
 
-      void chatClient.say(channel, 'Nope this game is not ranked')
+      void chatClient.say(
+        channel,
+        t('ranked', { context: 'no', lng: message.channel.client.locale }),
+      )
     }
 
     void handler()

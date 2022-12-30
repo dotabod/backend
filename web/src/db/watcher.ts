@@ -72,7 +72,7 @@ channel
       }
 
       if (newObj.key === DBSettings.commandDisable) {
-        void toggleDotabod(client.token, !!newObj.value, client.name)
+        void toggleDotabod(client.token, !!newObj.value, client.name, client.locale)
       }
 
       // Sending this one even when offline, cause they might be testing locally

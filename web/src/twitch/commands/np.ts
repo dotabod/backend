@@ -29,7 +29,7 @@ commandHandler.registerCommand('np', {
     async function addRemoveHandler() {
       if (addOrRemove === 'add') {
         if (!Number(forSteam32Id) || !forName) {
-          void chatClient.say(channel, 'Try !np add <steam32id> <playername>')
+          void chatClient.say(channel, t('npAdd', { lng: message.channel.client.locale }))
           return
         }
 
@@ -46,13 +46,16 @@ commandHandler.registerCommand('np', {
           },
           { upsert: true },
         )
-        void chatClient.say(channel, `Added ${forName} to !np for this channel`)
+        void chatClient.say(
+          channel,
+          t('npAdded', { name: forName, lng: message.channel.client.locale }),
+        )
         return
       }
 
       if (addOrRemove === 'remove') {
         if (!Number(forSteam32Id)) {
-          void chatClient.say(channel, 'Try !np remove <steam32id>')
+          void chatClient.say(channel, t('npRemove', { lng: message.channel.client.locale }))
           return
         }
 
@@ -60,9 +63,15 @@ commandHandler.registerCommand('np', {
           .collection('notablePlayers')
           .deleteOne({ channel: twitchChannelId, account_id: Number(forSteam32Id) })
         if (removed.deletedCount) {
-          void chatClient.say(channel, `Removed ${forSteam32Id} from !np for this channel`)
+          void chatClient.say(
+            channel,
+            t('npRemoved', { steamid: forSteam32Id, lng: message.channel.client.locale }),
+          )
         } else {
-          void chatClient.say(channel, `Could not find ${forSteam32Id} for this channel`)
+          void chatClient.say(
+            channel,
+            t('npUnknown', { steamid: forSteam32Id, lng: message.channel.client.locale }),
+          )
         }
         return
       }

@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { DBSettings } from '../../db/settings.js'
 import { plebMode } from '../../dota/lib/consts.js'
 import { chatClient } from '../index.js'
@@ -13,7 +15,7 @@ commandHandler.registerCommand('pleb', {
     } = message
     plebMode.add(channelId)
     void chatClient.say(channel, '/subscribersoff')
-    void chatClient.say(channel, 'One pleb IN 👇')
+    void chatClient.say(channel, t('pleb', { lng: message.channel.client.locale }))
     return
   },
 })
