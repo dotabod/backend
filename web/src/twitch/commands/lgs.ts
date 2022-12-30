@@ -24,6 +24,9 @@ commandHandler.registerCommand('lgs', {
             not: null,
           },
         },
+        orderBy: {
+          createdAt: 'desc',
+        },
       })
 
       const additionals = []
