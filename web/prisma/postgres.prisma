@@ -32,7 +32,7 @@ model Account {
 model User {
   id                String         @id @default(cuid())
   displayName       String?        @unique(map: "users_name_key")
-  email             String         @unique
+  email             String?        @unique
   image             String?
   createdAt         DateTime       @default(now()) @map("created_at")
   updatedAt         DateTime       @default(now()) @updatedAt @map("updated_at")
@@ -45,6 +45,7 @@ model User {
   stream_online     Boolean        @default(false)
   stream_start_date DateTime?      @db.Timestamp(6)
   beta_tester       Boolean        @default(false)
+  locale            String         @default("en")
   Account           Account?
   Bet               Bet[]
   settings          Setting[]

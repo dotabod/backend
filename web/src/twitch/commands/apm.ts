@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { DBSettings } from '../../db/settings.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import { chatClient } from '../index.js'
@@ -11,25 +13,20 @@ commandHandler.registerCommand('apm', {
       channel: { name: channel, client },
     } = message
     if (!client.gsi?.hero?.name) {
-      void chatClient.say(channel, 'No hero found')
+      void chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
       return
     }
+
     if (!isPlayingMatch(client.gsi)) {
-      void chatClient.say(channel, 'Not playing PauseChamp')
+      void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
     }
 
     const commandsIssued = client.gsi.player?.commands_issued ?? 0
-
-    if (!commandsIssued) {
-      void chatClient.say(channel, 'Live APM: 0 Chatting')
-      return
-    }
-
     const gameTime = client.gsi.map?.game_time ?? 1
-    const apm = Math.round(commandsIssued / (gameTime / 60))
+    const apm = commandsIssued ? Math.round(commandsIssued / (gameTime / 60)) : 0
 
-    void chatClient.say(channel, `Live APM: ${apm} Chatting`)
+    void chatClient.say(channel, t('apm', { lng: message.channel.client.locale, count: apm }))
     return
   },
 })

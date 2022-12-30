@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { prisma } from '../../db/prisma.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
@@ -20,13 +22,11 @@ commandHandler.registerCommand('beta', {
 
       void chatClient.say(
         message.channel.name,
-        `${message.channel.name} is now ${
-          message.channel.client.beta_tester ? 'not' : ''
-        } a beta tester.${
-          !message.channel.client.beta_tester
-            ? ' Visit discord.dotabod.com to see the beta features. '
-            : ''
-        } Type !beta to undo`,
+        t('betaTester', {
+          lng: message.channel.client.locale,
+          channel: message.channel.name,
+          context: message.channel.client.beta_tester ? 'off' : 'on',
+        }),
       )
     }
 

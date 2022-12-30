@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { prisma } from '../../db/prisma.js'
 import { updateMmr } from '../../dota/lib/updateMmr.js'
 import { logger } from '../../utils/logger.js'
@@ -13,7 +15,7 @@ function togglePartyMmr(
   const newmmr = currentMmr
   const baseDelta = isDoubledown ? 20 : 10
   const delta = wasParty ? -baseDelta : baseDelta
-  return didWin ? newmmr + delta : newmmr - delta
+  return didWin ? newmmr - delta : newmmr + delta
 }
 
 commandHandler.registerCommand('fixparty', {
@@ -42,15 +44,20 @@ commandHandler.registerCommand('fixparty', {
       })
 
       if (!bet) {
-        void chatClient.say(message.channel.name, `Did not find a last match PauseChamp`)
+        void chatClient.say(
+          message.channel.name,
+          t('noLastMatch', { lng: message.channel.client.locale }),
+        )
         return
       }
 
       void chatClient.say(
         message.channel.name,
-        `Changing this match to ${bet.is_party ? 'solo' : 'party'} mmr: dotabuff.com/matches/${
-          bet.matchId
-        } Type !fixsolo to undo`,
+        t('toggleMatch', {
+          context: bet.is_party ? 'solo' : 'party',
+          url: `dotabuff.com/matches/${bet.matchId}`,
+          lng: message.channel.client.locale,
+        }),
       )
 
       updateMmr(

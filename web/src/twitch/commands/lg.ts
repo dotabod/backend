@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { DBSettings } from '../../db/settings.js'
 import lastgame from '../../steam/lastgame.js'
 import { chatClient } from '../index.js'
@@ -10,7 +12,10 @@ commandHandler.registerCommand('lg', {
   dbkey: DBSettings.commandLG,
   handler: (message: MessageType, args: string[]) => {
     if (!message.channel.client.steam32Id) {
-      void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')
+      void chatClient.say(
+        message.channel.name,
+        t('unknownSteam', { lng: message.channel.client.locale }),
+      )
       return
     }
 
@@ -19,7 +24,10 @@ commandHandler.registerCommand('lg', {
         void chatClient.say(message.channel.name, desc)
       })
       .catch((e) => {
-        void chatClient.say(message.channel.name, e?.message ?? 'Game was not found.')
+        void chatClient.say(
+          message.channel.name,
+          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        )
       })
   },
 })

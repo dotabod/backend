@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { server } from '../../dota/index.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
@@ -12,7 +14,7 @@ commandHandler.registerCommand('test', {
     } = message
 
     if (!client.steam32Id) {
-      void chatClient.say(channel, 'Unknown steam ID. Play a match first!')
+      void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
       return
     }
 

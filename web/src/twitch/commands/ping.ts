@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -7,6 +9,6 @@ commandHandler.registerCommand('ping', {
   // The "ping" command has a cooldown of 15 seconds
   handler: (message: MessageType, args: string[]) => {
     // Send a "pong" message to the chat
-    void chatClient.say(message.channel.name, 'Pong EZ Clap')
+    void chatClient.say(message.channel.name, t('ping', { lng: message.channel.client.locale }))
   },
 })

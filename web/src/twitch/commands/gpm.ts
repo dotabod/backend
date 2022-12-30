@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { DBSettings } from '../../db/settings.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import { chatClient } from '../index.js'
@@ -12,18 +14,18 @@ commandHandler.registerCommand('gpm', {
     } = message
 
     if (!client.gsi?.hero?.name) {
-      void chatClient.say(channel, 'No hero found')
+      void chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
       return
     }
     if (!isPlayingMatch(client.gsi)) {
-      void chatClient.say(channel, 'Not playing PauseChamp')
+      void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
     }
 
     const gpm = client.gsi.player?.gpm
 
     if (!gpm) {
-      void chatClient.say(channel, 'Live GPM: 0')
+      void chatClient.say(channel, t('gpm', { count: 0, lng: message.channel.client.locale }))
       return
     }
 
@@ -32,9 +34,12 @@ commandHandler.registerCommand('gpm', {
 
     void chatClient.say(
       channel,
-      `Live GPM: ${gpm}. ${gold_from_hero_kills ?? 0} from hero kills, ${
-        gold_from_creep_kills ?? 0
-      } from creep kills.`,
+      t('gpm', {
+        count: gpm,
+        lng: message.channel.client.locale,
+        heroKills: gold_from_hero_kills ?? 0,
+        creepKills: gold_from_creep_kills ?? 0,
+      }),
     )
   },
 })

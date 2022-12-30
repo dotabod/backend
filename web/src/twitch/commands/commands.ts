@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
@@ -8,9 +10,6 @@ commandHandler.registerCommand('commands', {
     const {
       channel: { name: channel },
     } = message
-    // TODO: respond only with commands that are enabled for the channel
-    // TODO: only commands user can use
-
     // Find commands where we have user permission
     const filtered = [...commandHandler.commands]
       .filter(([k, v]) => (v.permission ?? 0) <= message.user.permission)
@@ -29,9 +28,23 @@ commandHandler.registerCommand('commands', {
     const everyone = filtered.filter((v) => v.permission === 0).map((v) => v.command)
     const others = filtered.filter((v) => v.permission > 0).map((v) => v.command)
 
-    void chatClient.say(channel, `Everyone can use: ${everyone.join(' · ')}.`)
+    void chatClient.say(
+      channel,
+      t('commands', {
+        context: 'everyone',
+        commandList: everyone.join(' · '),
+        lng: message.channel.client.locale,
+      }),
+    )
 
     if (others.length === 0) return
-    void chatClient.say(channel, `Mod only commands: ${others.join(' · ')}.`)
+    void chatClient.say(
+      channel,
+      t('commands', {
+        context: 'mods',
+        commandList: others.join(' · '),
+        lng: message.channel.client.locale,
+      }),
+    )
   },
 })

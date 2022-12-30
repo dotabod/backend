@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -9,7 +11,7 @@ commandHandler.registerCommand('dotabod', {
 
     void chatClient.say(
       channel,
-      `I'm an open source bot made by @techleed. More info: https://dotabod.com`,
+      t('dotabod', { url: 'https://dotabod.com', author: '@techleed', lng: client.locale }),
     )
   },
 })

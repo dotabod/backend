@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { DBSettings } from '../../db/settings.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import Mongo from '../../steam/mongo.js'
@@ -20,7 +22,7 @@ commandHandler.registerCommand('np', {
     } = message
 
     if (!client.steam32Id) {
-      void chatClient.say(channel, 'Unknown steam ID. Play a match first!')
+      void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
       return
     }
 
@@ -77,7 +79,10 @@ commandHandler.registerCommand('np', {
         void chatClient.say(channel, desc)
       })
       .catch((e) => {
-        void chatClient.say(channel, e?.message ?? 'Game was not found.')
+        void chatClient.say(
+          channel,
+          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        )
       })
   },
 })

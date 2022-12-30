@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { delayedGames } from '../../../prisma/generated/mongoclient/index.js'
 import { DBSettings } from '../../db/settings.js'
 import Mongo from '../../steam/mongo.js'
@@ -16,7 +18,7 @@ commandHandler.registerCommand('ranked', {
     } = message
 
     if (!client.steam32Id) {
-      void chatClient.say(channel, 'Unknown steam ID. Play a match first!')
+      void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
       return
     }
 

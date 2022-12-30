@@ -19,6 +19,7 @@
     "lint": "eslint --ext .ts ./src",
     "prettier": "prettier --ext .ts ./src --write",
     "lint:fix": "yarn lint -- --fix",
+    "translations": "i18next './src/**/*' -c ./i18next-parser.config.js",
     "update-np": "dotenv -e ../.env -- bash ../mongodb/updatenps.sh",
     "pullmongo": "dotenv -e ../.env -- prisma db pull --schema ./prisma/mongo.prisma --force",
     "pullpsql": "dotenv -e ../.env -- prisma db pull --schema ./prisma/postgres.prisma"
@@ -38,6 +39,8 @@
     "country-code-emoji": "^2.3.0",
     "dota2": "https://github.com/dotabod/node-dota2.git",
     "express": "^4.18.2",
+    "i18next": "^22.4.6",
+    "i18next-fs-backend": "^2.1.1",
     "long": "5.0.1",
     "mongodb": "^4.12.1",
     "newrelic": "^9.7.4",

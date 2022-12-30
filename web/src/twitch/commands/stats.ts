@@ -67,7 +67,7 @@ commandHandler.registerCommand('stats', {
     }
 
     if (!isPlayingMatch(client.gsi)) {
-      void chatClient.say(channel, 'Not playing PauseChamp')
+      void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
     }
 
@@ -77,7 +77,7 @@ commandHandler.registerCommand('stats', {
         void chatClient.say(message.channel.name, desc)
       })
       .catch((e) => {
-        void chatClient.say(message.channel.name, e?.message ?? 'Game was not found.')
+        void chatClient.say(message.channel.name, e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }))
       })
   },
 })

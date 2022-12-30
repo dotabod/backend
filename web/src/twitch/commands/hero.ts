@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { DBSettings } from '../../db/settings.js'
 import getHero from '../../dota/lib/getHero.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
@@ -12,28 +14,31 @@ commandHandler.registerCommand('hero', {
       channel: { name: channel, client },
     } = message
     if (!client.steam32Id) {
-      void chatClient.say(channel, 'No steam32Id found')
+      void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
       return
     }
     if (!client.gsi?.hero?.name) {
-      void chatClient.say(channel, 'No hero found')
+      void chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
       return
     }
     if (!isPlayingMatch(client.gsi)) {
-      void chatClient.say(channel, 'Not playing PauseChamp')
+      void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
     }
 
     const hero = getHero(client.gsi.hero.name)
 
     if (!hero) {
-      void chatClient.say(channel, "Couldn't find hero Sadge")
+      void chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
       return
     }
 
     void chatClient.say(
       channel,
-      `!hero command disabled because opendota blocked us for having too many users Sadge`,
+      t('hero', {
+        lng: message.channel.client.locale,
+        commandName: '!hero',
+      }),
     )
   },
 })

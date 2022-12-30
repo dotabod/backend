@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -15,6 +17,6 @@ commandHandler.registerCommand('steam', {
       return
     }
 
-    void chatClient.say(channel, 'Unknown steam ID. Play a match first!')
+    void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
   },
 })

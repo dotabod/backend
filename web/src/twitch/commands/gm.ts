@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { DBSettings } from '../../db/settings.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { gameMedals } from '../../steam/medals.js'
@@ -14,7 +16,10 @@ commandHandler.registerCommand('gm', {
       channel: { client },
     } = message
     if (!message.channel.client.steam32Id) {
-      void chatClient.say(message.channel.name, 'Unknown steam ID. Play a match first!')
+      void chatClient.say(
+        message.channel.name,
+        t('unknownSteam', { lng: message.channel.client.locale }),
+      )
       return
     }
 
@@ -23,7 +28,10 @@ commandHandler.registerCommand('gm', {
         void chatClient.say(message.channel.name, desc)
       })
       .catch((e) => {
-        void chatClient.say(message.channel.name, e?.message ?? 'Game was not found.')
+        void chatClient.say(
+          message.channel.name,
+          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        )
       })
   },
 })
