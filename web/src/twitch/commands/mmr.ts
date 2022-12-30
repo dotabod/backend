@@ -35,7 +35,7 @@ commandHandler.registerCommand('mmr', {
         return
       }
 
-      getRankDescription(client.mmr, customMmr, client.steam32Id ?? undefined)
+      getRankDescription(client.locale, client.mmr, customMmr, client.steam32Id ?? undefined)
         .then((description) => {
           void chatClient.say(channel, description ?? unknownMsg)
         })
@@ -51,7 +51,7 @@ commandHandler.registerCommand('mmr', {
       return
     }
 
-    getRankDescription(act.mmr, customMmr, act.steam32Id)
+    getRankDescription(client.locale, act.mmr, customMmr, act.steam32Id)
       .then((description) => {
         const msg = act.name ? description ?? unknownMsg : ''
         void chatClient.say(channel, msg || unknownMsg)

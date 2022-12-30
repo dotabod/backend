@@ -1,5 +1,6 @@
 // @ts-expect-error ???
 import { countryCodeEmoji } from 'country-code-emoji'
+import { t } from 'i18next'
 
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
@@ -20,6 +21,7 @@ export interface Player {
 }
 
 export async function notablePlayers(
+  locale: string,
   twitchChannelId: string,
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
@@ -83,5 +85,5 @@ export async function notablePlayers(
     .join(' · ')
 
   const modeText = typeof mode?.name === 'string' ? `${mode.name}: ` : ''
-  return `${modeText}${playerList || 'No notable players'}`
+  return `${modeText}${playerList || t('noNotable', { lng: locale })}`
 }

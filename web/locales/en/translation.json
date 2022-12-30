@@ -9,6 +9,9 @@
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "double": "Double down",
   "gameNotFound": "Game was not found",
+  "averageRank": "Average rank this game",
+  "lifetime": "Lifetime games",
+  "noNotable": "No notable players",
   "gpm_zero": "Live GPM: {{count}}",
   "gpm_one": "Live GPM: {{count}}",
   "gpm_other": "Live GPM: {{count}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
@@ -25,6 +28,7 @@
   "noHero": "No hero found",
   "noLastMatch": "Did not find a last match PauseChamp",
   "notLive": "Stream not live PauseChamp",
+  "betaFeature": "[beta feature]",
   "notPlaying": "Not playing PauseChamp",
   "npAdd": "Try !np add <steam32id> <playername>",
   "npAdded": "Added {{name}} to !np for this channel",
@@ -40,6 +44,15 @@
   "ranked_yes": "Yes this game is ranked",
   "refresh": "Refreshing overlay...",
   "toggle": "",
+  "rank": {
+    "nextRankIn_other": "in {{count}} wins",
+    "nextRankIn_one": "One more win peepoClap"
+  },
+  "lastgame": {
+    "none": "Not playing with anyone from last game",
+    "player": "{{lastMatchHero}} played as {{currentMatchHero}}",
+    "link": "Here's last game: {{- url}}"
+  },
   "toggle_disabled": "Dotabod is now disabled. Will no longer respond to commands nor watch game events. Type !toggle again to enable.",
   "toggle_enabled": "Dotabod is now enabled. Responding to commands again and watching game events. Type !toggle again to disable.",
   "toggleMatch": "",
@@ -49,7 +62,10 @@
   "toggleMatch_solo": "Changing this match to solo mmr: {{- url}} Type !fixparty to undo",
   "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",
   "unknownSteam": "Could not find steam account. Try playing a practice bot match first to save your account to Dotabod!",
+  "unknown": "Unknown",
   "unranked": "Not ranked",
+  "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
+  "updateMmr_manual": "Updated MMR to {{mmr}}",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
   "xpm_one": "Live XPM: {{count}}",
   "xpm_other": "Live XPM: {{count}}"

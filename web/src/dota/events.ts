@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
@@ -106,7 +108,7 @@ export class setupMainEvents {
   ) {
     if (beta && !this.client.beta_tester) return
 
-    const msg = beta ? `${message} [beta feature]` : message
+    const msg = beta ? `${message} ${t('betaFeature', { lng: this.client.locale })}` : message
     if (!delay) {
       void chatClient.say(this.getChannel(), msg)
       return

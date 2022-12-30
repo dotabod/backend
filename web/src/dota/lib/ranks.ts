@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { logger } from '../../utils/logger.js'
 import { server } from '../index.js'
 import { leaderRanks, ranks } from './consts.js'
@@ -82,6 +84,7 @@ export async function getRankDetail(mmr: string | number, steam32Id?: number | n
 // Variables: [currentmmr] [currentrank] [nextmmr] [wins]
 // Used for chatting !mmr
 export async function getRankDescription(
+  locale: string,
   mmr: string | number,
   customMmr: string,
   steam32Id?: number,
@@ -96,14 +99,16 @@ export async function getRankDescription(
   }
 
   const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = deets
-  const nextIn = `in ${winsToNextRank} wins`
-  const oneMore = mmrToNextRank <= 30 ? '| One more win peepoClap' : ''
+  const nextIn = t('rank.nextRankIn', {
+    count: mmrToNextRank <= 30 ? 1 : winsToNextRank,
+    lng: locale,
+  })
 
   const msg = customMmr
     .replace('[currentmmr]', `${mmr}`)
     .replace('[currentrank]', myRank.title)
     .replace('[nextmmr]', `${nextMMR}`)
-    .replace('[wins]', `${oneMore || nextIn}`)
+    .replace('[wins]', `${nextIn}`)
 
   return msg
 }

@@ -19,7 +19,11 @@ commandHandler.registerCommand('lg', {
       return
     }
 
-    lastgame(message.channel.client.steam32Id, message.channel.client.gsi?.map?.matchid)
+    lastgame(
+      message.channel.client.locale,
+      message.channel.client.steam32Id,
+      message.channel.client.gsi?.map?.matchid,
+    )
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })

@@ -1,7 +1,10 @@
+import { t } from 'i18next'
+
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
 
 export async function smurfs(
+  locale: string,
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
@@ -23,5 +26,5 @@ export async function smurfs(
     )
     .filter(Boolean)
     .join(' · ')
-  return `Lifetime games: ${results || 'Unknown'}`
+  return `${t('lifetime', { lng: locale })}: ${results || t('unknown', { lng: locale })}`
 }

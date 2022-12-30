@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { medals } from '../../prisma/generated/mongoclient/index.js'
 import { ranks } from '../dota/lib/consts.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
@@ -7,6 +9,7 @@ import Mongo from './mongo.js'
 const mongo = await Mongo.connect()
 
 export async function gameMedals(
+  locale: string,
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
@@ -21,7 +24,7 @@ export async function gameMedals(
     const currentMedal = medalQuery.find(
       (temporaryMedal) => temporaryMedal.rank_tier === card.rank_tier,
     )
-    if (!currentMedal) return 'Unknown'
+    if (!currentMedal) return t('unknown', { lng: locale })
     if (card.leaderboard_rank > 0) return `#${card.leaderboard_rank}`
     return currentMedal.name
   })

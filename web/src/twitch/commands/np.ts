@@ -83,7 +83,7 @@ commandHandler.registerCommand('np', {
     }
 
     const matchPlayers = getCurrentMatchPlayers(client.gsi)
-    notablePlayers(twitchChannelId, client.gsi?.map?.matchid, matchPlayers)
+    notablePlayers(client.locale, twitchChannelId, client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {
         void chatClient.say(channel, desc)
       })

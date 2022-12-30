@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { prisma } from '../../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { chatClient } from '../../twitch/index.js'
@@ -12,12 +14,16 @@ export function tellChatNewMMR(token: string, mmr = 0, oldMmr = 0) {
   const newMmr = mmr - oldMmr
   if (mmrEnabled && newMmr !== 0 && mmr !== 0) {
     const isAuto = Math.abs(newMmr) === 30
-    const partyMsg = isAuto ? '. !fixparty for party and !fixdd for doubledown' : ''
     setTimeout(
       () => {
         void chatClient.say(
           client.name,
-          `Updated MMR to ${mmr}, ${newMmr > 0 ? '+' : ''}${newMmr}${partyMsg}`,
+          t('updateMmr', {
+            context: isAuto ? 'auto' : 'manual',
+            mmr,
+            delta: `${newMmr > 0 ? '+' : ''}${newMmr}`,
+            lng: 'en',
+          }),
         )
       },
       isAuto ? GLOBAL_DELAY : 0,
@@ -88,6 +94,5 @@ export function updateMmr(
     })
     .catch((e) => {
       logger.error('[UPDATE MMR] Error updating account table', { channel, e })
-      void chatClient.say(channel, `Invalid steam32Id specified. !setmmr ${mmr} <steamid>`)
     })
 }

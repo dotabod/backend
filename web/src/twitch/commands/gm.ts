@@ -23,7 +23,11 @@ commandHandler.registerCommand('gm', {
       return
     }
 
-    gameMedals(message.channel.client.gsi?.map?.matchid, getCurrentMatchPlayers(client.gsi))
+    gameMedals(
+      client.locale,
+      message.channel.client.gsi?.map?.matchid,
+      getCurrentMatchPlayers(client.gsi),
+    )
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })
