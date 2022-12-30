@@ -32,7 +32,7 @@ model Account {
 model User {
   id                String         @id @default(cuid())
   displayName       String?        @unique(map: "users_name_key")
-  email             String         @unique
+  email             String?        @unique
   image             String?
   createdAt         DateTime       @default(now()) @map("created_at")
   updatedAt         DateTime       @default(now()) @updatedAt @map("updated_at")
@@ -45,6 +45,7 @@ model User {
   stream_online     Boolean        @default(false)
   stream_start_date DateTime?      @db.Timestamp(6)
   beta_tester       Boolean        @default(false)
+  locale            String         @default("en")
   Account           Account?
   Bet               Bet[]
   settings          Setting[]
@@ -80,19 +81,20 @@ model SteamAccount {
 }
 
 model Bet {
-  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
-  matchId      String
-  predictionId String
-  won          Boolean?
-  myTeam       String
-  userId       String
-  lobby_type   Int?     @db.SmallInt
-  steam32Id    BigInt?
-  is_party     Boolean  @default(false)
-  hero_slot    Int?     @db.SmallInt
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+  matchId       String
+  predictionId  String
+  won           Boolean?
+  myTeam        String
+  userId        String
+  lobby_type    Int?     @db.SmallInt
+  steam32Id     BigInt?
+  is_party      Boolean  @default(false)
+  hero_slot     Int?     @db.SmallInt
+  is_doubledown Boolean  @default(false)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([matchId, userId])
   @@map("bets")
