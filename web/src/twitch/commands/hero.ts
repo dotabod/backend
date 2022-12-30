@@ -5,9 +5,9 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('hero', {
-  aliases: [],
-  permission: 0,
-  cooldown: 15000,
+
+
+
   onlyOnline: true,
   dbkey: DBSettings.commandHero,
   handler: (message: MessageType, args: string[]) => {

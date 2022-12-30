@@ -4,9 +4,9 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('test', {
-  aliases: [],
+
   permission: 4, // Only admin is 4, not even streamer
-  cooldown: 15000,
+
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },

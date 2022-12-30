@@ -1,13 +1,12 @@
 import { DBSettings } from '../../db/settings.js'
+import { modMode } from '../../dota/lib/consts.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-export const modMode = new Set()
-
 commandHandler.registerCommand('modsonly', {
-  aliases: [],
+
   permission: 2,
-  cooldown: 15000,
+
   dbkey: DBSettings.commandModsonly,
   handler: (message: MessageType, args: string[]) => {
     const {

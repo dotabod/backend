@@ -3,9 +3,8 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('friends', {
-  aliases: [],
-  permission: 0,
-  cooldown: 15000,
+  permission: 4,
+
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },

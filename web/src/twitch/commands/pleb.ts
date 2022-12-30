@@ -1,13 +1,12 @@
 import { DBSettings } from '../../db/settings.js'
+import { plebMode } from '../../dota/lib/consts.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-export const plebMode = new Set()
-
 commandHandler.registerCommand('pleb', {
-  aliases: [],
+
   permission: 2,
-  cooldown: 15000,
+
   dbkey: DBSettings.commandPleb,
   handler: (message: MessageType, args: string[]) => {
     const {

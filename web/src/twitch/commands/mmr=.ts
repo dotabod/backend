@@ -7,7 +7,7 @@ export const plebMode = new Set()
 commandHandler.registerCommand('setmmr', {
   aliases: ['mmr=', 'mmrset'],
   permission: 2,
-  cooldown: 15000,
+
   onlyOnline: true,
   handler: (message: MessageType, args: string[]) => {
     const {

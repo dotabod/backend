@@ -50,9 +50,9 @@ export async function profileLink(currentMatchId: string, args: string[]) {
 
 commandHandler.registerCommand('stats', {
   aliases: ['check', 'profile'],
-  permission: 0,
+
   onlyOnline: true,
-  cooldown: 15000,
+
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },

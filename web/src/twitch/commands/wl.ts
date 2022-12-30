@@ -6,8 +6,8 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('wl', {
   aliases: ['score', 'winrate', 'wr'],
-  permission: 0,
-  cooldown: 15000,
+
+
   onlyOnline: true,
   dbkey: DBSettings.commandWL,
   handler: (message: MessageType, args: string[]) => {

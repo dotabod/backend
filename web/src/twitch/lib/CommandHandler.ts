@@ -21,13 +21,15 @@ export interface MessageType {
 }
 
 export interface CommandOptions {
-  aliases: string[]
-  permission: number
-  cooldown: number
+  aliases?: string[]
+  permission?: number
+  cooldown?: number
   onlyOnline?: boolean
   dbkey?: DBSettings
   handler: (message: MessageType, args: string[]) => void
 }
+
+const defaultCooldown = 15000
 
 class CommandHandler {
   aliases = new Map<string, string>()
@@ -53,7 +55,7 @@ class CommandHandler {
 
     // Store the command information in the commands map
     this.commands.set(commandName, options)
-    for (const alias of options.aliases) {
+    for (const alias of options.aliases ?? []) {
       if (this.aliases.has(alias)) {
         throw new Error(`Alias "${alias}" is already registered.`)
       }
@@ -90,15 +92,22 @@ class CommandHandler {
     if (!this.isEnabled(message.channel.settings, options.dbkey)) return
 
     // Check if the command is on cooldown
-    if (this.isOnCooldown(commandName, options.cooldown, message.user, message.channel.id)) {
+    if (
+      this.isOnCooldown(
+        commandName,
+        options.cooldown ?? defaultCooldown,
+        message.user,
+        message.channel.id,
+      )
+    ) {
       return // Skip commands that are on cooldown
     }
 
     // Update the command cooldown
-    this.updateCooldown(commandName, options.cooldown, message.channel.id)
+    this.updateCooldown(commandName, options.cooldown ?? defaultCooldown, message.channel.id)
 
     // Check if the user has the required permissions
-    if (!this.hasPermission(message.user, options.permission)) {
+    if (!this.hasPermission(message.user, options.permission ?? 0)) {
       return // Skip commands for which the user lacks permission
     }
 

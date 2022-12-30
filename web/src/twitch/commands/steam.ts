@@ -4,7 +4,7 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 commandHandler.registerCommand('steam', {
   aliases: ['steamid', 'account'],
   permission: 2,
-  cooldown: 15000,
+
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },

@@ -3,9 +3,9 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('opendota', {
-  aliases: [],
-  permission: 0,
-  cooldown: 15000,
+
+
+
   dbkey: DBSettings.commandOpendota,
   handler: (message: MessageType, args: string[]) => {
     const {

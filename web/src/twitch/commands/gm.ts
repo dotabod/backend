@@ -6,8 +6,8 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('gm', {
   aliases: ['medals', 'ranks'],
-  permission: 0,
-  cooldown: 15000,
+
+
   onlyOnline: true,
   dbkey: DBSettings.commandGM,
   handler: (message: MessageType, args: string[]) => {
