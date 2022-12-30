@@ -4,9 +4,6 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('xpm', {
-
-
-
   onlyOnline: true,
   dbkey: DBSettings.commandXPM,
   handler: (message: MessageType, args: string[]) => {

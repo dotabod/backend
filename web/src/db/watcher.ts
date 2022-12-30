@@ -41,7 +41,6 @@ channel
         client.stream_start_date = newObj.stream_start_date
       }
 
-
       // dont overwrite with 0 because we use this variable to track currently logged in mmr
       if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
         client.mmr = newObj.mmr

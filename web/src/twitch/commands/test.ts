@@ -4,7 +4,6 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('test', {
-
   permission: 4, // Only admin is 4, not even streamer
 
   handler: (message: MessageType, args: string[]) => {

@@ -3,9 +3,6 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('commands', {
-
-
-
   dbkey: DBSettings.commandCommands,
   handler: (message: MessageType, args: string[]) => {
     const {

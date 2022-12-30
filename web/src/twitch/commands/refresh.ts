@@ -3,7 +3,6 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('refresh', {
-
   permission: 2,
 
   handler: (message: MessageType, args: string[]) => {

@@ -5,9 +5,6 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('avg', {
-
-
-
   onlyOnline: true,
   dbkey: DBSettings.commandAvg,
   handler: (message: MessageType, args: string[]) => {

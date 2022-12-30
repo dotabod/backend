@@ -11,7 +11,6 @@ export const plebMode = new Set()
 commandHandler.registerCommand('mmr', {
   aliases: ['rank', 'medal'],
 
-
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },

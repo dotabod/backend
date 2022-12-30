@@ -3,9 +3,6 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('dotabuff', {
-
-
-
   dbkey: DBSettings.commandDotabuff,
   handler: (message: MessageType, args: string[]) => {
     const {

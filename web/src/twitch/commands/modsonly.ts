@@ -4,7 +4,6 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('modsonly', {
-
   permission: 2,
 
   dbkey: DBSettings.commandModsonly,

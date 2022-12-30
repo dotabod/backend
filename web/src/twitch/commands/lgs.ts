@@ -6,7 +6,6 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 commandHandler.registerCommand('lgs', {
   aliases: ['lastgamescore', 'lgscore', 'lgwl'],
 
-
   onlyOnline: true,
   dbkey: DBSettings.commandLG,
   handler: (message: MessageType, args: string[]) => {
