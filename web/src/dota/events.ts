@@ -381,7 +381,9 @@ export class setupMainEvents {
         event.player_id,
       )
 
-      this.say(t('aegis.denied', { lng: this.client.locale, heroName }), { beta: true })
+      this.say(t('aegis.denied', { lng: this.client.locale, heroName, emote: 'ICANT' }), {
+        beta: true,
+      })
     })
 
     events.on(`${this.getToken()}:${DotaEventTypes.AegisPickedUp}`, (event: DotaEvent) => {

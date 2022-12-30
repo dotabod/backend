@@ -1,6 +1,6 @@
 {
   "aegis": {
-    "denied": "{{heroName}} denied the aegis ICANT",
+    "denied": "{{heroName}} denied the aegis {{emote}}",
     "pickup": "{{heroName}} picked up the aegis!"
   },
   "apm_one": "Live APM: {{count}} Chatting",
