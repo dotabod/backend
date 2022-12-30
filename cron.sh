@@ -1,6 +1,10 @@
 #!/bin/bash
 
-set -a; source .env; set +a
+# Get the directory of the script
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+# Set the environment variables by sourcing the .env file from the script directory
+set -a; source "$SCRIPT_DIR/.env"; set +a
 
 # PostgreSQL Backup util
 # Automatic backup utility, run in cron job under postgres user
