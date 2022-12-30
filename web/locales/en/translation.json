@@ -1,4 +1,29 @@
 {
+  "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
+  "tip": {
+    "from": "The tip from {{heroName}} ICANT",
+    "to": "We tipping {{heroName}} PepeLaugh"
+  },
+  "bountyPickup": "+{{bountyValue}} gold from bounty EZ Clap Thanks {{heroNames}} SeemsGood",
+  "killstreak": {
+    "lost": "{{heroName}} lost the ${killstreakCount} kill streak BibleThump",
+    "won": "{{heroName}} has a ${killstreakCount} kill streak POGGIES"
+  },
+  "treadsToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
+  "treadsToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
+  "bets": {
+    "won": "We have won",
+    "lost": "We have lost",
+    "manual": "Mods need to end bets manually.",
+    "open": "Bets open peepoGamble",
+    "notScored": "Match not scored D: Not adding or removing MMR for match {{matchId}}."
+  },
+  "midasUsed": "Midas was finally used, {{seconds}} seconds late Madge",
+  "aegis": {
+    "denied": "{{heroName}} denied the aegis ICANT",
+    "pickup": "{{heroName}} picked up the aegis!"
+  },
+  "matchFound": "Match data found {{commandList}} commands activated.",
   "apm_one": "Live APM: {{count}} Chatting",
   "apm_other": "Live APM: {{count}} Chatting",
   "averageRank": "Average rank this game",

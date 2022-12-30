@@ -222,9 +222,15 @@ export class setupMainEvents {
         this.players = getAccountsFromMatch(delayedData)
 
         if (this.client.stream_online) {
-          this.say('Match data found !np · !smurfs · !gm · !lg · !avg commands activated.', {
-            delay: false,
-          })
+          this.say(
+            t('matchFound', {
+              commandList: '!np · !smurfs · !gm · !lg · !avg',
+              lng: this.client.locale,
+            }),
+            {
+              delay: false,
+            },
+          )
         }
       } else {
         this.playingLobbyType = response.match.lobby_type
@@ -269,39 +275,12 @@ export class setupMainEvents {
         maxDate,
       }
 
-      this.say(`Roshan killed! Next roshan between ${res.minTime} and ${res.maxTime}`, {
+      this.say(t('roshanKilled', { min: res.minTime, max: res.maxTime, lng: this.client.locale }), {
         beta: true,
       })
 
       this.roshanKilled = res
       server.io.to(this.getToken()).emit('roshan-killed', res)
-    })
-
-    // Event 'courier_killed'
-    // courier_team: string // 'dire',
-    // killer_player_id: number // 1,
-    // owning_player_id: number // 5
-    events.on(`${this.getToken()}:${DotaEventTypes.CourierKilled}`, (event: DotaEvent) => {
-      if (!isPlayingMatch(this.client.gsi)) return
-      if (!this.client.stream_online) return
-
-      const heroName = getHeroNameById(
-        this.players?.matchPlayers[event.killer_player_id].heroid ?? 0,
-        event.killer_player_id,
-      )
-
-      logger.info('COURIER EVENT', {
-        event,
-        client: this.getChannel(),
-        matchid: this.playingMatchId,
-        heroSlot: this.playingHeroSlot,
-        players: this.players,
-        heroName,
-      })
-
-      if (event.owning_player_id === this.playingHeroSlot) {
-        this.say(`Courier micro ICANT thanks ${heroName}`, { beta: true })
-      }
     })
 
     events.on(`${this.getToken()}:${DotaEventTypes.Tip}`, (event: DotaEvent) => {
@@ -316,7 +295,7 @@ export class setupMainEvents {
       )
 
       if (event.receiver_player_id === this.playingHeroSlot) {
-        this.say(`The tip from ${heroName} ICANT`, { beta: true })
+        this.say(t('tip.from', { lng: this.client.locale, heroName }), { beta: true })
       }
 
       if (event.sender_player_id === this.playingHeroSlot) {
@@ -325,7 +304,7 @@ export class setupMainEvents {
           event.receiver_player_id,
         )
 
-        this.say(`We tipping ${toHero} PepeLaugh`, { beta: true })
+        this.say(t('tip.to', { lng: this.client.locale, heroName: toHero }), { beta: true })
       }
     })
 
@@ -346,9 +325,11 @@ export class setupMainEvents {
         bountyHeroNames.push(heroName)
         bountyTimeout = setTimeout(() => {
           this.say(
-            `+${
-              event.bounty_value * bountyHeroNames.length
-            } gold from bounty EZ Clap Thanks ${bountyHeroNames.join(', ')} SeemsGood`,
+            t('bountyPickup', {
+              lng: this.client.locale,
+              bountyValue: event.bounty_value * bountyHeroNames.length,
+              heroNames: bountyHeroNames.join(', '),
+            }),
             {
               beta: true,
             },
@@ -369,7 +350,14 @@ export class setupMainEvents {
       const previousStreak = Number(this.client.gsi?.previously?.player?.kill_streak)
       const lostStreak = previousStreak > 3 && streak <= 3
       if (lostStreak) {
-        this.say(`${heroName} lost the ${previousStreak} kill streak BibleThump`, { beta: true })
+        this.say(
+          t('killstreak.lost', {
+            killstreakCount: previousStreak,
+            heroName,
+            lng: this.client.locale,
+          }),
+          { beta: true },
+        )
         return
       }
 
@@ -377,7 +365,10 @@ export class setupMainEvents {
 
       clearTimeout(killstreakTimeout)
       killstreakTimeout = setTimeout(() => {
-        this.say(`${heroName} has a ${streak} kill streak POGGIES`, { beta: true })
+        this.say(
+          t('killstreak.won', { killstreakCount: streak, heroName, lng: this.client.locale }),
+          { beta: true },
+        )
       }, 15000)
     })
 
@@ -390,7 +381,7 @@ export class setupMainEvents {
         event.player_id,
       )
 
-      this.say(`${heroName} denied the aegis ICANT`, { beta: true })
+      this.say(t('aegis.denied', { lng: this.client.locale, heroName }), { beta: true })
     })
 
     events.on(`${this.getToken()}:${DotaEventTypes.AegisPickedUp}`, (event: DotaEvent) => {
@@ -420,7 +411,7 @@ export class setupMainEvents {
         event.player_id,
       )
 
-      this.say(`${heroName} picked up the aegis!`, { beta: true })
+      this.say(t('aegis.pickup', { lng: this.client.locale, heroName }), { beta: true })
 
       server.io.to(this.getToken()).emit('aegis-picked-up', res)
     })
@@ -493,7 +484,7 @@ export class setupMainEvents {
           this.say(chatters.midas.message)
         }
         if (typeof isMidasPassive === 'number') {
-          this.say(`Midas was finally used, ${isMidasPassive} seconds late Madge`)
+          this.say(t('midasUsed', { lng: this.client.locale, seconds: isMidasPassive }))
         }
       }
     })
@@ -848,7 +839,7 @@ export class setupMainEvents {
             setTimeout(() => {
               openTwitchBet(this.getToken(), hero?.localized_name, this.client.settings)
                 .then(() => {
-                  this.say(`Bets open peepoGamble`, { delay: false })
+                  this.say(t('bets.open', { lng: this.client.locale }), { delay: false })
                   this.openingBets = false
                   logger.info('[BETS] open bets', {
                     event: 'open_bets',
@@ -927,7 +918,7 @@ export class setupMainEvents {
 
     const matchId = this.playingMatchId
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
-    const betsMessage = betsEnabled ? 'Mods need to end bets manually. ' : ''
+    const betsMessage = betsEnabled ? ` ${t('bets.manual', { lng: this.client.locale })} ` : ''
 
     // An early without waiting for ancient to blow up
     // We have to check every few seconds on Opendota to see if the match is over
@@ -957,9 +948,7 @@ export class setupMainEvents {
             })
 
             if (this.client.stream_online) {
-              this.say(
-                `Match not scored D: ${betsMessage}Not adding or removing MMR for match ${matchId}.`,
-              )
+              this.say(`${t('bets.notScored', { lng: this.client.locale, matchId })}${betsMessage}`)
             }
             this.resetClientState(true)
             return
@@ -1022,8 +1011,15 @@ export class setupMainEvents {
 
     if (this.treadToggles > 0) {
       this.say(
-        `We toggled treads ${this.treadToggles} times to save a total ${this.manaSaved} mana this match`,
-        { beta: true },
+        t('treadToggle', {
+          lng: this.client.locale,
+          manaCount: this.manaSaved,
+          count: this.treadToggles,
+          matchId,
+        }),
+        {
+          beta: true,
+        },
       )
     }
 
@@ -1087,7 +1083,11 @@ export class setupMainEvents {
             logger.info('[BETS] Error closing twitch bet', { channel, e: e?.message || e })
           }
 
-          this.say(`We have ${won ? 'won' : 'lost'}`, { delay: false })
+          if (won) {
+            this.say(t('bets.won', { lng: this.client.locale }), { delay: false })
+          } else {
+            this.say(t('bets.lost', { lng: this.client.locale }), { delay: false })
+          }
         })
         // Always
         .finally(() => {
