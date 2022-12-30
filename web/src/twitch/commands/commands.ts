@@ -13,7 +13,7 @@ commandHandler.registerCommand('commands', {
 
     // Find commands where we have user permission
     const filtered = [...commandHandler.commands]
-      .filter(([k, v]) => v.permission <= message.user.permission)
+      .filter(([k, v]) => (v.permission ?? 0) <= message.user.permission)
       .filter(([k, v]) => {
         if (v.dbkey) {
           return getValueOrDefault(v.dbkey, message.channel.settings)
@@ -22,7 +22,7 @@ commandHandler.registerCommand('commands', {
       })
       .map(([k, v]) => ({
         command: k,
-        permission: v.permission,
+        permission: v.permission ?? 0,
       }))
       .sort((a, b) => a.command.localeCompare(b.command))
 
