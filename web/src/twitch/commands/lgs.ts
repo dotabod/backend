@@ -24,18 +24,32 @@ commandHandler.registerCommand('lgs', {
             not: null,
           },
         },
+        select: {
+          won: true,
+          is_party: true,
+          is_doubledown: true,
+          matchId: true,
+          lobby_type: true,
+        },
         orderBy: {
           createdAt: 'desc',
         },
       })
 
+      if (!lg) {
+        void chatClient.say(message.channel.name, 'Last game not found')
+        return
+      }
+
       const additionals = []
-      if (lg?.is_party) additionals.push('Party match')
-      if (lg?.is_doubledown) additionals.push('Doubled down')
+      if (lg.is_party) additionals.push('Party match')
+      if (lg.is_doubledown) additionals.push('Double down')
+      if (lg.lobby_type !== 7) additionals.push('Not ranked')
+      additionals.push(`dotabuff.com/matches/${lg.matchId}`)
 
       void chatClient.say(
         message.channel.name,
-        `Last game: ${lg?.won ? 'won' : 'lost'} ${additionals.join(' · ')}`,
+        `Last game: ${lg.won ? 'won' : 'lost'} ${additionals.join(' · ')}`,
       )
     }
 
