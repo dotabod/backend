@@ -17,8 +17,10 @@ export async function toggleDotabod(
     await chatClient.join(channel)
   }
 
-  const toggled = isBotDisabled ? 'disabled' : 'enabled'
-  await chatClient.say(channel, t('toggle', { context: toggled, lng }))
+  await chatClient.say(
+    channel,
+    t('toggle', { context: isBotDisabled ? 'disabled' : 'enabled', lng }),
+  )
 
   if (isBotDisabled) {
     events.emit('remove-gsi-client', token)
