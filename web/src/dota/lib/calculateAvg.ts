@@ -8,16 +8,19 @@ export async function calculateAvg(
   const { cards } = await getPlayers(currentMatchId, players)
 
   const mmrs: number[] = []
+  const leaderranks: number[] = []
   cards.forEach((card) => {
     mmrs.push(rankTierToMmr(card.rank_tier))
+    leaderranks.push(rankTierToMmr(card.rank_tier))
   })
 
   // Get average of all numbers in mmrs array
   const avg = Math.round(mmrs.reduce((a, b) => a + b, 0) / mmrs.length)
+  const avgLeader = Math.round(leaderranks.reduce((a, b) => a + b, 0) / leaderranks.length)
   const avgMsg = ` - Average rank this game`
   const rank = await getRankDetail(avg)
 
-  if (!rank) return `${avg || 'Immortal'}${avgMsg}`
+  if (!rank) return `${avg || `#${avgLeader}`}${avgMsg}`
 
   if ('standing' in rank) {
     return `Immortal${avgMsg}`
