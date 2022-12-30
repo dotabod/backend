@@ -1,4 +1,5 @@
 import { toUserName } from '@twurple/chat'
+import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { getRankDescription } from '../../dota/lib/ranks.js'
@@ -21,9 +22,11 @@ commandHandler.registerCommand('mmr', {
 
     const customMmr = getValueOrDefault(DBSettings.customMmr, client.settings)
 
-    const unknownMsg = `I don't know ${toUserName(
-      channel,
-    )}'s MMR yet. Mods have to !setmmr 1234 or set it in dotabod.com/dashboard/features`
+    const unknownMsg = t('uknownMmr', {
+      channel: toUserName(channel),
+      url: 'dotabod.com/dashboard/features',
+      lng: message.channel.client.locale,
+    })
 
     // Didn't have a new account made yet on the new steamaccount table
     if (!client.SteamAccount.length) {
@@ -44,10 +47,7 @@ commandHandler.registerCommand('mmr', {
 
     const act = client.SteamAccount.find((a) => a.steam32Id === client.steam32Id)
     if (!act) {
-      void chatClient.say(
-        channel,
-        'Could not find steam account. Try playing a practice bot match first to save your account.',
-      )
+      void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
       return
     }
 

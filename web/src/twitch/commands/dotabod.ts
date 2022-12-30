@@ -11,7 +11,7 @@ commandHandler.registerCommand('dotabod', {
 
     void chatClient.say(
       channel,
-      t('dotabod', { url: 'https://dotabod.com', author: '@techleed', lng: client.locale }),
+      t('dotabod', { url: 'dotabod.com', author: '@techleed', lng: client.locale }),
     )
   },
 })

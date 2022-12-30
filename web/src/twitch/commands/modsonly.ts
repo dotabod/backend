@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { DBSettings } from '../../db/settings.js'
 import { modMode } from '../../dota/lib/consts.js'
 import { chatClient } from '../index.js'
@@ -12,7 +14,7 @@ commandHandler.registerCommand('modsonly', {
       channel: { name: channel, id: channelId, client },
     } = message
     if (modMode.has(channelId)) {
-      void chatClient.say(channel, 'Mods only mode disabled Sadge')
+      void chatClient.say(channel, t('modsOnly', { context: 'off', lng: client.locale }))
       modMode.delete(channelId)
       return
     }
@@ -20,9 +22,6 @@ commandHandler.registerCommand('modsonly', {
     // Delete all messages that are not from a mod
     modMode.add(channelId)
     void chatClient.say(channel, '/subscribers')
-    void chatClient.say(
-      channel,
-      'Mods only mode enabled BASED Clap. Type !modsonly again to disable.',
-    )
+    void chatClient.say(channel, t('modsOnly', { context: 'on', lng: client.locale }))
   },
 })

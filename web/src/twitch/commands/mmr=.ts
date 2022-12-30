@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { updateMmr } from '../../dota/lib/updateMmr.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
@@ -16,7 +18,7 @@ commandHandler.registerCommand('setmmr', {
     const [mmr, steam32Id] = args
 
     if (!mmr || !Number(mmr) || Number(mmr) > 20000 || Number(mmr) < 0) {
-      void chatClient.say(channel, 'Try !setmmr 1234')
+      void chatClient.say(channel, t('invalidMmr', { lng: message.channel.client.locale }))
       return
     }
 
@@ -32,36 +34,30 @@ commandHandler.registerCommand('setmmr', {
         return
       } else {
         if (!Number(client.steam32Id)) {
-          void chatClient.say(
-            channel,
-            `Did not find a steam account, try playing a practice bot match first.`,
-          )
+          void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
           return
         } else {
           void chatClient.say(
             channel,
-            `Found multiple steam accounts, updating the one you are currently logged in with (${Number(
-              client.steam32Id,
-            )})`,
+            t('updateMmrMulti', {
+              steamId: Number(client.steam32Id),
+              lng: message.channel.client.locale,
+            }),
           )
           updateMmr(mmr, Number(client.steam32Id), channel)
           return
         }
       }
     } else if (!Number(steam32Id)) {
-      void chatClient.say(channel, `Invalid steam32Id specified. Try !setmmr ${mmr} <steamid>`)
+      void chatClient.say(channel, t('invalidMmr', { lng: message.channel.client.locale }))
       return
     }
 
     if (!accounts.find((a) => a.steam32Id === Number(steam32Id))) {
-      void chatClient.say(
-        channel,
-        `Could not find that steam account for this channel. Try playing a practice bot match first. Then you can !setmmr ${mmr}`,
-      )
+      void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
       return
     }
 
-    updateMmr(mmr, Number(steam32Id), channel)
     return
   },
 })
