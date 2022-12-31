@@ -34,6 +34,7 @@
   "gpm_many": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",
   "gpm_other": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",
   "hero": "{{commandName}} comando disabilitato perchè opendota ci ha bloccato perchè abbiamo troppi utenti Sadge",
+  "invalidColor": "",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} ha perso la serie di uccisioni da {{killstreakCount}} BibleThump",
