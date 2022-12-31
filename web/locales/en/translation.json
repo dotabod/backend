@@ -45,12 +45,13 @@
     "player": "{{lastMatchHero}} played as {{currentMatchHero}}"
   },
   "lastgamescore": {
-    "won": "Last game: won",
-    "lost": "Last game: lost",
-    "ended": "Ended {minutes}m ago",
+    "double": "Double down",
     "duration": "{minutes}m long",
+    "ended": "Ended {minutes}m ago",
+    "lost": "Last game: lost",
     "party": "Party match",
-    "double": "Double down"
+    "unranked": "Not ranked",
+    "won": "Last game: won"
   },
   "lifetime": "Lifetime games",
   "matchFound": "Match data found {{commandList}} commands activated.",
@@ -107,7 +108,6 @@
   "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",
   "unknown": "Unknown",
   "unknownSteam": "Could not find steam account. Try playing a practice bot match first to save your account to Dotabod!",
-  "unranked": "Not ranked",
   "updateMmr": "",
   "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
