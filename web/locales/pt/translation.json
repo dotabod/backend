@@ -1,6 +1,6 @@
 {
   "aegis": {
-    "denied": "",
+    "denied": "{{- heroName}}",
     "pickup": ""
   },
   "apm_one": "",
