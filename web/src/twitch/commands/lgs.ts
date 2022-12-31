@@ -80,7 +80,7 @@ commandHandler.registerCommand('lgs', {
           lg.won
             ? t('lastgamescore.won', { lng: message.channel.client.locale })
             : t('lastgamescore.lost', { lng: message.channel.client.locale })
-        })}
+        }
         ${additionals.length ? ' · ' : ''}${additionals.join(' · ')}`,
       )
     }
