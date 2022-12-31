@@ -46,8 +46,8 @@
   },
   "lastgamescore": {
     "double": "Double down",
-    "duration": "{minutes}m long",
-    "ended": "Ended {minutes}m ago",
+    "duration": "{{minutes}}m long",
+    "ended": "Ended {{minutes}}m ago",
     "lost": "Last game: lost",
     "party": "Party match",
     "unranked": "Not ranked",
