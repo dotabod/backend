@@ -1,7 +1,7 @@
 {
   "aegis": {
-    "denied": "{{heroName}} ha negato l'egida {{emote}}",
-    "pickup": "{{heroName}} ha preso l'egida"
+    "denied": "{{- heroName}} ha negato l'egida {{emote}}",
+    "pickup": "{{- heroName}} ha preso l'egida"
   },
   "apm_one": "APM Live: {{count}} Chatting",
   "apm_many": "APM Live: {{count}} Chatting",
@@ -36,13 +36,13 @@
   "hero": "{{commandName}} comando disabilitato perchè opendota ci ha bloccato perchè abbiamo troppi utenti Sadge",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
-    "lost": "{{heroName}} ha perso la serie di uccisioni da {{killstreakCount}} BibleThump",
-    "won": "{{heroName}} ha una serie di uccisioni da {{killstreakCount}} POGGIES"
+    "lost": "{{- heroName}} ha perso la serie di uccisioni da {{killstreakCount}} BibleThump",
+    "won": "{{- heroName}} ha una serie di uccisioni da {{killstreakCount}} POGGIES"
   },
   "lastgame": {
     "link": "Partita precedente: {{- url}}",
     "none": "Non è presente nessun giocatore della partita precedente",
-    "player": "{{lastMatchHero}} ha giocato {{currentMatchHero}}"
+    "player": "{{- lastMatchHero}} ha giocato {{- currentMatchHero}}"
   },
   "lastgamescore": {
     "double": "Double down",
@@ -91,8 +91,8 @@
   "refresh": "Aggiornando l'overlay...",
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan tra {{min}} e {{max}}",
   "tip": {
-    "from": "Il tip da {{heroName}} ICANT",
-    "to": "Tippiamo {{heroName}} PepeLaugh"
+    "from": "Il tip da {{- heroName}} ICANT",
+    "to": "Tippiamo {{- heroName}} PepeLaugh"
   },
   "toggle": "",
   "toggle_disabled": "Dotabod è ora disattivato. Non risponde più ai comandi e non assiste agli eventi di gioco. Digita nuovamente !toggle per attivarlo.",
