@@ -43,9 +43,11 @@ export async function profileLink(locale: string, currentMatchId: string, args: 
   const matchPlayers = response.teams.flatMap((team) => team.players)
   const player = matchPlayers[heroKey]
 
-  return `Here's ${getHeroNameById(player.heroid, heroKey)}: dotabuff.com/players/${
-    player.accountid
-  }`
+  return t('profileUrl', {
+    lng: locale,
+    channel: getHeroNameById(player.heroid, heroKey),
+    url: `dotabuff.com/players/${player.accountid}`,
+  })
 }
 
 commandHandler.registerCommand('stats', {

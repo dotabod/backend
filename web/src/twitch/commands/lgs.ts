@@ -74,14 +74,12 @@ commandHandler.registerCommand('lgs', {
         additionals.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))
       additionals.push(`dotabuff.com/matches/${lg.matchId}`)
 
+      const wonMsg = lg.won
+        ? t('lastgamescore.won', { lng: message.channel.client.locale })
+        : t('lastgamescore.lost', { lng: message.channel.client.locale })
       void chatClient.say(
         message.channel.name,
-        `${
-          lg.won
-            ? t('lastgamescore.won', { lng: message.channel.client.locale })
-            : t('lastgamescore.lost', { lng: message.channel.client.locale })
-        }
-        ${additionals.length ? ' · ' : ''}${additionals.join(' · ')}`,
+        `${wonMsg}${additionals.length ? ' · ' : ''}${additionals.join(' · ')}`,
       )
     }
 
