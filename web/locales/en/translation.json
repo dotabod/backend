@@ -1,7 +1,7 @@
 {
   "aegis": {
-    "denied": "{{heroName}} denied the aegis {{emote}}",
-    "pickup": "{{heroName}} picked up the aegis!"
+    "denied": "{{- heroName}} denied the aegis {{emote}}",
+    "pickup": "{{- heroName}} picked up the aegis!"
   },
   "apm_one": "Live APM: {{count}} Chatting",
   "apm_many": "Live APM: {{count}} Chatting",
@@ -20,10 +20,10 @@
   },
   "bountyPickup": "+{{bountyValue}} gold from bounty EZ Clap Thanks {{heroNames}} SeemsGood",
   "chatters": {
-    "died": "{{heroName}} died with passive {{itemNames}} ICANT",
+    "died": "{{- heroName}} died with passive {{itemNames}} ICANT",
     "midas": "massivePIDAS Use your midas",
     "pause": "PauseChamp Who paused the game?",
-    "smoked": "Shush {{heroName}} is smoked!"
+    "smoked": "Shush {{- heroName}} is smoked!"
   },
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
@@ -36,13 +36,13 @@
   "hero": "{{commandName}} command disabled because opendota blocked us for having too many users Sadge",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "killstreak": {
-    "lost": "{{heroName}} lost the {{killstreakCount}} kill streak BibleThump",
-    "won": "{{heroName}} has a {{killstreakCount}} kill streak POGGIES"
+    "lost": "{{- heroName}} lost the {{killstreakCount}} kill streak BibleThump",
+    "won": "{{- heroName}} has a {{killstreakCount}} kill streak POGGIES"
   },
   "lastgame": {
     "link": "Here's last game: {{- url}}",
     "none": "Not playing with anyone from last game",
-    "player": "{{lastMatchHero}} played as {{currentMatchHero}}"
+    "player": "{{- lastMatchHero}} played as {{- currentMatchHero}}"
   },
   "lastgamescore": {
     "double": "Double down",
@@ -76,7 +76,7 @@
   "pleb_off": "{{name}} EZ Clap nice job pleb",
   "predictions": {
     "no": "No",
-    "title": "Will we win with {{heroName}}",
+    "title": "Will we win with {{- heroName}}",
     "yes": "Yes"
   },
   "profileUrl": "Here's {{channel}}: {{- url}}",
@@ -91,8 +91,8 @@
   "refresh": "Refreshing overlay...",
   "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
   "tip": {
-    "from": "The tip from {{heroName}} ICANT",
-    "to": "We tipping {{heroName}} PepeLaugh"
+    "from": "The tip from {{- heroName}} ICANT",
+    "to": "We tipping {{- heroName}} PepeLaugh"
   },
   "toggle": "",
   "toggle_disabled": "Dotabod is now disabled. Will no longer respond to commands nor watch game events. Type !toggle again to enable.",
