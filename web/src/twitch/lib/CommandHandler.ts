@@ -109,13 +109,13 @@ class CommandHandler {
       return // Skip commands that are on cooldown
     }
 
-    // Update the command cooldown
-    this.updateCooldown(commandName, options.cooldown ?? defaultCooldown, message.channel.id)
-
     // Check if the user has the required permissions
     if (!this.hasPermission(message.user, options.permission ?? 0)) {
       return // Skip commands for which the user lacks permission
     }
+
+    // Update the command cooldown
+    this.updateCooldown(commandName, options.cooldown ?? defaultCooldown, message.channel.id)
 
     // Execute the command handler
     options.handler(message, args)
