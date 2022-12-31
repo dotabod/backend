@@ -28,34 +28,41 @@ channel
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
     const newObj = payload.new as User
     const oldObj = payload.old as User
+    const client = findUser(newObj.id)
+    if (!client) return
 
-    async function handler() {
-      const client = findUser(newObj.id)
-      if (!client) return
-
-      client.locale = newObj.locale
-      client.beta_tester = newObj.beta_tester
-      client.stream_online = newObj.stream_online
-      if (typeof newObj.stream_start_date === 'string') {
-        client.stream_start_date = new Date(newObj.stream_start_date)
-      } else {
-        client.stream_start_date = newObj.stream_start_date
-      }
-
-      // dont overwrite with 0 because we use this variable to track currently logged in mmr
-      if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
-        client.mmr = newObj.mmr
-
-        if (!client.stream_online) return
-        logger.info('[WATCHER MMR] Sending mmr to socket', { name: client.name })
-        tellChatNewMMR(client.locale, client.token, newObj.mmr, oldObj.mmr)
-
-        const deets = await getRankDetail(newObj.mmr, client.steam32Id)
-        server.io.to(client.token).emit('update-medal', deets)
-      }
+    client.locale = newObj.locale
+    client.beta_tester = newObj.beta_tester
+    client.stream_online = newObj.stream_online
+    if (typeof newObj.stream_start_date === 'string') {
+      client.stream_start_date = new Date(newObj.stream_start_date)
+    } else {
+      client.stream_start_date = newObj.stream_start_date
     }
 
-    void handler()
+    if (typeof newObj.stream_start_date === 'string') {
+      client.stream_start_date = new Date(newObj.stream_start_date)
+    } else {
+      client.stream_start_date = newObj.stream_start_date
+    }
+
+    async function handler() {
+      if (!client) return
+
+      const deets = await getRankDetail(newObj.mmr, client.steam32Id)
+      server.io.to(client.token).emit('update-medal', deets)
+    }
+
+    // dont overwrite with 0 because we use this variable to track currently logged in mmr
+    if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
+      client.mmr = newObj.mmr
+
+      if (!client.stream_online) return
+      logger.info('[WATCHER MMR] Sending mmr to socket', { name: client.name })
+      tellChatNewMMR(client.locale, client.token, newObj.mmr, oldObj.mmr)
+
+      void handler()
+    }
   })
   .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, (payload) => {
     const newObj = payload.new as Setting
