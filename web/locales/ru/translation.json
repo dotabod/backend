@@ -3,9 +3,9 @@
     "denied": "\n{{- heroName}} разбил эгиду {{emote}}",
     "pickup": "{{- heroName}} поднял эгиду!"
   },
-  "apm_one": "Live APM: {{count}} Chatting",
-  "apm_many": "Live APM: {{count}} Chatting",
-  "apm_other": "Live APM: {{count}} Chatting",
+  "apm_one": "Текущий APM: {{count}} Chatting",
+  "apm_many": "Текущий APM: {{count}} Chatting",
+  "apm_other": "Текущий APM: {{count}} Chatting",
   "averageRank": "Средний рейтинг этой игры",
   "betaFeature": "[бета-версия]",
   "betaTester": "",
@@ -29,10 +29,10 @@
   "commands_mods": "Команды только для модераторов: {{commandList}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "gameNotFound": "Игра не найдена",
-  "gpm_zero": "Live GPM: {{count}}",
-  "gpm_one": "Live GPM: {{count}}",
-  "gpm_many": "Live GPM: {{count}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
-  "gpm_other": "Live GPM: {{count}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
+  "gpm_zero": "Текущий GPM: {{count}}",
+  "gpm_one": "Текущий GPM: {{count}}",
+  "gpm_many": "Текущий GPM: {{count}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
+  "gpm_other": "Текущий GPM: {{count}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
   "hero": "{{commandName}} команда отключена, потому что opendota заблокировала нас за слишком большое количество пользователей Sadge",
   "invalidColor": "Неверный цвет героя или слот. Должно быть 1-10, или одно из {{colorList}}",
   "invalidMmr": "Неверная команда. Попробуйте !setmmr 1234",
@@ -84,8 +84,8 @@
   "rank": {
     "nextRankAt": "Следующий ранг на",
     "nextRankIn_one": "Еще одна победа peepoClap",
-    "nextRankIn_many": "через {{count}} побед",
-    "nextRankIn_other": "через {{count}} побед"
+    "nextRankIn_many": "через {{count}} побед(у)",
+    "nextRankIn_other": "через {{count}} побед(у)"
   },
   "ranked_no": "Нет, эта игра не рейтинговая",
   "ranked_yes": "Да, эта игра рейтинговая",
@@ -113,7 +113,7 @@
   "updateMmr_auto": "Рейтинг обновлён до {{mmr}}. !fixparty для групповой игры и !fixdd для двойной ставки.",
   "updateMmr_manual": "Рейтинг изменён до {{mmr}}",
   "updateMmrMulti": "Несколько учетных записей Steam, обновление той, с которой вы вошли в систему в данный момент ({{steamId}})",
-  "xpm_one": "Live XPM: {{count}}",
-  "xpm_many": "Live XPM: {{count}}",
-  "xpm_other": "Live XPM: {{count}}"
+  "xpm_one": "Текущий XPM: {{count}}",
+  "xpm_many": "Текущий XPM: {{count}}",
+  "xpm_other": "Текущий XPM: {{count}}"
 }
