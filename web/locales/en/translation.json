@@ -28,7 +28,6 @@
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
-  "double": "Double down",
   "gameNotFound": "Game was not found",
   "gpm_zero": "Live GPM: {{count}}",
   "gpm_one": "Live GPM: {{count}}",
@@ -45,9 +44,14 @@
     "none": "Not playing with anyone from last game",
     "player": "{{lastMatchHero}} played as {{currentMatchHero}}"
   },
-  "lastgamescore": "",
-  "lastgamescore_lost": "Last game: lost",
-  "lastgamescore_won": "Last game: won",
+  "lastgamescore": {
+    "won": "Last game: won",
+    "lost": "Last game: lost",
+    "ended": "Ended {minutes}m ago",
+    "duration": "{minutes}m long",
+    "party": "Party match",
+    "double": "Double down"
+  },
   "lifetime": "Lifetime games",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
@@ -66,7 +70,6 @@
   "npRemove": "Try !np remove <steam32id>",
   "npRemoved": "Removed {{steamid}} from !np for this channel",
   "npUnknown": "Could not find {{steamid}} for this channel",
-  "party": "Party match",
   "ping": "Pong EZ Clap",
   "pleb": "One pleb IN 👇",
   "pleb_off": "{{name}} EZ Clap nice job pleb",

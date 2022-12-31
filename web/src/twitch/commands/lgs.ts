@@ -34,6 +34,7 @@ commandHandler.registerCommand('lgs', {
           is_doubledown: true,
           matchId: true,
           lobby_type: true,
+          createdAt: true,
           updatedAt: true,
         },
         orderBy: {
@@ -50,21 +51,35 @@ commandHandler.registerCommand('lgs', {
       }
 
       const additionals = []
+
+      // calculate the time difference in minutes between createdAt and updatedAt
+      const lasted = Math.floor((lg.updatedAt.getTime() - lg.createdAt.getTime()) / 1000 / 60)
+
       additionals.push(
-        `Ended ${Math.floor((Date.now() - lg.updatedAt.getTime()) / 1000 / 60)}m ago`,
+        t('lastgamescore.duration', { minutes: lasted, lng: message.channel.client.locale }),
       )
 
-      if (lg.is_party) additionals.push(t('party', { lng: message.channel.client.locale }))
-      if (lg.is_doubledown) additionals.push(t('double', { lng: message.channel.client.locale }))
+      additionals.push(
+        t('lastgamescore.ended', {
+          minutes: Math.floor((Date.now() - lg.updatedAt.getTime()) / 1000 / 60),
+          lng: message.channel.client.locale,
+        }),
+      )
+
+      if (lg.is_party)
+        additionals.push(t('lastgamescore.party', { lng: message.channel.client.locale }))
+      if (lg.is_doubledown)
+        additionals.push(t('lastgamescore.double', { lng: message.channel.client.locale }))
       if (lg.lobby_type !== 7)
-        additionals.push(t('unranked', { lng: message.channel.client.locale }))
+        additionals.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))
       additionals.push(`dotabuff.com/matches/${lg.matchId}`)
 
       void chatClient.say(
         message.channel.name,
-        `${t('lastgamescore', {
-          context: lg.won ? 'won' : 'lost',
-          lng: message.channel.client.locale,
+        `${
+          lg.won
+            ? t('lastgamescore.won', { lng: message.channel.client.locale })
+            : t('lastgamescore.lost', { lng: message.channel.client.locale })
         })}
         ${additionals.length ? ' · ' : ''}${additionals.join(' · ')}`,
       )
