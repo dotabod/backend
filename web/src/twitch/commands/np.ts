@@ -17,7 +17,7 @@ commandHandler.registerCommand('np', {
   handler: (message: MessageType, args: string[]) => {
     const [addOrRemove, forSteam32Id, forName] = args
     const {
-      user: { name: chatterName, permission: chatterPermission },
+      user: { name: chatterName },
       channel: { client, name: channel, id: twitchChannelId },
     } = message
 
@@ -77,7 +77,10 @@ commandHandler.registerCommand('np', {
       }
     }
 
-    if (chatterPermission >= 2 && (addOrRemove === 'add' || addOrRemove === 'remove')) {
+    if (
+      commandHandler.hasPermission(message.user, 2) &&
+      (addOrRemove === 'add' || addOrRemove === 'remove')
+    ) {
       void addRemoveHandler()
       return
     }

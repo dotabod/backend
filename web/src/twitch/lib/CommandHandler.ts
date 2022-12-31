@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { ADMIN_CHANNELS } from '../../dota/lib/consts.js'
 import { SocketClient } from '../../types.js'
 import { chatClient } from '../index.js'
 
@@ -211,7 +212,6 @@ class CommandHandler {
 const commandHandler = new CommandHandler()
 
 // Add a user to the list of users that are allowed to bypass the cooldown
-const ADMIN_CHANNELS = (process.env.ADMIN_CHANNELS ?? '').split(',')
 commandHandler.addUserToBypassList(ADMIN_CHANNELS)
 
 export default commandHandler
