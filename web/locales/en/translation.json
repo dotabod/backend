@@ -34,6 +34,7 @@
   "gpm_many": "Live GPM: {{count}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_other": "Live GPM: {{count}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "hero": "{{commandName}} command disabled because opendota blocked us for having too many users Sadge",
+  "invalidColor": "Invalid hero color or slot. Must be 1-10, or one of {{colorList}}",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} lost the {{killstreakCount}} kill streak BibleThump",

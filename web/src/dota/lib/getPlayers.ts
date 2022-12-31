@@ -37,7 +37,7 @@ export async function getPlayers(
       .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames)
 
   if (!response && !players?.length) {
-    throw new CustomError('Waiting for current match data PauseChamp')
+    throw new CustomError(t('missingMatchData', { lng: locale }))
   }
 
   const { matchPlayers, accountIds } = getAccountsFromMatch(

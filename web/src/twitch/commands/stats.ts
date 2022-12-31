@@ -16,7 +16,7 @@ export async function profileLink(locale: string, currentMatchId: string, args: 
   }
 
   if (!args.length) {
-    throw new CustomError('Missing hero color. Try !stats blue')
+    throw new CustomError(t('invalidColor', { colorList: heroColors.join(' '), lng: locale }))
   }
 
   // light blue can be an option
@@ -29,9 +29,7 @@ export async function profileLink(locale: string, currentMatchId: string, args: 
   }
 
   if (heroKey === -1) {
-    throw new CustomError(
-      `Invalid hero color or slot. Must be 1-10, or one of ${heroColors.join(' ')}`,
-    )
+    throw new CustomError(t('invalidColor', { colorList: heroColors.join(' '), lng: locale }))
   }
 
   const response = (await mongo
@@ -39,7 +37,7 @@ export async function profileLink(locale: string, currentMatchId: string, args: 
     .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames
 
   if (!response) {
-    throw new CustomError('Waiting for current match data PauseChamp')
+    throw new CustomError(t('missingMatchData', { lng: locale }))
   }
 
   const matchPlayers = response.teams.flatMap((team) => team.players)
