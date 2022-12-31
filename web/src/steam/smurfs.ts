@@ -8,7 +8,7 @@ export async function smurfs(
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
-  const { matchPlayers, cards } = await getPlayers(currentMatchId, players)
+  const { matchPlayers, cards } = await getPlayers(locale, currentMatchId, players)
 
   const result: { heroName: string; lifetime_games?: number }[] = []
   matchPlayers.forEach((player: { heroid: number; accountid: number }, i: number) => {

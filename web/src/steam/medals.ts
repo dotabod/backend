@@ -13,7 +13,7 @@ export async function gameMedals(
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
-  const { matchPlayers, cards } = await getPlayers(currentMatchId, players)
+  const { matchPlayers, cards } = await getPlayers(locale, currentMatchId, players)
 
   const medalQuery = (await mongo
     .collection('medals')

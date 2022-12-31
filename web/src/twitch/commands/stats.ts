@@ -10,9 +10,9 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 const mongo = await Mongo.connect()
 
-export async function profileLink(currentMatchId: string, args: string[]) {
+export async function profileLink(locale: string, currentMatchId: string, args: string[]) {
   if (!currentMatchId) {
-    throw new CustomError('Not in a match PauseChamp')
+    throw new CustomError(t('notPlaying', { lng: locale }))
   }
 
   if (!args.length) {
@@ -73,7 +73,7 @@ commandHandler.registerCommand('stats', {
       return
     }
 
-    profileLink(client.gsi.map.matchid, args)
+    profileLink(client.locale, client.gsi.map.matchid, args)
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })

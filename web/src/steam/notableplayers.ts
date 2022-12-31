@@ -26,7 +26,7 @@ export async function notablePlayers(
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
-  const { matchPlayers, accountIds, gameMode } = await getPlayers(currentMatchId, players)
+  const { matchPlayers, accountIds, gameMode } = await getPlayers(locale, currentMatchId, players)
 
   const mode = gameMode
     ? await mongo

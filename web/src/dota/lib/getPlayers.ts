@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 import { delayedGames } from '../../../prisma/generated/mongoclient/index.js'
 import Dota from '../../steam/index.js'
 import Mongo from '../../steam/mongo.js'
@@ -8,6 +10,7 @@ const mongo = await Mongo.connect()
 const dota = Dota.getInstance()
 
 export async function getPlayers(
+  locale: string,
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<{
@@ -24,7 +27,7 @@ export async function getPlayers(
   gameMode?: number
 }> {
   if (!currentMatchId) {
-    throw new CustomError('Not in a match PauseChamp')
+    throw new CustomError(t('notPlaying', { lng: locale }))
   }
 
   const response =

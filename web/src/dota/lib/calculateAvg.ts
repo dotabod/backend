@@ -8,7 +8,7 @@ export async function calculateAvg(
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
-  const { cards } = await getPlayers(currentMatchId, players)
+  const { cards } = await getPlayers(locale, currentMatchId, players)
 
   const mmrs: number[] = []
   const leaderranks: number[] = []
