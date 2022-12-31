@@ -48,7 +48,7 @@ channel
 
         if (!client.stream_online) return
         logger.info('[WATCHER MMR] Sending mmr to socket', { name: client.name })
-        tellChatNewMMR(client.token, newObj.mmr, oldObj.mmr)
+        tellChatNewMMR(client.locale, client.token, newObj.mmr, oldObj.mmr)
 
         const deets = await getRankDetail(newObj.mmr, client.steam32Id)
         server.io.to(client.token).emit('update-medal', deets)
@@ -118,7 +118,7 @@ channel
       client.mmr = newObj.mmr
 
       if (!client.stream_online) return
-      tellChatNewMMR(client.token, newObj.mmr, oldObj.mmr)
+      tellChatNewMMR(client.locale, client.token, newObj.mmr, oldObj.mmr)
       getRankDetail(newObj.mmr, newObj.steam32Id)
         .then((deets) => {
           server.io.to(client.token).emit('update-medal', deets)

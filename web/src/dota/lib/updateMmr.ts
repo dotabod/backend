@@ -7,7 +7,7 @@ import { logger } from '../../utils/logger.js'
 import findUser from './connectedStreamers.js'
 import { GLOBAL_DELAY } from './consts.js'
 
-export function tellChatNewMMR(token: string, mmr = 0, oldMmr = 0) {
+export function tellChatNewMMR(locale: string, token: string, mmr = 0, oldMmr = 0) {
   const client = findUser(token)
   if (!client) return
   const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
@@ -22,7 +22,7 @@ export function tellChatNewMMR(token: string, mmr = 0, oldMmr = 0) {
             context: isAuto ? 'auto' : 'manual',
             mmr,
             delta: `${newMmr > 0 ? '+' : ''}${newMmr}`,
-            lng: 'en',
+            lng: locale,
           }),
         )
       },
