@@ -1,6 +1,6 @@
 {
   "aegis": {
-    "denied": "\n{{- heroName}} разбил эгиду {{emote}}",
+    "denied": "{{- heroName}} разбил эгиду {{emote}}",
     "pickup": "{{- heroName}} поднял эгиду!"
   },
   "apm_one": "Текущий APM: {{count}} Chatting",
@@ -14,7 +14,7 @@
   "bets": {
     "lost": "Мы проиграли",
     "manual": "Модераторы должны завершить ставки вручную.",
-    "notScored": "Матч не засчитан D: Не изменять MMR для матча {{matchId}}.",
+    "notScored": "Матч не засчитан D: Не изменять рейтинг для матча {{matchId}}.",
     "open": "Ставки открыты peepoGamble",
     "won": "Мы победили"
   },
@@ -37,8 +37,8 @@
   "invalidColor": "Неверный цвет героя или слот. Должно быть 1-10, или одно из {{colorList}}",
   "invalidMmr": "Неверная команда. Попробуйте !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} потерял серию убийств из {{killstreakCount}} убийств! BibleThump",
-    "won": "у {{- heroName}} серия убийств из {{killstreakCount}} убийств! POGGIES"
+    "lost": "{{- heroName}} потерял серию из {{killstreakCount}} убийств! BibleThump",
+    "won": "у {{- heroName}} серия из {{killstreakCount}} убийств! POGGIES"
   },
   "lastgame": {
     "link": "Вот последняя игра: {{- url}}",
@@ -47,14 +47,14 @@
   },
   "lastgamescore": {
     "double": "Двойное понижение",
-    "duration": "длилась {{minutes}}m ",
+    "duration": "длилась {{minutes}}м ",
     "ended": "Закончилось {{minutes}}м назад",
     "lost": "Последняя игра: проигрыш",
     "party": "Групповой матч",
     "unranked": "Не рейтинговая",
     "won": "Последняя игра: победа"
   },
-  "lifetime": "Текущие игры",
+  "lifetime": "Количество игр",
   "matchFound": "Данные матча получены {{commandList}} команды бота активны.",
   "matchId": "ID матча: {{matchId}}",
   "midasUsed": "Midas наконец-то был использован, {{seconds}} секунды спустя Madge",
