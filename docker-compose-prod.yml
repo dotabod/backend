@@ -1,30 +1,36 @@
 services:
   twitch-chat-listener:
-      restart: on-failure
-      build:
-        context: twitch-chat-listener
-        target: prod
-        dockerfile: ../web/Dockerfile # Reusing same nodejs dockerfile
-      hostname: twitch-chat-listener
-      ports:
-        - '5005:5005'
-      env_file: .env
-      environment:
-        - NEW_RELIC_APP_NAME="twitch chat listener"
+    image: dotabod-twitch-chat-listener
+    container_name: dotabod-twitch-chat-listener
+    restart: on-failure
+    build:
+      context: twitch-chat-listener
+      target: prod
+      dockerfile: ../web/Dockerfile # Reusing same nodejs dockerfile
+    hostname: twitch-chat-listener
+    ports:
+      - '5005:5005'
+    env_file: .env
+    environment:
+      - NEW_RELIC_APP_NAME="twitch chat listener"
   twitch-eventsub-listener:
-      restart: on-failure
-      build:
-        context: twitch-eventsub-listener
-        target: prod
-        dockerfile: ../web/Dockerfile # Reusing same nodejs dockerfile
-      hostname: twitch-eventsub-listener
-      ports:
-        - '82:5010'
-      env_file: .env
-      environment:
-        - NEW_RELIC_APP_NAME="twitch eventsub listener"
-        - PORT=5010
+    image: dotabod-twitch-eventsub-listener
+    container_name: dotabod-twitch-eventsub-listener
+    restart: on-failure
+    build:
+      context: twitch-eventsub-listener
+      target: prod
+      dockerfile: ../web/Dockerfile # Reusing same nodejs dockerfile
+    hostname: twitch-eventsub-listener
+    ports:
+      - '82:5010'
+    env_file: .env
+    environment:
+      - NEW_RELIC_APP_NAME="twitch eventsub listener"
+      - PORT=5010
   web:
+    image: dotabod-web
+    container_name: dotabod-web
     restart: on-failure
     build:
       context: web
@@ -37,6 +43,8 @@ services:
       - '9229:9229'
     env_file: .env
   nginx:
+    container_name: dotabod-nginx
+    image: dotabod-nginx
     restart: on-failure
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template

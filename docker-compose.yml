@@ -1,5 +1,7 @@
 services:
   twitch-chat-listener:
+    image: dotabod-twitch-chat-listener
+    container_name: dotabod-twitch-chat-listener
     build:
       context: twitch-chat-listener
       target: dev
@@ -13,6 +15,8 @@ services:
     volumes:
       - ./twitch-chat-listener/src:/app/src
   twitch-eventsub-listener:
+    image: dotabod-twitch-eventsub-listener
+    container_name: dotabod-twitch-eventsub-listener
     build:
       context: twitch-eventsub-listener
       target: dev
@@ -27,6 +31,8 @@ services:
     volumes:
       - ./twitch-eventsub-listener/src:/app/src
   web:
+    image: dotabod-web
+    container_name: dotabod-web
     build:
       context: web
       target: dev
@@ -39,6 +45,8 @@ services:
       - ./web/src:/app/src
       - steam_auth:/app/src/steam/volumes
   nginx:
+    container_name: dotabod-nginx
+    image: dotabod-nginx
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
     env_file: .env
@@ -47,6 +55,7 @@ services:
       - '80:80'
       - '443:443'
   mongodb:
+    container_name: dotabod-mongodb
     image: "mongo"
     ports:
       - "27017:27017"
