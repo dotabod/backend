@@ -23,7 +23,7 @@ export async function openTwitchBet(
 
   const title =
     betsInfo.title !== defaultSettings[DBSettings.betsInfo].title
-      ? betsInfo.title
+      ? betsInfo.title.replace('[heroname]', heroName ?? '')
       : t('predictions.title', { lng: locale, heroName })
 
   const yes =
