@@ -4,7 +4,7 @@
     "pickup": "{{- heroName}} ha preso l'egida"
   },
   "apm_one": "APM Live: {{count}} Chatting",
-  "apm_many": "APM Live: {{count}} Chatting",
+  "apm_many": "APM in diretta {{count}} Chattare",
   "apm_other": "APM Live: {{count}} Chatting",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
