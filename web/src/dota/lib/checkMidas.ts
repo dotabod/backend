@@ -36,7 +36,7 @@ export default function checkMidas(
 }
 
 function isMidasOnCooldown(midasItem: Item): boolean {
-  return Number(midasItem.cooldown) > 0 || !midasItem.can_cast
+  return Number(midasItem.cooldown) > 0 || midasItem.can_cast !== true
 }
 
 function updatePassiveMidasTimer(passiveMidas: {
