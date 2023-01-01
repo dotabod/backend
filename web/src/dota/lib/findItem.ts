@@ -1,6 +1,6 @@
 import { Item, Packet } from '../../types.js'
 
-export function findItem(itemName: string | string[], searchStashAlso: boolean, data?: Packet) {
+export function findItem(itemName: string | string[], searchStashAlso?: boolean, data?: Packet) {
   if (!data?.items) return false
 
   // Should always be 17 unless they're not in a match

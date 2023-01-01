@@ -433,6 +433,12 @@ export class setupMainEvents {
       const hasWon = this.client.gsi?.map?.win_team && this.client.gsi.map.win_team !== 'none'
       if (hasWon) return
 
+      // We lost the aegis item
+      if (this.aegisPickedUp?.playerId === this.playingHeroSlot && !findItem('item_aegis')) {
+        this.aegisPickedUp = undefined
+        server.io.to(this.getToken()).emit('aegis-picked-up', {})
+      }
+
       // Can't just !this.heroSlot because it can be 0
       const purchaser = this.client.gsi?.items?.teleport0?.purchaser
       if (typeof this.playingHeroSlot !== 'number' && typeof purchaser === 'number') {
@@ -497,10 +503,41 @@ export class setupMainEvents {
       this.playingHero = name
     })
 
-    // TODO: check if we can use token:player:deaths
+    // TODO: check if we can use token:player:deaths for doing passiveDeath events
+    events.on(`${this.getToken()}:player:deaths`, (deaths: number) => {
+      if (!this.client.stream_online) return
+      if (!isPlayingMatch(this.client.gsi)) return
+      if (!deaths) return
+
+      logger.info('have we died +1? does not trigger on aegis or wraith ult?', { deaths })
+    })
+
+    // TODO: check kill list value
+    events.on(`${this.getToken()}:player:kill_list`, (kill_list: Player['kill_list']) => {
+      if (!this.client.stream_online) return
+      if (!isPlayingMatch(this.client.gsi)) return
+      if (typeof this.aegisPickedUp?.playerId !== 'number') return
+
+      // Remove aegis icon from the player we just killed
+      // TODO: are kills registered if its an aegis kill? my guess is no
+      if (Object.values(kill_list).includes(this.aegisPickedUp.playerId)) {
+        this.aegisPickedUp = undefined
+        server.io.to(this.getToken()).emit('aegis-picked-up', {})
+      }
+
+      logger.info('we killed someone', { kill_list })
+    })
+
     events.on(`${this.getToken()}:hero:alive`, (alive: boolean) => {
       if (!this.client.stream_online) return
       if (!isPlayingMatch(this.client.gsi)) return
+
+      // Case one, we had aegis, and we die with it
+      // TODO: Does this trigger on an aegis death or only real death?
+      if (!alive && this.aegisPickedUp?.playerId === this.playingHeroSlot) {
+        this.aegisPickedUp = undefined
+        server.io.to(this.getToken()).emit('aegis-picked-up', {})
+      }
 
       const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
       if (!chatterEnabled) return
