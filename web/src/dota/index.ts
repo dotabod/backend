@@ -1,11 +1,13 @@
+import './gsiEventLoader.js'
+
 import { logger } from '../utils/logger.js'
-import { setupMainEvents } from './events.js'
-import { events } from './gsiEventEmitter.js'
+import { events } from './globalEventEmitter.js'
+import { GSIHandler } from './GSIHandler.js'
+import GSIServer from './GSIServer.js'
 import findUser from './lib/connectedStreamers.js'
-import D2GSI from './server.js'
 
 // Then setup the dota gsi server & websocket server
-export const server = new D2GSI()
+export const server = new GSIServer()
 
 events.on('new-gsi-client', (token: string) => {
   if (!token) {
@@ -20,7 +22,7 @@ events.on('new-gsi-client', (token: string) => {
   }
 
   logger.info('[GSI] Connecting new client', { name: client.name })
-  new setupMainEvents(client)
+  new GSIHandler(client)
 })
 
 events.on('remove-gsi-client', (token: string) => {
