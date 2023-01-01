@@ -6,12 +6,12 @@ import { Server, Socket } from 'socket.io'
 import getDBUser from '../db/getDBUser.js'
 import Dota from '../steam/index.js'
 import { logger } from '../utils/logger.js'
-import { checkAuth } from './checkAuth.js'
-import { blockCache } from './events.js'
-import { newData, processChanges } from './gsiEventEmitter.js'
+import { newData, processChanges } from './globalEventEmitter.js'
+import { blockCache } from './GSIHandler.js'
 import findUser from './lib/connectedStreamers.js'
+import { validateToken } from './validateToken.js'
 
-class D2GSI {
+class GSIServer {
   io: Server
   dota: Dota
 
@@ -31,7 +31,7 @@ class D2GSI {
     app.use(bodyParser.urlencoded({ extended: true }))
     this.dota.dota2.on('ready', () => {
       logger.info('[SERVER] Connected to dota game coordinator')
-      app.post('/', checkAuth, processChanges('previously'), processChanges('added'), newData)
+      app.post('/', validateToken, processChanges('previously'), processChanges('added'), newData)
     })
 
     // No main page
@@ -83,4 +83,4 @@ class D2GSI {
   }
 }
 
-export default D2GSI
+export default GSIServer

@@ -1,4 +1,4 @@
-import './commands.js'
+import './commandLoader.js'
 
 import { t } from 'i18next'
 import { io } from 'socket.io-client'

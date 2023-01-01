@@ -3,26 +3,22 @@ import { t } from 'i18next'
 import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
-import { DBSettings, defaultSettings, getValueOrDefault } from '../db/settings.js'
+import { DBSettings, getValueOrDefault } from '../db/settings.js'
 import Mongo from '../steam/mongo.js'
 import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { disabledBets, openTwitchBet } from '../twitch/lib/openTwitchBet.js'
-import { DotaEvent, DotaEventTypes, Packet, Player, SocketClient } from '../types.js'
+import { DotaEvent, Player, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
-import { fmtMSS, steamID64toSteamID32 } from '../utils/index.js'
+import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
-import { events } from './gsiEventEmitter.js'
+import EventRunner from './EventRunner.js'
+import { events } from './globalEventEmitter.js'
 import { server } from './index.js'
-import checkMidas from './lib/checkMidas.js'
-import { calculateManaSaved } from './lib/checkTreadToggle.js'
 import { blockTypes, GLOBAL_DELAY, pickSates } from './lib/consts.js'
-import { findItem } from './lib/findItem.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import getHero, { HeroNames } from './lib/getHero.js'
-import { getHeroNameById } from './lib/heroes.js'
 import { isArcade } from './lib/isArcade.js'
-import { isPlayingMatch } from './lib/isPlayingMatch.js'
 import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
@@ -31,20 +27,9 @@ const mongo = await Mongo.connect()
 
 export const blockCache = new Map<string, string>()
 
-const passiveItemNames = [
-  { name: 'item_magic_stick', title: 'magic stick', charges: true },
-  { name: 'item_magic_wand', title: 'magic wand', charges: true },
-  { name: 'item_faerie_fire', title: 'faerie fire' },
-  { name: 'item_cheese', title: 'cheese' },
-  { name: 'item_holy_locket', title: 'holy locket', charges: true },
-  { name: 'item_mekansm', title: 'mek' },
-  { name: 'item_satanic', title: 'satanic' },
-  { name: 'item_guardian_greaves', title: 'greaves' },
-]
-
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
-export class setupMainEvents {
+export class GSIHandler {
   client: SocketClient
 
   // Server could reboot and lose these in memory
@@ -75,34 +60,34 @@ export class setupMainEvents {
 
   constructor(client: SocketClient) {
     this.client = client
-    this.watchEvents()
+    new EventRunner(this).registerEvents()
   }
 
-  private getMmr() {
+  public getMmr() {
     return this.client.mmr
   }
 
-  private getToken() {
+  public getToken() {
     return this.client.token
   }
 
-  private getChannel() {
+  public getChannel() {
     return this.client.name
   }
 
-  private getSteam32() {
+  public getSteam32() {
     return this.client.steam32Id
   }
 
-  private getChannelId(): string {
+  public getChannelId(): string {
     return this.client.Account?.providerAccountId ?? ''
   }
 
-  private addSecondsToNow(seconds: number) {
+  public addSecondsToNow(seconds: number) {
     return new Date(new Date().getTime() + seconds * 1000)
   }
 
-  private say(
+  public say(
     message: string,
     { delay = true, beta = false }: { delay?: boolean; beta?: boolean } = {},
   ) {
@@ -120,7 +105,7 @@ export class setupMainEvents {
   }
 
   // reset vars when a new match begins
-  private resetClientState(resetBets = false) {
+  public resetClientState(resetBets = false) {
     logger.info('newMatchNewVars', {
       resetBets,
       name: this.client.name,
@@ -243,395 +228,6 @@ export class setupMainEvents {
     } catch (e) {
       logger.info('saving match data failed', { name: this.client.name, e })
     }
-  }
-
-  watchEvents() {
-    events.on(`${this.getToken()}:${DotaEventTypes.RoshanKilled}`, (event: DotaEvent) => {
-      if (!isPlayingMatch(this.client.gsi)) return
-      if (!this.client.stream_online) return
-
-      // doing map gametime - event gametime in case the user reconnects to a match,
-      // and the gametime is over the event gametime
-      const gameTimeDiff = (this.client.gsi?.map?.game_time ?? event.game_time) - event.game_time
-
-      // min spawn for rosh in 5 + 3 minutes
-      const minS = 5 * 60 + 3 * 60 - gameTimeDiff
-      const minTime = (this.client.gsi?.map?.clock_time ?? 0) + minS
-
-      // max spawn for rosh in 5 + 3 + 3 minutes
-      const maxS = 5 * 60 + 3 * 60 + 3 * 60 - gameTimeDiff
-      const maxTime = (this.client.gsi?.map?.clock_time ?? 0) + maxS
-
-      // server time
-      const minDate = this.addSecondsToNow(minS)
-      const maxDate = this.addSecondsToNow(maxS)
-
-      const res = {
-        minS,
-        maxS,
-        minTime: fmtMSS(minTime),
-        maxTime: fmtMSS(maxTime),
-        minDate,
-        maxDate,
-      }
-
-      this.say(t('roshanKilled', { min: res.minTime, max: res.maxTime, lng: this.client.locale }), {
-        beta: true,
-      })
-
-      this.roshanKilled = res
-      server.io.to(this.getToken()).emit('roshan-killed', res)
-    })
-
-    events.on(`${this.getToken()}:${DotaEventTypes.Tip}`, (event: DotaEvent) => {
-      // beta opt in only
-      if (!this.client.beta_tester) return
-      if (!this.client.stream_online) return
-      if (!isPlayingMatch(this.client.gsi)) return
-
-      const heroName = getHeroNameById(
-        this.players?.matchPlayers[event.sender_player_id].heroid ?? 0,
-        event.sender_player_id,
-      )
-
-      if (event.receiver_player_id === this.playingHeroSlot) {
-        this.say(t('tip.from', { lng: this.client.locale, heroName }), { beta: true })
-      }
-
-      if (event.sender_player_id === this.playingHeroSlot) {
-        const toHero = getHeroNameById(
-          this.players?.matchPlayers[event.receiver_player_id].heroid ?? 0,
-          event.receiver_player_id,
-        )
-
-        this.say(t('tip.to', { lng: this.client.locale, heroName: toHero }), { beta: true })
-      }
-    })
-
-    let bountyTimeout: NodeJS.Timeout
-    let bountyHeroNames: string[] = []
-
-    events.on(`${this.getToken()}:${DotaEventTypes.BountyPickup}`, (event: DotaEvent) => {
-      if (!isPlayingMatch(this.client.gsi)) return
-      if (!this.client.stream_online) return
-
-      // Only for first bounties
-      if (event.team === this.playingTeam && Number(this.client.gsi?.map?.clock_time) <= 120) {
-        clearTimeout(bountyTimeout)
-        const heroName = getHeroNameById(
-          this.players?.matchPlayers[event.player_id].heroid ?? 0,
-          event.player_id,
-        )
-        bountyHeroNames.push(heroName)
-        bountyTimeout = setTimeout(() => {
-          this.say(
-            t('bountyPickup', {
-              lng: this.client.locale,
-              bountyValue: event.bounty_value * bountyHeroNames.length,
-              heroNames: bountyHeroNames.join(', '),
-            }),
-            {
-              beta: true,
-            },
-          )
-          bountyHeroNames = []
-        }, 15000)
-      }
-    })
-
-    let killstreakTimeout: NodeJS.Timeout
-    events.on(`${this.getToken()}:player:kill_streak`, (streak: number) => {
-      if (!isPlayingMatch(this.client.gsi)) return
-      if (!this.client.stream_online) return
-
-      const heroName =
-        getHero(this.playingHero ?? this.client.gsi?.hero?.name)?.localized_name ?? 'We'
-
-      const previousStreak = Number(this.client.gsi?.previously?.player?.kill_streak)
-      const lostStreak = previousStreak > 3 && streak <= 3
-      if (lostStreak) {
-        this.say(
-          t('killstreak.lost', {
-            killstreakCount: previousStreak,
-            heroName,
-            lng: this.client.locale,
-          }),
-          { beta: true },
-        )
-        return
-      }
-
-      if (streak <= 3) return
-
-      clearTimeout(killstreakTimeout)
-      killstreakTimeout = setTimeout(() => {
-        this.say(
-          t('killstreak.won', { killstreakCount: streak, heroName, lng: this.client.locale }),
-          { beta: true },
-        )
-      }, 15000)
-    })
-
-    events.on(`${this.getToken()}:${DotaEventTypes.AegisDenied}`, (event: DotaEvent) => {
-      if (!isPlayingMatch(this.client.gsi)) return
-      if (!this.client.stream_online) return
-
-      const heroName = getHeroNameById(
-        this.players?.matchPlayers[event.player_id].heroid ?? 0,
-        event.player_id,
-      )
-
-      this.say(t('aegis.denied', { lng: this.client.locale, heroName, emote: 'ICANT' }), {
-        beta: true,
-      })
-    })
-
-    events.on(`${this.getToken()}:${DotaEventTypes.AegisPickedUp}`, (event: DotaEvent) => {
-      if (!isPlayingMatch(this.client.gsi)) return
-      if (!this.client.stream_online) return
-
-      const gameTimeDiff = (this.client.gsi?.map?.game_time ?? event.game_time) - event.game_time
-
-      // expire for aegis in 5 minutes
-      const expireS = 5 * 60 - gameTimeDiff
-      const expireTime = (this.client.gsi?.map?.clock_time ?? 0) + expireS
-
-      // server time
-      const expireDate = this.addSecondsToNow(expireS)
-
-      const res = {
-        expireS,
-        playerId: event.player_id,
-        expireTime: fmtMSS(expireTime),
-        expireDate,
-      }
-
-      this.aegisPickedUp = res
-
-      const heroName = getHeroNameById(
-        this.players?.matchPlayers[event.player_id].heroid ?? 0,
-        event.player_id,
-      )
-
-      this.say(t('aegis.pickup', { lng: this.client.locale, heroName }), { beta: true })
-
-      server.io.to(this.getToken()).emit('aegis-picked-up', res)
-    })
-
-    // Catch all
-    events.on(`${this.getToken()}:newdata`, (data: Packet) => {
-      // New users who dont have a steamaccount saved yet
-      // This needs to run first so we have client.steamid on multiple acts
-      this.updateSteam32Id()
-
-      // In case they connect to a game in progress and we missed the start event
-      this.setupOBSBlockers(data.map?.game_state ?? '')
-
-      if (!isPlayingMatch(this.client.gsi)) return
-
-      // Everything below here requires an ongoing match, not a finished match
-      const hasWon = this.client.gsi?.map?.win_team && this.client.gsi.map.win_team !== 'none'
-      if (hasWon) return
-
-      // We lost the aegis item
-      if (this.aegisPickedUp?.playerId === this.playingHeroSlot && !findItem('item_aegis')) {
-        this.aegisPickedUp = undefined
-        server.io.to(this.getToken()).emit('aegis-picked-up', {})
-      }
-
-      // Can't just !this.heroSlot because it can be 0
-      const purchaser = this.client.gsi?.items?.teleport0?.purchaser
-      if (typeof this.playingHeroSlot !== 'number' && typeof purchaser === 'number') {
-        this.playingHeroSlot = purchaser
-        void this.saveMatchData()
-        return
-      }
-
-      // beta testers only
-      if (this.client.beta_tester) {
-        const mana = calculateManaSaved(this.treadsData, this.client.gsi)
-        this.manaSaved += mana
-        this.treadToggles += mana > 0 ? 1 : 0
-      }
-
-      // Always runs but only until steam is found
-      void this.saveMatchData()
-
-      // TODO: Move this to server.ts
-      const newEvents = data.events?.filter((event) => {
-        const existingEvent = this.events.find(
-          (e) => e.game_time === event.game_time && e.event_type === event.event_type,
-        )
-        return !existingEvent
-      })
-
-      if (newEvents?.length) {
-        this.events = [...this.events, ...newEvents]
-
-        newEvents.forEach((event) => {
-          events.emit(`${this.getToken()}:${event.event_type}`, event)
-
-          if (!Object.values(DotaEventTypes).includes(event.event_type)) {
-            logger.info('[NEWEVENT]', event)
-          }
-        })
-      }
-
-      this.openBets()
-
-      const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-      const chatters = getValueOrDefault(
-        DBSettings.chatters,
-        this.client.settings,
-      ) as typeof defaultSettings['chatters']
-      if (chatterEnabled && chatters.midas.enabled && this.client.stream_online) {
-        const isMidasPassive = checkMidas(data, this.passiveMidas)
-
-        if (isMidasPassive === true) {
-          logger.info('[MIDAS] Passive midas', { name: this.getChannel() })
-          this.say(t('chatters.midas', { lng: this.client.locale }))
-        }
-        if (typeof isMidasPassive === 'number') {
-          this.say(t('midasUsed', { lng: this.client.locale, seconds: isMidasPassive }))
-        }
-      }
-    })
-
-    events.on(`${this.getToken()}:hero:name`, (name: HeroNames) => {
-      if (!isPlayingMatch(this.client.gsi)) return
-
-      this.playingHero = name
-    })
-
-    // TODO: check if we can use token:player:deaths for doing passiveDeath events
-    events.on(`${this.getToken()}:player:deaths`, (deaths: number) => {
-      if (!this.client.stream_online) return
-      if (!isPlayingMatch(this.client.gsi)) return
-      if (!deaths) return
-
-      logger.info('have we died +1? does not trigger on aegis or wraith ult?', { deaths })
-    })
-
-    // TODO: check kill list value
-    events.on(`${this.getToken()}:player:kill_list`, (kill_list: Player['kill_list']) => {
-      if (!this.client.stream_online) return
-      if (!isPlayingMatch(this.client.gsi)) return
-      if (typeof this.aegisPickedUp?.playerId !== 'number') return
-
-      // Remove aegis icon from the player we just killed
-      // TODO: are kills registered if its an aegis kill? my guess is no
-      if (Object.values(kill_list).includes(this.aegisPickedUp.playerId)) {
-        this.aegisPickedUp = undefined
-        server.io.to(this.getToken()).emit('aegis-picked-up', {})
-      }
-
-      logger.info('we killed someone', { kill_list })
-    })
-
-    events.on(`${this.getToken()}:hero:alive`, (alive: boolean) => {
-      if (!this.client.stream_online) return
-      if (!isPlayingMatch(this.client.gsi)) return
-
-      // Case one, we had aegis, and we die with it
-      // TODO: Does this trigger on an aegis death or only real death?
-      if (!alive && this.aegisPickedUp?.playerId === this.playingHeroSlot) {
-        this.aegisPickedUp = undefined
-        server.io.to(this.getToken()).emit('aegis-picked-up', {})
-      }
-
-      const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-      if (!chatterEnabled) return
-
-      const chatters = getValueOrDefault(
-        DBSettings.chatters,
-        this.client.settings,
-      ) as typeof defaultSettings['chatters']
-
-      if (!chatters.passiveDeath.enabled) return
-
-      if (
-        !alive &&
-        this.client.gsi?.previously?.hero?.alive &&
-        this.client.gsi.previously.player?.deaths !== this.client.gsi.player?.deaths
-      ) {
-        const couldHaveLivedWith = findItem(
-          passiveItemNames.map((i) => i.name),
-          false,
-          this.client.gsi,
-        )
-
-        if (Array.isArray(couldHaveLivedWith) && couldHaveLivedWith.length) {
-          const itemNames = couldHaveLivedWith
-            .map((item) => {
-              const found = passiveItemNames.find((i) => {
-                if (i.name !== item.name) return false
-                if (Number(item.cooldown) > 0 || !item.can_cast) return false
-                if (i.charges) {
-                  return Number(item.charges) >= 10
-                }
-                return true
-              })
-              if (found) return found.title
-              return null
-            })
-            .flatMap((f) => f ?? [])
-            .join(', ')
-
-          if (!itemNames) return
-
-          const heroName =
-            getHero(this.playingHero ?? this.client.gsi.hero?.name)?.localized_name ?? ''
-
-          this.say(t('chatters.died', { heroName, itemNames, lng: this.client.locale }))
-        }
-      }
-    })
-
-    events.on(`${this.getToken()}:hero:smoked`, (isSmoked: boolean) => {
-      if (!this.client.stream_online) return
-      if (!isPlayingMatch(this.client.gsi)) return
-      const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-      if (!chatterEnabled) return
-
-      const chatters = getValueOrDefault(
-        DBSettings.chatters,
-        this.client.settings,
-      ) as typeof defaultSettings['chatters']
-
-      if (!chatters.smoke.enabled) return
-
-      if (isSmoked) {
-        const heroName =
-          getHero(this.playingHero ?? this.client.gsi?.hero?.name)?.localized_name ?? 'We'
-
-        this.say(t('chatters.smoked', { heroName, lng: this.client.locale }))
-      }
-    })
-
-    events.on(`${this.getToken()}:map:paused`, (isPaused: boolean) => {
-      if (!this.client.stream_online) return
-
-      if (!isPlayingMatch(this.client.gsi)) return
-      const chatterEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-
-      // Necessary to let the frontend know, so we can pause any rosh / aegis / etc timers
-      server.io.to(this.getToken()).emit('paused', isPaused)
-
-      const chatters = getValueOrDefault(
-        DBSettings.chatters,
-        this.client.settings,
-      ) as typeof defaultSettings['chatters']
-      if (isPaused && chatterEnabled && chatters.pause.enabled) {
-        this.say(t('chatters.pause', { lng: this.client.locale }))
-      }
-    })
-
-    // This wont get triggered if they click disconnect and dont wait for the ancient to go to 0
-    events.on(`${this.getToken()}:map:win_team`, (winningTeam: 'radiant' | 'dire') => {
-      if (!isPlayingMatch(this.client.gsi)) return
-
-      this.closeBets(winningTeam)
-    })
   }
 
   emitWLUpdate() {
@@ -1167,7 +763,7 @@ export class setupMainEvents {
       return
     }
 
-    // TODO: if the game is matchid 0 also dont show these? ie bot match. hero demo are type 'arcde'
+    // TODO: if the game is matchid 0 also dont show these? ie bot match. hero demo are type 'arcade'
 
     // Edge case:
     // Send strat screen if the player has picked their hero and it's locked in

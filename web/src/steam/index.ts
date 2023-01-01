@@ -10,7 +10,7 @@ import Steam from 'steam'
 import steamErrors from 'steam-errors'
 
 import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
-import { events } from '../dota/gsiEventEmitter.js'
+import { events } from '../dota/globalEventEmitter.js'
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import { GCMatchData } from '../types.js'
 import CustomError from '../utils/customError.js'

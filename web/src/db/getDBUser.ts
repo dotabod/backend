@@ -1,4 +1,4 @@
-import { events } from '../dota/gsiEventEmitter.js'
+import { events } from '../dota/globalEventEmitter.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
 import { gsiClients } from '../dota/lib/consts.js'
 import { SocketClient } from '../types.js'

@@ -2,11 +2,13 @@ import { EventEmitter } from 'events'
 import { NextFunction, Request, Response } from 'express'
 
 export const events = new EventEmitter()
+
 function emitAll(prefix: string, obj: Record<string, any>, token: string) {
   Object.keys(obj).forEach((key) => {
     events.emit(`${token}:${prefix + key}`, obj[key])
   })
 }
+
 function recursiveEmit(
   prefix: string,
   changed: Record<string, any>,
@@ -33,6 +35,7 @@ function recursiveEmit(
     }
   })
 }
+
 export function processChanges(section: string) {
   return function handle(req: Request, res: Response, next: NextFunction) {
     if (req.body[section]) {
@@ -42,6 +45,7 @@ export function processChanges(section: string) {
     next()
   }
 }
+
 export function newData(req: Request, res: Response) {
   const token = req.body.auth.token as string
   events.emit(`${token}:newdata`, req.body)

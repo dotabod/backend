@@ -5,7 +5,7 @@ import { logger } from '../utils/logger.js'
 
 export const pendingCheckAuth = new Set<string>()
 
-export function checkAuth(req: Request, res: Response, next: NextFunction) {
+export function validateToken(req: Request, res: Response, next: NextFunction) {
   // Sent from dota gsi config file
   const token = req.body?.auth?.token as string | undefined
 

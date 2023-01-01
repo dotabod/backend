@@ -1,5 +1,5 @@
 import { Setting, SteamAccount, User } from '../../prisma/generated/postgresclient/index.js'
-import { events } from '../dota/gsiEventEmitter.js'
+import { events } from '../dota/globalEventEmitter.js'
 import { server } from '../dota/index.js'
 import findUser, { deleteUser } from '../dota/lib/connectedStreamers.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
