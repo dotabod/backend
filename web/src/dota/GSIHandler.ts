@@ -12,7 +12,6 @@ import { DotaEvent, Player, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
-import EventRunner from './events/EventRunner.js'
 import { events } from './globalEventEmitter.js'
 import { server } from './index.js'
 import { blockTypes, GLOBAL_DELAY, pickSates } from './lib/consts.js'
@@ -58,9 +57,29 @@ export class GSIHandler {
   creatingSteamAccount = false
   treadsData = { manaAtLastToggle: 0, timeOfLastToggle: 0 }
 
-  constructor(client: SocketClient) {
-    this.client = client
-    new EventRunner(this).registerEvents()
+  constructor(dotaClient: SocketClient) {
+    this.client = dotaClient
+
+    // Check if bot is disabled and dont run event handler
+    const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, this.client.settings)
+    if (isBotDisabled) {
+      logger.info('[GSI] Bot is disabled for this user', { name: this.client.name })
+      return
+    }
+  }
+
+  public async enable() {
+    // run events
+    await chatClient.join(this.client.name)
+  }
+
+  public disable() {
+    // stop events
+    chatClient.part(this.client.name)
+  }
+
+  public unset() {
+    // Clear any timers etc before destroying this class
   }
 
   public getMmr() {

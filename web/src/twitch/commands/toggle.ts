@@ -3,6 +3,9 @@ import { t } from 'i18next'
 import { prisma } from '../../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { events } from '../../dota/globalEventEmitter.js'
+import { GSIHandler } from '../../dota/GSIHandler.js'
+import { gsiHandlers } from '../../dota/index.js'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -13,8 +16,8 @@ export async function toggleDotabod(
   lng = 'en',
 ) {
   if (!isBotDisabled) {
-    events.emit('new-gsi-client', token)
-    await chatClient.join(channel)
+    logger.info('[GSI] Connecting new client', { token })
+    await gsiHandlers.get(token)?.enable()
   }
 
   await chatClient.say(
@@ -23,8 +26,13 @@ export async function toggleDotabod(
   )
 
   if (isBotDisabled) {
-    events.emit('remove-gsi-client', token)
-    chatClient.part(channel)
+    if (!gsiHandlers.has(token)) {
+      logger.info('[REMOVE GSI] Could not find client', { token })
+      return
+    }
+
+    logger.info('[REMOVE GSI] Removing GSI client', { token })
+    gsiHandlers.get(token)?.disable()
   }
 }
 

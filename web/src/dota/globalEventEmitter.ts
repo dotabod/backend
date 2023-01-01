@@ -5,7 +5,7 @@ export const events = new EventEmitter()
 
 function emitAll(prefix: string, obj: Record<string, any>, token: string) {
   Object.keys(obj).forEach((key) => {
-    events.emit(`${token}:${prefix + key}`, obj[key])
+    events.emit('prefix + key', obj[key], token)
   })
 }
 
@@ -29,7 +29,7 @@ function recursiveEmit(
           // and doesn't contain each of the child keys
           emitAll(`${prefix + key}:`, body[key], token)
         } else {
-          events.emit(`${token}:${prefix + key}`, body[key])
+          events.emit(prefix + key, body[key], token)
         }
       }
     }
@@ -48,6 +48,6 @@ export function processChanges(section: string) {
 
 export function newData(req: Request, res: Response) {
   const token = req.body.auth.token as string
-  events.emit(`${token}:newdata`, req.body)
+  events.emit('newdata', req.body, token)
   res.end()
 }

@@ -1,10 +1,9 @@
-import { events } from '../dota/globalEventEmitter.js'
+import { GSIHandler } from '../dota/GSIHandler.js'
+import { gsiHandlers } from '../dota/index.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
-import { gsiClients } from '../dota/lib/consts.js'
 import { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
-import { DBSettings, getValueOrDefault } from './settings.js'
 
 export const invalidTokens = new Set()
 
@@ -85,15 +84,10 @@ export default async function getDBUser(
         token: user.id,
       }
 
-      gsiClients.push(theUser)
+      logger.info('[GSI] Connecting new client', { token })
+      const gsiHandler = new GSIHandler(theUser)
+      gsiHandlers.set(user.id, gsiHandler)
 
-      const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, user.settings)
-      if (isBotDisabled) {
-        logger.info('[GSI] Bot is disabled for this user', { name: user.name })
-        return theUser
-      }
-
-      events.emit('new-gsi-client', user.id)
       return theUser
     })
     .catch((e) => {

@@ -1,5 +1,7 @@
 import { gsiClients } from './consts.js'
 
+// TODO: gsihandlers instead of gsiclients
+
 function findUser(token?: string) {
   if (!token) return null
 

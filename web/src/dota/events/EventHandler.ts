@@ -1,20 +1,17 @@
+import { events } from '../globalEventEmitter.js'
 import { GSIHandler } from '../GSIHandler.js'
+import { gsiHandlers } from '../index.js'
 
 export interface EventOptions {
   handler: (dotaClient: GSIHandler, data: any) => void
 }
 
 class EventHandler {
-  events = new Map<string, EventOptions>() // Map for storing event information
-
   registerEvent = (eventName: string, options: EventOptions) => {
-    // Check if the event is already registered
-    if (this.events.has(eventName)) {
-      throw new Error(`Event "${eventName}" is already registered.`)
-    }
-
-    // Store the event information in the events map
-    this.events.set(eventName, options)
+    events.on(eventName, (data: any, token: string) => {
+      const dotaClient = gsiHandlers.get(token)
+      if (dotaClient) options.handler(dotaClient, data)
+    })
   }
 }
 
