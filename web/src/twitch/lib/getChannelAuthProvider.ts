@@ -4,15 +4,15 @@ import findUser from '../../dota/lib/connectedStreamers.js'
 import { logger } from '../../utils/logger.js'
 import { hasTokens } from './hasTokens.js'
 
-export const getChannelAuthProvider = function (userId: string) {
+export const getChannelAuthProvider = function (token: string) {
   if (!hasTokens) {
     throw new Error('Missing twitch tokens')
   }
 
-  const twitchTokens = findUser(userId)
+  const twitchTokens = findUser(token)
 
   if (!twitchTokens?.Account?.access_token || !twitchTokens.Account.refresh_token) {
-    logger.info('[TWITCHSETUP] Missing twitch tokens', { userId })
+    logger.info('[TWITCHSETUP] Missing twitch tokens', { userId: token })
     return {}
   }
 

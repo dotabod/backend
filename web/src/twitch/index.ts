@@ -59,8 +59,10 @@ twitchChat.on(
           isBotDisabled &&
           !toggleCommand.aliases?.includes(text.replace('!', '').split(' ')[0]) &&
           text.split(' ')[0] !== '!toggle'
-        )
+        ) {
+          logger.info("Bot is disabled, can't run command", { channel })
           return
+        }
 
         // Handle the incoming message using the command handler
         commandHandler.handleMessage({

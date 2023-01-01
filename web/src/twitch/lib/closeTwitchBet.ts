@@ -2,10 +2,10 @@ import { logger } from '../../utils/logger.js'
 import { getChannelAPI } from './getChannelAPI.js'
 import { disabledBets } from './openTwitchBet.js'
 
-export function closeTwitchBet(won: boolean, userId: string) {
-  if (disabledBets.has(userId)) throw new Error('Bets not enabled')
+export function closeTwitchBet(won: boolean, token: string) {
+  if (disabledBets.has(token)) throw new Error('Bets not enabled')
 
-  const { api, providerAccountId } = getChannelAPI(userId)
+  const { api, providerAccountId } = getChannelAPI(token)
 
   return api.predictions
     .getPredictions(providerAccountId, {
