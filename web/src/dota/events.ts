@@ -630,7 +630,7 @@ export class setupMainEvents {
     events.on(`${this.getToken()}:map:win_team`, (winningTeam: 'radiant' | 'dire') => {
       if (!isPlayingMatch(this.client.gsi)) return
 
-      this.endBets(winningTeam)
+      this.closeBets(winningTeam)
     })
   }
 
@@ -952,7 +952,7 @@ export class setupMainEvents {
       })
   }
 
-  endBets(winningTeam: 'radiant' | 'dire' | null = null) {
+  closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
     if (process.env.NODE_ENV === 'development') {
       this.resetClientState(true)
       return
@@ -1005,7 +1005,7 @@ export class setupMainEvents {
             winningTeam,
             matchId,
           })
-          this.endBets(winningTeam)
+          this.closeBets(winningTeam)
         })
         .catch((e) => {
           try {
@@ -1229,7 +1229,7 @@ export class setupMainEvents {
     if (!hasValidBlocker && blockCache.has(this.getToken())) {
       blockCache.delete(this.getToken())
       server.io.to(this.getToken()).emit('block', { type: null })
-      this.endBets()
+      this.closeBets()
       return
     }
   }
