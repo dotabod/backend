@@ -1,16 +1,10 @@
 #!/bin/bash
 
-# Get the directory of the script
-SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
-
-# Set the environment variables by sourcing the .env file from the script directory
-set -a; source "$SCRIPT_DIR/.env"; set +a
-
 # PostgreSQL Backup util
 # Automatic backup utility, run in cron job under postgres user
 # Example cron line:
 # cron every day
-# 0 0 * * * /bin/bash $HOME/dotabod/cron.sh
+# 0 0 * * * doppler run --scope $HOME/dotabod -- /bin/bash $HOME/dotabod/cron.sh
 
 # Set the number of backups to keep
 num_backups=24

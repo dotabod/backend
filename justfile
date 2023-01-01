@@ -1,5 +1,3 @@
-set dotenv-load
-
 # Lists Recipes
 default:
   @echo $NODE_ENV

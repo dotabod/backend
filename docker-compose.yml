@@ -9,7 +9,6 @@ services:
     hostname: twitch-chat-listener
     ports:
       - '5005:5005'
-    env_file: .env
     environment:
       - NEW_RELIC_APP_NAME="DEV twitch chat listener"
     volumes:
@@ -24,7 +23,6 @@ services:
     hostname: twitch-eventsub-listener
     ports:
       - '82:5010'
-    env_file: .env
     environment:
       - NEW_RELIC_APP_NAME="DEV twitch eventsub listener"
       - PORT=5010
@@ -40,7 +38,6 @@ services:
     ports:
       - '81:5000'
       - '9229:9229'
-    env_file: .env
     volumes:
       - ./web/src:/app/src
       - steam_auth:/app/src/steam/volumes
@@ -49,7 +46,6 @@ services:
     image: dotabod-nginx
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
-    env_file: .env
     build: ./nginx
     ports:
       - '80:80'

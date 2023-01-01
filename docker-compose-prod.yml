@@ -10,7 +10,6 @@ services:
     hostname: twitch-chat-listener
     ports:
       - '5005:5005'
-    env_file: .env
     environment:
       - NEW_RELIC_APP_NAME="twitch chat listener"
   twitch-eventsub-listener:
@@ -24,7 +23,6 @@ services:
     hostname: twitch-eventsub-listener
     ports:
       - '82:5010'
-    env_file: .env
     environment:
       - NEW_RELIC_APP_NAME="twitch eventsub listener"
       - PORT=5010
@@ -41,7 +39,6 @@ services:
     ports:
       - '81:5000'
       - '9229:9229'
-    env_file: .env
   nginx:
     container_name: dotabod-nginx
     image: dotabod-nginx
@@ -52,7 +49,6 @@ services:
     ports:
       - '80:80'
       - '443:443'
-    env_file: .env
 
 # Volumes are useful for data persistence, so the data will not be deleted
 # even later you call command docker-compose down.

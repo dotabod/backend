@@ -22,9 +22,5 @@ jobs:
           version: '2.12.2'
       - name: setup just
         uses: extractions/setup-just@v1
-      - name: init env file
-        run: |
-          touch .env
-          echo -e "YOUR_ENV_VAR=VAL" >> .env
       - name: test code
         run: 'just test'
