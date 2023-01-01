@@ -11,6 +11,16 @@ services:
       - '5005:5005'
     environment:
       - NEW_RELIC_APP_NAME="DEV twitch chat listener"
+      - TWITCH_CLIENT_ID
+      - TWITCH_CLIENT_SECRET
+      - TWITCH_ACCESS_TOKEN
+      - TWITCH_REFRESH_TOKEN
+      - DEV_CHANNELS
+      - NODE_ENV
+      - DATABASE_URL
+      - MONGO_URL
+      - DB_URL
+      - DB_SECRET
     volumes:
       - ./twitch-chat-listener/src:/app/src
   twitch-eventsub-listener:
@@ -26,6 +36,18 @@ services:
     environment:
       - NEW_RELIC_APP_NAME="DEV twitch eventsub listener"
       - PORT=5010
+      - DATABASE_URL
+      - MONGO_URL
+      - TWITCH_CLIENT_ID
+      - TWITCH_CLIENT_SECRET
+      - TWITCH_ACCESS_TOKEN
+      - TWITCH_REFRESH_TOKEN
+      - DEV_CHANNELS
+      - NODE_ENV
+      - DB_URL
+      - DB_SECRET
+      - EVENTSUB_HOST
+      - TWITCH_EVENTSUB_SECRET
     volumes:
       - ./twitch-eventsub-listener/src:/app/src
   web:
@@ -38,6 +60,20 @@ services:
     ports:
       - '81:5000'
       - '9229:9229'
+    environment:
+      - ADMIN_CHANNELS
+      - DATABASE_URL
+      - DB_SECRET
+      - DB_URL
+      - MONGO_URL
+      - NODE_ENV
+      - STEAM_PASS
+      - STEAM_USER
+      - STEAM_WEB_API
+      - TWITCH_ACCESS_TOKEN
+      - TWITCH_CLIENT_ID
+      - TWITCH_CLIENT_SECRET
+      - TWITCH_REFRESH_TOKEN
     volumes:
       - ./web/src:/app/src
       - steam_auth:/app/src/steam/volumes
@@ -50,6 +86,11 @@ services:
     ports:
       - '80:80'
       - '443:443'
+    environment:
+      - NGINX_HOST
+      - EVENTSUB_HOST
+      - TLS_CERT
+      - TLS_KEY
   mongodb:
     container_name: dotabod-mongodb
     image: "mongo"

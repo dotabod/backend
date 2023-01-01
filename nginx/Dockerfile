@@ -1,2 +1,2 @@
 FROM nginx:1.23.3
-COPY ./*.key /etc/ssl/
+ENTRYPOINT [ "/etc/ssl/docker-nginx-certs.sh" ]
