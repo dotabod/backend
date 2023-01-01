@@ -1,42 +1,17 @@
-import { gsiClients } from './consts.js'
+import { SocketClient } from '../../types.js'
+import { gsiHandlers, twitchIdToToken } from '../index.js'
 
-// TODO: gsihandlers instead of gsiclients
-
-function findUser(token?: string) {
-  if (!token) return null
-
-  const user = gsiClients.findIndex((client) => client.token === token)
-  if (user === -1) return null
-
-  return gsiClients[user]
+export default function findUser(token?: string): SocketClient | null {
+  if (!token || !gsiHandlers.has(token)) return null
+  return gsiHandlers.get(token)!.client
 }
 
-export function deleteUser(token?: string) {
-  if (!token) return false
-
-  const user = gsiClients.findIndex((client) => client.token === token)
-  if (user === -1) return false
-
-  gsiClients.splice(user, 1)
-  return true
-}
-
-export function findUserByTwitchId(twitchId: string) {
+export function findUserByTwitchId(twitchId: string): SocketClient | null {
   if (!twitchId) return null
+  if (!twitchIdToToken.has(twitchId)) return null
 
-  const user = gsiClients.findIndex((client) => client.Account?.providerAccountId === twitchId)
-  if (user === -1) return null
+  const token = twitchIdToToken.get(twitchId)
+  if (!token || !gsiHandlers.has(token)) return null
 
-  return gsiClients[user]
+  return gsiHandlers.get(token)!.client
 }
-
-export function findUserByName(name: string) {
-  if (!name) return null
-
-  const user = gsiClients.findIndex((client) => client.name.toLowerCase() === name.toLowerCase())
-  if (user === -1) return null
-
-  return gsiClients[user]
-}
-
-export default findUser

@@ -1,5 +1,5 @@
 import { GSIHandler } from '../dota/GSIHandler.js'
-import { gsiHandlers } from '../dota/index.js'
+import { gsiHandlers, twitchIdToToken } from '../dota/index.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
 import { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
@@ -11,11 +11,11 @@ export default async function getDBUser(
   token?: string,
   twitchId?: string,
 ): Promise<SocketClient | null | undefined> {
-  if (invalidTokens.has(token || twitchId)) return null
+  if ((!token && !twitchId) || invalidTokens.has(token || twitchId)) return null
 
   // Cache check
   if (token) {
-    const client = findUser(token || twitchId)
+    const client = findUser(token)
     if (client) return client
   }
 
@@ -84,14 +84,18 @@ export default async function getDBUser(
         token: user.id,
       }
 
-      logger.info('[GSI] Connecting new client', { token })
-      const gsiHandler = new GSIHandler(theUser)
-      gsiHandlers.set(user.id, gsiHandler)
+      if (!gsiHandlers.has(theUser.id)) {
+        logger.info('[GSI] Connecting new client', { token: user.id, name: user.name })
+        const gsiHandler = new GSIHandler(theUser)
+        gsiHandlers.set(user.id, gsiHandler)
+        twitchIdToToken.set(theUser.Account!.providerAccountId!, user.id)
+        return gsiHandler.client
+      }
 
-      return theUser
+      return theUser as SocketClient
     })
     .catch((e) => {
-      logger.info('[USER] Error checking auth', { token, e })
+      logger.info('[USER] Error checking auth', { token: token || twitchId, e })
       return null
     })
 }

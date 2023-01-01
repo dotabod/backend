@@ -7,3 +7,4 @@ import GSIServer from './GSIServer.js'
 export const server = new GSIServer()
 
 export const gsiHandlers = new Map<string, GSIHandler>()
+export const twitchIdToToken = new Map<string, string>()

@@ -1,6 +1,3 @@
-import { SocketClient } from '../../types.js'
-
-export const gsiClients: SocketClient[] = []
 
 export const playingStates = [
   'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',

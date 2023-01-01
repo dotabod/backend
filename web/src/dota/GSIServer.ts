@@ -8,7 +8,6 @@ import Dota from '../steam/index.js'
 import { logger } from '../utils/logger.js'
 import { newData, processChanges } from './globalEventEmitter.js'
 import { blockCache } from './GSIHandler.js'
-import findUser from './lib/connectedStreamers.js'
 import { validateToken } from './validateToken.js'
 
 class GSIServer {
@@ -66,15 +65,12 @@ class GSIServer {
 
     this.io.on('connection', (socket: Socket) => {
       const { token } = socket.handshake.auth
-      // This triggers a resend of obs blockers
       // TODO: should just send obs blockers regardless of blockcache somehow
+      // This triggers a resend of obs blockers
       blockCache.delete(token)
 
-      const client = findUser(token)
-      if (!client?.token) return
-
       // Their own personal room
-      void socket.join(client.token)
+      void socket.join(token)
     })
   }
 

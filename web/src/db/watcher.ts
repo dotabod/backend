@@ -1,11 +1,9 @@
 import { Setting, SteamAccount, User } from '../../prisma/generated/postgresclient/index.js'
-import { events } from '../dota/globalEventEmitter.js'
-import { server } from '../dota/index.js'
-import findUser, { deleteUser } from '../dota/lib/connectedStreamers.js'
+import { gsiHandlers, server } from '../dota/index.js'
+import findUser from '../dota/lib/connectedStreamers.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { toggleDotabod } from '../twitch/commands/toggle.js'
-import { chatClient } from '../twitch/index.js'
 import { logger } from '../utils/logger.js'
 import { DBSettings } from './settings.js'
 import supabase from './supabase.js'
@@ -20,9 +18,8 @@ channel
     const client = findUser(oldObj.id)
     if (client) {
       logger.info('[WATCHER USER] Deleting user', { name: client.name })
-      events.emit('remove-gsi-client', client.token)
-      chatClient.part(client.name)
-      deleteUser(client.token)
+      gsiHandlers.get(client.token)?.disable()
+      gsiHandlers.delete(client.token)
     }
   })
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
