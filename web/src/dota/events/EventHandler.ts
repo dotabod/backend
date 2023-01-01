@@ -9,8 +9,8 @@ export interface EventOptions {
 class EventHandler {
   registerEvent = (eventName: string, options: EventOptions) => {
     events.on(eventName, (data: any, token: string) => {
-      const dotaClient = gsiHandlers.get(token)
-      if (dotaClient) options.handler(dotaClient, data)
+      if (!gsiHandlers.has(token)) return
+      options.handler(gsiHandlers.get(token)!, data)
     })
   }
 }
