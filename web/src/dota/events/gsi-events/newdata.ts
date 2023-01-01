@@ -34,6 +34,11 @@ eventHandler.registerEvent(`newdata`, {
       dotaClient.aegisPickedUp?.playerId === dotaClient.playingHeroSlot &&
       !findItem('item_aegis')
     ) {
+      console.log(
+        dotaClient.aegisPickedUp?.playerId,
+        dotaClient.playingHeroSlot,
+        findItem('item_aegis'),
+      )
       dotaClient.aegisPickedUp = undefined
       server.io.to(dotaClient.getToken()).emit('aegis-picked-up', {})
     }
@@ -68,7 +73,7 @@ eventHandler.registerEvent(`newdata`, {
       dotaClient.events = [...dotaClient.events, ...newEvents]
 
       newEvents.forEach((event) => {
-        events.emit(`${dotaClient.getToken()}:event:${event.event_type}`, event)
+        events.emit(`event:${event.event_type}`, event, dotaClient.getToken())
 
         if (!Object.values(DotaEventTypes).includes(event.event_type)) {
           logger.info('[NEWEVENT]', event)
@@ -83,7 +88,7 @@ eventHandler.registerEvent(`newdata`, {
     if (chatterEnabled && chatters.midas.enabled && dotaClient.client.stream_online) {
       const isMidasPassive = checkMidas(data, dotaClient.passiveMidas)
 
-      if (isMidasPassive === true) {
+      if (isMidasPassive) {
         logger.info('[MIDAS] Passive midas', { name: dotaClient.getChannel() })
         dotaClient.say(t('chatters.midas', { lng: dotaClient.client.locale }))
       }
