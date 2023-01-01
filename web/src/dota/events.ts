@@ -497,6 +497,7 @@ export class setupMainEvents {
       this.playingHero = name
     })
 
+    // TODO: check if we can use token:player:deaths
     events.on(`${this.getToken()}:hero:alive`, (alive: boolean) => {
       if (!this.client.stream_online) return
       if (!isPlayingMatch(this.client.gsi)) return
@@ -511,7 +512,11 @@ export class setupMainEvents {
 
       if (!chatters.passiveDeath.enabled) return
 
-      if (!alive && this.client.gsi?.previously?.hero?.alive) {
+      if (
+        !alive &&
+        this.client.gsi?.previously?.hero?.alive &&
+        this.client.gsi.previously.player?.deaths !== this.client.gsi.player?.deaths
+      ) {
         const couldHaveLivedWith = findItem(
           passiveItemNames.map((i) => i.name),
           false,
