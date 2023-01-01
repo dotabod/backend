@@ -1,4 +1,4 @@
-import eventHandler from '../EventHandler.js'
+import eventHandler from '../events/EventHandler.js'
 import { GSIHandler } from '../GSIHandler.js'
 import { HeroNames } from '../lib/getHero.js'
 import { isPlayingMatch } from '../lib/isPlayingMatch.js'

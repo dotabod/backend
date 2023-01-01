@@ -1,4 +1,4 @@
-import { GSIHandler } from './GSIHandler.js'
+import { GSIHandler } from '../GSIHandler.js'
 
 export interface EventOptions {
   handler: (dotaClient: GSIHandler, data: any) => void

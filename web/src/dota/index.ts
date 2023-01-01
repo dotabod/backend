@@ -1,4 +1,4 @@
-import './gsiEventLoader.js'
+import './events/gsiEventLoader.js'
 
 import { logger } from '../utils/logger.js'
 import { events } from './globalEventEmitter.js'

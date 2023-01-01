@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { DotaEvent, DotaEventTypes } from '../../types.js'
-import eventHandler from '../EventHandler.js'
+import eventHandler from '../events/EventHandler.js'
 import { GSIHandler } from '../GSIHandler.js'
 import { getHeroNameById } from '../lib/heroes.js'
 import { isPlayingMatch } from '../lib/isPlayingMatch.js'

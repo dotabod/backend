@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
-import eventHandler from '../EventHandler.js'
+import eventHandler from '../events/EventHandler.js'
 import { GSIHandler } from '../GSIHandler.js'
 import { server } from '../index.js'
 import { isPlayingMatch } from '../lib/isPlayingMatch.js'

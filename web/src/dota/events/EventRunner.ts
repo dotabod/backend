@@ -1,6 +1,6 @@
+import { events } from '../globalEventEmitter.js'
+import { GSIHandler } from '../GSIHandler.js'
 import { EventOptions } from './EventHandler.js'
-import { events } from './globalEventEmitter.js'
-import { GSIHandler } from './GSIHandler.js'
 
 class EventRunner {
   dotaClient: GSIHandler
