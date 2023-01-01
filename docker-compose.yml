@@ -82,7 +82,8 @@ services:
     image: dotabod-nginx
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
-    build: ./nginx
+    build:
+      context: nginx
     ports:
       - '80:80'
       - '443:443'
