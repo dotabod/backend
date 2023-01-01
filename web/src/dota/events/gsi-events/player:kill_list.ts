@@ -1,9 +1,9 @@
-import { Player } from '../../types.js'
-import { logger } from '../../utils/logger.js'
-import eventHandler from '../events/EventHandler.js'
-import { GSIHandler } from '../GSIHandler.js'
-import { server } from '../index.js'
-import { isPlayingMatch } from '../lib/isPlayingMatch.js'
+import { Player } from '../../../types.js'
+import { logger } from '../../../utils/logger.js'
+import { GSIHandler } from '../../GSIHandler.js'
+import { server } from '../../index.js'
+import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import eventHandler from '../EventHandler.js'
 
 // TODO: check kill list value
 eventHandler.registerEvent(`player:kill_list`, {

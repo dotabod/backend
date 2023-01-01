@@ -1,16 +1,16 @@
 import { t } from 'i18next'
 
-import { DBSettings, getValueOrDefault } from '../../db/settings.js'
-import { DotaEventTypes, Packet } from '../../types.js'
-import { logger } from '../../utils/logger.js'
-import eventHandler from '../events/EventHandler.js'
-import { GSIHandler } from '../GSIHandler.js'
-import { events } from '../globalEventEmitter.js'
-import { server } from '../index.js'
-import checkMidas from '../lib/checkMidas.js'
-import { calculateManaSaved } from '../lib/checkTreadToggle.js'
-import { findItem } from '../lib/findItem.js'
-import { isPlayingMatch } from '../lib/isPlayingMatch.js'
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
+import { DotaEventTypes, Packet } from '../../../types.js'
+import { logger } from '../../../utils/logger.js'
+import { events } from '../../globalEventEmitter.js'
+import { GSIHandler } from '../../GSIHandler.js'
+import { server } from '../../index.js'
+import checkMidas from '../../lib/checkMidas.js'
+import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
+import { findItem } from '../../lib/findItem.js'
+import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import eventHandler from '../EventHandler.js'
 
 // Catch all
 eventHandler.registerEvent(`newdata`, {

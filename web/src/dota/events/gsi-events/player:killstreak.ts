@@ -1,9 +1,9 @@
 import { t } from 'i18next'
 
-import eventHandler from '../events/EventHandler.js'
-import { GSIHandler } from '../GSIHandler.js'
-import getHero from '../lib/getHero.js'
-import { isPlayingMatch } from '../lib/isPlayingMatch.js'
+import { GSIHandler } from '../../GSIHandler.js'
+import getHero from '../../lib/getHero.js'
+import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import eventHandler from '../EventHandler.js'
 
 let killstreakTimeout: NodeJS.Timeout
 

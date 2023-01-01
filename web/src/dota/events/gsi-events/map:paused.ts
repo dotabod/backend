@@ -1,10 +1,10 @@
 import { t } from 'i18next'
 
-import { DBSettings, getValueOrDefault } from '../../db/settings.js'
-import eventHandler from '../events/EventHandler.js'
-import { GSIHandler } from '../GSIHandler.js'
-import { server } from '../index.js'
-import { isPlayingMatch } from '../lib/isPlayingMatch.js'
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
+import { GSIHandler } from '../../GSIHandler.js'
+import { server } from '../../index.js'
+import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent(`map:paused`, {
   handler: (dotaClient: GSIHandler, isPaused: boolean) => {

@@ -1,12 +1,12 @@
 import { t } from 'i18next'
 
-import { DBSettings, getValueOrDefault } from '../../db/settings.js'
-import eventHandler from '../events/EventHandler.js'
-import { GSIHandler } from '../GSIHandler.js'
-import { server } from '../index.js'
-import { findItem } from '../lib/findItem.js'
-import getHero from '../lib/getHero.js'
-import { isPlayingMatch } from '../lib/isPlayingMatch.js'
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
+import { GSIHandler } from '../../GSIHandler.js'
+import { server } from '../../index.js'
+import { findItem } from '../../lib/findItem.js'
+import getHero from '../../lib/getHero.js'
+import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import eventHandler from '../EventHandler.js'
 
 const passiveItemNames = [
   { name: 'item_magic_stick', title: 'magic stick', charges: true },

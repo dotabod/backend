@@ -1,6 +1,6 @@
-import eventHandler from '../events/EventHandler.js'
-import { GSIHandler } from '../GSIHandler.js'
-import { isPlayingMatch } from '../lib/isPlayingMatch.js'
+import { GSIHandler } from '../../GSIHandler.js'
+import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import eventHandler from '../EventHandler.js'
 
 // This wont get triggered if they click disconnect and dont wait for the ancient to go to 0
 eventHandler.registerEvent(`map:win_team`, {

@@ -1,7 +1,7 @@
-import { logger } from '../../utils/logger.js'
-import eventHandler from '../events/EventHandler.js'
-import { GSIHandler } from '../GSIHandler.js'
-import { isPlayingMatch } from '../lib/isPlayingMatch.js'
+import { logger } from '../../../utils/logger.js'
+import { GSIHandler } from '../../GSIHandler.js'
+import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import eventHandler from '../EventHandler.js'
 
 // TODO: check if we can use token:player:deaths for doing passiveDeath events
 eventHandler.registerEvent(`player:deaths`, {
