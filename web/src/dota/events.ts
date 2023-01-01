@@ -12,6 +12,7 @@ import { DotaEvent, DotaEventTypes, Packet, Player, SocketClient } from '../type
 import axios from '../utils/axios.js'
 import { fmtMSS, steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
+import { events } from './gsiEventEmitter.js'
 import { server } from './index.js'
 import checkMidas from './lib/checkMidas.js'
 import { calculateManaSaved } from './lib/checkTreadToggle.js'
@@ -25,7 +26,6 @@ import { isPlayingMatch } from './lib/isPlayingMatch.js'
 import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
-import { events } from './server.js'
 
 const mongo = await Mongo.connect()
 

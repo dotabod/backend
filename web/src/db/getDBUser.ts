@@ -1,6 +1,6 @@
+import { events } from '../dota/gsiEventEmitter.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
 import { gsiClients } from '../dota/lib/consts.js'
-import { events } from '../dota/server.js'
 import { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
