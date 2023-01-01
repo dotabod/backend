@@ -11,13 +11,13 @@ commandHandler.registerCommand('match', {
     const {
       channel: { name: channel, client },
     } = message
-    const matchid = client.gsi?.map?.matchid
+    const matchId = client.gsi?.map?.matchid
 
-    if (!matchid) {
+    if (!matchId) {
       void chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
       return
     }
 
-    void chatClient.say(channel, t('matchId', { lng: message.channel.client.locale, matchid }))
+    void chatClient.say(channel, t('matchId', { lng: message.channel.client.locale, matchId }))
   },
 })
