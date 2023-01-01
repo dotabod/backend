@@ -14,13 +14,13 @@ import commandHandler from './lib/CommandHandler.js'
 export const chatClient = await ChatClientSingleton.getInstance()
 
 // Our docker chat forwarder instance
-const socket = io('ws://twitch-chat-listener:5005')
+const twitchChat = io('ws://twitch-chat-listener:5005')
 
-socket.on('connect', () => {
+twitchChat.on('connect', () => {
   logger.info('We alive on dotabod chat server!')
 })
 
-socket.on(
+twitchChat.on(
   'msg',
   function (channel: string, user: string, text: string, { channelId, userInfo, messageId }: any) {
     if (!channelId) return
