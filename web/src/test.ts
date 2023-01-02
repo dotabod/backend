@@ -101,7 +101,6 @@ async function getFollows() {
 }
 
 async function fixWins() {
-  logger.info('fix wins')
   const bets = await prisma.bet.findMany({
     select: {
       id: true,
@@ -112,23 +111,29 @@ async function fixWins() {
       won: null,
     },
     skip: 0,
-    take: 20,
+    take: 40,
     orderBy: {
       createdAt: 'desc',
     },
   })
 
-  logger.info('bets found')
-
   for (const bet of bets) {
     try {
-      const match = await axios('https://api.opendota.com/api/matches/' + bet.matchId)
-      if (!match.data?.match_id) continue
+      const match = await axios(
+        `https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`,
+        {
+          params: { key: process.env.STEAM_WEB_API, match_id: bet.matchId },
+        },
+      )
+
+      if (!match.data?.result?.match_id || typeof match.data?.result?.radiant_win !== 'boolean') {
+        continue
+      }
 
       logger.info('the bet found', {
-        matchid: match.data.match_id,
-        lobbytype: match.data.lobby_type,
-        won: match.data.radiant_win && bet.myTeam === 'radiant',
+        matchid: match.data?.result?.match_id,
+        lobbytype: match.data?.result?.lobby_type,
+        won: match.data?.result?.radiant_win && bet.myTeam === 'radiant',
       })
 
       await prisma.bet.update({
@@ -136,8 +141,8 @@ async function fixWins() {
           id: bet.id,
         },
         data: {
-          won: match.data.radiant_win && bet.myTeam === 'radiant',
-          lobby_type: match.data.lobby_type,
+          won: match.data?.result?.radiant_win && bet.myTeam === 'radiant',
+          lobby_type: match.data?.result?.lobby_type,
         },
       })
     } catch (e) {
@@ -175,8 +180,8 @@ const topFollowers = async () => {
 
 // await updateUsernameForAll()
 // await getAccounts()
-// await fixWins()
-await topFollowers()
+await fixWins()
+// await topFollowers()
 
 // server.dota.dota2.on('ready', () => {
 //   server.dota.getGcMatchData(69375017392, (err, response) => {
