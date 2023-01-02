@@ -32,13 +32,8 @@ eventHandler.registerEvent(`newdata`, {
     // We lost the aegis item
     if (
       dotaClient.aegisPickedUp?.playerId === dotaClient.playingHeroSlot &&
-      !findItem('item_aegis')
+      !findItem('item_aegis', false, dotaClient.client.gsi)
     ) {
-      console.log(
-        dotaClient.aegisPickedUp?.playerId,
-        dotaClient.playingHeroSlot,
-        findItem('item_aegis'),
-      )
       dotaClient.aegisPickedUp = undefined
       server.io.to(dotaClient.getToken()).emit('aegis-picked-up', {})
     }
