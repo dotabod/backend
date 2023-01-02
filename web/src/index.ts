@@ -5,6 +5,8 @@ await use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
   lng: 'en',
   fallbackLng: 'en',
+  returnEmptyString: false,
+  returnNull: false,
   preload: ['en', 'ru', 'it', 'es', 'pt-BR'],
   defaultNS: 'translation',
   backend: {
