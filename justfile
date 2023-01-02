@@ -12,16 +12,16 @@ CHECK  := `/usr/bin/printf "\xE2\x9C\x94"`
 
 # Lints Web source code
 test: build
-    @doppler run -- @docker compose -f {{dockerfile}} run web yarn lint
+    @doppler run -- docker compose -f {{dockerfile}} run web yarn lint
     @echo -e " {{GREEN}}{{CHECK}} All tests passed! {{CHECK}} {{RESET}}"
 
 # Stops all containers
 down:
-    @doppler run -- @docker compose -f {{dockerfile}} down
+    @doppler run -- docker compose -f {{dockerfile}} down
 
 # Builds all images
 build:
-    @doppler run -- @docker compose -f {{dockerfile}} build
+    @doppler run -- docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
 
 logone:
@@ -31,21 +31,21 @@ logone:
 buildone:
     @echo -e "Running for {{app}} on {{dockerfile}}"
     git pull
-    @doppler run -- @docker compose -f {{dockerfile}} build {{app}}
+    @doppler run -- docker compose -f {{dockerfile}} build {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
-    @doppler run -- @docker compose -f {{dockerfile}} up -d {{app}}
+    @doppler run -- docker compose -f {{dockerfile}} up -d {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully ran! {{CHECK}} {{RESET}}"
 
 # Starts images
 up:
     @echo "Starting server with database $NODE_ENV at {{dockerfile}}"
-    @doppler run -- @docker compose -f {{dockerfile}} up -d
+    @doppler run -- docker compose -f {{dockerfile}} up -d
 
 update:
     git pull
-    @doppler run -- @docker compose -f {{dockerfile}} build
+    @doppler run -- docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
-    @doppler run -- @docker compose -f {{dockerfile}} up -d
+    @doppler run -- docker compose -f {{dockerfile}} up -d
 
 pullall:
     cd ./web && yarn pullpsql && yarn postinstall
