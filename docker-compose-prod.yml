@@ -12,6 +12,16 @@ services:
       - '5005:5005'
     environment:
       - NEW_RELIC_APP_NAME="twitch chat listener"
+      - TWITCH_CLIENT_ID
+      - TWITCH_CLIENT_SECRET
+      - TWITCH_ACCESS_TOKEN
+      - TWITCH_REFRESH_TOKEN
+      - DEV_CHANNELS
+      - NODE_ENV
+      - DATABASE_URL
+      - MONGO_URL
+      - DB_URL
+      - DB_SECRET
   twitch-eventsub-listener:
     image: dotabod-twitch-eventsub-listener
     container_name: dotabod-twitch-eventsub-listener
@@ -26,6 +36,18 @@ services:
     environment:
       - NEW_RELIC_APP_NAME="twitch eventsub listener"
       - PORT=5010
+      - DATABASE_URL
+      - MONGO_URL
+      - TWITCH_CLIENT_ID
+      - TWITCH_CLIENT_SECRET
+      - TWITCH_ACCESS_TOKEN
+      - TWITCH_REFRESH_TOKEN
+      - DEV_CHANNELS
+      - NODE_ENV
+      - DB_URL
+      - DB_SECRET
+      - EVENTSUB_HOST
+      - TWITCH_EVENTSUB_SECRET
   web:
     image: dotabod-web
     container_name: dotabod-web
@@ -39,6 +61,20 @@ services:
     ports:
       - '81:5000'
       - '9229:9229'
+    environment:
+      - ADMIN_CHANNELS
+      - DATABASE_URL
+      - DB_SECRET
+      - DB_URL
+      - MONGO_URL
+      - NODE_ENV
+      - STEAM_PASS
+      - STEAM_USER
+      - STEAM_WEB_API
+      - TWITCH_ACCESS_TOKEN
+      - TWITCH_CLIENT_ID
+      - TWITCH_CLIENT_SECRET
+      - TWITCH_REFRESH_TOKEN
   nginx:
     container_name: dotabod-nginx
     image: dotabod-nginx
@@ -49,6 +85,11 @@ services:
     ports:
       - '80:80'
       - '443:443'
+    environment:
+      - NGINX_HOST
+      - EVENTSUB_HOST
+      - TLS_CERT
+      - TLS_KEY
 
 # Volumes are useful for data persistence, so the data will not be deleted
 # even later you call command docker-compose down.
