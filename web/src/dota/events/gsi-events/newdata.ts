@@ -5,10 +5,8 @@ import { DotaEventTypes, Packet } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
 import { GSIHandler } from '../../GSIHandler.js'
-import { server } from '../../index.js'
 import checkMidas from '../../lib/checkMidas.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
-import { findItem } from '../../lib/findItem.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 
@@ -28,15 +26,6 @@ eventHandler.registerEvent(`newdata`, {
     const hasWon =
       dotaClient.client.gsi?.map?.win_team && dotaClient.client.gsi.map.win_team !== 'none'
     if (hasWon) return
-
-    // We lost the aegis item
-    if (
-      dotaClient.aegisPickedUp?.playerId === dotaClient.playingHeroSlot &&
-      !findItem('item_aegis', false, dotaClient.client.gsi)
-    ) {
-      dotaClient.aegisPickedUp = undefined
-      server.io.to(dotaClient.getToken()).emit('aegis-picked-up', {})
-    }
 
     // Can't just !dotaClient.heroSlot because it can be 0
     const purchaser = dotaClient.client.gsi?.items?.teleport0?.purchaser

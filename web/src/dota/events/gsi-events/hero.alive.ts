@@ -24,11 +24,11 @@ eventHandler.registerEvent(`hero:alive`, {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
-    // Case one, we had aegis, and we die with it
-    // TODO: Does this trigger on an aegis death or only real death?
+    // Case one, we had aegis, and we die with it. Triggers on an aegis death
     if (!alive && dotaClient.aegisPickedUp?.playerId === dotaClient.playingHeroSlot) {
       dotaClient.aegisPickedUp = undefined
       server.io.to(dotaClient.getToken()).emit('aegis-picked-up', {})
+      return
     }
 
     const chatterEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
