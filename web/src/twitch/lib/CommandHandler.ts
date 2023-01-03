@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { DBSettings, getValueOrDefault } from '../../db/settings.js'
+import { DBSettings, getValueOrDefault, SettingKeys } from '../../db/settings.js'
 import { ADMIN_CHANNELS } from '../../dota/lib/consts.js'
 import { SocketClient } from '../../types.js'
 import { chatClient } from '../index.js'
@@ -28,7 +28,7 @@ export interface CommandOptions {
   permission?: number
   cooldown?: number
   onlyOnline?: boolean
-  dbkey?: DBSettings
+  dbkey?: SettingKeys
   handler: (message: MessageType, args: string[]) => void
 }
 
@@ -175,7 +175,7 @@ class CommandHandler {
     return true // The command is on cooldown if none of the above conditions are met
   }
 
-  isEnabled(settings: SocketClient['settings'], dbkey?: DBSettings) {
+  isEnabled(settings: SocketClient['settings'], dbkey?: SettingKeys) {
     // Default enabled if no dbkey is provided
     if (!dbkey) return true
 

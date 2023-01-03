@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
 import { GSIHandler } from '../../GSIHandler.js'
@@ -37,7 +38,13 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
       event.player_id,
     )
 
-    dotaClient.say(t('aegis.pickup', { lng: dotaClient.client.locale, heroName }), { beta: true })
+    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
+    const {
+      roshPickup: { enabled: chatterEnabled },
+    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
+
+    if (chattersEnabled && chatterEnabled)
+      dotaClient.say(t('aegis.pickup', { lng: dotaClient.client.locale, heroName }), { beta: true })
 
     server.io.to(dotaClient.getToken()).emit('aegis-picked-up', res)
   },

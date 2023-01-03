@@ -10,7 +10,7 @@ import { GLOBAL_DELAY } from './consts.js'
 export function tellChatNewMMR(locale: string, token: string, mmr = 0, oldMmr = 0) {
   const client = findUser(token)
   if (!client) return
-  const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
+  const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], client.settings)
   const newMmr = mmr - oldMmr
   if (mmrEnabled && newMmr !== 0 && mmr !== 0) {
     const isAuto = Math.abs(newMmr) === 30

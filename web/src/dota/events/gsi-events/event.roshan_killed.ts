@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
 import { GSIHandler } from '../../GSIHandler.js'
@@ -38,12 +39,19 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       maxDate,
     }
 
-    dotaClient.say(
-      t('roshanKilled', { min: res.minTime, max: res.maxTime, lng: dotaClient.client.locale }),
-      {
-        beta: true,
-      },
-    )
+    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
+    const {
+      roshanKilled: { enabled: chatterEnabled },
+    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
+
+    if (chattersEnabled && chatterEnabled) {
+      dotaClient.say(
+        t('roshanKilled', { min: res.minTime, max: res.maxTime, lng: dotaClient.client.locale }),
+        {
+          beta: true,
+        },
+      )
+    }
 
     dotaClient.roshanKilled = res
     server.io.to(dotaClient.getToken()).emit('roshan-killed', res)

@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { GSIHandler } from '../../GSIHandler.js'
 import { getHeroNameById } from '../../lib/heroes.js'
@@ -25,19 +26,26 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
         event.player_id,
       )
       bountyHeroNames.push(heroName)
-      bountyTimeout = setTimeout(() => {
-        dotaClient.say(
-          t('bountyPickup', {
-            lng: dotaClient.client.locale,
-            bountyValue: event.bounty_value * bountyHeroNames.length,
-            heroNames: bountyHeroNames.join(', '),
-          }),
-          {
-            beta: true,
-          },
-        )
-        bountyHeroNames = []
-      }, 15000)
+
+      const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
+      const {
+        bounties: { enabled: chatterEnabled },
+      } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
+
+      if (chattersEnabled && chatterEnabled)
+        bountyTimeout = setTimeout(() => {
+          dotaClient.say(
+            t('bountyPickup', {
+              lng: dotaClient.client.locale,
+              bountyValue: event.bounty_value * bountyHeroNames.length,
+              heroNames: bountyHeroNames.join(', '),
+            }),
+            {
+              beta: true,
+            },
+          )
+          bountyHeroNames = []
+        }, 15000)
     }
   },
 })

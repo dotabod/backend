@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 import { GSIHandler } from '../../GSIHandler.js'
 import getHero from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -30,6 +31,13 @@ eventHandler.registerEvent(`player:kill_streak`, {
     }
 
     if (streak <= 3) return
+
+    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
+    const {
+      killstreak: { enabled: chatterEnabled },
+    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
+
+    if (!chattersEnabled || !chatterEnabled) return
 
     clearTimeout(killstreakTimeout)
     killstreakTimeout = setTimeout(() => {

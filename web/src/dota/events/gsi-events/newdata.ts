@@ -35,8 +35,11 @@ eventHandler.registerEvent(`newdata`, {
       return
     }
 
-    // beta testers only
-    if (dotaClient.client.beta_tester) {
+    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
+    const {
+      powerTreads: { enabled: treadsChatterEnabled },
+    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
+    if (chattersEnabled && treadsChatterEnabled && dotaClient.client.beta_tester) {
       const mana = calculateManaSaved(dotaClient.treadsData, dotaClient.client.gsi)
       dotaClient.manaSaved += mana
       dotaClient.treadToggles += mana > 0 ? 1 : 0
@@ -67,9 +70,10 @@ eventHandler.registerEvent(`newdata`, {
 
     dotaClient.openBets()
 
-    const chatterEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
-    const chatters = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-    if (chatterEnabled && chatters.midas.enabled && dotaClient.client.stream_online) {
+    const {
+      midas: { enabled: midasChatterEnabled },
+    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
+    if (chattersEnabled && midasChatterEnabled && dotaClient.client.stream_online) {
       const isMidasPassive = checkMidas(data, dotaClient.passiveMidas)
 
       if (isMidasPassive) {

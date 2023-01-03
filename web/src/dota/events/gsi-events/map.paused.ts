@@ -11,13 +11,15 @@ eventHandler.registerEvent(`map:paused`, {
     if (!dotaClient.client.stream_online) return
 
     if (!isPlayingMatch(dotaClient.client.gsi)) return
-    const chatterEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
+    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
+    const {
+      pause: { enabled: chatterEnabled },
+    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
     // Necessary to let the frontend know, so we can pause any rosh / aegis / etc timers
     server.io.to(dotaClient.getToken()).emit('paused', isPaused)
 
-    const chatters = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-    if (isPaused && chatterEnabled && chatters.pause.enabled) {
+    if (isPaused && chattersEnabled && chatterEnabled) {
       dotaClient.say(t('chatters.pause', { lng: dotaClient.client.locale }))
     }
   },

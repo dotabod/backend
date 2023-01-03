@@ -22,19 +22,17 @@ export async function openTwitchBet(
   logger.info('[PREDICT] [BETS] Opening twitch bet', { userId: token, betsInfo })
 
   const title =
-    betsInfo.title !== defaultSettings[DBSettings.betsInfo].title
+    betsInfo.title !== defaultSettings.betsInfo.title
       ? betsInfo.title.replace('[heroname]', heroName ?? '')
       : t('predictions.title', { lng: locale, heroName })
 
   const yes =
-    betsInfo.yes !== defaultSettings[DBSettings.betsInfo].yes
+    betsInfo.yes !== defaultSettings.betsInfo.yes
       ? betsInfo.yes
       : t('predictions.yes', { lng: locale })
 
   const no =
-    betsInfo.no !== defaultSettings[DBSettings.betsInfo].no
-      ? betsInfo.no
-      : t('predictions.no', { lng: locale })
+    betsInfo.no !== defaultSettings.betsInfo.no ? betsInfo.no : t('predictions.no', { lng: locale })
 
   return api.predictions
     .createPrediction(providerAccountId || '', {

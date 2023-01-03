@@ -17,7 +17,7 @@ commandHandler.registerCommand('mmr', {
       channel: { name: channel, client },
     } = message
     // If connected, we can just respond with the cached MMR
-    const mmrEnabled = getValueOrDefault(DBSettings.mmrTracker, client.settings)
+    const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], client.settings)
     if (!mmrEnabled) return
 
     const customMmr = getValueOrDefault(DBSettings.customMmr, client.settings)

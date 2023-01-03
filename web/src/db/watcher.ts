@@ -65,26 +65,25 @@ channel
   .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, (payload) => {
     const newObj = payload.new as Setting
     const client = findUser(newObj.userId)
+    if (!client) return
 
     // replace the new setting with the one we have saved in cache
-    if (client) {
-      logger.info('[WATCHER SETTING] Updating setting for', { name: client.name, key: newObj.key })
-      const setting = client.settings.find((s) => s.key === newObj.key)
+    logger.info('[WATCHER SETTING] Updating setting for', { name: client.name, key: newObj.key })
+    const setting = client.settings.find((s) => s.key === newObj.key)
 
-      if (setting) {
-        setting.value = newObj.value
-      } else {
-        client.settings.push({ key: newObj.key, value: newObj.value })
-      }
-
-      if (newObj.key === DBSettings.commandDisable) {
-        void toggleDotabod(client.token, !!newObj.value, client.name, client.locale)
-      }
-
-      // Sending this one even when offline, cause they might be testing locally
-      logger.info('[WATCHER SETTING] Sending new setting value to socket', { name: client.name })
-      server.io.to(client.token).emit('refresh-settings')
+    if (setting) {
+      setting.value = newObj.value
+    } else {
+      client.settings.push({ key: newObj.key, value: newObj.value })
     }
+
+    if (newObj.key === DBSettings.commandDisable) {
+      void toggleDotabod(client.token, !!newObj.value, client.name, client.locale)
+    }
+
+    // Sending this one even when offline, cause they might be testing locally
+    logger.info('[WATCHER SETTING] Sending new setting value to socket', { name: client.name })
+    server.io.to(client.token).emit('refresh-settings')
   })
   .on('postgres_changes', { event: '*', schema: 'public', table: 'steam_accounts' }, (payload) => {
     const newObj = payload.new as SteamAccount
