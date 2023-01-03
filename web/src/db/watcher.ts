@@ -28,6 +28,7 @@ channel
     const client = findUser(newObj.id)
     if (!client) return
 
+    client.name = newObj.name
     client.locale = newObj.locale
     client.beta_tester = newObj.beta_tester
     client.stream_online = newObj.stream_online
