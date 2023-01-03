@@ -20,9 +20,16 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
       event.team === dotaClient.playingTeam &&
       Number(dotaClient.client.gsi?.map?.clock_time) <= 120
     ) {
+      if (
+        typeof dotaClient.players?.matchPlayers[event.player_id].heroid !== 'number' ||
+        typeof event.player_id !== 'number'
+      ) {
+        return
+      }
+
       clearTimeout(bountyTimeout)
       const heroName = getHeroNameById(
-        dotaClient.players?.matchPlayers[event.player_id].heroid ?? 0,
+        dotaClient.players.matchPlayers[event.player_id].heroid,
         event.player_id,
       )
       bountyHeroNames.push(heroName)
