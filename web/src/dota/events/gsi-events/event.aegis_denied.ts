@@ -23,11 +23,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
     if (chattersEnabled && chatterEnabled)
-      dotaClient.say(
-        t('aegis.denied', { lng: dotaClient.client.locale, heroName, emote: 'ICANT' }),
-        {
-          beta: true,
-        },
-      )
+      dotaClient.say(t('aegis.denied', { lng: dotaClient.client.locale, heroName, emote: 'ICANT' }))
   },
 })

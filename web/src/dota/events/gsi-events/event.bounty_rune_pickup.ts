@@ -40,9 +40,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
               bountyValue: event.bounty_value * bountyHeroNames.length,
               heroNames: bountyHeroNames.join(', '),
             }),
-            {
-              beta: true,
-            },
           )
           bountyHeroNames = []
         }, 15000)

@@ -47,9 +47,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
     if (chattersEnabled && chatterEnabled) {
       dotaClient.say(
         t('roshanKilled', { min: res.minTime, max: res.maxTime, lng: dotaClient.client.locale }),
-        {
-          beta: true,
-        },
       )
     }
 

@@ -13,6 +13,13 @@ eventHandler.registerEvent(`player:kill_streak`, {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 
+    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
+    const {
+      killstreak: { enabled: chatterEnabled },
+    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
+
+    if (!chattersEnabled || !chatterEnabled) return
+
     const heroName =
       getHero(dotaClient.playingHero ?? dotaClient.client.gsi?.hero?.name)?.localized_name ?? 'We'
 
@@ -25,27 +32,16 @@ eventHandler.registerEvent(`player:kill_streak`, {
           heroName,
           lng: dotaClient.client.locale,
         }),
-        { beta: true },
       )
       return
     }
 
     if (streak <= 3) return
 
-    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
-    const {
-      killstreak: { enabled: chatterEnabled },
-    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-
-    if (!chattersEnabled || !chatterEnabled) return
-
     clearTimeout(killstreakTimeout)
     killstreakTimeout = setTimeout(() => {
       dotaClient.say(
         t('killstreak.won', { killstreakCount: streak, heroName, lng: dotaClient.client.locale }),
-        {
-          beta: true,
-        },
       )
     }, 15000)
   },

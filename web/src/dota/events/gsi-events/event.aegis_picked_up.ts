@@ -44,7 +44,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
     if (chattersEnabled && chatterEnabled)
-      dotaClient.say(t('aegis.pickup', { lng: dotaClient.client.locale, heroName }), { beta: true })
+      dotaClient.say(t('aegis.pickup', { lng: dotaClient.client.locale, heroName }))
 
     server.io.to(dotaClient.getToken()).emit('aegis-picked-up', res)
   },

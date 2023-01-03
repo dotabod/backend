@@ -14,13 +14,20 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
+    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
+    const {
+      tip: { enabled: chatterEnabled },
+    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
+
+    if (!chattersEnabled || !chatterEnabled) return
+
     const heroName = getHeroNameById(
       dotaClient.players?.matchPlayers[event.sender_player_id].heroid ?? 0,
       event.sender_player_id,
     )
 
     if (event.receiver_player_id === dotaClient.playingHeroSlot) {
-      dotaClient.say(t('tip.from', { lng: dotaClient.client.locale, heroName }), { beta: true })
+      dotaClient.say(t('tip.from', { lng: dotaClient.client.locale, heroName }))
     }
 
     if (event.sender_player_id === dotaClient.playingHeroSlot) {
@@ -29,15 +36,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
         event.receiver_player_id,
       )
 
-      const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
-      const {
-        tip: { enabled: chatterEnabled },
-      } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-
-      if (chattersEnabled && chatterEnabled)
-        dotaClient.say(t('tip.to', { lng: dotaClient.client.locale, heroName: toHero }), {
-          beta: true,
-        })
+      dotaClient.say(t('tip.to', { lng: dotaClient.client.locale, heroName: toHero }))
     }
   },
 })

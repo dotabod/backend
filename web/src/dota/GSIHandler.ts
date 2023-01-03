@@ -678,9 +678,6 @@ export class GSIHandler {
           count: this.treadToggles,
           matchId,
         }),
-        {
-          beta: true,
-        },
       )
     }
 
