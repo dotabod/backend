@@ -32,7 +32,8 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
         dotaClient.players.matchPlayers[event.player_id].heroid,
         event.player_id,
       )
-      bountyHeroNames.push(heroName)
+
+      if (!bountyHeroNames.includes(heroName)) bountyHeroNames.push(heroName)
 
       const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
       const {
