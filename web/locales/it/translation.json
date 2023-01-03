@@ -20,10 +20,10 @@
   },
   "bountyPickup": "+{{bountyValue}} gold dalle bounty EZ Clap Grazie {{heroNames}} SeemsGood",
   "chatters": {
-    "died": "",
-    "midas": "",
-    "pause": "",
-    "smoked": ""
+    "died": "{{- heroName}} è morto con {{itemNames}} passivo/i ICANT",
+    "midas": "massivePIDAS Usa la tua Midas",
+    "pause": "PauseChamp Chi ha messo la partita in pausa?",
+    "smoked": "Shush {{- heroName}} è smokato!"
   },
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
@@ -34,7 +34,7 @@
   "gpm_many": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",
   "gpm_other": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",
   "hero": "{{commandName}} comando disabilitato perchè opendota ci ha bloccato perchè abbiamo troppi utenti Sadge",
-  "invalidColor": "",
+  "invalidColor": "Colore o Slot errato. Riprova con un numero da 1 a 10, o uno di {{colorList}} ",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} ha perso la serie di uccisioni da {{killstreakCount}} BibleThump",
@@ -47,8 +47,8 @@
   },
   "lastgamescore": {
     "double": "Double down",
-    "duration": "",
-    "ended": "",
+    "duration": "{{minutes}} minuti",
+    "ended": "Finito {{minutes}} minuti fa",
     "lost": "Ultima partita: persa",
     "party": "Match in gruppo",
     "unranked": "Non classificata",
@@ -76,13 +76,13 @@
   "pleb": "Un plebeo scrive 👇",
   "pleb_off": "{{name}} EZ Clap bel lavoro plebeo",
   "predictions": {
-    "no": "",
-    "title": "",
-    "yes": ""
+    "no": "No",
+    "title": "Vinceremo con {{- heroName}}?",
+    "yes": "Si"
   },
   "profileUrl": "Qui c'è {{channel}}: {{- url}}",
   "rank": {
-    "nextRankAt": "",
+    "nextRankAt": "Prossimo rank a",
     "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
     "nextRankIn_many": "in {{count}} vittorie",
     "nextRankIn_other": "in {{count}} vittorie"
