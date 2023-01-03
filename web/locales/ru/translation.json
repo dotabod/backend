@@ -18,7 +18,7 @@
     "open": "Ставки открыты peepoGamble",
     "won": "Мы победили"
   },
-  "bountyPickup": "+{{bountyValue}} золото от рун богатства EZ Clap Спасибо {{heroNames}} SeemsGood",
+  "bountyPickup": "Получено {{bountyValue}} золота от рун богатства EZ Clap Спасибо {{heroNames}} SeemsGood",
   "chatters": {
     "died": "{{- heroName}} умер с активным предметом {{itemNames}} ICANT",
     "midas": "massivePIDAS Используй свой Midas",
@@ -41,7 +41,7 @@
     "won": "у {{- heroName}} серия из {{killstreakCount}} убийств! POGGIES"
   },
   "lastgame": {
-    "link": "Вот последняя игра: {{- url}}",
+    "link": "ID последнего матча: {{- url}}",
     "none": "Не найдено игроков из прошлой игры",
     "player": "{{- lastMatchHero}} играл за {{- currentMatchHero}}"
   },
@@ -93,7 +93,7 @@
   "roshanKilled": "Рошан убит! Следующий рошан между {{min}} и {{max}}",
   "tip": {
     "from": "Благодарность от {{- heroName}} ICANT",
-    "to": "Мы поблагодарили{{- heroName}} PepeLaugh"
+    "to": "Мы поблагодарили {{- heroName}} PepeLaugh"
   },
   "toggle": "",
   "toggle_disabled": "Dotabod теперь отключен. Он больше не будет отвечать на команды и наблюдать за игровыми событиями. Введите !toggle , чтобы включить снова.",
@@ -103,14 +103,14 @@
   "toggleMatch_party": "Изменение этого матча на групповой рейтинг: {{- url}} Введите !fixparty для отмены",
   "toggleMatch_single": "Изменение этого матча на стандартный рейтинг {{- url}} Введите !fixdd для отмены",
   "toggleMatch_solo": "Изменение этого матча на одиночный рейтинг: {{- url}} Введите !fixparty для отмены",
-  "treadToggle_one": "Мы переключили ботинок {{count}} раз, чтобы сэкономить в общей сложности {{manaCount}} маны в этом матче.",
-  "treadToggle_many": "Мы переключили ботинок {{count}} раз, чтобы сэкономить в общей сложности {{manaCount}} маны в этом матче.",
-  "treadToggle_other": "Мы переключили ботинок {{count}} раз, чтобы сэкономить в общей сложности {{manaCount}} маны в этом матче.",
+  "treadToggle_one": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_many": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_other": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
   "uknownMmr": "Я еще не знаю рейтинг {{channel}}. Модераторы должны !setmmr 1234 или установить его вручную на сайте {{- url}}",
   "unknown": "Неизвестно",
   "unknownSteam": "Не удалось найти учетную запись Steam. Попробуйте сначала сыграть тренировочный матч с ботом, чтобы сохранить свой аккаунт в Dotabod!",
   "updateMmr": "",
-  "updateMmr_auto": "Рейтинг обновлён до {{mmr}}. !fixparty для изменения игры в группе и !fixdd для двойной ставки.",
+  "updateMmr_auto": "Рейтинг обновлён до {{mmr}}. Используйте команды !fixparty для изменения игры в группе и !fixdd для двойной ставки.",
   "updateMmr_manual": "Рейтинг изменён до {{mmr}}",
   "updateMmrMulti": "Несколько учетных записей Steam, обновление той, с которой вы вошли в систему в данный момент ({{steamId}})",
   "xpm_one": "Текущий XPM: {{count}}",
