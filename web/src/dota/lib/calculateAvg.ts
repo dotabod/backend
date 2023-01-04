@@ -23,6 +23,7 @@ export async function calculateAvg(
   const avgMsg = ` - ${t('averageRank', { lng: locale })}`
   const rank = await getRankDetail(avg)
 
+  if (!rank && !avgLeader) return `Immortal${avgMsg}`
   if (!rank) return `${avg || `#${avgLeader}`}${avgMsg}`
 
   if ('standing' in rank) {
