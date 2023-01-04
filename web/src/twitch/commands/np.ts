@@ -34,7 +34,7 @@ commandHandler.registerCommand('np', {
         }
 
         await mongo.collection('notablePlayers').updateOne(
-          { account_id: Number(forSteam32Id) },
+          { account_id: Number(forSteam32Id), channel: twitchChannelId },
           {
             $set: {
               account_id: Number(forSteam32Id),
