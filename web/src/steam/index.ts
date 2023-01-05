@@ -3,7 +3,7 @@ import crypto from 'crypto'
 // @ts-expect-error ???
 import Dota2 from 'dota2'
 import fs from 'fs'
-import Long from 'long'
+import { Long } from 'mongodb'
 import retry from 'retry'
 import Steam from 'steam'
 // @ts-expect-error ???
