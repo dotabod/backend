@@ -740,15 +740,15 @@ export class GSIHandler {
           } else {
             logger.info('[BETS] Error closing twitch bet', { channel, e: e?.message || e })
           }
-
+        })
+        // Always
+        .finally(() => {
           if (won) {
             this.say(t('bets.won', { lng: this.client.locale }), { delay: false })
           } else {
             this.say(t('bets.lost', { lng: this.client.locale }), { delay: false })
           }
-        })
-        // Always
-        .finally(() => {
+
           this.resetClientState(true)
         })
     }, GLOBAL_DELAY)
