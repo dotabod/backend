@@ -19,7 +19,7 @@ export async function openTwitchBet(
 
   const { api, providerAccountId } = getChannelAPI(token)
   const betsInfo = getValueOrDefault(DBSettings.betsInfo, settings)
-  logger.info('[PREDICT] [BETS] Opening twitch bet', { userId: token, betsInfo })
+  logger.info('[PREDICT] [BETS] Opening twitch bet', { userId: token, heroName })
 
   const title =
     betsInfo.title !== defaultSettings.betsInfo.title

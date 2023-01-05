@@ -16,8 +16,6 @@ export const getChannelAuthProvider = function (token: string) {
     return {}
   }
 
-  logger.info('[TWITCHSETUP] Retrieved twitch access tokens', { name: twitchTokens.name })
-
   const authProvider = new RefreshingAuthProvider(
     {
       clientId: process.env.TWITCH_CLIENT_ID ?? '',
