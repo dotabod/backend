@@ -1,6 +1,8 @@
 import { use } from 'i18next'
 import FsBackend, { FsBackendOptions } from 'i18next-fs-backend'
 
+import { logger } from './utils/logger.js'
+
 await use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
   lng: 'en',
@@ -17,7 +19,5 @@ await use(FsBackend).init<FsBackendOptions>({
 import './db/watcher.js'
 import './dota/index.js'
 import './twitch/index.js'
-
-import { logger } from './utils/logger.js'
 
 logger.info('Starting!')

@@ -61,6 +61,12 @@ services:
       - '81:5000'
       - '9229:9229'
     environment:
+      - NEW_RELIC_APP_NAME="dev dotabod web"
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
+      - NEW_RELIC_LICENSE_KEY
+      - NEW_RELIC_LOG
+      - NEW_RELIC_NO_CONFIG_FILE
       - ADMIN_CHANNELS
       - DATABASE_URL
       - DB_SECRET

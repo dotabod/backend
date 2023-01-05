@@ -997,6 +997,11 @@
   resolved "https://registry.yarnpkg.com/@newrelic/superagent/-/superagent-6.0.0.tgz#8aee871547ebea90fcb37f98ea38d820cc1bc67b"
   integrity sha512-5nClQp9ACd4BvLusAgFHjjKLDgAaC+dKmIsRNOPC82LOLFaoOgxxtbecnDIJ0NWCKQS+WOdmXdgYutwH+e5dsA==
 
+"@newrelic/winston-enricher@^4.0.1":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@newrelic/winston-enricher/-/winston-enricher-4.0.1.tgz#88452342b541007bea1bb1d4d573b42fa7d6b215"
+  integrity sha512-yNQbnyqeFtSeyH3hpPJLbqvIl29GKgqeOmJ7IvpjMTVHZCqUTqRBMIB+wtJuuRepMLRgBCUw5RCH+xWEiHACRQ==
+
 "@node-steam/id@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@node-steam/id/-/id-1.2.0.tgz#2ab90e21ddd181ab2a86d86557d7dbc571f632c4"

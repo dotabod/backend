@@ -1,4 +1,8 @@
-import { createLogger, format, transports } from 'winston'
+import newrelicFormatter from '@newrelic/winston-enricher'
+import winston, { createLogger, format, transports } from 'winston'
+
+// @ts-expect-error asdf
+const newrelicWinstonFormatter = newrelicFormatter(winston)
 
 export const logger = createLogger({
   level: 'info',
@@ -12,6 +16,7 @@ export const logger = createLogger({
     format.printf(({ message, level, timestamp, ...rest }) => {
       return `[${timestamp as string}] ${level}: ${message as string} ${JSON.stringify(rest)}`
     }),
+    newrelicWinstonFormatter(),
   ),
   transports: [new transports.Console()],
 })
