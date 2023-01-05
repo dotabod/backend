@@ -45,6 +45,9 @@ export class GSIHandler {
   savingSteamServerId = false
   steamServerTries = 0
   events: DotaEvent[] = []
+  bountyHeroNames: string[] = []
+  bountyTimeout?: NodeJS.Timeout
+  killstreakTimeout?: NodeJS.Timeout
   passiveMidas = { counter: 0, timer: 0, used: 0 }
   roshanKilled?: {
     minTime: string
