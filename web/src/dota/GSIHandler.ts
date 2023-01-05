@@ -355,6 +355,18 @@ export class GSIHandler {
   ) {
     const ranked = lobbyType === 7
 
+    const extraInfo = {
+      name: this.getChannel(),
+      steam32Id: this.client.steam32Id,
+      matchId,
+      isParty,
+      ranked,
+      increase,
+      lobbyType,
+    }
+
+    logger.info('[MMR Update] Begin updating mmr', extraInfo)
+
     // This also updates WL for the unranked matches
     prisma.bet
       .update({
@@ -372,7 +384,7 @@ export class GSIHandler {
         },
       })
       .then(() => {
-        //
+        logger.info('[DATABASE] Updated bet with winnings', extraInfo)
       })
       .catch((e) => {
         logger.error('[DATABASE ERROR MMR]', {
@@ -387,13 +399,17 @@ export class GSIHandler {
     this.emitWLUpdate()
 
     if (!ranked) {
+      logger.info('[MMR] Not ranked game, wont update mmr', extraInfo)
       return
     }
 
     const mmrSize = isParty ? 20 : 30
     const newMMR = this.getMmr() + (increase ? mmrSize : -mmrSize)
     if (this.client.steam32Id) {
+      logger.info('[MMR] Found steam32Id, updating mmr', extraInfo)
       updateMmr(newMMR, this.client.steam32Id, this.client.name)
+    } else {
+      logger.info('[MMR] Did not find steam32Id, wont update mmr', extraInfo)
     }
   }
 
