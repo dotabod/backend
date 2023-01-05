@@ -588,8 +588,8 @@ export class GSIHandler {
 
   closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
     if (process.env.NODE_ENV === 'development') {
-      this.resetClientState(true)
-      return
+      // this.resetClientState(true)
+      // return
     }
 
     if (this.openingBets || !this.playingMatchId || this.endingBets) {
