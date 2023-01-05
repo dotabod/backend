@@ -681,15 +681,8 @@ export class GSIHandler {
       )
     }
 
-    if (!betsEnabled) {
+    if (!betsEnabled || !this.client.stream_online) {
       logger.info('bets are not enabled, stopping here', { name: this.getChannel() })
-
-      this.resetClientState(true)
-      return
-    }
-
-    if (!this.client.stream_online) {
-      logger.info('[BETS] Not closing bets bc stream is offline for', { name: this.client.name })
       this.resetClientState(true)
       return
     }
