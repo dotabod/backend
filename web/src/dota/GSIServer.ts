@@ -35,7 +35,7 @@ class GSIServer {
 
     // No main page
     app.get('/', (req: Request, res: Response) => {
-      res.status(401).json({
+      res.status(200).json({
         status: 'ok',
       })
     })
