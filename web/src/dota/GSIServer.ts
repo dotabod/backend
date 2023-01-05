@@ -36,7 +36,7 @@ class GSIServer {
     // No main page
     app.get('/', (req: Request, res: Response) => {
       res.status(401).json({
-        error: new Error('Invalid request!'),
+        status: 'ok',
       })
     })
 
