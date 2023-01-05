@@ -63,21 +63,6 @@ const retryCustom = (cont: number, fn: () => Promise<any>, delay: number): Promi
 
 const mongo = await Mongo.connect()
 
-interface Match {
-  average_mmr: number
-  game_mode: number
-  radiant_win?: boolean
-  league_id: number
-  match_id: Long
-  lobby_id: Long
-  lobby_type: 0
-  players: { hero_id: number; account_id: number; party_size?: number }[]
-  server_steam_id: Long
-  weekend_tourney_bracket_round: null
-  weekend_tourney_skill_level: null
-  createdAt: Date
-}
-
 class Dota {
   private static instance: Dota
 
