@@ -13,7 +13,7 @@
     "build": "tsc",
     "debug": "doppler run -- nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 --trace-warnings --experimental-loader=newrelic/esm-loader.mjs -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "doppler run -- nodemon -L --ext ts --exec \"node --trace-warnings --experimental-loader=newrelic/esm-loader.mjs -r ts-node/register --loader ts-node/esm src/index.ts\"",
-    "test": "doppler run -- ts-node --project ./tsconfig.json --experimental-loader=newrelic/esm-loader.mjs -r ts-node/register ./src/test.ts",
+    "test": "doppler run -- ts-node --project ./tsconfig.json -r ts-node/register ./src/test.ts",
     "postinstall": "prisma generate --schema ./prisma/mongo.prisma && prisma generate --schema ./prisma/postgres.prisma",
     "lint": "eslint --ext .ts ./src",
     "prettier": "prettier --ext .ts ./src --write",
