@@ -43,7 +43,7 @@
   "lastgame": {
     "link": "ID последнего матча: {{- url}}",
     "none": "Не найдено игроков из прошлой игры",
-    "player": "{{- lastMatchHero}} играл за {{- currentMatchHero}}"
+    "player": "{{- lastMatchHero}} играет на {{- currentMatchHero}}"
   },
   "lastgamescore": {
     "double": "Двойное понижение",
