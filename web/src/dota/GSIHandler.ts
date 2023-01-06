@@ -786,6 +786,7 @@ export class GSIHandler {
 
       const blockType = isSpectator(this.client.gsi) ? 'spectator' : 'arcade'
       this.emitBlockEvent(blockType)
+      return
     }
 
     // TODO: if the game is matchid 0 also dont show these? ie bot match. hero demo are type 'arcade'
@@ -804,23 +805,27 @@ export class GSIHandler {
 
     // Check what needs to be blocked
     const hasValidBlocker = blockTypes.some((blocker) => {
-      if (!blocker.states.includes(state ?? '')) return false
+      if (blocker.states.includes(state ?? '')) {
+        if (this.blockCache !== blocker.type) {
+          this.emitBlockEvent(blocker.type)
 
-      this.emitBlockEvent(blocker.type)
+          if (blocker.type === 'playing') {
+            this.emitBadgeUpdate()
+            this.emitWLUpdate()
+          }
 
-      if (blocker.type === 'playing') {
-        this.emitBadgeUpdate()
-        this.emitWLUpdate()
+          if (this.aegisPickedUp?.expireDate) {
+            server.io.to(this.getToken()).emit('aegis-picked-up', this.aegisPickedUp)
+          }
+
+          if (this.roshanKilled?.maxDate) {
+            server.io.to(this.getToken()).emit('roshan-killed', this.roshanKilled)
+          }
+        }
+
+        return true
       }
-
-      if (this.aegisPickedUp?.expireDate) {
-        server.io.to(this.getToken()).emit('aegis-picked-up', this.aegisPickedUp)
-      }
-
-      if (this.roshanKilled?.maxDate) {
-        server.io.to(this.getToken()).emit('roshan-killed', this.roshanKilled)
-      }
-      return true
+      return false
     })
 
     // No blocker changes, don't emit any socket message
