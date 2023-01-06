@@ -11,19 +11,9 @@ export default async function getDBUser(
   token?: string,
   twitchId?: string,
 ): Promise<SocketClient | null | undefined> {
-  if ((!token && !twitchId) || invalidTokens.has(token || twitchId)) return null
-
-  // Cache check
-  if (token) {
-    const client = findUser(token)
-    if (client) return client
-  }
-
-  // Cache check
-  if (twitchId) {
-    const client = findUserByTwitchId(twitchId)
-    if (client) return client
-  }
+  if (invalidTokens.has(token) || invalidTokens.has(twitchId)) return null
+  const client = findUser(token) ?? findUserByTwitchId(twitchId)
+  if (client) return client
 
   logger.info('[GSI] Havent cached user token yet, checking db', { token: token ?? twitchId })
 
@@ -85,17 +75,17 @@ export default async function getDBUser(
       }
 
       if (!gsiHandlers.has(theUser.id)) {
-        logger.info('[GSI] Connecting new client', { token: user.id, name: user.name })
+        logger.info('[GSI] Connecting new client', { token: theUser.id, name: theUser.name })
         const gsiHandler = new GSIHandler(theUser)
-        gsiHandlers.set(user.id, gsiHandler)
-        twitchIdToToken.set(theUser.Account!.providerAccountId!, user.id)
+        gsiHandlers.set(theUser.id, gsiHandler)
+        twitchIdToToken.set(theUser.Account!.providerAccountId!, theUser.id)
         return gsiHandler.client
       }
 
       return theUser as SocketClient
     })
     .catch((e) => {
-      logger.info('[USER] Error checking auth', { token: token || twitchId, e })
+      logger.info('[USER] Error checking auth', { token: token ?? twitchId, e })
       return null
     })
 }
