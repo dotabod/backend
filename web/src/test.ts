@@ -131,7 +131,7 @@ async function fixWins() {
       }
 
       logger.info('the bet found', {
-        matchid: match.data?.result?.match_id,
+        matchId: match.data?.result?.match_id,
         lobbytype: match.data?.result?.lobby_type,
         won: match.data?.result?.radiant_win && bet.myTeam === 'radiant',
       })

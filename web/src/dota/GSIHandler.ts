@@ -128,10 +128,10 @@ export class GSIHandler {
 
   // reset vars when a new match begins
   public resetClientState(resetBets = false) {
-    logger.info('newMatchNewVars', {
+    logger.info('resetClientState', {
       resetBets,
       name: this.client.name,
-      matchid: this.playingBetMatchId,
+      matchId: this.playingBetMatchId,
     })
     this.playingHero = null
     this.playingHeroSlot = null
@@ -143,7 +143,7 @@ export class GSIHandler {
     // Bet stuff should be closed by endBets()
     // This should mean an entire match is over
     if (resetBets) {
-      this.client.steamserverid = undefined
+      this.client.steamServerId = undefined
       this.endingBets = false
       this.openingBets = false
       this.playingBetMatchId = null
@@ -161,96 +161,96 @@ export class GSIHandler {
 
   // Runs every gametick
   async saveMatchData() {
-    // Not gonna save any when local. Assuming we're just testing in local lobbys
-    // if (process.env.NODE_ENV === 'development') return
-
     if (!this.client.steam32Id || !this.client.gsi?.map?.matchid) return
     if (!Number(this.client.gsi.map.matchid)) return
-    if (this.client.steamserverid) return
+    if (this.client.steamServerId) return
     if (this.savingSteamServerId) return
 
     this.savingSteamServerId = true
-    try {
-      logger.info('Start match data', {
+    logger.info('saveMatchData start', {
+      name: this.client.name,
+      matchId: this.client.gsi.map.matchid,
+      steam32Id: this.client.steam32Id,
+    })
+
+    const response = (await mongo
+      .collection('delayedGames')
+      .findOne({ 'match.match_id': this.client.gsi.map.matchid })) as unknown as delayedGames | null
+
+    if (response) {
+      logger.info('saveMatchData delayedGame already found', {
         name: this.client.name,
         matchId: this.client.gsi.map.matchid,
       })
 
-      const response = (await mongo
-        .collection('delayedGames')
-        .findOne({ 'match.match_id': this.client.gsi.map.matchid })) as unknown as delayedGames
+      // not saving real steamserverid right now since not needed
+      this.client.steamServerId = 'true'
+      this.savingSteamServerId = false
+      this.playingLobbyType = response.match.lobby_type
+      this.players = getAccountsFromMatch(response)
+      return
+    }
 
-      if (!response) {
-        logger.info('No match data for user, checking from steam', {
-          name: this.client.name,
-          matchId: this.client.gsi.map.matchid,
-        })
+    logger.info('saveMatchData No match data for user, checking from steam', {
+      name: this.client.name,
+      matchId: this.client.gsi.map.matchid,
+      steam32Id: this.client.steam32Id,
+    })
 
-        const steamserverid = (await server.dota.getUserSteamServer(this.client.steam32Id)) as
-          | string
-          | undefined
-        if (!steamserverid) {
-          // 35 5s tries
-          // that's 3 minutes, should have full hero ids by then...right?
-          if (this.steamServerTries > 35) {
-            return
-          }
-          logger.info('Retry steamserverid', {
-            tries: this.steamServerTries,
-            channel: this.client.name,
-            matchid: this.client.gsi.map.matchid,
-          })
-          setTimeout(() => {
-            this.steamServerTries += 1
-            this.savingSteamServerId = false
-          }, 5000)
-          return
-        }
-
-        this.client.steamserverid = steamserverid
-        this.savingSteamServerId = false
-
-        // Only call once to update our local players variable with hero ids
-        events.once(
-          `delayedGameHeroes:${this.client.gsi.map.matchid}`,
-          (players: ReturnType<typeof getAccountsFromMatch>) => {
-            this.players = players
-          },
-        )
-
-        const delayedData = await server.dota.getDelayedMatchData(steamserverid, true)
-        if (!delayedData) {
-          logger.info('No match data found!', {
-            name: this.client.name,
-            matchid: this.client.gsi.map.matchid,
-          })
-          return
-        }
-
-        this.playingLobbyType = delayedData.match.lobby_type
-        this.players = getAccountsFromMatch(delayedData)
-
-        if (this.client.stream_online) {
-          this.say(
-            t('matchFound', {
-              commandList: '!np · !smurfs · !gm · !lg · !avg',
-              lng: this.client.locale,
-            }),
-            {
-              delay: false,
-            },
-          )
-        }
-      } else {
-        this.playingLobbyType = response.match.lobby_type
-        this.players = getAccountsFromMatch(response)
-        logger.info('Match data already found', {
-          name: this.client.name,
-          matchid: this.client.gsi.map.matchid,
-        })
+    const steamServerId = await server.dota.getUserSteamServer(this.client.steam32Id)
+    if (!steamServerId) {
+      // 35 5s tries
+      // that's 3 minutes, should have full hero ids by then...right?
+      if (this.steamServerTries > 35) {
+        return
       }
-    } catch (e) {
-      logger.info('saving match data failed', { name: this.client.name, e })
+      logger.info('Retry steamserverid', {
+        tries: this.steamServerTries,
+        channel: this.client.name,
+        matchId: this.client.gsi.map.matchid,
+      })
+      setTimeout(() => {
+        this.steamServerTries += 1
+        this.savingSteamServerId = false
+      }, 5000)
+      return
+    }
+
+    // Only call once to update our local players variable with hero ids
+    events.once(
+      `delayedGameHeroes:${this.client.gsi.map.matchid}`,
+      (players: ReturnType<typeof getAccountsFromMatch>) => {
+        this.players = players
+      },
+    )
+
+    const delayedData = await server.dota.getDelayedMatchData(steamServerId, true)
+
+    this.client.steamServerId = steamServerId
+    this.savingSteamServerId = false
+
+    // TODO: This almost never gets called, remove it?
+    if (!delayedData) {
+      logger.info('No match data found!', {
+        name: this.client.name,
+        matchId: this.client.gsi.map.matchid,
+      })
+      return
+    }
+
+    this.playingLobbyType = delayedData.match.lobby_type
+    this.players = getAccountsFromMatch(delayedData)
+
+    if (this.client.stream_online) {
+      this.say(
+        t('matchFound', {
+          commandList: '!np · !smurfs · !gm · !lg · !avg',
+          lng: this.client.locale,
+        }),
+        {
+          delay: false,
+        },
+      )
     }
   }
 
@@ -347,7 +347,7 @@ export class GSIHandler {
       })
       .catch((e) => {
         this.creatingSteamAccount = false
-        logger.info('[DATABASE ERROR]', { e: e?.message || e })
+        logger.error('[DATABASE ERROR]', { e: e?.message || e })
       })
   }
 
@@ -433,7 +433,7 @@ export class GSIHandler {
       logger.info('openBets resetClientState because stuck on old match id', {
         name: this.getChannel(),
         playingMatchId: this.playingBetMatchId,
-        matchid: this.client.gsi.map.matchid,
+        matchId: this.client.gsi.map.matchid,
       })
       this.resetClientState(true)
     }
@@ -569,7 +569,7 @@ export class GSIHandler {
                 })
                 .catch((e: any) => {
                   if (!disabledBets.has(this.getToken())) {
-                    logger.info('[BETS] Error opening twitch bet', {
+                    logger.error('[BETS] Error opening twitch bet', {
                       channel,
                       e: e?.message || e,
                       matchId,
@@ -876,6 +876,6 @@ function disableBetsForToken(token: string) {
       disabledBets.delete(token)
     })
     .catch((e) => {
-      logger.info('[BETS] Error disabling bets', { e: e?.message || e, token })
+      logger.error('[BETS] Error disabling bets', { e: e?.message || e, token })
     })
 }

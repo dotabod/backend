@@ -180,7 +180,7 @@ class Dota {
   }
 
   public getUserSteamServer = (steam32Id: number | string) => {
-    return new Promise((resolveOuter) => {
+    return new Promise((resolveOuter: (serverSteamId: string | undefined) => void) => {
       this.dota2.spectateFriendGame(
         { steam_id: this.dota2.ToSteamID(Number(steam32Id)) },
         (response: any, err: any) => {
@@ -284,7 +284,7 @@ class Dota {
 
             // Come back in 8 attempts to save the hero ids. With no cb()
             if (!hasHeroes) {
-              logger.info('Waiting for hero ids', { matchid: game.match.match_id })
+              logger.info('Waiting for hero ids', { matchId: game.match.match_id })
               this.GetRealTimeStats(steam_server_id, true)
             }
           }
