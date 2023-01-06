@@ -171,18 +171,20 @@ export class GSIHandler {
 
     this.savingSteamServerId = true
     try {
-      // logger.info('Start match data', this.client.name, this.client.gsi.map.matchid)
+      logger.info('Start match data', {
+        name: this.client.name,
+        matchId: this.client.gsi.map.matchid,
+      })
 
       const response = (await mongo
         .collection('delayedGames')
         .findOne({ 'match.match_id': this.client.gsi.map.matchid })) as unknown as delayedGames
 
       if (!response) {
-        // logger.info(
-        //   'No match data for user, checking from steam',
-        //   this.client.name,
-        //   this.client.gsi.map.matchid,
-        // )
+        logger.info('No match data for user, checking from steam', {
+          name: this.client.name,
+          matchId: this.client.gsi.map.matchid,
+        })
 
         const steamserverid = (await server.dota.getUserSteamServer(this.client.steam32Id)) as
           | string
@@ -437,23 +439,59 @@ export class GSIHandler {
     }
 
     // The bet was already made
-    if (this.playingMatchId !== null) return
-    if (this.openingBets) return
+    if (this.playingMatchId !== null) {
+      logger.info('Not opening bets because:', {
+        name: this.getChannel(),
+        playingMatchId: this.playingMatchId,
+      })
+      return
+    }
+    if (this.openingBets) {
+      logger.info('Not opening bets because:', {
+        name: this.getChannel(),
+        openingBets: this.openingBets,
+      })
+      return
+    }
 
     // Why open if not playing?
-    if (this.client.gsi?.player?.activity !== 'playing') return
+    if (this.client.gsi?.player?.activity !== 'playing') {
+      logger.info('Not opening bets because:', {
+        name: this.getChannel(),
+        activity: this.client.gsi?.player?.activity,
+      })
+      return
+    }
 
     // Why open if won?
-    if (this.client.gsi.map?.win_team !== 'none') return
+    if (this.client.gsi.map?.win_team !== 'none') {
+      logger.info('Not opening bets because:', {
+        name: this.getChannel(),
+        win_team: this.client.gsi.map?.win_team,
+      })
+      return
+    }
 
     // We at least want the hero name so it can go in the twitch bet title
-    if (!this.client.gsi.hero?.name || !this.client.gsi.hero.name.length) return
+    if (!this.client.gsi.hero?.name || !this.client.gsi.hero.name.length) {
+      logger.info('Not opening bets because:', {
+        name: this.getChannel(),
+        hero: this.client.gsi.hero?.name,
+      })
+      return
+    }
 
     this.openingBets = true
     const channel = this.getChannel()
 
     // It's not a live game, so we don't want to open bets nor save it to DB
-    if (!this.client.gsi.map.matchid || this.client.gsi.map.matchid === '0') return
+    if (!this.client.gsi.map.matchid || this.client.gsi.map.matchid === '0') {
+      logger.info('Not opening bets because:', {
+        name: this.getChannel(),
+        matchId: this.client.gsi.map.matchid,
+      })
+      return
+    }
 
     const matchId = this.client.gsi.map.matchid
 
@@ -593,6 +631,12 @@ export class GSIHandler {
     }
 
     if (this.openingBets || !this.playingMatchId || this.endingBets) {
+      logger.info('[BETS] Not closing bets bc openingBets or endingBets is true', {
+        name: this.getChannel(),
+        openingBets: this.openingBets,
+        playingMatchId: this.playingMatchId,
+        endingBets: this.endingBets,
+      })
       return
     }
 
