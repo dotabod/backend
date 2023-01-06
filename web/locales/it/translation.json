@@ -43,7 +43,7 @@
   "lastgame": {
     "link": "Partita precedente: {{- url}}",
     "none": "Non è presente nessun giocatore della partita precedente",
-    "player": "{{- lastMatchHero}} ha giocato {{- currentMatchHero}}"
+    "player": "{{- currentMatchHero}} ha giocato {{- lastMatchHero}}"
   },
   "lastgamescore": {
     "double": "Double down",

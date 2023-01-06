@@ -43,7 +43,7 @@
   "lastgame": {
     "link": "Here's last game: {{- url}}",
     "none": "Not playing with anyone from last game",
-    "player": "{{- lastMatchHero}} played as {{- currentMatchHero}}"
+    "player": "{{- currentMatchHero}} played as {{- lastMatchHero}}"
   },
   "lastgamescore": {
     "double": "Double down",

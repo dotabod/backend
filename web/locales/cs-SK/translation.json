@@ -43,7 +43,7 @@
   "lastgame": {
     "link": "Tu je posledná hra {{- url}}",
     "none": "Nehráme s nikým z predošlej hry.",
-    "player": "{{- lastMatchHero}} hrá ako {{- currentMatchHero}}"
+    "player": "{{- currentMatchHero}} hrá ako {{- lastMatchHero}}"
   },
   "lastgamescore": {
     "double": "Pokus číslo dva",

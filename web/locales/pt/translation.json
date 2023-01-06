@@ -43,7 +43,7 @@
   "lastgame": {
     "link": "Última partida: {{- url}}",
     "none": "Nenhum jogador da partida passada",
-    "player": "{{- lastMatchHero}} jogou de {{- currentMatchHero}}"
+    "player": "{{- currentMatchHero}} jogou de {{- lastMatchHero}}"
   },
   "lastgamescore": {
     "double": "Dobro de mmr",

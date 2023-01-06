@@ -43,7 +43,7 @@
   "lastgame": {
     "link": "Legutóbbi játék: {{- url}}",
     "none": "Nem játszunk senkivel az elöző játékból",
-    "player": "{{- lastMatchHero}} játszodt, mint {{- currentMatchHero}}"
+    "player": "{{- currentMatchHero}} játszodt, mint {{- lastMatchHero}}"
   },
   "lastgamescore": {
     "double": "Megduplázva",

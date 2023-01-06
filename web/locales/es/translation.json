@@ -43,7 +43,7 @@
   "lastgame": {
     "link": "Aqui esta el ultimo juego: {{- url}}",
     "none": "No estamos jugando con alguien del ultimo juego.",
-    "player": "{{- lastMatchHero}} juego como {{- currentMatchHero}}"
+    "player": "{{- currentMatchHero}} juego como {{- lastMatchHero}}"
   },
   "lastgamescore": {
     "double": "Doble la apuesta",
