@@ -2,8 +2,6 @@ import { t } from 'i18next'
 
 import { prisma } from '../../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
-import { events } from '../../dota/globalEventEmitter.js'
-import { GSIHandler } from '../../dota/GSIHandler.js'
 import { gsiHandlers } from '../../dota/index.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
@@ -16,7 +14,7 @@ export async function toggleDotabod(
   lng = 'en',
 ) {
   if (!isBotDisabled) {
-    logger.info('[GSI] Connecting new client', { token })
+    logger.info('[GSI] toggleDotabod Connecting new client', { token })
     await gsiHandlers.get(token)?.enable()
   }
 
