@@ -162,7 +162,7 @@ export class GSIHandler {
   // Runs every gametick
   async saveMatchData() {
     // Not gonna save any when local. Assuming we're just testing in local lobbys
-    if (process.env.NODE_ENV === 'development') return
+    // if (process.env.NODE_ENV === 'development') return
 
     if (!this.client.steam32Id || !this.client.gsi?.map?.matchid) return
     if (!Number(this.client.gsi.map.matchid)) return
@@ -440,12 +440,9 @@ export class GSIHandler {
 
     // The bet was already made
     if (this.playingMatchId !== null) {
-      logger.info('Not opening bets because playingMatchId', {
-        name: this.getChannel(),
-        playingMatchId: this.playingMatchId,
-      })
       return
     }
+
     if (this.openingBets) {
       logger.info('Not opening bets because openingBets', {
         name: this.getChannel(),
