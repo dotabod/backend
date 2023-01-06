@@ -68,7 +68,8 @@ class GSIServer {
       // TODO: should just send obs blockers regardless of blockcache somehow
       // This triggers a resend of obs blockers
       if (gsiHandlers.has(token)) {
-        gsiHandlers.get(token)!.blockCache = null
+        const handler = gsiHandlers.get(token)
+        if (handler) handler.blockCache = null
       }
 
       // Their own personal room

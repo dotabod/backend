@@ -835,7 +835,12 @@ export class GSIHandler {
 
     // Unblock all, we are disconnected from the match
     if (!hasValidBlocker && this.blockCache) {
-      logger.info('[BETS] Close bets because unblocked all', { name: this.getChannel() })
+      logger.info('[BETS] Close bets because unblocked all', {
+        hasValidBlocker,
+        state,
+        blockCache: this.blockCache,
+        name: this.getChannel(),
+      })
 
       this.emitBlockEvent(null)
       this.closeBets()
