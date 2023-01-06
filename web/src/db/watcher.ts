@@ -82,7 +82,11 @@ channel
     }
 
     // Sending this one even when offline, cause they might be testing locally
-    logger.info('[WATCHER SETTING] Sending new setting value to socket', { name: client.name })
+    logger.info('[WATCHER SETTING] Sending new setting value to socket', {
+      name: client.name,
+      key: newObj.key,
+      value: newObj.value,
+    })
     server.io.to(client.token).emit('refresh-settings')
   })
   .on('postgres_changes', { event: '*', schema: 'public', table: 'steam_accounts' }, (payload) => {
