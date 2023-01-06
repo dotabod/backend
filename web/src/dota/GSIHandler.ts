@@ -575,6 +575,7 @@ export class GSIHandler {
                       matchId,
                     })
                     this.openingBets = false
+                    return
                   }
 
                   disableBetsForToken(this.getToken())
@@ -616,7 +617,7 @@ export class GSIHandler {
     const betsMessage = betsEnabled ? ` ${t('bets.manual', { lng: this.client.locale })} ` : ''
 
     // An early without waiting for ancient to blow up
-    // We have to check every few seconds on Opendota to see if the match is over
+    // We have to check every few seconds with an pi to see if the match is over
     if (!winningTeam) {
       this.checkEarlyDCWinner(matchId, betsMessage)
       return
