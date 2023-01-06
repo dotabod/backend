@@ -769,16 +769,23 @@ export class GSIHandler {
       })
   }
 
+  private emitBlockEvent(blockType: string | null) {
+    if (this.blockCache === blockType) return
+
+    this.blockCache = blockType
+
+    server.io
+      .to(this.getToken())
+      .emit('block', { type: blockType, team: this.client.gsi?.player?.team_name })
+  }
+
   setupOBSBlockers(state?: string) {
     if (isSpectator(this.client.gsi) || isArcade(this.client.gsi)) {
       this.emitBadgeUpdate()
       this.emitWLUpdate()
 
       const blockType = isSpectator(this.client.gsi) ? 'spectator' : 'arcade'
-      if (this.blockCache !== blockType) {
-        server.io.to(this.getToken()).emit('block', { type: blockType })
-        this.blockCache = blockType
-      }
+      this.emitBlockEvent(blockType)
     }
 
     // TODO: if the game is matchid 0 also dont show these? ie bot match. hero demo are type 'arcade'
@@ -791,47 +798,29 @@ export class GSIHandler {
     // the map state can still be hero selection
     // name is empty if your hero is not locked in
     if ((this.client.gsi?.hero?.id ?? -1) >= 0 && pickSates.includes(state ?? '')) {
-      if (this.blockCache !== 'strategy') {
-        server.io
-          .to(this.getToken())
-          .emit('block', { type: 'strategy', team: this.client.gsi?.player?.team_name })
-
-        this.blockCache = 'strategy'
-      }
-
+      this.emitBlockEvent('strategy')
       return
     }
 
     // Check what needs to be blocked
     const hasValidBlocker = blockTypes.some((blocker) => {
-      if (blocker.states.includes(state ?? '')) {
-        // Only send if not already what it is
-        if (this.blockCache !== blocker.type) {
-          this.blockCache = blocker.type
+      if (!blocker.states.includes(state ?? '')) return false
 
-          // Send the one blocker type
-          server.io.to(this.getToken()).emit('block', {
-            type: blocker.type,
-            team: this.client.gsi?.player?.team_name,
-          })
+      this.emitBlockEvent(blocker.type)
 
-          if (blocker.type === 'playing') {
-            this.emitBadgeUpdate()
-            this.emitWLUpdate()
-          }
-
-          if (this.aegisPickedUp?.expireDate) {
-            server.io.to(this.getToken()).emit('aegis-picked-up', this.aegisPickedUp)
-          }
-
-          if (this.roshanKilled?.maxDate) {
-            server.io.to(this.getToken()).emit('roshan-killed', this.roshanKilled)
-          }
-        }
-        return true
+      if (blocker.type === 'playing') {
+        this.emitBadgeUpdate()
+        this.emitWLUpdate()
       }
 
-      return false
+      if (this.aegisPickedUp?.expireDate) {
+        server.io.to(this.getToken()).emit('aegis-picked-up', this.aegisPickedUp)
+      }
+
+      if (this.roshanKilled?.maxDate) {
+        server.io.to(this.getToken()).emit('roshan-killed', this.roshanKilled)
+      }
+      return true
     })
 
     // No blocker changes, don't emit any socket message
@@ -841,9 +830,9 @@ export class GSIHandler {
 
     // Unblock all, we are disconnected from the match
     if (!hasValidBlocker && this.blockCache) {
-      this.blockCache = null
-      server.io.to(this.getToken()).emit('block', { type: null })
       logger.info('[BETS] Close bets because unblocked all', { name: this.getChannel() })
+
+      this.emitBlockEvent(null)
       this.closeBets()
       return
     }
