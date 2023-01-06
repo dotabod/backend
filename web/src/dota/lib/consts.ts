@@ -17,7 +17,7 @@ export const stratStates = ['DOTA_GAMERULES_STATE_STRATEGY_TIME']
 export const blockTypes = [
   { type: 'picks', states: pickSates },
   { type: 'playing', states: playingStates },
-  { type: null, states: dontBlockStates },
+  { type: 'empty', states: dontBlockStates },
   // Removing because this state is checked manually
   // This state actually means all players are locked in and picked
   // It doesn't mean only the streamer is locked in like I thought

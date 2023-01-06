@@ -770,28 +770,15 @@ export class GSIHandler {
   }
 
   setupOBSBlockers(state?: string) {
-    if (isSpectator(this.client.gsi)) {
-      if (this.blockCache !== 'spectator') {
-        this.emitBadgeUpdate()
-        this.emitWLUpdate()
+    if (isSpectator(this.client.gsi) || isArcade(this.client.gsi)) {
+      this.emitBadgeUpdate()
+      this.emitWLUpdate()
 
-        server.io.to(this.getToken()).emit('block', { type: 'spectator' })
-        this.blockCache = 'spectator'
+      const blockType = isSpectator(this.client.gsi) ? 'spectator' : 'arcade'
+      if (this.blockCache !== blockType) {
+        server.io.to(this.getToken()).emit('block', { type: blockType })
+        this.blockCache = blockType
       }
-
-      return
-    }
-
-    if (isArcade(this.client.gsi)) {
-      if (this.blockCache !== 'arcade') {
-        this.emitBadgeUpdate()
-        this.emitWLUpdate()
-
-        server.io.to(this.getToken()).emit('block', { type: 'arcade' })
-        this.blockCache = 'arcade'
-      }
-
-      return
     }
 
     // TODO: if the game is matchid 0 also dont show these? ie bot match. hero demo are type 'arcade'
