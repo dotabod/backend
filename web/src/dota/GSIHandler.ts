@@ -34,7 +34,7 @@ export class GSIHandler {
   // Server could reboot and lose these in memory
   // But that's okay they will get reset based on current match state
   aegisPickedUp?: { playerId: number; expireTime: string; expireDate: Date }
-  playingMatchId: string | undefined | null = null
+  playingBetMatchId: string | undefined | null = null
   playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
   playingHeroSlot: number | undefined | null = null
   playingHero: HeroNames | undefined | null = null
@@ -131,7 +131,7 @@ export class GSIHandler {
     logger.info('newMatchNewVars', {
       resetBets,
       name: this.client.name,
-      matchid: this.playingMatchId,
+      matchid: this.playingBetMatchId,
     })
     this.playingHero = null
     this.playingHeroSlot = null
@@ -146,7 +146,7 @@ export class GSIHandler {
       this.client.steamserverid = undefined
       this.endingBets = false
       this.openingBets = false
-      this.playingMatchId = null
+      this.playingBetMatchId = null
       this.playingTeam = null
       this.manaSaved = 0
       this.treadToggles = 0
@@ -425,21 +425,21 @@ export class GSIHandler {
   // 4 Then, tell twitch to close bets based on win result
   openBets() {
     if (
-      !!this.playingMatchId &&
+      !!this.playingBetMatchId &&
       !!this.client.gsi?.map?.matchid &&
-      this.playingMatchId !== this.client.gsi.map.matchid
+      this.playingBetMatchId !== this.client.gsi.map.matchid
     ) {
       // We have the wrong matchid, reset vars and start over
       logger.info('openBets resetClientState because stuck on old match id', {
         name: this.getChannel(),
-        playingMatchId: this.playingMatchId,
+        playingMatchId: this.playingBetMatchId,
         matchid: this.client.gsi.map.matchid,
       })
       this.resetClientState(true)
     }
 
     // The bet was already made
-    if (this.playingMatchId !== null) {
+    if (this.playingBetMatchId !== null) {
       return
     }
 
@@ -471,15 +471,13 @@ export class GSIHandler {
 
     // We at least want the hero name so it can go in the twitch bet title
     if (!this.client.gsi.hero?.name || !this.client.gsi.hero.name.length) {
-      logger.info('Not opening bets because hero', {
+      logger.info('Not opening bets, hero hasnt been selected yet', {
         name: this.getChannel(),
+        matchId: this.client.gsi.map.matchid,
         hero: this.client.gsi.hero?.name,
       })
       return
     }
-
-    this.openingBets = true
-    const channel = this.getChannel()
 
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!this.client.gsi.map.matchid || this.client.gsi.map.matchid === '0') {
@@ -490,7 +488,10 @@ export class GSIHandler {
       return
     }
 
+    const channel = this.getChannel()
     const matchId = this.client.gsi.map.matchid
+
+    this.openingBets = true
 
     // Check if this bet for this match id already exists, dont continue if it does
     prisma.bet
@@ -510,14 +511,15 @@ export class GSIHandler {
         // Saving to local memory so we don't have to query the db again
         if (bet?.id) {
           logger.info('[BETS] Found a bet in the database', { id: bet.id })
-          this.playingMatchId = bet.matchId
+          this.playingBetMatchId = bet.matchId
           this.playingTeam = bet.myTeam as Player['team_name']
           this.openingBets = false
           return
         }
 
-        this.playingMatchId = matchId
+        this.playingBetMatchId = matchId
         this.playingTeam = this.client.gsi?.player?.team_name ?? null
+        this.playingHero = this.client.gsi?.hero?.name
 
         prisma.bet
           .create({
@@ -566,40 +568,17 @@ export class GSIHandler {
                   })
                 })
                 .catch((e: any) => {
-                  if (disabledBets.has(this.getToken())) {
-                    // disable the bet in settings for this user
-                    prisma.setting
-                      .upsert({
-                        where: {
-                          key_userId: {
-                            key: DBSettings.bets,
-                            userId: this.getToken(),
-                          },
-                        },
-                        create: {
-                          userId: this.getToken(),
-                          key: DBSettings.bets,
-                          value: false,
-                        },
-                        update: {
-                          value: false,
-                        },
-                      })
-                      .then((r) => {
-                        disabledBets.delete(this.getToken())
-                        logger.info('[BETS] Disabled bets for user', {
-                          channel,
-                        })
-                        this.openingBets = false
-                      })
-                      .catch((e) => {
-                        logger.info('[BETS] Error disabling bets', { e: e?.message || e })
-                        this.openingBets = false
-                      })
-                  } else {
-                    logger.info('[BETS] Error opening twitch bet', { channel, e: e?.message || e })
+                  if (!disabledBets.has(this.getToken())) {
+                    logger.info('[BETS] Error opening twitch bet', {
+                      channel,
+                      e: e?.message || e,
+                      matchId,
+                    })
                     this.openingBets = false
                   }
+
+                  disableBetsForToken(this.getToken())
+                  this.openingBets = false
                 })
             }, GLOBAL_DELAY)
           })
@@ -622,22 +601,17 @@ export class GSIHandler {
   }
 
   closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
-    if (process.env.NODE_ENV === 'development') {
-      // this.resetClientState(true)
-      // return
-    }
-
-    if (this.openingBets || !this.playingMatchId || this.endingBets) {
+    if (this.openingBets || !this.playingBetMatchId || this.endingBets) {
       logger.info('[BETS] Not closing bets bc openingBets or endingBets is true', {
         name: this.getChannel(),
         openingBets: this.openingBets,
-        playingMatchId: this.playingMatchId,
+        playingMatchId: this.playingBetMatchId,
         endingBets: this.endingBets,
       })
       return
     }
 
-    const matchId = this.playingMatchId
+    const matchId = this.playingBetMatchId
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
     const betsMessage = betsEnabled ? ` ${t('bets.manual', { lng: this.client.locale })} ` : ''
 
@@ -711,13 +685,15 @@ export class GSIHandler {
 
     // Both or one undefined
     if (!myTeam) {
-      logger.error('trying to end bets but did not find localWinner or myTeam', this.getChannel())
+      logger.error('trying to end bets but did not find localWinner or myTeam', {
+        channel: this.getChannel(),
+      })
       return
     }
 
     logger.info('[BETS] Running end bets to award mmr and close predictions', {
       name: this.getChannel(),
-      matchid: this.playingMatchId,
+      matchId,
     })
 
     // this was used when endBets() was still in 'newdata' event called every 0.5s
@@ -742,7 +718,7 @@ export class GSIHandler {
     }
 
     if (!betsEnabled || !this.client.stream_online) {
-      logger.info('bets are not enabled, stopping here', { name: this.getChannel() })
+      logger.info('Bets are not enabled, stopping here', { name: this.getChannel() })
       this.resetClientState(true)
       return
     }
@@ -762,46 +738,23 @@ export class GSIHandler {
           })
         })
         .catch((e: any) => {
-          if (disabledBets.has(this.getToken())) {
-            // disable the bet in settings for this user
-            prisma.setting
-              .upsert({
-                where: {
-                  key_userId: {
-                    key: DBSettings.bets,
-                    userId: this.getToken(),
-                  },
-                },
-                create: {
-                  userId: this.getToken(),
-                  key: DBSettings.bets,
-                  value: false,
-                },
-                update: {
-                  value: false,
-                },
-              })
-              .then((r) => {
-                logger.info('[BETS] Disabled bets for user', {
-                  channel,
-                })
-                disabledBets.delete(this.getToken())
-              })
-              .catch((e) => {
-                logger.info('[BETS] Error disabling bets', { e: e?.message || e })
-              })
-          } else {
-            logger.info('[BETS] Error closing twitch bet', { channel, e: e?.message || e })
-          }
-        })
-        // Always
-        .finally(() => {
-          if (won) {
-            this.say(t('bets.won', { lng: this.client.locale }), { delay: false })
-          } else {
-            this.say(t('bets.lost', { lng: this.client.locale }), { delay: false })
+          if (!disabledBets.has(this.getToken())) {
+            logger.error('[BETS] Error closing twitch bet', {
+              channel,
+              e: e?.message || e,
+              matchId,
+            })
+            this.openingBets = false
           }
 
+          disableBetsForToken(this.getToken())
+        })
+        .finally(() => {
+          const message = won
+            ? t('bets.won', { lng: this.client.locale })
+            : t('bets.lost', { lng: this.client.locale })
+
+          this.say(message, { delay: false })
           this.resetClientState(true)
         })
     }, GLOBAL_DELAY)
@@ -898,4 +851,34 @@ export class GSIHandler {
       return
     }
   }
+}
+
+// Disable the bet in settings for this user
+function disableBetsForToken(token: string) {
+  prisma.setting
+    .upsert({
+      where: {
+        key_userId: {
+          key: DBSettings.bets,
+          userId: token,
+        },
+      },
+      create: {
+        userId: token,
+        key: DBSettings.bets,
+        value: false,
+      },
+      update: {
+        value: false,
+      },
+    })
+    .then(() => {
+      logger.info('[BETS] Disabled bets for user', {
+        token,
+      })
+      disabledBets.delete(token)
+    })
+    .catch((e) => {
+      logger.info('[BETS] Error disabling bets', { e: e?.message || e, token })
+    })
 }
