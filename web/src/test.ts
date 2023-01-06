@@ -161,9 +161,9 @@ const topFollowers = async () => {
       stream_online: true,
     },
     orderBy: {
-      followers: 'desc',
+      createdAt: 'desc',
     },
-    take: 30,
+    take: 10,
   })
 
   console.info(
@@ -180,8 +180,8 @@ const topFollowers = async () => {
 
 // await updateUsernameForAll()
 // await getAccounts()
-await fixWins()
-// await topFollowers()
+// await fixWins()
+await topFollowers()
 
 // server.dota.dota2.on('ready', () => {
 //   server.dota.getGcMatchData(69375017392, (err, response) => {
