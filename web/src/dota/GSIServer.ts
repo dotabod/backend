@@ -7,7 +7,7 @@ import getDBUser from '../db/getDBUser.js'
 import Dota from '../steam/index.js'
 import { logger } from '../utils/logger.js'
 import { newData, processChanges } from './globalEventEmitter.js'
-import { blockCache } from './GSIHandler.js'
+import { gsiHandlers } from './index.js'
 import { validateToken } from './validateToken.js'
 
 class GSIServer {
@@ -67,7 +67,9 @@ class GSIServer {
       const { token } = socket.handshake.auth
       // TODO: should just send obs blockers regardless of blockcache somehow
       // This triggers a resend of obs blockers
-      blockCache.delete(token)
+      if (gsiHandlers.has(token)) {
+        gsiHandlers.get(token)!.blockCache = null
+      }
 
       // Their own personal room
       void socket.join(token)
