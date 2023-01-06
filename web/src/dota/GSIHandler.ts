@@ -440,14 +440,14 @@ export class GSIHandler {
 
     // The bet was already made
     if (this.playingMatchId !== null) {
-      logger.info('Not opening bets because:', {
+      logger.info('Not opening bets because playingMatchId', {
         name: this.getChannel(),
         playingMatchId: this.playingMatchId,
       })
       return
     }
     if (this.openingBets) {
-      logger.info('Not opening bets because:', {
+      logger.info('Not opening bets because openingBets', {
         name: this.getChannel(),
         openingBets: this.openingBets,
       })
@@ -456,7 +456,7 @@ export class GSIHandler {
 
     // Why open if not playing?
     if (this.client.gsi?.player?.activity !== 'playing') {
-      logger.info('Not opening bets because:', {
+      logger.info('Not opening bets because activity', {
         name: this.getChannel(),
         activity: this.client.gsi?.player?.activity,
       })
@@ -465,7 +465,7 @@ export class GSIHandler {
 
     // Why open if won?
     if (this.client.gsi.map?.win_team !== 'none') {
-      logger.info('Not opening bets because:', {
+      logger.info('Not opening bets because win_team', {
         name: this.getChannel(),
         win_team: this.client.gsi.map?.win_team,
       })
@@ -474,7 +474,7 @@ export class GSIHandler {
 
     // We at least want the hero name so it can go in the twitch bet title
     if (!this.client.gsi.hero?.name || !this.client.gsi.hero.name.length) {
-      logger.info('Not opening bets because:', {
+      logger.info('Not opening bets because hero', {
         name: this.getChannel(),
         hero: this.client.gsi.hero?.name,
       })
@@ -486,7 +486,7 @@ export class GSIHandler {
 
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!this.client.gsi.map.matchid || this.client.gsi.map.matchid === '0') {
-      logger.info('Not opening bets because:', {
+      logger.info('Not opening bets because matchId', {
         name: this.getChannel(),
         matchId: this.client.gsi.map.matchid,
       })
