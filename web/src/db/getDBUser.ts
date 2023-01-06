@@ -6,16 +6,25 @@ import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
 
 export const invalidTokens = new Set()
+invalidTokens.add('')
+invalidTokens.add(null)
+invalidTokens.add(undefined)
+invalidTokens.add(0)
+
+const pendingLookups = new Set<string | null | undefined>()
 
 export default async function getDBUser(
   token?: string,
   twitchId?: string,
 ): Promise<SocketClient | null | undefined> {
-  if (invalidTokens.has(token) || invalidTokens.has(twitchId)) return null
+  if (invalidTokens.has(token || twitchId)) return null
+
   const client = findUser(token) ?? findUserByTwitchId(twitchId)
   if (client) return client
 
+  if (pendingLookups.has(token ?? twitchId)) return undefined
   logger.info('[GSI] Havent cached user token yet, checking db', { token: token ?? twitchId })
+  pendingLookups.add(token ?? twitchId)
 
   return await prisma.user
     .findFirst({
@@ -87,6 +96,9 @@ export default async function getDBUser(
     .catch((e) => {
       logger.info('[USER] Error checking auth', { token: token ?? twitchId, e })
       return null
+    })
+    .finally(() => {
+      pendingLookups.delete(token ?? twitchId)
     })
 }
 
