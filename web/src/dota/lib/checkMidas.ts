@@ -1,10 +1,16 @@
 import { Item, Packet } from '../../types.js'
 import { findItem } from './findItem.js'
 
+/**
+ * Checks if the player has a midas and if it's on cooldown or not
+ * @param data - The packet with all the player data
+ * @param passiveMidas - The object with the passive midas data
+ */
 export default function checkMidas(
   data: Packet,
   passiveMidas: { counter: number; used: number; timer: number },
 ) {
+  // Find the midas
   const midasItem = findItem('item_hand_of_midas', true, data)
 
   // Doesn't have a midas
@@ -35,10 +41,18 @@ export default function checkMidas(
   return false
 }
 
+/**
+ * Checks if the midas is on cooldown or not
+ * @param midasItem - The midas item data
+ */
 function isMidasOnCooldown(midasItem: Item): boolean {
   return Number(midasItem.cooldown) > 0 || midasItem.can_cast !== true
 }
 
+/**
+ * Updates the passive midas timer
+ * @param passiveMidas - The object with the passive midas data
+ */
 function updatePassiveMidasTimer(passiveMidas: {
   counter: number
   used: number
@@ -53,6 +67,10 @@ function updatePassiveMidasTimer(passiveMidas: {
   }
 }
 
+/**
+ * Resets the passive midas data
+ * @param passiveMidas - The object with the passive midas data
+ */
 function resetPassiveMidas(passiveMidas: { counter: number; used: number; timer: number }): void {
   passiveMidas.counter = 0
   passiveMidas.timer = 0
