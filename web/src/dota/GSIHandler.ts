@@ -636,11 +636,17 @@ export class GSIHandler {
     const localWinner = winningTeam
     const myTeam = this.playingTeam ?? this.client.gsi?.player?.team_name
     const won = myTeam === localWinner
-    logger.info('end bets won data', { localWinner, myTeam, won, channel: this.getChannel() })
+    logger.info('[BETS] end bets won data', {
+      playingMatchId: this.playingBetMatchId,
+      localWinner,
+      myTeam,
+      won,
+      channel: this.getChannel(),
+    })
 
     // Both or one undefined
     if (!myTeam) {
-      logger.error('trying to end bets but did not find localWinner or myTeam', {
+      logger.error('[BETS] trying to end bets but did not find localWinner or myTeam', {
         channel: this.getChannel(),
       })
       return
@@ -651,8 +657,6 @@ export class GSIHandler {
       matchId,
     })
 
-    // this was used when endBets() was still in 'newdata' event called every 0.5s
-    // TODO: remove endingBets and confirm if needed
     const channel = this.getChannel()
     this.endingBets = true
 
@@ -722,9 +726,10 @@ export class GSIHandler {
     })
 
     // Check with opendota to see if the match is over
-    axios(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
-      params: { key: process.env.STEAM_WEB_API, match_id: matchId },
-    })
+    axios
+      .get(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
+        params: { key: process.env.STEAM_WEB_API, match_id: matchId },
+      })
       .then((response: { data: any }) => {
         logger.info('Found an early dc match data', { matchId, channel: this.getChannel() })
 
