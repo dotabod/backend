@@ -618,63 +618,7 @@ export class GSIHandler {
     // An early without waiting for ancient to blow up
     // We have to check every few seconds on Opendota to see if the match is over
     if (!winningTeam) {
-      logger.info('[BETS] Streamer exited the match before it ended with a winner', {
-        name: this.getChannel(),
-        matchId,
-        openingBets: this.openingBets,
-        endingBets: this.endingBets,
-      })
-
-      // Check with opendota to see if the match is over
-      axios(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
-        params: { key: process.env.STEAM_WEB_API, match_id: matchId },
-      })
-        .then((response: { data: any }) => {
-          logger.info('Found an early dc match data', { matchId, channel: this.getChannel() })
-
-          let winningTeam: 'radiant' | 'dire' | null = null
-          if (typeof response.data?.result?.radiant_win === 'boolean') {
-            winningTeam = response.data.result.radiant_win ? 'radiant' : 'dire'
-          }
-
-          if (winningTeam === null) {
-            logger.info('Early dc match wont be scored bc winner is null', {
-              name: this.getChannel(),
-            })
-
-            if (this.client.stream_online) {
-              this.say(`${t('bets.notScored', { lng: this.client.locale, matchId })}${betsMessage}`)
-            }
-            this.resetClientState(true)
-            return
-          }
-
-          logger.info('Should be scoring early dc here soon and closing predictions', {
-            channel: this.getChannel(),
-            winningTeam,
-            matchId,
-          })
-          this.closeBets(winningTeam)
-        })
-        .catch((e) => {
-          try {
-            // this could mean match is not over yet. just give up checking after this long (like 3m)
-            // resetting vars will mean it will just grab it again on match load
-            logger.error('early dc match didnt have data in it, match still going on?', {
-              channel: this.getChannel(),
-              matchId,
-              e: e?.message || e?.result || e?.data || e,
-            })
-
-            this.resetClientState(true)
-            return
-          } catch (e) {
-            logger.error(
-              'caught an error in axios retry. likely server rebooted and channel was inaccessible',
-            )
-          }
-        })
-
+      this.checkEarlyDCWinner(matchId, betsMessage)
       return
     }
 
@@ -758,6 +702,58 @@ export class GSIHandler {
           this.resetClientState(true)
         })
     }, GLOBAL_DELAY)
+  }
+
+  private checkEarlyDCWinner(matchId: string, betsMessage: string) {
+    logger.info('[BETS] Streamer exited the match before it ended with a winner', {
+      name: this.getChannel(),
+      matchId,
+      openingBets: this.openingBets,
+      endingBets: this.endingBets,
+    })
+
+    // Check with opendota to see if the match is over
+    axios(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
+      params: { key: process.env.STEAM_WEB_API, match_id: matchId },
+    })
+      .then((response: { data: any }) => {
+        logger.info('Found an early dc match data', { matchId, channel: this.getChannel() })
+
+        let winningTeam: 'radiant' | 'dire' | null = null
+        if (typeof response.data?.result?.radiant_win === 'boolean') {
+          winningTeam = response.data.result.radiant_win ? 'radiant' : 'dire'
+        }
+
+        if (winningTeam === null) {
+          logger.info('Early dc match wont be scored bc winner is null', {
+            name: this.getChannel(),
+          })
+
+          if (this.client.stream_online) {
+            this.say(`${t('bets.notScored', { lng: this.client.locale, matchId })}${betsMessage}`)
+          }
+          this.resetClientState(true)
+          return
+        }
+
+        logger.info('Should be scoring early dc here soon and closing predictions', {
+          channel: this.getChannel(),
+          winningTeam,
+          matchId,
+        })
+        this.closeBets(winningTeam)
+      })
+      .catch((err) => {
+        // this could mean match is not over yet. just give up checking after this long (like 3m)
+        // resetting vars will mean it will just grab it again on match load
+        logger.error('Early dc match didnt have data in it, match still going on?', {
+          channel: this.getChannel(),
+          matchId,
+          e: err?.message || err?.result || err?.data || err,
+        })
+
+        this.resetClientState(true)
+      })
   }
 
   setupOBSBlockers(state?: string) {
