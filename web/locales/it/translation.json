@@ -90,7 +90,7 @@
   "ranked_no": "No questa partita non è classificata",
   "ranked_yes": "Si questa partita è classificata",
   "refresh": "Aggiornando l'overlay...",
-  "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan tra {{min}} e {{max}}",
+  "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
   "tip": {
     "from": "Il tip da {{- heroName}} ICANT",
     "to": "Tippiamo {{- heroName}} PepeLaugh"
