@@ -24,8 +24,6 @@ import { updateMmr } from './lib/updateMmr.js'
 
 const mongo = await Mongo.connect()
 
-export const blockCache = new Map<string, string>()
-
 // Finally, we have a user and a GSI client
 // That means the user opened OBS and connected to Dota 2 GSI
 export class GSIHandler {
@@ -33,6 +31,7 @@ export class GSIHandler {
 
   // Server could reboot and lose these in memory
   // But that's okay they will get reset based on current match state
+  blockCache: string | null = null
   aegisPickedUp?: { playerId: number; expireTime: string; expireDate: Date }
   playingBetMatchId: string | undefined | null = null
   playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
@@ -772,24 +771,24 @@ export class GSIHandler {
 
   setupOBSBlockers(state?: string) {
     if (isSpectator(this.client.gsi)) {
-      if (blockCache.get(this.getToken()) !== 'spectator') {
+      if (this.blockCache !== 'spectator') {
         this.emitBadgeUpdate()
         this.emitWLUpdate()
 
         server.io.to(this.getToken()).emit('block', { type: 'spectator' })
-        blockCache.set(this.getToken(), 'spectator')
+        this.blockCache = 'spectator'
       }
 
       return
     }
 
     if (isArcade(this.client.gsi)) {
-      if (blockCache.get(this.getToken()) !== 'arcade') {
+      if (this.blockCache !== 'arcade') {
         this.emitBadgeUpdate()
         this.emitWLUpdate()
 
         server.io.to(this.getToken()).emit('block', { type: 'arcade' })
-        blockCache.set(this.getToken(), 'arcade')
+        this.blockCache = 'arcade'
       }
 
       return
@@ -805,12 +804,12 @@ export class GSIHandler {
     // the map state can still be hero selection
     // name is empty if your hero is not locked in
     if ((this.client.gsi?.hero?.id ?? -1) >= 0 && pickSates.includes(state ?? '')) {
-      if (blockCache.get(this.getToken()) !== 'strategy') {
+      if (this.blockCache !== 'strategy') {
         server.io
           .to(this.getToken())
           .emit('block', { type: 'strategy', team: this.client.gsi?.player?.team_name })
 
-        blockCache.set(this.getToken(), 'strategy')
+        this.blockCache = 'strategy'
       }
 
       return
@@ -820,8 +819,8 @@ export class GSIHandler {
     const hasValidBlocker = blockTypes.some((blocker) => {
       if (blocker.states.includes(state ?? '')) {
         // Only send if not already what it is
-        if (blockCache.get(this.getToken()) !== blocker.type) {
-          blockCache.set(this.getToken(), blocker.type)
+        if (this.blockCache !== blocker.type) {
+          this.blockCache = blocker.type
 
           // Send the one blocker type
           server.io.to(this.getToken()).emit('block', {
@@ -849,13 +848,13 @@ export class GSIHandler {
     })
 
     // No blocker changes, don't emit any socket message
-    if (!hasValidBlocker && !blockCache.has(this.getToken())) {
+    if (!hasValidBlocker && !this.blockCache) {
       return
     }
 
     // Unblock all, we are disconnected from the match
-    if (!hasValidBlocker && blockCache.has(this.getToken())) {
-      blockCache.delete(this.getToken())
+    if (!hasValidBlocker && this.blockCache) {
+      this.blockCache = null
       server.io.to(this.getToken()).emit('block', { type: null })
       logger.info('[BETS] Close bets because unblocked all', { name: this.getChannel() })
       this.closeBets()
