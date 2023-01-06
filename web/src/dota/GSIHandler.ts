@@ -430,7 +430,7 @@ export class GSIHandler {
       this.playingBetMatchId !== this.client.gsi.map.matchid
     ) {
       // We have the wrong matchid, reset vars and start over
-      logger.info('openBets resetClientState because stuck on old match id', {
+      logger.info('[BETS] openBets resetClientState because stuck on old match id', {
         name: this.getChannel(),
         playingMatchId: this.playingBetMatchId,
         matchId: this.client.gsi.map.matchid,
@@ -444,8 +444,9 @@ export class GSIHandler {
     }
 
     if (this.openingBets) {
-      logger.info('Not opening bets because openingBets', {
+      logger.info('[BETS] Not opening bets because openingBets', {
         name: this.getChannel(),
+        playingMatchId: this.playingBetMatchId,
         openingBets: this.openingBets,
       })
       return
@@ -453,8 +454,9 @@ export class GSIHandler {
 
     // Why open if not playing?
     if (this.client.gsi?.player?.activity !== 'playing') {
-      logger.info('Not opening bets because activity', {
+      logger.info('[BETS] Not opening bets because activity', {
         name: this.getChannel(),
+        playingMatchId: this.playingBetMatchId,
         activity: this.client.gsi?.player?.activity,
       })
       return
@@ -462,8 +464,9 @@ export class GSIHandler {
 
     // Why open if won?
     if (this.client.gsi.map?.win_team !== 'none') {
-      logger.info('Not opening bets because win_team', {
+      logger.info('[BETS] Not opening bets because win_team', {
         name: this.getChannel(),
+        playingMatchId: this.playingBetMatchId,
         win_team: this.client.gsi.map?.win_team,
       })
       return
@@ -471,8 +474,9 @@ export class GSIHandler {
 
     // We at least want the hero name so it can go in the twitch bet title
     if (!this.client.gsi.hero?.name || !this.client.gsi.hero.name.length) {
-      logger.info('Not opening bets, hero hasnt been selected yet', {
+      logger.info('[BETS] Not opening bets, hero hasnt been selected yet', {
         name: this.getChannel(),
+        playingMatchId: this.playingBetMatchId,
         matchId: this.client.gsi.map.matchid,
         hero: this.client.gsi.hero?.name,
       })
@@ -481,12 +485,20 @@ export class GSIHandler {
 
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!this.client.gsi.map.matchid || this.client.gsi.map.matchid === '0') {
-      logger.info('Not opening bets because matchId', {
+      logger.info('[BETS] Not opening bets because matchId', {
         name: this.getChannel(),
+        playingMatchId: this.playingBetMatchId,
         matchId: this.client.gsi.map.matchid,
       })
       return
     }
+
+    logger.info('[BETS] Begin opening bets', {
+      name: this.getChannel(),
+      playingMatchId: this.playingBetMatchId,
+      matchId: this.client.gsi.map.matchid,
+      hero: this.client.gsi.hero.name,
+    })
 
     const channel = this.getChannel()
     const matchId = this.client.gsi.map.matchid
@@ -560,11 +572,9 @@ export class GSIHandler {
                   this.openingBets = false
                   logger.info('[BETS] open bets', {
                     event: 'open_bets',
-                    data: {
-                      matchId: matchId,
-                      user: this.getToken(),
-                      player_team: this.client.gsi?.player?.team_name,
-                    },
+                    matchId: matchId,
+                    user: this.getToken(),
+                    player_team: this.client.gsi?.player?.team_name,
                   })
                 })
                 .catch((e: any) => {
@@ -603,7 +613,7 @@ export class GSIHandler {
 
   closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
     if (this.openingBets || !this.playingBetMatchId || this.endingBets) {
-      logger.info('[BETS] Not closing bets bc openingBets or endingBets is true', {
+      logger.info('[BETS] Not closing bets', {
         name: this.getChannel(),
         openingBets: this.openingBets,
         playingMatchId: this.playingBetMatchId,
@@ -673,13 +683,11 @@ export class GSIHandler {
         .then(() => {
           logger.info('[BETS] end bets', {
             event: 'end_bets',
-            data: {
-              matchId: matchId,
-              name: this.getChannel(),
-              winning_team: localWinner,
-              player_team: myTeam,
-              didWin: won,
-            },
+            matchId: matchId,
+            name: this.getChannel(),
+            winning_team: localWinner,
+            player_team: myTeam,
+            didWin: won,
           })
         })
         .catch((e: any) => {
@@ -844,6 +852,7 @@ export class GSIHandler {
     if (!hasValidBlocker && blockCache.has(this.getToken())) {
       blockCache.delete(this.getToken())
       server.io.to(this.getToken()).emit('block', { type: null })
+      logger.info('[BETS] Close bets because unblocked all', { name: this.getChannel() })
       this.closeBets()
       return
     }

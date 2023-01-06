@@ -14,8 +14,12 @@ export async function toggleDotabod(
   lng = 'en',
 ) {
   if (!isBotDisabled) {
-    logger.info('[GSI] toggleDotabod Connecting new client', { token })
-    await gsiHandlers.get(token)?.enable()
+    logger.info('[GSI] toggleDotabod Enabling client again', { token })
+    if (!gsiHandlers.has(token)) {
+      logger.info('[ENABLE GSI] Could not find client', { token })
+    } else {
+      await gsiHandlers.get(token)?.enable()
+    }
   }
 
   await chatClient.say(
