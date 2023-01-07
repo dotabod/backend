@@ -4,58 +4,6 @@ import { prisma } from './db/prisma.js'
 import { getBotAPI } from './twitch/lib/getBotAPI.js'
 import { logger } from './utils/logger.js'
 
-export async function updateUsernameForAll() {
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      Account: {
-        select: {
-          providerAccountId: true,
-        },
-      },
-    },
-    where: {
-      displayName: '',
-    },
-    orderBy: {
-      createdAt: 'asc',
-    },
-    take: 100,
-  })
-
-  const providerIds: string[] = users
-    .map((user) => {
-      if (!user.Account?.providerAccountId) return null
-      return user.Account.providerAccountId
-    })
-    .flatMap((f) => f ?? [])
-
-  const twitchApi = getBotAPI()
-  const twitchUser = await twitchApi.users.getUsersByIds(providerIds)
-  // const complete = twitchUser.map((u) => ({ name: u.name, displayName: u.displayName }))
-
-  for (const user of twitchUser) {
-    if (!user.name || !user.displayName) continue
-    logger.info('updating', { name: user.name, displayName: user.displayName })
-    await prisma.account.update({
-      where: {
-        provider_providerAccountId: {
-          provider: 'twitch',
-          providerAccountId: user.id,
-        },
-      },
-      data: {
-        user: {
-          update: {
-            displayName: user.displayName,
-            name: user.name,
-          },
-        },
-      },
-    })
-  }
-}
-
 async function getAccounts() {
   // const steam32id = 1234
   // const steamserverid = (await server.dota.getUserSteamServer(steam32id)) as string | undefined
@@ -156,6 +104,7 @@ const topFollowers = async () => {
     select: {
       name: true,
       followers: true,
+      createdAt: true,
     },
     where: {
       stream_online: true,
@@ -167,16 +116,49 @@ const topFollowers = async () => {
   })
 
   console.info(
-    'found follower data',
-    followers
-      .sort((a, b) => (b.followers ?? 0) - (a.followers ?? 0))
-      .map((f) => ({
-        ...f,
-        url: `https://twitch.tv/${f.name}`,
-        followers: f.followers?.toLocaleString(),
-      })),
+    followers.map((f) => ({
+      ...f,
+      url: `https://twitch.tv/${f.name}`,
+      followers: f.followers?.toLocaleString(),
+    })),
   )
 }
+
+const getLogQuery = async (name: string) => {
+  const user = await prisma.user.findFirst({
+    select: {
+      name: true,
+      id: true,
+      Account: {
+        select: {
+          providerAccountId: true,
+        },
+      },
+      SteamAccount: {
+        select: {
+          steam32Id: true,
+        },
+      },
+    },
+    where: {
+      name,
+    },
+  })
+
+  if (!user) return ''
+
+  return `
+channel:${user.name} or
+name:${user.name} or
+${user.SteamAccount.map((a) => `steam32Id:${a.steam32Id} or`).join(' ')}
+token:${user.id} or
+userId:${user.id} or
+token:${user.Account?.providerAccountId ?? ''} or
+message:Starting!
+`
+}
+
+// console.log(await getLogQuery('chaddoto'))
 
 // await updateUsernameForAll()
 // await getAccounts()
