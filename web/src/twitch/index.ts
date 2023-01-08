@@ -37,7 +37,7 @@ twitchChat.on(
     ) {
       plebMode.delete(channelId)
       void chatClient.say(channel, '/subscribers')
-      void chatClient.say(channel, t('pleb', { context: 'off', lng: userInfo.locale }))
+      void chatClient.say(channel, t('pleb', { context: 'off', name: user, lng: userInfo.locale }))
       return
     }
 
