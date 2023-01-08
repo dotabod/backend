@@ -58,25 +58,25 @@ export class GSIHandler {
   openingBets = false
   creatingSteamAccount = false
   treadsData = { manaAtLastToggle: 0, timeOfLastToggle: 0 }
+  disabled = false
 
   constructor(dotaClient: SocketClient) {
     this.client = dotaClient
 
-    // Check if bot is disabled and dont run event handler
     const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, this.client.settings)
     if (isBotDisabled) {
       logger.info('[GSI] Bot is disabled for this user', { name: this.client.name })
-      return
+      this.disable()
     }
   }
 
   public async enable() {
-    // run events
+    this.disabled = false
     await chatClient.join(this.client.name)
   }
 
   public disable() {
-    // stop events
+    this.disabled = true
     chatClient.part(this.client.name)
   }
 
@@ -780,6 +780,8 @@ export class GSIHandler {
   }
 
   setupOBSBlockers(state?: string) {
+    console.log({ state })
+
     if (isSpectator(this.client.gsi) || isArcade(this.client.gsi)) {
       this.emitBadgeUpdate()
       this.emitWLUpdate()

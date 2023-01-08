@@ -10,7 +10,10 @@ class EventHandler {
   registerEvent = (eventName: string, options: EventOptions) => {
     events.on(eventName, (data: any, token: string) => {
       if (!gsiHandlers.has(token)) return
-      options.handler(gsiHandlers.get(token)!, data)
+      const client = gsiHandlers.get(token)
+      if (client!.disabled) return
+
+      options.handler(client!, data)
     })
   }
 }

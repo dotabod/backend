@@ -22,7 +22,12 @@ twitchChat.on('connect', () => {
 
 twitchChat.on(
   'msg',
-  function (channel: string, user: string, text: string, { channelId, userInfo, messageId }: any) {
+  async function (
+    channel: string,
+    user: string,
+    text: string,
+    { channelId, userInfo, messageId }: any,
+  ) {
     if (!channelId) return
 
     // Letting one pleb in
@@ -46,42 +51,30 @@ twitchChat.on(
 
     // So we can get the users settings cuz some commands are disabled
     // This runs every command, but its cached so no hit on db
-    getDBUser(undefined, channelId)
-      .then((client) => {
-        if (!client || !channelId) {
-          void chatClient.say(channel, t('missingUser', { lng: userInfo.locale }))
-          return
-        }
+    const client = await getDBUser(undefined, channelId)
+    if (!client || !channelId) {
+      void chatClient.say(channel, t('missingUser', { lng: userInfo.locale }))
+      return
+    }
 
-        const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, client.settings)
-        const toggleCommand = commandHandler.commands.get('toggle')!
-        if (
-          isBotDisabled &&
-          !toggleCommand.aliases?.includes(text.replace('!', '').split(' ')[0]) &&
-          text.split(' ')[0] !== '!toggle'
-        ) {
-          logger.info("Bot is disabled, can't run command", { channel })
-          return
-        }
+    const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, client.settings)
+    const toggleCommand = commandHandler.commands.get('toggle')!
+    if (
+      isBotDisabled &&
+      !toggleCommand.aliases?.includes(text.replace('!', '').split(' ')[0]) &&
+      text.split(' ')[0] !== '!toggle'
+    ) {
+      return
+    }
 
-        // Handle the incoming message using the command handler
-        commandHandler.handleMessage({
-          channel: { name: channel, id: channelId, client, settings: client.settings },
-          user: {
-            name: user,
-            permission: userInfo.isBroadcaster
-              ? 3
-              : userInfo.isMod
-              ? 2
-              : userInfo.isSubscriber
-              ? 1
-              : 0,
-          },
-          content: text,
-        })
-      })
-      .catch((e) => {
-        //
-      })
+    // Handle the incoming message using the command handler
+    commandHandler.handleMessage({
+      channel: { name: channel, id: channelId, client, settings: client.settings },
+      user: {
+        name: user,
+        permission: userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0,
+      },
+      content: text,
+    })
   },
 )
