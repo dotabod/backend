@@ -780,8 +780,6 @@ export class GSIHandler {
   }
 
   setupOBSBlockers(state?: string) {
-    console.log({ state })
-
     if (isSpectator(this.client.gsi) || isArcade(this.client.gsi)) {
       this.emitBadgeUpdate()
       this.emitWLUpdate()
