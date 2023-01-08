@@ -10,7 +10,7 @@ datasource db {
 
 model Account {
   id                String   @id @default(cuid())
-  userId            String   @unique
+  userId            String
   type              String
   provider          String
   providerAccountId String
@@ -37,7 +37,7 @@ model User {
   createdAt         DateTime       @default(now()) @map("created_at")
   updatedAt         DateTime       @default(now()) @updatedAt @map("updated_at")
   mmr               Int            @default(0) @db.SmallInt
-  steam32Id         Int?           @unique(map: "users_playerId_key")
+  steam32Id         Int?
   followers         Int?
   stream_delay      Int?           @default(0) @db.SmallInt
   name              String         @unique(map: "users_username_key") @default("")
@@ -46,7 +46,7 @@ model User {
   stream_start_date DateTime?      @db.Timestamp(6)
   beta_tester       Boolean        @default(false)
   locale            String         @default("en")
-  Account           Account?
+  Account           Account[]
   Bet               Bet[]
   settings          Setting[]
   SteamAccount      SteamAccount[]
