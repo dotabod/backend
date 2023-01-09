@@ -656,7 +656,7 @@ export class GSIHandler {
 
     // Default ranked
     const localLobbyType = typeof this.playingLobbyType !== 'number' ? 7 : this.playingLobbyType
-    const isParty = false // sadge. opendota rate limited us
+    const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
     this.updateMMR(won, localLobbyType, matchId, isParty, this.playingHeroSlot)
 
     if (this.treadToggles > 0) {

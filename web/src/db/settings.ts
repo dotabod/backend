@@ -75,6 +75,7 @@ export const defaultSettings = {
   rosh: true,
   'minimap-simple': false,
   'minimap-xl': false,
+  onlyParty: false,
 }
 
 export type SettingKeys = keyof typeof defaultSettings

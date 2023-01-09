@@ -13,7 +13,7 @@ export function tellChatNewMMR(locale: string, token: string, mmr = 0, oldMmr = 
   const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], client.settings)
   const newMmr = mmr - oldMmr
   if (mmrEnabled && newMmr !== 0 && mmr !== 0) {
-    const isAuto = Math.abs(newMmr) === 30
+    const isAuto = [20, 30].includes(Math.abs(newMmr))
     setTimeout(
       () => {
         void chatClient.say(
