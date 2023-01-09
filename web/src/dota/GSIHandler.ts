@@ -8,6 +8,7 @@ import Mongo from '../steam/mongo.js'
 import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { disabledBets, openTwitchBet } from '../twitch/lib/openTwitchBet.js'
+import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
 import { DotaEvent, Player, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
@@ -618,12 +619,11 @@ export class GSIHandler {
 
     const matchId = this.playingBetMatchId
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
-    const betsMessage = betsEnabled ? ` ${t('bets.manual', { lng: this.client.locale })} ` : ''
 
     // An early without waiting for ancient to blow up
     // We have to check every few seconds with an pi to see if the match is over
     if (!winningTeam) {
-      this.checkEarlyDCWinner(matchId, betsMessage)
+      this.checkEarlyDCWinner(matchId)
       return
     }
 
@@ -662,7 +662,14 @@ export class GSIHandler {
       })
 
       if (this.client.stream_online) {
-        this.say(`${t('bets.notScored', { lng: this.client.locale, matchId })}${betsMessage}`)
+        this.say(t('bets.notScored', { lng: this.client.locale, matchId }))
+        refundTwitchBet(this.getToken())
+          .then(() => {
+            //
+          })
+          .catch((e) => {
+            logger.error('ERROR refunding bets', { e })
+          })
       }
       this.resetClientState(true)
       return
@@ -725,7 +732,7 @@ export class GSIHandler {
     }, GLOBAL_DELAY)
   }
 
-  private checkEarlyDCWinner(matchId: string, betsMessage: string) {
+  private checkEarlyDCWinner(matchId: string) {
     logger.info('[BETS] Streamer exited the match before it ended with a winner', {
       name: this.getChannel(),
       matchId,
@@ -752,17 +759,19 @@ export class GSIHandler {
           })
 
           if (this.client.stream_online) {
-            this.say(`${t('bets.notScored', { lng: this.client.locale, matchId })}${betsMessage}`)
+            this.say(t('bets.notScored', { lng: this.client.locale, matchId }))
+            refundTwitchBet(this.getToken())
+              .then(() => {
+                //
+              })
+              .catch((e) => {
+                logger.error('ERROR refunding bets', { e })
+              })
           }
           this.resetClientState(true)
           return
         }
 
-        logger.info('Should be scoring early dc here soon and closing predictions', {
-          channel: this.getChannel(),
-          winningTeam,
-          matchId,
-        })
         this.closeBets(winningTeam)
       })
       .catch((err) => {
