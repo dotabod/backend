@@ -1,4 +1,9 @@
 services:
+  redis:
+    container_name: redis
+    image: 'redis'
+    ports:
+      - '6379:6379'
   twitch-chat-listener:
     image: dotabod-twitch-chat-listener
     container_name: dotabod-twitch-chat-listener
