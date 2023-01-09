@@ -484,11 +484,6 @@ export class GSIHandler {
 
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!this.client.gsi.map.matchid || this.client.gsi.map.matchid === '0') {
-      logger.info('[BETS] Not opening bets because matchId', {
-        name: this.getChannel(),
-        playingMatchId: this.playingBetMatchId,
-        matchId: this.client.gsi.map.matchid,
-      })
       return
     }
 
