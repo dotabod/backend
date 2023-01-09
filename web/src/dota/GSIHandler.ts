@@ -326,7 +326,7 @@ export class GSIHandler {
             data: {
               mmr,
               steam32Id,
-              userId: this.getToken(),
+              providerAccountId: this.getChannelId(),
               name: this.client.gsi?.player?.name,
             },
           })
@@ -411,7 +411,7 @@ export class GSIHandler {
     const newMMR = this.getMmr() + (increase ? mmrSize : -mmrSize)
     if (this.client.steam32Id) {
       logger.info('[MMR] Found steam32Id, updating mmr', extraInfo)
-      updateMmr(newMMR, this.client.steam32Id, this.client.name)
+      updateMmr(newMMR, this.client.steam32Id)
     } else {
       logger.info('[MMR] Did not find steam32Id, wont update mmr', extraInfo)
     }
@@ -540,6 +540,7 @@ export class GSIHandler {
               userId: this.getToken(),
               myTeam: this.client.gsi?.player?.team_name ?? '',
               steam32Id: this.getSteam32(),
+              providerAccountId: this.getChannelId(),
             },
           })
           .then(() => {
@@ -577,7 +578,7 @@ export class GSIHandler {
                   })
                 })
                 .catch((e: any) => {
-                  if (!disabledBets.has(this.getToken())) {
+                  if (!disabledBets.has(this.getChannelId())) {
                     logger.error('[BETS] Error opening twitch bet', {
                       channel,
                       e: e?.message || e,
@@ -694,7 +695,7 @@ export class GSIHandler {
           })
         })
         .catch((e: any) => {
-          if (!disabledBets.has(this.getToken())) {
+          if (!disabledBets.has(this.getChannelId())) {
             logger.error('[BETS] Error closing twitch bet', {
               channel,
               e: e?.message || e,
@@ -850,17 +851,17 @@ export class GSIHandler {
 }
 
 // Disable the bet in settings for this user
-function disableBetsForToken(token: string) {
+function disableBetsForToken(channelId: string) {
   prisma.setting
     .upsert({
       where: {
         key_userId: {
           key: DBSettings.bets,
-          userId: token,
+          userId: channelId,
         },
       },
       create: {
-        userId: token,
+        providerAccountId: channelId,
         key: DBSettings.bets,
         value: false,
       },
@@ -870,11 +871,11 @@ function disableBetsForToken(token: string) {
     })
     .then(() => {
       logger.info('[BETS] Disabled bets for user', {
-        token,
+        channelId,
       })
-      disabledBets.delete(token)
+      disabledBets.delete(channelId)
     })
     .catch((e) => {
-      logger.error('[BETS] Error disabling bets', { e: e?.message || e, token })
+      logger.error('[BETS] Error disabling bets', { e: e?.message || e, channelId })
     })
 }

@@ -9,11 +9,11 @@ datasource db {
 }
 
 model Account {
-  id                String   @id @default(cuid())
+  id                String         @id @default(cuid())
   userId            String
   type              String
   provider          String
-  providerAccountId String
+  providerAccountId String         @unique
   refresh_token     String
   access_token      String
   expires_at        Int?
@@ -21,9 +21,12 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @default(now()) @updatedAt @map("updated_at")
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  bets              Bet[]
+  settings          Setting[]
+  steam_accounts    SteamAccount[]
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -55,46 +58,52 @@ model User {
 }
 
 model Setting {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
-  key       String
-  value     Json?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String   @id @default(cuid())
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+  key               String
+  value             Json?
+  userId            String
+  providerAccountId String?
+  accounts          Account? @relation(fields: [providerAccountId], references: [providerAccountId], onDelete: NoAction, onUpdate: NoAction)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([key, userId])
   @@map("settings")
 }
 
 model SteamAccount {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
-  steam32Id Int      @unique
-  userId    String
-  name      String?
-  mmr       Int      @default(0) @db.SmallInt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String   @id @default(cuid())
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+  steam32Id         Int      @unique
+  userId            String
+  name              String?
+  mmr               Int      @default(0) @db.SmallInt
+  providerAccountId String?
+  accounts          Account? @relation(fields: [providerAccountId], references: [providerAccountId], onDelete: NoAction, onUpdate: NoAction)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("steam_accounts")
 }
 
 model Bet {
-  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
-  matchId       String
-  predictionId  String
-  won           Boolean?
-  myTeam        String
-  userId        String
-  lobby_type    Int?     @db.SmallInt
-  steam32Id     BigInt?
-  is_party      Boolean  @default(false)
-  hero_slot     Int?     @db.SmallInt
-  is_doubledown Boolean  @default(false)
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+  matchId           String
+  predictionId      String
+  won               Boolean?
+  myTeam            String
+  userId            String
+  lobby_type        Int?     @db.SmallInt
+  steam32Id         BigInt?
+  is_party          Boolean  @default(false)
+  hero_slot         Int?     @db.SmallInt
+  is_doubledown     Boolean  @default(false)
+  providerAccountId String?
+  accounts          Account? @relation(fields: [providerAccountId], references: [providerAccountId], onDelete: NoAction, onUpdate: NoAction)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([matchId, userId])
   @@map("bets")

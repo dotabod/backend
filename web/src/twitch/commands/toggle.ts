@@ -57,6 +57,7 @@ commandHandler.registerCommand('toggle', {
           },
         },
         create: {
+          providerAccountId: client.Account?.[0].providerAccountId,
           userId: client.token,
           key: DBSettings.commandDisable,
           value: !isBotDisabled,

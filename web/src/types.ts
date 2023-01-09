@@ -12,11 +12,13 @@ export interface SocketClient {
   steam32Id: number | null // currently connected steam id
   mmr: number // currently connected mmr
   gsi?: Packet
-  Account?: {
-    refresh_token: string
-    access_token: string
-    providerAccountId: string
-  } | null
+  Account?:
+    | {
+        refresh_token: string
+        access_token: string
+        providerAccountId: string
+      }[]
+    | null
   SteamAccount: {
     mmr: number
     name: string | null

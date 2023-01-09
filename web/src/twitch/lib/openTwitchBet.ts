@@ -9,17 +9,17 @@ export const disabledBets = new Set()
 
 export async function openTwitchBet(
   locale: string,
-  token: string,
+  channelId: string,
   heroName?: string,
   settings?: SocketClient['settings'],
 ) {
-  if (disabledBets.has(token)) {
+  if (disabledBets.has(channelId)) {
     throw new Error('Bets not enabled')
   }
 
-  const { api, providerAccountId } = getChannelAPI(token)
+  const { api, providerAccountId } = getChannelAPI(channelId)
   const betsInfo = getValueOrDefault(DBSettings.betsInfo, settings)
-  logger.info('[PREDICT] [BETS] Opening twitch bet', { userId: token, heroName })
+  logger.info('[PREDICT] [BETS] Opening twitch bet', { channelId, heroName })
 
   const title =
     betsInfo.title !== defaultSettings.betsInfo.title
@@ -42,8 +42,8 @@ export async function openTwitchBet(
     })
     .catch((e: any) => {
       if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {
-        logger.info('[PREDICT] [BETS] Channel points not enabled for', { userId: token })
-        disabledBets.add(token)
+        logger.info('[PREDICT] [BETS] Channel points not enabled for', { channelId })
+        disabledBets.add(channelId)
         throw new Error('Bets not enabled')
       }
 

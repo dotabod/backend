@@ -57,7 +57,9 @@ export default async function getDBUser(
       },
       where: {
         Account: {
-          providerAccountId: twitchId,
+          some: {
+            providerAccountId: twitchId,
+          },
         },
         id: token,
       },
@@ -83,7 +85,7 @@ export default async function getDBUser(
         logger.info('[GSI] Connecting new client', { token: theUser.id, name: theUser.name })
         const gsiHandler = new GSIHandler(theUser)
         gsiHandlers.set(theUser.id, gsiHandler)
-        twitchIdToToken.set(theUser.Account!.providerAccountId!, theUser.id)
+        twitchIdToToken.set(theUser.Account[0].providerAccountId, theUser.id)
         return gsiHandler.client
       }
 
@@ -109,7 +111,9 @@ export async function getSteamByTwitchId(twitchId: string) {
       },
       where: {
         Account: {
-          providerAccountId: twitchId,
+          some: {
+            providerAccountId: twitchId,
+          },
         },
       },
     })

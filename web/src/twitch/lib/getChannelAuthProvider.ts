@@ -1,18 +1,18 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
 
-import findUser from '../../dota/lib/connectedStreamers.js'
+import { findUserByTwitchId } from '../../dota/lib/connectedStreamers.js'
 import { logger } from '../../utils/logger.js'
 import { hasTokens } from './hasTokens.js'
 
-export const getChannelAuthProvider = function (token: string) {
+export const getChannelAuthProvider = function (channelId: string) {
   if (!hasTokens) {
     throw new Error('Missing twitch tokens')
   }
 
-  const twitchTokens = findUser(token)
+  const twitchTokens = findUserByTwitchId(channelId)
 
-  if (!twitchTokens?.Account?.access_token || !twitchTokens.Account.refresh_token) {
-    logger.info('[TWITCHSETUP] Missing twitch tokens', { userId: token })
+  if (!twitchTokens?.Account?.[0]?.access_token || !twitchTokens.Account[0].refresh_token) {
+    logger.info('[TWITCHSETUP] Missing twitch tokens', { channelId })
     return {}
   }
 
@@ -32,10 +32,10 @@ export const getChannelAuthProvider = function (token: string) {
       ],
       expiresIn: 86400,
       obtainmentTimestamp: Date.now(),
-      accessToken: twitchTokens.Account.access_token,
-      refreshToken: twitchTokens.Account.refresh_token,
+      accessToken: twitchTokens.Account[0].access_token,
+      refreshToken: twitchTokens.Account[0].refresh_token,
     },
   )
 
-  return { providerAccountId: twitchTokens.Account.providerAccountId, authProvider }
+  return { providerAccountId: twitchTokens.Account[0].providerAccountId, authProvider }
 }

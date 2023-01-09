@@ -25,12 +25,10 @@ commandHandler.registerCommand('setmmr', {
     const accounts = client.SteamAccount
     if (!steam32Id) {
       if (accounts.length === 0) {
-        // Sends a `0` steam32Id so we can save it to the db,
-        // but server will update with steam later when they join a match
-        updateMmr(mmr, Number(client.steam32Id), channel, client.token)
+        void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
         return
       } else if (accounts.length === 1) {
-        updateMmr(mmr, accounts[0].steam32Id, channel)
+        updateMmr(mmr, accounts[0].steam32Id)
         return
       } else {
         if (!Number(client.steam32Id)) {
@@ -44,7 +42,7 @@ commandHandler.registerCommand('setmmr', {
               lng: message.channel.client.locale,
             }),
           )
-          updateMmr(mmr, Number(client.steam32Id), channel)
+          updateMmr(mmr, Number(client.steam32Id))
           return
         }
       }
@@ -57,7 +55,5 @@ commandHandler.registerCommand('setmmr', {
       void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
       return
     }
-
-    return
   },
 })

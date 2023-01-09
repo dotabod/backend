@@ -61,7 +61,6 @@ commandHandler.registerCommand('fixdbl', {
       updateMmr(
         toggleDoubledownMmr(message.channel.client.mmr, bet.is_party, !!bet.won, bet.is_doubledown),
         message.channel.client.steam32Id,
-        message.channel.name,
       )
 
       await prisma.bet.update({

@@ -31,10 +31,10 @@ async function getFollows() {
   })
 
   for (const user of users) {
-    if (!user.Account?.providerAccountId) continue
+    if (!user.Account[0]?.providerAccountId) continue
     logger.info('checking user id', { id: user.id })
     const follows = twitchApi.users.getFollowsPaginated({
-      followedUser: user.Account.providerAccountId,
+      followedUser: user.Account[0].providerAccountId,
     })
     const totalFollowerCount = await follows.getTotalCount()
     await prisma.user.update({
@@ -153,7 +153,7 @@ name:${user.name} or
 ${user.SteamAccount.map((a) => `steam32Id:${a.steam32Id} or`).join(' ')}
 token:${user.id} or
 userId:${user.id} or
-token:${user.Account?.providerAccountId ?? ''} or
+token:${user.Account[0]?.providerAccountId ?? ''} or
 message:Starting!
 `
 }
@@ -163,7 +163,43 @@ message:Starting!
 // await updateUsernameForAll()
 // await getAccounts()
 // await fixWins()
-await topFollowers()
+// await topFollowers()
+
+const fixTables = async () => {
+  const ids = await prisma.bet.findMany({
+    select: {
+      id: true,
+      user: {
+        select: {
+          Account: {
+            select: {
+              providerAccountId: true,
+            },
+          },
+        },
+      },
+    },
+    where: {
+      providerAccountId: null,
+    },
+  })
+
+  console.log(ids)
+
+  for (const setting of ids) {
+    if (setting.user.Account[0]?.providerAccountId)
+      await prisma.bet.update({
+        data: {
+          providerAccountId: setting.user.Account[0].providerAccountId,
+        },
+        where: {
+          id: setting.id,
+        },
+      })
+  }
+}
+
+await fixTables()
 
 // server.dota.dota2.on('ready', () => {
 //   server.dota.getGcMatchData(69375017392, (err, response) => {
