@@ -642,6 +642,7 @@ export class GSIHandler {
     if (!myTeam) {
       logger.error('[BETS] trying to end bets but did not find localWinner or myTeam', {
         channel: this.getChannel(),
+        matchId,
       })
       return
     }
@@ -653,6 +654,19 @@ export class GSIHandler {
 
     const channel = this.getChannel()
     this.endingBets = true
+
+    if (!this.client.gsi?.map?.dire_score && !this.client.gsi?.map?.radiant_score) {
+      logger.info('This is likely a no stats recorded match', {
+        name: this.getChannel(),
+        matchId,
+      })
+
+      if (this.client.stream_online) {
+        this.say(`${t('bets.notScored', { lng: this.client.locale, matchId })}${betsMessage}`)
+      }
+      this.resetClientState(true)
+      return
+    }
 
     // Default ranked
     const localLobbyType = typeof this.playingLobbyType !== 'number' ? 7 : this.playingLobbyType
