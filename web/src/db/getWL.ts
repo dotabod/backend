@@ -32,7 +32,7 @@ export async function getWL(channelId: string, startDate: Date | null) {
             providerAccountId: channelId,
           },
         },
-        updatedAt: {
+        createdAt: {
           // if its null then only the last 12 hours from now
           // should never be null but just in case
           gte: startDate ?? new Date(new Date().getTime() - 12 * 60 * 60 * 1000),
