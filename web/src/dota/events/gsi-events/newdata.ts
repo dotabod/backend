@@ -39,10 +39,12 @@ eventHandler.registerEvent(`newdata`, {
     const {
       powerTreads: { enabled: treadsChatterEnabled },
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-    if (chattersEnabled && treadsChatterEnabled && dotaClient.client.beta_tester) {
+    if (chattersEnabled && treadsChatterEnabled) {
       const mana = calculateManaSaved(dotaClient.treadsData, dotaClient.client.gsi)
-      dotaClient.manaSaved += mana
-      dotaClient.treadToggles += mana > 0 ? 1 : 0
+      if (mana > 0) {
+        dotaClient.treadToggles++
+        dotaClient.manaSaved += mana
+      }
     }
 
     // Always runs but only until steam is found

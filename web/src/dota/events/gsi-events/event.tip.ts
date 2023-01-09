@@ -9,8 +9,6 @@ import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
   handler: (dotaClient: GSIHandler, event: DotaEvent) => {
-    // beta opt in only
-    if (!dotaClient.client.beta_tester) return
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
