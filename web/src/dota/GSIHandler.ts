@@ -655,7 +655,11 @@ export class GSIHandler {
     const channel = this.getChannel()
     this.endingBets = true
 
-    if (!this.client.gsi?.map?.dire_score && !this.client.gsi?.map?.radiant_score) {
+    if (
+      !this.client.gsi?.map?.dire_score &&
+      !this.client.gsi?.map?.radiant_score &&
+      this.client.gsi?.map?.matchid
+    ) {
       logger.info('This is likely a no stats recorded match', {
         name: this.getChannel(),
         matchId,
