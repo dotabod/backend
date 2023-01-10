@@ -43,6 +43,9 @@ export const defaultSettings = {
     killstreak: {
       enabled: true,
     },
+    firstBloodDeath: {
+      enabled: true,
+    },
   },
   commandAPM: true,
   commandAvg: true,
