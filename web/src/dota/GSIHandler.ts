@@ -7,7 +7,7 @@ import { DBSettings, getValueOrDefault } from '../db/settings.js'
 import Mongo from '../steam/mongo.js'
 import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
-import { disabledBets, openTwitchBet } from '../twitch/lib/openTwitchBet.js'
+import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
 import { DotaEvent, Player, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
@@ -573,17 +573,12 @@ export class GSIHandler {
                   })
                 })
                 .catch((e: any) => {
-                  if (!disabledBets.has(this.getToken())) {
-                    logger.error('[BETS] Error opening twitch bet', {
-                      channel,
-                      e: e?.message || e,
-                      matchId,
-                    })
-                    this.openingBets = false
-                    return
-                  }
+                  logger.error('[BETS] Error opening twitch bet', {
+                    channel,
+                    e: e?.message || e,
+                    matchId,
+                  })
 
-                  disableBetsForToken(this.getToken())
                   this.openingBets = false
                 })
             }, GLOBAL_DELAY)
@@ -672,7 +667,7 @@ export class GSIHandler {
             //
           })
           .catch((e) => {
-            logger.error('ERROR refunding bets', { e })
+            logger.error('ERROR refunding bets', { token: this.getToken(), e })
           })
       }
       this.resetClientState(true)
@@ -714,16 +709,11 @@ export class GSIHandler {
           })
         })
         .catch((e: any) => {
-          if (!disabledBets.has(this.getToken())) {
-            logger.error('[BETS] Error closing twitch bet', {
-              channel,
-              e: e?.message || e,
-              matchId,
-            })
-            this.openingBets = false
-          }
-
-          disableBetsForToken(this.getToken())
+          logger.error('[BETS] Error closing twitch bet', {
+            channel,
+            e: e?.message || e,
+            matchId,
+          })
         })
         .finally(() => {
           const message = won
@@ -769,7 +759,7 @@ export class GSIHandler {
                 //
               })
               .catch((e) => {
-                logger.error('ERROR refunding bets', { e })
+                logger.error('ERROR refunding bets', { token: this.getToken(), e })
               })
           }
           this.resetClientState(true)
@@ -869,34 +859,4 @@ export class GSIHandler {
       return
     }
   }
-}
-
-// Disable the bet in settings for this user
-function disableBetsForToken(token: string) {
-  prisma.setting
-    .upsert({
-      where: {
-        key_userId: {
-          key: DBSettings.bets,
-          userId: token,
-        },
-      },
-      create: {
-        userId: token,
-        key: DBSettings.bets,
-        value: false,
-      },
-      update: {
-        value: false,
-      },
-    })
-    .then(() => {
-      logger.info('[BETS] Disabled bets for user', {
-        token,
-      })
-      disabledBets.delete(token)
-    })
-    .catch((e) => {
-      logger.error('[BETS] Error disabling bets', { e: e?.message || e, token })
-    })
 }

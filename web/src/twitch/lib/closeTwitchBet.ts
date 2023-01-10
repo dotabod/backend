@@ -1,10 +1,7 @@
 import { logger } from '../../utils/logger.js'
 import { getChannelAPI } from './getChannelAPI.js'
-import { disabledBets } from './openTwitchBet.js'
 
 export function closeTwitchBet(won: boolean, token: string) {
-  if (disabledBets.has(token)) throw new Error('Bets not enabled')
-
   const { api, providerAccountId } = getChannelAPI(token)
 
   return api.predictions
@@ -13,7 +10,7 @@ export function closeTwitchBet(won: boolean, token: string) {
     })
     .then(({ data: predictions }) => {
       if (!Array.isArray(predictions) || !predictions.length) {
-        logger.info('[PREDICT] No predictions found', { predictions })
+        logger.info('[PREDICT] No predictions found', { token, predictions })
         return
       }
 
@@ -23,10 +20,18 @@ export function closeTwitchBet(won: boolean, token: string) {
       //   logger.info('[PREDICT]','[BETS] Bet is not locked', channel)
       //   return
       // }
-      return api.predictions.resolvePrediction(
-        providerAccountId || '',
-        predictions[0].id,
-        won ? wonOutcome.id : lossOutcome.id,
-      )
+
+      return api.predictions
+        .resolvePrediction(
+          providerAccountId || '',
+          predictions[0].id,
+          won ? wonOutcome.id : lossOutcome.id,
+        )
+        .catch((e) => {
+          logger.error('[BETS] Could not resolve prediction', { token, error: e })
+        })
+    })
+    .catch((e) => {
+      logger.error('[BETS] Could not get predictions', { token, error: e })
     })
 }

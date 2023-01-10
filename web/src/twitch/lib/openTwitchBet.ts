@@ -1,11 +1,39 @@
 import { t } from 'i18next'
 
+import { prisma } from '../../db/prisma.js'
 import { DBSettings, defaultSettings, getValueOrDefault } from '../../db/settings.js'
 import { SocketClient } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { getChannelAPI } from './getChannelAPI.js'
 
-export const disabledBets = new Set()
+// Disable the bet in settings for this user
+export function disableBetsForToken(token: string) {
+  prisma.setting
+    .upsert({
+      where: {
+        key_userId: {
+          key: DBSettings.bets,
+          userId: token,
+        },
+      },
+      create: {
+        userId: token,
+        key: DBSettings.bets,
+        value: false,
+      },
+      update: {
+        value: false,
+      },
+    })
+    .then(() => {
+      logger.info('[BETS] Disabled bets for user', {
+        token,
+      })
+    })
+    .catch((e) => {
+      logger.error('[BETS] Error disabling bets', { e, token })
+    })
+}
 
 export async function openTwitchBet(
   locale: string,
@@ -13,10 +41,6 @@ export async function openTwitchBet(
   heroName?: string,
   settings?: SocketClient['settings'],
 ) {
-  if (disabledBets.has(token)) {
-    throw new Error('Bets not enabled')
-  }
-
   const { api, providerAccountId } = getChannelAPI(token)
   const betsInfo = getValueOrDefault(DBSettings.betsInfo, settings)
   logger.info('[PREDICT] [BETS] Opening twitch bet', { userId: token, heroName })
@@ -41,10 +65,15 @@ export async function openTwitchBet(
       autoLockAfter: betsInfo.duration >= 30 && betsInfo.duration <= 1800 ? betsInfo.duration : 240, // 4 min default
     })
     .catch((e: any) => {
-      if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {
-        logger.info('[PREDICT] [BETS] Channel points not enabled for', { userId: token })
-        disabledBets.add(token)
-        throw new Error('Bets not enabled')
+      try {
+        if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {
+          disableBetsForToken(token)
+
+          logger.info('[PREDICT] [BETS] Channel points not enabled for', { userId: token })
+          throw new Error('Bets not enabled')
+        }
+      } catch (e) {
+        // oops
       }
 
       throw e
