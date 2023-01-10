@@ -34,6 +34,16 @@ eventHandler.registerEvent(`hero:alive`, {
     const chatterEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
     if (!chatterEnabled) return
 
+    const heroName =
+      getHero(dotaClient.playingHero ?? dotaClient.client.gsi?.hero?.name)?.localized_name ?? ''
+
+    const wasFirstBlood =
+      dotaClient.playingTeam &&
+      dotaClient.client.gsi?.map?.[`${dotaClient.playingTeam as 'radiant' | 'dire'}_score`] === 0
+    if (!alive && wasFirstBlood) {
+      dotaClient.say(t('chatters.firstBloodDeath', { heroName, lng: dotaClient.client.locale }))
+    }
+
     const chatters = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
     if (!chatters.passiveDeath.enabled) return
@@ -67,9 +77,6 @@ eventHandler.registerEvent(`hero:alive`, {
           .join(', ')
 
         if (!itemNames) return
-
-        const heroName =
-          getHero(dotaClient.playingHero ?? dotaClient.client.gsi.hero?.name)?.localized_name ?? ''
 
         dotaClient.say(t('chatters.died', { heroName, itemNames, lng: dotaClient.client.locale }))
       }

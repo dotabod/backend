@@ -20,6 +20,7 @@
   },
   "bountyPickup": "+{{bountyValue}} gold from bounty EZ Clap Thanks {{heroNames}} SeemsGood",
   "chatters": {
+    "firstBloodDeath": "{{- heroName}} giving up first blood PepeLaugh",
     "died": "{{- heroName}} died with passive {{itemNames}} ICANT",
     "midas": "massivePIDAS Use your midas",
     "pause": "PauseChamp Who paused the game?",
