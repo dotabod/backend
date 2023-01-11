@@ -493,9 +493,7 @@ const heroes = {
   },
 }
 
-export const heroColors = 'Blue,Teal,Purple,Yellow,Orange,Pink,Olive,Light Blue,Green,Brown'.split(
-  ',',
-)
+export const heroColors = 'Blue,Teal,Purple,Yellow,Orange,Pink,Olive,Cyan,Green,Brown'.split(',')
 export function getHeroNameById(id: number, index?: number) {
   if (!id && typeof index === 'number') return heroColors[index]
   if (!id) return 'Unknown'
