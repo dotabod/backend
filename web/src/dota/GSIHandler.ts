@@ -795,9 +795,11 @@ export class GSIHandler {
 
     this.blockCache = blockType
 
-    server.io
-      .to(this.getToken())
-      .emit('block', { type: blockType, team: this.client.gsi?.player?.team_name })
+    server.io.to(this.getToken()).emit('block', {
+      type: blockType,
+      team: this.client.gsi?.player?.team_name,
+      matchId: this.client.gsi?.map?.matchid ?? this.playingBetMatchId,
+    })
   }
 
   setupOBSBlockers(state?: string) {
