@@ -5,7 +5,6 @@ import { getBotAPI } from './getBotAPI.js'
 const apiClient = getBotAPI()
 
 const listener = new EventSubHttpListener({
-  // @ts-expect-error why?
   apiClient,
   adapter: new EnvPortAdapter({
     hostName: process.env.EVENTSUB_HOST!,
