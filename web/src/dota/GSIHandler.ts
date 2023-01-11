@@ -547,7 +547,6 @@ export class GSIHandler {
                   channel: hero.localized_name,
                   url: `https://www.dota2protracker.com/hero/${hero.localized_name}`,
                   lng: this.client.locale,
-                  commandName: '!hero',
                 }),
                 { delay: false },
               )
