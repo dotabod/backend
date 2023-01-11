@@ -3,12 +3,9 @@
     "denied": "{{- heroName}} ha negato l'egida {{emote}}",
     "pickup": "{{- heroName}} ha preso l'egida"
   },
-  "apm_one": "APM Live: {{count}} Chatting",
-  "apm_many": "APM in diretta {{count}} Chattare",
   "apm_other": "APM Live: {{count}} Chatting",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
-  "betaTester": "",
   "betaTester_off": "{{channel}} non è più un partecipante alla beta. Scrivi !beta per tornare a farne parte ",
   "betaTester_on": "{{channel}} è ora un beta tester. Visita discord.dotabod.com per vedere le funzioni in beta. Scrivi !beta per annullare",
   "bets": {
@@ -20,6 +17,7 @@
   },
   "bountyPickup": "+{{bountyValue}} gold dalle bounty EZ Clap Grazie {{heroNames}} SeemsGood",
   "chatters": {
+    "firstBloodDeath": "",
     "died": "{{- heroName}} è morto con {{itemNames}} passivo/i ICANT",
     "midas": "massivePIDAS Usa la tua Midas",
     "pause": "PauseChamp Chi ha messo la partita in pausa?",
@@ -31,7 +29,6 @@
   "gameNotFound": "La partita non è stata trovata",
   "gpm_zero": "GPM Live: {{count}}",
   "gpm_one": "GPM Live: {{count}}",
-  "gpm_many": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",
   "gpm_other": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",
   "hero": "{{commandName}} comando disabilitato perchè opendota ci ha bloccato perchè abbiamo troppi utenti Sadge",
   "invalidColor": "Colore o Slot errato. Riprova con un numero da 1 a 10, o uno di {{colorList}} ",
@@ -84,36 +81,32 @@
   "rank": {
     "nextRankAt": "Prossimo rank a",
     "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
-    "nextRankIn_many": "in {{count}} vittorie",
     "nextRankIn_other": "in {{count}} vittorie"
   },
   "ranked_no": "No questa partita non è classificata",
   "ranked_yes": "Si questa partita è classificata",
   "refresh": "Aggiornando l'overlay...",
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
+  "roshanCount_one": "",
+  "roshanCount_two": "",
+  "roshanCount_other": "",
   "tip": {
     "from": "Il tip da {{- heroName}} ICANT",
     "to": "Tippiamo {{- heroName}} PepeLaugh"
   },
-  "toggle": "",
   "toggle_disabled": "Dotabod è ora disattivato. Non risponde più ai comandi e non assiste agli eventi di gioco. Digita nuovamente !toggle per attivarlo.",
   "toggle_enabled": "Dotabod è ora abilitato. Risponde di nuovo ai comandi e guarda gli eventi di gioco. Digita nuovamente !toggle per disabilitarlo.",
-  "toggleMatch": "",
   "toggleMatch_double": "Questo match verrá contato come double down: {{- url}} Scrivi !fixdd per annullare",
   "toggleMatch_party": "Questo match verrá contato come party mmr: {{- url}} Scrivi !fixparty per annullare",
   "toggleMatch_single": "Questo match verrá contato come standard mmr: {{- url}} Scrivi !fixdd per annullare",
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
   "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
-  "treadToggle_many": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",
   "unknownSteam": "Impossibile trovare l'account Steam. Prova a giocare una partita di prova contro i bot per salvare il tuo account su Dotabod!",
-  "updateMmr": "",
   "updateMmr_auto": "Aggiornato MMR a {{mmr}}. !fixparty per party e !fixdd per doubledown",
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
-  "xpm_one": "XPM Live: {{count}}",
-  "xpm_many": "XPM Live: {{count}}",
   "xpm_other": "XPM Live: {{count}}"
 }

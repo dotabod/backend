@@ -3,12 +3,9 @@
     "denied": "{{- heroName}} se rehusó la aegis {{emote}}",
     "pickup": "¡{{- heroName}} recogió el aegis!"
   },
-  "apm_one": "APM en vivo: {{count}} Chatting",
-  "apm_many": "APM en vivo: {{count}} Chatting",
   "apm_other": "APM en vivo: {{count}} Chatting",
   "averageRank": "La media de este juego es",
   "betaFeature": "[función beta]",
-  "betaTester": "",
   "betaTester_off": "{{channel}} ya no es beta tester. Escribe !beta para unirte de nuevo",
   "betaTester_on": "{{channel}} es ahora un beta tester. Visita discord.dotabod.com para ver las características de la beta. Escribe !beta para deshacer",
   "bets": {
@@ -20,6 +17,7 @@
   },
   "bountyPickup": "+{{bountyValue}} oro de recompensa EZ Clap Gracias {{heroNames}} SeemsGood",
   "chatters": {
+    "firstBloodDeath": "",
     "died": "{{- heroName}} murió con pasiva {{itemNames}} ICANT",
     "midas": "massivePIDAS Usa tu midas",
     "pause": "PauseChamp ¿Quién ha pausado el juego?",
@@ -31,7 +29,6 @@
   "gameNotFound": "Juego no encontrado",
   "gpm_zero": "GPM en vivo: {{count}}",
   "gpm_one": "GPM en vivo: {{count}}",
-  "gpm_many": "GPM en vivo:{{count}}. {{heroKills}} de matando Héroes. {{creepKills}} de matando grimas.",
   "gpm_other": "GPM en vivo:{{count}}. {{heroKills}} de matando Héroes. {{creepKills}} de matando grimas.",
   "hero": "{{commandName}} comando no funcione porque opendota nos bloqueo por tenindo demasiado usuarios Sadge",
   "invalidColor": "Color o espacio de héroe no son válidos. Debe ser 1-10, o uno de {{colorList}}",
@@ -84,36 +81,32 @@
   "rank": {
     "nextRankAt": "Siguiente rango en",
     "nextRankIn_one": "Una victoria más peepoClap",
-    "nextRankIn_many": "en {{count}} ganas",
     "nextRankIn_other": "en {{count}} ganas"
   },
   "ranked_no": "Nope este juego no está clasificado",
   "ranked_yes": "Sí, este juego está clasificado",
   "refresh": "Recargando superposición...",
   "roshanKilled": "¡Roshan asesinado! Siguiente roshan entre {{min}} y {{max}}",
+  "roshanCount_one": "",
+  "roshanCount_two": "",
+  "roshanCount_other": "",
   "tip": {
     "from": "La propina de {{- heroName}} ICANT",
     "to": "Estamos enviar propina {{- heroName}} PepeLaugh"
   },
-  "toggle": "",
   "toggle_disabled": "Dotabod está desactivado. Ya no responderá a comandos ni verá eventos del juego. Vuelve a escribir !toggle para activarlo.",
   "toggle_enabled": "Dotabod está ahora activado. Vuelve a responder a los comandos y a ver los eventos del juego. Escribe !toggle de nuevo para desactivar.",
-  "toggleMatch": "",
   "toggleMatch_double": "Cambiando esta mecha a doble mmr: {{- url}} Escriba !fixdd para deshacer",
   "toggleMatch_party": "Cambiando esta mecha al grupo mmr: {{- url}} Escribe !fixparty para deshacer",
   "toggleMatch_single": "Cambiando esta mecha a apostar mmr normalmente: {{- url}} Escriba !fixdd para deshacer",
   "toggleMatch_solo": "Cambiando este partido a solo mmr: {{- url}} Escriba !fixparty para deshacer",
   "treadToggle_one": "Cambiamos las pisadas {{count}} vez para ahorrar un total de {{manaCount}} maná este partido.",
-  "treadToggle_many": "Cambiamos las pisadas {{count}} veces para ahorrar un total de {{manaCount}} maná en esta partida.",
   "treadToggle_other": "Cambiamos las pisadas {{count}} veces para ahorrar un total de {{manaCount}} maná en esta partida.",
   "uknownMmr": "Aún no conozco el MMR de {{channel}}. Mods tienen que !setmmr 1234 o establecerlo en {{- url}}",
   "unknown": "Desconocido",
   "unknownSteam": "No se ha podido encontrar la cuenta de steam. Intenta jugar primero una partida de práctica para guardar tu cuenta en Dotabod",
-  "updateMmr": "",
   "updateMmr_auto": "Actualizado MMR a {{mmr}}. !fixparty para grupo y !fixdd para apostar doble",
   "updateMmr_manual": "Actualizado MMR a {{mmr}}",
   "updateMmrMulti": "Múltiples cuentas de steam, actualización de la que está conectado ahora con ({{steamId}})",
-  "xpm_one": "XPM en vivo: {{count}}",
-  "xpm_many": "XPM en vivo: {{count}}",
   "xpm_other": "XPM en vivo: {{count}}"
 }
