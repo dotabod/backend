@@ -35,7 +35,9 @@ commandHandler.registerCommand('hero', {
 
     void chatClient.say(
       channel,
-      t('hero', {
+      t('profileUrl', {
+        channel: hero.localized_name,
+        url: `dota2protracker.com/hero/${hero.localized_name}`,
         lng: message.channel.client.locale,
         commandName: '!hero',
       }),

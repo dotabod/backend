@@ -539,6 +539,19 @@ export class GSIHandler {
             },
           })
           .then(() => {
+            const hero = getHero(this.client.gsi?.hero?.name)
+
+            if (hero?.localized_name)
+              this.say(
+                t('profileUrl', {
+                  channel: hero.localized_name,
+                  url: `https://www.dota2protracker.com/hero/${hero.localized_name}`,
+                  lng: this.client.locale,
+                  commandName: '!hero',
+                }),
+                { delay: false },
+              )
+
             const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
             if (!betsEnabled) {
               this.openingBets = false
@@ -552,8 +565,6 @@ export class GSIHandler {
               this.openingBets = false
               return
             }
-
-            const hero = getHero(this.client.gsi?.hero?.name)
 
             setTimeout(() => {
               openTwitchBet(
