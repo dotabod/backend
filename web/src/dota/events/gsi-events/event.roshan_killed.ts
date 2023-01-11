@@ -57,6 +57,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
         })}. ${t('roshanCount', {
           count: dotaClient.roshanCount,
           ordinal: true,
+          lng: dotaClient.client.locale,
         })}`,
       )
     }
