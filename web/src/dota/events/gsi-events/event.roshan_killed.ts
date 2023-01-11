@@ -39,6 +39,9 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       maxDate,
     }
 
+    dotaClient.roshanKilled = res
+    dotaClient.roshanCount++
+
     const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
     const {
       roshanKilled: { enabled: chatterEnabled },
@@ -46,11 +49,18 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
 
     if (chattersEnabled && chatterEnabled) {
       dotaClient.say(
-        t('roshanKilled', { min: res.minTime, max: res.maxTime, lng: dotaClient.client.locale }),
+        `${t('roshanKilled', {
+          min: res.minTime,
+          max: res.maxTime,
+          lng: dotaClient.client.locale,
+          count: dotaClient.roshanCount,
+        })}. ${t('roshanCount', {
+          count: dotaClient.roshanCount,
+          ordinal: true,
+        })}`,
       )
     }
 
-    dotaClient.roshanKilled = res
     server.io.to(dotaClient.getToken()).emit('roshan-killed', res)
   },
 })

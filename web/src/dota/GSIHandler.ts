@@ -49,6 +49,7 @@ export class GSIHandler {
   bountyTimeout?: NodeJS.Timeout
   killstreakTimeout?: NodeJS.Timeout
   passiveMidas = { counter: 0, timer: 0, used: 0 }
+  roshanCount = 0
   roshanKilled?: {
     minTime: string
     maxTime: string
@@ -151,6 +152,7 @@ export class GSIHandler {
       this.manaSaved = 0
       this.treadToggles = 0
 
+      this.roshanCount = 0
       this.roshanKilled = undefined
       this.aegisPickedUp = undefined
 
@@ -841,7 +843,9 @@ export class GSIHandler {
           }
 
           if (this.roshanKilled?.maxDate) {
-            server.io.to(this.getToken()).emit('roshan-killed', this.roshanKilled)
+            server.io
+              .to(this.getToken())
+              .emit('roshan-killed', { ...this.roshanKilled, count: this.roshanCount })
           }
         }
 
