@@ -3,7 +3,7 @@
     "denied": "{{- heroName}} denied the aegis {{emote}}",
     "pickup": "{{- heroName}} picked up the aegis!"
   },
-  "apm_one": "",
+  "apm_one": "$t(apm_other)",
   "apm_other": "Live APM: {{count}} Chatting",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
