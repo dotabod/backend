@@ -40,7 +40,7 @@
   "lastgame": {
     "link": "ID последнего матча: {{- url}}",
     "none": "Не найдено игроков из прошлой игры",
-    "player": "{{- currentMatchHero}} играет на {{- lastMatchHero}}"
+    "player": "{{- currentMatchHero}} играл на {{- lastMatchHero}}"
   },
   "lastgamescore": {
     "double": "Двойное понижение",
@@ -88,8 +88,8 @@
   "refresh": "Перезапуск оверлея...",
   "roshanKilled": "Рошан убит! Следующий рошан между {{min}} и {{max}}",
   "roshanCount_one": "",
-  "roshanCount_two": "",
-  "roshanCount_other": "",
+  "roshanCount_two": "{{count}}-ой Рошан мёртв. Следующий дроп: Сыр и Аганим или Рефрешер.",
+  "roshanCount_other": "{{count}}-ий Рошан мёртв. Следующий дроп: Сыр, Аганим и Рефрешер.",
   "tip": {
     "from": "Благодарность от {{- heroName}} ICANT",
     "to": "Мы поблагодарили {{- heroName}} PepeLaugh"
