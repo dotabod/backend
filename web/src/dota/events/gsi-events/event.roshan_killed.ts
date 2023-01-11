@@ -61,6 +61,8 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       )
     }
 
-    server.io.to(dotaClient.getToken()).emit('roshan-killed', res)
+    server.io
+      .to(dotaClient.getToken())
+      .emit('roshan-killed', { ...res, count: dotaClient.roshanCount })
   },
 })
