@@ -30,7 +30,7 @@
   "commands_mods": "Команди лише для модераторів: {{commandList}}",
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",
   "gameNotFound": "Матч не знайдено",
-  "gpm_zero": "Поточний GPM: {{count}} Chatting",
+  "gpm_zero": "$t(gpm_one)",
   "gpm_one": "Поточний GPM: {{count}} Chatting",
   "gpm_few": "$t(gpm_other)",
   "gpm_many": "$t(gpm_other)",

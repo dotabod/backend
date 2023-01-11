@@ -30,7 +30,7 @@
   "commands_mods": "Iba moderátori môžu použiť {{commandList}}",
   "dotabod": "Ja som open source bot vytvorení {{author}}. Viac informácií na {{- url}}",
   "gameNotFound": "Našla sa hra! ",
-  "gpm_zero": "Momentálne GPM{{count}}",
+  "gpm_zero": "$t(gpm_one)",
   "gpm_one": "Momentálne GPM:{{count}}",
   "gpm_few": "$t(gpm_other)",
   "gpm_many": "$t(gpm_other)",

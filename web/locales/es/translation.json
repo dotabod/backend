@@ -29,7 +29,7 @@
   "commands_mods": "Mod sólo comandos: {{commandList}}",
   "dotabod": "Soy un bot hecho por {{author}}. Mas información {{- url}}",
   "gameNotFound": "Juego no encontrado",
-  "gpm_zero": "GPM en vivo: {{count}}",
+  "gpm_zero": "$t(gpm_one)",
   "gpm_one": "GPM en vivo: {{count}}",
   "gpm_many": "$t(gpm_other)",
   "gpm_other": "GPM en vivo:{{count}}. {{heroKills}} de matando Héroes. {{creepKills}} de matando grimas.",

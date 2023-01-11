@@ -28,7 +28,7 @@
   "commands_mods": "Mod only commands: {{commandList}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "gameNotFound": "Game was not found",
-  "gpm_zero": "Live GPM: {{count}}",
+  "gpm_zero": "$t(gpm_one)",
   "gpm_one": "Live GPM: {{count}}",
   "gpm_other": "Live GPM: {{count}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "invalidColor": "Invalid hero color or slot. Must be 1-10, or one of {{colorList}}",

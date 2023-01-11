@@ -29,7 +29,7 @@
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
-  "gpm_zero": "GPM Live: {{count}}",
+  "gpm_zero": "$t(gpm_one)",
   "gpm_one": "GPM Live: {{count}}",
   "gpm_many": "$t(gpm_other)",
   "gpm_other": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",

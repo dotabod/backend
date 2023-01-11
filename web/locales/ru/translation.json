@@ -30,7 +30,7 @@
   "commands_mods": "Команды только для модераторов: {{commandList}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "gameNotFound": "Игра не найдена",
-  "gpm_zero": "Текущий GPM: {{count}}",
+  "gpm_zero": "$t(gpm_one)",
   "gpm_one": "Текущий GPM: {{count}}",
   "gpm_few": "$t(gpm_other)",
   "gpm_many": "$t(gpm_other)",
