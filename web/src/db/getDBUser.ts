@@ -1,7 +1,6 @@
 import { GSIHandler } from '../dota/GSIHandler.js'
-import { gsiHandlers, twitchIdToToken } from '../dota/index.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
-import { invalidTokens } from '../dota/lib/consts.js'
+import { gsiHandlers, invalidTokens, twitchIdToToken } from '../dota/lib/consts.js'
 import { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'

@@ -1,3 +1,5 @@
+import { GSIHandler } from '../GSIHandler.js'
+
 // just here for reference, not being used
 const allSates = [
   'DOTA_GAMERULES_STATE_INIT',
@@ -95,3 +97,6 @@ export const modMode = new Set()
 export const ADMIN_CHANNELS = (process.env.ADMIN_CHANNELS ?? '').split(',')
 
 export const invalidTokens = new Set(['', null, undefined, 0])
+
+export const gsiHandlers = new Map<string, GSIHandler>()
+export const twitchIdToToken = new Map<string, string>()
