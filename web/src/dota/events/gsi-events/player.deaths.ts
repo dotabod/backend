@@ -2,7 +2,6 @@ import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 import { GSIHandler } from '../../GSIHandler.js'
-import { server } from '../../index.js'
 import { findItem } from '../../lib/findItem.js'
 import handleGetHero from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -24,12 +23,6 @@ eventHandler.registerEvent(`player:deaths`, {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!deaths) return
-
-    // Case one, we had aegis, and we die with it. Triggers on an aegis death
-    if (dotaClient.aegisPickedUp?.playerId === dotaClient.playingHeroSlot) {
-      dotaClient.aegisPickedUp = undefined
-      server.io.to(dotaClient.getToken()).emit('aegis-picked-up', {})
-    }
 
     const chatterEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
     if (!chatterEnabled) return
