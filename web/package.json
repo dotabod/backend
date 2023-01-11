@@ -18,7 +18,7 @@
     "lint": "eslint --ext .ts ./src",
     "prettier": "prettier --ext .ts ./src --write",
     "lint:fix": "yarn lint -- --fix",
-    "translations": "i18next './src/**/*' -c ./i18next-parser.config.js",
+    "translations": "i18next './src/**/*.ts' -c ./i18next-parser.config.js",
     "update-np": "doppler run -- bash ../mongodb/updatenps.sh",
     "pullmongo": "doppler run -- prisma db pull --schema ./prisma/mongo.prisma --force",
     "pullpsql": "doppler run -- prisma db pull --schema ./prisma/postgres.prisma"

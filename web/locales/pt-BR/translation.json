@@ -3,22 +3,24 @@
     "denied": "{{- heroName}} denou o aegis {{emote}}",
     "pickup": "{{- heroName}} pegou o aegis!"
   },
+  "apm_one": "$t(apm_other)",
+  "apm_many": "$t(apm_other)",
   "apm_other": "APM ao vivo: {{count}} Chatting",
   "averageRank": "Rank médio neste jogo",
   "betaFeature": "[recurso beta]",
+  "betaTester": "",
   "betaTester_off": "{{channel}} não é mais um beta tester. Digite !beta para entrar novamente",
   "betaTester_on": "{{channel}} agora é um beta tester. Visite discord.dotabod.com para ver os recursos beta. Digite !beta para desfazer",
   "bets": {
     "lost": "Nós perdemos",
-    "manual": "Mods precisam encerrar as apostas manualmente.",
     "notScored": "Partida não contabilizada D: Não adicionando nem subtraindo MMR para a partida {{matchId}}",
     "open": "Apostas abertas peepoGamble",
     "won": "Nós ganhamos"
   },
   "bountyPickup": "{{bountyValue}}de ouro de bônus de recompensa  EZ Clap Obrigado {{heroNames}} SeemsGood ",
   "chatters": {
-    "firstBloodDeath": "",
     "died": "{{- heroName}} morreu com {{itemNames}} passivo ICANT",
+    "firstBloodDeath": "",
     "midas": "massivePIDAS Use a sua midas",
     "pause": "PauseChamp Quem pausou o jogo?",
     "smoked": "Shush {{- heroName}} acabou de smokar!"
@@ -29,8 +31,8 @@
   "gameNotFound": "Partida não encontrada",
   "gpm_zero": "GPM ao vivo: {{count}}",
   "gpm_one": "GPM ao vivo: {{count}}",
+  "gpm_many": "$t(gpm_other)",
   "gpm_other": "GPM ao vivo: {{count}}. {{heroKills}} de heróis, {{creepKills}} de creeps.",
-  "hero": "{{commandName}} comando desabilitado porque OpenDota nos bloqueou por ter muitos usuários Sadge",
   "invalidColor": "Cor ou slot do herói inválido. Precisa ser 1-10 ou uma das cores: {{colorList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
@@ -81,32 +83,39 @@
   "rank": {
     "nextRankAt": "Próximo rank em",
     "nextRankIn_one": "Mais uma vitória peepoClap",
+    "nextRankIn_many": "$t(rank.nextRankIn_other)",
     "nextRankIn_other": "em {{count}} vitórias"
   },
   "ranked_no": "Não, este jogo não é ranqueado",
   "ranked_yes": "Sim, este jogo é ranqueado",
   "refresh": "Reiniciando overlay...",
-  "roshanKilled": "Roshan morto! Próximo roshan entre {{min}} e {{max}}",
   "roshanCount_one": "",
   "roshanCount_two": "",
   "roshanCount_other": "",
+  "roshanKilled": "Roshan morto! Próximo roshan entre {{min}} e {{max}}",
   "tip": {
     "from": "O tip de {{- heroName}} ICANT",
     "to": "Tipando {{- heroName}} PepeLaugh"
   },
+  "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod foi desabilitado. Não irei mais responder aos comandos nem reagir aos eventos da partida. Digite !toggle novamente para habilitar.",
   "toggle_enabled": "Dotabod foi habilitado. Respondendo aos comandos e reagindo aos eventos da partida. Digite !toggle novamente para desabilitar.",
+  "toggleMatch": "$t(toggleMatch_party)",
   "toggleMatch_double": "Mudando partida para MMR dobrado: {{- url}} Digite !fixdd para desfazer",
   "toggleMatch_party": "Mudando partida para MMR em equipe: {{- url}} Digite !fixparty para desfazer",
   "toggleMatch_single": "Mudando partida para MMR normal: {{- url}} Digite !fixdd para desfazer",
   "toggleMatch_solo": "Mudando partida para MMR solo: {{- url}} Digite !fixparty para desfazer",
   "treadToggle_one": "Usamos power treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
+  "treadToggle_many": "$t(treadToggle_one)",
   "treadToggle_other": "Usamos power treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
   "uknownMmr": "Ainda não sei o MMR de {{channel}}. Mods precisam digitar !setmmr 1234 ou configurar em {{- url}}",
   "unknown": "Desconhecido",
   "unknownSteam": "Conta steam não encontrada. Tente jogar uma partida contra bots para salvar sua conta em Dotabod!",
+  "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "MMR atualizado para {{mmr}}. Digite !fixparty para alterar para MMR em equipe, ou !fixdd para partida com dobro de MMR",
   "updateMmr_manual": "MMR atualizado para {{mmr}}",
   "updateMmrMulti": "Múltiplas contas steam, atualizando a conta logada no momento ({{steamId}})",
+  "xpm_one": "$t(xpm_other)",
+  "xpm_many": "$t(xpm_other)",
   "xpm_other": "XPM ao vivo: {{count}}"
 }
