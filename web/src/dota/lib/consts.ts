@@ -93,3 +93,5 @@ export const plebMode = new Set()
 export const modMode = new Set()
 
 export const ADMIN_CHANNELS = (process.env.ADMIN_CHANNELS ?? '').split(',')
+
+export const invalidTokens = new Set(['', null, undefined, 0])

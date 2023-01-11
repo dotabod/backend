@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express'
 
-import getDBUser, { invalidTokens } from '../db/getDBUser.js'
+import getDBUser from '../db/getDBUser.js'
 import { logger } from '../utils/logger.js'
+import { invalidTokens } from './lib/consts.js'
 
 export const pendingCheckAuth = new Set<string>()
 

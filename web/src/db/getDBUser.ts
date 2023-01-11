@@ -1,15 +1,10 @@
 import { GSIHandler } from '../dota/GSIHandler.js'
 import { gsiHandlers, twitchIdToToken } from '../dota/index.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
+import { invalidTokens } from '../dota/lib/consts.js'
 import { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
-
-export const invalidTokens = new Set()
-invalidTokens.add('')
-invalidTokens.add(null)
-invalidTokens.add(undefined)
-invalidTokens.add(0)
 
 export default async function getDBUser(
   token?: string,
