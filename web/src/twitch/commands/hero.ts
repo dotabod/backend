@@ -37,7 +37,7 @@ commandHandler.registerCommand('hero', {
       channel,
       t('profileUrl', {
         channel: hero.localized_name,
-        url: `dota2protracker.com/hero/${hero.localized_name}`,
+        url: `dota2protracker.com/hero/${encodeURI(hero.localized_name)}`,
         lng: message.channel.client.locale,
       }),
     )

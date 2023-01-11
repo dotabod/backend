@@ -110,7 +110,7 @@ const topFollowers = async () => {
       stream_online: true,
     },
     orderBy: {
-      createdAt: 'desc',
+      followers: 'asc',
     },
     take: 10,
   })
@@ -153,17 +153,18 @@ name:${user.name} or
 ${user.SteamAccount.map((a) => `steam32Id:${a.steam32Id} or`).join(' ')}
 token:${user.id} or
 userId:${user.id} or
+user:${user.id} or
 token:${user.Account?.providerAccountId ?? ''} or
 message:Starting!
 `
 }
 
-// console.log(await getLogQuery('chaddoto'))
+console.log(await getLogQuery('grubby'))
 
 // await updateUsernameForAll()
 // await getAccounts()
 // await fixWins()
-await topFollowers()
+// await topFollowers()
 
 // server.dota.dota2.on('ready', () => {
 //   server.dota.getGcMatchData(69375017392, (err, response) => {
