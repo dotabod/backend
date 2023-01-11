@@ -7,7 +7,7 @@ import getDBUser from '../db/getDBUser.js'
 import Dota from '../steam/index.js'
 import { logger } from '../utils/logger.js'
 import { newData, processChanges } from './globalEventEmitter.js'
-import { gsiHandlers } from './index.js'
+import { gsiHandlers } from './lib/consts.js'
 import { validateToken } from './validateToken.js'
 
 class GSIServer {

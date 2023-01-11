@@ -1,6 +1,7 @@
 import { Setting, SteamAccount, User } from '../../prisma/generated/postgresclient/index.js'
-import { gsiHandlers, server } from '../dota/index.js'
+import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
+import { gsiHandlers } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { toggleDotabod } from '../twitch/commands/toggle.js'

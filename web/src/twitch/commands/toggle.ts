@@ -2,7 +2,7 @@ import { t } from 'i18next'
 
 import { prisma } from '../../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '../../db/settings.js'
-import { gsiHandlers } from '../../dota/index.js'
+import { gsiHandlers } from '../../dota/lib/consts.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
