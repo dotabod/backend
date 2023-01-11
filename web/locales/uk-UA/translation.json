@@ -9,7 +9,7 @@
   "apm_other": "Поточний APM: {{count}} Chatting",
   "averageRank": "Середній рейтинг матчу",
   "betaFeature": "[бета-версія]",
-  "betaTester": "",
+  "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} більше не є бета-тестером. Введіть !beta, щоб знову приєднатися",
   "betaTester_on": "{{channel}} зараз є бета-тестером. Відвідайте discord.dotabod.com, щоб побачити можливості бета-версії. Введіть !beta, щоб скасувати",
   "bets": {

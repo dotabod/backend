@@ -8,7 +8,7 @@
   "apm_other": "APM Live: {{count}} Chatting",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
-  "betaTester": "",
+  "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} non è più un partecipante alla beta. Scrivi !beta per tornare a farne parte ",
   "betaTester_on": "{{channel}} è ora un beta tester. Visita discord.dotabod.com per vedere le funzioni in beta. Scrivi !beta per annullare",
   "bets": {

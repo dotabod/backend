@@ -9,7 +9,7 @@
   "apm_other": "Momentálne APM: {{count}} četujucich ",
   "averageRank": "Priemerný rank tejto hry",
   "betaFeature": "Beta funkcia ",
-  "betaTester": "",
+  "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}}nieje už naďalej beta testerom. Napíš !beta pre pripojenie",
   "betaTester_on": "{{channel}} sa stal beta testerom. Navštívte discord dotabod.com pre zobrazenie ",
   "bets": {
