@@ -77,7 +77,7 @@
     "title": "Vamos ganhar com {{- heroName}}",
     "yes": "Sim"
   },
-  "profileUrl": "Aqui está {{channel}}: {{- url}}",
+  "profileUrl": "Aqui está {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Próximo rank em",
     "nextRankIn_one": "Mais uma vitória peepoClap",

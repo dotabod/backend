@@ -77,7 +77,7 @@
     "title": "Чи виграємо гру на {{- heroName}}",
     "yes": "Так"
   },
-  "profileUrl": "Ось {{channel}}: {{- url}}",
+  "profileUrl": "Ось {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Наступне звання на ",
     "nextRankIn_one": "Ще одна перемога peepoClap",

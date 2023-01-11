@@ -77,7 +77,7 @@
     "title": "Vyhráme s {{- heroName}} ?",
     "yes": "Áno "
   },
-  "profileUrl": "Tu je {{channel}}:{{- url}}",
+  "profileUrl": "Tu je {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Ďalší rank za",
     "nextRankIn_one": "Ešte jedna výhra peepoClap",

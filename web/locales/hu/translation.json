@@ -77,7 +77,7 @@
     "title": "Nyerni fogunk {{- heroName}}",
     "yes": "Igen"
   },
-  "profileUrl": "Itt {{channel}} : {{- url}}",
+  "profileUrl": "Itt {{- channel}} : {{- url}}",
   "rank": {
     "nextRankAt": "Következő rank ",
     "nextRankIn_one": "Még egy gyözelem",
