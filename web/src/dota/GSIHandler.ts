@@ -261,9 +261,6 @@ export class GSIHandler {
 
     getWL(this.getChannelId(), this.client.stream_start_date)
       .then(({ record }) => {
-        logger.info('[STEAM32ID] Emitting WL overlay update', {
-          name: this.getChannel(),
-        })
         server.io.to(this.getToken()).emit('update-wl', record)
       })
       .catch((e) => {
@@ -275,9 +272,6 @@ export class GSIHandler {
   emitBadgeUpdate() {
     getRankDetail(this.getMmr(), this.getSteam32())
       .then((deets) => {
-        logger.info('[STEAM32ID] Emitting badge overlay update', {
-          name: this.getChannel(),
-        })
         server.io.to(this.getToken()).emit('update-medal', deets)
       })
       .catch((e) => {
