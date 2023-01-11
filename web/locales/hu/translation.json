@@ -3,12 +3,9 @@
     "denied": "{{- heroName}} semlegesitette az aegist {{emote}}",
     "pickup": "{{- heroName}} felvette az aegist!"
   },
-  "apm_one": "Élő APM: {{count}} Csevegés",
-  "apm_many": "Élő APM: {{count}} Csevegés",
   "apm_other": "Élő APM: {{count}} Csevegés",
   "averageRank": "Átlagos rank ebben a játékban",
   "betaFeature": "",
-  "betaTester": "",
   "betaTester_off": "{{channel}} már nem egy beta teszter. Próbáld !beta, ha szeretnél csatlakozni",
   "betaTester_on": "{{channel}} egy beta teszter. Látogas el discord.dotabod.com ha több vonást szeretnél. Ird !beta hogy visszacsináld",
   "bets": {
@@ -20,6 +17,7 @@
   },
   "bountyPickup": "+{{bountyValue}} arany az adományból EZ CLAP Köszönjük {{heroNames}} SeemsGood",
   "chatters": {
+    "firstBloodDeath": "",
     "died": "{{- heroName}} meghalt, paszival {{itemNames}} ICANT",
     "midas": "massivePIDAS Használd a midászt",
     "pause": "massivePIDAS Ki pauseolt?",
@@ -31,7 +29,6 @@
   "gameNotFound": "Nincs játék találva",
   "gpm_zero": "Élő GPM: {{count}}",
   "gpm_one": "Élő  GPM:{{count}}",
-  "gpm_many": "Élő GPM: {{count}}. Amiből {{heroKills}} hős ölés, {{creepKills}} arany creepekből",
   "gpm_other": "Élő GPM: {{count}}. Amiből {{heroKills}} hős ölés, {{creepKills}} arany creepekből",
   "hero": "{{commandName}} parancs némitva, mivel opedota nem engedélyezi a zsúfolt felhasználókat Sadge",
   "invalidColor": "Érvénytelen szin vagy slot. Próbáld 1-10 vagy {{colorList}}",
@@ -84,36 +81,32 @@
   "rank": {
     "nextRankAt": "Következő rank ",
     "nextRankIn_one": "Még egy gyözelem",
-    "nextRankIn_many": "{{count}} gyözelmek száma",
     "nextRankIn_other": "{{count}} gyözelmek száma"
   },
   "ranked_no": "Nem rangsorolt játék",
   "ranked_yes": "Rangsorolt játék",
   "refresh": "Üde overlay....",
   "roshanKilled": "Roshánt legyőzték! Következő roshán {{min}} és {{max}} perc közöt",
+  "roshanCount_one": "",
+  "roshanCount_two": "",
+  "roshanCount_other": "",
   "tip": {
     "from": "Borravaló {{- heroName}} ICANT",
     "to": "Borravalót adtunk {{- heroName}} PepeLaugh"
   },
-  "toggle": "",
   "toggle_disabled": "Dotabod lezárva. Nem fog válaszolni az utasitásokra vagy játékbeli eseményekre. Próbáld !toggle ha aktiválni szeretnéd.",
   "toggle_enabled": "Dotabod lezárva. Nem fog válaszolni az utasitásokra vagy játékbeli eseményekre. Próbáld !toggle ha aktiválni szeretnéd.",
-  "toggleMatch": "",
   "toggleMatch_double": "Meccs megváltoztatása megduplázott MMR-re: {{- url}} Próbáld !fixdd ha mégse",
   "toggleMatch_party": "Meccs megváltoztatása party MMR-re: {{- url}} Próbáld !fixpartyha ha mégse",
   "toggleMatch_single": "Meccs megváltoztatása sima MMR-re: {{- url}} Próbáld !fixdd ha mégse",
   "toggleMatch_solo": "Meccs megváltoztatása solo MMR-re: {{- url}} Próbáld !fixdd ha mégse",
   "treadToggle_one": "Használjuk a toggle képeségét a cipőnek. Eddig {{count}}-szor spóroltunk {{manaCount}}manát vele",
-  "treadToggle_many": "Használjuk a toggle képeségét a cipőnek. Eddig {{count}}-szor spóroltunk {{manaCount}}manát vele",
   "treadToggle_other": "Használjuk a toggle képeségét a cipőnek. Eddig {{count}}-szor spóroltunk {{manaCount}}manát vele\n",
   "uknownMmr": "Nincs még a {{channel}} csatornéán MMR meghatározva. Moderátorok próbálkozanak !setmmr 1234 vagy {{- url}}",
   "unknown": "Ismeretlen",
   "unknownSteam": "Nincs egyezés steam felhasználóra. Próbáj egy bot mérközést, hogy tudjam érzékelni.",
-  "updateMmr": "",
   "updateMmr_auto": "Frissített MMR {{mmr}}-re. !fixparty ha party és !fixdd ha doubledown",
   "updateMmr_manual": "Frissített MMR {{mmr}}-re",
   "updateMmrMulti": "Több felhasználó észlelhető, frissitve a jelenlegi belépetre. {{steamId}}",
-  "xpm_one": "Élő XPM: {{count}}",
-  "xpm_many": "Élő XPM:{{count}}",
   "xpm_other": "Élő XPM:{{count}}"
 }

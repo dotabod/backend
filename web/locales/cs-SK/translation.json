@@ -3,12 +3,9 @@
     "denied": "{{- heroName}}zničil Aegis {{emote}}",
     "pickup": "{{- heroName}} získal Aegis!"
   },
-  "apm_one": "Momentálne APM: {{count}} ",
-  "apm_many": "Momentálne APM:{{count}} četujucich",
   "apm_other": "Momentálne APM: {{count}} četujucich ",
   "averageRank": "Priemerný rank tejto hry",
   "betaFeature": "Beta funkcia ",
-  "betaTester": "",
   "betaTester_off": "{{channel}}nieje už naďalej beta testerom. Napíš !beta pre pripojenie",
   "betaTester_on": "{{channel}} sa stal beta testerom. Navštívte discord dotabod.com pre zobrazenie ",
   "bets": {
@@ -20,6 +17,7 @@
   },
   "bountyPickup": "{{bountyValue}}gold z bounty EZ Clap Thanks {{heroNames}}SeemsGood",
   "chatters": {
+    "firstBloodDeath": "",
     "died": "{{- heroName}}zomrel s pasívkou {{itemNames}} ICANT",
     "midas": "massivePIDAS použi svoju midasku",
     "pause": "PauseChamp kto zastavil hru ?",
@@ -31,7 +29,6 @@
   "gameNotFound": "Našla sa hra! ",
   "gpm_zero": "Momentálne GPM{{count}}",
   "gpm_one": "Momentálne GPM:{{count}}",
-  "gpm_many": "Momentálne GPM{{count}}.{{heroKills}}za zabitie hrdinov {{creepKills}} za zabitie creepov.",
   "gpm_other": "Momentálne {{count}}.{{heroKills}} za zabitie hrdinov, {{creepKills}} za zabitie creepov.",
   "hero": "{{commandName}} príkaz vypnutý pretože opendota nás zablokovala z dôvodu príliš veľa užívateľov ",
   "invalidColor": "Nesprávna farba hrdinu alebo slot. Farba musí byť od 1 do 10 z {{colorList}}.",
@@ -84,36 +81,32 @@
   "rank": {
     "nextRankAt": "Ďalší rank za",
     "nextRankIn_one": "Ešte jedna výhra peepoClap",
-    "nextRankIn_many": "V {{count}} výhrach ",
     "nextRankIn_other": "V {{count}} výhrach "
   },
   "ranked_no": "Nie táto hra nieje hodnotená ",
   "ranked_yes": "Áno táto hra je hodnotená ",
   "refresh": "Obnovujem overlay",
   "roshanKilled": "Roshan zabitý! Ďalší Roshan sa spawne medzi{{min}} a {{max}}",
+  "roshanCount_one": "",
+  "roshanCount_two": "",
+  "roshanCount_other": "",
   "tip": {
     "from": "Tip od {{- heroName}} ICANT",
     "to": "Poslali sme tip {{- heroName}} PepeLaugh"
   },
-  "toggle": "",
   "toggle_disabled": "Dotabod je teraz vypnutý. Nebude naďalej odpovedať na príkazy ani monitorovať priebeh hry. Napíš !toggle znova pre zapnutie",
   "toggle_enabled": "Dotabod je teraz zapnutý. Odpovedá na príkazy a monitoruje priebeh hry. Napíš !toggle pre vypnutie ",
-  "toggleMatch": "",
   "toggleMatch_double": "Mením tuto hru na dvojité riziko v MMR: {{- url}} Napíš !fixdd pre zrušenie.",
   "toggleMatch_party": "Mením tuto hru na skupinové MMR: {{- url}} Napíš !fixparty pre zrušenie ",
   "toggleMatch_single": "Mením tuto hru na klasické MMR: {{- url}}. Napíš !fixdd pre zrušenie ",
   "toggleMatch_solo": "Mením tuto hru na sólo MMR: {{- url}}. Napíš !fixparty pre zrušenie ",
   "treadToggle_one": "Aktivovali sme treadky {{count}} krát na ušetrenie {{manaCount}} many v tejto hre.",
-  "treadToggle_many": "Aktivovali sme treadky {{count}} krát na ušetrenie {{manaCount}} many v tejto hre.",
   "treadToggle_other": "Aktivovali sme treadky {{count}} krát na ušetrenie {{manaCount}}many v tejto hre.",
   "uknownMmr": "Nepoznám {{channel}} MMR. Moderátori misie použiť príkaz !setmmr 1234 alebo nastaviť MMR na {{- url}}",
   "unknown": "Neznáme ",
   "unknownSteam": "Nemôžem nájsť steam účet. Skús si zahrať hru s normy na uloženie tvojho účtu v Dotabod!",
-  "updateMmr": "",
   "updateMmr_auto": "Aktualizované MMR na {{mmr}}. !fixparty pre skupinu a !fixdd pre double down ",
   "updateMmr_manual": "Aktualizované MMR na {{mmr}}",
   "updateMmrMulti": "Viacnásobnom steam účtov, aktualizujem ten na ktorý si momentálne prihlásený s {{steamId}}",
-  "xpm_one": "Momentálne XPM:{{count}}",
-  "xpm_many": "Momentálne XPM:{{count}}",
   "xpm_other": "Momentálne XPM:{{count}}"
 }
