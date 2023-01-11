@@ -40,9 +40,12 @@ eventHandler.registerEvent(`hero:alive`, {
       getHero(dotaClient.playingHero ?? dotaClient.client.gsi?.hero?.name)?.localized_name ?? ''
 
     if (chatters.firstBloodDeath.enabled) {
+      const otherTeam = dotaClient.playingTeam === 'radiant' ? 'dire' : 'radiant'
       const wasFirstBlood =
         dotaClient.playingTeam &&
-        dotaClient.client.gsi?.map?.[`${dotaClient.playingTeam as 'radiant' | 'dire'}_score`] === 0
+        dotaClient.client.gsi?.map?.[`${dotaClient.playingTeam as 'radiant' | 'dire'}_score`] ===
+          0 &&
+        dotaClient.client.gsi.map[`${otherTeam}_score`] === 1
       if (!alive && wasFirstBlood) {
         dotaClient.say(t('chatters.firstBloodDeath', { heroName, lng: dotaClient.client.locale }))
       }
