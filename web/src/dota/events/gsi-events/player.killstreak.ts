@@ -22,8 +22,10 @@ eventHandler.registerEvent(`player:kill_streak`, {
       getHero(dotaClient.playingHero ?? dotaClient.client.gsi?.hero?.name)?.localized_name ?? 'We'
 
     const previousStreak = Number(dotaClient.client.gsi?.previously?.player?.kill_streak)
-    const lostStreak = previousStreak > 3 && streak <= 3
+    const lostStreak = previousStreak >= 3 && !streak
     if (lostStreak) {
+      clearTimeout(dotaClient.killstreakTimeout)
+
       dotaClient.say(
         t('killstreak.lost', {
           killstreakCount: previousStreak,
