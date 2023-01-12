@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 import { prisma } from './db/prisma.js'
+import { server } from './dota/index.js'
 import { getBotAPI } from './twitch/lib/getBotAPI.js'
 import { logger } from './utils/logger.js'
 
@@ -159,19 +160,29 @@ message:Starting!
 `
 }
 
-console.log(await getLogQuery('grubby'))
+// console.log(await getLogQuery('grubby'))
 
 // await updateUsernameForAll()
 // await getAccounts()
 // await fixWins()
 // await topFollowers()
 
-// server.dota.dota2.on('ready', () => {
-//   server.dota.getGcMatchData(69375017392, (err, response) => {
-//     logger.info('getGcMatchData', { err, response: response?.match?.match_outcome })
-//     //
-//   })
-// })
+server.dota.dota2.on('ready', async () => {
+  const steamserverid = (await server.dota.getUserSteamServer(849473199)) ?? ''
+
+  console.log(
+    `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env
+      .STEAM_WEB_API!}&server_steam_id=${steamserverid}`,
+  )
+
+  server.dota.getGcMatchData(6965705261, (err, response) => {
+    console.log('getGcMatchData', { err, response: response?.match?.match_outcome })
+    //
+  })
+
+  const delayedData = await server.dota.getDelayedMatchData(steamserverid)
+  console.log({ delayedData })
+})
 
 // 2 = radiant
 // 3 = dire

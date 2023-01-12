@@ -25,9 +25,7 @@ commandHandler.registerCommand('test', {
         return
       }
 
-      const steamserverid = (await server.dota.getUserSteamServer(
-        steam32Id || client.steam32Id,
-      )) as string | undefined
+      const steamserverid = await server.dota.getUserSteamServer(steam32Id || client.steam32Id)
 
       if (!steamserverid) {
         void chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
