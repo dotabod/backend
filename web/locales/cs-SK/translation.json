@@ -4,8 +4,6 @@
     "pickup": "{{- heroName}} získal Aegis!"
   },
   "apm_one": "$t(apm_other)",
-  "apm_few": "$t(apm_other)",
-  "apm_many": "$t(apm_other)",
   "apm_other": "Momentálne APM: {{count}} četujucich ",
   "averageRank": "Priemerný rank tejto hry",
   "betaFeature": "Beta funkcia ",
@@ -28,12 +26,11 @@
   },
   "commands_everyone": "Všetci môžu použiť {{commandList}}",
   "commands_mods": "Iba moderátori môžu použiť {{commandList}}",
+  "dota2pt": "",
   "dotabod": "Ja som open source bot vytvorení {{author}}. Viac informácií na {{- url}}",
   "gameNotFound": "Našla sa hra! ",
   "gpm_zero": "$t(gpm_one)",
   "gpm_one": "Momentálne GPM:{{count}}",
-  "gpm_few": "$t(gpm_other)",
-  "gpm_many": "$t(gpm_other)",
   "gpm_other": "Momentálne {{count}}.{{heroKills}} za zabitie hrdinov, {{creepKills}} za zabitie creepov.",
   "invalidColor": "Nesprávna farba hrdinu alebo slot. Farba musí byť od 1 do 10 z {{colorList}}.",
   "invalidMmr": "Nesprávny príkaz. Skús !setmmr 1234",
@@ -85,8 +82,6 @@
   "rank": {
     "nextRankAt": "Ďalší rank za",
     "nextRankIn_one": "Ešte jedna výhra peepoClap",
-    "nextRankIn_few": "$t(rank.nextRankIn_other)",
-    "nextRankIn_many": "$t(rank.nextRankIn_other)",
     "nextRankIn_other": "V {{count}} výhrach "
   },
   "ranked_no": "Nie táto hra nieje hodnotená ",
@@ -94,6 +89,7 @@
   "refresh": "Obnovujem overlay",
   "roshanCount_one": "",
   "roshanCount_two": "",
+  "roshanCount_few": "",
   "roshanCount_other": "",
   "roshanKilled": "Roshan zabitý! Ďalší Roshan sa spawne medzi{{min}} a {{max}}",
   "tip": {
@@ -109,8 +105,6 @@
   "toggleMatch_single": "Mením tuto hru na klasické MMR: {{- url}}. Napíš !fixdd pre zrušenie ",
   "toggleMatch_solo": "Mením tuto hru na sólo MMR: {{- url}}. Napíš !fixparty pre zrušenie ",
   "treadToggle_one": "Aktivovali sme treadky {{count}} krát na ušetrenie {{manaCount}} many v tejto hre.",
-  "treadToggle_few": "$t(treadToggle_one)",
-  "treadToggle_many": "$t(treadToggle_one)",
   "treadToggle_other": "Aktivovali sme treadky {{count}} krát na ušetrenie {{manaCount}}many v tejto hre.",
   "uknownMmr": "Nepoznám {{channel}} MMR. Moderátori misie použiť príkaz !setmmr 1234 alebo nastaviť MMR na {{- url}}",
   "unknown": "Neznáme ",
@@ -120,7 +114,5 @@
   "updateMmr_manual": "Aktualizované MMR na {{mmr}}",
   "updateMmrMulti": "Viacnásobnom steam účtov, aktualizujem ten na ktorý si momentálne prihlásený s {{steamId}}",
   "xpm_one": "$t(xpm_other)",
-  "xpm_few": "$t(xpm_other)",
-  "xpm_many": "$t(xpm_other)",
   "xpm_other": "Momentálne XPM:{{count}}"
 }

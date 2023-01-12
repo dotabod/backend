@@ -4,7 +4,6 @@
     "pickup": "¡{{- heroName}} recogió el aegis!"
   },
   "apm_one": "$t(apm_other)",
-  "apm_many": "$t(apm_other)",
   "apm_other": "APM en vivo: {{count}} Chatting",
   "averageRank": "La media de este juego es",
   "betaFeature": "[función beta]",
@@ -27,11 +26,11 @@
   },
   "commands_everyone": "Todos pueden usar: {{commandList}}",
   "commands_mods": "Mod sólo comandos: {{commandList}}",
+  "dota2pt": "",
   "dotabod": "Soy un bot hecho por {{author}}. Mas información {{- url}}",
   "gameNotFound": "Juego no encontrado",
   "gpm_zero": "$t(gpm_one)",
   "gpm_one": "GPM en vivo: {{count}}",
-  "gpm_many": "$t(gpm_other)",
   "gpm_other": "GPM en vivo:{{count}}. {{heroKills}} de matando Héroes. {{creepKills}} de matando grimas.",
   "invalidColor": "Color o espacio de héroe no son válidos. Debe ser 1-10, o uno de {{colorList}}",
   "invalidMmr": "Comando inválido. Usa !setmmr 1234",
@@ -83,7 +82,6 @@
   "rank": {
     "nextRankAt": "Siguiente rango en",
     "nextRankIn_one": "Una victoria más peepoClap",
-    "nextRankIn_many": "$t(rank.nextRankIn_other)",
     "nextRankIn_other": "en {{count}} ganas"
   },
   "ranked_no": "Nope este juego no está clasificado",
@@ -91,6 +89,7 @@
   "refresh": "Recargando superposición...",
   "roshanCount_one": "",
   "roshanCount_two": "",
+  "roshanCount_few": "",
   "roshanCount_other": "",
   "roshanKilled": "¡Roshan asesinado! Siguiente roshan entre {{min}} y {{max}}",
   "tip": {
@@ -106,7 +105,6 @@
   "toggleMatch_single": "Cambiando esta mecha a apostar mmr normalmente: {{- url}} Escriba !fixdd para deshacer",
   "toggleMatch_solo": "Cambiando este partido a solo mmr: {{- url}} Escriba !fixparty para deshacer",
   "treadToggle_one": "Cambiamos las pisadas {{count}} vez para ahorrar un total de {{manaCount}} maná este partido.",
-  "treadToggle_many": "$t(treadToggle_one)",
   "treadToggle_other": "Cambiamos las pisadas {{count}} veces para ahorrar un total de {{manaCount}} maná en esta partida.",
   "uknownMmr": "Aún no conozco el MMR de {{channel}}. Mods tienen que !setmmr 1234 o establecerlo en {{- url}}",
   "unknown": "Desconocido",
@@ -116,6 +114,5 @@
   "updateMmr_manual": "Actualizado MMR a {{mmr}}",
   "updateMmrMulti": "Múltiples cuentas de steam, actualización de la que está conectado ahora con ({{steamId}})",
   "xpm_one": "$t(xpm_other)",
-  "xpm_many": "$t(xpm_other)",
   "xpm_other": "XPM en vivo: {{count}}"
 }

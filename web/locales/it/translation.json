@@ -4,7 +4,6 @@
     "pickup": "{{- heroName}} ha preso l'egida"
   },
   "apm_one": "$t(apm_other)",
-  "apm_many": "$t(apm_other)",
   "apm_other": "APM Live: {{count}} Chatting",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
@@ -27,11 +26,11 @@
   },
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
+  "dota2pt": "",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
   "gpm_zero": "$t(gpm_one)",
   "gpm_one": "GPM Live: {{count}}",
-  "gpm_many": "$t(gpm_other)",
   "gpm_other": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",
   "invalidColor": "Colore o Slot errato. Riprova con un numero da 1 a 10, o uno di {{colorList}} ",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
@@ -83,7 +82,6 @@
   "rank": {
     "nextRankAt": "Prossimo rank a",
     "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
-    "nextRankIn_many": "$t(rank.nextRankIn_other)",
     "nextRankIn_other": "in {{count}} vittorie"
   },
   "ranked_no": "No questa partita non è classificata",
@@ -91,7 +89,7 @@
   "refresh": "Aggiornando l'overlay...",
   "roshanCount_one": "",
   "roshanCount_two": "",
-  "roshanCount_many": "roshanCount",
+  "roshanCount_few": "",
   "roshanCount_other": "",
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
   "tip": {
@@ -107,7 +105,6 @@
   "toggleMatch_single": "Questo match verrá contato come standard mmr: {{- url}} Scrivi !fixdd per annullare",
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
   "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
-  "treadToggle_many": "$t(treadToggle_one)",
   "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",
@@ -117,6 +114,5 @@
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
   "xpm_one": "$t(xpm_other)",
-  "xpm_many": "$t(xpm_other)",
   "xpm_other": "XPM Live: {{count}}"
 }
