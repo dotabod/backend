@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { DBSettings, getValueOrDefault, SettingKeys } from '../../db/settings.js'
+import { getValueOrDefault, SettingKeys } from '../../db/settings.js'
 import { ADMIN_CHANNELS } from '../../dota/lib/consts.js'
 import { SocketClient } from '../../types.js'
 import { chatClient } from '../index.js'
