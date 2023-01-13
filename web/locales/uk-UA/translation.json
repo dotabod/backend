@@ -16,7 +16,7 @@
     "open": "Ставимо ставки, панство peepoGamble",
     "won": "Ми перемогли"
   },
-  "bountyPickup": "+{{bountyValue}}  золота від рун багатства EZ Clap Дякую {{heroNames}} SeemsGood",
+  "bountyPickup": "+{{bountyValue}}  золота від рун багатства EZ  Clap Дякую {{heroNames}} SeemsGood",
   "chatters": {
     "died": "{{- heroName}} помер, не нажавши {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} пролив першу кров PepeLaugh",
@@ -31,7 +31,7 @@
   "gameNotFound": "Матч не знайдено",
   "gpm_zero": "$t(gpm_one)",
   "gpm_one": "Поточний GPM: {{count}} Chatting",
-  "gpm_other": "Поточний GPM: {{count}}. {{heroKills}} від вбивства героїв, {{creepKills}} від вбивства кріпочків.",
+  "gpm_other": "Поточний GPM: {{count}}. Зароблено {{heroKills}} золота від вбивства героїв та {{creepKills}} від вбивства кріпочків.",
   "invalidColor": "Неправильний номер або колір героя. Повинно бути 1-10 або один з кольорів: {{colorList}}",
   "invalidMmr": "Неправильна команда. Спробуйте !setmmr 1234",
   "killstreak": {
@@ -53,13 +53,13 @@
     "won": "Остання гра: перемога"
   },
   "lifetime": "Кількість ігор",
-  "matchFound": "Отримано дані матчу {{commandList}} команди бота активовані.",
+  "matchFound": "Отримано дані матчу: {{commandList}} дані команди бота активовані.",
   "matchId": "ID матчу: {{matchId}}",
   "midasUsed": "Midas нарешті був використаний через {{seconds}} секунд(и) Madge",
   "missingMatchData": "Очікування поточних даних матчу PauseChamp",
   "missingUser": "Користувача не знайдено. Спробуйте перезайти на сайті dotabod.com",
   "modsOnly_off": "Режим \"Тільки для модераторів\" вимкнено. Роботяги + в чат.",
-  "modsOnly_on": "Режим \"Тільки для модераторів\" тепер ввімкнений на BASED Clap. Тільки модератори можуть використовувати чат.",
+  "modsOnly_on": "Режим \"Тільки для модераторів\" тепер ввімкнений на BASED  Clap. Тільки модератори можуть використовувати чат.",
   "noHero": "Герой не знайдений",
   "noLastMatch": "Не знайдено останню гру PauseChamp",
   "noNotable": "Немає відомих гравців",
