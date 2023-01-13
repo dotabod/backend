@@ -440,42 +440,21 @@ export class GSIHandler {
     }
 
     if (this.openingBets) {
-      logger.info('[BETS] Not opening bets because openingBets', {
-        name: this.getChannel(),
-        playingMatchId: this.playingBetMatchId,
-        openingBets: this.openingBets,
-      })
       return
     }
 
     // Why open if not playing?
     if (this.client.gsi?.player?.activity !== 'playing') {
-      logger.info('[BETS] Not opening bets because activity', {
-        name: this.getChannel(),
-        playingMatchId: this.playingBetMatchId,
-        activity: this.client.gsi?.player?.activity,
-      })
       return
     }
 
     // Why open if won?
     if (this.client.gsi.map?.win_team !== 'none') {
-      logger.info('[BETS] Not opening bets because win_team', {
-        name: this.getChannel(),
-        playingMatchId: this.playingBetMatchId,
-        win_team: this.client.gsi.map?.win_team,
-      })
       return
     }
 
     // We at least want the hero name so it can go in the twitch bet title
     if (!this.client.gsi.hero?.name || !this.client.gsi.hero.name.length) {
-      logger.info('[BETS] Not opening bets, hero hasnt been selected yet', {
-        name: this.getChannel(),
-        playingMatchId: this.playingBetMatchId,
-        matchId: this.client.gsi.map.matchid,
-        hero: this.client.gsi.hero?.name,
-      })
       return
     }
 
