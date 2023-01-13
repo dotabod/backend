@@ -1,9 +1,8 @@
 import axios from 'axios'
 
-import { prisma } from './db/prisma.js'
-import { server } from './dota/index.js'
-import { getBotAPI } from './twitch/lib/getBotAPI.js'
-import { logger } from './utils/logger.js'
+import { prisma } from '../db/prisma.js'
+import { getBotAPI } from '../twitch/lib/getBotAPI.js'
+import { logger } from '../utils/logger.js'
 
 async function getAccounts() {
   // const steam32id = 1234
@@ -166,7 +165,7 @@ message:Starting!
 // await getAccounts()
 // await fixWins()
 // await topFollowers()
-
+/*
 server.dota.dota2.on('ready', async () => {
   const steamserverid = (await server.dota.getUserSteamServer(849473199)) ?? ''
 
@@ -182,7 +181,82 @@ server.dota.dota2.on('ready', async () => {
 
   const delayedData = await server.dota.getDelayedMatchData(steamserverid)
   console.log({ delayedData })
-})
+})*/
 
 // 2 = radiant
 // 3 = dire
+
+const botApi = getBotAPI()
+
+async function onlineEvent({ userId, startDate }: { userId: string; startDate: Date }) {
+  return await prisma.user.update({
+    data: {
+      stream_online: true,
+      stream_start_date: startDate,
+    },
+    where: {
+      id: userId,
+    },
+  })
+}
+async function checkUserOnline({
+  providerAccountId,
+  userId,
+}: {
+  providerAccountId: string
+  userId: string
+}) {
+  console.log('checking', { providerAccountId, userId })
+  if (!providerAccountId) return
+
+  try {
+    const stream = await botApi.streams.getStreamByUserId(providerAccountId)
+    console.log({ stream })
+    if (stream?.startDate) {
+      await onlineEvent({
+        startDate: stream.startDate,
+        userId,
+      })
+    }
+  } catch (e) {
+    console.log(e, 'error on checkUserOnline')
+  }
+}
+
+async function fixOnline() {
+  const bets = await prisma.bet.findMany({
+    where: {
+      user: {
+        stream_online: {
+          not: true,
+        },
+      },
+      createdAt: {
+        gte: new Date('2023-01-13T09:46:51.887Z'),
+      },
+    },
+    select: {
+      id: true,
+      user: {
+        select: {
+          id: true,
+          Account: {
+            select: {
+              providerAccountId: true,
+            },
+          },
+        },
+      },
+    },
+    distinct: ['userId'],
+  })
+
+  for (const bet of bets) {
+    await checkUserOnline({
+      providerAccountId: bet.user.Account?.providerAccountId ?? '',
+      userId: bet.user.id,
+    })
+  }
+}
+
+await fixOnline()

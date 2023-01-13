@@ -28,7 +28,7 @@ export const dontBlockStates = [
   'DOTA_GAMERULES_STATE_CUSTOM_GAME_SETUP',
   'DOTA_GAMERULES_STATE_WAIT_FOR_MAP_TO_LOAD',
 
-  // Adding this strategy to dont block because this state is checked manually
+  // Adding this strategy to don't block because this state is checked manually
   // This state actually means all players are locked in and picked
   // It doesn't mean only the streamer is locked in like I thought
   // So since all are locked in, everyone can see heroes, and we should unblock all
