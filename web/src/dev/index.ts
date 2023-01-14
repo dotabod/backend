@@ -179,7 +179,7 @@ server.dota.dota2.on('ready', async () => {
     //
   })
 
-  const delayedData = await server.dota.getDelayedMatchData(steamserverid)
+  const delayedData = await server.dota.getDelayedMatchData({steamserverid})
   console.log({ delayedData })
 })*/
 

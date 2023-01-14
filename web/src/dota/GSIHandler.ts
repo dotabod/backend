@@ -13,7 +13,6 @@ import { DotaEvent, Player, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
-import { events } from './globalEventEmitter.js'
 import { server } from './index.js'
 import { blockTypes, GLOBAL_DELAY, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
@@ -70,16 +69,6 @@ export class GSIHandler {
       logger.info('[GSI] Bot is disabled for this user', { name: this.client.name })
       this.disable()
     }
-
-    // Only call to update our local players variable with hero ids
-    events.on(
-      'saveHeroesForMatchId',
-      (matchId, players: ReturnType<typeof getAccountsFromMatch>) => {
-        if (this.playingBetMatchId && this.playingBetMatchId === matchId) {
-          this.players = players
-        }
-      },
-    )
   }
 
   public async enable() {
@@ -232,7 +221,11 @@ export class GSIHandler {
       return
     }
 
-    const delayedData = await server.dota.getDelayedMatchData(steamServerId, true)
+    const delayedData = await server.dota.getDelayedMatchData({
+      server_steamid: steamServerId,
+      refetchCards: true,
+      token: this.getToken(),
+    })
 
     this.client.steamServerId = steamServerId
     this.savingSteamServerId = false

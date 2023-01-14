@@ -63,6 +63,14 @@ const retryCustom = (cont: number, fn: () => Promise<any>, delay: number): Promi
 
 const mongo = await Mongo.connect()
 
+interface RealTimeStats {
+  steam_server_id: string
+  token: string
+  waitForHeros: boolean
+  refetchCards?: boolean
+  cb?: (err: Error | null, body: delayedGames | null) => void
+}
+
 class Dota {
   private static instance: Dota
 
@@ -171,10 +179,24 @@ class Dota {
   }
 
   // 2 minute delayed match data if its out of our region
-  public getDelayedMatchData = (server_steamid: string, refetchCards = false) => {
+  public getDelayedMatchData = ({
+    server_steamid,
+    refetchCards = false,
+    token,
+  }: {
+    server_steamid: string
+    token: string
+    refetchCards?: boolean
+  }) => {
     return new Promise((resolveOuter: (response: delayedGames | null) => void) => {
-      this.GetRealTimeStats(server_steamid, false, refetchCards, (err, response) => {
-        resolveOuter(response)
+      this.GetRealTimeStats({
+        steam_server_id: server_steamid,
+        token,
+        waitForHeros: false,
+        refetchCards: refetchCards,
+        cb: (err, response) => {
+          resolveOuter(response)
+        },
       })
     })
   }
@@ -190,12 +212,13 @@ class Dota {
     })
   }
 
-  public GetRealTimeStats = (
-    steam_server_id: string,
-    waitForHeros: boolean,
+  public GetRealTimeStats = ({
+    steam_server_id,
+    waitForHeros,
+    token,
     refetchCards = false,
-    cb?: (err: null | Error, body: delayedGames | null) => void,
-  ) => {
+    cb,
+  }: RealTimeStats) => {
     if (!steam_server_id) {
       return cb?.(new Error('Match not found'), null)
     }
@@ -257,7 +280,7 @@ class Dota {
             )
 
             const players = getAccountsFromMatch(delayedData)
-            events.emit('saveHeroesForMatchId', game.match.match_id, players)
+            events.emit('saveHeroesForMatchId', { matchId: game.match.match_id, players }, token)
 
             return
           }
@@ -285,7 +308,7 @@ class Dota {
             // Come back in 8 attempts to save the hero ids. With no cb()
             if (!hasHeroes) {
               logger.info('Waiting for hero ids', { matchId: game.match.match_id })
-              this.GetRealTimeStats(steam_server_id, true)
+              this.GetRealTimeStats({ token, steam_server_id: steam_server_id, waitForHeros: true })
             }
           }
 
