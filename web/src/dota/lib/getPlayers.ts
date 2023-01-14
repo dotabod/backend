@@ -30,6 +30,10 @@ export async function getPlayers(
     throw new CustomError(t('notPlaying', { lng: locale }))
   }
 
+  if (!Number(currentMatchId)) {
+    throw new CustomError(t('gameNotFound', { lng: locale }))
+  }
+
   const response =
     !players?.length &&
     ((await mongo

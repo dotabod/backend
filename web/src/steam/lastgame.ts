@@ -48,8 +48,10 @@ export default async function lastgame(locale: string, steam32Id: number, curren
     )
     .toArray()) as unknown as delayedGames[]
 
-  if (!currentMatchId) {
-    const msg = t('notPlaying', { lng: locale })
+  if (!currentMatchId || !Number(currentMatchId)) {
+    const msg = !currentMatchId
+      ? t('notPlaying', { lng: locale })
+      : t('gameNotFound', { lng: locale })
     return gameHistory[0]?.match?.match_id
       ? `${msg}. ${t('lastgame.link', {
           lng: locale,

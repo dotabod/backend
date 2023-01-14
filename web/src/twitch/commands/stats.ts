@@ -15,6 +15,10 @@ export async function profileLink(locale: string, currentMatchId: string, args: 
     throw new CustomError(t('notPlaying', { lng: locale }))
   }
 
+  if (!Number(currentMatchId)) {
+    throw new CustomError(t('gameNotFound', { lng: locale }))
+  }
+
   if (!args.length) {
     throw new CustomError(t('invalidColor', { colorList: heroColors.join(' '), lng: locale }))
   }
