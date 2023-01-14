@@ -16,7 +16,7 @@
     "open": "Bets open peepoGamble",
     "won": "We have won"
   },
-  "bountyPickup": "+{{bountyValue}} gold from bounty EZ Clap Thanks {{heroNames}} SeemsGood",
+  "bountyPickup": "+{{bountyValue}} gold from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
   "chatters": {
     "died": "{{- heroName}} died with passive {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} giving up first blood PepeLaugh",

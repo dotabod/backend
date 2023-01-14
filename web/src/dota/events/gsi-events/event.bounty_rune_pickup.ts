@@ -38,12 +38,35 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
     )
 
     dotaClient.bountyHeroNames.push(heroName)
+
+    // there could be multiple hero names in bountyHeroNames, so aggregate them and write `2x heroName` for example
+    // if only 1 then dont write the number, just write `heroName`
+    const bountyHeroNames = dotaClient.bountyHeroNames.reduce<Record<string, number>>(
+      (acc, cur) => {
+        if (acc[cur]) {
+          acc[cur]++
+        } else {
+          acc[cur] = 1
+        }
+        return acc
+      },
+      {},
+    )
+
+    const bountyHeroNamesString = Object.keys(bountyHeroNames)
+      .map((heroName) => {
+        const count = bountyHeroNames[heroName]
+        return count > 1 ? `${count}x ${heroName}` : heroName
+      })
+      .join(', ')
+
     dotaClient.bountyTimeout = setTimeout(() => {
       dotaClient.say(
         t('bountyPickup', {
           lng: dotaClient.client.locale,
           bountyValue: event.bounty_value * dotaClient.bountyHeroNames.length,
-          heroNames: dotaClient.bountyHeroNames.join(', '),
+          totalBounties: dotaClient.bountyHeroNames.length,
+          heroNames: bountyHeroNamesString,
         }),
       )
       dotaClient.bountyHeroNames = []
