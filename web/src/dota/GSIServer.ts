@@ -69,7 +69,11 @@ class GSIServer {
       // This triggers a resend of obs blockers
       if (gsiHandlers.has(token)) {
         const handler = gsiHandlers.get(token)
-        if (handler) handler.blockCache = null
+        if (handler) {
+          handler.emitBadgeUpdate()
+          handler.emitWLUpdate()
+          handler.blockCache = null
+        }
       }
 
       // Their own personal room

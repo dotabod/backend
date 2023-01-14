@@ -68,7 +68,11 @@ export class GSIHandler {
     if (isBotDisabled) {
       logger.info('[GSI] Bot is disabled for this user', { name: this.client.name })
       this.disable()
+      return
     }
+
+    this.emitBadgeUpdate()
+    this.emitWLUpdate()
   }
 
   public async enable() {
