@@ -795,14 +795,15 @@ export class GSIHandler {
 
     // Another edge case. When we pick a hero, it may not be locked in yet
     // But once we have hero name, that means it's locked in and the enemy sees it too
-    if (
+    // Not ready yet, WIP
+    /*    if (
       this.client.gsi?.hero?.name &&
       this.client.gsi.hero.name.length &&
       pickSates.includes(state ?? '')
     ) {
       this.emitBlockEvent('strategy-2')
       return
-    }
+    }*/
 
     // Edge case:
     // Send strat screen if the player has picked their hero and it's locked in
