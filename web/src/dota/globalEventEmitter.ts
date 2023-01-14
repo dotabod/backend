@@ -2,6 +2,7 @@ import { EventEmitter } from 'events'
 import { NextFunction, Request, Response } from 'express'
 
 export const events = new EventEmitter()
+events.setMaxListeners(500)
 
 function emitAll(prefix: string, obj: Record<string, any>, token: string) {
   Object.keys(obj).forEach((key) => {
