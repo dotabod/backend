@@ -70,6 +70,16 @@ export class GSIHandler {
       logger.info('[GSI] Bot is disabled for this user', { name: this.client.name })
       this.disable()
     }
+
+    // Only call to update our local players variable with hero ids
+    events.on(
+      'saveHeroesForMatchId',
+      (matchId, players: ReturnType<typeof getAccountsFromMatch>) => {
+        if (this.playingBetMatchId && this.playingBetMatchId === matchId) {
+          this.players = players
+        }
+      },
+    )
   }
 
   public async enable() {
@@ -163,26 +173,30 @@ export class GSIHandler {
 
   // Runs every gametick
   async saveMatchData() {
-    if (!this.client.steam32Id || !this.client.gsi?.map?.matchid) return
-    if (!Number(this.client.gsi.map.matchid)) return
+    // This now waits for the bet to complete before checking match data
+    // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
+    // the playingBetMatchId is saved when the hero is selected
+    if (!this.client.steam32Id || !this.playingBetMatchId) return
+    const matchId = this.playingBetMatchId
+    if (!Number(matchId)) return
     if (this.client.steamServerId) return
     if (this.savingSteamServerId) return
 
     this.savingSteamServerId = true
     logger.info('saveMatchData start', {
       name: this.client.name,
-      matchId: this.client.gsi.map.matchid,
+      matchId,
       steam32Id: this.client.steam32Id,
     })
 
     const response = (await mongo
       .collection('delayedGames')
-      .findOne({ 'match.match_id': this.client.gsi.map.matchid })) as unknown as delayedGames | null
+      .findOne({ 'match.match_id': matchId })) as unknown as delayedGames | null
 
     if (response) {
       logger.info('saveMatchData delayedGame already found', {
         name: this.client.name,
-        matchId: this.client.gsi.map.matchid,
+        matchId,
       })
 
       // not saving real steamserverid right now since not needed
@@ -195,7 +209,7 @@ export class GSIHandler {
 
     logger.info('saveMatchData No match data for user, checking from steam', {
       name: this.client.name,
-      matchId: this.client.gsi.map.matchid,
+      matchId,
       steam32Id: this.client.steam32Id,
     })
 
@@ -209,7 +223,7 @@ export class GSIHandler {
       logger.info('Retry steamserverid', {
         tries: this.steamServerTries,
         channel: this.client.name,
-        matchId: this.client.gsi.map.matchid,
+        matchId,
       })
       setTimeout(() => {
         this.steamServerTries += 1
@@ -217,14 +231,6 @@ export class GSIHandler {
       }, 5000)
       return
     }
-
-    // Only call once to update our local players variable with hero ids
-    events.once(
-      `delayedGameHeroes:${this.client.gsi.map.matchid}`,
-      (players: ReturnType<typeof getAccountsFromMatch>) => {
-        this.players = players
-      },
-    )
 
     const delayedData = await server.dota.getDelayedMatchData(steamServerId, true)
 
@@ -235,7 +241,7 @@ export class GSIHandler {
     if (!delayedData) {
       logger.info('No match data found!', {
         name: this.client.name,
-        matchId: this.client.gsi.map.matchid,
+        matchId,
       })
       return
     }
@@ -373,7 +379,7 @@ export class GSIHandler {
       .update({
         where: {
           matchId_userId: {
-            matchId: matchId,
+            matchId,
             userId: this.getToken(),
           },
         },
@@ -485,7 +491,7 @@ export class GSIHandler {
         },
         where: {
           userId: this.getToken(),
-          matchId: matchId,
+          matchId,
           won: null,
         },
       })
@@ -507,7 +513,7 @@ export class GSIHandler {
           .create({
             data: {
               predictionId: matchId,
-              matchId: matchId,
+              matchId,
               userId: this.getToken(),
               myTeam: this.client.gsi?.player?.team_name ?? '',
               steam32Id: this.getSteam32(),
@@ -555,7 +561,7 @@ export class GSIHandler {
                   this.openingBets = false
                   logger.info('[BETS] open bets', {
                     event: 'open_bets',
-                    matchId: matchId,
+                    matchId,
                     user: this.getToken(),
                     player_team: this.client.gsi?.player?.team_name,
                   })
@@ -689,7 +695,7 @@ export class GSIHandler {
         .then(() => {
           logger.info('[BETS] end bets', {
             event: 'end_bets',
-            matchId: matchId,
+            matchId,
             name: this.getChannel(),
             winning_team: localWinner,
             player_team: myTeam,
