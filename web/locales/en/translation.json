@@ -3,8 +3,8 @@
     "denied": "{{- heroName}} denied the aegis {{emote}}",
     "pickup": "{{- heroName}} picked up the aegis!"
   },
-  "apm_one": "$t(apm_other)",
-  "apm_other": "Live APM: {{count}} Chatting",
+
+  "apm": "Live APM: {{num}} Chatting",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -29,9 +29,8 @@
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "gameNotFound": "Game was not found",
-  "gpm_zero": "$t(gpm_one)",
-  "gpm_one": "Live GPM: {{count}}",
-  "gpm_other": "Live GPM: {{count}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_zero": "Live GPM: {{num}}",
+  "gpm_other": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "invalidColor": "Invalid hero color or slot. Must be 1-10, or one of {{colorList}}",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "killstreak": {
@@ -115,6 +114,6 @@
   "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
-  "xpm_one": "$t(xpm_other)",
-  "xpm_other": "Live XPM: {{count}}"
+
+  "xpm": "Live XPM: {{num}}"
 }

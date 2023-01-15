@@ -3,8 +3,8 @@
     "denied": "{{- heroName}} знищив Аєгіс {{emote}}",
     "pickup": "{{- heroName}} підібрав Аєгіс!"
   },
-  "apm_one": "$t(apm_other)",
-  "apm_other": "Поточний APM: {{count}} Chatting",
+
+  "apm": "Поточний APM: {{num}} Chatting",
   "averageRank": "Середній рейтинг матчу",
   "betaFeature": "[бета-версія]",
   "betaTester": "$t(betaTester_on)",
@@ -29,9 +29,8 @@
   "dota2pt": "Потрібні професійні айтембілди на {{- heroName}}?  Знаходьте їх по посиланню {{- url}}",
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",
   "gameNotFound": "Матч не знайдено",
-  "gpm_zero": "$t(gpm_one)",
-  "gpm_one": "Поточний GPM: {{count}} Chatting",
-  "gpm_other": "Поточний GPM: {{count}}. Зароблено {{heroKills}} золота від вбивства героїв та {{creepKills}} від вбивства кріпочків.",
+  "gpm_zero": "Поточний GPM: {{num}} Chatting",
+  "gpm_other": "Поточний GPM: {{num}}. Зароблено {{heroKills}} золота від вбивства героїв та {{creepKills}} від вбивства кріпочків.",
   "invalidColor": "Неправильний номер або колір героя. Повинно бути 1-10 або один з кольорів: {{colorList}}",
   "invalidMmr": "Неправильна команда. Спробуйте !setmmr 1234",
   "killstreak": {
@@ -115,6 +114,6 @@
   "updateMmr_auto": "Рейтинг оновлено до {{mmr}} MMR. Використовуйте команди !fixparty для зміни рейтингу в групі та !fixdd для подвійної ставки.",
   "updateMmr_manual": "Рейтинг змінено до {{mmr}} MMR",
   "updateMmrMulti": "Кілька облікових записів Steam, оновлення тієї, з якою ви увійшли в систему в даний момент ({{steamId}})",
-  "xpm_one": "$t(xpm_other)",
-  "xpm_other": "Поточний XPM: {{count}}"
+
+  "xpm": "Поточний XPM: {{num}}"
 }

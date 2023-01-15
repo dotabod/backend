@@ -21,7 +21,7 @@ commandHandler.registerCommand('xpm', {
       return
     }
     const xpm = client.gsi.player?.xpm ?? 0
-    void chatClient.say(channel, t('xpm', { lng: client.locale, count: xpm }))
+    void chatClient.say(channel, t('xpm', { lng: client.locale, num: xpm }))
     return
   },
 })

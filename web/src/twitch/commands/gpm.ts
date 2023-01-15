@@ -25,7 +25,7 @@ commandHandler.registerCommand('gpm', {
     const gpm = client.gsi.player?.gpm
 
     if (!gpm) {
-      void chatClient.say(channel, t('gpm', { count: 0, lng: message.channel.client.locale }))
+      void chatClient.say(channel, t('gpm_zero', { num: 0, lng: message.channel.client.locale }))
       return
     }
 
@@ -34,8 +34,8 @@ commandHandler.registerCommand('gpm', {
 
     void chatClient.say(
       channel,
-      t('gpm', {
-        count: gpm,
+      t('gpm_other', {
+        num: gpm,
         lng: message.channel.client.locale,
         heroKills: gold_from_hero_kills ?? 0,
         creepKills: gold_from_creep_kills ?? 0,

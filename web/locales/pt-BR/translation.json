@@ -3,8 +3,8 @@
     "denied": "{{- heroName}} denou o aegis {{emote}}",
     "pickup": "{{- heroName}} pegou o aegis!"
   },
-  "apm_one": "$t(apm_other)",
-  "apm_other": "APM ao vivo: {{count}} Chatting",
+
+  "apm": "APM ao vivo: {{num}} Chatting",
   "averageRank": "Rank médio neste jogo",
   "betaFeature": "[recurso beta]",
   "betaTester": "$t(betaTester_on)",
@@ -29,9 +29,8 @@
   "dota2pt": "Precisa de ideias de build para {{- heroName}} ? Dê uma olhada aqui {{- url}}",
   "dotabod": "Eu sou um bot open source feito pelo {{author}}. Mais informações: {{- url}}",
   "gameNotFound": "Partida não encontrada",
-  "gpm_zero": "$t(gpm_one)",
-  "gpm_one": "GPM ao vivo: {{count}}",
-  "gpm_other": "GPM ao vivo: {{count}}. {{heroKills}} de heróis, {{creepKills}} de creeps.",
+  "gpm_zero": "GPM ao vivo: {{num}}",
+  "gpm_other": "GPM ao vivo: {{num}}. {{heroKills}} de heróis, {{creepKills}} de creeps.",
   "invalidColor": "Cor ou slot do herói inválido. Precisa ser 1-10 ou uma das cores: {{colorList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
@@ -115,6 +114,6 @@
   "updateMmr_auto": "MMR atualizado para {{mmr}}. Digite !fixparty para alterar para MMR em equipe, ou !fixdd para partida com dobro de MMR",
   "updateMmr_manual": "MMR atualizado para {{mmr}}",
   "updateMmrMulti": "Múltiplas contas steam, atualizando a conta logada no momento ({{steamId}})",
-  "xpm_one": "$t(xpm_other)",
-  "xpm_other": "XPM ao vivo: {{count}}"
+
+  "xpm": "XPM ao vivo: {{num}}"
 }

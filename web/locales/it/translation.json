@@ -3,8 +3,8 @@
     "denied": "{{- heroName}} ha negato l'egida {{emote}}",
     "pickup": "{{- heroName}} ha preso l'egida"
   },
-  "apm_one": "$t(apm_other)",
-  "apm_other": "APM Live: {{count}} Chatting",
+
+  "apm": "APM Live: {{num}} Chatting",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "$t(betaTester_on)",
@@ -29,9 +29,8 @@
   "dota2pt": "Hai bisogno di build pro per {{- heroName}}? Vai qui {{- url}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
-  "gpm_zero": "$t(gpm_one)",
-  "gpm_one": "GPM Live: {{count}}",
-  "gpm_other": "GPM Live: {{count}}. {{heroKills}} da kill, {{creepKills}}da creep.",
+  "gpm_zero": "GPM Live: {{num}}",
+  "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}}da creep.",
   "invalidColor": "Colore o Slot errato. Riprova con un numero da 1 a 10, o uno di {{colorList}} ",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
@@ -115,6 +114,6 @@
   "updateMmr_auto": "Aggiornato MMR a {{mmr}}. !fixparty per party e !fixdd per doubledown",
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
-  "xpm_one": "$t(xpm_other)",
-  "xpm_other": "XPM Live: {{count}}"
+
+  "xpm": "XPM Live: {{num}}"
 }

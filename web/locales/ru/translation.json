@@ -3,8 +3,8 @@
     "denied": "{{- heroName}} уничтожает эгиду {{emote}}",
     "pickup": "{{- heroName}} подбирает эгиду!"
   },
-  "apm_one": "$t(apm_other)",
-  "apm_other": "Текущий APM: {{count}} Chatting",
+
+  "apm": "Текущий APM: {{num}} Chatting",
   "averageRank": "Средний рейтинг этой игры",
   "betaFeature": "[бета-версия]",
   "betaTester": "$t(betaTester_on)",
@@ -29,9 +29,8 @@
   "dota2pt": "",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "gameNotFound": "Игра не найдена",
-  "gpm_zero": "$t(gpm_one)",
-  "gpm_one": "Текущий GPM: {{count}}",
-  "gpm_other": "Текущий GPM: {{count}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
+  "gpm_zero": "Текущий GPM: {{num}}",
+  "gpm_other": "Текущий GPM: {{num}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
   "invalidColor": "Неверный цвет героя или слот. Должно быть 1-10, или одно из {{colorList}}",
   "invalidMmr": "Неверная команда. Попробуйте !setmmr 1234",
   "killstreak": {
@@ -115,6 +114,6 @@
   "updateMmr_auto": "Рейтинг обновлён до {{mmr}}. Используйте команды !fixparty для изменения игры в группе и !fixdd для двойной ставки.",
   "updateMmr_manual": "Рейтинг изменён до {{mmr}}",
   "updateMmrMulti": "Несколько учетных записей Steam, обновление той, с которой вы вошли в систему в данный момент ({{steamId}})",
-  "xpm_one": "$t(xpm_other)",
-  "xpm_other": "Текущий XPM: {{count}}"
+
+  "xpm": "Текущий XPM: {{num}}"
 }

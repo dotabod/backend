@@ -3,8 +3,7 @@
     "denied": "",
     "pickup": ""
   },
-  "apm_one": "",
-  "apm_other": "",
+  "apm": "",
   "averageRank": "",
   "betaFeature": "",
   "betaTester": "",
@@ -29,8 +28,8 @@
   "dota2pt": "",
   "dotabod": "",
   "gameNotFound": "",
-  "gpm_zero": "",
-  "gpm_one": "",
+
+
   "gpm_other": "",
   "invalidColor": "",
   "invalidMmr": "",
@@ -115,6 +114,5 @@
   "updateMmr_auto": "",
   "updateMmr_manual": "",
   "updateMmrMulti": "",
-  "xpm_one": "",
-  "xpm_other": ""
+  "xpm": ""
 }
