@@ -48,16 +48,27 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
     if (chattersEnabled && chatterEnabled) {
+      const props = {
+        num: dotaClient.roshanCount,
+        lng: dotaClient.client.locale,
+      }
+
+      // Doing it this way so i18n can pick up the t('') strings
+      const roshCountMsg =
+        props.num === 1
+          ? t('roshanCount.1', props)
+          : props.num === 2
+          ? t('roshanCount.2', props)
+          : props.num === 3
+          ? t('roshanCount.3', props)
+          : t('roshanCount.more', props)
+
       dotaClient.say(
         `${t('roshanKilled', {
           min: res.minTime,
           max: res.maxTime,
           lng: dotaClient.client.locale,
-        })}. ${t('roshanCount', {
-          count: dotaClient.roshanCount,
-          ordinal: true,
-          lng: dotaClient.client.locale,
-        })}`,
+        })}. ${roshCountMsg}`,
       )
     }
 

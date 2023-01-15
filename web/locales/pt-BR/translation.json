@@ -87,10 +87,12 @@
   "ranked_no": "Não, este jogo não é ranqueado",
   "ranked_yes": "Sim, este jogo é ranqueado",
   "refresh": "Reiniciando overlay...",
-  "roshanCount_one": "{{count}}ª vez que o roshan morre. Próximo item a cair: fragmento de aghanim",
-  "roshanCount_two": "{{count}}ª vez que o roshan morre. Próximos items a cair vão ser: queijo, benção de aghanim ou fragmento de orbe restaurador",
-  "roshanCount_few": "{{count}}ª vez que o roshan morre. Próximos items a cair vão ser: queijo,  queijo, benção de aghanim e fragmento de orbe restaurador",
-  "roshanCount_other": "{{count}}ª vez que o roshan morre. Próximos items a cair vão ser: Queijo, fragmento de aghanim e fragmento de orbe restaurador",
+  "roshanCount": {
+    "1": "1 vez que o roshan morre · Próximo item a cair: fragmento de aghanim",
+    "2": "2 vez que o roshan morre · Próximos items a cair vão ser: queijo, benção de aghanim ou fragmento de orbe restaurador",
+    "3": "3 vez que o roshan morre · Próximos items a cair vão ser: queijo,  queijo, benção de aghanim e fragmento de orbe restaurador",
+    "more": "{{num}} vez que o roshan morre · Próximos items a cair vão ser: Queijo, fragmento de aghanim e fragmento de orbe restaurador"
+  },
   "roshanKilled": "Roshan morto! Próximo roshan entre {{min}} e {{max}}",
   "tip": {
     "from": "O tip de {{- heroName}} ICANT",

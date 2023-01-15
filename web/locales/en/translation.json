@@ -87,10 +87,12 @@
   "ranked_no": "Nope this game is not ranked",
   "ranked_yes": "Yes this game is ranked",
   "refresh": "Refreshing overlay...",
-  "roshanCount_one": "{{count}}st rosh death. Next drop: agh's shard.",
-  "roshanCount_two": "{{count}}nd rosh death. Next drop: cheese and agh's blessing or refresher shard.",
-  "roshanCount_few": "{{count}}rd rosh death. Next drop: cheese, agh's blessing, and refresher shard.",
-  "roshanCount_other": "{{count}}th rosh death. Next drop: cheese, agh's blessing, and refresher shard.",
+  "roshanCount": {
+    "1": "Rosh deaths: 1 · Next drop: agh's shard.",
+    "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",
+    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more": "Rosh deaths: {{num}} · Next drop: cheese, agh's blessing, and refresher shard."
+  },
   "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
   "tip": {
     "from": "The tip from {{- heroName}} ICANT",
