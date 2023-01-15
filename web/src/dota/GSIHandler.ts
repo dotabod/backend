@@ -519,7 +519,15 @@ export class GSIHandler {
           .then(() => {
             const hero = getHero(this.client.gsi?.hero?.name)
 
-            if (hero?.localized_name)
+            if (!this.client.stream_online) {
+              logger.info('[BETS] Not opening bets bc stream is offline for', {
+                name: this.client.name,
+              })
+              this.openingBets = false
+              return
+            }
+
+            if (hero?.localized_name) {
               this.say(
                 t('profileUrl', {
                   channel: hero.localized_name,
@@ -531,17 +539,10 @@ export class GSIHandler {
                 }),
                 { delay: false },
               )
+            }
 
             const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
             if (!betsEnabled) {
-              this.openingBets = false
-              return
-            }
-
-            if (!this.client.stream_online) {
-              logger.info('[BETS] Not opening bets bc stream is offline for', {
-                name: this.client.name,
-              })
               this.openingBets = false
               return
             }
@@ -670,7 +671,7 @@ export class GSIHandler {
     const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
     this.updateMMR(won, localLobbyType, matchId, isParty, this.playingHeroSlot)
 
-    if (this.treadToggles > 0) {
+    if (this.treadToggles > 0 && this.client.stream_online) {
       this.say(
         t('treadToggle', {
           lng: this.client.locale,
