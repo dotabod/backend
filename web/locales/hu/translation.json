@@ -3,7 +3,6 @@
     "denied": "{{- heroName}} semlegesitette az aegist {{emote}}",
     "pickup": "{{- heroName}} felvette az aegist!"
   },
-
   "apm": "Élő APM: {{num}} Csevegés",
   "averageRank": "Átlagos rank ebben a játékban",
   "betaFeature": "",
@@ -114,6 +113,5 @@
   "updateMmr_auto": "Frissített MMR {{mmr}}-re. !fixparty ha party és !fixdd ha doubledown",
   "updateMmr_manual": "Frissített MMR {{mmr}}-re",
   "updateMmrMulti": "Több felhasználó észlelhető, frissitve a jelenlegi belépetre. {{steamId}}",
-
   "xpm": "Élő XPM:{{num}}"
 }

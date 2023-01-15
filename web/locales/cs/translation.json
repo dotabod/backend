@@ -6,31 +6,30 @@
   "apm": "",
   "averageRank": "",
   "betaFeature": "",
+  "betaTester": "",
   "betaTester_off": "",
   "betaTester_on": "",
   "bets": {
     "lost": "",
-    "manual": "",
     "notScored": "",
     "open": "",
     "won": ""
   },
   "bountyPickup": "",
   "chatters": {
-    "firstBloodDeath": "",
     "died": "",
+    "firstBloodDeath": "",
     "midas": "",
     "pause": "",
     "smoked": ""
   },
   "commands_everyone": "",
   "commands_mods": "",
+  "dota2pt": "",
   "dotabod": "",
   "gameNotFound": "",
-
-
+  "gpm_zero": "",
   "gpm_other": "",
-  "hero": "",
   "invalidColor": "",
   "invalidMmr": "",
   "killstreak": {
@@ -86,16 +85,21 @@
   "ranked_no": "",
   "ranked_yes": "",
   "refresh": "",
+  "roshanCount": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "more": ""
+  },
   "roshanKilled": "",
-  "roshanCount_one": "",
-  "roshanCount_two": "",
-  "roshanCount_other": "",
   "tip": {
     "from": "",
     "to": ""
   },
+  "toggle": "",
   "toggle_disabled": "",
   "toggle_enabled": "",
+  "toggleMatch": "",
   "toggleMatch_double": "",
   "toggleMatch_party": "",
   "toggleMatch_single": "",
@@ -105,6 +109,7 @@
   "uknownMmr": "",
   "unknown": "",
   "unknownSteam": "",
+  "updateMmr": "",
   "updateMmr_auto": "",
   "updateMmr_manual": "",
   "updateMmrMulti": "",

@@ -86,10 +86,10 @@
   "ranked_yes": "Si questa partita è classificata",
   "refresh": "Aggiornando l'overlay...",
   "roshanCount": {
-    "1": "",
-    "2": "",
-    "3": "",
-    "more": ""
+    "1": "Morti di Rosh: 1 · Prossimo drop: Aghanim Shard.",
+    "2": "Morti di Rosh: 2 · Prossimo drop: Cheese e Aghanim Blessing o Refresher Shard.",
+    "3": "Morti di Rosh: 3 · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard.",
+    "more": "Morti di Rosh: {{num}} · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard."
   },
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
   "tip": {
