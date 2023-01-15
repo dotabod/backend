@@ -25,8 +25,8 @@ commandHandler.registerCommand('commands', {
       }))
       .sort((a, b) => a.command.localeCompare(b.command))
 
-    const everyone = filtered.filter((v) => v.permission === 0).map((v) => v.command)
-    const others = filtered.filter((v) => v.permission > 0).map((v) => v.command)
+    const everyone = filtered.filter((v) => v.permission === 0).map((v) => `!${v.command}`)
+    const others = filtered.filter((v) => v.permission > 0).map((v) => `!${v.command}`)
 
     void chatClient.say(
       channel,
