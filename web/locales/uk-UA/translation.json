@@ -11,12 +11,12 @@
   "betaTester_off": "{{channel}} більше не є бета-тестером. Введіть !beta, щоб знову приєднатися",
   "betaTester_on": "{{channel}} наразі є бета-тестером. Відвідайте discord.dotabod.com, щоб побачити можливості бета-версії. Введіть !beta, щоб скасувати",
   "bets": {
-    "lost": "Ми програли",
+    "lost": "Ми програли битву, але не війну",
     "notScored": "Матч не зараховано D: Не змінювати рейтинг для матчу {{matchId}}.",
     "open": "Ставимо ставки, панство peepoGamble",
     "won": "Ми перемогли"
   },
-  "bountyPickup": "Отримано {{bountyValue}} золота від рун багатства EZ  Clap Дякую {{heroNames}} SeemsGood",
+  "bountyPickup": "Отримано {{bountyValue}} золота від рун багатства ({{totalBounties}}/4) EZ  Clap Дякую {{heroNames}} SeemsGood",
   "chatters": {
     "died": "{{- heroName}} помер, не нажавши {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} пролив першу кров PepeLaugh",
@@ -49,7 +49,7 @@
     "ended": "Завершився {{minutes}}хв тому",
     "lost": "Остання гра: поразка",
     "party": "Груповий матч",
-    "unranked": "Не рейтингова",
+    "unranked": "Не рейтинговий матч",
     "won": "Остання гра: перемога"
   },
   "lifetime": "Кількість ігор",

@@ -87,10 +87,12 @@
   "ranked_no": "",
   "ranked_yes": "",
   "refresh": "",
-  "roshanCount_one": "",
-  "roshanCount_two": "",
-  "roshanCount_few": "",
-  "roshanCount_other": "",
+  "roshanCount": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "more": ""
+  },
   "roshanKilled": "",
   "tip": {
     "from": "",

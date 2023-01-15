@@ -87,10 +87,12 @@
   "ranked_no": "Nie táto hra nieje hodnotená ",
   "ranked_yes": "Áno táto hra je hodnotená ",
   "refresh": "Obnovujem overlay",
-  "roshanCount_one": "",
-  "roshanCount_two": "",
-  "roshanCount_few": "",
-  "roshanCount_other": "",
+  "roshanCount": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "more": ""
+  },
   "roshanKilled": "Roshan zabitý! Ďalší Roshan sa spawne medzi{{min}} a {{max}}",
   "tip": {
     "from": "Tip od {{- heroName}} ICANT",

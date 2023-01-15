@@ -16,17 +16,17 @@
     "open": "Scommesse aperte peepoGamble",
     "won": "Abbiamo vinto"
   },
-  "bountyPickup": "+{{bountyValue}} gold dalle bounty EZ Clap Grazie {{heroNames}} SeemsGood",
+  "bountyPickup": "+{{bountyValue}} gold dalle bounty ({{totalBounties}}/4) EZ Clap Grazie {{heroNames}} SeemsGood",
   "chatters": {
     "died": "{{- heroName}} è morto con {{itemNames}} passivo/i ICANT",
-    "firstBloodDeath": "",
+    "firstBloodDeath": "{{- heroName}} ha dato il first blood PepeLaugh",
     "midas": "massivePIDAS Usa la tua Midas",
     "pause": "PauseChamp Chi ha messo la partita in pausa?",
     "smoked": "Shush {{- heroName}} è smokato!"
   },
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
-  "dota2pt": "",
+  "dota2pt": "Hai bisogno di build pro per {{- heroName}}? Vai qui {{- url}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
   "gpm_zero": "$t(gpm_one)",
@@ -78,7 +78,7 @@
     "title": "Vinceremo con {{- heroName}}?",
     "yes": "Si"
   },
-  "profileUrl": "Qui c'è {{- channel}}: {{- url}}",
+  "profileUrl": "Ecco {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Prossimo rank a",
     "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
@@ -87,10 +87,12 @@
   "ranked_no": "No questa partita non è classificata",
   "ranked_yes": "Si questa partita è classificata",
   "refresh": "Aggiornando l'overlay...",
-  "roshanCount_one": "",
-  "roshanCount_two": "",
-  "roshanCount_few": "",
-  "roshanCount_other": "",
+  "roshanCount": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "more": ""
+  },
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
   "tip": {
     "from": "Il tip da {{- heroName}} ICANT",

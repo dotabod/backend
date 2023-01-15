@@ -87,10 +87,12 @@
   "ranked_no": "Nope este juego no está clasificado",
   "ranked_yes": "Sí, este juego está clasificado",
   "refresh": "Recargando superposición...",
-  "roshanCount_one": "",
-  "roshanCount_two": "",
-  "roshanCount_few": "",
-  "roshanCount_other": "",
+  "roshanCount": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "more": ""
+  },
   "roshanKilled": "¡Roshan asesinado! Siguiente roshan entre {{min}} y {{max}}",
   "tip": {
     "from": "La propina de {{- heroName}} ICANT",

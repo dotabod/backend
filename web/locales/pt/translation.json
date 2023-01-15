@@ -87,10 +87,12 @@
   "ranked_no": "Não este jogo não é ranqueado",
   "ranked_yes": "Sim este jogo é ranqueado",
   "refresh": "Reiniciando overlay...",
-  "roshanCount_one": "",
-  "roshanCount_two": "",
-  "roshanCount_few": "",
-  "roshanCount_other": "",
+  "roshanCount": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "more": ""
+  },
   "roshanKilled": "Roshan morto! Próximo roshan em {{min}} e {{max}}",
   "tip": {
     "from": "Tip de {{- heroName}} ICANT",

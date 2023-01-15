@@ -87,10 +87,12 @@
   "ranked_no": "Nem rangsorolt játék",
   "ranked_yes": "Rangsorolt játék",
   "refresh": "Üde overlay....",
-  "roshanCount_one": "",
-  "roshanCount_two": "",
-  "roshanCount_few": "",
-  "roshanCount_other": "",
+  "roshanCount": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "more": ""
+  },
   "roshanKilled": "Roshánt legyőzték! Következő roshán {{min}} és {{max}} perc közöt",
   "tip": {
     "from": "Borravaló {{- heroName}} ICANT",
