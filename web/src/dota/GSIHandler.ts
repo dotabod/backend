@@ -784,6 +784,16 @@ export class GSIHandler {
     })
   }
 
+  /*
+      // hero banned
+      if hero.id === -1 && previously.hero.id > 0 && previously.hero.name === ''
+
+      // picked, enemy cant see yet
+      if hero.id > 0 && hero.name === ''
+
+      // picked, enemy can see now
+      if hero.id > 0 && hero.name && hero.name.length
+  */
   setupOBSBlockers(state?: string) {
     if (isSpectator(this.client.gsi) || isArcade(this.client.gsi)) {
       this.emitBadgeUpdate()
@@ -796,27 +806,23 @@ export class GSIHandler {
 
     // TODO: if the game is matchid 0 also dont show these? ie bot match. hero demo are type 'arcade'
 
-    // Another edge case. When we pick a hero, it may not be locked in yet
-    // But once we have hero name, that means it's locked in and the enemy sees it too
-    // Not ready yet, WIP
-    /*    if (
-      this.client.gsi?.hero?.name &&
-      this.client.gsi.hero.name.length &&
-      pickSates.includes(state ?? '')
-    ) {
-      this.emitBlockEvent('strategy-2')
-      return
-    }*/
+    const heroName = this.client.gsi?.hero?.name
+    const heroPicked = this.client.gsi?.hero?.id && this.client.gsi.hero.id > 0
+    const heroLockedIn = heroName && heroName.startsWith('npc_')
+    const heroNotLockedIn = (heroName as string) === ''
+    const pickingPhase = pickSates.includes(state ?? '')
 
-    // Edge case:
-    // Send strat screen if the player has picked their hero and it's locked in
-    // Other players on their team could still be picking
-    // -1 is the id of your hero if it gets ban picked when you pick first
-    // the id is your hero if you pick last, and strategy screen is shown, but
-    // the map state can still be hero selection
-    // name is empty if your hero is not locked in
-    if ((this.client.gsi?.hero?.id ?? -1) >= 0 && pickSates.includes(state ?? '')) {
+    // Picked hero, but enemy can't see yet
+    if (pickingPhase && heroPicked && heroNotLockedIn) {
+      // invasive hero blocking overlay that hides all picked hero info
       this.emitBlockEvent('strategy')
+      return
+    }
+
+    // Picked hero, enemy can see it now
+    if (pickingPhase && heroPicked && heroLockedIn) {
+      // less invasive strategy that shows our hero but hides teammates
+      this.emitBlockEvent('strategy-2')
       return
     }
 
