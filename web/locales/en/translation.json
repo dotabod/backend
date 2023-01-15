@@ -3,7 +3,6 @@
     "denied": "{{- heroName}} denied the aegis {{emote}}",
     "pickup": "{{- heroName}} picked up the aegis!"
   },
-
   "apm": "Live APM: {{num}} Chatting",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
@@ -114,6 +113,5 @@
   "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
-
   "xpm": "Live XPM: {{num}}"
 }

@@ -3,7 +3,6 @@
     "denied": "{{- heroName}}zničil Aegis {{emote}}",
     "pickup": "{{- heroName}} získal Aegis!"
   },
-
   "apm": "Momentálne APM: {{num}} četujucich ",
   "averageRank": "Priemerný rank tejto hry",
   "betaFeature": "Beta funkcia ",
@@ -114,6 +113,5 @@
   "updateMmr_auto": "Aktualizované MMR na {{mmr}}. !fixparty pre skupinu a !fixdd pre double down ",
   "updateMmr_manual": "Aktualizované MMR na {{mmr}}",
   "updateMmrMulti": "Viacnásobnom steam účtov, aktualizujem ten na ktorý si momentálne prihlásený s {{steamId}}",
-
   "xpm": "Momentálne XPM:{{num}}"
 }

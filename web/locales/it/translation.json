@@ -3,7 +3,6 @@
     "denied": "{{- heroName}} ha negato l'egida {{emote}}",
     "pickup": "{{- heroName}} ha preso l'egida"
   },
-
   "apm": "APM Live: {{num}} Chatting",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
@@ -114,6 +113,5 @@
   "updateMmr_auto": "Aggiornato MMR a {{mmr}}. !fixparty per party e !fixdd per doubledown",
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
-
   "xpm": "XPM Live: {{num}}"
 }

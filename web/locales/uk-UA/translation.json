@@ -3,7 +3,6 @@
     "denied": "{{- heroName}} знищив Аєгіс {{emote}}",
     "pickup": "{{- heroName}} підібрав Аєгіс!"
   },
-
   "apm": "Поточний APM: {{num}} Chatting",
   "averageRank": "Середній рейтинг матчу",
   "betaFeature": "[бета-версія]",
@@ -114,6 +113,5 @@
   "updateMmr_auto": "Рейтинг оновлено до {{mmr}} MMR. Використовуйте команди !fixparty для зміни рейтингу в групі та !fixdd для подвійної ставки.",
   "updateMmr_manual": "Рейтинг змінено до {{mmr}} MMR",
   "updateMmrMulti": "Кілька облікових записів Steam, оновлення тієї, з якою ви увійшли в систему в даний момент ({{steamId}})",
-
   "xpm": "Поточний XPM: {{num}}"
 }

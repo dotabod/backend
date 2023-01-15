@@ -3,7 +3,6 @@
     "denied": "{{- heroName}} denou o aegis {{emote}}",
     "pickup": "{{- heroName}} pegou o aegis!"
   },
-
   "apm": "APM ao vivo: {{num}} Chatting",
   "averageRank": "Rank médio neste jogo",
   "betaFeature": "[recurso beta]",
@@ -114,6 +113,5 @@
   "updateMmr_auto": "MMR atualizado para {{mmr}}. Digite !fixparty para alterar para MMR em equipe, ou !fixdd para partida com dobro de MMR",
   "updateMmr_manual": "MMR atualizado para {{mmr}}",
   "updateMmrMulti": "Múltiplas contas steam, atualizando a conta logada no momento ({{steamId}})",
-
   "xpm": "XPM ao vivo: {{num}}"
 }
