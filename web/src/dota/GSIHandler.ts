@@ -527,20 +527,6 @@ export class GSIHandler {
               return
             }
 
-            if (hero?.localized_name) {
-              this.say(
-                t('profileUrl', {
-                  channel: hero.localized_name,
-                  url: `dota2protracker.com/hero/${encodeURI(hero.localized_name).replace(
-                    /'/g,
-                    '%27',
-                  )}`,
-                  lng: this.client.locale,
-                }),
-                { delay: false },
-              )
-            }
-
             const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
             if (!betsEnabled) {
               this.openingBets = false
