@@ -106,7 +106,13 @@ const gsiCache: LRUCache.Options<any, any> = {
   // Expire after 30 minutes of inactivity
   ttl: 1000 * 60 * 30,
 }
-export const gsiHandlers = new LRUCache<string, GSIHandler>(gsiCache)
+
+export const gsiHandlers = new LRUCache<string, GSIHandler>({
+  ...gsiCache,
+  dispose: (value: GSIHandler, key: string) => {
+    value.destroy()
+  },
+})
 
 export const twitchIdToToken = new LRUCache<string, string>(gsiCache)
 

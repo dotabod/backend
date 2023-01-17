@@ -85,10 +85,6 @@ export class GSIHandler {
     chatClient.part(this.client.name)
   }
 
-  public unset() {
-    // Clear any timers etc before destroying this class
-  }
-
   public getMmr() {
     return this.client.mmr
   }
@@ -858,5 +854,36 @@ export class GSIHandler {
       this.closeBets()
       return
     }
+  }
+
+  public destroy() {
+    clearTimeout(this.bountyTimeout)
+    clearTimeout(this.killstreakTimeout)
+
+    this.client = null as any
+    this.blockCache = null
+    this.aegisPickedUp = undefined
+    this.playingBetMatchId = undefined
+    this.playingTeam = undefined
+    this.playingHeroSlot = undefined
+    this.playingHero = undefined
+    this.playingLobbyType = undefined
+    this.manaSaved = 0
+    this.treadToggles = 0
+    this.players = undefined
+    this.savingSteamServerId = false
+    this.steamServerTries = 0
+    this.bountyHeroNames.length = 0
+    this.events.length = 0
+    this.bountyTimeout = undefined
+    this.killstreakTimeout = undefined
+    this.passiveMidas = { counter: 0, timer: 0, used: 0 }
+    this.roshanCount = 0
+    this.roshanKilled = undefined
+    this.endingBets = false
+    this.openingBets = false
+    this.creatingSteamAccount = false
+    this.treadsData = { manaAtLastToggle: 0, timeOfLastToggle: 0 }
+    this.disabled = false
   }
 }
