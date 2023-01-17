@@ -4,8 +4,6 @@ import { updateMmr } from '../../dota/lib/updateMmr.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-export const plebMode = new Set()
-
 commandHandler.registerCommand('setmmr', {
   aliases: ['mmr=', 'mmrset'],
   permission: 2,

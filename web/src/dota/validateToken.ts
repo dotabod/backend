@@ -2,9 +2,7 @@ import { NextFunction, Request, Response } from 'express'
 
 import getDBUser from '../db/getDBUser.js'
 import { logger } from '../utils/logger.js'
-import { invalidTokens } from './lib/consts.js'
-
-export const pendingCheckAuth = new Set<string>()
+import { invalidTokens, pendingCheckAuth } from './lib/consts.js'
 
 export function validateToken(req: Request, res: Response, next: NextFunction) {
   // Sent from dota gsi config file
@@ -29,7 +27,7 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
     return
   }
 
-  pendingCheckAuth.add(token)
+  pendingCheckAuth.set(token, true)
   getDBUser(token)
     .then((client) => {
       if (client?.token) {
@@ -49,7 +47,7 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
       pendingCheckAuth.delete(token)
       next(new Error('authentication error'))
     })
-    // TODO: idk if finalyl runs when next() is called in a .then() earlier
+    // TODO: idk if finally runs when next() is called in a .then() earlier
     // So adding the .deletes to .then and .catch until i figure that out lol
     .finally(() => {
       pendingCheckAuth.delete(token)

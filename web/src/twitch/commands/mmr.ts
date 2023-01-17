@@ -7,8 +7,6 @@ import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-export const plebMode = new Set()
-
 commandHandler.registerCommand('mmr', {
   aliases: ['rank', 'medal'],
 

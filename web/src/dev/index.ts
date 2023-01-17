@@ -110,7 +110,7 @@ const topFollowers = async () => {
       stream_online: true,
     },
     orderBy: {
-      followers: 'asc',
+      followers: 'desc',
     },
     take: 10,
   })
@@ -259,4 +259,5 @@ async function fixOnline() {
   }
 }
 
-await fixOnline()
+// await fixOnline()
+// await topFollowers()

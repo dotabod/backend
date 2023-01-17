@@ -1,3 +1,5 @@
+import LRUCache from 'lru-cache'
+
 import { GSIHandler } from '../GSIHandler.js'
 
 // just here for reference, not being used
@@ -98,5 +100,18 @@ export const ADMIN_CHANNELS = (process.env.ADMIN_CHANNELS ?? '').split(',')
 
 export const invalidTokens = new Set(['', null, undefined, 0])
 
-export const gsiHandlers = new Map<string, GSIHandler>()
-export const twitchIdToToken = new Map<string, string>()
+const gsiCache: LRUCache.Options<any, any> = {
+  // Constant users at a time
+  max: 500,
+  // Expire after 30 minutes of inactivity
+  ttl: 1000 * 60 * 30,
+}
+export const gsiHandlers = new LRUCache<string, GSIHandler>(gsiCache)
+
+export const twitchIdToToken = new LRUCache<string, string>(gsiCache)
+
+export const pendingCheckAuth = new LRUCache({
+  max: 500,
+  // 5 minutes
+  ttl: 1000 * 60 * 5,
+})
