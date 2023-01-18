@@ -49,22 +49,27 @@ const events = [
   'subscribeToChannelPollEndEvents',
 ]
 
-accountIds.map((userId) => {
-  return Promise.all(
-    events.map((event) => {
-      try {
-        // @ts-expect-error gonna just call strings and hope they exist if we dont update the lib
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return listener[event](userId, (data: any) => handleEvent(event, data))
-      } catch (error) {
-        console.error(error)
-      }
-    }),
-  )
-    .catch((error) => {
-      console.error(error)
-    })
-    .then(() => {
-      console.log('done')
-    })
+const promises: Promise<any>[] = []
+accountIds.forEach((userId) => {
+  try {
+    promises.push(
+      ...events.map((event: string) => {
+        try {
+          // @ts-expect-error gonna just call strings and hope they exist if we dont update the lib
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return listener[event](userId, (data: any) => handleEvent(event, data))
+        } catch (error) {
+          console.error(error)
+        }
+      }),
+    )
+  } catch (e) {
+    console.log(e)
+  }
 })
+
+Promise.all(promises)
+  .then(() => console.log('done subbing to', accountIds.length, 'channels'))
+  .catch((e) => {
+    console.log(e)
+  })
