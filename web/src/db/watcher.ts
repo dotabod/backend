@@ -88,7 +88,7 @@ channel
       key: newObj.key,
       value: newObj.value,
     })
-    server.io.to(client.token).emit('refresh-settings')
+    server.io.to(client.token).emit('refresh-settings', newObj.key)
   })
   .on('postgres_changes', { event: '*', schema: 'public', table: 'steam_accounts' }, (payload) => {
     const newObj = payload.new as SteamAccount
