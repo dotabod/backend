@@ -168,7 +168,7 @@ export class GSIHandler {
     if (!this.client.steam32Id || !this.playingBetMatchId) return
     const matchId = this.playingBetMatchId
     if (!Number(matchId)) return
-    if (this.client.steamServerId) return
+    if (this.client?.steamServerId) return
     if (this.savingSteamServerId) return
 
     this.savingSteamServerId = true
@@ -189,8 +189,8 @@ export class GSIHandler {
       })
 
       // not saving real steamserverid right now since not needed
-      this.client.steamServerId = 'true'
       this.savingSteamServerId = false
+      this.client.steamServerId = 'true'
       this.playingLobbyType = response.match.lobby_type
       this.players = getAccountsFromMatch(response)
       return
@@ -205,8 +205,7 @@ export class GSIHandler {
     const steamServerId = await server.dota.getUserSteamServer(this.client.steam32Id)
     if (!steamServerId) {
       // 35 5s tries
-      // that's 3 minutes, should have full hero ids by then...right?
-      if (this.steamServerTries > 35) {
+      if (this.steamServerTries > 3) {
         return
       }
       logger.info('Retry steamserverid', {
@@ -220,6 +219,9 @@ export class GSIHandler {
       }, 5000)
       return
     }
+
+    // a race condition from unknown uncaught exception
+    if (!this.client) return
 
     const delayedData = await server.dota.getDelayedMatchData({
       server_steamid: steamServerId,
