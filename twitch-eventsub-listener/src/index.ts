@@ -59,7 +59,7 @@ accountIds.forEach((userId) => {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           return listener[event](userId, (data: any) => handleEvent(event, data))
         } catch (error) {
-          console.error(error)
+          console.error({ userId, error })
         }
       }),
     )
