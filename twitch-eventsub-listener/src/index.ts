@@ -61,4 +61,10 @@ accountIds.map((userId) => {
       }
     }),
   )
+    .catch((error) => {
+      console.error(error)
+    })
+    .then(() => {
+      console.log('done')
+    })
 })
