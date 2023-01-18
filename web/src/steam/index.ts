@@ -236,10 +236,6 @@ class Dota {
       )
         .then(async (response) => {
           const game = response.data as delayedGames | undefined
-          if (game?.match.match_id === '0') {
-            return cb?.(new Error('Match not found'), null)
-          }
-
           const hasTeams = Array.isArray(game?.teams) && game?.teams.length === 2
           const hasPlayers =
             hasTeams &&
@@ -285,8 +281,6 @@ class Dota {
 
             const players = getAccountsFromMatch(delayedData)
             events.emit('saveHeroesForMatchId', { matchId: game.match.match_id, players }, token)
-
-            cb?.(null, game)
             return
           }
 
