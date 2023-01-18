@@ -1,5 +1,3 @@
-import LRUCache from 'lru-cache'
-
 import { GSIHandler } from '../dota/GSIHandler.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
 import { gsiHandlers, invalidTokens, twitchIdToToken } from '../dota/lib/consts.js'
@@ -7,11 +5,7 @@ import { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
 
-const lookingupToken = new LRUCache<string, boolean>({
-  max: 500,
-  // 5 minutes
-  ttl: 1000 * 60 * 5,
-})
+const lookingupToken = new Map<string, boolean>()
 
 export default async function getDBUser(
   token?: string,
@@ -68,7 +62,7 @@ export default async function getDBUser(
       },
     })
     .then((user) => {
-      if (!user?.id) {
+      if (!user.id) {
         logger.info('Invalid token', { token: token ?? twitchId })
         invalidTokens.add(token ?? twitchId)
         return null

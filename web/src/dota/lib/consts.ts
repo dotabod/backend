@@ -107,17 +107,6 @@ const gsiCache: LRUCache.Options<any, any> = {
   ttl: 1000 * 60 * 30,
 }
 
-export const gsiHandlers = new LRUCache<string, GSIHandler>({
-  ...gsiCache,
-  dispose: (value: GSIHandler, key: string) => {
-    value.destroy()
-  },
-})
-
-export const twitchIdToToken = new LRUCache<string, string>(gsiCache)
-
-export const pendingCheckAuth = new LRUCache({
-  max: 500,
-  // 5 minutes
-  ttl: 1000 * 60 * 5,
-})
+export const gsiHandlers = new Map<string, GSIHandler>()
+export const twitchIdToToken = new Map<string, string>()
+export const pendingCheckAuth = new Map<string, boolean>()
