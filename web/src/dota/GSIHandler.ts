@@ -122,7 +122,7 @@ export class GSIHandler {
     }
 
     setTimeout(() => {
-      void chatClient.say(this.getChannel(), msg)
+      this.getChannel() && void chatClient.say(this.getChannel(), msg)
     }, GLOBAL_DELAY)
   }
 
@@ -168,7 +168,7 @@ export class GSIHandler {
     if (!this.client.steam32Id || !this.playingBetMatchId) return
     const matchId = this.playingBetMatchId
     if (!Number(matchId)) return
-    if (this.client?.steamServerId) return
+    if (this.client.steamServerId) return
     if (this.savingSteamServerId) return
 
     this.savingSteamServerId = true
@@ -532,31 +532,32 @@ export class GSIHandler {
             }
 
             setTimeout(() => {
-              openTwitchBet(
-                this.client.locale,
-                this.getToken(),
-                hero?.localized_name,
-                this.client.settings,
-              )
-                .then(() => {
-                  this.say(t('bets.open', { lng: this.client.locale }), { delay: false })
-                  this.openingBets = false
-                  logger.info('[BETS] open bets', {
-                    event: 'open_bets',
-                    matchId,
-                    user: this.getToken(),
-                    player_team: this.client.gsi?.player?.team_name,
+              this.getToken() &&
+                openTwitchBet(
+                  this.client.locale,
+                  this.getToken(),
+                  hero?.localized_name,
+                  this.client.settings,
+                )
+                  .then(() => {
+                    this.say(t('bets.open', { lng: this.client.locale }), { delay: false })
+                    this.openingBets = false
+                    logger.info('[BETS] open bets', {
+                      event: 'open_bets',
+                      matchId,
+                      user: this.getToken(),
+                      player_team: this.client.gsi?.player?.team_name,
+                    })
                   })
-                })
-                .catch((e: any) => {
-                  logger.error('[BETS] Error opening twitch bet', {
-                    channel,
-                    e: e?.message || e,
-                    matchId,
-                  })
+                  .catch((e: any) => {
+                    logger.error('[BETS] Error opening twitch bet', {
+                      channel,
+                      e: e?.message || e,
+                      matchId,
+                    })
 
-                  this.openingBets = false
-                })
+                    this.openingBets = false
+                  })
             }, GLOBAL_DELAY)
           })
           .catch((e: any) => {
@@ -673,32 +674,33 @@ export class GSIHandler {
     }
 
     setTimeout(() => {
-      closeTwitchBet(won, this.getToken())
-        .then(() => {
-          logger.info('[BETS] end bets', {
-            event: 'end_bets',
-            matchId,
-            name: this.getChannel(),
-            winning_team: localWinner,
-            player_team: myTeam,
-            didWin: won,
+      this.getToken() &&
+        closeTwitchBet(won, this.getToken())
+          .then(() => {
+            logger.info('[BETS] end bets', {
+              event: 'end_bets',
+              matchId,
+              name: this.getChannel(),
+              winning_team: localWinner,
+              player_team: myTeam,
+              didWin: won,
+            })
           })
-        })
-        .catch((e: any) => {
-          logger.error('[BETS] Error closing twitch bet', {
-            channel,
-            e: e?.message || e,
-            matchId,
+          .catch((e: any) => {
+            logger.error('[BETS] Error closing twitch bet', {
+              channel,
+              e: e?.message || e,
+              matchId,
+            })
           })
-        })
-        .finally(() => {
-          const message = won
-            ? t('bets.won', { lng: this.client.locale })
-            : t('bets.lost', { lng: this.client.locale })
+          .finally(() => {
+            const message = won
+              ? t('bets.won', { lng: this.client.locale })
+              : t('bets.lost', { lng: this.client.locale })
 
-          this.say(message, { delay: false })
-          this.resetClientState(true)
-        })
+            this.say(message, { delay: false })
+            this.resetClientState(true)
+          })
     }, GLOBAL_DELAY)
   }
 
