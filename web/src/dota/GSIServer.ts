@@ -68,13 +68,11 @@ class GSIServer {
       // TODO: should just send obs blockers regardless of blockcache somehow
       // This triggers a resend of obs blockers
       if (gsiHandlers.has(token)) {
-        logger.info('[GSI] Client connected', { id: socket.id, token })
-
         const handler = gsiHandlers.get(token)
         if (handler) {
-          // handler.emitBadgeUpdate()
-          // handler.emitWLUpdate()
-          // handler.blockCache = null
+          handler.emitBadgeUpdate()
+          handler.emitWLUpdate()
+          handler.blockCache = null
         }
       }
 
