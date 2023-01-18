@@ -55,11 +55,11 @@ class GSIServer {
             return
           }
 
-          next(new Error('authentication error'))
+          next(new Error('authentication error 58'))
         })
         .catch((e) => {
           logger.info('[GSI] io.use Error checking auth', { token, e })
-          next(new Error('authentication error'))
+          next(new Error('authentication error 62'))
         })
     })
 
