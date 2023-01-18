@@ -205,7 +205,7 @@ export class GSIHandler {
     const steamServerId = await server.dota.getUserSteamServer(this.client.steam32Id)
     if (!steamServerId) {
       // 35 5s tries
-      if (this.steamServerTries > 3) {
+      if (this.steamServerTries > 35) {
         return
       }
       logger.info('Retry steamserverid', {
