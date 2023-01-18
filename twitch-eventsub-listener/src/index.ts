@@ -3,6 +3,7 @@ import './db/watcher.js'
 import { Server } from 'socket.io'
 
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
+import { listener } from './twitch/lib/listener.js'
 import { offlineEvent } from './twitch/lib/offlineEvent.js'
 import { onlineEvent } from './twitch/lib/onlineEvent.js'
 
