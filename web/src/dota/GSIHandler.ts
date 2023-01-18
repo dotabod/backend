@@ -779,10 +779,11 @@ export class GSIHandler {
   */
   setupOBSBlockers(state?: string) {
     if (isSpectator(this.client.gsi) || isArcade(this.client.gsi)) {
+      const blockType = isSpectator(this.client.gsi) ? 'spectator' : 'arcade'
+      if (this.blockCache === blockType) return
+
       this.emitBadgeUpdate()
       this.emitWLUpdate()
-
-      const blockType = isSpectator(this.client.gsi) ? 'spectator' : 'arcade'
       this.emitBlockEvent(blockType)
       return
     }
