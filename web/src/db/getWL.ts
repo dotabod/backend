@@ -1,13 +1,14 @@
 import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
 
-export async function getWL(channelId: string, startDate: Date | null) {
+export async function getWL(channelId: string, startDate?: Date | null) {
   if (!channelId) {
     return Promise.resolve({ record: [{ win: 0, lose: 0, type: 'U' }], msg: null })
   }
 
   if (!startDate) {
     logger.info('[WL] Stream not live??', { channelId, startDate })
+    return Promise.resolve({ record: [{ win: 0, lose: 0, type: 'U' }], msg: null })
   }
 
   return prisma.bet
