@@ -236,7 +236,7 @@ class Dota {
       )
         .then(async (response) => {
           const game = response.data as delayedGames | undefined
-          if (game?.match?.match_id === '0' || !game?.match?.match_id) {
+          if (game?.match.match_id === '0') {
             return cb?.(new Error('Match not found'), null)
           }
 
