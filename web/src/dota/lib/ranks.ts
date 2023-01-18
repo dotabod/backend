@@ -31,7 +31,7 @@ export async function lookupLeaderRank(mmr: number, steam32Id?: number | null) {
         .getCard(steam32Id)
         .then((data) => data?.leaderboard_rank as number)
     } catch (e) {
-      logger.error('[lookupLeaderRank] Error fetching leaderboard rank', steam32Id)
+      logger.error('[lookupLeaderRank] Error fetching leaderboard rank', { e, steam32Id })
       return {
         myRank: leaderRanks[leaderRanks.length - 1],
         standing: null,
