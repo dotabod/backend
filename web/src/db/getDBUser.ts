@@ -17,7 +17,7 @@ export default async function getDBUser(
   logger.info('[GSI] Havent cached user token yet, checking db', { token: token ?? twitchId })
 
   return await prisma.user
-    .findFirst({
+    .findFirstOrThrow({
       select: {
         settings: {
           select: {
@@ -83,32 +83,9 @@ export default async function getDBUser(
 
       return theUser as SocketClient
     })
-    .catch((e) => {
+    .catch((e: any) => {
       logger.info('[USER] Error checking auth', { token: token ?? twitchId, e })
-      return null
-    })
-}
-
-export async function getSteamByTwitchId(twitchId: string) {
-  return await prisma.user
-    .findFirst({
-      select: {
-        SteamAccount: {
-          select: {
-            mmr: true,
-            steam32Id: true,
-            name: true,
-          },
-        },
-      },
-      where: {
-        Account: {
-          providerAccountId: twitchId,
-        },
-      },
-    })
-    .catch((e) => {
-      logger.info('[USER] Error checking auth', { twitchId, e })
+      invalidTokens.add(token ?? twitchId)
       return null
     })
 }
