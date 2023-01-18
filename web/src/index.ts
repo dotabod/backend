@@ -19,5 +19,6 @@ await use(FsBackend).init<FsBackendOptions>({
 import './db/watcher.js'
 import './dota/index.js'
 import './twitch/index.js'
+import './twitch/events.js'
 
 logger.info('Starting!')

@@ -38,6 +38,7 @@ services:
     hostname: twitch-eventsub-listener
     ports:
       - '82:5010'
+      - '5015:5015'
     environment:
       - NEW_RELIC_APP_NAME="DEV twitch eventsub listener"
       - PORT=5010
@@ -94,8 +95,7 @@ services:
     image: dotabod-nginx
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
-    build:
-      context: nginx
+    build: ./nginx
     ports:
       - '80:80'
       - '443:443'

@@ -12,7 +12,7 @@ const io = new Server(5015)
 
 let eventsIOConnected = false
 io.on('connection', (socket) => {
-  void socket.join('twitch-chat-events')
+  void socket.join('twitch-channel-events')
   eventsIOConnected = true
 
   socket.on('disconnect', () => {
@@ -34,7 +34,7 @@ function handleEvent(eventName: string, data: any) {
     return
   }
 
-  io.to('twitch-chat-events').emit(eventName, data.broadcasterId, data)
+  io.to('twitch-channel-events').emit('event', eventName, data.broadcasterId, JSON.stringify(data))
 }
 
 const events = [
@@ -51,6 +51,8 @@ const events = [
 
 accountIds.map((userId) => {
   return Promise.all(
+    // @ts-expect-error gonna just call strings and hope they exist if we dont update the lib
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     events.map((event) => listener[event](userId, (data: any) => handleEvent(event, data))),
   )
 })

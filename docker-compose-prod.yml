@@ -43,6 +43,7 @@ services:
     hostname: twitch-eventsub-listener
     ports:
       - '82:5010'
+      - '5015:5015'
     environment:
       - NEW_RELIC_APP_NAME="twitch eventsub listener"
       - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED

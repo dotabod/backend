@@ -8,3 +8,4 @@ config.js
 prisma/generated
 private.key
 public.key
+.idea
