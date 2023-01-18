@@ -1,9 +1,17 @@
+import LRUCache from 'lru-cache'
+
 import { GSIHandler } from '../dota/GSIHandler.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
 import { gsiHandlers, invalidTokens, twitchIdToToken } from '../dota/lib/consts.js'
 import { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
+
+const lookingupToken = new LRUCache<string, boolean>({
+  max: 500,
+  // 5 minutes
+  ttl: 1000 * 60 * 5,
+})
 
 export default async function getDBUser(
   token?: string,
@@ -14,7 +22,10 @@ export default async function getDBUser(
   const client = findUser(token) ?? findUserByTwitchId(twitchId)
   if (client) return client
 
+  if (lookingupToken.has(token ?? twitchId ?? '')) return null
+
   logger.info('[GSI] Havent cached user token yet, checking db', { token: token ?? twitchId })
+  lookingupToken.set(token ?? twitchId ?? '', true)
 
   return await prisma.user
     .findFirstOrThrow({
@@ -83,9 +94,12 @@ export default async function getDBUser(
 
       return theUser as SocketClient
     })
-    .catch((e: any) => {
-      logger.info('[USER] Error checking auth', { token: token ?? twitchId, e })
+    .catch((e) => {
+      logger.error('[USER] Error checking auth', { token: token ?? twitchId, e })
       invalidTokens.add(token ?? twitchId)
       return null
+    })
+    .finally(() => {
+      lookingupToken.delete(token ?? twitchId ?? '')
     })
 }
