@@ -18,14 +18,14 @@
   "bountyPickup": "Отримано {{bountyValue}} золота від рун багатства ({{totalBounties}}/4) EZ  Clap Дякую {{heroNames}} SeemsGood",
   "chatters": {
     "died": "{{- heroName}} помер, не нажавши {{itemNames}} ICANT",
-    "firstBloodDeath": "{{- heroName}} пролив першу кров PepeLaugh",
+    "firstBloodDeath": "{{- heroName}} проливає першу кров PepeLaugh",
     "midas": "massivePIDAS Використай свій Midas",
     "pause": "PauseChamp Хто поставив паузу?",
     "smoked": "Shush {{- heroName}} в смоці!"
   },
   "commands_everyone": "Кожен може використовувати: {{commandList}}",
   "commands_mods": "Команди лише для модераторів: {{commandList}}",
-  "dota2pt": "Потрібні професійні айтембілди на {{- heroName}}?  Знаходьте їх по посиланню {{- url}}",
+  "dota2pt": "Ти не знаєш що купити на {{- heroName}}?  Купуй предмети як про гравець, по посиланню {{- url}}",
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",
   "gameNotFound": "Матч не знайдено",
   "gpm_zero": "Поточний GPM: {{num}}",

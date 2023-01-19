@@ -1,7 +1,7 @@
 {
   "aegis": {
-    "denied": "{{- heroName}}  پولدار رو ببین! آنخ رو اتک داد {{emote}}",
-    "pickup": "{{- heroName}} یه غذای رایگان میتونه بده"
+    "denied": "پولدار رو ببین! آنخ رو اتک داد {{- heroName}} {{emote}}",
+    "pickup": " میتونه یه غذای رایگان بده {{- heroName}}"
   },
   "apm": "Live APM: {{num}} Chatting",
   "averageRank": "میانگین اکانت بایرهای این بازی",
@@ -11,30 +11,30 @@
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
   "bets": {
     "lost": "این رو که باختیم. عب نداره بعدی هم لوزه",
-    "notScored": "بازی رو دبه کردن همه D: بازی {{matchId}} هیچ تاثیری نداشت",
+    "notScored": "همه بازی رو دبه کردن D: بازی {{matchId}} هیچ تاثیری نداشت",
     "open": "قمار کنید peepoGamble",
     "won": "بلاخره بردیم. یک تنه بازی رو حمل کردم"
   },
   "bountyPickup": "+{{bountyValue}} gold from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
   "chatters": {
     "died": "درخشیدی {{- heroName}} . {{itemNames}}  را نگه دار واسه بازی بعد ICANT",
-    "firstBloodDeath": "{{- heroName}} اولین غذا را داد PepeLaugh",
+    "firstBloodDeath": "اولین غذا را داد {{- heroName}} PepeLaugh",
     "midas": "massivePIDAS میداس رو استفاده کن",
     "pause": "PauseChamp کی وسط شکار ریدنش گرفت؟",
     "smoked": "Shush {{- heroName}} سبحان الله غیب شد"
   },
   "commands_everyone": "کامندهای همگانی: {{commandList}}",
   "commands_mods": "کامندهای مادها {{commandList}}",
-  "dota2pt": "میخوای چیز جدید واسه هیروی {{- heroName}} یاد بگیری؟ این اینک رو چک کن {{- url}}",
+  "dota2pt": "میخوای چیز جدید واسه قهرمان {{- heroName}} یاد بگیری؟ این اینک رو چک کن {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "gameNotFound": "بازی پیدا نشد",
   "gpm_zero": "Live GPM: {{num}}",
   "gpm_other": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "invalidColor": "رنگ هیروها اشتباه است. باید بین 1 تا 10 باشد یا یکی از {{colorList}}",
+  "invalidColor": "رنگ قرمان ها اشتباه است. باید بین 1 تا 10 باشد یا یکی از {{colorList}}",
   "invalidMmr": "داداچ اشتباه میزنی. این رو بزن  !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} lost the {{killstreakCount}} kill streak BibleThump",
-    "won": "{{- heroName}} has a {{killstreakCount}} kill streak POGGIES"
+    "lost": "{{- heroName}} با {{killstreakCount}} غذایی که گرفته بود رفت غذا داد BibleThump",
+    "won": "{{- heroName}}  {{killstreakCount}}غذا خورده POGGIES"
   },
   "lastgame": {
     "link": "بازی قبل: {{- url}}",
@@ -58,9 +58,9 @@
   "missingUser": "User not found. Try logging out and in of dotabod.com",
   "modsOnly_off": "فقط مادها خاموش شد! همه میتونن چت کنن",
   "modsOnly_on": "فقط مادها! کسی دیگه نمیتونه چت کنه BASED Clap",
-  "noHero": "هیرو پیدا نشد",
+  "noHero": "قهرمانی پیدا نشد",
   "noLastMatch": "بازی قبلی پیدا نشد PauseChamp",
-  "noNotable": "غذا دهنده های معروف",
+  "noNotable": "غذا دهنده معروفی در بازی نیست",
   "notLive": "استریم هنوز شروع نشده PauseChamp",
   "notPlaying": "بازی نمیکنه PauseChamp",
   "npAdd": "Try !np add <steam32id> <playername>",
@@ -86,10 +86,10 @@
   "ranked_yes": "بله این گیم رنکه",
   "refresh": "Refreshing overlay...",
   "roshanCount": {
-    "1": "روشان اول. روش بعدی آقانیم شارد",
-    "2": "روشان دوم. روش بعدی پنیر و آقانیم یا رفرش شارد",
-    "3": "روش سوم. روش بعدی پنیر و آقانیم و رفرش",
-    "more": "روشان {{num}}. روش بعدی پنیر و آقانیم و رفرش شارد"
+    "1": "روشان اول. روشان بعدی آقانیم شارد",
+    "2": "روشان دوم. روشان بعدی پنیر و آقانیم یا رفرش شارد",
+    "3": "روشان سوم. روشان بعدی پنیر و آقانیم و رفرش",
+    "more": "روشان {{num}}. روشان بعدی پنیر و آقانیم و رفرش شارد"
   },
   "roshanKilled": "روشان رو کوشتن. روشان بعدی بین {{min}} تا {{max}} دقیقه",
   "tip": {
@@ -107,11 +107,11 @@
   "treadToggle_one": "",
   "treadToggle_other": "",
   "uknownMmr": "",
-  "unknown": "",
+  "unknown": "نامعلوم",
   "unknownSteam": "",
-  "updateMmr": "",
-  "updateMmr_auto": "",
-  "updateMmr_manual": "",
-  "updateMmrMulti": "",
-  "xpm": ""
+  "updateMmr": "$t(updateMmr_manual)",
+  "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
+  "updateMmr_manual": "Updated MMR to {{mmr}}",
+  "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
+  "xpm": "Live XPM: {{num}}"
 }
