@@ -12,7 +12,7 @@
   "bets": {
     "lost": "Kikaptunk",
     "notScored": "Nem pontozott mérkőzés D: Nem számolunk MMR-t a {{matchId}}-re",
-    "open": "Fogadások elindítva peepoGamble",
+    "open": "Fogadás elindítva peepoGamble",
     "won": "Nyertünk"
   },
   "bountyPickup": "+{{bountyValue}} arany a bountyból ({{totalBounties}}/4) EZ CLAP Köszönjük {{heroNames}} SeemsGood",
@@ -54,7 +54,7 @@
   "matchFound": "Meccs információ megtalálható {{commandList}} a parancsok aktívak.",
   "matchId": "Meccs ID: {{matchId}}",
   "midasUsed": "Végre használva volt a Midas, {{seconds}} késéssel Madge",
-  "missingMatchData": "Várakozunk a meccs eredményére PauseChamp",
+  "missingMatchData": "Várunk a meccs adataira PauseChamp",
   "missingUser": "Felhasználó nem található. Próbálj újra bejelentkezni a dotabod.com-on",
   "modsOnly_off": "Moderátor mód kikapcsolva. Mindenki cseveghet.",
   "modsOnly_on": "Moderátor csevegés bekapcsolva. BASED Clap. Csak a modok írhatnak.",
