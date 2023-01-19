@@ -7,7 +7,7 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('smurfs', {
-  aliases: ['lifetimes', 'totals', 'games'],
+  aliases: ['lifetimes', 'totals', 'games', 'smurf'],
 
   onlyOnline: true,
   dbkey: DBSettings.commandSmurfs,
