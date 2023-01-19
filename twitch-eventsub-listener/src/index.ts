@@ -1,5 +1,6 @@
 import './db/watcher.js'
 
+import { EventSubChannelPollChoice, EventSubChannelPredictionOutcome } from '@twurple/eventsub-base'
 import { Server } from 'socket.io'
 
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
@@ -34,7 +35,18 @@ function handleEvent(eventName: string, data: any) {
     return
   }
 
-  io.to('twitch-channel-events').emit('event', eventName, data.broadcasterId, JSON.stringify(data))
+  io.to('twitch-channel-events').emit('event', eventName, data.broadcasterId, {
+    choices: data?.choices?.map((choice: EventSubChannelPollChoice) => ({
+      totalVotes: choice.totalVotes,
+      title: choice.title,
+    })),
+    title: data?.title,
+    endDate: data?.lockDate || data?.endDate,
+    outcomes: data?.outcomes?.map((outcome: EventSubChannelPredictionOutcome) => ({
+      totalVotes: outcome.users,
+      title: outcome.title,
+    })),
+  })
 }
 
 const events = [

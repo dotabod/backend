@@ -2,7 +2,7 @@ import { SocketClient } from '../../types.js'
 import { GSIHandler } from '../GSIHandler.js'
 import { gsiHandlers, twitchIdToToken } from './consts.js'
 
-function getTokenFromTwitchId(twitchId?: string | null) {
+export function getTokenFromTwitchId(twitchId?: string | null) {
   if (!twitchId) return null
   if (!twitchIdToToken.has(twitchId)) return null
 
