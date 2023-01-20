@@ -80,6 +80,7 @@ services:
       - '81:5000'
       - '9229:9229'
     environment:
+      - NEW_RELIC_ENABLED
       - NR_NATIVE_METRICS_NO_BUILD
       - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
       - NEW_RELIC_APP_NAME="dotabod web"

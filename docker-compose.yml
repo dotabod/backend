@@ -64,12 +64,13 @@ services:
     container_name: dotabod-web
     build:
       context: web
-      target: dev
+      target: prod
     hostname: web
     ports:
       - '81:5000'
       - '9229:9229'
     environment:
+      - NEW_RELIC_ENABLED
       - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
       - NEW_RELIC_APP_NAME="dev dotabod web"
       - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
@@ -92,7 +93,6 @@ services:
       - TWITCH_CLIENT_SECRET
       - TWITCH_REFRESH_TOKEN
     volumes:
-      - ./web/src:/app/src
       - steam_auth:/app/src/steam/volumes
   nginx:
     container_name: dotabod-nginx
