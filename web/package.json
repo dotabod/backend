@@ -9,9 +9,9 @@
   "type": "module",
   "scripts": {
     "studio": "doppler run -- yarn prisma studio --schema ./prisma/postgres.prisma",
-    "start": "node --trace-warnings --experimental-loader=newrelic/esm-loader.mjs ./src/index.js",
+    "start": "node --inspect=0.0.0.0:9229 --trace-warnings --experimental-loader=newrelic/esm-loader.mjs ./src/index.js",
     "build": "tsc",
-    "debug": "doppler run -- nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 --trace-warnings --experimental-loader=newrelic/esm-loader.mjs -r ts-node/register --loader ts-node/esm src/index.ts\"",
+    "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 --trace-warnings --experimental-loader=newrelic/esm-loader.mjs -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts --exec \"node --trace-warnings --experimental-loader=newrelic/esm-loader.mjs -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "test": "doppler run -- ts-node --project ./tsconfig.json -r ts-node/register src/dev/index.ts",
     "postinstall": "prisma generate --schema ./prisma/mongo.prisma && prisma generate --schema ./prisma/postgres.prisma",
