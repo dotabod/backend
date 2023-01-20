@@ -67,8 +67,8 @@ class GSIServer {
       const { token } = socket.handshake.auth
       // TODO: should just send obs blockers regardless of blockcache somehow
       // This triggers a resend of obs blockers
-      if (gsiHandlers.has(token)) {
-        const handler = gsiHandlers.get(token)
+      if (gsiHandlers[token]) {
+        const handler = gsiHandlers[token]
         if (handler) {
           handler.emitBadgeUpdate()
           handler.emitWLUpdate()

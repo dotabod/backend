@@ -19,8 +19,8 @@ channel
     const client = findUser(oldObj.id)
     if (client) {
       logger.info('[WATCHER USER] Deleting user', { name: client.name })
-      gsiHandlers.get(client.token)?.disable()
-      gsiHandlers.delete(client.token)
+      gsiHandlers[client.token].disable()
+      delete gsiHandlers[client.token]
     }
   })
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {

@@ -22,34 +22,34 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
     return
   }
 
-  if (pendingCheckAuth.has(token)) {
+  if (pendingCheckAuth[token]) {
     res.status(401).send('Still validating token, skipping requests until auth')
     return
   }
 
-  pendingCheckAuth.set(token, true)
+  pendingCheckAuth[token] = true
   getDBUser(token)
     .then((client) => {
       if (client?.token) {
         client.gsi = req.body
-        pendingCheckAuth.delete(token)
+        delete pendingCheckAuth[token]
 
         next()
         return
       }
 
-      pendingCheckAuth.delete(token)
+      delete pendingCheckAuth[token]
       next(new Error('authentication error 42'))
     })
     .catch((e) => {
       logger.info('[GSI] io.use Error checking auth', { token, e })
       invalidTokens.add(token)
-      pendingCheckAuth.delete(token)
+      delete pendingCheckAuth[token]
       next(new Error('authentication error 48'))
     })
     // TODO: idk if finally runs when next() is called in a .then() earlier
     // So adding the .deletes to .then and .catch until i figure that out lol
     .finally(() => {
-      pendingCheckAuth.delete(token)
+      delete pendingCheckAuth[token]
     })
 }
