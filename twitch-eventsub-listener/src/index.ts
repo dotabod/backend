@@ -43,8 +43,14 @@ function handleEvent(eventName: string, data: any) {
     title: data?.title,
     endDate: data?.lockDate || data?.endDate,
     outcomes: data?.outcomes?.map((outcome: EventSubChannelPredictionOutcome) => ({
-      totalVotes: outcome.users,
+      totalVotes: outcome.channelPoints,
+      totalUsers: outcome.users,
       title: outcome.title,
+      topUsers: outcome.topPredictors.map((topUser) => ({
+        userDisplayName: topUser.userDisplayName,
+        channelPointsUsed: topUser.channelPointsUsed,
+        channelPointsWon: topUser.channelPointsWon,
+      })),
     })),
   })
 }
