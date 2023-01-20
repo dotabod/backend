@@ -42,15 +42,17 @@ function handleEvent(eventName: string, data: any) {
     })),
     title: data?.title,
     endDate: data?.lockDate || data?.endDate,
-    outcomes: data?.outcomes?.map((outcome: EventSubChannelPredictionOutcome) => ({
-      totalVotes: outcome.channelPoints,
-      totalUsers: outcome.users,
-      title: outcome.title,
-      topUsers: outcome.topPredictors.map((topUser) => ({
-        userDisplayName: topUser.userDisplayName,
-        channelPointsUsed: topUser.channelPointsUsed,
-        channelPointsWon: topUser.channelPointsWon,
-      })),
+    outcomes: data?.outcomes?.map((outcome: EventSubChannelPredictionOutcome | null) => ({
+      totalVotes: outcome?.channelPoints,
+      totalUsers: outcome?.users,
+      title: outcome?.title,
+      topUsers: Array.isArray(outcome?.topPredictors)
+        ? outcome?.topPredictors.map((topUser) => ({
+            userDisplayName: topUser.userDisplayName,
+            channelPointsUsed: topUser.channelPointsUsed,
+            channelPointsWon: topUser.channelPointsWon,
+          }))
+        : [],
     })),
   })
 }
