@@ -421,6 +421,10 @@ export class GSIHandler {
   // 3 If it is, steam dota2 api result of match
   // 4 Then, tell twitch to close bets based on win result
   openBets() {
+    if (this.openingBets) {
+      return
+    }
+
     if (
       !!this.playingBetMatchId &&
       !!this.client.gsi?.map?.matchid &&
@@ -440,9 +444,6 @@ export class GSIHandler {
       return
     }
 
-    if (this.openingBets) {
-      return
-    }
 
     // Why open if not playing?
     if (this.client.gsi?.player?.activity !== 'playing') {
