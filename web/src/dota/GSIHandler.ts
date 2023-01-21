@@ -435,6 +435,9 @@ export class GSIHandler {
         name: this.getChannel(),
         playingMatchId: this.playingBetMatchId,
         matchId: this.client.gsi.map.matchid,
+        steam32Id: this.getSteam32(),
+        steamFromGSI: this.client.gsi?.player?.steamid,
+        token: this.getToken(),
       })
       this.resetClientState(true)
     }
