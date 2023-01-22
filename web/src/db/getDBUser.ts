@@ -78,11 +78,11 @@ export default async function getDBUser(
         token: user.id,
       }
 
-      if (!gsiHandlers[theUser.id]) {
+      if (!gsiHandlers.has(theUser.id)) {
         logger.info('[GSI] Connecting new client', { token: theUser.id, name: theUser.name })
         const gsiHandler = new GSIHandler(theUser)
-        gsiHandlers[theUser.id] = gsiHandler
-        twitchIdToToken[theUser.Account!.providerAccountId!] = theUser.id
+        gsiHandlers.set(theUser.id, gsiHandler)
+        twitchIdToToken.set(theUser.Account!.providerAccountId!, theUser.id)
         return gsiHandler.client
       }
 

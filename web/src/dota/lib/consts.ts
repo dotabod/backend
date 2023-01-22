@@ -107,7 +107,6 @@ const gsiCache: LRUCache.Options<any, any> = {
   ttl: 1000 * 60 * 30,
 }
 
-type MyMap<T> = Record<string, T>
-export const gsiHandlers: MyMap<GSIHandler> = {}
-export const twitchIdToToken: MyMap<string> = {}
-export const pendingCheckAuth: MyMap<boolean> = {}
+export const gsiHandlers = new Map<string, GSIHandler>()
+export const twitchIdToToken = new Map<string, string>()
+export const pendingCheckAuth = new Map<string, boolean>()
