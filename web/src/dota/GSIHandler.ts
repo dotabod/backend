@@ -75,9 +75,9 @@ export class GSIHandler {
     this.emitWLUpdate()
   }
 
-  public async enable() {
+  public enable() {
     this.disabled = false
-    await chatClient.join(this.client.name)
+    return chatClient.join(this.client.name)
   }
 
   public disable() {
@@ -436,7 +436,7 @@ export class GSIHandler {
         playingMatchId: this.playingBetMatchId,
         matchId: this.client.gsi.map.matchid,
         steam32Id: this.getSteam32(),
-        steamFromGSI: this.client.gsi?.player?.steamid,
+        steamFromGSI: this.client.gsi.player?.steamid,
         token: this.getToken(),
       })
       this.resetClientState(true)
@@ -446,7 +446,6 @@ export class GSIHandler {
     if (this.playingBetMatchId !== null) {
       return
     }
-
 
     // Why open if not playing?
     if (this.client.gsi?.player?.activity !== 'playing') {

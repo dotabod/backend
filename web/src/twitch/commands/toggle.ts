@@ -35,6 +35,7 @@ export async function toggleDotabod(
 
     logger.info('[REMOVE GSI] Removing GSI client', { token })
     gsiHandlers.get(token)?.disable()
+    gsiHandlers.delete(token)
   }
 }
 
