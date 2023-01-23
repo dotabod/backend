@@ -36,7 +36,7 @@ io.on('say', function (channel: string, text: string) {
   void chatClient.say(channel, text)
 })
 
-// Setup twitch chat bot client
+// Setup twitch chatbot client
 export const chatClient = await getChatClient()
 
 chatClient.onMessage(function (channel, user, text, msg) {
