@@ -72,7 +72,7 @@ services:
     container_name: dotabod-web
     build:
       context: web
-      target: prod
+      target: dev
     hostname: web
     ports:
       - '81:5000'
@@ -101,6 +101,7 @@ services:
       - TWITCH_CLIENT_SECRET
       - TWITCH_REFRESH_TOKEN
     volumes:
+      - ./web/src:/app/src
       - steam_auth:/app/src/steam/volumes
   nginx:
     container_name: dotabod-nginx
