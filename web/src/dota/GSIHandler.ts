@@ -266,9 +266,7 @@ export class GSIHandler {
           command: '!avg',
           key: DBSettings.commandAvg,
         },
-      ].filter((cmd) => {
-        return getValueOrDefault(cmd.key, this.client.settings)
-      })
+      ].filter((cmd) => getValueOrDefault(cmd.key, this.client.settings))
       if (commands.length) {
         this.say(
           t('matchFound', {
