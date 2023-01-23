@@ -32,6 +32,11 @@ export async function getAccountIds() {
           },
         },
       },
+      orderBy: {
+        user: {
+          followers: 'desc',
+        },
+      },
     })
     .then((users) => users.map((user) => user.providerAccountId))
 }
