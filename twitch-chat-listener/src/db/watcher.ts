@@ -17,7 +17,18 @@ channel
       try {
         void chatClient.join(newUser.name)
       } catch (e) {
-        console.error('[SUPABASE] Error joining channel: ', e)
+        console.error('[SUPABASE] Error joining channel: ', { e })
+      }
+    } else if (oldUser.name !== newUser.name) {
+      console.log('[SUPABASE] User changed name: ', {
+        oldName: oldUser.name,
+        newName: newUser.name,
+      })
+      try {
+        chatClient.part(oldUser.name)
+        void chatClient.join(newUser.name)
+      } catch (e) {
+        console.error('[SUPABASE] Error joining channel: ', { e })
       }
     }
   })
