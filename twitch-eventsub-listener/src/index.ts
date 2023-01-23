@@ -107,7 +107,6 @@ const handleEvent = (eventName: keyof typeof events, data: any) => {
 
   if (event.customHandler) {
     event.customHandler(data)
-    return
   }
 
   if (event.sendToSocket) {

@@ -1,7 +1,6 @@
 import { User } from '../../prisma/generated/postgresclient/index.js'
+import { SubscribeEvents } from '../index.js'
 import { getBotAPI } from '../twitch/lib/getBotAPI.js'
-import { listener } from '../twitch/lib/listener.js'
-import { offlineEvent } from '../twitch/lib/offlineEvent.js'
 import { onlineEvent } from '../twitch/lib/onlineEvent.js'
 import { prisma } from './prisma.js'
 import supabase from './supabase.js'
@@ -35,8 +34,7 @@ async function handleNewUser(userId: string) {
   }
 
   try {
-    await listener.subscribeToStreamOnlineEvents(user.providerAccountId, onlineEvent)
-    await listener.subscribeToStreamOfflineEvents(user.providerAccountId, offlineEvent)
+    SubscribeEvents([user.providerAccountId])
   } catch (e) {
     console.log(e, 'error on handlenewuser')
   }
@@ -49,7 +47,7 @@ channel
     }
 
     const user = payload.new as User
-    console.log('[SUPABASE] New user to subscribe online events for: ', user.name)
+    console.log('[SUPABASE] New user to subscribe online events for: ', { name: user.name })
     void handleNewUser(user.id)
   })
   .subscribe((status, err) => {
