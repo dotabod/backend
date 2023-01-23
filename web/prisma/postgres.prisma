@@ -30,26 +30,29 @@ model Account {
 }
 
 model User {
-  id                String         @id @default(cuid())
-  displayName       String?        @unique(map: "users_name_key")
-  email             String?        @unique
-  image             String?
-  createdAt         DateTime       @default(now()) @map("created_at")
-  updatedAt         DateTime       @default(now()) @updatedAt @map("updated_at")
-  mmr               Int            @default(0) @db.SmallInt
-  steam32Id         Int?
-  followers         Int?
-  stream_delay      Int?           @default(0) @db.SmallInt
-  name              String         @unique(map: "users_username_key") @default("")
-  emailVerified     DateTime?
-  stream_online     Boolean        @default(false)
-  stream_start_date DateTime?      @db.Timestamp(6)
-  beta_tester       Boolean        @default(false)
-  locale            String         @default("en")
-  Account           Account?
-  Bet               Bet[]
-  settings          Setting[]
-  SteamAccount      SteamAccount[]
+  id                                String         @id @default(cuid())
+  displayName                       String?        @unique(map: "users_name_key")
+  email                             String?        @unique
+  image                             String?
+  createdAt                         DateTime       @default(now()) @map("created_at")
+  updatedAt                         DateTime       @default(now()) @updatedAt @map("updated_at")
+  mmr                               Int            @default(0) @db.SmallInt
+  steam32Id                         Int?
+  followers                         Int?
+  stream_delay                      Int?           @default(0) @db.SmallInt
+  name                              String         @unique(map: "users_username_key") @default("")
+  emailVerified                     DateTime?
+  stream_online                     Boolean        @default(false)
+  stream_start_date                 DateTime?      @db.Timestamp(6)
+  beta_tester                       Boolean        @default(false)
+  locale                            String         @default("en")
+  Account                           Account?
+  Bet                               Bet[]
+  mods_mods_mod_user_idTousers      mods[]         @relation("mods_mod_user_idTousers")
+  mods_mods_streamer_user_idTousers mods[]         @relation("mods_streamer_user_idTousers")
+  settings                          Setting[]
+  SteamAccount                      SteamAccount[]
+  streams                           streams?
 
   @@map("users")
 }
@@ -98,4 +101,30 @@ model Bet {
 
   @@unique([matchId, userId])
   @@map("bets")
+}
+
+model mods {
+  id                                 BigInt   @id @default(autoincrement())
+  temp_mod_name                      String?  @db.VarChar
+  streamer_user_id                   String
+  mod_user_id                        String?
+  created_at                         DateTime @default(now()) @db.Timestamptz(6)
+  updated_at                         DateTime @default(now()) @db.Timestamptz(6)
+  users_mods_mod_user_idTousers      User?    @relation("mods_mod_user_idTousers", fields: [mod_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_mods_streamer_user_idTousers User     @relation("mods_streamer_user_idTousers", fields: [streamer_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model streams {
+  id                String
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @default(now())
+  userId            String    @id
+  followers         Int?
+  stream_delay      Int?      @default(0) @db.SmallInt
+  stream_online     Boolean   @default(false)
+  stream_start_date DateTime? @db.Timestamp(6)
+  category_name     String?
+  category_id       Int?
+  title             String?
+  users             User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
