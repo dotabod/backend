@@ -220,9 +220,6 @@ export class GSIHandler {
       return
     }
 
-    // a race condition from unknown uncaught exception
-    if (!this.client) return
-
     const delayedData = await server.dota.getDelayedMatchData({
       server_steamid: steamServerId,
       refetchCards: true,
@@ -233,7 +230,7 @@ export class GSIHandler {
     this.savingSteamServerId = false
 
     // TODO: This almost never gets called, remove it?
-    if (!delayedData) {
+    if (!delayedData || !delayedData.match || !delayedData.match.match_id) {
       logger.info('No match data found!', {
         name: this.client.name,
         matchId,
