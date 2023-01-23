@@ -3,7 +3,7 @@ import { t } from 'i18next'
 import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
-import { DBSettings, getValueOrDefault } from '../db/settings.js'
+import { DBSettings, getValueOrDefault, SettingKeys } from '../db/settings.js'
 import Mongo from '../steam/mongo.js'
 import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
@@ -245,15 +245,41 @@ export class GSIHandler {
     this.players = getAccountsFromMatch(delayedData)
 
     if (this.client.stream_online && this.players.accountIds.length) {
-      this.say(
-        t('matchFound', {
-          commandList: '!np · !smurfs · !gm · !lg · !avg',
-          lng: this.client.locale,
-        }),
+      const commands: { command: string; key: SettingKeys }[] = [
         {
-          delay: false,
+          command: '!np',
+          key: DBSettings.commandNP,
         },
-      )
+        {
+          command: '!smurfs',
+          key: DBSettings.commandSmurfs,
+        },
+        {
+          command: '!gm',
+          key: DBSettings.commandGM,
+        },
+        {
+          command: '!lg',
+          key: DBSettings.commandLG,
+        },
+        {
+          command: '!avg',
+          key: DBSettings.commandAvg,
+        },
+      ].filter((cmd) => {
+        return getValueOrDefault(cmd.key, this.client.settings)
+      })
+      if (commands.length) {
+        this.say(
+          t('matchFound', {
+            commandList: commands.map((c) => c.command).join(' · '),
+            lng: this.client.locale,
+          }),
+          {
+            delay: false,
+          },
+        )
+      }
     }
   }
 

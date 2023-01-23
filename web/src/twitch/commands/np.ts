@@ -11,7 +11,6 @@ const mongo = await Mongo.connect()
 
 commandHandler.registerCommand('np', {
   aliases: ['players', 'who'],
-
   onlyOnline: true,
   dbkey: DBSettings.commandNP,
   handler: (message: MessageType, args: string[]) => {
