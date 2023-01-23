@@ -7,7 +7,7 @@ export function getAccountsFromMatch(
   const matchPlayers =
     Array.isArray(players) && players.length
       ? players
-      : response?.id
+      : response
       ? [
           ...response.teams[0].players.map((a) => ({
             heroid: a.heroid,
