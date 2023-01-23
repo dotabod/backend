@@ -7,7 +7,6 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('lg', {
   aliases: ['lastgame'],
-
   onlyOnline: true,
   dbkey: DBSettings.commandLG,
   handler: (message: MessageType, args: string[]) => {

@@ -262,22 +262,22 @@ class Dota {
             return
           }
 
-          if (waitForHeros && hasHeroes) {
+          const delayedData = {
+            match: game.match,
+            teams: game.teams,
+            createdAt: new Date(),
+          } as delayedGames
+
+          if ((waitForHeros && hasHeroes) || hasHeroes) {
             logger.info('Saving match data with heroes', { matchid: game.match.match_id })
 
-            const delayedData = {
-              matchid: game.matchid,
-              match: game.match,
-              teams: game.teams,
-              createdAt: new Date(),
-            } as delayedGames
-            await mongo.collection('delayedGames').updateOne(
-              { 'match.match_id': game.match.match_id },
-              {
-                $set: delayedData,
-              },
-              { upsert: true },
-            )
+            await mongo
+              .collection('delayedGames')
+              .updateOne(
+                { 'match.match_id': game.match.match_id },
+                { $set: delayedData },
+                { upsert: true },
+              )
 
             const players = getAccountsFromMatch(delayedData)
             events.emit('saveHeroesForMatchId', { matchId: game.match.match_id, players }, token)
@@ -291,7 +291,7 @@ class Dota {
                 .collection('delayedGames')
                 .updateOne(
                   { 'match.match_id': game.match.match_id },
-                  { $set: { ...game, createdAt: new Date() } },
+                  { $set: delayedData },
                   { upsert: true },
                 )
 

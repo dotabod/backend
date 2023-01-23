@@ -48,7 +48,7 @@ export default async function lastgame(locale: string, steam32Id: number, curren
     )
     .toArray()) as unknown as delayedGames[]
 
-  if (!currentMatchId || !Number(currentMatchId)) {
+  if (!Number(currentMatchId)) {
     const msg = !currentMatchId
       ? t('notPlaying', { lng: locale })
       : t('gameNotFound', { lng: locale })

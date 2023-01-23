@@ -244,7 +244,7 @@ export class GSIHandler {
     this.playingLobbyType = delayedData.match.lobby_type
     this.players = getAccountsFromMatch(delayedData)
 
-    if (this.client.stream_online) {
+    if (this.client.stream_online && this.players.accountIds.length) {
       this.say(
         t('matchFound', {
           commandList: '!np · !smurfs · !gm · !lg · !avg',
