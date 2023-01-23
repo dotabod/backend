@@ -40,7 +40,7 @@ export async function getPlayers(
       .collection('delayedGames')
       .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames)
 
-  if (!response) {
+  if (!response && !players?.length) {
     throw new CustomError(t('missingMatchData', { lng: locale }))
   }
 
