@@ -245,6 +245,13 @@ export class GSIHandler {
     this.players = getAccountsFromMatch(delayedData)
 
     if (this.client.stream_online && this.players.accountIds.length) {
+      logger.info('saveMatchData stream online, updating stream', {
+        name: this.client.name,
+        matchId,
+        players: this.players,
+        lobbyType: this.playingLobbyType,
+      })
+
       const commands: { command: string; key: SettingKeys }[] = [
         {
           command: '!np',
