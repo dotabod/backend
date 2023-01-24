@@ -6,7 +6,7 @@ await use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
   lng: 'en',
   fallbackLng: 'en',
-  preload: ['cs-SK', 'en', 'es', 'it', 'pt', 'pt-BR', 'ru', 'uk-UA'],
+  preload: ['cs', 'en', 'es', 'it', 'pt', 'pt-BR', 'ru', 'uk-UA'],
   defaultNS: 'translation',
   backend: {
     loadPath: 'locales/{{lng}}/{{ns}}.json',
