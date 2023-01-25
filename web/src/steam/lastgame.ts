@@ -37,7 +37,19 @@ const generateMessage = (
     .join(' · ')
 }
 
-export default async function lastgame(locale: string, steam32Id: number, currentMatchId?: string) {
+interface LastgameParams {
+  locale: string
+  steam32Id: number
+  currentMatchId?: string
+  currentPlayers?: { heroid: number; accountid: number }[]
+}
+
+export default async function lastgame({
+  locale,
+  steam32Id,
+  currentMatchId,
+  currentPlayers,
+}: LastgameParams) {
   const gameHistory = (await mongo
     .collection('delayedGames')
     .find(
@@ -63,17 +75,18 @@ export default async function lastgame(locale: string, steam32Id: number, curren
   if (!gameHistory.length) throw new CustomError(t('noLastMatch', { lng: locale }))
   if (gameHistory.length !== 2) throw new CustomError(t('noLastMatch', { lng: locale }))
 
-  const [currentGame, oldGame] = gameHistory as unknown as delayedGames[]
+  const [gameOne, gameTwo] = gameHistory as unknown as delayedGames[]
+  const oldGame = gameOne.match.match_id === currentMatchId ? gameTwo : gameOne
 
-  if (currentGame.match.match_id !== currentMatchId) {
+  if (!currentPlayers?.length) {
     throw new CustomError(t('missingMatchData', { lng: locale }))
   }
 
-  if (!oldGame.match.match_id || oldGame.match.match_id === currentGame.match.match_id) {
+  if (!oldGame.match.match_id || oldGame.match.match_id === currentMatchId) {
     throw new CustomError(t('lastgame.none', { lng: locale }))
   }
 
-  const { matchPlayers: newMatchPlayers } = getAccountsFromMatch(currentGame)
+  const newMatchPlayers = currentPlayers
   const { matchPlayers: oldMatchPlayers } = getAccountsFromMatch(oldGame)
 
   const playersFromLastGame = newMatchPlayers
