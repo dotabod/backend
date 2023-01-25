@@ -3,11 +3,13 @@ import { t } from 'i18next'
 import { getPlayers } from '../../dota/lib/getPlayers.js'
 import { getRankDetail, rankTierToMmr } from './ranks.js'
 
-export async function calculateAvg(
-  locale: string,
-  currentMatchId?: string,
-  players?: { heroid: number; accountid: number }[],
-): Promise<string> {
+interface Avg {
+  locale: string
+  currentMatchId?: string
+  players?: { heroid: number; accountid: number }[]
+}
+
+export async function calculateAvg({ locale, currentMatchId, players }: Avg): Promise<string> {
   const { cards } = await getPlayers(locale, currentMatchId, players)
 
   const mmrs: number[] = []

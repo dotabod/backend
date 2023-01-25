@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
-import { delayedGames } from '../../../prisma/generated/mongoclient/index.js'
+import { gsiHandlers } from '../../dota/lib/consts.js'
+import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { getHeroNameById, heroColors } from '../../dota/lib/heroes.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import Mongo from '../../steam/mongo.js'
@@ -10,7 +11,14 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 const mongo = await Mongo.connect()
 
-export async function profileLink(locale: string, currentMatchId: string, args: string[]) {
+interface ProfileLinkParams {
+  locale: string
+  currentMatchId: string
+  args: string[]
+  players?: { heroid: number; accountid: number }[]
+}
+
+export function profileLink({ players, locale, currentMatchId, args }: ProfileLinkParams) {
   if (!currentMatchId) {
     throw new CustomError(t('notPlaying', { lng: locale }))
   }
@@ -23,8 +31,7 @@ export async function profileLink(locale: string, currentMatchId: string, args: 
     throw new CustomError(t('invalidColor', { colorList: heroColors.join(' '), lng: locale }))
   }
 
-  // light blue can be an option
-  const color = `${args[0].toLowerCase().trim()}${args[1]?.toLowerCase() === 'blue' ? ' blue' : ''}`
+  const color = args[0].toLowerCase().trim()
   let heroKey = heroColors.findIndex((heroColor) => heroColor.toLowerCase() === color)
 
   const colorKey = Number(args[0])
@@ -36,16 +43,11 @@ export async function profileLink(locale: string, currentMatchId: string, args: 
     throw new CustomError(t('invalidColor', { colorList: heroColors.join(' '), lng: locale }))
   }
 
-  const response = (await mongo
-    .collection('delayedGames')
-    .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames
-
-  if (!response) {
+  if (!players?.length) {
     throw new CustomError(t('missingMatchData', { lng: locale }))
   }
 
-  const matchPlayers = response.teams.flatMap((team) => team.players)
-  const player = matchPlayers[heroKey]
+  const player = players[heroKey]
 
   return t('profileUrl', {
     lng: locale,
@@ -63,10 +65,6 @@ commandHandler.registerCommand('stats', {
     const {
       channel: { name: channel, client },
     } = message
-    // if (!getValueOrDefault(DBSettings.commandStats, client.settings)) {
-    //   return
-    // }
-
     if (!client.gsi?.map?.matchid) {
       void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
@@ -77,15 +75,22 @@ commandHandler.registerCommand('stats', {
       return
     }
 
-    profileLink(client.locale, client.gsi.map.matchid, args)
-      .then((desc) => {
-        void chatClient.say(message.channel.name, desc)
+    try {
+      const desc = profileLink({
+        players:
+          gsiHandlers.get(client.token)?.players?.matchPlayers ||
+          getCurrentMatchPlayers(client.gsi),
+        locale: client.locale,
+        currentMatchId: client.gsi.map.matchid,
+        args: args,
       })
-      .catch((e) => {
-        void chatClient.say(
-          message.channel.name,
-          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-        )
-      })
+
+      void chatClient.say(message.channel.name, desc)
+    } catch (e: any) {
+      void chatClient.say(
+        message.channel.name,
+        e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+      )
+    }
   },
 })

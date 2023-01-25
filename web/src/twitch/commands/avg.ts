@@ -19,11 +19,12 @@ commandHandler.registerCommand('avg', {
       return
     }
 
-    calculateAvg(
-      client.locale,
-      message.channel.client.gsi?.map?.matchid,
-      gsiHandlers.get(client.token)?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi),
-    )
+    calculateAvg({
+      locale: client.locale,
+      currentMatchId: message.channel.client.gsi?.map?.matchid,
+      players:
+        gsiHandlers.get(client.token)?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi),
+    })
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
       })
