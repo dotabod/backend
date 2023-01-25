@@ -7,7 +7,7 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('modsonly', {
   permission: 2,
-
+  cooldown: 0,
   dbkey: DBSettings.commandModsonly,
   handler: (message: MessageType, args: string[]) => {
     const {
