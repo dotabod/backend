@@ -82,7 +82,7 @@ export default async function lastgame({
     throw new CustomError(t('missingMatchData', { lng: locale }))
   }
 
-  if (!oldGame.match.match_id || oldGame.match.match_id === currentMatchId) {
+  if (!Number(oldGame.match.match_id) || oldGame.match.match_id === currentMatchId) {
     throw new CustomError(t('lastgame.none', { lng: locale }))
   }
 
