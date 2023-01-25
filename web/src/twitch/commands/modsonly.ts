@@ -15,6 +15,7 @@ commandHandler.registerCommand('modsonly', {
     } = message
     if (modMode.has(channelId)) {
       void chatClient.say(channel, t('modsOnly', { context: 'off', lng: client.locale }))
+      void chatClient.say(channel, '/subscribersoff')
       modMode.delete(channelId)
       return
     }
