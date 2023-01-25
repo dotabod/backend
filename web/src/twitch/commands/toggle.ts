@@ -41,7 +41,7 @@ export async function toggleDotabod(
 commandHandler.registerCommand('toggle', {
   aliases: ['mute', 'unmute'],
   permission: 2,
-
+  cooldown: 0,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { client },

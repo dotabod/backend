@@ -7,7 +7,7 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 commandHandler.registerCommand('setmmr', {
   aliases: ['mmr=', 'mmrset'],
   permission: 2,
-
+  cooldown: 0,
   onlyOnline: true,
   handler: (message: MessageType, args: string[]) => {
     const {

@@ -42,7 +42,7 @@ twitchChat.on(
     }
 
     // Don't allow non mods to message
-    if (modMode.has(channelId) && !(userInfo.isMod || userInfo.isBroadcaster)) {
+    if (modMode.has(channelId) && !userInfo.isMod && !userInfo.isBroadcaster) {
       void chatClient.deleteMessage(channel, messageId)
       return
     }

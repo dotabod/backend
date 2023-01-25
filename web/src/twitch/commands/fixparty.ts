@@ -21,7 +21,7 @@ function togglePartyMmr(
 commandHandler.registerCommand('fixparty', {
   aliases: ['fixsolo'],
   permission: 2,
-
+  cooldown: 0,
   handler: (message: MessageType, args: string[]) => {
     async function handler() {
       const bet = await prisma.bet.findFirst({

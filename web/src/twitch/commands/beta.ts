@@ -8,7 +8,7 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 commandHandler.registerCommand('beta', {
   aliases: ['joinbeta', 'leavebeta', 'betaoff', 'betaon'],
   permission: 2,
-
+  cooldown: 0,
   handler: (message: MessageType, args: string[]) => {
     async function handler() {
       await prisma.user.update({

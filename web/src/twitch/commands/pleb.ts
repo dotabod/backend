@@ -7,7 +7,6 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('pleb', {
   permission: 2,
-
   dbkey: DBSettings.commandPleb,
   handler: (message: MessageType, args: string[]) => {
     const {
