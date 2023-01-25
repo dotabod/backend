@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
 import { DBSettings } from '../../db/settings.js'
+import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import Mongo from '../../steam/mongo.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
@@ -84,7 +85,8 @@ commandHandler.registerCommand('np', {
       return
     }
 
-    const matchPlayers = getCurrentMatchPlayers(client.gsi)
+    const matchPlayers =
+      gsiHandlers.get(client.token)?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi)
     notablePlayers(client.locale, twitchChannelId, client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {
         void chatClient.say(channel, desc)

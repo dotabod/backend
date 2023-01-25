@@ -2,6 +2,7 @@ import { t } from 'i18next'
 
 import { DBSettings } from '../../db/settings.js'
 import { calculateAvg } from '../../dota/lib/calculateAvg.js'
+import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
@@ -21,7 +22,7 @@ commandHandler.registerCommand('avg', {
     calculateAvg(
       client.locale,
       message.channel.client.gsi?.map?.matchid,
-      getCurrentMatchPlayers(client.gsi),
+      gsiHandlers.get(client.token)?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi),
     )
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)

@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
 import { DBSettings } from '../../db/settings.js'
+import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { smurfs } from '../../steam/smurfs.js'
 import { chatClient } from '../index.js'
@@ -26,7 +27,7 @@ commandHandler.registerCommand('smurfs', {
     smurfs(
       client.locale,
       message.channel.client.gsi?.map?.matchid,
-      getCurrentMatchPlayers(client.gsi),
+      gsiHandlers.get(client.token)?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi),
     )
       .then((desc) => {
         void chatClient.say(message.channel.name, desc)
