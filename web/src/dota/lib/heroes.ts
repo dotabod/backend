@@ -506,4 +506,22 @@ export function getHeroNameById(id: number, index?: number) {
   return name ?? 'Unknown'
 }
 
+export function getHeroByName(name: string) {
+  if (!name) return null
+
+  // only keep a-z in name
+  name = name.replace(/[^a-z]/gi, '')
+
+  const hero = Object.values(heroes).find((h) => {
+    const inName = h.localized_name
+      // replace all spaces with nothing, and only keep a-z
+      .replace(/[^a-z]/gi, '')
+      .toLowerCase()
+      .trim()
+    return inName.includes(name)
+  })
+
+  return hero
+}
+
 export default heroes
