@@ -15,7 +15,7 @@ commandHandler.registerCommand('np', {
   onlyOnline: true,
   dbkey: DBSettings.commandNP,
   handler: (message: MessageType, args: string[]) => {
-    const [addOrRemove, forSteam32Id, forName] = args
+    const [addOrRemove, forSteam32Id, ...name] = args
     const {
       user: { name: chatterName },
       channel: { client, name: channel, id: twitchChannelId },
@@ -28,6 +28,7 @@ commandHandler.registerCommand('np', {
 
     async function addRemoveHandler() {
       if (addOrRemove === 'add') {
+        const forName = name.join(' ')
         if (!Number(forSteam32Id) || !forName) {
           void chatClient.say(channel, t('npAdd', { lng: message.channel.client.locale }))
           return
