@@ -436,8 +436,11 @@ export class GSIHandler {
     const mmrSize = isParty ? 20 : 30
     const newMMR = this.getMmr() + (increase ? mmrSize : -mmrSize)
     if (this.client.steam32Id) {
-      logger.info('[MMR] Found steam32Id, updating mmr', extraInfo)
-      updateMmr(newMMR, this.client.steam32Id, this.client.name)
+      const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], this.client.settings)
+      if (mmrEnabled) {
+        logger.info('[MMR] Found steam32Id, updating mmr', extraInfo)
+        updateMmr(newMMR, this.client.steam32Id, this.client.name)
+      }
     } else {
       logger.info('[MMR] Did not find steam32Id, wont update mmr', extraInfo)
     }
