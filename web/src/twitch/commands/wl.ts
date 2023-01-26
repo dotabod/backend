@@ -1,14 +1,13 @@
 import { t } from 'i18next'
 
 import { getWL } from '../../db/getWL.js'
-import { DBSettings } from '../../db/settings.js'
+import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('wl', {
   aliases: ['score', 'winrate', 'wr'],
-
   onlyOnline: true,
   dbkey: DBSettings.commandWL,
   handler: (message: MessageType, args: string[]) => {
@@ -26,7 +25,9 @@ commandHandler.registerCommand('wl', {
       name: client.name,
     })
 
-    getWL(channelId, client.stream_start_date)
+    const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], client.settings)
+
+    getWL({ channelId: channelId, mmrEnabled: mmrEnabled, startDate: client.stream_start_date })
       .then((res: any) => {
         if (res?.msg) {
           void chatClient.say(channel, res.msg)

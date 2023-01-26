@@ -9,7 +9,6 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('smurfs', {
   aliases: ['lifetimes', 'totals', 'games', 'smurf'],
-
   onlyOnline: true,
   dbkey: DBSettings.commandSmurfs,
   handler: (message: MessageType, args: string[]) => {

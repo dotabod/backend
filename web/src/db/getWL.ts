@@ -1,7 +1,13 @@
 import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
 
-export async function getWL(channelId: string, startDate?: Date | null) {
+interface WL {
+  channelId: string
+  mmrEnabled: false
+  startDate?: Date | null
+}
+
+export async function getWL({ channelId, mmrEnabled, startDate }: WL) {
   if (!channelId) {
     return Promise.resolve({ record: [{ win: 0, lose: 0, type: 'U' }], msg: null })
   }
@@ -73,7 +79,7 @@ export async function getWL(channelId: string, startDate?: Date | null) {
       if (!hasRanked && !hasUnranked) record.push({ win: 0, lose: 0, type: 'U' })
 
       const msg = []
-      const mmrMsg = ` | ${ranked.mmr >= 0 ? '+' : ''}${ranked.mmr} MMR`
+      const mmrMsg = mmrEnabled ? ` | ${ranked.mmr >= 0 ? '+' : ''}${ranked.mmr} MMR` : ''
       const rankedMsg = `Ranked ${ranked.win} W - ${ranked.lose} L${mmrMsg}`
       const unrankedMsg = `Unranked ${unranked.win} W - ${unranked.lose} L`
 
