@@ -143,6 +143,7 @@ export class GSIHandler {
     // Bet stuff should be closed by endBets()
     // This should mean an entire match is over
     if (resetBets) {
+      this.players = null
       this.client.steamServerId = undefined
       this.endingBets = false
       this.openingBets = false
