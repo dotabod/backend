@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
 import { prisma } from '../../db/prisma.js'
+import { DBSettings } from '../../db/settings.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
@@ -22,14 +23,19 @@ commandHandler.registerCommand('setdelay', {
     }
 
     async function handler() {
-      await prisma.setting.update({
+      await prisma.setting.upsert({
         where: {
           key_userId: {
-            key: 'streamDelay',
+            key: DBSettings.streamDelay,
             userId: message.channel.client.token,
           },
         },
-        data: {
+        create: {
+          userId: message.channel.client.token,
+          key: DBSettings.bets,
+          value: (Number(args[0]) || 0) * 1000,
+        },
+        update: {
           value: (Number(args[0]) || 0) * 1000,
         },
       })
