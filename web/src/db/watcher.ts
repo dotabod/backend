@@ -11,8 +11,14 @@ import supabase from './supabase.js'
 
 const channel = supabase.channel('db-changes')
 
+const IS_DEV = process.env.NODE_ENV !== 'production'
+const DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
+
 channel
   .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'users' }, (payload) => {
+    if (IS_DEV && !DEV_CHANNELS.includes(payload.old.name)) return
+    if (!IS_DEV && DEV_CHANNELS.includes(payload.old.name)) return
+
     logger.info('Removing user', payload)
 
     const oldObj = payload.old as User
@@ -24,6 +30,9 @@ channel
     }
   })
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
+    if (IS_DEV && !DEV_CHANNELS.includes(payload.new.name)) return
+    if (!IS_DEV && DEV_CHANNELS.includes(payload.new.name)) return
+
     const newObj = payload.new as User
     const oldObj = payload.old as User
     const client = findUser(newObj.id)
@@ -68,8 +77,15 @@ channel
     const client = findUser(newObj.userId)
     if (!client) return
 
+    if (IS_DEV && !DEV_CHANNELS.includes(client.name)) return
+    if (!IS_DEV && DEV_CHANNELS.includes(client.name)) return
+
     // replace the new setting with the one we have saved in cache
-    logger.info('[WATCHER SETTING] Updating setting for', { name: client.name, key: newObj.key })
+    logger.info('[WATCHER SETTING] Updating setting for', {
+      name: client.name,
+      key: newObj.key,
+      value: newObj.value,
+    })
     const setting = client.settings.find((s) => s.key === newObj.key)
 
     if (setting) {
@@ -97,6 +113,9 @@ channel
 
     // Just here to update local memory
     if (!client) return
+
+    if (IS_DEV && !DEV_CHANNELS.includes(client.name)) return
+    if (!IS_DEV && DEV_CHANNELS.includes(client.name)) return
 
     if (payload.eventType === 'DELETE') {
       logger.info('[WATCHER STEAM] Deleting steam account for', { name: client.name })

@@ -102,6 +102,7 @@ services:
       - DB_SECRET
       - DB_URL
       - MONGO_URL
+      - DEV_CHANNELS
       - NODE_ENV
       - STEAM_PASS
       - STEAM_USER

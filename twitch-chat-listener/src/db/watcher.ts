@@ -3,15 +3,17 @@ import { chatClient } from '../index.js'
 import supabase from './supabase.js'
 
 const channel = supabase.channel('twitch-changes')
+const IS_DEV = process.env.NODE_ENV !== 'production'
+const DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
 
 channel
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
-    if (process.env.NODE_ENV !== 'production') {
-      return
-    }
-
     const oldUser = payload.old as User
     const newUser = payload.new as User
+
+    if (IS_DEV && !DEV_CHANNELS.includes(newUser.name)) return
+    if (!IS_DEV && DEV_CHANNELS.includes(newUser.name)) return
+
     if (!oldUser.displayName && newUser.displayName) {
       console.log('[SUPABASE] New user to send bot to: ', newUser.name)
       try {

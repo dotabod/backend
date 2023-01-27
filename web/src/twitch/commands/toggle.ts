@@ -14,9 +14,9 @@ export async function toggleDotabod(
   lng = 'en',
 ) {
   if (!isBotDisabled) {
-    logger.info('[GSI] toggleDotabod Enabling client again', { token })
+    logger.info('[GSI] toggleDotabod Enabling client again', { token, channel })
     if (!gsiHandlers.has(token)) {
-      logger.info('[ENABLE GSI] Could not find client', { token })
+      logger.info('[ENABLE GSI] Could not find client', { token, channel })
     } else {
       await gsiHandlers.get(token)?.enable()
     }
@@ -29,11 +29,11 @@ export async function toggleDotabod(
 
   if (isBotDisabled) {
     if (!gsiHandlers.has(token)) {
-      logger.info('[REMOVE GSI] Could not find client', { token })
+      logger.info('[REMOVE GSI] Could not find client', { token, channel })
       return
     }
 
-    logger.info('[REMOVE GSI] Removing GSI client', { token })
+    logger.info('[REMOVE GSI] Disabling GSI client from responding', { token, channel })
     gsiHandlers.get(token)?.disable()
   }
 }

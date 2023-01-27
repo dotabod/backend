@@ -6,6 +6,8 @@ import { prisma } from './prisma.js'
 import supabase from './supabase.js'
 
 const channel = supabase.channel('twitch-changes')
+const IS_DEV = process.env.NODE_ENV !== 'production'
+const DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
 
 async function handleNewUser(userId: string) {
   const user = await prisma.account.findFirst({
@@ -42,11 +44,10 @@ async function handleNewUser(userId: string) {
 
 channel
   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
-    if (process.env.NODE_ENV !== 'production') {
-      return
-    }
-
     const user = payload.new as User
+    if (IS_DEV && !DEV_CHANNELS.includes(user.name)) return
+    if (!IS_DEV && DEV_CHANNELS.includes(user.name)) return
+
     console.log('[SUPABASE] New user to subscribe online events for: ', { name: user.name })
     void handleNewUser(user.id)
   })
