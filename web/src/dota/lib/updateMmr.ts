@@ -5,6 +5,7 @@ import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { chatClient } from '../../twitch/index.js'
 import { logger } from '../../utils/logger.js'
 import findUser from './connectedStreamers.js'
+import { GLOBAL_DELAY } from './consts.js'
 
 interface TellChatNewMMRParams {
   locale: string
@@ -39,7 +40,7 @@ export function tellChatNewMMR({
           }),
         )
       },
-      isAuto ? streamDelay : 0,
+      isAuto ? streamDelay + GLOBAL_DELAY : 0,
     )
   }
 }

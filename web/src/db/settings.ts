@@ -80,7 +80,7 @@ export const defaultSettings = {
   'minimap-xl': false,
   onlyParty: false,
   livePolls: true,
-  streamDelay: 7000,
+  streamDelay: 0,
   commandDelay: true,
 }
 

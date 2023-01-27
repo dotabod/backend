@@ -14,7 +14,7 @@ import axios from '../utils/axios.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import { server } from './index.js'
-import { blockTypes, pickSates } from './lib/consts.js'
+import { blockTypes, GLOBAL_DELAY, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import getHero, { HeroNames } from './lib/getHero.js'
 import { isArcade } from './lib/isArcade.js'
@@ -109,10 +109,12 @@ export class GSIHandler {
   }
 
   public getStreamDelay() {
-    return getValueOrDefault(
-      DBSettings.streamDelay,
-      this.client.settings,
-    ) as typeof defaultSettings.streamDelay
+    return (
+      (getValueOrDefault(
+        DBSettings.streamDelay,
+        this.client.settings,
+      ) as typeof defaultSettings.streamDelay) + GLOBAL_DELAY
+    )
   }
 
   public say(
