@@ -20,15 +20,19 @@ export async function calculateAvg({ locale, currentMatchId, players }: Avg): Pr
   })
 
   // Get average of all numbers in mmrs array
-  const avg = Math.round(mmrs.reduce((a, b) => a + b, 0) / mmrs.length)
-  const avgLeader = Math.round(leaderranks.reduce((a, b) => a + b, 0) / leaderranks.length)
+  const avg = Math.round(
+    mmrs.filter(Boolean).reduce((a, b) => a + b, 0) / mmrs.filter(Boolean).length,
+  )
+  const avgLeader = Math.round(
+    leaderranks.filter(Boolean).reduce((a, b) => a + b, 0) / leaderranks.filter(Boolean).length,
+  )
   const avgMsg = ` - ${t('averageRank', { lng: locale })}`
   const rank = await getRankDetail(avg)
 
   if (!rank && !avgLeader) return `Immortal${avgMsg}`
   if (!rank) return `${avg || `#${avgLeader}`}${avgMsg}`
 
-  if ('standing' in rank) {
+  if ('standing' in rank || avgLeader) {
     return `Immortal${avgMsg}`
   }
 
