@@ -118,7 +118,7 @@
   "streamDelay_one": "Stream delay: {{count}} second",
   "streamDelay_other": "Stream delay: {{count}} seconds",
   "setStreamDelay_zero": "Removing stream delay",
-  "setStreamDelay_one": "Setting stream delay to: {{num}} second",
-  "setStreamDelay_other": "Setting stream delay to: {{num}} seconds",
+  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
+  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>"
 }

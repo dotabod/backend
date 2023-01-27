@@ -44,7 +44,7 @@ commandHandler.registerCommand('setdelay', {
         message.channel.name,
         t('setStreamDelay', {
           lng: message.channel.client.locale,
-          num: Number(args[0]) || 0,
+          count: Number(args[0]) || 0,
         }),
       )
     }
