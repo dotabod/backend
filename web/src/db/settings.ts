@@ -81,6 +81,7 @@ export const defaultSettings = {
   onlyParty: false,
   livePolls: true,
   streamDelay: 7000,
+  commandDelay: true,
 }
 
 export type SettingKeys = keyof typeof defaultSettings
