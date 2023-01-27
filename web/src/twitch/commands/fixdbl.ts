@@ -6,12 +6,14 @@ import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-export function toggleDoubledownMmr(
-  currentMmr: number,
-  isParty: boolean,
-  didWin: boolean,
-  wasDoubledown: boolean,
-) {
+interface DoubledownMmr {
+  currentMmr: number
+  isParty: boolean
+  didWin: boolean
+  wasDoubledown: boolean
+}
+
+export function toggleDoubledownMmr({ currentMmr, isParty, didWin, wasDoubledown }: DoubledownMmr) {
   const change = isParty ? 20 : 30
   return currentMmr + change * (didWin === wasDoubledown ? -1 : 1)
 }
@@ -58,11 +60,16 @@ commandHandler.registerCommand('fixdbl', {
         }),
       )
 
-      updateMmr(
-        toggleDoubledownMmr(message.channel.client.mmr, bet.is_party, !!bet.won, bet.is_doubledown),
-        message.channel.client.steam32Id,
-        message.channel.name,
-      )
+      updateMmr({
+        newMmr: toggleDoubledownMmr({
+          currentMmr: message.channel.client.mmr,
+          isParty: bet.is_party,
+          didWin: !!bet.won,
+          wasDoubledown: bet.is_doubledown,
+        }),
+        steam32Id: message.channel.client.steam32Id,
+        channel: message.channel.name,
+      })
 
       await prisma.bet.update({
         where: {

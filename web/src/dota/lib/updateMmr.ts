@@ -5,9 +5,22 @@ import { DBSettings, getValueOrDefault } from '../../db/settings.js'
 import { chatClient } from '../../twitch/index.js'
 import { logger } from '../../utils/logger.js'
 import findUser from './connectedStreamers.js'
-import { GLOBAL_DELAY } from './consts.js'
 
-export function tellChatNewMMR(locale: string, token: string, mmr = 0, oldMmr = 0) {
+interface TellChatNewMMRParams {
+  locale: string
+  token: string
+  mmr?: number
+  oldMmr?: number
+  streamDelay: number
+}
+
+export function tellChatNewMMR({
+  streamDelay,
+  locale,
+  token,
+  mmr = 0,
+  oldMmr = 0,
+}: TellChatNewMMRParams) {
   const client = findUser(token)
   if (!client) return
   const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], client.settings)
@@ -26,17 +39,19 @@ export function tellChatNewMMR(locale: string, token: string, mmr = 0, oldMmr = 
           }),
         )
       },
-      isAuto ? GLOBAL_DELAY : 0,
+      isAuto ? streamDelay : 0,
     )
   }
 }
 
-export function updateMmr(
-  newMmr: string | number,
-  steam32Id: number | null | undefined,
-  channel: string,
-  token?: string | null,
-) {
+interface Mmr {
+  newMmr: string | number
+  steam32Id: number | null | undefined
+  channel: string
+  token?: string | null
+}
+
+export function updateMmr({ newMmr, steam32Id, channel, token }: Mmr) {
   let mmr = Number(newMmr)
   if (!newMmr || !mmr || mmr > 20000 || mmr < 0) {
     logger.info('Invalid mmr, forcing to 0', { channel, mmr })

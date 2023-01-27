@@ -45,8 +45,6 @@ export const blockTypes = [
   { type: 'empty', states: dontBlockStates },
 ]
 
-export const GLOBAL_DELAY = 7000 // 7s
-
 export const ranks = [
   { range: [0, 153], title: 'Herald☆1', image: '11.png' },
   { range: [154, 307], title: 'Herald☆2', image: '12.png' },

@@ -3,7 +3,7 @@ import { t } from 'i18next'
 import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
-import { DBSettings, getValueOrDefault, SettingKeys } from '../db/settings.js'
+import { DBSettings, defaultSettings, getValueOrDefault, SettingKeys } from '../db/settings.js'
 import Mongo from '../steam/mongo.js'
 import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
@@ -14,7 +14,7 @@ import axios from '../utils/axios.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import { server } from './index.js'
-import { blockTypes, GLOBAL_DELAY, pickSates } from './lib/consts.js'
+import { blockTypes, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import getHero, { HeroNames } from './lib/getHero.js'
 import { isArcade } from './lib/isArcade.js'
@@ -108,6 +108,13 @@ export class GSIHandler {
     return new Date(new Date().getTime() + seconds * 1000)
   }
 
+  public getStreamDelay() {
+    return getValueOrDefault(
+      DBSettings.streamDelay,
+      this.client.settings,
+    ) as typeof defaultSettings.streamDelay
+  }
+
   public say(
     message: string,
     { delay = true, beta = false }: { delay?: boolean; beta?: boolean } = {},
@@ -122,7 +129,7 @@ export class GSIHandler {
 
     setTimeout(() => {
       this.getChannel() && void chatClient.say(this.getChannel(), msg)
-    }, GLOBAL_DELAY)
+    }, this.getStreamDelay())
   }
 
   // reset vars when a new match begins
@@ -440,7 +447,7 @@ export class GSIHandler {
       const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], this.client.settings)
       if (mmrEnabled) {
         logger.info('[MMR] Found steam32Id, updating mmr', extraInfo)
-        updateMmr(newMMR, this.client.steam32Id, this.client.name)
+        updateMmr({ newMmr: newMMR, steam32Id: this.client.steam32Id, channel: this.client.name })
       }
     } else {
       logger.info('[MMR] Did not find steam32Id, wont update mmr', extraInfo)
@@ -593,7 +600,7 @@ export class GSIHandler {
 
                     this.openingBets = false
                   })
-            }, GLOBAL_DELAY)
+            }, this.getStreamDelay())
           })
           .catch((e: any) => {
             logger.error(`[BETS] Could not add bet to channel`, {
@@ -736,7 +743,7 @@ export class GSIHandler {
             this.say(message, { delay: false })
             this.resetClientState(true)
           })
-    }, GLOBAL_DELAY)
+    }, this.getStreamDelay())
   }
 
   private checkEarlyDCWinner(matchId: string) {

@@ -6,7 +6,7 @@ import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { toggleDotabod } from '../twitch/commands/toggle.js'
 import { logger } from '../utils/logger.js'
-import { DBSettings } from './settings.js'
+import { DBSettings, getValueOrDefault } from './settings.js'
 import supabase from './supabase.js'
 
 const channel = supabase.channel('db-changes')
@@ -67,7 +67,13 @@ channel
 
       if (!client.stream_online) return
       logger.info('[WATCHER MMR] Sending mmr to socket', { name: client.name })
-      tellChatNewMMR(client.locale, client.token, newObj.mmr, oldObj.mmr)
+      tellChatNewMMR({
+        streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
+        locale: client.locale,
+        token: client.token,
+        mmr: newObj.mmr,
+        oldMmr: oldObj.mmr,
+      })
 
       void handler()
     }
@@ -146,7 +152,13 @@ channel
       client.mmr = newObj.mmr
 
       if (!client.stream_online) return
-      tellChatNewMMR(client.locale, client.token, newObj.mmr, oldObj.mmr)
+      tellChatNewMMR({
+        locale: client.locale,
+        token: client.token,
+        streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
+        mmr: newObj.mmr,
+        oldMmr: oldObj.mmr,
+      })
       getRankDetail(newObj.mmr, newObj.steam32Id)
         .then((deets) => {
           server.io.to(client.token).emit('update-medal', deets)

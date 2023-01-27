@@ -79,6 +79,8 @@ export const defaultSettings = {
   'minimap-simple': false,
   'minimap-xl': false,
   onlyParty: false,
+  livePolls: true,
+  streamDelay: 7000,
 }
 
 export type SettingKeys = keyof typeof defaultSettings
