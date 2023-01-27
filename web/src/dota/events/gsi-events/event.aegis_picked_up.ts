@@ -29,6 +29,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
       playerId: event.player_id,
       expireTime: fmtMSS(expireTime),
       expireDate,
+      snatched: event.snatched,
     }
 
     dotaClient.aegisPickedUp = res
@@ -43,8 +44,13 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
       roshPickup: { enabled: chatterEnabled },
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
-    if (chattersEnabled && chatterEnabled)
-      dotaClient.say(t('aegis.pickup', { lng: dotaClient.client.locale, heroName }))
+    if (chattersEnabled && chatterEnabled) {
+      if (res.snatched) {
+        dotaClient.say(t('aegis.snatched', { lng: dotaClient.client.locale, heroName }))
+      } else {
+        dotaClient.say(t('aegis.pickup', { lng: dotaClient.client.locale, heroName }))
+      }
+    }
 
     server.io.to(dotaClient.getToken()).emit('aegis-picked-up', res)
   },

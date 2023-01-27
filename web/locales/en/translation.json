@@ -1,7 +1,8 @@
 {
   "aegis": {
     "denied": "{{- heroName}} denied the aegis {{emote}}",
-    "pickup": "{{- heroName}} picked up the aegis!"
+    "pickup": "{{- heroName}} picked up the aegis!",
+    "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
   "apm": "Live APM: {{num}} Chatting",
   "averageRank": "Average rank this game",
