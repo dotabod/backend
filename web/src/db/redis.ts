@@ -17,9 +17,9 @@ export default class RedisClient {
     })
   }
 
-  public connectClient(): ReturnType<typeof createClient> {
+  public async connectClient(): Promise<ReturnType<typeof createClient>> {
     try {
-      this.client.connect()
+      await this.client.connect()
       return this.client
     } catch (error) {
       logger.error('REDIS CONNECT ERR', { error })
@@ -27,9 +27,9 @@ export default class RedisClient {
     }
   }
 
-  public connectSubscriber(): ReturnType<typeof createClient> {
+  public async connectSubscriber(): Promise<ReturnType<typeof createClient>> {
     try {
-      this.subscriber.connect()
+      await this.subscriber.connect()
       return this.subscriber
     } catch (error) {
       logger.error('REDIS CONNECT ERR', { error })
