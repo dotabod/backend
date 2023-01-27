@@ -32,7 +32,7 @@ commandHandler.registerCommand('setdelay', {
         },
         create: {
           userId: message.channel.client.token,
-          key: DBSettings.bets,
+          key: DBSettings.streamDelay,
           value: (Number(args[0]) || 0) * 1000,
         },
         update: {
