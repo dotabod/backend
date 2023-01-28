@@ -38,7 +38,7 @@ function speakHeroStats({
         heroName: hero.localized_name,
         winrate,
         timeperiod,
-        wl: total,
+        total,
       }),
     )
     return
