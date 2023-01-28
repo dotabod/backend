@@ -31,6 +31,7 @@ export class GSIHandler {
 
   // Server could reboot and lose these in memory
   // But that's okay they will get reset based on current match state
+  heroData: null | { win: number; lose: number } = null
   blockCache: string | null = null
   aegisPickedUp?: { playerId: number; expireTime: string; expireDate: Date }
   playingBetMatchId: string | undefined | null = null
@@ -151,6 +152,7 @@ export class GSIHandler {
     // Bet stuff should be closed by endBets()
     // This should mean an entire match is over
     if (resetBets) {
+      this.heroData = null
       this.players = null
       this.client.steamServerId = undefined
       this.endingBets = false
@@ -903,36 +905,5 @@ export class GSIHandler {
       this.closeBets()
       return
     }
-  }
-
-  public destroy() {
-    clearTimeout(this.bountyTimeout)
-    clearTimeout(this.killstreakTimeout)
-
-    this.client = null as any
-    this.blockCache = null
-    this.aegisPickedUp = undefined
-    this.playingBetMatchId = undefined
-    this.playingTeam = undefined
-    this.playingHeroSlot = undefined
-    this.playingHero = undefined
-    this.playingLobbyType = undefined
-    this.manaSaved = 0
-    this.treadToggles = 0
-    this.players = undefined
-    this.savingSteamServerId = false
-    this.steamServerTries = 0
-    this.bountyHeroNames.length = 0
-    this.events.length = 0
-    this.bountyTimeout = undefined
-    this.killstreakTimeout = undefined
-    this.passiveMidas = { counter: 0, timer: 0, used: 0 }
-    this.roshanCount = 0
-    this.roshanKilled = undefined
-    this.endingBets = false
-    this.openingBets = false
-    this.creatingSteamAccount = false
-    this.treadsData = { manaAtLastToggle: 0, timeOfLastToggle: 0 }
-    this.disabled = false
   }
 }
