@@ -2,7 +2,7 @@
   "aegis": {
     "denied": "{{- heroName}} знищив Аєгіс {{emote}}",
     "pickup": "{{- heroName}} підібрав Аєгіс!",
-    "snatched": ""
+    "snatched": "{{- heroName}} викрав Аєгіс PepeLaugh"
   },
   "apm": "Поточний APM: {{num}} Chatting",
   "averageRank": "Середній рейтинг матчу",

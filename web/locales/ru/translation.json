@@ -2,7 +2,7 @@
   "aegis": {
     "denied": "{{- heroName}} уничтожает эгиду {{emote}}",
     "pickup": "{{- heroName}} подбирает эгиду!",
-    "snatched": ""
+    "snatched": "{{- heroName}} украл (SNATCH.) эгиду PepeLaugh"
   },
   "apm": "Текущий APM: {{num}} Chatting",
   "averageRank": "Средний рейтинг этой игры",
@@ -119,7 +119,7 @@
   "streamDelay_one": "На стриме задержка: {{count}} секунд",
   "streamDelay_other": "На стриме задержка: {{count}} секунд",
   "setStreamDelay_zero": "Задержка на стриме убрана",
-  "setStreamDelay_one": "Изменяю задержку стрима  до: {{count}} секунд",
-  "setStreamDelay_other": "Изменяю задержку стрима  до: {{count}} секунд",
+  "setStreamDelay_one": "Устанавливаю задержку в {{count}} секунд(ы)",
+  "setStreamDelay_other": "Устанавливаю задержку в {{count}} секунд(ы)",
   "setStreamDelayNoArgs": "Задержка на стриме не установлена, напиши !setdelay <seconds>"
 }
