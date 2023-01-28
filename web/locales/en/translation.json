@@ -45,7 +45,7 @@
   "lastgamescore": {
     "double": "Double down",
     "duration": "{{minutes}}m long",
-    "ended": "Ended {{minutes}}m ago",
+    "ended": "Ended {{timeAgo}} ago",
     "lost": "Last game: lost",
     "party": "Party match",
     "unranked": "Not ranked",
@@ -121,5 +121,11 @@
   "setStreamDelay_zero": "Removing stream delay",
   "setStreamDelay_one": "Setting stream delay to: {{count}} second",
   "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
-  "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>"
+  "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
+  "time" :{
+      "minute": "m",
+      "hour": "h",
+      "day": "d",
+      "week": "w"
+  }
 }
