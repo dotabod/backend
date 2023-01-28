@@ -1,7 +1,8 @@
 {
   "aegis": {
     "denied": "{{- heroName}} se rehusó la aegis {{emote}}",
-    "pickup": "¡{{- heroName}} recogió el aegis!"
+    "pickup": "¡{{- heroName}} recogió el aegis!",
+    "snatched": ""
   },
   "apm": "APM en vivo: {{num}} Chatting",
   "averageRank": "La media de este juego es",
@@ -113,5 +114,12 @@
   "updateMmr_auto": "Actualizado MMR a {{mmr}}. !fixparty para grupo y !fixdd para apostar doble",
   "updateMmr_manual": "Actualizado MMR a {{mmr}}",
   "updateMmrMulti": "Múltiples cuentas de steam, actualización de la que está conectado ahora con ({{steamId}})",
-  "xpm": "XPM en vivo: {{num}}"
+  "xpm": "XPM en vivo: {{num}}",
+  "streamDelay_zero": "",
+  "streamDelay_one": "",
+  "streamDelay_other": "",
+  "setStreamDelay_zero": "",
+  "setStreamDelay_one": "",
+  "setStreamDelay_other": "",
+  "setStreamDelayNoArgs": ""
 }

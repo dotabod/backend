@@ -1,7 +1,8 @@
 {
   "aegis": {
     "denied": "{{- heroName}} знищив Аєгіс {{emote}}",
-    "pickup": "{{- heroName}} підібрав Аєгіс!"
+    "pickup": "{{- heroName}} підібрав Аєгіс!",
+    "snatched": "{{- heroName}} викрав Аєгіс PepeLaugh"
   },
   "apm": "Поточний APM: {{num}} Chatting",
   "averageRank": "Середній рейтинг матчу",
@@ -113,5 +114,12 @@
   "updateMmr_auto": "Рейтинг оновлено до {{mmr}} MMR. Використовуйте команди !fixparty для зміни рейтингу в групі та !fixdd для подвійної ставки.",
   "updateMmr_manual": "Рейтинг змінено до {{mmr}} MMR",
   "updateMmrMulti": "Кілька облікових записів Steam, оновлення тієї, з якою ви увійшли в систему в даний момент ({{steamId}})",
-  "xpm": "Поточний XPM: {{num}}"
+  "xpm": "Поточний XPM: {{num}}",
+  "streamDelay_zero": "Немає затримки на стрімі",
+  "streamDelay_one": "На стрімі затримка {{count}} секунд",
+  "streamDelay_other": "На стрімі затримка {{count}} секунд",
+  "setStreamDelay_zero": "Затримку на стрімі прибрано ",
+  "setStreamDelay_one": "Тепер затримка на стрімі {{count}} секунд",
+  "setStreamDelay_other": "Тепер затримка на стрімі {{count}} секунд",
+  "setStreamDelayNoArgs": "Затримка на стрімі не встановлена, напишіть !setdelay <seconds>"
 }

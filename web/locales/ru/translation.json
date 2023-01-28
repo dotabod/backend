@@ -1,7 +1,8 @@
 {
   "aegis": {
     "denied": "{{- heroName}} уничтожает эгиду {{emote}}",
-    "pickup": "{{- heroName}} подбирает эгиду!"
+    "pickup": "{{- heroName}} подбирает эгиду!",
+    "snatched": "{{- heroName}} украл (SNATCH.) эгиду PepeLaugh"
   },
   "apm": "Текущий APM: {{num}} Chatting",
   "averageRank": "Средний рейтинг этой игры",
@@ -113,5 +114,12 @@
   "updateMmr_auto": "Рейтинг обновлён до {{mmr}}. Используйте команды !fixparty для изменения игры в группе и !fixdd для двойной ставки.",
   "updateMmr_manual": "Рейтинг изменён до {{mmr}}",
   "updateMmrMulti": "Несколько учетных записей Steam, обновление той, с которой вы вошли в систему в данный момент ({{steamId}})",
-  "xpm": "Текущий XPM: {{num}}"
+  "xpm": "Текущий XPM: {{num}}",
+  "streamDelay_zero": "Нету задержки на стриме",
+  "streamDelay_one": "На стриме задержка: {{count}} секунд",
+  "streamDelay_other": "На стриме задержка: {{count}} секунд",
+  "setStreamDelay_zero": "Задержка на стриме убрана",
+  "setStreamDelay_one": "Устанавливаю задержку в {{count}} секунд(ы)",
+  "setStreamDelay_other": "Устанавливаю задержку в {{count}} секунд(ы)",
+  "setStreamDelayNoArgs": "Задержка на стриме не установлена, напиши !setdelay <seconds>"
 }

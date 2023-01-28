@@ -1,7 +1,8 @@
 {
   "aegis": {
     "denied": "پولدار رو ببین! آنخ رو اتک داد {{- heroName}} {{emote}}",
-    "pickup": " میتونه یه غذای رایگان بده {{- heroName}}"
+    "pickup": " میتونه یه غذای رایگان بده {{- heroName}}",
+    "snatched": ""
   },
   "apm": "Live APM: {{num}} Chatting",
   "averageRank": "میانگین اکانت بایرهای این بازی",
@@ -113,5 +114,12 @@
   "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
-  "xpm": "Live XPM: {{num}}"
+  "xpm": "Live XPM: {{num}}",
+  "streamDelay_zero": "",
+  "streamDelay_one": "",
+  "streamDelay_other": "",
+  "setStreamDelay_zero": "",
+  "setStreamDelay_one": "",
+  "setStreamDelay_other": "",
+  "setStreamDelayNoArgs": ""
 }

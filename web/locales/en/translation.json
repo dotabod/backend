@@ -26,6 +26,15 @@
   },
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
+  "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
+  "herostats": {
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches.",
+    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
+    "timeperiod": {
+      "days": "{{days}}d",
+      "lifetime": "lifetime"
+    }
+  },
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "gameNotFound": "Game was not found",

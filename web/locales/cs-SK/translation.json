@@ -1,7 +1,8 @@
 {
   "aegis": {
     "denied": "{{- heroName}}zničil Aegis {{emote}}",
-    "pickup": "{{- heroName}} získal Aegis!"
+    "pickup": "{{- heroName}} získal Aegis!",
+    "snatched": ""
   },
   "apm": "Momentálne APM: {{num}} četujucich ",
   "averageRank": "Priemerný rank tejto hry",
@@ -113,5 +114,12 @@
   "updateMmr_auto": "Aktualizované MMR na {{mmr}}. !fixparty pre skupinu a !fixdd pre double down ",
   "updateMmr_manual": "Aktualizované MMR na {{mmr}}",
   "updateMmrMulti": "Viacnásobnom steam účtov, aktualizujem ten na ktorý si momentálne prihlásený s {{steamId}}",
-  "xpm": "Momentálne XPM:{{num}}"
+  "xpm": "Momentálne XPM:{{num}}",
+  "streamDelay_zero": "",
+  "streamDelay_one": "",
+  "streamDelay_other": "",
+  "setStreamDelay_zero": "",
+  "setStreamDelay_one": "",
+  "setStreamDelay_other": "",
+  "setStreamDelayNoArgs": ""
 }

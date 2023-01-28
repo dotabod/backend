@@ -55,6 +55,7 @@ export const defaultSettings = {
   commandGM: true,
   commandGPM: true,
   commandHero: true,
+  commandD2pt: true,
   commandLG: true,
   commandModsonly: true,
   commandNP: true,

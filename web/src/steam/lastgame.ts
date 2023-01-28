@@ -65,7 +65,7 @@ export default async function lastgame({
       ? t('notPlaying', { lng: locale })
       : t('gameNotFound', { lng: locale })
     return gameHistory[0]?.match?.match_id
-      ? `${msg}. ${t('lastgame.link', {
+      ? `${msg} · ${t('lastgame.link', {
           lng: locale,
           url: `dotabuff.com/matches/${gameHistory[0].match.match_id}`,
         })}`
