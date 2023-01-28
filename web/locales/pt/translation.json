@@ -1,7 +1,8 @@
 {
   "aegis": {
     "denied": "{{- heroName}} negou o aegis {{emote}}",
-    "pickup": "{{- heroName}} pegou o aegis"
+    "pickup": "{{- heroName}} pegou o aegis",
+    "snatched": ""
   },
   "apm": "APM ao vivo: {{num}} ",
   "averageRank": "Média de rank este jogo",
@@ -113,5 +114,12 @@
   "updateMmr_auto": "MMR atualizado para {{mmr}}. Digite !fixparty para alterar para partida em equipe, ou !fixdd para partida com dobro mmr",
   "updateMmr_manual": "MMR atualizado para {{mmr}}",
   "updateMmrMulti": "Vários contas steam, atualizando a logada no momento com ({{steamId}})",
-  "xpm": "XPM ao vivo: {{num}}"
+  "xpm": "XPM ao vivo: {{num}}",
+  "streamDelay_zero": "",
+  "streamDelay_one": "",
+  "streamDelay_other": "",
+  "setStreamDelay_zero": "",
+  "setStreamDelay_one": "",
+  "setStreamDelay_other": "",
+  "setStreamDelayNoArgs": ""
 }

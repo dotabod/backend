@@ -1,7 +1,8 @@
 {
   "aegis": {
     "denied": "{{- heroName}} ha negato l'egida {{emote}}",
-    "pickup": "{{- heroName}} ha preso l'egida"
+    "pickup": "{{- heroName}} ha preso l'egida",
+    "snatched": ""
   },
   "apm": "APM Live: {{num}} Chatting",
   "averageRank": "Rank medio in questa partita",
@@ -113,5 +114,12 @@
   "updateMmr_auto": "Aggiornato MMR a {{mmr}}. !fixparty per party e !fixdd per doubledown",
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
-  "xpm": "XPM Live: {{num}}"
+  "xpm": "XPM Live: {{num}}",
+  "streamDelay_zero": "",
+  "streamDelay_one": "",
+  "streamDelay_other": "",
+  "setStreamDelay_zero": "",
+  "setStreamDelay_one": "",
+  "setStreamDelay_other": "",
+  "setStreamDelayNoArgs": ""
 }
