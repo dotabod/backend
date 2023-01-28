@@ -58,10 +58,37 @@ commandHandler.registerCommand('lgs', {
       additionals.push(
         t('lastgamescore.duration', { minutes: lasted, lng: message.channel.client.locale }),
       )
-
+      
+      const endedMinutes = Math.floor((Date.now() - lg.updatedAt.getTime()) / (1000 * 60)))
+      const minutes = endedMinutes % 60;
+      const hours = Math.floor(endedMinutes / 60) % 24
+      const days = Math.floor(endedMinutes / (60 * 24)) % 7
+      const weeks = Math.floor(endedMinutes / (60 * 24 * 7))
+      
+      let time = ""
+      if (weeks > 0){
+        time += weeks + t('time.week', { lng: message.channel.client.locale }) + " "
+      }
+      
+      if (days > 0){
+        time += days + t('time.day', { lng: message.channel.client.locale })+ " "
+      }
+      
+      if (hours > 0){
+        time += hours + t('time.hour', { lng: message.channel.client.locale })+ " " 
+      }
+      
+      if (minutes > 0){
+        time += minutes + t('time.minute', { lng: message.channel.client.locale })+ " "
+      }
+      
+      time.trim()
+      
+      
+      
       additionals.push(
         t('lastgamescore.ended', {
-          minutes: Math.floor((Date.now() - lg.updatedAt.getTime()) / 1000 / 60),
+          timeAgo: time,
           lng: message.channel.client.locale,
         }),
       )
