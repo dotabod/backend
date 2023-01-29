@@ -26,20 +26,19 @@
   },
   "commands_everyone": "Všetci môžu použiť {{commandList}}",
   "commands_mods": "Iba moderátori môžu použiť {{commandList}}",
-  "overlayMissing": "",
-  "herostats": {
-    "winrate": "",
-    "none": "",
-    "timeperiod": {
-      "days": "",
-      "lifetime": ""
-    }
-  },
   "dota2pt": "",
   "dotabod": "Ja som open source bot vytvorení {{author}}. Viac informácií na {{- url}}",
   "gameNotFound": "Našla sa hra! ",
   "gpm_zero": "Momentálne GPM:{{num}}",
   "gpm_other": "Momentálne {{num}}.{{heroKills}} za zabitie hrdinov, {{creepKills}} za zabitie creepov.",
+  "herostats": {
+    "none": "",
+    "timeperiod": {
+      "days": "",
+      "lifetime": ""
+    },
+    "winrate": ""
+  },
   "invalidColor": "Nesprávna farba hrdinu alebo slot. Farba musí byť od 1 do 10 z {{colorList}}.",
   "invalidMmr": "Nesprávny príkaz. Skús !setmmr 1234",
   "killstreak": {
@@ -52,10 +51,9 @@
     "player": "{{- currentMatchHero}} hrá ako {{- lastMatchHero}}"
   },
   "lastgamescore": {
-    "kda": "",
     "double": "Pokus číslo dva",
     "duration": "{{minutes}} minút dlhý ",
-    "ended": "Skončil pred {{minutes}} minutamy ",
+    "kda": "",
     "lost": "Posledná hra: prehra",
     "party": "Skupinový match",
     "unranked": "Nehodnotený",
@@ -79,6 +77,7 @@
   "npRemove": "Skús !np odstrániť <steam32id>",
   "npRemoved": "Odstráň {{steamid}} z !no pre tento kanál ",
   "npUnknown": "{{steamid}} sa nenašlo pre tento kanál ",
+  "overlayMissing": "",
   "ping": "Pong EZ Clap",
   "pleb": "Jeden pleb tu 👇",
   "pleb_off": "{{name}}EZ Clap dobrá práca pleb",
@@ -103,6 +102,13 @@
     "more": ""
   },
   "roshanKilled": "Roshan zabitý! Ďalší Roshan sa spawne medzi{{min}} a {{max}}",
+  "setStreamDelay_zero": "",
+  "setStreamDelay_one": "",
+  "setStreamDelay_other": "",
+  "setStreamDelayNoArgs": "",
+  "streamDelay_zero": "",
+  "streamDelay_one": "",
+  "streamDelay_other": "",
   "tip": {
     "from": "Tip od {{- heroName}} ICANT",
     "to": "Poslali sme tip {{- heroName}} PepeLaugh"
@@ -124,18 +130,5 @@
   "updateMmr_auto": "Aktualizované MMR na {{mmr}}. !fixparty pre skupinu a !fixdd pre double down ",
   "updateMmr_manual": "Aktualizované MMR na {{mmr}}",
   "updateMmrMulti": "Viacnásobnom steam účtov, aktualizujem ten na ktorý si momentálne prihlásený s {{steamId}}",
-  "xpm": "Momentálne XPM:{{num}}",
-  "streamDelay_zero": "",
-  "streamDelay_one": "",
-  "streamDelay_other": "",
-  "setStreamDelay_zero": "",
-  "setStreamDelay_one": "",
-  "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": "",
-  "time": {
-    "minute": "",
-    "hour": "",
-    "day": "",
-    "week": ""
-  }
+  "xpm": "Momentálne XPM:{{num}}"
 }
