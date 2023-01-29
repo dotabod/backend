@@ -140,3 +140,4 @@ services:
 # even later you call command docker-compose down.
 volumes:
   steam_auth:
+  mongodb_data:
