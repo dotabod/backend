@@ -26,6 +26,15 @@
   },
   "commands_everyone": "Кожен може використовувати: {{commandList}}",
   "commands_mods": "Команди лише для модераторів: {{commandList}}",
+  "overlayMissing": "Оверлей не знайдено. Команді {{command}} необхідний оверлей, щоб вона була додана.",
+  "herostats": {
+    "winrate": "Відсоток перемог: {{winrate}} на {{- heroName}} в {{timeperiod}} за {{total}} матчів.",
+    "none": "На {{- heroName}} не зіграно матчів протягом {{timeperiod}}",
+    "timeperiod": {
+      "days": "{{days}}д",
+      "lifetime": "за все життя"
+    }
+  },
   "dota2pt": "Ти не знаєш що купити на {{- heroName}}?  Подивись тут {{- url}}",
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",
   "gameNotFound": "Матч не знайдено",
@@ -45,7 +54,7 @@
   "lastgamescore": {
     "double": "Подвійна ставка рейтингу",
     "duration": "Тривала {{minutes}}хв",
-    "ended": "Завершилась {{minutes}}хв тому",
+    "ended": "Завершилась {{timeAgo}} тому",
     "lost": "Остання гра: Поразка",
     "party": "Груповий матч",
     "unranked": "Не рейтинговий матч",
@@ -121,5 +130,11 @@
   "setStreamDelay_zero": "Затримку на стрімі прибрано ",
   "setStreamDelay_one": "Тепер затримка на стрімі {{count}} секунд",
   "setStreamDelay_other": "Тепер затримка на стрімі {{count}} секунд",
-  "setStreamDelayNoArgs": "Затримка на стрімі не встановлена, напишіть !setdelay <seconds>"
+  "setStreamDelayNoArgs": "Затримка на стрімі не встановлена, напишіть !setdelay <seconds>",
+  "time": {
+    "minute": "хв",
+    "hour": "год",
+    "day": "д",
+    "week": "тижд"
+  }
 }

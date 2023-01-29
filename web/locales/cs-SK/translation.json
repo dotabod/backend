@@ -26,6 +26,15 @@
   },
   "commands_everyone": "Všetci môžu použiť {{commandList}}",
   "commands_mods": "Iba moderátori môžu použiť {{commandList}}",
+  "overlayMissing": "",
+  "herostats": {
+    "winrate": "",
+    "none": "",
+    "timeperiod": {
+      "days": "",
+      "lifetime": ""
+    }
+  },
   "dota2pt": "",
   "dotabod": "Ja som open source bot vytvorení {{author}}. Viac informácií na {{- url}}",
   "gameNotFound": "Našla sa hra! ",
@@ -121,5 +130,11 @@
   "setStreamDelay_zero": "",
   "setStreamDelay_one": "",
   "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": ""
+  "setStreamDelayNoArgs": "",
+  "time": {
+    "minute": "",
+    "hour": "",
+    "day": "",
+    "week": ""
+  }
 }

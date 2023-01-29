@@ -131,10 +131,10 @@
   "setStreamDelay_one": "Setting stream delay to: {{count}} second",
   "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "time" :{
-      "minute": "m",
-      "hour": "h",
-      "day": "d",
-      "week": "w"
+  "time": {
+    "minute": "m",
+    "hour": "h",
+    "day": "d",
+    "week": "w"
   }
 }

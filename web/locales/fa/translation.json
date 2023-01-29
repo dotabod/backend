@@ -26,6 +26,15 @@
   },
   "commands_everyone": "کامندهای همگانی: {{commandList}}",
   "commands_mods": "کامندهای مادها {{commandList}}",
+  "overlayMissing": "",
+  "herostats": {
+    "winrate": "",
+    "none": "",
+    "timeperiod": {
+      "days": "",
+      "lifetime": ""
+    }
+  },
   "dota2pt": "میخوای چیز جدید واسه قهرمان {{- heroName}} یاد بگیری؟ این اینک رو چک کن {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "gameNotFound": "بازی پیدا نشد",
@@ -121,5 +130,11 @@
   "setStreamDelay_zero": "",
   "setStreamDelay_one": "",
   "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": ""
+  "setStreamDelayNoArgs": "",
+  "time": {
+    "minute": "",
+    "hour": "",
+    "day": "",
+    "week": ""
+  }
 }

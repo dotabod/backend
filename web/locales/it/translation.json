@@ -26,6 +26,15 @@
   },
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
+  "overlayMissing": "",
+  "herostats": {
+    "winrate": "",
+    "none": "",
+    "timeperiod": {
+      "days": "",
+      "lifetime": ""
+    }
+  },
   "dota2pt": "Hai bisogno di build pro per {{- heroName}}? Vai qui {{- url}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
@@ -121,5 +130,11 @@
   "setStreamDelay_zero": "",
   "setStreamDelay_one": "",
   "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": ""
+  "setStreamDelayNoArgs": "",
+  "time": {
+    "minute": "",
+    "hour": "",
+    "day": "",
+    "week": ""
+  }
 }
