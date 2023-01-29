@@ -66,7 +66,7 @@ channel
       client.mmr = newObj.mmr
 
       if (!client.stream_online) return
-      logger.info('[WATCHER MMR] Sending mmr to socket', { name: client.name })
+      logger.info('[WATCHER MMR] Sending mmr to socket', { name: client.name, mmr: newObj.mmr })
       tellChatNewMMR({
         streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
         locale: client.locale,
@@ -89,8 +89,7 @@ channel
     // replace the new setting with the one we have saved in cache
     logger.info('[WATCHER SETTING] Updating setting for', {
       name: client.name,
-      key: newObj.key,
-      value: newObj.value,
+      newObj,
     })
     const setting = client.settings.find((s) => s.key === newObj.key)
 
@@ -124,7 +123,7 @@ channel
     if (!IS_DEV && DEV_CHANNELS.includes(client.name)) return
 
     if (payload.eventType === 'DELETE') {
-      logger.info('[WATCHER STEAM] Deleting steam account for', { name: client.name })
+      logger.info('[WATCHER STEAM] Deleting steam account for', { name: client.name, oldObj })
       const oldSteamIdx = client.SteamAccount.findIndex((s) => s.steam32Id === oldObj.steam32Id)
       client.SteamAccount.splice(oldSteamIdx, 1)
       if (client.steam32Id === oldObj.steam32Id) {
@@ -133,7 +132,7 @@ channel
       return
     }
 
-    logger.info('[WATCHER STEAM] Updating steam accounts for', { name: client.name })
+    logger.info('[WATCHER STEAM] Updating steam accounts for', { name: client.name, newObj })
 
     const currentSteamIdx = client.SteamAccount.findIndex((s) => s.steam32Id === newObj.steam32Id)
     if (currentSteamIdx === -1) {
@@ -164,7 +163,7 @@ channel
           server.io.to(client.token).emit('update-medal', deets)
         })
         .catch((e) => {
-          logger.info('[WATCHER STEAM] Error getting rank detail', e)
+          logger.info('[WATCHER STEAM] Error getting rank detail', { e })
         })
     }
   })
