@@ -12,7 +12,10 @@ export default async function getDBUser(
   if (invalidTokens.has(token || twitchId)) return null
 
   const client = findUser(token) ?? findUserByTwitchId(twitchId)
-  if (client) return client
+  if (client) {
+    lookingupToken.delete(token ?? twitchId ?? '')
+    return client
+  }
 
   if (lookingupToken.has(token ?? twitchId ?? '')) return null
 
@@ -62,11 +65,15 @@ export default async function getDBUser(
       if (!user.id) {
         logger.info('Invalid token', { token: token ?? twitchId })
         invalidTokens.add(token ?? twitchId)
+        lookingupToken.delete(token ?? twitchId ?? '')
         return null
       }
 
       const client = findUser(user.id)
-      if (client) return client
+      if (client) {
+        lookingupToken.delete(token ?? twitchId ?? '')
+        return client
+      }
 
       const theUser = {
         ...user,
@@ -80,6 +87,7 @@ export default async function getDBUser(
         const gsiHandler = new GSIHandler(theUser)
         gsiHandlers.set(theUser.id, gsiHandler)
         twitchIdToToken.set(theUser.Account!.providerAccountId!, theUser.id)
+        lookingupToken.delete(token ?? twitchId ?? '')
         return gsiHandler.client
       }
 
@@ -88,9 +96,8 @@ export default async function getDBUser(
     .catch((e: any) => {
       logger.error('[USER] Error checking auth', { token: token ?? twitchId, e })
       invalidTokens.add(token ?? twitchId)
-      return null
-    })
-    .finally(() => {
       lookingupToken.delete(token ?? twitchId ?? '')
+
+      return null
     })
 }
