@@ -9,7 +9,6 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 const mongo = await Mongo.connect()
 commandHandler.registerCommand('ranked', {
   aliases: ['isranked'],
-
   onlyOnline: true,
   dbkey: DBSettings.commandRanked,
   handler: (message: MessageType, args: string[]) => {

@@ -5,7 +5,6 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('match', {
   aliases: ['matchid'],
-
   onlyOnline: true,
   handler: (message: MessageType, args: string[]) => {
     const {

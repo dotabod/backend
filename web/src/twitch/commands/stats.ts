@@ -64,7 +64,6 @@ export function profileLink({ players, locale, currentMatchId, args }: ProfileLi
 
 commandHandler.registerCommand('stats', {
   aliases: ['check', 'profile'],
-
   onlyOnline: true,
 
   handler: (message: MessageType, args: string[]) => {
