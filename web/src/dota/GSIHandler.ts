@@ -25,6 +25,15 @@ import { updateMmr } from './lib/updateMmr.js'
 const mongo = await Mongo.connect()
 
 // Finally, we have a user and a GSI client
+interface MMR {
+  scores: { radiant_score: number | null; dire_score: number | null }
+  increase: boolean
+  lobbyType: number
+  matchId: string
+  isParty?: boolean
+  heroSlot?: number | null
+}
+
 // That means the user opened OBS and connected to Dota 2 GSI
 export class GSIHandler {
   client: SocketClient
@@ -388,13 +397,7 @@ export class GSIHandler {
       })
   }
 
-  updateMMR(
-    increase: boolean,
-    lobbyType: number,
-    matchId: string,
-    isParty?: boolean,
-    heroSlot?: number | null,
-  ) {
+  updateMMR({ scores, increase, lobbyType, matchId, isParty, heroSlot }: MMR) {
     const ranked = lobbyType === 7
 
     const extraInfo = {
@@ -423,6 +426,7 @@ export class GSIHandler {
           lobby_type: lobbyType,
           hero_slot: heroSlot,
           is_party: isParty,
+          ...scores,
         },
       })
       .then(() => {
@@ -647,6 +651,10 @@ export class GSIHandler {
 
     const localWinner = winningTeam
     const myTeam = this.playingTeam ?? this.client.gsi?.player?.team_name
+    const scores = {
+      radiant_score: this.client.gsi?.map?.radiant_score ?? null,
+      dire_score: this.client.gsi?.map?.dire_score ?? null,
+    }
     const won = myTeam === localWinner
     logger.info('[BETS] end bets won data', {
       playingMatchId: this.playingBetMatchId,
@@ -700,7 +708,14 @@ export class GSIHandler {
     // Default ranked
     const localLobbyType = typeof this.playingLobbyType !== 'number' ? 7 : this.playingLobbyType
     const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
-    this.updateMMR(won, localLobbyType, matchId, isParty, this.playingHeroSlot)
+    this.updateMMR({
+      scores: scores,
+      increase: won,
+      lobbyType: localLobbyType,
+      matchId: matchId,
+      isParty: isParty,
+      heroSlot: this.playingHeroSlot,
+    })
 
     if (this.treadToggles > 0 && this.client.stream_online) {
       this.say(

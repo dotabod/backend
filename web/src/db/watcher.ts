@@ -103,7 +103,7 @@ channel
       void toggleDotabod(client.token, !!newObj.value, client.name, client.locale)
     }
 
-    // Sending this one even when offline, cause they might be testing locally
+    // Sending this one even when offline, because they might be testing locally
     logger.info('[WATCHER SETTING] Sending new setting value to socket', {
       name: client.name,
       key: newObj.key,

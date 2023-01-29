@@ -97,6 +97,8 @@ model Bet {
   is_party      Boolean  @default(false)
   hero_slot     Int?     @db.SmallInt
   is_doubledown Boolean  @default(false)
+  radiant_score Int?     @db.SmallInt
+  dire_score    Int?     @db.SmallInt
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([matchId, userId])
