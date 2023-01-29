@@ -26,20 +26,19 @@
   },
   "commands_everyone": "کامندهای همگانی: {{commandList}}",
   "commands_mods": "کامندهای مادها {{commandList}}",
-  "overlayMissing": "",
-  "herostats": {
-    "winrate": "",
-    "none": "",
-    "timeperiod": {
-      "days": "",
-      "lifetime": ""
-    }
-  },
   "dota2pt": "میخوای چیز جدید واسه قهرمان {{- heroName}} یاد بگیری؟ این اینک رو چک کن {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "gameNotFound": "بازی پیدا نشد",
   "gpm_zero": "Live GPM: {{num}}",
   "gpm_other": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "herostats": {
+    "none": "",
+    "timeperiod": {
+      "days": "",
+      "lifetime": ""
+    },
+    "winrate": ""
+  },
   "invalidColor": "رنگ قرمان ها اشتباه است. باید بین 1 تا 10 باشد یا یکی از {{colorList}}",
   "invalidMmr": "داداچ اشتباه میزنی. این رو بزن  !setmmr 1234",
   "killstreak": {
@@ -52,10 +51,9 @@
     "player": "{{- currentMatchHero}} توی بازی قبل با {{- lastMatchHero}} غذا میداد"
   },
   "lastgamescore": {
-    "kda": "",
     "double": "بریم دوبله رنک رو به فنا بدیم",
     "duration": "{{minutes}}m long",
-    "ended": "بازی {{minutes}} دقیقه پیش تمام شده",
+    "kda": "",
     "lost": "بازی قبلی: فقط غذا دادم و باختیم",
     "party": "توی یک پارتی غذا میدیم",
     "unranked": "بازی رنک نیست",
@@ -79,6 +77,7 @@
   "npRemove": "Try !np remove <steam32id>",
   "npRemoved": "{{steamid}} را از !np برای این کانال حذف شد",
   "npUnknown": "{{steamid}} برای این کانال پیدا نشد",
+  "overlayMissing": "",
   "ping": "Pong EZ Clap",
   "pleb": "پایینی یک pleb 👇",
   "pleb_off": "{{name}} EZ Clap nice job pleb",
@@ -103,6 +102,13 @@
     "more": "روشان {{num}}. روشان بعدی پنیر و آقانیم و رفرش شارد"
   },
   "roshanKilled": "روشان رو کوشتن. روشان بعدی بین {{min}} تا {{max}} دقیقه",
+  "setStreamDelay_zero": "",
+  "setStreamDelay_one": "",
+  "setStreamDelay_other": "",
+  "setStreamDelayNoArgs": "",
+  "streamDelay_zero": "",
+  "streamDelay_one": "",
+  "streamDelay_other": "",
   "tip": {
     "from": "{{- heroName}} تیپش کرد ICANT",
     "to": "{{- heroName}} تیپش کردم PepeLaugh"
@@ -124,18 +130,5 @@
   "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
-  "xpm": "Live XPM: {{num}}",
-  "streamDelay_zero": "",
-  "streamDelay_one": "",
-  "streamDelay_other": "",
-  "setStreamDelay_zero": "",
-  "setStreamDelay_one": "",
-  "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": "",
-  "time": {
-    "minute": "",
-    "hour": "",
-    "day": "",
-    "week": ""
-  }
+  "xpm": "Live XPM: {{num}}"
 }

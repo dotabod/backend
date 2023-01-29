@@ -26,20 +26,19 @@
   },
   "commands_everyone": "Mindenki számára elérhető parancsok: {{commandList}}",
   "commands_mods": "Moderátor parancsok: {{commandList}}",
-  "overlayMissing": "",
-  "herostats": {
-    "winrate": "",
-    "none": "",
-    "timeperiod": {
-      "days": "",
-      "lifetime": ""
-    }
-  },
   "dota2pt": "Profi {{- heroName}} buildeket keresel? Itt találsz párat: {{- url}}",
   "dotabod": "Nyílt forráskódú bot vagyok, {{author}} tervezett. Több információért {{- url}}",
   "gameNotFound": "Meccs nem található",
   "gpm_zero": "Élő GPM: {{num}}",
   "gpm_other": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
+  "herostats": {
+    "none": "",
+    "timeperiod": {
+      "days": "",
+      "lifetime": ""
+    },
+    "winrate": ""
+  },
   "invalidColor": "Érvénytelen szín vagy slot. Próbáld 1-10ig, vagy válassz innen: {{colorList}}",
   "invalidMmr": "Érvénytelen parancs. Próbáld így: !setmmr 1234",
   "killstreak": {
@@ -52,10 +51,9 @@
     "player": "{{- currentMatchHero}} {{- lastMatchHero}}ként az előző meccsben."
   },
   "lastgamescore": {
-    "kda": "",
     "double": "Megduplázva",
     "duration": "{{minutes}}perc hosszú",
-    "ended": "Befejeződött {{minutes}}perce",
+    "kda": "",
     "lost": "Előző meccs: vereség",
     "party": "Party meccs",
     "unranked": "Unranked",
@@ -79,6 +77,7 @@
   "npRemove": "Próbáld az !np remove <steam32id>",
   "npRemoved": "{{steamid}} ismert játékos eltávolítva a csatornáról. (!np)",
   "npUnknown": "Nem található {{steamid}} azonosítójú játékos ezen a csatornán",
+  "overlayMissing": "",
   "ping": "Pong EZ Clap",
   "pleb": "Pong EZ Clap",
   "pleb_off": "{{name}} EZ Clap szép munka pleb",
@@ -103,6 +102,13 @@
     "more": "{{num}}. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard."
   },
   "roshanKilled": "Roshan meghalt! Következő Roshan {{min}} és {{max}} perc között várható",
+  "setStreamDelay_zero": "",
+  "setStreamDelay_one": "",
+  "setStreamDelay_other": "",
+  "setStreamDelayNoArgs": "",
+  "streamDelay_zero": "",
+  "streamDelay_one": "",
+  "streamDelay_other": "",
   "tip": {
     "from": "{{- heroName}} borravalót adott ICANT",
     "to": "Borravalót adtunk {{- heroName}} PepeLaugh"
@@ -124,18 +130,5 @@
   "updateMmr_auto": "MMR frissítve {{mmr}}-re. Próbáld a !fixparty -t party és !fixdd -t doubledown esetén",
   "updateMmr_manual": "MMR frissítve {{mmr}}-re",
   "updateMmrMulti": "Több steam account található, frissítem a jelenleg belépettet: ({{steamId}})",
-  "xpm": "Élő XPM: {{num}}",
-  "streamDelay_zero": "",
-  "streamDelay_one": "",
-  "streamDelay_other": "",
-  "setStreamDelay_zero": "",
-  "setStreamDelay_one": "",
-  "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": "",
-  "time": {
-    "minute": "",
-    "hour": "",
-    "day": "",
-    "week": ""
-  }
+  "xpm": "Élő XPM: {{num}}"
 }

@@ -26,20 +26,19 @@
   },
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
-  "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
-  "herostats": {
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches.",
-    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
-    "timeperiod": {
-      "days": "{{days}}d",
-      "lifetime": "lifetime"
-    }
-  },
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "gameNotFound": "Game was not found",
   "gpm_zero": "Live GPM: {{num}}",
   "gpm_other": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "herostats": {
+    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
+    "timeperiod": {
+      "days": "{{days}}d",
+      "lifetime": "lifetime"
+    },
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
+  },
   "invalidColor": "Invalid hero color or slot. Must be 1-10, or one of {{colorList}}",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "killstreak": {
@@ -52,10 +51,9 @@
     "player": "{{- currentMatchHero}} played as {{- lastMatchHero}}"
   },
   "lastgamescore": {
-    "kda": "{{- kdavalue}} on {{- heroName}}",
     "double": "Double down",
     "duration": "{{minutes}}m long",
-    "ended": "Ended {{timeAgo}} ago",
+    "kda": "{{- kdavalue}} on {{- heroName}}",
     "lost": "Lost last game",
     "party": "Party match",
     "unranked": "Not ranked",
@@ -79,6 +77,7 @@
   "npRemove": "Try !np remove <steam32id>",
   "npRemoved": "Removed {{steamid}} from !np for this channel",
   "npUnknown": "Could not find {{steamid}} for this channel",
+  "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
   "ping": "Pong EZ Clap",
   "pleb": "One pleb IN 👇",
   "pleb_off": "{{name}} EZ Clap nice job pleb",
@@ -103,6 +102,13 @@
     "more": "Rosh deaths: {{num}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
+  "setStreamDelay_zero": "Removing stream delay",
+  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
+  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
+  "streamDelay_zero": "There is no stream delay on this channel",
+  "streamDelay_one": "Stream delay: {{count}} second",
+  "streamDelay_other": "Stream delay: {{count}} seconds",
   "tip": {
     "from": "The tip from {{- heroName}} ICANT",
     "to": "We tipping {{- heroName}} PepeLaugh"
@@ -124,18 +130,5 @@
   "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
-  "xpm": "Live XPM: {{num}}",
-  "streamDelay_zero": "There is no stream delay on this channel",
-  "streamDelay_one": "Stream delay: {{count}} second",
-  "streamDelay_other": "Stream delay: {{count}} seconds",
-  "setStreamDelay_zero": "Removing stream delay",
-  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
-  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
-  "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "time": {
-    "minute": "m",
-    "hour": "h",
-    "day": "d",
-    "week": "w"
-  }
+  "xpm": "Live XPM: {{num}}"
 }

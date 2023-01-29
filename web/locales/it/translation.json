@@ -26,20 +26,19 @@
   },
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
-  "overlayMissing": "",
-  "herostats": {
-    "winrate": "",
-    "none": "",
-    "timeperiod": {
-      "days": "",
-      "lifetime": ""
-    }
-  },
   "dota2pt": "Hai bisogno di build pro per {{- heroName}}? Vai qui {{- url}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
   "gpm_zero": "GPM Live: {{num}}",
   "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}}da creep.",
+  "herostats": {
+    "none": "",
+    "timeperiod": {
+      "days": "",
+      "lifetime": ""
+    },
+    "winrate": ""
+  },
   "invalidColor": "Colore o Slot errato. Riprova con un numero da 1 a 10, o uno di {{colorList}} ",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
@@ -52,10 +51,9 @@
     "player": "{{- currentMatchHero}} ha giocato {{- lastMatchHero}}"
   },
   "lastgamescore": {
-    "kda": "",
     "double": "Double down",
     "duration": "{{minutes}} minuti",
-    "ended": "Finito {{minutes}} minuti fa",
+    "kda": "",
     "lost": "Ultima partita: persa",
     "party": "Match in gruppo",
     "unranked": "Non classificata",
@@ -79,6 +77,7 @@
   "npRemove": "Prova !np remove <steam32id>",
   "npRemoved": "Rimosso {{steamid}} da !np per questo canale",
   "npUnknown": "Impossibile trovare {{steamid}} per questo canale",
+  "overlayMissing": "",
   "ping": "Pong EZ Clap",
   "pleb": "Un plebeo scrive 👇",
   "pleb_off": "{{name}} EZ Clap bel lavoro plebeo",
@@ -91,6 +90,7 @@
   "rank": {
     "nextRankAt": "Prossimo rank a",
     "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
+    "nextRankIn_many": "",
     "nextRankIn_other": "in {{count}} vittorie"
   },
   "ranked_no": "No questa partita non è classificata",
@@ -103,6 +103,15 @@
     "more": "Morti di Rosh: {{num}} · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard."
   },
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
+  "setStreamDelay_zero": "",
+  "setStreamDelay_one": "",
+  "setStreamDelay_many": "",
+  "setStreamDelay_other": "",
+  "setStreamDelayNoArgs": "",
+  "streamDelay_zero": "",
+  "streamDelay_one": "",
+  "streamDelay_many": "",
+  "streamDelay_other": "",
   "tip": {
     "from": "Il tip da {{- heroName}} ICANT",
     "to": "Tippiamo {{- heroName}} PepeLaugh"
@@ -116,6 +125,7 @@
   "toggleMatch_single": "Questo match verrá contato come standard mmr: {{- url}} Scrivi !fixdd per annullare",
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
   "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
+  "treadToggle_many": "",
   "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",
@@ -124,18 +134,5 @@
   "updateMmr_auto": "Aggiornato MMR a {{mmr}}. !fixparty per party e !fixdd per doubledown",
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
-  "xpm": "XPM Live: {{num}}",
-  "streamDelay_zero": "",
-  "streamDelay_one": "",
-  "streamDelay_other": "",
-  "setStreamDelay_zero": "",
-  "setStreamDelay_one": "",
-  "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": "",
-  "time": {
-    "minute": "",
-    "hour": "",
-    "day": "",
-    "week": ""
-  }
+  "xpm": "XPM Live: {{num}}"
 }

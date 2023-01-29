@@ -26,20 +26,19 @@
   },
   "commands_everyone": "Všichni mohou použít: {{commandList}}",
   "commands_mods": "Pouze pro moderátory: {{commandList}}",
-  "overlayMissing": "",
-  "herostats": {
-    "winrate": "",
-    "none": "",
-    "timeperiod": {
-      "days": "",
-      "lifetime": ""
-    }
-  },
   "dota2pt": "Potřebuješ poradit co kupovat na {{- heroName}}? Nápady najdeš zde {{- url}}",
   "dotabod": "Jsem open-source bot vytvořený {{author}}. Více info na {{- url}}",
   "gameNotFound": "Hra nebyla nalezena",
   "gpm_zero": "Aktuální GPM: {{num}}",
   "gpm_other": "Aktuální GPM: {{num}}. {{heroKills}} ze zabitých hrdinů, {{creepKills}} z creepů.",
+  "herostats": {
+    "none": "",
+    "timeperiod": {
+      "days": "",
+      "lifetime": ""
+    },
+    "winrate": ""
+  },
   "invalidColor": "Neplatná pozice nebo barva hrdiny. Musí být 1-10 nebo jedna z {{colorList}}",
   "invalidMmr": "Neplatný příkaz. Zkus !setmmr 1234",
   "killstreak": {
@@ -52,10 +51,9 @@
     "player": "{{- currentMatchHero}} hrál jako {{- lastMatchHero}}"
   },
   "lastgamescore": {
-    "kda": "",
     "double": "Double down",
     "duration": "{{minutes}}m dlouhý",
-    "ended": "Skončil před {{minutes}}m",
+    "kda": "",
     "lost": "Poslední hra byla prohra",
     "party": "Skupinový zápas",
     "unranked": "Nehodnocená",
@@ -79,6 +77,7 @@
   "npRemove": "Zkus !np remove <steam32id>",
   "npRemoved": "{{steamid}} odebrán z !np pro tento kanál",
   "npUnknown": "Nenalezeno {{steamid}} pro tento kanál",
+  "overlayMissing": "",
   "ping": "Pong EZ Clap",
   "pleb": "Jeden bleb tu 👇",
   "pleb_off": "{{name}} EZ Clap dobrá práce, blebsi",
@@ -91,6 +90,8 @@
   "rank": {
     "nextRankAt": "Další rank na",
     "nextRankIn_one": "Ještě jedna výhra peepoClap",
+    "nextRankIn_few": "",
+    "nextRankIn_many": "",
     "nextRankIn_other": "za {{count}} výher"
   },
   "ranked_no": "Nope, tenhle zápas není hodnocený",
@@ -103,6 +104,17 @@
     "more": "Zabitých roshanů: {{num}} - Další drop: sejra, aghanim a refresher."
   },
   "roshanKilled": "Roshan zabit! Další spawne mezi {{min}} a {{max}}",
+  "setStreamDelay_zero": "",
+  "setStreamDelay_one": "",
+  "setStreamDelay_few": "",
+  "setStreamDelay_many": "",
+  "setStreamDelay_other": "",
+  "setStreamDelayNoArgs": "",
+  "streamDelay_zero": "",
+  "streamDelay_one": "",
+  "streamDelay_few": "",
+  "streamDelay_many": "",
+  "streamDelay_other": "",
   "tip": {
     "from": "Tip od {{- heroName}} ICANT",
     "to": "Tip pro {{- heroName}} PepeLaugh"
@@ -116,6 +128,8 @@
   "toggleMatch_single": "Měním tento zápas na single down MMR: {{- url}} Napiš !fixdd pro zrušení.",
   "toggleMatch_solo": "Měním tento zápas na solo MMR: {{- url}} Napiš !fixparty pro zrušení.",
   "treadToggle_one": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
+  "treadToggle_few": "",
+  "treadToggle_many": "",
   "treadToggle_other": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
   "uknownMmr": "Neznám MMR kanálu {{channel}}. Modi ho můžou nastavit příkazem !setmmr 1234 nebo na stránce {{- url}}",
   "unknown": "Neznámé",
@@ -124,18 +138,5 @@
   "updateMmr_auto": "Aktualizované MMR na {{mmr}}. !fixparty pro party a !fixdd pro double down",
   "updateMmr_manual": "Aktualizované MMR na {{mmr}}",
   "updateMmrMulti": "Vícero steam účtů, aktualizuji ten který je nyní přihlášený - {{steamId}}",
-  "xpm": "Aktuální XPM: {{num}}",
-  "streamDelay_zero": "",
-  "streamDelay_one": "",
-  "streamDelay_other": "",
-  "setStreamDelay_zero": "",
-  "setStreamDelay_one": "",
-  "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": "",
-  "time": {
-    "minute": "",
-    "hour": "",
-    "day": "",
-    "week": ""
-  }
+  "xpm": "Aktuální XPM: {{num}}"
 }
