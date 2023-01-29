@@ -32,6 +32,7 @@ commandHandler.registerCommand('lgs', {
           is_party: true,
           is_doubledown: true,
           matchId: true,
+          kda: true,
           lobby_type: true,
           createdAt: true,
           updatedAt: true,
@@ -49,12 +50,33 @@ commandHandler.registerCommand('lgs', {
         return
       }
 
-      const more = []
+      const returnMsg = []
+
+      returnMsg.push(
+        lg.won
+          ? t('lastgamescore.won', { lng: message.channel.client.locale })
+          : t('lastgamescore.lost', { lng: message.channel.client.locale }),
+      )
+
+      const kda = lg.kda as {
+        kills: number | null
+        deaths: number | null
+        assists: number | null
+      } | null
+      if (kda) {
+        const kdaMsg = `${kda.kills ?? 0}/${kda.deaths ?? 0}/${kda.assists ?? 0}`
+        returnMsg.push(
+          t('lastgamescore.kda', {
+            lng: message.channel.client.locale,
+            kdavalue: kdaMsg,
+          }),
+        )
+      }
 
       // calculate the time difference in minutes between createdAt and updatedAt
       const lasted = Math.floor((lg.updatedAt.getTime() - lg.createdAt.getTime()) / 1000 / 60)
 
-      more.push(
+      returnMsg.push(
         t('lastgamescore.duration', { minutes: lasted, lng: message.channel.client.locale }),
       )
 
@@ -81,27 +103,22 @@ commandHandler.registerCommand('lgs', {
         times.push(`${minutes}${t('time.minute', { lng: message.channel.client.locale })}`)
       }
 
-      more.push(
+      returnMsg.push(
         t('lastgamescore.ended', {
           timeAgo: times.join(' '),
           lng: message.channel.client.locale,
         }),
       )
 
-      if (lg.is_party) more.push(t('lastgamescore.party', { lng: message.channel.client.locale }))
+      if (lg.is_party)
+        returnMsg.push(t('lastgamescore.party', { lng: message.channel.client.locale }))
       if (lg.is_doubledown)
-        more.push(t('lastgamescore.double', { lng: message.channel.client.locale }))
+        returnMsg.push(t('lastgamescore.double', { lng: message.channel.client.locale }))
       if (lg.lobby_type !== 7)
-        more.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))
-      more.push(`dotabuff.com/matches/${lg.matchId}`)
+        returnMsg.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))
+      returnMsg.push(`dotabuff.com/matches/${lg.matchId}`)
 
-      const wonMsg = lg.won
-        ? t('lastgamescore.won', { lng: message.channel.client.locale })
-        : t('lastgamescore.lost', { lng: message.channel.client.locale })
-      void chatClient.say(
-        message.channel.name,
-        `${wonMsg}${more.length ? ' · ' : ''}${more.join(' · ')}`,
-      )
+      void chatClient.say(message.channel.name, returnMsg.join(' · '))
     }
 
     void handler()

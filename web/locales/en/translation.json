@@ -52,6 +52,7 @@
     "player": "{{- currentMatchHero}} played as {{- lastMatchHero}}"
   },
   "lastgamescore": {
+    "kda": "{{kdavalue}} KDA",
     "double": "Double down",
     "duration": "{{minutes}}m long",
     "ended": "Ended {{timeAgo}} ago",

@@ -26,7 +26,11 @@ const mongo = await Mongo.connect()
 
 // Finally, we have a user and a GSI client
 interface MMR {
-  scores: { radiant_score: number | null; dire_score: number | null }
+  scores: {
+    radiant_score: number | null
+    dire_score: number | null
+    kda: any
+  }
   increase: boolean
   lobbyType: number
   matchId: string
@@ -426,7 +430,9 @@ export class GSIHandler {
           lobby_type: lobbyType,
           hero_slot: heroSlot,
           is_party: isParty,
-          ...scores,
+          kda: scores.kda,
+          radiant_score: scores.radiant_score,
+          dire_score: scores.dire_score,
         },
       })
       .then(() => {
@@ -652,6 +658,11 @@ export class GSIHandler {
     const localWinner = winningTeam
     const myTeam = this.playingTeam ?? this.client.gsi?.player?.team_name
     const scores = {
+      kda: {
+        kills: this.client.gsi?.player?.kills ?? null,
+        deaths: this.client.gsi?.player?.deaths ?? null,
+        assists: this.client.gsi?.player?.assists ?? null,
+      },
       radiant_score: this.client.gsi?.map?.radiant_score ?? null,
       dire_score: this.client.gsi?.map?.dire_score ?? null,
     }
