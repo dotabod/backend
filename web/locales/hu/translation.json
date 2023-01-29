@@ -26,6 +26,15 @@
   },
   "commands_everyone": "Mindenki számára elérhető parancsok: {{commandList}}",
   "commands_mods": "Moderátor parancsok: {{commandList}}",
+  "overlayMissing": "",
+  "herostats": {
+    "winrate": "",
+    "none": "",
+    "timeperiod": {
+      "days": "",
+      "lifetime": ""
+    }
+  },
   "dota2pt": "Profi {{- heroName}} buildeket keresel? Itt találsz párat: {{- url}}",
   "dotabod": "Nyílt forráskódú bot vagyok, {{author}} tervezett. Több információért {{- url}}",
   "gameNotFound": "Meccs nem található",
@@ -121,5 +130,11 @@
   "setStreamDelay_zero": "",
   "setStreamDelay_one": "",
   "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": ""
+  "setStreamDelayNoArgs": "",
+  "time": {
+    "minute": "",
+    "hour": "",
+    "day": "",
+    "week": ""
+  }
 }

@@ -26,6 +26,15 @@
   },
   "commands_everyone": "Каждый может использовать: {{commandList}}",
   "commands_mods": "Команды только для модераторов: {{commandList}}",
+  "overlayMissing": "",
+  "herostats": {
+    "winrate": "",
+    "none": "",
+    "timeperiod": {
+      "days": "",
+      "lifetime": ""
+    }
+  },
   "dota2pt": "Нужны сборки от про игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "gameNotFound": "Игра не найдена",
@@ -121,5 +130,11 @@
   "setStreamDelay_zero": "Задержка на стриме убрана",
   "setStreamDelay_one": "Устанавливаю задержку в {{count}} секунд(ы)",
   "setStreamDelay_other": "Устанавливаю задержку в {{count}} секунд(ы)",
-  "setStreamDelayNoArgs": "Задержка на стриме не установлена, напиши !setdelay <seconds>"
+  "setStreamDelayNoArgs": "Задержка на стриме не установлена, напиши !setdelay <seconds>",
+  "time": {
+    "minute": "",
+    "hour": "",
+    "day": "",
+    "week": ""
+  }
 }
