@@ -9,7 +9,7 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 commandHandler.registerCommand('d2pt', {
   aliases: ['dota2pt', 'build', 'builds', 'getbuild'],
   onlyOnline: true,
-  dbkey: DBSettings.commandD2pt,
+  dbkey: DBSettings.commandBuilds,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },

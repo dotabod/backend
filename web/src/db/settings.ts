@@ -55,7 +55,6 @@ export const defaultSettings = {
   commandGM: true,
   commandGPM: true,
   commandHero: true,
-  commandD2pt: true,
   commandLG: true,
   commandModsonly: true,
   commandNP: true,
@@ -83,6 +82,7 @@ export const defaultSettings = {
   livePolls: true,
   streamDelay: 0,
   commandDelay: true,
+  commandBuilds: true,
 }
 
 export type SettingKeys = keyof typeof defaultSettings
