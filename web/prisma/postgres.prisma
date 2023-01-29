@@ -99,6 +99,7 @@ model Bet {
   is_doubledown Boolean  @default(false)
   radiant_score Int?     @db.SmallInt
   dire_score    Int?     @db.SmallInt
+  kda           Json?
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([matchId, userId])
