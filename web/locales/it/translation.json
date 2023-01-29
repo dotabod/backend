@@ -90,6 +90,7 @@
   "rank": {
     "nextRankAt": "Prossimo rank a",
     "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
+    "nextRankIn_many": "",
     "nextRankIn_other": "in {{count}} vittorie"
   },
   "ranked_no": "No questa partita non è classificata",
@@ -104,10 +105,12 @@
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
   "setStreamDelay_zero": "",
   "setStreamDelay_one": "",
+  "setStreamDelay_many": "",
   "setStreamDelay_other": "",
   "setStreamDelayNoArgs": "",
   "streamDelay_zero": "",
   "streamDelay_one": "",
+  "streamDelay_many": "",
   "streamDelay_other": "",
   "tip": {
     "from": "Il tip da {{- heroName}} ICANT",
@@ -122,6 +125,7 @@
   "toggleMatch_single": "Questo match verrá contato come standard mmr: {{- url}} Scrivi !fixdd per annullare",
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
   "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
+  "treadToggle_many": "",
   "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",

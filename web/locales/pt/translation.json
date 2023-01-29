@@ -90,6 +90,7 @@
   "rank": {
     "nextRankAt": "Próximo rank em",
     "nextRankIn_one": "Mais uma vitória peepoClap",
+    "nextRankIn_many": "",
     "nextRankIn_other": "em {{count}} vitórias"
   },
   "ranked_no": "Não este jogo não é ranqueado",
@@ -104,10 +105,12 @@
   "roshanKilled": "Roshan morto! Próximo roshan em {{min}} e {{max}}",
   "setStreamDelay_zero": "",
   "setStreamDelay_one": "",
+  "setStreamDelay_many": "",
   "setStreamDelay_other": "",
   "setStreamDelayNoArgs": "",
   "streamDelay_zero": "",
   "streamDelay_one": "",
+  "streamDelay_many": "",
   "streamDelay_other": "",
   "tip": {
     "from": "Tip de {{- heroName}} ICANT",
@@ -122,6 +125,7 @@
   "toggleMatch_single": "Mudando partida para mmr não dobrado: {{- url}} Digite !fixdd para desfazer",
   "toggleMatch_solo": "Mudando partida para partida solo: {{- url}} Digite !fixparty para desfazer",
   "treadToggle_one": "Usamos power treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
+  "treadToggle_many": "",
   "treadToggle_other": "Usamos power treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
   "uknownMmr": "Ainda não o MMR de {{channel}}. Mods favor digitar !setmmr 1234 or configure em {{- url}}",
   "unknown": "Desconhecido",

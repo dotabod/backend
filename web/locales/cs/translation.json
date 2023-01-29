@@ -90,6 +90,8 @@
   "rank": {
     "nextRankAt": "Další rank na",
     "nextRankIn_one": "Ještě jedna výhra peepoClap",
+    "nextRankIn_few": "",
+    "nextRankIn_many": "",
     "nextRankIn_other": "za {{count}} výher"
   },
   "ranked_no": "Nope, tenhle zápas není hodnocený",
@@ -104,10 +106,14 @@
   "roshanKilled": "Roshan zabit! Další spawne mezi {{min}} a {{max}}",
   "setStreamDelay_zero": "",
   "setStreamDelay_one": "",
+  "setStreamDelay_few": "",
+  "setStreamDelay_many": "",
   "setStreamDelay_other": "",
   "setStreamDelayNoArgs": "",
   "streamDelay_zero": "",
   "streamDelay_one": "",
+  "streamDelay_few": "",
+  "streamDelay_many": "",
   "streamDelay_other": "",
   "tip": {
     "from": "Tip od {{- heroName}} ICANT",
@@ -122,6 +128,8 @@
   "toggleMatch_single": "Měním tento zápas na single down MMR: {{- url}} Napiš !fixdd pro zrušení.",
   "toggleMatch_solo": "Měním tento zápas na solo MMR: {{- url}} Napiš !fixparty pro zrušení.",
   "treadToggle_one": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
+  "treadToggle_few": "",
+  "treadToggle_many": "",
   "treadToggle_other": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
   "uknownMmr": "Neznám MMR kanálu {{channel}}. Modi ho můžou nastavit příkazem !setmmr 1234 nebo na stránce {{- url}}",
   "unknown": "Neznámé",
