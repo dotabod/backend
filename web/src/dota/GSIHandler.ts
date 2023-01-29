@@ -36,6 +36,7 @@ interface MMR {
   matchId: string
   isParty?: boolean
   heroSlot?: number | null
+  heroName?: string | null
 }
 
 // That means the user opened OBS and connected to Dota 2 GSI
@@ -401,7 +402,7 @@ export class GSIHandler {
       })
   }
 
-  updateMMR({ scores, increase, lobbyType, matchId, isParty, heroSlot }: MMR) {
+  updateMMR({ scores, increase, heroName, lobbyType, matchId, isParty, heroSlot }: MMR) {
     const ranked = lobbyType === 7
 
     const extraInfo = {
@@ -430,6 +431,7 @@ export class GSIHandler {
           lobby_type: lobbyType,
           hero_slot: heroSlot,
           is_party: isParty,
+          hero_name: heroName,
           kda: scores.kda,
           radiant_score: scores.radiant_score,
           dire_score: scores.dire_score,
@@ -719,6 +721,7 @@ export class GSIHandler {
     // Default ranked
     const localLobbyType = typeof this.playingLobbyType !== 'number' ? 7 : this.playingLobbyType
     const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
+
     this.updateMMR({
       scores: scores,
       increase: won,
@@ -726,6 +729,7 @@ export class GSIHandler {
       matchId: matchId,
       isParty: isParty,
       heroSlot: this.playingHeroSlot,
+      heroName: this.client.gsi?.hero?.name,
     })
 
     if (this.treadToggles > 0 && this.client.stream_online) {

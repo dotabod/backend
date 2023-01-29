@@ -52,14 +52,14 @@
     "player": "{{- currentMatchHero}} played as {{- lastMatchHero}}"
   },
   "lastgamescore": {
-    "kda": "{{kdavalue}} KDA",
+    "kda": "{{- kdavalue}} on {{- heroName}}",
     "double": "Double down",
     "duration": "{{minutes}}m long",
     "ended": "Ended {{timeAgo}} ago",
-    "lost": "Last game: lost",
+    "lost": "Lost last game",
     "party": "Party match",
     "unranked": "Not ranked",
-    "won": "Last game: won"
+    "won": "Won last game"
   },
   "lifetime": "Lifetime games",
   "matchFound": "Match data found {{commandList}} commands activated.",

@@ -2,6 +2,7 @@ import { t } from 'i18next'
 
 import { prisma } from '../../db/prisma.js'
 import { DBSettings } from '../../db/settings.js'
+import getHero, { HeroNames } from '../../dota/lib/getHero.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -34,6 +35,7 @@ commandHandler.registerCommand('lgs', {
           matchId: true,
           kda: true,
           lobby_type: true,
+          hero_name: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -68,6 +70,9 @@ commandHandler.registerCommand('lgs', {
         returnMsg.push(
           t('lastgamescore.kda', {
             lng: message.channel.client.locale,
+            heroName:
+              getHero(lg.hero_name as HeroNames)?.localized_name ??
+              t('unknown', { lng: message.channel.client.locale }),
             kdavalue: kdaMsg,
           }),
         )
@@ -78,36 +83,6 @@ commandHandler.registerCommand('lgs', {
 
       returnMsg.push(
         t('lastgamescore.duration', { minutes: lasted, lng: message.channel.client.locale }),
-      )
-
-      const endedMinutes = Math.floor((Date.now() - lg.updatedAt.getTime()) / (1000 * 60))
-      const minutes = endedMinutes % 60
-      const hours = Math.floor(endedMinutes / 60) % 24
-      const days = Math.floor(endedMinutes / (60 * 24)) % 7
-      const weeks = Math.floor(endedMinutes / (60 * 24 * 7))
-
-      const times = []
-      if (weeks > 0) {
-        times.push(`${weeks}${t('time.week', { lng: message.channel.client.locale })}`)
-      }
-
-      if (days > 0) {
-        times.push(`${days}${t('time.day', { lng: message.channel.client.locale })}`)
-      }
-
-      if (hours > 0) {
-        times.push(`${hours}${t('time.hour', { lng: message.channel.client.locale })}`)
-      }
-
-      if (minutes > 0) {
-        times.push(`${minutes}${t('time.minute', { lng: message.channel.client.locale })}`)
-      }
-
-      returnMsg.push(
-        t('lastgamescore.ended', {
-          timeAgo: times.join(' '),
-          lng: message.channel.client.locale,
-        }),
       )
 
       if (lg.is_party)

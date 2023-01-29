@@ -100,6 +100,7 @@ model Bet {
   radiant_score Int?     @db.SmallInt
   dire_score    Int?     @db.SmallInt
   kda           Json?
+  hero_name     String?
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([matchId, userId])
