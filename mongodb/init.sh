@@ -1,5 +1,6 @@
 db = db.getSiblingDB('dotabod');
-db.cards.createIndex({ id: 1, lobby_id: -1 });
+db.cards.createIndex({ id: 1 });
+db.cards.createIndex({ createdAt: -1 }, { expireAfterSeconds: 3600 });
 const gameModes = [{ id: 1, name: 'All Pick' }, { id: 2, name: 'Captains Mode' }, { id: 3, name: 'Random Draft' }, { id: 4, name: 'Single Draft' },
 { id: 5, name: 'All Random' }, { id: 6, name: 'Intro' }, { id: 7, name: 'Diretide' }, { id: 8, name: 'Reverse Captains Mode' }, { id: 9, name: 'The Greeviling' },
 { id: 10, name: 'Tutorial' }, { id: 11, name: 'Mid Only' }, { id: 12, name: 'Least Played' }, { id: 13, name: 'New Player Pool' },
