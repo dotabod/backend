@@ -52,6 +52,7 @@
     "player": "{{- currentMatchHero}} {{- lastMatchHero}}ként az előző meccsben."
   },
   "lastgamescore": {
+    "kda": "",
     "double": "Megduplázva",
     "duration": "{{minutes}}perc hosszú",
     "ended": "Befejeződött {{minutes}}perce",

@@ -52,6 +52,7 @@
     "player": "{{- currentMatchHero}} توی بازی قبل با {{- lastMatchHero}} غذا میداد"
   },
   "lastgamescore": {
+    "kda": "",
     "double": "بریم دوبله رنک رو به فنا بدیم",
     "duration": "{{minutes}}m long",
     "ended": "بازی {{minutes}} دقیقه پیش تمام شده",

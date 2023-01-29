@@ -52,6 +52,7 @@
     "player": "{{- currentMatchHero}} ha giocato {{- lastMatchHero}}"
   },
   "lastgamescore": {
+    "kda": "",
     "double": "Double down",
     "duration": "{{minutes}} minuti",
     "ended": "Finito {{minutes}} minuti fa",

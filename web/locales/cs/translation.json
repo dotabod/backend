@@ -52,6 +52,7 @@
     "player": "{{- currentMatchHero}} hrál jako {{- lastMatchHero}}"
   },
   "lastgamescore": {
+    "kda": "",
     "double": "Double down",
     "duration": "{{minutes}}m dlouhý",
     "ended": "Skončil před {{minutes}}m",

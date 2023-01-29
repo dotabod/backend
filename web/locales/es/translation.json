@@ -52,6 +52,7 @@
     "player": "{{- currentMatchHero}} juego como {{- lastMatchHero}}"
   },
   "lastgamescore": {
+    "kda": "",
     "double": "Doble la apuesta",
     "duration": "{{minutes}}minutos",
     "ended": "Terminado hace {{minutes}}minutos",

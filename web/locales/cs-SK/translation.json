@@ -52,6 +52,7 @@
     "player": "{{- currentMatchHero}} hrá ako {{- lastMatchHero}}"
   },
   "lastgamescore": {
+    "kda": "",
     "double": "Pokus číslo dva",
     "duration": "{{minutes}} minút dlhý ",
     "ended": "Skončil pred {{minutes}} minutamy ",

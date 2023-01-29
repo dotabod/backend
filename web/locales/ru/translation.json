@@ -26,13 +26,13 @@
   },
   "commands_everyone": "Каждый может использовать: {{commandList}}",
   "commands_mods": "Команды только для модераторов: {{commandList}}",
-  "overlayMissing": "",
+  "overlayMissing": "Оверлей не обнаружен. Команда {{command}} требует добавления оверлея.",
   "herostats": {
-    "winrate": "",
-    "none": "",
+    "winrate": "Винрейт: {{winrate}}% на {{- heroName}} за {{timeperiod}}, сыграно {{total}} игр.",
+    "none": "Нет сыгранных игр на  {{- heroName}} за {{timeperiod}}",
     "timeperiod": {
-      "days": "",
-      "lifetime": ""
+      "days": "{{days}} д",
+      "lifetime": "Все сыгранные игры"
     }
   },
   "dota2pt": "Нужны сборки от про игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
@@ -52,9 +52,10 @@
     "player": "{{- currentMatchHero}} играл на {{- lastMatchHero}}"
   },
   "lastgamescore": {
+    "kda": "{{- kdavalue}} на {{- heroName}}",
     "double": "Двойное понижение",
     "duration": "длилась {{minutes}}м ",
-    "ended": "Закончилось {{minutes}}м назад",
+    "ended": "",
     "lost": "Последняя игра: проигрыш",
     "party": "Групповой матч",
     "unranked": "Не рейтинговая",
@@ -124,17 +125,17 @@
   "updateMmr_manual": "Рейтинг изменён до {{mmr}}",
   "updateMmrMulti": "Несколько учетных записей Steam, обновление той, с которой вы вошли в систему в данный момент ({{steamId}})",
   "xpm": "Текущий XPM: {{num}}",
-  "streamDelay_zero": "Нету задержки на стриме",
-  "streamDelay_one": "На стриме задержка: {{count}} секунд",
-  "streamDelay_other": "На стриме задержка: {{count}} секунд",
-  "setStreamDelay_zero": "Задержка на стриме убрана",
+  "streamDelay_zero": "На данном канале задержка не установлена",
+  "streamDelay_one": "На стриме задержка: {{count}} с",
+  "streamDelay_other": "На стриме задержка: {{count}} с",
+  "setStreamDelay_zero": "Задержка на стриме отключена",
   "setStreamDelay_one": "Устанавливаю задержку в {{count}} секунд(ы)",
   "setStreamDelay_other": "Устанавливаю задержку в {{count}} секунд(ы)",
-  "setStreamDelayNoArgs": "Задержка на стриме не установлена, напиши !setdelay <seconds>",
+  "setStreamDelayNoArgs": "Задержка на стриме не установлена, используйте !setdelay <seconds>",
   "time": {
-    "minute": "",
-    "hour": "",
-    "day": "",
-    "week": ""
+    "minute": "мин",
+    "hour": "час",
+    "day": "день",
+    "week": "неделя"
   }
 }

@@ -52,6 +52,7 @@
     "player": "{{- currentMatchHero}} грає на {{- lastMatchHero}}"
   },
   "lastgamescore": {
+    "kda": "",
     "double": "Подвійна ставка рейтингу",
     "duration": "Тривала {{minutes}}хв",
     "ended": "Завершилась {{timeAgo}} тому",
