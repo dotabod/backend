@@ -7,7 +7,6 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('lgs', {
   aliases: ['lastgamescore', 'lgscore', 'lgwl'],
-
   onlyOnline: true,
   dbkey: DBSettings.commandLG,
   handler: (message: MessageType, args: string[]) => {
@@ -50,63 +49,58 @@ commandHandler.registerCommand('lgs', {
         return
       }
 
-      const additionals = []
+      const more = []
 
       // calculate the time difference in minutes between createdAt and updatedAt
       const lasted = Math.floor((lg.updatedAt.getTime() - lg.createdAt.getTime()) / 1000 / 60)
 
-      additionals.push(
+      more.push(
         t('lastgamescore.duration', { minutes: lasted, lng: message.channel.client.locale }),
       )
-      
-      const endedMinutes = Math.floor((Date.now() - lg.updatedAt.getTime()) / (1000 * 60)))
-      const minutes = endedMinutes % 60;
+
+      const endedMinutes = Math.floor((Date.now() - lg.updatedAt.getTime()) / (1000 * 60))
+      const minutes = endedMinutes % 60
       const hours = Math.floor(endedMinutes / 60) % 24
       const days = Math.floor(endedMinutes / (60 * 24)) % 7
       const weeks = Math.floor(endedMinutes / (60 * 24 * 7))
-      
-      let time = ""
-      if (weeks > 0){
-        time += weeks + t('time.week', { lng: message.channel.client.locale }) + " "
+
+      const times = []
+      if (weeks > 0) {
+        times.push(`${weeks}${t('time.week', { lng: message.channel.client.locale })}`)
       }
-      
-      if (days > 0){
-        time += days + t('time.day', { lng: message.channel.client.locale })+ " "
+
+      if (days > 0) {
+        times.push(`${days}${t('time.day', { lng: message.channel.client.locale })}`)
       }
-      
-      if (hours > 0){
-        time += hours + t('time.hour', { lng: message.channel.client.locale })+ " " 
+
+      if (hours > 0) {
+        times.push(`${hours}${t('time.hour', { lng: message.channel.client.locale })}`)
       }
-      
-      if (minutes > 0){
-        time += minutes + t('time.minute', { lng: message.channel.client.locale })+ " "
+
+      if (minutes > 0) {
+        times.push(`${minutes}${t('time.minute', { lng: message.channel.client.locale })}`)
       }
-      
-      time.trim()
-      
-      
-      
-      additionals.push(
+
+      more.push(
         t('lastgamescore.ended', {
-          timeAgo: time,
+          timeAgo: times.join(' '),
           lng: message.channel.client.locale,
         }),
       )
 
-      if (lg.is_party)
-        additionals.push(t('lastgamescore.party', { lng: message.channel.client.locale }))
+      if (lg.is_party) more.push(t('lastgamescore.party', { lng: message.channel.client.locale }))
       if (lg.is_doubledown)
-        additionals.push(t('lastgamescore.double', { lng: message.channel.client.locale }))
+        more.push(t('lastgamescore.double', { lng: message.channel.client.locale }))
       if (lg.lobby_type !== 7)
-        additionals.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))
-      additionals.push(`dotabuff.com/matches/${lg.matchId}`)
+        more.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))
+      more.push(`dotabuff.com/matches/${lg.matchId}`)
 
       const wonMsg = lg.won
         ? t('lastgamescore.won', { lng: message.channel.client.locale })
         : t('lastgamescore.lost', { lng: message.channel.client.locale })
       void chatClient.say(
         message.channel.name,
-        `${wonMsg}${additionals.length ? ' · ' : ''}${additionals.join(' · ')}`,
+        `${wonMsg}${more.length ? ' · ' : ''}${more.join(' · ')}`,
       )
     }
 
