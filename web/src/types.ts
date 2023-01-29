@@ -6,7 +6,6 @@ export interface SocketClient {
   token: string
   stream_online: boolean
   stream_start_date: Date | null
-  stream_delay: number | null
   beta_tester: boolean
   locale: string
   steam32Id: number | null // currently connected steam id

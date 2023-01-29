@@ -50,7 +50,6 @@ export default async function getDBUser(
         steam32Id: true,
         stream_online: true,
         stream_start_date: true,
-        stream_delay: true,
         beta_tester: true,
         locale: true,
       },
@@ -88,7 +87,7 @@ export default async function getDBUser(
 
       return theUser as SocketClient
     })
-    .catch((e) => {
+    .catch((e: any) => {
       logger.error('[USER] Error checking auth', { token: token ?? twitchId, e })
       invalidTokens.add(token ?? twitchId)
       return null
