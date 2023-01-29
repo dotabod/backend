@@ -1,11 +1,9 @@
 import { GSIHandler } from '../dota/GSIHandler.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
-import { gsiHandlers, invalidTokens, twitchIdToToken } from '../dota/lib/consts.js'
+import { gsiHandlers, invalidTokens, lookingupToken, twitchIdToToken } from '../dota/lib/consts.js'
 import { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
-
-const lookingupToken = new Map<string, boolean>()
 
 export default async function getDBUser(
   token?: string,

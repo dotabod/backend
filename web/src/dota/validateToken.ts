@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express'
 
 import getDBUser from '../db/getDBUser.js'
 import { logger } from '../utils/logger.js'
-import { invalidTokens, pendingCheckAuth } from './lib/consts.js'
+import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts.js'
 
 export function validateToken(req: Request, res: Response, next: NextFunction) {
   // Sent from dota gsi config file
@@ -22,7 +22,10 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
     return
   }
 
-  if (pendingCheckAuth.has(token)) {
+  // lookingupToken comes from the gsi handler, which could be true at the same time
+  // so getDBUser was returning null, which means this was sending a new auth error and then
+  // no longer doing authentications. i think adding the `lookingupToken` check here fixes that
+  if (pendingCheckAuth.has(token) || lookingupToken.has(token)) {
     res.status(401).send('Still validating token, skipping requests until auth')
     return
   }

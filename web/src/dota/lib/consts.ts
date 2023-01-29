@@ -110,3 +110,4 @@ const gsiCache: LRUCache.Options<any, any> = {
 export const gsiHandlers = new Map<string, GSIHandler>()
 export const twitchIdToToken = new Map<string, string>()
 export const pendingCheckAuth = new Map<string, boolean>()
+export const lookingupToken = new Map<string, boolean>()
