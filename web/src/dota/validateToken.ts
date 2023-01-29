@@ -39,10 +39,11 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
       }
 
       pendingCheckAuth.delete(token)
+      logger.info('[GSI] io.use Error checking auth 42', { token, client })
       next(new Error('authentication error 42'))
     })
     .catch((e) => {
-      logger.info('[GSI] io.use Error checking auth', { token, e })
+      logger.info('[GSI] io.use Error checking auth 48', { token, e })
       invalidTokens.add(token)
       pendingCheckAuth.delete(token)
       next(new Error('authentication error 48'))
