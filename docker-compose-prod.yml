@@ -9,7 +9,7 @@ services:
       - '8990:8990'
   redis:
     container_name: redis
-    image: 'redis'
+    image: 'redis/redis-stack-server:latest'
     ports:
       - '6379:6379'
   twitch-chat-listener:

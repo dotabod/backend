@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import RedisClient from '../../../db/redis.js'
 import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
@@ -8,6 +9,8 @@ import { server } from '../../index.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
+
+const redisClient = RedisClient.getInstance()
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
   handler: (dotaClient: GSIHandler, event: DotaEvent) => {
@@ -32,7 +35,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
       snatched: event.snatched,
     }
 
-    dotaClient.aegisPickedUp = res
+    void redisClient.client.json.set(`${dotaClient.getToken()}:aegis`, '$', res)
 
     const heroName = getHeroNameById(
       dotaClient.players?.matchPlayers[event.player_id].heroid ?? 0,

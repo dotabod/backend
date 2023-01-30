@@ -3,6 +3,7 @@ import { t } from 'i18next'
 import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
+import RedisClient from '../db/redis.js'
 import { DBSettings, defaultSettings, getValueOrDefault, SettingKeys } from '../db/settings.js'
 import Mongo from '../steam/mongo.js'
 import { chatClient } from '../twitch/index.js'
@@ -23,6 +24,7 @@ import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
 
 const mongo = await Mongo.connect()
+const redisClient = RedisClient.getInstance()
 
 // Finally, we have a user and a GSI client
 interface MMR {
@@ -47,7 +49,6 @@ export class GSIHandler {
   // But that's okay they will get reset based on current match state
   heroData: null | { win: number; lose: number } = null
   blockCache: string | null = null
-  aegisPickedUp?: { playerId: number; expireTime: string; expireDate: Date }
   playingBetMatchId: string | undefined | null = null
   playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
   playingHeroSlot: number | undefined | null = null
@@ -63,13 +64,7 @@ export class GSIHandler {
   bountyTimeout?: NodeJS.Timeout
   killstreakTimeout?: NodeJS.Timeout
   passiveMidas = { counter: 0, timer: 0, used: 0 }
-  roshanCount = 0
-  roshanKilled?: {
-    minTime: string
-    maxTime: string
-    minDate: Date
-    maxDate: Date
-  }
+
   endingBets = false
   openingBets = false
   creatingSteamAccount = false
@@ -176,9 +171,8 @@ export class GSIHandler {
       this.manaSaved = 0
       this.treadToggles = 0
 
-      this.roshanCount = 0
-      this.roshanKilled = undefined
-      this.aegisPickedUp = undefined
+      void redisClient.client.json.del(`${this.getToken()}:roshan`)
+      void redisClient.client.json.del(`${this.getToken()}:aegis`)
 
       server.io.to(this.getToken()).emit('aegis-picked-up', {})
       server.io.to(this.getToken()).emit('roshan-killed', {})
@@ -644,6 +638,8 @@ export class GSIHandler {
         playingMatchId: this.playingBetMatchId,
         endingBets: this.endingBets,
       })
+
+      if (!this.playingBetMatchId) this.resetClientState(true)
       return
     }
 
@@ -920,16 +916,7 @@ export class GSIHandler {
           if (blocker.type === 'playing') {
             this.emitBadgeUpdate()
             this.emitWLUpdate()
-          }
-
-          if (this.aegisPickedUp?.expireDate) {
-            server.io.to(this.getToken()).emit('aegis-picked-up', this.aegisPickedUp)
-          }
-
-          if (this.roshanKilled?.maxDate) {
-            server.io
-              .to(this.getToken())
-              .emit('roshan-killed', { ...this.roshanKilled, count: this.roshanCount })
+            void this.maybeSendRoshAegisEvent()
           }
         }
 
@@ -955,6 +942,25 @@ export class GSIHandler {
       this.emitBlockEvent(null)
       this.closeBets()
       return
+    }
+  }
+
+  /*roshanKilled?: {
+    minTime: string
+    maxTime: string
+    minDate: Date
+    maxDate: Date
+  }*/
+  private async maybeSendRoshAegisEvent() {
+    const aegisRes = (await redisClient.client.json.get(`${this.getToken()}:aegis`)) as any
+    const roshRes = (await redisClient.client.json.get(`${this.getToken()}:roshan`)) as any
+
+    if (aegisRes?.expireDate) {
+      server.io.to(this.getToken()).emit('aegis-picked-up', aegisRes)
+    }
+
+    if (roshRes?.maxDate) {
+      server.io.to(this.getToken()).emit('roshan-killed', roshRes)
     }
   }
 }

@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import RedisClient from '../../../db/redis.js'
 import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
@@ -7,6 +8,8 @@ import { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
+
+const redisClient = RedisClient.getInstance()
 
 eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
   handler: (dotaClient: GSIHandler, event: DotaEvent) => {
@@ -30,50 +33,57 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
     const minDate = dotaClient.addSecondsToNow(minS)
     const maxDate = dotaClient.addSecondsToNow(maxS)
 
-    const res = {
-      minS,
-      maxS,
-      minTime: fmtMSS(minTime),
-      maxTime: fmtMSS(maxTime),
-      minDate,
-      maxDate,
-    }
-
-    dotaClient.roshanKilled = res
-    dotaClient.roshanCount++
-
     const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
     const {
       roshanKilled: { enabled: chatterEnabled },
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
-    if (chattersEnabled && chatterEnabled) {
-      const props = {
-        num: dotaClient.roshanCount,
-        lng: dotaClient.client.locale,
+    async function handler() {
+      const redisJson = (await redisClient.client.json.get(
+        `${dotaClient.getToken()}:roshan`,
+      )) as any
+      const count = redisJson ? Number(redisJson?.count) : 0
+      const newCount = count + 1
+      const res = {
+        minS,
+        maxS,
+        minTime: fmtMSS(minTime),
+        maxTime: fmtMSS(maxTime),
+        minDate,
+        maxDate,
+        count: newCount,
       }
 
-      // Doing it this way so i18n can pick up the t('') strings
-      const roshCountMsg =
-        props.num === 1
-          ? t('roshanCount.1', props)
-          : props.num === 2
-          ? t('roshanCount.2', props)
-          : props.num === 3
-          ? t('roshanCount.3', props)
-          : t('roshanCount.more', props)
+      await redisClient.client.json.set(`${dotaClient.getToken()}:roshan`, '$', res)
 
-      dotaClient.say(
-        `${t('roshanKilled', {
-          min: res.minTime,
-          max: res.maxTime,
+      if (chattersEnabled && chatterEnabled) {
+        const props = {
+          num: newCount,
           lng: dotaClient.client.locale,
-        })}. ${roshCountMsg}`,
-      )
+        }
+
+        // Doing it this way so i18n can pick up the t('') strings
+        const roshCountMsg =
+          props.num === 1
+            ? t('roshanCount.1', props)
+            : props.num === 2
+            ? t('roshanCount.2', props)
+            : props.num === 3
+            ? t('roshanCount.3', props)
+            : t('roshanCount.more', props)
+
+        dotaClient.say(
+          `${t('roshanKilled', {
+            min: res.minTime,
+            max: res.maxTime,
+            lng: dotaClient.client.locale,
+          })}. ${roshCountMsg}`,
+        )
+      }
+
+      server.io.to(dotaClient.getToken()).emit('roshan-killed', { ...res, count: newCount })
     }
 
-    server.io
-      .to(dotaClient.getToken())
-      .emit('roshan-killed', { ...res, count: dotaClient.roshanCount })
+    void handler()
   },
 })

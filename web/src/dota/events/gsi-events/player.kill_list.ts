@@ -1,9 +1,11 @@
+import RedisClient from '../../../db/redis.js'
 import { Player } from '../../../types.js'
-import { logger } from '../../../utils/logger.js'
 import { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
+
+const redisClient = RedisClient.getInstance()
 
 // TODO: check kill list value
 eventHandler.registerEvent(`player:kill_list`, {
@@ -11,18 +13,17 @@ eventHandler.registerEvent(`player:kill_list`, {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
-    /// victimid_n, n = hero slot id, player id: x, x = count of kills
-    // killlist { victimid_6: 1, victimid_7: 2 }
-    console.log({ kill_list }, 'added')
-    if (typeof dotaClient.aegisPickedUp?.playerId !== 'number') return
+    async function handler() {
+      const redisJson = (await redisClient.client.json.get(`${dotaClient.getToken()}:aegis`)) as any
+      if (typeof redisJson?.playerId !== 'number') return
 
-    // Remove aegis icon from the player we just killed
-    // TODO: are kills registered if its an aegis kill? my guess is no
-    if (Object.values(kill_list).includes(dotaClient.aegisPickedUp.playerId)) {
-      dotaClient.aegisPickedUp = undefined
-      server.io.to(dotaClient.getToken()).emit('aegis-picked-up', {})
+      // Remove aegis icon from the player we just killed
+      if (Object.values(kill_list).includes(redisJson.playerId)) {
+        void redisClient.client.json.del(`${dotaClient.getToken()}:aegis`)
+        server.io.to(dotaClient.getToken()).emit('aegis-picked-up', {})
+      }
     }
 
-    logger.info('we killed someone', { kill_list })
+    void handler()
   },
 })
