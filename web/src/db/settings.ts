@@ -64,7 +64,6 @@ export const defaultSettings = {
   commandSmurfs: true,
   commandWL: true,
   commandXPM: true,
-  customMmr: '[currentmmr] | [currentrank] | Next rank at [nextmmr] [wins]',
   'minimap-blocker': true,
   minimapRight: false,
   mmr: null,
@@ -83,6 +82,10 @@ export const defaultSettings = {
   streamDelay: 0,
   commandDelay: true,
   commandBuilds: true,
+  showRankMmr: true,
+  showRankImage: true,
+  showRankLeader: true,
+  commandMmr: true,
 }
 
 export type SettingKeys = keyof typeof defaultSettings

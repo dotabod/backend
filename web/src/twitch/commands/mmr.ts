@@ -9,16 +9,15 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('mmr', {
   aliases: ['rank', 'medal'],
-
+  dbkey: DBSettings.commandMmr,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message
-    // If connected, we can just respond with the cached MMR
-    const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], client.settings)
-    if (!mmrEnabled) return
 
-    const customMmr = getValueOrDefault(DBSettings.customMmr, client.settings)
+    // If connected, we can just respond with the cached MMR
+    const showRankMmr = getValueOrDefault(DBSettings.showRankMmr, client.settings)
+    const showRankLeader = getValueOrDefault(DBSettings.showRankLeader, client.settings)
 
     const unknownMsg = t('uknownMmr', {
       channel: toUserName(channel),
@@ -33,7 +32,13 @@ commandHandler.registerCommand('mmr', {
         return
       }
 
-      getRankDescription(client.locale, client.mmr, customMmr, client.steam32Id ?? undefined)
+      getRankDescription({
+        locale: client.locale,
+        mmr: client.mmr,
+        steam32Id: client.steam32Id ?? undefined,
+        showRankMmr,
+        showRankLeader,
+      })
         .then((description) => {
           void chatClient.say(channel, description ?? unknownMsg)
         })
@@ -49,7 +54,13 @@ commandHandler.registerCommand('mmr', {
       return
     }
 
-    getRankDescription(client.locale, act.mmr, customMmr, act.steam32Id)
+    getRankDescription({
+      locale: client.locale,
+      mmr: act.mmr,
+      steam32Id: act.steam32Id,
+      showRankMmr,
+      showRankLeader,
+    })
       .then((description) => {
         const msg = act.name ? description ?? unknownMsg : ''
         void chatClient.say(channel, msg || unknownMsg)

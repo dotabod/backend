@@ -76,35 +76,53 @@ export async function getRankDetail(mmr: string | number, steam32Id?: number | n
   }
 }
 
-// Variables: [currentmmr] [currentrank] [nextmmr] [wins]
+interface RankDescription {
+  locale: string
+  mmr: string | number
+  steam32Id?: number
+  showRankMmr: boolean
+  showRankLeader: boolean
+}
+
 // Used for chatting !mmr
-export async function getRankDescription(
-  locale: string,
-  mmr: string | number,
-  customMmr: string,
-  steam32Id?: number,
-) {
-  const deets = await getRankDetail(mmr, steam32Id)
+export async function getRankDescription({
+  locale,
+  mmr,
+  steam32Id,
+  showRankMmr,
+  showRankLeader,
+}: RankDescription) {
+  const rankResponse = await getRankDetail(mmr, steam32Id)
 
-  if (!deets) return null
+  if (!rankResponse) return null
 
-  if ('standing' in deets) {
-    const standingDesc = `Immortal${deets.standing ? ` #${deets.standing}` : ''}`
-    return `${mmr} MMR | ${standingDesc}`
+  if ('standing' in rankResponse) {
+    const rankTitle = 'Immortal'
+    const standing = rankResponse.standing && `#${rankResponse.standing}`
+    const msgs = []
+
+    if (showRankMmr) msgs.push(`${mmr} MMR`)
+    msgs.push(rankTitle)
+    if (showRankLeader) msgs.push(standing)
+
+    return msgs.join(' · ')
   }
 
-  const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = deets
+  if (!showRankMmr) {
+    return null
+  }
+
+  const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = rankResponse
+  const nextAt = t('rank.nextRankAt', { lng: locale })
   const nextIn = t('rank.nextRankIn', {
     count: mmrToNextRank <= 30 ? 1 : winsToNextRank,
     lng: locale,
   })
 
-  const msg = customMmr
-    .replace('[currentmmr]', `${mmr}`)
-    .replace('[currentrank]', myRank.title)
-    .replace('[nextmmr]', `${nextMMR}`)
-    .replace('[wins]', `${nextIn}`)
-    .replace('Next rank at', t('rank.nextRankAt', { lng: locale }))
+  const msgs = []
+  msgs.push(mmr)
+  msgs.push(myRank.title)
+  msgs.push(`${nextAt} ${nextMMR} ${nextIn}`)
 
-  return msg
+  return msgs.join(' | ')
 }
