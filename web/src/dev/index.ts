@@ -161,10 +161,6 @@ message:Starting!
 
 // console.log(await getLogQuery('grubby'))
 
-// await updateUsernameForAll()
-// await getAccounts()
-// await fixWins()
-// await topFollowers()
 /*
 server.dota.dota2.on('ready', async () => {
   const steamserverid = (await server.dota.getUserSteamServer(849473199)) ?? ''
@@ -259,5 +255,36 @@ async function fixOnline() {
   }
 }
 
-// await fixOnline()
-// await topFollowers()
+async function migrateUsersToNewMMROptions() {
+  const disabledMmrUsers = await prisma.setting.findMany({
+    where: {
+      key: 'mmr-tracker',
+      value: {
+        not: true,
+      },
+    },
+    select: {
+      value: true,
+      user: {
+        select: {
+          id: true,
+        },
+      },
+    },
+  })
+
+  const data = []
+  const keys = ['showRankMmr', 'showRankImage', 'showRankLeader']
+
+  // turn these off
+  for (const setting of disabledMmrUsers) {
+    data.push(keys.map((key) => ({ key, value: false, userId: setting.user.id })))
+  }
+
+  console.log(disabledMmrUsers.length)
+
+  await prisma.setting.createMany({
+    data: data.flat(),
+    skipDuplicates: true,
+  })
+}
