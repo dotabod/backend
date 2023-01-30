@@ -43,6 +43,7 @@ export default async function getDBUser(
             mmr: true,
             steam32Id: true,
             name: true,
+            leaderboard_rank: true,
           },
         },
         id: true,

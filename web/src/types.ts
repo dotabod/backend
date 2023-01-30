@@ -18,7 +18,7 @@ export interface SocketClient {
   } | null
   SteamAccount: {
     mmr: number
-    leaderboard_rank?: number | null
+    leaderboard_rank: number | null
     name: string | null
     steam32Id: number
   }[]

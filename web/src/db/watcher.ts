@@ -140,10 +140,12 @@ channel
         name: newObj.name,
         mmr: newObj.mmr,
         steam32Id: newObj.steam32Id,
+        leaderboard_rank: newObj.leaderboard_rank,
       })
     } else {
       client.SteamAccount[currentSteamIdx].name = newObj.name
       client.SteamAccount[currentSteamIdx].mmr = newObj.mmr
+      client.SteamAccount[currentSteamIdx].leaderboard_rank = newObj.leaderboard_rank
     }
 
     // Push an mmr update to overlay since it's the steam account rn
