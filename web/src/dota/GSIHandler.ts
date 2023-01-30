@@ -732,6 +732,27 @@ export class GSIHandler {
       heroName: this.client.gsi?.hero?.name,
     })
 
+    getRankDetail(this.getMmr(), this.getSteam32())
+      .then((response) => {
+        if (!this.getSteam32() || !response || !('standing' in response)) return
+
+        prisma.steamAccount
+          .update({
+            where: {
+              steam32Id: this.getSteam32() ?? undefined,
+            },
+            data: {
+              leaderboard_rank: response.standing,
+            },
+          })
+          .catch((e) => {
+            logger.error('Error updating leaderboard rank', { e })
+          })
+      })
+      .catch((e) => {
+        // nothing to do here, user probably doesn't have a rank
+      })
+
     if (this.treadToggles > 0 && this.client.stream_online) {
       this.say(
         t('treadToggle', {

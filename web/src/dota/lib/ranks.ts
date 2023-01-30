@@ -21,36 +21,31 @@ export function rankTierToMmr(rankTier: string | number) {
 }
 
 export async function lookupLeaderRank(mmr: number, steam32Id?: number | null) {
-  let standing = mmr
+  let standing: null | number = null
+  const lowestImmortalRank = leaderRanks[leaderRanks.length - 1]
+  const defaultNotFound = { myRank: lowestImmortalRank, mmr, standing }
 
   // Not everyone has a steam32Id saved yet
-  // The dota2gsi should save one for us
-  if (steam32Id) {
-    try {
-      standing = await server.dota
-        .getCard(steam32Id)
-        .then((data) => data?.leaderboard_rank as number)
-    } catch (e) {
-      logger.error('[lookupLeaderRank] Error fetching leaderboard rank', { e, steam32Id })
-      return {
-        myRank: leaderRanks[leaderRanks.length - 1],
-        standing: null,
-        mmr,
-      }
-    }
+  // The dota2 gsi should save one for us
+  if (!steam32Id) {
+    return defaultNotFound
   }
 
-  if (!standing) {
-    return {
-      myRank: leaderRanks[leaderRanks.length - 1],
-      standing: null,
-      mmr,
+  try {
+    standing = await server.dota.getCard(steam32Id).then((data) => data?.leaderboard_rank as number)
+
+    if (!standing) {
+      return defaultNotFound
     }
+
+    const [myRank] = leaderRanks.filter(
+      (rank) => typeof standing === 'number' && standing <= rank.range[1],
+    )
+    return { myRank, mmr, standing }
+  } catch (e) {
+    logger.error('[lookupLeaderRank] Error fetching leaderboard rank', { e, steam32Id })
+    return defaultNotFound
   }
-
-  const [myRank] = leaderRanks.filter((rank) => standing <= rank.range[1])
-
-  return { myRank, mmr, standing }
 }
 
 export async function getRankDetail(mmr: string | number, steam32Id?: number | null) {
