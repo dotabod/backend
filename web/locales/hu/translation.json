@@ -2,7 +2,7 @@
   "aegis": {
     "denied": "{{- heroName}} semlegesítette az aegist {{emote}}",
     "pickup": "{{- heroName}} felvette az aegist!",
-    "snatched": ""
+    "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
   "apm": "Élő APM: {{num}} Csevegés",
   "averageRank": "Átlagos rank ezen a meccsen",
@@ -32,12 +32,12 @@
   "gpm_zero": "Élő GPM: {{num}}",
   "gpm_other": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
   "herostats": {
-    "none": "",
+    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
-      "days": "",
-      "lifetime": ""
+      "days": "{{days}}d",
+      "lifetime": "lifetime"
     },
-    "winrate": ""
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
   },
   "invalidColor": "Érvénytelen szín vagy slot. Próbáld 1-10ig, vagy válassz innen: {{colorList}}",
   "invalidMmr": "Érvénytelen parancs. Próbáld így: !setmmr 1234",
@@ -53,7 +53,7 @@
   "lastgamescore": {
     "double": "Megduplázva",
     "duration": "{{minutes}}perc hosszú",
-    "kda": "",
+    "kda": "{{- kdavalue}} on {{- heroName}}",
     "lost": "Előző meccs: vereség",
     "party": "Party meccs",
     "unranked": "Unranked",
@@ -77,7 +77,7 @@
   "npRemove": "Próbáld az !np remove <steam32id>",
   "npRemoved": "{{steamid}} ismert játékos eltávolítva a csatornáról. (!np)",
   "npUnknown": "Nem található {{steamid}} azonosítójú játékos ezen a csatornán",
-  "overlayMissing": "",
+  "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
   "ping": "Pong EZ Clap",
   "pleb": "Pong EZ Clap",
   "pleb_off": "{{name}} EZ Clap szép munka pleb",
@@ -102,13 +102,13 @@
     "more": "{{num}}. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard."
   },
   "roshanKilled": "Roshan meghalt! Következő Roshan {{min}} és {{max}} perc között várható",
-  "setStreamDelay_zero": "",
-  "setStreamDelay_one": "",
-  "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": "",
-  "streamDelay_zero": "",
-  "streamDelay_one": "",
-  "streamDelay_other": "",
+  "setStreamDelay_zero": "Removing stream delay",
+  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
+  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
+  "streamDelay_zero": "There is no stream delay on this channel",
+  "streamDelay_one": "Stream delay: {{count}} second",
+  "streamDelay_other": "Stream delay: {{count}} seconds",
   "tip": {
     "from": "{{- heroName}} borravalót adott ICANT",
     "to": "Borravalót adtunk {{- heroName}} PepeLaugh"

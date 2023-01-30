@@ -2,7 +2,7 @@
   "aegis": {
     "denied": "{{- heroName}} se rehusó la aegis {{emote}}",
     "pickup": "¡{{- heroName}} recogió el aegis!",
-    "snatched": ""
+    "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
   "apm": "APM en vivo: {{num}} Chatting",
   "averageRank": "La media de este juego es",
@@ -19,25 +19,25 @@
   "bountyPickup": "+{{bountyValue}} oro de recompensa EZ Clap Gracias {{heroNames}} SeemsGood",
   "chatters": {
     "died": "{{- heroName}} murió con pasiva {{itemNames}} ICANT",
-    "firstBloodDeath": "",
+    "firstBloodDeath": "{{- heroName}} giving up first blood PepeLaugh",
     "midas": "massivePIDAS Usa tu midas",
     "pause": "PauseChamp ¿Quién ha pausado el juego?",
     "smoked": "¡Calladito! {{- heroName}} esta escondido."
   },
   "commands_everyone": "Todos pueden usar: {{commandList}}",
   "commands_mods": "Mod sólo comandos: {{commandList}}",
-  "dota2pt": "",
+  "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "Soy un bot hecho por {{author}}. Mas información {{- url}}",
   "gameNotFound": "Juego no encontrado",
   "gpm_zero": "GPM en vivo: {{num}}",
   "gpm_other": "GPM en vivo:{{num}}. {{heroKills}} de matando Héroes. {{creepKills}} de matando grimas.",
   "herostats": {
-    "none": "",
+    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
-      "days": "",
-      "lifetime": ""
+      "days": "{{days}}d",
+      "lifetime": "lifetime"
     },
-    "winrate": ""
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
   },
   "invalidColor": "Color o espacio de héroe no son válidos. Debe ser 1-10, o uno de {{colorList}}",
   "invalidMmr": "Comando inválido. Usa !setmmr 1234",
@@ -53,7 +53,7 @@
   "lastgamescore": {
     "double": "Doble la apuesta",
     "duration": "{{minutes}}minutos",
-    "kda": "",
+    "kda": "{{- kdavalue}} on {{- heroName}}",
     "lost": "Ultimo juego: Perdido",
     "party": "Mecha con grupo",
     "unranked": "Sin clasificar",
@@ -77,7 +77,7 @@
   "npRemove": "Usa !np remove <steam32id>",
   "npRemoved": "Eliminado {{steamid}} de !np para este canal",
   "npUnknown": "No se pudo encontrar {{steamid}} para este canal",
-  "overlayMissing": "",
+  "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
   "ping": "Pong EZ Clap",
   "pleb": "Un pleb aqui 👇",
   "pleb_off": "{{name}} EZ Clap buen trabajo pleb",
@@ -90,28 +90,25 @@
   "rank": {
     "nextRankAt": "Siguiente rango en",
     "nextRankIn_one": "Una victoria más peepoClap",
-    "nextRankIn_many": "",
     "nextRankIn_other": "en {{count}} ganas"
   },
   "ranked_no": "Nope este juego no está clasificado",
   "ranked_yes": "Sí, este juego está clasificado",
   "refresh": "Recargando superposición...",
   "roshanCount": {
-    "1": "",
-    "2": "",
-    "3": "",
-    "more": ""
+    "1": "Rosh deaths: 1 · Next drop: agh's shard.",
+    "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",
+    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more": "Rosh deaths: {{num}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "¡Roshan asesinado! Siguiente roshan entre {{min}} y {{max}}",
-  "setStreamDelay_zero": "",
-  "setStreamDelay_one": "",
-  "setStreamDelay_many": "",
-  "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": "",
-  "streamDelay_zero": "",
-  "streamDelay_one": "",
-  "streamDelay_many": "",
-  "streamDelay_other": "",
+  "setStreamDelay_zero": "Removing stream delay",
+  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
+  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
+  "streamDelay_zero": "There is no stream delay on this channel",
+  "streamDelay_one": "Stream delay: {{count}} second",
+  "streamDelay_other": "Stream delay: {{count}} seconds",
   "tip": {
     "from": "La propina de {{- heroName}} ICANT",
     "to": "Estamos enviar propina {{- heroName}} PepeLaugh"
@@ -125,7 +122,6 @@
   "toggleMatch_single": "Cambiando esta mecha a apostar mmr normalmente: {{- url}} Escriba !fixdd para deshacer",
   "toggleMatch_solo": "Cambiando este partido a solo mmr: {{- url}} Escriba !fixparty para deshacer",
   "treadToggle_one": "Cambiamos las pisadas {{count}} vez para ahorrar un total de {{manaCount}} maná este partido.",
-  "treadToggle_many": "",
   "treadToggle_other": "Cambiamos las pisadas {{count}} veces para ahorrar un total de {{manaCount}} maná en esta partida.",
   "uknownMmr": "Aún no conozco el MMR de {{channel}}. Mods tienen que !setmmr 1234 o establecerlo en {{- url}}",
   "unknown": "Desconocido",

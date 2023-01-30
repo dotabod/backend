@@ -2,7 +2,7 @@
   "aegis": {
     "denied": "{{- heroName}} ha negato l'egida {{emote}}",
     "pickup": "{{- heroName}} ha preso l'egida",
-    "snatched": ""
+    "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
   "apm": "APM Live: {{num}} Chatting",
   "averageRank": "Rank medio in questa partita",
@@ -32,12 +32,12 @@
   "gpm_zero": "GPM Live: {{num}}",
   "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}}da creep.",
   "herostats": {
-    "none": "",
+    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
-      "days": "",
-      "lifetime": ""
+      "days": "{{days}}d",
+      "lifetime": "lifetime"
     },
-    "winrate": ""
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
   },
   "invalidColor": "Colore o Slot errato. Riprova con un numero da 1 a 10, o uno di {{colorList}} ",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
@@ -53,7 +53,7 @@
   "lastgamescore": {
     "double": "Double down",
     "duration": "{{minutes}} minuti",
-    "kda": "",
+    "kda": "{{- kdavalue}} on {{- heroName}}",
     "lost": "Ultima partita: persa",
     "party": "Match in gruppo",
     "unranked": "Non classificata",
@@ -77,7 +77,7 @@
   "npRemove": "Prova !np remove <steam32id>",
   "npRemoved": "Rimosso {{steamid}} da !np per questo canale",
   "npUnknown": "Impossibile trovare {{steamid}} per questo canale",
-  "overlayMissing": "",
+  "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
   "ping": "Pong EZ Clap",
   "pleb": "Un plebeo scrive 👇",
   "pleb_off": "{{name}} EZ Clap bel lavoro plebeo",
@@ -90,7 +90,6 @@
   "rank": {
     "nextRankAt": "Prossimo rank a",
     "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
-    "nextRankIn_many": "",
     "nextRankIn_other": "in {{count}} vittorie"
   },
   "ranked_no": "No questa partita non è classificata",
@@ -103,15 +102,13 @@
     "more": "Morti di Rosh: {{num}} · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard."
   },
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
-  "setStreamDelay_zero": "",
-  "setStreamDelay_one": "",
-  "setStreamDelay_many": "",
-  "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": "",
-  "streamDelay_zero": "",
-  "streamDelay_one": "",
-  "streamDelay_many": "",
-  "streamDelay_other": "",
+  "setStreamDelay_zero": "Removing stream delay",
+  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
+  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
+  "streamDelay_zero": "There is no stream delay on this channel",
+  "streamDelay_one": "Stream delay: {{count}} second",
+  "streamDelay_other": "Stream delay: {{count}} seconds",
   "tip": {
     "from": "Il tip da {{- heroName}} ICANT",
     "to": "Tippiamo {{- heroName}} PepeLaugh"
@@ -125,7 +122,6 @@
   "toggleMatch_single": "Questo match verrá contato come standard mmr: {{- url}} Scrivi !fixdd per annullare",
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
   "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
-  "treadToggle_many": "",
   "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",

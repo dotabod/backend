@@ -1,12 +1,12 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} уничтожает эгиду {{emote}}",
-    "pickup": "{{- heroName}} подбирает эгиду!",
-    "snatched": "{{- heroName}} украл (SNATCH.) эгиду PepeLaugh"
+    "denied": "{{- heroName}} уничтожает аегис {{emote}}",
+    "pickup": "{{- heroName}} подбирает аегис!",
+    "snatched": "{{- heroName}} крадёт аегис PepeLaugh"
   },
   "apm": "Текущий APM: {{num}} Chatting",
   "averageRank": "Средний рейтинг этой игры",
-  "betaFeature": "[бета-версия]",
+  "betaFeature": "[бета-функция]",
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} больше не является бета-тестером. Введите !beta, чтобы присоединиться снова",
   "betaTester_on": "{{channel}} стал бета-тестером. Посетите сайт discord.dotabod.com, чтобы ознакомиться с возможностями бета-версии. Введите !beta, чтобы отменить",
@@ -34,7 +34,7 @@
   "herostats": {
     "none": "Нет сыгранных игр на  {{- heroName}} за {{timeperiod}}",
     "timeperiod": {
-      "days": "{{days}} д",
+      "days": "{{days}} дн.",
       "lifetime": "Все сыгранные игры"
     },
     "winrate": "Винрейт: {{winrate}}% на {{- heroName}} за {{timeperiod}}, сыграно {{total}} игр."
@@ -51,8 +51,8 @@
     "player": "{{- currentMatchHero}} играл на {{- lastMatchHero}}"
   },
   "lastgamescore": {
-    "double": "Двойное понижение",
-    "duration": "длилась {{minutes}}м ",
+    "double": "Двойная ставка",
+    "duration": "длилась {{minutes}} мин.",
     "kda": "{{- kdavalue}} на {{- heroName}}",
     "lost": "Последняя игра: проигрыш",
     "party": "Групповой матч",
@@ -90,8 +90,6 @@
   "rank": {
     "nextRankAt": "Следующий ранг на",
     "nextRankIn_one": "Еще одна победа peepoClap",
-    "nextRankIn_few": "",
-    "nextRankIn_many": "",
     "nextRankIn_other": "через {{count}} побед(у)"
   },
   "ranked_no": "Нет, эта игра не рейтинговая",
@@ -106,14 +104,10 @@
   "roshanKilled": "Рошан убит! Следующий рошан между {{min}} и {{max}}",
   "setStreamDelay_zero": "Задержка на стриме отключена",
   "setStreamDelay_one": "Устанавливаю задержку в {{count}} секунд(ы)",
-  "setStreamDelay_few": "",
-  "setStreamDelay_many": "",
   "setStreamDelay_other": "Устанавливаю задержку в {{count}} секунд(ы)",
   "setStreamDelayNoArgs": "Задержка на стриме не установлена, используйте !setdelay <seconds>",
-  "streamDelay_zero": "На данном канале задержка не установлена",
+  "streamDelay_zero": "На этом канале отсутствует задержка на стриме",
   "streamDelay_one": "На стриме задержка: {{count}} с",
-  "streamDelay_few": "",
-  "streamDelay_many": "",
   "streamDelay_other": "На стриме задержка: {{count}} с",
   "tip": {
     "from": "Благодарность от {{- heroName}} ICANT",
@@ -128,8 +122,6 @@
   "toggleMatch_single": "Изменение этого матча на стандартный рейтинг {{- url}} Введите !fixdd для отмены",
   "toggleMatch_solo": "Изменение этого матча на одиночный рейтинг: {{- url}} Введите !fixparty для отмены",
   "treadToggle_one": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_few": "",
-  "treadToggle_many": "",
   "treadToggle_other": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
   "uknownMmr": "Я еще не знаю рейтинг {{channel}}. Модераторы или стример должны сами ввести команду, пример: !setmmr 1234 или установить его вручную на сайте {{- url}}",
   "unknown": "Неизвестно",

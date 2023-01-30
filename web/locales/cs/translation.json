@@ -2,7 +2,7 @@
   "aegis": {
     "denied": "{{- heroName}} zničil aegis {{emote}}",
     "pickup": "{{- heroName}} získal aegis!",
-    "snatched": ""
+    "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
   "apm": "Aktuální APM: {{num}} Chatting",
   "averageRank": "Průměrný rank této hry",
@@ -32,12 +32,12 @@
   "gpm_zero": "Aktuální GPM: {{num}}",
   "gpm_other": "Aktuální GPM: {{num}}. {{heroKills}} ze zabitých hrdinů, {{creepKills}} z creepů.",
   "herostats": {
-    "none": "",
+    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
-      "days": "",
-      "lifetime": ""
+      "days": "{{days}}d",
+      "lifetime": "lifetime"
     },
-    "winrate": ""
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
   },
   "invalidColor": "Neplatná pozice nebo barva hrdiny. Musí být 1-10 nebo jedna z {{colorList}}",
   "invalidMmr": "Neplatný příkaz. Zkus !setmmr 1234",
@@ -53,7 +53,7 @@
   "lastgamescore": {
     "double": "Double down",
     "duration": "{{minutes}}m dlouhý",
-    "kda": "",
+    "kda": "{{- kdavalue}} on {{- heroName}}",
     "lost": "Poslední hra byla prohra",
     "party": "Skupinový zápas",
     "unranked": "Nehodnocená",
@@ -77,7 +77,7 @@
   "npRemove": "Zkus !np remove <steam32id>",
   "npRemoved": "{{steamid}} odebrán z !np pro tento kanál",
   "npUnknown": "Nenalezeno {{steamid}} pro tento kanál",
-  "overlayMissing": "",
+  "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
   "ping": "Pong EZ Clap",
   "pleb": "Jeden bleb tu 👇",
   "pleb_off": "{{name}} EZ Clap dobrá práce, blebsi",
@@ -90,8 +90,6 @@
   "rank": {
     "nextRankAt": "Další rank na",
     "nextRankIn_one": "Ještě jedna výhra peepoClap",
-    "nextRankIn_few": "",
-    "nextRankIn_many": "",
     "nextRankIn_other": "za {{count}} výher"
   },
   "ranked_no": "Nope, tenhle zápas není hodnocený",
@@ -104,17 +102,13 @@
     "more": "Zabitých roshanů: {{num}} - Další drop: sejra, aghanim a refresher."
   },
   "roshanKilled": "Roshan zabit! Další spawne mezi {{min}} a {{max}}",
-  "setStreamDelay_zero": "",
-  "setStreamDelay_one": "",
-  "setStreamDelay_few": "",
-  "setStreamDelay_many": "",
-  "setStreamDelay_other": "",
-  "setStreamDelayNoArgs": "",
-  "streamDelay_zero": "",
-  "streamDelay_one": "",
-  "streamDelay_few": "",
-  "streamDelay_many": "",
-  "streamDelay_other": "",
+  "setStreamDelay_zero": "Removing stream delay",
+  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
+  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
+  "streamDelay_zero": "There is no stream delay on this channel",
+  "streamDelay_one": "Stream delay: {{count}} second",
+  "streamDelay_other": "Stream delay: {{count}} seconds",
   "tip": {
     "from": "Tip od {{- heroName}} ICANT",
     "to": "Tip pro {{- heroName}} PepeLaugh"
@@ -128,8 +122,6 @@
   "toggleMatch_single": "Měním tento zápas na single down MMR: {{- url}} Napiš !fixdd pro zrušení.",
   "toggleMatch_solo": "Měním tento zápas na solo MMR: {{- url}} Napiš !fixparty pro zrušení.",
   "treadToggle_one": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
-  "treadToggle_few": "",
-  "treadToggle_many": "",
   "treadToggle_other": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
   "uknownMmr": "Neznám MMR kanálu {{channel}}. Modi ho můžou nastavit příkazem !setmmr 1234 nebo na stránce {{- url}}",
   "unknown": "Neznámé",
