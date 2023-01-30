@@ -103,26 +103,29 @@ export async function getRankDescription({
 
     if (showRankMmr) msgs.push(`${mmr} MMR`)
     msgs.push(rankTitle)
-    if (showRankLeader) msgs.push(standing)
+    if (showRankLeader && standing) msgs.push(standing)
 
     return msgs.join(' · ')
   }
 
+  const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = rankResponse
+
   if (!showRankMmr) {
-    return null
+    return myRank.title
   }
 
-  const { myRank, nextMMR, mmrToNextRank, winsToNextRank } = rankResponse
+  const count = mmrToNextRank <= 30 ? 1 : winsToNextRank
   const nextAt = t('rank.nextRankAt', { lng: locale })
   const nextIn = t('rank.nextRankIn', {
-    count: mmrToNextRank <= 30 ? 1 : winsToNextRank,
+    count,
     lng: locale,
   })
 
   const msgs = []
   msgs.push(mmr)
   msgs.push(myRank.title)
-  msgs.push(`${nextAt} ${nextMMR} ${nextIn}`)
+  msgs.push(`${nextAt} ${nextMMR}${count !== 1 ? ` ${nextIn}` : ''}`)
+  if (count === 1) msgs.push(nextIn)
 
-  return msgs.join(' | ')
+  return msgs.join(' · ')
 }

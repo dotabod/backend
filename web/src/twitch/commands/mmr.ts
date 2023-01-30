@@ -40,7 +40,9 @@ commandHandler.registerCommand('mmr', {
         showRankLeader,
       })
         .then((description) => {
-          void chatClient.say(channel, description ?? unknownMsg)
+          if (description === null || description.length) {
+            void chatClient.say(channel, description ?? unknownMsg)
+          }
         })
         .catch((e) => {
           logger.info('[MMR] Failed to get rank description', { e, channel })
@@ -62,8 +64,10 @@ commandHandler.registerCommand('mmr', {
       showRankLeader,
     })
       .then((description) => {
-        const msg = act.name ? description ?? unknownMsg : ''
-        void chatClient.say(channel, msg || unknownMsg)
+        if (description === null || description.length) {
+          const msg = act.name ? description ?? unknownMsg : ''
+          void chatClient.say(channel, msg || unknownMsg)
+        }
       })
       .catch((e) => {
         logger.info('[MMR] Failed to get rank description', { e, channel })
