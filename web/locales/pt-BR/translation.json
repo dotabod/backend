@@ -53,7 +53,7 @@
   "lastgamescore": {
     "double": "Dobro de MMR",
     "duration": "{{minutes}} min de duração",
-    "kda": "",
+    "kda": "{{- kdavalue}} on {{- heroName}}",
     "lost": "Partida anterior: Derrota",
     "party": "Partida em equipe",
     "unranked": "Não ranqueada",
@@ -90,8 +90,6 @@
   "rank": {
     "nextRankAt": "Próximo rank em",
     "nextRankIn_one": "Mais uma vitória peepoClap",
-    "nextRankIn_few": "",
-    "nextRankIn_many": "",
     "nextRankIn_other": "em {{count}} vitórias"
   },
   "ranked_no": "Não, este jogo não é ranqueado",
@@ -106,14 +104,10 @@
   "roshanKilled": "Roshan morto! Próximo roshan entre {{min}} e {{max}} .",
   "setStreamDelay_zero": "Retirando o delay da stream.",
   "setStreamDelay_one": "Configurando o delay na stream para: {{count}} segundo",
-  "setStreamDelay_few": "",
-  "setStreamDelay_many": "",
   "setStreamDelay_other": "Configurando o delay na stream para: {{count}} segundos",
   "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <seconds> .",
   "streamDelay_zero": "Este canal não possui delay.",
   "streamDelay_one": "Delay da Stream: {{count}} segundo.",
-  "streamDelay_few": "",
-  "streamDelay_many": "",
   "streamDelay_other": "Delay da Stream: {{count}} segundos.",
   "tip": {
     "from": "A tip de {{- heroName}} ICANT",
@@ -128,8 +122,6 @@
   "toggleMatch_single": "Mudando partida para MMR normal: {{- url}} Digite !fixdd para desfazer",
   "toggleMatch_solo": "Mudando partida para MMR solo: {{- url}} Digite !fixparty para desfazer",
   "treadToggle_one": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
-  "treadToggle_few": "",
-  "treadToggle_many": "",
   "treadToggle_other": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
   "uknownMmr": "Ainda não sei o MMR de {{channel}}. Mods precisam digitar !setmmr 1234 ou configurar em {{- url}}",
   "unknown": "Desconhecido",
