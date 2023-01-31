@@ -21,7 +21,7 @@ jobs:
 
       - name: crowdin action
         if: steps.changes.outputs.crowdin == 'true'
-        uses: crowdin/github-action@1.6.0
+        uses: crowdin/github-action@v1.6.0
         with:
           upload_sources: true
           upload_translations: false
