@@ -104,9 +104,9 @@
     "more": "Morti di Rosh: {{num}} · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard."
   },
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
-  "setStreamDelay_one": "Impostando il delay della stream a: {{count}} secondi",
+  "setStreamDelay_one": "Impostando il delay della stream a: {{count}} secondo",
   "setStreamDelay_many": "",
-  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "setStreamDelay_other": "Impostando il delay della stream a: {{count}} secondi",
   "setStreamDelayNoArgs": "Delay della stream invalido, usa !setdelay <seconds>",
   "streamDelay_one": "Delay Stream: {{count}} secondo",
   "streamDelay_many": "",
