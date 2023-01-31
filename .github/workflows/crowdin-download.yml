@@ -17,6 +17,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Setup Node
+        uses: actions/setup-node@v3.6.0
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: |
+          yarn global add i18next
+
       - name: Change branch to the update branch
         id: commits
         run: |
@@ -42,6 +51,11 @@ jobs:
         env:
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+
+      - name: Organize translations
+        run: |
+          sudo chown -R $(id -u):$(id -g) **/locales/*
+          i18next 'web/src/**/*.ts' -c web/i18next-parser.config.js
 
       - name: Count lines
         id: count
