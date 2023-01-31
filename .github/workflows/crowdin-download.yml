@@ -39,7 +39,10 @@ jobs:
           upload_translations: false
           create_pull_request: false
           push_translations: false
-          config: 'crowdin.yml'
+          source: /**/locales/en/translation.json
+          translation: /**/locales/%two_letters_code%/%original_file_name%
+          token: "${{ secrets.CROWDIN_PERSONAL_TOKEN }}"
+          project_id: "${{ secrets.CROWDIN_PROJECT_ID }}"
 
       - name: Count lines
         id: count
