@@ -39,7 +39,7 @@ jobs:
           upload_translations: false
           create_pull_request: false
           push_translations: false
-          config: '/crowdin.yml'
+          config: 'crowdin.yml'
 
       - name: Count lines
         id: count
