@@ -2,7 +2,7 @@
   "aegis": {
     "denied": "{{- heroName}} ha negato l'egida {{emote}}",
     "pickup": "{{- heroName}} ha preso l'egida",
-    "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
+    "snatched": "{{- heroName}} ha rubato l'egida PepeLaugh"
   },
   "apm": "APM Live: {{num}} Chatting",
   "averageRank": "Rank medio in questa partita",
@@ -29,15 +29,16 @@
   "dota2pt": "Hai bisogno di build pro per {{- heroName}}? Vai qui {{- url}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
-  "gpm_zero": "GPM Live: {{num}}",
-  "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}}da creep.",
+  "gpm_zero": "",
+  "gpm_one": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
+  "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
   "herostats": {
-    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
+    "none": "Nessun match giocato come {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
-      "days": "{{days}}d",
-      "lifetime": "lifetime"
+      "days": "{{days}} giorni",
+      "lifetime": "totali"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
+    "winrate": "Winrate: {{winrate}}% come {{- heroName}} in {{timeperiod}} in un totale di {{total}} partite."
   },
   "invalidColor": "Colore o Slot errato. Riprova con un numero da 1 a 10, o uno di {{colorList}} ",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
@@ -51,9 +52,9 @@
     "player": "{{- currentMatchHero}} ha giocato {{- lastMatchHero}}"
   },
   "lastgamescore": {
-    "double": "Double down",
+    "double": "Doppio MMR",
     "duration": "{{minutes}} minuti",
-    "kda": "{{- kdavalue}} on {{- heroName}}",
+    "kda": "{{- kdavalue}} con {{- heroName}}",
     "lost": "Ultima partita: persa",
     "party": "Match in gruppo",
     "unranked": "Non classificata",
@@ -65,8 +66,8 @@
   "midasUsed": "Finalmente ha usato la Midas, {{seconds}} secondi in ritardo Madge",
   "missingMatchData": "In attesa delle informazioni di questo match PauseChamp",
   "missingUser": "Utente non trovato. Prova a sloggare e riloggare su dotabod.com",
-  "modsOnly_off": "È stata disattivata la modalitá solo moderatori. Ora tutti possono scrivere.",
-  "modsOnly_on": "È stata attivata la modalitá solo moderatori BASED Clap. Ora solo i mod possono scrivere",
+  "modsOnly_off": "È stata disattivata la modalità solo moderatori. Ora tutti possono scrivere.",
+  "modsOnly_on": "È stata attivata la modalità solo moderatori BASED Clap Ora solo i mod possono scrivere",
   "noHero": "Nessun eroe trovato",
   "noLastMatch": "Non è stato trovato un match precedente PauseChamp",
   "noNotable": "Nessun player famoso",
@@ -77,7 +78,7 @@
   "npRemove": "Prova !np remove <steam32id>",
   "npRemoved": "Rimosso {{steamid}} da !np per questo canale",
   "npUnknown": "Impossibile trovare {{steamid}} per questo canale",
-  "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
+  "overlayMissing": "Overlay non trovato. Il comando {{command}} richiede l'aggiunta dell'overlay.",
   "ping": "Pong EZ Clap",
   "pleb": "Un plebeo scrive 👇",
   "pleb_off": "{{name}} EZ Clap bel lavoro plebeo",
@@ -90,6 +91,7 @@
   "rank": {
     "nextRankAt": "Prossimo rank a",
     "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
+    "nextRankIn_many": "",
     "nextRankIn_other": "in {{count}} vittorie"
   },
   "ranked_no": "No questa partita non è classificata",
@@ -102,13 +104,13 @@
     "more": "Morti di Rosh: {{num}} · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard."
   },
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
-  "setStreamDelay_zero": "Removing stream delay",
-  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
+  "setStreamDelay_one": "Impostando il delay della stream a: {{count}} secondi",
+  "setStreamDelay_many": "",
   "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
-  "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelay_zero": "There is no stream delay on this channel",
-  "streamDelay_one": "Stream delay: {{count}} second",
-  "streamDelay_other": "Stream delay: {{count}} seconds",
+  "setStreamDelayNoArgs": "Delay della stream invalido, usa !setdelay <seconds>",
+  "streamDelay_one": "Delay Stream: {{count}} secondo",
+  "streamDelay_many": "",
+  "streamDelay_other": "Delay Stream: {{count}} secondi",
   "tip": {
     "from": "Il tip da {{- heroName}} ICANT",
     "to": "Tippiamo {{- heroName}} PepeLaugh"
@@ -122,6 +124,7 @@
   "toggleMatch_single": "Questo match verrá contato come standard mmr: {{- url}} Scrivi !fixdd per annullare",
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
   "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
+  "treadToggle_many": "",
   "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",

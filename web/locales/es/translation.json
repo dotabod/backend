@@ -29,7 +29,8 @@
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "Soy un bot hecho por {{author}}. Mas información {{- url}}",
   "gameNotFound": "Juego no encontrado",
-  "gpm_zero": "GPM en vivo: {{num}}",
+  "gpm_zero": "",
+  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_other": "GPM en vivo:{{num}}. {{heroKills}} de matando Héroes. {{creepKills}} de matando grimas.",
   "herostats": {
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
@@ -90,6 +91,7 @@
   "rank": {
     "nextRankAt": "Siguiente rango en",
     "nextRankIn_one": "Una victoria más peepoClap",
+    "nextRankIn_many": "",
     "nextRankIn_other": "en {{count}} ganas"
   },
   "ranked_no": "Nope este juego no está clasificado",
@@ -102,12 +104,12 @@
     "more": "Rosh deaths: {{num}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "¡Roshan asesinado! Siguiente roshan entre {{min}} y {{max}}",
-  "setStreamDelay_zero": "Removing stream delay",
   "setStreamDelay_one": "Setting stream delay to: {{count}} second",
+  "setStreamDelay_many": "",
   "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelay_zero": "There is no stream delay on this channel",
   "streamDelay_one": "Stream delay: {{count}} second",
+  "streamDelay_many": "",
   "streamDelay_other": "Stream delay: {{count}} seconds",
   "tip": {
     "from": "La propina de {{- heroName}} ICANT",
@@ -122,6 +124,7 @@
   "toggleMatch_single": "Cambiando esta mecha a apostar mmr normalmente: {{- url}} Escriba !fixdd para deshacer",
   "toggleMatch_solo": "Cambiando este partido a solo mmr: {{- url}} Escriba !fixparty para deshacer",
   "treadToggle_one": "Cambiamos las pisadas {{count}} vez para ahorrar un total de {{manaCount}} maná este partido.",
+  "treadToggle_many": "",
   "treadToggle_other": "Cambiamos las pisadas {{count}} veces para ahorrar un total de {{manaCount}} maná en esta partida.",
   "uknownMmr": "Aún no conozco el MMR de {{channel}}. Mods tienen que !setmmr 1234 o establecerlo en {{- url}}",
   "unknown": "Desconocido",

@@ -29,7 +29,8 @@
   "dota2pt": "Profi {{- heroName}} buildeket keresel? Itt találsz párat: {{- url}}",
   "dotabod": "Nyílt forráskódú bot vagyok, {{author}} tervezett. Több információért {{- url}}",
   "gameNotFound": "Meccs nem található",
-  "gpm_zero": "Élő GPM: {{num}}",
+  "gpm_zero": "",
+  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_other": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
   "herostats": {
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
@@ -102,11 +103,9 @@
     "more": "{{num}}. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard."
   },
   "roshanKilled": "Roshan meghalt! Következő Roshan {{min}} és {{max}} perc között várható",
-  "setStreamDelay_zero": "Removing stream delay",
   "setStreamDelay_one": "Setting stream delay to: {{count}} second",
   "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelay_zero": "There is no stream delay on this channel",
   "streamDelay_one": "Stream delay: {{count}} second",
   "streamDelay_other": "Stream delay: {{count}} seconds",
   "tip": {
