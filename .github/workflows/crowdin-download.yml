@@ -1,0 +1,63 @@
+name: Crowdin Download Translations
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"
+
+jobs:
+  download:
+    name: Synchronize with Crowdin
+    runs-on: ubuntu-latest
+    env:
+      UPDATE_BRANCH: ci/update-locale
+      BASE_BRANCH: master
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Change branch to the update branch
+        id: commits
+        run: |
+          git pull
+          echo "::set-output name=base::$(git rev-parse origin/${{ env.BASE_BRANCH }})"
+          git rev-parse --quiet origin/${{ env.UPDATE_BRANCH }} || git branch ${{ env.UPDATE_BRANCH }}
+          git checkout ${{ env.UPDATE_BRANCH }}
+          echo "::set-output name=update::$(git rev-parse ${{ env.UPDATE_BRANCH }}~)"
+
+      - name: Use the base branch instead
+        if: ${{ steps.commits.outputs.base != steps.commits.outputs.update }}
+        run: |
+          git checkout ${{ env.BASE_BRANCH }}
+
+      - name: Download Crowdin Translations
+        uses: crowdin/github-action@v1.6.0
+        with:
+          download_translations: true
+          upload_sources: false
+          upload_translations: false
+          create_pull_request: false
+          push_translations: false
+          source: /**/locales/en/translation.json
+          translation: /**/locales/%two_letters_code%/%original_file_name%
+          type: i18next_json
+          token: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+          project_id: ${{ secrets.CROWDIN_PROJECT_ID }}
+
+      - name: Count lines
+        id: count
+        run: |
+          echo "::set-output name=lines::$(git status --porcelain | wc -l)"
+
+      - name: Create Pull Request
+        if: ${{ steps.count.outputs.lines != '0' }}
+        uses: peter-evans/create-pull-request@v4.2.3
+        with:
+          title: "[CI] New Crowdin Translations"
+          body: The latest approved translations from Crowdin
+          base: ${{ env.BASE_BRANCH }}
+          branch: ${{ env.UPDATE_BRANCH }}
+          commit-message: Add new locales
+          delete-branch: true
+          add-paths: |
+            /**/locales/*

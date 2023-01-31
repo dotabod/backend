@@ -1,14 +1,7 @@
-# Pull Request
-## Linked GH Issues
+# Pull Request Title
 
-## Summary of Change
+## Linked GH Issues
 
 ## Current Behavior
 
 ## New Behavior
-
-## Breaking Changes and Impact/Migration
-
-## Tested With
-
-## Other Information
