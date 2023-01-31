@@ -14,9 +14,6 @@ jobs:
       UPDATE_BRANCH: ci/update-locale
       BASE_BRANCH: master
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Setup Node
         uses: actions/setup-node@v3.6.0
         with:
@@ -25,6 +22,9 @@ jobs:
       - name: Install Dependencies
         run: |
           yarn global add i18next
+
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Change branch to the update branch
         id: commits
