@@ -18,7 +18,7 @@ jobs:
         with:
           filters: |
             crowdin:
-              - '/**/locales/en/translation.json'
+              - '**/locales/en/translation.json'
 
       - name: crowdin action
         if: steps.changes.outputs.crowdin == 'true'

@@ -59,4 +59,4 @@ jobs:
           commit-message: Add new locales
           delete-branch: true
           add-paths: |
-            /**/locales/*
+            **/locales/*
