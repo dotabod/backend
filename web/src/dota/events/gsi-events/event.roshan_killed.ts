@@ -11,6 +11,16 @@ import eventHandler from '../EventHandler.js'
 
 const redisClient = RedisClient.getInstance()
 
+export interface RoshRes {
+  minS: number
+  maxS: number
+  minTime: string
+  maxTime: string
+  minDate: Date
+  maxDate: Date
+  count: number
+}
+
 eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
   handler: (dotaClient: GSIHandler, event: DotaEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return

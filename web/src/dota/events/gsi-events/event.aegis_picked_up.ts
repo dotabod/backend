@@ -12,6 +12,14 @@ import eventHandler from '../EventHandler.js'
 
 const redisClient = RedisClient.getInstance()
 
+export interface AegisRes {
+  expireS: number
+  playerId: number
+  expireTime: string
+  expireDate: Date
+  snatched: false
+}
+
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
   handler: (dotaClient: GSIHandler, event: DotaEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
