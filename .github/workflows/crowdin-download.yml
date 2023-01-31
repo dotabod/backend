@@ -21,7 +21,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          yarn global add i18next
+          yarn global add i18next-parser
 
       - name: Checkout
         uses: actions/checkout@v3
