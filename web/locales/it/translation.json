@@ -29,9 +29,6 @@
   "dota2pt": "Hai bisogno di build pro per {{- heroName}}? Vai qui {{- url}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
-  "gpm_zero": "",
-  "gpm_one": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
-  "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
   "herostats": {
     "none": "Nessun match giocato come {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
@@ -91,7 +88,6 @@
   "rank": {
     "nextRankAt": "Prossimo rank a",
     "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
-    "nextRankIn_many": "",
     "nextRankIn_other": "in {{count}} vittorie"
   },
   "ranked_no": "No questa partita non è classificata",
@@ -104,13 +100,7 @@
     "more": "Morti di Rosh: {{num}} · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard."
   },
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
-  "setStreamDelay_one": "Impostando il delay della stream a: {{count}} secondi",
-  "setStreamDelay_many": "",
-  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
   "setStreamDelayNoArgs": "Delay della stream invalido, usa !setdelay <seconds>",
-  "streamDelay_one": "Delay Stream: {{count}} secondo",
-  "streamDelay_many": "",
-  "streamDelay_other": "Delay Stream: {{count}} secondi",
   "tip": {
     "from": "Il tip da {{- heroName}} ICANT",
     "to": "Tippiamo {{- heroName}} PepeLaugh"
@@ -123,9 +113,6 @@
   "toggleMatch_party": "Questo match verrá contato come party mmr: {{- url}} Scrivi !fixparty per annullare",
   "toggleMatch_single": "Questo match verrá contato come standard mmr: {{- url}} Scrivi !fixdd per annullare",
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
-  "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
-  "treadToggle_many": "",
-  "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",
   "unknownSteam": "Impossibile trovare l'account Steam. Prova a giocare una partita di prova contro i bot per salvare il tuo account su Dotabod!",
@@ -133,5 +120,13 @@
   "updateMmr_auto": "Aggiornato MMR a {{mmr}}. !fixparty per party e !fixdd per doubledown",
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
-  "xpm": "XPM Live: {{num}}"
+  "xpm": "XPM Live: {{num}}",
+  "gpm_one": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
+  "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
+  "setStreamDelay_one": "Impostando il delay della stream a: {{count}} secondo",
+  "setStreamDelay_other": "Impostando il delay della stream a: {{count}} secondi",
+  "streamDelay_one": "Delay Stream: {{count}} secondo",
+  "streamDelay_other": "Delay Stream: {{count}} secondi",
+  "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
+  "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita"
 }

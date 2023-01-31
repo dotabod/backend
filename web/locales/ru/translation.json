@@ -29,11 +29,6 @@
   "dota2pt": "Нужны сборки от про игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "gameNotFound": "Игра не найдена",
-  "gpm_zero": "",
-  "gpm_one": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_few": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_many": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_other": "Текущий GPM: {{num}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
   "herostats": {
     "none": "Нет сыгранных игр на  {{- heroName}} за {{timeperiod}}",
     "timeperiod": {
@@ -107,15 +102,7 @@
     "more": "{{num}} Рошан мёртв · Следующая награда:  Сыр, Аганим и Рефрешер."
   },
   "roshanKilled": "Рошан убит! Следующий рошан между {{min}} и {{max}}",
-  "setStreamDelay_one": "Устанавливаю задержку стрима на {{count}} секунду",
-  "setStreamDelay_few": "Устанавливаю задержку стрима на {{count}} секунды",
-  "setStreamDelay_many": "Устанавливаю задержку стрима на {{count}} секунд",
-  "setStreamDelay_other": "Устанавливаю задержку стрима на {{count}} секунд",
   "setStreamDelayNoArgs": "Неверная задержка стрима, используйте !setdelay <seconds>",
-  "streamDelay_one": "Задержка стрима: {{count}} секунда",
-  "streamDelay_few": "Задержка стрима: {{count}} секунды",
-  "streamDelay_many": "Задержка стрима: {{count}} секунд",
-  "streamDelay_other": "Задержка стрима: {{count}} секунд",
   "tip": {
     "from": "Благодарность от {{- heroName}} ICANT",
     "to": "Мы поблагодарили {{- heroName}} PepeLaugh"
@@ -128,10 +115,6 @@
   "toggleMatch_party": "Изменение этого матча на групповой рейтинг: {{- url}} Введите !fixparty для отмены",
   "toggleMatch_single": "Изменение этого матча на стандартный рейтинг {{- url}} Введите !fixdd для отмены",
   "toggleMatch_solo": "Изменение этого матча на одиночный рейтинг: {{- url}} Введите !fixparty для отмены",
-  "treadToggle_one": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_few": "Power Treads были переключены {{count}} раза, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_many": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_other": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
   "uknownMmr": "Я еще не знаю рейтинг {{channel}}. Модераторы или стример должны сами ввести команду, пример: !setmmr 1234 или установить его вручную на сайте {{- url}}",
   "unknown": "Неизвестно",
   "unknownSteam": "Не удалось найти учетную запись Steam. Попробуйте сначала сыграть тренировочный матч с ботом, чтобы сохранить свой аккаунт в Dotabod!",
@@ -139,5 +122,21 @@
   "updateMmr_auto": "Рейтинг обновлён до {{mmr}}. Используйте команды !fixparty для изменения игры в группе и !fixdd для двойной ставки.",
   "updateMmr_manual": "Рейтинг изменён до {{mmr}}",
   "updateMmrMulti": "Несколько учетных записей Steam, обновление той, с которой вы вошли в систему в данный момент ({{steamId}})",
-  "xpm": "Текущий XPM: {{num}}"
+  "xpm": "Текущий XPM: {{num}}",
+  "gpm_one": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "gpm_few": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "gpm_many": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "gpm_other": "Текущий GPM: {{num}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
+  "setStreamDelay_few": "Устанавливаю задержку стрима на {{count}} секунды",
+  "setStreamDelay_many": "Устанавливаю задержку стрима на {{count}} секунд",
+  "setStreamDelay_one": "Устанавливаю задержку стрима на {{count}} секунду",
+  "setStreamDelay_other": "Устанавливаю задержку стрима на {{count}} секунд",
+  "streamDelay_few": "Задержка стрима: {{count}} секунды",
+  "streamDelay_many": "Задержка стрима: {{count}} секунд",
+  "streamDelay_one": "Задержка стрима: {{count}} секунда",
+  "streamDelay_other": "Задержка стрима: {{count}} секунд",
+  "treadToggle_one": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_few": "Power Treads были переключены {{count}} раза, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_many": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_other": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче."
 }

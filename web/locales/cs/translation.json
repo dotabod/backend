@@ -29,11 +29,6 @@
   "dota2pt": "Potřebuješ poradit co kupovat na {{- heroName}}? Nápady najdeš zde {{- url}}",
   "dotabod": "Jsem open-source bot vytvořený {{author}}. Více info na {{- url}}",
   "gameNotFound": "Hra nebyla nalezena",
-  "gpm_zero": "",
-  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_few": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_many": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_other": "Aktuální GPM: {{num}}. {{heroKills}} ze zabitých hrdinů, {{creepKills}} z creepů.",
   "herostats": {
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
@@ -107,15 +102,7 @@
     "more": "Zabitých roshanů: {{num}} - Další drop: sejra, aghanim a refresher."
   },
   "roshanKilled": "Roshan zabit! Další spawne mezi {{min}} a {{max}}",
-  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
-  "setStreamDelay_few": "Setting stream delay to: {{count}} seconds",
-  "setStreamDelay_many": "Setting stream delay to: {{count}} seconds",
-  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelay_one": "Stream delay: {{count}} second",
-  "streamDelay_few": "Stream delay: {{count}} seconds",
-  "streamDelay_many": "Stream delay: {{count}} seconds",
-  "streamDelay_other": "Stream delay: {{count}} seconds",
   "tip": {
     "from": "Tip od {{- heroName}} ICANT",
     "to": "Tip pro {{- heroName}} PepeLaugh"
@@ -128,10 +115,6 @@
   "toggleMatch_party": "Měním tento zápas party MMR: {{- url}} Napiš !fixparty pro zrušení.",
   "toggleMatch_single": "Měním tento zápas na single down MMR: {{- url}} Napiš !fixdd pro zrušení.",
   "toggleMatch_solo": "Měním tento zápas na solo MMR: {{- url}} Napiš !fixparty pro zrušení.",
-  "treadToggle_one": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
-  "treadToggle_few": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
-  "treadToggle_many": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
-  "treadToggle_other": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
   "uknownMmr": "Neznám MMR kanálu {{channel}}. Modi ho můžou nastavit příkazem !setmmr 1234 nebo na stránce {{- url}}",
   "unknown": "Neznámé",
   "unknownSteam": "Nenalezen steam účet. Postupuj podle kroku 2, odehraj zápas s boty a zkus to znovu.",
@@ -139,5 +122,21 @@
   "updateMmr_auto": "Aktualizované MMR na {{mmr}}. !fixparty pro party a !fixdd pro double down",
   "updateMmr_manual": "Aktualizované MMR na {{mmr}}",
   "updateMmrMulti": "Vícero steam účtů, aktualizuji ten který je nyní přihlášený - {{steamId}}",
-  "xpm": "Aktuální XPM: {{num}}"
+  "xpm": "Aktuální XPM: {{num}}",
+  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_few": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_many": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Aktuální GPM: {{num}}. {{heroKills}} ze zabitých hrdinů, {{creepKills}} z creepů.",
+  "setStreamDelay_few": "Setting stream delay to: {{count}} seconds",
+  "setStreamDelay_many": "Setting stream delay to: {{count}} seconds",
+  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
+  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "streamDelay_few": "Stream delay: {{count}} seconds",
+  "streamDelay_many": "Stream delay: {{count}} seconds",
+  "streamDelay_one": "Stream delay: {{count}} second",
+  "streamDelay_other": "Stream delay: {{count}} seconds",
+  "treadToggle_one": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
+  "treadToggle_few": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
+  "treadToggle_many": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
+  "treadToggle_other": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many."
 }
