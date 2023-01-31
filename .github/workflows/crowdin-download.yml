@@ -55,7 +55,7 @@ jobs:
       - name: Organize translations
         run: |
           sudo chown -R $(id -u):$(id -g) **/locales/*
-          i18next 'web/src/**/*.ts' -c web/i18next-parser.config.js
+          i18next -c 'web/i18next-parser.config.js'
 
       - name: Count lines
         id: count
