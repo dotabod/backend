@@ -17,7 +17,7 @@ export interface AegisRes {
   playerId: number
   expireTime: string
   expireDate: Date
-  snatched: false
+  snatched: boolean
   heroName: string
 }
 
@@ -71,7 +71,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
       event.player_id,
     )
 
-    const res = {
+    const res: AegisRes = {
       expireS,
       playerId: event.player_id,
       expireTime: fmtMSS(expireTime),
