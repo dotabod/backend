@@ -51,7 +51,7 @@ async function getItems(client: SocketClient, profile: ReturnType<typeof profile
     throw new CustomError(t('missingMatchData', { lng: client.locale }))
   }
 
-  const teamIndex = profile.heroKey % 2
+  const teamIndex = profile.heroKey > 4 ? 1 : 0
   const teamPlayerIdx = profile.heroKey % 5
   const list = delayedData.teams[teamIndex]?.players[teamPlayerIdx]?.items
   const itemList: string[] | false =
