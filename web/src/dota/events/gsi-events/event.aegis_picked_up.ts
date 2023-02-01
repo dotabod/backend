@@ -18,6 +18,37 @@ export interface AegisRes {
   expireTime: string
   expireDate: Date
   snatched: false
+  heroName: string
+}
+
+export function getNewAegisTime(res: AegisRes) {
+  // calculate seconds delta between now and expireDate
+  const newSeconds = Math.floor((new Date(res.expireDate).getTime() - Date.now()) / 1000)
+  res.expireS = newSeconds > 0 ? newSeconds : 0
+
+  return res
+}
+export function generateAegisMessage(res: AegisRes, lng: string) {
+  res = getNewAegisTime(res)
+
+  if (res.expireS <= 0) {
+    return t('aegis.expired', { lng, heroName: res.heroName })
+  }
+
+  if (res.snatched) {
+    return t('aegis.snatched', { lng, heroName: res.heroName })
+  }
+
+  return t('aegis.pickup', { lng, heroName: res.heroName })
+}
+
+export function emitAegisEvent(res: AegisRes, token: string) {
+  if (!res || !res?.expireDate) return
+
+  res = getNewAegisTime(res)
+  if (res.expireS <= 0) return
+
+  server.io.to(token).emit('aegis-picked-up', res)
 }
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
@@ -35,20 +66,21 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     // server time
     const expireDate = dotaClient.addSecondsToNow(expireS)
 
+    const heroName = getHeroNameById(
+      dotaClient.players?.matchPlayers[event.player_id].heroid ?? 0,
+      event.player_id,
+    )
+
     const res = {
       expireS,
       playerId: event.player_id,
       expireTime: fmtMSS(expireTime),
       expireDate,
       snatched: event.snatched,
+      heroName,
     }
 
     void redisClient.client.json.set(`${dotaClient.getToken()}:aegis`, '$', res)
-
-    const heroName = getHeroNameById(
-      dotaClient.players?.matchPlayers[event.player_id].heroid ?? 0,
-      event.player_id,
-    )
 
     const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
     const {
@@ -56,13 +88,9 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
     if (chattersEnabled && chatterEnabled) {
-      if (res.snatched) {
-        dotaClient.say(t('aegis.snatched', { lng: dotaClient.client.locale, heroName }))
-      } else {
-        dotaClient.say(t('aegis.pickup', { lng: dotaClient.client.locale, heroName }))
-      }
+      dotaClient.say(generateAegisMessage(res, dotaClient.client.locale))
     }
 
-    server.io.to(dotaClient.getToken()).emit('aegis-picked-up', res)
+    emitAegisEvent(res, dotaClient.getToken())
   },
 })

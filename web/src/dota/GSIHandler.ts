@@ -14,8 +14,8 @@ import { DotaEvent, Player, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
-import { AegisRes } from './events/gsi-events/event.aegis_picked_up.js'
-import { RoshRes } from './events/gsi-events/event.roshan_killed.js'
+import { AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
+import { emitRoshEvent, RoshRes } from './events/gsi-events/event.roshan_killed.js'
 import { server } from './index.js'
 import { blockTypes, GLOBAL_DELAY, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
@@ -955,19 +955,12 @@ export class GSIHandler {
       `${this.getToken()}:roshan`,
     )) as unknown as RoshRes | null
 
-    if (aegisRes && Number(aegisRes?.expireS)) {
-      // calculate seconds delta between now and expireDate
-      const newSeconds = Math.floor((new Date(aegisRes.expireDate).getTime() - Date.now()) / 1000)
-      aegisRes.expireS = newSeconds
-
-      server.io.to(this.getToken()).emit('aegis-picked-up', aegisRes)
+    if (aegisRes) {
+      emitAegisEvent(aegisRes, this.getToken())
     }
 
-    if (roshRes && (Number(roshRes?.minS) || Number(roshRes?.maxS))) {
-      roshRes.minS = Math.floor((new Date(roshRes.minDate).getTime() - Date.now()) / 1000)
-      roshRes.maxS = Math.floor((new Date(roshRes.maxDate).getTime() - Date.now()) / 1000)
-
-      server.io.to(this.getToken()).emit('roshan-killed', roshRes)
+    if (roshRes) {
+      emitRoshEvent(roshRes, this.getToken())
     }
   }
 }

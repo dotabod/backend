@@ -21,6 +21,62 @@ export interface RoshRes {
   count: number
 }
 
+// Doing it this way so i18n can pick up the t('') strings
+export function getRoshCountMessage(props: { lng: string; num: number }) {
+  let roshCountMsg
+  switch (props.num) {
+    case 1:
+      roshCountMsg = t('roshanCount.1', props)
+      break
+    case 2:
+      roshCountMsg = t('roshanCount.2', props)
+      break
+    case 3:
+      roshCountMsg = t('roshanCount.3', props)
+      break
+    default:
+      roshCountMsg = t('roshanCount.more', props)
+      break
+  }
+  return roshCountMsg
+}
+
+export function getNewRoshTime(res: RoshRes) {
+  // Recalculate using server time for seconds left
+  const min = Math.floor((new Date(res.minDate).getTime() - Date.now()) / 1000)
+  const max = Math.floor((new Date(res.maxDate).getTime() - Date.now()) / 1000)
+  res.minS = min > 0 ? min : 0
+  res.maxS = max > 0 ? max - res.minS : 0
+
+  return res
+}
+
+export function generateRoshanMessage(res: RoshRes, lng: string) {
+  res = getNewRoshTime(res)
+
+  const msgs = []
+  if (res.maxS > 0) {
+    msgs.push(
+      t('roshanKilled', {
+        min: res.minTime,
+        max: res.maxTime,
+        lng,
+      }),
+    )
+  }
+
+  msgs.push(getRoshCountMessage({ lng, num: res.count }))
+
+  return msgs.join(' · ')
+}
+
+export function emitRoshEvent(res: RoshRes, token: string) {
+  if (!res || !res?.minDate) return
+  res = getNewRoshTime(res)
+
+  server.io.to(token).emit('roshan-killed', res)
+}
+
 eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
   handler: (dotaClient: GSIHandler, event: DotaEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
@@ -48,12 +104,11 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       roshanKilled: { enabled: chatterEnabled },
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
-    async function handler() {
+    async function redisHandler() {
       const redisJson = (await redisClient.client.json.get(
         `${dotaClient.getToken()}:roshan`,
-      )) as any
+      )) as RoshRes | null
       const count = redisJson ? Number(redisJson?.count) : 0
-      const newCount = count + 1
       const res = {
         minS,
         maxS,
@@ -61,39 +116,18 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
         maxTime: fmtMSS(maxTime),
         minDate,
         maxDate,
-        count: newCount,
+        count: count + 1,
       }
 
       await redisClient.client.json.set(`${dotaClient.getToken()}:roshan`, '$', res)
 
       if (chattersEnabled && chatterEnabled) {
-        const props = {
-          num: newCount,
-          lng: dotaClient.client.locale,
-        }
-
-        // Doing it this way so i18n can pick up the t('') strings
-        const roshCountMsg =
-          props.num === 1
-            ? t('roshanCount.1', props)
-            : props.num === 2
-            ? t('roshanCount.2', props)
-            : props.num === 3
-            ? t('roshanCount.3', props)
-            : t('roshanCount.more', props)
-
-        dotaClient.say(
-          `${t('roshanKilled', {
-            min: res.minTime,
-            max: res.maxTime,
-            lng: dotaClient.client.locale,
-          })}. ${roshCountMsg}`,
-        )
+        dotaClient.say(generateRoshanMessage(res, dotaClient.client.locale))
       }
 
-      server.io.to(dotaClient.getToken()).emit('roshan-killed', { ...res, count: newCount })
+      emitRoshEvent(res, dotaClient.getToken())
     }
 
-    void handler()
+    void redisHandler()
   },
 })

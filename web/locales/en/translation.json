@@ -1,5 +1,6 @@
 {
   "aegis": {
+    "expired": "{{- heroName}}'s aegis expired :)",
     "denied": "{{- heroName}} denied the aegis {{emote}}",
     "pickup": "{{- heroName}} picked up the aegis!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
@@ -101,6 +102,7 @@
     "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
     "more": "Rosh deaths: {{num}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
+  "roshanAlive": "Roshan is currently alive Happi",
   "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
   "setStreamDelay_zero": "Removing stream delay",
   "setStreamDelay_one": "Setting stream delay to: {{count}} second",
