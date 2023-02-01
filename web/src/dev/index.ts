@@ -256,12 +256,12 @@ async function fixOnline() {
 }
 
 async function migrateUsersToNewMMROptions() {
-  const disabledMmrUsers = await prisma.setting.findMany({
+  const disabledMmrUsers =
+    (await prisma.$queryRaw`SELECT * FROM settings WHERE value is null`) as []
+  /*  const disabledMmrUsers = await prisma.setting.findMany({
     where: {
       key: 'mmr-tracker',
-      value: {
-        not: true,
-      },
+      value: PrismaClient.dbNull,
     },
     select: {
       value: true,
@@ -271,20 +271,20 @@ async function migrateUsersToNewMMROptions() {
         },
       },
     },
-  })
+  })*/
 
   const data = []
   const keys = ['showRankMmr', 'showRankImage', 'showRankLeader']
-
   // turn these off
-  for (const setting of disabledMmrUsers) {
-    data.push(keys.map((key) => ({ key, value: false, userId: setting.user.id })))
+  for (const setting of disabledMmrUsers as any) {
+    data.push(keys.map((key) => ({ key, value: false, userId: setting.userId })))
   }
 
-  console.log(disabledMmrUsers.length)
-
-  await prisma.setting.createMany({
+  console.log(disabledMmrUsers)
+  /* await prisma.setting.createMany({
     data: data.flat(),
     skipDuplicates: true,
-  })
+  })*/
 }
+
+await migrateUsersToNewMMROptions()
