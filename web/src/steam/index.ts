@@ -281,6 +281,8 @@ class Dota {
 
             const players = getAccountsFromMatch(delayedData)
             events.emit('saveHeroesForMatchId', { matchId: game.match.match_id, players }, token)
+            cb?.(null, game)
+
             return
           }
 

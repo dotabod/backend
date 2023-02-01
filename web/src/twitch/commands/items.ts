@@ -30,16 +30,16 @@ async function getItems(client: SocketClient, profile: ReturnType<typeof profile
 
   const teamIndex = profile.heroKey % 2
   const teamPlayerIdx = profile.heroKey % 5
-  const itemList: string[] = delayedData.teams[teamIndex].players[teamPlayerIdx].items.map(
-    (itemId) => {
+  const itemList: string[] = delayedData.teams[teamIndex].players[teamPlayerIdx].items
+    .map((itemId) => {
       const id = itemId as unknown as keyof typeof DOTA_ITEM_IDS
       const itemShortname = DOTA_ITEM_IDS[id] as keyof typeof DOTA_ITEMS
       const item = DOTA_ITEMS[itemShortname]
-      const itemName = 'dname' in item && (item.dname as string)
+      const itemName: string | boolean = item && 'dname' in item && (item.dname as string)
 
       return itemName || itemShortname
-    },
-  )
+    })
+    .filter(Boolean)
 
   if (!itemList.length) {
     throw new CustomError(
