@@ -1,6 +1,7 @@
 {
   "aegis": {
     "denied": "{{- heroName}} ha negato l'egida {{emote}}",
+    "expired": "L'egida di {{- heroName}} è scaduta :)",
     "pickup": "{{- heroName}} ha preso l'egida",
     "snatched": "{{- heroName}} ha rubato l'egida PepeLaugh"
   },
@@ -97,6 +98,7 @@
   "ranked_no": "No questa partita non è classificata",
   "ranked_yes": "Si questa partita è classificata",
   "refresh": "Aggiornando l'overlay...",
+  "roshanAlive": "Roshan è vivo Happi",
   "roshanCount": {
     "1": "Morti di Rosh: 1 · Prossimo drop: Aghanim Shard.",
     "2": "Morti di Rosh: 2 · Prossimo drop: Cheese e Aghanim Blessing o Refresher Shard.",
