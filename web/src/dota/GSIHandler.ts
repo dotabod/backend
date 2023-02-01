@@ -186,7 +186,8 @@ export class GSIHandler {
     // This now waits for the bet to complete before checking match data
     // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
     // the playingBetMatchId is saved when the hero is selected
-    if (!this.client.steam32Id || !this.playingBetMatchId) return
+    if (!this.client.steam32Id || !this.playingBetMatchId || this.client.gsi?.map?.matchid === '0')
+      return
     const matchId = this.playingBetMatchId
     if (!Number(matchId)) return
     if (this.client.steamServerId) return
