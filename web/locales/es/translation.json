@@ -1,6 +1,7 @@
 {
   "aegis": {
     "denied": "{{- heroName}} se rehusó la aegis {{emote}}",
+    "expired": "{{- heroName}}'s aegis expired :)",
     "pickup": "¡{{- heroName}} recogió el aegis!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
@@ -32,6 +33,10 @@
   "gpm_zero": "",
   "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_other": "GPM en vivo:{{num}}. {{heroKills}} de matando Héroes. {{creepKills}} de matando grimas.",
+  "heroItems": {
+    "empty": "(2m delay) No items found for {{- heroName}}",
+    "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
+  },
   "herostats": {
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
@@ -64,7 +69,7 @@
   "matchFound": "Datos de la mecha {{commandList}} comandos activado.",
   "matchId": "ID de Mecha: {{matchId}}",
   "midasUsed": "Midas al fin usado, {{seconds}} segundos tarde Madge",
-  "missingMatchData": "Esperando para la corriente datos PauseChamp",
+  "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "No se encuentra el usuario. Trata de salir y acceso el login de nuevo en dotabod.com",
   "modsOnly_off": "Solomente Mods ahora esta apagado. Todos pueden usar chat.",
   "modsOnly_on": "Solomente Mods esta prendido BASED Clap. Solo mods pueden usar chat",
@@ -97,6 +102,7 @@
   "ranked_no": "Nope este juego no está clasificado",
   "ranked_yes": "Sí, este juego está clasificado",
   "refresh": "Recargando superposición...",
+  "roshanAlive": "Roshan is currently alive Happi",
   "roshanCount": {
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
     "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",

@@ -1,11 +1,12 @@
 {
   "aegis": {
     "denied": "{{- heroName}} знищив Аєгіс {{emote}}",
+    "expired": "Аєгіс {{- heroName}} зник :). Ніхто його не бачив?",
     "pickup": "{{- heroName}} підібрав Аєгіс!",
     "snatched": "{{- heroName}} викрав Аєгіс PepeLaugh"
   },
   "apm": "Поточний APM: {{num}} Chatting",
-  "averageRank": "Середній ранг цього матчу",
+  "averageRank": "Середній рейтинг цієї гри",
   "betaFeature": "[бета-версія]",
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} більше не є бета-тестером. Введіть !beta, щоб приєднатися знову ",
@@ -34,6 +35,10 @@
   "gpm_few": "Поточний GPM: {{num}}. {{heroKills}} золота від вбивства героїв та {{creepKills}} золота від вбивства кріпочків.",
   "gpm_many": "Поточний GPM: {{num}}. {{heroKills}} золота від вбивства героїв та {{creepKills}} золота від вбивства кріпочків.",
   "gpm_other": "Поточний GPM: {{num}}. {{heroKills}} золота від вбивства героїв та {{creepKills}} золота від вбивства кріпочків.",
+  "heroItems": {
+    "empty": "(2 хв. затримка) У {{- heroName}} немає предметів FeelsBadMan",
+    "list": "(2 хв. затримка) {{- heroName}} має: {{- itemNames}}"
+  },
   "herostats": {
     "none": "Немає зіграних матчів на {{- heroName}} за {{timeperiod}}",
     "timeperiod": {
@@ -66,7 +71,7 @@
   "matchFound": "Отримано дані матчу: {{commandList}} - команди активовані.",
   "matchId": "ID матчу: {{matchId}}",
   "midasUsed": "Midas нарешті був використаний через {{seconds}} секунд(и) Madge",
-  "missingMatchData": "Очікування поточних даних матчу PauseChamp",
+  "missingMatchData": "Очікування даних про поточний матч PauseChamp",
   "missingUser": "Користувача не знайдено. Спробуйте перезайти на сайті dotabod.com",
   "modsOnly_off": "Режим \"Тільки для модераторів\" вимкнено. Роботяги + в чат.",
   "modsOnly_on": "Режим \"Тільки для модераторів\" тепер ввімкнений BASED Clap. Тільки модератори можуть використовувати чат.",
@@ -100,6 +105,7 @@
   "ranked_no": "Ні, ця гра не рейтингова гра",
   "ranked_yes": "Так, ця гра рейтингова гра",
   "refresh": "Перезапуск оверлея...",
+  "roshanAlive": "Наразі Рошан живий Happi",
   "roshanCount": {
     "1": "1 Рошан мертвий · Наступна винагорода: Аєгіс та Аганім Шард",
     "2": "2 Рошан мертвий · Наступна винагорода: Аєгіс, Сир і Аганім/Рефрешер",

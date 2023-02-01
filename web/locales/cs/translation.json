@@ -1,6 +1,7 @@
 {
   "aegis": {
     "denied": "{{- heroName}} zničil aegis {{emote}}",
+    "expired": "{{- heroName}}'s aegis expired :)",
     "pickup": "{{- heroName}} získal aegis!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
@@ -34,6 +35,10 @@
   "gpm_few": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_many": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_other": "Aktuální GPM: {{num}}. {{heroKills}} ze zabitých hrdinů, {{creepKills}} z creepů.",
+  "heroItems": {
+    "empty": "(2m delay) No items found for {{- heroName}}",
+    "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
+  },
   "herostats": {
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
@@ -66,7 +71,7 @@
   "matchFound": "Data zápasu nalezena, příkazy {{commandList}} aktivovány.",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas konečně použita. Ale o {{seconds}} pozdě Madge",
-  "missingMatchData": "Čekám na data tohoto zápasu PauseChamp",
+  "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "Uživatel nenalezen. Zkus se znovu připojit na dotabod.com",
   "modsOnly_off": "Mód pouze pro moderátory vypnut. Všichni mohou psát",
   "modsOnly_on": "Mód pouze pro moderátory zapnut BASED Clap Pouze moderátoři mohou psát",
@@ -100,6 +105,7 @@
   "ranked_no": "Nope, tenhle zápas není hodnocený",
   "ranked_yes": "Yep, tahle hra je hodnocená",
   "refresh": "Obnovuji overlay..",
+  "roshanAlive": "Roshan is currently alive Happi",
   "roshanCount": {
     "1": "Zabitých roshanů: 1 - Další drop: agha shard.",
     "2": "Zabitých roshanů: 2 - Další drop: sejra a aghanim nebo refresher.",

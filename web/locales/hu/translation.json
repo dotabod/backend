@@ -1,6 +1,7 @@
 {
   "aegis": {
     "denied": "{{- heroName}} semlegesítette az aegist {{emote}}",
+    "expired": "{{- heroName}}'s aegis expired :)",
     "pickup": "{{- heroName}} felvette az aegist!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
@@ -32,6 +33,10 @@
   "gpm_zero": "",
   "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_other": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
+  "heroItems": {
+    "empty": "(2m delay) No items found for {{- heroName}}",
+    "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
+  },
   "herostats": {
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
@@ -64,7 +69,7 @@
   "matchFound": "Meccs információ megtalálható {{commandList}} a parancsok aktívak.",
   "matchId": "Meccs ID: {{matchId}}",
   "midasUsed": "Végre használva volt a Midas, {{seconds}} késéssel Madge",
-  "missingMatchData": "Várunk a meccs adataira PauseChamp",
+  "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "Felhasználó nem található. Próbálj újra bejelentkezni a dotabod.com-on",
   "modsOnly_off": "Moderátor mód kikapcsolva. Mindenki cseveghet.",
   "modsOnly_on": "Moderátor csevegés bekapcsolva. BASED Clap. Csak a modok írhatnak.",
@@ -96,6 +101,7 @@
   "ranked_no": "Nem, ez nem egy rangsorolt meccs",
   "ranked_yes": "Rangsorolt meccs",
   "refresh": "Overlay frissítése...",
+  "roshanAlive": "Roshan is currently alive Happi",
   "roshanCount": {
     "1": "1. Roshan halál · Következő drop: aghanim's shard.",
     "2": "2. Roshan halál · Következő drop: cheese és aghanim's blessing vagy refresher shard.",
