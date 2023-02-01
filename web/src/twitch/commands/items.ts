@@ -77,14 +77,11 @@ async function getItems(client: SocketClient, profile: ReturnType<typeof profile
     )
   }
 
-  void chatClient.say(
-    client.name,
-    t('heroItems.list', {
-      heroName: getHeroNameById(profile.heroid, profile.heroKey),
-      itemNames: formatItemList(itemList).join(' · '),
-      lng: client.locale,
-    }),
-  )
+  return {
+    heroName: getHeroNameById(profile.heroid, profile.heroKey),
+    itemNames: formatItemList(itemList).join(' · '),
+    lng: client.locale,
+  }
 }
 
 commandHandler.registerCommand('items', {
@@ -110,13 +107,17 @@ commandHandler.registerCommand('items', {
         args: args,
       })
 
-      void getItems(client, profile)
+      getItems(client, profile)
+        .then((res) => {
+          void chatClient.say(client.name, t('heroItems.list', res))
+        })
+        .catch((e: any) => {
+          const msg = !e?.message ? t('gameNotFound', { lng: client.locale }) : e?.message
+          void chatClient.say(client.name, msg)
+        })
     } catch (e: any) {
-      void chatClient.say(
-        message.channel.name,
-        e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-      )
-      return
+      const msg = !e?.message ? t('gameNotFound', { lng: client.locale }) : e?.message
+      void chatClient.say(client.name, msg)
     }
   },
 })
