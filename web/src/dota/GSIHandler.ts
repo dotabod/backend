@@ -17,7 +17,7 @@ import { logger } from '../utils/logger.js'
 import { AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
 import { emitRoshEvent, RoshRes } from './events/gsi-events/event.roshan_killed.js'
 import { server } from './index.js'
-import { blockTypes, GLOBAL_DELAY, pickSates } from './lib/consts.js'
+import { blockTypes, DelayedCommands, GLOBAL_DELAY, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import getHero, { HeroNames } from './lib/getHero.js'
 import { isArcade } from './lib/isArcade.js'
@@ -262,6 +262,7 @@ export class GSIHandler {
     this.playingLobbyType = delayedData.match.lobby_type
     this.players = getAccountsFromMatch(delayedData)
 
+    // letting people know match data is available
     if (this.client.stream_online && this.players.accountIds.length) {
       logger.info('saveMatchData stream online, updating stream', {
         name: this.client.name,
@@ -270,28 +271,9 @@ export class GSIHandler {
         lobbyType: this.playingLobbyType,
       })
 
-      const commands: { command: string; key: SettingKeys }[] = [
-        {
-          command: '!np',
-          key: DBSettings.commandNP,
-        },
-        {
-          command: '!smurfs',
-          key: DBSettings.commandSmurfs,
-        },
-        {
-          command: '!gm',
-          key: DBSettings.commandGM,
-        },
-        {
-          command: '!lg',
-          key: DBSettings.commandLG,
-        },
-        {
-          command: '!avg',
-          key: DBSettings.commandAvg,
-        },
-      ].filter((cmd) => getValueOrDefault(cmd.key, this.client.settings))
+      const commands = DelayedCommands.filter((cmd) =>
+        getValueOrDefault(cmd.key, this.client.settings),
+      )
       if (commands.length) {
         this.say(
           t('matchFound', {

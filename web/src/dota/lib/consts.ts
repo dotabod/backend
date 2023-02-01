@@ -1,6 +1,7 @@
 import LRUCache from 'lru-cache'
 
 import { GSIHandler } from '../GSIHandler.js'
+import { DBSettings, SettingKeys } from '../../db/settings.js'
 
 // just here for reference, not being used
 const allSates = [
@@ -111,3 +112,26 @@ export const gsiHandlers = new Map<string, GSIHandler>()
 export const twitchIdToToken = new Map<string, string>()
 export const pendingCheckAuth = new Map<string, boolean>()
 export const lookingupToken = new Map<string, boolean>()
+
+export const DelayedCommands: { command: string; key: SettingKeys }[] = [
+  {
+    command: '!np',
+    key: DBSettings.commandNP,
+  },
+  {
+    command: '!smurfs',
+    key: DBSettings.commandSmurfs,
+  },
+  {
+    command: '!gm',
+    key: DBSettings.commandGM,
+  },
+  {
+    command: '!lg',
+    key: DBSettings.commandLG,
+  },
+  {
+    command: '!avg',
+    key: DBSettings.commandAvg,
+  },
+]
