@@ -71,7 +71,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
       event.player_id,
     )
 
-    const res: AegisRes = {
+    const res = {
       expireS,
       playerId: event.player_id,
       expireTime: fmtMSS(expireTime),
