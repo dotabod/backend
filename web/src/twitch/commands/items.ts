@@ -14,6 +14,29 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 import { profileLink } from './stats.js'
 
+function formatItemList(itemList: string[]) {
+  const itemCounts = {} as Record<string, number>
+  const result = [] as string[]
+
+  for (const item of itemList) {
+    if (!itemCounts[item]) {
+      itemCounts[item] = 1
+    } else {
+      itemCounts[item]++
+    }
+  }
+
+  for (const item in itemCounts) {
+    if (itemCounts[item] === 1) {
+      result.push(item)
+    } else {
+      result.push(`${item} x${itemCounts[item]}`)
+    }
+  }
+
+  return result
+}
+
 async function getItems(client: SocketClient, profile: ReturnType<typeof profileLink>) {
   if (!client.steamServerId) {
     throw new CustomError(t('missingMatchData', { lng: client.locale }))
@@ -58,7 +81,7 @@ async function getItems(client: SocketClient, profile: ReturnType<typeof profile
     client.name,
     t('heroItems.list', {
       heroName: getHeroNameById(profile.heroid, profile.heroKey),
-      itemNames: itemList.join(' · '),
+      itemNames: formatItemList(itemList).join(' · '),
       lng: client.locale,
     }),
   )
