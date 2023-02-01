@@ -950,12 +950,12 @@ export class GSIHandler {
   private async maybeSendRoshAegisEvent() {
     const aegisRes = (await redisClient.client.json.get(
       `${this.getToken()}:aegis`,
-    )) as unknown as AegisRes
+    )) as unknown as AegisRes | null
     const roshRes = (await redisClient.client.json.get(
       `${this.getToken()}:roshan`,
-    )) as unknown as RoshRes
+    )) as unknown as RoshRes | null
 
-    if (aegisRes.expireDate) {
+    if (aegisRes && Number(aegisRes?.expireS)) {
       // calculate seconds delta between now and expireDate
       const newSeconds = Math.floor((new Date(aegisRes.expireDate).getTime() - Date.now()) / 1000)
       aegisRes.expireS = newSeconds
@@ -963,7 +963,7 @@ export class GSIHandler {
       server.io.to(this.getToken()).emit('aegis-picked-up', aegisRes)
     }
 
-    if (roshRes.maxDate) {
+    if (roshRes && (Number(roshRes?.minS) || Number(roshRes?.maxS))) {
       roshRes.minS = Math.floor((new Date(roshRes.minDate).getTime() - Date.now()) / 1000)
       roshRes.maxS = Math.floor((new Date(roshRes.maxDate).getTime() - Date.now()) / 1000)
 
