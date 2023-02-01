@@ -1,6 +1,7 @@
 {
   "aegis": {
     "denied": "{{- heroName}} negou o aegis {{emote}}",
+    "expired": "{{- heroName}}'s aegis expired :)",
     "pickup": "{{- heroName}} pegou o aegis",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
@@ -32,6 +33,10 @@
   "gpm_zero": "",
   "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_other": "GPM ao vivo: {{num}}. {{heroKills}} de hérois, {{creepKills}} de creeps.",
+  "heroItems": {
+    "empty": "(2m delay) No items found for {{- heroName}}",
+    "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
+  },
   "herostats": {
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
@@ -64,7 +69,7 @@
   "matchFound": "Partida encontrada: {{commandList}} comandos ativados.",
   "matchId": "ID da partida: {{matchId}}",
   "midasUsed": "Midas finalmente usada, {{seconds}}seg atrasados Madge",
-  "missingMatchData": "Esperando dados da partida PauseChamp",
+  "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "Usuário não encontrado. Tente sair e entrar novamente de dotabod.com",
   "modsOnly_off": "Modo Somente-Mods desligado. Todos podem digitar.",
   "modsOnly_on": "Modo Somente-Mods ativado BASED Clap. Somente moderadores podem escrever.",
@@ -97,6 +102,7 @@
   "ranked_no": "Não este jogo não é ranqueado",
   "ranked_yes": "Sim este jogo é ranqueado",
   "refresh": "Reiniciando overlay...",
+  "roshanAlive": "Roshan is currently alive Happi",
   "roshanCount": {
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
     "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",

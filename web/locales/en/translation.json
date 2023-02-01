@@ -1,7 +1,7 @@
 {
   "aegis": {
-    "expired": "{{- heroName}}'s aegis expired :)",
     "denied": "{{- heroName}} denied the aegis {{emote}}",
+    "expired": "{{- heroName}}'s aegis expired :)",
     "pickup": "{{- heroName}} picked up the aegis!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
@@ -32,6 +32,10 @@
   "gameNotFound": "Game was not found",
   "gpm_zero": "Live GPM: {{num}}",
   "gpm_other": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "heroItems": {
+    "empty": "(2m delay) No items found for {{- heroName}}",
+    "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
+  },
   "herostats": {
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
@@ -60,15 +64,10 @@
     "unranked": "Not ranked",
     "won": "Won last game"
   },
-  "heroItems": {
-    "empty": "(2m delay) No items found for {{- heroName}}",
-    "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
-  },
   "lifetime": "Lifetime games",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas was finally used, {{seconds}} seconds late Madge",
-  "2mDelayed": "This is a 2m delayed command, try again when heroes spawn in fountain Chatting",
   "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "User not found. Try logging out and in of dotabod.com",
   "modsOnly_off": "Mods only mode is now off. Everyone can type.",
@@ -101,13 +100,13 @@
   "ranked_no": "Nope this game is not ranked",
   "ranked_yes": "Yes this game is ranked",
   "refresh": "Refreshing overlay...",
+  "roshanAlive": "Roshan is currently alive Happi",
   "roshanCount": {
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
     "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",
     "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
     "more": "Rosh deaths: {{num}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
-  "roshanAlive": "Roshan is currently alive Happi",
   "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
   "setStreamDelay_zero": "Removing stream delay",
   "setStreamDelay_one": "Setting stream delay to: {{count}} second",

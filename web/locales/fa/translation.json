@@ -1,6 +1,7 @@
 {
   "aegis": {
     "denied": "{{- heroName}} پولدار رو ببین! آنخ رو اتک داد {{emote}}",
+    "expired": "{{- heroName}}'s aegis expired :)",
     "pickup": " میتونه یه غذای رایگان بده {{- heroName}}",
     "snatched": "{{- heroName}} آنخ رو دزدید PepeLaugh"
   },
@@ -32,6 +33,10 @@
   "gpm_zero": "",
   "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_other": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "heroItems": {
+    "empty": "(2m delay) No items found for {{- heroName}}",
+    "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
+  },
   "herostats": {
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
@@ -64,7 +69,7 @@
   "matchFound": "بازی شروع شد. تمام این کامندها فعال است {{commandList}}",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "بلاخره بعد از {{seconds}} ثانیه میداس زد Madge",
-  "missingMatchData": "در انتظار داده های بازی PauseChamp",
+  "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "User not found. Try logging out and in of dotabod.com",
   "modsOnly_off": "فقط مادها خاموش شد! همه میتونن چت کنن",
   "modsOnly_on": "فقط مادها! کسی دیگه نمیتونه چت کنه BASED Clap",
@@ -96,6 +101,7 @@
   "ranked_no": "نچ! این بازی رنک نیست",
   "ranked_yes": "بله این گیم رنکه",
   "refresh": "Refreshing overlay...",
+  "roshanAlive": "Roshan is currently alive Happi",
   "roshanCount": {
     "1": "روشان اول. روشان بعدی آقانیم شارد",
     "2": "روشان دوم. روشان بعدی پنیر و آقانیم یا رفرش شارد",

@@ -1,6 +1,7 @@
 {
   "aegis": {
     "denied": "{{- heroName}} уничтожает аегис {{emote}}",
+    "expired": "Закончился аегис у {{- heroName}} :)",
     "pickup": "{{- heroName}} подбирает аегис!",
     "snatched": "{{- heroName}} крадёт аегис PepeLaugh"
   },
@@ -34,6 +35,10 @@
   "gpm_few": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
   "gpm_many": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
   "gpm_other": "Текущий GPM: {{num}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
+  "heroItems": {
+    "empty": "(2m delay) No items found for {{- heroName}}",
+    "list": "(2 мин. задержка) {{- heroName}} имеет: {{- itemNames}}"
+  },
   "herostats": {
     "none": "Нет сыгранных игр на  {{- heroName}} за {{timeperiod}}",
     "timeperiod": {
@@ -100,6 +105,7 @@
   "ranked_no": "Нет, эта игра не рейтинговая",
   "ranked_yes": "Да, эта игра рейтинговая",
   "refresh": "Перезапуск оверлея...",
+  "roshanAlive": "Рошан все еще жив Happi",
   "roshanCount": {
     "1": "1 Рошан мёртв · Следующая награда:  Шард.",
     "2": "2 Рошан мёртв · Следующая награда:  Сыр, Аганим или Рефрешер.",
