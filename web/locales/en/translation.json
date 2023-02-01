@@ -40,7 +40,7 @@
     },
     "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
   },
-  "invalidColor": "Invalid hero color or slot. Must be 1-10, or one of {{colorList}}",
+  "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} lost the {{killstreakCount}} kill streak BibleThump",
