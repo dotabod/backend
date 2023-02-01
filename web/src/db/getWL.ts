@@ -12,11 +12,6 @@ export async function getWL({ channelId, mmrEnabled, startDate }: WL) {
     return Promise.resolve({ record: [{ win: 0, lose: 0, type: 'U' }], msg: null })
   }
 
-  if (!startDate) {
-    logger.info('[WL] Stream not live??', { channelId, startDate })
-    return Promise.resolve({ record: [{ win: 0, lose: 0, type: 'U' }], msg: null })
-  }
-
   return prisma.bet
     .groupBy({
       by: ['won', 'lobby_type', 'is_party', 'is_doubledown'],
