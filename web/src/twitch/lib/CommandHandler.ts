@@ -4,6 +4,9 @@ import { getValueOrDefault, SettingKeys } from '../../db/settings.js'
 import { ADMIN_CHANNELS } from '../../dota/lib/consts.js'
 import { SocketClient } from '../../types.js'
 import { chatClient } from '../index.js'
+import Mongo from '../../steam/mongo.js'
+
+const mongo = await Mongo.connect()
 
 export interface UserType {
   name: string
@@ -67,6 +70,34 @@ class CommandHandler {
     }
   }
 
+  logCommand(commandName: string, message: MessageType) {
+    // Log statistics for this command
+    const {
+      channel: { name: channel, id: channelId },
+    } = message
+    const command = commandName.toLowerCase()
+
+    // current date in yyyy-mm-dd format
+    const date = new Date().toISOString().slice(0, 10)
+    const data = {
+      date,
+      channelId,
+      channel,
+      command,
+    }
+
+    void mongo.collection('commandstats').updateOne(
+      { command, channel, date },
+      {
+        $set: data,
+        $inc: {
+          count: 1,
+        },
+      },
+      { upsert: true },
+    )
+  }
+
   // Function for handling incoming Twitch chat messages
   handleMessage(message: MessageType) {
     // Parse the message to get the command and its arguments
@@ -85,6 +116,9 @@ class CommandHandler {
 
     const options = this.commands.get(commandName)
     if (!options) return
+
+    // Log statistics for this command
+    this.logCommand(commandName, message)
 
     if (options.onlyOnline && !message.channel.client.stream_online) {
       void chatClient.say(
