@@ -40,6 +40,7 @@
     "body-parser": "^1.20.1",
     "country-code-emoji": "^2.3.0",
     "dota2": "https://github.com/dotabod/node-dota2.git",
+    "dotaconstants": "https://github.com/odota/dotaconstants",
     "express": "^4.18.2",
     "i18next": "^22.4.9",
     "i18next-fs-backend": "^2.1.1",

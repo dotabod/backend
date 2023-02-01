@@ -60,11 +60,15 @@
     "unranked": "Not ranked",
     "won": "Won last game"
   },
+  "heroItems": {
+    "empty": "(2m delay) No items found for {{- heroName}}",
+    "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
+  },
   "lifetime": "Lifetime games",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas was finally used, {{seconds}} seconds late Madge",
-  "missingMatchData": "Waiting for current match data PauseChamp",
+  "missingMatchData": "This is a 2m delayed command, try again when heroes spawn in fountain Chatting",
   "missingUser": "User not found. Try logging out and in of dotabod.com",
   "modsOnly_off": "Mods only mode is now off. Everyone can type.",
   "modsOnly_on": "Mods only mode is now on BASED Clap. Only mods can type.",

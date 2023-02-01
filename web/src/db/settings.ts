@@ -87,6 +87,7 @@ export const defaultSettings = {
   showRankLeader: true,
   commandMmr: true,
   commandRosh: true,
+  commandItems: true,
 }
 
 export type SettingKeys = keyof typeof defaultSettings

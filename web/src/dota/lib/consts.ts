@@ -1,7 +1,7 @@
 import LRUCache from 'lru-cache'
 
-import { GSIHandler } from '../GSIHandler.js'
 import { DBSettings, SettingKeys } from '../../db/settings.js'
+import { GSIHandler } from '../GSIHandler.js'
 
 // just here for reference, not being used
 const allSates = [
@@ -133,5 +133,9 @@ export const DelayedCommands: { command: string; key: SettingKeys }[] = [
   {
     command: '!avg',
     key: DBSettings.commandAvg,
+  },
+  {
+    command: '!items',
+    key: DBSettings.commandItems,
   },
 ]

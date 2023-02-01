@@ -55,11 +55,7 @@ export function profileLink({ players, locale, currentMatchId, args }: ProfileLi
   }
 
   const player = players[heroKey]
-  return t('profileUrl', {
-    lng: locale,
-    channel: getHeroNameById(player.heroid, heroKey),
-    url: `dotabuff.com/players/${player.accountid}`,
-  })
+  return { heroKey, ...player }
 }
 
 commandHandler.registerCommand('stats', {
@@ -70,24 +66,25 @@ commandHandler.registerCommand('stats', {
     const {
       channel: { name: channel, client },
     } = message
-    if (!client.gsi?.map?.matchid) {
-      void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
-      return
-    }
-
-    if (!isPlayingMatch(client.gsi)) {
+    if (!client.gsi?.map?.matchid || !isPlayingMatch(client.gsi)) {
       void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
     }
 
     try {
-      const desc = profileLink({
+      const profile = profileLink({
         players:
           gsiHandlers.get(client.token)?.players?.matchPlayers ||
           getCurrentMatchPlayers(client.gsi),
         locale: client.locale,
         currentMatchId: client.gsi.map.matchid,
         args: args,
+      })
+
+      const desc = t('profileUrl', {
+        lng: client.locale,
+        channel: getHeroNameById(profile.heroid, profile.heroKey),
+        url: `dotabuff.com/players/${profile.accountid}`,
       })
 
       void chatClient.say(message.channel.name, desc)
