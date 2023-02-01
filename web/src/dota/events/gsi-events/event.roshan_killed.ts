@@ -104,6 +104,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       roshanKilled: { enabled: chatterEnabled },
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
+    // TODO: move this to a redis handler
     async function redisHandler() {
       const redisJson = (await redisClient.client.json.get(
         `${dotaClient.getToken()}:roshan`,

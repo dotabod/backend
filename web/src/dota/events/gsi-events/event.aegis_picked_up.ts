@@ -43,7 +43,7 @@ export function generateAegisMessage(res: AegisRes, lng: string) {
 }
 
 export function emitAegisEvent(res: AegisRes, token: string) {
-  if (!res || !res?.expireDate) return
+  if (!res || !res.expireDate) return
 
   res = getNewAegisTime(res)
   if (res.expireS <= 0) return
