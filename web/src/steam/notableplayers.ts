@@ -91,6 +91,6 @@ export async function notablePlayers(
     players: players,
   })
 
-  const modeText = typeof mode?.name === 'string' ? `${mode.name} [${avg} avg]: ` : ''
+  const modeText = typeof mode?.name === 'string' ? `${mode.name} [${avg} avg]: ` : `[${avg} avg]: `
   return `${modeText}${playerList || t('noNotable', { lng: locale })}`
 }
