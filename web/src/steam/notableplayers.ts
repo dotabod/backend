@@ -2,6 +2,7 @@
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
 
+import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
 import Mongo from './mongo.js'
@@ -84,6 +85,12 @@ export async function notablePlayers(
     })
     .join(' · ')
 
-  const modeText = typeof mode?.name === 'string' ? `${mode.name}: ` : ''
+  const avg = await calculateAvg({
+    locale: locale,
+    currentMatchId: currentMatchId,
+    players: players,
+  })
+
+  const modeText = typeof mode?.name === 'string' ? `${mode.name} [${avg} avg]: ` : ''
   return `${modeText}${playerList || t('noNotable', { lng: locale })}`
 }

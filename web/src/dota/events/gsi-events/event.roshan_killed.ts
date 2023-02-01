@@ -71,7 +71,7 @@ export function generateRoshanMessage(res: RoshRes, lng: string) {
 }
 
 export function emitRoshEvent(res: RoshRes, token: string) {
-  if (!res || !res?.minDate) return
+  if (!res || !res.minDate) return
   res = getNewRoshTime(res)
 
   server.io.to(token).emit('roshan-killed', res)
@@ -109,7 +109,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       const redisJson = (await redisClient.client.json.get(
         `${dotaClient.getToken()}:roshan`,
       )) as RoshRes | null
-      const count = redisJson ? Number(redisJson?.count) : 0
+      const count = redisJson ? Number(redisJson.count) : 0
       const res = {
         minS,
         maxS,

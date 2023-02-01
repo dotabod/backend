@@ -1,5 +1,3 @@
-import { t } from 'i18next'
-
 import { getPlayers } from '../../dota/lib/getPlayers.js'
 import { getRankDetail, rankTierToMmr } from './ranks.js'
 
@@ -26,15 +24,14 @@ export async function calculateAvg({ locale, currentMatchId, players }: Avg): Pr
   const avgLeader = Math.round(
     leaderranks.filter(Boolean).reduce((a, b) => a + b, 0) / leaderranks.filter(Boolean).length,
   )
-  const avgMsg = ` - ${t('averageRank', { lng: locale })}`
   const rank = await getRankDetail(avg)
 
-  if (!rank && !avgLeader) return `Immortal${avgMsg}`
-  if (!rank) return `${avg || `#${avgLeader}`}${avgMsg}`
+  if (!rank && !avgLeader) return `Immortal`
+  if (!rank) return `${avg || `#${avgLeader}`}`
 
   if ('standing' in rank || avgLeader) {
-    return `Immortal${avgMsg}`
+    return `Immortal`
   }
 
-  return `${avg} · ${rank.myRank.title}${avgMsg}`
+  return `${avg} · ${rank.myRank.title}`
 }

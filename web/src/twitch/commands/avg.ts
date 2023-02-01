@@ -19,14 +19,16 @@ commandHandler.registerCommand('avg', {
       return
     }
 
+    const avgDescriptor = ` - ${t('averageRank', { lng: client.locale })}`
+
     calculateAvg({
       locale: client.locale,
       currentMatchId: message.channel.client.gsi?.map?.matchid,
       players:
         gsiHandlers.get(client.token)?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi),
     })
-      .then((desc) => {
-        void chatClient.say(message.channel.name, desc)
+      .then((avg) => {
+        void chatClient.say(message.channel.name, `${avg}${avgDescriptor}`)
       })
       .catch((e) => {
         void chatClient.say(

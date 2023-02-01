@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
 import { medals } from '../../prisma/generated/mongoclient/index.js'
+import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { ranks } from '../dota/lib/consts.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
@@ -74,10 +75,17 @@ export async function gameMedals(
     return 0
   })
 
+  const avg = await calculateAvg({
+    locale: locale,
+    currentMatchId: currentMatchId,
+    players: players,
+  })
+
   // Build the result array, preserving the original order of the medals
   sortedMedals.forEach((medal) => {
     result.push({ heroNames: medalsToPlayers[medal].join(', '), medal })
   })
 
-  return result.map((m) => `${m.heroNames}: ${m.medal}`).join(' · ')
+  const gms = result.map((m) => `${m.heroNames}: ${m.medal}`).join(' · ')
+  return `[${avg} avg] ${gms}`
 }
