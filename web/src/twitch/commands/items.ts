@@ -41,9 +41,18 @@ async function getItems(client: SocketClient, profile: ReturnType<typeof profile
     },
   )
 
+  if (!itemList.length) {
+    throw new CustomError(
+      t('heroItems.empty', {
+        heroName: getHeroNameById(profile.heroid, profile.heroKey),
+        lng: client.locale,
+      }),
+    )
+  }
+
   void chatClient.say(
     client.name,
-    t('heroItems', {
+    t('heroItems.list', {
       heroName: getHeroNameById(profile.heroid, profile.heroKey),
       itemNames: itemList.join(' · '),
       lng: client.locale,
@@ -54,7 +63,7 @@ async function getItems(client: SocketClient, profile: ReturnType<typeof profile
 commandHandler.registerCommand('items', {
   aliases: ['item'],
   onlyOnline: true,
-  dbkey: DBSettings.commandLG,
+  dbkey: DBSettings.commandItems,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
@@ -75,7 +84,6 @@ commandHandler.registerCommand('items', {
       })
 
       void getItems(client, profile)
-      // asd
     } catch (e: any) {
       void chatClient.say(
         message.channel.name,
