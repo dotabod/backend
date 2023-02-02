@@ -244,6 +244,7 @@ export class GSIHandler {
 
     const delayedData = await server.dota.getDelayedMatchData({
       server_steamid: steamServerId,
+      match_id: matchId,
       refetchCards: true,
       token: this.getToken(),
     })
