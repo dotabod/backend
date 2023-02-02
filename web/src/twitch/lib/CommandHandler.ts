@@ -32,7 +32,7 @@ export interface CommandOptions {
   cooldown?: number
   onlyOnline?: boolean
   dbkey?: SettingKeys
-  handler: (message: MessageType, args: string[]) => void
+  handler: (message: MessageType, args: string[], commandUsed: string) => void
 }
 
 const defaultCooldown = 15000
@@ -152,7 +152,7 @@ class CommandHandler {
     this.updateCooldown(commandName, options.cooldown ?? defaultCooldown, message.channel.id)
 
     // Execute the command handler
-    options.handler(message, args)
+    options.handler(message, args, command)
   }
 
   // Function for parsing a Twitch chat message to extract the command and its arguments

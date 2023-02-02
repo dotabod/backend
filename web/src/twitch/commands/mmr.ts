@@ -17,7 +17,6 @@ commandHandler.registerCommand('mmr', {
 
     // If connected, we can just respond with the cached MMR
     const showRankMmr = getValueOrDefault(DBSettings.showRankMmr, client.settings)
-    const showRankLeader = getValueOrDefault(DBSettings.showRankLeader, client.settings)
 
     const unknownMsg = t('uknownMmr', {
       channel: toUserName(channel),
@@ -37,7 +36,6 @@ commandHandler.registerCommand('mmr', {
         mmr: client.mmr,
         steam32Id: client.steam32Id ?? undefined,
         showRankMmr,
-        showRankLeader,
       })
         .then((description) => {
           if (description === null || description.length) {
@@ -61,7 +59,6 @@ commandHandler.registerCommand('mmr', {
       mmr: act.mmr,
       steam32Id: act.steam32Id,
       showRankMmr,
-      showRankLeader,
     })
       .then((description) => {
         if (description === null || description.length) {

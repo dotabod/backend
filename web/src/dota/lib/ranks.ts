@@ -81,7 +81,6 @@ interface RankDescription {
   mmr: string | number
   steam32Id?: number
   showRankMmr: boolean
-  showRankLeader: boolean
 }
 
 // Used for chatting !mmr
@@ -89,8 +88,7 @@ export async function getRankDescription({
   locale,
   mmr,
   steam32Id,
-  showRankMmr,
-  showRankLeader,
+  showRankMmr = true,
 }: RankDescription) {
   const rankResponse = await getRankDetail(mmr, steam32Id)
 
@@ -103,7 +101,7 @@ export async function getRankDescription({
 
     if (showRankMmr) msgs.push(`${mmr} MMR`)
     msgs.push(rankTitle)
-    if (showRankLeader && standing) msgs.push(standing)
+    if (standing) msgs.push(standing)
 
     return msgs.join(' · ')
   }
