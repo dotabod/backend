@@ -118,7 +118,7 @@ class CommandHandler {
     if (!options) return
 
     // Log statistics for this command
-    this.logCommand(commandName, message)
+    this.logCommand(command, message)
 
     if (options.onlyOnline && !message.channel.client.stream_online) {
       void chatClient.say(
