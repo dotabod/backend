@@ -63,6 +63,7 @@ export class GSIHandler {
   steamServerTries = 0
   events: DotaEvent[] = []
   bountyHeroNames: string[] = []
+  noTpTimeout?: NodeJS.Timeout
   bountyTimeout?: NodeJS.Timeout
   killstreakTimeout?: NodeJS.Timeout
   passiveMidas = { counter: 0, timer: 0, used: 0 }

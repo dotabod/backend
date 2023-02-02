@@ -46,6 +46,9 @@ export const defaultSettings = {
     firstBloodDeath: {
       enabled: true,
     },
+    noTp: {
+      enabled: true,
+    },
   },
   commandAPM: true,
   commandAvg: true,

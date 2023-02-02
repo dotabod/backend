@@ -19,6 +19,7 @@
   },
   "bountyPickup": "+{{bountyValue}} gold from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
   "chatters": {
+    "noTp": "{{channel}} where's your tp HECANT",
     "died": "{{- heroName}} died with passive {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} giving up first blood PepeLaugh",
     "midas": "massivePIDAS Use your midas",
