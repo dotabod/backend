@@ -37,7 +37,11 @@ function formatItemList(itemList: string[]) {
   return result
 }
 
-async function getItems(client: SocketClient, profile: ReturnType<typeof profileLink>) {
+async function getItems(
+  client: SocketClient,
+  profile: ReturnType<typeof profileLink>,
+  matchId: string,
+) {
   if (!client.steamServerId) {
     throw new CustomError(t('missingMatchData', { lng: client.locale }))
   }
@@ -45,6 +49,7 @@ async function getItems(client: SocketClient, profile: ReturnType<typeof profile
   const delayedData = await server.dota.getDelayedMatchData({
     server_steamid: client.steamServerId,
     token: client.token,
+    match_id: matchId,
   })
 
   if (!delayedData) {
@@ -97,17 +102,19 @@ commandHandler.registerCommand('items', {
       return
     }
 
+    const currentMatchId = client.gsi.map.matchid
+
     try {
       const profile = profileLink({
         players:
           gsiHandlers.get(client.token)?.players?.matchPlayers ||
           getCurrentMatchPlayers(client.gsi),
         locale: client.locale,
-        currentMatchId: client.gsi.map.matchid,
+        currentMatchId,
         args: args,
       })
 
-      getItems(client, profile)
+      getItems(client, profile, currentMatchId)
         .then((res) => {
           void chatClient.say(client.name, t('heroItems.list', res))
         })
