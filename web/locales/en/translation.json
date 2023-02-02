@@ -17,8 +17,12 @@
     "open": "Bets open peepoGamble",
     "won": "We have won Happi go next"
   },
+  "seconds_zero": "{{count}} seconds",
+  "seconds_one": "{{count}} second",
+  "seconds_other": "{{count}} seconds",
   "bountyPickup": "+{{bountyValue}} gold from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
   "chatters": {
+    "tpFound": "{{channel}} nice job getting a tp finally after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe",
     "noTp": "{{channel}} where's your tp HECANT",
     "died": "{{- heroName}} died with passive {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} giving up first blood PepeLaugh",
