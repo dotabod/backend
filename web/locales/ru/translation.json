@@ -1,7 +1,7 @@
 {
   "aegis": {
     "denied": "{{- heroName}} уничтожает аегис {{emote}}",
-    "expired": "Закончился аегис у {{- heroName}} :)",
+    "expired": "Аегис у {{- heroName}} закончился :)",
     "pickup": "{{- heroName}} подбирает аегис!",
     "snatched": "{{- heroName}} крадёт аегис PepeLaugh"
   },
@@ -27,7 +27,7 @@
   },
   "commands_everyone": "Каждый может использовать: {{commandList}}",
   "commands_mods": "Команды только для модераторов: {{commandList}}",
-  "dota2pt": "Нужны сборки от про игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
+  "dota2pt": "Нужны сборки от про-игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "gameNotFound": "Игра не найдена",
   "gpm_zero": "",
@@ -36,7 +36,7 @@
   "gpm_many": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
   "gpm_other": "Текущий GPM: {{num}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
   "heroItems": {
-    "empty": "(2m delay) No items found for {{- heroName}}",
+    "empty": "(2 мин. задержка) Не найдено предметов у {{- heroName}}",
     "list": "(2 мин. задержка) {{- heroName}} имеет: {{- itemNames}}"
   },
   "herostats": {

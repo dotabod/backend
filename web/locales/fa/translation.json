@@ -22,8 +22,10 @@
     "died": "درخشیدی {{- heroName}} . {{itemNames}}  را نگه دار واسه بازی بعد ICANT",
     "firstBloodDeath": "اولین غذا را داد {{- heroName}} PepeLaugh",
     "midas": "massivePIDAS میداس رو استفاده کن",
+    "noTp": "{{channel}} where's your tp HECANT",
     "pause": "PauseChamp کی وسط شکار ریدنش گرفت؟",
-    "smoked": "Shush {{- heroName}} سبحان الله غیب شد"
+    "smoked": "Shush {{- heroName}} سبحان الله غیب شد",
+    "tpFound": "{{channel}} nice job getting a tp finally after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "کامندهای همگانی: {{commandList}}",
   "commands_mods": "کامندهای مادها {{commandList}}",
@@ -45,7 +47,7 @@
     },
     "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
   },
-  "invalidColor": "رنگ قرمان ها اشتباه است. باید بین 1 تا 10 باشد یا یکی از {{colorList}}",
+  "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "داداچ اشتباه میزنی. این رو بزن  !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} با {{killstreakCount}} غذایی که گرفته بود رفت غذا داد BibleThump",
