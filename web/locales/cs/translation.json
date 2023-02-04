@@ -22,8 +22,10 @@
     "died": "{{- heroName}} umřel bez použití {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} daroval First Blood PepeLaugh",
     "midas": "massivePIDAS Použij midas",
+    "noTp": "{{channel}} where's your tp HECANT",
     "pause": "PauseChamp Kdo to pauznul?",
-    "smoked": "Ticho! {{- heroName}} použil smoke"
+    "smoked": "Ticho! {{- heroName}} použil smoke",
+    "tpFound": "{{channel}} nice job getting a tp finally after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Všichni mohou použít: {{commandList}}",
   "commands_mods": "Pouze pro moderátory: {{commandList}}",
@@ -47,7 +49,7 @@
     },
     "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
   },
-  "invalidColor": "Neplatná pozice nebo barva hrdiny. Musí být 1-10 nebo jedna z {{colorList}}",
+  "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Neplatný příkaz. Zkus !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} přišel o {{killstreakCount}} kill streak BibleThump",

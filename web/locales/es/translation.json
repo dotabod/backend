@@ -22,8 +22,10 @@
     "died": "{{- heroName}} murió con pasiva {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} giving up first blood PepeLaugh",
     "midas": "massivePIDAS Usa tu midas",
+    "noTp": "{{channel}} where's your tp HECANT",
     "pause": "PauseChamp ¿Quién ha pausado el juego?",
-    "smoked": "¡Calladito! {{- heroName}} esta escondido."
+    "smoked": "¡Calladito! {{- heroName}} esta escondido.",
+    "tpFound": "{{channel}} nice job getting a tp finally after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Todos pueden usar: {{commandList}}",
   "commands_mods": "Mod sólo comandos: {{commandList}}",
@@ -45,7 +47,7 @@
     },
     "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
   },
-  "invalidColor": "Color o espacio de héroe no son válidos. Debe ser 1-10, o uno de {{colorList}}",
+  "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Comando inválido. Usa !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} perdio el {{killstreakCount}} racha de muertes BibleThump",

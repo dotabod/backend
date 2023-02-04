@@ -34,14 +34,14 @@
   "gpm_one": "GPM ao vivo: {{num}}. {{heroKills}} de heróis, {{creepKills}} de creeps.",
   "gpm_other": "GPM ao vivo: {{num}}. {{heroKills}} de heróis, {{creepKills}} de creeps.",
   "heroItems": {
-    "empty": "(2m de atraso) Nenhum item encontrado para {{- heroName}}",
-    "list": "(2m de atraso) {{- heroName}} possui: {{- itemNames}}"
+    "empty": "(2 min de atraso) Nenhum item encontrado para {{- heroName}}",
+    "list": "(2 min de atraso) {{- heroName}} possui: {{- itemNames}}"
   },
   "herostats": {
     "none": "Nenhuma partida jogada de {{- heroName}} em{{timeperiod}} .",
     "timeperiod": {
-      "days": "{{days}} dias.",
-      "lifetime": "Tempo de vida"
+      "days": "{{days}} dias",
+      "lifetime": "total"
     },
     "winrate": "Taxa de vitória: {{winrate}}% com {{- heroName}} em {{timeperiod}}em um total de {{total}} partidas"
   },
@@ -69,7 +69,7 @@
   "matchFound": "Dados da partida encontrados comandos ativados: {{commandList}}",
   "matchId": "ID da partida: {{matchId}}",
   "midasUsed": "A midas foi finalmente usada, {{seconds}} segundos atrasados Madge",
-  "missingMatchData": "Waiting for current match data PauseChamp",
+  "missingMatchData": "Esperando os dados da partida PauseChamp",
   "missingUser": "Usuário não encontrado. Tente sair e entrar novamente em dotabod.com",
   "modsOnly_off": "Modo somente mods desativado. Todos podem digitar agora.",
   "modsOnly_on": "Modo somente mods ativado BASED Clap. Só mods podem digitar.",
