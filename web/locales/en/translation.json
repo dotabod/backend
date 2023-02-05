@@ -6,6 +6,8 @@
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
   "apm": "Live APM: {{count}} Chatting",
+  "apm_one": "",
+  "apm_other": "",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -45,15 +47,23 @@
     "none": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
       "days": "in {{count}}d",
+      "days_one": "",
+      "days_other": "",
       "lifetime": "of all time"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrate_one": "",
+    "winrate_other": ""
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
-    "won": "{{- heroName}} has a {{count}} kill streak POGGIES"
+    "lost_one": "",
+    "lost_other": "",
+    "won": "{{- heroName}} has a {{count}} kill streak POGGIES",
+    "won_one": "",
+    "won_other": ""
   },
   "lastgame": {
     "link": "Here's last game: {{- url}}",
@@ -110,17 +120,19 @@
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
     "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",
     "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
-    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more_one": "",
+    "more_other": ""
   },
   "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
   "seconds_zero": "{{count}} seconds",
   "seconds_one": "{{count}} second",
   "seconds_other": "{{count}} seconds",
-  "setStreamDelayRemoved": "Removing stream delay",
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelayNone": "There is no stream delay on this channel",
+  "setStreamDelayRemoved": "Removing stream delay",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
     "from": "The tip from {{- heroName}} ICANT",
     "to": "We tipping {{- heroName}} PepeLaugh"

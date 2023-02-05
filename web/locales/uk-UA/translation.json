@@ -5,7 +5,11 @@
     "pickup": "{{- heroName}} підібрав Аєгіс!",
     "snatched": "{{- heroName}} викрав Аєгіс PepeLaugh"
   },
-  "apm": "Поточний APM: {{num}} Chatting",
+  "apm": "Live APM: {{count}} Chatting",
+  "apm_one": "",
+  "apm_few": "",
+  "apm_many": "",
+  "apm_other": "",
   "averageRank": "Середній рейтинг цієї гри",
   "betaFeature": "[бета-функція]",
   "betaTester": "$t(betaTester_on)",
@@ -17,7 +21,10 @@
     "open": "Ставимо ставки, панство peepoGamble",
     "won": "Ми перемогли <3.Наступна буде ще легша Happi"
   },
-  "bountyPickup": "Отримано {{bountyValue}} золота від рун багатства ({{totalBounties}}/4) EZ Clap Дякую {{heroNames}} SeemsGood",
+  "bounties": {
+    "pickup": "Отримано {{bountyValue}} золота від рун багатства ({{totalBounties}}/4) EZ Clap Дякую {{heroNames}} SeemsGood",
+    "totalGold": "{{count}} золота"
+  },
   "chatters": {
     "died": "{{- heroName}} помер, не нажавши {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} проливає першу кров PepeLaugh",
@@ -25,7 +32,7 @@
     "noTp": "Хтось бачить ТП у {{channel}}? HECANT",
     "pause": "PauseChamp Хто поставив паузу?",
     "smoked": "Shush {{- heroName}} в смоці!",
-    "tpFound": "{{channel}} як серденьку приємно отримати ТП після $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFound": "{{channel}} нарешті має ТП після $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Кожен може використовувати: {{commandList}}",
   "commands_mods": "Команди лише для модераторів: {{commandList}}",
@@ -42,18 +49,34 @@
     "list": "(2 хв. затримка) {{- heroName}} має: {{- itemNames}}"
   },
   "herostats": {
-    "none": "Немає зіграних матчів на {{- heroName}} за {{timeperiod}}",
+    "none": "На {{- heroName}} не зіграно матчів протягом {{timeperiod}}",
     "timeperiod": {
-      "days": "{{days}}д",
-      "lifetime": "за все життя"
+      "days": "in {{count}}d",
+      "days_one": "",
+      "days_few": "",
+      "days_many": "",
+      "days_other": "",
+      "lifetime": "за весь час"
     },
-    "winrate": "Відсоток перемог: {{winrate}}% на {{- heroName}} за {{timeperiod}} зіграно {{total}} матчів."
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrate_one": "",
+    "winrate_few": "",
+    "winrate_many": "",
+    "winrate_other": ""
   },
   "invalidColor": "Неправильний номер, ім'я або колір героя. Спробуйте ввести 1-10, часткове ім'я героя або один з кольорів: {{colorList}}",
   "invalidMmr": "Неправильна команда. Спробуйте !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} втратив серію з {{killstreakCount}} вбивств BibleThump",
-    "won": "{{- heroName}} має серію з {{killstreakCount}} вбивств! POGGIES"
+    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "lost_one": "",
+    "lost_few": "",
+    "lost_many": "",
+    "lost_other": "",
+    "won": "{{- heroName}} has a {{count}} kill streak POGGIES",
+    "won_one": "",
+    "won_few": "",
+    "won_many": "",
+    "won_other": ""
   },
   "lastgame": {
     "link": "ID останньої гри: {{- url}}",
@@ -72,7 +95,7 @@
   "lifetime": "Кількість ігор",
   "matchFound": "Отримано дані матчу: {{commandList}} - команди активовані.",
   "matchId": "ID матчу: {{matchId}}",
-  "midasUsed": "Midas нарешті був використаний через {{seconds}} секунд(и) Madge",
+  "midasUsed": "Midas нарешті був використаний через {{seconds}} с Madge",
   "missingMatchData": "Очікування даних про поточний матч PauseChamp",
   "missingUser": "Користувача не знайдено. Спробуйте перезайти на сайті dotabod.com",
   "modsOnly_off": "Режим \"Тільки для модераторів\" вимкнено. Роботяги + в чат.",
@@ -112,18 +135,22 @@
     "1": "1 Рошан мертвий · Наступна винагорода: Аєгіс та Аганім Шард",
     "2": "2 Рошан мертвий · Наступна винагорода: Аєгіс, Сир і Аганім/Рефрешер",
     "3": "3 Рошан мертвий · Наступна винагорода: Аєгіс, Сир, Аганім і Рефрешер",
-    "more": "{{num}} Рошана вбито · Наступна винагорода: Аєгіс, Сир, Аганім і Рефрешер"
+    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more_one": "",
+    "more_few": "",
+    "more_many": "",
+    "more_other": ""
   },
   "roshanKilled": "Рошан вбитий! Наступна поява Рошана між {{min}} та {{max}}",
-  "setStreamDelay_one": "Тепер затримка на стрімі {{count}} секунда",
-  "setStreamDelay_few": "Тепер затримка на стрімі {{count}} секунди",
-  "setStreamDelay_many": "Тепер затримка на стрімі {{count}} секунд",
-  "setStreamDelay_other": "Тепер затримка на стрімі {{count}} секунди",
+  "seconds_one": "{{count}} секунда",
+  "seconds_few": "{{count}} секунди",
+  "seconds_many": "{{count}} секунд",
+  "seconds_other": "{{count}} секунд",
+  "setStreamDelay": "Затримка потоку змінена до $t(seconds, {\"count\": {{seconds}} }) с",
   "setStreamDelayNoArgs": "Затримка на стрімі не встановлена, використайте !setdelay <seconds>",
-  "streamDelay_one": "На стрімі затримка: {{count}} секунда",
-  "streamDelay_few": "На стрімі затримка: {{count}} секунди",
-  "streamDelay_many": "На стрімі затримка: {{count}} секунд",
-  "streamDelay_other": "На стрімі затримка: {{count}} секунд",
+  "setStreamDelayRemoved": "Затримку на стрімі прибрано",
+  "streamDelay": "Затримка потоку: $t(секунди, {\"count\": {{seconds}}}) с",
+  "streamDelayNone": "Немає затримки на стрімі Happi",
   "tip": {
     "from": "Подяка від {{- heroName}} ICANT",
     "to": "Ми подякували {{- heroName}} за чудову гру PepeLaugh"

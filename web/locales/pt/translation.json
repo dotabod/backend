@@ -5,7 +5,10 @@
     "pickup": "{{- heroName}} pegou o aegis",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
-  "apm": "APM ao vivo: {{num}} ",
+  "apm": "Live APM: {{count}} Chatting",
+  "apm_one": "",
+  "apm_many": "",
+  "apm_other": "",
   "averageRank": "Média de rank este jogo",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -17,7 +20,10 @@
     "open": "Apostas abertas peepoGamble",
     "won": "Nós ganhamos"
   },
-  "bountyPickup": "+{{bountyValue}} de ouro de bônus de recompensa  EZ Clap Obrigado {{heroNames}} SeemsGood ",
+  "bounties": {
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
+    "totalGold": "{{count}} gold"
+  },
   "chatters": {
     "died": "{{- heroName}}morreu com {{itemNames}} passivo ICANT",
     "firstBloodDeath": "{{- heroName}} giving up first blood PepeLaugh",
@@ -25,7 +31,7 @@
     "noTp": "{{channel}} where's your tp HECANT",
     "pause": "PauseChamp Quem pausou o jogo?",
     "smoked": "Shush {{- heroName}} acabou de smokar!",
-    "tpFound": "{{channel}} nice job getting a tp finally after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Todos podem usar: {{commandList}}",
   "commands_mods": "Somente moderadores podem usar: {{commandList}}",
@@ -40,18 +46,30 @@
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
   },
   "herostats": {
-    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
+    "none": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "days": "{{days}}d",
-      "lifetime": "lifetime"
+      "days": "in {{count}}d",
+      "days_one": "",
+      "days_many": "",
+      "days_other": "",
+      "lifetime": "of all time"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrate_one": "",
+    "winrate_many": "",
+    "winrate_other": ""
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Comando invalido. Tente !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} perdeu o kill streak de {{killstreakCount}} BibleThump",
-    "won": "{{- heroName}} tem kill streak de {{killstreakCount}} POGGIES"
+    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "lost_one": "",
+    "lost_many": "",
+    "lost_other": "",
+    "won": "{{- heroName}} has a {{count}} kill streak POGGIES",
+    "won_one": "",
+    "won_many": "",
+    "won_other": ""
   },
   "lastgame": {
     "link": "Última partida: {{- url}}",
@@ -70,7 +88,7 @@
   "lifetime": "Partidas totais",
   "matchFound": "Partida encontrada: {{commandList}} comandos ativados.",
   "matchId": "ID da partida: {{matchId}}",
-  "midasUsed": "Midas finalmente usada, {{seconds}}seg atrasados Madge",
+  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late Madge",
   "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "Usuário não encontrado. Tente sair e entrar novamente de dotabod.com",
   "modsOnly_off": "Modo Somente-Mods desligado. Todos podem digitar.",
@@ -109,16 +127,19 @@
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
     "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",
     "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
-    "more": "Rosh deaths: {{num}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more_one": "",
+    "more_many": "",
+    "more_other": ""
   },
   "roshanKilled": "Roshan morto! Próximo roshan em {{min}} e {{max}}",
-  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
-  "setStreamDelay_many": "",
-  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "seconds_one": "{{count}} second",
+  "seconds_other": "{{count}} second",
+  "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelay_one": "Stream delay: {{count}} second",
-  "streamDelay_many": "",
-  "streamDelay_other": "Stream delay: {{count}} seconds",
+  "setStreamDelayRemoved": "Removing stream delay",
+  "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
     "from": "Tip de {{- heroName}} ICANT",
     "to": "Tipando {{- heroName}} PepeLaugh"

@@ -5,7 +5,11 @@
     "pickup": "{{- heroName}} získal aegis!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
-  "apm": "Aktuální APM: {{num}} Chatting",
+  "apm": "Live APM: {{count}} Chatting",
+  "apm_one": "",
+  "apm_few": "",
+  "apm_many": "",
+  "apm_other": "",
   "averageRank": "Průměrný rank této hry",
   "betaFeature": "[beta funkce]",
   "betaTester": "$t(betaTester_on)",
@@ -17,7 +21,10 @@
     "open": "Sázky otevřeny peepoGamble",
     "won": "Vyhráli jsme"
   },
-  "bountyPickup": "+ {{bountyValue}} zlata z bounty run ({{totalBounties}}/4) EZ Clap dík {{heroNames}} SeemsGood",
+  "bounties": {
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
+    "totalGold": "{{count}} gold"
+  },
   "chatters": {
     "died": "{{- heroName}} umřel bez použití {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} daroval First Blood PepeLaugh",
@@ -25,7 +32,7 @@
     "noTp": "{{channel}} where's your tp HECANT",
     "pause": "PauseChamp Kdo to pauznul?",
     "smoked": "Ticho! {{- heroName}} použil smoke",
-    "tpFound": "{{channel}} nice job getting a tp finally after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Všichni mohou použít: {{commandList}}",
   "commands_mods": "Pouze pro moderátory: {{commandList}}",
@@ -42,18 +49,34 @@
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
   },
   "herostats": {
-    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
+    "none": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "days": "{{days}}d",
-      "lifetime": "lifetime"
+      "days": "in {{count}}d",
+      "days_one": "",
+      "days_few": "",
+      "days_many": "",
+      "days_other": "",
+      "lifetime": "of all time"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrate_one": "",
+    "winrate_few": "",
+    "winrate_many": "",
+    "winrate_other": ""
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Neplatný příkaz. Zkus !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} přišel o {{killstreakCount}} kill streak BibleThump",
-    "won": "{{- heroName}} má {{killstreakCount}} kill streak POGGIES"
+    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "lost_one": "",
+    "lost_few": "",
+    "lost_many": "",
+    "lost_other": "",
+    "won": "{{- heroName}} has a {{count}} kill streak POGGIES",
+    "won_one": "",
+    "won_few": "",
+    "won_many": "",
+    "won_other": ""
   },
   "lastgame": {
     "link": "Zde je poslední hra: {{- url}}",
@@ -72,7 +95,7 @@
   "lifetime": "Celkem her",
   "matchFound": "Data zápasu nalezena, příkazy {{commandList}} aktivovány.",
   "matchId": "Match ID: {{matchId}}",
-  "midasUsed": "Midas konečně použita. Ale o {{seconds}} pozdě Madge",
+  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late Madge",
   "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "Uživatel nenalezen. Zkus se znovu připojit na dotabod.com",
   "modsOnly_off": "Mód pouze pro moderátory vypnut. Všichni mohou psát",
@@ -112,18 +135,22 @@
     "1": "Zabitých roshanů: 1 - Další drop: agha shard.",
     "2": "Zabitých roshanů: 2 - Další drop: sejra a aghanim nebo refresher.",
     "3": "Zabitých roshanů: 3 - Další drop: sejra, aghanim a refresher.",
-    "more": "Zabitých roshanů: {{num}} - Další drop: sejra, aghanim a refresher."
+    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more_one": "",
+    "more_few": "",
+    "more_many": "",
+    "more_other": ""
   },
   "roshanKilled": "Roshan zabit! Další spawne mezi {{min}} a {{max}}",
-  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
-  "setStreamDelay_few": "Setting stream delay to: {{count}} seconds",
-  "setStreamDelay_many": "Setting stream delay to: {{count}} seconds",
-  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "seconds_one": "{{count}} second",
+  "seconds_few": "{{count}} second",
+  "seconds_many": "{{count}} second",
+  "seconds_other": "{{count}} second",
+  "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelay_one": "Stream delay: {{count}} second",
-  "streamDelay_few": "Stream delay: {{count}} seconds",
-  "streamDelay_many": "Stream delay: {{count}} seconds",
-  "streamDelay_other": "Stream delay: {{count}} seconds",
+  "setStreamDelayRemoved": "Removing stream delay",
+  "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
     "from": "Tip od {{- heroName}} ICANT",
     "to": "Tip pro {{- heroName}} PepeLaugh"

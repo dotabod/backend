@@ -5,7 +5,10 @@
     "pickup": "{{- heroName}} ha preso l'egida",
     "snatched": "{{- heroName}} ha rubato l'egida PepeLaugh"
   },
-  "apm": "APM Live: {{num}} Chatting",
+  "apm": "Live APM: {{count}} Chatting",
+  "apm_one": "",
+  "apm_many": "",
+  "apm_other": "",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "$t(betaTester_on)",
@@ -17,7 +20,10 @@
     "open": "Scommesse aperte peepoGamble",
     "won": "Abbiamo vinto"
   },
-  "bountyPickup": "+{{bountyValue}} gold dalle bounty ({{totalBounties}}/4) EZ Clap Grazie {{heroNames}} SeemsGood",
+  "bounties": {
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
+    "totalGold": "{{count}} gold"
+  },
   "chatters": {
     "died": "{{- heroName}} è morto con {{itemNames}} passivo/i ICANT",
     "firstBloodDeath": "{{- heroName}} ha dato il first blood PepeLaugh",
@@ -25,7 +31,7 @@
     "noTp": "{{channel}} dov'è il tuo tp HECANT",
     "pause": "PauseChamp Chi ha messo la partita in pausa?",
     "smoked": "Shush {{- heroName}} è smokato!",
-    "tpFound": "{{channel}} ben fatto, hai comprato un tp dopo $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
@@ -40,18 +46,30 @@
     "list": "(Delay di 2m) {{- heroName}} ha: {{- itemNames}}"
   },
   "herostats": {
-    "none": "Nessun match giocato come {{- heroName}} in {{timeperiod}}",
+    "none": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "days": "{{days}} giorni",
-      "lifetime": "totali"
+      "days": "in {{count}}d",
+      "days_one": "",
+      "days_many": "",
+      "days_other": "",
+      "lifetime": "of all time"
     },
-    "winrate": "Winrate: {{winrate}}% come {{- heroName}} in {{timeperiod}} in un totale di {{total}} partite."
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrate_one": "",
+    "winrate_many": "",
+    "winrate_other": ""
   },
   "invalidColor": "Colore, slot o nome dell'eroe non validi. Prova 1-10, parte del nome, o un colore da {{colorList}}",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} ha perso la serie di uccisioni da {{killstreakCount}} BibleThump",
-    "won": "{{- heroName}} ha una serie di uccisioni da {{killstreakCount}} POGGIES"
+    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "lost_one": "",
+    "lost_many": "",
+    "lost_other": "",
+    "won": "{{- heroName}} has a {{count}} kill streak POGGIES",
+    "won_one": "",
+    "won_many": "",
+    "won_other": ""
   },
   "lastgame": {
     "link": "Partita precedente: {{- url}}",
@@ -70,7 +88,7 @@
   "lifetime": "Partite totali",
   "matchFound": "Informazioni del match trovate {{commandList}} attivati",
   "matchId": "Match ID: {{matchId}}",
-  "midasUsed": "Finalmente ha usato la Midas, {{seconds}} secondi in ritardo Madge",
+  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late Madge",
   "missingMatchData": "In attesa delle informazioni del match PauseChamp",
   "missingUser": "Utente non trovato. Prova a sloggare e riloggare su dotabod.com",
   "modsOnly_off": "È stata disattivata la modalità solo moderatori. Ora tutti possono scrivere.",
@@ -109,16 +127,19 @@
     "1": "Morti di Rosh: 1 · Prossimo drop: Aghanim Shard.",
     "2": "Morti di Rosh: 2 · Prossimo drop: Cheese e Aghanim Blessing o Refresher Shard.",
     "3": "Morti di Rosh: 3 · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard.",
-    "more": "Morti di Rosh: {{num}} · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard."
+    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more_one": "",
+    "more_many": "",
+    "more_other": ""
   },
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
-  "setStreamDelay_one": "Impostando il delay della stream a: {{count}} secondo",
-  "setStreamDelay_many": "",
-  "setStreamDelay_other": "Impostando il delay della stream a: {{count}} secondi",
+  "seconds_one": "{{count}} secondo",
+  "seconds_other": "{{count}} secondi",
+  "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Delay della stream invalido, usa !setdelay <seconds>",
-  "streamDelay_one": "Delay Stream: {{count}} secondo",
-  "streamDelay_many": "",
-  "streamDelay_other": "Delay Stream: {{count}} secondi",
+  "setStreamDelayRemoved": "Removing stream delay",
+  "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
     "from": "Il tip da {{- heroName}} ICANT",
     "to": "Tippiamo {{- heroName}} PepeLaugh"

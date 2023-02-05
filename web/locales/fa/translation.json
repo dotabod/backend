@@ -5,7 +5,9 @@
     "pickup": " میتونه یه غذای رایگان بده {{- heroName}}",
     "snatched": "{{- heroName}} آنخ رو دزدید PepeLaugh"
   },
-  "apm": "Live APM: {{num}} Chatting",
+  "apm": "Live APM: {{count}} Chatting",
+  "apm_one": "",
+  "apm_other": "",
   "averageRank": "میانگین اکانت بایرهای این بازی",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -17,7 +19,10 @@
     "open": "قمار کنید peepoGamble",
     "won": "بلاخره بردیم. یک تنه بازی رو حمل کردم"
   },
-  "bountyPickup": "+{{bountyValue}} gold from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
+  "bounties": {
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
+    "totalGold": "{{count}} gold"
+  },
   "chatters": {
     "died": "درخشیدی {{- heroName}} . {{itemNames}}  را نگه دار واسه بازی بعد ICANT",
     "firstBloodDeath": "اولین غذا را داد {{- heroName}} PepeLaugh",
@@ -25,7 +30,7 @@
     "noTp": "{{channel}} where's your tp HECANT",
     "pause": "PauseChamp کی وسط شکار ریدنش گرفت؟",
     "smoked": "Shush {{- heroName}} سبحان الله غیب شد",
-    "tpFound": "{{channel}} nice job getting a tp finally after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "کامندهای همگانی: {{commandList}}",
   "commands_mods": "کامندهای مادها {{commandList}}",
@@ -40,18 +45,26 @@
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
   },
   "herostats": {
-    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
+    "none": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "days": "{{days}}d",
-      "lifetime": "lifetime"
+      "days": "in {{count}}d",
+      "days_one": "",
+      "days_other": "",
+      "lifetime": "of all time"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrate_one": "",
+    "winrate_other": ""
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "داداچ اشتباه میزنی. این رو بزن  !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} با {{killstreakCount}} غذایی که گرفته بود رفت غذا داد BibleThump",
-    "won": "{{- heroName}}  {{killstreakCount}}غذا خورده POGGIES"
+    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "lost_one": "",
+    "lost_other": "",
+    "won": "{{- heroName}} has a {{count}} kill streak POGGIES",
+    "won_one": "",
+    "won_other": ""
   },
   "lastgame": {
     "link": "بازی قبل: {{- url}}",
@@ -70,7 +83,7 @@
   "lifetime": "تمام بازی ها",
   "matchFound": "بازی شروع شد. تمام این کامندها فعال است {{commandList}}",
   "matchId": "Match ID: {{matchId}}",
-  "midasUsed": "بلاخره بعد از {{seconds}} ثانیه میداس زد Madge",
+  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late Madge",
   "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "User not found. Try logging out and in of dotabod.com",
   "modsOnly_off": "فقط مادها خاموش شد! همه میتونن چت کنن",
@@ -108,14 +121,18 @@
     "1": "روشان اول. روشان بعدی آقانیم شارد",
     "2": "روشان دوم. روشان بعدی پنیر و آقانیم یا رفرش شارد",
     "3": "روشان سوم. روشان بعدی پنیر و آقانیم و رفرش",
-    "more": "روشان {{num}}. روشان بعدی پنیر و آقانیم و رفرش شارد"
+    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more_one": "",
+    "more_other": ""
   },
   "roshanKilled": "روشان رو کوشتن. روشان بعدی بین {{min}} تا {{max}} دقیقه",
-  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
-  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "seconds_one": "{{count}} second",
+  "seconds_other": "{{count}} second",
+  "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelay_one": "Stream delay: {{count}} second",
-  "streamDelay_other": "Stream delay: {{count}} seconds",
+  "setStreamDelayRemoved": "Removing stream delay",
+  "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
     "from": "{{- heroName}} تیپش کرد ICANT",
     "to": "{{- heroName}} تیپش کردم PepeLaugh"
