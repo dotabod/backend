@@ -10,9 +10,17 @@ GREEN  := "\\u001b[32m"
 RESET  := "\\u001b[0m"
 CHECK  := `/usr/bin/printf "\xE2\x9C\x94"`
 
-translate:
-    @echo "Translating"
+i18np:
+    @echo "Parsing translation files"
     @i18next -c 'web/i18next-parser.config.js'
+
+i18nd:
+    @echo "Downloading translations"
+    @crowdin.bat download --config './crowdin.yml'
+
+i18nu:
+    @echo "Uploading translations"
+    @crowdin.bat upload translations --config './crowdin.yml'
 
 # Lints Web source code
 test: build
