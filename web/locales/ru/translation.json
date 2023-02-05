@@ -22,8 +22,10 @@
     "died": "{{- heroName}} умер с пассивным {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} умирает первым PepeLaugh",
     "midas": "massivePIDAS Используй свой Midas",
+    "noTp": "{{channel}} где твое ТП? HECANT",
     "pause": "PauseChamp Кто поставил паузу?",
-    "smoked": "Shush {{- heroName}} в смоках!"
+    "smoked": "Shush {{- heroName}} в смоках!",
+    "tpFound": "{{channel}} молодец, наконец-то купил ТП спустя $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Каждый может использовать: {{commandList}}",
   "commands_mods": "Команды только для модераторов: {{commandList}}",
@@ -47,7 +49,7 @@
     },
     "winrate": "Винрейт: {{winrate}}% на {{- heroName}} за {{timeperiod}}, сыграно {{total}} игр."
   },
-  "invalidColor": "Неверный цвет героя или слот. Должно быть 1-10, или одно из {{colorList}}",
+  "invalidColor": "Неверный цвет героя, номер или имя. Попробуй 1-10, имя героя на английском или цвет из списка: {{colorList}}",
   "invalidMmr": "Неверная команда. Попробуйте !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} потерял серию из {{killstreakCount}} убийств! BibleThump",
@@ -100,7 +102,7 @@
     "nextRankIn_one": "Еще одна победа peepoClap",
     "nextRankIn_few": "через {{count}} победы",
     "nextRankIn_many": "через {{count}} побед",
-    "nextRankIn_other": "через {{count}} побед(у)"
+    "nextRankIn_other": "через {{count}} побед"
   },
   "ranked_no": "Нет, эта игра не рейтинговая",
   "ranked_yes": "Да, эта игра рейтинговая",

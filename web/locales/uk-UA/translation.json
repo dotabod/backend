@@ -1,7 +1,7 @@
 {
   "aegis": {
     "denied": "{{- heroName}} знищив Аєгіс {{emote}}",
-    "expired": "Аєгіс {{- heroName}} зник :). Ніхто його не бачив?",
+    "expired": "Аєгіс у {{- heroName}} зник :). Ніхто його не бачив?",
     "pickup": "{{- heroName}} підібрав Аєгіс!",
     "snatched": "{{- heroName}} викрав Аєгіс PepeLaugh"
   },
