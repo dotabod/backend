@@ -5,7 +5,7 @@
     "pickup": "{{- heroName}} získal aegis!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
-  "apm": "Aktuální APM: {{num}} Chatting",
+  "apm": "Live APM: {{count}} Chatting",
   "averageRank": "Průměrný rank této hry",
   "betaFeature": "[beta funkce]",
   "betaTester": "$t(betaTester_on)",
@@ -17,7 +17,10 @@
     "open": "Sázky otevřeny peepoGamble",
     "won": "Vyhráli jsme"
   },
-  "bountyPickup": "+ {{bountyValue}} zlata z bounty run ({{totalBounties}}/4) EZ Clap dík {{heroNames}} SeemsGood",
+  "bounties": {
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
+    "totalGold": "{{count}} gold"
+  },
   "chatters": {
     "died": "{{- heroName}} umřel bez použití {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} daroval First Blood PepeLaugh",
@@ -25,35 +28,30 @@
     "noTp": "{{channel}} where's your tp HECANT",
     "pause": "PauseChamp Kdo to pauznul?",
     "smoked": "Ticho! {{- heroName}} použil smoke",
-    "tpFound": "{{channel}} nice job getting a tp finally after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Všichni mohou použít: {{commandList}}",
   "commands_mods": "Pouze pro moderátory: {{commandList}}",
   "dota2pt": "Potřebuješ poradit co kupovat na {{- heroName}}? Nápady najdeš zde {{- url}}",
   "dotabod": "Jsem open-source bot vytvořený {{author}}. Více info na {{- url}}",
   "gameNotFound": "Hra nebyla nalezena",
-  "gpm_zero": "",
-  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_few": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_many": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_other": "Aktuální GPM: {{num}}. {{heroKills}} ze zabitých hrdinů, {{creepKills}} z creepů.",
   "heroItems": {
     "empty": "(2m delay) No items found for {{- heroName}}",
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
   },
   "herostats": {
-    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
+    "none": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "days": "{{days}}d",
-      "lifetime": "lifetime"
+      "days": "in {{count}}d",
+      "lifetime": "of all time"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Neplatný příkaz. Zkus !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} přišel o {{killstreakCount}} kill streak BibleThump",
-    "won": "{{- heroName}} má {{killstreakCount}} kill streak POGGIES"
+    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "won": "{{- heroName}} has a {{count}} kill streak POGGIES"
   },
   "lastgame": {
     "link": "Zde je poslední hra: {{- url}}",
@@ -72,7 +70,7 @@
   "lifetime": "Celkem her",
   "matchFound": "Data zápasu nalezena, příkazy {{commandList}} aktivovány.",
   "matchId": "Match ID: {{matchId}}",
-  "midasUsed": "Midas konečně použita. Ale o {{seconds}} pozdě Madge",
+  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late Madge",
   "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "Uživatel nenalezen. Zkus se znovu připojit na dotabod.com",
   "modsOnly_off": "Mód pouze pro moderátory vypnut. Všichni mohou psát",
@@ -112,18 +110,14 @@
     "1": "Zabitých roshanů: 1 - Další drop: agha shard.",
     "2": "Zabitých roshanů: 2 - Další drop: sejra a aghanim nebo refresher.",
     "3": "Zabitých roshanů: 3 - Další drop: sejra, aghanim a refresher.",
-    "more": "Zabitých roshanů: {{num}} - Další drop: sejra, aghanim a refresher."
+    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "Roshan zabit! Další spawne mezi {{min}} a {{max}}",
-  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
-  "setStreamDelay_few": "Setting stream delay to: {{count}} seconds",
-  "setStreamDelay_many": "Setting stream delay to: {{count}} seconds",
-  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "setStreamDelayRemoved": "Removing stream delay",
+  "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelay_one": "Stream delay: {{count}} second",
-  "streamDelay_few": "Stream delay: {{count}} seconds",
-  "streamDelay_many": "Stream delay: {{count}} seconds",
-  "streamDelay_other": "Stream delay: {{count}} seconds",
+  "streamDelayNone": "There is no stream delay on this channel",
+  "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "tip": {
     "from": "Tip od {{- heroName}} ICANT",
     "to": "Tip pro {{- heroName}} PepeLaugh"
@@ -136,10 +130,6 @@
   "toggleMatch_party": "Měním tento zápas party MMR: {{- url}} Napiš !fixparty pro zrušení.",
   "toggleMatch_single": "Měním tento zápas na single down MMR: {{- url}} Napiš !fixdd pro zrušení.",
   "toggleMatch_solo": "Měním tento zápas na solo MMR: {{- url}} Napiš !fixparty pro zrušení.",
-  "treadToggle_one": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
-  "treadToggle_few": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
-  "treadToggle_many": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
-  "treadToggle_other": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
   "uknownMmr": "Neznám MMR kanálu {{channel}}. Modi ho můžou nastavit příkazem !setmmr 1234 nebo na stránce {{- url}}",
   "unknown": "Neznámé",
   "unknownSteam": "Nenalezen steam účet. Postupuj podle kroku 2, odehraj zápas s boty a zkus to znovu.",
@@ -147,5 +137,17 @@
   "updateMmr_auto": "Aktualizované MMR na {{mmr}}. !fixparty pro party a !fixdd pro double down",
   "updateMmr_manual": "Aktualizované MMR na {{mmr}}",
   "updateMmrMulti": "Vícero steam účtů, aktualizuji ten který je nyní přihlášený - {{steamId}}",
-  "xpm": "Aktuální XPM: {{num}}"
+  "xpm": "Aktuální XPM: {{num}}",
+  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_few": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_many": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Aktuální GPM: {{num}}. {{heroKills}} ze zabitých hrdinů, {{creepKills}} z creepů.",
+  "seconds_few": "{{count}} second",
+  "seconds_many": "{{count}} second",
+  "treadToggle_one": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
+  "treadToggle_few": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
+  "treadToggle_many": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
+  "treadToggle_other": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
+  "seconds_one": "{{count}} second",
+  "seconds_other": "{{count}} second"
 }

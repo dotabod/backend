@@ -5,7 +5,7 @@
     "pickup": "{{- heroName}} подбирает аегис!",
     "snatched": "{{- heroName}} крадёт аегис PepeLaugh"
   },
-  "apm": "Текущий APM: {{num}} Chatting",
+  "apm": "Live APM: {{count}} Chatting",
   "averageRank": "Средний ранг этой игры",
   "betaFeature": "[бета-функция]",
   "betaTester": "$t(betaTester_on)",
@@ -17,7 +17,10 @@
     "open": "Ставки открыты peepoGamble",
     "won": "Мы победили"
   },
-  "bountyPickup": "Получено {{bountyValue}} золота от рун богатства EZ Clap Спасибо {{heroNames}} SeemsGood",
+  "bounties": {
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
+    "totalGold": "{{count}} gold"
+  },
   "chatters": {
     "died": "{{- heroName}} умер с пассивным {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} умирает первым PepeLaugh",
@@ -32,28 +35,23 @@
   "dota2pt": "Нужны сборки от про-игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "gameNotFound": "Игра не найдена",
-  "gpm_zero": "",
-  "gpm_one": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_few": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_many": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_other": "Текущий GPM: {{num}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
   "heroItems": {
     "empty": "(2 мин. задержка) Не найдено предметов у {{- heroName}}",
     "list": "(2 мин. задержка) {{- heroName}} имеет: {{- itemNames}}"
   },
   "herostats": {
-    "none": "Нет сыгранных игр на  {{- heroName}} за {{timeperiod}}",
+    "none": "Нет сыгранных игр на {{- heroName}} за {{timeperiod}}",
     "timeperiod": {
-      "days": "{{days}} дн.",
-      "lifetime": "Все сыгранные игры"
+      "days": "in {{count}}d",
+      "lifetime": "of all time"
     },
-    "winrate": "Винрейт: {{winrate}}% на {{- heroName}} за {{timeperiod}}, сыграно {{total}} игр."
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Неверный цвет героя, номер или имя. Попробуй 1-10, имя героя на английском или цвет из списка: {{colorList}}",
   "invalidMmr": "Неверная команда. Попробуйте !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} потерял серию из {{killstreakCount}} убийств! BibleThump",
-    "won": "у {{- heroName}} серия из {{killstreakCount}} убийств! POGGIES"
+    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "won": "{{- heroName}} has a {{count}} kill streak POGGIES"
   },
   "lastgame": {
     "link": "ID последнего матча: {{- url}}",
@@ -72,7 +70,7 @@
   "lifetime": "Количество игр",
   "matchFound": "Данные матча получены {{commandList}} команды бота активны.",
   "matchId": "ID матча: {{matchId}}",
-  "midasUsed": "Midas наконец-то был использован, {{seconds}} секунд(ы) спустя Madge",
+  "midasUsed": "Midas наконец-то был использован $t(seconds, {\"count\": {{seconds}} }) спустя Madge",
   "missingMatchData": "Ожидание данных о текущем матче PauseChamp",
   "missingUser": "Пользователь не найден. Попробуйте перезайти на сайте dotabod.com",
   "modsOnly_off": "Режим «Только для модераторов» теперь отключен. Все могут использовать чат.",
@@ -112,18 +110,14 @@
     "1": "1 Рошан мёртв · Следующая награда:  Шард.",
     "2": "2 Рошан мёртв · Следующая награда:  Сыр, Аганим или Рефрешер.",
     "3": "3 Рошан мёртв · Следующая награда:  Сыр, Аганим и Рефрешер.",
-    "more": "{{num}} Рошан мёртв · Следующая награда:  Сыр, Аганим и Рефрешер."
+    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "Рошан убит! Следующий рошан между {{min}} и {{max}}",
-  "setStreamDelay_one": "Устанавливаю задержку стрима на {{count}} секунду",
-  "setStreamDelay_few": "Устанавливаю задержку стрима на {{count}} секунды",
-  "setStreamDelay_many": "Устанавливаю задержку стрима на {{count}} секунд",
-  "setStreamDelay_other": "Устанавливаю задержку стрима на {{count}} секунд",
+  "setStreamDelayRemoved": "Отключаем задержку стрима",
+  "setStreamDelay": "Устанавливаю задержку стрима на: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Неверная задержка стрима, используйте !setdelay <seconds>",
-  "streamDelay_one": "Задержка стрима: {{count}} секунда",
-  "streamDelay_few": "Задержка стрима: {{count}} секунды",
-  "streamDelay_many": "Задержка стрима: {{count}} секунд",
-  "streamDelay_other": "Задержка стрима: {{count}} секунд",
+  "streamDelayNone": "На этом канале нет задержки стрима",
+  "streamDelay": "Задержка стрима: $t(seconds, {\"count\": {{seconds}} })",
   "tip": {
     "from": "Благодарность от {{- heroName}} ICANT",
     "to": "Мы поблагодарили {{- heroName}} PepeLaugh"
@@ -136,10 +130,6 @@
   "toggleMatch_party": "Изменение этого матча на групповой рейтинг: {{- url}} Введите !fixparty для отмены",
   "toggleMatch_single": "Изменение этого матча на стандартный рейтинг {{- url}} Введите !fixdd для отмены",
   "toggleMatch_solo": "Изменение этого матча на одиночный рейтинг: {{- url}} Введите !fixparty для отмены",
-  "treadToggle_one": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_few": "Power Treads были переключены {{count}} раза, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_many": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_other": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
   "uknownMmr": "Я еще не знаю рейтинг {{channel}}. Модераторы или стример должны сами ввести команду, пример: !setmmr 1234 или установить его вручную на сайте {{- url}}",
   "unknown": "Неизвестно",
   "unknownSteam": "Не удалось найти учетную запись Steam. Попробуйте сначала сыграть тренировочный матч с ботом, чтобы сохранить свой аккаунт в Dotabod!",
@@ -147,5 +137,17 @@
   "updateMmr_auto": "Рейтинг обновлён до {{mmr}}. Используйте команды !fixparty для изменения игры в группе и !fixdd для двойной ставки.",
   "updateMmr_manual": "Рейтинг изменён до {{mmr}}",
   "updateMmrMulti": "Несколько учетных записей Steam, обновление той, с которой вы вошли в систему в данный момент ({{steamId}})",
-  "xpm": "Текущий XPM: {{num}}"
+  "xpm": "Текущий XPM: {{num}}",
+  "gpm_one": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "gpm_few": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "gpm_many": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "gpm_other": "Текущий GPM: {{num}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
+  "seconds_few": "{{count}} секунды",
+  "seconds_many": "{{count}} секунд",
+  "treadToggle_one": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_few": "Power Treads были переключены {{count}} раза, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_many": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_other": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "seconds_one": "{{count}} секунду",
+  "seconds_other": "{{count}} секунд"
 }

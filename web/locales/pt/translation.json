@@ -5,7 +5,7 @@
     "pickup": "{{- heroName}} pegou o aegis",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
-  "apm": "APM ao vivo: {{num}} ",
+  "apm": "Live APM: {{count}} Chatting",
   "averageRank": "Média de rank este jogo",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -17,7 +17,10 @@
     "open": "Apostas abertas peepoGamble",
     "won": "Nós ganhamos"
   },
-  "bountyPickup": "+{{bountyValue}} de ouro de bônus de recompensa  EZ Clap Obrigado {{heroNames}} SeemsGood ",
+  "bounties": {
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
+    "totalGold": "{{count}} gold"
+  },
   "chatters": {
     "died": "{{- heroName}}morreu com {{itemNames}} passivo ICANT",
     "firstBloodDeath": "{{- heroName}} giving up first blood PepeLaugh",
@@ -25,33 +28,30 @@
     "noTp": "{{channel}} where's your tp HECANT",
     "pause": "PauseChamp Quem pausou o jogo?",
     "smoked": "Shush {{- heroName}} acabou de smokar!",
-    "tpFound": "{{channel}} nice job getting a tp finally after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Todos podem usar: {{commandList}}",
   "commands_mods": "Somente moderadores podem usar: {{commandList}}",
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "Eu sou um bot open source feito por {{author}}. Mais informações: {{- url}}",
   "gameNotFound": "Partida não encontrada",
-  "gpm_zero": "",
-  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_other": "GPM ao vivo: {{num}}. {{heroKills}} de hérois, {{creepKills}} de creeps.",
   "heroItems": {
     "empty": "(2m delay) No items found for {{- heroName}}",
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
   },
   "herostats": {
-    "none": "No matches played as {{- heroName}} in {{timeperiod}}",
+    "none": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "days": "{{days}}d",
-      "lifetime": "lifetime"
+      "days": "in {{count}}d",
+      "lifetime": "of all time"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Comando invalido. Tente !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} perdeu o kill streak de {{killstreakCount}} BibleThump",
-    "won": "{{- heroName}} tem kill streak de {{killstreakCount}} POGGIES"
+    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "won": "{{- heroName}} has a {{count}} kill streak POGGIES"
   },
   "lastgame": {
     "link": "Última partida: {{- url}}",
@@ -70,7 +70,7 @@
   "lifetime": "Partidas totais",
   "matchFound": "Partida encontrada: {{commandList}} comandos ativados.",
   "matchId": "ID da partida: {{matchId}}",
-  "midasUsed": "Midas finalmente usada, {{seconds}}seg atrasados Madge",
+  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late Madge",
   "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "Usuário não encontrado. Tente sair e entrar novamente de dotabod.com",
   "modsOnly_off": "Modo Somente-Mods desligado. Todos podem digitar.",
@@ -98,7 +98,6 @@
   "rank": {
     "nextRankAt": "Próximo rank em",
     "nextRankIn_one": "Mais uma vitória peepoClap",
-    "nextRankIn_many": "",
     "nextRankIn_other": "em {{count}} vitórias"
   },
   "ranked_no": "Não este jogo não é ranqueado",
@@ -109,16 +108,14 @@
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
     "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",
     "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
-    "more": "Rosh deaths: {{num}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "Roshan morto! Próximo roshan em {{min}} e {{max}}",
-  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
-  "setStreamDelay_many": "",
-  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "setStreamDelayRemoved": "Removing stream delay",
+  "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelay_one": "Stream delay: {{count}} second",
-  "streamDelay_many": "",
-  "streamDelay_other": "Stream delay: {{count}} seconds",
+  "streamDelayNone": "There is no stream delay on this channel",
+  "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "tip": {
     "from": "Tip de {{- heroName}} ICANT",
     "to": "Tipando {{- heroName}} PepeLaugh"
@@ -131,9 +128,6 @@
   "toggleMatch_party": "Mudando partida para partida em equipe: {{- url}} Digite !fixparty para desfazer",
   "toggleMatch_single": "Mudando partida para mmr não dobrado: {{- url}} Digite !fixdd para desfazer",
   "toggleMatch_solo": "Mudando partida para partida solo: {{- url}} Digite !fixparty para desfazer",
-  "treadToggle_one": "Usamos power treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
-  "treadToggle_many": "",
-  "treadToggle_other": "Usamos power treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
   "uknownMmr": "Ainda não o MMR de {{channel}}. Mods favor digitar !setmmr 1234 or configure em {{- url}}",
   "unknown": "Desconhecido",
   "unknownSteam": "Conta steam não encontrado. Jogar contra bot para salvar sua conta em Dotabod!",
@@ -141,5 +135,11 @@
   "updateMmr_auto": "MMR atualizado para {{mmr}}. Digite !fixparty para alterar para partida em equipe, ou !fixdd para partida com dobro mmr",
   "updateMmr_manual": "MMR atualizado para {{mmr}}",
   "updateMmrMulti": "Vários contas steam, atualizando a logada no momento com ({{steamId}})",
-  "xpm": "XPM ao vivo: {{num}}"
+  "xpm": "XPM ao vivo: {{num}}",
+  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "GPM ao vivo: {{num}}. {{heroKills}} de hérois, {{creepKills}} de creeps.",
+  "treadToggle_one": "Usamos power treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
+  "treadToggle_other": "Usamos power treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
+  "seconds_one": "{{count}} second",
+  "seconds_other": "{{count}} second"
 }
