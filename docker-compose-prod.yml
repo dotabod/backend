@@ -1,12 +1,4 @@
 services:
-  fs-relay:
-    image: "ghcr.io/fullstorydev/relay-core/relay-core:v0.2.0"
-    environment:
-      RELAY_PORT: 8990
-      TRAFFIC_RELAY_TARGET: "https://rs.fullstory.com"
-      TRAFFIC_RELAY_SPECIALS: ^/s/fs\.js https://edge.fullstory.com/s/fs.js
-    ports:
-      - '8990:8990'
   redis:
     container_name: redis
     image: 'redis/redis-stack-server:latest'
@@ -123,7 +115,6 @@ services:
       - '443:443'
     environment:
       - NGINX_HOST
-      - NGINX_FULLSTORY_HOST
       - EVENTSUB_HOST
       - TLS_CERT
       - TLS_KEY
