@@ -11,6 +11,8 @@ eventHandler.registerEvent(`items:teleport0:name`, {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 
+    const secondsToWait = 30
+
     const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
     const {
       noTp: { enabled: chatterEnabled },
@@ -25,9 +27,10 @@ eventHandler.registerEvent(`items:teleport0:name`, {
       if (dotaClient.noTpChatter.lastRemindedDate) {
         dotaClient.say(
           t('chatters.tpFound', {
-            seconds: Math.round(
-              (new Date().getTime() - dotaClient.noTpChatter.lastRemindedDate.getTime()) / 1000,
-            ),
+            seconds:
+              Math.round(
+                (new Date().getTime() - dotaClient.noTpChatter.lastRemindedDate.getTime()) / 1000,
+              ) + secondsToWait,
             channel: `@${dotaClient.client.name}`,
             lng: dotaClient.client.locale,
           }),
@@ -57,7 +60,7 @@ eventHandler.registerEvent(`items:teleport0:name`, {
           }),
           { beta: true },
         )
-      }, 1000 * 30)
+      }, 1000 * secondsToWait)
     }
   },
 })
