@@ -6,9 +6,6 @@
     "snatched": "{{- heroName}} roubou o aegis! PepeLaugh"
   },
   "apm": "APM ao vivo: {{num}} Chatting",
-  "apm_one": "",
-  "apm_many": "",
-  "apm_other": "",
   "averageRank": "Rank médio neste jogo",
   "betaFeature": "[recurso beta]",
   "betaTester": "$t(betaTester_on)",
@@ -19,9 +16,6 @@
     "notScored": "Partida não contabilizada D: Não adicionando nem subtraindo MMR para a partida {{matchId}}",
     "open": "Apostas abertas peepoGamble",
     "won": "Nós ganhamos! Happi Vamos para a próxima partida."
-  },
-  "bounties": {
-    "pickup": ""
   },
   "bountyPickup": "+ {{bountyValue}}de ouro de bônus de recompensa ({{totalBounties}} /4) Fácil! Clap Thanks  {{heroNames}} SeemsGood ",
   "chatters": {
@@ -49,27 +43,15 @@
     "none": "Nenhuma partida jogada de {{- heroName}} em {{timeperiod}}",
     "timeperiod": {
       "days": "{{days}} dias",
-      "days_one": "",
-      "days_many": "",
-      "days_other": "",
       "lifetime": "total"
     },
-    "winrate": "Taxa de vitória: {{winrate}}% com {{- heroName}} em {{timeperiod}} em um total de {{total}} partidas.",
-    "winrate_one": "",
-    "winrate_many": "",
-    "winrate_other": ""
+    "winrate": "Taxa de vitória: {{winrate}}% com {{- heroName}} em {{timeperiod}} em um total de {{total}} partidas."
   },
   "invalidColor": "Cor, espaço ou nome de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} perdeu a killstreak de {{killstreakCount}} BibleThump",
-    "lost_one": "",
-    "lost_many": "",
-    "lost_other": "",
-    "won": "{{- heroName}} tem uma killstreak de {{killstreakCount}} POGGIES",
-    "won_one": "",
-    "won_many": "",
-    "won_other": ""
+    "won": "{{- heroName}} tem uma killstreak de {{killstreakCount}} POGGIES"
   },
   "lastgame": {
     "link": "Aqui está a última partida: {{- url}}",
@@ -127,23 +109,16 @@
     "1": "Mortes do Roshan: 1 · Próximo item a cair: fragmento de aghanim.",
     "2": "Mortes do Roshan: 2 · Próximos items a cair vão ser: queijo, benção de aghanim ou fragmento de orbe restaurador.",
     "3": "Mortes do Roshan: 3 · Próximos items a cair vão ser: queijo,  queijo, benção de aghanim e fragmento de orbe restaurador.",
-    "more": "Mortes do Roshan: {{num}} · Próximos items a cair vão ser: Queijo, fragmento de aghanim e fragmento de orbe restaurador.",
-    "more_one": "",
-    "more_many": "",
-    "more_other": ""
+    "more": "Mortes do Roshan: {{num}} · Próximos items a cair vão ser: Queijo, fragmento de aghanim e fragmento de orbe restaurador."
   },
   "roshanKilled": "Roshan morto! Próximo roshan entre {{min}} e {{max}} .",
-  "setStreamDelay": "",
   "setStreamDelay_one": "Configurando o delay na stream para: {{count}} segundo",
   "setStreamDelay_many": "",
   "setStreamDelay_other": "Configurando o delay na stream para: {{count}} segundos",
   "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <seconds> .",
-  "setStreamDelayRemoved": "",
-  "streamDelay": "",
   "streamDelay_one": "Delay da Stream: {{count}} segundo.",
   "streamDelay_many": "",
   "streamDelay_other": "Delay da Stream: {{count}} segundos.",
-  "streamDelayNone": "",
   "tip": {
     "from": "A tip de {{- heroName}} ICANT",
     "to": "Estamos tipando {{- heroName}} PepeLaugh"

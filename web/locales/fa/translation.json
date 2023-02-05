@@ -6,8 +6,6 @@
     "snatched": "{{- heroName}} آنخ رو دزدید PepeLaugh"
   },
   "apm": "Live APM: {{num}} Chatting",
-  "apm_one": "",
-  "apm_other": "",
   "averageRank": "میانگین اکانت بایرهای این بازی",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -18,9 +16,6 @@
     "notScored": "همه بازی رو دبه کردن D: بازی {{matchId}} هیچ تاثیری نداشت",
     "open": "قمار کنید peepoGamble",
     "won": "بلاخره بردیم. یک تنه بازی رو حمل کردم"
-  },
-  "bounties": {
-    "pickup": ""
   },
   "bountyPickup": "+{{bountyValue}} gold from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
   "chatters": {
@@ -48,23 +43,15 @@
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
       "days": "{{days}}d",
-      "days_one": "",
-      "days_other": "",
       "lifetime": "lifetime"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches.",
-    "winrate_one": "",
-    "winrate_other": ""
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "داداچ اشتباه میزنی. این رو بزن  !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} با {{killstreakCount}} غذایی که گرفته بود رفت غذا داد BibleThump",
-    "lost_one": "",
-    "lost_other": "",
-    "won": "{{- heroName}}  {{killstreakCount}}غذا خورده POGGIES",
-    "won_one": "",
-    "won_other": ""
+    "won": "{{- heroName}}  {{killstreakCount}}غذا خورده POGGIES"
   },
   "lastgame": {
     "link": "بازی قبل: {{- url}}",
@@ -121,20 +108,14 @@
     "1": "روشان اول. روشان بعدی آقانیم شارد",
     "2": "روشان دوم. روشان بعدی پنیر و آقانیم یا رفرش شارد",
     "3": "روشان سوم. روشان بعدی پنیر و آقانیم و رفرش",
-    "more": "روشان {{num}}. روشان بعدی پنیر و آقانیم و رفرش شارد",
-    "more_one": "",
-    "more_other": ""
+    "more": "روشان {{num}}. روشان بعدی پنیر و آقانیم و رفرش شارد"
   },
   "roshanKilled": "روشان رو کوشتن. روشان بعدی بین {{min}} تا {{max}} دقیقه",
-  "setStreamDelay": "",
   "setStreamDelay_one": "Setting stream delay to: {{count}} second",
   "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "setStreamDelayRemoved": "",
-  "streamDelay": "",
   "streamDelay_one": "Stream delay: {{count}} second",
   "streamDelay_other": "Stream delay: {{count}} seconds",
-  "streamDelayNone": "",
   "tip": {
     "from": "{{- heroName}} تیپش کرد ICANT",
     "to": "{{- heroName}} تیپش کردم PepeLaugh"

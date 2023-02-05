@@ -6,10 +6,6 @@
     "snatched": "{{- heroName}} крадёт аегис PepeLaugh"
   },
   "apm": "Текущий APM: {{num}} Chatting",
-  "apm_one": "",
-  "apm_few": "",
-  "apm_many": "",
-  "apm_other": "",
   "averageRank": "Средний ранг этой игры",
   "betaFeature": "[бета-функция]",
   "betaTester": "$t(betaTester_on)",
@@ -20,9 +16,6 @@
     "notScored": "Матч не засчитан D: Рейтинг для матча {{matchId}} не будет изменен.",
     "open": "Ставки открыты peepoGamble",
     "won": "Мы победили"
-  },
-  "bounties": {
-    "pickup": ""
   },
   "bountyPickup": "Получено {{bountyValue}} золота от рун богатства EZ Clap Спасибо {{heroNames}} SeemsGood",
   "chatters": {
@@ -52,31 +45,15 @@
     "none": "Нет сыгранных игр на  {{- heroName}} за {{timeperiod}}",
     "timeperiod": {
       "days": "{{days}} дн.",
-      "days_one": "",
-      "days_few": "",
-      "days_many": "",
-      "days_other": "",
       "lifetime": "Все сыгранные игры"
     },
-    "winrate": "Винрейт: {{winrate}}% на {{- heroName}} за {{timeperiod}}, сыграно {{total}} игр.",
-    "winrate_one": "",
-    "winrate_few": "",
-    "winrate_many": "",
-    "winrate_other": ""
+    "winrate": "Винрейт: {{winrate}}% на {{- heroName}} за {{timeperiod}}, сыграно {{total}} игр."
   },
   "invalidColor": "Неверный цвет героя, номер или имя. Попробуй 1-10, имя героя на английском или цвет из списка: {{colorList}}",
   "invalidMmr": "Неверная команда. Попробуйте !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} потерял серию из {{killstreakCount}} убийств! BibleThump",
-    "lost_one": "",
-    "lost_few": "",
-    "lost_many": "",
-    "lost_other": "",
-    "won": "у {{- heroName}} серия из {{killstreakCount}} убийств! POGGIES",
-    "won_one": "",
-    "won_few": "",
-    "won_many": "",
-    "won_other": ""
+    "won": "у {{- heroName}} серия из {{killstreakCount}} убийств! POGGIES"
   },
   "lastgame": {
     "link": "ID последнего матча: {{- url}}",
@@ -135,26 +112,18 @@
     "1": "1 Рошан мёртв · Следующая награда:  Шард.",
     "2": "2 Рошан мёртв · Следующая награда:  Сыр, Аганим или Рефрешер.",
     "3": "3 Рошан мёртв · Следующая награда:  Сыр, Аганим и Рефрешер.",
-    "more": "{{num}} Рошан мёртв · Следующая награда:  Сыр, Аганим и Рефрешер.",
-    "more_one": "",
-    "more_few": "",
-    "more_many": "",
-    "more_other": ""
+    "more": "{{num}} Рошан мёртв · Следующая награда:  Сыр, Аганим и Рефрешер."
   },
   "roshanKilled": "Рошан убит! Следующий рошан между {{min}} и {{max}}",
-  "setStreamDelay": "",
   "setStreamDelay_one": "Устанавливаю задержку стрима на {{count}} секунду",
   "setStreamDelay_few": "Устанавливаю задержку стрима на {{count}} секунды",
   "setStreamDelay_many": "Устанавливаю задержку стрима на {{count}} секунд",
   "setStreamDelay_other": "Устанавливаю задержку стрима на {{count}} секунд",
   "setStreamDelayNoArgs": "Неверная задержка стрима, используйте !setdelay <seconds>",
-  "setStreamDelayRemoved": "",
-  "streamDelay": "",
   "streamDelay_one": "Задержка стрима: {{count}} секунда",
   "streamDelay_few": "Задержка стрима: {{count}} секунды",
   "streamDelay_many": "Задержка стрима: {{count}} секунд",
   "streamDelay_other": "Задержка стрима: {{count}} секунд",
-  "streamDelayNone": "",
   "tip": {
     "from": "Благодарность от {{- heroName}} ICANT",
     "to": "Мы поблагодарили {{- heroName}} PepeLaugh"

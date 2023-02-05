@@ -6,9 +6,6 @@
     "snatched": "{{- heroName}} ha rubato l'egida PepeLaugh"
   },
   "apm": "APM Live: {{num}} Chatting",
-  "apm_one": "",
-  "apm_many": "",
-  "apm_other": "",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "$t(betaTester_on)",
@@ -19,9 +16,6 @@
     "notScored": "Partita non valida D: Non aggiungerò ne rimuoverò MMR per questa partita {{matchId}}.",
     "open": "Scommesse aperte peepoGamble",
     "won": "Abbiamo vinto"
-  },
-  "bounties": {
-    "pickup": ""
   },
   "bountyPickup": "+{{bountyValue}} gold dalle bounty ({{totalBounties}}/4) EZ Clap Grazie {{heroNames}} SeemsGood",
   "chatters": {
@@ -49,27 +43,15 @@
     "none": "Nessun match giocato come {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
       "days": "{{days}} giorni",
-      "days_one": "",
-      "days_many": "",
-      "days_other": "",
       "lifetime": "totali"
     },
-    "winrate": "Winrate: {{winrate}}% come {{- heroName}} in {{timeperiod}} in un totale di {{total}} partite.",
-    "winrate_one": "",
-    "winrate_many": "",
-    "winrate_other": ""
+    "winrate": "Winrate: {{winrate}}% come {{- heroName}} in {{timeperiod}} in un totale di {{total}} partite."
   },
   "invalidColor": "Colore, slot o nome dell'eroe non validi. Prova 1-10, parte del nome, o un colore da {{colorList}}",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} ha perso la serie di uccisioni da {{killstreakCount}} BibleThump",
-    "lost_one": "",
-    "lost_many": "",
-    "lost_other": "",
-    "won": "{{- heroName}} ha una serie di uccisioni da {{killstreakCount}} POGGIES",
-    "won_one": "",
-    "won_many": "",
-    "won_other": ""
+    "won": "{{- heroName}} ha una serie di uccisioni da {{killstreakCount}} POGGIES"
   },
   "lastgame": {
     "link": "Partita precedente: {{- url}}",
@@ -127,23 +109,16 @@
     "1": "Morti di Rosh: 1 · Prossimo drop: Aghanim Shard.",
     "2": "Morti di Rosh: 2 · Prossimo drop: Cheese e Aghanim Blessing o Refresher Shard.",
     "3": "Morti di Rosh: 3 · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard.",
-    "more": "Morti di Rosh: {{num}} · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard.",
-    "more_one": "",
-    "more_many": "",
-    "more_other": ""
+    "more": "Morti di Rosh: {{num}} · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard."
   },
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
-  "setStreamDelay": "",
   "setStreamDelay_one": "Impostando il delay della stream a: {{count}} secondo",
   "setStreamDelay_many": "",
   "setStreamDelay_other": "Impostando il delay della stream a: {{count}} secondi",
   "setStreamDelayNoArgs": "Delay della stream invalido, usa !setdelay <seconds>",
-  "setStreamDelayRemoved": "",
-  "streamDelay": "",
   "streamDelay_one": "Delay Stream: {{count}} secondo",
   "streamDelay_many": "",
   "streamDelay_other": "Delay Stream: {{count}} secondi",
-  "streamDelayNone": "",
   "tip": {
     "from": "Il tip da {{- heroName}} ICANT",
     "to": "Tippiamo {{- heroName}} PepeLaugh"

@@ -6,8 +6,6 @@
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
   "apm": "Élő APM: {{num}} Csevegés",
-  "apm_one": "",
-  "apm_other": "",
   "averageRank": "Átlagos rank ezen a meccsen",
   "betaFeature": "[beta funkció]",
   "betaTester": "$t(betaTester_on)",
@@ -18,9 +16,6 @@
     "notScored": "Nem pontozott mérkőzés D: Nem számolunk MMR-t a {{matchId}}-re",
     "open": "Fogadás elindítva peepoGamble",
     "won": "Nyertünk"
-  },
-  "bounties": {
-    "pickup": ""
   },
   "bountyPickup": "+{{bountyValue}} arany a bountyból ({{totalBounties}}/4) EZ CLAP Köszönjük {{heroNames}} SeemsGood",
   "chatters": {
@@ -48,23 +43,15 @@
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
       "days": "{{days}}d",
-      "days_one": "",
-      "days_other": "",
       "lifetime": "lifetime"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches.",
-    "winrate_one": "",
-    "winrate_other": ""
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Érvénytelen parancs. Próbáld így: !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} elvesztette a {{killstreakCount}} killstreaket. BibleThump",
-    "lost_one": "",
-    "lost_other": "",
-    "won": "{{- heroName}} {{killstreakCount}} killsteaken van. POGGIES",
-    "won_one": "",
-    "won_other": ""
+    "won": "{{- heroName}} {{killstreakCount}} killsteaken van. POGGIES"
   },
   "lastgame": {
     "link": "Legutóbbi meccs: {{- url}}",
@@ -121,20 +108,14 @@
     "1": "1. Roshan halál · Következő drop: aghanim's shard.",
     "2": "2. Roshan halál · Következő drop: cheese és aghanim's blessing vagy refresher shard.",
     "3": "3. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard.",
-    "more": "{{num}}. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard.",
-    "more_one": "",
-    "more_other": ""
+    "more": "{{num}}. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard."
   },
   "roshanKilled": "Roshan meghalt! Következő Roshan {{min}} és {{max}} perc között várható",
-  "setStreamDelay": "",
   "setStreamDelay_one": "Setting stream delay to: {{count}} second",
   "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "setStreamDelayRemoved": "",
-  "streamDelay": "",
   "streamDelay_one": "Stream delay: {{count}} second",
   "streamDelay_other": "Stream delay: {{count}} seconds",
-  "streamDelayNone": "",
   "tip": {
     "from": "{{- heroName}} borravalót adott ICANT",
     "to": "Borravalót adtunk {{- heroName}} PepeLaugh"
