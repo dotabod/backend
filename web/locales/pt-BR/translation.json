@@ -22,8 +22,10 @@
     "died": "{{- heroName}} morreu com o {{itemNames}} passivo ICANT",
     "firstBloodDeath": "{{- heroName}} dando FB para o outro time PepeLaugh",
     "midas": "massivePIDAS Use a sua midas",
+    "noTp": "{{channel}} cadê seu tp? HECANT",
     "pause": "PauseChamp Quem pausou o jogo?",
-    "smoked": "Shush {{- heroName}} acabou de usar smoke!"
+    "smoked": "Shush {{- heroName}} acabou de usar smoke!",
+    "tpFound": "{{channel}} bom trabalho comprando um tp FINALMENTE depois de $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Todos podem usar: {{commandList}}",
   "commands_mods": "Comandos exclusivos para mods: {{commandList}}",
@@ -38,14 +40,14 @@
     "list": "(2 min de atraso) {{- heroName}} possui: {{- itemNames}}"
   },
   "herostats": {
-    "none": "Nenhuma partida jogada de {{- heroName}} em{{timeperiod}} .",
+    "none": "Nenhuma partida jogada de {{- heroName}} em {{timeperiod}}",
     "timeperiod": {
       "days": "{{days}} dias",
       "lifetime": "total"
     },
-    "winrate": "Taxa de vitória: {{winrate}}% com {{- heroName}} em {{timeperiod}}em um total de {{total}} partidas"
+    "winrate": "Taxa de vitória: {{winrate}}% com {{- heroName}} em {{timeperiod}} em um total de {{total}} partidas."
   },
-  "invalidColor": "Cor de herói invalido ou slot. Precisa ser 1-10 ou uma das cores da lista: {{colorList}}",
+  "invalidColor": "Cor, espaço ou nome de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} perdeu a killstreak de {{killstreakCount}} BibleThump",
