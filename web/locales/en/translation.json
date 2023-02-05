@@ -25,7 +25,7 @@
     "noTp": "{{channel}} where's your tp HECANT",
     "pause": "PauseChamp Who paused the game?",
     "smoked": "Shush {{- heroName}} is smoked!",
-    "tpFound": "{{channel}} nice job getting a tp finally after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
