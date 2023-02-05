@@ -6,6 +6,10 @@
     "snatched": "{{- heroName}} викрав Аєгіс PepeLaugh"
   },
   "apm": "Поточний APM: {{num}} Chatting",
+  "apm_one": "",
+  "apm_few": "",
+  "apm_many": "",
+  "apm_other": "",
   "averageRank": "Середній рейтинг цієї гри",
   "betaFeature": "[бета-функція]",
   "betaTester": "$t(betaTester_on)",
@@ -16,6 +20,9 @@
     "notScored": "Матч не зараховано D:  Рейтинг для матчу {{matchId}} не буде змінений.",
     "open": "Ставимо ставки, панство peepoGamble",
     "won": "Ми перемогли <3.Наступна буде ще легша Happi"
+  },
+  "bounties": {
+    "pickup": ""
   },
   "bountyPickup": "Отримано {{bountyValue}} золота від рун багатства ({{totalBounties}}/4) EZ Clap Дякую {{heroNames}} SeemsGood",
   "chatters": {
@@ -45,15 +52,31 @@
     "none": "Немає зіграних матчів на {{- heroName}} за {{timeperiod}}",
     "timeperiod": {
       "days": "{{days}}д",
+      "days_one": "",
+      "days_few": "",
+      "days_many": "",
+      "days_other": "",
       "lifetime": "за все життя"
     },
-    "winrate": "Відсоток перемог: {{winrate}}% на {{- heroName}} за {{timeperiod}} зіграно {{total}} матчів."
+    "winrate": "Відсоток перемог: {{winrate}}% на {{- heroName}} за {{timeperiod}} зіграно {{total}} матчів.",
+    "winrate_one": "",
+    "winrate_few": "",
+    "winrate_many": "",
+    "winrate_other": ""
   },
   "invalidColor": "Неправильний номер, ім'я або колір героя. Спробуйте ввести 1-10, часткове ім'я героя або один з кольорів: {{colorList}}",
   "invalidMmr": "Неправильна команда. Спробуйте !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} втратив серію з {{killstreakCount}} вбивств BibleThump",
-    "won": "{{- heroName}} має серію з {{killstreakCount}} вбивств! POGGIES"
+    "lost_one": "",
+    "lost_few": "",
+    "lost_many": "",
+    "lost_other": "",
+    "won": "{{- heroName}} має серію з {{killstreakCount}} вбивств! POGGIES",
+    "won_one": "",
+    "won_few": "",
+    "won_many": "",
+    "won_other": ""
   },
   "lastgame": {
     "link": "ID останньої гри: {{- url}}",
@@ -112,18 +135,26 @@
     "1": "1 Рошан мертвий · Наступна винагорода: Аєгіс та Аганім Шард",
     "2": "2 Рошан мертвий · Наступна винагорода: Аєгіс, Сир і Аганім/Рефрешер",
     "3": "3 Рошан мертвий · Наступна винагорода: Аєгіс, Сир, Аганім і Рефрешер",
-    "more": "{{num}} Рошана вбито · Наступна винагорода: Аєгіс, Сир, Аганім і Рефрешер"
+    "more": "{{num}} Рошана вбито · Наступна винагорода: Аєгіс, Сир, Аганім і Рефрешер",
+    "more_one": "",
+    "more_few": "",
+    "more_many": "",
+    "more_other": ""
   },
   "roshanKilled": "Рошан вбитий! Наступна поява Рошана між {{min}} та {{max}}",
+  "setStreamDelay": "",
   "setStreamDelay_one": "Тепер затримка на стрімі {{count}} секунда",
   "setStreamDelay_few": "Тепер затримка на стрімі {{count}} секунди",
   "setStreamDelay_many": "Тепер затримка на стрімі {{count}} секунд",
   "setStreamDelay_other": "Тепер затримка на стрімі {{count}} секунди",
   "setStreamDelayNoArgs": "Затримка на стрімі не встановлена, використайте !setdelay <seconds>",
+  "setStreamDelayRemoved": "",
+  "streamDelay": "",
   "streamDelay_one": "На стрімі затримка: {{count}} секунда",
   "streamDelay_few": "На стрімі затримка: {{count}} секунди",
   "streamDelay_many": "На стрімі затримка: {{count}} секунд",
   "streamDelay_other": "На стрімі затримка: {{count}} секунд",
+  "streamDelayNone": "",
   "tip": {
     "from": "Подяка від {{- heroName}} ICANT",
     "to": "Ми подякували {{- heroName}} за чудову гру PepeLaugh"

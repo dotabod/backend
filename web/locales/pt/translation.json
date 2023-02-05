@@ -6,6 +6,9 @@
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
   "apm": "APM ao vivo: {{num}} ",
+  "apm_one": "",
+  "apm_many": "",
+  "apm_other": "",
   "averageRank": "Média de rank este jogo",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -16,6 +19,9 @@
     "notScored": "Partida não contabilizada D: Não acrescentando nem adicionando MMR para partida {{matchId}}",
     "open": "Apostas abertas peepoGamble",
     "won": "Nós ganhamos"
+  },
+  "bounties": {
+    "pickup": ""
   },
   "bountyPickup": "+{{bountyValue}} de ouro de bônus de recompensa  EZ Clap Obrigado {{heroNames}} SeemsGood ",
   "chatters": {
@@ -43,15 +49,27 @@
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
       "days": "{{days}}d",
+      "days_one": "",
+      "days_many": "",
+      "days_other": "",
       "lifetime": "lifetime"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches.",
+    "winrate_one": "",
+    "winrate_many": "",
+    "winrate_other": ""
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Comando invalido. Tente !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} perdeu o kill streak de {{killstreakCount}} BibleThump",
-    "won": "{{- heroName}} tem kill streak de {{killstreakCount}} POGGIES"
+    "lost_one": "",
+    "lost_many": "",
+    "lost_other": "",
+    "won": "{{- heroName}} tem kill streak de {{killstreakCount}} POGGIES",
+    "won_one": "",
+    "won_many": "",
+    "won_other": ""
   },
   "lastgame": {
     "link": "Última partida: {{- url}}",
@@ -109,16 +127,23 @@
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
     "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",
     "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
-    "more": "Rosh deaths: {{num}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more": "Rosh deaths: {{num}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more_one": "",
+    "more_many": "",
+    "more_other": ""
   },
   "roshanKilled": "Roshan morto! Próximo roshan em {{min}} e {{max}}",
+  "setStreamDelay": "",
   "setStreamDelay_one": "Setting stream delay to: {{count}} second",
   "setStreamDelay_many": "",
   "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
+  "setStreamDelayRemoved": "",
+  "streamDelay": "",
   "streamDelay_one": "Stream delay: {{count}} second",
   "streamDelay_many": "",
   "streamDelay_other": "Stream delay: {{count}} seconds",
+  "streamDelayNone": "",
   "tip": {
     "from": "Tip de {{- heroName}} ICANT",
     "to": "Tipando {{- heroName}} PepeLaugh"

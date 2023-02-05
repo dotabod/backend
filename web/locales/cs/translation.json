@@ -6,6 +6,10 @@
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
   "apm": "Aktuální APM: {{num}} Chatting",
+  "apm_one": "",
+  "apm_few": "",
+  "apm_many": "",
+  "apm_other": "",
   "averageRank": "Průměrný rank této hry",
   "betaFeature": "[beta funkce]",
   "betaTester": "$t(betaTester_on)",
@@ -16,6 +20,9 @@
     "notScored": "Zápas se nepočítá D: Žádná ztráta ani zisk MMR za zápas {{matchId}}.",
     "open": "Sázky otevřeny peepoGamble",
     "won": "Vyhráli jsme"
+  },
+  "bounties": {
+    "pickup": ""
   },
   "bountyPickup": "+ {{bountyValue}} zlata z bounty run ({{totalBounties}}/4) EZ Clap dík {{heroNames}} SeemsGood",
   "chatters": {
@@ -45,15 +52,31 @@
     "none": "No matches played as {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
       "days": "{{days}}d",
+      "days_one": "",
+      "days_few": "",
+      "days_many": "",
+      "days_other": "",
       "lifetime": "lifetime"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches."
+    "winrate": "Winrate: {{winrate}}% as {{- heroName}} in {{timeperiod}} of {{total}} matches.",
+    "winrate_one": "",
+    "winrate_few": "",
+    "winrate_many": "",
+    "winrate_other": ""
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Neplatný příkaz. Zkus !setmmr 1234",
   "killstreak": {
     "lost": "{{- heroName}} přišel o {{killstreakCount}} kill streak BibleThump",
-    "won": "{{- heroName}} má {{killstreakCount}} kill streak POGGIES"
+    "lost_one": "",
+    "lost_few": "",
+    "lost_many": "",
+    "lost_other": "",
+    "won": "{{- heroName}} má {{killstreakCount}} kill streak POGGIES",
+    "won_one": "",
+    "won_few": "",
+    "won_many": "",
+    "won_other": ""
   },
   "lastgame": {
     "link": "Zde je poslední hra: {{- url}}",
@@ -112,18 +135,26 @@
     "1": "Zabitých roshanů: 1 - Další drop: agha shard.",
     "2": "Zabitých roshanů: 2 - Další drop: sejra a aghanim nebo refresher.",
     "3": "Zabitých roshanů: 3 - Další drop: sejra, aghanim a refresher.",
-    "more": "Zabitých roshanů: {{num}} - Další drop: sejra, aghanim a refresher."
+    "more": "Zabitých roshanů: {{num}} - Další drop: sejra, aghanim a refresher.",
+    "more_one": "",
+    "more_few": "",
+    "more_many": "",
+    "more_other": ""
   },
   "roshanKilled": "Roshan zabit! Další spawne mezi {{min}} a {{max}}",
+  "setStreamDelay": "",
   "setStreamDelay_one": "Setting stream delay to: {{count}} second",
   "setStreamDelay_few": "Setting stream delay to: {{count}} seconds",
   "setStreamDelay_many": "Setting stream delay to: {{count}} seconds",
   "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
+  "setStreamDelayRemoved": "",
+  "streamDelay": "",
   "streamDelay_one": "Stream delay: {{count}} second",
   "streamDelay_few": "Stream delay: {{count}} seconds",
   "streamDelay_many": "Stream delay: {{count}} seconds",
   "streamDelay_other": "Stream delay: {{count}} seconds",
+  "streamDelayNone": "",
   "tip": {
     "from": "Tip od {{- heroName}} ICANT",
     "to": "Tip pro {{- heroName}} PepeLaugh"
