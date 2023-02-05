@@ -10,6 +10,10 @@ GREEN  := "\\u001b[32m"
 RESET  := "\\u001b[0m"
 CHECK  := `/usr/bin/printf "\xE2\x9C\x94"`
 
+translate:
+    @echo "Translating"
+    @i18next -c 'web/i18next-parser.config.js'
+
 # Lints Web source code
 test: build
     @docker compose -f {{dockerfile}} run web yarn lint

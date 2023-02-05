@@ -110,6 +110,9 @@
     "more": "Rosh deaths: {{num}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
+  "seconds_zero": "{{count}} seconds",
+  "seconds_one": "{{count}} second",
+  "seconds_other": "{{count}} seconds",
   "setStreamDelay_zero": "Removing stream delay",
   "setStreamDelay_one": "Setting stream delay to: {{count}} second",
   "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
