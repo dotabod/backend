@@ -3,11 +3,22 @@ import { t } from 'i18next'
 import { GSIHandler } from '../../GSIHandler.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 
 eventHandler.registerEvent(`items:teleport0:name`, {
   handler: (dotaClient: GSIHandler, itemName: 'item_tpscroll' | 'empty') => {
     if (!dotaClient.client.beta_tester) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
+    if (!dotaClient.client.stream_online) return
+
+    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
+    const {
+      noTp: { enabled: chatterEnabled },
+    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
+
+    if (!chattersEnabled || !chatterEnabled) {
+      return
+    }
 
     // we found a tp scroll
     if (itemName !== 'empty') {
