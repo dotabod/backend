@@ -5,7 +5,8 @@
     "pickup": "{{- heroName}} picked up the aegis!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
-  "apm": "Live APM: {{count}} Chatting",
+  "apm_other": "Live APM: {{count}} Chatting",
+  "apm_one": "Live APM: {{count}} Chatting",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -18,8 +19,7 @@
     "won": "We have won Happi go next"
   },
   "bounties": {
-    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
-    "totalGold": "{{count}} gold"
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood"
   },
   "chatters": {
     "died": "{{- heroName}} died with passive {{itemNames}} ICANT",
@@ -44,16 +44,20 @@
   "herostats": {
     "none": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "days": "in {{count}}d",
+      "days_one": "in {{count}}d",
+      "days_other": "in {{count}}d",
       "lifetime": "of all time"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrate_one": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrate_other": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
-    "won": "{{- heroName}} has a {{count}} kill streak POGGIES"
+    "lost_one": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "lost_other": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "won_one": "{{- heroName}} has a {{count}} kill streak POGGIES",
+    "won_other": "{{- heroName}} has a {{count}} kill streak POGGIES"
   },
   "lastgame": {
     "link": "Here's last game: {{- url}}",
@@ -110,7 +114,8 @@
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
     "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",
     "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
-    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
   "seconds_zero": "{{count}} seconds",
@@ -119,8 +124,8 @@
   "setStreamDelayRemoved": "Removing stream delay",
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelayNone": "There is no stream delay on this channel",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
     "from": "The tip from {{- heroName}} ICANT",
     "to": "We tipping {{- heroName}} PepeLaugh"
