@@ -5,8 +5,8 @@
     "pickup": "{{- heroName}} picked up the aegis!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
-  "apm_other": "Live APM: {{count}} Chatting",
   "apm_one": "Live APM: {{count}} Chatting",
+  "apm_other": "Live APM: {{count}} Chatting",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -121,9 +121,9 @@
   "seconds_zero": "{{count}} seconds",
   "seconds_one": "{{count}} second",
   "seconds_other": "{{count}} seconds",
-  "setStreamDelayRemoved": "Removing stream delay",
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
+  "setStreamDelayRemoved": "Removing stream delay",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
