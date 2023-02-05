@@ -27,7 +27,7 @@ function speakHeroStats({
   const total = (win || 0) + (lose || 0)
   const timeperiod = allTime
     ? t('herostats.timeperiod.lifetime', { lng })
-    : t('herostats.timeperiod.days', { days: 30, lng })
+    : t('herostats.timeperiod.days', { count: 30, lng })
 
   if (total > 0) {
     const winrate = !total ? 0 : Math.round(((win || 0) / total) * 100)
@@ -38,7 +38,7 @@ function speakHeroStats({
         heroName: hero.localized_name,
         winrate,
         timeperiod,
-        total,
+        count: total,
       }),
     )
     return
