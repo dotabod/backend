@@ -5,7 +5,7 @@
     "pickup": "{{- heroName}} picked up the aegis!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
-  "apm": "Live APM: {{num}} Chatting",
+  "apm": "Live APM: {{count}} Chatting",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -49,8 +49,8 @@
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} lost the {{killstreakCount}} kill streak BibleThump",
-    "won": "{{- heroName}} has a {{killstreakCount}} kill streak POGGIES"
+    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "won": "{{- heroName}} has a {{count}} kill streak POGGIES"
   },
   "lastgame": {
     "link": "Here's last game: {{- url}}",
@@ -69,7 +69,7 @@
   "lifetime": "Lifetime games",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
-  "midasUsed": "Midas was finally used, {{seconds}} seconds late Madge",
+  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late Madge",
   "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "User not found. Try logging out and in of dotabod.com",
   "modsOnly_off": "Mods only mode is now off. Everyone can type.",
@@ -113,13 +113,11 @@
   "seconds_zero": "{{count}} seconds",
   "seconds_one": "{{count}} second",
   "seconds_other": "{{count}} seconds",
-  "setStreamDelay_zero": "Removing stream delay",
-  "setStreamDelay_one": "Setting stream delay to: {{count}} second",
-  "setStreamDelay_other": "Setting stream delay to: {{count}} seconds",
+  "setStreamDelayRemoved": "Removing stream delay",
+  "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelay_zero": "There is no stream delay on this channel",
-  "streamDelay_one": "Stream delay: {{count}} second",
-  "streamDelay_other": "Stream delay: {{count}} seconds",
+  "streamDelayNone": "There is no stream delay on this channel",
+  "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "tip": {
     "from": "The tip from {{- heroName}} ICANT",
     "to": "We tipping {{- heroName}} PepeLaugh"

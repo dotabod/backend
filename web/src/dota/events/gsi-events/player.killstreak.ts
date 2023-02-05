@@ -28,7 +28,7 @@ eventHandler.registerEvent(`player:kill_streak`, {
 
       dotaClient.say(
         t('killstreak.lost', {
-          killstreakCount: previousStreak,
+          count: previousStreak,
           heroName,
           lng: dotaClient.client.locale,
         }),
@@ -41,7 +41,7 @@ eventHandler.registerEvent(`player:kill_streak`, {
     clearTimeout(dotaClient.killstreakTimeout)
     dotaClient.killstreakTimeout = setTimeout(() => {
       dotaClient.say(
-        t('killstreak.won', { killstreakCount: streak, heroName, lng: dotaClient.client.locale }),
+        t('killstreak.won', { count: streak, heroName, lng: dotaClient.client.locale }),
       )
     }, 15000)
   },

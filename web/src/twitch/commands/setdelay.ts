@@ -42,10 +42,14 @@ commandHandler.registerCommand('setdelay', {
 
       void chatClient.say(
         message.channel.name,
-        t('setStreamDelay', {
-          lng: message.channel.client.locale,
-          count: Number(args[0]) || 0,
-        }),
+        !(Number(args[0]) || 0)
+          ? t('setStreamDelayRemoved', {
+              lng: message.channel.client.locale,
+            })
+          : t('setStreamDelay', {
+              lng: message.channel.client.locale,
+              seconds: Number(args[0]) || 0,
+            }),
       )
     }
 

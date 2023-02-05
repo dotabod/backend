@@ -26,7 +26,7 @@ commandHandler.registerCommand('apm', {
     const gameTime = client.gsi.map?.game_time ?? 1
     const apm = commandsIssued ? Math.round(commandsIssued / (gameTime / 60)) : 0
 
-    void chatClient.say(channel, t('apm', { lng: message.channel.client.locale, num: apm }))
+    void chatClient.say(channel, t('apm', { lng: message.channel.client.locale, count: apm }))
     return
   },
 })
