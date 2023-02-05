@@ -17,7 +17,10 @@
     "open": "Bets open peepoGamble",
     "won": "We have won Happi go next"
   },
-  "bountyPickup": "+{{bountyValue}} gold from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
+  "bounties": {
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
+    "totalGold": "{{count}} gold"
+  },
   "chatters": {
     "died": "{{- heroName}} died with passive {{itemNames}} ICANT",
     "firstBloodDeath": "{{- heroName}} giving up first blood PepeLaugh",
@@ -107,7 +110,7 @@
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
     "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",
     "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
-    "more": "Rosh deaths: {{num}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
   "seconds_zero": "{{count}} seconds",

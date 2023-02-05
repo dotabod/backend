@@ -22,9 +22,9 @@ export interface RoshRes {
 }
 
 // Doing it this way so i18n can pick up the t('') strings
-export function getRoshCountMessage(props: { lng: string; num: number }) {
+export function getRoshCountMessage(props: { lng: string; count: number }) {
   let roshCountMsg
-  switch (props.num) {
+  switch (props.count) {
     case 1:
       roshCountMsg = t('roshanCount.1', props)
       break
@@ -35,7 +35,7 @@ export function getRoshCountMessage(props: { lng: string; num: number }) {
       roshCountMsg = t('roshanCount.3', props)
       break
     default:
-      roshCountMsg = t('roshanCount.more', props)
+      roshCountMsg = t('roshanCount.more', { lng: props.lng, count: props.count })
       break
   }
   return roshCountMsg
@@ -65,7 +65,7 @@ export function generateRoshanMessage(res: RoshRes, lng: string) {
     )
   }
 
-  msgs.push(getRoshCountMessage({ lng, num: res.count }))
+  msgs.push(getRoshCountMessage({ lng, count: res.count }))
 
   return msgs.join(' · ')
 }

@@ -62,7 +62,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
 
     dotaClient.bountyTimeout = setTimeout(() => {
       dotaClient.say(
-        t('bountyPickup', {
+        t('bounties.pickup', {
           lng: dotaClient.client.locale,
           bountyValue: event.bounty_value * dotaClient.bountyHeroNames.length,
           totalBounties: dotaClient.bountyHeroNames.length,
