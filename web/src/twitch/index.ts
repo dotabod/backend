@@ -7,14 +7,22 @@ import getDBUser from '../db/getDBUser.js'
 import { DBSettings, getValueOrDefault } from '../db/settings.js'
 import { modMode, plebMode } from '../dota/lib/consts.js'
 import { logger } from '../utils/logger.js'
-import ChatClientSingleton from './lib/ChatClientSingleton.js'
 import commandHandler from './lib/CommandHandler.js'
-
-// Setup twitch chat bot client first
-export const chatClient = await ChatClientSingleton.getInstance()
 
 // Our docker chat forwarder instance
 const twitchChat = io('ws://twitch-chat-listener:5005')
+
+export const chatClient = {
+  join: (channel: string) => {
+    twitchChat.emit('join', channel)
+  },
+  part: (channel: string) => {
+    twitchChat.emit('part', channel)
+  },
+  say: (channel: string, text: string) => {
+    twitchChat.emit('say', channel, text)
+  },
+}
 
 twitchChat.on('connect', () => {
   logger.info('We alive on dotabod chat server!')
@@ -36,14 +44,15 @@ twitchChat.on(
       !(userInfo.isMod || userInfo.isBroadcaster || userInfo.isSubscriber)
     ) {
       plebMode.delete(channelId)
-      void chatClient.say(channel, '/subscribers')
-      void chatClient.say(channel, t('pleb', { context: 'off', name: user, lng: userInfo.locale }))
+      chatClient.say(channel, '/subscribers')
+      chatClient.say(channel, t('pleb', { context: 'off', name: user, lng: userInfo.locale }))
       return
     }
 
     // Don't allow non mods to message
     if (modMode.has(channelId) && !userInfo.isMod && !userInfo.isBroadcaster) {
-      void chatClient.deleteMessage(channel, messageId)
+      // TODO: Disabling this feature until we fix the deleteMessage deprecation notice
+      // void chatClient.deleteMessage(channel, messageId)
       return
     }
 
@@ -53,7 +62,7 @@ twitchChat.on(
     // This runs every command, but its cached so no hit on db
     const client = await getDBUser(undefined, channelId)
     if (!client || !channelId) {
-      void chatClient.say(channel, t('missingUser', { lng: userInfo.locale }))
+      chatClient.say(channel, t('missingUser', { lng: userInfo.locale }))
       return
     }
 

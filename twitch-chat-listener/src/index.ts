@@ -36,6 +36,14 @@ io.on('say', function (channel: string, text: string) {
   void chatClient.say(channel, text)
 })
 
+io.on('join', function (channel: string) {
+  void chatClient.join(channel)
+})
+
+io.on('part', function (channel: string) {
+  chatClient.part(channel)
+})
+
 // Setup twitch chatbot client
 export const chatClient = await getChatClient()
 

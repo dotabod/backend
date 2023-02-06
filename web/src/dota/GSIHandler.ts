@@ -98,6 +98,7 @@ export class GSIHandler {
 
   public disable() {
     this.disabled = true
+    return chatClient.part(this.client.name)
   }
 
   public getMmr() {
@@ -141,12 +142,12 @@ export class GSIHandler {
 
     const msg = beta ? `${message} ${t('betaFeature', { lng: this.client.locale })}` : message
     if (!delay) {
-      void chatClient.say(this.getChannel(), msg)
+      chatClient.say(this.getChannel(), msg)
       return
     }
 
     setTimeout(() => {
-      this.getChannel() && void chatClient.say(this.getChannel(), msg)
+      this.getChannel() && chatClient.say(this.getChannel(), msg)
     }, this.getStreamDelay())
   }
 
