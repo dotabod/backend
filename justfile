@@ -22,31 +22,28 @@ i18nu:
     @echo "Uploading translations"
     @crowdin.bat upload translations --config './crowdin.yml'
 
-# Lints Web source code
-test: build
-    @docker compose -f {{dockerfile}} run web yarn lint
-    @echo -e " {{GREEN}}{{CHECK}} All tests passed! {{CHECK}} {{RESET}}"
-
 # Stops all containers
 down:
     @docker compose -f {{dockerfile}} down
 
 # Builds all images
 buildall:
-    @docker compose -f {{dockerfile}} build
+    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
+    @docker image prune -a -f
 
-logone:
+logs:
     @docker logs {{app}} -f
 
 # Builds one image
 build:
     @echo -e "Running for {{app}} on {{dockerfile}}"
     git pull
-    @docker compose -f {{dockerfile}} build {{app}}
+    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully ran! {{CHECK}} {{RESET}}"
+    @docker image prune -a -f
 
 # Starts images
 up:
@@ -55,9 +52,10 @@ up:
 
 update:
     git pull
-    @docker compose -f {{dockerfile}} build
+    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d
+    @docker image prune -a -f
 
 pullall:
     cd ./web && yarn pullpsql && yarn generateprisma
