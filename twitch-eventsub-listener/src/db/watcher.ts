@@ -1,5 +1,5 @@
 import { User } from '../../prisma/generated/postgresclient/index.js'
-import { SubscribeEvents } from '../index.js'
+import { SubscribeEvents } from '../twitch/events/index.js'
 import { getBotAPI } from '../twitch/lib/getBotAPI.js'
 import { onlineEvent } from '../twitch/lib/onlineEvent.js'
 import { prisma } from './prisma.js'
