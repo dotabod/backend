@@ -32,15 +32,15 @@ down:
     @docker compose -f {{dockerfile}} down
 
 # Builds all images
-build:
+buildall:
     @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
 
 logone:
     @docker logs {{app}} -f
 
-# Builds all images
-buildone:
+# Builds one image
+build:
     @echo -e "Running for {{app}} on {{dockerfile}}"
     git pull
     @docker compose -f {{dockerfile}} build {{app}}
