@@ -65,6 +65,7 @@ services:
     build:
       context: web
       target: dev
+      dockerfile: ./Dockerfile # Reusing same nodejs dockerfile
     hostname: web
     ports:
       - '81:5000'
