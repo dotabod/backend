@@ -5,7 +5,9 @@
     "pickup": "{{- heroName}} pegou o aegis!",
     "snatched": "{{- heroName}} roubou o aegis! PepeLaugh"
   },
-  "apm": "Live APM: {{count}} Chatting",
+  "apm_one": "APM ao vivo: {{count}} Chatting",
+  "apm_many": "",
+  "apm_other": "APM ao vivo: {{count}} Chatting",
   "averageRank": "Rank médio neste jogo",
   "betaFeature": "[recurso beta]",
   "betaTester": "$t(betaTester_on)",
