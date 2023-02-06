@@ -15,6 +15,7 @@ class GSIServer {
   dota: Dota
 
   constructor() {
+    logger.info('Starting GSI Server!')
     this.dota = Dota.getInstance()
 
     const app = express()

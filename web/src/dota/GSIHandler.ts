@@ -98,7 +98,6 @@ export class GSIHandler {
 
   public disable() {
     this.disabled = true
-    return chatClient.part(this.client.name)
   }
 
   public getMmr() {

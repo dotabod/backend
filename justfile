@@ -26,6 +26,10 @@ i18nu:
 down:
     @docker compose -f {{dockerfile}} down
 
+restart:
+    @docker compose -f {{dockerfile}} down
+    @docker compose -f {{dockerfile}} up
+
 # Builds all images
 buildall:
     @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV
