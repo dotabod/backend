@@ -6,6 +6,7 @@ import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
+import getDBUser from './getDBUser.js'
 import { DBSettings, getValueOrDefault } from './settings.js'
 import supabase from './supabase.js'
 
@@ -20,6 +21,13 @@ class SetupSupabase {
     this.DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
 
     logger.info('Starting watcher for', { dev: this.IS_DEV, channels: this.DEV_CHANNELS })
+  }
+
+  toggleHandler = async (userId: string, enable: boolean) => {
+    const client = await getDBUser(userId)
+    if (!client) return
+
+    toggleDotabod(userId, enable, client.name, client.locale)
   }
 
   init() {
@@ -105,16 +113,21 @@ class SetupSupabase {
         (payload: any) => {
           const newObj = payload.new as Setting
           const client = findUser(newObj.userId)
+
+          if (newObj.key === DBSettings.commandDisable) {
+            if (!client) {
+              // in case they ban dotabod and we reboot server,
+              // we'll never have the client cached, so we have to lookup the user again
+              void this.toggleHandler(newObj.userId, !!newObj.value)
+            } else {
+              toggleDotabod(newObj.userId, !!newObj.value, client.name, client.locale)
+            }
+          }
+
           if (!client) return
 
           if (this.IS_DEV && !this.DEV_CHANNELS.includes(client.name)) return
           if (!this.IS_DEV && this.DEV_CHANNELS.includes(client.name)) return
-
-          if (newObj.key === DBSettings.commandDisable) {
-            const name = client.name ?? 'unknown'
-            const locale = client.locale ?? 'en'
-            toggleDotabod(newObj.userId, !!newObj.value, name, locale)
-          }
 
           // replace the new setting with the one we have saved in cache
           logger.info('[WATCHER SETTING] Updating setting for', {
