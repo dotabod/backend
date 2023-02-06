@@ -28,7 +28,7 @@ down:
 
 restart:
     @docker compose -f {{dockerfile}} down
-    @docker compose -f {{dockerfile}} up
+    @docker compose -f {{dockerfile}} up -d
 
 # Builds all images
 buildall:
