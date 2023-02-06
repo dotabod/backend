@@ -12,7 +12,7 @@ commandHandler.registerCommand('setdelay', {
   cooldown: 0,
   handler: (message: MessageType, args: string[]) => {
     if (isNaN(Number(args[0]))) {
-      void chatClient.say(
+      chatClient.say(
         message.channel.name,
         t('setStreamDelayNoArgs', {
           lng: message.channel.client.locale,
@@ -40,7 +40,7 @@ commandHandler.registerCommand('setdelay', {
         },
       })
 
-      void chatClient.say(
+      chatClient.say(
         message.channel.name,
         !(Number(args[0]) || 0)
           ? t('setStreamDelayRemoved', {

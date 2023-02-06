@@ -12,7 +12,7 @@ commandHandler.registerCommand('refresh', {
       channel: { name: channel, client },
     } = message
     if (client.token) {
-      void chatClient.say(channel, t('refresh', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('refresh', { lng: message.channel.client.locale }))
       server.io.to(client.token).emit('refresh')
     }
   },

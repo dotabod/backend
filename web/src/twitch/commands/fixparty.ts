@@ -46,14 +46,14 @@ commandHandler.registerCommand('fixparty', {
       })
 
       if (!bet) {
-        void chatClient.say(
+        chatClient.say(
           message.channel.name,
           t('noLastMatch', { lng: message.channel.client.locale }),
         )
         return
       }
 
-      void chatClient.say(
+      chatClient.say(
         message.channel.name,
         t('toggleMatch', {
           context: bet.is_party ? 'solo' : 'party',

@@ -13,10 +13,10 @@ commandHandler.registerCommand('steam', {
     } = message
 
     if (client.steam32Id && Number(client.steam32Id)) {
-      void chatClient.say(channel, `steamid.xyz/${client.steam32Id.toString()}`)
+      chatClient.say(channel, `steamid.xyz/${client.steam32Id.toString()}`)
       return
     }
 
-    void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
+    chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
   },
 })

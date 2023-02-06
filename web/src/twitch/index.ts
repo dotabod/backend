@@ -52,7 +52,7 @@ twitchChat.on(
     // Don't allow non mods to message
     if (modMode.has(channelId) && !userInfo.isMod && !userInfo.isBroadcaster) {
       // TODO: Disabling this feature until we fix the deleteMessage deprecation notice
-      // void chatClient.deleteMessage(channel, messageId)
+      // chatClient.deleteMessage(channel, messageId)
       return
     }
 

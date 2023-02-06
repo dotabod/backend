@@ -14,21 +14,21 @@ commandHandler.registerCommand('test', {
     } = message
 
     if (!client.steam32Id) {
-      void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
       return
     }
 
     const [steam32Id] = args
     async function handler() {
       if (!steam32Id || !client.steam32Id) {
-        void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
+        chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
         return
       }
 
       const steamserverid = await server.dota.getUserSteamServer(steam32Id || client.steam32Id)
 
       if (!steamserverid) {
-        void chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
+        chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
         return
       }
 

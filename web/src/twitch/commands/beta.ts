@@ -20,7 +20,7 @@ commandHandler.registerCommand('beta', {
         },
       })
 
-      void chatClient.say(
+      chatClient.say(
         message.channel.name,
         t('betaTester', {
           lng: message.channel.client.locale,

@@ -13,15 +13,15 @@ commandHandler.registerCommand('xpm', {
       channel: { name: channel, client },
     } = message
     if (!client.gsi?.hero?.name) {
-      void chatClient.say(channel, t('noHero', { lng: client.locale }))
+      chatClient.say(channel, t('noHero', { lng: client.locale }))
       return
     }
     if (!isPlayingMatch(client.gsi)) {
-      void chatClient.say(channel, t('notPlaying', { lng: client.locale }))
+      chatClient.say(channel, t('notPlaying', { lng: client.locale }))
       return
     }
     const xpm = client.gsi.player?.xpm ?? 0
-    void chatClient.say(channel, t('xpm', { lng: client.locale, num: xpm }))
+    chatClient.say(channel, t('xpm', { lng: client.locale, num: xpm }))
     return
   },
 })

@@ -13,8 +13,8 @@ commandHandler.registerCommand('pleb', {
       channel: { name: channel, id: channelId },
     } = message
     plebMode.add(channelId)
-    void chatClient.say(channel, '/subscribersoff')
-    void chatClient.say(channel, t('pleb', { lng: message.channel.client.locale }))
+    chatClient.say(channel, '/subscribersoff')
+    chatClient.say(channel, t('pleb', { lng: message.channel.client.locale }))
     return
   },
 })

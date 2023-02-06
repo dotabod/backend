@@ -14,25 +14,25 @@ commandHandler.registerCommand('gpm', {
     } = message
 
     if (!client.gsi?.hero?.name) {
-      void chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
       return
     }
     if (!isPlayingMatch(client.gsi)) {
-      void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
     }
 
     const gpm = client.gsi.player?.gpm
 
     if (!gpm) {
-      void chatClient.say(channel, t('gpm_zero', { num: 0, lng: message.channel.client.locale }))
+      chatClient.say(channel, t('gpm_zero', { num: 0, lng: message.channel.client.locale }))
       return
     }
 
     const gold_from_hero_kills = client.gsi.player?.gold_from_hero_kills
     const gold_from_creep_kills = client.gsi.player?.gold_from_creep_kills
 
-    void chatClient.say(
+    chatClient.say(
       channel,
       t('gpm_other', {
         num: gpm,

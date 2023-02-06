@@ -16,7 +16,7 @@ commandHandler.registerCommand('setmmr', {
     const [mmr, steam32Id] = args
 
     if (!mmr || !Number(mmr) || Number(mmr) > 20000 || Number(mmr) < 0) {
-      void chatClient.say(channel, t('invalidMmr', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('invalidMmr', { lng: message.channel.client.locale }))
       return
     }
 
@@ -37,10 +37,10 @@ commandHandler.registerCommand('setmmr', {
         return
       } else {
         if (!Number(client.steam32Id)) {
-          void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
+          chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
           return
         } else {
-          void chatClient.say(
+          chatClient.say(
             channel,
             t('updateMmrMulti', {
               steamId: Number(client.steam32Id),
@@ -52,12 +52,12 @@ commandHandler.registerCommand('setmmr', {
         }
       }
     } else if (!Number(steam32Id)) {
-      void chatClient.say(channel, t('invalidMmr', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('invalidMmr', { lng: message.channel.client.locale }))
       return
     }
 
     if (!accounts.find((a) => a.steam32Id === Number(steam32Id))) {
-      void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
       return
     }
 

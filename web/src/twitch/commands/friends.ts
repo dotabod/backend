@@ -14,14 +14,14 @@ commandHandler.registerCommand('friends', {
     const matchId = client.gsi?.map?.matchid
 
     if (!client.gsi?.hero?.name) {
-      void chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
       return
     }
     if (!isPlayingMatch(client.gsi) || !matchId) {
-      void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
     }
 
-    void chatClient.say(channel, t('matchId', { lng: message.channel.client.locale, matchId }))
+    chatClient.say(channel, t('matchId', { lng: message.channel.client.locale, matchId }))
   },
 })

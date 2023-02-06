@@ -23,12 +23,12 @@ commandHandler.registerCommand('roshan', {
     } = message
 
     if (!isPlayingMatch(client.gsi)) {
-      void chatClient.say(channel, t('notPlaying', { lng: client.locale }))
+      chatClient.say(channel, t('notPlaying', { lng: client.locale }))
       return
     }
 
     if (!client.gsi?.hero?.name) {
-      void chatClient.say(channel, t('noHero', { lng: client.locale }))
+      chatClient.say(channel, t('noHero', { lng: client.locale }))
       return
     }
 
@@ -41,7 +41,7 @@ commandHandler.registerCommand('roshan', {
       )) as unknown as AegisRes | null
 
       if (!roshJson?.minS && !roshJson?.maxS) {
-        void chatClient.say(channel, t('roshanAlive', { lng: client.locale }))
+        chatClient.say(channel, t('roshanAlive', { lng: client.locale }))
         return
       }
 
@@ -51,7 +51,7 @@ commandHandler.registerCommand('roshan', {
         msgs.push(generateAegisMessage(aegisRes, client.locale))
       }
 
-      void chatClient.say(channel, msgs.join(' · '))
+      chatClient.say(channel, msgs.join(' · '))
     }
 
     void handler()

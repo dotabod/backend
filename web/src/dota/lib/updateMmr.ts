@@ -30,7 +30,7 @@ export function tellChatNewMMR({
     const isAuto = [20, 30].includes(Math.abs(newMmr))
     setTimeout(
       () => {
-        void chatClient.say(
+        chatClient.say(
           client.name,
           t('updateMmr', {
             context: isAuto ? 'auto' : 'manual',

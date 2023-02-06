@@ -2,9 +2,9 @@ import { t } from 'i18next'
 
 import { getValueOrDefault, SettingKeys } from '../../db/settings.js'
 import { ADMIN_CHANNELS } from '../../dota/lib/consts.js'
+import Mongo from '../../steam/mongo.js'
 import { SocketClient } from '../../types.js'
 import { chatClient } from '../index.js'
-import Mongo from '../../steam/mongo.js'
 
 const mongo = await Mongo.connect()
 
@@ -121,10 +121,7 @@ class CommandHandler {
     this.logCommand(command, message)
 
     if (options.onlyOnline && !message.channel.client.stream_online) {
-      void chatClient.say(
-        message.channel.name,
-        t('notLive', { lng: message.channel.client.locale }),
-      )
+      chatClient.say(message.channel.name, t('notLive', { lng: message.channel.client.locale }))
       return
     }
 

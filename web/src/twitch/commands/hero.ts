@@ -31,7 +31,7 @@ function speakHeroStats({
 
   if (total > 0) {
     const winrate = !total ? 0 : Math.round(((win || 0) / total) * 100)
-    void chatClient.say(
+    chatClient.say(
       channel,
       t('herostats.winrate', {
         lng,
@@ -45,7 +45,7 @@ function speakHeroStats({
   }
 
   if (!total) {
-    void chatClient.say(
+    chatClient.say(
       channel,
       t('herostats.none', {
         lng,
@@ -65,16 +65,16 @@ commandHandler.registerCommand('hero', {
       channel: { name: channel, client },
     } = message
     if (!client.steam32Id) {
-      void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
       return
     }
     if (!isPlayingMatch(client.gsi)) {
-      void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
     }
     const hero = getHero(client.gsi?.hero?.name)
     if (!hero) {
-      void chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
       return
     }
 
@@ -118,7 +118,7 @@ async function getHeroMsg({ hero, channel, steam32Id, allTime, token, gsi, lng }
 
   const sockets = await server.io.in(token).fetchSockets()
   if (sockets.length === 0) {
-    void chatClient.say(channel, t('overlayMissing', { command: '!hero', lng }))
+    chatClient.say(channel, t('overlayMissing', { command: '!hero', lng }))
     return
   }
 

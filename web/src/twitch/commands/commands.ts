@@ -28,7 +28,7 @@ commandHandler.registerCommand('commands', {
     const everyone = filtered.filter((v) => v.permission === 0).map((v) => `!${v.command}`)
     const others = filtered.filter((v) => v.permission > 0).map((v) => `!${v.command}`)
 
-    void chatClient.say(
+    chatClient.say(
       channel,
       t('commands', {
         context: 'everyone',
@@ -38,7 +38,7 @@ commandHandler.registerCommand('commands', {
     )
 
     if (others.length === 0) return
-    void chatClient.say(
+    chatClient.say(
       channel,
       t('commands', {
         context: 'mods',

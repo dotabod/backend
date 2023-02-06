@@ -67,7 +67,7 @@ commandHandler.registerCommand('stats', {
       channel: { name: channel, client },
     } = message
     if (!client.gsi?.map?.matchid || !isPlayingMatch(client.gsi)) {
-      void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
     }
 
@@ -87,9 +87,9 @@ commandHandler.registerCommand('stats', {
         url: `dotabuff.com/players/${profile.accountid}`,
       })
 
-      void chatClient.say(message.channel.name, desc)
+      chatClient.say(message.channel.name, desc)
     } catch (e: any) {
-      void chatClient.say(
+      chatClient.say(
         message.channel.name,
         e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
       )

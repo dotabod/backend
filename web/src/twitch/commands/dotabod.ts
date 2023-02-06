@@ -9,7 +9,7 @@ commandHandler.registerCommand('dotabod', {
       channel: { name: channel, client },
     } = message
 
-    void chatClient.say(
+    chatClient.say(
       channel,
       t('dotabod', { url: 'dotabod.com', author: '@techleed', lng: client.locale }),
     )

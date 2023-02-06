@@ -17,7 +17,7 @@ commandHandler.registerCommand('lg', {
     } = message
 
     if (!message.channel.client.steam32Id) {
-      void chatClient.say(
+      chatClient.say(
         message.channel.name,
         t('unknownSteam', { lng: message.channel.client.locale }),
       )
@@ -32,10 +32,10 @@ commandHandler.registerCommand('lg', {
       steam32Id: message.channel.client.steam32Id,
     })
       .then((desc) => {
-        void chatClient.say(message.channel.name, desc)
+        chatClient.say(message.channel.name, desc)
       })
       .catch((e) => {
-        void chatClient.say(
+        chatClient.say(
           message.channel.name,
           e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
         )

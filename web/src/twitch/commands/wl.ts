@@ -15,7 +15,7 @@ commandHandler.registerCommand('wl', {
     } = message
 
     if (!client.steam32Id) {
-      void chatClient.say(channel, t('unknownSteam', { lng: client.locale }))
+      chatClient.say(channel, t('unknownSteam', { lng: client.locale }))
       return
     }
 
@@ -29,7 +29,7 @@ commandHandler.registerCommand('wl', {
     getWL({ channelId: channelId, mmrEnabled: mmrEnabled, startDate: client.stream_start_date })
       .then((res: any) => {
         if (res?.msg) {
-          void chatClient.say(channel, res.msg)
+          chatClient.say(channel, res.msg)
         }
       })
       .catch((e) => {

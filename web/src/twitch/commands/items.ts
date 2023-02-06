@@ -67,7 +67,7 @@ async function getItems(
         const id = itemId as unknown as keyof typeof DOTA_ITEM_IDS
         const itemShortname = DOTA_ITEM_IDS[id] as keyof typeof DOTA_ITEMS
         const item = DOTA_ITEMS[itemShortname]
-        const itemName: string | boolean = item && 'dname' in item && (item.dname as string)
+        const itemName: string | boolean = item && 'dname' in item && item.dname
 
         return itemName || itemShortname
       })
@@ -98,7 +98,7 @@ commandHandler.registerCommand('items', {
       channel: { name: channel, client },
     } = message
     if (!client.gsi?.map?.matchid || !isPlayingMatch(client.gsi)) {
-      void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
     }
 
@@ -116,15 +116,15 @@ commandHandler.registerCommand('items', {
 
       getItems(client, profile, currentMatchId)
         .then((res) => {
-          void chatClient.say(client.name, t('heroItems.list', res))
+          chatClient.say(client.name, t('heroItems.list', res))
         })
         .catch((e: any) => {
           const msg = !e?.message ? t('gameNotFound', { lng: client.locale }) : e?.message
-          void chatClient.say(client.name, msg)
+          chatClient.say(client.name, msg)
         })
     } catch (e: any) {
       const msg = !e?.message ? t('gameNotFound', { lng: client.locale }) : e?.message
-      void chatClient.say(client.name, msg)
+      chatClient.say(client.name, msg)
     }
   },
 })

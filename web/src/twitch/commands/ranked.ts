@@ -17,7 +17,7 @@ commandHandler.registerCommand('ranked', {
     } = message
 
     if (!client.steam32Id) {
-      void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
       return
     }
 
@@ -25,12 +25,12 @@ commandHandler.registerCommand('ranked', {
 
     async function handler() {
       if (!currentMatchId) {
-        void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
+        chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
         return
       }
 
       if (!Number(currentMatchId)) {
-        void chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
+        chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
         return
       }
 
@@ -39,22 +39,16 @@ commandHandler.registerCommand('ranked', {
         .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames | undefined
 
       if (!response) {
-        void chatClient.say(channel, t('missingMatchData', { lng: message.channel.client.locale }))
+        chatClient.say(channel, t('missingMatchData', { lng: message.channel.client.locale }))
         return
       }
 
       if (response.match.lobby_type === 7) {
-        void chatClient.say(
-          channel,
-          t('ranked', { context: 'yes', lng: message.channel.client.locale }),
-        )
+        chatClient.say(channel, t('ranked', { context: 'yes', lng: message.channel.client.locale }))
         return
       }
 
-      void chatClient.say(
-        channel,
-        t('ranked', { context: 'no', lng: message.channel.client.locale }),
-      )
+      chatClient.say(channel, t('ranked', { context: 'no', lng: message.channel.client.locale }))
     }
 
     void handler()

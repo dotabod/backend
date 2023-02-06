@@ -15,7 +15,7 @@ commandHandler.registerCommand('avg', {
       channel: { client },
     } = message
     if (!message.channel.client.steam32Id) {
-      void chatClient.say(message.channel.name, t('unknownSteam', { lng: client.locale }))
+      chatClient.say(message.channel.name, t('unknownSteam', { lng: client.locale }))
       return
     }
 
@@ -28,10 +28,10 @@ commandHandler.registerCommand('avg', {
         gsiHandlers.get(client.token)?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi),
     })
       .then((avg) => {
-        void chatClient.say(message.channel.name, `${avg}${avgDescriptor}`)
+        chatClient.say(message.channel.name, `${avg}${avgDescriptor}`)
       })
       .catch((e) => {
-        void chatClient.say(
+        chatClient.say(
           message.channel.name,
           e?.message ?? t('gameNotFound', { lng: client.locale }),
         )

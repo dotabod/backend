@@ -11,7 +11,7 @@ commandHandler.registerCommand('lgs', {
   dbkey: DBSettings.commandLG,
   handler: (message: MessageType, args: string[]) => {
     if (!message.channel.client.steam32Id) {
-      void chatClient.say(
+      chatClient.say(
         message.channel.name,
         t('unknownSteam', { lng: message.channel.client.locale }),
       )
@@ -44,7 +44,7 @@ commandHandler.registerCommand('lgs', {
       })
 
       if (!lg) {
-        void chatClient.say(
+        chatClient.say(
           message.channel.name,
           t('noLastMatch', { lng: message.channel.client.locale }),
         )
@@ -92,7 +92,7 @@ commandHandler.registerCommand('lgs', {
         returnMsg.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))
       returnMsg.push(`dotabuff.com/matches/${lg.matchId}`)
 
-      void chatClient.say(message.channel.name, returnMsg.join(' · '))
+      chatClient.say(message.channel.name, returnMsg.join(' · '))
     }
 
     void handler()

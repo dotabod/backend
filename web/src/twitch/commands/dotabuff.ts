@@ -12,7 +12,7 @@ commandHandler.registerCommand('dotabuff', {
     } = message
 
     if (client.steam32Id && Number(client.steam32Id)) {
-      void chatClient.say(
+      chatClient.say(
         channel,
         t('profileUrl', {
           channel: client.name,
@@ -23,6 +23,6 @@ commandHandler.registerCommand('dotabuff', {
       return
     }
 
-    void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
+    chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
   },
 })

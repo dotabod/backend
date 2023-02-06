@@ -15,20 +15,20 @@ commandHandler.registerCommand('d2pt', {
       channel: { name: channel, client },
     } = message
     if (!client.steam32Id) {
-      void chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('unknownSteam', { lng: message.channel.client.locale }))
       return
     }
     if (!isPlayingMatch(client.gsi)) {
-      void chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
       return
     }
     const hero = getHero(client.gsi?.hero?.name)
     if (!hero) {
-      void chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
+      chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
       return
     }
 
-    void chatClient.say(
+    chatClient.say(
       channel,
       t('dota2pt', {
         heroName: hero.localized_name,
