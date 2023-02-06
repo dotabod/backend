@@ -5,7 +5,10 @@
     "pickup": "{{- heroName}} подбирает аегис!",
     "snatched": "{{- heroName}} крадёт аегис PepeLaugh"
   },
-  "apm": "Live APM: {{count}} Chatting",
+  "apm_one": "Текущий APM: {{count}} Ctatting",
+  "apm_few": "Текущий APM: {{count}} Chatting",
+  "apm_many": "Текущий APM: {{count}} Chatting",
+  "apm_other": "Текущий APM: {{count}} Chatting",
   "averageRank": "Средний ранг этой игры",
   "betaFeature": "[бета-функция]",
   "betaTester": "$t(betaTester_on)",
@@ -18,8 +21,7 @@
     "won": "Мы победили"
   },
   "bounties": {
-    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
-    "totalGold": "{{count}} gold"
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) от рун золота ({{totalBounties}}/4) EZ Clap спасибо {{heroNames}} SeemsGood"
   },
   "chatters": {
     "died": "{{- heroName}} умер с пассивным {{itemNames}} ICANT",
@@ -40,18 +42,30 @@
     "list": "(2 мин. задержка) {{- heroName}} имеет: {{- itemNames}}"
   },
   "herostats": {
-    "none": "Нет сыгранных игр на {{- heroName}} за {{timeperiod}}",
+    "none": "Нет сыгранных игр на {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "days": "in {{count}}d",
-      "lifetime": "of all time"
+      "days_one": "за {{count}} день",
+      "days_few": "за {{count}} дня",
+      "days_many": "за {{count}} дней",
+      "days_other": "за {{count}} дня",
+      "lifetime": "за всё время"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrate_one": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игр.",
+    "winrate_few": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игры.",
+    "winrate_many": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игр.",
+    "winrate_other": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыгран {{count}} игр."
   },
   "invalidColor": "Неверный цвет героя, номер или имя. Попробуй 1-10, имя героя на английском или цвет из списка: {{colorList}}",
   "invalidMmr": "Неверная команда. Попробуйте !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
-    "won": "{{- heroName}} has a {{count}} kill streak POGGIES"
+    "lost_one": "{{- heroName}} потерял серию из {{count}} убийства! BibleThump",
+    "lost_few": "{{- heroName}} потерял серию из {{count}} убийств! BibleThump",
+    "lost_many": "{{- heroName}} потерял серию из {{count}} убийств! BibleThump",
+    "lost_other": "{{- heroName}} потерял серию из {{count}} убийств! BibleThump",
+    "won_one": "У {{- heroName}} серия из {{count}} убийства! POGGIES",
+    "won_few": "У {{- heroName}} серия из {{count}} убийств! POGGIES",
+    "won_many": "У {{- heroName}} серия из {{count}} убийств! POGGIES",
+    "won_other": "у {{- heroName}} серия из {{count}} убийств! POGGIES"
   },
   "lastgame": {
     "link": "ID последнего матча: {{- url}}",
@@ -110,12 +124,20 @@
     "1": "1 Рошан мёртв · Следующая награда:  Шард.",
     "2": "2 Рошан мёртв · Следующая награда:  Сыр, Аганим или Рефрешер.",
     "3": "3 Рошан мёртв · Следующая награда:  Сыр, Аганим и Рефрешер.",
-    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more_one": "У Рошана {{count}} смерть · Следующая награда:  Сыр, Аганим и Рефрешер.",
+    "more_few": "У Рошана {{count}} смерти · Следующая награда:  Сыр, Аганим и Рефрешер.",
+    "more_many": "У Рошана {{count}} смертей · Следующая награда:  Сыр, Аганим и Рефрешер.",
+    "more_other": "У Рошана {{count}} смертей · Следующая награда: Сыр, Аганим и Рефрешер."
   },
   "roshanKilled": "Рошан убит! Следующий рошан между {{min}} и {{max}}",
-  "setStreamDelayRemoved": "Отключаем задержку стрима",
-  "setStreamDelay": "Устанавливаю задержку стрима на: $t(seconds, {\"count\": {{seconds}} })",
+  "seconds_one": "{{count}} секунду",
+  "seconds_few": "{{count}} секунды",
+  "seconds_many": "{{count}} секунд",
+  "seconds_other": "{{count}} секунд",
+  "setStreamDelay": "Теперь задержка стрима - $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Неверная задержка стрима, используйте !setdelay <seconds>",
+  "setStreamDelayRemoved": "Отключаю задержку стрима",
+  "streamDelay": "Задержка стрима: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "На этом канале нет задержки стрима",
   "streamDelay": "Задержка стрима: $t(seconds, {\"count\": {{seconds}} })",
   "tip": {
