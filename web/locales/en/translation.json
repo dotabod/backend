@@ -27,6 +27,7 @@
     "firstBloodDeath": "{{- heroName}} giving up first blood PepeLaugh",
     "midas": "massivePIDAS Use your midas",
     "noTp": "{{channel}} where's your tp HECANT",
+    "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe",
     "pause": "PauseChamp Who paused the game?",
     "smoked": "Shush {{- heroName}} is smoked!",
     "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"

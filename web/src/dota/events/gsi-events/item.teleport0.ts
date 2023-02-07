@@ -1,9 +1,9 @@
 import { t } from 'i18next'
 
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 import { GSIHandler } from '../../GSIHandler.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
-import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 
 eventHandler.registerEvent(`items:teleport0:name`, {
   handler: (dotaClient: GSIHandler, itemName: 'item_tpscroll' | 'empty') => {
@@ -22,29 +22,45 @@ eventHandler.registerEvent(`items:teleport0:name`, {
       return
     }
 
+    function resetTimer() {
+      clearTimeout(dotaClient.noTpChatter.timeout)
+      dotaClient.noTpChatter.timeout = undefined
+      dotaClient.noTpChatter.lastRemindedDate = undefined
+    }
+
     // we found a tp scroll
     if (itemName !== 'empty') {
+      if (dotaClient.noTpChatter.timeout) {
+        return resetTimer()
+      }
+
       if (dotaClient.noTpChatter.lastRemindedDate) {
+        const timeSinceLastReminder =
+          (Date.now() - dotaClient.noTpChatter.lastRemindedDate.getTime()) / 1000
+        const seconds = Math.round(timeSinceLastReminder) + secondsToWait
+
+        if (dotaClient.client.gsi?.hero?.alive === false) {
+          dotaClient.say(
+            t('chatters.tpFromDeath', {
+              seconds,
+              channel: `@${dotaClient.client.name}`,
+              lng: dotaClient.client.locale,
+            }),
+            { beta: true },
+          )
+          return resetTimer()
+        }
+
         dotaClient.say(
           t('chatters.tpFound', {
-            seconds:
-              Math.round(
-                (new Date().getTime() - dotaClient.noTpChatter.lastRemindedDate.getTime()) / 1000,
-              ) + secondsToWait,
+            seconds,
             channel: `@${dotaClient.client.name}`,
             lng: dotaClient.client.locale,
           }),
           { beta: true },
         )
 
-        dotaClient.noTpChatter.lastRemindedDate = undefined
-        return
-      }
-
-      if (dotaClient.noTpChatter.timeout) {
-        clearTimeout(dotaClient.noTpChatter.timeout)
-        dotaClient.noTpChatter.timeout = undefined
-        return
+        return resetTimer()
       }
     }
 
