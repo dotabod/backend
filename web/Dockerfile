@@ -1,5 +1,5 @@
 # First stage: Install dependencies and cache them
-FROM node:19.4-alpine AS deps
+FROM --platform=linux/amd64 node:19.4-alpine AS deps
 
 RUN apk add yarn git
 
@@ -22,27 +22,20 @@ RUN rm -rf node_modules
 # Copy the cached dependencies and build the application
 FROM prisma AS builder
 
-ARG NODE_ENV
-ENV NODE_ENV=${NODE_ENV}
-
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/package.json ./
 COPY --from=prisma /app/prisma ./prisma
 COPY locales ./locales
 COPY tsconfig.json ./tsconfig.json
+COPY src ./src
 
-RUN echo "Running on environment: $NODE_ENV"
-
-RUN if [ "$NODE_ENV" = "production" ]; then \
-        yarn build; \
-    fi
-
+RUN yarn build
 RUN rm -rf node_modules
 
 ## PROD ##
-FROM node:19.4-alpine AS prod
+FROM --platform=linux/amd64 node:19.4-alpine AS prod
 
 WORKDIR /app
 
@@ -58,7 +51,7 @@ RUN mkdir -p ./src/steam/volumes
 CMD ["yarn", "start"]
 
 ## DEV ##
-FROM node:19.4-alpine AS dev
+FROM --platform=linux/amd64 node:19.4-alpine AS dev
 
 WORKDIR /app
 

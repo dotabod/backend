@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "start": "node -r newrelic --trace-warnings ./src/index.js",
-    "build": "tsc",
+    "build": "tsc --build --verbose",
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
     "devnotdocker": "doppler run -- nodemon -L --ext ts ./src/index.ts",
