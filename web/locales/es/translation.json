@@ -5,7 +5,9 @@
     "pickup": "¡{{- heroName}} recogió el aegis!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
-  "apm": "Live APM: {{count}} Chatting",
+  "apm_one": "Live APM: {{count}} Chatting",
+  "apm_many": "",
+  "apm_other": "Live APM: {{count}} Chatting",
   "averageRank": "La media de este juego es",
   "betaFeature": "[función beta]",
   "betaTester": "$t(betaTester_on)",
@@ -28,13 +30,17 @@
     "noTp": "{{channel}} where's your tp HECANT",
     "pause": "PauseChamp ¿Quién ha pausado el juego?",
     "smoked": "¡Calladito! {{- heroName}} esta escondido.",
-    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe",
+    "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Todos pueden usar: {{commandList}}",
   "commands_mods": "Mod sólo comandos: {{commandList}}",
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "Soy un bot hecho por {{author}}. Mas información {{- url}}",
   "gameNotFound": "Juego no encontrado",
+  "gpm_zero": "",
+  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "GPM en vivo:{{num}}. {{heroKills}} de matando Héroes. {{creepKills}} de matando grimas.",
   "heroItems": {
     "empty": "(2m delay) No items found for {{- heroName}}",
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
@@ -42,16 +48,24 @@
   "herostats": {
     "none": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "days": "in {{count}}d",
+      "days_one": "in {{count}}d",
+      "days_many": "",
+      "days_other": "in {{count}}d",
       "lifetime": "of all time"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrate_one": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrate_many": "",
+    "winrate_other": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Comando inválido. Usa !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
-    "won": "{{- heroName}} has a {{count}} kill streak POGGIES"
+    "lost_one": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "lost_many": "",
+    "lost_other": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "won_one": "{{- heroName}} has a {{count}} kill streak POGGIES",
+    "won_many": "",
+    "won_other": "{{- heroName}} has a {{count}} kill streak POGGIES"
   },
   "lastgame": {
     "link": "Aqui esta el ultimo juego: {{- url}}",
@@ -98,6 +112,7 @@
   "rank": {
     "nextRankAt": "Siguiente rango en",
     "nextRankIn_one": "Una victoria más peepoClap",
+    "nextRankIn_many": "",
     "nextRankIn_other": "en {{count}} ganas"
   },
   "ranked_no": "Nope este juego no está clasificado",
@@ -108,14 +123,18 @@
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
     "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",
     "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
-    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more_many": "",
+    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "¡Roshan asesinado! Siguiente roshan entre {{min}} y {{max}}",
-  "setStreamDelayRemoved": "Removing stream delay",
+  "seconds_one": "{{count}} second",
+  "seconds_other": "{{count}} seconds",
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelayNone": "There is no stream delay on this channel",
+  "setStreamDelayRemoved": "Removing stream delay",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
     "from": "La propina de {{- heroName}} ICANT",
     "to": "Estamos enviar propina {{- heroName}} PepeLaugh"
@@ -128,6 +147,9 @@
   "toggleMatch_party": "Cambiando esta mecha al grupo mmr: {{- url}} Escribe !fixparty para deshacer",
   "toggleMatch_single": "Cambiando esta mecha a apostar mmr normalmente: {{- url}} Escriba !fixdd para deshacer",
   "toggleMatch_solo": "Cambiando este partido a solo mmr: {{- url}} Escriba !fixparty para deshacer",
+  "treadToggle_one": "Cambiamos las pisadas {{count}} vez para ahorrar un total de {{manaCount}} maná este partido.",
+  "treadToggle_many": "",
+  "treadToggle_other": "Cambiamos las pisadas {{count}} veces para ahorrar un total de {{manaCount}} maná en esta partida.",
   "uknownMmr": "Aún no conozco el MMR de {{channel}}. Mods tienen que !setmmr 1234 o establecerlo en {{- url}}",
   "unknown": "Desconocido",
   "unknownSteam": "No se ha podido encontrar la cuenta de steam. Intenta jugar primero una partida de práctica para guardar tu cuenta en Dotabod",
@@ -135,11 +157,5 @@
   "updateMmr_auto": "Actualizado MMR a {{mmr}}. !fixparty para grupo y !fixdd para apostar doble",
   "updateMmr_manual": "Actualizado MMR a {{mmr}}",
   "updateMmrMulti": "Múltiples cuentas de steam, actualización de la que está conectado ahora con ({{steamId}})",
-  "xpm": "XPM en vivo: {{num}}",
-  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_other": "GPM en vivo:{{num}}. {{heroKills}} de matando Héroes. {{creepKills}} de matando grimas.",
-  "treadToggle_one": "Cambiamos las pisadas {{count}} vez para ahorrar un total de {{manaCount}} maná este partido.",
-  "treadToggle_other": "Cambiamos las pisadas {{count}} veces para ahorrar un total de {{manaCount}} maná en esta partida.",
-  "seconds_one": "{{count}} second",
-  "seconds_other": "{{count}} second"
+  "xpm": "XPM en vivo: {{num}}"
 }

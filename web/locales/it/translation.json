@@ -5,7 +5,9 @@
     "pickup": "{{- heroName}} ha preso l'egida",
     "snatched": "{{- heroName}} ha rubato l'egida PepeLaugh"
   },
-  "apm": "Live APM: {{count}} Chatting",
+  "apm_one": "Live APM: {{count}} Chatting",
+  "apm_many": "",
+  "apm_other": "Live APM: {{count}} Chatting",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "$t(betaTester_on)",
@@ -18,8 +20,8 @@
     "won": "Abbiamo vinto"
   },
   "bounties": {
-    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
-    "totalGold": "{{count}} gold"
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) dalle rune ({{totalBounties}}/4) EZ Clap Grazie {{heroNames}} SeemsGood",
+    "totalGold": "{{count}} oro"
   },
   "chatters": {
     "died": "{{- heroName}} è morto con {{itemNames}} passivo/i ICANT",
@@ -28,30 +30,42 @@
     "noTp": "{{channel}} dov'è il tuo tp HECANT",
     "pause": "PauseChamp Chi ha messo la partita in pausa?",
     "smoked": "Shush {{- heroName}} è smokato!",
-    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFound": "{{channel}} ben fatto, hai finalmente comprato un tp dopo $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe",
+    "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
   "dota2pt": "Hai bisogno di build pro per {{- heroName}}? Vai qui {{- url}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
+  "gpm_zero": "",
+  "gpm_one": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
+  "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
   "heroItems": {
     "empty": "(Delay di 2m) Nessun oggetto trovato per {{- heroName}}",
     "list": "(Delay di 2m) {{- heroName}} ha: {{- itemNames}}"
   },
   "herostats": {
-    "none": "No matches played as {{- heroName}} {{timeperiod}}",
+    "none": "Nessuna partita giocata come {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "days": "in {{count}}d",
-      "lifetime": "of all time"
+      "days_one": "in {{count}} giorno",
+      "days_many": "",
+      "days_other": "in {{count}} giorni",
+      "lifetime": "di sempre"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrate_one": "Winrate: {{winrate}} come {{- heroName}} {{timeperiod}} in un totale di {{count}} partita.",
+    "winrate_many": "",
+    "winrate_other": "Winrate: {{winrate}} come {{- heroName}} {{timeperiod}} in un totale di {{count}} partite."
   },
   "invalidColor": "Colore, slot o nome dell'eroe non validi. Prova 1-10, parte del nome, o un colore da {{colorList}}",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
-    "won": "{{- heroName}} has a {{count}} kill streak POGGIES"
+    "lost_one": "{{- heroName}} ha perso la kill streak di {{count}} BibleThump",
+    "lost_many": "",
+    "lost_other": "{{- heroName}} ha perso la kill streak di {{count}} BibleThump",
+    "won_one": "{{- heroName}} ha una kill streak di {{count}} POGGIES",
+    "won_many": "",
+    "won_other": "{{- heroName}} ha una kill streak di {{count}} POGGIES"
   },
   "lastgame": {
     "link": "Partita precedente: {{- url}}",
@@ -70,7 +84,7 @@
   "lifetime": "Partite totali",
   "matchFound": "Informazioni del match trovate {{commandList}} attivati",
   "matchId": "Match ID: {{matchId}}",
-  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late Madge",
+  "midasUsed": "Midas è stata finalmente usata, $t(seconds, {\"count\": {{seconds}} }) dopo Madge",
   "missingMatchData": "In attesa delle informazioni del match PauseChamp",
   "missingUser": "Utente non trovato. Prova a sloggare e riloggare su dotabod.com",
   "modsOnly_off": "È stata disattivata la modalità solo moderatori. Ora tutti possono scrivere.",
@@ -98,6 +112,7 @@
   "rank": {
     "nextRankAt": "Prossimo rank a",
     "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
+    "nextRankIn_many": "",
     "nextRankIn_other": "in {{count}} vittorie"
   },
   "ranked_no": "No questa partita non è classificata",
@@ -105,17 +120,21 @@
   "refresh": "Aggiornando l'overlay...",
   "roshanAlive": "Roshan è vivo Happi",
   "roshanCount": {
-    "1": "Morti di Rosh: 1 · Prossimo drop: Aghanim Shard.",
+    "1": "Morti di Rosh: 1 · Prossimo drop: Aghanim's Shard.",
     "2": "Morti di Rosh: 2 · Prossimo drop: Cheese e Aghanim Blessing o Refresher Shard.",
     "3": "Morti di Rosh: 3 · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard.",
-    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more_one": "Morti di Rosh: {{count}} · Prossimo drop: Cheese, Aghanim's Blessing e Refresher Shard.",
+    "more_many": "",
+    "more_other": "Morti di Rosh: {{count}} · Prossimo drop: Cheese, Aghanim's Blessing e Refresher Shard."
   },
-  "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sará tra {{min}} e {{max}}",
-  "setStreamDelayRemoved": "Removing stream delay",
-  "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
+  "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sarà tra {{min}} e {{max}}",
+  "seconds_one": "{{count}} secondo",
+  "seconds_other": "{{count}} secondi",
+  "setStreamDelay": "Impostando il delay dello stream a: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Delay della stream invalido, usa !setdelay <seconds>",
-  "streamDelayNone": "There is no stream delay on this channel",
-  "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
+  "setStreamDelayRemoved": "Removing stream delay",
+  "streamDelay": "Delay dello stream: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "Non c'è nessun delay su questo canale",
   "tip": {
     "from": "Il tip da {{- heroName}} ICANT",
     "to": "Tippiamo {{- heroName}} PepeLaugh"
@@ -128,6 +147,9 @@
   "toggleMatch_party": "Questo match verrá contato come party mmr: {{- url}} Scrivi !fixparty per annullare",
   "toggleMatch_single": "Questo match verrá contato come standard mmr: {{- url}} Scrivi !fixdd per annullare",
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
+  "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
+  "treadToggle_many": "",
+  "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",
   "unknownSteam": "Impossibile trovare l'account Steam. Prova a giocare una partita di prova contro i bot per salvare il tuo account su Dotabod!",
@@ -135,11 +157,5 @@
   "updateMmr_auto": "Aggiornato MMR a {{mmr}}. !fixparty per party e !fixdd per doubledown",
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
-  "xpm": "XPM Live: {{num}}",
-  "gpm_one": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
-  "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
-  "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
-  "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
-  "seconds_one": "{{count}} secondo",
-  "seconds_other": "{{count}} secondi"
+  "xpm": "XPM Live: {{num}}"
 }

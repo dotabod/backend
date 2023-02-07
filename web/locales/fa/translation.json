@@ -5,7 +5,8 @@
     "pickup": " میتونه یه غذای رایگان بده {{- heroName}}",
     "snatched": "{{- heroName}} آنخ رو دزدید PepeLaugh"
   },
-  "apm": "Live APM: {{count}} Chatting",
+  "apm_one": "Live APM: {{count}} Chatting",
+  "apm_other": "Live APM: {{count}} Chatting",
   "averageRank": "میانگین اکانت بایرهای این بازی",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -28,13 +29,17 @@
     "noTp": "{{channel}} where's your tp HECANT",
     "pause": "PauseChamp کی وسط شکار ریدنش گرفت؟",
     "smoked": "Shush {{- heroName}} سبحان الله غیب شد",
-    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe",
+    "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "کامندهای همگانی: {{commandList}}",
   "commands_mods": "کامندهای مادها {{commandList}}",
   "dota2pt": "میخوای چیز جدید واسه قهرمان {{- heroName}} یاد بگیری؟ این اینک رو چک کن {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "gameNotFound": "بازی پیدا نشد",
+  "gpm_zero": "",
+  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2m delay) No items found for {{- heroName}}",
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
@@ -42,16 +47,20 @@
   "herostats": {
     "none": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "days": "in {{count}}d",
+      "days_one": "in {{count}}d",
+      "days_other": "in {{count}}d",
       "lifetime": "of all time"
     },
-    "winrate": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrate_one": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrate_other": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "داداچ اشتباه میزنی. این رو بزن  !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} lost the {{count}} kill streak BibleThump",
-    "won": "{{- heroName}} has a {{count}} kill streak POGGIES"
+    "lost_one": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "lost_other": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "won_one": "{{- heroName}} has a {{count}} kill streak POGGIES",
+    "won_other": "{{- heroName}} has a {{count}} kill streak POGGIES"
   },
   "lastgame": {
     "link": "بازی قبل: {{- url}}",
@@ -108,14 +117,17 @@
     "1": "روشان اول. روشان بعدی آقانیم شارد",
     "2": "روشان دوم. روشان بعدی پنیر و آقانیم یا رفرش شارد",
     "3": "روشان سوم. روشان بعدی پنیر و آقانیم و رفرش",
-    "more": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "روشان رو کوشتن. روشان بعدی بین {{min}} تا {{max}} دقیقه",
-  "setStreamDelayRemoved": "Removing stream delay",
+  "seconds_one": "{{count}} second",
+  "seconds_other": "{{count}} seconds",
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "streamDelayNone": "There is no stream delay on this channel",
+  "setStreamDelayRemoved": "Removing stream delay",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
     "from": "{{- heroName}} تیپش کرد ICANT",
     "to": "{{- heroName}} تیپش کردم PepeLaugh"
@@ -128,6 +140,8 @@
   "toggleMatch_party": "Changing this match to party mmr: {{- url}} Type !fixparty to undo",
   "toggleMatch_single": "Changing this match to single down mmr: {{- url}} Type !fixdd to undo",
   "toggleMatch_solo": "Changing this match to solo mmr: {{- url}} Type !fixparty to undo",
+  "treadToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
+  "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
   "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",
   "unknown": "نامعلوم",
   "unknownSteam": "Could not find steam account. Follow Step 2 of setup, play a bot match, and try again.",
@@ -135,11 +149,5 @@
   "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
-  "xpm": "Live XPM: {{num}}",
-  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_other": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "treadToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
-  "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
-  "seconds_one": "{{count}} second",
-  "seconds_other": "{{count}} second"
+  "xpm": "Live XPM: {{num}}"
 }
