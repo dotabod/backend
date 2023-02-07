@@ -423,6 +423,7 @@ export class GSIHandler {
       })
       .then(() => {
         logger.info('[DATABASE] Updated bet with winnings', extraInfo)
+        this.emitWLUpdate()
       })
       .catch((e) => {
         logger.error('[DATABASE ERROR MMR]', {
@@ -433,8 +434,6 @@ export class GSIHandler {
           lobbyType,
         })
       })
-
-    this.emitWLUpdate()
 
     if (!ranked) {
       logger.info('[MMR] Not ranked game, wont update mmr', extraInfo)
