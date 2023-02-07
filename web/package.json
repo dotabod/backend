@@ -38,6 +38,7 @@
     "axios": "1.2.0-alpha.1",
     "axios-retry": "^3.3.1",
     "body-parser": "^1.20.1",
+    "chokidar": "^3.5.3",
     "country-code-emoji": "^2.3.0",
     "dota2": "https://github.com/dotabod/node-dota2.git",
     "dotaconstants": "https://github.com/odota/dotaconstants",

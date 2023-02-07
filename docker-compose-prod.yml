@@ -9,7 +9,7 @@ services:
     container_name: dotabod-twitch-chat-listener
     restart: on-failure
     volumes:
-      - ./web/locales:/app/locales
+      - ./twitch-chat-listener/locales:/app/locales
     build:
       context: twitch-chat-listener
       target: prod
@@ -39,8 +39,6 @@ services:
     image: dotabod-twitch-eventsub-listener
     container_name: dotabod-twitch-eventsub-listener
     restart: on-failure
-    volumes:
-      - ./web/locales:/app/locales
     build:
       context: twitch-eventsub-listener
       target: prod

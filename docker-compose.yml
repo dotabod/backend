@@ -29,7 +29,7 @@ services:
       - DB_SECRET
     volumes:
       - ./twitch-chat-listener/src:/app/src
-      - ./web/locales:/app/locales
+      - ./twitch-chat-listener/locales:/app/locales
   twitch-eventsub-listener:
     image: dotabod-twitch-eventsub-listener
     container_name: dotabod-twitch-eventsub-listener
@@ -59,7 +59,6 @@ services:
       - EVENTSUB_HOST
       - TWITCH_EVENTSUB_SECRET
     volumes:
-      - ./web/locales:/app/locales
       - ./twitch-eventsub-listener/src:/app/src
   web:
     image: dotabod-web

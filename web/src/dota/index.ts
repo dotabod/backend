@@ -1,9 +1,10 @@
 import './events/gsiEventLoader.js'
 
+import chokidar from 'chokidar'
 import { lstatSync, readdirSync } from 'fs'
 import i18next from 'i18next'
 import FsBackend, { FsBackendOptions } from 'i18next-fs-backend'
-import { join } from 'path'
+import path, { join } from 'path'
 
 import RedisClient from '../db/redis.js'
 import SetupSupabase from '../db/watcher.js'
@@ -28,6 +29,23 @@ await i18next.use(FsBackend).init<FsBackendOptions>({
     loadPath: join('./locales/{{lng}}/{{ns}}.json'),
   },
 })
+
+chokidar
+  .watch('/app/locales/**/*.json', { ignoreInitial: true, usePolling: true, interval: 5000 })
+  .on('all', (_event, filePath) => {
+    console.log({ _event, filePath })
+    const parsedPath = path.parse(filePath)
+    const ns = parsedPath.name
+    const lng = path.basename(parsedPath.dir)
+    i18next
+      .reloadResources([lng], [ns])
+      .then(() => {
+        logger.info(`Translation reloaded`, { filePath })
+      })
+      .catch((error) => {
+        logger.info(`Translation error on reloading`, { error })
+      })
+  })
 
 logger.info('Loaded translations')
 
