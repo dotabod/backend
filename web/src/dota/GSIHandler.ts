@@ -6,6 +6,7 @@ import { prisma } from '../db/prisma.js'
 import RedisClient from '../db/redis.js'
 import { DBSettings, defaultSettings, getValueOrDefault } from '../db/settings.js'
 import Mongo from '../steam/mongo.js'
+import { notablePlayers } from '../steam/notableplayers.js'
 import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
@@ -19,6 +20,7 @@ import { emitRoshEvent, RoshRes } from './events/gsi-events/event.roshan_killed.
 import { server } from './index.js'
 import { blockTypes, DelayedCommands, GLOBAL_DELAY, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
+import { getCurrentMatchPlayers } from './lib/getCurrentMatchPlayers.js'
 import getHero, { HeroNames } from './lib/getHero.js'
 import { isArcade } from './lib/isArcade.js'
 import { isSpectator } from './lib/isSpectator.js'
@@ -305,6 +307,29 @@ export class GSIHandler {
       .catch((e) => {
         // Stream not live
         // console.error('[MMR] emitWLUpdate Error getting WL', {e: e?.message || e})
+      })
+  }
+  emitNotablePlayers() {
+    if (!this.client.stream_online) return
+
+    const matchPlayers = this.players?.matchPlayers ?? getCurrentMatchPlayers(this.client.gsi)
+    notablePlayers(
+      this.client.locale,
+      this.getChannelId(),
+      this.client.gsi?.map?.matchid,
+      matchPlayers,
+    )
+      .then((response) => {
+        if (response.playerList.length) {
+          server.io.to(this.getToken()).emit('notable-players', response.playerList)
+
+          setTimeout(() => {
+            server.io.to(this.getToken()).emit('notable-players', null)
+          }, 60 * 2000)
+        }
+      })
+      .catch((e) => {
+        // stream not live
       })
   }
 
@@ -881,6 +906,10 @@ export class GSIHandler {
       this.emitBadgeUpdate()
       this.emitWLUpdate()
       this.emitBlockEvent(blockType)
+
+      if (blockType === 'spectator') {
+        this.emitNotablePlayers()
+      }
       return
     }
 

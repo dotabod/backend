@@ -9,12 +9,14 @@ import Mongo from './mongo.js'
 
 const mongo = await Mongo.connect()
 
-type nps = {
+interface NotablePlayer {
+  heroId: number
   account_id: number
+  position: number
   heroName: string
   name: string
   country_code: string
-}[]
+}
 
 export interface Player {
   accountid: number
@@ -26,7 +28,7 @@ export async function notablePlayers(
   twitchChannelId: string,
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
-): Promise<string> {
+): Promise<{ playerList: NotablePlayer[]; description: string }> {
   const { matchPlayers, accountIds, gameMode } = await getPlayers(locale, currentMatchId, players)
 
   const mode = gameMode
@@ -57,13 +59,15 @@ export async function notablePlayers(
     )
     .toArray()
 
-  const notFoundNp: nps = []
-  const result: nps = []
+  const notFoundNp: NotablePlayer[] = []
+  const result: NotablePlayer[] = []
   matchPlayers.forEach((player: Player, i: number) => {
     const np = nps.find((np) => np.account_id === player.accountid)
     if (np) {
       result.push({
         account_id: player.accountid,
+        heroId: player.heroid,
+        position: i,
         heroName: getHeroNameById(player.heroid, i),
         name: np.name,
         country_code: np.country_code,
@@ -71,6 +75,8 @@ export async function notablePlayers(
     } else {
       notFoundNp.push({
         account_id: player.accountid,
+        heroId: player.heroid,
+        position: i,
         heroName: getHeroNameById(player.heroid, i),
         name: `Player ${i + 1}`,
         country_code: '',
@@ -78,7 +84,7 @@ export async function notablePlayers(
     }
   })
 
-  const playerList = result
+  const allPlayers = result
     .map((m) => {
       const country: string = m.country_code ? `${countryCodeEmoji(m.country_code) as string} ` : ''
       return `${country}${m.name} (${m.heroName})`
@@ -92,5 +98,9 @@ export async function notablePlayers(
   })
 
   const modeText = typeof mode?.name === 'string' ? `${mode.name} [${avg} avg]: ` : `[${avg} avg]: `
-  return `${modeText}${playerList || t('noNotable', { lng: locale })}`
+
+  return {
+    description: `${modeText}${allPlayers || t('noNotable', { lng: locale })}`,
+    playerList: result,
+  }
 }

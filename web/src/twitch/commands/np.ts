@@ -83,11 +83,11 @@ commandHandler.registerCommand('np', {
       return
     }
 
-    const matchPlayers =
-      gsiHandlers.get(client.token)?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi)
+    const dotaClient = gsiHandlers.get(client.token)
+    const matchPlayers = dotaClient?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi)
     notablePlayers(client.locale, twitchChannelId, client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {
-        chatClient.say(channel, desc)
+        chatClient.say(channel, desc.description)
       })
       .catch((e) => {
         chatClient.say(

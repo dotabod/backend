@@ -11,6 +11,7 @@ eventHandler.registerEvent(`saveHeroesForMatchId`, {
   ) => {
     if (dotaClient.playingBetMatchId && dotaClient.playingBetMatchId === matchId) {
       dotaClient.players = players
+      dotaClient.emitNotablePlayers()
     }
   },
 })
