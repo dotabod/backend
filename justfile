@@ -45,7 +45,7 @@ logs:
 build:
     @echo -e "Running for {{app}} on {{dockerfile}}"
     git pull
-    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV {{app}} --progress=plain
+    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully ran! {{CHECK}} {{RESET}}"
@@ -58,7 +58,7 @@ up:
 
 update:
     git pull
-    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --progress=plain
+    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d
     @docker image prune -a -f
