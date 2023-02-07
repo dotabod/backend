@@ -49,6 +49,9 @@ export const defaultSettings = {
     noTp: {
       enabled: true,
     },
+    matchOutcome: {
+      enabled: true,
+    },
   },
   commandAPM: true,
   commandAvg: true,

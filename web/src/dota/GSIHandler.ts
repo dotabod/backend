@@ -776,12 +776,22 @@ export class GSIHandler {
             })
           })
           .finally(() => {
+            this.resetClientState(true)
+
+            const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
+            const {
+              matchOutcome: { enabled: chatterEnabled },
+            } = getValueOrDefault(DBSettings.chatters, this.client.settings)
+
+            if (!chattersEnabled || !chatterEnabled) {
+              return
+            }
+
             const message = won
               ? t('bets.won', { lng: this.client.locale })
               : t('bets.lost', { lng: this.client.locale })
 
             this.say(message, { delay: false })
-            this.resetClientState(true)
           })
     }, this.getStreamDelay())
   }
