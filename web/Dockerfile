@@ -27,7 +27,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=prisma /app/prisma ./prisma
-COPY locales ./locales
 COPY tsconfig.json ./tsconfig.json
 COPY src ./src
 
@@ -40,7 +39,6 @@ FROM --platform=linux/amd64 node:19.4-alpine AS prod
 WORKDIR /app
 
 COPY --from=builder /app/dist ./
-COPY --from=builder /app/locales ./locales
 COPY --from=builder /app/tsconfig.json ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./
@@ -55,7 +53,6 @@ FROM --platform=linux/amd64 node:19.4-alpine AS dev
 
 WORKDIR /app
 
-COPY --from=builder /app/locales ./locales
 COPY --from=builder /app/tsconfig.json ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./

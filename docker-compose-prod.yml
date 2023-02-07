@@ -8,6 +8,8 @@ services:
     image: dotabod-twitch-chat-listener
     container_name: dotabod-twitch-chat-listener
     restart: on-failure
+    volumes:
+      - ./web/locales:/app/locales
     build:
       context: twitch-chat-listener
       target: prod
@@ -37,6 +39,8 @@ services:
     image: dotabod-twitch-eventsub-listener
     container_name: dotabod-twitch-eventsub-listener
     restart: on-failure
+    volumes:
+      - ./web/locales:/app/locales
     build:
       context: twitch-eventsub-listener
       target: prod
@@ -75,6 +79,7 @@ services:
       target: prod
     volumes:
       - steam_auth:/app/src/steam/volumes
+      - ./web/locales:/app/locales
     hostname: web
     ports:
       - '81:5000'
