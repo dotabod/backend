@@ -16,6 +16,7 @@
     "lost": "Kikaptunk",
     "notScored": "Nem pontozott mérkőzés D: Nem számolunk MMR-t a {{matchId}}-re",
     "open": "Fogadás elindítva peepoGamble",
+    "remade": "Swapped hero SuskaygeAgreeGe Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened peepoGamble",
     "won": "Nyertünk"
   },
   "bounties": {

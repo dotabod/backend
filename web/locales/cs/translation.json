@@ -18,6 +18,7 @@
     "lost": "Prohráli jsme",
     "notScored": "Zápas se nepočítá D: Žádná ztráta ani zisk MMR za zápas {{matchId}}.",
     "open": "Sázky otevřeny peepoGamble",
+    "remade": "Swapped hero SuskaygeAgreeGe Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened peepoGamble",
     "won": "Vyhráli jsme"
   },
   "bounties": {
