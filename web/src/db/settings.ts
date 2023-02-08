@@ -52,6 +52,9 @@ export const defaultSettings = {
     matchOutcome: {
       enabled: true,
     },
+    commandsReady: {
+      enabled: true,
+    },
   },
   commandAPM: true,
   commandAvg: true,
@@ -94,6 +97,7 @@ export const defaultSettings = {
   commandMmr: true,
   commandRosh: true,
   commandItems: true,
+  notablePlayersOverlay: true,
 }
 
 export type SettingKeys = keyof typeof defaultSettings

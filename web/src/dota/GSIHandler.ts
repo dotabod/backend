@@ -282,7 +282,13 @@ export class GSIHandler {
       const commands = DelayedCommands.filter((cmd) =>
         getValueOrDefault(cmd.key, this.client.settings),
       )
-      if (commands.length) {
+
+      const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
+      const {
+        commandsReady: { enabled: chatterEnabled },
+      } = getValueOrDefault(DBSettings.chatters, this.client.settings)
+
+      if (commands.length && chattersEnabled && chatterEnabled) {
         this.say(
           t('matchFound', {
             commandList: commands.map((c) => c.command).join(' · '),
