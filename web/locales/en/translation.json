@@ -13,6 +13,7 @@
   "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
   "bets": {
+    "remade": "Swapped hero SuskaygeAgreeGe Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened peepoGamble",
     "lost": "We have lost, gg nt Happi go next",
     "notScored": "Match not scored D: Not adding or removing MMR for match {{matchId}}.",
     "open": "Bets open peepoGamble",
