@@ -6,6 +6,7 @@ import { findItem } from '../../lib/findItem.js'
 import handleGetHero from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
+import { Item } from '../../../types.js'
 
 const passiveItemNames = [
   { name: 'item_magic_stick', title: 'magic stick', charges: true },
@@ -52,6 +53,16 @@ function firstBloodChat(chatters: any, dotaClient: GSIHandler, heroName: string)
   dotaClient.say(t('chatters.firstBloodDeath', { heroName, lng: dotaClient.client.locale }))
 }
 
+function cantCastItem(item: Item, dotaClient: GSIHandler) {
+  return (
+    Number(item.cooldown) > 0 ||
+    !item.can_cast ||
+    dotaClient.client.gsi?.previously?.hero?.muted ||
+    dotaClient.client.gsi?.previously?.hero?.hexed ||
+    dotaClient.client.gsi?.previously?.hero?.stunned
+  )
+}
+
 function passiveDeathChat(chatters: any, dotaClient: GSIHandler, heroName: string) {
   if (!chatters.passiveDeath.enabled) return
 
@@ -68,7 +79,10 @@ function passiveDeathChat(chatters: any, dotaClient: GSIHandler, heroName: strin
     .map((item) => {
       const found = passiveItemNames.find((i) => {
         if (i.name !== item.name) return false
-        if (Number(item.cooldown) > 0 || !item.can_cast) return false
+        if (cantCastItem(item, dotaClient)) {
+          return false
+        }
+
         if (i.charges) {
           return Number(item.charges) >= 10
         }
