@@ -16,6 +16,7 @@
     "lost": "این رو که باختیم. عب نداره بعدی هم لوزه",
     "notScored": "همه بازی رو دبه کردن D: بازی {{matchId}} هیچ تاثیری نداشت",
     "open": "قمار کنید peepoGamble",
+    "remade": "Swapped hero SuskaygeAgreeGe Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened peepoGamble",
     "won": "بلاخره بردیم. یک تنه بازی رو حمل کردم"
   },
   "bounties": {

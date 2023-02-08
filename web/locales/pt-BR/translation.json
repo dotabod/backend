@@ -17,11 +17,12 @@
     "lost": "Nós perdemos, GG, boa tentativa! Happi Vamos para o próximo.",
     "notScored": "Partida não contabilizada D: Não adicionando nem subtraindo MMR para a partida {{matchId}}",
     "open": "Apostas abertas peepoGamble",
+    "remade": "Swapped hero SuskaygeAgreeGe Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened peepoGamble",
     "won": "Nós ganhamos! Happi Vamos para a próxima partida."
   },
   "bounties": {
     "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) de ouro de bônus de recompensa ({{totalBounties}} /4) EZ Clap Obrigado {{heroNames}} SeemsGood",
-    "totalGold": "{{count}} gold"
+    "totalGold": "{{count}} ouro"
   },
   "chatters": {
     "died": "{{- heroName}} morreu com o {{itemNames}} passivo ICANT",
@@ -31,7 +32,7 @@
     "pause": "PauseChamp Quem pausou o jogo?",
     "smoked": "Shush {{- heroName}} acabou de usar smoke!",
     "tpFound": "{{channel}} bom trabalho comprando um tp FINALMENTE depois de $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe",
-    "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFromDeath": "Graças a essa morte você finalmente conseguiu um tp. Levou apenas $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Todos podem usar: {{commandList}}",
   "commands_mods": "Comandos exclusivos para mods: {{commandList}}",

@@ -18,6 +18,7 @@
     "lost": "Мы проиграли",
     "notScored": "Матч не засчитан D: Рейтинг для матча {{matchId}} не будет изменен.",
     "open": "Ставки открыты peepoGamble",
+    "remade": "Swapped hero SuskaygeAgreeGe Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened peepoGamble",
     "won": "Мы победили"
   },
   "bounties": {
