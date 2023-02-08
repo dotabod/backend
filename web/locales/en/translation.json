@@ -76,6 +76,7 @@
     "unranked": "Not ranked",
     "won": "Won last game"
   },
+  "version": "Last git commit: {{- url}}",
   "lifetime": "Lifetime games",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
