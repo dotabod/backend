@@ -7,6 +7,7 @@
   "main": "src/index.ts",
   "exports": "./dist/index.js",
   "type": "module",
+  "packageManager": "yarn@1.22.19",
   "scripts": {
     "studio": "doppler run -- yarn prisma studio --schema ./prisma/postgres.prisma",
     "start": "node --inspect=0.0.0.0:9229 ./src/index.js",
