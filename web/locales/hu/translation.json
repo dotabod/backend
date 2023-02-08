@@ -5,7 +5,8 @@
     "pickup": "{{- heroName}} felvette az aegist!",
     "snatched": "{{- heroName}} ellopta az aegis-t PepeLaugh"
   },
-  "apm": "Élő APM: {{count}} Chatting",
+  "apm_one": "Live APM: {{count}} Chatting",
+  "apm_other": "Live APM: {{count}} Chatting",
   "averageRank": "Átlagos rank ezen a meccsen",
   "betaFeature": "[beta funkció]",
   "betaTester": "$t(betaTester_on)",
@@ -28,13 +29,17 @@
     "noTp": "{{channel}} hol a tp-d? HECANT",
     "pause": "massivePIDAS Ki pauseolt?",
     "smoked": "Shush {{- heroName}} smokeolt!",
-    "tpFound": "{{channel}} szép munka, végre van tp-d $t(seconds, {\"count\": {{seconds}} }) után. SuskaygeAgreeGe"
+    "tpFound": "{{channel}} szép munka, végre van tp-d $t(seconds, {\"count\": {{seconds}} }) után. SuskaygeAgreeGe",
+    "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Mindenki számára elérhető parancsok: {{commandList}}",
   "commands_mods": "Moderátor parancsok: {{commandList}}",
   "dota2pt": "Profi {{- heroName}} buildeket keresel? Itt találsz párat: {{- url}}",
   "dotabod": "Nyílt forráskódú bot vagyok, {{author}} tervezett. Több információért {{- url}}",
   "gameNotFound": "Meccs nem található",
+  "gpm_zero": "",
+  "gpm_one": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
+  "gpm_other": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
   "heroItems": {
     "empty": "(2p delay) Itemek nem találhatóak {{- heroName}}-hez.",
     "list": "(2p delay) {{- heroName}} itemjei: {{- itemNames}}"
@@ -42,16 +47,20 @@
   "herostats": {
     "none": "Nem játszott egy meccset sem {{- heroName}} ebben az időszakban: {{timeperiod}}",
     "timeperiod": {
-      "days": "{{count}}",
+      "days_one": "in {{count}}d",
+      "days_other": "in {{count}}d",
       "lifetime": "összesen"
     },
-    "winrate": "Winrate: {{winrate}}% {{- heroName}} -ként {{timeperiod}} periódusban {{count}} meccsből."
+    "winrate_one": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrate_other": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Helytelen hero szín, slot vagy név. Próbáld 1-10ig, a hős nevét vagy a színt innen: {{colorList}}",
   "invalidMmr": "Érvénytelen parancs. Próbáld így: !setmmr 1234",
   "killstreak": {
-    "lost": "{{- heroName}} {{count}} killstreakjének vége. BibleThump",
-    "won": "{{- heroName}} {{count}} killstreaken van. POGGIES"
+    "lost_one": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "lost_other": "{{- heroName}} lost the {{count}} kill streak BibleThump",
+    "won_one": "{{- heroName}} has a {{count}} kill streak POGGIES",
+    "won_other": "{{- heroName}} has a {{count}} kill streak POGGIES"
   },
   "lastgame": {
     "link": "Legutóbbi meccs: {{- url}}",
@@ -108,14 +117,17 @@
     "1": "1. Roshan halál · Következő drop: aghanim's shard.",
     "2": "2. Roshan halál · Következő drop: cheese és aghanim's blessing vagy refresher shard.",
     "3": "3. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard.",
-    "more": "{{count}}. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard."
+    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "Roshan meghalt! Következő Roshan {{min}} és {{max}} perc között várható",
-  "setStreamDelayRemoved": "Stream delay eltávoltva",
+  "seconds_one": "{{count}} másodperc",
+  "seconds_other": "{{count}} másodperc",
   "setStreamDelay": "Stream delay beállítva: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Helytelen stream delay, próbáld így: !setdelay <seconds>",
-  "streamDelayNone": "Nincs beállítva stream delay a csatornán",
+  "setStreamDelayRemoved": "Stream delay eltávoltva",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "Nincs beállítva stream delay a csatornán",
   "tip": {
     "from": "{{- heroName}} borravalót adott ICANT",
     "to": "Borravalót adtunk {{- heroName}} PepeLaugh"
@@ -128,6 +140,8 @@
   "toggleMatch_party": "Meccs megváltoztatása party MMR esetén: {{- url}} Próbáld a !fixparty parancsot a visszavonáshoz",
   "toggleMatch_single": "Meccs megváltoztatása sima MMR esetén: {{- url}} Próbáld a !fixdd parancsot a visszavonáshoz",
   "toggleMatch_solo": "Meccs megváltoztatása solo MMR esetén: {{- url}} Próbáld a !fixdd parancsot a visszavonáshoz",
+  "treadToggle_one": "Eddig {{count}} alkalommal használtuk a cipő képességét és {{manaCount}} manát spóroltunk vele.",
+  "treadToggle_other": "Eddig {{count}} alkalommal használtuk a cipő képességét és {{manaCount}} manát spóroltunk vele.\n",
   "uknownMmr": "Nem tudom {{channel}} MMR-jét. Moderátorok beállíthatják !setmmr 1234 vagy {{- url}} paranccsal.",
   "unknown": "Ismeretlen",
   "unknownSteam": "Steam felhasználó nem található. Próbálj egy bot mérkőzést játszani, hogy hozzáadjam az accountod a Dotabodhoz.",
@@ -135,11 +149,5 @@
   "updateMmr_auto": "MMR frissítve {{mmr}}-re. Próbáld a !fixparty -t party és !fixdd -t doubledown esetén",
   "updateMmr_manual": "MMR frissítve {{mmr}}-re",
   "updateMmrMulti": "Több steam account található, frissítem a jelenleg belépettet: ({{steamId}})",
-  "xpm": "Élő XPM: {{num}}",
-  "gpm_one": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
-  "gpm_other": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
-  "treadToggle_one": "Eddig {{count}} alkalommal használtuk a cipő képességét és {{manaCount}} manát spóroltunk vele.",
-  "treadToggle_other": "Eddig {{count}} alkalommal használtuk a cipő képességét és {{manaCount}} manát spóroltunk vele.\n",
-  "seconds_one": "{{count}} másodperc",
-  "seconds_other": "{{count}} másodperc"
+  "xpm": "Élő XPM: {{num}}"
 }
