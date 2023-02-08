@@ -17,6 +17,9 @@ export async function getChannels() {
           },
         },
       },
+      orderBy: {
+        followers: 'desc',
+      },
     })
     .then((users) => users.map((user) => user.name))
 }
