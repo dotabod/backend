@@ -56,7 +56,6 @@ class SetupSupabase {
         (payload: any) => {
           if (this.IS_DEV && !this.DEV_CHANNELS.includes(payload.new.name)) return
           if (!this.IS_DEV && this.DEV_CHANNELS.includes(payload.new.name)) return
-          console.log(payload, 'done')
 
           const newObj = payload.new as User
           const oldObj = payload.old as User
