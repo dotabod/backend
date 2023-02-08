@@ -46,7 +46,9 @@ export const blockTypes = [
   { type: 'empty', states: dontBlockStates },
 ]
 
-export const GLOBAL_DELAY = 7000 // 7s
+export const isDev = process.env.NODE_ENV === 'development'
+
+export const GLOBAL_DELAY = isDev ? 0 : 7000 // 7s for prod only
 
 export const ranks = [
   { range: [0, 153], title: 'Herald☆1', image: '11.png' },
