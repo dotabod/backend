@@ -18,6 +18,7 @@
     "lost": "Ми програли битву, але не війну. Команда знову заруїнила Happi",
     "notScored": "Матч не зараховано D:  Рейтинг для матчу {{matchId}} не буде змінений.",
     "open": "Ставимо ставки, панство peepoGamble",
+    "remade": "Swapped hero SuskaygeAgreeGe Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened peepoGamble",
     "won": "Ми перемогли Happi. Підтримуйте Україну та донатьте на ЗСУ <3"
   },
   "bounties": {

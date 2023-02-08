@@ -17,6 +17,7 @@
     "lost": "Abbiamo perso",
     "notScored": "Partita non valida D: Non aggiungerò ne rimuoverò MMR per questa partita {{matchId}}.",
     "open": "Scommesse aperte peepoGamble",
+    "remade": "Eroe scambiato SuskaygeAgreeGe Scommesse per {{- oldHeroName}} rimborsate e aperte scommesse per {{- newHeroName}} peepoGamble",
     "won": "Abbiamo vinto"
   },
   "bounties": {
@@ -31,7 +32,7 @@
     "pause": "PauseChamp Chi ha messo la partita in pausa?",
     "smoked": "Shush {{- heroName}} è smokato!",
     "tpFound": "{{channel}} ben fatto, hai finalmente comprato un tp dopo $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe",
-    "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFromDeath": "Grazie a questa morte hai finalmente un tp. Ti ci sono voluti solo $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
@@ -132,7 +133,7 @@
   "seconds_other": "{{count}} secondi",
   "setStreamDelay": "Impostando il delay dello stream a: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Delay della stream invalido, usa !setdelay <seconds>",
-  "setStreamDelayRemoved": "Removing stream delay",
+  "setStreamDelayRemoved": "Rimuovendo il delay dello stream",
   "streamDelay": "Delay dello stream: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Non c'è nessun delay su questo canale",
   "tip": {

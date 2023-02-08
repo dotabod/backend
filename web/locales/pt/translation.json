@@ -17,6 +17,7 @@
     "lost": "Nós perdemos",
     "notScored": "Partida não contabilizada D: Não acrescentando nem adicionando MMR para partida {{matchId}}",
     "open": "Apostas abertas peepoGamble",
+    "remade": "Swapped hero SuskaygeAgreeGe Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened peepoGamble",
     "won": "Nós ganhamos"
   },
   "bounties": {

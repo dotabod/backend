@@ -17,6 +17,7 @@
     "lost": "Hemos perdido",
     "notScored": "Mecha no puntuado D: No añadir o quitar MMR para el partido {{matchId}}.",
     "open": "Apuestas abiertas peepoGamble",
+    "remade": "Swapped hero SuskaygeAgreeGe Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened peepoGamble",
     "won": "Hemos ganado"
   },
   "bounties": {
