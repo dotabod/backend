@@ -882,13 +882,14 @@ export class GSIHandler {
       })
   }
 
-  private emitBlockEvent(blockType: string | null) {
+  private emitBlockEvent({ blockType, state }: { state?: string; blockType: string | null }) {
     if (this.blockCache === blockType) return
 
     this.blockCache = blockType
 
     server.io.to(this.getToken()).emit('block', {
       type: blockType,
+      state,
       team: this.client.gsi?.player?.team_name,
       matchId: this.client.gsi?.map?.matchid ?? this.playingBetMatchId,
     })
@@ -911,7 +912,7 @@ export class GSIHandler {
 
       this.emitBadgeUpdate()
       this.emitWLUpdate()
-      this.emitBlockEvent(blockType)
+      this.emitBlockEvent({ state, blockType })
 
       if (blockType === 'spectator') {
         this.emitNotablePlayers()
@@ -930,14 +931,14 @@ export class GSIHandler {
     // Picked hero, but enemy can't see yet
     if (pickingPhase && heroPicked && heroNotLockedIn) {
       // invasive hero blocking overlay that hides all picked hero info
-      this.emitBlockEvent('strategy')
+      this.emitBlockEvent({ state, blockType: 'strategy' })
       return
     }
 
     // Picked hero, enemy can see it now
     if (pickingPhase && heroPicked && heroLockedIn) {
       // less invasive strategy that shows our hero but hides teammates
-      this.emitBlockEvent('strategy-2')
+      this.emitBlockEvent({ state, blockType: 'strategy-2' })
       return
     }
 
@@ -945,7 +946,7 @@ export class GSIHandler {
     const hasValidBlocker = blockTypes.some((blocker) => {
       if (blocker.states.includes(state ?? '')) {
         if (this.blockCache !== blocker.type) {
-          this.emitBlockEvent(blocker.type)
+          this.emitBlockEvent({ state, blockType: blocker.type })
 
           if (blocker.type === 'playing') {
             this.emitBadgeUpdate()
@@ -973,7 +974,7 @@ export class GSIHandler {
         name: this.getChannel(),
       })
 
-      this.emitBlockEvent(null)
+      this.emitBlockEvent({ state, blockType: null })
       this.closeBets()
       return
     }
