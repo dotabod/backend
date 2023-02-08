@@ -32,7 +32,7 @@
     "pause": "PauseChamp Кто поставил паузу?",
     "smoked": "Shush {{- heroName}} в смоках!",
     "tpFound": "{{channel}} молодец, наконец-то купил ТП спустя $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe",
-    "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFromDeath": "Благодаря этой смерти вы получили ТП наконец. Спустя $t(seconds, {\"count\": {{seconds}} }) оно  появилось SuskaygeAgreeGe"
   },
   "commands_everyone": "Каждый может использовать: {{commandList}}",
   "commands_mods": "Команды только для модераторов: {{commandList}}",
