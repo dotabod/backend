@@ -721,7 +721,8 @@ export class GSIHandler {
       })
 
       if (this.client.stream_online) {
-        this.say(t('bets.notScored', { lng: this.client.locale, matchId }))
+        const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
+        if (chattersEnabled) this.say(t('bets.notScored', { lng: this.client.locale, matchId }))
         refundTwitchBet(this.getToken())
           .then(() => {
             //
@@ -854,7 +855,8 @@ export class GSIHandler {
           })
 
           if (this.client.stream_online) {
-            this.say(t('bets.notScored', { lng: this.client.locale, matchId }))
+            const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
+            if (chattersEnabled) this.say(t('bets.notScored', { lng: this.client.locale, matchId }))
             refundTwitchBet(this.getToken())
               .then(() => {
                 //
