@@ -58,7 +58,7 @@ up:
 
 update:
     git pull
-    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV
+    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --progress=plain
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d
     @docker image prune -a -f
