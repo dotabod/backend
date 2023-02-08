@@ -5,6 +5,9 @@ import { getChannels } from './getChannels.js'
 
 export async function getChatClient() {
   const chatClient = new ChatClient({
+    logger: {
+      minLevel: 'debug',
+    },
     isAlwaysMod: true,
     authProvider: getAuthProvider(),
     channels: getChannels,
