@@ -192,55 +192,18 @@ export class GSIHandler {
     // This now waits for the bet to complete before checking match data
     // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
     // the playingBetMatchId is saved when the hero is selected
-    if (!this.client.steam32Id || !this.playingBetMatchId || this.client.gsi?.map?.matchid === '0')
-      return
     const matchId = this.playingBetMatchId
-    if (!Number(matchId)) return
-    if (this.client.steamServerId) return
-    if (this.savingSteamServerId) return
 
-    this.savingSteamServerId = true
-    logger.info('saveMatchData start', {
-      name: this.client.name,
-      matchId,
-      steam32Id: this.client.steam32Id,
-    })
-
-    const response = (await mongo
-      .collection('delayedGames')
-      .findOne({ 'match.match_id': matchId })) as unknown as delayedGames | null
-
-    if (response) {
-      logger.info('saveMatchData delayedGame already found', {
-        name: this.client.name,
-        matchId,
-      })
-
-      // not saving real steamserverid right now since not needed
-      this.savingSteamServerId = false
-      this.client.steamServerId = 'true'
-      this.playingLobbyType = response.match.lobby_type
-      this.players = getAccountsFromMatch(response)
+    if (this.hasMatchData(matchId)) {
       return
     }
 
-    logger.info('saveMatchData No match data for user, checking from steam', {
-      name: this.client.name,
-      matchId,
-      steam32Id: this.client.steam32Id,
-    })
-
-    const steamServerId = await server.dota.getUserSteamServer(this.client.steam32Id)
+    this.savingSteamServerId = true
+    const steamServerId = await server.dota.getUserSteamServer(this.client.steam32Id!)
     if (!steamServerId) {
-      // 35 5s tries
       if (this.steamServerTries > 35) {
         return
       }
-      logger.info('Retry steamserverid', {
-        tries: this.steamServerTries,
-        channel: this.client.name,
-        matchId,
-      })
       setTimeout(() => {
         this.steamServerTries += 1
         this.savingSteamServerId = false
@@ -248,18 +211,17 @@ export class GSIHandler {
       return
     }
 
+    this.client.steamServerId = steamServerId
+    this.savingSteamServerId = false
+
     const delayedData = await server.dota.getDelayedMatchData({
       server_steamid: steamServerId,
-      match_id: matchId,
+      match_id: matchId!,
       refetchCards: true,
       token: this.getToken(),
     })
 
-    this.client.steamServerId = steamServerId
-    this.savingSteamServerId = false
-
-    // TODO: This almost never gets called, remove it?
-    if (!delayedData || !delayedData.match || !delayedData.match.match_id) {
+    if (!delayedData?.match.match_id) {
       logger.info('No match data found!', {
         name: this.client.name,
         matchId,
@@ -272,13 +234,6 @@ export class GSIHandler {
 
     // letting people know match data is available
     if (this.client.stream_online && this.players.accountIds.length) {
-      logger.info('saveMatchData stream online, updating stream', {
-        name: this.client.name,
-        matchId,
-        players: this.players,
-        lobbyType: this.playingLobbyType,
-      })
-
       const commands = DelayedCommands.filter((cmd) =>
         getValueOrDefault(cmd.key, this.client.settings),
       )
@@ -300,6 +255,16 @@ export class GSIHandler {
         )
       }
     }
+  }
+
+  private hasMatchData(matchId?: string | null) {
+    return (
+      !this.client.steam32Id ||
+      !Number(matchId) ||
+      this.client.gsi?.map?.matchid === '0' ||
+      this.client.steamServerId ||
+      this.savingSteamServerId
+    )
   }
 
   emitWLUpdate() {
