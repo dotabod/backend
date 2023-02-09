@@ -1,13 +1,15 @@
+import { t } from 'i18next'
 import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
 
 interface WL {
+  lng: string
   channelId: string
   mmrEnabled: false
   startDate?: Date | null
 }
 
-export async function getWL({ channelId, mmrEnabled, startDate }: WL) {
+export async function getWL({ lng, channelId, mmrEnabled, startDate }: WL) {
   if (!channelId) {
     return Promise.resolve({ record: [{ win: 0, lose: 0, type: 'U' }], msg: null })
   }
@@ -75,8 +77,8 @@ export async function getWL({ channelId, mmrEnabled, startDate }: WL) {
 
       const msg = []
       const mmrMsg = mmrEnabled ? ` | ${ranked.mmr >= 0 ? '+' : ''}${ranked.mmr} MMR` : ''
-      const rankedMsg = `Ranked ${ranked.win} W - ${ranked.lose} L${mmrMsg}`
-      const unrankedMsg = `Unranked ${unranked.win} W - ${unranked.lose} L`
+      const rankedMsg = `${t('ranked', { lng })} ${ranked.win} W - ${ranked.lose} L${mmrMsg}`
+      const unrankedMsg = `${t('unranked', { lng })} ${unranked.win} W - ${unranked.lose} L`
 
       if (hasRanked) msg.push(rankedMsg)
       if (hasUnranked) msg.push(unrankedMsg)

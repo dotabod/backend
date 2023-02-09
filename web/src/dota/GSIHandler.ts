@@ -264,7 +264,12 @@ export class GSIHandler {
     if (!this.client.stream_online) return
 
     const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], this.client.settings)
-    getWL({ channelId: this.getChannelId(), startDate: this.client.stream_start_date, mmrEnabled })
+    getWL({
+      lng: this.client.locale,
+      channelId: this.getChannelId(),
+      startDate: this.client.stream_start_date,
+      mmrEnabled,
+    })
       .then(({ record }) => {
         server.io.to(this.getToken()).emit('update-wl', record)
       })

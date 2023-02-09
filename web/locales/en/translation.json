@@ -154,6 +154,8 @@
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
+  "unranked": "Unranked",
+  "ranked": "Ranked",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
   "xpm": "Live XPM: {{num}}"
 }

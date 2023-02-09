@@ -26,7 +26,12 @@ commandHandler.registerCommand('wl', {
 
     const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], client.settings)
 
-    getWL({ channelId: channelId, mmrEnabled: mmrEnabled, startDate: client.stream_start_date })
+    getWL({
+      lng: client.locale,
+      channelId: channelId,
+      mmrEnabled: mmrEnabled,
+      startDate: client.stream_start_date,
+    })
       .then((res: any) => {
         if (res?.msg) {
           chatClient.say(channel, res.msg)
