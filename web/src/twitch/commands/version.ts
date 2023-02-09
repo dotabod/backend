@@ -7,7 +7,7 @@ commandHandler.registerCommand('version', {
   handler: (message: MessageType, args: string[]) => {
     chatClient.say(
       message.channel.name,
-      t('commands.version', {
+      t('version', {
         url: `github.com/dotabod/backend/commit/${process?.env?.COMMIT_HASH || ''}`,
       }),
     )
