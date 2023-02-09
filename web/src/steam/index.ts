@@ -308,6 +308,12 @@ class Dota {
             return
           }
 
+          // No heroes, we have to keep waiting for their items
+          if (itemsOnly) {
+            operation.retry(new Error('Waiting for hero ids'))
+            return
+          }
+
           if (!waitForHeros) {
             logger.info('Saving match data', { matchId: match_id, hasHeroes })
             try {
