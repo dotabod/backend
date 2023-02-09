@@ -55,6 +55,7 @@ async function getItems(
 
   const delayedData = await server.dota.getDelayedMatchData({
     server_steamid: client.steamServerId,
+    itemsOnly: true,
     token: client.token,
     match_id: matchId,
   })
