@@ -126,7 +126,13 @@ class CommandHandler {
     }
 
     // Check if the command is enabled
-    if (!this.isEnabled(message.channel.settings, options.dbkey)) return
+    if (!this.isEnabled(message.channel.settings, options.dbkey)) {
+      chatClient.say(
+        message.channel.name,
+        t('commandDisabled', { lng: message.channel.client.locale, cmdName: `!${command}` }),
+      )
+      return
+    }
 
     // Check if the command is on cooldown
     if (

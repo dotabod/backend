@@ -33,6 +33,7 @@
     "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe",
     "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
   },
+  "commandDisabled": "Streamer disabled {{cmdName}} command BibleThump Check !commands for the enabled ones",
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
