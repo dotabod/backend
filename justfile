@@ -38,7 +38,7 @@ restart:
 buildall:
     @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
-    @docker image prune -a -f
+    @docker system prune -f
 
 logs:
     @docker logs {{app}} -f
@@ -51,7 +51,7 @@ build:
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully ran! {{CHECK}} {{RESET}}"
-    @docker image prune -a -f
+    @docker system prune -f
 
 # Starts images
 up:
@@ -63,7 +63,7 @@ update:
     @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d
-    @docker image prune -a -f
+    @docker system prune -f
 
 pullall:
     cd ./web && yarn pullpsql && yarn generateprisma
