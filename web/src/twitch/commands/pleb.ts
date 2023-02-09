@@ -14,7 +14,7 @@ commandHandler.registerCommand('pleb', {
     } = message
     plebMode.add(channelId)
     chatClient.say(channel, '/subscribersoff')
-    chatClient.say(channel, t('pleb', { lng: message.channel.client.locale }))
+    chatClient.say(channel, t('pleb', { emote: '👇', lng: message.channel.client.locale }))
     return
   },
 })

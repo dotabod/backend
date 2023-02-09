@@ -23,7 +23,7 @@ commandHandler.registerCommand('roshan', {
     } = message
 
     if (!isPlayingMatch(client.gsi)) {
-      chatClient.say(channel, t('notPlaying', { lng: client.locale }))
+      chatClient.say(channel, t('notPlaying', { emote: 'PauseChamp', lng: client.locale }))
       return
     }
 
@@ -41,7 +41,7 @@ commandHandler.registerCommand('roshan', {
       )) as unknown as AegisRes | null
 
       if (!roshJson?.minS && !roshJson?.maxS) {
-        chatClient.say(channel, t('roshanAlive', { lng: client.locale }))
+        chatClient.say(channel, t('roshanAlive', { emote: 'Happi', lng: client.locale }))
         return
       }
 

@@ -79,13 +79,21 @@ eventHandler.registerEvent(`newdata`, {
       const isMidasPassive = checkMidas(data, dotaClient.passiveMidas)
 
       if (typeof isMidasPassive === 'number') {
-        dotaClient.say(t('midasUsed', { lng: dotaClient.client.locale, seconds: isMidasPassive }))
+        dotaClient.say(
+          t('midasUsed', {
+            emote: 'Madge',
+            lng: dotaClient.client.locale,
+            seconds: isMidasPassive,
+          }),
+        )
         return
       }
 
       if (isMidasPassive) {
         logger.info('[MIDAS] Passive midas', { name: dotaClient.getChannel() })
-        dotaClient.say(t('chatters.midas', { lng: dotaClient.client.locale }))
+        dotaClient.say(
+          t('chatters.midas', { emote: 'massivePIDAS', lng: dotaClient.client.locale }),
+        )
         return
       }
     }

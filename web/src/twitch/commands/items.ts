@@ -43,14 +43,14 @@ async function getItems(
   matchId: string,
 ) {
   if (!client.steamServerId) {
-    throw new CustomError(t('missingMatchData', { lng: client.locale }))
+    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: client.locale }))
   }
 
   if (
     !gsiHandlers.get(client.token)?.players?.matchPlayers.length &&
     !getCurrentMatchPlayers(client.gsi).length
   ) {
-    throw new CustomError(t('missingMatchData', { lng: client.locale }))
+    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: client.locale }))
   }
 
   const delayedData = await server.dota.getDelayedMatchData({
@@ -61,7 +61,7 @@ async function getItems(
   })
 
   if (!delayedData) {
-    throw new CustomError(t('missingMatchData', { lng: client.locale }))
+    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: client.locale }))
   }
 
   const teamIndex = profile.heroKey > 4 ? 1 : 0
@@ -106,7 +106,10 @@ commandHandler.registerCommand('items', {
       channel: { name: channel, client },
     } = message
     if (!client.gsi?.map?.matchid || !isPlayingMatch(client.gsi)) {
-      chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
+      chatClient.say(
+        channel,
+        t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+      )
       return
     }
 

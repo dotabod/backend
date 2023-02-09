@@ -27,7 +27,7 @@ export async function getPlayers(
   gameMode?: number
 }> {
   if (!currentMatchId) {
-    throw new CustomError(t('notPlaying', { lng: locale }))
+    throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
   }
 
   if (!Number(currentMatchId)) {
@@ -39,7 +39,7 @@ export async function getPlayers(
     .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames | null
 
   if (!response && !players?.length) {
-    throw new CustomError(t('missingMatchData', { lng: locale }))
+    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
   }
 
   const { matchPlayers, accountIds } = getAccountsFromMatch(

@@ -25,7 +25,10 @@ commandHandler.registerCommand('ranked', {
 
     async function handler() {
       if (!currentMatchId) {
-        chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
+        chatClient.say(
+          channel,
+          t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+        )
         return
       }
 
@@ -39,7 +42,10 @@ commandHandler.registerCommand('ranked', {
         .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames | undefined
 
       if (!response) {
-        chatClient.say(channel, t('missingMatchData', { lng: message.channel.client.locale }))
+        chatClient.say(
+          channel,
+          t('missingMatchData', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+        )
         return
       }
 

@@ -45,7 +45,10 @@ twitchChat.on(
     ) {
       plebMode.delete(channelId)
       chatClient.say(channel, '/subscribers')
-      chatClient.say(channel, t('pleb', { context: 'off', name: user, lng: userInfo.locale }))
+      chatClient.say(
+        channel,
+        t('pleb', { emote: 'EZ Clap', context: 'off', name: user, lng: userInfo.locale }),
+      )
       return
     }
 

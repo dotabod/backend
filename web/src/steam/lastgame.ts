@@ -62,7 +62,7 @@ export default async function lastgame({
 
   if (!Number(currentMatchId)) {
     const msg = !currentMatchId
-      ? t('notPlaying', { lng: locale })
+      ? t('notPlaying', { emote: 'PauseChamp', lng: locale })
       : t('gameNotFound', { lng: locale })
     return gameHistory[0]?.match?.match_id
       ? `${msg} · ${t('lastgame.link', {
@@ -72,14 +72,16 @@ export default async function lastgame({
       : msg
   }
 
-  if (!gameHistory.length) throw new CustomError(t('noLastMatch', { lng: locale }))
-  if (gameHistory.length !== 2) throw new CustomError(t('noLastMatch', { lng: locale }))
+  if (!gameHistory.length)
+    throw new CustomError(t('noLastMatch', { emote: 'PauseChamp', lng: locale }))
+  if (gameHistory.length !== 2)
+    throw new CustomError(t('noLastMatch', { emote: 'PauseChamp', lng: locale }))
 
   const [gameOne, gameTwo] = gameHistory as unknown as delayedGames[]
   const oldGame = gameOne.match.match_id === currentMatchId ? gameTwo : gameOne
 
   if (!currentPlayers?.length) {
-    throw new CustomError(t('missingMatchData', { lng: locale }))
+    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
   }
 
   if (!Number(oldGame.match.match_id) || oldGame.match.match_id === currentMatchId) {

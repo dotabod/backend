@@ -63,6 +63,8 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
     dotaClient.bountyTimeout = setTimeout(() => {
       dotaClient.say(
         t('bounties.pickup', {
+          emote: 'EZ Clap',
+          emote2: 'SeemsGood',
           lng: dotaClient.client.locale,
           bountyValue: event.bounty_value * dotaClient.bountyHeroNames.length,
           totalBounties: dotaClient.bountyHeroNames.length,

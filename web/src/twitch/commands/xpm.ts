@@ -17,7 +17,7 @@ commandHandler.registerCommand('xpm', {
       return
     }
     if (!isPlayingMatch(client.gsi)) {
-      chatClient.say(channel, t('notPlaying', { lng: client.locale }))
+      chatClient.say(channel, t('notPlaying', { emote: 'PauseChamp', lng: client.locale }))
       return
     }
     const xpm = client.gsi.player?.xpm ?? 0

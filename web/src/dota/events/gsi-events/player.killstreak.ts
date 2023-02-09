@@ -28,6 +28,7 @@ eventHandler.registerEvent(`player:kill_streak`, {
 
       dotaClient.say(
         t('killstreak.lost', {
+          emote: 'BibleThump',
           count: previousStreak,
           heroName,
           lng: dotaClient.client.locale,
@@ -41,7 +42,12 @@ eventHandler.registerEvent(`player:kill_streak`, {
     clearTimeout(dotaClient.killstreakTimeout)
     dotaClient.killstreakTimeout = setTimeout(() => {
       dotaClient.say(
-        t('killstreak.won', { count: streak, heroName, lng: dotaClient.client.locale }),
+        t('killstreak.won', {
+          emote: 'POGGIES',
+          count: streak,
+          heroName,
+          lng: dotaClient.client.locale,
+        }),
       )
     }, 15000)
   },

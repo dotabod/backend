@@ -18,7 +18,10 @@ commandHandler.registerCommand('gpm', {
       return
     }
     if (!isPlayingMatch(client.gsi)) {
-      chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
+      chatClient.say(
+        channel,
+        t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+      )
       return
     }
 

@@ -115,6 +115,7 @@ export async function getRankDescription({
   const count = mmrToNextRank <= 30 ? 1 : winsToNextRank
   const nextAt = t('rank.nextRankAt', { lng: locale })
   const nextIn = t('rank.nextRankIn', {
+    emote: 'peepoClap',
     count,
     lng: locale,
   })

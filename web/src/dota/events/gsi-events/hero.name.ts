@@ -24,7 +24,14 @@ eventHandler.registerEvent(`hero:name`, {
             dotaClient.client.settings,
           )
             .then(() => {
-              dotaClient.say(t('bets.remade', { lng: dotaClient.client.locale }), { delay: false })
+              dotaClient.say(
+                t('bets.remade', {
+                  lng: dotaClient.client.locale,
+                  emote: 'SuskaygeAgreeGe',
+                  emote2: 'peepoGamble',
+                }),
+                { delay: false },
+              )
               logger.info('[BETS] remade bets', {
                 event: 'open_bets',
                 oldHeroName: dotaClient.playingHero,

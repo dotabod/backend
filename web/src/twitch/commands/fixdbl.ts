@@ -46,7 +46,7 @@ commandHandler.registerCommand('fixdbl', {
       if (!bet) {
         chatClient.say(
           message.channel.name,
-          t('noLastMatch', { lng: message.channel.client.locale }),
+          t('noLastMatch', { emote: 'PauseChamp', lng: message.channel.client.locale }),
         )
         return
       }

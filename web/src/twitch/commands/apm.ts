@@ -18,7 +18,10 @@ commandHandler.registerCommand('apm', {
     }
 
     if (!isPlayingMatch(client.gsi)) {
-      chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
+      chatClient.say(
+        channel,
+        t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+      )
       return
     }
 
@@ -26,7 +29,10 @@ commandHandler.registerCommand('apm', {
     const gameTime = client.gsi.map?.game_time ?? 1
     const apm = commandsIssued ? Math.round(commandsIssued / (gameTime / 60)) : 0
 
-    chatClient.say(channel, t('apm', { lng: message.channel.client.locale, count: apm }))
+    chatClient.say(
+      channel,
+      t('apm', { emote: 'Chatting', lng: message.channel.client.locale, count: apm }),
+    )
     return
   },
 })

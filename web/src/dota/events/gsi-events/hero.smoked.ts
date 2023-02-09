@@ -21,7 +21,9 @@ eventHandler.registerEvent(`hero:smoked`, {
       const heroName =
         getHero(dotaClient.playingHero ?? dotaClient.client.gsi?.hero?.name)?.localized_name ?? 'We'
 
-      dotaClient.say(t('chatters.smoked', { heroName, lng: dotaClient.client.locale }))
+      dotaClient.say(
+        t('chatters.smoked', { emote: 'Shush', heroName, lng: dotaClient.client.locale }),
+      )
     }
   },
 })

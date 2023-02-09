@@ -25,7 +25,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
     )
 
     if (event.receiver_player_id === dotaClient.playingHeroSlot) {
-      dotaClient.say(t('tip.from', { lng: dotaClient.client.locale, heroName }))
+      dotaClient.say(t('tip.from', { emote: 'ICANT', lng: dotaClient.client.locale, heroName }))
     }
 
     if (event.sender_player_id === dotaClient.playingHeroSlot) {
@@ -34,7 +34,9 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
         event.receiver_player_id,
       )
 
-      dotaClient.say(t('tip.to', { lng: dotaClient.client.locale, heroName: toHero }))
+      dotaClient.say(
+        t('tip.to', { emote: 'PepeLaugh', lng: dotaClient.client.locale, heroName: toHero }),
+      )
     }
   },
 })

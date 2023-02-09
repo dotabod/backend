@@ -121,7 +121,10 @@ class CommandHandler {
     this.logCommand(command, message)
 
     if (options.onlyOnline && !message.channel.client.stream_online) {
-      chatClient.say(message.channel.name, t('notLive', { lng: message.channel.client.locale }))
+      chatClient.say(
+        message.channel.name,
+        t('notLive', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+      )
       return
     }
 
@@ -129,7 +132,11 @@ class CommandHandler {
     if (!this.isEnabled(message.channel.settings, options.dbkey)) {
       chatClient.say(
         message.channel.name,
-        t('commandDisabled', { lng: message.channel.client.locale, cmdName: `!${command}` }),
+        t('commandDisabled', {
+          emote: 'BibleThump',
+          lng: message.channel.client.locale,
+          cmdName: `!${command}`,
+        }),
       )
       return
     }

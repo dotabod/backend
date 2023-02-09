@@ -17,7 +17,7 @@ interface ProfileLinkParams {
 
 export function profileLink({ players, locale, currentMatchId, args }: ProfileLinkParams) {
   if (!currentMatchId) {
-    throw new CustomError(t('notPlaying', { lng: locale }))
+    throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
   }
 
   if (!Number(currentMatchId)) {
@@ -25,7 +25,7 @@ export function profileLink({ players, locale, currentMatchId, args }: ProfileLi
   }
 
   if (!players?.length) {
-    throw new CustomError(t('missingMatchData', { lng: locale }))
+    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
   }
 
   if (!args.length) {
@@ -67,7 +67,10 @@ commandHandler.registerCommand('stats', {
       channel: { name: channel, client },
     } = message
     if (!client.gsi?.map?.matchid || !isPlayingMatch(client.gsi)) {
-      chatClient.say(channel, t('notPlaying', { lng: message.channel.client.locale }))
+      chatClient.say(
+        channel,
+        t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+      )
       return
     }
 

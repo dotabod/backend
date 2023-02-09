@@ -26,6 +26,9 @@ commandHandler.registerCommand('modsonly', {
     modMode.add(channelId)
     chatClient.say(channel, '/subscribers')
     chatClient.say(channel, '/emoteonly')
-    chatClient.say(channel, t('modsOnly', { context: 'on', lng: client.locale }))
+    chatClient.say(
+      channel,
+      t('modsOnly', { emote: 'BASED Clap', context: 'on', lng: client.locale }),
+    )
   },
 })

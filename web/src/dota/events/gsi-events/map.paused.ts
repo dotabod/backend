@@ -20,7 +20,7 @@ eventHandler.registerEvent(`map:paused`, {
     server.io.to(dotaClient.getToken()).emit('paused', isPaused)
 
     if (isPaused && chattersEnabled && chatterEnabled) {
-      dotaClient.say(t('chatters.pause', { lng: dotaClient.client.locale }))
+      dotaClient.say(t('chatters.pause', { emote: 'PauseChamp', lng: dotaClient.client.locale }))
     }
   },
 })

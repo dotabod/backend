@@ -570,7 +570,9 @@ export class GSIHandler {
                   this.client.settings,
                 )
                   .then(() => {
-                    this.say(t('bets.open', { lng: this.client.locale }), { delay: false })
+                    this.say(t('bets.open', { emote: 'peepoGamble', lng: this.client.locale }), {
+                      delay: false,
+                    })
                     this.openingBets = false
                     logger.info('[BETS] open bets', {
                       event: 'open_bets',
@@ -680,7 +682,8 @@ export class GSIHandler {
 
       if (this.client.stream_online) {
         const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-        if (chattersEnabled) this.say(t('bets.notScored', { lng: this.client.locale, matchId }))
+        if (chattersEnabled)
+          this.say(t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }))
         refundTwitchBet(this.getToken())
           .then(() => {
             //
@@ -778,8 +781,8 @@ export class GSIHandler {
             }
 
             const message = won
-              ? t('bets.won', { lng: this.client.locale })
-              : t('bets.lost', { lng: this.client.locale })
+              ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
+              : t('bets.lost', { lng: this.client.locale, emote: 'Happi' })
 
             this.say(message, { delay: false })
           })
@@ -814,7 +817,8 @@ export class GSIHandler {
 
           if (this.client.stream_online) {
             const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-            if (chattersEnabled) this.say(t('bets.notScored', { lng: this.client.locale, matchId }))
+            if (chattersEnabled)
+              this.say(t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }))
             refundTwitchBet(this.getToken())
               .then(() => {
                 //
