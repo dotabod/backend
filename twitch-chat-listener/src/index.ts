@@ -60,7 +60,7 @@ chatClient.onMessage(function (channel, user, text, msg) {
   if (!hasDotabodSocket) {
     // TODO: only commands that we register should be checked here
     if (text === '!ping') {
-      void chatClient.say(channel, t('rebooting', { lng: 'en' }))
+      void chatClient.say(channel, t('rebooting', { emote: 'PauseChamp', lng: 'en' }))
     }
 
     return
