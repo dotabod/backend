@@ -1,14 +1,14 @@
 {
   "aegis": {
     "denied": "{{- heroName}} zničil aegis {{emote}}",
-    "expired": "{{- heroName}}'s aegis expired :)",
+    "expired": "{{- heroName}}'s aegis expired {{emote}}",
     "pickup": "{{- heroName}} získal aegis!",
-    "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
+    "snatched": "{{- heroName}} snatched the aegis {{emote}}"
   },
-  "apm_one": "Live APM: {{count}} Chatting",
-  "apm_few": "Live APM: {{count}} Chatting",
-  "apm_many": "Live APM: {{count}} Chatting",
-  "apm_other": "Live APM: {{count}} Chatting",
+  "apm_one": "Live APM: {{count}} {{emote}}",
+  "apm_few": "Live APM: {{count}} {{emote}}",
+  "apm_many": "Live APM: {{count}} {{emote}}",
+  "apm_other": "Live APM: {{count}} {{emote}}",
   "averageRank": "Průměrný rank této hry",
   "betaFeature": "[beta funkce]",
   "betaTester": "$t(betaTester_on)",
@@ -16,24 +16,24 @@
   "betaTester_on": "{{channel}} je nyní beta tester. Navštiv discord.dotabod.com a podívej se na seznam beta funkcí. Nebo znovu napiš !beta pro zrušení",
   "bets": {
     "lost": "Prohráli jsme",
-    "notScored": "Zápas se nepočítá D: Žádná ztráta ani zisk MMR za zápas {{matchId}}.",
-    "open": "Sázky otevřeny peepoGamble",
-    "remade": "Swapped hero SuskaygeAgreeGe Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened peepoGamble",
+    "notScored": "Zápas se nepočítá {{emote}} Žádná ztráta ani zisk MMR za zápas {{matchId}}.",
+    "open": "Sázky otevřeny {{emote}}",
+    "remade": "Swapped hero {{emote}} Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened {{emote2}}",
     "won": "Vyhráli jsme"
   },
   "bounties": {
-    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) EZ Clap Thanks {{heroNames}} SeemsGood",
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) {{emote}} Thanks {{heroNames}} {{emote2}}",
     "totalGold": "{{count}} gold"
   },
   "chatters": {
-    "died": "{{- heroName}} umřel bez použití {{itemNames}} ICANT",
-    "firstBloodDeath": "{{- heroName}} daroval First Blood PepeLaugh",
-    "midas": "massivePIDAS Použij midas",
-    "noTp": "{{channel}} where's your tp HECANT",
-    "pause": "PauseChamp Kdo to pauznul?",
+    "died": "{{- heroName}} umřel bez použití {{itemNames}} {{emote}}",
+    "firstBloodDeath": "{{- heroName}} daroval First Blood {{emote}}",
+    "midas": "{{emote}} Použij midas",
+    "noTp": "{{channel}} where's your tp {{emote}}",
+    "pause": "{{emote}} Kdo to pauznul?",
     "smoked": "Ticho! {{- heroName}} použil smoke",
-    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe",
-    "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
+    "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
   "commands_everyone": "Všichni mohou použít: {{commandList}}",
   "commands_mods": "Pouze pro moderátory: {{commandList}}",
@@ -66,14 +66,14 @@
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Neplatný příkaz. Zkus !setmmr 1234",
   "killstreak": {
-    "lost_one": "{{- heroName}} lost the {{count}} kill streak BibleThump",
-    "lost_few": "{{- heroName}} lost the {{count}} kill streak BibleThump",
-    "lost_many": "{{- heroName}} lost the {{count}} kill streak BibleThump",
-    "lost_other": "{{- heroName}} lost the {{count}} kill streak BibleThump",
-    "won_one": "{{- heroName}} has a {{count}} kill streak POGGIES",
-    "won_few": "{{- heroName}} has a {{count}} kill streak POGGIES",
-    "won_many": "{{- heroName}} has a {{count}} kill streak POGGIES",
-    "won_other": "{{- heroName}} has a {{count}} kill streak POGGIES"
+    "lost_one": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
+    "lost_few": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
+    "lost_many": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
+    "lost_other": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
+    "won_one": "{{- heroName}} has a {{count}} kill streak {{emote}}",
+    "won_few": "{{- heroName}} has a {{count}} kill streak {{emote}}",
+    "won_many": "{{- heroName}} has a {{count}} kill streak {{emote}}",
+    "won_other": "{{- heroName}} has a {{count}} kill streak {{emote}}"
   },
   "lastgame": {
     "link": "Zde je poslední hra: {{- url}}",
@@ -92,25 +92,25 @@
   "lifetime": "Celkem her",
   "matchFound": "Data zápasu nalezena, příkazy {{commandList}} aktivovány.",
   "matchId": "Match ID: {{matchId}}",
-  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late Madge",
-  "missingMatchData": "Waiting for current match data PauseChamp",
+  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",
+  "missingMatchData": "Waiting for current match data {{emote}}",
   "missingUser": "Uživatel nenalezen. Zkus se znovu připojit na dotabod.com",
   "modsOnly_off": "Mód pouze pro moderátory vypnut. Všichni mohou psát",
-  "modsOnly_on": "Mód pouze pro moderátory zapnut BASED Clap Pouze moderátoři mohou psát",
+  "modsOnly_on": "Mód pouze pro moderátory zapnut {{emote}} Pouze moderátoři mohou psát",
   "noHero": "Nenalezen žádný hrdina",
-  "noLastMatch": "Nenalezena data posledního zápasu PauseChamp",
+  "noLastMatch": "Nenalezena data posledního zápasu {{emote}}",
   "noNotable": "Žádní známí hráči",
-  "notLive": "Stream nevysílá PauseChamp",
-  "notPlaying": "Nehrajem PauseChamp",
+  "notLive": "Stream nevysílá {{emote}}",
+  "notPlaying": "Nehrajem {{emote}}",
   "npAdd": "Zkus !np add <steam32id> <playername>",
   "npAdded": "{{name}} přidán do !np pro tento kanál",
   "npRemove": "Zkus !np remove <steam32id>",
   "npRemoved": "{{steamid}} odebrán z !np pro tento kanál",
   "npUnknown": "Nenalezeno {{steamid}} pro tento kanál",
   "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
-  "ping": "Pong EZ Clap",
-  "pleb": "Jeden bleb tu 👇",
-  "pleb_off": "{{name}} EZ Clap dobrá práce, blebsi",
+  "ping": "Pong {{emote}}",
+  "pleb": "Jeden bleb tu {{emote}}",
+  "pleb_off": "{{name}} {{emote}} dobrá práce, blebsi",
   "predictions": {
     "no": "Ne",
     "title": "Vyhrajeme s {{- heroName}}?",
@@ -119,7 +119,7 @@
   "profileUrl": "Zde je {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Další rank na",
-    "nextRankIn_one": "Ještě jedna výhra peepoClap",
+    "nextRankIn_one": "Ještě jedna výhra {{emote}}",
     "nextRankIn_few": "in {{count}} wins",
     "nextRankIn_many": "in {{count}} wins",
     "nextRankIn_other": "za {{count}} výher"
@@ -127,7 +127,7 @@
   "ranked_no": "Nope, tenhle zápas není hodnocený",
   "ranked_yes": "Yep, tahle hra je hodnocená",
   "refresh": "Obnovuji overlay..",
-  "roshanAlive": "Roshan is currently alive Happi",
+  "roshanAlive": "Roshan is currently alive {{emote}}",
   "roshanCount": {
     "1": "Zabitých roshanů: 1 - Další drop: agha shard.",
     "2": "Zabitých roshanů: 2 - Další drop: sejra a aghanim nebo refresher.",
@@ -148,8 +148,8 @@
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
-    "from": "Tip od {{- heroName}} ICANT",
-    "to": "Tip pro {{- heroName}} PepeLaugh"
+    "from": "Tip od {{- heroName}} {{emote}}",
+    "to": "Tip pro {{- heroName}} {{emote}}"
   },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod je nyní vypnutý. Nebudu odpovídat na příkazy ani sledovat hru. Napiš !toggle pro zapnutí.",

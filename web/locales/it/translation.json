@@ -1,13 +1,13 @@
 {
   "aegis": {
     "denied": "{{- heroName}} ha negato l'egida {{emote}}",
-    "expired": "L'egida di {{- heroName}} è scaduta :)",
+    "expired": "L'egida di {{- heroName}} è scaduta {{emote}}",
     "pickup": "{{- heroName}} ha preso l'egida",
-    "snatched": "{{- heroName}} ha rubato l'egida PepeLaugh"
+    "snatched": "{{- heroName}} ha rubato l'egida {{emote}}"
   },
-  "apm_one": "Live APM: {{count}} Chatting",
+  "apm_one": "Live APM: {{count}} {{emote}}",
   "apm_many": "",
-  "apm_other": "Live APM: {{count}} Chatting",
+  "apm_other": "Live APM: {{count}} {{emote}}",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "$t(betaTester_on)",
@@ -15,24 +15,24 @@
   "betaTester_on": "{{channel}} è ora un beta tester. Visita discord.dotabod.com per vedere le funzioni in beta. Scrivi !beta per annullare",
   "bets": {
     "lost": "Abbiamo perso",
-    "notScored": "Partita non valida D: Non aggiungerò ne rimuoverò MMR per questa partita {{matchId}}.",
-    "open": "Scommesse aperte peepoGamble",
-    "remade": "Eroe scambiato SuskaygeAgreeGe Scommesse per {{- oldHeroName}} rimborsate e aperte scommesse per {{- newHeroName}} peepoGamble",
+    "notScored": "Partita non valida {{emote}} Non aggiungerò ne rimuoverò MMR per questa partita {{matchId}}.",
+    "open": "Scommesse aperte {{emote}}",
+    "remade": "Eroe scambiato {{emote}} Scommesse per {{- oldHeroName}} rimborsate e aperte scommesse per {{- newHeroName}} {{emote2}}",
     "won": "Abbiamo vinto"
   },
   "bounties": {
-    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) dalle rune ({{totalBounties}}/4) EZ Clap Grazie {{heroNames}} SeemsGood",
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) dalle rune ({{totalBounties}}/4) {{emote}} Grazie {{heroNames}} {{emote2}}",
     "totalGold": "{{count}} oro"
   },
   "chatters": {
-    "died": "{{- heroName}} è morto con {{itemNames}} passivo/i ICANT",
-    "firstBloodDeath": "{{- heroName}} ha dato il first blood PepeLaugh",
-    "midas": "massivePIDAS Usa la tua Midas",
-    "noTp": "{{channel}} dov'è il tuo tp HECANT",
-    "pause": "PauseChamp Chi ha messo la partita in pausa?",
-    "smoked": "Shush {{- heroName}} è smokato!",
-    "tpFound": "{{channel}} ben fatto, hai finalmente comprato un tp dopo $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe",
-    "tpFromDeath": "Grazie a questa morte hai finalmente un tp. Ti ci sono voluti solo $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "died": "{{- heroName}} è morto con {{itemNames}} passivo/i {{emote}}",
+    "firstBloodDeath": "{{- heroName}} ha dato il first blood {{emote}}",
+    "midas": "{{emote}} Usa la tua Midas",
+    "noTp": "{{channel}} dov'è il tuo tp {{emote}}",
+    "pause": "{{emote}} Chi ha messo la partita in pausa?",
+    "smoked": "{{emote}} {{- heroName}} è smokato!",
+    "tpFound": "{{channel}} ben fatto, hai finalmente comprato un tp dopo $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
+    "tpFromDeath": "Grazie a questa morte hai finalmente un tp. Ti ci sono voluti solo $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
@@ -61,12 +61,12 @@
   "invalidColor": "Colore, slot o nome dell'eroe non validi. Prova 1-10, parte del nome, o un colore da {{colorList}}",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
-    "lost_one": "{{- heroName}} ha perso la kill streak di {{count}} BibleThump",
+    "lost_one": "{{- heroName}} ha perso la kill streak di {{count}} {{emote}}",
     "lost_many": "",
-    "lost_other": "{{- heroName}} ha perso la kill streak di {{count}} BibleThump",
-    "won_one": "{{- heroName}} ha una kill streak di {{count}} POGGIES",
+    "lost_other": "{{- heroName}} ha perso la kill streak di {{count}} {{emote}}",
+    "won_one": "{{- heroName}} ha una kill streak di {{count}} {{emote}}",
     "won_many": "",
-    "won_other": "{{- heroName}} ha una kill streak di {{count}} POGGIES"
+    "won_other": "{{- heroName}} ha una kill streak di {{count}} {{emote}}"
   },
   "lastgame": {
     "link": "Partita precedente: {{- url}}",
@@ -85,25 +85,25 @@
   "lifetime": "Partite totali",
   "matchFound": "Informazioni del match trovate {{commandList}} attivati",
   "matchId": "Match ID: {{matchId}}",
-  "midasUsed": "Midas è stata finalmente usata, $t(seconds, {\"count\": {{seconds}} }) dopo Madge",
-  "missingMatchData": "In attesa delle informazioni del match PauseChamp",
+  "midasUsed": "Midas è stata finalmente usata, $t(seconds, {\"count\": {{seconds}} }) dopo {{emote}}",
+  "missingMatchData": "In attesa delle informazioni del match {{emote}}",
   "missingUser": "Utente non trovato. Prova a sloggare e riloggare su dotabod.com",
   "modsOnly_off": "È stata disattivata la modalità solo moderatori. Ora tutti possono scrivere.",
-  "modsOnly_on": "È stata attivata la modalità solo moderatori BASED Clap Ora solo i mod possono scrivere",
+  "modsOnly_on": "È stata attivata la modalità solo moderatori {{emote}} Ora solo i mod possono scrivere",
   "noHero": "Nessun eroe trovato",
-  "noLastMatch": "Non è stato trovato un match precedente PauseChamp",
+  "noLastMatch": "Non è stato trovato un match precedente {{emote}}",
   "noNotable": "Nessun player famoso",
-  "notLive": "La stream non è live PauseChamp",
-  "notPlaying": "Non sta giocando PauseChamp",
+  "notLive": "La stream non è live {{emote}}",
+  "notPlaying": "Non sta giocando {{emote}}",
   "npAdd": "Prova !np add <steam32id> <playername>",
   "npAdded": "Aggiunto {{name}} a !np per questo canale",
   "npRemove": "Prova !np remove <steam32id>",
   "npRemoved": "Rimosso {{steamid}} da !np per questo canale",
   "npUnknown": "Impossibile trovare {{steamid}} per questo canale",
   "overlayMissing": "Overlay non trovato. Il comando {{command}} richiede l'aggiunta dell'overlay.",
-  "ping": "Pong EZ Clap",
-  "pleb": "Un plebeo scrive 👇",
-  "pleb_off": "{{name}} EZ Clap bel lavoro plebeo",
+  "ping": "Pong {{emote}}",
+  "pleb": "Un plebeo scrive {{emote}}",
+  "pleb_off": "{{name}} {{emote}} bel lavoro plebeo",
   "predictions": {
     "no": "No",
     "title": "Vinceremo con {{- heroName}}?",
@@ -112,14 +112,14 @@
   "profileUrl": "Ecco {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Prossimo rank a",
-    "nextRankIn_one": "Ancora un'altra vittoria peepoClap",
+    "nextRankIn_one": "Ancora un'altra vittoria {{emote}}",
     "nextRankIn_many": "",
     "nextRankIn_other": "in {{count}} vittorie"
   },
   "ranked_no": "No questa partita non è classificata",
   "ranked_yes": "Si questa partita è classificata",
   "refresh": "Aggiornando l'overlay...",
-  "roshanAlive": "Roshan è vivo Happi",
+  "roshanAlive": "Roshan è vivo {{emote}}",
   "roshanCount": {
     "1": "Morti di Rosh: 1 · Prossimo drop: Aghanim's Shard.",
     "2": "Morti di Rosh: 2 · Prossimo drop: Cheese e Aghanim Blessing o Refresher Shard.",
@@ -137,8 +137,8 @@
   "streamDelay": "Delay dello stream: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Non c'è nessun delay su questo canale",
   "tip": {
-    "from": "Il tip da {{- heroName}} ICANT",
-    "to": "Tippiamo {{- heroName}} PepeLaugh"
+    "from": "Il tip da {{- heroName}} {{emote}}",
+    "to": "Tippiamo {{- heroName}} {{emote}}"
   },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod è ora disattivato. Non risponde più ai comandi e non assiste agli eventi di gioco. Digita nuovamente !toggle per attivarlo.",

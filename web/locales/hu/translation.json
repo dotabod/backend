@@ -1,12 +1,12 @@
 {
   "aegis": {
     "denied": "{{- heroName}} semlegesítette az aegist {{emote}}",
-    "expired": "{{- heroName}} aegise lejárt :)",
+    "expired": "{{- heroName}} aegise lejárt {{emote}}",
     "pickup": "{{- heroName}} felvette az aegist!",
-    "snatched": "{{- heroName}} ellopta az aegis-t PepeLaugh"
+    "snatched": "{{- heroName}} ellopta az aegis-t {{emote}}"
   },
-  "apm_one": "Live APM: {{count}} Chatting",
-  "apm_other": "Live APM: {{count}} Chatting",
+  "apm_one": "Live APM: {{count}} {{emote}}",
+  "apm_other": "Live APM: {{count}} {{emote}}",
   "averageRank": "Átlagos rank ezen a meccsen",
   "betaFeature": "[beta funkció]",
   "betaTester": "$t(betaTester_on)",
@@ -14,24 +14,24 @@
   "betaTester_on": "{{channel}} mostantól beta tesztelő. Látogass el a discord.dotabod.com oldalra a beta funkciók megismeréséhez. Ird !beta hogy visszavond.",
   "bets": {
     "lost": "Kikaptunk",
-    "notScored": "Nem pontozott mérkőzés D: Nem számolunk MMR-t a {{matchId}}-re",
-    "open": "Fogadás elindítva peepoGamble",
-    "remade": "Swapped hero SuskaygeAgreeGe Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened peepoGamble",
+    "notScored": "Nem pontozott mérkőzés {{emote}} Nem számolunk MMR-t a {{matchId}}-re",
+    "open": "Fogadás elindítva {{emote}}",
+    "remade": "Swapped hero {{emote}} Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened {{emote2}}",
     "won": "Nyertünk"
   },
   "bounties": {
-    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) arany bountyból ({{totalBounties}}/4) EZ Clap Köszönjük {{heroNames}} SeemsGood",
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) arany bountyból ({{totalBounties}}/4) {{emote}} Köszönjük {{heroNames}} {{emote2}}",
     "totalGold": "{{count}} gold"
   },
   "chatters": {
-    "died": "{{- heroName}} meghalt, passzívval {{itemNames}} ICANT",
-    "firstBloodDeath": "{{- heroName}} lett a first blood PepeLaugh",
-    "midas": "massivePIDAS Használd a midast",
-    "noTp": "{{channel}} hol a tp-d? HECANT",
-    "pause": "massivePIDAS Ki pauseolt?",
-    "smoked": "Shush {{- heroName}} smokeolt!",
-    "tpFound": "{{channel}} szép munka, végre van tp-d $t(seconds, {\"count\": {{seconds}} }) után. SuskaygeAgreeGe",
-    "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "died": "{{- heroName}} meghalt, passzívval {{itemNames}} {{emote}}",
+    "firstBloodDeath": "{{- heroName}} lett a first blood {{emote}}",
+    "midas": "{{emote}} Használd a midast",
+    "noTp": "{{channel}} hol a tp-d? {{emote}}",
+    "pause": "{{emote}} Ki pauseolt?",
+    "smoked": "{{emote}} {{- heroName}} smokeolt!",
+    "tpFound": "{{channel}} szép munka, végre van tp-d $t(seconds, {\"count\": {{seconds}} }) után. {{emote}}",
+    "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
   "commands_everyone": "Mindenki számára elérhető parancsok: {{commandList}}",
   "commands_mods": "Moderátor parancsok: {{commandList}}",
@@ -58,10 +58,10 @@
   "invalidColor": "Helytelen hero szín, slot vagy név. Próbáld 1-10ig, a hős nevét vagy a színt innen: {{colorList}}",
   "invalidMmr": "Érvénytelen parancs. Próbáld így: !setmmr 1234",
   "killstreak": {
-    "lost_one": "{{- heroName}} lost the {{count}} kill streak BibleThump",
-    "lost_other": "{{- heroName}} lost the {{count}} kill streak BibleThump",
-    "won_one": "{{- heroName}} has a {{count}} kill streak POGGIES",
-    "won_other": "{{- heroName}} has a {{count}} kill streak POGGIES"
+    "lost_one": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
+    "lost_other": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
+    "won_one": "{{- heroName}} has a {{count}} kill streak {{emote}}",
+    "won_other": "{{- heroName}} has a {{count}} kill streak {{emote}}"
   },
   "lastgame": {
     "link": "Legutóbbi meccs: {{- url}}",
@@ -80,25 +80,25 @@
   "lifetime": "Összes lejátszott játék",
   "matchFound": "Meccs információ megtalálható {{commandList}} a parancsok aktívak.",
   "matchId": "Meccs ID: {{matchId}}",
-  "midasUsed": "Midas végre használva volt, $t(seconds, {\"count\": {{seconds}} }) késéssel. Madge",
-  "missingMatchData": "Várakozás a meccs adataira. PauseChamp",
+  "midasUsed": "Midas végre használva volt, $t(seconds, {\"count\": {{seconds}} }) késéssel. {{emote}}",
+  "missingMatchData": "Várakozás a meccs adataira. {{emote}}",
   "missingUser": "Felhasználó nem található. Próbálj újra bejelentkezni a dotabod.com-on",
   "modsOnly_off": "Moderátor mód kikapcsolva. Mindenki cseveghet.",
-  "modsOnly_on": "Moderátor csevegés bekapcsolva. BASED Clap. Csak a modok írhatnak.",
+  "modsOnly_on": "Moderátor csevegés bekapcsolva. {{emote}}. Csak a modok írhatnak.",
   "noHero": "Hős nem található",
-  "noLastMatch": "Előző meccs nem található PauseChamp",
+  "noLastMatch": "Előző meccs nem található {{emote}}",
   "noNotable": "Ismert/híres játékos nem található",
-  "notLive": "A stream nem fut PauseChamp",
-  "notPlaying": "Nem vagyunk mérkőzésben PauseChamp",
+  "notLive": "A stream nem fut {{emote}}",
+  "notPlaying": "Nem vagyunk mérkőzésben {{emote}}",
   "npAdd": "Próbáld az !np add <steam32id> <playername> parancsot ismert játékos hozzáadásához.",
   "npAdded": "{{name}} ismert játékos hozzáadva a csatornához. (!np)",
   "npRemove": "Próbáld az !np remove <steam32id>",
   "npRemoved": "{{steamid}} ismert játékos eltávolítva a csatornáról. (!np)",
   "npUnknown": "Nem található {{steamid}} azonosítójú játékos ezen a csatornán",
   "overlayMissing": "Overlay nem található. A {{command}} parancs eléréséhez szükség van az overlay hozzáadásához.",
-  "ping": "Pong EZ Clap",
-  "pleb": "Pong EZ Clap",
-  "pleb_off": "{{name}} EZ Clap szép munka pleb",
+  "ping": "Pong {{emote}}",
+  "pleb": "Pong {{emote}}",
+  "pleb_off": "{{name}} {{emote}} szép munka pleb",
   "predictions": {
     "no": "Nem",
     "title": "Nyerni fogunk {{- heroName}}",
@@ -107,13 +107,13 @@
   "profileUrl": "Itt {{- channel}} : {{- url}}",
   "rank": {
     "nextRankAt": "Következő rank ekkor: ",
-    "nextRankIn_one": "Még egy győzelem peepoClap",
+    "nextRankIn_one": "Még egy győzelem {{emote}}",
     "nextRankIn_other": "{{count}} győzelem múlva"
   },
   "ranked_no": "Nem, ez nem egy rangsorolt meccs",
   "ranked_yes": "Rangsorolt meccs",
   "refresh": "Overlay frissítése...",
-  "roshanAlive": "A Roshan életben van Happi",
+  "roshanAlive": "A Roshan életben van {{emote}}",
   "roshanCount": {
     "1": "1. Roshan halál · Következő drop: aghanim's shard.",
     "2": "2. Roshan halál · Következő drop: cheese és aghanim's blessing vagy refresher shard.",
@@ -130,8 +130,8 @@
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Nincs beállítva stream delay a csatornán",
   "tip": {
-    "from": "{{- heroName}} borravalót adott ICANT",
-    "to": "Borravalót adtunk {{- heroName}} PepeLaugh"
+    "from": "{{- heroName}} borravalót adott {{emote}}",
+    "to": "Borravalót adtunk {{- heroName}} {{emote}}"
   },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod letiltva. Nem fog válaszolni a parancsokra vagy játékbeli eseményekre. A !toggle paranccsal újra aktiválhatod.",

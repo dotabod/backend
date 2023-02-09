@@ -1,38 +1,38 @@
 {
   "aegis": {
     "denied": "{{- heroName}} denou o aegis {{emote}}",
-    "expired": "O aegis de {{- heroName}} expirou :)",
+    "expired": "O aegis de {{- heroName}} expirou {{emote}}",
     "pickup": "{{- heroName}} pegou o aegis!",
-    "snatched": "{{- heroName}} roubou o aegis! PepeLaugh"
+    "snatched": "{{- heroName}} roubou o aegis! {{emote}}"
   },
-  "apm_one": "APM ao vivo: {{count}} Chatting",
+  "apm_one": "APM ao vivo: {{count}} {{emote}}",
   "apm_many": "",
-  "apm_other": "APM ao vivo: {{count}} Chatting",
+  "apm_other": "APM ao vivo: {{count}} {{emote}}",
   "averageRank": "Rank médio neste jogo",
   "betaFeature": "[recurso beta]",
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} não é mais um beta tester. Digite !beta para entrar novamente",
   "betaTester_on": "{{channel}} agora é um beta tester. Visite discord.dotabod.com para ver os recursos beta. Digite !beta para desfazer",
   "bets": {
-    "lost": "Nós perdemos, GG, boa tentativa! Happi Vamos para o próximo.",
-    "notScored": "Partida não contabilizada D: Não adicionando nem subtraindo MMR para a partida {{matchId}}",
-    "open": "Apostas abertas peepoGamble",
-    "remade": "Swapped hero SuskaygeAgreeGe Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened peepoGamble",
-    "won": "Nós ganhamos! Happi Vamos para a próxima partida."
+    "lost": "Nós perdemos, GG, boa tentativa! {{emote}} Vamos para o próximo.",
+    "notScored": "Partida não contabilizada {{emote}} Não adicionando nem subtraindo MMR para a partida {{matchId}}",
+    "open": "Apostas abertas {{emote}}",
+    "remade": "Swapped hero {{emote}} Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened {{emote2}}",
+    "won": "Nós ganhamos! {{emote}} Vamos para a próxima partida."
   },
   "bounties": {
-    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) de ouro de bônus de recompensa ({{totalBounties}} /4) EZ Clap Obrigado {{heroNames}} SeemsGood",
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) de ouro de bônus de recompensa ({{totalBounties}} /4) {{emote}} Obrigado {{heroNames}} {{emote2}}",
     "totalGold": "{{count}} ouro"
   },
   "chatters": {
-    "died": "{{- heroName}} morreu com o {{itemNames}} passivo ICANT",
-    "firstBloodDeath": "{{- heroName}} dando FB para o outro time PepeLaugh",
-    "midas": "massivePIDAS Use a sua midas",
-    "noTp": "{{channel}} cadê seu tp? HECANT",
-    "pause": "PauseChamp Quem pausou o jogo?",
-    "smoked": "Shush {{- heroName}} acabou de usar smoke!",
-    "tpFound": "{{channel}} bom trabalho comprando um tp FINALMENTE depois de $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe",
-    "tpFromDeath": "Graças a essa morte você finalmente conseguiu um tp. Levou apenas $t(seconds, {\"count\": {{seconds}} }) SuskaygeAgreeGe"
+    "died": "{{- heroName}} morreu com o {{itemNames}} passivo {{emote}}",
+    "firstBloodDeath": "{{- heroName}} dando FB para o outro time {{emote}}",
+    "midas": "{{emote}} Use a sua midas",
+    "noTp": "{{channel}} cadê seu tp? {{emote}}",
+    "pause": "{{emote}} Quem pausou o jogo?",
+    "smoked": "{{emote}} {{- heroName}} acabou de usar smoke!",
+    "tpFound": "{{channel}} bom trabalho comprando um tp FINALMENTE depois de $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
+    "tpFromDeath": "Graças a essa morte você finalmente conseguiu um tp. Levou apenas $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
   "commands_everyone": "Todos podem usar: {{commandList}}",
   "commands_mods": "Comandos exclusivos para mods: {{commandList}}",
@@ -61,12 +61,12 @@
   "invalidColor": "Espaço, nome ou cor de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
-    "lost_one": "{{- heroName}} perdeu a killstreak de {{count}} BibleThump",
+    "lost_one": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
     "lost_many": "",
-    "lost_other": "{{- heroName}} perdeu a killstreak de {{count}} BibleThump",
-    "won_one": "{{- heroName}} tem uma killstreak de {{count}} POGGIES",
+    "lost_other": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
+    "won_one": "{{- heroName}} tem uma killstreak de {{count}} {{emote}}",
     "won_many": "",
-    "won_other": "{{- heroName}} tem uma killstreak de {{count}} POGGIES"
+    "won_other": "{{- heroName}} tem uma killstreak de {{count}} {{emote}}"
   },
   "lastgame": {
     "link": "Aqui está a última partida: {{- url}}",
@@ -85,25 +85,25 @@
   "lifetime": "Partidas totais jogadas",
   "matchFound": "Dados da partida encontrados comandos ativados: {{commandList}}",
   "matchId": "ID da partida: {{matchId}}",
-  "midasUsed": "A midas foi finalmente usada, $t(seconds, {\"count\": {{seconds}} }) atrasados Madge",
-  "missingMatchData": "Esperando os dados da partida PauseChamp",
+  "midasUsed": "A midas foi finalmente usada, $t(seconds, {\"count\": {{seconds}} }) atrasados {{emote}}",
+  "missingMatchData": "Esperando os dados da partida {{emote}}",
   "missingUser": "Usuário não encontrado. Tente sair e entrar novamente em dotabod.com",
   "modsOnly_off": "Modo somente mods desativado. Todos podem digitar agora.",
-  "modsOnly_on": "Modo somente mods ativado BASED Clap. Só mods podem digitar.",
+  "modsOnly_on": "Modo somente mods ativado {{emote}}. Só mods podem digitar.",
   "noHero": "Nenhum herói encontrado",
-  "noLastMatch": "Última partida não foi encontrada PauseChamp",
+  "noLastMatch": "Última partida não foi encontrada {{emote}}",
   "noNotable": "Nenhum jogador notável",
-  "notLive": "A stream não está ao vivo PauseChamp",
-  "notPlaying": "Não está jogando PauseChamp",
+  "notLive": "A stream não está ao vivo {{emote}}",
+  "notPlaying": "Não está jogando {{emote}}",
   "npAdd": "Tente  !np add <steam32id> <playername>",
   "npAdded": "{{name}} foi adicionado ao !np deste canal",
   "npRemove": "Tente !np remove <steam32id>",
   "npRemoved": "{{steamid}} foi removido do !np deste canal",
   "npUnknown": "{{steamid}} não encontrado para este canal",
   "overlayMissing": "Overlay não encontrada. O comando {{command}} requere que a overlay esteja adicionada.",
-  "ping": "Pong EZ Clap",
-  "pleb": "Pobre aqui 👇",
-  "pleb_off": "{{name}} EZ Clap bom trabalho, pobre",
+  "ping": "Pong {{emote}}",
+  "pleb": "Pobre aqui {{emote}}",
+  "pleb_off": "{{name}} {{emote}} bom trabalho, pobre",
   "predictions": {
     "no": "Não",
     "title": "Vamos ganhar essa partida com {{- heroName}}",
@@ -112,14 +112,14 @@
   "profileUrl": "Aqui {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Próximo rank em",
-    "nextRankIn_one": "Mais uma vitória peepoClap",
+    "nextRankIn_one": "Mais uma vitória {{emote}}",
     "nextRankIn_many": "",
     "nextRankIn_other": "em {{count}} vitórias"
   },
   "ranked_no": "Não, este jogo não é ranqueado",
   "ranked_yes": "Sim, este jogo é ranqueado",
   "refresh": "Reiniciando overlay...",
-  "roshanAlive": "O roshan está vivo Happi",
+  "roshanAlive": "O roshan está vivo {{emote}}",
   "roshanCount": {
     "1": "Mortes do Roshan: 1 · Próximo item a cair: fragmento de aghanim.",
     "2": "Mortes do Roshan: 2 · Próximos itens a cair: queijo e benção de aghanim ou fragmento de orbe restaurador.",
@@ -137,8 +137,8 @@
   "streamDelay": "Delay de transmissão: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Não há delay de transmissão neste canal",
   "tip": {
-    "from": "A tip de {{- heroName}} ICANT",
-    "to": "Estamos tipando {{- heroName}} PepeLaugh"
+    "from": "A tip de {{- heroName}} {{emote}}",
+    "to": "Estamos tipando {{- heroName}} {{emote}}"
   },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod foi desabilitado. Não irei mais responder aos comandos, nem reagir aos eventos da partida. Digite !toggle novamente para habilitar.",
