@@ -8,6 +8,7 @@ export async function getChatClient() {
     isAlwaysMod: true,
     authProvider: getAuthProvider(),
     channels: getChannels,
+    webSocket: false,
   })
 
   await chatClient.connect()
