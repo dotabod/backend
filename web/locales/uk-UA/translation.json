@@ -33,7 +33,7 @@
     "pause": "{{emote}} Хто поставив паузу?",
     "smoked": "{{emote}} {{- heroName}} в смоці!",
     "tpFound": "{{channel}} нафідив заради ТП після $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
-    "tpFromDeath": "Гарна робота {{emote}}. Фідіти для того щоб отримати ТП після $t(секунди, {\"count\": {{seconds}} }) SuskaygeAgreeG"
+    "tpFromDeath": "Гарна робота {{emote}}. Фідіти для того щоб отримати ТП після $t(секунди, {\"count\": {{seconds}} }) {{emote2}}"
   },
   "commands_everyone": "Кожен може використовувати: {{commandList}}",
   "commands_mods": "Команди лише для модераторів: {{commandList}}",

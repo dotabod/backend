@@ -5,7 +5,7 @@
     "pickup": "{{- heroName}} подбирает аегис!",
     "snatched": "{{- heroName}} крадёт аегис {{emote}}"
   },
-  "apm_one": "Текущий APM: {{count}} Ctatting",
+  "apm_one": "Текущий APM: {{count}} {{emote}}",
   "apm_few": "Текущий APM: {{count}} {{emote}}",
   "apm_many": "Текущий APM: {{count}} {{emote}}",
   "apm_other": "Текущий APM: {{count}} {{emote}}",

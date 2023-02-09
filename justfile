@@ -22,7 +22,7 @@ i18nd:
 
 i18nu:
     @echo "Uploading translations"
-    @crowdin.bat upload translations --config './crowdin.yml'
+    @crowdin.bat upload translations --auto-approve-imported --config './crowdin.yml'
 
 # Stops all containers
 down:
