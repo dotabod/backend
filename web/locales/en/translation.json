@@ -76,7 +76,7 @@
     "unranked": "Not ranked",
     "won": "Won last game"
   },
-  "version": "Last git commit: {{- url}}",
+  "version": "Server running v{{version}}, here's what's missing compared to the latest version: {{- url}}",
   "versionNoCommit": "Couldn't find the last git commit, here's the repo {{- url}}",
   "lifetime": "Lifetime games",
   "matchFound": "Match data found {{commandList}} commands activated.",
