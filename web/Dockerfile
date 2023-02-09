@@ -21,6 +21,9 @@ RUN yarn prisma generate --schema ./prisma/postgres.prisma && \
 # Copy the cached dependencies and build the application
 FROM prisma AS builder
 
+ARG COMMIT_HASH
+ENV COMMIT_HASH $COMMIT_HASH
+
 WORKDIR /app
 
 COPY tsconfig.json ./tsconfig.json
@@ -47,9 +50,12 @@ CMD ["yarn", "start"]
 ## DEV ##
 FROM node:19.4-alpine AS dev
 
+ARG COMMIT_HASH
+ENV COMMIT_HASH $COMMIT_HASH
+
 WORKDIR /app
 
-COPY --from=builder /app/tsconfig.json ./
+COPY tsconfig.json ./tsconfig.json
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./
 COPY --from=prisma /app/prisma ./prisma

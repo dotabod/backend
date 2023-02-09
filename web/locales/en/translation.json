@@ -77,6 +77,7 @@
     "won": "Won last game"
   },
   "version": "Last git commit: {{- url}}",
+  "versionNoCommit": "Couldn't find the last git commit, here's the repo {{- url}}",
   "lifetime": "Lifetime games",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",

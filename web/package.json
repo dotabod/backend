@@ -11,7 +11,7 @@
   "scripts": {
     "studio": "doppler run -- yarn prisma studio --schema ./prisma/postgres.prisma",
     "start": "node --inspect=0.0.0.0:9229 ./src/index.js",
-    "build": "export COMMIT_HASH=$(git rev-parse --short HEAD) && tsc --build --verbose",
+    "build": "tsc --build --verbose",
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 --trace-warnings --experimental-loader=newrelic/esm-loader.mjs -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
     "test": "doppler run -- ts-node --project ./tsconfig.json -r ts-node/register src/dev/index.ts",
