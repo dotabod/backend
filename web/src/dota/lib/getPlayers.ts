@@ -34,11 +34,9 @@ export async function getPlayers(
     throw new CustomError(t('gameNotFound', { lng: locale }))
   }
 
-  const response =
-    !players?.length &&
-    ((await mongo
-      .collection('delayedGames')
-      .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames)
+  const response = (await mongo
+    .collection('delayedGames')
+    .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames | null
 
   if (!response && !players?.length) {
     throw new CustomError(t('missingMatchData', { lng: locale }))
@@ -51,7 +49,7 @@ export async function getPlayers(
   const cards = await dota.getCards(accountIds)
 
   return {
-    gameMode: response ? response.match.game_mode : undefined,
+    gameMode: response ? Number(response.match.game_mode) : undefined,
     matchPlayers,
     accountIds,
     cards,
