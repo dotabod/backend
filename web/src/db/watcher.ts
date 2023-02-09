@@ -26,6 +26,8 @@ class SetupSupabase {
   toggleHandler = async (userId: string, enable: boolean) => {
     const client = await getDBUser(userId)
     if (!client) return
+    if (this.IS_DEV && !this.DEV_CHANNELS.includes(client.name)) return
+    if (!this.IS_DEV && this.DEV_CHANNELS.includes(client.name)) return
 
     toggleDotabod(userId, enable, client.name, client.locale)
   }
@@ -119,6 +121,8 @@ class SetupSupabase {
               // we'll never have the client cached, so we have to lookup the user again
               void this.toggleHandler(newObj.userId, !!newObj.value)
             } else {
+              if (this.IS_DEV && !this.DEV_CHANNELS.includes(client.name)) return
+              if (!this.IS_DEV && this.DEV_CHANNELS.includes(client.name)) return
               toggleDotabod(newObj.userId, !!newObj.value, client.name, client.locale)
             }
           }
