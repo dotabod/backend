@@ -153,12 +153,7 @@ export class GSIHandler {
   }
 
   // reset vars when a new match begins
-  public resetClientState(resetBets = false) {
-    logger.info('resetClientState', {
-      resetBets,
-      name: this.client.name,
-      matchId: this.playingBetMatchId,
-    })
+  public resetClientState() {
     this.playingHero = null
     this.playingHeroSlot = null
     this.events = []
@@ -168,23 +163,21 @@ export class GSIHandler {
 
     // Bet stuff should be closed by endBets()
     // This should mean an entire match is over
-    if (resetBets) {
-      this.heroData = null
-      this.players = null
-      this.client.steamServerId = undefined
-      this.endingBets = false
-      this.openingBets = false
-      this.playingBetMatchId = null
-      this.playingTeam = null
-      this.manaSaved = 0
-      this.treadToggles = 0
+    this.heroData = null
+    this.players = null
+    this.client.steamServerId = undefined
+    this.endingBets = false
+    this.openingBets = false
+    this.playingBetMatchId = null
+    this.playingTeam = null
+    this.manaSaved = 0
+    this.treadToggles = 0
 
-      void redisClient.client.json.del(`${this.getToken()}:roshan`)
-      void redisClient.client.json.del(`${this.getToken()}:aegis`)
+    void redisClient.client.json.del(`${this.getToken()}:roshan`)
+    void redisClient.client.json.del(`${this.getToken()}:aegis`)
 
-      server.io.to(this.getToken()).emit('aegis-picked-up', {})
-      server.io.to(this.getToken()).emit('roshan-killed', {})
-    }
+    server.io.to(this.getToken()).emit('aegis-picked-up', {})
+    server.io.to(this.getToken()).emit('roshan-killed', {})
   }
 
   // Runs every gametick
@@ -473,7 +466,7 @@ export class GSIHandler {
         steamFromGSI: this.client.gsi.player?.steamid,
         token: this.getToken(),
       })
-      this.resetClientState(true)
+      this.resetClientState()
     }
 
     // The bet was already made
@@ -624,7 +617,7 @@ export class GSIHandler {
         endingBets: this.endingBets,
       })
 
-      if (!this.playingBetMatchId) this.resetClientState(true)
+      if (!this.playingBetMatchId) this.resetClientState()
       return
     }
 
@@ -696,7 +689,7 @@ export class GSIHandler {
             logger.error('ERROR refunding bets', { token: this.getToken(), e })
           })
       }
-      this.resetClientState(true)
+      this.resetClientState()
       return
     }
 
@@ -748,7 +741,7 @@ export class GSIHandler {
 
     if (!betsEnabled || !this.client.stream_online) {
       logger.info('Bets are not enabled, stopping here', { name: this.getChannel() })
-      this.resetClientState(true)
+      this.resetClientState()
       return
     }
 
@@ -773,7 +766,7 @@ export class GSIHandler {
             })
           })
           .finally(() => {
-            this.resetClientState(true)
+            this.resetClientState()
 
             const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
             const {
@@ -830,7 +823,7 @@ export class GSIHandler {
                 logger.error('ERROR refunding bets', { token: this.getToken(), e })
               })
           }
-          this.resetClientState(true)
+          this.resetClientState()
           return
         }
 
@@ -845,7 +838,7 @@ export class GSIHandler {
           e: err?.message || err?.result || err?.data || err,
         })
 
-        this.resetClientState(true)
+        this.resetClientState()
       })
   }
 
