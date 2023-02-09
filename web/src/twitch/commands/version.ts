@@ -8,7 +8,7 @@ commandHandler.registerCommand('version', {
     if (!process.env.COMMIT_HASH) {
       chatClient.say(
         message.channel.name,
-        t('versionNoCommit', {
+        t('version.unknown', {
           url: 'github.com/dotabod/backend',
           lng: message.channel.client.locale,
         }),
@@ -18,7 +18,7 @@ commandHandler.registerCommand('version', {
 
     chatClient.say(
       message.channel.name,
-      t('version', {
+      t('version.commit', {
         lng: message.channel.client.locale,
         version: process.env.COMMIT_HASH,
         url: `github.com/dotabod/backend/compare/${process.env.COMMIT_HASH || ''}...master`,
