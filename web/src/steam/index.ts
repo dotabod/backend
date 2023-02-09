@@ -66,10 +66,30 @@ const mongo = await Mongo.connect()
 interface RealTimeStats {
   steam_server_id: string
   token: string
+  itemsOnly?: boolean
   match_id: string
   waitForHeros: boolean
   refetchCards?: boolean
   cb?: (err: Error | null, body: delayedGames | null) => void
+}
+
+function hasSteamData(game?: delayedGames | null) {
+  const hasTeams = Array.isArray(game?.teams) && game?.teams.length === 2
+  const hasPlayers =
+    hasTeams &&
+    Array.isArray(game.teams[0].players) &&
+    Array.isArray(game.teams[1].players) &&
+    game.teams[0].players.length === 5 &&
+    game.teams[1].players.length === 5
+  const hasAccountIds =
+    hasPlayers &&
+    game.teams[0].players.every((player) => player.accountid) &&
+    game.teams[1].players.every((player) => player.accountid)
+  const hasHeroes =
+    hasPlayers &&
+    game.teams[0].players.every((player) => player.heroid) &&
+    game.teams[1].players.every((player) => player.heroid)
+  return { hasAccountIds, hasHeroes }
 }
 
 class Dota {
@@ -179,23 +199,26 @@ class Dota {
     this.steamClient.connect()
   }
 
-  // 2 minute delayed match data if its out of our region
+  // 2 minute delayed match data if it's out of our region
   public getDelayedMatchData = ({
     server_steamid,
     match_id,
     refetchCards = false,
     token,
+    itemsOnly = false,
   }: {
     server_steamid: string
     token: string
     match_id: string
     refetchCards?: boolean
+    itemsOnly?: boolean
   }) => {
     return new Promise((resolveOuter: (response: delayedGames | null) => void) => {
-      this.GetRealTimeStats({
+      void this.GetRealTimeStats({
         steam_server_id: server_steamid,
         token,
         match_id,
+        itemsOnly,
         waitForHeros: false,
         refetchCards: refetchCards,
         cb: (err, response) => {
@@ -216,10 +239,11 @@ class Dota {
     })
   }
 
-  public GetRealTimeStats = ({
+  public GetRealTimeStats = async ({
     steam_server_id,
     waitForHeros,
     match_id,
+    itemsOnly,
     token,
     refetchCards = false,
     cb,
@@ -228,36 +252,31 @@ class Dota {
       return cb?.(new Error('Match not found'), null)
     }
 
+    const currentData = (await mongo
+      .collection('delayedGames')
+      .findOne({ 'match.match_id': match_id })) as unknown as delayedGames | null
+    const { hasAccountIds, hasHeroes } = hasSteamData(currentData)
+    if (!itemsOnly && currentData && hasHeroes && hasAccountIds) {
+      cb?.(null, currentData)
+      return
+    }
+
     const operation = retry.operation({
       retries: 8,
       factor: 2,
       minTimeout: 1 * 1000,
     })
 
-    operation.attempt((currentAttempt: number) => {
+    operation.attempt(() => {
       axios(
         `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env
           .STEAM_WEB_API!}&server_steam_id=${steam_server_id}`,
       )
         .then(async (response) => {
           const game = response.data as delayedGames | undefined
-          const hasTeams = Array.isArray(game?.teams) && game?.teams.length === 2
-          const hasPlayers =
-            hasTeams &&
-            Array.isArray(game.teams[0].players) &&
-            Array.isArray(game.teams[1].players) &&
-            game.teams[0].players.length === 5 &&
-            game.teams[1].players.length === 5
-          const hasAccountIds =
-            hasPlayers &&
-            game.teams[0].players.every((player) => player.accountid) &&
-            game.teams[1].players.every((player) => player.accountid)
-          const hasHeroes =
-            hasPlayers &&
-            game.teams[0].players.every((player) => player.heroid) &&
-            game.teams[1].players.every((player) => player.heroid)
+          const { hasAccountIds, hasHeroes } = hasSteamData(game)
 
-          if (!hasAccountIds) {
+          if (!hasAccountIds || !game) {
             operation.retry(new Error('Waiting for account ids'))
             return
           }
@@ -274,14 +293,16 @@ class Dota {
           } as delayedGames
 
           if ((waitForHeros && hasHeroes) || hasHeroes) {
-            logger.info('Saving match data with heroes', { matchid: match_id })
-
-            await mongo
-              .collection('delayedGames')
-              .updateOne({ 'match.match_id': match_id }, { $set: delayedData }, { upsert: true })
-
             const players = getAccountsFromMatch(delayedData)
-            events.emit('saveHeroesForMatchId', { matchId: match_id, players }, token)
+
+            if (!itemsOnly) {
+              logger.info('Saving match data with heroes', { matchid: match_id })
+              await mongo
+                .collection('delayedGames')
+                .updateOne({ 'match.match_id': match_id }, { $set: delayedData }, { upsert: true })
+              events.emit('saveHeroesForMatchId', { matchId: match_id, players }, token)
+            }
+
             cb?.(null, game)
 
             return
@@ -306,7 +327,7 @@ class Dota {
             // Come back in 8 attempts to save the hero ids. With no cb()
             if (!hasHeroes) {
               logger.info('Waiting for hero ids', { matchId: match_id })
-              this.GetRealTimeStats({
+              void this.GetRealTimeStats({
                 match_id,
                 token,
                 steam_server_id: steam_server_id,

@@ -46,6 +46,13 @@ async function getItems(
     throw new CustomError(t('missingMatchData', { lng: client.locale }))
   }
 
+  if (
+    !gsiHandlers.get(client.token)?.players?.matchPlayers.length &&
+    !getCurrentMatchPlayers(client.gsi).length
+  ) {
+    throw new CustomError(t('missingMatchData', { lng: client.locale }))
+  }
+
   const delayedData = await server.dota.getDelayedMatchData({
     server_steamid: client.steamServerId,
     token: client.token,
