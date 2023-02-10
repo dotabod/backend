@@ -1,64 +1,72 @@
-# First stage: Install dependencies and cache them
-FROM node:19.4-alpine AS deps
+#################
+#      BASE     #
+#################
+FROM node:19.4-alpine as base
 
-RUN apk add git
+RUN apk add --no-cache git
 
 WORKDIR /app
 COPY package.json yarn.lock* ./
 RUN yarn install --frozen-lockfile
 
-FROM deps AS prisma
 
-WORKDIR /app
+#################
+#     PRISMA    #
+#################
+FROM base AS prisma
 
-# Generate prisma schema
 COPY prisma ./prisma
+RUN yarn prisma generate --schema ./prisma/postgres.prisma 
+RUN test -f ./prisma/postgres.prisma \
+    && yarn prisma generate --schema ./prisma/mongo.prisma \
+    || true
 
-RUN yarn prisma generate --schema ./prisma/postgres.prisma && \
-    yarn prisma generate --schema ./prisma/mongo.prisma || \
-    true
 
-# Copy the cached dependencies and build the application
+#################
+#    BUILDER    #
+#################
 FROM prisma AS builder
-
-ARG COMMIT_HASH
-ENV COMMIT_HASH $COMMIT_HASH
-
-WORKDIR /app
 
 COPY tsconfig.json ./tsconfig.json
 COPY src ./src
 
 RUN yarn build
-RUN rm -rf node_modules
+RUN yarn install --frozen-lockfile --production --offline
 
-## PROD ##
-FROM node:19.4-alpine AS prod
-
-WORKDIR /app
-
-COPY --from=builder /app/dist ./
-COPY --from=builder /app/tsconfig.json ./
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/package.json ./
-COPY --from=prisma /app/prisma ./prisma
-
-RUN mkdir -p ./src/steam/volumes
-
-CMD ["yarn", "start"]
-
-## DEV ##
-FROM node:19.4-alpine AS dev
+#################
+#      DEV      #
+#################
+FROM node:19.4-alpine as dev
 
 ARG COMMIT_HASH
 ENV COMMIT_HASH $COMMIT_HASH
 
 WORKDIR /app
-
 COPY tsconfig.json ./tsconfig.json
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/package.json ./
-COPY --from=prisma /app/prisma ./prisma
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/prisma ./prisma
+
+RUN mkdir -p ./src/steam/volumes
+
+CMD ["yarn", "dev"]
+
+#################
+#     PROD      #
+#################
+FROM node:19.4-alpine as prod
+
+ARG COMMIT_HASH
+ENV COMMIT_HASH $COMMIT_HASH
+
+LABEL org.opencontainers.image.source="https://github.com/dotabod/backend"
+LABEL org.opencontainers.image.version=$COMMIT_HASH
+
+WORKDIR /app
+COPY tsconfig.json ./tsconfig.json
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/prisma ./prisma
 
 RUN mkdir -p ./src/steam/volumes
 
