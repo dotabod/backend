@@ -7,13 +7,15 @@ RUN apk add --no-cache git
 
 WORKDIR /app
 COPY package.json yarn.lock* ./
-RUN yarn install --frozen-lockfile
+RUN yarn install --frozen-lockfile --production
 
 
 #################
 #     PRISMA    #
 #################
 FROM base AS prisma
+
+RUN yarn install --frozen-lockfile
 
 COPY prisma ./prisma
 RUN yarn prisma generate --schema ./prisma/postgres.prisma 
@@ -31,7 +33,7 @@ COPY tsconfig.json ./tsconfig.json
 COPY src ./src
 
 RUN yarn build
-RUN yarn install --frozen-lockfile --production --offline
+
 
 #################
 #      DEV      #
@@ -64,10 +66,11 @@ LABEL org.opencontainers.image.version=$COMMIT_HASH
 
 WORKDIR /app
 COPY tsconfig.json ./tsconfig.json
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=base /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/prisma ./prisma
 
 RUN mkdir -p ./src/steam/volumes
 
-CMD ["yarn", "dev"]
+CMD ["yarn", "start"]
