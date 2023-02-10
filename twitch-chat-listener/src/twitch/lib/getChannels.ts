@@ -42,7 +42,9 @@ export async function getChannels() {
           settings: {
             some: {
               key: 'commandDisable',
-              value: true as any,
+              value: {
+                equals: true,
+              },
             },
           },
         },
