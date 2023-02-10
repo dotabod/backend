@@ -4,13 +4,17 @@ services:
     image: 'redis/redis-stack-server:latest'
     ports:
       - '6379:6379'
+
   twitch-chat-listener:
-    image: dotabod-twitch-chat-listener
+    image: dotabod-twitch-chat-listener:${COMMIT_HASH:-latest}
     container_name: dotabod-twitch-chat-listener
     build:
-      context: twitch-chat-listener
+      context: .
       target: dev
-      dockerfile: ../web/Dockerfile # Reusing same nodejs dockerfile
+      dockerfile: ./web/Dockerfile # Reusing same nodejs dockerfile
+      args:
+        - BUILD_CONTEXT=twitch-chat-listener
+        - COMMIT_HASH=$COMMIT_HASH
     hostname: twitch-chat-listener
     ports:
       - '5005:5005'
@@ -28,15 +32,19 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
     volumes:
-      - ./twitch-chat-listener/src:/app/src
-      - ./twitch-chat-listener/locales:/app/locales
+      - ./twitch-chat-listener/src:/app/twitch-chat-listener/src
+      - ./twitch-chat-listener/locales:/app/twitch-chat-listener/locales
+
   twitch-eventsub-listener:
-    image: dotabod-twitch-eventsub-listener
+    image: dotabod-twitch-eventsub-listener:${COMMIT_HASH:-latest}
     container_name: dotabod-twitch-eventsub-listener
     build:
-      context: twitch-eventsub-listener
+      context: .
       target: dev
-      dockerfile: ../web/Dockerfile # Reusing same nodejs dockerfile
+      dockerfile: ./web/Dockerfile # Reusing same nodejs dockerfile
+      args:
+        - BUILD_CONTEXT=twitch-eventsub-listener
+        - COMMIT_HASH=$COMMIT_HASH
     hostname: twitch-eventsub-listener
     ports:
       - '82:5010'
@@ -59,13 +67,17 @@ services:
       - TWITCH_EVENTSUB_SECRET
     volumes:
       - ./twitch-eventsub-listener/src:/app/src
+
   web:
-    image: dotabod-web
+    image: dotabod-web:${COMMIT_HASH:-latest}
     container_name: dotabod-web
     build:
-      context: web
+      context: .
       target: dev
-      dockerfile: ./Dockerfile # Reusing same nodejs dockerfile
+      dockerfile: ./web/Dockerfile # Reusing same nodejs dockerfile
+      args:
+        - BUILD_CONTEXT=web
+        - COMMIT_HASH=$COMMIT_HASH
     hostname: web
     ports:
       - '81:5000'
@@ -99,6 +111,7 @@ services:
       # Storing locales in a volume so that they can be edited without rebuilding the image
       - ./web/locales:/app/locales
       - steam_auth:/app/src/steam/volumes
+
   nginx:
     container_name: dotabod-nginx
     image: dotabod-nginx
@@ -113,6 +126,7 @@ services:
       - EVENTSUB_HOST
       - TLS_CERT
       - TLS_KEY
+
   mongodb:
     container_name: dotabod-mongodb
     image: "mongo"

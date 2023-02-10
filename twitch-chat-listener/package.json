@@ -1,5 +1,5 @@
 {
-  "name": "dotabod-twitch-chat-server",
+  "name": "@dotabod/twitch-chat-server",
   "description": "We forward twitch chat to dotabod.",
   "version": "1.0.0",
   "license": "GPL-3.0-or-later",
@@ -8,6 +8,7 @@
   "exports": "./dist/index.js",
   "type": "module",
   "packageManager": "yarn@1.22.19",
+  "private": true,
   "scripts": {
     "start": "node --trace-warnings ./src/index.js",
     "build": "tsc --build --verbose",
@@ -21,33 +22,11 @@
     "pullpsql": "doppler run -- prisma db pull --schema ./prisma/postgres.prisma"
   },
   "dependencies": {
-    "@prisma/client": "4.10.0",
-    "@supabase/supabase-js": "^2.7.1",
-    "@twurple/api": "5.3.1",
-    "@twurple/auth": "5.3.1",
-    "@twurple/chat": "5.3.1",
-    "i18next": "^22.4.9",
     "i18next-fs-backend": "^2.1.1",
-    "prisma": "^4.10.0",
-    "socket.io": "^4.6.0",
-    "winston": "^3.8.2"
+    "i18next": "^22.4.9"
   },
   "devDependencies": {
-    "@types/node": "^18.13.0",
-    "@typescript-eslint/eslint-plugin": "^5.51.0",
-    "@typescript-eslint/parser": "^5.51.0",
-    "dotenv": "^16.0.3",
     "dotenv-cli": "^6.0.0",
-    "eslint": "^8.33.0",
-    "eslint-config-prettier": "^8.6.0",
-    "eslint-import-resolver-typescript": "^3.5.3",
-    "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-unused-imports": "^2.0.0",
-    "nodemon": "^2.0.20",
-    "prettier": "^2.8.4",
-    "ts-node": "^10.9.1",
-    "tsconfig-paths": "^4.1.2",
-    "typescript": "^4.9.5"
+    "dotenv": "^16.0.3"
   }
 }
