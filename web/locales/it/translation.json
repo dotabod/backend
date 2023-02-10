@@ -5,9 +5,9 @@
     "pickup": "{{- heroName}} ha preso l'egida",
     "snatched": "{{- heroName}} ha rubato l'egida {{emote}}"
   },
-  "apm_one": "Live APM: {{count}} {{emote}}",
+  "apm_one": "APM live: {{count}} {{emote}}",
   "apm_many": "",
-  "apm_other": "Live APM: {{count}} {{emote}}",
+  "apm_other": "APM live: {{count}} {{emote}}",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "$t(betaTester_on)",
@@ -34,6 +34,7 @@
     "tpFound": "{{channel}} ben fatto, hai finalmente comprato un tp dopo $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Grazie a questa morte hai finalmente un tp. Ti ci sono voluti solo $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "commandDisabled": "Lo streamer ha disabilitato il comando {{cmdName}} {{emote}} Usa !commands per quelli abilitati",
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
   "dota2pt": "Hai bisogno di build pro per {{- heroName}}? Vai qui {{- url}}",
@@ -116,6 +117,7 @@
     "nextRankIn_many": "",
     "nextRankIn_other": "in {{count}} vittorie"
   },
+  "ranked": "Classificata",
   "ranked_no": "No questa partita non è classificata",
   "ranked_yes": "Si questa partita è classificata",
   "refresh": "Aggiornando l'overlay...",
@@ -154,9 +156,14 @@
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",
   "unknownSteam": "Impossibile trovare l'account Steam. Prova a giocare una partita di prova contro i bot per salvare il tuo account su Dotabod!",
+  "unranked": "Non Classificata",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Aggiornato MMR a {{mmr}}. !fixparty per party e !fixdd per doubledown",
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
+  "version": {
+    "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
+    "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
+  },
   "xpm": "XPM Live: {{num}}"
 }

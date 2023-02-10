@@ -35,6 +35,7 @@
     "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Thanks to this death you got a tp finally. Only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "commandDisabled": "Streamer disabled {{cmdName}} command {{emote}} Check !commands for the enabled ones",
   "commands_everyone": "Všichni mohou použít: {{commandList}}",
   "commands_mods": "Pouze pro moderátory: {{commandList}}",
   "dota2pt": "Potřebuješ poradit co kupovat na {{- heroName}}? Nápady najdeš zde {{- url}}",
@@ -124,6 +125,7 @@
     "nextRankIn_many": "in {{count}} wins",
     "nextRankIn_other": "za {{count}} výher"
   },
+  "ranked": "Ranked",
   "ranked_no": "Nope, tenhle zápas není hodnocený",
   "ranked_yes": "Yep, tahle hra je hodnocená",
   "refresh": "Obnovuji overlay..",
@@ -166,9 +168,14 @@
   "uknownMmr": "Neznám MMR kanálu {{channel}}. Modi ho můžou nastavit příkazem !setmmr 1234 nebo na stránce {{- url}}",
   "unknown": "Neznámé",
   "unknownSteam": "Nenalezen steam účet. Postupuj podle kroku 2, odehraj zápas s boty a zkus to znovu.",
+  "unranked": "Unranked",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Aktualizované MMR na {{mmr}}. !fixparty pro party a !fixdd pro double down",
   "updateMmr_manual": "Aktualizované MMR na {{mmr}}",
   "updateMmrMulti": "Vícero steam účtů, aktualizuji ten který je nyní přihlášený - {{steamId}}",
+  "version": {
+    "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
+    "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
+  },
   "xpm": "Aktuální XPM: {{num}}"
 }
