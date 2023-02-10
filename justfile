@@ -1,5 +1,5 @@
+export COMMIT_HASH := `git rev-parse --short HEAD`
 dockerfile := if env_var("NODE_ENV") == "production" { "docker-compose-prod.yml" } else { "docker-compose.yml" }
-commithash := `git rev-parse --short HEAD`
 app := ""
 
 GREEN  := "\\u001b[32m"
@@ -8,7 +8,7 @@ CHECK  := `/usr/bin/printf "\xE2\x9C\x94"`
 
 # Lists Recipes
 default:
-  @echo Environment is $NODE_ENV on commit {{commithash}}
+  @echo Environment is $NODE_ENV on commit {{COMMIT_HASH}}
   @just --list
 
 
@@ -36,22 +36,20 @@ restart:
 
 # Builds all images
 buildall:
-    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
+    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{COMMIT_HASH}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
-    @docker system prune -f
 
 logs:
     @docker logs {{app}} -f
 
 # Builds one image
 build:
-    @echo -e "Running for {{app}} on {{dockerfile}} with {{commithash}}"
+    @echo -e "Running for {{app}} on {{dockerfile}} with {{COMMIT_HASH}}"
     git pull
-    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}} {{app}}
+    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{COMMIT_HASH}} {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully ran! {{CHECK}} {{RESET}}"
-    @docker system prune -f
 
 # Starts images
 up:
@@ -60,10 +58,9 @@ up:
 
 update:
     git pull
-    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
+    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{COMMIT_HASH}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d
-    @docker system prune -f
 
 pullall:
     cd ./web && yarn pullpsql && yarn generateprisma
