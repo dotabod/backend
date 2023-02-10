@@ -2,21 +2,29 @@
 #      BASE     #
 #################
 FROM node:19.4-alpine as base
-
 RUN apk add --no-cache git
-
 WORKDIR /app
+
+
+#################
+#   DEV DEPS    #
+#################
+FROM base as dev-deps
 COPY package.json yarn.lock* ./
-RUN yarn install --frozen-lockfile --production
+RUN yarn install --frozen-lockfile
+
+
+#################
+#   PROD DEPS   #
+#################
+FROM dev-deps as prod-deps
+RUN yarn install --frozen-lockfile --production --offline
 
 
 #################
 #     PRISMA    #
 #################
-FROM base AS prisma
-
-RUN yarn install --frozen-lockfile
-
+FROM dev-deps AS prisma
 COPY prisma ./prisma
 RUN yarn prisma generate --schema ./prisma/postgres.prisma 
 RUN test -f ./prisma/postgres.prisma \
@@ -28,10 +36,8 @@ RUN test -f ./prisma/postgres.prisma \
 #    BUILDER    #
 #################
 FROM prisma AS builder
-
 COPY tsconfig.json ./tsconfig.json
 COPY src ./src
-
 RUN yarn build
 
 
@@ -45,9 +51,9 @@ ENV COMMIT_HASH $COMMIT_HASH
 
 WORKDIR /app
 COPY tsconfig.json ./tsconfig.json
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/prisma ./prisma
+COPY --from=prisma /app/node_modules ./node_modules
+COPY --from=prisma /app/package.json ./
+COPY --from=prisma /app/prisma ./prisma
 
 RUN mkdir -p ./src/steam/volumes
 
@@ -66,7 +72,7 @@ LABEL org.opencontainers.image.version=$COMMIT_HASH
 
 WORKDIR /app
 COPY tsconfig.json ./tsconfig.json
-COPY --from=base /app/node_modules ./node_modules
+COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/prisma ./prisma

@@ -29,7 +29,6 @@
     "@twurple/eventsub-base": "5.3.1",
     "@twurple/eventsub-http": "5.3.1",
     "newrelic": "^9.9.0",
-    "prisma": "^4.10.0",
     "socket.io": "^4.6.0",
     "winston": "^3.8.2"
   },
@@ -47,6 +46,7 @@
     "eslint-plugin-unused-imports": "^2.0.0",
     "nodemon": "^2.0.20",
     "prettier": "^2.8.4",
+    "prisma": "^4.10.0",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.1.2",
     "typescript": "^4.9.5"
