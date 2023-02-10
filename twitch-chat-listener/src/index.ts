@@ -69,10 +69,26 @@ io.on('connection', (socket) => {
 
 async function disableChannel(channel: string) {
   const name = channel.replace('#', '')
-  const user = await prisma.user.findFirst({ where: { name } })
+  const user = await prisma.user.findFirst({
+    select: {
+      id: true,
+      settings: {
+        select: {
+          key: true,
+          value: true,
+        },
+      },
+    },
+    where: { name },
+  })
 
   if (!user) {
     console.log('Failed to find user', name)
+    return
+  }
+
+  if (user.settings.find((s) => s.key === 'commandDisable' && s.value === true)) {
+    console.log('User already disabled', name)
     return
   }
 
@@ -96,7 +112,7 @@ async function disableChannel(channel: string) {
 }
 
 chatClient.onJoinFailure((channel, reason) => {
-  if (['msg_banned', 'msg_banned_phone_number_alias'].includes(reason)) {
+  if (['msg_banned', 'msg_banned_phone_number_alias', 'msg_channel_suspended'].includes(reason)) {
     // disable the channel in the database
     void disableChannel(channel)
     return
