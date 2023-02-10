@@ -47,9 +47,16 @@ io.on('connection', (socket) => {
     await chatClient.say(channel, text || "I'm sorry, I can't do that")
   })
 
-  socket.on('join', async function (channel: string) {
+  socket.on('join', function (channel: string) {
     try {
-      await chatClient.join(channel)
+      chatClient
+        .join(channel)
+        .then(() => {
+          //
+        })
+        .catch((e) => {
+          console.log('[ENABLE GSI] Failed to enable client inside promise', { channel, error: e })
+        })
     } catch (e) {
       console.log('[ENABLE GSI] Failed to enable client', { channel, error: e })
     }
