@@ -51,7 +51,7 @@ io.on('connection', (socket) => {
     try {
       await chatClient.join(channel)
     } catch (e) {
-      console.error('[ENABLE GSI] Failed to enable client', { channel, error: e })
+      console.log('[ENABLE GSI] Failed to enable client', { channel, error: e })
     }
   })
 
