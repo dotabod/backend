@@ -17,7 +17,7 @@
     "lost": "Nós perdemos, GG, boa tentativa! {{emote}} Vamos para o próximo.",
     "notScored": "Partida não contabilizada {{emote}} Não adicionando nem subtraindo MMR para a partida {{matchId}}",
     "open": "Apostas abertas {{emote}}",
-    "remade": "Swapped hero {{emote}} Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened {{emote2}}",
+    "remade": "Herói trocado {{emote}} Apostas para {{- oldHeroName}} reembolsadas, novas apostas abertas para {{- newHeroName}} {{emote2}}",
     "won": "Nós ganhamos! {{emote}} Vamos para a próxima partida."
   },
   "bounties": {
@@ -34,6 +34,7 @@
     "tpFound": "{{channel}} bom trabalho comprando um tp FINALMENTE depois de $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Graças a essa morte você finalmente conseguiu um tp. Levou apenas $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "commandDisabled": "O streamer desativou o comando {{cmdName}} {{emote}} Digite !commands para verificar os comandos habilitados",
   "commands_everyone": "Todos podem usar: {{commandList}}",
   "commands_mods": "Comandos exclusivos para mods: {{commandList}}",
   "dota2pt": "Precisa de builds profissionais para {{- heroName}} ? Dê uma olhada aqui {{- url}}",
@@ -116,6 +117,7 @@
     "nextRankIn_many": "",
     "nextRankIn_other": "em {{count}} vitórias"
   },
+  "ranked": "Ranqueada",
   "ranked_no": "Não, este jogo não é ranqueado",
   "ranked_yes": "Sim, este jogo é ranqueado",
   "refresh": "Reiniciando overlay...",
@@ -154,9 +156,14 @@
   "uknownMmr": "Ainda não sei o MMR de {{channel}}. Mods precisam digitar !setmmr 1234 ou configurar em {{- url}}",
   "unknown": "Desconhecido",
   "unknownSteam": "Conta da steam não encontrada. Siga os passos 2 do setup , tente jogar uma partida contra bots para salvar sua conta em Dotabod!",
+  "unranked": "Não ranqueada",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "MMR atualizado para {{mmr}}. Digite !fixparty para alterar para MMR em equipe, ou !fixdd para partida com dobro de MMR",
   "updateMmr_manual": "MMR atualizado para {{mmr}}",
   "updateMmrMulti": "Múltiplas contas da steam, atualizando a conta logada no momento ({{steamId}})",
+  "version": {
+    "commit": "Servidor executando a versão {{version}}, aqui está o que falta em comparação com a versão mais recente: {{- url}}",
+    "unknown": "Não foi possível encontrar o último git commit, aqui está o repositório {{- url}}"
+  },
   "xpm": "XPM ao vivo: {{num}}"
 }
