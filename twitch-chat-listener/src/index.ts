@@ -11,8 +11,7 @@ await use(FsBackend).init<FsBackendOptions>({
   fallbackLng: 'en',
   preload: readdirSync(join('./locales')).filter((fileName: string) => {
     const joinedPath = join(join('./locales'), fileName)
-    const isDirectory = lstatSync(joinedPath).isDirectory()
-    return !!isDirectory
+    return lstatSync(joinedPath).isDirectory()
   }),
   defaultNS: 'translation',
   backend: {
@@ -24,6 +23,7 @@ console.log('Loaded i18n for chat')
 
 import './db/watcher.js'
 import { getChatClient } from './twitch/lib/getChatClient.js'
+import { prisma } from './db/prisma.js'
 
 // Setup twitch chatbot client FIRST
 export const chatClient = await getChatClient()
@@ -48,12 +48,54 @@ io.on('connection', (socket) => {
   })
 
   socket.on('join', async function (channel: string) {
-    await chatClient.join(channel)
+    try {
+      await chatClient.join(channel)
+    } catch (e) {
+      console.error('[ENABLE GSI] Failed to enable client', { channel, error: e })
+    }
   })
 
   socket.on('part', function (channel: string) {
     chatClient.part(channel)
   })
+})
+
+async function disableChannel(channel: string) {
+  const name = channel.replace('#', '')
+  const user = await prisma.user.findFirst({ where: { name } })
+
+  if (!user) {
+    console.log('Failed to find user', name)
+    return
+  }
+
+  console.log('Disabling user', name)
+  await prisma.setting.upsert({
+    where: {
+      key_userId: {
+        userId: user.id,
+        key: 'commandDisable',
+      },
+    },
+    create: {
+      userId: user.id,
+      key: 'commandDisable',
+      value: true,
+    },
+    update: {
+      value: true,
+    },
+  })
+}
+
+chatClient.onJoinFailure((channel, reason) => {
+  if (['msg_banned', 'msg_banned_phone_number_alias'].includes(reason)) {
+    // disable the channel in the database
+    void disableChannel(channel)
+    return
+  }
+
+  console.log('Failed to join channel', channel, reason)
 })
 
 chatClient.onMessage(function (channel, user, text, msg) {
