@@ -29,6 +29,8 @@ eventHandler.registerEvent(`hero:name`, {
                   lng: dotaClient.client.locale,
                   emote: 'SuskaygeAgreeGe',
                   emote2: 'peepoGamble',
+                  oldHeroName: dotaClient.playingHero,
+                  newHeroName: name,
                 }),
                 { delay: false },
               )
