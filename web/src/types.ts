@@ -14,6 +14,10 @@ export interface SocketClient {
   Account?: {
     refresh_token: string
     access_token: string
+    expires_at: number | null
+    scope: string | null
+    obtainment_timestamp: number | null
+    expires_in: number | null
     providerAccountId: string
   } | null
   SteamAccount: {

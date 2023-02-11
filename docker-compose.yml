@@ -15,18 +15,17 @@ services:
     ports:
       - '5005:5005'
     environment:
+      - DATABASE_URL
+      - DB_SECRET
+      - DB_URL
+      - DEV_CHANNELS
+      - MONGO_URL
       - NEW_RELIC_APP_NAME="DEV twitch chat listener"
       - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
+      - NODE_ENV
+      - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
-      - TWITCH_ACCESS_TOKEN
-      - TWITCH_REFRESH_TOKEN
-      - DEV_CHANNELS
-      - NODE_ENV
-      - DATABASE_URL
-      - MONGO_URL
-      - DB_URL
-      - DB_SECRET
     volumes:
       - ./twitch-chat-listener/src:/app/src
       - ./twitch-chat-listener/locales:/app/locales
@@ -42,21 +41,19 @@ services:
       - '82:5010'
       - '5015:5015'
     environment:
-      - NR_NATIVE_METRICS_NO_BUILD
-      - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
-      - NEW_RELIC_APP_NAME="DEV twitch eventsub listener"
-      - PORT=5010
       - DATABASE_URL
+      - DB_SECRET
+      - DB_URL
+      - DEV_CHANNELS
+      - EVENTSUB_HOST
       - MONGO_URL
+      - NEW_RELIC_APP_NAME="DEV twitch eventsub listener"
+      - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
+      - NODE_ENV
+      - NR_NATIVE_METRICS_NO_BUILD
+      - PORT=5010
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
-      - TWITCH_ACCESS_TOKEN
-      - TWITCH_REFRESH_TOKEN
-      - DEV_CHANNELS
-      - NODE_ENV
-      - DB_URL
-      - DB_SECRET
-      - EVENTSUB_HOST
       - TWITCH_EVENTSUB_SECRET
     volumes:
       - ./twitch-eventsub-listener/src:/app/src
@@ -72,29 +69,28 @@ services:
       - '81:5000'
       - '9229:9229'
     environment:
-      - NEW_RELIC_ENABLED
-      - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
-      - NEW_RELIC_APP_NAME="dev dotabod web"
-      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
-      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
-      - NEW_RELIC_LICENSE_KEY
-      - NEW_RELIC_LOG
-      - NEW_RELIC_LOG_ENABLED
-      - NEW_RELIC_NO_CONFIG_FILE
       - ADMIN_CHANNELS
       - DATABASE_URL
       - DB_SECRET
       - DB_URL
-      - MONGO_URL
       - DEV_CHANNELS
+      - MONGO_URL
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      - NEW_RELIC_APP_NAME="dev dotabod web"
+      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
+      - NEW_RELIC_ENABLED
+      - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
+      - NEW_RELIC_LICENSE_KEY
+      - NEW_RELIC_LOG
+      - NEW_RELIC_LOG_ENABLED
+      - NEW_RELIC_NO_CONFIG_FILE
       - NODE_ENV
       - STEAM_PASS
       - STEAM_USER
       - STEAM_WEB_API
-      - TWITCH_ACCESS_TOKEN
+      - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
-      - TWITCH_REFRESH_TOKEN
     volumes:
       - ./web/src:/app/src
       # Storing locales in a volume so that they can be edited without rebuilding the image

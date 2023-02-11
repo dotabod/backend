@@ -27,8 +27,7 @@ services:
       - NEW_RELIC_NO_CONFIG_FILE
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
-      - TWITCH_ACCESS_TOKEN
-      - TWITCH_REFRESH_TOKEN
+      - TWITCH_BOT_PROVIDERID
       - DEV_CHANNELS
       - NODE_ENV
       - DATABASE_URL
@@ -60,8 +59,6 @@ services:
       - MONGO_URL
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
-      - TWITCH_ACCESS_TOKEN
-      - TWITCH_REFRESH_TOKEN
       - DEV_CHANNELS
       - NODE_ENV
       - DB_URL
@@ -102,10 +99,9 @@ services:
       - STEAM_PASS
       - STEAM_USER
       - STEAM_WEB_API
-      - TWITCH_ACCESS_TOKEN
+      - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
-      - TWITCH_REFRESH_TOKEN
   nginx:
     container_name: dotabod-nginx
     image: dotabod-nginx

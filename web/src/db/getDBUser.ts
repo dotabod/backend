@@ -34,6 +34,10 @@ export default async function getDBUser(
         Account: {
           select: {
             refresh_token: true,
+            scope: true,
+            expires_at: true,
+            expires_in: true,
+            obtainment_timestamp: true,
             access_token: true,
             providerAccountId: true,
           },

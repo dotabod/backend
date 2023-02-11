@@ -1,12 +1,12 @@
 import { ChatClient } from '@twurple/chat'
 
-import { getAuthProvider } from './getAuthProvider.js'
+import { getBotAuthProvider } from './getBotAuthProvider.js'
 import { getChannels } from './getChannels.js'
 
 export async function getChatClient() {
   const chatClient = new ChatClient({
     isAlwaysMod: true,
-    authProvider: getAuthProvider(),
+    authProvider: getBotAuthProvider(),
     channels: getChannels,
     webSocket: true,
   })

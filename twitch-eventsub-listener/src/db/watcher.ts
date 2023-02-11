@@ -2,7 +2,7 @@ import { prisma } from './prisma.js'
 import supabase from './supabase.js'
 import { User } from '../../prisma/generated/postgresclient/index.js'
 import { SubscribeEvents } from '../twitch/events/index.js'
-import { getBotAPI } from '../twitch/lib/getBotAPI.js'
+import { getBotAPIStatic } from '../twitch/lib/getBotAPIStatic.js'
 import { onlineEvent } from '../twitch/lib/onlineEvent.js'
 
 const channel = supabase.channel('twitch-changes')
@@ -22,7 +22,7 @@ async function handleNewUser(userId: string) {
   if (!user?.providerAccountId) return
 
   try {
-    const botApi = getBotAPI()
+    const botApi = getBotAPIStatic()
     const stream = await botApi.streams.getStreamByUserId(user.providerAccountId)
     if (stream?.startDate) {
       // @ts-expect-error asdf

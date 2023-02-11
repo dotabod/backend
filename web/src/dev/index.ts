@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 import { prisma } from '../db/prisma.js'
-import { getBotAPI } from '../twitch/lib/getBotAPI.js'
+import { getBotAPI_DEV_ONLY } from '../twitch/lib/getBotAPI_DEV_ONLY.js'
 import { logger } from '../utils/logger.js'
 
 async function getAccounts() {
@@ -14,8 +14,6 @@ async function getAccounts() {
 }
 
 async function getFollows() {
-  const twitchApi = getBotAPI()
-
   const users = await prisma.user.findMany({
     select: {
       id: true,
@@ -33,7 +31,7 @@ async function getFollows() {
   for (const user of users) {
     if (!user.Account?.providerAccountId) continue
     logger.info('checking user id', { id: user.id })
-    const follows = twitchApi.users.getFollowsPaginated({
+    const follows = botApi.users.getFollowsPaginated({
       followedUser: user.Account.providerAccountId,
     })
     const totalFollowerCount = await follows.getTotalCount()
@@ -182,7 +180,7 @@ server.dota.dota2.on('ready', async () => {
 // 2 = radiant
 // 3 = dire
 
-const botApi = getBotAPI()
+const botApi = await getBotAPI_DEV_ONLY()
 
 async function onlineEvent({ userId, startDate }: { userId: string; startDate: Date }) {
   return await prisma.user.update({

@@ -9,7 +9,9 @@ export const getChannelAPI = async function (twitchId: string) {
   }
 
   const authProvider = await getChannelAuthProvider(twitchId)
-  // @ts-expect-error asdf
+
+  if (authProvider === false) throw new Error('Missing authProvider')
+
   const api = new ApiClient({ authProvider })
   console.log('[PREDICT] Retrieved twitch api', twitchId)
 
