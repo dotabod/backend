@@ -286,6 +286,10 @@ class Dota {
             return
           }
 
+          // 2-minute delay gives "0" match id, so we use the gsi match id instead
+          // which is instant and up to date
+          game.match.match_id = match_id
+
           const delayedData = {
             match: game.match,
             teams: game.teams,
