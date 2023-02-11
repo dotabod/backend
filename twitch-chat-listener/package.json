@@ -9,7 +9,7 @@
   "type": "module",
   "packageManager": "yarn@1.22.19",
   "scripts": {
-    "start": "node -r newrelic --trace-warnings ./src/index.js",
+    "start": "node --trace-warnings ./src/index.js",
     "build": "tsc --build --verbose",
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
@@ -29,7 +29,6 @@
     "@twurple/chat": "5.3.1",
     "i18next": "^22.4.9",
     "i18next-fs-backend": "^2.1.1",
-    "newrelic": "^9.9.0",
     "prisma": "^4.10.0",
     "socket.io": "^4.6.0",
     "winston": "^3.8.2"

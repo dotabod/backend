@@ -2,7 +2,6 @@
   "include": [
     "src/**/*",
     "i18next-parser.config.js",
-    "newrelic.cjs",
     "./.eslintrc.js"
   ],
   "exclude": [
