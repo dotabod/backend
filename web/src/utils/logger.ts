@@ -1,7 +1,7 @@
 import { createLogger, format, transports } from 'winston'
 const isDev = process.env.NODE_ENV === 'development'
 
-const prodFormats = format.combine(format.errors({ stack: true }))
+const prodFormats = format.combine(format.errors({ stack: true }), format.json())
 const devFormats = format.combine(
   format.errors({ stack: true }),
   format.json(),
