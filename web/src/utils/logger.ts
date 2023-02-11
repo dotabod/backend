@@ -1,10 +1,7 @@
-import newrelicFormatter from '@newrelic/winston-enricher'
-import winston, { createLogger, format, transports } from 'winston'
+import { createLogger, format, transports } from 'winston'
 const isDev = process.env.NODE_ENV === 'development'
-// @ts-expect-error asdf
-const newrelicWinstonFormatter = newrelicFormatter(winston)
 
-const prodFormats = format.combine(format.errors({ stack: true }), newrelicWinstonFormatter())
+const prodFormats = format.combine(format.errors({ stack: true }))
 const devFormats = format.combine(
   format.errors({ stack: true }),
   format.json(),

@@ -930,11 +930,6 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@newrelic/winston-enricher@^4.0.1":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@newrelic/winston-enricher/-/winston-enricher-4.0.1.tgz#88452342b541007bea1bb1d4d573b42fa7d6b215"
-  integrity sha512-yNQbnyqeFtSeyH3hpPJLbqvIl29GKgqeOmJ7IvpjMTVHZCqUTqRBMIB+wtJuuRepMLRgBCUw5RCH+xWEiHACRQ==
-
 "@node-steam/id@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@node-steam/id/-/id-1.2.0.tgz#2ab90e21ddd181ab2a86d86557d7dbc571f632c4"
@@ -1281,11 +1276,6 @@
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-3.0.1.tgz#5f8f2bca0a5863cb69bc0b0acd88c96cb1d4ae10"
   integrity sha512-Y4XFY5VJAuw0FgAqPNd6NNoV44jbq9Bz2L7Rh/J6jLTiHBSBJa9fxqQIvkIld4GsoDOcCbvzOUAbLPsSKKg+uA==
-
-"@types/newrelic@^9.4.0":
-  version "9.4.0"
-  resolved "https://registry.yarnpkg.com/@types/newrelic/-/newrelic-9.4.0.tgz#90c9c7c51998d4249d737c868923eee3e42a2641"
-  integrity sha512-09jlh+c8zBwbYegstS74IDfWliDf72Bwf4gNyRQ81u29Xm/vIKfzkGfAywVLfMjE6nsii4WRNu7raRAyNSLNVQ==
 
 "@types/node-fetch@^2.5.7":
   version "2.6.2"
