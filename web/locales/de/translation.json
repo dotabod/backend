@@ -73,10 +73,6 @@
     "unranked": "Not ranked",
     "won": "Won last game"
   },
-  "version": {
-    "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
-    "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
-  },
   "lifetime": "Lifetime games",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
@@ -110,6 +106,7 @@
     "nextRankIn_one": "One more win peepoClap",
     "nextRankIn_other": "in {{count}} wins"
   },
+  "ranked": "Ranked",
   "ranked_no": "Nope this game is not ranked",
   "ranked_yes": "Yes this game is ranked",
   "refresh": "Refreshing overlay...",
@@ -142,12 +139,15 @@
   "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",
   "unknown": "Unknown",
   "unknownSteam": "Could not find steam account. Follow Step 2 of setup, play a bot match, and try again.",
+  "unranked": "Unranked",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
-  "unranked": "Unranked",
-  "ranked": "Ranked",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
+  "version": {
+    "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
+    "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
+  },
   "xpm": "Live XPM: {{num}}",
   "apm_one": "Live APM: {{count}} Chatting",
   "apm_other": "Live APM: {{count}} Chatting",
