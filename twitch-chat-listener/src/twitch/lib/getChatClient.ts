@@ -6,7 +6,7 @@ import { getChannels } from './getChannels.js'
 export async function getChatClient() {
   const chatClient = new ChatClient({
     isAlwaysMod: true,
-    authProvider: getBotAuthProvider(),
+    authProvider: await getBotAuthProvider(),
     channels: getChannels,
     webSocket: true,
   })

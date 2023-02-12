@@ -38,7 +38,7 @@ export const getBotAuthProvider = async function () {
               refresh_token: newTokenData.refreshToken ?? botTokens.refresh_token,
               expires_at: newTokenData.obtainmentTimestamp + (newTokenData.expiresIn ?? 0),
               expires_in: newTokenData.expiresIn,
-              obtainment_timestamp: newTokenData.obtainmentTimestamp,
+              obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp),
             },
           })
           .then(() => {
@@ -54,8 +54,8 @@ export const getBotAuthProvider = async function () {
     },
     {
       scope: botTokens.scope?.split(' ') ?? [],
-      expiresIn: botTokens.expires_in,
-      obtainmentTimestamp: botTokens.obtainment_timestamp ?? 0,
+      expiresIn: botTokens.expires_in ?? 0,
+      obtainmentTimestamp: botTokens.obtainment_timestamp?.getTime() ?? 0,
       accessToken: botTokens.access_token,
       refreshToken: botTokens.refresh_token,
     },

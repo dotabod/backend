@@ -16,7 +16,7 @@ export interface SocketClient {
     access_token: string
     expires_at: number | null
     scope: string | null
-    obtainment_timestamp: number | null
+    obtainment_timestamp: Date | null
     expires_in: number | null
     providerAccountId: string
   } | null

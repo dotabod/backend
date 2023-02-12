@@ -35,7 +35,7 @@ export const getChannelAuthProvider = function (token: string) {
               refresh_token: newTokenData.refreshToken ?? twitchTokens.Account?.refresh_token,
               expires_at: newTokenData.obtainmentTimestamp + (newTokenData.expiresIn ?? 0),
               expires_in: newTokenData.expiresIn,
-              obtainment_timestamp: newTokenData.obtainmentTimestamp,
+              obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp),
             },
           })
           .then(() => {
@@ -51,8 +51,8 @@ export const getChannelAuthProvider = function (token: string) {
     },
     {
       scope: twitchTokens.Account.scope?.split(' ') ?? [],
-      expiresIn: twitchTokens.Account.expires_in,
-      obtainmentTimestamp: twitchTokens.Account.obtainment_timestamp ?? 0,
+      expiresIn: twitchTokens.Account.expires_in ?? 0,
+      obtainmentTimestamp: twitchTokens.Account.obtainment_timestamp?.getTime() ?? 0,
       accessToken: twitchTokens.Account.access_token,
       refreshToken: twitchTokens.Account.refresh_token,
     },
