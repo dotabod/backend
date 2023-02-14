@@ -22,7 +22,11 @@ export const getChannelAuthProvider = function (token: string) {
       clientId: process.env.TWITCH_CLIENT_ID!,
       clientSecret: process.env.TWITCH_CLIENT_SECRET!,
       onRefresh: (newTokenData) => {
-        logger.info('[TWITCHSETUP] Refreshing twitch tokens', { userId: token })
+        logger.info('[TWITCHSETUP] Refreshing twitch tokens', {
+          userId: token,
+          time: newTokenData.expiresIn,
+          time2: newTokenData.obtainmentTimestamp,
+        })
 
         prisma.account
           .update({
@@ -33,8 +37,11 @@ export const getChannelAuthProvider = function (token: string) {
               scope: newTokenData.scope.join(' '),
               access_token: newTokenData.accessToken,
               refresh_token: newTokenData.refreshToken ?? twitchTokens.Account?.refresh_token,
-              expires_at: newTokenData.obtainmentTimestamp + (newTokenData.expiresIn ?? 0),
-              expires_in: newTokenData.expiresIn,
+              expires_at: Math.floor(
+                new Date(newTokenData.obtainmentTimestamp).getTime() / 1000 +
+                  (newTokenData.expiresIn ?? 0),
+              ),
+              expires_in: newTokenData.expiresIn ?? 0,
               obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp),
             },
           })

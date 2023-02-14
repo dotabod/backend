@@ -3,7 +3,6 @@ import supabase from './supabase.js'
 import { User } from '../../prisma/generated/postgresclient/index.js'
 import { SubscribeEvents } from '../twitch/events/index.js'
 import { getBotAPIStatic } from '../twitch/lib/getBotAPIStatic.js'
-import { onlineEvent } from '../twitch/lib/onlineEvent.js'
 
 const channel = supabase.channel('twitch-changes')
 const IS_DEV = process.env.NODE_ENV !== 'production'
@@ -24,13 +23,38 @@ async function handleNewUser(userId: string) {
   try {
     const botApi = getBotAPIStatic()
     const stream = await botApi.streams.getStreamByUserId(user.providerAccountId)
-    if (stream?.startDate) {
-      // @ts-expect-error asdf
-      onlineEvent({
-        broadcasterId: user.providerAccountId,
-        startDate: stream.startDate,
+    const streamer = await stream?.getUser()
+    const follows = botApi.users.getFollowsPaginated({
+      followedUser: user.providerAccountId,
+    })
+    const totalFollowerCount = await follows.getTotalCount()
+
+    prisma.account
+      .update({
+        data: {
+          user: {
+            update: {
+              displayName: streamer?.displayName,
+              name: streamer?.name,
+              followers: totalFollowerCount,
+              stream_online: !!stream?.startDate,
+              stream_start_date: stream?.startDate ?? null,
+            },
+          },
+        },
+        where: {
+          provider_providerAccountId: {
+            provider: 'twitch',
+            providerAccountId: user.providerAccountId,
+          },
+        },
       })
-    }
+      .then(() => {
+        console.log('updated user info for', user.providerAccountId)
+      })
+      .catch((e) => {
+        console.log(e, 'error saving new user info for', e.broadcasterId)
+      })
   } catch (e) {
     console.log(e, 'error on getStreamByUserId')
   }

@@ -2,17 +2,19 @@ import { EventSubUserUpdateEvent } from '@twurple/eventsub-base'
 
 import { prisma } from '../../db/prisma.js'
 
-export function updateUserEvent(e: EventSubUserUpdateEvent) {
+export async function updateUserEvent(e: EventSubUserUpdateEvent) {
   console.log(`${e.userId} updateUserEvent`)
+  try {
+    const streamer = await e.getUser()
 
-  prisma.account
-    .update({
+    await prisma.account.update({
       data: {
         user: {
           update: {
             name: e.userName,
             displayName: e.userDisplayName,
             email: e.userEmail,
+            image: streamer.profilePictureUrl,
           },
         },
       },
@@ -23,10 +25,7 @@ export function updateUserEvent(e: EventSubUserUpdateEvent) {
         },
       },
     })
-    .then(() => {
-      console.log('updateUserEvent event', e.userId)
-    })
-    .catch((e) => {
-      console.error(e, 'updateUserEvent error', e.userId)
-    })
+  } catch (err) {
+    console.error(err, 'updateUserEvent error', e.userId)
+  }
 }

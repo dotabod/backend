@@ -10,7 +10,7 @@ export const handleEvent = (eventName: keyof typeof events, data: any) => {
   const event = events[eventName]
 
   if (event.customHandler) {
-    event.customHandler(data)
+    void event.customHandler(data)
   }
 
   if (event.sendToSocket) {

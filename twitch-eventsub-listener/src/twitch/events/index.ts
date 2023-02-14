@@ -1,9 +1,9 @@
 import { EventSubHttpListener } from '@twurple/eventsub-http'
 import { Server } from 'socket.io'
 
-import { listener } from '../lib/listener.js'
 import { events } from './events.js'
 import { handleEvent } from './handleEvent.js'
+import { listener } from '../lib/listener.js'
 
 export const io = new Server(5015)
 export const DOTABOD_EVENTS_ROOM = 'twitch-channel-events'
