@@ -24,9 +24,12 @@ export function tellChatNewMMR({
 }: TellChatNewMMRParams) {
   const client = findUser(token)
   if (!client) return
+
   const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], client.settings)
+  const tellChatNewMMR = getValueOrDefault(DBSettings.tellChatNewMMR, client.settings)
+
   const newMmr = mmr - oldMmr
-  if (mmrEnabled && newMmr !== 0 && mmr !== 0) {
+  if (mmrEnabled && tellChatNewMMR && newMmr !== 0 && mmr !== 0) {
     const isAuto = [20, 30].includes(Math.abs(newMmr))
     setTimeout(
       () => {

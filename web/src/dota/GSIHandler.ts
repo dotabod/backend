@@ -575,9 +575,20 @@ export class GSIHandler {
                   this.client.settings,
                 )
                   .then(() => {
-                    this.say(t('bets.open', { emote: 'peepoGamble', lng: this.client.locale }), {
-                      delay: false,
-                    })
+                    const tellChatBets = getValueOrDefault(
+                      DBSettings.tellChatBets,
+                      this.client.settings,
+                    )
+                    const chattersEnabled = getValueOrDefault(
+                      DBSettings.chatter,
+                      this.client.settings,
+                    )
+
+                    if (chattersEnabled && tellChatBets) {
+                      this.say(t('bets.open', { emote: 'peepoGamble', lng: this.client.locale }), {
+                        delay: false,
+                      })
+                    }
                     this.openingBets = false
                     logger.info('[BETS] open bets', {
                       event: 'open_bets',
@@ -686,9 +697,11 @@ export class GSIHandler {
       })
 
       if (this.client.stream_online) {
+        const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, this.client.settings)
         const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-        if (chattersEnabled)
+        if (chattersEnabled && tellChatBets) {
           this.say(t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }))
+        }
         refundTwitchBet(this.getToken())
           .then(() => {
             //
@@ -821,9 +834,11 @@ export class GSIHandler {
           })
 
           if (this.client.stream_online) {
+            const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, this.client.settings)
             const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-            if (chattersEnabled)
+            if (chattersEnabled && tellChatBets) {
               this.say(t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }))
+            }
             refundTwitchBet(this.getToken())
               .then(() => {
                 //

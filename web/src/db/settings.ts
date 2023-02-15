@@ -98,6 +98,8 @@ export const defaultSettings = {
   commandRosh: true,
   commandItems: true,
   notablePlayersOverlay: true,
+  tellChatNewMMR: true,
+  tellChatBets: true,
 }
 
 export type SettingKeys = keyof typeof defaultSettings

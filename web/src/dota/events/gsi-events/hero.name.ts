@@ -7,6 +7,7 @@ import { GSIHandler } from '../../GSIHandler.js'
 import getHero, { HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 
 eventHandler.registerEvent(`hero:name`, {
   handler: (dotaClient: GSIHandler, name: HeroNames) => {
@@ -24,16 +25,25 @@ eventHandler.registerEvent(`hero:name`, {
             dotaClient.client.settings,
           )
             .then(() => {
-              dotaClient.say(
-                t('bets.remade', {
-                  lng: dotaClient.client.locale,
-                  emote: 'SuskaygeAgreeGe',
-                  emote2: 'peepoGamble',
-                  oldHeroName: dotaClient.playingHero,
-                  newHeroName: name,
-                }),
-                { delay: false },
+              const tellChatBets = getValueOrDefault(
+                DBSettings.tellChatBets,
+                dotaClient.client.settings,
               )
+              const chattersEnabled = getValueOrDefault(
+                DBSettings.chatter,
+                dotaClient.client.settings,
+              )
+              if (tellChatBets && chattersEnabled)
+                dotaClient.say(
+                  t('bets.remade', {
+                    lng: dotaClient.client.locale,
+                    emote: 'SuskaygeAgreeGe',
+                    emote2: 'peepoGamble',
+                    oldHeroName: dotaClient.playingHero,
+                    newHeroName: name,
+                  }),
+                  { delay: false },
+                )
               logger.info('[BETS] remade bets', {
                 event: 'open_bets',
                 oldHeroName: dotaClient.playingHero,
