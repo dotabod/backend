@@ -1,11 +1,11 @@
 import { EnvPortAdapter, EventSubHttpListener } from '@twurple/eventsub-http'
 
-import { getBotAPIStatic } from './getBotAPIStatic.js'
+import BotAPI from './BotApiSingleton.js'
+const botApi = BotAPI.getInstance()
 
-const apiClient = getBotAPIStatic()
-
+console.log('Create the event sub listener')
 const listener = new EventSubHttpListener({
-  apiClient,
+  apiClient: botApi,
   adapter: new EnvPortAdapter({
     hostName: process.env.EVENTSUB_HOST!,
   }),
@@ -13,6 +13,8 @@ const listener = new EventSubHttpListener({
   strictHostCheck: true,
 })
 
+console.log('Start the event sub listener')
 await listener.start()
+console.log('Started the event sub listener')
 
 export { listener }

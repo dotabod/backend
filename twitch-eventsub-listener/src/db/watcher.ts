@@ -1,31 +1,29 @@
 import { prisma } from './prisma.js'
 import supabase from './supabase.js'
-import { User } from '../../prisma/generated/postgresclient/index.js'
+import { Account } from '../../prisma/generated/postgresclient/index.js'
 import { SubscribeEvents } from '../twitch/events/index.js'
-import { getBotAPIStatic } from '../twitch/lib/getBotAPIStatic.js'
+import BotAPI from '../twitch/lib/BotApiSingleton.js'
 
 const channel = supabase.channel('twitch-changes')
 const IS_DEV = process.env.NODE_ENV !== 'production'
-const DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
+const DEV_CHANNELIDS = process.env.DEV_CHANNELIDS?.split(',') ?? []
+const botApi = BotAPI.getInstance()
 
-async function handleNewUser(userId: string) {
-  const user = await prisma.account.findFirst({
-    select: { providerAccountId: true },
-    where: {
-      user: {
-        id: userId,
-      },
-    },
-  })
+async function handleNewUser(providerAccountId: string) {
+  console.log("New user, let's get their info", { userId: providerAccountId })
 
-  if (!user?.providerAccountId) return
+  if (!providerAccountId) {
+    console.error("This should never happen, user doesn't have a providerAccountId", {
+      providerAccountId,
+    })
+    return
+  }
 
   try {
-    const botApi = getBotAPIStatic()
-    const stream = await botApi.streams.getStreamByUserId(user.providerAccountId)
-    const streamer = await stream?.getUser()
+    const stream = await botApi.streams.getStreamByUserId(providerAccountId)
+    const streamer = await botApi.users.getUserById(providerAccountId)
     const follows = botApi.users.getFollowsPaginated({
-      followedUser: user.providerAccountId,
+      followedUser: providerAccountId,
     })
     const totalFollowerCount = await follows.getTotalCount()
 
@@ -45,12 +43,12 @@ async function handleNewUser(userId: string) {
         where: {
           provider_providerAccountId: {
             provider: 'twitch',
-            providerAccountId: user.providerAccountId,
+            providerAccountId: providerAccountId,
           },
         },
       })
       .then(() => {
-        console.log('updated user info for', user.providerAccountId)
+        console.log('updated user info for', providerAccountId)
       })
       .catch((e) => {
         console.log(e, 'error saving new user info for', e.broadcasterId)
@@ -60,20 +58,21 @@ async function handleNewUser(userId: string) {
   }
 
   try {
-    SubscribeEvents([user.providerAccountId])
+    SubscribeEvents([providerAccountId])
   } catch (e) {
     console.log(e, 'error on handlenewuser')
   }
 }
 
-channel
-  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
-    const user = payload.new as User
-    if (IS_DEV && !DEV_CHANNELS.includes(user.name)) return
-    if (!IS_DEV && DEV_CHANNELS.includes(user.name)) return
+console.log('Starting psql subscriptions')
 
-    console.log('[SUPABASE] New user to subscribe online events for: ', { name: user.name })
-    void handleNewUser(user.id)
+channel
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'accounts' }, (payload) => {
+    const user = payload.new as Account
+    if (IS_DEV && !DEV_CHANNELIDS.includes(user.providerAccountId)) return
+    if (!IS_DEV && DEV_CHANNELIDS.includes(user.providerAccountId)) return
+
+    void handleNewUser(user.providerAccountId)
   })
   .subscribe((status, err) => {
     if (status === 'SUBSCRIBED') {

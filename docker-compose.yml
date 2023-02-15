@@ -19,6 +19,7 @@ services:
       - DB_SECRET
       - DB_URL
       - DEV_CHANNELS
+      - DEV_CHANNELIDS
       - MONGO_URL
       - NEW_RELIC_APP_NAME="DEV twitch chat listener"
       - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
@@ -45,6 +46,7 @@ services:
       - DB_SECRET
       - DB_URL
       - DEV_CHANNELS
+      - DEV_CHANNELIDS
       - EVENTSUB_HOST
       - MONGO_URL
       - NEW_RELIC_APP_NAME="DEV twitch eventsub listener"
@@ -74,6 +76,7 @@ services:
       - DB_SECRET
       - DB_URL
       - DEV_CHANNELS
+      - DEV_CHANNELIDS
       - MONGO_URL
       - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
       - NEW_RELIC_APP_NAME="dev dotabod web"

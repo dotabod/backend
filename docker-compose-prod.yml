@@ -29,6 +29,7 @@ services:
       - TWITCH_CLIENT_SECRET
       - TWITCH_BOT_PROVIDERID
       - DEV_CHANNELS
+      - DEV_CHANNELIDS
       - NODE_ENV
       - DATABASE_URL
       - MONGO_URL
@@ -60,6 +61,7 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
       - DEV_CHANNELS
+      - DEV_CHANNELIDS
       - NODE_ENV
       - DB_URL
       - DB_SECRET
@@ -95,6 +97,7 @@ services:
       - DB_URL
       - MONGO_URL
       - DEV_CHANNELS
+      - DEV_CHANNELIDS
       - NODE_ENV
       - STEAM_PASS
       - STEAM_USER

@@ -21,11 +21,6 @@ export const events: { [key in string]: Event } = {
   subscribeToUserUpdateEvents: {
     customHandler: updateUserEvent,
   },
-  subscribeToUserAuthorizationRevokeEvents: {
-    customHandler: (data: EventSubUserAuthorizationRevokeEvent) => {
-      // todo: remove user from db
-    },
-  },
   subscribeToChannelPredictionBeginEvents: {
     sendToSocket: transformBetData,
   },
