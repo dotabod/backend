@@ -722,14 +722,40 @@ export class GSIHandler {
       .in(this.getToken())
       .fetchSockets()
       .then((sockets: any) => {
+        if (sockets.length === 0) {
+          this.updateMMR({
+            scores: scores,
+            increase: won,
+            lobbyType: localLobbyType,
+            matchId: matchId,
+            isParty: isParty,
+            heroSlot: this.playingHeroSlot,
+            heroName: this.client.gsi?.hero?.name,
+          })
+          return
+        }
+
         sockets[0]
           .timeout(25000)
           .emit(
             'requestMatchData',
             { matchId, heroSlot: this.playingHeroSlot },
             (err: any, response: any) => {
+              const foundParty = typeof response?.isParty === 'boolean' ? response.isParty : isParty
+
+              this.updateMMR({
+                scores: scores,
+                increase: won,
+                lobbyType: localLobbyType,
+                matchId: matchId,
+                isParty: foundParty,
+                heroSlot: this.playingHeroSlot,
+                heroName: this.client.gsi?.hero?.name,
+              })
+
               logger.info('Found match data from overlay', {
                 matchId,
+                foundParty,
                 channel: this.getChannel(),
                 response,
                 err,
@@ -738,18 +764,17 @@ export class GSIHandler {
           )
       })
       .catch((e) => {
-        logger.error('Error fetching sockets', { e })
+        // dont log errs
+        this.updateMMR({
+          scores: scores,
+          increase: won,
+          lobbyType: localLobbyType,
+          matchId: matchId,
+          isParty: isParty,
+          heroSlot: this.playingHeroSlot,
+          heroName: this.client.gsi?.hero?.name,
+        })
       })
-
-    this.updateMMR({
-      scores: scores,
-      increase: won,
-      lobbyType: localLobbyType,
-      matchId: matchId,
-      isParty: isParty,
-      heroSlot: this.playingHeroSlot,
-      heroName: this.client.gsi?.hero?.name,
-    })
 
     getRankDetail(this.getMmr(), this.getSteam32())
       .then((response) => {
