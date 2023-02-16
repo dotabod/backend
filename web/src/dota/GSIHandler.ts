@@ -718,6 +718,29 @@ export class GSIHandler {
     const localLobbyType = typeof this.playingLobbyType !== 'number' ? 7 : this.playingLobbyType
     const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
 
+    server.io
+      .in(this.getToken())
+      .fetchSockets()
+      .then((sockets: any) => {
+        sockets[0]
+          .timeout(25000)
+          .emit(
+            'requestMatchData',
+            { matchId, heroSlot: this.playingHeroSlot },
+            (err: any, response: any) => {
+              logger.info('Found match data from overlay', {
+                matchId,
+                channel: this.getChannel(),
+                response,
+                err,
+              })
+            },
+          )
+      })
+      .catch((e) => {
+        logger.error('Error fetching sockets', { e })
+      })
+
     this.updateMMR({
       scores: scores,
       increase: won,
@@ -815,7 +838,7 @@ export class GSIHandler {
       endingBets: this.endingBets,
     })
 
-    // Check with opendota to see if the match is over
+    // Check with steam to see if the match is over
     axios
       .get(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
         params: { key: process.env.STEAM_WEB_API, match_id: matchId },
