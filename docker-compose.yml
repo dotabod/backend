@@ -72,6 +72,7 @@ services:
       - '9229:9229'
     environment:
       - ADMIN_CHANNELS
+      - D2PT_TOKEN
       - DATABASE_URL
       - DB_SECRET
       - DB_URL

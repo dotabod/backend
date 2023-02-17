@@ -10,6 +10,14 @@
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
+  "timings": {
+    "boring_slow": "@{{channel}} bought {{- itemName}} at {{clockTime}}, {{minutes}} slower than pros' average Tomfoolery",
+    "boring_fast": "@{{channel}} bought {{- itemName}} at {{clockTime}}, {{minutes}} faster than pros' average pogg",
+    "fun_slow": "If @{{channel}} keeps buying {{- itemName}} at this pace, they might set a new record for slowest timing! {{minutes}}m slower than pros OMEGALUL",
+    "fun_fast": "Hmm, @{{channel}} bought {{- itemName}} in {{time}} minutes? That's a little fast Susge ... Maybe they've been practicing in secret Krappa",
+    "fun2_fast": "Looks like @{{channel}}'s luck is turning around, they just got {{- itemName}} in {{time}} minutes! Did someone switch out their mouse or something pogg",
+    "fun2_slow": "Well, that's one way to make the game harder for yourself... @{{channel}} bought {{- itemName}} in {{time}} minutes. Keep up the good work SuskaygeAgreeGe !"
+  },
   "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
   "bets": {
@@ -123,6 +131,9 @@
     "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
+  "minutes_zero": "{{count}} minutes",
+  "minutes_one": "{{count}} minute",
+  "minutes_other": "{{count}} minutes",
   "seconds_zero": "{{count}} seconds",
   "seconds_one": "{{count}} second",
   "seconds_other": "{{count}} seconds",

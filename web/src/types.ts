@@ -443,3 +443,39 @@ export interface PermanentBuff {
   stack_count: number
   grant_time: number
 }
+
+export interface D2ptResponse {
+  avg: number[]
+  earliest: number
+  latest: number
+  matches: number
+  pro_avg: number[]
+  pro_matches: number
+  pro_names: string[]
+  winRate: number
+}
+
+/*
+D2ptResponse:
+{
+  "avg": [
+    8.6, // mean
+    3.6 // std
+  ],
+  "earliest": 4, // 4 minutes
+  "latest": 19, // 19 minutes
+  "matches": 49, // 49 minutes
+  "pro_avg": [
+    10.5, // mean
+    5.0 // std
+  ],
+  "pro_matches": 4, // total matches
+  "pro_names": [
+    "Arteezy",
+    "MagE-",
+    "MoOz",
+    "EternalEnvy (smurf 2)"
+  ],
+  "winRate": 0.5510204081632653 // win rate Math.round(n* 100) / 100
+}
+ */

@@ -92,6 +92,7 @@ services:
       - NEW_RELIC_LOG
       - NEW_RELIC_NO_CONFIG_FILE
       - ADMIN_CHANNELS
+      - D2PT_TOKEN
       - DATABASE_URL
       - DB_SECRET
       - DB_URL
