@@ -1,3 +1,5 @@
+set dotenv-load
+
 dockerfile := if env_var("NODE_ENV") == "production" { "docker-compose-prod.yml" } else { "docker-compose.yml" }
 commithash := `git rev-parse --short HEAD`
 app := ""
