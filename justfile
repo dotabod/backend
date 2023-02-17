@@ -28,13 +28,13 @@ i18nu:
 
 # Stops all containers
 down:
-    @docker compose -f {{dockerfile}} down
+    @docker compose -f {{dockerfile}} down --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
 stop:
-    @docker compose -f {{dockerfile}} down
+    @docker compose -f {{dockerfile}} down --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
 
 restart:
-    @docker compose -f {{dockerfile}} down
-    @docker compose -f {{dockerfile}} up -d
+    @docker compose -f {{dockerfile}} down --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
+    @docker compose -f {{dockerfile}} up -d --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
 
 # Builds all images
 buildall:
@@ -50,19 +50,19 @@ build:
     git pull
     @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}} {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
-    @docker compose -f {{dockerfile}} up -d {{app}}
+    @docker compose -f {{dockerfile}} up -d {{app}} --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully ran! {{CHECK}} {{RESET}}"
 
 # Starts images
 up:
     @echo "Starting server with database $NODE_ENV at {{dockerfile}}"
-    @docker compose -f {{dockerfile}} up -d
+    @docker compose -f {{dockerfile}} up -d --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
 
 update:
     git pull
     @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
-    @docker compose -f {{dockerfile}} up -d
+    @docker compose -f {{dockerfile}} up -d --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
 
 pullall:
     cd ./web && yarn pullpsql && yarn generateprisma

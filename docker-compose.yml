@@ -14,7 +14,6 @@ services:
       dockerfile: ./web/Dockerfile # Reusing same nodejs dockerfile
       args:
         - BUILD_CONTEXT=twitch-chat-listener
-        - COMMIT_HASH=$COMMIT_HASH
     hostname: twitch-chat-listener
     ports:
       - '5005:5005'
@@ -44,7 +43,6 @@ services:
       dockerfile: ./web/Dockerfile # Reusing same nodejs dockerfile
       args:
         - BUILD_CONTEXT=twitch-eventsub-listener
-        - COMMIT_HASH=$COMMIT_HASH
     hostname: twitch-eventsub-listener
     ports:
       - '82:5010'
@@ -77,7 +75,6 @@ services:
       dockerfile: ./web/Dockerfile # Reusing same nodejs dockerfile
       args:
         - BUILD_CONTEXT=web
-        - COMMIT_HASH=$COMMIT_HASH
     hostname: web
     ports:
       - '81:5000'
