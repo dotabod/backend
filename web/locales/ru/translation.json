@@ -35,7 +35,7 @@
     "tpFound": "{{channel}} молодец, наконец-то купил ТП спустя $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Благодаря этой смерти вы получили ТП наконец. Спустя $t(seconds, {\"count\": {{seconds}} }) оно  появилось {{emote}}"
   },
-  "commandDisabled": "Стример отключил {{cmdName}} команду {{emote}} Напиши !commands что бы узнать рабочие ",
+  "commandDisabled": "Стример отключил команду {{cmdName}} {{emote}}. Напишите !commands, чтобы увидеть доступные команды",
   "commands_everyone": "Каждый может использовать: {{commandList}}",
   "commands_mods": "Команды только для модераторов: {{commandList}}",
   "dota2pt": "Нужны сборки от про-игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
@@ -168,14 +168,14 @@
   "uknownMmr": "Я еще не знаю рейтинг {{channel}}. Модераторы или стример должны сами ввести команду, пример: !setmmr 1234 или установить его вручную на сайте {{- url}}",
   "unknown": "Неизвестно",
   "unknownSteam": "Не удалось найти учетную запись Steam. Попробуйте сначала сыграть тренировочный матч с ботом, чтобы сохранить свой аккаунт в Dotabod!",
-  "unranked": "Не рейтинговая",
+  "unranked": "Нерейтинговая",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Рейтинг обновлён до {{mmr}}. Используйте команды !fixparty для изменения игры в группе и !fixdd для двойной ставки.",
   "updateMmr_manual": "Рейтинг изменён до {{mmr}}",
   "updateMmrMulti": "Несколько учетных записей Steam, обновление той, с которой вы вошли в систему в данный момент ({{steamId}})",
   "version": {
-    "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
-    "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
+    "commit": "Сервер работает на версии {{version}}, вот что отсутствует по сравнению с последней версией: {{- url}}",
+    "unknown": "Не удалось найти последний коммит git, репозиторий находится здесь {{- url}}"
   },
   "xpm": "Текущий XPM: {{num}}"
 }
