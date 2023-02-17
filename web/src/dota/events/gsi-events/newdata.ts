@@ -14,6 +14,7 @@ import eventHandler from '../EventHandler.js'
 import handleGetHero from '../../lib/getHero.js'
 import axios from '../../../utils/axios.js'
 import { fmtMSS } from '../../../utils/index.js'
+import { getHeroPositions } from '../../lib/getLane.js'
 
 // Catch all
 eventHandler.registerEvent(`newdata`, {
@@ -77,6 +78,10 @@ eventHandler.registerEvent(`newdata`, {
 
     dotaClient.openBets()
 
+    const position = getHeroPositions(data)
+    logger.info('Position data', position)
+
+    /*
     const hero = handleGetHero(dotaClient.playingHero)
     if (hero?.id) {
       const itemTimingsToCheck = ['item_hand_of_midas', 'item_bfury']
@@ -139,6 +144,8 @@ eventHandler.registerEvent(`newdata`, {
           console.log(e)
         })
     }
+
+     */
 
     const {
       midas: { enabled: midasChatterEnabled },

@@ -55,75 +55,24 @@ export function getHeroPositions(data: Packet): HeroPosition {
     isCore = true
   }
 
-  //This is where the actual logic happens.
-  //Logic will look like:
-  //  Is Mid?
-  //    return 2
-  //  Is Top?
-  //    Is Radiant?
-  //      Is Core?
-  //        return 3
-  //  ect.
   const distanceTop = getDistance({ xpos, ypos }, topLaneCenter)
   const distanceBot = getDistance({ xpos, ypos }, botLaneCenter)
   const distanceMid = getDistance({ xpos, ypos }, { xpos: 0, ypos: 0 })
 
-  if (distanceMid < distanceTop && distanceMid < distanceBot) {
-    return {
-      position: 2,
-      lane: laneMap[team][2],
-    }
-  } else if (distanceTop < distanceBot) {
-    if (isRadiant) {
-      if (isCore) {
-        return {
-          position: 3,
-          lane: laneMap[team][3],
-        }
-      } else {
-        return {
-          position: 4,
-          lane: laneMap[team][4],
-        }
-      }
-    } else {
-      if (isCore) {
-        return {
-          position: 1,
-          lane: laneMap[team][1],
-        }
-      } else {
-        return {
-          position: 5,
-          lane: laneMap[team][5],
-        }
-      }
-    }
-  } else {
-    if (isRadiant) {
-      if (isCore) {
-        return {
-          position: 1,
-          lane: laneMap[team][1],
-        }
-      } else {
-        return {
-          position: 5,
-          lane: laneMap[team][5],
-        }
-      }
-    } else {
-      if (isCore) {
-        return {
-          position: 3,
-          lane: laneMap[team][3],
-        }
-      } else {
-        return {
-          position: 4,
-          lane: laneMap[team][4],
-        }
-      }
-    }
+  const isMidLane = distanceMid < distanceTop && distanceMid < distanceBot
+  const isCloserToTop = distanceTop < distanceBot
+
+  const pos1 = isRadiant ? (isCore ? 1 : 5) : isCore ? 3 : 4
+  const pos2 = isRadiant ? (isCore ? 3 : 4) : isCore ? 1 : 5
+
+  const pos = !isCloserToTop ? pos2 : pos1
+
+  if (isMidLane) {
+    return { position: 2, lane: laneMap[team][2] }
+  }
+
+  return {
+    position: pos,
+    lane: laneMap[team][pos],
   }
 }
