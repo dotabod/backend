@@ -1,5 +1,5 @@
 {
-  "name": "@dotabod/twitch-chat-server",
+  "name": "@dotabod/twitch-chat",
   "description": "We forward twitch chat to dotabod.",
   "version": "1.0.0",
   "license": "GPL-3.0-or-later",
