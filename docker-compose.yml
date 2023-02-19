@@ -8,12 +8,13 @@ services:
   twitch-chat:
     image: twitch-chat:${COMMIT_HASH:-latest}
     container_name: twitch-chat
+    restart: on-failure
     build:
       context: .
-      target: dev
+      target: prod
       dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
       args:
-        - BUILD_CONTEXT=twitch-chat
+        - BUILD_CONTEXT=packages/twitch/chat
     hostname: twitch-chat
     ports:
       - '5005:5005'
@@ -24,25 +25,25 @@ services:
       - DEV_CHANNELS
       - DEV_CHANNELIDS
       - MONGO_URL
-      - NEW_RELIC_APP_NAME="DEV twitch chat listener"
+      - NEW_RELIC_APP_NAME="twitch chat listener"
       - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
       - NODE_ENV
       - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
     volumes:
-      - ./packages/twitch/chat/src:/app/packages/twitch/chat/src
       - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
   twitch-events:
     image: twitch-events:${COMMIT_HASH:-latest}
     container_name: twitch-events
+    restart: on-failure
     build:
       context: .
-      target: dev
+      target: prod
       dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
       args:
-        - BUILD_CONTEXT=twitch-events
+        - BUILD_CONTEXT=packages/twitch/events
     hostname: twitch-events
     ports:
       - '82:5010'
@@ -55,7 +56,7 @@ services:
       - DEV_CHANNELIDS
       - EVENTSUB_HOST
       - MONGO_URL
-      - NEW_RELIC_APP_NAME="DEV twitch eventsub listener"
+      - NEW_RELIC_APP_NAME="twitch eventsub listener"
       - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
       - NODE_ENV
       - NR_NATIVE_METRICS_NO_BUILD
@@ -63,18 +64,17 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
-    volumes:
-      - ./packages/twitch/events/src:/app/twitch/events/src
 
   dota:
     image: dota:${COMMIT_HASH:-latest}
     container_name: dota
+    restart: on-failure
     build:
       context: .
-      target: dev
+      target: prod
       dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
       args:
-        - BUILD_CONTEXT=dota
+        - BUILD_CONTEXT=packages/dota
     hostname: dota
     ports:
       - '81:5000'
@@ -89,7 +89,7 @@ services:
       - DEV_CHANNELIDS
       - MONGO_URL
       - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
-      - NEW_RELIC_APP_NAME="dev dotabod dota"
+      - NEW_RELIC_APP_NAME="dotabod dota"
       - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
       - NEW_RELIC_ENABLED
       - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
@@ -105,13 +105,13 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
     volumes:
-      - ./packages/dota/src:/app/packages/dota/src
       # Storing locales in a volume so that they can be edited without rebuilding the image
       - ./packages/dota/locales:/app/packages/dota/locales
       - steam_auth:/app/src/steam/volumes
 
   nginx:
     container_name: nginx
+    restart: on-failure
     image: nginx
     volumes:
     - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
