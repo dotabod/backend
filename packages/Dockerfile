@@ -27,7 +27,7 @@ RUN yarn install --frozen-lockfile
 WORKDIR /app/$BUILD_CONTEXT
 COPY ./$BUILD_CONTEXT/prisma ./prisma
 
-RUN yarn prisma generate --schema ./prisma/postgres.prisma 
+RUN yarn prisma generate --schema ./prisma/postgres.prisma
 RUN test -f ./prisma/postgres.prisma \
     && yarn prisma generate --schema ./prisma/mongo.prisma \
     || true
@@ -57,7 +57,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 
 WORKDIR /app/$BUILD_CONTEXT
-COPY --from=builder /app/$BUILD_CONTEXT/node_modules ./node_modules
+COPY --from=builder /app/$BUILD_CONTEXT/node_modules* ./node_modules
 COPY --from=builder /app/$BUILD_CONTEXT/package.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/tsconfig.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/prisma ./prisma
