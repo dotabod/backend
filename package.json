@@ -2,9 +2,7 @@
     "name": "dotabod",
     "private": true,
     "workspaces": [
-        "packages/dota",
-        "packages/twitch/chat",
-        "packages/twitch/events"
+        "packages/**/*"
     ],
     "dependencies": {
         "@prisma/client": "4.10.0",
