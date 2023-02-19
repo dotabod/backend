@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { DBSettings } from '../../db/settings.js'
+import { DBSettings } from '@dotabod/settings'
 import getHero from '../../dota/lib/getHero.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import { chatClient } from '../index.js'

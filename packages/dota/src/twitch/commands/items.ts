@@ -2,7 +2,7 @@ import DOTA_ITEM_IDS from 'dotaconstants/build/item_ids.json' assert { type: 'js
 import DOTA_ITEMS from 'dotaconstants/build/items.json' assert { type: 'json' }
 import { t } from 'i18next'
 
-import { DBSettings } from '../../db/settings.js'
+import { DBSettings } from '@dotabod/settings'
 import { server } from '../../dota/index.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'

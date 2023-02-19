@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { prisma } from '../../db/prisma.js'
-import { DBSettings, defaultSettings, getValueOrDefault } from '../../db/settings.js'
+import { DBSettings, defaultSettings, getValueOrDefault } from '@dotabod/settings'
 import { SocketClient } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { getChannelAPI } from './getChannelAPI.js'

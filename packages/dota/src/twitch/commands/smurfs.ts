@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { DBSettings } from '../../db/settings.js'
+import { DBSettings } from '@dotabod/settings'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { smurfs } from '../../steam/smurfs.js'

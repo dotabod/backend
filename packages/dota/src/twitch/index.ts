@@ -4,7 +4,7 @@ import { t } from 'i18next'
 import { io } from 'socket.io-client'
 
 import getDBUser from '../db/getDBUser.js'
-import { DBSettings, getValueOrDefault } from '../db/settings.js'
+import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { modMode, plebMode } from '../dota/lib/consts.js'
 import { logger } from '../utils/logger.js'
 import commandHandler from './lib/CommandHandler.js'
