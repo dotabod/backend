@@ -4,14 +4,18 @@ services:
     image: 'redis/redis-stack-server:latest'
     ports:
       - '6379:6379'
-  twitch-chat-listener:
-    image: dotabod-twitch-chat-listener
-    container_name: dotabod-twitch-chat-listener
+
+  twitch-chat:
+    image: twitch-chat:${COMMIT_HASH:-latest}
+    container_name: twitch-chat
+    restart: on-failure
     build:
-      context: twitch-chat-listener
-      target: dev
-      dockerfile: ../web/Dockerfile # Reusing same nodejs dockerfile
-    hostname: twitch-chat-listener
+      context: .
+      target: prod
+      dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
+      args:
+        - BUILD_CONTEXT=packages/twitch/chat
+    hostname: twitch-chat
     ports:
       - '5005:5005'
     environment:
@@ -21,23 +25,26 @@ services:
       - DEV_CHANNELS
       - DEV_CHANNELIDS
       - MONGO_URL
-      - NEW_RELIC_APP_NAME="DEV twitch chat listener"
+      - NEW_RELIC_APP_NAME="twitch chat listener"
       - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
       - NODE_ENV
       - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
     volumes:
-      - ./twitch-chat-listener/src:/app/src
-      - ./twitch-chat-listener/locales:/app/locales
-  twitch-eventsub-listener:
-    image: dotabod-twitch-eventsub-listener
-    container_name: dotabod-twitch-eventsub-listener
+      - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
+
+  twitch-events:
+    image: twitch-events:${COMMIT_HASH:-latest}
+    container_name: twitch-events
+    restart: on-failure
     build:
-      context: twitch-eventsub-listener
-      target: dev
-      dockerfile: ../web/Dockerfile # Reusing same nodejs dockerfile
-    hostname: twitch-eventsub-listener
+      context: .
+      target: prod
+      dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
+      args:
+        - BUILD_CONTEXT=packages/twitch/events
+    hostname: twitch-events
     ports:
       - '82:5010'
       - '5015:5015'
@@ -49,7 +56,7 @@ services:
       - DEV_CHANNELIDS
       - EVENTSUB_HOST
       - MONGO_URL
-      - NEW_RELIC_APP_NAME="DEV twitch eventsub listener"
+      - NEW_RELIC_APP_NAME="twitch eventsub listener"
       - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
       - NODE_ENV
       - NR_NATIVE_METRICS_NO_BUILD
@@ -57,21 +64,24 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
-    volumes:
-      - ./twitch-eventsub-listener/src:/app/src
-  web:
-    image: dotabod-web
-    container_name: dotabod-web
+
+  dota:
+    image: dota:${COMMIT_HASH:-latest}
+    container_name: dota
+    restart: on-failure
     build:
-      context: web
-      target: dev
-      dockerfile: ./Dockerfile # Reusing same nodejs dockerfile
-    hostname: web
+      context: .
+      target: prod
+      dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
+      args:
+        - BUILD_CONTEXT=packages/dota
+    hostname: dota
     ports:
       - '81:5000'
       - '9229:9229'
     environment:
       - ADMIN_CHANNELS
+      - COMMIT_HASH
       - DATABASE_URL
       - DB_SECRET
       - DB_URL
@@ -79,7 +89,7 @@ services:
       - DEV_CHANNELIDS
       - MONGO_URL
       - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
-      - NEW_RELIC_APP_NAME="dev dotabod web"
+      - NEW_RELIC_APP_NAME="dotabod dota"
       - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
       - NEW_RELIC_ENABLED
       - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
@@ -95,16 +105,17 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
     volumes:
-      - ./web/src:/app/src
       # Storing locales in a volume so that they can be edited without rebuilding the image
-      - ./web/locales:/app/locales
+      - ./packages/dota/locales:/app/packages/dota/locales
       - steam_auth:/app/src/steam/volumes
+
   nginx:
-    container_name: dotabod-nginx
-    image: dotabod-nginx
+    container_name: nginx
+    restart: on-failure
+    image: nginx
     volumes:
-    - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
-    build: ./nginx
+    - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
+    build: ./services/nginx
     ports:
       - '80:80'
       - '443:443'
@@ -113,14 +124,15 @@ services:
       - EVENTSUB_HOST
       - TLS_CERT
       - TLS_KEY
+
   mongodb:
-    container_name: dotabod-mongodb
+    container_name: mongodb
     image: "mongo"
     ports:
       - "27017:27017"
     volumes:
       - "mongodb_data:/data/db"
-      - ./mongodb/init.sh:/docker-entrypoint-initdb.d/init_mongo.js
+      - ./services/mongodb/init.sh:/docker-entrypoint-initdb.d/init_mongo.js
 
 # Volumes are useful for data persistence, so the data will not be deleted
 # even later you call command docker-compose down.

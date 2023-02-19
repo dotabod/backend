@@ -10,7 +10,7 @@ import { logger } from '../utils/logger.js'
 import commandHandler from './lib/CommandHandler.js'
 
 // Our docker chat forwarder instance
-const twitchChat = io('ws://twitch-chat-listener:5005')
+const twitchChat = io('ws://twitch-chat:5005')
 
 export const chatClient = {
   join: (channel: string) => {

@@ -1,7 +1,7 @@
 set dotenv-load
 
-dockerfile := if env_var("NODE_ENV") == "production" { "docker-compose-prod.yml" } else { "docker-compose.yml" }
-commithash := `git rev-parse --short HEAD`
+dockerfile := if env_var("NODE_ENV") == "production" { "docker-compose.yml" } else { "docker-compose.yml -f docker-compose-dev.yml" }
+export COMMIT_HASH := `git rev-parse --short HEAD`
 app := ""
 
 GREEN  := "\\u001b[32m"
@@ -10,13 +10,13 @@ CHECK  := `/usr/bin/printf "\xE2\x9C\x94"`
 
 # Lists Recipes
 default:
-  @echo Environment is $NODE_ENV on commit {{commithash}}
+  @echo Environment is $NODE_ENV on commit {{COMMIT_HASH}}
   @just --list
 
 
 i18np:
     @echo "Parsing translation files"
-    @i18next -c 'web/i18next-parser.config.js'
+    @i18next -c 'packages/dota/i18next-parser.config.js'
 
 i18nd:
     @echo "Downloading translations"
@@ -38,7 +38,7 @@ restart:
 
 # Builds all images
 buildall:
-    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
+    @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
 
 logs:
@@ -46,9 +46,9 @@ logs:
 
 # Builds one image
 build:
-    @echo -e "Running for {{app}} on {{dockerfile}} with {{commithash}}"
+    @echo -e "Running for {{app}} on {{dockerfile}} with {{COMMIT_HASH}}"
     git pull
-    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}} {{app}}
+    @docker compose -f {{dockerfile}} build  {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully ran! {{CHECK}} {{RESET}}"
@@ -60,11 +60,11 @@ up:
 
 update:
     git pull
-    @docker compose -f {{dockerfile}} build --build-arg NODE_ENV=$NODE_ENV --build-arg COMMIT_HASH={{commithash}}
+    @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
-    @docker compose -f {{dockerfile}} up -d
+    @docker compose -f {{dockerfile}} up  -d
 
 pullall:
-    cd ./web && yarn pullpsql && yarn generateprisma
-    cd ./twitch-eventsub-listener && yarn pullpsql && yarn generateprisma
-    cd ./twitch-chat-listener && yarn pullpsql && yarn generateprisma
+    cd ./packages/dota && yarn pullpsql && yarn generateprisma
+    cd ./packages/twitch/events && yarn pullpsql && yarn generateprisma
+    cd ./packages/twitch/chat && yarn pullpsql && yarn generateprisma

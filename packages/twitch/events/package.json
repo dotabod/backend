@@ -1,0 +1,32 @@
+{
+  "name": "@dotabod/twitch-events",
+  "description": "We forward twitch events to dotabod.",
+  "version": "1.0.0",
+  "license": "GPL-3.0-or-later",
+  "author": "Geczy",
+  "main": "src/index.ts",
+  "exports": "./dist/index.js",
+  "type": "module",
+  "packageManager": "yarn@1.22.19",
+  "private": true,
+  "scripts": {
+    "start": "node --trace-warnings --trace-deprecation ./src/index.js",
+    "build": "tsc --build --verbose",
+    "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register --loader ts-node/esm src/index.ts\"",
+    "dev": "nodemon -L --ext ts ./src/index.ts",
+    "devnotdocker": "doppler run -- nodemon -L --ext ts ./src/index.ts",
+    "generateprisma": "prisma generate --schema ./prisma/postgres.prisma",
+    "lint": "eslint --ext .ts ./src",
+    "prettier": "prettier --ext .ts ./src --write",
+    "lint:fix": "npm run lint -- --fix",
+    "pullpsql": "doppler run -- prisma db pull --schema ./prisma/postgres.prisma"
+  },
+  "dependencies": {
+    "@twurple/eventsub-base": "5.3.1",
+    "@twurple/eventsub-http": "5.3.1"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^7.0.0",
+    "dotenv": "^16.0.3"
+  }
+}

@@ -11,7 +11,7 @@ import SetupSupabase from '../db/watcher.js'
 import { logger } from '../utils/logger.js'
 import GSIServer from './GSIServer.js'
 
-logger.info('Starting!')
+logger.info('Starting on', { env: process.env.NODE_ENV })
 
 await i18next.use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
@@ -31,7 +31,7 @@ await i18next.use(FsBackend).init<FsBackendOptions>({
 })
 
 chokidar
-  .watch('/app/locales/**/*.json', { ignoreInitial: true, usePolling: true, interval: 5000 })
+  .watch('/app/packages/dota/locales/**/*.json', { ignoreInitial: true, usePolling: true, interval: 5000 })
   .on('all', (_event, filePath) => {
     console.log({ _event, filePath })
     const parsedPath = path.parse(filePath)
