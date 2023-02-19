@@ -148,7 +148,7 @@
   "setStreamDelayNoArgs": "Затримка на стрімі не встановлена, використайте !setdelay <seconds>",
   "setStreamDelayRemoved": "Затримку на стрімі прибрано",
   "streamDelay": "Затримка потоку: $t(секунди, {\"count\": {{seconds}}}) с",
-  "streamDelayNone": "Немає затримки на стрімі {{emote}}",
+  "streamDelayNone": "Немає затримки на стрімі",
   "tip": {
     "from": "Подяка від {{- heroName}} {{emote}}",
     "to": "Ми подякували {{- heroName}} за чудову гру {{emote}}"
