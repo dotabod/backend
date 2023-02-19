@@ -50,7 +50,6 @@ RUN yarn build
 FROM node:19.4-alpine as dev
 
 ARG BUILD_CONTEXT
-ARG COMMIT_HASH
 ENV COMMIT_HASH $COMMIT_HASH
 
 WORKDIR /app
@@ -74,7 +73,6 @@ CMD ["yarn", "dev"]
 FROM node:19.4-alpine as prod
 
 ARG BUILD_CONTEXT
-ARG COMMIT_HASH
 ENV COMMIT_HASH $COMMIT_HASH
 
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend"
