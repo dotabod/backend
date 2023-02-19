@@ -1,8 +1,12 @@
 {
   "name": "@dotabod/settings",
   "version": "1.0.0",
-  "main": "index.ts",
-  "exports": "./index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": "./dist/index.js",
   "type": "module",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --build"
+  }
 }

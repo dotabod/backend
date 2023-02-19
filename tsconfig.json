@@ -1,0 +1,35 @@
+{
+    "compilerOptions": {
+        /* Basic Options */
+        "lib": [
+            "ESNext"
+        ],
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Node16",
+        "sourceMap": true,
+        "strictNullChecks": true,
+        "types": [
+            "node"
+        ],
+        "allowJs": false,
+        "checkJs": false,
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "noImplicitAny": true,
+        "skipLibCheck": true
+    },
+    "ts-node": {
+        "esm": true,
+        "pretty": true,
+        "require": [
+            "tsconfig-paths/register",
+        ],
+        "ignore": [
+            "(?:^|/)node_modules/",
+            "(?:^|/)prisma/generated/",
+        ]
+    }
+}

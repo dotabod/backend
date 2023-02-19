@@ -1,42 +1,18 @@
 {
+  "compilerOptions": {
+    /* Basic Options */
+    "outDir": "dist",
+    "rootDir": "src"
+  },
   "include": [
-    "src/**/*",
+    "src",
     "i18next-parser.config.js",
     "./.eslintrc.js"
   ],
   "exclude": [
     "prisma/generated",
-    "node_modules",
+    "node_modules"
   ],
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Node16",
-    "rootDir": "./",
-    "outDir": "./dist",
-    "sourceMap": false,
-    "strictNullChecks": true,
-    "types": [
-      "node"
-    ],
-    "allowJs": false,
-    "checkJs": false,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "skipLibCheck": true
-  },
-  "ts-node": {
-    "esm": true,
-    "pretty": true,
-    "require": [
-      "tsconfig-paths/register",
-    ],
-    "ignore": [
-      "(?:^|/)node_modules/",
-      "(?:^|/)prisma/generated/",
-    ]
-  }
+  "references": [{ "path": "../settings" }],
+  "extends": "../../tsconfig.json"
 }
