@@ -9,6 +9,7 @@ RUN apk add --no-cache git
 
 WORKDIR /app
 COPY package.json yarn.lock* ./
+COPY packages/settings ./packages/settings
 
 WORKDIR /app/$BUILD_CONTEXT
 COPY ./$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/yarn.lock* ./

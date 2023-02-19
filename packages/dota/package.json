@@ -25,7 +25,7 @@
     "pullmongo": "doppler run -- prisma db pull --schema ./prisma/mongo.prisma --force",
     "pullpsql": "doppler run -- prisma db pull --schema ./prisma/postgres.prisma",
     "pushpsql": "doppler run -- prisma db push --schema ./prisma/postgres.prisma",
-    "prepare": "cd .. && husky install packages/dota/.husky"
+    "prepare": "cd ../../ && husky install packages/dota/.husky"
   },
   "dependencies": {
     "@dotabod/settings": "^1.0.0",
@@ -33,24 +33,24 @@
     "@twurple/eventsub": "5.3.1",
     "@types/long": "^5.0.0",
     "@types/lru-cache": "^7.10.10",
-    "axios-retry": "^3.3.1",
     "axios": "1.2.0-alpha.1",
+    "axios-retry": "^3.3.1",
     "body-parser": "^1.20.1",
     "chokidar": "^3.5.3",
     "country-code-emoji": "^2.3.0",
     "dota2": "https://github.com/dotabod/node-dota2.git",
     "dotaconstants": "https://github.com/odota/dotaconstants",
     "express": "^4.18.2",
-    "i18next-fs-backend": "^2.1.1",
     "i18next": "^22.4.9",
+    "i18next-fs-backend": "^2.1.1",
     "lru-cache": "^7.14.1",
     "mongodb": "^4.13.0",
     "redis": "^4.6.2",
     "retry": "^0.13.1",
-    "socket.io-client": "^4.6.0",
     "socket.io": "4.6.0-alpha1",
-    "steam-errors": "^1.0.0",
+    "socket.io-client": "^4.6.0",
     "steam": "https://github.com/dotabod/node-steam",
+    "steam-errors": "^1.0.0",
     "winston": "^3.8.2"
   },
   "devDependencies": {
