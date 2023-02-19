@@ -64,7 +64,7 @@ services:
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
     volumes:
-      - ./twitch-eventsub-listener/src:/app/src
+      - ./twitch-eventsub-listener/src:/app/twitch-eventsub-listener/src
 
   web:
     image: dotabod-web:${COMMIT_HASH:-latest}
@@ -105,9 +105,9 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
     volumes:
-      - ./web/src:/app/src
+      - ./web/src:/app/web/src
       # Storing locales in a volume so that they can be edited without rebuilding the image
-      - ./web/locales:/app/locales
+      - ./web/locales:/app/web/locales
       - steam_auth:/app/src/steam/volumes
 
   nginx:
