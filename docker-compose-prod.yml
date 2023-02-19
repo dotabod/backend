@@ -5,7 +5,7 @@ services:
     ports:
       - '6379:6379'
   twitch-chat:
-    image: twitch-chat
+    image: twitch-chat:${COMMIT_HASH:-latest}
     container_name: twitch-chat
     restart: on-failure
     volumes:
@@ -36,7 +36,7 @@ services:
       - DB_URL
       - DB_SECRET
   twitch-events:
-    image: twitch-events
+    image: twitch-events:${COMMIT_HASH:-latest}
     container_name: twitch-events
     restart: on-failure
     build:
@@ -68,7 +68,7 @@ services:
       - EVENTSUB_HOST
       - TWITCH_EVENTSUB_SECRET
   dota:
-    image: dota
+    image: dota:${COMMIT_HASH:-latest}
     container_name: dota
     restart: on-failure
     build:
@@ -107,8 +107,8 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
   nginx:
-    container_name: dotabod-nginx
-    image: dotabod-nginx
+    container_name: nginx
+    image: nginx
     restart: on-failure
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template

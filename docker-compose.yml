@@ -111,8 +111,8 @@ services:
       - steam_auth:/app/src/steam/volumes
 
   nginx:
-    container_name: dotabod-nginx
-    image: dotabod-nginx
+    container_name: nginx
+    image: nginx
     volumes:
     - ./nginx/default.conf:/etc/nginx/templates/default.conf.template
     build: ./nginx
@@ -126,7 +126,7 @@ services:
       - TLS_KEY
 
   mongodb:
-    container_name: dotabod-mongodb
+    container_name: mongodb
     image: "mongo"
     ports:
       - "27017:27017"
