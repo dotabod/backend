@@ -4,17 +4,17 @@ services:
     image: 'redis/redis-stack-server:latest'
     ports:
       - '6379:6379'
-  twitch-chat-listener:
-    image: dotabod-twitch-chat-listener
-    container_name: dotabod-twitch-chat-listener
+  twitch-chat:
+    image: twitch-chat
+    container_name: twitch-chat
     restart: on-failure
     volumes:
-      - ./twitch-chat-listener/locales:/app/locales
+      - ./packages/twitch/chat/locales:/app/locales
     build:
-      context: twitch-chat-listener
+      context: twitch-chat
       target: prod
-      dockerfile: ../web/Dockerfile # Reusing same nodejs dockerfile
-    hostname: twitch-chat-listener
+      dockerfile: ../packages/Dockerfile # Reusing same nodejs dockerfile
+    hostname: twitch-chat
     ports:
       - '5005:5005'
     environment:
@@ -35,15 +35,15 @@ services:
       - MONGO_URL
       - DB_URL
       - DB_SECRET
-  twitch-eventsub-listener:
-    image: dotabod-twitch-eventsub-listener
-    container_name: dotabod-twitch-eventsub-listener
+  twitch-events:
+    image: twitch-events
+    container_name: twitch-events
     restart: on-failure
     build:
-      context: twitch-eventsub-listener
+      context: twitch-events
       target: prod
-      dockerfile: ../web/Dockerfile # Reusing same nodejs dockerfile
-    hostname: twitch-eventsub-listener
+      dockerfile: ../packages/Dockerfile # Reusing same nodejs dockerfile
+    hostname: twitch-events
     ports:
       - '82:5010'
       - '5015:5015'
@@ -67,17 +67,17 @@ services:
       - DB_SECRET
       - EVENTSUB_HOST
       - TWITCH_EVENTSUB_SECRET
-  web:
-    image: dotabod-web
-    container_name: dotabod-web
+  dota:
+    image: dota
+    container_name: dota
     restart: on-failure
     build:
-      context: web
+      context: dota
       target: prod
     volumes:
       - steam_auth:/app/src/steam/volumes
-      - ./web/locales:/app/locales
-    hostname: web
+      - ./packages/dota/locales:/app/locales
+    hostname: dota
     ports:
       - '81:5000'
       - '9229:9229'
@@ -86,7 +86,7 @@ services:
       - NEW_RELIC_ENABLED
       - NR_NATIVE_METRICS_NO_BUILD
       - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
-      - NEW_RELIC_APP_NAME="dotabod web"
+      - NEW_RELIC_APP_NAME="dotabod dota"
       - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
       - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
       - NEW_RELIC_LICENSE_KEY

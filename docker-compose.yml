@@ -5,16 +5,16 @@ services:
     ports:
       - '6379:6379'
 
-  twitch-chat-listener:
-    image: dotabod-twitch-chat-listener:${COMMIT_HASH:-latest}
-    container_name: dotabod-twitch-chat-listener
+  twitch-chat:
+    image: twitch-chat:${COMMIT_HASH:-latest}
+    container_name: twitch-chat
     build:
       context: .
       target: dev
-      dockerfile: ./web/Dockerfile # Reusing same nodejs dockerfile
+      dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
       args:
-        - BUILD_CONTEXT=twitch-chat-listener
-    hostname: twitch-chat-listener
+        - BUILD_CONTEXT=twitch-chat
+    hostname: twitch-chat
     ports:
       - '5005:5005'
     environment:
@@ -31,19 +31,19 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
     volumes:
-      - ./twitch-chat-listener/src:/app/twitch-chat-listener/src
-      - ./twitch-chat-listener/locales:/app/twitch-chat-listener/locales
+      - ./packages/twitch/chat/src:/app/packages/twitch/chat/src
+      - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
-  twitch-eventsub-listener:
-    image: dotabod-twitch-eventsub-listener:${COMMIT_HASH:-latest}
-    container_name: dotabod-twitch-eventsub-listener
+  twitch-events:
+    image: twitch-events:${COMMIT_HASH:-latest}
+    container_name: twitch-events
     build:
       context: .
       target: dev
-      dockerfile: ./web/Dockerfile # Reusing same nodejs dockerfile
+      dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
       args:
-        - BUILD_CONTEXT=twitch-eventsub-listener
-    hostname: twitch-eventsub-listener
+        - BUILD_CONTEXT=twitch-events
+    hostname: twitch-events
     ports:
       - '82:5010'
       - '5015:5015'
@@ -64,18 +64,18 @@ services:
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
     volumes:
-      - ./twitch-eventsub-listener/src:/app/twitch-eventsub-listener/src
+      - ./packages/twitch/events/src:/app/twitch/events/src
 
-  web:
-    image: dotabod-web:${COMMIT_HASH:-latest}
-    container_name: dotabod-web
+  dota:
+    image: dota:${COMMIT_HASH:-latest}
+    container_name: dota
     build:
       context: .
       target: dev
-      dockerfile: ./web/Dockerfile # Reusing same nodejs dockerfile
+      dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
       args:
-        - BUILD_CONTEXT=web
-    hostname: web
+        - BUILD_CONTEXT=dota
+    hostname: dota
     ports:
       - '81:5000'
       - '9229:9229'
@@ -89,7 +89,7 @@ services:
       - DEV_CHANNELIDS
       - MONGO_URL
       - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
-      - NEW_RELIC_APP_NAME="dev dotabod web"
+      - NEW_RELIC_APP_NAME="dev dotabod dota"
       - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
       - NEW_RELIC_ENABLED
       - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
@@ -105,9 +105,9 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
     volumes:
-      - ./web/src:/app/web/src
+      - ./packages/dota/src:/app/packages/dota/src
       # Storing locales in a volume so that they can be edited without rebuilding the image
-      - ./web/locales:/app/web/locales
+      - ./packages/dota/locales:/app/packages/dota/locales
       - steam_auth:/app/src/steam/volumes
 
   nginx:

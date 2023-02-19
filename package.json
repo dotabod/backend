@@ -1,11 +1,7 @@
 {
     "name": "dotabod",
     "private": true,
-    "workspaces": [
-        "twitch-chat-listener",
-        "twitch-eventsub-listener",
-        "web"
-    ],
+    "workspaces": [ "packages/*" ],
     "dependencies": {
         "@prisma/client": "4.10.0",
         "@supabase/supabase-js": "^2.7.1",

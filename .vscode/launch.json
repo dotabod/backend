@@ -7,7 +7,7 @@
             "request": "attach",
             "port": 9229,
             "address": "localhost",
-            "localRoot": "${workspaceFolder}/web/src",
+            "localRoot": "${workspaceFolder}/dota/src",
             "remoteRoot": "/app/src",
             "skipFiles": [
               "${workspaceFolder}/node_modules/**/*.js",

@@ -25,7 +25,7 @@
     "pullmongo": "doppler run -- prisma db pull --schema ./prisma/mongo.prisma --force",
     "pullpsql": "doppler run -- prisma db pull --schema ./prisma/postgres.prisma",
     "pushpsql": "doppler run -- prisma db push --schema ./prisma/postgres.prisma",
-    "prepare": "cd .. && husky install web/.husky"
+    "prepare": "cd .. && husky install packages/dota/.husky"
   },
   "dependencies": {
     "@node-steam/id": "^1.2.0",

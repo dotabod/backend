@@ -16,7 +16,7 @@ import { getTokenFromTwitchId } from '../dota/lib/connectedStreamers.js'
 import { logger } from '../utils/logger.js'
 
 // Our docker events forwarder instance
-const twitchEvent = io('ws://twitch-eventsub-listener:5015')
+const twitchEvent = io('ws://twitch-events:5015')
 
 twitchEvent.on('connect', () => {
   logger.info('We alive on dotabod twitch events server!')

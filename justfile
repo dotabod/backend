@@ -16,7 +16,7 @@ default:
 
 i18np:
     @echo "Parsing translation files"
-    @i18next -c 'web/i18next-parser.config.js'
+    @i18next -c 'packages/dota/i18next-parser.config.js'
 
 i18nd:
     @echo "Downloading translations"
@@ -65,6 +65,6 @@ update:
     @docker compose -f {{dockerfile}} up  -d
 
 pullall:
-    cd ./web && yarn pullpsql && yarn generateprisma
-    cd ./twitch-eventsub-listener && yarn pullpsql && yarn generateprisma
-    cd ./twitch-chat-listener && yarn pullpsql && yarn generateprisma
+    cd ./packages/dota && yarn pullpsql && yarn generateprisma
+    cd ./packages/twitch/events && yarn pullpsql && yarn generateprisma
+    cd ./packages/twitch/chat && yarn pullpsql && yarn generateprisma
