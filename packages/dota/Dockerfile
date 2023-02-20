@@ -3,18 +3,15 @@
 #################
 FROM node:19.4-alpine as base
 
-ARG BUILD_CONTEXT
-
 RUN apk add --no-cache git
 
+# We only need to call workdir once per FROM directive
 WORKDIR /app
 COPY package.json yarn.lock* ./
 COPY packages/settings ./packages/settings
 
-WORKDIR /app/$BUILD_CONTEXT
-COPY ./$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/yarn.lock* ./
+COPY ./package.json ./yarn.lock* ./
 
-WORKDIR /app
 RUN yarn install --frozen-lockfile --production
 
 #################
@@ -27,21 +24,15 @@ RUN yarn install --frozen-lockfile
 WORKDIR /app
 COPY tsconfig.json ./
 
-WORKDIR /app/$BUILD_CONTEXT
-COPY ./$BUILD_CONTEXT/prisma ./prisma
+COPY ./prisma ./prisma
 
 RUN yarn prisma generate --schema ./prisma/postgres.prisma
 RUN test -f ./prisma/postgres.prisma \
     && yarn prisma generate --schema ./prisma/mongo.prisma \
     || true
 
-# #################
-# #    BUILDER    #
-# #################
-# FROM prisma AS builder
-
-COPY ./$BUILD_CONTEXT/tsconfig.json ./tsconfig.json
-COPY ./$BUILD_CONTEXT/src ./src
+COPY ./tsconfig.json ./tsconfig.json
+COPY ./src ./src
 
 RUN yarn build
 
@@ -50,7 +41,6 @@ RUN yarn build
 #################
 FROM node:19.4-alpine as dev
 
-ARG BUILD_CONTEXT
 ENV COMMIT_HASH $COMMIT_HASH
 
 WORKDIR /app
@@ -62,12 +52,11 @@ COPY --from=builder /app/packages/settings/node_modules* ./node_modules
 COPY --from=builder /app/packages/settings/package.json ./
 COPY --from=builder /app/packages/settings/tsconfig.json ./
 
-WORKDIR /app/$BUILD_CONTEXT
 COPY --from=builder /app/tsconfig.json ./
-COPY --from=builder /app/$BUILD_CONTEXT/node_modules* ./node_modules
-COPY --from=builder /app/$BUILD_CONTEXT/package.json ./
-COPY --from=builder /app/$BUILD_CONTEXT/tsconfig.json ./
-COPY --from=builder /app/$BUILD_CONTEXT/prisma ./prisma
+COPY --from=builder /app/node_modules* ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/prisma ./prisma
 
 RUN mkdir -p ./src/steam/volumes
 
@@ -77,24 +66,22 @@ CMD ["yarn", "dev"]
 #     PROD      #
 #################
 FROM node:19.4-alpine as prod
+WORKDIR /app
 
-ARG BUILD_CONTEXT
 ENV COMMIT_HASH $COMMIT_HASH
 
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend"
 LABEL org.opencontainers.image.version=$COMMIT_HASH
 
-WORKDIR /app
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/tsconfig.json ./
 
-WORKDIR /app/$BUILD_CONTEXT
-COPY --from=base /app/$BUILD_CONTEXT/node_modules* ./node_modules
-COPY --from=builder /app/$BUILD_CONTEXT/dist ./
-COPY --from=builder /app/$BUILD_CONTEXT/package.json ./
-COPY --from=builder /app/$BUILD_CONTEXT/tsconfig.json ./
-COPY --from=builder /app/$BUILD_CONTEXT/prisma ./prisma
+COPY --from=base /app/node_modules* ./node_modules
+COPY --from=builder /app/dist ./
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/prisma ./prisma
 
 RUN mkdir -p ./src/steam/volumes
 

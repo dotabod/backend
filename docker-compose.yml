@@ -10,11 +10,9 @@ services:
     container_name: twitch-chat
     restart: on-failure
     build:
-      context: .
+      context: ./packages/twitch/chat
       target: prod
-      dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
-      args:
-        - BUILD_CONTEXT=packages/twitch/chat
+      dockerfile: ./packages/twitch/chat/Dockerfile # Reusing same nodejs dockerfile
     hostname: twitch-chat
     ports:
       - '5005:5005'
@@ -39,11 +37,9 @@ services:
     container_name: twitch-events
     restart: on-failure
     build:
-      context: .
+      context: ./packages/twitch/events # This makes relative paths in the dockerfile be set to this dir
       target: prod
-      dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
-      args:
-        - BUILD_CONTEXT=packages/twitch/events
+      dockerfile: ./packages/twitch/events/Dockerfile # Reusing same nodejs dockerfile
     hostname: twitch-events
     ports:
       - '82:5010'
@@ -70,11 +66,9 @@ services:
     container_name: dota
     restart: on-failure
     build:
-      context: .
+      context: ./packages/dota
       target: prod
-      dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
-      args:
-        - BUILD_CONTEXT=packages/dota
+      dockerfile: ./packages/dota/Dockerfile # Reusing same nodejs dockerfile
     hostname: dota
     ports:
       - '81:5000'
