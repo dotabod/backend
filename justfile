@@ -41,7 +41,7 @@ buildall:
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
 
 logs app="":
-    @docker logs {{app}} -f
+    @docker compose logs -f {{app}}
 
 # Builds one image
 build app="":
