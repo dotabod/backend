@@ -2,7 +2,6 @@ set dotenv-load
 
 dockerfile := if env_var("NODE_ENV") == "production" { "docker-compose.yml" } else { "docker-compose.yml -f docker-compose-dev.yml" }
 export COMMIT_HASH := `git rev-parse --short HEAD`
-app := ""
 
 GREEN  := "\\u001b[32m"
 RESET  := "\\u001b[0m"
@@ -41,11 +40,11 @@ buildall:
     @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
 
-logs:
-    @docker logs {{app}} -f
+logs app="":
+    @docker compose logs -f {{app}}
 
 # Builds one image
-build:
+build app="":
     @echo -e "Running for {{app}} on {{dockerfile}} with {{COMMIT_HASH}}"
     git pull
     @docker compose -f {{dockerfile}} build  {{app}}
