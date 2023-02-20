@@ -132,7 +132,7 @@ services:
       - "27017:27017"
     volumes:
       - "mongodb_data:/data/db"
-      - ./services/mongodb/init.sh:/docker-entrypoint-initdb.d/init_mongo.js
+      - ./services/mongodb/init.js:/docker-entrypoint-initdb.d/init_mongo.js
 
 # Volumes are useful for data persistence, so the data will not be deleted
 # even later you call command docker-compose down.
