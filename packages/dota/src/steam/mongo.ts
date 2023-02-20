@@ -30,7 +30,7 @@ class MongoDBSingleton {
           const mongoURL =
             process.env.NODE_ENV === 'production'
               ? process.env.MONGO_URL!
-              : 'mongodb://mongodb:27017'
+              : 'mongodb://mongodb:27017/dotabod'
           const client = await MongoClient.connect(mongoURL)
 
           // Resolve the promise with the client
