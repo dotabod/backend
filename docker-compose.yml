@@ -12,7 +12,7 @@ services:
     build:
       context: ./packages
       target: prod
-      dockerfile: ./packages/Dockerfile.chat
+      dockerfile: ./Dockerfile.chat
     hostname: twitch-chat
     ports:
       - '5005:5005'
@@ -39,7 +39,7 @@ services:
     build:
       context: ./packages
       target: prod
-      dockerfile: ./packages/Dockerfile.events
+      dockerfile: ./Dockerfile.events
     hostname: twitch-events
     ports:
       - '82:5010'
@@ -68,7 +68,7 @@ services:
     build:
       context: ./packages
       target: prod
-      dockerfile: ./packages/Dockerfile.dota
+      dockerfile: ./Dockerfile.dota
     hostname: dota
     ports:
       - '81:5000'
