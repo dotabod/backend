@@ -2,6 +2,7 @@ set dotenv-load
 
 dockerfile := if env_var("NODE_ENV") == "production" { "docker-compose.yml" } else { "docker-compose.yml -f docker-compose-dev.yml" }
 export COMMIT_HASH := `git rev-parse --short HEAD`
+export BUILDKIT_PROGRESS := "plain"
 
 GREEN  := "\\u001b[32m"
 RESET  := "\\u001b[0m"
