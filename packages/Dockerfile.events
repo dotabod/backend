@@ -7,10 +7,8 @@ RUN apk add --no-cache git
 
 # We only need to call workdir once per FROM directive
 WORKDIR /app
-COPY package.json yarn.lock* ./
+COPY ./twitch/events/package.json ./twitch/events/yarn.lock* ./
 COPY packages/settings ./packages/settings
-
-COPY ./package.json ./yarn.lock* ./
 
 RUN yarn install --frozen-lockfile --production
 
@@ -22,17 +20,16 @@ FROM base AS builder
 RUN yarn install --frozen-lockfile
 
 WORKDIR /app
-COPY tsconfig.json ./
+COPY ./twitch/events/tsconfig.json ./
 
-COPY ./prisma ./prisma
+COPY .twitch/events/prisma ./prisma
 
 RUN yarn prisma generate --schema ./prisma/postgres.prisma
 RUN test -f ./prisma/postgres.prisma \
     && yarn prisma generate --schema ./prisma/mongo.prisma \
     || true
 
-COPY ./tsconfig.json ./tsconfig.json
-COPY ./src ./src
+COPY ./twitch/events/src ./src
 
 RUN yarn build
 
