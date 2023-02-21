@@ -12,7 +12,6 @@ COPY ./$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/yarn.lock* ./
 
 WORKDIR /app
 COPY package.json yarn.lock* ./
-COPY ./packages/settings/package.json ./packages/settings/yarn.lock* ./
 
 RUN yarn install --pure-lockfile --non-interactive
 
@@ -36,10 +35,6 @@ COPY ./$BUILD_CONTEXT/tsconfig.json ./tsconfig.json
 COPY ./$BUILD_CONTEXT/src ./src
 RUN yarn build
 
-WORKDIR /app/packages/settings
-COPY ./packages/settings/tsconfig.json ./
-RUN yarn build
-
 #################
 #      DEV      #
 #################
@@ -52,12 +47,6 @@ WORKDIR /app
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/tsconfig.json ./
-
-WORKDIR /app/packages/settings
-COPY ./node_modules* ./node_modules
-COPY ./package.json ./
-COPY ./tsconfig.json ./
-RUN yarn build
 
 WORKDIR /app/$BUILD_CONTEXT
 COPY --from=base /app/$BUILD_CONTEXT/node_modules* ./node_modules
