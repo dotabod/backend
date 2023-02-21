@@ -11,7 +11,7 @@
   "private": true,
   "scripts": {
     "studio": "doppler run -- yarn prisma studio --schema ./prisma/postgres.prisma",
-    "start": "node --inspect=0.0.0.0:9229 ./src/index.js",
+    "start": "node --inspect=0.0.0.0:9229 ./dist/index.js",
     "build": "tsc --build --verbose",
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
