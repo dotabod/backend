@@ -173,6 +173,11 @@ export class GSIHandler {
     this.manaSaved = 0
     this.treadToggles = 0
 
+    this.noTpChatter = {
+      timeout: undefined,
+      lastRemindedDate: undefined,
+    }
+
     void redisClient.client.json.del(`${this.getToken()}:roshan`)
     void redisClient.client.json.del(`${this.getToken()}:aegis`)
 
