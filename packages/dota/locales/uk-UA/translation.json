@@ -33,7 +33,7 @@
     "pause": "{{emote}} Хто поставив паузу?",
     "smoked": "{{emote}} {{- heroName}} в смоці!",
     "tpFound": "{{channel}} нафідив заради ТП після $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
-    "tpFromDeath": "Гарна робота {{emote}}. Фідіти для того щоб отримати ТП після $t(секунди, {\"count\": {{seconds}} }) {{emote2}}"
+    "tpFromDeath": "Завдяки цій смерті ви нарешті отримали TP всього лиш через $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
   "commandDisabled": "Streamer вимкнув {{cmdName}} команду {{emote}} Введіть !commands, щоб дізнатись, які команди зараз доступні",
   "commands_everyone": "Кожен може використовувати: {{commandList}}",

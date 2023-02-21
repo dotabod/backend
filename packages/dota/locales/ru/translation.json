@@ -33,7 +33,7 @@
     "pause": "{{emote}} Кто поставил паузу?",
     "smoked": "{{emote}} {{- heroName}} в смоках!",
     "tpFound": "{{channel}} молодец, наконец-то купил ТП спустя $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
-    "tpFromDeath": "Благодаря этой смерти вы получили ТП наконец. Спустя $t(seconds, {\"count\": {{seconds}} }) оно  появилось {{emote}}"
+    "tpFromDeath": "Спасибо смерти за данное тебе ТП. Это заняло всего лишь $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
   "commandDisabled": "Стример отключил команду {{cmdName}} {{emote}}. Напишите !commands, чтобы увидеть доступные команды",
   "commands_everyone": "Каждый может использовать: {{commandList}}",

@@ -32,7 +32,7 @@
     "pause": "{{emote}} Quem pausou o jogo?",
     "smoked": "{{emote}} {{- heroName}} acabou de usar smoke!",
     "tpFound": "{{channel}} bom trabalho comprando um tp FINALMENTE depois de $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
-    "tpFromDeath": "Graças a essa morte você finalmente conseguiu um tp. Levou apenas $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
+    "tpFromDeath": "Thanks to this death you finally got a tp. And it only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
   "commandDisabled": "O streamer desativou o comando {{cmdName}} {{emote}} Digite !commands para verificar os comandos habilitados",
   "commands_everyone": "Todos podem usar: {{commandList}}",
