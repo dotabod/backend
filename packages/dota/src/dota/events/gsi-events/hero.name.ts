@@ -7,7 +7,7 @@ import { GSIHandler } from '../../GSIHandler.js'
 import getHero, { HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 
 eventHandler.registerEvent(`hero:name`, {
   handler: (dotaClient: GSIHandler, name: HeroNames) => {

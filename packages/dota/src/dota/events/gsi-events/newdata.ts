@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 import { DotaEventTypes, Packet } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'

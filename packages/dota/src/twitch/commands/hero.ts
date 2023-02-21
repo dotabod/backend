@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { DBSettings } from '@dotabod/settings'
+import { DBSettings } from '../../db/settings.js'
 import { GSIHandler } from '../../dota/GSIHandler.js'
 import { server } from '../../dota/index.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'

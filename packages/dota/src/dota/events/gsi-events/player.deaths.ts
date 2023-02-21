@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
+import { DBSettings, getValueOrDefault } from '../../../db/settings.js'
 import { GSIHandler } from '../../GSIHandler.js'
 import { findItem } from '../../lib/findItem.js'
 import handleGetHero from '../../lib/getHero.js'
