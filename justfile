@@ -20,11 +20,11 @@ i18np:
 
 i18nd:
     @echo "Downloading translations"
-    @crowdin.bat download --config './crowdin.yml'
+    @crowdin download --config './crowdin.yml'
 
 i18nu:
     @echo "Uploading translations"
-    @crowdin.bat upload translations --auto-approve-imported --config './crowdin.yml'
+    @crowdin upload translations --auto-approve-imported --config './crowdin.yml'
 
 # Stops all containers
 down:
