@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import RedisClient from '../../db/redis.js'
-import { DBSettings } from '../../db/settings.js'
+import { DBSettings } from '@dotabod/settings'
 import {
   AegisRes,
   generateAegisMessage,

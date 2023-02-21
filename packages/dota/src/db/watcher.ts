@@ -7,7 +7,7 @@ import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
-import { DBSettings, getValueOrDefault } from './settings.js'
+import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import supabase from './supabase.js'
 
 class SetupSupabase {
