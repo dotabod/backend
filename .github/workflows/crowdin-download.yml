@@ -54,7 +54,7 @@ jobs:
 
       - name: Organize translations
         run: |
-          sudo chown -R $(id -u):$(id -g) packages/**/
+          sudo chown -R $(id -u):$(id -g) packages/**/locales/*
           i18next -c 'packages/dota/i18next-parser.config.js'
 
       - name: Count lines
@@ -73,4 +73,4 @@ jobs:
           commit-message: Add new locales
           delete-branch: true
           add-paths: |
-            packages/**/
+            packages/**/locales/*
