@@ -4,7 +4,8 @@
     "workspaces": [
         "packages/twitch/events",
         "packages/twitch/chat",
-        "packages/dota"
+        "packages/dota",
+        "packages/settings"
     ],
     "dependencies": {
         "@prisma/client": "4.10.0",
