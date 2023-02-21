@@ -28,7 +28,6 @@
     "prepare": "cd ../../ && husky install packages/dota/.husky"
   },
   "dependencies": {
-    "@dotabod/settings": "^1.0.0",
     "@node-steam/id": "^1.2.0",
     "@twurple/eventsub": "5.3.1",
     "@types/long": "^5.0.0",
