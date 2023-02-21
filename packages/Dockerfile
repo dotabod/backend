@@ -10,6 +10,9 @@ RUN apk add --no-cache git
 WORKDIR /app/$BUILD_CONTEXT
 COPY ./$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/yarn.lock* ./
 
+WORKDIR /app/packages/settings
+COPY ./packages/settings/package.json ./packages/settings/yarn.lock* ./
+
 WORKDIR /app
 COPY package.json yarn.lock* ./
 
@@ -23,16 +26,21 @@ FROM base AS builder
 WORKDIR /app
 COPY tsconfig.json ./
 
+WORKDIR /app/packages/settings
+COPY ./packages/settings/tsconfig.json ./
+COPY ./packages/settings/src ./src
+RUN yarn build
+
 WORKDIR /app/$BUILD_CONTEXT
 COPY ./$BUILD_CONTEXT/prisma ./prisma
+COPY ./$BUILD_CONTEXT/tsconfig.json ./
+COPY ./$BUILD_CONTEXT/src ./src
 
 RUN yarn prisma generate --schema ./prisma/postgres.prisma
 RUN test -f ./prisma/postgres.prisma \
     && yarn prisma generate --schema ./prisma/mongo.prisma \
     || true
 
-COPY ./$BUILD_CONTEXT/tsconfig.json ./tsconfig.json
-COPY ./$BUILD_CONTEXT/src ./src
 RUN yarn build
 
 #################
@@ -48,9 +56,14 @@ COPY --from=base /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/tsconfig.json ./
 
+WORKDIR /app/packages/settings
+COPY --from=base /app/packages/settings/node_modules* ./node_modules
+COPY --from=builder /app/packages/settings/package.json ./
+COPY --from=builder /app/packages/settings/tsconfig.json ./
+RUN sed -i 's/dist/src/g' ./package.json
+
 WORKDIR /app/$BUILD_CONTEXT
 COPY --from=base /app/$BUILD_CONTEXT/node_modules* ./node_modules
-COPY --from=builder /app/tsconfig.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/package.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/tsconfig.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/prisma ./prisma
@@ -75,9 +88,15 @@ COPY --from=base /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/tsconfig.json ./
 
+WORKDIR /app/packages/settings
+COPY --from=base /app/packages/settings/node_modules* ./node_modules
+COPY --from=builder /app/packages/settings/dist ./dist
+COPY --from=builder /app/packages/settings/package.json ./
+COPY --from=builder /app/packages/settings/tsconfig.json ./
+
 WORKDIR /app/$BUILD_CONTEXT
 COPY --from=base /app/$BUILD_CONTEXT/node_modules* ./node_modules
-COPY --from=builder /app/$BUILD_CONTEXT/dist ./
+COPY --from=builder /app/$BUILD_CONTEXT/dist ./dist
 COPY --from=builder /app/$BUILD_CONTEXT/package.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/tsconfig.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/prisma ./prisma
