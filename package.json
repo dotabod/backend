@@ -2,7 +2,6 @@
     "name": "dotabod",
     "private": true,
     "workspaces": [
-        "packages/settings",
         "packages/twitch/events",
         "packages/twitch/chat",
         "packages/dota"
