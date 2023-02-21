@@ -51,7 +51,6 @@ eventHandler.registerEvent(`hero:name`, {
                 user: dotaClient.getToken(),
                 player_team: dotaClient.client.gsi?.player?.team_name,
               })
-              dotaClient.playingHero = name
             })
             .catch((e: any) => {
               logger.error('[BETS] Error opening twitch bet', {
@@ -65,8 +64,6 @@ eventHandler.registerEvent(`hero:name`, {
             e: e?.message || e,
           })
         })
-
-      return
     }
 
     dotaClient.playingHero = name
