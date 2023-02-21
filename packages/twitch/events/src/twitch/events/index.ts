@@ -40,7 +40,7 @@ export const SubscribeEvents = (accountIds: string[]) => {
     }
   })
 
-  console.log('Starting promise waiting')
+  console.log('Starting promise waiting for', accountIds.length)
   Promise.all(promises)
     .then(() => console.log('done subbing to', accountIds.length, 'channels'))
     .catch((e) => {
