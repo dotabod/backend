@@ -8,7 +8,6 @@ import eventHandler from '../EventHandler.js'
 // todo: make sure streamer has gold to buy tp?
 eventHandler.registerEvent(`items:teleport0:name`, {
   handler: (dotaClient: GSIHandler, itemName: 'item_tpscroll' | 'empty') => {
-    if (!dotaClient.client.beta_tester) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 
@@ -43,7 +42,6 @@ eventHandler.registerEvent(`items:teleport0:name`, {
             channel: `@${dotaClient.client.name}`,
             lng: dotaClient.client.locale,
           }),
-          { beta: true },
         )
         return resetTimer()
       }
@@ -55,7 +53,6 @@ eventHandler.registerEvent(`items:teleport0:name`, {
           channel: `@${dotaClient.client.name}`,
           lng: dotaClient.client.locale,
         }),
-        { beta: true },
       )
 
       return resetTimer()
@@ -75,7 +72,6 @@ eventHandler.registerEvent(`items:teleport0:name`, {
             lng: dotaClient.client.locale,
             emote: 'HECANT',
           }),
-          { beta: true },
         )
       }, 1000 * secondsToWait)
     }
