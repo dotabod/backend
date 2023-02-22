@@ -6,7 +6,7 @@
         ],
         "target": "ESNext",
         "module": "ESNext",
-        "moduleResolution": "Node16",
+        "moduleResolution": "node",
         "sourceMap": true,
         "strictNullChecks": true,
         "types": [

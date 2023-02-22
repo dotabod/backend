@@ -21,7 +21,6 @@ axios.interceptors.response.use((response) => {
   throw err
 })
 
-// @ts-expect-error ??? its callable
 axiosRetry(axios, {
   retries: process.env.NODE_ENV === 'development' ? 2 : 7, // number of retries
   retryDelay: (retryCount: number) => {

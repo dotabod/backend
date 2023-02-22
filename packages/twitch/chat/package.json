@@ -22,11 +22,13 @@
     "pullpsql": "doppler run -- prisma db pull --schema ./prisma/postgres.prisma"
   },
   "dependencies": {
-    "i18next-fs-backend": "^2.1.1",
-    "i18next": "^22.4.9"
+    "@prisma/client": "4.10.1",
+    "@supabase/supabase-js": "^2.8.0"
   },
   "devDependencies": {
-    "dotenv-cli": "^6.0.0",
-    "dotenv": "^16.0.3"
+    "@types/node": "^18.14.0",
+    "@typescript-eslint/eslint-plugin": "^5.53.0",
+    "@typescript-eslint/parser": "^5.53.0",
+    "eslint": "^8.34.0"
   }
 }

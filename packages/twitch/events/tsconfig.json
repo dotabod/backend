@@ -1,41 +1,13 @@
 {
-  "include": [
-    "src/**/*",
-    "./.eslintrc.cjs"
-  ],
-  "exclude": [
-    "prisma/generated",
-    "node_modules"
-  ],
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Node16",
-    "rootDir": "./",
-    "outDir": "./dist",
-    "sourceMap": false,
-    "strictNullChecks": true,
-    "types": [
-      "node"
-    ],
-    "allowJs": false,
-    "checkJs": false,
-    "resolveJsonModule": false,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "skipLibCheck": true
+    /* Basic Options */
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "outDir": "dist",
+    "rootDir": "src"
   },
-  "ts-node": {
-    "esm": true,
-    "pretty": true,
-    "require": [
-      "tsconfig-paths/register",
-    ],
-    "ignore": [
-      "(?:^|/)node_modules/",
-      "(?:^|/)prisma/generated/",
-    ]
-  }
+  "include": ["src"],
+  "extends": "../../../tsconfig.json"
 }

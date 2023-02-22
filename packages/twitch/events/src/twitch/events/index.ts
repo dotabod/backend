@@ -26,7 +26,7 @@ export const SubscribeEvents = (accountIds: string[]) => {
       promises.push(
         ...Object.keys(events).map((eventName) => {
           try {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            // @ts-expect-error asdf
             return listener[eventName as EventSubHttpListenerKey](userId, (data: any) =>
               handleEvent(eventName, data),
             )

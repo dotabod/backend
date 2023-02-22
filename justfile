@@ -47,7 +47,7 @@ logs app="":
 # Builds one image
 build app="":
     @echo -e "Running for {{app}} on {{dockerfile}} with {{COMMIT_HASH}}"
-    git pull
+    git pull || true
     @docker compose -f {{dockerfile}} build  {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d {{app}}
@@ -59,7 +59,7 @@ up:
     @docker compose -f {{dockerfile}} up -d
 
 update:
-    git pull
+    git pull || true
     @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up  -d
