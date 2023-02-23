@@ -1,6 +1,6 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} denied the aegasdis {{emote}}",
+    "denied": "{{- heroName}} denied the aegis {{emote}}",
     "expired": "{{- heroName}}'s aegis expired {{emote}}",
     "pickup": "{{- heroName}} picked up the aegis!",
     "snatched": "{{- heroName}} snatched the aegis {{emote}}"
