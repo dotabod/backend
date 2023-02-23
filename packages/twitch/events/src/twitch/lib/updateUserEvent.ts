@@ -7,15 +7,22 @@ export async function updateUserEvent(e: EventSubUserUpdateEvent) {
   try {
     const streamer = await e.getUser()
 
+    const data = {
+      name: e.userName,
+      displayName: e.userDisplayName,
+      email: e.userEmail,
+      image: streamer.profilePictureUrl,
+    }
+
+    // remove falsy values from data (like displayName: undefined)
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([key, value]) => Boolean(value))
+    );
+
     await prisma.account.update({
       data: {
         user: {
-          update: {
-            name: e.userName,
-            displayName: e.userDisplayName,
-            email: e.userEmail,
-            image: streamer.profilePictureUrl,
-          },
+          update: filteredData,
         },
       },
       where: {

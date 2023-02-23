@@ -27,17 +27,24 @@ async function handleNewUser(providerAccountId: string) {
     })
     const totalFollowerCount = await follows.getTotalCount()
 
+    const data = {
+      displayName: streamer?.displayName,
+      name: streamer?.name,
+      followers: totalFollowerCount,
+      stream_online: !!stream?.startDate,
+      stream_start_date: stream?.startDate ?? null,
+    }
+
+    // remove falsy values from data (like displayName: undefined)
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([key, value]) => Boolean(value)),
+    )
+
     prisma.account
       .update({
         data: {
           user: {
-            update: {
-              displayName: streamer?.displayName,
-              name: streamer?.name,
-              followers: totalFollowerCount,
-              stream_online: !!stream?.startDate,
-              stream_start_date: stream?.startDate ?? null,
-            },
+            update: filteredData,
           },
         },
         where: {
