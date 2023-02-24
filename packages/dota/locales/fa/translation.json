@@ -115,6 +115,7 @@
   "ranked_no": "نچ! این بازی رنک نیست",
   "ranked_yes": "بله این گیم رنکه",
   "refresh": "Refreshing overlay...",
+  "resetwl": "",
   "roshanAlive": "Roshan is currently alive {{emote}}",
   "roshanCount": {
     "1": "روشان اول. روشان بعدی آقانیم شارد",
@@ -129,6 +130,7 @@
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Removing stream delay",
+  "stream": "",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "There is no stream delay on this channel",
   "tip": {

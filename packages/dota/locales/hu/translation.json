@@ -115,6 +115,7 @@
   "ranked_no": "Nem, ez nem egy rangsorolt meccs",
   "ranked_yes": "Rangsorolt meccs",
   "refresh": "Overlay frissítése...",
+  "resetwl": "",
   "roshanAlive": "A Roshan életben van {{emote}}",
   "roshanCount": {
     "1": "1. Roshan halál · Következő drop: aghanim's shard.",
@@ -129,6 +130,7 @@
   "setStreamDelay": "Stream delay beállítva: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Helytelen stream delay, próbáld így: !setdelay <seconds>",
   "setStreamDelayRemoved": "Stream delay eltávoltva",
+  "stream": "",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Nincs beállítva stream delay a csatornán",
   "tip": {

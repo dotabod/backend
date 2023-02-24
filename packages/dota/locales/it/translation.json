@@ -121,6 +121,7 @@
   "ranked_no": "No questa partita non è classificata",
   "ranked_yes": "Si questa partita è classificata",
   "refresh": "Aggiornando l'overlay...",
+  "resetwl": "",
   "roshanAlive": "Roshan è vivo {{emote}}",
   "roshanCount": {
     "1": "Morti di Rosh: 1 · Prossimo drop: Aghanim's Shard.",
@@ -136,6 +137,7 @@
   "setStreamDelay": "Impostando il delay dello stream a: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Delay della stream invalido, usa !setdelay <seconds>",
   "setStreamDelayRemoved": "Rimuovendo il delay dello stream",
+  "stream": "",
   "streamDelay": "Delay dello stream: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Non c'è nessun delay su questo canale",
   "tip": {
