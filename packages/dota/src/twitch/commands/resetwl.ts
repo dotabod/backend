@@ -5,8 +5,7 @@ import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-commandHandler.registerCommand('online', {
-  aliases: ['offline', 'forceonline', 'forceoffline'],
+commandHandler.registerCommand('resetwl', {
   permission: 2,
   cooldown: 0,
   handler: (message: MessageType, args: string[]) => {
@@ -16,17 +15,15 @@ commandHandler.registerCommand('online', {
           id: message.channel.client.token,
         },
         data: {
-          stream_online: !message.channel.client.stream_online,
-          stream_start_date: null,
+          stream_start_date: new Date(),
         },
       })
 
       chatClient.say(
         message.channel.name,
-        t('stream', {
+        t('resetwl', {
           lng: message.channel.client.locale,
           channel: message.channel.name,
-          context: message.channel.client.stream_online ? 'off' : 'on',
         }),
       )
     }
@@ -34,7 +31,7 @@ commandHandler.registerCommand('online', {
     try {
       void handler()
     } catch (e) {
-      logger.error('Error in offline/online command', e)
+      logger.error('Error in resetwl command', e)
     }
   },
 })

@@ -12,6 +12,7 @@
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
+  "resetwl": "Resetting win/loss to 0 for {{channel}}",
   "stream": "$t(stream_on)",
   "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
   "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
