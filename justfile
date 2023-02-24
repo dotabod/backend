@@ -13,6 +13,8 @@ default:
   @echo Environment is $NODE_ENV on commit {{COMMIT_HASH}}
   @just --list
 
+ip:
+    @ip addr | grep eth0 | grep inet | awk '{print $2}' | awk -F/ '{print $1}' | head -1
 
 i18np:
     @echo "Parsing translation files"
