@@ -12,10 +12,6 @@
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
-  "resetwl": "Resetting win/loss to 0 for {{channel}}",
-  "stream": "$t(stream_on)",
-  "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
-  "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "bets": {
     "lost": "We have lost, gg nt {{emote}} go next",
     "notScored": "Match not scored {{emote}} Not adding or removing MMR for match {{matchId}}.",
@@ -118,6 +114,7 @@
   "ranked_no": "Nope this game is not ranked",
   "ranked_yes": "Yes this game is ranked",
   "refresh": "Refreshing overlay...",
+  "resetwl": "Resetting win/loss to 0 for {{channel}}",
   "roshanAlive": "Roshan is currently alive {{emote}}",
   "roshanCount": {
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
@@ -133,6 +130,9 @@
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Removing stream delay",
+  "stream": "$t(stream_on)",
+  "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
+  "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "There is no stream delay on this channel",
   "tip": {

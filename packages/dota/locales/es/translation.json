@@ -121,6 +121,7 @@
   "ranked_no": "Nope este juego no está clasificado",
   "ranked_yes": "Sí, este juego está clasificado",
   "refresh": "Recargando superposición...",
+  "resetwl": "",
   "roshanAlive": "Roshan is currently alive {{emote}}",
   "roshanCount": {
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
@@ -136,6 +137,7 @@
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Removing stream delay",
+  "stream": "",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
