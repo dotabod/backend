@@ -80,12 +80,12 @@ export const ranks = [
   { range: [4004, 4157], title: 'Ancient☆2', image: '62.png' },
   { range: [4158, 4311], title: 'Ancient☆3', image: '63.png' },
   { range: [4312, 4465], title: 'Ancient☆4', image: '64.png' },
-  { range: [4466, 4619], title: 'Ancient☆5', image: '65.png' },
-  { range: [4620, 4819], title: 'Divine☆1', image: '71.png' },
-  { range: [4820, 5019], title: 'Divine☆2', image: '72.png' },
-  { range: [5020, 5219], title: 'Divine☆3', image: '73.png' },
-  { range: [5220, 5419], title: 'Divine☆4', image: '74.png' },
-  { range: [5420, 5629], title: 'Divine☆5', image: '75.png' },
+  { range: [4466, 4630], title: 'Ancient☆5', image: '65.png' },
+  { range: [4630, 4830], title: 'Divine☆1', image: '71.png' },
+  { range: [4830, 5030], title: 'Divine☆2', image: '72.png' },
+  { range: [5030, 5230], title: 'Divine☆3', image: '73.png' },
+  { range: [5230, 5430], title: 'Divine☆4', image: '74.png' },
+  { range: [5430, 5630], title: 'Divine☆5', image: '75.png' },
 ]
 
 export const leaderRanks = [
