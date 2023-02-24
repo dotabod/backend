@@ -1,5 +1,3 @@
-import './commandLoader.js'
-
 import {
   EventSubChannelPollBeginEvent,
   EventSubChannelPollEndEvent,

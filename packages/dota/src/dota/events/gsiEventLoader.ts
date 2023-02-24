@@ -1,18 +1,16 @@
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-type GSIEventsMap = Record<string, any>
-const gsiEvents: GSIEventsMap = {}
-
-fs.readdirSync(path.resolve(__dirname, 'gsi-events')).forEach((file) => {
-  if (file.endsWith('.js') || file.endsWith('.ts')) {
-    const gsiEvent = import(`./gsi-events/${file}`)
-    gsiEvents[file.slice(0, -3)] = gsiEvent
-  }
-})
-
-export default gsiEvents
+import './gsi-events/event.aegis_denied.js'
+import './gsi-events/event.aegis_picked_up.js'
+import './gsi-events/event.bounty_rune_pickup.js'
+import './gsi-events/event.roshan_killed.js'
+import './gsi-events/event.tip.js'
+import './gsi-events/hero.alive.js'
+import './gsi-events/hero.name.js'
+import './gsi-events/hero.smoked.js'
+import './gsi-events/item.teleport0.js'
+import './gsi-events/map.paused.js'
+import './gsi-events/map.win_team.js'
+import './gsi-events/newdata.js'
+import './gsi-events/player.deaths.js'
+import './gsi-events/player.kill_list.js'
+import './gsi-events/player.killstreak.js'
+import './gsi-events/saveHeroesForMatchId.js'

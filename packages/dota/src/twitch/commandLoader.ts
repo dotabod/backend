@@ -1,18 +1,39 @@
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-type CommandMap = Record<string, any>
-const commands: CommandMap = {}
-
-fs.readdirSync(path.resolve(__dirname, 'commands')).forEach((file) => {
-  if (file.endsWith('.js') || file.endsWith('.ts')) {
-    const command = import(`./commands/${file}`)
-    commands[file.slice(0, -3)] = command
-  }
-})
-
-export default commands
+import './commands/apm.js'
+import './commands/delay.js'
+import './commands/friends.js'
+import './commands/lg.js'
+import './commands/modsonly.js'
+import './commands/pleb.js'
+import './commands/setdelay.js'
+import './commands/toggle.js'
+import './commands/avg.js'
+import './commands/dotabod.js'
+import './commands/gm.js'
+import './commands/lgs.js'
+import './commands/np.js'
+import './commands/ranked.js'
+import './commands/smurfs.js'
+import './commands/version.js'
+import './commands/beta.js'
+import './commands/dotabuff.js'
+import './commands/gpm.js'
+import './commands/match.js'
+import './commands/online.js'
+import './commands/refresh.js'
+import './commands/stats.js'
+import './commands/wl.js'
+import './commands/commands.js'
+import './commands/fixdbl.js'
+import './commands/hero.js'
+import './commands/mmr.js'
+import './commands/opendota.js'
+import './commands/resetwl.js'
+import './commands/steam.js'
+import './commands/xpm.js'
+import './commands/d2pt.js'
+import './commands/fixparty.js'
+import './commands/items.js'
+import './commands/mmr=.js'
+import './commands/ping.js'
+import './commands/roshan.js'
+import './commands/test.js'
