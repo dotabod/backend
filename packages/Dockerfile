@@ -58,9 +58,9 @@ COPY --from=builder /app/tsconfig.json ./
 
 WORKDIR /app/packages/settings
 COPY --from=base /app/packages/settings/node_modules* ./node_modules
+COPY --from=builder /app/packages/settings/dist ./dist
 COPY --from=builder /app/packages/settings/package.json ./
 COPY --from=builder /app/packages/settings/tsconfig.json ./
-RUN sed -i 's/dist/src/g' ./package.json
 
 WORKDIR /app/$BUILD_CONTEXT
 COPY --from=base /app/$BUILD_CONTEXT/node_modules* ./node_modules

@@ -22,4 +22,3 @@ services:
       - NEW_RELIC_APP_NAME="dev dotabod dota"
     volumes:
       - ./packages/dota/src:/app/packages/dota/src
-      - ./packages/settings/src:/app/packages/settings/src
