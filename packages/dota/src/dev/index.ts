@@ -4,6 +4,85 @@ import { prisma } from '../db/prisma.js'
 import { getBotAPI_DEV_ONLY } from '../twitch/lib/getBotAPI_DEV_ONLY.js'
 import { logger } from '../utils/logger.js'
 
+const botApi = await getBotAPI_DEV_ONLY()
+
+console.log('running dev script')
+async function fixNewUsers() {
+  console.log('running fixNewUsers')
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      Account: {
+        select: {
+          providerAccountId: true,
+        },
+      }
+    },
+    where: {
+      displayName: null,
+    },
+  })
+
+  for (const user of users) {
+    const account = user.Account
+    if (!account?.providerAccountId) {
+      console.log('no account for user', user.id)
+      continue
+    }
+    await handleNewUser(account.providerAccountId)
+  }
+  return
+}
+
+async function handleNewUser(providerAccountId: string) {
+  try {
+    const stream = await botApi.streams.getStreamByUserId(providerAccountId)
+    const streamer = await botApi.users.getUserById(providerAccountId)
+    const follows = botApi.users.getFollowsPaginated({
+      followedUser: providerAccountId,
+    })
+    const totalFollowerCount = await follows.getTotalCount()
+
+    const data = {
+      displayName: streamer?.displayName,
+      name: streamer?.name,
+      followers: totalFollowerCount,
+      stream_online: !!stream?.startDate,
+      stream_start_date: stream?.startDate ?? null,
+    }
+
+    // remove falsy values from data (like displayName: undefined)
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([key, value]) => Boolean(value)),
+    )
+
+    prisma.account
+      .update({
+        data: {
+          user: {
+            update: filteredData,
+          },
+        },
+        where: {
+          provider_providerAccountId: {
+            provider: 'twitch',
+            providerAccountId: providerAccountId,
+          },
+        },
+      })
+      .then(() => {
+        console.log('updated user info for', providerAccountId)
+      })
+      .catch((e) => {
+        console.log(e, 'error saving new user info for', e.broadcasterId)
+      })
+  } catch (e) {
+    console.log(e, 'error on getStreamByUserId')
+  }
+}
+
+await fixNewUsers()
+
 async function getAccounts() {
   // const steam32id = 1234
   // const steamserverid = (await server.dota.getUserSteamServer(steam32id)) as string | undefined
@@ -180,8 +259,6 @@ server.dota.dota2.on('ready', async () => {
 // 2 = radiant
 // 3 = dire
 
-const botApi = await getBotAPI_DEV_ONLY()
-
 async function onlineEvent({ userId, startDate }: { userId: string; startDate: Date }) {
   return await prisma.user.update({
     data: {
@@ -284,5 +361,3 @@ async function migrateUsersToNewMMROptions() {
     skipDuplicates: true,
   })*/
 }
-
-await migrateUsersToNewMMROptions()
