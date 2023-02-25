@@ -26,6 +26,7 @@ commandHandler.registerCommand('setmmr', {
         // Sends a `0` steam32Id so we can save it to the db,
         // but server will update with steam later when they join a match
         updateMmr({
+          currentMmr: client.mmr,
           newMmr: mmr,
           steam32Id: Number(client.steam32Id),
           channel: channel,
@@ -33,7 +34,7 @@ commandHandler.registerCommand('setmmr', {
         })
         return
       } else if (accounts.length === 1) {
-        updateMmr({ newMmr: mmr, steam32Id: accounts[0].steam32Id, channel: channel })
+        updateMmr({ currentMmr: client.mmr, newMmr: mmr, steam32Id: accounts[0].steam32Id, channel: channel })
         return
       } else {
         if (!Number(client.steam32Id)) {
@@ -47,7 +48,7 @@ commandHandler.registerCommand('setmmr', {
               lng: message.channel.client.locale,
             }),
           )
-          updateMmr({ newMmr: mmr, steam32Id: Number(client.steam32Id), channel: channel })
+          updateMmr({ currentMmr: client.mmr, newMmr: mmr, steam32Id: Number(client.steam32Id), channel: channel })
           return
         }
       }

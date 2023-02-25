@@ -61,6 +61,7 @@ commandHandler.registerCommand('fixdbl', {
       )
 
       updateMmr({
+        currentMmr: message.channel.client.mmr,
         newMmr: toggleDoubledownMmr({
           currentMmr: message.channel.client.mmr,
           isParty: bet.is_party,

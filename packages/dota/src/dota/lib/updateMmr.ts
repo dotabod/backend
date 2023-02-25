@@ -52,10 +52,14 @@ interface Mmr {
   newMmr: string | number
   steam32Id: number | null | undefined
   channel: string
+  currentMmr: number
   token?: string | null
 }
 
-export function updateMmr({ newMmr, steam32Id, channel, token }: Mmr) {
+export function updateMmr({ currentMmr, newMmr, steam32Id, channel, token }: Mmr) {
+  // uncalibrated (0) mmr do not deserve an update
+  if (!currentMmr) return
+
   let mmr = Number(newMmr)
   if (!newMmr || !mmr || mmr > 20000 || mmr < 0) {
     logger.info('Invalid mmr, forcing to 0', { channel, mmr })

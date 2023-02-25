@@ -63,6 +63,7 @@ commandHandler.registerCommand('fixparty', {
       )
 
       updateMmr({
+        currentMmr: message.channel.client.mmr,
         newMmr: togglePartyMmr({
           currentMmr: message.channel.client.mmr,
           wasParty: bet.is_party,
