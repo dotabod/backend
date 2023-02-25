@@ -35,6 +35,7 @@ async function fixNewUsers() {
 }
 
 async function handleNewUser(providerAccountId: string) {
+  if (!botApi) return
   try {
     const stream = await botApi.streams.getStreamByUserId(providerAccountId)
     const streamer = await botApi.users.getUserById(providerAccountId)
@@ -93,6 +94,7 @@ async function getAccounts() {
 }
 
 async function getFollows() {
+  if (!botApi) return
   const users = await prisma.user.findMany({
     select: {
       id: true,
@@ -277,6 +279,8 @@ async function checkUserOnline({
   providerAccountId: string
   userId: string
 }) {
+  if (!botApi) return
+
   console.log('checking', { providerAccountId, userId })
   if (!providerAccountId) return
 

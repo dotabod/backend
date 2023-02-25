@@ -21,10 +21,6 @@
     "lint:fix": "npm run lint -- --fix",
     "pullpsql": "doppler run -- prisma db pull --schema ./prisma/postgres.prisma"
   },
-  "dependencies": {
-    "@prisma/client": "4.10.1",
-    "@supabase/supabase-js": "^2.8.0"
-  },
   "devDependencies": {
     "@types/node": "^18.14.0",
     "@typescript-eslint/eslint-plugin": "^5.53.0",

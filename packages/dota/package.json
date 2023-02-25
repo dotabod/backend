@@ -15,7 +15,7 @@
     "build": "tsc --build --verbose",
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
-    "test": "nodemon -L --ext ts ./src/dev/index.ts",
+    "test": "doppler run -- nodemon -L --ext ts ./src/dev/index.ts",
     "generateprisma": "prisma generate --schema ./prisma/mongo.prisma && prisma generate --schema ./prisma/postgres.prisma",
     "lint": "eslint --ext .ts ./src",
     "prettier": "prettier --ext .ts ./src --write",
