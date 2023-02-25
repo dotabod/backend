@@ -13,6 +13,9 @@ default:
   @echo Environment is $NODE_ENV on commit {{COMMIT_HASH}}
   @just --list
 
+changelog since="2023-02-23":
+    @git log --pretty="* %cs %s" --author-date-order --since="{{since}}" > changes.md
+
 ip:
     @ip addr | grep eth0 | grep inet | awk '{print $2}' | awk -F/ '{print $1}' | head -1
 
