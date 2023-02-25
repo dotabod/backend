@@ -31,10 +31,11 @@ commandHandler.registerCommand('setmmr', {
           steam32Id: Number(client.steam32Id),
           channel: channel,
           token: client.token,
+          force,
         })
         return
       } else if (accounts.length === 1) {
-        updateMmr({ currentMmr: client.mmr, newMmr: mmr, steam32Id: accounts[0].steam32Id, channel: channel })
+        updateMmr({ force, currentMmr: client.mmr, newMmr: mmr, steam32Id: accounts[0].steam32Id, channel: channel })
         return
       } else {
         if (!Number(client.steam32Id)) {
@@ -48,7 +49,7 @@ commandHandler.registerCommand('setmmr', {
               lng: message.channel.client.locale,
             }),
           )
-          updateMmr({ currentMmr: client.mmr, newMmr: mmr, steam32Id: Number(client.steam32Id), channel: channel })
+          updateMmr({ force, currentMmr: client.mmr, newMmr: mmr, steam32Id: Number(client.steam32Id), channel: channel })
           return
         }
       }

@@ -54,11 +54,12 @@ interface Mmr {
   channel: string
   currentMmr: number
   token?: string | null
+  force?: boolean
 }
 
-export function updateMmr({ currentMmr, newMmr, steam32Id, channel, token }: Mmr) {
+export function updateMmr({ force = false, currentMmr, newMmr, steam32Id, channel, token }: Mmr) {
   // uncalibrated (0) mmr do not deserve an update
-  if (!currentMmr) return
+  if (!currentMmr && !force) return
 
   let mmr = Number(newMmr)
   if (!newMmr || !mmr || mmr > 20000 || mmr < 0) {
