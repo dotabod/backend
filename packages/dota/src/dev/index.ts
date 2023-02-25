@@ -72,7 +72,7 @@ async function handleNewUser(providerAccountId: string) {
         },
       })
       .then(() => {
-        console.log('updated user info for', providerAccountId)
+        console.log('updated user info for', { providerAccountId, data: filteredData })
       })
       .catch((e) => {
         console.log(e, 'error saving new user info for', e.broadcasterId)
