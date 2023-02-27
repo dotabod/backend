@@ -51,6 +51,9 @@ FROM node:19.4-alpine as dev
 ARG BUILD_CONTEXT
 ENV COMMIT_HASH $COMMIT_HASH
 
+LABEL org.opencontainers.image.source="https://github.com/dotabod/backend"
+LABEL org.opencontainers.image.version=$COMMIT_HASH
+
 WORKDIR /app
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
