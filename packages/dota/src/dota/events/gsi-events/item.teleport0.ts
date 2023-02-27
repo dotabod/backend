@@ -37,7 +37,7 @@ eventHandler.registerEvent(`items:teleport0:name`, {
       if (dotaClient.client.gsi?.hero?.alive === false) {
         dotaClient.say(
           t('chatters.tpFromDeath', {
-            emote: 'SuskaygeAgreeGe',
+            emote: 'Okayeg 👍',
             seconds,
             channel: `@${dotaClient.client.name}`,
             lng: dotaClient.client.locale,
@@ -48,7 +48,7 @@ eventHandler.registerEvent(`items:teleport0:name`, {
 
       dotaClient.say(
         t('chatters.tpFound', {
-          emote: 'SuskaygeAgreeGe',
+          emote: 'Okayeg 👍',
           seconds,
           channel: `@${dotaClient.client.name}`,
           lng: dotaClient.client.locale,

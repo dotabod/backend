@@ -37,7 +37,7 @@ eventHandler.registerEvent(`hero:name`, {
                 dotaClient.say(
                   t('bets.remade', {
                     lng: dotaClient.client.locale,
-                    emote: 'SuskaygeAgreeGe',
+                    emote: 'Okayeg 👍',
                     emote2: 'peepoGamble',
                     oldHeroName: dotaClient.playingHero,
                     newHeroName: name,
