@@ -45,7 +45,15 @@ commandHandler.registerCommand('setmmr', {
         return
       } else {
         if (!Number(client.steam32Id)) {
-          chatClient.say(channel, message.channel.client.multiAccount ? t('multiAccount', { lng: message.channel.client.locale, url: 'dotabod.com/dashboard/features' }) : t('unknownSteam', { lng: message.channel.client.locale }))
+          chatClient.say(
+            channel,
+            message.channel.client.multiAccount
+              ? t('multiAccount', {
+                  lng: message.channel.client.locale,
+                  url: 'dotabod.com/dashboard/features',
+                })
+              : t('unknownSteam', { lng: message.channel.client.locale }),
+          )
           return
         } else {
           chatClient.say(
@@ -71,7 +79,15 @@ commandHandler.registerCommand('setmmr', {
     }
 
     if (!accounts.find((a) => a.steam32Id === Number(steam32Id))) {
-      chatClient.say(channel, message.channel.client.multiAccount ? t('multiAccount', { lng: message.channel.client.locale, url: 'dotabod.com/dashboard/features' }) : t('unknownSteam', { lng: message.channel.client.locale }))
+      chatClient.say(
+        channel,
+        message.channel.client.multiAccount
+          ? t('multiAccount', {
+              lng: message.channel.client.locale,
+              url: 'dotabod.com/dashboard/features',
+            })
+          : t('unknownSteam', { lng: message.channel.client.locale }),
+      )
       return
     }
 

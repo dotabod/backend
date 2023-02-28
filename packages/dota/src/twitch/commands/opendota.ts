@@ -23,6 +23,14 @@ commandHandler.registerCommand('opendota', {
       return
     }
 
-    chatClient.say(channel, message.channel.client.multiAccount ? t('multiAccount', { lng: message.channel.client.locale, url: 'dotabod.com/dashboard/features' }) : t('unknownSteam', { lng: message.channel.client.locale }))
+    chatClient.say(
+      channel,
+      message.channel.client.multiAccount
+        ? t('multiAccount', {
+            lng: message.channel.client.locale,
+            url: 'dotabod.com/dashboard/features',
+          })
+        : t('unknownSteam', { lng: message.channel.client.locale }),
+    )
   },
 })

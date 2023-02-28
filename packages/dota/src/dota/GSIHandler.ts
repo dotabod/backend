@@ -375,7 +375,6 @@ export class GSIHandler {
           this.client.multiAccount = undefined
           this.emitBadgeUpdate()
         } else {
-
           if (res.userId === this.getToken()) {
             this.client.mmr = res.mmr
             this.client.steam32Id = steam32Id

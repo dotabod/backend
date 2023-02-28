@@ -175,7 +175,6 @@ class SetupSupabase {
             for (const connectedToken of oldObj.connectedUserIds) {
               const connectedUser = gsiHandlers.get(connectedToken)
               if (connectedUser) {
-
                 connectedUser.client.multiAccount = undefined
               }
             }

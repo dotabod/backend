@@ -50,7 +50,15 @@ commandHandler.registerCommand('mmr', {
 
     const act = client.SteamAccount.find((a) => a.steam32Id === client.steam32Id)
     if (!act) {
-      chatClient.say(channel, message.channel.client.multiAccount ? t('multiAccount', { lng: message.channel.client.locale, url: 'dotabod.com/dashboard/features' }) : t('unknownSteam', { lng: message.channel.client.locale }))
+      chatClient.say(
+        channel,
+        message.channel.client.multiAccount
+          ? t('multiAccount', {
+              lng: message.channel.client.locale,
+              url: 'dotabod.com/dashboard/features',
+            })
+          : t('unknownSteam', { lng: message.channel.client.locale }),
+      )
       return
     }
 

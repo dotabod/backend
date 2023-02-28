@@ -14,14 +14,30 @@ commandHandler.registerCommand('test', {
     } = message
 
     if (!client.steam32Id) {
-      chatClient.say(channel, message.channel.client.multiAccount ? t('multiAccount', { lng: message.channel.client.locale, url: 'dotabod.com/dashboard/features' }) : t('unknownSteam', { lng: message.channel.client.locale }))
+      chatClient.say(
+        channel,
+        message.channel.client.multiAccount
+          ? t('multiAccount', {
+              lng: message.channel.client.locale,
+              url: 'dotabod.com/dashboard/features',
+            })
+          : t('unknownSteam', { lng: message.channel.client.locale }),
+      )
       return
     }
 
     const [steam32Id] = args
     async function handler() {
       if (!steam32Id || !client.steam32Id) {
-        chatClient.say(channel, message.channel.client.multiAccount ? t('multiAccount', { lng: message.channel.client.locale, url: 'dotabod.com/dashboard/features' }) : t('unknownSteam', { lng: message.channel.client.locale }))
+        chatClient.say(
+          channel,
+          message.channel.client.multiAccount
+            ? t('multiAccount', {
+                lng: message.channel.client.locale,
+                url: 'dotabod.com/dashboard/features',
+              })
+            : t('unknownSteam', { lng: message.channel.client.locale }),
+        )
         return
       }
 
