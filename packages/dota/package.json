@@ -55,14 +55,6 @@
     "@types/express": "^4.17.17",
     "@types/memoizee": "^0.4.8",
     "@types/retry": "^0.12.2",
-    "@types/steam": "^0.0.29",
-    "husky": "^8.0.3",
-    "lint-staged": "^13.1.1"
-  },
-  "lint-staged": {
-    "*.ts": [
-      "eslint --fix",
-      "prettier --write"
-    ]
+    "@types/steam": "^0.0.29"
   }
 }
