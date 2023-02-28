@@ -81,6 +81,7 @@ model SteamAccount {
   name             String?
   mmr              Int      @default(0) @db.SmallInt
   leaderboard_rank Int?     @db.SmallInt
+  connectedUserIds String[]
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("steam_accounts")

@@ -19,7 +19,7 @@ commandHandler.registerCommand('lg', {
     if (!message.channel.client.steam32Id) {
       chatClient.say(
         message.channel.name,
-        t('unknownSteam', { lng: message.channel.client.locale }),
+        message.channel.client.multiAccount ? t('multiAccount', { lng: message.channel.client.locale, url: 'dotabod.com/dashboard/features' }) : t('unknownSteam', { lng: message.channel.client.locale }),
       )
       return
     }

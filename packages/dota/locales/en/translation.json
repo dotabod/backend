@@ -150,6 +150,7 @@
   "treadToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
   "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
   "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",
+  "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
   "unknown": "Unknown",
   "unknownSteam": "Could not find steam account. Follow Step 2 of setup, play a bot match, and try again.",
   "unranked": "Unranked",

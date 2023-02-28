@@ -329,6 +329,9 @@ export class GSIHandler {
     const steam32Id = steamID64toSteamID32(this.client.gsi.player.steamid)
     if (!steam32Id) return
 
+    // Its a multi account, no need to create a new act
+    if (this.client.multiAccount === steam32Id) return
+
     // It's the same user, no need to create a new act
     if (this.getSteam32() === steam32Id) return
 
@@ -338,6 +341,7 @@ export class GSIHandler {
     if (foundAct) {
       this.client.mmr = foundAct.mmr
       this.client.steam32Id = steam32Id
+      this.client.multiAccount = undefined
       this.emitBadgeUpdate()
       return
     } // else we create this act in db
@@ -368,17 +372,33 @@ export class GSIHandler {
           // Logged into a new account (smurfs vs mains)
           this.client.mmr = mmr
           this.client.steam32Id = steam32Id
+          this.client.multiAccount = undefined
           this.emitBadgeUpdate()
         } else {
-          // We should never arrive here
-          logger.info('ERROR We should never be here', { name: this.getChannel() })
-          this.client.mmr = res.mmr
-          this.client.steam32Id = steam32Id
+
+          if (res.userId === this.getToken()) {
+            this.client.mmr = res.mmr
+            this.client.steam32Id = steam32Id
+          } else {
+            // This means its currently being used by another account
+            logger.info('Found multi-account', { name: this.getChannel() })
+            this.client.multiAccount = steam32Id
+            // remove duplicates from userIds
+            const userIds = [...res.connectedUserIds, this.getToken()].filter(
+              (id, i, arr) => arr.indexOf(id) === i,
+            )
+
+            await prisma.steamAccount.update({
+              where: { id: res.id },
+              data: { connectedUserIds: userIds },
+            })
+          }
         }
 
         this.creatingSteamAccount = false
       })
       .catch((e) => {
+        this.client.multiAccount = undefined
         this.creatingSteamAccount = false
         logger.error('[DATABASE ERROR]', { e: e?.message || e })
       })

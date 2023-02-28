@@ -45,6 +45,7 @@ export default async function getDBUser(
         SteamAccount: {
           select: {
             mmr: true,
+            connectedUserIds: true,
             steam32Id: true,
             name: true,
             leaderboard_rank: true,

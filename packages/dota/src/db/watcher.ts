@@ -170,18 +170,28 @@ class SetupSupabase {
           if (!this.IS_DEV && this.DEV_CHANNELS.includes(client.name)) return
 
           if (payload.eventType === 'DELETE') {
-            logger.info('[WATCHER STEAM] Deleting steam account for', { name: client.name, oldObj })
+            logger.info('[WATCHER STEAM] Deleting steam account for', { name: client.name })
+
+            for (const connectedToken of oldObj.connectedUserIds) {
+              const connectedUser = gsiHandlers.get(connectedToken)
+              if (connectedUser) {
+
+                connectedUser.client.multiAccount = undefined
+              }
+            }
+
             const oldSteamIdx = client.SteamAccount.findIndex(
               (s) => s.steam32Id === oldObj.steam32Id,
             )
             client.SteamAccount.splice(oldSteamIdx, 1)
             if (client.steam32Id === oldObj.steam32Id) {
+              client.mmr = 0
               client.steam32Id = null
             }
             return
           }
 
-          logger.info('[WATCHER STEAM] Updating steam accounts for', { name: client.name, newObj })
+          logger.info('[WATCHER STEAM] Updating steam accounts for', { name: client.name })
 
           const currentSteamIdx = client.SteamAccount.findIndex(
             (s) => s.steam32Id === newObj.steam32Id,

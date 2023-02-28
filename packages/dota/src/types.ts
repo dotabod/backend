@@ -8,6 +8,7 @@ export interface SocketClient {
   stream_start_date: Date | null
   beta_tester: boolean
   locale: string
+  multiAccount?: number
   steam32Id: number | null // currently connected steam id
   mmr: number // currently connected mmr
   gsi?: Packet
