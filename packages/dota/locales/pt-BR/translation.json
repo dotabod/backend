@@ -1,6 +1,6 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} denou o aegis {{emote}}",
+    "denied": "{{- heroName}} denied the aegis {{emote}}",
     "expired": "O aegis de {{- heroName}} expirou {{emote}}",
     "pickup": "{{- heroName}} pegou o aegis!",
     "snatched": "{{- heroName}} roubou o aegis! {{emote}}"
@@ -121,7 +121,7 @@
   "ranked_no": "Não, este jogo não é ranqueado",
   "ranked_yes": "Sim, este jogo é ranqueado",
   "refresh": "Reiniciando overlay...",
-  "resetwl": "",
+  "resetwl": "Resetting win/loss to 0 for {{channel}}",
   "roshanAlive": "O roshan está vivo {{emote}}",
   "roshanCount": {
     "1": "Mortes do Roshan: 1 · Próximo item a cair: fragmento de aghanim.",
@@ -137,7 +137,9 @@
   "setStreamDelay": "Configurando delay de transmissão para: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <seconds> .",
   "setStreamDelayRemoved": "Removendo delay de transmissão",
-  "stream": "",
+  "stream": "$t(stream_on)",
+  "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
+  "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "streamDelay": "Delay de transmissão: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Não há delay de transmissão neste canal",
   "tip": {
