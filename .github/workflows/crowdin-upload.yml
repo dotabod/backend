@@ -7,7 +7,7 @@ on:
 
 jobs:
   upload:
-    environment: 'prod'
+    environment: "prod"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -18,7 +18,8 @@ jobs:
         with:
           filters: |
             crowdin:
-              - '/packages/**/locales/en/translation.json'
+              - '/packages/dota/locales/en/translation.json'
+              - '/packages/twitch/**/locales/en/translation.json'
 
       - name: crowdin action
         if: steps.changes.outputs.crowdin == 'true'
