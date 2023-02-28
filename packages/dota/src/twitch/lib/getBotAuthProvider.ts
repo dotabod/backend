@@ -1,9 +1,9 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
 
+import { prisma } from '../../db/prisma.js'
 import { logger } from '../../utils/logger.js'
 import { getBotTokens } from './getBotTokens.js'
 import { hasTokens } from './hasTokens.js'
-import { prisma } from '../../db/prisma.js'
 
 export const getBotAuthProvider = async function () {
   if (!hasTokens) {

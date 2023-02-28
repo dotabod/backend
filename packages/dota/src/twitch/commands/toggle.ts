@@ -1,5 +1,6 @@
-import { prisma } from '../../db/prisma.js'
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
+
+import { prisma } from '../../db/prisma.js'
 import { logger } from '../../utils/logger.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 

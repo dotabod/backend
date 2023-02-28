@@ -1,10 +1,9 @@
+import { DBSettings, defaultSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
 import RedisClient from '../db/redis.js'
-import { DBSettings, defaultSettings, getValueOrDefault } from '@dotabod/settings'
 import Mongo from '../steam/mongo.js'
 import { notablePlayers } from '../steam/notableplayers.js'
 import { chatClient } from '../twitch/index.js'

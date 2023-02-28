@@ -1,5 +1,3 @@
-import { EventSubUserAuthorizationRevokeEvent } from '@twurple/eventsub-base'
-
 import { transformBetData } from './transformers/transformBetData.js'
 import { transformPollData } from './transformers/transformPollData.js'
 import { offlineEvent } from '../lib/offlineEvent.js'

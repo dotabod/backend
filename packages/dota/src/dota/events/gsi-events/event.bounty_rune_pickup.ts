@@ -1,6 +1,6 @@
+import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { GSIHandler } from '../../GSIHandler.js'
 import { getHeroNameById } from '../../lib/heroes.js'

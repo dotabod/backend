@@ -85,7 +85,7 @@ export async function notablePlayers(
 
   const allPlayers = result
     .map((m) => {
-      const country: string = m.country_code ? `${countryCodeEmoji(m.country_code) as string} ` : ''
+      const country: string = m.country_code ? `${countryCodeEmoji(m.country_code)} ` : ''
       return `${country}${m.name} (${m.heroName})`
     })
     .join(' · ')

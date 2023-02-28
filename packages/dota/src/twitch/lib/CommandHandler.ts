@@ -1,6 +1,6 @@
+import { getValueOrDefault, SettingKeys } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { getValueOrDefault, SettingKeys } from '@dotabod/settings'
 import { ADMIN_CHANNELS } from '../../dota/lib/consts.js'
 import Mongo from '../../steam/mongo.js'
 import { SocketClient } from '../../types.js'

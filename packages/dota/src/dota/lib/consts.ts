@@ -1,6 +1,6 @@
+import { DBSettings, SettingKeys } from '@dotabod/settings'
 import LRUCache from 'lru-cache'
 
-import { DBSettings, SettingKeys } from '@dotabod/settings'
 import { GSIHandler } from '../GSIHandler.js'
 
 // just here for reference, not being used

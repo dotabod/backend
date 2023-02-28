@@ -1,3 +1,5 @@
+import { DBSettings, getValueOrDefault } from '@dotabod/settings'
+
 import { Setting, SteamAccount, User } from '../../prisma/generated/postgresclient/index.js'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
@@ -7,7 +9,6 @@ import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import supabase from './supabase.js'
 
 class SetupSupabase {

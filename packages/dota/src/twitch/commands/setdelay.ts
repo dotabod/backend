@@ -1,7 +1,7 @@
+import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { prisma } from '../../db/prisma.js'
-import { DBSettings } from '@dotabod/settings'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'

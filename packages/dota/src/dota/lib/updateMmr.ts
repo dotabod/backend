@@ -1,7 +1,7 @@
+import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { prisma } from '../../db/prisma.js'
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { chatClient } from '../../twitch/index.js'
 import { logger } from '../../utils/logger.js'
 import findUser from './connectedStreamers.js'

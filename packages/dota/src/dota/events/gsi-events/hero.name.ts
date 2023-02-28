@@ -1,3 +1,4 @@
+import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { openTwitchBet } from '../../../twitch/lib/openTwitchBet.js'
@@ -7,7 +8,6 @@ import { GSIHandler } from '../../GSIHandler.js'
 import getHero, { HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 
 eventHandler.registerEvent(`hero:name`, {
   handler: (dotaClient: GSIHandler, name: HeroNames) => {

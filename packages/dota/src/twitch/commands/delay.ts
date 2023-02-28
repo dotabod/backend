@@ -1,6 +1,6 @@
+import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 

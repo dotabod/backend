@@ -1,12 +1,12 @@
+import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
+import { Item } from '../../../types.js'
 import { GSIHandler } from '../../GSIHandler.js'
 import { findItem } from '../../lib/findItem.js'
 import handleGetHero from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
-import { Item } from '../../../types.js'
 
 const passiveItemNames = [
   { name: 'item_magic_stick', title: 'magic stick', charges: true },
