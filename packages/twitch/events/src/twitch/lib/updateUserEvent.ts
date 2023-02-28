@@ -16,8 +16,8 @@ export async function updateUserEvent(e: EventSubUserUpdateEvent) {
 
     // remove falsy values from data (like displayName: undefined)
     const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([key, value]) => Boolean(value))
-    );
+      Object.entries(data).filter(([key, value]) => Boolean(value)),
+    )
 
     await prisma.account.update({
       data: {

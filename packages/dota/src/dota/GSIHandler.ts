@@ -445,7 +445,12 @@ export class GSIHandler {
       const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], this.client.settings)
       if (mmrEnabled) {
         logger.info('[MMR] Found steam32Id, updating mmr', extraInfo)
-        updateMmr({ currentMmr: this.getMmr(), newMmr: newMMR, steam32Id: this.client.steam32Id, channel: this.client.name })
+        updateMmr({
+          currentMmr: this.getMmr(),
+          newMmr: newMMR,
+          steam32Id: this.client.steam32Id,
+          channel: this.client.name,
+        })
       }
     } else {
       logger.info('[MMR] Did not find steam32Id, wont update mmr', extraInfo)

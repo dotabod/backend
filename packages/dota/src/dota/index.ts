@@ -31,7 +31,11 @@ await i18next.use(FsBackend).init<FsBackendOptions>({
 })
 
 chokidar
-  .watch('/app/packages/dota/locales/**/*.json', { ignoreInitial: true, usePolling: true, interval: 5000 })
+  .watch('/app/packages/dota/locales/**/*.json', {
+    ignoreInitial: true,
+    usePolling: true,
+    interval: 5000,
+  })
   .on('all', (_event, filePath) => {
     console.log({ _event, filePath })
     const parsedPath = path.parse(filePath)

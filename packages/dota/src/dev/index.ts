@@ -16,7 +16,7 @@ async function fixNewUsers() {
         select: {
           providerAccountId: true,
         },
-      }
+      },
     },
     where: {
       displayName: null,
