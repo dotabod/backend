@@ -152,7 +152,7 @@
   "toggleMatch_party": "Questo match verrá contato come party mmr: {{- url}} Scrivi !fixparty per annullare",
   "toggleMatch_single": "Questo match verrá contato come standard mmr: {{- url}} Scrivi !fixdd per annullare",
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
-  "treadToggle_one": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
+  "treadToggle_one": "Abbiamo togglato i treads {{count}} volte per salvare un totale di {{manaCount}} mana questa partita.",
   "treadToggle_many": "",
   "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
@@ -164,8 +164,8 @@
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
   "version": {
-    "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
-    "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
+    "commit": "La versione corrente del server è {{version}}, ecco cosa manca rispetto all'ultima versione: {{- url}}",
+    "unknown": "Impossibile trovare l'ultimo git commit, ecco il repo {{- url}}"
   },
   "xpm": "XPM Live: {{num}}"
 }
