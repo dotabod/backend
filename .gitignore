@@ -10,3 +10,4 @@ config.js
 newrelic_agent.log
 .idea
 **/locales
+services
