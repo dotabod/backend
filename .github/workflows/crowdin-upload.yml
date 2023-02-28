@@ -18,8 +18,8 @@ jobs:
         with:
           filters: |
             crowdin:
-              - '/packages/dota/locales/en/translation.json'
-              - '/packages/twitch/**/locales/en/translation.json'
+              - packages/dota/locales/en/translation.json
+              - packages/twitch/**/locales/en/translation.json
 
       - name: crowdin action
         if: steps.changes.outputs.crowdin == 'true'

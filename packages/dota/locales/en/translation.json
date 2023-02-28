@@ -114,7 +114,7 @@
   "ranked_no": "Nope this game is not ranked",
   "ranked_yes": "Yes this game is ranked",
   "refresh": "Refreshing overlay...",
-  "resetwl": "Resetting wins and losses to 0 for {{channel}}",
+  "resetwl": "Resetting win/loss to 0 for {{channel}}",
   "roshanAlive": "Roshan is currently alive {{emote}}",
   "roshanCount": {
     "1": "Rosh deaths: 1 · Next drop: agh's shard.",
