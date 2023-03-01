@@ -57,8 +57,6 @@ export class GSIHandler {
   playingHeroSlot: number | undefined | null = null
   playingHero: HeroNames | undefined | null = null
   playingLobbyType: number | undefined | null = null
-  manaSaved = 0
-  treadToggles = 0
   players: ReturnType<typeof getAccountsFromMatch> | undefined | null = null
   savingSteamServerId = false
   steamServerTries = 0
@@ -75,7 +73,7 @@ export class GSIHandler {
   endingBets = false
   openingBets = false
   creatingSteamAccount = false
-  treadsData = { manaAtLastToggle: 0, timeOfLastToggle: 0 }
+  treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0, timeOfLastToggle: 0 }
   disabled = false
 
   constructor(dotaClient: SocketClient) {
@@ -169,8 +167,7 @@ export class GSIHandler {
     this.openingBets = false
     this.playingBetMatchId = null
     this.playingTeam = null
-    this.manaSaved = 0
-    this.treadToggles = 0
+    this.treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0, timeOfLastToggle: 0 }
 
     this.noTpChatter = {
       timeout: undefined,
@@ -179,6 +176,7 @@ export class GSIHandler {
 
     void redisClient.client.json.del(`${this.getToken()}:roshan`)
     void redisClient.client.json.del(`${this.getToken()}:aegis`)
+    void redisClient.client.json.del(`${this.getToken()}:treadtoggle`)
 
     server.io.to(this.getToken()).emit('aegis-picked-up', {})
     server.io.to(this.getToken()).emit('roshan-killed', {})
@@ -827,16 +825,26 @@ export class GSIHandler {
         // nothing to do here, user probably doesn't have a rank
       })
 
-    if (this.treadToggles > 0 && this.client.stream_online) {
-      this.say(
-        t('treadToggle', {
-          lng: this.client.locale,
-          manaCount: this.manaSaved,
-          count: this.treadToggles,
-          matchId,
-        }),
-      )
+
+    const TreadToggleData = this.treadsData
+    const toggleHandler = async () => {
+      const treadToggleData = (await redisClient.client.json.get(
+        `${this.getToken()}:treadtoggle`,
+      )) as unknown as typeof TreadToggleData | null
+
+      if (treadToggleData?.treadToggles && this.client.stream_online) {
+        this.say(
+          t('treadToggle', {
+            lng: this.client.locale,
+            manaCount: treadToggleData.manaSaved,
+            count: treadToggleData.treadToggles,
+            matchId,
+          }),
+        )
+      }
     }
+
+    void toggleHandler()
 
     if (!betsEnabled || !this.client.stream_online) {
       logger.info('Bets are not enabled, stopping here', { name: this.getChannel() })

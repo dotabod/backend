@@ -1,13 +1,20 @@
+import RedisClient from '../../db/redis.js';
 import { Packet } from '../../types.js'
+import { logger } from '../../utils/logger.js';
+import { GSIHandler } from '../GSIHandler.js';
 import { findItem } from './findItem.js'
 
-export function calculateManaSaved(
-  treadsData: { manaAtLastToggle: number; timeOfLastToggle: number },
-  data?: Packet,
+const redisClient = RedisClient.getInstance()
+
+export async function calculateManaSaved(
+  dotaClient: GSIHandler
 ) {
-  if (!data?.hero?.mana || !data.hero.max_mana) return 0
+  const { treadsData } = dotaClient
+  const data = dotaClient.client.gsi
+
+  if (!data?.hero?.mana || !data.hero.max_mana) return
   const hasPowerTreads = findItem('item_power_treads', false, data)
-  if (!hasPowerTreads || !hasPowerTreads[0]) return 0
+  if (!hasPowerTreads || !hasPowerTreads[0]) return
 
   const maxMana = data.hero.max_mana
   const prevMaxMana = data.previously?.hero?.max_mana ?? 0
@@ -18,16 +25,27 @@ export function calculateManaSaved(
   if (didToggleToInt) {
     treadsData.timeOfLastToggle = Date.now()
     treadsData.manaAtLastToggle = data.hero.mana
+
+    await redisClient.client.json.set(`${dotaClient.getToken()}:treadtoggle`, '$', { treadsData })
+
     // Come back when we toggle off int
-    return 0
+    return
   }
 
   // Calculate total mana saved
   if (didToggleOffInt) {
     treadsData.timeOfLastToggle = 0
     const diff = treadsData.manaAtLastToggle - data.hero.mana - 120
-    return diff > 0 ? diff : 0
+    const mana = diff > 0 ? diff : 0
+    if (mana > 0) {
+      treadsData.treadToggles++
+      treadsData.manaSaved += mana
+    }
+
+    await redisClient.client.json.set(`${dotaClient.getToken()}:treadtoggle`, '$', { treadsData })
+    return
   }
 
-  return 0
+  await redisClient.client.json.set(`${dotaClient.getToken()}:treadtoggle`, '$', { treadsData })
+  return
 }
