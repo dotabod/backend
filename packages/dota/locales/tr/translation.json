@@ -1,6 +1,6 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} Aegis'i yok etti {{emote}}",
+    "denied": "{{- heroName}} denied the aegis {{emote}}",
     "expired": "{{- heroName}} Aegis'in süresi bitti {{emote}}",
     "pickup": "{{- heroName}} Aegis'i aldı!",
     "snatched": "{{- heroName}} Aegis'i çaldı {{emote}}"
@@ -110,6 +110,7 @@
   "ranked_no": "Hayır, bu oyun dereceli değil",
   "ranked_yes": "Evet, bu oyun dereceli",
   "refresh": "Overlay yenileniyor...",
+  "resetwl": "Resetting win/loss to 0 for {{channel}}",
   "roshanAlive": "Roshan şu anda yaşıyor{{emote}}",
   "roshanCount": {
     "1": "Roshan ölüm sayısı: 1 Bir sonraki drop: aghanims shard.",
@@ -122,6 +123,9 @@
   "setStreamDelay": "Yayın gecikme ayarı: $t(seconds, {\"count\": {{seconds}} }) ayarlanıyor",
   "setStreamDelayNoArgs": "Geçersiz yayın gecikmesi, !setdelay <seconds> komutunu kullanın",
   "setStreamDelayRemoved": "Yayın gecikmesi kaldırılıyor",
+  "stream": "$t(stream_on)",
+  "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
+  "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "streamDelay": "Yayın gecikmesi: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Bu kanalda gecikme yoktur",
   "tip": {

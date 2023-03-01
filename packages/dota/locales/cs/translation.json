@@ -1,6 +1,6 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} zničil aegis {{emote}}",
+    "denied": "{{- heroName}} denied the aegis {{emote}}",
     "expired": "{{- heroName}}'s aegis expired {{emote}}",
     "pickup": "{{- heroName}} získal aegis!",
     "snatched": "{{- heroName}} snatched the aegis {{emote}}"
@@ -129,7 +129,7 @@
   "ranked_no": "Nope, tenhle zápas není hodnocený",
   "ranked_yes": "Yep, tahle hra je hodnocená",
   "refresh": "Obnovuji overlay..",
-  "resetwl": "",
+  "resetwl": "Resetting win/loss to 0 for {{channel}}",
   "roshanAlive": "Roshan is currently alive {{emote}}",
   "roshanCount": {
     "1": "Zabitých roshanů: 1 - Další drop: agha shard.",
@@ -148,7 +148,9 @@
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Removing stream delay",
-  "stream": "",
+  "stream": "$t(stream_on)",
+  "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
+  "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "There is no stream delay on this channel",
   "tip": {

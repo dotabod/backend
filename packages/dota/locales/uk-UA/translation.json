@@ -129,7 +129,7 @@
   "ranked_no": "Ні, ця гра не рейтингова гра",
   "ranked_yes": "Так, ця гра рейтингова гра",
   "refresh": "Перезапуск оверлея...",
-  "resetwl": "",
+  "resetwl": "Скинуто перемоги/поразки до 0 для {{channel}}",
   "roshanAlive": "Наразі Рошан живий {{emote}}",
   "roshanCount": {
     "1": "1 Рошан мертвий · Наступна винагорода: Аєгіс та Аганім Шард",
@@ -148,7 +148,9 @@
   "setStreamDelay": "Затримка потоку змінена до $t(seconds, {\"count\": {{seconds}} }) с",
   "setStreamDelayNoArgs": "Затримка на стрімі не встановлена, використайте !setdelay <seconds>",
   "setStreamDelayRemoved": "Затримку на стрімі прибрано",
-  "stream": "",
+  "stream": "$t(stream_on)",
+  "stream_off": "Dotabod вважатиме {{channel}} офлайн. Введіть !online, щоб скасувати це",
+  "stream_on": "Dotabod вважатиме {{channel}} онлайн. Введіть !offline, щоб скасувати це",
   "streamDelay": "Затримка потоку: $t(секунди, {\"count\": {{seconds}}}) с",
   "streamDelayNone": "Немає затримки на стрімі",
   "tip": {

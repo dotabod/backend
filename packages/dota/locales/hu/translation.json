@@ -1,12 +1,12 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} semlegesítette az aegist {{emote}}",
+    "denied": "{{- heroName}} denied the aegis {{emote}}",
     "expired": "{{- heroName}} aegise lejárt {{emote}}",
     "pickup": "{{- heroName}} felvette az aegist!",
     "snatched": "{{- heroName}} ellopta az aegis-t {{emote}}"
   },
-  "apm_one": "Live APM: {{count}} {{emote}}",
-  "apm_other": "Live APM: {{count}} {{emote}}",
+  "apm_one": "Élő APM: {{count}} {{emote}}",
+  "apm_other": "Élő APM: {{count}} {{emote}}",
   "averageRank": "Átlagos rank ezen a meccsen",
   "betaFeature": "[beta funkció]",
   "betaTester": "$t(betaTester_on)",
@@ -16,7 +16,7 @@
     "lost": "Kikaptunk",
     "notScored": "Nem pontozott mérkőzés {{emote}} Nem számolunk MMR-t a {{matchId}}-re",
     "open": "Fogadás elindítva {{emote}}",
-    "remade": "Swapped hero {{emote}} Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened {{emote2}}",
+    "remade": "Hero csere volt {{emote}} {{- oldHeroName}} herora tett fogadások visszatérítve, új fogadás indult {{- newHeroName}} herora {{emote2}}",
     "won": "Nyertünk"
   },
   "bounties": {
@@ -31,9 +31,9 @@
     "pause": "{{emote}} Ki pauseolt?",
     "smoked": "{{emote}} {{- heroName}} smokeolt!",
     "tpFound": "{{channel}} szép munka, végre van tp-d $t(seconds, {\"count\": {{seconds}} }) után. {{emote}}",
-    "tpFromDeath": "Thanks to this death you finally got a tp. And it only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
+    "tpFromDeath": "Végre kaptál egy TP-t annak köszönhetően, hogy meghaltál. Végülis csak $t(seconds, {\"count\": {{seconds}} }) -be telt. {{emote}}"
   },
-  "commandDisabled": "Streamer disabled {{cmdName}} command {{emote}} Check !commands for the enabled ones",
+  "commandDisabled": "A streamer kikapcsolta a {{cmdName}} parancsot {{emote}} Elérhető parancsok megtekinthetőek a !commands paranccsal.",
   "commands_everyone": "Mindenki számára elérhető parancsok: {{commandList}}",
   "commands_mods": "Moderátor parancsok: {{commandList}}",
   "dota2pt": "Profi {{- heroName}} buildeket keresel? Itt találsz párat: {{- url}}",
@@ -53,16 +53,16 @@
       "days_other": "in {{count}}d",
       "lifetime": "összesen"
     },
-    "winrate_one": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} match.",
-    "winrate_other": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrate_one": "Winrate: {{winrate}}% {{- heroName}} -ként {{timeperiod}} periódusban {{count}} meccsből.",
+    "winrate_other": "Winrate: {{winrate}}% {{- heroName}} -ként {{timeperiod}} periódusban {{count}} meccsből."
   },
   "invalidColor": "Helytelen hero szín, slot vagy név. Próbáld 1-10ig, a hős nevét vagy a színt innen: {{colorList}}",
   "invalidMmr": "Érvénytelen parancs. Próbáld így: !setmmr 1234",
   "killstreak": {
-    "lost_one": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
-    "lost_other": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
-    "won_one": "{{- heroName}} has a {{count}} kill streak {{emote}}",
-    "won_other": "{{- heroName}} has a {{count}} kill streak {{emote}}"
+    "lost_one": "{{- heroName}} {{count}} killstreakjének vége. {{emote}}",
+    "lost_other": "{{- heroName}} {{count}} killstreakjének vége. {{emote}}",
+    "won_one": "{{- heroName}} {{count}} killstreaken van. {{emote}}",
+    "won_other": "{{- heroName}} {{count}} killstreaken van. {{emote}}"
   },
   "lastgame": {
     "link": "Legutóbbi meccs: {{- url}}",
@@ -115,14 +115,14 @@
   "ranked_no": "Nem, ez nem egy rangsorolt meccs",
   "ranked_yes": "Rangsorolt meccs",
   "refresh": "Overlay frissítése...",
-  "resetwl": "",
+  "resetwl": "Resetting win/loss to 0 for {{channel}}",
   "roshanAlive": "A Roshan életben van {{emote}}",
   "roshanCount": {
     "1": "1. Roshan halál · Következő drop: aghanim's shard.",
     "2": "2. Roshan halál · Következő drop: cheese és aghanim's blessing vagy refresher shard.",
     "3": "3. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard.",
-    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
-    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more_one": "{{count}}. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard.",
+    "more_other": "{{count}}. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard."
   },
   "roshanKilled": "Roshan meghalt! Következő Roshan {{min}} és {{max}} perc között várható",
   "seconds_one": "{{count}} másodperc",
@@ -130,7 +130,9 @@
   "setStreamDelay": "Stream delay beállítva: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Helytelen stream delay, próbáld így: !setdelay <seconds>",
   "setStreamDelayRemoved": "Stream delay eltávoltva",
-  "stream": "",
+  "stream": "$t(stream_on)",
+  "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
+  "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Nincs beállítva stream delay a csatornán",
   "tip": {
@@ -150,14 +152,14 @@
   "uknownMmr": "Nem tudom {{channel}} MMR-jét. Moderátorok beállíthatják !setmmr 1234 vagy {{- url}} paranccsal.",
   "unknown": "Ismeretlen",
   "unknownSteam": "Steam felhasználó nem található. Próbálj egy bot mérkőzést játszani, hogy hozzáadjam az accountod a Dotabodhoz.",
-  "unranked": "Unranked",
+  "unranked": "Nem rangsorolt",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "MMR frissítve {{mmr}}-re. Próbáld a !fixparty -t party és !fixdd -t doubledown esetén",
   "updateMmr_manual": "MMR frissítve {{mmr}}-re",
   "updateMmrMulti": "Több steam account található, frissítem a jelenleg belépettet: ({{steamId}})",
   "version": {
-    "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
-    "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
+    "commit": "Szerveren futó verzió: {{version}}, itt megtalálod mi változott az előző verzióhoz képest: {{- url}}",
+    "unknown": "Nem találom az utolsó git commitot, a repot itt éred el: {{- url}}"
   },
   "xpm": "Élő XPM: {{num}}"
 }

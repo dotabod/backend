@@ -1,6 +1,6 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} پولدار رو ببین! آنخ رو اتک داد {{emote}}",
+    "denied": "{{- heroName}} denied the aegis {{emote}}",
     "expired": "{{- heroName}}'s aegis expired {{emote}}",
     "pickup": " میتونه یه غذای رایگان بده {{- heroName}}",
     "snatched": "{{- heroName}} آنخ رو دزدید {{emote}}"
@@ -115,7 +115,7 @@
   "ranked_no": "نچ! این بازی رنک نیست",
   "ranked_yes": "بله این گیم رنکه",
   "refresh": "Refreshing overlay...",
-  "resetwl": "",
+  "resetwl": "Resetting win/loss to 0 for {{channel}}",
   "roshanAlive": "Roshan is currently alive {{emote}}",
   "roshanCount": {
     "1": "روشان اول. روشان بعدی آقانیم شارد",
@@ -130,7 +130,9 @@
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Removing stream delay",
-  "stream": "",
+  "stream": "$t(stream_on)",
+  "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
+  "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
