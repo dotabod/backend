@@ -59,6 +59,10 @@ build app="":
     @docker compose -f {{dockerfile}} up -d {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully ran! {{CHECK}} {{RESET}}"
 
+# ssh one image
+ssh app="":
+    @docker exec -it {{app}} sh
+
 # Starts images
 up:
     @echo "Starting server with database $NODE_ENV at {{dockerfile}}"
