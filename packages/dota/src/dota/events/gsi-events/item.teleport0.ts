@@ -28,43 +28,50 @@ eventHandler.registerEvent(`items:teleport0:name`, {
       dotaClient.noTpChatter.lastRemindedDate = undefined
     }
 
-    // we found a tp scroll
-    if (itemName !== 'empty' && dotaClient.noTpChatter.lastRemindedDate) {
-      const timeSinceLastReminder =
-        (Date.now() - dotaClient.noTpChatter.lastRemindedDate.getTime()) / 1000
-      const seconds = Math.round(timeSinceLastReminder) + secondsToWait
+    const hasTp = itemName !== 'empty'
+    const deadge = dotaClient.client.gsi?.hero?.alive === false
 
-      if (dotaClient.client.gsi?.hero?.alive === false) {
+    if (hasTp) {
+      // they got a tp within 30s so no scolding
+      if (dotaClient.noTpChatter.timeout) {
+        return resetTimer()
+      }
+
+      // they got a tp after 30s so tell how long its been
+      if (dotaClient.noTpChatter.lastRemindedDate) {
+        const timeSinceLastReminder =
+          (Date.now() - dotaClient.noTpChatter.lastRemindedDate.getTime()) / 1000
+        const seconds = Math.round(timeSinceLastReminder) + secondsToWait
+
+        if (deadge) {
+          dotaClient.say(
+            t('chatters.tpFromDeath', {
+              emote: 'Okayeg 👍',
+              seconds,
+              channel: `@${dotaClient.client.name}`,
+              lng: dotaClient.client.locale,
+            }),
+          )
+          return resetTimer()
+        }
+
         dotaClient.say(
-          t('chatters.tpFromDeath', {
+          t('chatters.tpFound', {
             emote: 'Okayeg 👍',
             seconds,
             channel: `@${dotaClient.client.name}`,
             lng: dotaClient.client.locale,
           }),
         )
+
         return resetTimer()
       }
-
-      dotaClient.say(
-        t('chatters.tpFound', {
-          emote: 'Okayeg 👍',
-          seconds,
-          channel: `@${dotaClient.client.name}`,
-          lng: dotaClient.client.locale,
-        }),
-      )
-
-      return resetTimer()
     }
 
-    if (
-      itemName === 'empty' &&
-      !dotaClient.noTpChatter.timeout &&
-      !dotaClient.noTpChatter.lastRemindedDate
-    ) {
+    if (!hasTp && !dotaClient.noTpChatter.timeout && !dotaClient.noTpChatter.lastRemindedDate) {
       dotaClient.noTpChatter.timeout = setTimeout(() => {
         dotaClient.noTpChatter.lastRemindedDate = new Date()
+        dotaClient.noTpChatter.timeout = undefined
 
         dotaClient.say(
           t('chatters.noTp', {
