@@ -53,7 +53,8 @@ logs app="":
 build app="":
     @echo -e "Running for {{app}} on {{dockerfile}} with {{COMMIT_HASH}}"
     git pull || true
-    @docker compose -f {{dockerfile}} build  {{app}}
+    export COMMIT_HASH := `git rev-parse --short HEAD`
+    @docker compose -f {{dockerfile}} build {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
     @docker compose -f {{dockerfile}} up -d {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully ran! {{CHECK}} {{RESET}}"
@@ -65,9 +66,10 @@ up:
 
 update:
     git pull || true
+    export COMMIT_HASH=`git rev-parse --short HEAD`
     @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
-    @docker compose -f {{dockerfile}} up  -d
+    @docker compose -f {{dockerfile}} up -d
 
 pullall:
     cd ./packages/dota && yarn pullpsql && yarn generateprisma
