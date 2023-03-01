@@ -669,6 +669,8 @@ export class GSIHandler {
 
     const matchId = this.playingBetMatchId
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
+    const heroSlot = this.playingHeroSlot
+    const heroName = this.playingHero
 
     // An early without waiting for ancient to blow up
     // We have to check every few seconds with an pi to see if the match is over
@@ -757,8 +759,8 @@ export class GSIHandler {
             lobbyType: localLobbyType,
             matchId: matchId,
             isParty: isParty,
-            heroSlot: this.playingHeroSlot,
-            heroName: this.client.gsi?.hero?.name,
+            heroSlot,
+            heroName,
           })
           return
         }
@@ -767,7 +769,7 @@ export class GSIHandler {
           .timeout(25000)
           .emit(
             'requestMatchData',
-            { matchId, heroSlot: this.playingHeroSlot },
+            { matchId, heroSlot },
             (err: any, response: any) => {
               const foundParty = typeof response?.isParty === 'boolean' ? response.isParty : isParty
 
@@ -777,8 +779,8 @@ export class GSIHandler {
                 lobbyType: localLobbyType,
                 matchId: matchId,
                 isParty: foundParty,
-                heroSlot: this.playingHeroSlot,
-                heroName: this.client.gsi?.hero?.name,
+                heroSlot,
+                heroName,
               })
 
               logger.info('Found match data from overlay', {
@@ -799,8 +801,8 @@ export class GSIHandler {
           lobbyType: localLobbyType,
           matchId: matchId,
           isParty: isParty,
-          heroSlot: this.playingHeroSlot,
-          heroName: this.client.gsi?.hero?.name,
+          heroSlot,
+          heroName,
         })
       })
 
