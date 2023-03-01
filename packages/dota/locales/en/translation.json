@@ -95,7 +95,7 @@
   "npRemove": "Try !np remove <steam32id>",
   "npRemoved": "Removed {{steamid}} from !np for this channel",
   "npUnknown": "Could not find {{steamid}} for this channel",
-  "privateProfile": "Streamer's profile is private. The {{command}} uses OpenDota and requires them to enable 'Expose Public Match Data' in their Dota settings.",
+  "privateProfile": "Streamer's profile is private. The {{command}} command uses OpenDota and requires them to enable 'Expose Public Match Data' in their Dota settings.",
   "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
   "ping": "Pong {{emote}}",
   "pleb": "One pleb IN {{emote}}",
