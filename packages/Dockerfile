@@ -70,7 +70,6 @@ COPY --from=base /app/$BUILD_CONTEXT/node_modules* ./node_modules
 COPY --from=builder /app/$BUILD_CONTEXT/package.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/tsconfig.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/prisma ./prisma
-
 RUN mkdir -p ./src/steam/volumes
 
 CMD ["yarn", "dev"]
@@ -103,7 +102,6 @@ COPY --from=builder /app/$BUILD_CONTEXT/dist ./dist
 COPY --from=builder /app/$BUILD_CONTEXT/package.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/tsconfig.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/prisma ./prisma
-
 RUN mkdir -p ./src/steam/volumes
 
 CMD ["yarn", "start"]

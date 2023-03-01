@@ -107,7 +107,7 @@ services:
     volumes:
       # Storing locales in a volume so that they can be edited without rebuilding the image
       - ./packages/dota/locales:/app/packages/dota/locales
-      - steam_auth:/app/src/steam/volumes
+      - steam_auth:/app/packages/dota/src/steam/volumes
 
   nginx:
     container_name: nginx
