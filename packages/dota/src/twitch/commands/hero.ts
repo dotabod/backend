@@ -1,6 +1,7 @@
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
+import RedisClient from '../../db/redis.js'
 import { GSIHandler } from '../../dota/GSIHandler.js'
 import { server } from '../../dota/index.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
@@ -8,6 +9,8 @@ import getHero from '../../dota/lib/getHero.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+
+const redisClient = RedisClient.getInstance()
 
 function speakHeroStats({
   win,
@@ -69,9 +72,9 @@ commandHandler.registerCommand('hero', {
         channel,
         message.channel.client.multiAccount
           ? t('multiAccount', {
-              lng: message.channel.client.locale,
-              url: 'dotabod.com/dashboard/features',
-            })
+            lng: message.channel.client.locale,
+            url: 'dotabod.com/dashboard/features',
+          })
           : t('unknownSteam', { lng: message.channel.client.locale }),
       )
       return
@@ -125,6 +128,12 @@ async function getHeroMsg({ hero, channel, steam32Id, allTime, token, gsi, lng }
     allTime,
     heroId: hero.id,
     steam32Id,
+  }
+
+  const isPrivate = await redisClient.client.get(`${token}:isPrivate`)
+  if (isPrivate) {
+    chatClient.say(channel, t('privateProfile', { command: '!hero', lng }))
+    return
   }
 
   const sockets = await server.io.in(token).fetchSockets()

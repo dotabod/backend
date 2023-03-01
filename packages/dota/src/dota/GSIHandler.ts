@@ -4,7 +4,6 @@ import { t } from 'i18next'
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
 import RedisClient from '../db/redis.js'
-import Mongo from '../steam/mongo.js'
 import { notablePlayers } from '../steam/notableplayers.js'
 import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
@@ -26,7 +25,6 @@ import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
 
-const mongo = await Mongo.connect()
 const redisClient = RedisClient.getInstance()
 
 // Finally, we have a user and a GSI client
@@ -768,8 +766,12 @@ export class GSIHandler {
           .emit(
             'requestMatchData',
             { matchId, heroSlot },
-            (err: any, response: any) => {
-              const foundParty = typeof response?.isParty === 'boolean' ? response.isParty : isParty
+            (err: any, response: { isParty: boolean; matchId: number; isPrivate: boolean }) => {
+              const foundParty = typeof response.isParty === 'boolean' ? response.isParty : isParty
+              void redisClient.client.set(
+                `${this.getToken()}:isPrivate`,
+                response.isPrivate ? 1 : 0,
+              )
 
               this.updateMMR({
                 scores: scores,
@@ -824,7 +826,6 @@ export class GSIHandler {
       .catch((e) => {
         // nothing to do here, user probably doesn't have a rank
       })
-
 
     const TreadToggleData = this.treadsData
     const toggleHandler = async () => {

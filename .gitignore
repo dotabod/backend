@@ -9,5 +9,6 @@ config.js
 **/prisma/generated
 newrelic_agent.log
 .idea
-**/locales
+**/locales/**/*.json
+!**/locales/en/translation.json
 services
