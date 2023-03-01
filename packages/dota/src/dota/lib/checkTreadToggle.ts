@@ -1,14 +1,10 @@
-import RedisClient from '../../db/redis.js';
-import { Packet } from '../../types.js'
-import { logger } from '../../utils/logger.js';
-import { GSIHandler } from '../GSIHandler.js';
+import RedisClient from '../../db/redis.js'
+import { GSIHandler } from '../GSIHandler.js'
 import { findItem } from './findItem.js'
 
 const redisClient = RedisClient.getInstance()
 
-export async function calculateManaSaved(
-  dotaClient: GSIHandler
-) {
+export async function calculateManaSaved(dotaClient: GSIHandler) {
   const { treadsData } = dotaClient
   const data = dotaClient.client.gsi
 
