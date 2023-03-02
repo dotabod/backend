@@ -72,9 +72,9 @@ commandHandler.registerCommand('hero', {
         channel,
         message.channel.client.multiAccount
           ? t('multiAccount', {
-              lng: message.channel.client.locale,
-              url: 'dotabod.com/dashboard/features',
-            })
+            lng: message.channel.client.locale,
+            url: 'dotabod.com/dashboard/features',
+          })
           : t('unknownSteam', { lng: message.channel.client.locale }),
       )
       return
@@ -131,7 +131,7 @@ async function getHeroMsg({ hero, channel, steam32Id, allTime, token, gsi, lng }
   }
 
   const isPrivate = await redisClient.client.get(`${token}:isPrivate`)
-  if (isPrivate) {
+  if (Number(isPrivate) === 1) {
     chatClient.say(channel, t('privateProfile', { command: '!hero', lng }))
     return
   }
