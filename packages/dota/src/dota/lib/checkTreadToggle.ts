@@ -19,7 +19,6 @@ export async function calculateManaSaved(dotaClient: GSIHandler) {
   const didToggleOffInt = maxMana - prevMaxMana === -120
 
   if (didToggleToInt) {
-    treadsData.timeOfLastToggle = Date.now()
     treadsData.manaAtLastToggle = data.hero.mana
 
     await redisClient.client.json.set(`${dotaClient.getToken()}:treadtoggle`, '$', { treadsData })
@@ -30,7 +29,6 @@ export async function calculateManaSaved(dotaClient: GSIHandler) {
 
   // Calculate total mana saved
   if (didToggleOffInt) {
-    treadsData.timeOfLastToggle = 0
     const diff = treadsData.manaAtLastToggle - data.hero.mana - 120
     const mana = diff > 0 ? diff : 0
     if (mana > 0) {

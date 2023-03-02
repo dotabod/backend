@@ -71,7 +71,7 @@ export class GSIHandler {
   endingBets = false
   openingBets = false
   creatingSteamAccount = false
-  treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0, timeOfLastToggle: 0 }
+  treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
   disabled = false
 
   constructor(dotaClient: SocketClient) {
@@ -165,7 +165,7 @@ export class GSIHandler {
     this.openingBets = false
     this.playingBetMatchId = null
     this.playingTeam = null
-    this.treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0, timeOfLastToggle: 0 }
+    this.treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
 
     this.noTpChatter = {
       timeout: undefined,
