@@ -199,7 +199,7 @@ export interface Abilities {
   ability18?: Ability
   ability19?: Ability
 }
-interface Ability {
+export interface Ability {
   name: string // e.g. "antimage_mana_break" or "seasonal_ti11_balloon"
   level: number // e.g. 1,
   can_cast: boolean // e.g. false,
