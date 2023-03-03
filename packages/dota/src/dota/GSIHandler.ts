@@ -1,4 +1,4 @@
-import { DBSettings, defaultSettings, getValueOrDefault } from '@dotabod/settings'
+import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { getWL } from '../db/getWL.js'
@@ -122,12 +122,7 @@ export class GSIHandler {
   }
 
   public getStreamDelay() {
-    return (
-      (getValueOrDefault(
-        DBSettings.streamDelay,
-        this.client.settings,
-      ) as typeof defaultSettings.streamDelay) + GLOBAL_DELAY
-    )
+    return getValueOrDefault(DBSettings.streamDelay, this.client.settings) + GLOBAL_DELAY
   }
 
   public say(
@@ -766,7 +761,20 @@ export class GSIHandler {
           .emit(
             'requestMatchData',
             { matchId, heroSlot },
-            (err: any, response: { isParty: boolean; matchId: number; isPrivate: boolean }) => {
+            (err: any, response?: { isParty: boolean; matchId: number; isPrivate: boolean }) => {
+              if (err || !response) {
+                this.updateMMR({
+                  scores: scores,
+                  increase: won,
+                  lobbyType: localLobbyType,
+                  matchId: matchId,
+                  isParty: isParty,
+                  heroSlot,
+                  heroName,
+                })
+                return
+              }
+
               const foundParty = typeof response.isParty === 'boolean' ? response.isParty : isParty
               void redisClient.client.set(
                 `${this.getToken()}:isPrivate`,
