@@ -88,7 +88,5 @@ channel
       })
   })
   .subscribe((status, err) => {
-    if (status === 'SUBSCRIBED') {
-      console.log('[SUPABASE] Ready to receive database changes!')
-    }
+    console.log('[SUPABASE] Subscription status on twitch-events:', { status, err })
   })
