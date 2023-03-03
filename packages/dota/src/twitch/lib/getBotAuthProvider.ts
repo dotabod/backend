@@ -25,7 +25,7 @@ export const getBotAuthProvider = async function () {
       clientId: process.env.TWITCH_CLIENT_ID ?? '',
       clientSecret: process.env.TWITCH_CLIENT_SECRET ?? '',
       onRefresh: (newTokenData) => {
-        console.log('[TWITCHSETUP] Refreshing twitch tokens', { twitchId })
+        logger.info('[TWITCHSETUP] Refreshing twitch tokens', { twitchId })
 
         prisma.account
           .update({
@@ -38,14 +38,14 @@ export const getBotAuthProvider = async function () {
               refresh_token: newTokenData.refreshToken ?? botTokens.refresh_token,
               expires_at: Math.floor(
                 new Date(newTokenData.obtainmentTimestamp).getTime() / 1000 +
-                  (newTokenData.expiresIn ?? 0),
+                (newTokenData.expiresIn ?? 0),
               ),
               expires_in: newTokenData.expiresIn ?? 0,
               obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp),
             },
           })
           .then(() => {
-            console.log('[TWITCHSETUP] Updated bot tokens', { twitchId })
+            logger.info('[TWITCHSETUP] Updated bot tokens', { twitchId })
           })
           .catch((e) => {
             console.error('[TWITCHSETUP] Failed to update bot tokens', {
