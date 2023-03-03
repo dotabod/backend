@@ -79,7 +79,13 @@ channel
     if (IS_DEV && !DEV_CHANNELIDS.includes(user.providerAccountId)) return
     if (!IS_DEV && DEV_CHANNELIDS.includes(user.providerAccountId)) return
 
-    void handleNewUser(user.providerAccountId)
+    handleNewUser(user.providerAccountId)
+      .then(() => {
+        console.log('done handling new user', { providerAccountId: user.providerAccountId })
+      })
+      .catch((e) => {
+        console.error('error on handleNewUser', { e, providerAccountId: user.providerAccountId })
+      })
   })
   .subscribe((status, err) => {
     if (status === 'SUBSCRIBED') {
