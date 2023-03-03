@@ -1,4 +1,3 @@
-import bodyParser from 'body-parser'
 import express, { Request, Response } from 'express'
 import http from 'http'
 import { Server, Socket } from 'socket.io'
@@ -27,8 +26,8 @@ class GSIServer {
       },
     })
 
-    app.use(bodyParser.json())
-    app.use(bodyParser.urlencoded({ extended: true }))
+    app.use(express.json())
+    app.use(express.urlencoded({ extended: true }))
     this.dota.dota2.on('ready', () => {
       logger.info('[SERVER] Connected to dota game coordinator')
       app.post('/', validateToken, processChanges('previously'), processChanges('added'), newData)
