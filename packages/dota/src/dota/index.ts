@@ -86,5 +86,4 @@ const main = async () => {
   return startServer()
 }
 
-const server = await main()
-export default server
+export const server = await main()
