@@ -37,5 +37,5 @@ RUN chmod 0644 /etc/cron.d/backup-cron
 # Apply cron job
 RUN crontab /etc/cron.d/backup-cron
 
-# Start cron in the foreground
-CMD ["cron", "-f"]
+# Add entrypoint to set environment variables and start cron in the foreground
+ENTRYPOINT printenv | grep -v "no_proxy" >> /etc/environment && cron -f
