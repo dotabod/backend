@@ -1,13 +1,13 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} denied the aegis {{emote}}",
-    "expired": "{{- heroName}}'s aegis expired {{emote}}",
+    "denied": "{{- heroName}} denegó el aegis {{emote}}",
+    "expired": "El aegis de {{- heroName}} expiró {{emote}}",
     "pickup": "¡{{- heroName}} recogió el aegis!",
-    "snatched": "{{- heroName}} snatched the aegis {{emote}}"
+    "snatched": "{{- heroName}} robó el aegis {{emote}}"
   },
-  "apm_one": "Live APM: {{count}} {{emote}}",
+  "apm_one": "APM en vivo: {{count}} {{emote}}",
   "apm_many": "",
-  "apm_other": "Live APM: {{count}} {{emote}}",
+  "apm_other": "APM en vivo: {{count}} {{emote}}",
   "averageRank": "La media de este juego es",
   "betaFeature": "[función beta]",
   "betaTester": "$t(betaTester_on)",
@@ -17,54 +17,54 @@
     "lost": "Hemos perdido",
     "notScored": "Mecha no puntuado {{emote}} No añadir o quitar MMR para el partido {{matchId}}.",
     "open": "Apuestas abiertas {{emote}}",
-    "remade": "Swapped hero {{emote}} Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened {{emote2}}",
+    "remade": "Cambio de héroe! {{emote}} Las apuestas para {{- oldHeroName}} devueltas y una nueva abierta para {{- newHeroName}} {{emote2}}",
     "won": "Hemos ganado"
   },
   "bounties": {
-    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) {{emote}} Thanks {{heroNames}} {{emote2}}",
-    "totalGold": "{{count}} gold"
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) de ({{totalBounties}}/4){{emote}} runas, gracias\n{{heroNames}} {{emote2}}",
+    "totalGold": "{{count}} de oro"
   },
   "chatters": {
     "died": "{{- heroName}} murió con pasiva {{itemNames}} {{emote}}",
-    "firstBloodDeath": "{{- heroName}} giving up first blood {{emote}}",
+    "firstBloodDeath": "{{- heroName}} ha regalado la primera sangre {{emote}}",
     "midas": "{{emote}} Usa tu midas",
-    "noTp": "{{channel}} where's your tp {{emote}}",
+    "noTp": "{{channel}} dónde está tu tp {{emote}}",
     "pause": "{{emote}} ¿Quién ha pausado el juego?",
     "smoked": "¡Calladito! {{- heroName}} esta escondido.",
-    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
-    "tpFromDeath": "Thanks to this death you finally got a tp. And it only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
+    "tpFound": "{{channel}} buen trabajo, por fin obtuvo un tp después de $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
+    "tpFromDeath": "Gracias a su muerte finalmente conseguiste un tp y solo te tomó $t(seconds, {\"count\": {{seconds}} }){{emote}}"
   },
-  "commandDisabled": "Streamer disabled {{cmdName}} command {{emote}} Check !commands for the enabled ones",
+  "commandDisabled": "El streamer ha dehabilitado el comando {{cmdName}} {{emote}}, escribe !commands para ver los disponibles",
   "commands_everyone": "Todos pueden usar: {{commandList}}",
   "commands_mods": "Mod sólo comandos: {{commandList}}",
-  "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
+  "dota2pt": "Necesitas builds para {{- heroName}}? Encuéntralas aquí {{- url}}",
   "dotabod": "Soy un bot hecho por {{author}}. Mas información {{- url}}",
   "gameNotFound": "Juego no encontrado",
   "gpm_zero": "",
   "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_other": "GPM en vivo:{{num}}. {{heroKills}} de matando Héroes. {{creepKills}} de matando grimas.",
   "heroItems": {
-    "empty": "(2m delay) No items found for {{- heroName}}",
-    "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
+    "empty": "(2m de retraso) No se encontraron items para {{- heroName}}",
+    "list": "(2m de retraso) {{- heroName}} tiene: {{- itemNames}}"
   },
   "herostats": {
-    "none": "No matches played as {{- heroName}} {{timeperiod}}",
+    "none": "No hay partidas jugadas como: {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "days_one": "in {{count}}d",
+      "days_one": "en {{count}}d",
       "days_many": "",
-      "days_other": "in {{count}}d",
-      "lifetime": "of all time"
+      "days_other": "en {{count}}d",
+      "lifetime": "de todos los tiempos"
     },
-    "winrate_one": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrate_one": "Tasa de victorias: {{winrate}}% como {{- heroName}} {{timeperiod}} de {{count}} partidas.",
     "winrate_many": "",
-    "winrate_other": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrate_other": "Tasa de victorias: {{winrate}}% como {{- heroName}} {{timeperiod}} de {{count}} partidas."
   },
-  "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
+  "invalidColor": "Slot, nombre o color de héroe inválido. Intenta del 1-10, parte del nombre del héroe o un color de {{colorList}}",
   "invalidMmr": "Comando inválido. Usa !setmmr 1234",
   "killstreak": {
-    "lost_one": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
+    "lost_one": "{{- heroName}} perdió la racha de {{count}} kills {{emote}}",
     "lost_many": "",
-    "lost_other": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
+    "lost_other": "{{- heroName}} perdió la racha de {{count}} asesinatos {{emote}}",
     "won_one": "{{- heroName}} has a {{count}} kill streak {{emote}}",
     "won_many": "",
     "won_other": "{{- heroName}} has a {{count}} kill streak {{emote}}"
@@ -91,6 +91,7 @@
   "missingUser": "No se encuentra el usuario. Trata de salir y acceso el login de nuevo en dotabod.com",
   "modsOnly_off": "Solomente Mods ahora esta apagado. Todos pueden usar chat.",
   "modsOnly_on": "Solomente Mods esta prendido {{emote}}. Solo mods pueden usar chat",
+  "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
   "noHero": "No se ha encontrado el héroe",
   "noLastMatch": "No se ha encontrado la ultimo partido {{emote}}",
   "noNotable": "No hay jugadores destacados",
@@ -110,6 +111,7 @@
     "title": "¿Ganaremos con {{- heroName}}?",
     "yes": "Sí"
   },
+  "privateProfile": "Streamer's profile is private. The {{command}} command uses OpenDota and requires them to enable 'Expose Public Match Data' in their Dota settings.",
   "profileUrl": "Aquí está {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Siguiente rango en",

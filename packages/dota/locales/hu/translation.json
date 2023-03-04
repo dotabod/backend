@@ -1,6 +1,6 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} denied the aegis {{emote}}",
+    "denied": "{{- heroName}} denieolta az aegist {{emote}}",
     "expired": "{{- heroName}} aegise lejárt {{emote}}",
     "pickup": "{{- heroName}} felvette az aegist!",
     "snatched": "{{- heroName}} ellopta az aegis-t {{emote}}"
@@ -49,8 +49,8 @@
   "herostats": {
     "none": "Nem játszott egy meccset sem {{- heroName}} ebben az időszakban: {{timeperiod}}",
     "timeperiod": {
-      "days_one": "in {{count}}d",
-      "days_other": "in {{count}}d",
+      "days_one": "{{count}} napon belül",
+      "days_other": "{{count}} napon belül",
       "lifetime": "összesen"
     },
     "winrate_one": "Winrate: {{winrate}}% {{- heroName}} -ként {{timeperiod}} periódusban {{count}} meccsből.",
@@ -86,6 +86,7 @@
   "missingUser": "Felhasználó nem található. Próbálj újra bejelentkezni a dotabod.com-on",
   "modsOnly_off": "Moderátor mód kikapcsolva. Mindenki cseveghet.",
   "modsOnly_on": "Moderátor csevegés bekapcsolva. {{emote}}. Csak a modok írhatnak.",
+  "multiAccount": "Ehhez a steam accounthoz már van hozzárendelve Dotabod felhasználó. Nézd meg a kezelőfelületet további inromációkért: {{- url}}",
   "noHero": "Hős nem található",
   "noLastMatch": "Előző meccs nem található {{emote}}",
   "noNotable": "Ismert/híres játékos nem található",
@@ -105,6 +106,7 @@
     "title": "Nyerni fogunk {{- heroName}}",
     "yes": "Igen"
   },
+  "privateProfile": "A stremer profilja privát. Az {{command}} parancs OpenDotát használ és szüksége van, hogy engedélyezd a Publikus Match Adatok megosztását a Dota beállításaiban. ('Expose Public Match Data')",
   "profileUrl": "Itt {{- channel}} : {{- url}}",
   "rank": {
     "nextRankAt": "Következő rank ekkor: ",
@@ -115,7 +117,7 @@
   "ranked_no": "Nem, ez nem egy rangsorolt meccs",
   "ranked_yes": "Rangsorolt meccs",
   "refresh": "Overlay frissítése...",
-  "resetwl": "Resetting win/loss to 0 for {{channel}}",
+  "resetwl": "Win/loss arány visszaállítva 0-ra {{channel}}",
   "roshanAlive": "A Roshan életben van {{emote}}",
   "roshanCount": {
     "1": "1. Roshan halál · Következő drop: aghanim's shard.",
@@ -131,8 +133,8 @@
   "setStreamDelayNoArgs": "Helytelen stream delay, próbáld így: !setdelay <seconds>",
   "setStreamDelayRemoved": "Stream delay eltávoltva",
   "stream": "$t(stream_on)",
-  "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
-  "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
+  "stream_off": "Dotabot {{channel}} csatornáját mostantól offlineként kezeli. !online a visszavonáshoz.",
+  "stream_on": "Dotabot {{channel}} csatornáját mostantól onlineként kezeli. !offline a visszavonáshoz.",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Nincs beállítva stream delay a csatornán",
   "tip": {

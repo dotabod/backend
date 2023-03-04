@@ -91,6 +91,7 @@
   "missingUser": "Usuário não encontrado. Tente sair e entrar novamente em dotabod.com",
   "modsOnly_off": "Modo somente mods desativado. Todos podem digitar agora.",
   "modsOnly_on": "Modo somente mods ativado {{emote}}. Só mods podem digitar.",
+  "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
   "noHero": "Nenhum herói encontrado",
   "noLastMatch": "Última partida não foi encontrada {{emote}}",
   "noNotable": "Nenhum jogador notável",
@@ -110,6 +111,7 @@
     "title": "Vamos ganhar essa partida com {{- heroName}}",
     "yes": "Sim"
   },
+  "privateProfile": "Streamer's profile is private. The {{command}} command uses OpenDota and requires them to enable 'Expose Public Match Data' in their Dota settings.",
   "profileUrl": "Aqui {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Próximo rank em",

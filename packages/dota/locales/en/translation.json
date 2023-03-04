@@ -85,6 +85,7 @@
   "missingUser": "User not found. Try logging out and in of dotabod.com",
   "modsOnly_off": "Mods only mode is now off. Everyone can type.",
   "modsOnly_on": "Mods only mode is now on {{emote}}. Only mods can type.",
+  "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
   "noHero": "No hero found",
   "noLastMatch": "Did not find a last match {{emote}}",
   "noNotable": "No notable players",
@@ -95,7 +96,6 @@
   "npRemove": "Try !np remove <steam32id>",
   "npRemoved": "Removed {{steamid}} from !np for this channel",
   "npUnknown": "Could not find {{steamid}} for this channel",
-  "privateProfile": "Streamer's profile is private. The {{command}} command uses OpenDota and requires them to enable 'Expose Public Match Data' in their Dota settings.",
   "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
   "ping": "Pong {{emote}}",
   "pleb": "One pleb IN {{emote}}",
@@ -105,6 +105,7 @@
     "title": "Will we win with {{- heroName}}",
     "yes": "Yes"
   },
+  "privateProfile": "Streamer's profile is private. The {{command}} command uses OpenDota and requires them to enable 'Expose Public Match Data' in their Dota settings.",
   "profileUrl": "Here's {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Next rank at",
@@ -151,7 +152,6 @@
   "treadToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
   "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
   "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",
-  "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
   "unknown": "Unknown",
   "unknownSteam": "Could not find steam account. Follow Step 2 of setup, play a bot match, and try again.",
   "unranked": "Unranked",
