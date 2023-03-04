@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express'
 import getDBUser from '../db/getDBUser.js'
 import { logger } from '../utils/logger.js'
 import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts.js'
-
+RawServer, RawRequest, RawReply, RouteGeneric, ContextConfig, SchemaCompiler, TypeProvider, Logger
 export function validateToken(req: Request, res: Response, next: NextFunction) {
   // Sent from dota gsi config file
   const token = req.body?.auth?.token as string | undefined

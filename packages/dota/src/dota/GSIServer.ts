@@ -1,5 +1,5 @@
-import express, { Request, Response } from 'express'
-import http from 'http'
+import fastifyCors from '@fastify/cors'
+import fastify, { FastifyInstance } from 'fastify'
 import { Server, Socket } from 'socket.io'
 
 import getDBUser from '../db/getDBUser.js'
@@ -12,36 +12,43 @@ import { validateToken } from './validateToken.js'
 class GSIServer {
   io: Server
   dota: Dota
+  server: FastifyInstance
 
   constructor() {
     logger.info('Starting GSI Server!')
     this.dota = Dota.getInstance()
 
-    const app = express()
-    const httpServer = http.createServer(app)
-    this.io = new Server(httpServer, {
+    this.server = fastify()
+    this.server.register(fastifyCors, {
+      origin: ['http://localhost:3000', 'http://localhost:3001', 'https://dotabod.com'],
+    })
+    this.server.register(import('fastify-socket.io'), {
       cors: {
         origin: ['http://localhost:3000', 'http://localhost:3001', 'https://dotabod.com'],
         methods: ['GET', 'POST'],
       },
     })
+    this.io = this.server.io
+    this.server.register(import('@fastify/formbody'))
 
-    app.use(express.json())
-    app.use(express.urlencoded({ extended: true }))
     this.dota.dota2.on('ready', () => {
       logger.info('[SERVER] Connected to dota game coordinator')
-      app.post('/', validateToken, processChanges('previously'), processChanges('added'), newData)
-    })
-
-    // No main page
-    app.get('/', (req: Request, res: Response) => {
-      res.status(200).json({
-        status: 'ok',
+      this.server.post('/', { preHandler: validateToken }, async (request, reply) => {
+        await processChanges('previously')(request, reply)
+        await processChanges('added')(request, reply)
+        await newData(request, reply)
       })
     })
 
-    httpServer.listen(5000, () => {
-      logger.info(`[GSI] Dota 2 GSI listening on *:${5000}`)
+    // No main page
+    this.server.get('/', (request, reply) => {
+      reply.status(200).send({ status: 'ok' })
+    })
+
+    this.server.listen({ port: 5000 }, (err, address) => {
+      if (err) throw err
+
+      logger.info(`[GSI] Dota 2 GSI listening on ${address}`)
     })
 
     // IO auth & client setup so we can send this socket messages
