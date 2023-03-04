@@ -172,10 +172,12 @@ class SetupSupabase {
           if (payload.eventType === 'DELETE') {
             logger.info('[WATCHER STEAM] Deleting steam account for', { name: client.name })
 
-            for (const connectedToken of oldObj.connectedUserIds) {
-              const connectedUser = gsiHandlers.get(connectedToken)
-              if (connectedUser) {
-                connectedUser.client.multiAccount = undefined
+            if (Array.isArray(oldObj.connectedUserIds)) {
+              for (const connectedToken of oldObj.connectedUserIds) {
+                const connectedUser = gsiHandlers.get(connectedToken)
+                if (connectedUser) {
+                  connectedUser.client.multiAccount = undefined
+                }
               }
             }
 
