@@ -98,6 +98,7 @@
   "missingUser": "Uživatel nenalezen. Zkus se znovu připojit na dotabod.com",
   "modsOnly_off": "Mód pouze pro moderátory vypnut. Všichni mohou psát",
   "modsOnly_on": "Mód pouze pro moderátory zapnut {{emote}} Pouze moderátoři mohou psát",
+  "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
   "noHero": "Nenalezen žádný hrdina",
   "noLastMatch": "Nenalezena data posledního zápasu {{emote}}",
   "noNotable": "Žádní známí hráči",
@@ -117,6 +118,7 @@
     "title": "Vyhrajeme s {{- heroName}}?",
     "yes": "Ano"
   },
+  "privateProfile": "Streamer's profile is private. The {{command}} command uses OpenDota and requires them to enable 'Expose Public Match Data' in their Dota settings.",
   "profileUrl": "Zde je {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Další rank na",
