@@ -232,10 +232,8 @@ class SetupSupabase {
           }
         },
       )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          logger.info('[SUPABASE] Ready to receive database changes!')
-        }
+      .subscribe((status: string, err: any) => {
+        console.log('[SUPABASE] Subscription status on dota:', { status, err })
       })
   }
 }
