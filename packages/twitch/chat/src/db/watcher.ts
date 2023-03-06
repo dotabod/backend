@@ -2,7 +2,7 @@ import supabase from './supabase.js'
 import { User } from '../../prisma/generated/postgresclient/index.js'
 import { chatClient } from '../index.js'
 
-const channel = supabase.channel('twitch-changes')
+const channel = supabase.channel('twitch-chat')
 const IS_DEV = process.env.NODE_ENV !== 'production'
 const DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
 

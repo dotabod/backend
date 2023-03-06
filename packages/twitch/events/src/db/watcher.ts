@@ -4,7 +4,7 @@ import { Account } from '../../prisma/generated/postgresclient/index.js'
 import { SubscribeEvents } from '../twitch/events/index.js'
 import BotAPI from '../twitch/lib/BotApiSingleton.js'
 
-const channel = supabase.channel('twitch-changes')
+const channel = supabase.channel('twitch-events')
 const IS_DEV = process.env.NODE_ENV !== 'production'
 const DEV_CHANNELIDS = process.env.DEV_CHANNELIDS?.split(',') ?? []
 const botApi = BotAPI.getInstance()
