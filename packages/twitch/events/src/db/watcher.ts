@@ -4,10 +4,10 @@ import { Account } from '../../prisma/generated/postgresclient/index.js'
 import { SubscribeEvents } from '../twitch/events/index.js'
 import BotAPI from '../twitch/lib/BotApiSingleton.js'
 
-const channel = supabase.channel('twitch-events')
 const IS_DEV = process.env.NODE_ENV !== 'production'
 const DEV_CHANNELIDS = process.env.DEV_CHANNELIDS?.split(',') ?? []
 const botApi = BotAPI.getInstance()
+const channel = supabase.channel(`${IS_DEV ? 'dev-' : ''}twitch-events`)
 
 async function handleNewUser(providerAccountId: string) {
   console.log("New user, let's get their info", { userId: providerAccountId })

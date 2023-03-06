@@ -16,10 +16,9 @@ class SetupSupabase {
   IS_DEV: boolean
   DEV_CHANNELS: string[]
   constructor() {
-    this.channel = supabase.channel('db-changes')
-
     this.IS_DEV = process.env.NODE_ENV !== 'production'
     this.DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
+    this.channel = supabase.channel(`${this.IS_DEV ? 'dev-' : ''}dota`)
 
     logger.info('Starting watcher for', { dev: this.IS_DEV, channels: this.DEV_CHANNELS })
   }
