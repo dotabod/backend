@@ -1,9 +1,12 @@
 import { EventSubStreamOnlineEvent } from '@twurple/eventsub-base'
 
 import { prisma } from '../../db/prisma.js'
+import { onlineEvents } from '../events/events.js'
 
 export function onlineEvent(data: EventSubStreamOnlineEvent) {
   console.log(`${data.broadcasterId} just went online`)
+  onlineEvents.set(data.broadcasterId, new Date())
+
   prisma.account
     .update({
       data: {
