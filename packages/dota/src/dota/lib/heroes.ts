@@ -491,6 +491,10 @@ const heroes = {
     id: 137,
     localized_name: 'Primal Beast',
   },
+  npc_dota_hero_muerta: {
+    id: 138,
+    localized_name: 'Muerta',
+  },
 }
 
 export const heroColors = 'Blue,Teal,Purple,Yellow,Orange,Pink,Olive,Cyan,Green,Brown'.split(',')
