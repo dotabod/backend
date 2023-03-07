@@ -99,6 +99,8 @@ export const defaultSettings = {
   commandRosh: true,
   commandItems: true,
   notablePlayersOverlay: true,
+  notablePlayersOverlayFlags: true,
+  notablePlayersOverlayFlagsCmd: true,
   tellChatNewMMR: true,
   tellChatBets: true,
   queueBlocker: true,

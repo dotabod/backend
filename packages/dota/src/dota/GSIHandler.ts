@@ -277,11 +277,16 @@ export class GSIHandler {
     if (!this.client.stream_online) return
 
     const matchPlayers = this.players?.matchPlayers ?? getCurrentMatchPlayers(this.client.gsi)
+    const enableCountries = getValueOrDefault(
+      DBSettings.notablePlayersOverlayFlagsCmd,
+      this.client.settings,
+    )
     notablePlayers(
       this.client.locale,
       this.getChannelId(),
       this.client.gsi?.map?.matchid,
       matchPlayers,
+      enableCountries,
     )
       .then((response) => {
         if (response.playerList.length) {

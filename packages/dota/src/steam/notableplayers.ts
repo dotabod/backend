@@ -27,6 +27,7 @@ export async function notablePlayers(
   twitchChannelId: string,
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
+  enableFlags?: boolean,
 ): Promise<{ playerList: NotablePlayer[]; description: string }> {
   const { matchPlayers, accountIds, gameMode } = await getPlayers(locale, currentMatchId, players)
 
@@ -85,7 +86,8 @@ export async function notablePlayers(
 
   const allPlayers = result
     .map((m) => {
-      const country: string = m.country_code ? `${countryCodeEmoji(m.country_code)} ` : ''
+      const country: string =
+        enableFlags && m.country_code ? `${countryCodeEmoji(m.country_code)} ` : ''
       return `${country}${m.name} (${m.heroName})`
     })
     .join(' · ')
