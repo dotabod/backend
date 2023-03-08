@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "./dist/psql"
+  output   = "../dist/psql"
 }
 
 datasource db {
