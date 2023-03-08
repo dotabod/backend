@@ -1,6 +1,6 @@
+import { medals } from '@dotabod/prisma/dist/mongo/index.js'
 import { t } from 'i18next'
 
-import { medals } from '../../prisma/generated/mongoclient/index.js'
 import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { ranks } from '../dota/lib/consts.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'

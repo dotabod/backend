@@ -1,6 +1,7 @@
+import { Account } from '@dotabod/prisma/dist/psql/index.js'
+
 import { prisma } from './prisma.js'
 import supabase from './supabase.js'
-import { Account } from '../../prisma/generated/postgresclient/index.js'
 import { SubscribeEvents } from '../twitch/events/index.js'
 import BotAPI from '../twitch/lib/BotApiSingleton.js'
 

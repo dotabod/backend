@@ -56,7 +56,7 @@ jobs:
         run: |
           sudo chown -R $(id -u):$(id -g) packages/**/locales/*
           sudo chown -R $(id -u):$(id -g) packages/twitch/**/locales/*
-          i18next -c 'packages/dota/i18next-parser.config.js'
+          i18next -c 'services/crowdin/i18next-parser.config.js'
 
       - name: Count lines
         id: count

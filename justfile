@@ -21,7 +21,7 @@ ip:
 
 i18np:
     @echo "Parsing translation files"
-    @i18next -c 'packages/dota/i18next-parser.config.js'
+    @i18next -c 'services/crowdin/i18next-parser.config.js'
 
 i18nd:
     @echo "Downloading translations"

@@ -1,5 +1,5 @@
-import { PrismaClient as PrismaMongo } from '../../prisma/generated/mongoclient/index.js'
-import { PrismaClient as PrismaPsql } from '../../prisma/generated/postgresclient/index.js'
+import { PrismaClient as PrismaMongo } from '@dotabod/prisma/dist/mongo/index.js'
+import { PrismaClient as PrismaPsql } from '@dotabod/prisma/dist/psql/index.js'
 
 // allow global `var` declarations
 declare global {

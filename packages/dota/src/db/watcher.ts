@@ -1,6 +1,6 @@
+import { Setting, SteamAccount, User } from '@dotabod/prisma/dist/psql/index.js'
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 
-import { Setting, SteamAccount, User } from '../../prisma/generated/postgresclient/index.js'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
 import { gsiHandlers } from '../dota/lib/consts.js'

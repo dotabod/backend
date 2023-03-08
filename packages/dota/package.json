@@ -10,18 +10,14 @@
   "packageManager": "yarn@1.22.19",
   "private": true,
   "scripts": {
-    "studio": "doppler run -- yarn prisma studio --schema ./prisma/postgres.prisma",
     "start": "node --inspect=0.0.0.0:9229 ./dist/index.js",
     "build": "tsc --build --verbose",
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
-    "test": "doppler run -- nodemon -L --ext ts ./src/dev/index.ts",
-    "lint": "eslint --ext .ts ./src",
-    "prettier": "prettier --ext .ts ./src --write",
-    "lint:fix": "yarn lint -- --fix",
-    "translations": "i18next './src/**/*.ts' -c ./i18next-parser.config.js"
+    "test": "doppler run -- nodemon -L --ext ts ./src/dev/index.ts"
   },
   "dependencies": {
+    "@dotabod/prisma": "^1.0.0",
     "@dotabod/settings": "^1.0.0",
     "@node-steam/id": "^1.2.0",
     "@twurple/eventsub": "5.3.1",

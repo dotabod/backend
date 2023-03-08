@@ -8,7 +8,7 @@
     "sourceMap": true,
     "strictNullChecks": true,
     "types": ["node"],
-    "allowJs": false,
+    "allowJs": true,
     "checkJs": false,
     "resolveJsonModule": true,
     "esModuleInterop": true,
@@ -22,6 +22,6 @@
     "esm": true,
     "pretty": true,
     "require": ["tsconfig-paths/register"],
-    "ignore": ["(?:^|/)node_modules/", "(?:^|/)prisma/generated/"]
+    "ignore": ["(?:^|/)node_modules/"]
   }
 }

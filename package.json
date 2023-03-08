@@ -2,13 +2,14 @@
   "name": "dotabod",
   "private": true,
   "workspaces": [
-    "services/prisma",
+    "packages/prisma",
+    "packages/settings",
     "packages/twitch/events",
     "packages/twitch/chat",
-    "packages/dota",
-    "packages/settings"
+    "packages/dota"
   ],
   "scripts": {
+    "studio": "doppler run -- yarn prisma studio --schema ./packages/prisma/postgres.prisma",
     "build": "yarn workspaces run build",
     "lint": "yarn eslint -- . && yarn prettier -- . && echo 'Linting complete.'",
     "prettier": "prettier --write",
@@ -42,7 +43,6 @@
     "lint-staged": "^13.1.4",
     "nodemon": "^2.0.21",
     "prettier": "^2.8.4",
-    "prisma": "^4.11.0",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.1.2",
     "typescript": "^4.9.5"

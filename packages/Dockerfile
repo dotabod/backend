@@ -31,6 +31,10 @@ COPY ./packages/settings/tsconfig.json ./
 COPY ./packages/settings/src ./src
 RUN yarn build
 
+WORKDIR /app/packages/prisma
+COPY ./packages/prisma/*.prisma ./
+RUN yarn build
+
 WORKDIR /app/$BUILD_CONTEXT
 COPY ./$BUILD_CONTEXT/prisma ./prisma
 COPY ./$BUILD_CONTEXT/tsconfig.json ./
@@ -64,6 +68,11 @@ COPY --from=base /app/packages/settings/node_modules* ./node_modules
 COPY --from=builder /app/packages/settings/dist ./dist
 COPY --from=builder /app/packages/settings/package.json ./
 COPY --from=builder /app/packages/settings/tsconfig.json ./
+
+WORKDIR /app/packages/prisma
+COPY --from=base /app/packages/prisma/node_modules* ./node_modules
+COPY --from=builder /app/packages/prisma/dist ./dist
+COPY --from=builder /app/packages/prisma/package.json ./
 
 WORKDIR /app/$BUILD_CONTEXT
 COPY --from=base /app/$BUILD_CONTEXT/node_modules* ./node_modules
