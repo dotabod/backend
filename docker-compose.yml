@@ -1,9 +1,9 @@
 services:
   redis:
     container_name: redis
-    image: 'redis/redis-stack-server:latest'
+    image: "redis/redis-stack-server:latest"
     ports:
-      - '6379:6379'
+      - "6379:6379"
 
   twitch-chat:
     image: twitch-chat:${COMMIT_HASH:-latest}
@@ -17,7 +17,7 @@ services:
         - BUILD_CONTEXT=packages/twitch/chat
     hostname: twitch-chat
     ports:
-      - '5005:5005'
+      - "5005:5005"
     environment:
       - DATABASE_URL
       - DB_SECRET
@@ -46,8 +46,8 @@ services:
         - BUILD_CONTEXT=packages/twitch/events
     hostname: twitch-events
     ports:
-      - '82:5010'
-      - '5015:5015'
+      - "82:5010"
+      - "5015:5015"
     environment:
       - DATABASE_URL
       - DB_SECRET
@@ -77,8 +77,8 @@ services:
         - BUILD_CONTEXT=packages/dota
     hostname: dota
     ports:
-      - '81:5000'
-      - '9229:9229'
+      - "81:5000"
+      - "9229:9229"
     environment:
       - D2PT_TOKEN
       - ADMIN_CHANNELS
@@ -115,11 +115,11 @@ services:
     restart: on-failure
     image: nginx
     volumes:
-    - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
+      - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
     build: ./services/nginx
     ports:
-      - '80:80'
-      - '443:443'
+      - "80:80"
+      - "443:443"
     environment:
       - NGINX_HOST
       - EVENTSUB_HOST

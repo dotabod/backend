@@ -38,7 +38,7 @@ export const getBotAuthProvider = async function () {
               refresh_token: newTokenData.refreshToken ?? botTokens.refresh_token,
               expires_at: Math.floor(
                 new Date(newTokenData.obtainmentTimestamp).getTime() / 1000 +
-                (newTokenData.expiresIn ?? 0),
+                  (newTokenData.expiresIn ?? 0),
               ),
               expires_in: newTokenData.expiresIn ?? 0,
               obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp),
