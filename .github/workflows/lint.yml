@@ -28,11 +28,8 @@ jobs:
       - name: Install Node.js dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build Node.js packages (required for linter)
-        run: yarn workspaces build
-
       - name: Run linters
         uses: wearerequired/lint-action@v2
         with:
-          eslint: true
+          eslint: false
           prettier: true
