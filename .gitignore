@@ -11,3 +11,4 @@ newrelic_agent.log
 .idea
 !**/locales/en/translation.json
 *.key
+.tsconfig.tsbuildinfo
