@@ -80,6 +80,7 @@ services:
       - '81:5000'
       - '9229:9229'
     environment:
+      - D2PT_TOKEN
       - ADMIN_CHANNELS
       - COMMIT_HASH
       - DATABASE_URL
