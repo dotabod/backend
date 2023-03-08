@@ -5,10 +5,6 @@
     "pickup": "{{- heroName}} подбирает аегис!",
     "snatched": "{{- heroName}} крадёт аегис {{emote}}"
   },
-  "apm_one": "Текущий APM: {{count}} {{emote}}",
-  "apm_few": "Текущий APM: {{count}} {{emote}}",
-  "apm_many": "Текущий APM: {{count}} {{emote}}",
-  "apm_other": "Текущий APM: {{count}} {{emote}}",
   "averageRank": "Средний ранг этой игры",
   "betaFeature": "[бета-функция]",
   "betaTester": "$t(betaTester_on)",
@@ -41,11 +37,6 @@
   "dota2pt": "Нужны сборки от про-игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "gameNotFound": "Игра не найдена",
-  "gpm_zero": "",
-  "gpm_one": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_few": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_many": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_other": "Текущий GPM: {{num}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
   "heroItems": {
     "empty": "(2 мин. задержка) Не найдено предметов у {{- heroName}}",
     "list": "(2 мин. задержка) {{- heroName}} имеет: {{- itemNames}}"
@@ -53,11 +44,11 @@
   "herostats": {
     "none": "Нет сыгранных игр на {{- heroName}} {{timeperiod}}",
     "timeperiod": {
+      "lifetime": "за всё время",
       "days_one": "за {{count}} день",
       "days_few": "за {{count}} дня",
       "days_many": "за {{count}} дней",
-      "days_other": "за {{count}} дня",
-      "lifetime": "за всё время"
+      "days_other": "за {{count}} дня"
     },
     "winrate_one": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игр.",
     "winrate_few": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игры.",
@@ -143,10 +134,6 @@
     "more_other": "У Рошана {{count}} смертей · Следующая награда: Сыр, Аганим и Рефрешер."
   },
   "roshanKilled": "Рошан убит! Следующий рошан между {{min}} и {{max}}",
-  "seconds_one": "{{count}} секунду",
-  "seconds_few": "{{count}} секунды",
-  "seconds_many": "{{count}} секунд",
-  "seconds_other": "{{count}} секунд",
   "setStreamDelay": "Теперь задержка стрима - $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Неверная задержка стрима, используйте !setdelay <seconds>",
   "setStreamDelayRemoved": "Отключаю задержку стрима",
@@ -167,10 +154,6 @@
   "toggleMatch_party": "Изменение этого матча на групповой рейтинг: {{- url}} Введите !fixparty для отмены",
   "toggleMatch_single": "Изменение этого матча на стандартный рейтинг {{- url}} Введите !fixdd для отмены",
   "toggleMatch_solo": "Изменение этого матча на одиночный рейтинг: {{- url}} Введите !fixparty для отмены",
-  "treadToggle_one": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_few": "Power Treads были переключены {{count}} раза, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_many": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_other": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
   "uknownMmr": "Я еще не знаю рейтинг {{channel}}. Модераторы или стример должны сами ввести команду, пример: !setmmr 1234 или установить его вручную на сайте {{- url}}",
   "unknown": "Неизвестно",
   "unknownSteam": "Не удалось найти учетную запись Steam. Попробуйте сначала сыграть тренировочный матч с ботом, чтобы сохранить свой аккаунт в Dotabod!",
@@ -183,5 +166,21 @@
     "commit": "Сервер работает на версии {{version}}, вот что отсутствует по сравнению с последней версией: {{- url}}",
     "unknown": "Не удалось найти последний коммит git, репозиторий находится здесь {{- url}}"
   },
-  "xpm": "Текущий XPM: {{num}}"
+  "xpm": "Текущий XPM: {{num}}",
+  "apm_one": "Текущий APM: {{count}} {{emote}}",
+  "apm_few": "Текущий APM: {{count}} {{emote}}",
+  "apm_many": "Текущий APM: {{count}} {{emote}}",
+  "apm_other": "Текущий APM: {{count}} {{emote}}",
+  "gpm_one": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "gpm_few": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "gpm_many": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "gpm_other": "Текущий GPM: {{num}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
+  "seconds_few": "{{count}} секунды",
+  "seconds_many": "{{count}} секунд",
+  "seconds_one": "{{count}} секунду",
+  "seconds_other": "{{count}} секунд",
+  "treadToggle_one": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_few": "Power Treads были переключены {{count}} раза, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_many": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_other": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче."
 }
