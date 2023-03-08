@@ -8,8 +8,9 @@
     "packages/settings"
   ],
   "scripts": {
-    "lint": "yarn prettier && eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx .",
-    "prettier": "prettier --write ."
+    "lint": "yarn prettier && yarn eslint",
+    "prettier": "prettier --write .",
+    "eslint": "eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx ."
   },
   "dependencies": {
     "@prisma/client": "4.11.0",
