@@ -1,0 +1,12 @@
+{
+  "name": "@dotabod/prisma",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "prisma generate --schema ./mongo.prisma && prisma generate --schema ./postgres.prisma",
+    "pull:mongo": "doppler run -- prisma db pull --schema ./mongo.prisma --force",
+    "pull:psql": "doppler run -- prisma db pull --schema ./postgres.prisma",
+    "push:psql": "doppler run -- prisma db push --schema ./postgres.prisma"
+  }
+}

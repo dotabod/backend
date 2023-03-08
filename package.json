@@ -2,15 +2,18 @@
   "name": "dotabod",
   "private": true,
   "workspaces": [
+    "services/prisma",
     "packages/twitch/events",
     "packages/twitch/chat",
     "packages/dota",
     "packages/settings"
   ],
   "scripts": {
-    "lint": "yarn prettier && yarn eslint",
+    "build": "yarn workspaces run build",
+    "lint": "yarn prettier && yarn eslint && echo 'Linting complete.'",
     "prettier": "prettier --write .",
-    "eslint": "eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx ."
+    "eslint": "eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx .",
+    "update-np": "doppler run -- bash ../services/mongodb/updatenps.sh"
   },
   "dependencies": {
     "@prisma/client": "4.11.0",

@@ -16,16 +16,10 @@
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
     "test": "doppler run -- nodemon -L --ext ts ./src/dev/index.ts",
-    "generateprisma": "prisma generate --schema ./prisma/mongo.prisma && prisma generate --schema ./prisma/postgres.prisma",
     "lint": "eslint --ext .ts ./src",
     "prettier": "prettier --ext .ts ./src --write",
     "lint:fix": "yarn lint -- --fix",
-    "translations": "i18next './src/**/*.ts' -c ./i18next-parser.config.js",
-    "update-np": "doppler run -- bash ../services/mongodb/updatenps.sh",
-    "pullmongo": "doppler run -- prisma db pull --schema ./prisma/mongo.prisma --force",
-    "pullpsql": "doppler run -- prisma db pull --schema ./prisma/postgres.prisma",
-    "pushpsql": "doppler run -- prisma db push --schema ./prisma/postgres.prisma",
-    "prepare": "cd ../../ && husky install packages/dota/.husky"
+    "translations": "i18next './src/**/*.ts' -c ./i18next-parser.config.js"
   },
   "dependencies": {
     "@dotabod/settings": "^1.0.0",
