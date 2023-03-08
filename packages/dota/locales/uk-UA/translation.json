@@ -42,7 +42,7 @@
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",
   "gameNotFound": "Матч не знайдено",
   "gpm_zero": "",
-  "gpm_one": "Поточний GPM: {{num}}. {{heroKills}} золота від вбивства героїв та {{creepKills}} золота від вбивства кріпочків.",
+  "gpm_one": "Поточний GPM: {{num}}. Отримано {{heroKills}} золота від вбивства героїв та {{creepKills}} золота від вбивства кріпочків.",
   "gpm_few": "Поточний GPM: {{num}}. {{heroKills}} золота від вбивства героїв та {{creepKills}} золота від вбивства кріпочків.",
   "gpm_many": "Поточний GPM: {{num}}. {{heroKills}} золота від вбивства героїв та {{creepKills}} золота від вбивства кріпочків.",
   "gpm_other": "Поточний GPM: {{num}}. {{heroKills}} золота від вбивства героїв та {{creepKills}} золота від вбивства кріпочків.",
@@ -79,7 +79,7 @@
   "lastgame": {
     "link": "ID останньої гри: {{- url}}",
     "none": "Не знайдено гравців з минулої гри",
-    "player": "{{- currentMatchHero}} грає на {{- lastMatchHero}}"
+    "player": "{{- currentMatchHero}} грав на {{- lastMatchHero}}"
   },
   "lastgamescore": {
     "double": "Подвійна ставка рейтингу",
