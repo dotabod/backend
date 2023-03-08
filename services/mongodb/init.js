@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+
 db = db.getSiblingDB("dotabod");
 db.cards.createIndex({ id: 1 });
 db.cards.createIndex({ createdAt: -1 }, { expireAfterSeconds: 3600 });
