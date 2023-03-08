@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "lint": "yarn prettier && eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx .",
-    "prettier": "prettier --write . --ignore-path .gitignore"
+    "prettier": "prettier --write ."
   },
   "dependencies": {
     "@prisma/client": "4.11.0",

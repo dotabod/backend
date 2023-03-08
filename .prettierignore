@@ -1,1 +1,17 @@
+# just for prettier \/
 **/locales/**/*.json
+
+# default gitignore \/
+.env*
+.idea
+node_modules
+assets
+dist
+build
+config.js
+**/volumes
+**/prisma/generated
+newrelic_agent.log
+.idea
+!**/locales/en/translation.json
+*.key
