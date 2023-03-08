@@ -5,8 +5,6 @@
     "pickup": "{{- heroName}} felvette az aegist!",
     "snatched": "{{- heroName}} ellopta az aegis-t {{emote}}"
   },
-  "apm_one": "Élő APM: {{count}} {{emote}}",
-  "apm_other": "Élő APM: {{count}} {{emote}}",
   "averageRank": "Átlagos rank ezen a meccsen",
   "betaFeature": "[beta funkció]",
   "betaTester": "$t(betaTester_on)",
@@ -39,9 +37,6 @@
   "dota2pt": "Profi {{- heroName}} buildeket keresel? Itt találsz párat: {{- url}}",
   "dotabod": "Nyílt forráskódú bot vagyok, {{author}} tervezett. Több információért {{- url}}",
   "gameNotFound": "Meccs nem található",
-  "gpm_zero": "",
-  "gpm_one": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
-  "gpm_other": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
   "heroItems": {
     "empty": "(2p delay) Itemek nem találhatóak {{- heroName}}-hez.",
     "list": "(2p delay) {{- heroName}} itemjei: {{- itemNames}}"
@@ -49,9 +44,9 @@
   "herostats": {
     "none": "Nem játszott egy meccset sem {{- heroName}} ebben az időszakban: {{timeperiod}}",
     "timeperiod": {
+      "lifetime": "összesen",
       "days_one": "{{count}} napon belül",
-      "days_other": "{{count}} napon belül",
-      "lifetime": "összesen"
+      "days_other": "{{count}} napon belül"
     },
     "winrate_one": "Winrate: {{winrate}}% {{- heroName}} -ként {{timeperiod}} periódusban {{count}} meccsből.",
     "winrate_other": "Winrate: {{winrate}}% {{- heroName}} -ként {{timeperiod}} periódusban {{count}} meccsből."
@@ -127,8 +122,6 @@
     "more_other": "{{count}}. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard."
   },
   "roshanKilled": "Roshan meghalt! Következő Roshan {{min}} és {{max}} perc között várható",
-  "seconds_one": "{{count}} másodperc",
-  "seconds_other": "{{count}} másodperc",
   "setStreamDelay": "Stream delay beállítva: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Helytelen stream delay, próbáld így: !setdelay <seconds>",
   "setStreamDelayRemoved": "Stream delay eltávoltva",
@@ -149,8 +142,6 @@
   "toggleMatch_party": "Meccs megváltoztatása party MMR esetén: {{- url}} Próbáld a !fixparty parancsot a visszavonáshoz",
   "toggleMatch_single": "Meccs megváltoztatása sima MMR esetén: {{- url}} Próbáld a !fixdd parancsot a visszavonáshoz",
   "toggleMatch_solo": "Meccs megváltoztatása solo MMR esetén: {{- url}} Próbáld a !fixdd parancsot a visszavonáshoz",
-  "treadToggle_one": "Eddig {{count}} alkalommal használtuk a cipő képességét és {{manaCount}} manát spóroltunk vele.",
-  "treadToggle_other": "Eddig {{count}} alkalommal használtuk a cipő képességét és {{manaCount}} manát spóroltunk vele.\n",
   "uknownMmr": "Nem tudom {{channel}} MMR-jét. Moderátorok beállíthatják !setmmr 1234 vagy {{- url}} paranccsal.",
   "unknown": "Ismeretlen",
   "unknownSteam": "Steam felhasználó nem található. Próbálj egy bot mérkőzést játszani, hogy hozzáadjam az accountod a Dotabodhoz.",
@@ -163,5 +154,13 @@
     "commit": "Szerveren futó verzió: {{version}}, itt megtalálod mi változott az előző verzióhoz képest: {{- url}}",
     "unknown": "Nem találom az utolsó git commitot, a repot itt éred el: {{- url}}"
   },
-  "xpm": "Élő XPM: {{num}}"
+  "xpm": "Élő XPM: {{num}}",
+  "apm_one": "Élő APM: {{count}} {{emote}}",
+  "apm_other": "Élő APM: {{count}} {{emote}}",
+  "gpm_one": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
+  "gpm_other": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
+  "seconds_one": "{{count}} másodperc",
+  "seconds_other": "{{count}} másodperc",
+  "treadToggle_one": "Eddig {{count}} alkalommal használtuk a cipő képességét és {{manaCount}} manát spóroltunk vele.",
+  "treadToggle_other": "Eddig {{count}} alkalommal használtuk a cipő képességét és {{manaCount}} manát spóroltunk vele.\n"
 }
