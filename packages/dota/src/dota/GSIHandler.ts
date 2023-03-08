@@ -122,7 +122,7 @@ export class GSIHandler {
   }
 
   public getStreamDelay() {
-    return getValueOrDefault(DBSettings.streamDelay, this.client.settings) + GLOBAL_DELAY
+    return Number(getValueOrDefault(DBSettings.streamDelay, this.client.settings)) + GLOBAL_DELAY
   }
 
   public say(
