@@ -103,7 +103,7 @@ export const defaultSettings = {
   notablePlayersOverlayFlagsCmd: true,
   tellChatNewMMR: true,
   tellChatBets: true,
-  queueBlocker: true,
+  queueBlocker: false,
 };
 
 export type SettingKeys = keyof typeof defaultSettings;
