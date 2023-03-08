@@ -45,8 +45,8 @@
   },
   "lint-staged": {
     "*.ts": [
-      "eslint --fix",
-      "prettier --write"
+      "yarn prettier",
+      "yarn eslint"
     ]
   }
 }
