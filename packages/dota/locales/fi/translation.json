@@ -14,7 +14,7 @@
     "lost": "Hävisimme, gg nt {{emote}} mennään seuraavaan",
     "notScored": "Ottelua ei lasketa {{emote}} Ei lisätä tai poisteta MMR:ää ottelulle {{matchId}}.",
     "open": "Vedot avattu {{emote}}",
-    "remade": "Swapped hero {{emote}} Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened {{emote2}}",
+    "remade": "Sankari vaihdettu {{emote}} Vedot {{- oldHeroName}}-pelille palautettu ja uusi vedonlyönti {{- newHeroName}}-pelille avattu {{emote2}}",
     "won": "Voitimme {{emote}} mennään seuraavaan"
   },
   "bounties": {
@@ -45,11 +45,11 @@
     "none": "Ei pelattuja otteluita sankarina {{- heroName}} {{timeperiod}}",
     "timeperiod": {
       "lifetime": "ikinä",
-      "days_one": "in {{count}}d",
-      "days_other": "in {{count}}d"
+      "days_one": "{{count}}pv",
+      "days_other": "{{count}}pv"
     },
-    "winrate_one": "Voittosuhde: {{winrate}}% sankarina {{- heroName}} {{timeperiod}} {{count}} pelistä.",
-    "winrate_other": "Voittosuhde: {{winrate}}% sankarina {{- heroName}} {{timeperiod}} {{count}} peleistä."
+    "winrate_one": "Voittosuhde: {{winrate}}% sankarina {{- heroName}} {{timeperiod}} {{count}} ottelusta.",
+    "winrate_other": "Voittosuhde: {{winrate}}% sankarina {{- heroName}} {{timeperiod}} {{count}} otteluista."
   },
   "invalidColor": "Virheellinen sankarin väri, paikka tai nimi. Kokeile 1-10, osittaista sankarin nimeä tai väriä näistä {{colorList}}",
   "invalidMmr": "Virheellinen komento. Kokeile !setmmr 1234",
@@ -132,20 +132,20 @@
   "streamDelayNone": "Kanavalla ei ole striimin viivettä",
   "tip": {
     "from": "Tippi sankarilta {{- heroName}} {{emote}}",
-    "to": "Tippaamme {{- heroName}} {{emote}}"
+    "to": "Tippaamme sankaria {{- heroName}} {{emote}}"
   },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod on nyt poistettu käytöstä. Ei enää vastaa komentoihin eikä katsele pelitapahtumia. Ota käyttöön kirjoittamalla !toggle uudelleen.",
   "toggle_enabled": "Dotabod on nyt käytössä. Vastaa taas komentoihin ja katselee pelitapahtumia. Kirjoita !toggle uudelleen poistaaksesi käytöstä.",
   "toggleMatch": "$t(toggleMatch_party)",
-  "toggleMatch_double": "Changing this match to double down mmr: {{- url}} Type !fixdd to undo",
-  "toggleMatch_party": "Changing this match to party mmr: {{- url}} Type !fixparty to undo",
-  "toggleMatch_single": "Changing this match to single down mmr: {{- url}} Type !fixdd to undo",
-  "toggleMatch_solo": "Changing this match to solo mmr: {{- url}} Type !fixparty to undo",
+  "toggleMatch_double": "Vaihdetaan tämä ottelu tupla mmr:äksi: {{- url}} Kirjoita !fixdd peruuttaaksesi",
+  "toggleMatch_party": "Vaihdetaan tämä ottelu ryhmä mmr:äksi: {{- url}} Kirjoita !fixparty peruuttaaksesi",
+  "toggleMatch_single": "Vaihdetaan tämä ottelu tavalliseksi mmr:äksi: {{- url}} Kirjoita !fixdd peruuttaaksesi",
+  "toggleMatch_solo": "Vaihdetaan tämä ottelu soolo mmr:äksi: {{- url}} Kirjoita !fixparty peruuttaaksesi",
   "uknownMmr": "En tiedä {{channel}}-kanavan MMR:ää vielä. Modien täytyy !setmmr 1234 tai asettaa se osoitteessa {{- url}}",
   "unknown": "Tuntematon",
   "unknownSteam": "Steam-tiliä ei löytynyt. Noudata asennuksen 2-vaihetta, pelaa bottipeli ja yritä uudelleen.",
-  "unranked": "Unranked",
+  "unranked": "Ei rankattu",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "MMR päivitetty arvoon {{mmr}}. !fixparty jos kyseessä on ryhmäottelu ja !fixdd jos tuplaus",
   "updateMmr_manual": "MMR päivitetty arvoon {{mmr}}",

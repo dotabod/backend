@@ -5,9 +5,6 @@
     "pickup": "{{- heroName}} ha preso l'egida",
     "snatched": "{{- heroName}} ha rubato l'egida {{emote}}"
   },
-  "apm_one": "APM live: {{count}} {{emote}}",
-  "apm_many": "",
-  "apm_other": "APM live: {{count}} {{emote}}",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "$t(betaTester_on)",
@@ -40,9 +37,6 @@
   "dota2pt": "Hai bisogno di build pro per {{- heroName}}? Vai qui {{- url}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
-  "gpm_zero": "",
-  "gpm_one": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
-  "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
   "heroItems": {
     "empty": "(Delay di 2m) Nessun oggetto trovato per {{- heroName}}",
     "list": "(Delay di 2m) {{- heroName}} ha: {{- itemNames}}"
@@ -50,23 +44,19 @@
   "herostats": {
     "none": "Nessuna partita giocata come {{- heroName}} {{timeperiod}}",
     "timeperiod": {
+      "lifetime": "di sempre",
       "days_one": "in {{count}} giorno",
-      "days_many": "",
-      "days_other": "in {{count}} giorni",
-      "lifetime": "di sempre"
+      "days_other": "in {{count}} giorni"
     },
     "winrate_one": "Winrate: {{winrate}} come {{- heroName}} {{timeperiod}} in un totale di {{count}} partita.",
-    "winrate_many": "",
     "winrate_other": "Winrate: {{winrate}} come {{- heroName}} {{timeperiod}} in un totale di {{count}} partite."
   },
   "invalidColor": "Colore, slot o nome dell'eroe non validi. Prova 1-10, parte del nome, o un colore da {{colorList}}",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} ha perso la kill streak di {{count}} {{emote}}",
-    "lost_many": "",
     "lost_other": "{{- heroName}} ha perso la kill streak di {{count}} {{emote}}",
     "won_one": "{{- heroName}} ha una kill streak di {{count}} {{emote}}",
-    "won_many": "",
     "won_other": "{{- heroName}} ha una kill streak di {{count}} {{emote}}"
   },
   "lastgame": {
@@ -116,7 +106,6 @@
   "rank": {
     "nextRankAt": "Prossimo rank a",
     "nextRankIn_one": "Ancora un'altra vittoria {{emote}}",
-    "nextRankIn_many": "",
     "nextRankIn_other": "in {{count}} vittorie"
   },
   "ranked": "Classificata",
@@ -130,12 +119,9 @@
     "2": "Morti di Rosh: 2 · Prossimo drop: Cheese e Aghanim Blessing o Refresher Shard.",
     "3": "Morti di Rosh: 3 · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard.",
     "more_one": "Morti di Rosh: {{count}} · Prossimo drop: Cheese, Aghanim's Blessing e Refresher Shard.",
-    "more_many": "",
     "more_other": "Morti di Rosh: {{count}} · Prossimo drop: Cheese, Aghanim's Blessing e Refresher Shard."
   },
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sarà tra {{min}} e {{max}}",
-  "seconds_one": "{{count}} secondo",
-  "seconds_other": "{{count}} secondi",
   "setStreamDelay": "Impostando il delay dello stream a: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Delay della stream invalido, usa !setdelay <seconds>",
   "setStreamDelayRemoved": "Rimuovendo il delay dello stream",
@@ -156,9 +142,6 @@
   "toggleMatch_party": "Questo match verrá contato come party mmr: {{- url}} Scrivi !fixparty per annullare",
   "toggleMatch_single": "Questo match verrá contato come standard mmr: {{- url}} Scrivi !fixdd per annullare",
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
-  "treadToggle_one": "Abbiamo togglato i treads {{count}} volte per salvare un totale di {{manaCount}} mana questa partita.",
-  "treadToggle_many": "",
-  "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",
   "unknownSteam": "Impossibile trovare l'account Steam. Prova a giocare una partita di prova contro i bot per salvare il tuo account su Dotabod!",
@@ -171,5 +154,13 @@
     "commit": "La versione corrente del server è {{version}}, ecco cosa manca rispetto all'ultima versione: {{- url}}",
     "unknown": "Impossibile trovare l'ultimo git commit, ecco il repo {{- url}}"
   },
-  "xpm": "XPM Live: {{num}}"
+  "xpm": "XPM Live: {{num}}",
+  "apm_one": "APM live: {{count}} {{emote}}",
+  "apm_other": "APM live: {{count}} {{emote}}",
+  "gpm_one": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
+  "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
+  "seconds_one": "{{count}} secondo",
+  "seconds_other": "{{count}} secondi",
+  "treadToggle_one": "Abbiamo togglato i treads {{count}} volte per salvare un totale di {{manaCount}} mana questa partita.",
+  "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita"
 }
