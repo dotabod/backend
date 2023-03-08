@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
 
-db = db.getSiblingDB("dotabod");
-db.cards.createIndex({ id: 1 });
-db.cards.createIndex({ createdAt: -1 }, { expireAfterSeconds: 3600 });
+db = db.getSiblingDB("dotabod")
+db.cards.createIndex({ id: 1 })
+db.cards.createIndex({ createdAt: -1 }, { expireAfterSeconds: 3600 })
 const gameModes = [
   { id: 1, name: "All Pick" },
   { id: 2, name: "Captains Mode" },
@@ -27,10 +27,10 @@ const gameModes = [
   { id: 22, name: "All Pick" },
   { id: 23, name: "Turbo" },
   { id: 24, name: "Mutation" },
-];
-db.gameModes.createIndex({ id: 1 });
-db.gameModes.insertMany(gameModes);
-db.games.createIndex({ createdAt: -1 }, { expireAfterSeconds: 3600 });
+]
+db.gameModes.createIndex({ id: 1 })
+db.gameModes.insertMany(gameModes)
+db.games.createIndex({ createdAt: -1 }, { expireAfterSeconds: 3600 })
 const heroes = [
   { localized_name: "Not Picked", id: 0 },
   { localized_name: "Anti-Mage", id: 1 },
@@ -153,10 +153,10 @@ const heroes = [
   { localized_name: "Mars", id: 129 },
   { localized_name: "Dawnbreaker", id: 135 },
   { localized_name: "Marci", id: 136 },
-];
-db.heroes.createIndex({ id: 1 });
-db.heroes.createIndex({ custom: 1, localized_name: 1 });
-db.heroes.insertMany(heroes);
+]
+db.heroes.createIndex({ id: 1 })
+db.heroes.createIndex({ custom: 1, localized_name: 1 })
+db.heroes.insertMany(heroes)
 const medals = [
   { rank_tier: 0, name: "Uncalibrated" },
   { rank_tier: 11, name: "Herald☆1" },
@@ -209,11 +209,11 @@ const medals = [
   { rank_tier: 76, name: "Divine☆6" },
   { rank_tier: 77, name: "Divine☆7" },
   { rank_tier: 80, name: "Immortal" },
-];
-db.medals.createIndex({ rank_tier: 1 });
-db.medals.insertMany(medals);
-db.notablePlayers.createIndex({ account_id: 1 });
-db.notablePlayers.createIndex({ channel: 1 });
-db.delayedGames.createIndex({ "match.match_id": 1 });
-db.delayedGames.createIndex({ "teams.players.accountid": 1 });
-db.delayedGames.createIndex({ createdAt: -1 }, { expireAfterSeconds: 604800 });
+]
+db.medals.createIndex({ rank_tier: 1 })
+db.medals.insertMany(medals)
+db.notablePlayers.createIndex({ account_id: 1 })
+db.notablePlayers.createIndex({ channel: 1 })
+db.delayedGames.createIndex({ "match.match_id": 1 })
+db.delayedGames.createIndex({ "teams.players.accountid": 1 })
+db.delayedGames.createIndex({ createdAt: -1 }, { expireAfterSeconds: 604800 })

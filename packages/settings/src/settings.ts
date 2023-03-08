@@ -104,43 +104,40 @@ export const defaultSettings = {
   tellChatNewMMR: true,
   tellChatBets: true,
   queueBlocker: false,
-};
+}
 
-export type SettingKeys = keyof typeof defaultSettings;
-export const DBSettings = {} as Record<SettingKeys, SettingKeys>;
+export type SettingKeys = keyof typeof defaultSettings
+export const DBSettings = {} as Record<SettingKeys, SettingKeys>
 Object.keys(defaultSettings).forEach((key) => {
-  DBSettings[key as SettingKeys] = key as SettingKeys;
-});
+  DBSettings[key as SettingKeys] = key as SettingKeys
+})
 
-export const getValueOrDefault = (
-  key: SettingKeys,
-  data?: { key: string; value: any }[]
-) => {
+export const getValueOrDefault = (key: SettingKeys, data?: { key: string; value: any }[]) => {
   if (!Array.isArray(data) || !data.length || !data.filter(Boolean).length) {
-    return defaultSettings[key];
+    return defaultSettings[key]
   }
 
-  const dbVal = data.find((s) => s.key === key)?.value;
+  const dbVal = data.find((s) => s.key === key)?.value
 
   // Undefined is not touching the option in FE yet
   // So we give them our best default
   if (dbVal === undefined) {
-    return defaultSettings[key];
+    return defaultSettings[key]
   }
 
   try {
     if (typeof dbVal === "string") {
-      const val = JSON.parse(dbVal) as unknown as any;
+      const val = JSON.parse(dbVal) as unknown as any
       if (typeof val === "object" && typeof defaultSettings[key] === "object") {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return {
           ...(defaultSettings[key] as any),
           ...val,
-        };
+        }
       }
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return val;
+      return val
     }
 
     if (typeof dbVal === "object" && typeof defaultSettings[key] === "object") {
@@ -148,13 +145,13 @@ export const getValueOrDefault = (
       return {
         ...(defaultSettings[key] as any),
         ...dbVal,
-      };
+      }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return dbVal;
+    return dbVal
   } catch {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return dbVal;
+    return dbVal
   }
-};
+}

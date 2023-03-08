@@ -17,6 +17,7 @@
     "noImplicitAny": true,
     "skipLibCheck": true
   },
+  "include": ["./.eslintrc.cjs"],
   "ts-node": {
     "esm": true,
     "pretty": true,
