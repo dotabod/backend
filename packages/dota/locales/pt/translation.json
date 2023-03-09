@@ -5,6 +5,9 @@
     "pickup": "{{- heroName}} pegou o aegis!",
     "snatched": "{{- heroName}} roubou o aegis! {{emote}}"
   },
+  "apm_one": "APM ao vivo: {{count}} {{emote}}",
+  "apm_many": "",
+  "apm_other": "APM ao vivo: {{count}} {{emote}}",
   "averageRank": "Rank médio neste jogo",
   "betaFeature": "[recurso beta]",
   "betaTester": "$t(betaTester_on)",
@@ -37,6 +40,9 @@
   "dota2pt": "Precisa de builds profissionais para {{- heroName}} ? Dê uma olhada aqui {{- url}}",
   "dotabod": "Eu sou um bot open source feito pelo {{author}}. Mais informações: {{- url}}",
   "gameNotFound": "Jogo não encontrado",
+  "gpm_zero": "",
+  "gpm_one": "GPM ao vivo: {{num}}. {{heroKills}} de heróis, {{creepKills}} de creeps.",
+  "gpm_other": "GPM ao vivo: {{num}}. {{heroKills}} de heróis, {{creepKills}} de creeps.",
   "heroItems": {
     "empty": "(2 min de atraso) Nenhum item encontrado para {{- heroName}}",
     "list": "(2 min de atraso) {{- heroName}} possui: {{- itemNames}}"
@@ -44,19 +50,23 @@
   "herostats": {
     "none": "Nenhuma partida jogada de {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "lifetime": "de todos os tempos",
       "days_one": "em {{count}} dia",
-      "days_other": "em {{count}} dias"
+      "days_many": "",
+      "days_other": "em {{count}} dias",
+      "lifetime": "de todos os tempos"
     },
     "winrate_one": "Taxa de vitória: {{winrate}}% com {{- heroName}} {{timeperiod}} em um total de {{count}} partida.",
+    "winrate_many": "",
     "winrate_other": "Taxa de vitória: {{winrate}}% com {{- heroName}} {{timeperiod}} em um total de {{count}} partidas."
   },
   "invalidColor": "Espaço, nome ou cor de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
+    "lost_many": "",
     "lost_other": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
     "won_one": "{{- heroName}} tem uma killstreak de {{count}} {{emote}}",
+    "won_many": "",
     "won_other": "{{- heroName}} tem uma killstreak de {{count}} {{emote}}"
   },
   "lastgame": {
@@ -106,6 +116,7 @@
   "rank": {
     "nextRankAt": "Próximo rank em",
     "nextRankIn_one": "Mais uma vitória {{emote}}",
+    "nextRankIn_many": "",
     "nextRankIn_other": "em {{count}} vitórias"
   },
   "ranked": "Ranqueada",
@@ -119,9 +130,12 @@
     "2": "Mortes do Roshan: 2 · Próximos itens a cair: queijo e benção de aghanim ou fragmento de orbe restaurador.",
     "3": "Mortes do Roshan: 3 · Próximos itens a cair: queijo, benção de aghanim e fragmento de orbe restaurador.",
     "more_one": "Mortes do Roshan: {{count}} · Próximos itens a cair: queijo, benção de aghanim e fragmento de orbe restaurador.",
+    "more_many": "",
     "more_other": "Mortes do Roshan: {{count}} · Próximos itens a cair: queijo, benção de aghanim e fragmento de orbe restaurador."
   },
   "roshanKilled": "Roshan morto! Próximo roshan entre {{min}} e {{max}} .",
+  "seconds_one": "{{count}} segundo",
+  "seconds_other": "{{count}} segundos",
   "setStreamDelay": "Configurando delay de transmissão para: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <seconds> .",
   "setStreamDelayRemoved": "Removendo delay de transmissão",
@@ -142,6 +156,14 @@
   "toggleMatch_party": "Mudando partida para MMR em equipe: {{- url}} Digite !fixparty para desfazer",
   "toggleMatch_single": "Mudando partida para MMR normal: {{- url}} Digite !fixdd para desfazer",
   "toggleMatch_solo": "Mudando partida para MMR solo: {{- url}} Digite !fixparty para desfazer",
+  "translated": {
+    "by_one": "",
+    "by_many": "",
+    "by_other": ""
+  },
+  "treadToggle_one": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
+  "treadToggle_many": "",
+  "treadToggle_other": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
   "uknownMmr": "Ainda não sei o MMR de {{channel}}. Mods precisam digitar !setmmr 1234 ou configurar em {{- url}}",
   "unknown": "Desconhecido",
   "unknownSteam": "Conta da steam não encontrada. Siga os passos 2 do setup , tente jogar uma partida contra bots para salvar sua conta em Dotabod!",
@@ -154,13 +176,5 @@
     "commit": "Servidor executando a versão {{version}}, aqui está o que falta em comparação com a versão mais recente: {{- url}}",
     "unknown": "Não foi possível encontrar o último git commit, aqui está o repositório {{- url}}"
   },
-  "xpm": "XPM ao vivo: {{num}}",
-  "apm_one": "APM ao vivo: {{count}} {{emote}}",
-  "apm_other": "APM ao vivo: {{count}} {{emote}}",
-  "gpm_one": "GPM ao vivo: {{num}}. {{heroKills}} de heróis, {{creepKills}} de creeps.",
-  "gpm_other": "GPM ao vivo: {{num}}. {{heroKills}} de heróis, {{creepKills}} de creeps.",
-  "seconds_one": "{{count}} segundo",
-  "seconds_other": "{{count}} segundos",
-  "treadToggle_one": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
-  "treadToggle_other": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida."
+  "xpm": "XPM ao vivo: {{num}}"
 }
