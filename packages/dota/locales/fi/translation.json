@@ -38,8 +38,8 @@
   "dotabod": "Olen avoimen lähdekoodin botti jonka on tehnyt {{author}}. Lisätietoja: {{- url}}",
   "gameNotFound": "Peliä ei löytynyt",
   "heroItems": {
-    "empty": "(2m viive) Esineitä ei löytynyt sankarille {{- heroName}}",
-    "list": "(2m viive) Sankarilla {{- heroName}} on: {{- itemNames}}"
+    "empty": "(2min viive) Esineitä ei löytynyt sankarille {{- heroName}}",
+    "list": "(2min viive) Sankarilla {{- heroName}} on: {{- itemNames}}"
   },
   "herostats": {
     "none": "Ei pelattuja otteluita sankarina {{- heroName}} {{timeperiod}}",
