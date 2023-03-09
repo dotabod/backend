@@ -6,9 +6,9 @@
     "snatched": "{{- heroName}} snatched the aegis {{emote}}"
   },
   "translated": {
-    "by_one": "Translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
-    "by_other": "Translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
-    "by_zero": "No translator listed for this language. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
+    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
+    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
+    "by_zero": "Dotabod has no translator listed for this language. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
   },
   "apm_one": "Live APM: {{count}} {{emote}}",
   "apm_other": "Live APM: {{count}} {{emote}}",
@@ -50,15 +50,30 @@
     "empty": "(2m delay) No items found for {{- heroName}}",
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
   },
+  "colors": {
+    "blue": "Blue",
+    "teal": "Teal",
+    "purple": "Purple",
+    "yellow": "Yellow",
+    "orange": "Orange",
+    "pink": "Pink",
+    "olive": "Olive",
+    "cyan": "Cyan",
+    "green": "Green",
+    "brown": "Brown"
+  },
   "herostats": {
-    "none": "No matches played as {{- heroName}} {{timeperiod}}",
+    "noneStreamer": "No matches played as {{- heroName}} {{timeperiod}}",
+    "noneColor": "{{color}} has no matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
       "days_one": "in {{count}}d",
       "days_other": "in {{count}}d",
       "lifetime": "of all time"
     },
-    "winrate_one": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} match.",
-    "winrate_other": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Invalid command. Try !setmmr 1234",

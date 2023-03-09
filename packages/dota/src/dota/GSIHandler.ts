@@ -48,10 +48,11 @@ export class GSIHandler {
 
   // Server could reboot and lose these in memory
   // But that's okay they will get reset based on current match state
-  heroData: null | { win: number; lose: number } = null
+  heroDatas: Partial<Record<number, { win: number; lose: number }>> = {}
   blockCache: string | null = null
   playingBetMatchId: string | undefined | null = null
   playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
+  // hero slot can be 0-9
   playingHeroSlot: number | undefined | null = null
   playingHero: HeroNames | undefined | null = null
   playingLobbyType: number | undefined | null = null
@@ -153,7 +154,7 @@ export class GSIHandler {
 
     // Bet stuff should be closed by endBets()
     // This should mean an entire match is over
-    this.heroData = null
+    this.heroDatas = {}
     this.players = null
     this.client.steamServerId = undefined
     this.endingBets = false

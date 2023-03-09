@@ -5,10 +5,12 @@ import RedisClient from '../../db/redis.js'
 import { GSIHandler } from '../../dota/GSIHandler.js'
 import { server } from '../../dota/index.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
-import getHero from '../../dota/lib/getHero.js'
-import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
+import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
+import { getHeroById, heroColors, translatedColor } from '../../dota/lib/heroes.js'
+import { isArcade } from '../../dota/lib/isArcade.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import { profileLink } from './stats.js'
 
 const redisClient = RedisClient.getInstance()
 
@@ -18,10 +20,14 @@ function speakHeroStats({
   hero,
   channel,
   allTime,
+  profile,
+  ourHero,
   lng,
 }: {
   allTime: boolean
+  ourHero: boolean
   lose: number
+  profile: ReturnType<typeof profileLink>
   channel: string
   lng: string
   hero: { id: number; localized_name: string }
@@ -34,28 +40,32 @@ function speakHeroStats({
 
   if (total > 0) {
     const winrate = !total ? 0 : Math.round(((win || 0) / total) * 100)
-    chatClient.say(
-      channel,
-      t('herostats.winrate', {
-        lng,
-        heroName: hero.localized_name,
-        winrate,
-        timeperiod,
-        count: total,
-      }),
-    )
+    const langProps = {
+      lng,
+      heroName: hero.localized_name,
+      winrate,
+      timeperiod,
+      count: total,
+      color: translatedColor(heroColors[profile.heroKey], lng),
+    }
+    const desc = ourHero
+      ? t('herostats.winrateStreamer', langProps)
+      : t('herostats.winrateColor', langProps)
+    chatClient.say(channel, desc)
     return
   }
 
   if (!total) {
-    chatClient.say(
-      channel,
-      t('herostats.none', {
-        lng,
-        heroName: hero.localized_name,
-        timeperiod,
-      }),
-    )
+    const langProps = {
+      lng,
+      heroName: hero.localized_name,
+      timeperiod,
+      color: translatedColor(heroColors[profile.heroKey], lng),
+    }
+    const desc = ourHero
+      ? t('herostats.noneStreamer', langProps)
+      : t('herostats.noneColor', langProps)
+    chatClient.say(channel, desc)
     return
   }
 }
@@ -79,41 +89,75 @@ commandHandler.registerCommand('hero', {
       )
       return
     }
-    if (!isPlayingMatch(client.gsi)) {
+
+    const gsi = gsiHandlers.get(client.token)
+    if (!gsi) return // this would never happen but its to satisfy typescript
+    if (!client.gsi?.map?.matchid || isArcade(client.gsi)) {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
       )
       return
     }
-    const hero = getHero(client.gsi?.hero?.name)
-    if (!hero) {
-      chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
-      return
-    }
 
-    const gsi = gsiHandlers.get(client.token)
-    if (!gsi) return // this would never happen but its to satisfy typescript
+    try {
+      const gsiHandle = gsiHandlers.get(client.token)
+      if (!gsiHandle) return // this would never happen but its to satisfy typescript
 
-    const allTime = args[0] === 'all'
-    if (gsi.heroData) {
-      const { win, lose } = gsi.heroData as { win: number; lose: number }
-      speakHeroStats({ win, lose, hero, channel, allTime, lng: message.channel.client.locale })
-    } else {
-      void getHeroMsg({
-        hero,
-        channel,
-        steam32Id: client.steam32Id,
-        allTime,
-        token: client.token,
-        gsi,
-        lng: message.channel.client.locale,
+      const ourHero = !args.length
+      const profile = profileLink({
+        players: gsiHandle.players?.matchPlayers || getCurrentMatchPlayers(client.gsi),
+        locale: client.locale,
+        currentMatchId: client.gsi.map.matchid,
+        // defaults to the hero the user is playing
+        args: gsiHandle.playingHeroSlot && ourHero ? [`${gsiHandle.playingHeroSlot + 1}`] : args,
       })
+
+      const hero = getHeroById(profile.heroid)
+      if (!hero) {
+        chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
+        return
+      }
+
+      const allTime = args[0] === 'all'
+      const data = gsi.heroDatas[profile.accountid]
+      if (data) {
+        const { win, lose } = data
+        speakHeroStats({
+          win,
+          lose,
+          profile,
+          ourHero,
+          hero,
+          channel,
+          allTime,
+          lng: message.channel.client.locale,
+        })
+      } else {
+        void getHeroMsg({
+          hero,
+          channel,
+          ourHero,
+          profile,
+          steam32Id: profile.accountid,
+          allTime,
+          token: client.token,
+          gsi,
+          lng: message.channel.client.locale,
+        })
+      }
+    } catch (e: any) {
+      chatClient.say(
+        message.channel.name,
+        e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+      )
     }
   },
 })
 
 interface HeroMsg {
+  ourHero: boolean
+  profile: ReturnType<typeof profileLink>
   hero: { id: number; localized_name: string }
   channel: string
   steam32Id: number
@@ -123,17 +167,29 @@ interface HeroMsg {
   lng: string
 }
 
-async function getHeroMsg({ hero, channel, steam32Id, allTime, token, gsi, lng }: HeroMsg) {
+async function getHeroMsg({
+  ourHero,
+  hero,
+  channel,
+  steam32Id,
+  allTime,
+  token,
+  gsi,
+  lng,
+  profile,
+}: HeroMsg) {
   const data = {
     allTime,
     heroId: hero.id,
     steam32Id,
   }
 
-  const isPrivate = await redisClient.client.get(`${token}:isPrivate`)
-  if (Number(isPrivate) === 1) {
-    chatClient.say(channel, t('privateProfile', { command: '!hero', lng }))
-    return
+  if (ourHero) {
+    const isPrivate = await redisClient.client.get(`${token}:isPrivate`)
+    if (Number(isPrivate) === 1) {
+      chatClient.say(channel, t('privateProfile', { command: '!hero', lng }))
+      return
+    }
   }
 
   const sockets = await server.io.in(token).fetchSockets()
@@ -143,7 +199,16 @@ async function getHeroMsg({ hero, channel, steam32Id, allTime, token, gsi, lng }
   }
 
   sockets[0].timeout(15000).emit('requestHeroData', { data }, (err: any, response: any) => {
-    gsi.heroData = response ?? null
-    speakHeroStats({ win: response?.win, lose: response?.lose, lng, hero, channel, allTime })
+    gsi.heroDatas[steam32Id] = response ?? null
+    speakHeroStats({
+      ourHero,
+      profile,
+      win: response?.win,
+      lose: response?.lose,
+      lng,
+      hero,
+      channel,
+      allTime,
+    })
   })
 }

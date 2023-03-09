@@ -8,30 +8,24 @@ import CustomError from '../../utils/customError.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
+interface Player {
+  heroid: number
+  accountid: number // steam32 id
+}
+
 interface ProfileLinkParams {
   locale: string
   currentMatchId: string
   args: string[]
-  players?: { heroid: number; accountid: number }[]
+  players?: Player[]
 }
 
-export function profileLink({ players, locale, currentMatchId, args }: ProfileLinkParams) {
-  if (!currentMatchId) {
-    throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
-  }
-
-  if (!Number(currentMatchId)) {
-    throw new CustomError(t('gameNotFound', { lng: locale }))
-  }
-
-  if (!players?.length) {
-    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
-  }
-
+export function getPlayerFromArgs(args: string[], players: Player[], locale: string) {
   if (!args.length) {
     throw new CustomError(t('invalidColor', { colorList: heroColors.join(' · '), lng: locale }))
   }
 
+  // herokey is 0-9
   let heroKey: number | undefined
   const color = args[0].toLowerCase().trim()
   const heroColorIndex = heroColors.findIndex((heroColor) => heroColor.toLowerCase() === color)
@@ -54,7 +48,23 @@ export function profileLink({ players, locale, currentMatchId, args }: ProfileLi
     throw new CustomError(t('invalidColor', { colorList: heroColors.join(' '), lng: locale }))
   }
 
-  const player = players[heroKey]
+  return { heroKey, player: players[heroKey] }
+}
+
+export function profileLink({ players, locale, currentMatchId, args }: ProfileLinkParams) {
+  if (!currentMatchId) {
+    throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
+  }
+
+  if (!Number(currentMatchId)) {
+    throw new CustomError(t('gameNotFound', { lng: locale }))
+  }
+
+  if (!players?.length) {
+    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
+  }
+
+  const { player, heroKey } = getPlayerFromArgs(args, players, locale)
   return { heroKey, ...player }
 }
 
