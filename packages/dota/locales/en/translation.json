@@ -5,6 +5,11 @@
     "pickup": "{{- heroName}} picked up the aegis!",
     "snatched": "{{- heroName}} snatched the aegis {{emote}}"
   },
+  "translated": {
+    "by_one": "Translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
+    "by_other": "Translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
+    "by_zero": "No translator listed for this language. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
+  },
   "apm_one": "Live APM: {{count}} {{emote}}",
   "apm_other": "Live APM: {{count}} {{emote}}",
   "averageRank": "Average rank this game",
