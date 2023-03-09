@@ -92,7 +92,7 @@
   "npRemove": "Prova !np remove <steam32id>",
   "npRemoved": "Tog bort {{steamid}} från !np för denna kanal",
   "npUnknown": "Kunde inte hitta {{steamid}} för denna kanal",
-  "overlayMissing": "Överlägget hittades inte. {{command}}-kommandot kräver att överlägget läggs till.",
+  "overlayMissing": "Överlägg hittades inte. {{command}}-kommandot kräver att överlägget läggs till.",
   "ping": "Pong {{emote}}",
   "pleb": "En pleb IN {{emote}}",
   "pleb_off": "{{name}} {{emote}} bra jobbat pleb",

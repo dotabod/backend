@@ -44,7 +44,7 @@
   "herostats": {
     "none": "Ei pelattuja otteluita sankarina {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "lifetime": "ikinä",
+      "lifetime": "kaikilta ajoilta",
       "days_one": "{{count}}pv",
       "days_other": "{{count}}pv"
     },
@@ -66,7 +66,7 @@
   },
   "lastgamescore": {
     "double": "Tuplaus",
-    "duration": "{{minutes}}m pitkä",
+    "duration": "kesti {{minutes}}min",
     "kda": "{{- kdavalue}} {{- heroName}}",
     "lost": "Hävisi edellisen pelin",
     "party": "Ryhmäottelu",
