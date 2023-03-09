@@ -2,5 +2,5 @@ project_id_env: CROWDIN_PROJECT_ID
 api_token_env: CROWDIN_PERSONAL_TOKEN
 files:
   - source: /packages/**/locales/en/translation.json
-    translation: /packages/**/locales/%two_letters_code%/%original_file_name%
+    translation: /packages/**/locales/%locale%/%original_file_name%
     type: i18next_json
