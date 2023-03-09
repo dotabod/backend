@@ -5,11 +5,6 @@
     "pickup": "{{- heroName}} picked up the aegis!",
     "snatched": "{{- heroName}} snatched the aegis {{emote}}"
   },
-  "translated": {
-    "by_one": "Translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
-    "by_other": "Translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
-    "by_zero": "No translator listed for this language. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
-  },
   "apm_one": "Live APM: {{count}} {{emote}}",
   "apm_other": "Live APM: {{count}} {{emote}}",
   "averageRank": "Average rank this game",
@@ -154,6 +149,11 @@
   "toggleMatch_party": "Changing this match to party mmr: {{- url}} Type !fixparty to undo",
   "toggleMatch_single": "Changing this match to single down mmr: {{- url}} Type !fixdd to undo",
   "toggleMatch_solo": "Changing this match to solo mmr: {{- url}} Type !fixparty to undo",
+  "translated": {
+    "by_zero": "No translator listed for this language. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
+    "by_one": "Translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
+    "by_other": "Translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
+  },
   "treadToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
   "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
   "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",

@@ -156,6 +156,11 @@
   "toggleMatch_party": "Mudando partida para MMR em equipe: {{- url}} Digite !fixparty para desfazer",
   "toggleMatch_single": "Mudando partida para MMR normal: {{- url}} Digite !fixdd para desfazer",
   "toggleMatch_solo": "Mudando partida para MMR solo: {{- url}} Digite !fixparty para desfazer",
+  "translated": {
+    "by_one": "",
+    "by_many": "",
+    "by_other": ""
+  },
   "treadToggle_one": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
   "treadToggle_many": "",
   "treadToggle_other": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
