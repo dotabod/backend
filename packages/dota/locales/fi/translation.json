@@ -38,13 +38,13 @@
   "dotabod": "Olen avoimen lähdekoodin botti jonka on tehnyt {{author}}. Lisätietoja: {{- url}}",
   "gameNotFound": "Peliä ei löytynyt",
   "heroItems": {
-    "empty": "(2m viive) Esineitä ei löytynyt sankarille {{- heroName}}",
-    "list": "(2m viive) Sankarilla {{- heroName}} on: {{- itemNames}}"
+    "empty": "(2min viive) Esineitä ei löytynyt sankarille {{- heroName}}",
+    "list": "(2min viive) Sankarilla {{- heroName}} on: {{- itemNames}}"
   },
   "herostats": {
     "none": "Ei pelattuja otteluita sankarina {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "lifetime": "ikinä",
+      "lifetime": "kaikilta ajoilta",
       "days_one": "{{count}}pv",
       "days_other": "{{count}}pv"
     },
@@ -66,7 +66,7 @@
   },
   "lastgamescore": {
     "double": "Tuplaus",
-    "duration": "{{minutes}}m pitkä",
+    "duration": "kesti {{minutes}}min",
     "kda": "{{- kdavalue}} {{- heroName}}",
     "lost": "Hävisi edellisen pelin",
     "party": "Ryhmäottelu",
