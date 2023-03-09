@@ -33,6 +33,7 @@ commandHandler.registerCommand('locale', {
         t('translated.by', {
           lng: message.channel.client.locale,
           count: 0,
+          url: 'https://discord.dotabod.com',
         }),
       )
       return
@@ -44,6 +45,7 @@ commandHandler.registerCommand('locale', {
         count: translators.contributors.length,
         lng: message.channel.client.locale,
         translators: translators.contributors.join(' · '),
+        url: 'https://discord.dotabod.com',
       }),
     )
   },
