@@ -1,6 +1,7 @@
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
 
+import { prisma } from '../db/prisma.js'
 import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
@@ -14,6 +15,7 @@ interface NotablePlayer {
   position: number
   heroName: string
   name: string
+  image?: string
   country_code: string
 }
 
@@ -28,7 +30,7 @@ export async function notablePlayers(
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
   enableFlags?: boolean,
-): Promise<{ playerList: NotablePlayer[]; description: string }> {
+) {
   const { matchPlayers, accountIds, gameMode } = await getPlayers(locale, currentMatchId, players)
 
   const mode = gameMode
@@ -99,6 +101,38 @@ export async function notablePlayers(
   })
 
   const modeText = typeof mode?.name === 'string' ? `${mode.name} [${avg} avg]: ` : `[${avg} avg]: `
+
+  // get the list of users in the Dotabod postgresql database according to steam id
+  const users = await prisma.user.findMany({
+    select: {
+      image: true,
+      displayName: true,
+      SteamAccount: {
+        take: 1,
+        select: {
+          steam32Id: true,
+        },
+      },
+    },
+    where: {
+      SteamAccount: {
+        some: {
+          steam32Id: {
+            in: result.map((m) => m.account_id),
+          },
+        },
+      },
+    },
+  })
+
+  // connect playerList to users
+  result.forEach((player) => {
+    const user = users.find((user) => user.SteamAccount[0].steam32Id === player.account_id)
+    if (user) {
+      player.name = user.displayName ?? player.name
+      player.image = user.image ?? undefined
+    }
+  })
 
   return {
     description: `${modeText}${allPlayers || t('noNotable', { lng: locale })}`,
