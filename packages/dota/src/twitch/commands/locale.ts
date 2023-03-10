@@ -5,20 +5,20 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 const contributors = [
   { language: 'English', locale: 'en', contributors: ['techleed'] },
-  { language: 'Russian', locale: 'ru', contributors: ['MorTal', 'nikkkolai', 'azverin7'] },
-  { language: 'Italian', locale: 'it', contributors: ['OmniXen', '@helle_xxx'] },
-  { language: 'Portuguese', locale: 'pt', contributors: ['BDN', 'chefinhu'] },
+  { language: 'Russian', locale: 'ru-RU', contributors: ['MorTal', 'nikkkolai', 'azverin7'] },
+  { language: 'Italian', locale: 'it-IT', contributors: ['OmniXen', '@helle_xxx'] },
+  { language: 'Portuguese', locale: 'pt-PT', contributors: ['BDN', 'chefinhu'] },
   { language: 'Brazilian Portuguese', locale: 'pt-BR', contributors: ['KenjiMomose', '! Eldo'] },
-  { language: 'Spanish', locale: 'es', contributors: ['@SirShirou'] },
-  { language: 'Hungarian', locale: 'hu', contributors: ['@slinkyone', 'ggeeli'] },
-  { language: 'Czech', locale: 'cs', contributors: ['matt100893', 'Poody'] },
+  { language: 'Spanish', locale: 'es-ES', contributors: ['@SirShirou'] },
+  { language: 'Hungarian', locale: 'hu-HU', contributors: ['@slinkyone', 'ggeeli'] },
+  { language: 'Czech', locale: 'cs-CZ', contributors: ['matt100893', 'Poody'] },
   { language: 'Ukrainian', locale: 'uk-UA', contributors: ['@dankYbat'] },
-  { language: 'Farsi', locale: 'fa', contributors: ['@RSaber'] },
-  { language: 'Turkish', locale: 'tr', contributors: ['Bedirhan'] },
-  { language: 'German', locale: 'de', contributors: ['Ostfreeze'] },
-  { language: 'Swedish', locale: 'sv', contributors: ['@poecco'] },
-  { language: 'Finnish', locale: 'fi', contributors: ['@poecco'] },
-  { language: 'Polish', locale: 'pl', contributors: ['PoliG^', '@ProximusPL'] },
+  { language: 'Farsi', locale: 'fa-IR', contributors: ['@RSaber'] },
+  { language: 'Turkish', locale: 'tr-TR', contributors: ['Bedirhan'] },
+  { language: 'German', locale: 'de-DE', contributors: ['Ostfreeze'] },
+  { language: 'Swedish', locale: 'sv-SE', contributors: ['@poecco'] },
+  { language: 'Finnish', locale: 'fi-FI', contributors: ['@poecco'] },
+  { language: 'Polish', locale: 'pl-PL', contributors: ['PoliG^', '@ProximusPL'] },
 ]
 
 commandHandler.registerCommand('locale', {
