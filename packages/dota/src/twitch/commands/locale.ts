@@ -22,7 +22,7 @@ const contributors = [
 ]
 
 commandHandler.registerCommand('locale', {
-  aliases: ['lang', 'language', 'translation', 'translate', 'translated'],
+  aliases: ['translation', 'translatedby'],
   permission: 0,
   cooldown: 0,
   handler: (message: MessageType, args: string[]) => {
