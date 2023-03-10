@@ -1,6 +1,8 @@
 set dotenv-load
 
 dockerfile := if env_var("NODE_ENV") == "production" { "docker-compose.yml" } else { "docker-compose.yml -f docker-compose-dev.yml" }
+fam := os_family()
+
 export COMMIT_HASH := `git rev-parse --short HEAD`
 export BUILDKIT_PROGRESS := "plain"
 
@@ -25,7 +27,11 @@ i18np:
 
 i18nd:
     @echo "Downloading translations"
-    @crowdin download --config './crowdin.yml'
+    if [[ {{fam}} == "windows" ]]; then \
+        "c:/Program Files (x86)/CrowdinCLI/crowdin.bat" download --config "./crowdin.yml" --verbose; \
+    else \
+        crowdin download --config "./crowdin.yml"; \
+    fi
 
 i18nu:
     @echo "Uploading translations"
