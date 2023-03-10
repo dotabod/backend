@@ -35,18 +35,6 @@
     "tpFound": "{{channel}} молодец, наконец-то купил ТП спустя $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Спасибо смерти за данное тебе ТП. Это заняло всего лишь $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
-  "colors": {
-    "blue": "",
-    "brown": "",
-    "cyan": "",
-    "green": "",
-    "olive": "",
-    "orange": "",
-    "pink": "",
-    "purple": "",
-    "teal": "",
-    "yellow": ""
-  },
   "commandDisabled": "Стример отключил команду {{cmdName}} {{emote}}. Напишите !commands, чтобы увидеть доступные команды",
   "commands_everyone": "Каждый может использовать: {{commandList}}",
   "commands_mods": "Команды только для модераторов: {{commandList}}",
@@ -64,8 +52,6 @@
   },
   "herostats": {
     "none": "Нет сыгранных игр на {{- heroName}} {{timeperiod}}",
-    "noneColor": "",
-    "noneStreamer": "",
     "timeperiod": {
       "days_one": "за {{count}} день",
       "days_few": "за {{count}} дня",
@@ -76,9 +62,7 @@
     "winrate_one": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игр.",
     "winrate_few": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игры.",
     "winrate_many": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игр.",
-    "winrate_other": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыгран {{count}} игр.",
-    "winrateColor": "",
-    "winrateStreamer": ""
+    "winrate_other": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыгран {{count}} игр."
   },
   "invalidColor": "Неверный цвет героя, номер или имя. Попробуй 1-10, имя героя на английском или цвет из списка: {{colorList}}",
   "invalidMmr": "Неверная команда. Попробуйте !setmmr 1234",
@@ -95,11 +79,7 @@
   "lastgame": {
     "link": "ID последнего матча: {{- url}}",
     "none": "Не найдено игроков из прошлой игры",
-    "player": "{{- currentMatchHero}} играл на {{- lastMatchHero}}",
-    "total_one": "",
-    "total_few": "",
-    "total_many": "",
-    "total_other": ""
+    "player": "{{- currentMatchHero}} играл на {{- lastMatchHero}}"
   },
   "lastgamescore": {
     "double": "Двойная ставка",
