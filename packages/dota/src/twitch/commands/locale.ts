@@ -4,7 +4,7 @@ import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 const contributors = [
-  { language: 'English', locale: 'en', contributors: ['techleed'] },
+  { language: 'English', locale: 'en', contributors: ['@techleed'] },
   { language: 'Russian', locale: 'ru-RU', contributors: ['MorTal', 'nikkkolai', 'azverin7'] },
   { language: 'Italian', locale: 'it-IT', contributors: ['OmniXen', '@helle_xxx'] },
   { language: 'Portuguese', locale: 'pt-PT', contributors: ['BDN', 'chefinhu'] },
