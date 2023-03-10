@@ -33,6 +33,18 @@
     "tpFound": "{{channel}} szép munka, végre van tp-d $t(seconds, {\"count\": {{seconds}} }) után. {{emote}}",
     "tpFromDeath": "Végre kaptál egy TP-t annak köszönhetően, hogy meghaltál. Végülis csak $t(seconds, {\"count\": {{seconds}} }) -be telt. {{emote}}"
   },
+  "colors": {
+    "blue": "",
+    "brown": "",
+    "cyan": "",
+    "green": "",
+    "olive": "",
+    "orange": "",
+    "pink": "",
+    "purple": "",
+    "teal": "",
+    "yellow": ""
+  },
   "commandDisabled": "A streamer kikapcsolta a {{cmdName}} parancsot {{emote}} Elérhető parancsok megtekinthetőek a !commands paranccsal.",
   "commands_everyone": "Mindenki számára elérhető parancsok: {{commandList}}",
   "commands_mods": "Moderátor parancsok: {{commandList}}",
@@ -48,13 +60,17 @@
   },
   "herostats": {
     "none": "Nem játszott egy meccset sem {{- heroName}} ebben az időszakban: {{timeperiod}}",
+    "noneColor": "",
+    "noneStreamer": "",
     "timeperiod": {
       "days_one": "{{count}} napon belül",
       "days_other": "{{count}} napon belül",
       "lifetime": "összesen"
     },
     "winrate_one": "Winrate: {{winrate}}% {{- heroName}} -ként {{timeperiod}} periódusban {{count}} meccsből.",
-    "winrate_other": "Winrate: {{winrate}}% {{- heroName}} -ként {{timeperiod}} periódusban {{count}} meccsből."
+    "winrate_other": "Winrate: {{winrate}}% {{- heroName}} -ként {{timeperiod}} periódusban {{count}} meccsből.",
+    "winrateColor": "",
+    "winrateStreamer": ""
   },
   "invalidColor": "Helytelen hero szín, slot vagy név. Próbáld 1-10ig, a hős nevét vagy a színt innen: {{colorList}}",
   "invalidMmr": "Érvénytelen parancs. Próbáld így: !setmmr 1234",
@@ -67,7 +83,9 @@
   "lastgame": {
     "link": "Legutóbbi meccs: {{- url}}",
     "none": "Senkivel sem játszunk az előző meccsből.",
-    "player": "{{- currentMatchHero}} {{- lastMatchHero}}ként az előző meccsben."
+    "player": "{{- currentMatchHero}} {{- lastMatchHero}}ként az előző meccsben.",
+    "total_one": "",
+    "total_other": ""
   },
   "lastgamescore": {
     "double": "Megduplázva",

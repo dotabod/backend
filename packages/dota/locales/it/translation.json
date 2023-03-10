@@ -34,6 +34,18 @@
     "tpFound": "{{channel}} ben fatto, hai finalmente comprato un tp dopo $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Grazie a questa morte finalmente hai un tp. Ti ci sono voluti solo $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "colors": {
+    "blue": "",
+    "brown": "",
+    "cyan": "",
+    "green": "",
+    "olive": "",
+    "orange": "",
+    "pink": "",
+    "purple": "",
+    "teal": "",
+    "yellow": ""
+  },
   "commandDisabled": "Lo streamer ha disabilitato il comando {{cmdName}} {{emote}} Usa !commands per quelli abilitati",
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
@@ -49,6 +61,8 @@
   },
   "herostats": {
     "none": "Nessuna partita giocata come {{- heroName}} {{timeperiod}}",
+    "noneColor": "",
+    "noneStreamer": "",
     "timeperiod": {
       "days_one": "in {{count}} giorno",
       "days_many": "",
@@ -57,7 +71,9 @@
     },
     "winrate_one": "Winrate: {{winrate}} come {{- heroName}} {{timeperiod}} in un totale di {{count}} partita.",
     "winrate_many": "",
-    "winrate_other": "Winrate: {{winrate}} come {{- heroName}} {{timeperiod}} in un totale di {{count}} partite."
+    "winrate_other": "Winrate: {{winrate}} come {{- heroName}} {{timeperiod}} in un totale di {{count}} partite.",
+    "winrateColor": "",
+    "winrateStreamer": ""
   },
   "invalidColor": "Colore, slot o nome dell'eroe non validi. Prova 1-10, parte del nome, o un colore da {{colorList}}",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
@@ -72,7 +88,10 @@
   "lastgame": {
     "link": "Partita precedente: {{- url}}",
     "none": "Non è presente nessun giocatore della partita precedente",
-    "player": "{{- currentMatchHero}} ha giocato {{- lastMatchHero}}"
+    "player": "{{- currentMatchHero}} ha giocato {{- lastMatchHero}}",
+    "total_one": "",
+    "total_many": "",
+    "total_other": ""
   },
   "lastgamescore": {
     "double": "Doppio MMR",

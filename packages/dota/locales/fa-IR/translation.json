@@ -1,0 +1,187 @@
+{
+  "aegis": {
+    "denied": "{{- heroName}} denied the aegis {{emote}}",
+    "expired": "{{- heroName}}'s aegis expired {{emote}}",
+    "pickup": " میتونه یه غذای رایگان بده {{- heroName}}",
+    "snatched": "{{- heroName}} آنخ رو دزدید {{emote}}"
+  },
+  "averageRank": "میانگین اکانت بایرهای این بازی",
+  "betaFeature": "[beta feature]",
+  "betaTester": "$t(betaTester_on)",
+  "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
+  "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
+  "bets": {
+    "lost": "این رو که باختیم. عب نداره بعدی هم لوزه",
+    "notScored": "همه بازی رو دبه کردن {{emote}} بازی {{matchId}} هیچ تاثیری نداشت",
+    "open": "قمار کنید {{emote}}",
+    "remade": "Swapped hero {{emote}} Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened {{emote2}}",
+    "won": "بلاخره بردیم. یک تنه بازی رو حمل کردم"
+  },
+  "bounties": {
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) {{emote}} Thanks {{heroNames}} {{emote2}}",
+    "totalGold": "{{count}} gold"
+  },
+  "chatters": {
+    "died": "درخشیدی {{- heroName}} . {{itemNames}}  را نگه دار واسه بازی بعد {{emote}}",
+    "firstBloodDeath": "اولین غذا را داد {{- heroName}} {{emote}}",
+    "midas": "{{emote}} میداس رو استفاده کن",
+    "noTp": "{{channel}} where's your tp {{emote}}",
+    "pause": "{{emote}} کی وسط شکار ریدنش گرفت؟",
+    "smoked": "{{emote}} {{- heroName}} سبحان الله غیب شد",
+    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
+    "tpFromDeath": "Thanks to this death you finally got a tp. And it only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
+  },
+  "commandDisabled": "Streamer disabled {{cmdName}} command {{emote}} Check !commands for the enabled ones",
+  "commands_everyone": "کامندهای همگانی: {{commandList}}",
+  "commands_mods": "کامندهای مادها {{commandList}}",
+  "dota2pt": "میخوای چیز جدید واسه قهرمان {{- heroName}} یاد بگیری؟ این اینک رو چک کن {{- url}}",
+  "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
+  "gameNotFound": "بازی پیدا نشد",
+  "heroItems": {
+    "empty": "(2m delay) No items found for {{- heroName}}",
+    "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
+  },
+  "colors": {
+    "blue": "Blue",
+    "teal": "Teal",
+    "purple": "Purple",
+    "yellow": "Yellow",
+    "orange": "Orange",
+    "pink": "Pink",
+    "olive": "Olive",
+    "cyan": "Cyan",
+    "green": "Green",
+    "brown": "Brown"
+  },
+  "herostats": {
+    "noneStreamer": "No matches played as {{- heroName}} {{timeperiod}}",
+    "noneColor": "{{color}} has no matches played as {{- heroName}} {{timeperiod}}",
+    "timeperiod": {
+      "lifetime": "of all time",
+      "days_one": "in {{count}}d",
+      "days_other": "in {{count}}d"
+    },
+    "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
+  },
+  "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
+  "invalidMmr": "داداچ اشتباه میزنی. این رو بزن  !setmmr 1234",
+  "killstreak": {
+    "lost_one": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
+    "lost_other": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
+    "won_one": "{{- heroName}} has a {{count}} kill streak {{emote}}",
+    "won_other": "{{- heroName}} has a {{count}} kill streak {{emote}}"
+  },
+  "lastgame": {
+    "link": "بازی قبل: {{- url}}",
+    "none": "با هیچ اکانت بایری از بازی قبل بازی نمیکنه! همه جدیدن",
+    "player": "{{- currentMatchHero}} was {{- lastMatchHero}}",
+    "total_one": "",
+    "total_other": "Playing with {{count}} players from last game."
+  },
+  "lastgamescore": {
+    "double": "بریم دوبله رنک رو به فنا بدیم",
+    "duration": "{{minutes}}m long",
+    "kda": "{{- kdavalue}} on {{- heroName}}",
+    "lost": "بازی قبلی: فقط غذا دادم و باختیم",
+    "party": "توی یک پارتی غذا میدیم",
+    "unranked": "بازی رنک نیست",
+    "won": "بازی قبلی: بردیم"
+  },
+  "lifetime": "تمام بازی ها",
+  "matchFound": "بازی شروع شد. تمام این کامندها فعال است {{commandList}}",
+  "matchId": "Match ID: {{matchId}}",
+  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",
+  "missingMatchData": "Waiting for current match data {{emote}}",
+  "missingUser": "User not found. Try logging out and in of dotabod.com",
+  "modsOnly_off": "فقط مادها خاموش شد! همه میتونن چت کنن",
+  "modsOnly_on": "فقط مادها! کسی دیگه نمیتونه چت کنه {{emote}}",
+  "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
+  "noHero": "قهرمانی پیدا نشد",
+  "noLastMatch": "بازی قبلی پیدا نشد {{emote}}",
+  "noNotable": "غذا دهنده معروفی در بازی نیست",
+  "notLive": "استریم هنوز شروع نشده {{emote}}",
+  "notPlaying": "بازی نمیکنه {{emote}}",
+  "npAdd": "Try !np add <steam32id> <playername>",
+  "npAdded": "{{name}} برای این کانال اضافه شد. !np",
+  "npRemove": "Try !np remove <steam32id>",
+  "npRemoved": "{{steamid}} را از !np برای این کانال حذف شد",
+  "npUnknown": "{{steamid}} برای این کانال پیدا نشد",
+  "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
+  "ping": "Pong {{emote}}",
+  "pleb": "پایینی یک pleb {{emote}}",
+  "pleb_off": "{{name}} {{emote}} nice job pleb",
+  "predictions": {
+    "no": "نه",
+    "title": "غذا میدیم ولی میبریم با {{- heroName}}",
+    "yes": "بله"
+  },
+  "privateProfile": "Streamer's profile is private. The {{command}} command uses OpenDota and requires them to enable 'Expose Public Match Data' in their Dota settings.",
+  "profileUrl": "Here's {{- channel}}: {{- url}}",
+  "rank": {
+    "nextRankAt": "رنک بعد در",
+    "nextRankIn_one": "یک برد دیگه مونده {{emote}}",
+    "nextRankIn_other": "با بردن {{count}} "
+  },
+  "ranked": "Ranked",
+  "ranked_no": "نچ! این بازی رنک نیست",
+  "ranked_yes": "بله این گیم رنکه",
+  "refresh": "Refreshing overlay...",
+  "resetwl": "Resetting win/loss to 0 for {{channel}}",
+  "roshanAlive": "Roshan is currently alive {{emote}}",
+  "roshanCount": {
+    "1": "روشان اول. روشان بعدی آقانیم شارد",
+    "2": "روشان دوم. روشان بعدی پنیر و آقانیم یا رفرش شارد",
+    "3": "روشان سوم. روشان بعدی پنیر و آقانیم و رفرش",
+    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
+  },
+  "roshanKilled": "روشان رو کوشتن. روشان بعدی بین {{min}} تا {{max}} دقیقه",
+  "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
+  "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
+  "setStreamDelayRemoved": "Removing stream delay",
+  "stream": "$t(stream_on)",
+  "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
+  "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
+  "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "There is no stream delay on this channel",
+  "tip": {
+    "from": "{{- heroName}} تیپش کرد {{emote}}",
+    "to": "{{- heroName}} تیپش کردم {{emote}}"
+  },
+  "toggle": "$t(toggle_enabled)",
+  "toggle_disabled": "بات غیرفعال شد. برای فعال سازی مجدد  !toggle  بزن",
+  "toggle_enabled": "بات فعال شد. برای غیرفعال سازی مجدد  !toggle  بزن",
+  "toggleMatch": "$t(toggleMatch_party)",
+  "toggleMatch_double": "Changing this match to double down mmr: {{- url}} Type !fixdd to undo",
+  "toggleMatch_party": "Changing this match to party mmr: {{- url}} Type !fixparty to undo",
+  "toggleMatch_single": "Changing this match to single down mmr: {{- url}} Type !fixdd to undo",
+  "toggleMatch_solo": "Changing this match to solo mmr: {{- url}} Type !fixparty to undo",
+  "translated": {
+    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
+    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
+  },
+  "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",
+  "unknown": "نامعلوم",
+  "unknownSteam": "Could not find steam account. Follow Step 2 of setup, play a bot match, and try again.",
+  "unranked": "Unranked",
+  "updateMmr": "$t(updateMmr_manual)",
+  "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
+  "updateMmr_manual": "Updated MMR to {{mmr}}",
+  "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
+  "version": {
+    "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
+    "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
+  },
+  "xpm": "Live XPM: {{num}}",
+  "apm_one": "Live APM: {{count}} {{emote}}",
+  "apm_other": "Live APM: {{count}} {{emote}}",
+  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "seconds_one": "{{count}} second",
+  "seconds_other": "{{count}} seconds",
+  "treadToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
+  "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match."
+}
