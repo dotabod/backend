@@ -1,6 +1,6 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} denied the aegis {{emote}}",
+    "denied": "{{- heroName}} denou o aegis {{emote}}",
     "expired": "O aegis de {{- heroName}} expirou {{emote}}",
     "pickup": "{{- heroName}} pegou o aegis!",
     "snatched": "{{- heroName}} roubou o aegis! {{emote}}"
@@ -34,6 +34,18 @@
     "tpFound": "{{channel}} bom trabalho comprando um tp FINALMENTE depois de $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Graças a essa morte você finalmente conseguiu um tp. Levou apenas $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "colors": {
+    "blue": "Azul",
+    "brown": "Brown",
+    "cyan": "Cyan",
+    "green": "Green",
+    "olive": "Olive",
+    "orange": "Orange",
+    "pink": "Pink",
+    "purple": "Purple",
+    "teal": "Teal",
+    "yellow": "Yellow"
+  },
   "commandDisabled": "O streamer desativou o comando {{cmdName}} {{emote}} Digite !commands para verificar os comandos habilitados",
   "commands_everyone": "Todos podem usar: {{commandList}}",
   "commands_mods": "Comandos exclusivos para mods: {{commandList}}",
@@ -48,16 +60,20 @@
     "list": "(2 min de atraso) {{- heroName}} possui: {{- itemNames}}"
   },
   "herostats": {
-    "none": "Nenhuma partida jogada de {{- heroName}} {{timeperiod}}",
+    "noneColor": "{{color}} has no matches played as {{- heroName}} {{timeperiod}}",
+    "noneStreamer": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
       "days_one": "em {{count}} dia",
       "days_many": "",
       "days_other": "em {{count}} dias",
       "lifetime": "de todos os tempos"
     },
-    "winrate_one": "Taxa de vitória: {{winrate}}% com {{- heroName}} {{timeperiod}} em um total de {{count}} partida.",
-    "winrate_many": "",
-    "winrate_other": "Taxa de vitória: {{winrate}}% com {{- heroName}} {{timeperiod}} em um total de {{count}} partidas."
+    "winrateColor": "",
+    "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrateStreamer": "",
+    "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Espaço, nome ou cor de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
@@ -72,7 +88,10 @@
   "lastgame": {
     "link": "Aqui está a última partida: {{- url}}",
     "none": "Não está jogando com nenhum jogador da partida anterior.",
-    "player": "{{- currentMatchHero}} jogou de {{- lastMatchHero}}"
+    "player": "{{- currentMatchHero}} era {{- lastMatchHero}}",
+    "total_one": "",
+    "total_many": "",
+    "total_other": "Playing with {{count}} players from last game."
   },
   "lastgamescore": {
     "double": "Dobro de MMR",
@@ -91,7 +110,7 @@
   "missingUser": "Usuário não encontrado. Tente sair e entrar novamente em dotabod.com",
   "modsOnly_off": "Modo somente mods desativado. Todos podem digitar agora.",
   "modsOnly_on": "Modo somente mods ativado {{emote}}. Só mods podem digitar.",
-  "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
+  "multiAccount": "Esta conta steam já está conectada a outro usuário do Dotabod. Confira o painel de controle para mais informações: {{- url}}",
   "noHero": "Nenhum herói encontrado",
   "noLastMatch": "Última partida não foi encontrada {{emote}}",
   "noNotable": "Nenhum jogador notável",
@@ -111,7 +130,7 @@
     "title": "Vamos ganhar essa partida com {{- heroName}}",
     "yes": "Sim"
   },
-  "privateProfile": "Streamer's profile is private. The {{command}} command uses OpenDota and requires them to enable 'Expose Public Match Data' in their Dota settings.",
+  "privateProfile": "O perfil do streamer é privado. O comando {{command}} usa dados do OpenDota e exige que a opção \"Expor dados de partidas públicas\" esteja habilitada nas configurações do Dota.",
   "profileUrl": "Aqui {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Próximo rank em",
@@ -123,7 +142,7 @@
   "ranked_no": "Não, este jogo não é ranqueado",
   "ranked_yes": "Sim, este jogo é ranqueado",
   "refresh": "Reiniciando overlay...",
-  "resetwl": "Resetting win/loss to 0 for {{channel}}",
+  "resetwl": "Redefinindo vitórias/derrotas para 0 em {{channel}}",
   "roshanAlive": "O roshan está vivo {{emote}}",
   "roshanCount": {
     "1": "Mortes do Roshan: 1 · Próximo item a cair: fragmento de aghanim.",
@@ -140,8 +159,8 @@
   "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <seconds> .",
   "setStreamDelayRemoved": "Removendo delay de transmissão",
   "stream": "$t(stream_on)",
-  "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
-  "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
+  "stream_off": "Dotabod tratará {{channel}} como offline. Digite !online para desfazer",
+  "stream_on": "Dotabod tratará {{channel}} como online. Digite !offline para desfazer",
   "streamDelay": "Delay de transmissão: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Não há delay de transmissão neste canal",
   "tip": {
@@ -157,9 +176,9 @@
   "toggleMatch_single": "Mudando partida para MMR normal: {{- url}} Digite !fixdd para desfazer",
   "toggleMatch_solo": "Mudando partida para MMR solo: {{- url}} Digite !fixparty para desfazer",
   "translated": {
-    "by_one": "",
+    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
     "by_many": "",
-    "by_other": ""
+    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
   },
   "treadToggle_one": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
   "treadToggle_many": "",

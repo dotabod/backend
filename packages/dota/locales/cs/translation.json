@@ -35,6 +35,18 @@
     "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Thanks to this death you finally got a tp. And it only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "colors": {
+    "blue": "",
+    "brown": "",
+    "cyan": "",
+    "green": "",
+    "olive": "",
+    "orange": "",
+    "pink": "",
+    "purple": "",
+    "teal": "",
+    "yellow": ""
+  },
   "commandDisabled": "Streamer disabled {{cmdName}} command {{emote}} Check !commands for the enabled ones",
   "commands_everyone": "Všichni mohou použít: {{commandList}}",
   "commands_mods": "Pouze pro moderátory: {{commandList}}",
@@ -52,6 +64,8 @@
   },
   "herostats": {
     "none": "No matches played as {{- heroName}} {{timeperiod}}",
+    "noneColor": "",
+    "noneStreamer": "",
     "timeperiod": {
       "days_one": "in {{count}}d",
       "days_few": "in {{count}}d",
@@ -62,7 +76,9 @@
     "winrate_one": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} match.",
     "winrate_few": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches.",
     "winrate_many": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches.",
-    "winrate_other": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrate_other": "Winrate: {{winrate}}% as {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrateColor": "",
+    "winrateStreamer": ""
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidMmr": "Neplatný příkaz. Zkus !setmmr 1234",
@@ -79,7 +95,11 @@
   "lastgame": {
     "link": "Zde je poslední hra: {{- url}}",
     "none": "Nehrajeme s nikým z poslední hry",
-    "player": "{{- currentMatchHero}} hrál jako {{- lastMatchHero}}"
+    "player": "{{- currentMatchHero}} hrál jako {{- lastMatchHero}}",
+    "total_one": "",
+    "total_few": "",
+    "total_many": "",
+    "total_other": ""
   },
   "lastgamescore": {
     "double": "Double down",

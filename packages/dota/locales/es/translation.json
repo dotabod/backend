@@ -34,6 +34,18 @@
     "tpFound": "{{channel}} buen trabajo, por fin obtuvo un tp después de $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Gracias a su muerte finalmente conseguiste un tp y solo te tomó $t(seconds, {\"count\": {{seconds}} }){{emote}}"
   },
+  "colors": {
+    "blue": "Blue",
+    "brown": "Brown",
+    "cyan": "Cyan",
+    "green": "Green",
+    "olive": "Olive",
+    "orange": "Orange",
+    "pink": "Pink",
+    "purple": "Purple",
+    "teal": "Teal",
+    "yellow": "Yellow"
+  },
   "commandDisabled": "El streamer ha dehabilitado el comando {{cmdName}} {{emote}}, escribe !commands para ver los disponibles",
   "commands_everyone": "Todos pueden usar: {{commandList}}",
   "commands_mods": "Mod sólo comandos: {{commandList}}",
@@ -48,16 +60,20 @@
     "list": "(2m de retraso) {{- heroName}} tiene: {{- itemNames}}"
   },
   "herostats": {
-    "none": "No hay partidas jugadas como: {{- heroName}} {{timeperiod}}",
+    "noneColor": "{{color}} has no matches played as {{- heroName}} {{timeperiod}}",
+    "noneStreamer": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
       "days_one": "en {{count}}d",
       "days_many": "",
       "days_other": "en {{count}}d",
       "lifetime": "de todos los tiempos"
     },
-    "winrate_one": "Tasa de victorias: {{winrate}}% como {{- heroName}} {{timeperiod}} de {{count}} partidas.",
-    "winrate_many": "",
-    "winrate_other": "Tasa de victorias: {{winrate}}% como {{- heroName}} {{timeperiod}} de {{count}} partidas."
+    "winrateColor": "",
+    "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrateStreamer": "",
+    "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Slot, nombre o color de héroe inválido. Intenta del 1-10, parte del nombre del héroe o un color de {{colorList}}",
   "invalidMmr": "Comando inválido. Usa !setmmr 1234",
@@ -72,7 +88,10 @@
   "lastgame": {
     "link": "Aqui esta el ultimo juego: {{- url}}",
     "none": "No estamos jugando con alguien del ultimo juego.",
-    "player": "{{- currentMatchHero}} juego como {{- lastMatchHero}}"
+    "player": "{{- currentMatchHero}} was {{- lastMatchHero}}",
+    "total_one": "",
+    "total_many": "",
+    "total_other": "Playing with {{count}} players from last game."
   },
   "lastgamescore": {
     "double": "Doble la apuesta",
@@ -157,9 +176,9 @@
   "toggleMatch_single": "Cambiando esta mecha a apostar mmr normalmente: {{- url}} Escriba !fixdd para deshacer",
   "toggleMatch_solo": "Cambiando este partido a solo mmr: {{- url}} Escriba !fixparty para deshacer",
   "translated": {
-    "by_one": "",
+    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
     "by_many": "",
-    "by_other": ""
+    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
   },
   "treadToggle_one": "Cambiamos las pisadas {{count}} vez para ahorrar un total de {{manaCount}} maná este partido.",
   "treadToggle_many": "",
