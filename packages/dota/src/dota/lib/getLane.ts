@@ -4,18 +4,56 @@ const topLaneCenter = { xpos: -6000, ypos: 5000 }
 const botLaneCenter = { xpos: 6000, ypos: -5000 }
 const laneMap = {
   radiant: {
-    1: 'top',
-    2: 'mid',
-    3: 'bottom',
-    4: 'top',
-    5: 'bottom',
+    0: {
+      core: {
+        position: 1,
+      },
+      support: {
+        position: 5,
+      },
+      lane: 'bottom',
+    },
+    1: {
+      core: {
+        position: 2,
+      },
+      lane: 'mid',
+    },
+    2: {
+      core: {
+        position: 3,
+      },
+      support: {
+        position: 4,
+      },
+      lane: 'top',
+    },
   },
   dire: {
-    1: 'bottom',
-    2: 'mid',
-    3: 'top',
-    4: 'bottom',
-    5: 'top',
+    0: {
+      core: {
+        position: 3,
+      },
+      support: {
+        position: 4,
+      },
+      lane: 'bottom',
+    },
+    1: {
+      core: {
+        position: 2,
+      },
+      lane: 'mid',
+    },
+    2: {
+      core: {
+        position: 1,
+      },
+      support: {
+        position: 5,
+      },
+      lane: 'top',
+    },
   },
 }
 
@@ -36,11 +74,9 @@ function getDistance(
 export function getHeroPositions(data: Packet): HeroPosition {
   const xpos = data.hero?.xpos ?? 0
   const ypos = data.hero?.ypos ?? 0
-  const team = data.player?.team_name as undefined | 'radiant' | 'dire'
+  const team: 'radiant' | 'dire' = (data.player?.team_name as 'radiant' | 'dire') ?? 'unknown'
 
   if (!team || !xpos || !ypos) return { position: 0, lane: 'unknown' }
-
-  const isRadiant = team === 'radiant'
 
   const cs = data.player?.last_hits ?? 0
   const minute = (data.map?.clock_time ?? 0) / 60
@@ -59,20 +95,26 @@ export function getHeroPositions(data: Packet): HeroPosition {
   const distanceBot = getDistance({ xpos, ypos }, botLaneCenter)
   const distanceMid = getDistance({ xpos, ypos }, { xpos: 0, ypos: 0 })
 
-  const isMidLane = distanceMid < distanceTop && distanceMid < distanceBot
-  const isCloserToTop = distanceTop < distanceBot
+  const distances = [distanceBot, distanceMid, distanceTop]
+  const idx: keyof (typeof laneMap)[typeof team] = distances.indexOf(
+    Math.min(...distances),
+  ) as keyof (typeof laneMap)[typeof team]
 
-  const pos1 = isRadiant ? (isCore ? 1 : 5) : isCore ? 3 : 4
-  const pos2 = isRadiant ? (isCore ? 3 : 4) : isCore ? 1 : 5
-
-  const pos = !isCloserToTop ? pos2 : pos1
-
-  if (isMidLane) {
-    return { position: 2, lane: laneMap[team][2] }
+  let core_or_support: 'core' | 'support'
+  if (csPerMinute > isCoreThreshold) {
+    core_or_support = 'core'
+  } else {
+    core_or_support = 'support'
   }
 
-  return {
-    position: pos,
-    lane: laneMap[team][pos],
+  const result = {
+    position: (laneMap[team][idx] as { [key in typeof core_or_support]: { position: number } })[
+      core_or_support
+    ].position,
+    lane: laneMap[team][idx].lane,
   }
+
+  console.log({ result, team, distances, idx, csPerMinute, isCore, isCoreThreshold })
+
+  return result
 }
