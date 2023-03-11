@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    /* Basic Options */
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src", "./.eslintrc.js"],
+  "exclude": ["prisma/generated", "node_modules"],
+  "extends": "../../tsconfig.json"
+}

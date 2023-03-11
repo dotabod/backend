@@ -1,0 +1,22 @@
+{
+  "name": "@dotabod/twitch-events",
+  "description": "We forward twitch events to dotabod.",
+  "version": "1.0.0",
+  "license": "GPL-3.0-or-later",
+  "author": "Geczy",
+  "main": "src/index.ts",
+  "exports": "./dist/index.js",
+  "type": "module",
+  "packageManager": "yarn@1.22.19",
+  "private": true,
+  "scripts": {
+    "start": "node --trace-warnings --trace-deprecation ./dist/index.js",
+    "build": "tsc --build --verbose",
+    "dev": "nodemon -L --ext ts ./src/index.ts"
+  },
+  "dependencies": {
+    "@dotabod/prisma": "^1.0.0",
+    "@twurple/eventsub-base": "5.3.1",
+    "@twurple/eventsub-http": "5.3.1"
+  }
+}

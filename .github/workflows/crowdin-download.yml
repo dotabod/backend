@@ -7,7 +7,7 @@ on:
 
 jobs:
   download:
-    environment: 'prod'
+    environment: "prod"
     name: Synchronize with Crowdin
     runs-on: ubuntu-latest
     env:
@@ -54,8 +54,9 @@ jobs:
 
       - name: Organize translations
         run: |
-          sudo chown -R $(id -u):$(id -g) **/locales/*
-          i18next -c 'web/i18next-parser.config.js'
+          sudo chown -R $(id -u):$(id -g) packages/**/locales/*
+          sudo chown -R $(id -u):$(id -g) packages/twitch/**/locales/*
+          i18next -c 'services/crowdin/src/i18next-parser.config.js'
 
       - name: Count lines
         id: count
@@ -63,6 +64,7 @@ jobs:
           echo "::set-output name=lines::$(git status --porcelain | wc -l)"
 
       - name: Create Pull Request
+        id: cpr
         if: ${{ steps.count.outputs.lines != '0' }}
         uses: peter-evans/create-pull-request@v4.2.3
         with:
@@ -70,7 +72,15 @@ jobs:
           body: The latest approved translations from Crowdin
           base: ${{ env.BASE_BRANCH }}
           branch: ${{ env.UPDATE_BRANCH }}
-          commit-message: Add new locales
+          commit-message: 💅 i18n update from crowdin
           delete-branch: true
           add-paths: |
-            **/locales/*
+            packages/**/locales/*
+            packages/twitch/**/locales/*
+
+      - name: Enable Pull Request Automerge
+        if: steps.cpr.outputs.pull-request-operation == 'created'
+        uses: peter-evans/enable-pull-request-automerge@v2
+        with:
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: squash
