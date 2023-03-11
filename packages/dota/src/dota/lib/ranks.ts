@@ -1,8 +1,11 @@
 import { t } from 'i18next'
 
+import RedisClient from '../../db/redis.js'
 import { logger } from '../../utils/logger.js'
 import { server } from '../index.js'
 import { leaderRanks, ranks } from './consts.js'
+
+const redisClient = RedisClient.getInstance()
 
 export function rankTierToMmr(rankTier: string | number) {
   if (!Number(rankTier)) {
@@ -20,6 +23,16 @@ export function rankTierToMmr(rankTier: string | number) {
   return ((rank?.range[0] ?? 0) + (rank?.range[1] ?? 0)) / 2
 }
 
+interface LeaderRankData {
+  myRank: {
+    range: number[]
+    image: string
+    sparklingEffect: boolean
+  }
+  mmr: number
+  standing: number
+}
+
 export async function lookupLeaderRank(mmr: number, steam32Id?: number | null) {
   let standing: null | number = null
   const lowestImmortalRank = leaderRanks[leaderRanks.length - 1]
@@ -31,6 +44,11 @@ export async function lookupLeaderRank(mmr: number, steam32Id?: number | null) {
     return defaultNotFound
   }
 
+  // medal caching to save a dota server lookup
+  const cacheKey = `${steam32Id}:medal`
+  const medalCache = (await redisClient.client.json.get(cacheKey)) as LeaderRankData | null
+  if (medalCache) return medalCache
+
   try {
     standing = await server.dota.getCard(steam32Id).then((data) => data?.leaderboard_rank as number)
 
@@ -41,7 +59,12 @@ export async function lookupLeaderRank(mmr: number, steam32Id?: number | null) {
     const [myRank] = leaderRanks.filter(
       (rank) => typeof standing === 'number' && standing <= rank.range[1],
     )
-    return { myRank, mmr, standing }
+    const result = { myRank, mmr, standing }
+
+    // Cache the result
+    await redisClient.client.json.set(cacheKey, '$', result)
+
+    return result
   } catch (e) {
     logger.error('[lookupLeaderRank] Error fetching leaderboard rank', { e, steam32Id })
     return defaultNotFound

@@ -168,6 +168,7 @@ export class GSIHandler {
       lastRemindedDate: undefined,
     }
 
+    void redisClient.client.json.del(`${this.getSteam32() ?? ''}:medal`)
     void redisClient.client.json.del(`${this.getToken()}:roshan`)
     void redisClient.client.json.del(`${this.getToken()}:aegis`)
     void redisClient.client.json.del(`${this.getToken()}:treadtoggle`)
