@@ -85,7 +85,7 @@ export async function notablePlayers({
       SteamAccount: {
         some: {
           steam32Id: {
-            in: matchPlayers.map((m) => m.accountid),
+            in: accountIds,
           },
         },
       },
