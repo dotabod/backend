@@ -1,4 +1,5 @@
 import { Packet } from '../../types.js'
+import { findItem } from './findItem.js'
 
 const topLaneCenter = { xpos: -6000, ypos: 5000 }
 const botLaneCenter = { xpos: 6000, ypos: -5000 }
@@ -58,8 +59,8 @@ const laneMap = {
 }
 
 interface HeroPosition {
-  position: number
-  lane: string
+  position: 1 | 2 | 3 | 4 | 5
+  lane: 'bottom' | 'mid' | 'top'
 }
 
 function getDistance(
@@ -71,25 +72,71 @@ function getDistance(
   return Math.sqrt(dx * dx + dy * dy)
 }
 
-export function getHeroPositions(data: Packet): HeroPosition {
+// Quantity of items in inventory
+export function isSupport(data: Packet): boolean {
+  const supItems = ['item_ward_observer', 'item_ward_sentry', 'item_boots', 'item_ward_dispenser']
+
+  const items = findItem(supItems, true, data)
+  if (!items) return false
+
+  const supportItems = items.filter((item) => supItems.includes(item.name))
+  return supportItems.length > 0
+}
+
+// Define the window size for the moving average
+const windowSize = 10
+
+// Initialize arrays to store the last `windowSize` values for `position` and `lane`
+const positionWindow: Positions[] = []
+const laneWindow: Lanes[] = []
+
+type Lanes = 'mid' | 'top' | 'bottom'
+type Positions = 1 | 2 | 3 | 4 | 5
+
+// Define a function to update the moving average
+function updateMovingAverage(newResult: HeroPosition): HeroPosition {
+  // Add the new value to the end of the window
+  positionWindow.push(newResult.position)
+  laneWindow.push(newResult.lane)
+
+  // If the window size is exceeded, remove the oldest value from the beginning of the window
+  if (positionWindow.length > windowSize) {
+    positionWindow.shift()
+    laneWindow.shift()
+  }
+
+  // Compute the average of the window
+  const positionSum = positionWindow.reduce((sum, value) => sum + value, 0)
+  const laneCounts = laneWindow.reduce<Record<Lanes, number>>((counts, lane, index) => {
+    if (index === 0) {
+      counts[lane] = 1
+    } else {
+      counts[lane] = counts[lane] ? counts[lane] + 1 : 1
+    }
+    return counts
+    // @ts-expect-error asdf
+  }, {})
+  const lane = Object.entries(laneCounts).reduce(
+    (mostFrequentLane, [lane, count]) =>
+      // @ts-expect-error asdf
+      count > laneCounts[mostFrequentLane] ? lane : mostFrequentLane,
+    'mid',
+  )
+
+  const positionAverage = positionSum / positionWindow.length
+
+  return {
+    position: positionAverage as Positions,
+    lane: lane as Lanes,
+  }
+}
+
+export function getHeroPositions(data: Packet): HeroPosition | null {
   const xpos = data.hero?.xpos ?? 0
   const ypos = data.hero?.ypos ?? 0
-  const team: 'radiant' | 'dire' = (data.player?.team_name as 'radiant' | 'dire') ?? 'unknown'
+  const team: 'radiant' | 'dire' = (data.player?.team_name as 'radiant' | 'dire') ?? null
 
-  if (!team || !xpos || !ypos) return { position: 0, lane: 'unknown' }
-
-  const cs = data.player?.last_hits ?? 0
-  const minute = (data.map?.clock_time ?? 0) / 60
-  const csPerMinute = cs / minute
-
-  let isCore = false
-
-  // TODO: This number needs to be determined better somehow.
-  const isCoreThreshold = 4
-
-  if (csPerMinute > isCoreThreshold) {
-    isCore = true
-  }
+  if (!team || !xpos || !ypos) return null
 
   const distanceTop = getDistance({ xpos, ypos }, topLaneCenter)
   const distanceBot = getDistance({ xpos, ypos }, botLaneCenter)
@@ -100,21 +147,15 @@ export function getHeroPositions(data: Packet): HeroPosition {
     Math.min(...distances),
   ) as keyof (typeof laneMap)[typeof team]
 
-  let core_or_support: 'core' | 'support'
-  if (csPerMinute > isCoreThreshold) {
-    core_or_support = 'core'
-  } else {
-    core_or_support = 'support'
-  }
+  const core_or_support = isSupport(data) ? 'support' : 'core'
 
   const result = {
     position: (laneMap[team][idx] as { [key in typeof core_or_support]: { position: number } })[
       core_or_support
-    ].position,
-    lane: laneMap[team][idx].lane,
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    ]?.position as Positions,
+    lane: laneMap[team][idx].lane as Lanes,
   }
 
-  console.log({ result, team, distances, idx, csPerMinute, isCore, isCoreThreshold })
-
-  return result
+  return updateMovingAverage(result)
 }

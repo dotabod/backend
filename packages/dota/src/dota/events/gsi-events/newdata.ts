@@ -70,7 +70,7 @@ eventHandler.registerEvent(`newdata`, {
     dotaClient.openBets()
 
     const position = getHeroPositions(data)
-    logger.info('Position data', position)
+    console.log('New moving average:', position)
 
     /*
     const hero = handleGetHero(dotaClient.playingHero)
