@@ -20,7 +20,9 @@
   "include": ["./.eslintrc.cjs"],
   "ts-node": {
     "esm": true,
-    "pretty": true,
+    "files": false,
+    "transpileOnly": true,
+    "typeCheck": false,
     "require": ["tsconfig-paths/register"],
     "ignore": ["(?:^|/)node_modules/"]
   }
