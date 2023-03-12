@@ -5,6 +5,8 @@
     "pickup": "{{- heroName}} poimi aegiksen!",
     "snatched": "{{- heroName}} nappasi aegiksen {{emote}}"
   },
+  "apm_one": "Live APM: {{count}} {{emote}}",
+  "apm_other": "Live APM: {{count}} {{emote}}",
   "averageRank": "Keskimääräinen rankki pelissä",
   "betaFeature": "[beta-ominaisuus]",
   "betaTester": "$t(betaTester_on)",
@@ -31,40 +33,45 @@
     "tpFound": "{{channel}} hyvää työtä hankkia tp vihdoinkin, kesti $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Tämän kuoleman ansiosta sait vihdoin tp:n. Ja se kesti vain $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "colors": {
+    "blue": "Sininen",
+    "brown": "Ruskea",
+    "cyan": "Syaani",
+    "green": "Vihreä",
+    "olive": "Oliivinvihreä",
+    "orange": "Oranssi",
+    "pink": "Pinkki",
+    "purple": "Violetti",
+    "teal": "Sinivihreä",
+    "yellow": "Keltainen"
+  },
   "commandDisabled": "Striimaaja poisti {{cmdName}}-komennon {{emote}} Tarkista !commands käytössä oleville",
   "commands_everyone": "Jokainen voi käyttää: {{commandList}}",
   "commands_mods": "Vain modien komennot: {{commandList}}",
   "dota2pt": "Tarvitsetko ammattilaisen build-ideoita sankarille {{- heroName}}? Tarkista osoitteessa {{- url}}",
   "dotabod": "Olen avoimen lähdekoodin botti jonka on tehnyt {{author}}. Lisätietoja: {{- url}}",
   "gameNotFound": "Peliä ei löytynyt",
+  "gpm_zero": "",
+  "gpm_one": "Live GPM: {{num}}. {{heroKills}} sankaritapoista, {{creepKills}} kätyritapoista.",
+  "gpm_other": "Live GPM: {{num}}. {{heroKills}} sankaritapoista, {{creepKills}} kätyritapoista.",
   "heroItems": {
     "empty": "(2min viive) Esineitä ei löytynyt sankarille {{- heroName}}",
     "list": "(2min viive) Sankarilla {{- heroName}} on: {{- itemNames}}"
   },
-  "colors": {
-    "blue": "Sininen",
-    "teal": "Sinivihreä",
-    "purple": "Violetti",
-    "yellow": "Keltainen",
-    "orange": "Oranssi",
-    "pink": "Pinkki",
-    "olive": "Oliivinvihreä",
-    "cyan": "Syaani",
-    "green": "Vihreä",
-    "brown": "Ruskea"
-  },
   "herostats": {
-    "noneStreamer": "Ei pelattuja otteluita sankarina {{- heroName}} {{timeperiod}}",
     "noneColor": "{{color}} ei ole pelannut otteluita sankarina {{- heroName}} {{timeperiod}}",
+    "noneStreamer": "Ei pelattuja otteluita sankarina {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "lifetime": "kaikilta ajoilta",
       "days_one": "{{count}}pv",
-      "days_other": "{{count}}pv"
+      "days_other": "{{count}}pv",
+      "lifetime": "kaikilta ajoilta"
     },
-    "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
-    "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrateColor": "",
     "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
-    "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrateStreamer": "",
+    "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Virheellinen sankarin väri, paikka tai nimi. Kokeile 1-10, osittaista sankarin nimeä tai väriä näistä {{colorList}}",
   "invalidMmr": "Virheellinen komento. Kokeile !setmmr 1234",
@@ -139,6 +146,8 @@
     "more_other": "Roshanin kuolemat: {{count}} · Seuraava droppi: juusto, agh's blessing ja refresher shard."
   },
   "roshanKilled": "Roshan tapettiin! Seuraava roshan {{min}} ja {{max}} välillä",
+  "seconds_one": "{{count}} sekunti",
+  "seconds_other": "{{count}} sekuntia",
   "setStreamDelay": "Asetetaan striimin viive: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Virheellinen striimin viive, käytä !setdelay <sekuntia>",
   "setStreamDelayRemoved": "Poistetaan striimin viive",
@@ -163,6 +172,8 @@
     "by_one": "Dotabodin on kääntänyt {{- translators}}. Haluatko auttaa kääntämisessä tai näetkö virheen? Liity meidän Discord #translations-kanavalle {{- url}}",
     "by_other": "Dotabodin on kääntänyt {{- translators}}. Haluatko auttaa kääntämisessä tai näetkö virheen? Liity meidän Discord #translations-kanavalle {{- url}}"
   },
+  "treadToggle_one": "Vaihdoimme treadsejä {{count}} kerran säästääksemme yhteensä {{manaCount}} manaa tässä ottelussa.",
+  "treadToggle_other": "Vaihdoimme treadsejä {{count}} kertaa säästääksemme yhteensä {{manaCount}} manaa tässä ottelussa.",
   "uknownMmr": "En tiedä {{channel}}-kanavan MMR:ää vielä. Modien täytyy !setmmr 1234 tai asettaa se osoitteessa {{- url}}",
   "unknown": "Tuntematon",
   "unknownSteam": "Steam-tiliä ei löytynyt. Noudata asennuksen 2-vaihetta, pelaa bottipeli ja yritä uudelleen.",
@@ -175,13 +186,5 @@
     "commit": "Palvelin käyttää versiota {{version}}, tässä mitä puuttuu viimeisimpään versioon verrattuna: {{- url}}",
     "unknown": "Viimeistä git committia ei löytynyt, tässä osoitteessa repo {{- url}}"
   },
-  "xpm": "Live XPM: {{num}}",
-  "apm_one": "Live APM: {{count}} {{emote}}",
-  "apm_other": "Live APM: {{count}} {{emote}}",
-  "gpm_one": "Live GPM: {{num}}. {{heroKills}} sankaritapoista, {{creepKills}} kätyritapoista.",
-  "gpm_other": "Live GPM: {{num}}. {{heroKills}} sankaritapoista, {{creepKills}} kätyritapoista.",
-  "seconds_one": "{{count}} sekunti",
-  "seconds_other": "{{count}} sekuntia",
-  "treadToggle_one": "Vaihdoimme treadsejä {{count}} kerran säästääksemme yhteensä {{manaCount}} manaa tässä ottelussa.",
-  "treadToggle_other": "Vaihdoimme treadsejä {{count}} kertaa säästääksemme yhteensä {{manaCount}} manaa tässä ottelussa."
+  "xpm": "Live XPM: {{num}}"
 }

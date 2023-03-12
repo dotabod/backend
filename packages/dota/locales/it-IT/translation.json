@@ -5,6 +5,9 @@
     "pickup": "{{- heroName}} ha preso l'egida",
     "snatched": "{{- heroName}} ha rubato l'egida {{emote}}"
   },
+  "apm_one": "APM live: {{count}} {{emote}}",
+  "apm_many": "",
+  "apm_other": "APM live: {{count}} {{emote}}",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "$t(betaTester_on)",
@@ -31,47 +34,55 @@
     "tpFound": "{{channel}} ben fatto, hai finalmente comprato un tp dopo $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Grazie a questa morte finalmente hai un tp. Ti ci sono voluti solo $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "colors": {
+    "blue": "Blu",
+    "brown": "Marrone",
+    "cyan": "Azzurro",
+    "green": "Verde",
+    "olive": "Verde oliva",
+    "orange": "Arancione",
+    "pink": "Rosa",
+    "purple": "Viola",
+    "teal": "Verde acqua",
+    "yellow": "Giallo"
+  },
   "commandDisabled": "Lo streamer ha disabilitato il comando {{cmdName}} {{emote}} Usa !commands per quelli abilitati",
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
   "dota2pt": "Hai bisogno di build pro per {{- heroName}}? Vai qui {{- url}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
+  "gpm_zero": "",
+  "gpm_one": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
+  "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
   "heroItems": {
     "empty": "(Delay di 2m) Nessun oggetto trovato per {{- heroName}}",
     "list": "(Delay di 2m) {{- heroName}} ha: {{- itemNames}}"
   },
-  "colors": {
-    "blue": "Blu",
-    "teal": "Verde acqua",
-    "purple": "Viola",
-    "yellow": "Giallo",
-    "orange": "Arancione",
-    "pink": "Rosa",
-    "olive": "Verde oliva",
-    "cyan": "Azzurro",
-    "green": "Verde",
-    "brown": "Marrone"
-  },
   "herostats": {
-    "noneStreamer": "Nessuna partita giocata come {{- heroName}} in {{timeperiod}}",
     "noneColor": "{{color}} non ha giocato come {{- heroName}} in {{timeperiod}}",
+    "noneStreamer": "Nessuna partita giocata come {{- heroName}} in {{timeperiod}}",
     "timeperiod": {
-      "lifetime": "di sempre",
       "days_one": "in {{count}} giorno",
-      "days_other": "in {{count}} giorni"
+      "days_many": "",
+      "days_other": "in {{count}} giorni",
+      "lifetime": "di sempre"
     },
-    "winrateStreamer_one": "Il winrate è {{winrate}} con {{- heroName}} in {{timeperiod}} e {{count}} partita.",
-    "winrateStreamer_other": "Il winrate è {{winrate}} con {{- heroName}} in {{timeperiod}} e {{count}} partite.",
+    "winrateColor": "",
     "winrateColor_one": "Il winrate di {{color}} è {{winrate}}% con {{- heroName}} in {{timeperiod}} e {{count}} partita.",
-    "winrateColor_other": "Il winrate di {{color}} è {{winrate}}% con {{- heroName}} in {{timeperiod}} e {{count}} partite."
+    "winrateColor_other": "Il winrate di {{color}} è {{winrate}}% con {{- heroName}} in {{timeperiod}} e {{count}} partite.",
+    "winrateStreamer": "",
+    "winrateStreamer_one": "Il winrate è {{winrate}} con {{- heroName}} in {{timeperiod}} e {{count}} partita.",
+    "winrateStreamer_other": "Il winrate è {{winrate}} con {{- heroName}} in {{timeperiod}} e {{count}} partite."
   },
   "invalidColor": "Colore, slot o nome dell'eroe non validi. Prova 1-10, parte del nome, o un colore da {{colorList}}",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} ha perso la kill streak di {{count}} {{emote}}",
+    "lost_many": "",
     "lost_other": "{{- heroName}} ha perso la kill streak di {{count}} {{emote}}",
     "won_one": "{{- heroName}} ha una kill streak di {{count}} {{emote}}",
+    "won_many": "",
     "won_other": "{{- heroName}} ha una kill streak di {{count}} {{emote}}"
   },
   "lastgame": {
@@ -79,6 +90,7 @@
     "none": "Non è presente nessun giocatore della partita precedente",
     "player": "{{- currentMatchHero}} ha giocato come {{- lastMatchHero}}",
     "total_one": "",
+    "total_many": "",
     "total_other": "Playing with {{count}} players from last game."
   },
   "lastgamescore": {
@@ -123,6 +135,7 @@
   "rank": {
     "nextRankAt": "Prossimo rank a",
     "nextRankIn_one": "Ancora un'altra vittoria {{emote}}",
+    "nextRankIn_many": "",
     "nextRankIn_other": "in {{count}} vittorie"
   },
   "ranked": "Classificata",
@@ -136,9 +149,12 @@
     "2": "Morti di Rosh: 2 · Prossimo drop: Cheese e Aghanim Blessing o Refresher Shard.",
     "3": "Morti di Rosh: 3 · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard.",
     "more_one": "Morti di Rosh: {{count}} · Prossimo drop: Cheese, Aghanim's Blessing e Refresher Shard.",
+    "more_many": "",
     "more_other": "Morti di Rosh: {{count}} · Prossimo drop: Cheese, Aghanim's Blessing e Refresher Shard."
   },
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sarà tra {{min}} e {{max}}",
+  "seconds_one": "{{count}} secondo",
+  "seconds_other": "{{count}} secondi",
   "setStreamDelay": "Impostando il delay dello stream a: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Delay della stream invalido, usa !setdelay <seconds>",
   "setStreamDelayRemoved": "Rimuovendo il delay dello stream",
@@ -161,8 +177,12 @@
   "toggleMatch_solo": "Questo match verrá contato come solo mmr: {{- url}} Scrivi !fixparty per annullare",
   "translated": {
     "by_one": "Dotabod è tradotto da {{- translators}}. Vuoi aiutare con le traduzioni o vedi un errore? Unisciti al nostro canale discord #🌎translations {{- url}}",
+    "by_many": "",
     "by_other": "Dotabod è tradotto da {{- translators}}. Vuoi aiutare con le traduzioni o vedi un errore? Unisciti al nostro canale discord #🌎translations {{- url}}"
   },
+  "treadToggle_one": "Abbiamo togglato i treads {{count}} volte per salvare un totale di {{manaCount}} mana questa partita.",
+  "treadToggle_many": "",
+  "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita",
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",
   "unknownSteam": "Impossibile trovare l'account Steam. Prova a giocare una partita di prova contro i bot per salvare il tuo account su Dotabod!",
@@ -175,13 +195,5 @@
     "commit": "La versione corrente del server è {{version}}, ecco cosa manca rispetto all'ultima versione: {{- url}}",
     "unknown": "Impossibile trovare l'ultimo git commit, ecco il repo {{- url}}"
   },
-  "xpm": "XPM Live: {{num}}",
-  "apm_one": "APM live: {{count}} {{emote}}",
-  "apm_other": "APM live: {{count}} {{emote}}",
-  "gpm_one": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
-  "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
-  "seconds_one": "{{count}} secondo",
-  "seconds_other": "{{count}} secondi",
-  "treadToggle_one": "Abbiamo togglato i treads {{count}} volte per salvare un totale di {{manaCount}} mana questa partita.",
-  "treadToggle_other": "Abbiamo togglato i thread {{count}} volte per salvare un totale di {{manaCount}} mana questa partita"
+  "xpm": "XPM Live: {{num}}"
 }
