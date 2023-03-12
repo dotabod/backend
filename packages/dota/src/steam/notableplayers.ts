@@ -24,13 +24,21 @@ export interface Player {
   heroid: number
 }
 
-export async function notablePlayers(
-  locale: string,
-  twitchChannelId: string,
-  currentMatchId?: string,
-  players?: { heroid: number; accountid: number }[],
-  enableFlags?: boolean,
-) {
+export async function notablePlayers({
+  locale,
+  twitchChannelId,
+  currentMatchId,
+  players,
+  enableFlags,
+  steam32Id,
+}: {
+  locale: string
+  twitchChannelId: string
+  currentMatchId?: string
+  players?: { heroid: number; accountid: number }[]
+  enableFlags?: boolean
+  steam32Id: number | null
+}) {
   const { matchPlayers, accountIds, gameMode } = await getPlayers(locale, currentMatchId, players)
 
   const mode = gameMode
@@ -61,49 +69,8 @@ export async function notablePlayers(
     )
     .toArray()
 
-  const notFoundNp: NotablePlayer[] = []
-  const result: NotablePlayer[] = []
-  matchPlayers.forEach((player: Player, i: number) => {
-    const np = nps.find((np) => np.account_id === player.accountid)
-    if (np) {
-      result.push({
-        account_id: player.accountid,
-        heroId: player.heroid,
-        position: i,
-        heroName: getHeroNameById(player.heroid, i),
-        name: np.name,
-        country_code: np.country_code,
-      })
-    } else {
-      notFoundNp.push({
-        account_id: player.accountid,
-        heroId: player.heroid,
-        position: i,
-        heroName: getHeroNameById(player.heroid, i),
-        name: `Player ${i + 1}`,
-        country_code: '',
-      })
-    }
-  })
-
-  const allPlayers = result
-    .map((m) => {
-      const country: string =
-        enableFlags && m.country_code ? `${countryCodeEmoji(m.country_code)} ` : ''
-      return `${country}${m.name} (${m.heroName})`
-    })
-    .join(' · ')
-
-  const avg = await calculateAvg({
-    locale: locale,
-    currentMatchId: currentMatchId,
-    players: players,
-  })
-
-  const modeText = typeof mode?.name === 'string' ? `${mode.name} [${avg} avg]: ` : `[${avg} avg]: `
-
   // get the list of users in the Dotabod postgresql database according to steam id
-  const users = await prisma.user.findMany({
+  const dotabodPlayers = await prisma.user.findMany({
     select: {
       image: true,
       displayName: true,
@@ -118,24 +85,60 @@ export async function notablePlayers(
       SteamAccount: {
         some: {
           steam32Id: {
-            in: result.map((m) => m.account_id),
+            in: matchPlayers.map((m) => m.accountid),
           },
         },
       },
     },
   })
 
-  // connect playerList to users
-  result.forEach((player) => {
-    const user = users.find((user) => user.SteamAccount[0].steam32Id === player.account_id)
+  // Description text
+  const avg = await calculateAvg({
+    locale: locale,
+    currentMatchId: currentMatchId,
+    players: players,
+  })
+
+  const regularPlayers: NotablePlayer[] = []
+  const proPlayers: NotablePlayer[] = []
+  matchPlayers.forEach((player: Player, i: number) => {
+    const np = nps.find((np) => np.account_id === player.accountid)
+    const props = {
+      account_id: player.accountid,
+      heroId: player.heroid,
+      position: i,
+      heroName: getHeroNameById(player.heroid, i),
+      name: np?.name ?? `Player ${i + 1}`,
+      country_code: np?.country_code ?? '',
+      isMe: steam32Id === player.accountid,
+    }
+
+    if (np) proPlayers.push(props)
+    else regularPlayers.push(props)
+  })
+
+  const allPlayers = [...proPlayers, ...regularPlayers]
+
+  // Connect all players to dotabod users
+  allPlayers.forEach((player) => {
+    const user = dotabodPlayers.find((user) => user.SteamAccount[0].steam32Id === player.account_id)
     if (user) {
       player.name = user.displayName ?? player.name
       player.image = user.image ?? undefined
     }
   })
 
+  const modeText = typeof mode?.name === 'string' ? `${mode.name} [${avg} avg]: ` : `[${avg} avg]: `
+  const proPlayersString = proPlayers
+    .map((m) => {
+      const country: string =
+        enableFlags && m.country_code ? `${countryCodeEmoji(m.country_code)} ` : ''
+      return `${country}${m.name} (${m.heroName})`
+    })
+    .join(' · ')
+
   return {
-    description: `${modeText}${allPlayers || t('noNotable', { lng: locale })}`,
-    playerList: result,
+    description: `${modeText}${proPlayersString || t('noNotable', { lng: locale })}`,
+    playerList: proPlayers,
   }
 }
