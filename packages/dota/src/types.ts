@@ -237,6 +237,7 @@ export interface Item {
   purchaser?: number // 5,
   can_cast?: boolean // e.g. true,
   cooldown?: number // e.g. 0,
+  item_level?: number // e.g. 1,2,3,4 = 9,8,7,6 seconds for bkb **new 3/12/2023**
   passive: boolean // e.g. true for item_paladin_sword
   charges?: number // e.g. 2
 }
