@@ -283,13 +283,14 @@ export class GSIHandler {
       DBSettings.notablePlayersOverlayFlagsCmd,
       this.client.settings,
     )
-    notablePlayers(
-      this.client.locale,
-      this.getChannelId(),
-      this.client.gsi?.map?.matchid,
-      matchPlayers,
-      enableCountries,
-    )
+    notablePlayers({
+      locale: this.client.locale,
+      twitchChannelId: this.getChannelId(),
+      currentMatchId: this.client.gsi?.map?.matchid,
+      players: matchPlayers,
+      enableFlags: enableCountries,
+      steam32Id: this.getSteam32(),
+    })
       .then((response) => {
         if (response.playerList.length) {
           server.io.to(this.getToken()).emit('notable-players', response.playerList)

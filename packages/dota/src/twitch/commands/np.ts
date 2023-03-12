@@ -97,13 +97,14 @@ commandHandler.registerCommand('np', {
       DBSettings.notablePlayersOverlayFlagsCmd,
       client.settings,
     )
-    notablePlayers(
-      client.locale,
+    notablePlayers({
+      locale: client.locale,
       twitchChannelId,
-      client.gsi?.map?.matchid,
-      matchPlayers,
-      enableCountries,
-    )
+      currentMatchId: client.gsi?.map?.matchid,
+      players: matchPlayers,
+      enableFlags: enableCountries,
+      steam32Id: client.steam32Id,
+    })
       .then((desc) => {
         chatClient.say(channel, desc.description)
       })
