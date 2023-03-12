@@ -5,6 +5,8 @@
     "pickup": "{{- heroName}} Aegis'i aldı!",
     "snatched": "{{- heroName}} Aegis'i çaldı {{emote}}"
   },
+  "apm_one": "Anlık APM: {{count}} {{emote}}",
+  "apm_other": "Anlık APM: {{count}} {{emote}}",
   "averageRank": "Oyunun ortalama sıralaması",
   "betaFeature": "Beta özellikleri",
   "betaTester": "$t(betaTester_on)",
@@ -31,40 +33,45 @@
     "tpFound": "{{channel}} helal olsun sonunda $t(seconds, {\"count\": {{seconds}} }) saniye sonra tp aldın {{emote}}",
     "tpFromDeath": "İyi ki öldün yoksa tp alamayacaktın. Tp alman sadece $t(seconds, {\"count\": {{seconds}} }) saniye sürdü {{emote}}"
   },
+  "colors": {
+    "blue": "Blue",
+    "brown": "Brown",
+    "cyan": "Cyan",
+    "green": "Green",
+    "olive": "Olive",
+    "orange": "Orange",
+    "pink": "Pink",
+    "purple": "Purple",
+    "teal": "Teal",
+    "yellow": "Yellow"
+  },
   "commandDisabled": "Yayıncı devre dışı {{cmdName}} komutu {{emote}} !commands komutu ile aktif olanları kontrol edebilirsin",
   "commands_everyone": "Herkes kullanabilir: {{commandList}}",
   "commands_mods": "Sadece mod komutları: {{commandList}}",
   "dota2pt": "Daha iyi item tavsiyelerine mi ihtiyacın var {{- heroName}}? Buraya tıkla {{- url}}",
   "dotabod": "Ben {{author}} tarafından yaratılan açık kaynaklı bir botum. Daha detaylı bilgi için {{- url}}",
   "gameNotFound": "Oyun bulunamadı",
+  "gpm_zero": "",
+  "gpm_one": "Anlık GPM:{{num}} {{heroKills}} kahraman ölümlerinden, {{creepKills}} creep ölümlerinden.",
+  "gpm_other": "Anlık GPM:{{num}} {{heroKills}} kahraman ölümlerinden, {{creepKills}} creep ölümlerinden.",
   "heroItems": {
     "empty": "(2 dakika gecikme) {{- heroName}} için item bulunamadı",
     "list": "(2 dakika gecikme) {{- heroName}} {{- itemNames}} var"
   },
-  "colors": {
-    "blue": "Blue",
-    "teal": "Teal",
-    "purple": "Purple",
-    "yellow": "Yellow",
-    "orange": "Orange",
-    "pink": "Pink",
-    "olive": "Olive",
-    "cyan": "Cyan",
-    "green": "Green",
-    "brown": "Brown"
-  },
   "herostats": {
-    "noneStreamer": "No matches played as {{- heroName}} {{timeperiod}}",
     "noneColor": "{{color}} has no matches played as {{- heroName}} {{timeperiod}}",
+    "noneStreamer": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "lifetime": "tüm zamanlar",
       "days_one": "{{count}}",
-      "days_other": "{{count}}"
+      "days_other": "{{count}}",
+      "lifetime": "tüm zamanlar"
     },
-    "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
-    "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrateColor": "",
     "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
-    "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrateStreamer": "",
+    "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Geçersiz kahraman rengi, yuvası veya adı. 1-10, kısmi bir kahraman adı veya {{colorList}}'ten bir renk deneyin",
   "invalidMmr": "Geçersiz komut. !set mmr 1234 komutunu deneyin",
@@ -139,6 +146,8 @@
     "more_other": "Roshan ölüm sayısı:{{count}} Bir sonraki drop: cheese, aghanims shard ve refresher shard."
   },
   "roshanKilled": "Roshan öldürüldü! Bir sonraki Roshan {{min}} ve {{max}} dakika arasında yeniden doğacak",
+  "seconds_one": "{{count}} saniye",
+  "seconds_other": "{{count}} saniye",
   "setStreamDelay": "Yayın gecikme ayarı: $t(seconds, {\"count\": {{seconds}} }) ayarlanıyor",
   "setStreamDelayNoArgs": "Geçersiz yayın gecikmesi, !setdelay <seconds> komutunu kullanın",
   "setStreamDelayRemoved": "Yayın gecikmesi kaldırılıyor",
@@ -163,6 +172,8 @@
     "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
     "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
   },
+  "treadToggle_one": "{{count}} Powertreads toggle yaparak bu maç toplamda {{manaCount}} mana kurtardın.",
+  "treadToggle_other": "{{count}} Powertreads toggle yaparak bu maç toplamda {{manaCount}} mana kurtardın.",
   "uknownMmr": "{{channel}} mevcut MMR'ını henüz bilmiyorum. !setmmr (mevcut mmr) komutunu kullanarak ya da {{- url}} link üzerinden ayarlayarak işlemi tamamlayabilirsin",
   "unknown": "Bilinmiyor",
   "unknownSteam": "Steam hesabı bulunamadı. Kurulumun 2. adımını uygulayın, bir bot maçı yapın ve tekrar deneyin.",
@@ -175,13 +186,5 @@
     "commit": "Mevcut sunucu versiyonu {{version}}, işte en son sürüme kıyasla eksik olan şeyler: {{- url}}",
     "unknown": "Son git bulunamadı, raporlar burada {{- url}}"
   },
-  "xpm": "Anlık XPM: {{num}}",
-  "apm_one": "Anlık APM: {{count}} {{emote}}",
-  "apm_other": "Anlık APM: {{count}} {{emote}}",
-  "gpm_one": "Anlık GPM:{{num}} {{heroKills}} kahraman ölümlerinden, {{creepKills}} creep ölümlerinden.",
-  "gpm_other": "Anlık GPM:{{num}} {{heroKills}} kahraman ölümlerinden, {{creepKills}} creep ölümlerinden.",
-  "seconds_one": "{{count}} saniye",
-  "seconds_other": "{{count}} saniye",
-  "treadToggle_one": "{{count}} Powertreads toggle yaparak bu maç toplamda {{manaCount}} mana kurtardın.",
-  "treadToggle_other": "{{count}} Powertreads toggle yaparak bu maç toplamda {{manaCount}} mana kurtardın."
+  "xpm": "Anlık XPM: {{num}}"
 }
