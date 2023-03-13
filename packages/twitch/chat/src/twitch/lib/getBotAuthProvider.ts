@@ -23,7 +23,7 @@ export const getBotAuthProvider = async function () {
       refreshToken: botTokens.refresh_token,
     }
 
-    authProvider.addUser(twitchId, tokenData)
+    authProvider.addUser(twitchId, tokenData, ['chat'])
   }
 
   return authProvider

@@ -308,7 +308,7 @@ export enum DotaEventTypes {
   AegisDenied = 'aegis_denied',
   Tip = 'tip',
   BountyPickup = 'bounty_rune_pickup',
-  CourierKilled = 'courier_killed',
+  CourierKilled = 'courier_killed', // spectator only
 }
 
 export interface DotaEvent {

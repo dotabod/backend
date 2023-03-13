@@ -1,5 +1,4 @@
 import { DBSettings, SettingKeys } from '@dotabod/settings'
-import LRUCache from 'lru-cache'
 
 import { GSIHandler } from '../GSIHandler.js'
 
@@ -102,13 +101,6 @@ export const modMode = new Set()
 export const ADMIN_CHANNELS = (process.env.ADMIN_CHANNELS ?? '').split(',')
 
 export const invalidTokens = new Set(['', null, undefined, 0])
-
-const gsiCache: LRUCache.Options<any, any> = {
-  // Constant users at a time
-  max: 500,
-  // Expire after 30 minutes of inactivity
-  ttl: 1000 * 60 * 30,
-}
 
 export const gsiHandlers = new Map<string, GSIHandler>()
 export const twitchIdToToken = new Map<string, string>()

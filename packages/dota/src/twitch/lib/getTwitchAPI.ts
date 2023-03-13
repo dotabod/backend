@@ -24,6 +24,7 @@ export const getTwitchAPI = function (twitchId: string): ApiClient {
       refreshToken: twitchTokens.Account.refresh_token,
     }
 
+    // TODO: missing intents
     authProvider.addUser(twitchId, tokenData)
   }
 

@@ -25,7 +25,7 @@ export const getBotAPI_DEV_ONLY = async function () {
     refreshToken: botTokens.refresh_token,
   }
 
-  authProvider.addUser(twitchId, tokenData)
+  authProvider.addUser(twitchId, tokenData, ['chat'])
 
   const api = new ApiClient({ authProvider })
   logger.info('[TWITCH] Retrieved twitch dotabod api')

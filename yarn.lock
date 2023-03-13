@@ -439,7 +439,7 @@
     klona "^2.0.4"
     tslib "^2.0.3"
 
-"@twurple/eventsub-base@6.0.8":
+"@twurple/eventsub-base@6.0.8", "@twurple/eventsub-base@^6.0.8":
   version "6.0.8"
   resolved "https://registry.yarnpkg.com/@twurple/eventsub-base/-/eventsub-base-6.0.8.tgz#034081cfcc797a688af34bf8d395f32ed770cae7"
   integrity sha512-r0mB53CaCWgmnJZVknqajxEuWizDQEBpaY7u9egVWe2Q25fkbRRCVQZcym3vIC22+VOoe2wRNnIFC0ZTvHxS6A==

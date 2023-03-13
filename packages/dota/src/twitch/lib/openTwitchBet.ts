@@ -2,12 +2,16 @@ import { DBSettings, defaultSettings, getValueOrDefault } from '@dotabod/setting
 import { t } from 'i18next'
 
 import { prisma } from '../../db/prisma.js'
+import { getTokenFromTwitchId } from '../../dota/lib/connectedStreamers.js'
 import { SocketClient } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { getTwitchAPI } from './getTwitchAPI.js'
 
 // Disable the bet in settings for this user
-export function disableBetsForToken(token: string) {
+export function disableBetsForTwitchId(twitchId: string) {
+  const token = getTokenFromTwitchId(twitchId)
+  if (!token) return
+
   prisma.setting
     .upsert({
       where: {
@@ -67,9 +71,9 @@ export function openTwitchBet(
     .catch((e: any) => {
       try {
         if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {
-          disableBetsForToken(token)
+          disableBetsForTwitchId(twitchId)
 
-          logger.info('[PREDICT] [BETS] Channel points not enabled for', { userId: token })
+          logger.info('[PREDICT] [BETS] Channel points not enabled for', { twitchId })
           throw new Error('Bets not enabled')
         }
       } catch (e) {
