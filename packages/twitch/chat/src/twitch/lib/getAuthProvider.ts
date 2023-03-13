@@ -1,8 +1,7 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
 
-import { prisma } from '../../db/prisma.js'
-import { logger } from '../../utils/logger.js'
 import { hasTokens } from './hasTokens.js'
+import { prisma } from '../../db/prisma.js'
 
 let authProvider: RefreshingAuthProvider | null = null
 
@@ -14,7 +13,7 @@ export const getAuthProvider = function () {
     clientId: process.env.TWITCH_CLIENT_ID ?? '',
     clientSecret: process.env.TWITCH_CLIENT_SECRET ?? '',
     onRefresh: (twitchId, newTokenData) => {
-      logger.info('[TWITCHSETUP] Refreshing twitch tokens', { twitchId })
+      console.log('[TWITCHSETUP] Refreshing twitch tokens', { twitchId })
 
       prisma.account
         .update({
@@ -34,7 +33,7 @@ export const getAuthProvider = function () {
           },
         })
         .then(() => {
-          logger.info('[TWITCHSETUP] Updated bot tokens', { twitchId })
+          console.log('[TWITCHSETUP] Updated bot tokens', { twitchId })
         })
         .catch((e) => {
           console.error('[TWITCHSETUP] Failed to update bot tokens', {

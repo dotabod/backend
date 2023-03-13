@@ -1,16 +1,16 @@
 import { logger } from '../../utils/logger.js'
-import { getChannelAPI } from './getChannelAPI.js'
+import { getTwitchAPI } from './getTwitchAPI.js'
 
-export function closeTwitchBet(won: boolean, token: string) {
-  const { api, providerAccountId } = getChannelAPI(token)
+export function closeTwitchBet(won: boolean, twitchId: string) {
+  const api = getTwitchAPI(twitchId)
 
   return api.predictions
-    .getPredictions(providerAccountId, {
+    .getPredictions(twitchId, {
       limit: 1,
     })
     .then(({ data: predictions }) => {
       if (!Array.isArray(predictions) || !predictions.length) {
-        logger.info('[PREDICT] No predictions found', { token, predictions })
+        logger.info('[PREDICT] No predictions found', { token: twitchId, predictions })
         return
       }
 
@@ -22,16 +22,12 @@ export function closeTwitchBet(won: boolean, token: string) {
       // }
 
       return api.predictions
-        .resolvePrediction(
-          providerAccountId || '',
-          predictions[0].id,
-          won ? wonOutcome.id : lossOutcome.id,
-        )
+        .resolvePrediction(twitchId || '', predictions[0].id, won ? wonOutcome.id : lossOutcome.id)
         .catch((e) => {
-          logger.error('[BETS] Could not resolve prediction', { token, error: e })
+          logger.error('[BETS] Could not resolve prediction', { token: twitchId, error: e })
         })
     })
     .catch((e) => {
-      logger.error('[BETS] Could not get predictions', { token, error: e })
+      logger.error('[BETS] Could not get predictions', { token: twitchId, error: e })
     })
 }

@@ -1,11 +1,11 @@
 import { logger } from '../../utils/logger.js'
-import { getChannelAPI } from './getChannelAPI.js'
+import { getTwitchAPI } from './getTwitchAPI.js'
 
-export function refundTwitchBet(token: string) {
-  const { api, providerAccountId } = getChannelAPI(token)
+export function refundTwitchBet(twitchId: string) {
+  const api = getTwitchAPI(twitchId)
 
   return api.predictions
-    .getPredictions(providerAccountId, {
+    .getPredictions(twitchId, {
       limit: 1,
     })
     .then(({ data: predictions }) => {
@@ -14,6 +14,6 @@ export function refundTwitchBet(token: string) {
         return
       }
 
-      return api.predictions.cancelPrediction(providerAccountId || '', predictions[0].id)
+      return api.predictions.cancelPrediction(twitchId || '', predictions[0].id)
     })
 }

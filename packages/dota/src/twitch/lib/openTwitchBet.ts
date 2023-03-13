@@ -4,7 +4,7 @@ import { t } from 'i18next'
 import { prisma } from '../../db/prisma.js'
 import { SocketClient } from '../../types.js'
 import { logger } from '../../utils/logger.js'
-import { getChannelAPI } from './getChannelAPI.js'
+import { getTwitchAPI } from './getTwitchAPI.js'
 
 // Disable the bet in settings for this user
 export function disableBetsForToken(token: string) {
@@ -35,15 +35,15 @@ export function disableBetsForToken(token: string) {
     })
 }
 
-export async function openTwitchBet(
+export function openTwitchBet(
   locale: string,
-  token: string,
+  twitchId: string,
   heroName?: string,
   settings?: SocketClient['settings'],
 ) {
-  const { api, providerAccountId } = getChannelAPI(token)
+  const api = getTwitchAPI(twitchId)
   const betsInfo = getValueOrDefault(DBSettings.betsInfo, settings)
-  logger.info('[PREDICT] [BETS] Opening twitch bet', { userId: token, heroName })
+  logger.info('[PREDICT] [BETS] Opening twitch bet', { twitchId, heroName })
 
   const title =
     betsInfo.title !== defaultSettings.betsInfo.title
@@ -59,7 +59,7 @@ export async function openTwitchBet(
     betsInfo.no !== defaultSettings.betsInfo.no ? betsInfo.no : t('predictions.no', { lng: locale })
 
   return api.predictions
-    .createPrediction(providerAccountId || '', {
+    .createPrediction(twitchId || '', {
       title: title.substring(0, 45),
       outcomes: [yes.substring(0, 25), no.substring(0, 25)],
       autoLockAfter: betsInfo.duration >= 30 && betsInfo.duration <= 1800 ? betsInfo.duration : 240, // 4 min default

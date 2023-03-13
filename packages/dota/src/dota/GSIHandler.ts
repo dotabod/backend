@@ -597,7 +597,7 @@ export class GSIHandler {
               this.getToken() &&
                 openTwitchBet(
                   this.client.locale,
-                  this.getToken(),
+                  this.getChannelId(),
                   hero?.localized_name,
                   this.client.settings,
                 )
@@ -731,7 +731,7 @@ export class GSIHandler {
         if (chattersEnabled && tellChatBets) {
           this.say(t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }))
         }
-        refundTwitchBet(this.getToken())
+        refundTwitchBet(this.getChannelId())
           .then(() => {
             //
           })
@@ -871,7 +871,7 @@ export class GSIHandler {
 
     setTimeout(() => {
       this.getToken() &&
-        closeTwitchBet(won, this.getToken())
+        closeTwitchBet(won, this.getChannelId())
           .then(() => {
             logger.info('[BETS] end bets', {
               event: 'end_bets',
@@ -942,11 +942,11 @@ export class GSIHandler {
             if (chattersEnabled && tellChatBets) {
               this.say(t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }))
             }
-            refundTwitchBet(this.getToken())
+            refundTwitchBet(this.getChannelId())
               .then(() => {
                 //
               })
-              .catch((e) => {
+              .catch((e: any) => {
                 logger.error('ERROR refunding bets', { token: this.getToken(), e })
               })
           }
