@@ -699,6 +699,7 @@ export class GSIHandler {
     })
 
     // Both or one undefined
+    // This is never undefined, it's only here to satisfy typescript
     if (!myTeam) {
       logger.error('[BETS] trying to end bets but did not find localWinner or myTeam', {
         channel: this.getChannel(),
