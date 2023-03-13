@@ -14,7 +14,7 @@ const listener = new EventSubHttpListener({
 })
 
 console.log('Start the event sub listener')
-await listener.start()
+listener.start()
 console.log('Started the event sub listener')
 
 export { listener }

@@ -15,10 +15,10 @@
     "dev": "nodemon -L --ext ts ./src/index.ts"
   },
   "devDependencies": {
-    "@types/node": "^18.14.6",
-    "@typescript-eslint/eslint-plugin": "^5.54.0",
-    "@typescript-eslint/parser": "^5.54.0",
-    "eslint": "^8.35.0"
+    "@types/node": "^18.15.1",
+    "@typescript-eslint/eslint-plugin": "^5.54.1",
+    "@typescript-eslint/parser": "^5.55.0",
+    "eslint": "^8.36.0"
   },
   "dependencies": {
     "@dotabod/prisma": "^1.0.0"
