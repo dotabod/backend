@@ -6,7 +6,7 @@ import {
   EventSubChannelPredictionEndEvent,
   EventSubChannelPredictionLockEvent,
   EventSubChannelPredictionProgressEvent,
-} from '@twurple/eventsub'
+} from '@twurple/eventsub-base'
 import { io } from 'socket.io-client'
 
 import { server } from '../dota/index.js'
