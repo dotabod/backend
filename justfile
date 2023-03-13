@@ -28,14 +28,18 @@ i18np:
 i18nd:
     @echo "Downloading translations"
     if [[ {{fam}} == "windows" ]]; then \
-        "c:/Program Files (x86)/CrowdinCLI/crowdin.bat" download --config "./crowdin.yml" --verbose; \
+        @crowdin download --config "./crowdin.yml" --verbose; \
     else \
-        crowdin download --config "./crowdin.yml"; \
+        @crowdin download --config "./crowdin.yml"; \
     fi
 
 i18nu:
     @echo "Uploading translations"
-    @crowdin upload translations --auto-approve-imported --config './crowdin.yml'
+    if [[ {{fam}} == "windows" ]]; then \
+        @crowdin.bat upload translations --auto-approve-imported --config "./crowdin.yml"; \
+    else \
+        @crowdin upload translations --auto-approve-imported --config "./crowdin.yml"; \
+    fi
 
 # Stops all containers
 down:
