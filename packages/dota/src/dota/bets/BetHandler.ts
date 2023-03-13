@@ -53,12 +53,12 @@ class TwitchBets {
         continue
       }
 
-      for (let i = 0; i < bet.conditions.length; i++) {
+      for (let i = 0; i < bet.resolveConditions.length; i++) {
         if (bet.completedConditions.has(i)) {
           continue
         }
 
-        const conditionResult = bet.conditions[i](gameTickData)
+        const conditionResult = bet.resolveConditions[i](gameTickData)
         if (conditionResult === ResolveCondition.CONTINUE) {
           continue
         }
