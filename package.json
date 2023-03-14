@@ -21,16 +21,16 @@
   "dependencies": {
     "@prisma/client": "4.11.0",
     "@supabase/supabase-js": "^2.10.0",
-    "@twurple/api": "6.0.8",
-    "@twurple/auth": "6.0.8",
-    "@twurple/chat": "6.0.8",
+    "@twurple/api": "6.0.9",
+    "@twurple/auth": "6.0.9",
+    "@twurple/chat": "6.0.9",
     "i18next": "^22.4.11",
     "i18next-fs-backend": "^2.1.1",
     "socket.io": "^4.6.1",
     "winston": "^3.8.2"
   },
   "devDependencies": {
-    "@types/node": "^18.15.1",
+    "@types/node": "^18.15.3",
     "@typescript-eslint/eslint-plugin": "^5.54.1",
     "@typescript-eslint/parser": "^5.55.0",
     "eslint": "^8.36.0",

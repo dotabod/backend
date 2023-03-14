@@ -20,7 +20,7 @@
     "@dotabod/prisma": "^1.0.0",
     "@dotabod/settings": "^1.0.0",
     "@node-steam/id": "^1.2.0",
-    "@twurple/eventsub-base": "^6.0.8",
+    "@twurple/eventsub-base": "^6.0.9",
     "@types/long": "^5.0.0",
     "@types/lru-cache": "^7.10.10",
     "axios": "1.2.0-alpha.1",

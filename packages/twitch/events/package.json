@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@dotabod/prisma": "^1.0.0",
-    "@twurple/eventsub-base": "6.0.8",
-    "@twurple/eventsub-http": "6.0.8"
+    "@twurple/eventsub-base": "6.0.9",
+    "@twurple/eventsub-http": "6.0.9"
   }
 }
