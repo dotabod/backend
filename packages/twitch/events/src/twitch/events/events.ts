@@ -10,34 +10,34 @@ interface Event {
 }
 
 export const events: { [key in string]: Event } = {
-  subscribeToStreamOnlineEvents: {
+  onStreamOnline: {
     customHandler: onlineEvent,
   },
-  subscribeToStreamOfflineEvents: {
+  onStreamOffline: {
     customHandler: offlineEvent,
   },
-  subscribeToUserUpdateEvents: {
+  onUserUpdate: {
     customHandler: updateUserEvent,
   },
-  subscribeToChannelPredictionBeginEvents: {
+  onChannelPredictionBegin: {
     sendToSocket: transformBetData,
   },
-  subscribeToChannelPredictionProgressEvents: {
+  onChannelPredictionProgress: {
     sendToSocket: transformBetData,
   },
-  subscribeToChannelPredictionLockEvents: {
+  onChannelPredictionLock: {
     sendToSocket: transformBetData,
   },
-  subscribeToChannelPredictionEndEvents: {
+  onChannelPredictionEnd: {
     sendToSocket: transformBetData,
   },
-  subscribeToChannelPollBeginEvents: {
+  onChannelPollBegin: {
     sendToSocket: transformPollData,
   },
-  subscribeToChannelPollProgressEvents: {
+  onChannelPollProgress: {
     sendToSocket: transformPollData,
   },
-  subscribeToChannelPollEndEvents: {
+  onChannelPollEnd: {
     sendToSocket: transformPollData,
   },
 }
