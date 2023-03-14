@@ -35,16 +35,16 @@
     "tpFromDeath": "Gracias a su muerte finalmente conseguiste un tp y solo te tomó $t(seconds, {\"count\": {{seconds}} }){{emote}}"
   },
   "colors": {
-    "blue": "Blue",
-    "brown": "Brown",
-    "cyan": "Cyan",
-    "green": "Green",
-    "olive": "Olive",
-    "orange": "Orange",
-    "pink": "Pink",
-    "purple": "Purple",
-    "teal": "Teal",
-    "yellow": "Yellow"
+    "blue": "Azul",
+    "brown": "Marrón",
+    "cyan": "Turquesa",
+    "green": "Verde",
+    "olive": "Verde Oliva",
+    "orange": "Naranja",
+    "pink": "Rosa",
+    "purple": "Morado",
+    "teal": "Verde Azulado",
+    "yellow": "Amarillo"
   },
   "commandDisabled": "El streamer ha dehabilitado el comando {{cmdName}} {{emote}}, escribe !commands para ver los disponibles",
   "commands_everyone": "Todos pueden usar: {{commandList}}",
@@ -60,8 +60,8 @@
     "list": "(2m de retraso) {{- heroName}} tiene: {{- itemNames}}"
   },
   "herostats": {
-    "noneColor": "{{color}} has no matches played as {{- heroName}} {{timeperiod}}",
-    "noneStreamer": "No matches played as {{- heroName}} {{timeperiod}}",
+    "noneColor": "{{color}} No tiene partidas jugadas como: {{- heroName}} {{timeperiod}}",
+    "noneStreamer": "No hay partidas jugadas como: {{- heroName}} {{timeperiod}}",
     "timeperiod": {
       "days_one": "en {{count}}d",
       "days_many": "",
@@ -69,10 +69,10 @@
       "lifetime": "de todos los tiempos"
     },
     "winrateColor": "",
-    "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateColor_one": "El porcentaje de victorias de {{color}} es {{winrate}}% con {{- heroName}} en {{timeperiod}} con {{count}} partidas jugadas.",
     "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
     "winrateStreamer": "",
-    "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateStreamer_one": "Su porcentaje de victorias es: {{winrate}}% como {{- heroName}} en {{timeperiod}} de {{count}} partidas jugadas.",
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Slot, nombre o color de héroe inválido. Intenta del 1-10, parte del nombre del héroe o un color de {{colorList}}",
@@ -81,14 +81,14 @@
     "lost_one": "{{- heroName}} perdió la racha de {{count}} kills {{emote}}",
     "lost_many": "",
     "lost_other": "{{- heroName}} perdió la racha de {{count}} asesinatos {{emote}}",
-    "won_one": "{{- heroName}} has a {{count}} kill streak {{emote}}",
+    "won_one": "{{- heroName}} tiene una racha de {{count}} asesinatos {{emote}}",
     "won_many": "",
     "won_other": "{{- heroName}} has a {{count}} kill streak {{emote}}"
   },
   "lastgame": {
     "link": "Aqui esta el ultimo juego: {{- url}}",
     "none": "No estamos jugando con alguien del ultimo juego.",
-    "player": "{{- currentMatchHero}} was {{- lastMatchHero}}",
+    "player": "{{- currentMatchHero}} jugó como {{- lastMatchHero}}",
     "total_one": "",
     "total_many": "",
     "total_other": "Playing with {{count}} players from last game."
@@ -96,7 +96,7 @@
   "lastgamescore": {
     "double": "Doble la apuesta",
     "duration": "{{minutes}}minutos",
-    "kda": "{{- kdavalue}} on {{- heroName}}",
+    "kda": "{{- kdavalue}} con {{- heroName}}",
     "lost": "Ultimo juego: Perdido",
     "party": "Mecha con grupo",
     "unranked": "Sin clasificar",
@@ -105,12 +105,12 @@
   "lifetime": "Juegos de toda la vida",
   "matchFound": "Datos de la mecha {{commandList}} comandos activado.",
   "matchId": "ID de Mecha: {{matchId}}",
-  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",
-  "missingMatchData": "Waiting for current match data {{emote}}",
+  "midasUsed": "Midas fue utilizado, $t(seconds, {\"count\": {{seconds}} }) tarde {{emote}}",
+  "missingMatchData": "Esperando datos de la partida reciente {{emote}}",
   "missingUser": "No se encuentra el usuario. Trata de salir y acceso el login de nuevo en dotabod.com",
   "modsOnly_off": "Solomente Mods ahora esta apagado. Todos pueden usar chat.",
   "modsOnly_on": "Solomente Mods esta prendido {{emote}}. Solo mods pueden usar chat",
-  "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
+  "multiAccount": "Esta cuenta de Steam ya está conectada a otro usuario de Dotabod. Comprueba el panel de control para más información {{- url}}",
   "noHero": "No se ha encontrado el héroe",
   "noLastMatch": "No se ha encontrado la ultimo partido {{emote}}",
   "noNotable": "No hay jugadores destacados",
@@ -121,7 +121,7 @@
   "npRemove": "Usa !np remove <steam32id>",
   "npRemoved": "Eliminado {{steamid}} de !np para este canal",
   "npUnknown": "No se pudo encontrar {{steamid}} para este canal",
-  "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
+  "overlayMissing": "El overlay no se ha encontrado. El comando {{command}} requiere que se añada el overlay.",
   "ping": "Pong {{emote}}",
   "pleb": "Un pleb aqui {{emote}}",
   "pleb_off": "{{name}} {{emote}} buen trabajo pleb",
@@ -130,7 +130,7 @@
     "title": "¿Ganaremos con {{- heroName}}?",
     "yes": "Sí"
   },
-  "privateProfile": "Streamer's profile is private. The {{command}} command uses OpenDota and requires them to enable 'Expose Public Match Data' in their Dota settings.",
+  "privateProfile": "El perfil del streamer es privado. El comando {{command}} usa OpenDota y requiere que activen 'Exponer datos públicos de partida' en sus ajustes de Dota.",
   "profileUrl": "Aquí está {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Siguiente rango en",
@@ -138,31 +138,31 @@
     "nextRankIn_many": "",
     "nextRankIn_other": "en {{count}} ganas"
   },
-  "ranked": "Ranked",
+  "ranked": "Clasificatoria",
   "ranked_no": "Nope este juego no está clasificado",
   "ranked_yes": "Sí, este juego está clasificado",
   "refresh": "Recargando superposición...",
-  "resetwl": "Resetting win/loss to 0 for {{channel}}",
-  "roshanAlive": "Roshan is currently alive {{emote}}",
+  "resetwl": "Restableciendo victorias/derrotas a 0 para {{channel}}",
+  "roshanAlive": "Roshan esta vivo ahora! {{emote}}",
   "roshanCount": {
-    "1": "Rosh deaths: 1 · Next drop: agh's shard.",
-    "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",
-    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
-    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "1": "Muertes de Roshan: 1· Siguiente drop: Fragmento de aghanim's.",
+    "2": "Muertes De Roshan: 2 · Siguiente drop: Queso, Bendición de Aghanim o Esquirla Revigorizante.",
+    "3": "Muertes De Roshan: 3 · Siguiente drop: Queso, Bendición de Aghanim y Esquirla Revigorizante.",
+    "more_one": "Muertes De Roshan: {{count}} · Siguiente drop: Queso, Bendición de Aghanim y Esquirla Revigorizante.",
     "more_many": "",
     "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
   },
   "roshanKilled": "¡Roshan asesinado! Siguiente roshan entre {{min}} y {{max}}",
-  "seconds_one": "{{count}} second",
+  "seconds_one": "{{count}} segundos",
   "seconds_other": "{{count}} seconds",
-  "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
-  "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "setStreamDelayRemoved": "Removing stream delay",
+  "setStreamDelay": "Establecer el delay de la transmisión en: $t(seconds, {\"count\": {{seconds}} })",
+  "setStreamDelayNoArgs": "Stream Delay no valido, use !setdelay <seconds>",
+  "setStreamDelayRemoved": "Eliminando el Delay del stream",
   "stream": "$t(stream_on)",
-  "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
-  "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
+  "stream_off": "Dotabod pondrá {{channel}} como fuera de línea, Escribir !online para deshacer",
+  "stream_on": "Dotabod pondrá {{channel}} como en línea, Escribir !offline para deshacer",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
-  "streamDelayNone": "There is no stream delay on this channel",
+  "streamDelayNone": "No hay delay de stream en este canal",
   "tip": {
     "from": "La propina de {{- heroName}} {{emote}}",
     "to": "Estamos enviar propina {{- heroName}} {{emote}}"
@@ -176,7 +176,7 @@
   "toggleMatch_single": "Cambiando esta mecha a apostar mmr normalmente: {{- url}} Escriba !fixdd para deshacer",
   "toggleMatch_solo": "Cambiando este partido a solo mmr: {{- url}} Escriba !fixparty para deshacer",
   "translated": {
-    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
+    "by_one": "Dotabod está traducido por {{- translators}}. ¿Quieres ayudar a traducir o ver un error? Únete a nuestro canal de #traducciones de Discord {{- url}}",
     "by_many": "",
     "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
   },
@@ -192,8 +192,8 @@
   "updateMmr_manual": "Actualizado MMR a {{mmr}}",
   "updateMmrMulti": "Múltiples cuentas de steam, actualización de la que está conectado ahora con ({{steamId}})",
   "version": {
-    "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
-    "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
+    "commit": "El servidor esta ejecutando la versión {{version}}, esto es lo que falta en comparación con la última versión: {{- url}}",
+    "unknown": "No se pudo encontrar el último git commit, aquí está el repositorio {{- url}}"
   },
   "xpm": "XPM en vivo: {{num}}"
 }
