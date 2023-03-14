@@ -1,3 +1,5 @@
+import { EventSubListener } from '@twurple/eventsub-base'
+
 import { transformBetData } from './transformers/transformBetData.js'
 import { transformPollData } from './transformers/transformPollData.js'
 import { offlineEvent } from '../lib/offlineEvent.js'
@@ -9,7 +11,7 @@ interface Event {
   sendToSocket?: (data: any) => void
 }
 
-export const events: { [key in string]: Event } = {
+export const events: Partial<{ [key in keyof EventSubListener]: Event }> = {
   onStreamOnline: {
     customHandler: onlineEvent,
   },
