@@ -8,7 +8,11 @@ export const getBotAuthProvider = async function () {
     throw new Error('Missing bot provider id (TWITCH_BOT_PROVIDERID)')
   }
 
-  if (authProvider.getCurrentScopesForUser(twitchId).length === 0) {
+  // User has not been added to the twurple provider yet
+  // getCurrentScopesForUser will throw if the user does not exist
+  try {
+    authProvider.getCurrentScopesForUser(twitchId)
+  } catch (e) {
     const botTokens = await getBotTokens()
 
     if (!botTokens?.access_token || !botTokens.refresh_token) {
@@ -24,6 +28,9 @@ export const getBotAuthProvider = async function () {
     }
 
     authProvider.addUser(twitchId, tokenData, ['chat'])
+    console.log('[PREDICT] Retrieved bot twitch provider, must have been the first user', {
+      twitchId,
+    })
   }
 
   return authProvider
