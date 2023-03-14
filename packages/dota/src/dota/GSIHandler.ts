@@ -625,6 +625,23 @@ export class GSIHandler {
                     })
                   })
                   .catch((e: any) => {
+                    try {
+                      // "message\": \"Invalid refresh token\"\n}" means they have to logout and login
+                      if (JSON.parse(e?.body)?.message?.includes('refresh token')) {
+                        this.say(
+                          t('bets.error', {
+                            channel: `@${this.getChannel()}`,
+                            lng: this.client.locale,
+                          }),
+                          {
+                            delay: false,
+                          },
+                        )
+                      }
+                    } catch (e) {
+                      // only interested in refresh token err
+                    }
+
                     logger.error('[BETS] Error opening twitch bet', {
                       channel,
                       e: e?.message || e,
