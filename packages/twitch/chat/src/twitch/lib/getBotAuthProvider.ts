@@ -8,7 +8,7 @@ export const getBotAuthProvider = async function () {
     throw new Error('Missing bot provider id (TWITCH_BOT_PROVIDERID)')
   }
 
-  if (authProvider.getIntentsForUser(twitchId).length === 0) {
+  if (authProvider.getCurrentScopesForUser(twitchId).length === 0) {
     const botTokens = await getBotTokens()
 
     if (!botTokens?.access_token || !botTokens.refresh_token) {

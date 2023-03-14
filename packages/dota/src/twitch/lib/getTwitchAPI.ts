@@ -9,7 +9,10 @@ export const getTwitchAPI = function (twitchId: string): ApiClient {
   const authProvider = getAuthProvider()
 
   // User has not been added to the twurple provider yet
-  if (authProvider.getIntentsForUser(twitchId).length === 0) {
+  // getCurrentScopesForUser will throw if the user does not exist
+  try {
+    authProvider.getCurrentScopesForUser(twitchId)
+  } catch (e) {
     const twitchTokens = findUserByTwitchId(twitchId)
     if (!twitchTokens?.Account?.access_token || !twitchTokens.Account.refresh_token) {
       logger.info('[TWITCHSETUP] Missing twitch tokens', { twitchId })
@@ -24,7 +27,6 @@ export const getTwitchAPI = function (twitchId: string): ApiClient {
       refreshToken: twitchTokens.Account.refresh_token,
     }
 
-    // TODO: missing intents
     authProvider.addUser(twitchId, tokenData)
   }
 
