@@ -9,15 +9,11 @@ import checkMidas from '../../lib/checkMidas.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
-import MinimapParser from '../minimap/parser.js'
-
-const minimapParser = new MinimapParser()
+import minimapParser from '../minimap/parser.js'
 
 // Catch all
 eventHandler.registerEvent(`newdata`, {
   handler: (dotaClient: GSIHandler, data: Packet) => {
-    minimapParser.init(data, dotaClient.getToken())
-
     // New users who dont have a steamaccount saved yet
     // This needs to run first so we have client.steamid on multiple acts
     dotaClient.updateSteam32Id()
@@ -26,6 +22,12 @@ eventHandler.registerEvent(`newdata`, {
     dotaClient.setupOBSBlockers(data.map?.game_state ?? '')
 
     if (!isPlayingMatch(dotaClient.client.gsi)) return
+
+    // only if they're in a match ^ and they're a beta tester
+    if (dotaClient.client.beta_tester) {
+      const enabled = getValueOrDefault(DBSettings['minimap-blocker'], dotaClient.client.settings)
+      if (enabled) minimapParser.init(data, dotaClient.getToken())
+    }
 
     // Everything below here requires an ongoing match, not a finished match
     const hasWon =

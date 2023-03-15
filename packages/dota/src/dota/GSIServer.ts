@@ -26,8 +26,9 @@ class GSIServer {
       },
     })
 
-    app.use(express.json())
-    app.use(express.urlencoded({ extended: true }))
+    app.use(express.json({ limit: '1mb' }))
+    app.use(express.urlencoded({ extended: true, limit: '1mb' }))
+
     this.dota.dota2.on('ready', () => {
       logger.info('[SERVER] Connected to dota game coordinator')
       app.post('/', validateToken, processChanges('previously'), processChanges('added'), newData)
@@ -71,6 +72,9 @@ class GSIServer {
       if (gsiHandlers.has(token)) {
         const handler = gsiHandlers.get(token)
         if (handler) {
+          if (handler.client.gsi && handler.client.beta_tester) {
+            handler.emitMinimapBlockerStatus()
+          }
           handler.emitBadgeUpdate()
           handler.emitWLUpdate()
           handler.blockCache = null

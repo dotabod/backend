@@ -1,9 +1,11 @@
 import { Entity, MapData, Packet, Player } from '../../../types.js'
+import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { DataBroadcaster } from './DataBroadcaster.js'
 
 const dataBroadcaster = new DataBroadcaster()
+let lastBroadcastTime = 0
 
-export default class MinimapParser {
+class MinimapParser {
   prevHeroes = []
   xLength = 8205
   yLength = 8174
@@ -78,7 +80,19 @@ export default class MinimapParser {
   ]
 
   init(data: Packet, token: string) {
+    if (!isPlayingMatch(data)) return
+
     const parsed = this.parse(data)
+
+    if (parsed.status === false) {
+      const currentTime = new Date().getTime()
+      if (currentTime - lastBroadcastTime >= 5000) {
+        dataBroadcaster.sendData(parsed, token)
+        lastBroadcastTime = currentTime
+      }
+      return
+    }
+
     dataBroadcaster.sendData(parsed, token)
   }
 
@@ -208,106 +222,101 @@ export default class MinimapParser {
   }
 
   parse(data: Packet) {
-    if (data.map && this.isGameOnGoing(data.map) && data.player && data.hero && data.minimap) {
-      // Parse Status
-      const status: any = {
-        active: true,
-        paused: this.isGamePaused(data.map),
-        playing: this.isPlaying(data.player),
-        hero: this.isPlaying(data.player) ? data.hero.name : data.hero.team2?.player0.name,
-        team: this.isPlaying(data.player) ? data.player.team_name : 'radiant',
-      }
-
-      // Parse Minimap
-      const minimap: any = {
-        heroes: [],
-        hero_units: [],
-        couriers: [],
-        creeps: [],
-        buildings: [],
-        tp: [],
-        scan: [],
-      }
-      const entities = Object.keys(data.minimap)
-
-      entities.forEach((key) => {
-        const entity = data.minimap![key]
-
-        // Heroes
-        if (
-          entity.unitname &&
-          entity.unitname.includes('npc_dota_hero') &&
-          this.isEntityAlive(entity) &&
-          this.isValidHero(entity)
-        ) {
-          minimap.heroes.push(this.cleanData(entity))
-        }
-
-        // Hero Units
-        if (
-          entity.image &&
-          entity.image === 'minimap_controlledcreep' &&
-          this.isEntityAlive(entity)
-        ) {
-          minimap.hero_units.push(this.cleanData(entity))
-        }
-
-        // Couriers
-        if (
-          entity.unitname &&
-          entity.unitname === 'npc_dota_courier' &&
-          this.isEntityAlive(entity)
-        ) {
-          minimap.couriers.push(this.cleanData(entity))
-        }
-
-        // Creeps
-        if (
-          entity.unitname &&
-          this.creeps.includes(entity.unitname) &&
-          this.isEntityAlive(entity)
-        ) {
-          minimap.creeps.push(this.cleanData(entity))
-        }
-
-        // Buildings
-        if (entity.unitname && this.buildings.includes(entity.unitname)) {
-          minimap.buildings.push(this.cleanData(entity))
-        }
-
-        // Teleporting
-        if (
-          entity.image &&
-          entity.image === 'minimap_ping_teleporting' &&
-          entity.eventduration &&
-          entity.eventduration > 1
-        ) {
-          minimap.tp.push(this.cleanData(entity))
-        }
-
-        // Scanning
-        if (
-          entity.image &&
-          entity.image === 'minimap_ping_teleporting' &&
-          entity.eventduration &&
-          entity.eventduration === 1
-        ) {
-          minimap.scan.push(this.cleanData(entity))
-        }
-      })
-
-      minimap.heroes = this.parseHeroRotation(minimap.heroes)
-
+    const currentCfgFile = data.map && this.isGameOnGoing(data.map) && data.player && data.hero
+    const betaCfgFile = data.minimap
+    if (!currentCfgFile || !betaCfgFile) {
       return {
-        minimap: minimap,
-        status: status,
+        status: {
+          active: false,
+        },
       }
     }
 
+    // Parse Status
+    const status: any = {
+      active: true,
+      paused: this.isGamePaused(data.map!),
+      playing: this.isPlaying(data.player!),
+      hero: this.isPlaying(data.player!) ? data.hero!.name : data.hero!.team2?.player0.name,
+      team: this.isPlaying(data.player!) ? data.player!.team_name : 'radiant',
+    }
+
+    // Parse Minimap
+    const minimap: any = {
+      heroes: [],
+      hero_units: [],
+      couriers: [],
+      creeps: [],
+      buildings: [],
+      tp: [],
+      scan: [],
+    }
+    const entities = Object.keys(data.minimap!)
+
+    entities.forEach((key) => {
+      const entity = data.minimap![key]
+
+      // Heroes
+      if (
+        entity.unitname &&
+        entity.unitname.includes('npc_dota_hero') &&
+        this.isEntityAlive(entity) &&
+        this.isValidHero(entity)
+      ) {
+        minimap.heroes.push(this.cleanData(entity))
+      }
+
+      // Hero Units
+      if (
+        entity.image &&
+        entity.image === 'minimap_controlledcreep' &&
+        this.isEntityAlive(entity)
+      ) {
+        minimap.hero_units.push(this.cleanData(entity))
+      }
+
+      // Couriers
+      if (entity.unitname && entity.unitname === 'npc_dota_courier' && this.isEntityAlive(entity)) {
+        minimap.couriers.push(this.cleanData(entity))
+      }
+
+      // Creeps
+      if (entity.unitname && this.creeps.includes(entity.unitname) && this.isEntityAlive(entity)) {
+        minimap.creeps.push(this.cleanData(entity))
+      }
+
+      // Buildings
+      if (entity.unitname && this.buildings.includes(entity.unitname)) {
+        minimap.buildings.push(this.cleanData(entity))
+      }
+
+      // Teleporting
+      if (
+        entity.image &&
+        entity.image === 'minimap_ping_teleporting' &&
+        entity.eventduration &&
+        entity.eventduration > 1
+      ) {
+        minimap.tp.push(this.cleanData(entity))
+      }
+
+      // Scanning
+      if (
+        entity.image &&
+        entity.image === 'minimap_ping_teleporting' &&
+        entity.eventduration &&
+        entity.eventduration === 1
+      ) {
+        minimap.scan.push(this.cleanData(entity))
+      }
+    })
+
     return {
-      status: {
-        active: false,
-      },
+      minimap: minimap,
+      status: status,
     }
   }
 }
+
+const minimapParser = new MinimapParser()
+export default minimapParser

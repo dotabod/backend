@@ -3,8 +3,7 @@ import isEqual from 'lodash.isequal'
 import { server } from '../../index.js'
 
 export class DataBroadcaster {
-  status: any = { active: false }
-  lastUpdate = 0
+  lastUpdateByToken: Record<string, number> = {} // stores the last update time per token
   minimap: Record<string, any> = {
     heroes: {
       data: [],
@@ -43,10 +42,8 @@ export class DataBroadcaster {
     },
   }
 
+  // called every gametick
   sendData(parsedData: any, token: string) {
-    // Update Status
-    this.status = parsedData.status
-
     // Update Data
     if (parsedData.minimap) {
       Object.keys(this.minimap).forEach((type) => {
@@ -58,13 +55,19 @@ export class DataBroadcaster {
         if (emitFlag) {
           entity.data = parsedData.minimap[type]
           entity.lastUpdate = Date.now()
-          server.io.to(token).emit(`DATA_${type}`, entity.data)
-          // this.logger.info(`Broadcast: ${type}`)
+
+          // check if the token has a last update time
+          if (!this.lastUpdateByToken[token]) {
+            this.lastUpdateByToken[token] = 0
+          }
+
+          // check if the last update time for the token is greater than the entity's last update time
+          if (this.lastUpdateByToken[token] < entity.lastUpdate) {
+            server.io.to(token).emit(`DATA_${type}`, entity.data)
+            this.lastUpdateByToken[token] = entity.lastUpdate
+          }
         }
       })
     }
-
-    // Set timestamp
-    this.lastUpdate = Date.now()
   }
 }
