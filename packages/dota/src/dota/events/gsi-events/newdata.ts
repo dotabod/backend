@@ -9,10 +9,15 @@ import checkMidas from '../../lib/checkMidas.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
+import MinimapParser from '../minimap/parser.js'
+
+const minimapParser = new MinimapParser()
 
 // Catch all
 eventHandler.registerEvent(`newdata`, {
   handler: (dotaClient: GSIHandler, data: Packet) => {
+    minimapParser.init(data, dotaClient.getToken())
+
     // New users who dont have a steamaccount saved yet
     // This needs to run first so we have client.steamid on multiple acts
     dotaClient.updateSteam32Id()
