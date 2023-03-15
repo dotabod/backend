@@ -36,7 +36,7 @@ COPY ./$BUILD_CONTEXT/tsconfig.json ./
 COPY ./$BUILD_CONTEXT/src ./src
 
 # Run 'yarn build' only in production environment
-RUN if [ "$NODE_ENV" = "production" ]; then yarn build; fi
+RUN yarn build
 
 #################
 #    RUNNER    #
