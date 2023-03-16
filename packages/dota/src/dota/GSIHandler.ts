@@ -15,8 +15,6 @@ import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import { AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
 import { emitRoshEvent, RoshRes } from './events/gsi-events/event.roshan_killed.js'
-import { DataBroadcaster } from './events/minimap/DataBroadcaster.js'
-import minimapParser from './events/minimap/parser.js'
 import { server } from './index.js'
 import { blockTypes, DelayedCommands, GLOBAL_DELAY, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
@@ -77,11 +75,8 @@ export class GSIHandler {
   treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
   disabled = false
 
-  mapBlocker: DataBroadcaster
-
   constructor(dotaClient: SocketClient) {
     this.client = dotaClient
-    this.mapBlocker = new DataBroadcaster(this.getToken())
 
     const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, this.client.settings)
     if (isBotDisabled) {
@@ -150,7 +145,6 @@ export class GSIHandler {
 
   // reset vars when a new match begins
   public resetClientState() {
-    this.mapBlocker.resetData()
     this.playingHero = null
     this.playingHeroSlot = null
     this.events = []
@@ -309,17 +303,6 @@ export class GSIHandler {
       .catch((e) => {
         // stream not live
       })
-  }
-
-  emitMinimapBlockerStatus() {
-    if (!this.client.stream_online || !this.client.beta_tester || !this.client.gsi) return
-
-    const enabled = getValueOrDefault(DBSettings['minimap-blocker'], this.client.settings)
-    if (!enabled) return
-
-    const parsedData = minimapParser.parse(this.client.gsi)
-    this.mapBlocker.sendInitialData(parsedData)
-    server.io.to(this.getToken()).emit('STATUS', parsedData.status)
   }
 
   emitBadgeUpdate() {
@@ -1070,7 +1053,6 @@ export class GSIHandler {
           this.emitBlockEvent({ state, blockType: blocker.type })
 
           if (blocker.type === 'playing') {
-            this.emitMinimapBlockerStatus()
             this.emitBadgeUpdate()
             this.emitWLUpdate()
             void this.maybeSendRoshAegisEvent()
