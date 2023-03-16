@@ -6,7 +6,7 @@ services:
       - "6379:6379"
 
   twitch-chat:
-    image: twitch-chat:${COMMIT_HASH:-latest}
+    image: twitch-chat
     container_name: twitch-chat
     restart: on-failure
     build:
@@ -32,7 +32,7 @@ services:
       - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
   twitch-events:
-    image: twitch-events:${COMMIT_HASH:-latest}
+    image: twitch-events
     container_name: twitch-events
     restart: on-failure
     build:
@@ -59,7 +59,7 @@ services:
       - TWITCH_EVENTSUB_SECRET
 
   dota:
-    image: dota:${COMMIT_HASH:-latest}
+    image: dota
     container_name: dota
     restart: on-failure
     build:
