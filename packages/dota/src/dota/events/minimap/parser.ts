@@ -124,36 +124,6 @@ class MinimapParser {
     return true
   }
 
-  parseHeroRotation(minimapHeroes: any): any {
-    if (this.prevHeroes.length > 0) {
-      minimapHeroes.forEach((hero: any) => {
-        const prevData: any = this.prevHeroes.find((prev: any) => {
-          return prev.unitname === hero.unitname
-        })
-
-        if (prevData) {
-          const currentRotation = prevData.yaw % 360
-          const isNegative = currentRotation - hero.yaw < 0
-          let change = Math.abs(currentRotation - hero.yaw)
-
-          if (change > 180) {
-            change -= 360
-          }
-
-          if (isNegative) {
-            hero.yaw = Number(prevData.yaw) + change
-          } else {
-            hero.yaw = Number(prevData.yaw) - change
-          }
-        }
-      })
-    }
-
-    this.prevHeroes = minimapHeroes
-
-    return minimapHeroes
-  }
-
   cleanData(entity: Entity): any {
     // Simplify Coordinates
     if (entity.xpos !== undefined) {

@@ -150,6 +150,7 @@ export class GSIHandler {
 
   // reset vars when a new match begins
   public resetClientState() {
+    this.mapBlocker.resetData()
     this.playingHero = null
     this.playingHeroSlot = null
     this.events = []
@@ -317,7 +318,7 @@ export class GSIHandler {
     if (!enabled) return
 
     const parsedData = minimapParser.parse(this.client.gsi)
-    this.mapBlocker.sendInitialData()
+    this.mapBlocker.sendInitialData(parsedData)
     server.io.to(this.getToken()).emit('STATUS', parsedData.status)
   }
 
