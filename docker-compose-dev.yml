@@ -10,3 +10,9 @@ services:
   dota:
     volumes:
       - ./packages/dota/src:/app/packages/dota/src
+  backup:
+    profiles:
+      - donotstart
+  nginx:
+    profiles:
+      - donotstart

@@ -20,7 +20,7 @@ WORKDIR /app
 COPY package.json yarn.lock* ./
 
 # Only install production dependencies for production builds
-RUN yarn install --pure-lockfile --non-interactive $(if [ "$NODE_ENV" = "production" ]; then echo "--production"; fi)
+RUN yarn install --pure-lockfile --non-interactive
 
 #################
 #     BUILDER    #
@@ -44,7 +44,7 @@ COPY ./$BUILD_CONTEXT/tsconfig.json ./
 COPY ./$BUILD_CONTEXT/src ./src
 
 # Run 'yarn build' only in production environment
-RUN if [ "$NODE_ENV" = "production" ]; then yarn build; fi
+RUN yarn build
 
 #################
 #     PROD      #
@@ -52,10 +52,6 @@ RUN if [ "$NODE_ENV" = "production" ]; then yarn build; fi
 FROM node:19.4-alpine
 
 ARG BUILD_CONTEXT
-ENV COMMIT_HASH $COMMIT_HASH
-
-LABEL org.opencontainers.image.source="https://github.com/dotabod/backend"
-LABEL org.opencontainers.image.version=$COMMIT_HASH
 
 WORKDIR /app
 COPY --from=base /app/node_modules ./node_modules
@@ -80,5 +76,5 @@ COPY --from=builder /app/$BUILD_CONTEXT/package.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/tsconfig.json ./
 RUN mkdir -p ./src/steam/volumes
 
-CMD [ "sh", "-c", "if [ \"$NODE_ENV\" = \"production\" ]; then yarn start; else yarn dev; fi" ]
+CMD [ "sh", "-c", "yarn start" ]
 
