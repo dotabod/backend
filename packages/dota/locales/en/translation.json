@@ -12,7 +12,6 @@
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
-  "refreshToken": "Your Twitch account needs to be reconnected to Dotabod. {{channel}} logout and login on dotabod.com to fix this.",
   "bets": {
     "error": "Unable to open bets. $t(refreshToken)",
     "lost": "We have lost, gg nt {{emote}} go next",
@@ -138,6 +137,7 @@
   "ranked_no": "Nope this game is not ranked",
   "ranked_yes": "Yes this game is ranked",
   "refresh": "Refreshing overlay...",
+  "refreshToken": "Your Twitch account needs to be reconnected to Dotabod. {{channel}} logout and login on dotabod.com to fix this.",
   "resetwl": "Resetting win/loss to 0 for {{channel}}",
   "roshanAlive": "Roshan is currently alive {{emote}}",
   "roshanCount": {

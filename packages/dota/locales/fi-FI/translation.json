@@ -13,6 +13,7 @@
   "betaTester_off": "{{channel}} ei ole enää beta-testaaja. Kirjoita !beta liittyäksesi uudelleen",
   "betaTester_on": "{{channel}} on nyt beta-testaaja. Käy osoitteessa discord.dotabod.com nähdäksesi beta-ominaisuudet. Kumoa kirjoittamalla !beta",
   "bets": {
+    "error": "Unable to open bets. $t(refreshToken)",
     "lost": "Hävisimme, gg nt {{emote}} mennään seuraavaan",
     "notScored": "Ottelua ei lasketa {{emote}} Ei lisätä tai poisteta MMR:ää ottelulle {{matchId}}.",
     "open": "Vedot avattu {{emote}}",
@@ -136,6 +137,7 @@
   "ranked_no": "Ei, tämä peli ei ole rankattu",
   "ranked_yes": "Kyllä, tämä peli on rankattu",
   "refresh": "Päivitetään peittokuvaa...",
+  "refreshToken": "Your Twitch account needs to be reconnected to Dotabod. {{channel}} logout and login on dotabod.com to fix this.",
   "resetwl": "Nollataan voitto/tappio-arvo kanavalle {{channel}}",
   "roshanAlive": "Roshan on tällä hetkellä elossa {{emote}}",
   "roshanCount": {
@@ -169,8 +171,8 @@
   "toggleMatch_single": "Vaihdetaan tämä ottelu tavalliseksi mmr:äksi: {{- url}} Kirjoita !fixdd peruuttaaksesi",
   "toggleMatch_solo": "Vaihdetaan tämä ottelu soolo mmr:äksi: {{- url}} Kirjoita !fixparty peruuttaaksesi",
   "translated": {
-    "by_one": "Dotabodin on kääntänyt {{- translators}}. Haluatko auttaa kääntämisessä tai näetkö virheen? Liity meidän Discord #translations-kanavalle {{- url}}",
-    "by_other": "Dotabodin on kääntänyt {{- translators}}. Haluatko auttaa kääntämisessä tai näetkö virheen? Liity meidän Discord #translations-kanavalle {{- url}}"
+    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
+    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
   },
   "treadToggle_one": "Vaihdoimme treadsejä {{count}} kerran säästääksemme yhteensä {{manaCount}} manaa tässä ottelussa.",
   "treadToggle_other": "Vaihdoimme treadsejä {{count}} kertaa säästääksemme yhteensä {{manaCount}} manaa tässä ottelussa.",
