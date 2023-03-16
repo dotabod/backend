@@ -13,6 +13,7 @@
   "betaTester_off": "{{channel}} är inte längre en betatestare. Skriv !beta för att gå med igen",
   "betaTester_on": "{{channel}} är nu en betatestare. Besök discord.dotabod.com för att se beta-funktionerna. Skriv !beta för att ångra",
   "bets": {
+    "error": "Unable to open bets. $t(refreshToken)",
     "lost": "Vi förlorade, gg nt {{emote}} gå nästa",
     "notScored": "Matchen räknas inte {{emote}} Lägger inte till eller tar bort MMR för match {{matchId}}.",
     "open": "Satsningar öppnade {{emote}}",
@@ -136,6 +137,7 @@
   "ranked_no": "Nej, denna match är inte rankad",
   "ranked_yes": "Ja, denna match är rankad",
   "refresh": "Uppdaterar överlägg...",
+  "refreshToken": "Your Twitch account needs to be reconnected to Dotabod. {{channel}} logout and login on dotabod.com to fix this.",
   "resetwl": "Återställer vinst/förlust till 0 för {{channel}}",
   "roshanAlive": "Roshan lever för tillfället {{emote}}",
   "roshanCount": {
@@ -169,8 +171,8 @@
   "toggleMatch_single": "Ändrar denna match till normal mmr: {{- url}} Skriv !fixdd för att ångra",
   "toggleMatch_solo": "Ändrar denna match till solo mmr: {{- url}} Skriv !fixparty för att ångra",
   "translated": {
-    "by_one": "Dotabod är översatt av {{- translators}}. Vill du hjälpa till med översättningen eller ser du ett misstag? Gå med i vår Discord #translations-kanal {{- url}}",
-    "by_other": "Dotabod är översatt av {{- translators}}. Vill du hjälpa till med översättningen eller ser du ett misstag? Gå med i vår Discord #translations-kanal {{- url}}"
+    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
+    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
   },
   "treadToggle_one": "Vi växlade treads {{count}} gång för att spara totalt {{manaCount}} mana denna match.",
   "treadToggle_other": "Vi växlade treads {{count}} gånger för att spara totalt {{manaCount}} mana denna match.",
