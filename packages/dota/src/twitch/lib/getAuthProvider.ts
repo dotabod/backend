@@ -19,7 +19,10 @@ export const getAuthProvider = function () {
       prisma.account
         .update({
           where: {
-            providerAccountId: twitchId,
+            provider_providerAccountId: {
+              provider: 'twitch',
+              providerAccountId: twitchId,
+            },
           },
           data: {
             requires_refresh: true,
