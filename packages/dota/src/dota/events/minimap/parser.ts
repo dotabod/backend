@@ -2,10 +2,8 @@ import { Entity, MapData, Packet, Player } from '../../../types.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { DataBroadcaster } from './DataBroadcaster.js'
 
-const dataBroadcaster = new DataBroadcaster()
-let lastBroadcastTime = 0
-
 class MinimapParser {
+  lastBroadcastTime = 0
   prevHeroes = []
   xLength = 8205
   yLength = 8174
@@ -79,21 +77,21 @@ class MinimapParser {
     'npc_dota_creep_badguys_siege_upgraded_mega',
   ]
 
-  init(data: Packet, token: string) {
+  init(data: Packet, dataBroadcaster: DataBroadcaster) {
     if (!isPlayingMatch(data)) return
 
     const parsed = this.parse(data)
 
     if (parsed.status === false) {
       const currentTime = new Date().getTime()
-      if (currentTime - lastBroadcastTime >= 5000) {
-        dataBroadcaster.sendData(parsed, token)
-        lastBroadcastTime = currentTime
+      if (currentTime - this.lastBroadcastTime >= 5000) {
+        dataBroadcaster.sendData(parsed)
+        this.lastBroadcastTime = currentTime
       }
       return
     }
 
-    dataBroadcaster.sendData(parsed, token)
+    dataBroadcaster.sendData(parsed)
   }
 
   isGameOnGoing(mapData: MapData): boolean {

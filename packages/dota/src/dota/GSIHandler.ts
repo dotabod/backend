@@ -15,6 +15,7 @@ import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import { AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
 import { emitRoshEvent, RoshRes } from './events/gsi-events/event.roshan_killed.js'
+import { DataBroadcaster } from './events/minimap/DataBroadcaster.js'
 import minimapParser from './events/minimap/parser.js'
 import { server } from './index.js'
 import { blockTypes, DelayedCommands, GLOBAL_DELAY, pickSates } from './lib/consts.js'
@@ -76,8 +77,11 @@ export class GSIHandler {
   treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
   disabled = false
 
+  mapBlocker: DataBroadcaster
+
   constructor(dotaClient: SocketClient) {
     this.client = dotaClient
+    this.mapBlocker = new DataBroadcaster(this.getToken())
 
     const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, this.client.settings)
     if (isBotDisabled) {
@@ -313,6 +317,7 @@ export class GSIHandler {
     if (!enabled) return
 
     const parsedData = minimapParser.parse(this.client.gsi)
+    this.mapBlocker.sendInitialData()
     server.io.to(this.getToken()).emit('STATUS', parsedData.status)
   }
 

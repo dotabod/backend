@@ -26,7 +26,7 @@ eventHandler.registerEvent(`newdata`, {
     // only if they're in a match ^ and they're a beta tester
     if (dotaClient.client.beta_tester) {
       const enabled = getValueOrDefault(DBSettings['minimap-blocker'], dotaClient.client.settings)
-      if (enabled) minimapParser.init(data, dotaClient.getToken())
+      if (enabled) minimapParser.init(data, dotaClient.mapBlocker)
     }
 
     // Everything below here requires an ongoing match, not a finished match
