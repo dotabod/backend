@@ -14,6 +14,7 @@
   "betaTester_off": "{{channel}} não é mais um beta tester. Escreva !beta para entrar novamente",
   "betaTester_on": "{{channel}} agora é um beta tester. Visite discord.dotabod.com para ver os recursos do beta. Escreva !beta para desfazer",
   "bets": {
+    "error": "Unable to open bets. $t(refreshToken)",
     "lost": "Nós perdemos",
     "notScored": "Partida não contabilizada {{emote}} Não acrescentando nem adicionando MMR para partida {{matchId}}",
     "open": "Apostas abertas {{emote}}",
@@ -142,6 +143,7 @@
   "ranked_no": "Não este jogo não é ranqueado",
   "ranked_yes": "Sim este jogo é ranqueado",
   "refresh": "Reiniciando overlay...",
+  "refreshToken": "Your Twitch account needs to be reconnected to Dotabod. {{channel}} logout and login on dotabod.com to fix this.",
   "resetwl": "Reiniciando vitória/derrota em 0 para {{channel}}",
   "roshanAlive": "Roshan no momento está vivo {{emote}}",
   "roshanCount": {
@@ -176,9 +178,9 @@
   "toggleMatch_single": "Mudando partida para mmr não dobrado: {{- url}} Digite !fixdd para desfazer",
   "toggleMatch_solo": "Mudando partida para partida solo: {{- url}} Digite !fixparty para desfazer",
   "translated": {
-    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
+    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
     "by_many": "",
-    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
+    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
   },
   "treadToggle_one": "Usamos power treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
   "treadToggle_many": "",
