@@ -23,16 +23,16 @@ eventHandler.registerEvent(`newdata`, {
 
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
-    // only if they're in a match ^ and they're a beta tester
-    if (dotaClient.client.beta_tester) {
-      const enabled = getValueOrDefault(DBSettings['minimap-blocker'], dotaClient.client.settings)
-      if (enabled) minimapParser.init(data, dotaClient.mapBlocker)
-    }
-
     // Everything below here requires an ongoing match, not a finished match
     const hasWon =
       dotaClient.client.gsi?.map?.win_team && dotaClient.client.gsi.map.win_team !== 'none'
     if (hasWon) return
+
+    // only if they're in a match ^ and they're a beta tester
+    if (dotaClient.client.beta_tester && dotaClient.client.stream_online) {
+      const enabled = getValueOrDefault(DBSettings['minimap-blocker'], dotaClient.client.settings)
+      if (enabled) minimapParser.init(data, dotaClient.mapBlocker)
+    }
 
     // Can't just !dotaClient.heroSlot because it can be 0
     const purchaser = dotaClient.client.gsi?.items?.teleport0?.purchaser
