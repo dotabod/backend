@@ -6,7 +6,7 @@ services:
       - "6379:6379"
 
   twitch-chat:
-    image: twitch-chat
+    image: "twitch-chat:latest"
     container_name: twitch-chat
     restart: on-failure
     build:
@@ -32,7 +32,7 @@ services:
       - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
   twitch-events:
-    image: twitch-events
+    image: "twitch-events:latest"
     container_name: twitch-events
     restart: on-failure
     build:
@@ -59,7 +59,7 @@ services:
       - TWITCH_EVENTSUB_SECRET
 
   dota:
-    image: dota
+    image: "dota:latest"
     container_name: dota
     restart: on-failure
     build:
@@ -96,7 +96,7 @@ services:
   nginx:
     container_name: nginx
     restart: on-failure
-    image: nginx
+    image: "nginx:latest"
     volumes:
       - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
     build: ./services/nginx
@@ -111,7 +111,7 @@ services:
 
   mongodb:
     container_name: mongodb
-    image: "mongo"
+    image: "mongo:latest"
     ports:
       - "27017:27017"
     volumes:
