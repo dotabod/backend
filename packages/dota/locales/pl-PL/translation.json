@@ -15,6 +15,7 @@
   "betaTester_off": "{{channel}} już nie jest beta testerem. Wpisz !beta, aby dołączyć ponownie",
   "betaTester_on": "{{channel}} jest teraz beta testerem. Odwiedź discord.dotabod.com, aby zobaczyć funkcje beta. Wpisz !beta ponownie, aby cofnąć zmiany.",
   "bets": {
+    "error": "Nie można otworzyć zakładów. $t(refreshToken)",
     "lost": "Przegraliśmy, mówi się trudno {{emote}} dawaj nexta ",
     "notScored": "Gra nie została zaliczona {{emote}} MMR nie uległ zmianie dla gry {{matchId}}.",
     "open": "Zakłady otwarte {{emote}}",
@@ -154,6 +155,7 @@
   "ranked_no": "Ta gra jest nierankingowa ",
   "ranked_yes": "Tak, ta gra jest rankingowa",
   "refresh": "Odświeżanie nakładki...",
+  "refreshToken": "Twoje konto Twitcha musi zostać ponownie podłączone do Dotaboda. {{channel}} wyloguj się, a następnie ponownie zaloguj na dotabod.com, aby to naprawić.",
   "resetwl": "Resetowanie wskaźnika wygranych/przegranych do 0 dla {{channel}}",
   "roshanAlive": "Roshan jest obecnie żywy {{emote}}",
   "roshanCount": {
@@ -191,15 +193,15 @@
   "toggleMatch_single": "Ustawiono standardową stawkę MMR dla tego meczu: {{- url}} Wpisz !fixdd, aby cofnąć",
   "toggleMatch_solo": "Ustawiono stawkę MMR dla rozgrywki w pojedynkę dla tego meczu: {{- url}} Wpisz !fixparty, aby cofnąć",
   "translated": {
-    "by_one": "Dotabod przetłumaczył {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? Dołącz do naszego kanału #translations {{- url}}",
-    "by_few": "Dotabod przetłumaczyli {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? Dołącz do naszego kanału #translations {{- url}}",
-    "by_many": "Dotabod przetłumaczyli {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? Dołącz do naszego kanału #translations {{- url}}",
-    "by_other": "Dotabod przetłumaczyli {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? Dołącz do naszego kanału #translations {{- url}}"
+    "by_one": "Dotabod przetłumaczył przez {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? {{- url}}",
+    "by_few": "Dotabod przetłumaczyli {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? {{- url}}",
+    "by_many": "Dotabod przetłumaczyli {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? {{- url}}",
+    "by_other": "Dotabod przetłumaczyli {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? {{- url}}"
   },
-  "treadToggle_one": "Przełączyliśmy Buciki Mocy już {{count}} raz, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
-  "treadToggle_few": "Przełączyliśmy Buciki Mocy już {{count}} razy, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
-  "treadToggle_many": "Przełączyliśmy Buciki Mocy już {{count}} razy, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
-  "treadToggle_other": "Przełączyliśmy Buciki Mocy już {{count}} razy, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
+  "treadToggle_one": "Przełączyliśmy Trzewiki Mocy już {{count}} raz, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
+  "treadToggle_few": "Przełączyliśmy Trzewiki Mocy już {{count}} razy, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
+  "treadToggle_many": "Przełączyliśmy Trzewiki Mocy już {{count}} razy, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
+  "treadToggle_other": "Przełączyliśmy Trzewiki Mocy już {{count}} razy, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
   "uknownMmr": "Nie znam jeszcze MMR-u {{channel}}. Moderatorzy muszą użyć komendy !setmmr 1234 lub ustawić go tutaj: {{- url}}",
   "unknown": "Nieznany",
   "unknownSteam": "Nie można odnaleźć konta Steam. Postępuj zgodnie z Krokiem 2 konfiguracji, zagraj z botami i spróbuj ponownie.",

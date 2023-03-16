@@ -13,6 +13,7 @@
   "betaTester_off": "{{channel}} már nem beta tesztelő. Próbáld !beta, ha szeretnél csatlakozni",
   "betaTester_on": "{{channel}} mostantól beta tesztelő. Látogass el a discord.dotabod.com oldalra a beta funkciók megismeréséhez. Ird !beta hogy visszavond.",
   "bets": {
+    "error": "Unable to open bets. $t(refreshToken)",
     "lost": "Kikaptunk",
     "notScored": "Nem pontozott mérkőzés {{emote}} Nem számolunk MMR-t a {{matchId}}-re",
     "open": "Fogadás elindítva {{emote}}",
@@ -136,6 +137,7 @@
   "ranked_no": "Nem, ez nem egy rangsorolt meccs",
   "ranked_yes": "Rangsorolt meccs",
   "refresh": "Overlay frissítése...",
+  "refreshToken": "Your Twitch account needs to be reconnected to Dotabod. {{channel}} logout and login on dotabod.com to fix this.",
   "resetwl": "Win/loss arány visszaállítva 0-ra {{channel}}",
   "roshanAlive": "A Roshan életben van {{emote}}",
   "roshanCount": {
@@ -169,8 +171,8 @@
   "toggleMatch_single": "Meccs megváltoztatása sima MMR esetén: {{- url}} Próbáld a !fixdd parancsot a visszavonáshoz",
   "toggleMatch_solo": "Meccs megváltoztatása solo MMR esetén: {{- url}} Próbáld a !fixdd parancsot a visszavonáshoz",
   "translated": {
-    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
-    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
+    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
+    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
   },
   "treadToggle_one": "Eddig {{count}} alkalommal használtuk a cipő képességét és {{manaCount}} manát spóroltunk vele.",
   "treadToggle_other": "Eddig {{count}} alkalommal használtuk a cipő képességét és {{manaCount}} manát spóroltunk vele.\n",

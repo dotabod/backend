@@ -13,6 +13,7 @@
   "betaTester_off": "{{channel}} artık beta test edemez. !beta yazarak tekrar katılabilirsin",
   "betaTester_on": "{{channel}} beta test edebilirsiniz. discord.bod.com adresini ziyaret ederek beta özelliklerini inceleyebilirsiniz. !beta yazarak geri alabilirsiniz",
   "bets": {
+    "error": "Unable to open bets. $t(refreshToken)",
     "lost": "Ne yazık ki kaybettin, en azından denedin {{emote}} bir dahaki sefere",
     "notScored": "Maç geçerli sayılmadı {{emote}} Bu maç için MMR artış veya azalma olamayacaktır {{matchId}}.",
     "open": "Betler açıldı {{emote}}",
@@ -136,6 +137,7 @@
   "ranked_no": "Hayır, bu oyun dereceli değil",
   "ranked_yes": "Evet, bu oyun dereceli",
   "refresh": "Overlay yenileniyor...",
+  "refreshToken": "Your Twitch account needs to be reconnected to Dotabod. {{channel}} logout and login on dotabod.com to fix this.",
   "resetwl": "{{channel}} için galibiyet/mağlubiyet sıfırlanıyor",
   "roshanAlive": "Roshan şu anda yaşıyor{{emote}}",
   "roshanCount": {
@@ -169,8 +171,8 @@
   "toggleMatch_single": "Bu maç tekli mmr olarak değiştiriliyor. {{- url}} !fixdd yazarak geri alabilirsin",
   "toggleMatch_solo": "Bu maç solo mmr olarak değiştiriliyor. {{- url}} !fixparty yazarak geri alabilirsin",
   "translated": {
-    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}",
-    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? Join our Discord #translations channel {{- url}}"
+    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
+    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
   },
   "treadToggle_one": "{{count}} Powertreads toggle yaparak bu maç toplamda {{manaCount}} mana kurtardın.",
   "treadToggle_other": "{{count}} Powertreads toggle yaparak bu maç toplamda {{manaCount}} mana kurtardın.",

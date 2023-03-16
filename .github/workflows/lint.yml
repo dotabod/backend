@@ -1,12 +1,9 @@
-name: Lint
+name: Continuous Integration
 
+# This action works with pull requests and pushes
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the master branch
-  push:
-    branches:
-      - master
   pull_request:
+  push:
     branches:
       - master
 
