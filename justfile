@@ -89,4 +89,6 @@ update:
     @docker compose -f {{dockerfile}} up -d
 
 pullall:
-    cd ./packages/prisma && yarn pull:psql && yarn build
+    cd ./packages/dota && yarn pullpsql && yarn generateprisma
+    cd ./packages/twitch/events && yarn pullpsql && yarn generateprisma
+    cd ./packages/twitch/chat && yarn pullpsql && yarn generateprisma

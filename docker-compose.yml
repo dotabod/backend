@@ -6,7 +6,7 @@ services:
       - "6379:6379"
 
   twitch-chat:
-    image: "twitch-chat:latest"
+    image: twitch-chat:${COMMIT_HASH:-latest}
     container_name: twitch-chat
     restart: on-failure
     build:
@@ -24,6 +24,7 @@ services:
       - DEV_CHANNELS
       - DEV_CHANNELIDS
       - MONGO_URL
+      - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
       - NODE_ENV
       - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
@@ -32,7 +33,7 @@ services:
       - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
   twitch-events:
-    image: "twitch-events:latest"
+    image: twitch-events:${COMMIT_HASH:-latest}
     container_name: twitch-events
     restart: on-failure
     build:
@@ -52,14 +53,16 @@ services:
       - DEV_CHANNELIDS
       - EVENTSUB_HOST
       - MONGO_URL
+      - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
       - NODE_ENV
+      - NR_NATIVE_METRICS_NO_BUILD
       - PORT=5010
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
 
   dota:
-    image: "dota:latest"
+    image: dota:${COMMIT_HASH:-latest}
     container_name: dota
     restart: on-failure
     build:
@@ -81,6 +84,14 @@ services:
       - DEV_CHANNELS
       - DEV_CHANNELIDS
       - MONGO_URL
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
+      - NEW_RELIC_ENABLED
+      - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
+      - NEW_RELIC_LICENSE_KEY
+      - NEW_RELIC_LOG
+      - NEW_RELIC_LOG_ENABLED
+      - NEW_RELIC_NO_CONFIG_FILE
       - NODE_ENV
       - STEAM_PASS
       - STEAM_USER
@@ -96,7 +107,7 @@ services:
   nginx:
     container_name: nginx
     restart: on-failure
-    image: "nginx:latest"
+    image: nginx
     volumes:
       - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
     build: ./services/nginx
@@ -111,7 +122,7 @@ services:
 
   mongodb:
     container_name: mongodb
-    image: "mongo:latest"
+    image: "mongo"
     ports:
       - "27017:27017"
     volumes:
