@@ -65,8 +65,12 @@ class GSIServer {
         })
     })
 
-    this.io.on('connection', (socket: Socket) => {
+    this.io.on('connection', async (socket: Socket) => {
       const { token } = socket.handshake.auth
+
+      // Their own personal room, join first before emitting updates
+      await socket.join(token)
+
       // TODO: should just send obs blockers regardless of blockcache somehow
       // This triggers a resend of obs blockers
       if (gsiHandlers.has(token)) {
@@ -80,9 +84,6 @@ class GSIServer {
           handler.blockCache = null
         }
       }
-
-      // Their own personal room
-      void socket.join(token)
     })
   }
 
