@@ -1,12 +1,9 @@
-name: Lint
+name: Continuous Integration
 
+# This action works with pull requests and pushes
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the master branch
-  push:
-    branches:
-      - master
   pull_request:
+  push:
     branches:
       - master
 
@@ -28,8 +25,9 @@ jobs:
       - name: Install Node.js dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Run linters
-        uses: wearerequired/lint-action@v2
+      - name: Prettify code
+        uses: creyD/prettier_action@v4.2
         with:
-          eslint: false
-          prettier: true
+          # This part is also where you can pass other options, for example:
+          prettier_options: --write **/*.{ts,js,md}
+          only_changed: True
