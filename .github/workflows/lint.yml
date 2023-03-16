@@ -25,9 +25,8 @@ jobs:
       - name: Install Node.js dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Prettify code
-        uses: creyD/prettier_action@v4.2
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
         with:
-          # This part is also where you can pass other options, for example:
-          prettier_options: --write **/*.{ts,js,md}
-          only_changed: True
+          eslint: false
+          prettier: true
