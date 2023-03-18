@@ -74,15 +74,15 @@
       "lifetime": "за весь час"
     },
     "winrateColor": "",
-    "winrateColor_one": "{{color}} має {{winrate}}% вінрейту на {{- heroName}} протягом {{timeperiod}} за {{count}} матч.",
-    "winrateColor_few": "{{color}} має {{winrate}}% вінрейту на {{- heroName}} протягом {{timeperiod}} за {{count}} матчи.",
-    "winrateColor_many": "{{color}} має {{winrate}}% вінрейту на {{- heroName}} протягом {{timeperiod}} за {{count}} матчів.",
-    "winrateColor_other": "{{color}} має {{winrate}}% вінрейту на {{- heroName}} протягом {{timeperiod}} за {{count}} матчів.",
+    "winrateColor_one": "{{color}} має {{winrate}}% вінрейту за {{count}} матч на {{- heroName}} {{timeperiod}}.",
+    "winrateColor_few": "{{color}} має {{winrate}}% вінрейту за {{count}} матчи на {{- heroName}} {{timeperiod}}.",
+    "winrateColor_many": "{{color}} має {{winrate}}% вінрейту за {{count}} матчів на {{- heroName}} {{timeperiod}}.",
+    "winrateColor_other": "{{color}} має {{winrate}}% вінрейту за {{count}} матчів на {{- heroName}} {{timeperiod}}.",
     "winrateStreamer": "",
-    "winrateStreamer_one": "Відсоток перемог: {{winrate}}% на {{- heroName}} протягом {{timeperiod}} за {{count}} матч.",
-    "winrateStreamer_few": "Відсоток перемог: {{winrate}}% на {{- heroName}} протягом {{timeperiod}} за {{count}} матчи.",
-    "winrateStreamer_many": "Відсоток перемог: {{winrate}}% на {{- heroName}} протягом {{timeperiod}} за {{count}} матчів.",
-    "winrateStreamer_other": "Відсоток перемог: {{winrate}}% на {{- heroName}} протягом {{timeperiod}} за {{count}} матчів."
+    "winrateStreamer_one": "Відсоток перемог: {{winrate}}% {{count}} матч на {{- heroName}} {{timeperiod}} .",
+    "winrateStreamer_few": "Відсоток перемог: {{winrate}}% {{count}} матчі на {{- heroName}} {{timeperiod}} .",
+    "winrateStreamer_many": "Відсоток перемог: {{winrate}}% {{count}} матчів на {{- heroName}} {{timeperiod}} .",
+    "winrateStreamer_other": "Відсоток перемог: {{winrate}}% {{count}} матчів на {{- heroName}} {{timeperiod}} ."
   },
   "invalidColor": "Неправильний номер, ім'я або колір героя. Спробуйте ввести 1-10, часткове ім'я героя або один з кольорів: {{colorList}}",
   "invalidMmr": "Неправильна команда. Спробуйте !setmmr 1234",
