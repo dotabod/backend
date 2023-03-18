@@ -19,7 +19,6 @@ COPY ./packages/prisma/package.json ./packages/prisma/yarn.lock* ./
 WORKDIR /app
 COPY package.json yarn.lock* ./
 
-# Only install production dependencies for production builds
 RUN yarn install --pure-lockfile --non-interactive
 
 #################
