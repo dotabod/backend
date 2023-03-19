@@ -4,7 +4,6 @@ import { server } from '../../index.js'
 
 export class DataBroadcaster {
   token: string
-  lastUpdate = 0
   minimap: Record<string, any> = {
     heroes: {
       data: [],
@@ -76,17 +75,7 @@ export class DataBroadcaster {
         if (emitFlag) {
           entity.data = parsedData.minimap[type]
           entity.lastUpdate = Date.now()
-
-          // check if the token has a last update time
-          if (!this.lastUpdate) {
-            this.lastUpdate = 0
-          }
-
-          // check if the last update time for the token is greater than the entity's last update time
-          if (this.lastUpdate < entity.lastUpdate) {
-            server.io.to(this.token).emit(`DATA_${type}`, entity.data)
-            this.lastUpdate = entity.lastUpdate
-          }
+          server.io.to(this.token).emit(`DATA_${type}`, entity.data)
         }
       })
     }
