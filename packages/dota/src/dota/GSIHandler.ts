@@ -318,7 +318,7 @@ export class GSIHandler {
     if (!enabled) return
 
     const parsedData = minimapParser.parse(this.client.gsi)
-    this.mapBlocker.sendInitialData(parsedData)
+    this.mapBlocker.sendInitialData()
     server.io.to(this.getToken()).emit('STATUS', parsedData.status)
   }
 

@@ -47,14 +47,12 @@ export class DataBroadcaster {
     this.token = token
   }
 
-  sendInitialData(parsedData: any) {
-    if (parsedData.minimap) {
-      Object.keys(parsedData.minimap).forEach((type) => {
-        const entity = this.minimap[type]
-        entity.lastUpdate = Date.now()
-        server.io.to(this.token).emit(`DATA_${type}`, entity.data)
-      })
-    }
+  sendInitialData() {
+    Object.keys(this.minimap).forEach((type) => {
+      const entity = this.minimap[type]
+      entity.lastUpdate = Date.now()
+      server.io.to(this.token).emit(`DATA_${type}`, entity.data)
+    })
   }
 
   resetData() {
