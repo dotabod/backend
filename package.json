@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "up": "yarn upgrade-interactive --latest",
-    "studio": "doppler run -- yarn prisma studio --schema ./packages/prisma/postgres.prisma",
+    "studio": "doppler run -- yarn prisma studio --schema ./packages/prisma/src/postgres.prisma",
     "build": "yarn workspaces run build",
     "lint": "yarn eslint -- . && yarn prettier -- . && echo 'Linting complete.'",
     "prettier": "prettier --write",
