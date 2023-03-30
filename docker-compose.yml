@@ -98,7 +98,6 @@ services:
     restart: on-failure
     image: "nginx:latest"
     volumes:
-      - ./services/nginx/krisp.conf:/etc/nginx/conf.d/krisp.conf
       - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
     build: ./services/nginx
     ports:
@@ -142,3 +141,6 @@ volumes:
   mongodb_data:
   steam_auth:
   backup_data:
+networks:
+  network1:
+    name: dotabod
