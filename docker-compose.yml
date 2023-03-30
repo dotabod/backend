@@ -142,5 +142,5 @@ volumes:
   steam_auth:
   backup_data:
 networks:
-  network1:
+  default:
     name: dotabod
