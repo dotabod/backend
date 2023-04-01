@@ -57,10 +57,12 @@ class GSIServer {
           }
 
           logger.info('[GSI] io.use Error checking auth 58', { token, client })
+          socket.disconnect()
           next(new Error('authentication error 58'))
         })
         .catch((e) => {
           logger.info('[GSI] io.use Error checking auth', { token, e })
+          socket.disconnect()
           next(new Error('authentication error 62'))
         })
     })

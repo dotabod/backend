@@ -35,6 +35,8 @@ async function fixNewUsers() {
   return
 }
 
+await fixNewUsers()
+
 async function handleNewUser(providerAccountId: string) {
   if (!botApi) return
   try {
