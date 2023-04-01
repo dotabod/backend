@@ -89,8 +89,8 @@ export const ranks = [
 
 export const leaderRanks = [
   { range: [1, 1], image: '92.png', sparklingEffect: true },
-  { range: [2, 10], image: '91.png', sparklingEffect: true },
-  { range: [11, 100], image: '80.png', sparklingEffect: true },
+  { range: [2, 10], image: '92.png', sparklingEffect: true },
+  { range: [11, 100], image: '91.png', sparklingEffect: true },
   { range: [101, 1000], image: '80.png', sparklingEffect: true },
   { range: [1001, 100000], image: '80.png', sparklingEffect: false },
 ]
