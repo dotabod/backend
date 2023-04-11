@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# * 0-5 * * * /home/ec2-user/dotabod/monitor_dota.sh
+
 # Set the memory limit in bytes (600MB)
 MEMORY_LIMIT=$((600 * 1024 * 1024))
 
@@ -22,6 +24,6 @@ if [ "$MEMORY_USAGE" -gt "$MEMORY_LIMIT" ]; then
     echo "Dry run: Would restart the 'dota' container due to high memory usage."
   else
     # Restart the "dota" container using docker-compose
-    docker-compose restart dota
+    docker compose restart dota
   fi
 fi
