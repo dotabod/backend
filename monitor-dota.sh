@@ -11,6 +11,9 @@ if [ "$1" == "--dry-run" ]; then
   DRY_RUN=true
 fi
 
+# Get the container ID of the "dota" container
+CONTAINER_ID=$(docker ps --filter "name=dota" --format "{{.ID}}")
+
 # Get the memory usage of the "dota" container in megabytes (MiB)
 MEMORY_USAGE_MiB=$(docker stats --no-stream --format "{{.MemUsage}}" "$CONTAINER_ID" | awk -F '/' '{print $1}' | sed 's/[^0-9.]*//g')
 
