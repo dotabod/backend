@@ -21,9 +21,9 @@
     "push:psql": "doppler run -- prisma db push --schema ./src/postgres.prisma"
   },
   "devDependencies": {
-    "prisma": "^4.11.0"
+    "prisma": "^4.13.0"
   },
   "dependencies": {
-    "@prisma/client": "^4.11.0"
+    "@prisma/client": "^4.13.0"
   }
 }
