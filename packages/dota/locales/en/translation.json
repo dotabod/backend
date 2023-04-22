@@ -141,11 +141,11 @@
   "resetwl": "Resetting win/loss to 0 for {{channel}}",
   "roshanAlive": "Roshan is currently alive {{emote}}",
   "roshanCount": {
-    "1": "Rosh deaths: 1 · Next drop: agh's shard.",
-    "2": "Rosh deaths: 2 · Next drop: cheese and agh's blessing or refresher shard.",
-    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
-    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
-    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "1": "Rosh deaths: 1 · Next drop: cheese.",
+    "2": "Rosh deaths: 2 · Next drop: cheese, agh's blessing or refresher shard.",
+    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing or refresher shard.",
+    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
+    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
   "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
   "seconds_zero": "{{count}} seconds",
