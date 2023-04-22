@@ -99,7 +99,9 @@ services:
     image: "nginx:latest"
     volumes:
       - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
-    build: ./services/nginx
+    build:
+      context: ./services/nginx
+      dockerfile: Dockerfile
     ports:
       - "80:80"
       - "443:443"

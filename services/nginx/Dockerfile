@@ -6,5 +6,6 @@ COPY ./*.key /etc/ssl/
 
 # Move the default conf out of the way
 RUN mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf_orig
+
 # Copy in your project's new nginx conf
-RUN cp ./nginx.conf /etc/nginx/nginx.conf
+COPY ./nginx.conf /etc/nginx/nginx.conf
