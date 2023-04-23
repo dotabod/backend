@@ -13,6 +13,7 @@ import { validateToken } from './validateToken.js'
 
 const origin = ['http://localhost:3000', 'http://localhost:3001', 'https://dotabod.com']
 class GSIServer {
+  // @ts-expect-error asdf
   io: Server
   dota: Dota
   server: FastifyInstance

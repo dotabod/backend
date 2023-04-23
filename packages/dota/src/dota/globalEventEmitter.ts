@@ -39,7 +39,7 @@ function recursiveEmit(
 }
 
 export function processChanges(section: string) {
-  return function handle(req: any, res: FastifyReply, done) {
+  return function handle(req: any, res: FastifyReply, done: any) {
     if (req.body[section]) {
       const token = req.body.auth.token as string
       recursiveEmit('', req.body[section], req.body, token)
