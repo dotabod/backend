@@ -1,4 +1,4 @@
-FROM nginx:latest
+FROM nginx:1.23.4-alpine
 
 RUN echo "$TLS_CERT" > public.key
 RUN echo "$TLS_KEY" > private.key
