@@ -1,11 +1,11 @@
 #################
 #      BASE     #
 #################
-FROM node:19.4-alpine as base
+FROM node:20.0-alpine as base
 
 ARG BUILD_CONTEXT
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git g++ make py3-pip
 
 WORKDIR /app/$BUILD_CONTEXT
 COPY ./$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/yarn.lock* ./
@@ -41,7 +41,7 @@ RUN yarn build
 #################
 #    RUNNER    #
 #################
-FROM node:19.4-alpine
+FROM node:20.0-alpine
 
 ARG BUILD_CONTEXT
 
