@@ -1,3 +1,4 @@
+import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 import axios from 'axios'
 import crypto from 'crypto'
 // @ts-expect-error ???
@@ -9,7 +10,6 @@ import Steam from 'steam'
 // @ts-expect-error ???
 import steamErrors from 'steam-errors'
 
-import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { events } from '../dota/globalEventEmitter.js'
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import { GCMatchData } from '../types.js'

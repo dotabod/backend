@@ -8,7 +8,7 @@
     "sourceMap": true,
     "strictNullChecks": true,
     "types": ["node"],
-    "allowJs": false,
+    "allowJs": true,
     "checkJs": false,
     "resolveJsonModule": true,
     "esModuleInterop": true,
@@ -17,10 +17,13 @@
     "noImplicitAny": true,
     "skipLibCheck": true
   },
+  "include": ["./.eslintrc.cjs"],
   "ts-node": {
     "esm": true,
-    "pretty": true,
+    "files": false,
+    "transpileOnly": true,
+    "typeCheck": false,
     "require": ["tsconfig-paths/register"],
-    "ignore": ["(?:^|/)node_modules/", "(?:^|/)prisma/generated/"]
+    "ignore": ["(?:^|/)node_modules/"]
   }
 }

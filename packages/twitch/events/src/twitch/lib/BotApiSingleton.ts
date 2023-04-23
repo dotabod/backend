@@ -1,12 +1,12 @@
 import { ApiClient } from '@twurple/api'
-import { ClientCredentialsAuthProvider } from '@twurple/auth'
+import { AppTokenAuthProvider } from '@twurple/auth'
 
 class BotAPI {
   static instance: ApiClient | null = null
 
   static getInstance() {
     if (!BotAPI.instance) {
-      const authProvider = new ClientCredentialsAuthProvider(
+      const authProvider = new AppTokenAuthProvider(
         process.env.TWITCH_CLIENT_ID ?? '',
         process.env.TWITCH_CLIENT_SECRET ?? '',
       )

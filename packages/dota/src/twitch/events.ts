@@ -6,12 +6,14 @@ import {
   EventSubChannelPredictionEndEvent,
   EventSubChannelPredictionLockEvent,
   EventSubChannelPredictionProgressEvent,
-} from '@twurple/eventsub'
+} from '@twurple/eventsub-base'
 import { io } from 'socket.io-client'
 
 import { server } from '../dota/index.js'
 import { getTokenFromTwitchId } from '../dota/lib/connectedStreamers.js'
 import { logger } from '../utils/logger.js'
+
+logger.info("Starting 'twitch' package events")
 
 // Our docker events forwarder instance
 const twitchEvent = io('ws://twitch-events:5015')

@@ -9,6 +9,8 @@ import { modMode, plebMode } from '../dota/lib/consts.js'
 import { logger } from '../utils/logger.js'
 import commandHandler from './lib/CommandHandler.js'
 
+logger.info("Starting 'twitch' package")
+
 // Our docker chat forwarder instance
 const twitchChat = io('ws://twitch-chat:5005')
 

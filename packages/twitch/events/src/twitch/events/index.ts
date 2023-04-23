@@ -1,4 +1,3 @@
-import { EventSubHttpListener } from '@twurple/eventsub-http'
 import { Server } from 'socket.io'
 
 import { events } from './events.js'
@@ -18,19 +17,17 @@ io.on('connection', (socket) => {
   })
 })
 
-type EventSubHttpListenerKey = keyof EventSubHttpListener
 export const SubscribeEvents = (accountIds: string[]) => {
   const promises: Promise<any>[] = []
   accountIds.forEach((userId) => {
     try {
       promises.push(
         ...Object.keys(events).map((eventName) => {
+          const eventNameTyped = eventName as keyof typeof events
           try {
             // @ts-expect-error asdf
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            return listener[eventName as EventSubHttpListenerKey](userId, (data: unknown) =>
-              handleEvent(eventName, data),
-            )
+            return listener[eventName](userId, (data: unknown) => handleEvent(eventNameTyped, data))
           } catch (error) {
             console.error({ userId, error })
           }

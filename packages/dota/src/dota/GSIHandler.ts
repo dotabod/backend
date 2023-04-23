@@ -15,6 +15,8 @@ import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import { AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
 import { emitRoshEvent, RoshRes } from './events/gsi-events/event.roshan_killed.js'
+import { DataBroadcaster } from './events/minimap/DataBroadcaster.js'
+import minimapParser from './events/minimap/parser.js'
 import { server } from './index.js'
 import { blockTypes, DelayedCommands, GLOBAL_DELAY, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
@@ -48,10 +50,11 @@ export class GSIHandler {
 
   // Server could reboot and lose these in memory
   // But that's okay they will get reset based on current match state
-  heroData: null | { win: number; lose: number } = null
+  heroDatas: Partial<Record<number, { win: number; lose: number }>> = {}
   blockCache: string | null = null
   playingBetMatchId: string | undefined | null = null
   playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
+  // hero slot can be 0-9
   playingHeroSlot: number | undefined | null = null
   playingHero: HeroNames | undefined | null = null
   playingLobbyType: number | undefined | null = null
@@ -74,8 +77,11 @@ export class GSIHandler {
   treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
   disabled = false
 
+  mapBlocker: DataBroadcaster
+
   constructor(dotaClient: SocketClient) {
     this.client = dotaClient
+    this.mapBlocker = new DataBroadcaster(this.getToken())
 
     const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, this.client.settings)
     if (isBotDisabled) {
@@ -122,7 +128,7 @@ export class GSIHandler {
   }
 
   public getStreamDelay() {
-    return getValueOrDefault(DBSettings.streamDelay, this.client.settings) + GLOBAL_DELAY
+    return Number(getValueOrDefault(DBSettings.streamDelay, this.client.settings)) + GLOBAL_DELAY
   }
 
   public say(
@@ -144,6 +150,7 @@ export class GSIHandler {
 
   // reset vars when a new match begins
   public resetClientState() {
+    this.mapBlocker.resetData()
     this.playingHero = null
     this.playingHeroSlot = null
     this.events = []
@@ -153,7 +160,7 @@ export class GSIHandler {
 
     // Bet stuff should be closed by endBets()
     // This should mean an entire match is over
-    this.heroData = null
+    this.heroDatas = {}
     this.players = null
     this.client.steamServerId = undefined
     this.endingBets = false
@@ -167,6 +174,7 @@ export class GSIHandler {
       lastRemindedDate: undefined,
     }
 
+    void redisClient.client.json.del(`${this.getSteam32() ?? ''}:medal`)
     void redisClient.client.json.del(`${this.getToken()}:roshan`)
     void redisClient.client.json.del(`${this.getToken()}:aegis`)
     void redisClient.client.json.del(`${this.getToken()}:treadtoggle`)
@@ -277,12 +285,18 @@ export class GSIHandler {
     if (!this.client.stream_online) return
 
     const matchPlayers = this.players?.matchPlayers ?? getCurrentMatchPlayers(this.client.gsi)
-    notablePlayers(
-      this.client.locale,
-      this.getChannelId(),
-      this.client.gsi?.map?.matchid,
-      matchPlayers,
+    const enableCountries = getValueOrDefault(
+      DBSettings.notablePlayersOverlayFlagsCmd,
+      this.client.settings,
     )
+    notablePlayers({
+      locale: this.client.locale,
+      twitchChannelId: this.getChannelId(),
+      currentMatchId: this.client.gsi?.map?.matchid,
+      players: matchPlayers,
+      enableFlags: enableCountries,
+      steam32Id: this.getSteam32(),
+    })
       .then((response) => {
         if (response.playerList.length) {
           server.io.to(this.getToken()).emit('notable-players', response.playerList)
@@ -295,6 +309,17 @@ export class GSIHandler {
       .catch((e) => {
         // stream not live
       })
+  }
+
+  emitMinimapBlockerStatus() {
+    if (!this.client.stream_online || !this.client.beta_tester || !this.client.gsi) return
+
+    const enabled = getValueOrDefault(DBSettings['minimap-blocker'], this.client.settings)
+    if (!enabled) return
+
+    const parsedData = minimapParser.parse(this.client.gsi)
+    this.mapBlocker.sendInitialData()
+    server.io.to(this.getToken()).emit('STATUS', parsedData.status)
   }
 
   emitBadgeUpdate() {
@@ -589,7 +614,7 @@ export class GSIHandler {
               this.getToken() &&
                 openTwitchBet(
                   this.client.locale,
-                  this.getToken(),
+                  this.getChannelId(),
                   hero?.localized_name,
                   this.client.settings,
                 )
@@ -617,6 +642,23 @@ export class GSIHandler {
                     })
                   })
                   .catch((e: any) => {
+                    try {
+                      // "message\": \"Invalid refresh token\"\n}" means they have to logout and login
+                      if (JSON.parse(e?.body)?.message?.includes('refresh token')) {
+                        this.say(
+                          t('bets.error', {
+                            channel: `@${this.getChannel()}`,
+                            lng: this.client.locale,
+                          }),
+                          {
+                            delay: false,
+                          },
+                        )
+                      }
+                    } catch (e) {
+                      // only interested in refresh token err
+                    }
+
                     logger.error('[BETS] Error opening twitch bet', {
                       channel,
                       e: e?.message || e,
@@ -723,7 +765,7 @@ export class GSIHandler {
         if (chattersEnabled && tellChatBets) {
           this.say(t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }))
         }
-        refundTwitchBet(this.getToken())
+        refundTwitchBet(this.getChannelId())
           .then(() => {
             //
           })
@@ -863,7 +905,7 @@ export class GSIHandler {
 
     setTimeout(() => {
       this.getToken() &&
-        closeTwitchBet(won, this.getToken())
+        closeTwitchBet(won, this.getChannelId())
           .then(() => {
             logger.info('[BETS] end bets', {
               event: 'end_bets',
@@ -934,11 +976,11 @@ export class GSIHandler {
             if (chattersEnabled && tellChatBets) {
               this.say(t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }))
             }
-            refundTwitchBet(this.getToken())
+            refundTwitchBet(this.getChannelId())
               .then(() => {
                 //
               })
-              .catch((e) => {
+              .catch((e: any) => {
                 logger.error('ERROR refunding bets', { token: this.getToken(), e })
               })
           }
@@ -1028,6 +1070,7 @@ export class GSIHandler {
           this.emitBlockEvent({ state, blockType: blocker.type })
 
           if (blocker.type === 'playing') {
+            this.emitMinimapBlockerStatus()
             this.emitBadgeUpdate()
             this.emitWLUpdate()
             void this.maybeSendRoshAegisEvent()

@@ -12,17 +12,11 @@
   "scripts": {
     "start": "node --trace-warnings --trace-deprecation ./dist/index.js",
     "build": "tsc --build --verbose",
-    "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 -r ts-node/register --loader ts-node/esm src/index.ts\"",
-    "dev": "nodemon -L --ext ts ./src/index.ts",
-    "devnotdocker": "doppler run -- nodemon -L --ext ts ./src/index.ts",
-    "generateprisma": "prisma generate --schema ./prisma/postgres.prisma",
-    "lint": "eslint --ext .ts ./src",
-    "prettier": "prettier --ext .ts ./src --write",
-    "lint:fix": "npm run lint -- --fix",
-    "pullpsql": "doppler run -- prisma db pull --schema ./prisma/postgres.prisma"
+    "dev": "nodemon -L --ext ts ./src/index.ts"
   },
   "dependencies": {
-    "@twurple/eventsub-base": "5.3.1",
-    "@twurple/eventsub-http": "5.3.1"
+    "@dotabod/prisma": "^1.0.0",
+    "@twurple/eventsub-base": "6.0.9",
+    "@twurple/eventsub-http": "6.0.9"
   }
 }

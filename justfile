@@ -1,6 +1,8 @@
 set dotenv-load
 
 dockerfile := if env_var("NODE_ENV") == "production" { "docker-compose.yml" } else { "docker-compose.yml -f docker-compose-dev.yml" }
+fam := os_family()
+
 export COMMIT_HASH := `git rev-parse --short HEAD`
 export BUILDKIT_PROGRESS := "plain"
 
@@ -21,15 +23,23 @@ ip:
 
 i18np:
     @echo "Parsing translation files"
-    @i18next -c 'packages/dota/i18next-parser.config.js'
+    @i18next -c 'services/crowdin/src/i18next-parser.config.js'
 
 i18nd:
     @echo "Downloading translations"
-    @crowdin download --config './crowdin.yml'
+    if [[ {{fam}} == "windows" ]]; then \
+        @crowdin download --config "./crowdin.yml" --verbose; \
+    else \
+        @crowdin download --config "./crowdin.yml"; \
+    fi
 
 i18nu:
     @echo "Uploading translations"
-    @crowdin upload translations --auto-approve-imported --config './crowdin.yml'
+    if [[ {{fam}} == "windows" ]]; then \
+        @crowdin.bat upload translations --auto-approve-imported --config "./crowdin.yml"; \
+    else \
+        @crowdin upload translations --auto-approve-imported --config "./crowdin.yml"; \
+    fi
 
 # Stops all containers
 down:
@@ -69,7 +79,9 @@ up:
     @docker compose -f {{dockerfile}} up -d
 
 update:
-    curl $DISCORD_SERVER_WEBHOOK -d "avatar_url=https%3A%2F%2Fstatic-cdn.jtvnw.net%2Fjtv_user_pictures%2Fd52ea619-5491-4a66-aeeb-f180a2668049-profile_image-70x70.png&username=Dotabod Server&content=Server%20update%2C%20restarting%20Dotabod%21%20Here%27s%20what%27s%20coming%3A%20https%3A%2F%2Fgithub.com%2Fdotabod%2Fbackend%2Fcompare%2F{{COMMIT_HASH}}...master"
+    @if [ "${NODE_ENV}" = "production" ]; then \
+        curl $DISCORD_SERVER_WEBHOOK -d "avatar_url=https%3A%2F%2Fstatic-cdn.jtvnw.net%2Fjtv_user_pictures%2Fd52ea619-5491-4a66-aeeb-f180a2668049-profile_image-70x70.png&username=Dotabod Server&content=Server%20update%2C%20restarting%20Dotabod%21%20Here%27s%20what%27s%20coming%3A%20https%3A%2F%2Fgithub.com%2Fdotabod%2Fbackend%2Fcompare%2F{{COMMIT_HASH}}...master"; \
+    fi
     git pull || true
     export COMMIT_HASH=`git rev-parse --short HEAD`
     @docker compose -f {{dockerfile}} build
@@ -77,6 +89,4 @@ update:
     @docker compose -f {{dockerfile}} up -d
 
 pullall:
-    cd ./packages/dota && yarn pullpsql && yarn generateprisma
-    cd ./packages/twitch/events && yarn pullpsql && yarn generateprisma
-    cd ./packages/twitch/chat && yarn pullpsql && yarn generateprisma
+    cd ./packages/prisma && yarn pull:psql && yarn build

@@ -1,0 +1,29 @@
+{
+  "name": "@dotabod/prisma",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "exports": {
+    "./dist/mongo/index.js": {
+      "types": "./dist/mongo/index.d.ts",
+      "default": "./dist/mongo/index.js"
+    },
+    "./dist/psql/index.js": {
+      "types": "./dist/psql/index.d.ts",
+      "default": "./dist/psql/index.js"
+    }
+  },
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "prisma generate --schema ./src/mongo.prisma && prisma generate --schema ./src/postgres.prisma",
+    "pull:mongo": "doppler run -- prisma db pull --schema ./src/mongo.prisma --force",
+    "pull:psql": "doppler run -- prisma db pull --schema ./src/postgres.prisma",
+    "push:psql": "doppler run -- prisma db push --schema ./src/postgres.prisma"
+  },
+  "devDependencies": {
+    "prisma": "^4.13.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^4.13.0"
+  }
+}

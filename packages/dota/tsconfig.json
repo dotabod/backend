@@ -4,7 +4,12 @@
     "outDir": "dist",
     "rootDir": "src"
   },
-  "include": ["src", "i18next-parser.config.js", "./.eslintrc.js"],
+  "include": ["src", "./.eslintrc.js"],
   "exclude": ["prisma/generated", "node_modules"],
+  "ts-node": {
+    "files": [],
+    "transpileOnly": true,
+    "typeCheck": false
+  },
   "extends": "../../tsconfig.json"
 }

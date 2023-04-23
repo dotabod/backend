@@ -1,4 +1,4 @@
-import { delayedGames } from '../../../prisma/generated/mongoclient/index.js'
+import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 
 export function getAccountsFromMatch(
   response?: delayedGames,

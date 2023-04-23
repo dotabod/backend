@@ -1,3 +1,5 @@
+import { t } from 'i18next'
+
 const heroes = {
   npc_dota_hero_antimage: {
     id: 1,
@@ -491,19 +493,58 @@ const heroes = {
     id: 137,
     localized_name: 'Primal Beast',
   },
+  npc_dota_hero_muerta: {
+    id: 138,
+    localized_name: 'Muerta',
+  },
+}
+
+export const translatedColor = (color: string, lng: string) => {
+  if (lng === 'en') return color
+
+  const props = { lng }
+  switch (color) {
+    case 'Blue':
+      return t('colors.blue', props)
+    case 'Teal':
+      return t('colors.teal', props)
+    case 'Purple':
+      return t('colors.purple', props)
+    case 'Yellow':
+      return t('colors.yellow', props)
+    case 'Orange':
+      return t('colors.orange', props)
+    case 'Pink':
+      return t('colors.pink', props)
+    case 'Olive':
+      return t('colors.olive', props)
+    case 'Cyan':
+      return t('colors.cyan', props)
+    case 'Green':
+      return t('colors.green', props)
+    case 'Brown':
+      return t('colors.brown', props)
+    default:
+      return color
+  }
 }
 
 export const heroColors = 'Blue,Teal,Purple,Yellow,Orange,Pink,Olive,Cyan,Green,Brown'.split(',')
 export function getHeroNameById(id: number, index?: number) {
   if (!id && typeof index === 'number') return heroColors[index]
-  if (!id) return 'Unknown'
 
-  const name = Object.values(heroes).find((h) => h.id === id)?.localized_name
+  const name = getHeroById(id)?.localized_name
   if (!name && typeof index === 'number') {
     return heroColors[index]
   }
 
   return name ?? 'Unknown'
+}
+
+export function getHeroById(id: number) {
+  if (!id) return null
+
+  return Object.values(heroes).find((h) => h.id === id)
 }
 
 export function getHeroByName(name: string) {

@@ -1,24 +1,18 @@
 services:
   twitch-chat:
-    build:
-      target: dev
-    environment:
-      - NEW_RELIC_APP_NAME="DEV twitch chat listener"
     volumes:
       - ./packages/twitch/chat/src:/app/packages/twitch/chat/src
 
   twitch-events:
-    build:
-      target: dev
-    environment:
-      - NEW_RELIC_APP_NAME="DEV twitch eventsub listener"
     volumes:
       - ./packages/twitch/events/src:/app/packages/twitch/events/src
 
   dota:
-    build:
-      target: dev
-    environment:
-      - NEW_RELIC_APP_NAME="dev dotabod dota"
     volumes:
       - ./packages/dota/src:/app/packages/dota/src
+  backup:
+    profiles:
+      - donotstart
+  nginx:
+    profiles:
+      - donotstart

@@ -1,8 +1,11 @@
 import { t } from 'i18next'
 
+import RedisClient from '../../db/redis.js'
 import { logger } from '../../utils/logger.js'
 import { server } from '../index.js'
 import { leaderRanks, ranks } from './consts.js'
+
+const redisClient = RedisClient.getInstance()
 
 export function rankTierToMmr(rankTier: string | number) {
   if (!Number(rankTier)) {
@@ -20,32 +23,65 @@ export function rankTierToMmr(rankTier: string | number) {
   return ((rank?.range[0] ?? 0) + (rank?.range[1] ?? 0)) / 2
 }
 
-export async function lookupLeaderRank(mmr: number, steam32Id?: number | null) {
-  let standing: null | number = null
-  const lowestImmortalRank = leaderRanks[leaderRanks.length - 1]
-  const defaultNotFound = { myRank: lowestImmortalRank, mmr, standing }
+interface LeaderRankData {
+  myRank: {
+    range: number[]
+    image: string
+    sparklingEffect: boolean
+  }
+  mmr: number
+  standing: number | null
+}
 
-  // Not everyone has a steam32Id saved yet
-  // The dota2 gsi should save one for us
+export async function lookupLeaderRank(
+  mmr: number,
+  steam32Id?: number | null,
+): Promise<LeaderRankData> {
+  const defaultNotFound: LeaderRankData = {
+    myRank: leaderRanks[leaderRanks.length - 1],
+    mmr,
+    standing: null,
+  }
+
+  // Return default values if steam32Id is undefined or null
   if (!steam32Id) {
     return defaultNotFound
   }
 
-  try {
-    standing = await server.dota.getCard(steam32Id).then((data) => data?.leaderboard_rank as number)
+  const cacheKey = `${steam32Id}:medal`
+  let result
 
-    if (!standing) {
+  // Try to get the cached result first
+  const medalCache = await redisClient.client.json.get(cacheKey)
+  if (medalCache) {
+    result = medalCache as unknown as LeaderRankData
+  } else {
+    try {
+      // Fetch the leaderboard rank from the Dota 2 server
+      const data = await server.dota.getCard(steam32Id)
+      const standing: number = data?.leaderboard_rank
+
+      // If the rank is not available, return default values
+      if (!standing || typeof standing !== 'number') {
+        return defaultNotFound
+      }
+
+      // Find the corresponding leaderboard rank for the given standing
+      const myRank =
+        leaderRanks.find((rank) => standing <= rank.range[1]) || leaderRanks[leaderRanks.length - 1]
+
+      // Construct the result object
+      result = { myRank, mmr, standing }
+
+      // Cache the result
+      await redisClient.client.json.set(cacheKey, '$', result)
+    } catch (e) {
+      logger.error('[lookupLeaderRank] Error fetching leaderboard rank', { e, steam32Id })
       return defaultNotFound
     }
-
-    const [myRank] = leaderRanks.filter(
-      (rank) => typeof standing === 'number' && standing <= rank.range[1],
-    )
-    return { myRank, mmr, standing }
-  } catch (e) {
-    logger.error('[lookupLeaderRank] Error fetching leaderboard rank', { e, steam32Id })
-    return defaultNotFound
   }
+
+  return result
 }
 
 export async function getRankDetail(mmr: string | number, steam32Id?: number | null) {

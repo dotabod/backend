@@ -14,13 +14,13 @@ eventHandler.registerEvent(`hero:name`, {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
     if (dotaClient.playingHero && dotaClient.playingHero !== name) {
-      refundTwitchBet(dotaClient.getToken())
+      refundTwitchBet(dotaClient.getChannelId())
         .then(() => {
           const hero = getHero(name)
 
           openTwitchBet(
             dotaClient.client.locale,
-            dotaClient.getToken(),
+            dotaClient.getChannelId(),
             hero?.localized_name,
             dotaClient.client.settings,
           )

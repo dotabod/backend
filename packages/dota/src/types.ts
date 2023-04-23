@@ -93,6 +93,39 @@ Example player from spec mode
   gold_lost_to_death: 26,
   gold_spent_on_buybacks: 0
 */
+
+export interface Wearables {
+  wearable0: number
+  wearable1: number
+  wearable2: number
+  wearable3: number
+  wearable4: number
+  wearable5: number
+  wearable6: number
+  wearable7: number
+  wearable8: number
+  wearable9: number
+  wearable10: number
+  wearable11: number
+}
+
+export interface Entity {
+  xpos: number
+  ypos: number
+  image: string
+  team: number
+  yaw: number
+  unitname: string
+  visionrange: number
+  name?: string
+  eventduration?: number
+  yposP?: string // parser
+  xposP?: string // parser
+  teamP?: string // parser
+}
+
+export type Minimap = Record<string, Entity>
+
 export interface Player {
   team2?: { player0: Player; player1: Player; player2: Player; player3: Player; player4: Player }
   team3?: { player5: Player; player6: Player; player7: Player; player8: Player; player9: Player }
@@ -237,6 +270,7 @@ export interface Item {
   purchaser?: number // 5,
   can_cast?: boolean // e.g. true,
   cooldown?: number // e.g. 0,
+  item_level?: number // e.g. 1,2,3,4 = 9,8,7,6 seconds for bkb **new 3/12/2023**
   passive: boolean // e.g. true for item_paladin_sword
   charges?: number // e.g. 2
 }
@@ -307,7 +341,7 @@ export enum DotaEventTypes {
   AegisDenied = 'aegis_denied',
   Tip = 'tip',
   BountyPickup = 'bounty_rune_pickup',
-  CourierKilled = 'courier_killed',
+  CourierKilled = 'courier_killed', // spectator only
 }
 
 export interface DotaEvent {
@@ -351,6 +385,7 @@ export interface Packet {
   provider: Provider
   map?: MapData
   player?: Player
+  minimap?: Minimap
   hero?: Hero
   abilities?: Abilities
   items?: Items

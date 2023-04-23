@@ -9,11 +9,11 @@ export const handleEvent = (eventName: keyof typeof events, data: any) => {
 
   const event = events[eventName]
 
-  if (event.customHandler) {
+  if (event?.customHandler) {
     void event.customHandler(data)
   }
 
-  if (event.sendToSocket) {
+  if (event?.sendToSocket) {
     io.to(DOTABOD_EVENTS_ROOM).emit(
       'event',
       eventName,

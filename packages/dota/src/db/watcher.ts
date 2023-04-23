@@ -1,11 +1,12 @@
+import { Account, Setting, SteamAccount, User } from '@dotabod/prisma/dist/psql/index.js'
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 
-import { Setting, SteamAccount, User } from '../../prisma/generated/postgresclient/index.js'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
 import { gsiHandlers } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
+import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
@@ -15,11 +16,13 @@ class SetupSupabase {
   channel: any
   IS_DEV: boolean
   DEV_CHANNELS: string[]
-  constructor() {
-    this.channel = supabase.channel('db-changes')
+  DEV_CHANNELIDS: string[]
 
+  constructor() {
     this.IS_DEV = process.env.NODE_ENV !== 'production'
     this.DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
+    this.DEV_CHANNELIDS = process.env.DEV_CHANNELIDS?.split(',') ?? []
+    this.channel = supabase.channel(`${this.IS_DEV ? 'dev-' : ''}dota`)
 
     logger.info('Starting watcher for', { dev: this.IS_DEV, channels: this.DEV_CHANNELS })
   }
@@ -50,6 +53,36 @@ class SetupSupabase {
             logger.info('[WATCHER USER] Deleting user', { name: client.name })
             gsiHandlers.get(client.token)?.disable()
             gsiHandlers.delete(client.token)
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'accounts' },
+        (payload: any) => {
+          // watch the accounts table for requires_refresh to change from true to false
+          // if it does, add the user to twurple authprovider again via addUser()
+          if (this.IS_DEV && !this.DEV_CHANNELIDS.includes(payload.new?.providerAccountId)) return
+          if (!this.IS_DEV && this.DEV_CHANNELIDS.includes(payload.new?.providerAccountId)) return
+
+          const newObj = payload.new as Account
+          const oldObj = payload.old as Account
+
+          // The frontend will set it to false when they relogin
+          // Which allows us to update the authProvider object
+          if (newObj.requires_refresh === false && oldObj.requires_refresh === true) {
+            logger.info('[WATCHER ACCOUNT] Refreshing account', {
+              twitchId: newObj.providerAccountId,
+            })
+            const tokenData = {
+              scope: newObj.scope?.split(' ') ?? [],
+              expiresIn: newObj.expires_in ?? 0,
+              obtainmentTimestamp: newObj.obtainment_timestamp?.getTime() ?? 0,
+              accessToken: newObj.access_token,
+              refreshToken: newObj.refresh_token,
+            }
+            const authProvider = getAuthProvider()
+            authProvider.addUser(newObj.providerAccountId, tokenData)
           }
         },
       )
@@ -172,10 +205,12 @@ class SetupSupabase {
           if (payload.eventType === 'DELETE') {
             logger.info('[WATCHER STEAM] Deleting steam account for', { name: client.name })
 
-            for (const connectedToken of oldObj.connectedUserIds) {
-              const connectedUser = gsiHandlers.get(connectedToken)
-              if (connectedUser) {
-                connectedUser.client.multiAccount = undefined
+            if (Array.isArray(oldObj.connectedUserIds)) {
+              for (const connectedToken of oldObj.connectedUserIds) {
+                const connectedUser = gsiHandlers.get(connectedToken)
+                if (connectedUser) {
+                  connectedUser.client.multiAccount = undefined
+                }
               }
             }
 
@@ -230,10 +265,8 @@ class SetupSupabase {
           }
         },
       )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          logger.info('[SUPABASE] Ready to receive database changes!')
-        }
+      .subscribe((status: string, err: any) => {
+        console.log('[SUPABASE] Subscription status on dota:', { status, err })
       })
   }
 }

@@ -11,6 +11,8 @@ import SetupSupabase from '../db/watcher.js'
 import { logger } from '../utils/logger.js'
 import GSIServer from './GSIServer.js'
 
+logger.info("Starting 'dota' package")
+
 const setupTranslations = async () => {
   await i18next.use(FsBackend).init<FsBackendOptions>({
     initImmediate: false,
@@ -86,5 +88,4 @@ const main = async () => {
   return startServer()
 }
 
-const server = await main()
-export default server
+export const server = await main()

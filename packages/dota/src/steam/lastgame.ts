@@ -1,6 +1,6 @@
+import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 import { t } from 'i18next'
 
-import { delayedGames } from '../../prisma/generated/mongoclient/index.js'
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
 import CustomError from '../utils/customError.js'
@@ -109,8 +109,15 @@ export default async function lastgame({
     .flatMap((f) => f ?? [])
 
   const msg = generateMessage(locale, playersFromLastGame)
-  return `${msg}. ${t('lastgame.link', {
+  const totalPlayers =
+    playersFromLastGame.length > 1
+      ? t('lastgame.total', {
+          lng: locale,
+          count: playersFromLastGame.length,
+        })
+      : ''
+  return `${totalPlayers} ${msg}. ${t('lastgame.link', {
     lng: locale,
     url: `dotabuff.com/matches/${oldGame.match.match_id}`,
-  })}`
+  })}`.trim()
 }

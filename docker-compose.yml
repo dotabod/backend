@@ -1,23 +1,22 @@
 services:
   redis:
     container_name: redis
-    image: 'redis/redis-stack-server:latest'
+    image: "redis/redis-stack-server:latest"
     ports:
-      - '6379:6379'
+      - "6379:6379"
 
   twitch-chat:
-    image: twitch-chat:${COMMIT_HASH:-latest}
+    image: "twitch-chat:latest"
     container_name: twitch-chat
     restart: on-failure
     build:
       context: .
-      target: prod
-      dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
+      dockerfile: ./packages/Dockerfile.chat
       args:
         - BUILD_CONTEXT=packages/twitch/chat
     hostname: twitch-chat
     ports:
-      - '5005:5005'
+      - "5005:5005"
     environment:
       - DATABASE_URL
       - DB_SECRET
@@ -25,8 +24,6 @@ services:
       - DEV_CHANNELS
       - DEV_CHANNELIDS
       - MONGO_URL
-      - NEW_RELIC_APP_NAME="twitch chat listener"
-      - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
       - NODE_ENV
       - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
@@ -35,19 +32,18 @@ services:
       - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
   twitch-events:
-    image: twitch-events:${COMMIT_HASH:-latest}
+    image: "twitch-events:latest"
     container_name: twitch-events
     restart: on-failure
     build:
       context: .
-      target: prod
-      dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
+      dockerfile: ./packages/Dockerfile.events
       args:
         - BUILD_CONTEXT=packages/twitch/events
     hostname: twitch-events
     ports:
-      - '82:5010'
-      - '5015:5015'
+      - "82:5010"
+      - "5015:5015"
     environment:
       - DATABASE_URL
       - DB_SECRET
@@ -56,30 +52,27 @@ services:
       - DEV_CHANNELIDS
       - EVENTSUB_HOST
       - MONGO_URL
-      - NEW_RELIC_APP_NAME="twitch eventsub listener"
-      - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
       - NODE_ENV
-      - NR_NATIVE_METRICS_NO_BUILD
       - PORT=5010
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
 
   dota:
-    image: dota:${COMMIT_HASH:-latest}
+    image: "dota:latest"
     container_name: dota
     restart: on-failure
     build:
       context: .
-      target: prod
-      dockerfile: ./packages/Dockerfile # Reusing same nodejs dockerfile
+      dockerfile: ./packages/Dockerfile.dota
       args:
         - BUILD_CONTEXT=packages/dota
     hostname: dota
     ports:
-      - '81:5000'
-      - '9229:9229'
+      - "81:5000"
+      - "9229:9229"
     environment:
+      - D2PT_TOKEN
       - ADMIN_CHANNELS
       - COMMIT_HASH
       - DATABASE_URL
@@ -88,15 +81,6 @@ services:
       - DEV_CHANNELS
       - DEV_CHANNELIDS
       - MONGO_URL
-      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
-      - NEW_RELIC_APP_NAME="dotabod dota"
-      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
-      - NEW_RELIC_ENABLED
-      - NEW_RELIC_FEATURE_FLAG_ASYNC_LOCAL_CONTEXT
-      - NEW_RELIC_LICENSE_KEY
-      - NEW_RELIC_LOG
-      - NEW_RELIC_LOG_ENABLED
-      - NEW_RELIC_NO_CONFIG_FILE
       - NODE_ENV
       - STEAM_PASS
       - STEAM_USER
@@ -112,13 +96,15 @@ services:
   nginx:
     container_name: nginx
     restart: on-failure
-    image: nginx
+    image: "nginx:latest"
     volumes:
-    - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
-    build: ./services/nginx
+      - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
+    build:
+      context: ./services/nginx
+      dockerfile: Dockerfile
     ports:
-      - '80:80'
-      - '443:443'
+      - "80:80"
+      - "443:443"
     environment:
       - NGINX_HOST
       - EVENTSUB_HOST
@@ -127,12 +113,12 @@ services:
 
   mongodb:
     container_name: mongodb
-    image: "mongo"
+    image: "mongo:latest"
     ports:
       - "27017:27017"
     volumes:
       - "mongodb_data:/data/db"
-      - ./services/mongodb/init.js:/docker-entrypoint-initdb.d/init_mongo.js
+      - ./services/mongodb/src/init.js:/docker-entrypoint-initdb.d/init_mongo.js
 
   # Backup service
   backup:
@@ -157,3 +143,6 @@ volumes:
   mongodb_data:
   steam_auth:
   backup_data:
+networks:
+  default:
+    name: dotabod

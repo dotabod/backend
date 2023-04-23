@@ -62,30 +62,36 @@ class GSIServer {
             return
           }
 
-          logger.info('[GSI] io.use Error checking auth 58', { token, client })
+          // logger.info('[GSI] io.use Error checking auth 58', { token, client })
+          socket.disconnect()
           next(new Error('authentication error 58'))
         })
         .catch((e) => {
           logger.info('[GSI] io.use Error checking auth', { token, e })
+          socket.disconnect()
           next(new Error('authentication error 62'))
         })
     })
 
-    this.io.on('connection', (socket: Socket) => {
+    this.io.on('connection', async (socket: Socket) => {
       const { token } = socket.handshake.auth
+
+      // Their own personal room, join first before emitting updates
+      await socket.join(token)
+
       // TODO: should just send obs blockers regardless of blockcache somehow
       // This triggers a resend of obs blockers
       if (gsiHandlers.has(token)) {
         const handler = gsiHandlers.get(token)
         if (handler) {
+          if (handler.client.gsi && handler.client.beta_tester) {
+            handler.emitMinimapBlockerStatus()
+          }
           handler.emitBadgeUpdate()
           handler.emitWLUpdate()
           handler.blockCache = null
         }
       }
-
-      // Their own personal room
-      void socket.join(token)
     })
   }
 

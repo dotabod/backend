@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../dist/psql"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  type                 String
+  provider             String
+  providerAccountId    String    @unique
+  refresh_token        String
+  access_token         String
+  expires_at           Int?
+  token_type           String?
+  scope                String?
+  id_token             String?
+  session_state        String?
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at")
+  obtainment_timestamp DateTime? @db.Timestamptz(6)
+  expires_in           Int?
+  requires_refresh     Boolean?
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model User {
+  id                                String         @id @default(cuid())
+  displayName                       String?        @unique(map: "users_name_key")
+  email                             String?        @unique
+  image                             String?
+  createdAt                         DateTime       @default(now()) @map("created_at")
+  updatedAt                         DateTime       @default(now()) @updatedAt @map("updated_at")
+  mmr                               Int            @default(0) @db.SmallInt
+  steam32Id                         Int?
+  followers                         Int?
+  stream_delay                      Int?           @default(0) @db.SmallInt
+  name                              String         @unique(map: "users_username_key") @default("")
+  emailVerified                     DateTime?
+  stream_online                     Boolean        @default(false)
+  stream_start_date                 DateTime?      @db.Timestamp(6)
+  beta_tester                       Boolean        @default(false)
+  locale                            String         @default("en")
+  Account                           Account?
+  Bet                               Bet[]
+  mods_mods_mod_user_idTousers      mods[]         @relation("mods_mod_user_idTousers")
+  mods_mods_streamer_user_idTousers mods[]         @relation("mods_streamer_user_idTousers")
+  settings                          Setting[]
+  SteamAccount                      SteamAccount[]
+  streams                           streams?
+
+  @@map("users")
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  key       String
+  value     Json?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([key, userId])
+  @@map("settings")
+}
+
+model SteamAccount {
+  id               String   @id @default(cuid())
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
+  steam32Id        Int      @unique
+  userId           String
+  name             String?
+  mmr              Int      @default(0) @db.SmallInt
+  leaderboard_rank Int?     @db.SmallInt
+  connectedUserIds String[]
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("steam_accounts")
+}
+
+model Bet {
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+  matchId       String
+  predictionId  String
+  won           Boolean?
+  myTeam        String
+  userId        String
+  lobby_type    Int?     @db.SmallInt
+  steam32Id     BigInt?
+  is_party      Boolean  @default(false)
+  hero_slot     Int?     @db.SmallInt
+  is_doubledown Boolean  @default(false)
+  radiant_score Int?     @db.SmallInt
+  dire_score    Int?     @db.SmallInt
+  kda           Json?
+  hero_name     String?
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, userId])
+  @@map("bets")
+}
+
+model mods {
+  id                                 BigInt   @id @default(autoincrement())
+  temp_mod_name                      String?  @db.VarChar
+  streamer_user_id                   String
+  mod_user_id                        String?
+  created_at                         DateTime @default(now()) @db.Timestamptz(6)
+  updated_at                         DateTime @default(now()) @db.Timestamptz(6)
+  users_mods_mod_user_idTousers      User?    @relation("mods_mod_user_idTousers", fields: [mod_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_mods_streamer_user_idTousers User     @relation("mods_streamer_user_idTousers", fields: [streamer_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model streams {
+  id                String
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @default(now())
+  userId            String    @id
+  followers         Int?
+  stream_delay      Int?      @default(0) @db.SmallInt
+  stream_online     Boolean   @default(false)
+  stream_start_date DateTime? @db.Timestamp(6)
+  category_name     String?
+  category_id       Int?
+  title             String?
+  users             User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}

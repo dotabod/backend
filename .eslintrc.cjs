@@ -19,16 +19,17 @@ module.exports = {
     ecmaVersion: "latest",
     sourceType: "module",
     tsconfigRootDir: __dirname,
-    project: "./tsconfig.json",
+    project: [
+      "./tsconfig.json",
+      "./packages/*/tsconfig.json",
+      "./packages/twitch/*/tsconfig.json",
+      "./services/*/tsconfig.json",
+    ],
   },
-  plugins: [
-    "@typescript-eslint",
-    "import",
-    "unused-imports",
-    "simple-import-sort",
-    "prettier",
-  ],
+  plugins: ["@typescript-eslint", "import", "unused-imports", "simple-import-sort", "prettier"],
   rules: {
+    semi: "off",
+    "max-len": [1, { code: 100 }],
     "simple-import-sort/imports": "error",
     "simple-import-sort/exports": "error",
     "@typescript-eslint/no-unsafe-call": "off",
@@ -69,4 +70,4 @@ module.exports = {
       },
     },
   },
-};
+}

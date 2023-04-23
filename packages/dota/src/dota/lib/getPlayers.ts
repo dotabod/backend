@@ -1,6 +1,6 @@
+import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 import { t } from 'i18next'
 
-import { delayedGames } from '../../../prisma/generated/mongoclient/index.js'
 import Dota from '../../steam/index.js'
 import Mongo from '../../steam/mongo.js'
 import CustomError from '../../utils/customError.js'

@@ -1,3 +1,4 @@
+import { PrismaClient } from '@prisma/client'
 import axios from 'axios'
 
 import { prisma } from '../db/prisma.js'
@@ -33,6 +34,8 @@ async function fixNewUsers() {
   }
   return
 }
+
+await fixNewUsers()
 
 async function handleNewUser(providerAccountId: string) {
   if (!botApi) return
@@ -81,8 +84,6 @@ async function handleNewUser(providerAccountId: string) {
     console.log(e, 'error on getStreamByUserId')
   }
 }
-
-await fixNewUsers()
 
 async function getAccounts() {
   // const steam32id = 1234
@@ -331,6 +332,95 @@ async function fixOnline() {
       providerAccountId: bet.user.Account?.providerAccountId ?? '',
       userId: bet.user.id,
     })
+  }
+}
+
+const newLocales = [
+  'en',
+  'af-ZA',
+  'ar-SA',
+  'ca-ES',
+  'cs-CZ',
+  'da-DK',
+  'de-DE',
+  'el-GR',
+  'es-ES',
+  'fa-IR',
+  'fi-FI',
+  'fr-FR',
+  'he-IL',
+  'hu-HU',
+  'it-IT',
+  'ja-JP',
+  'ko-KR',
+  'nl-NL',
+  'no-NO',
+  'pl-PL',
+  'pt-BR',
+  'pt-PT',
+  'ro-RO',
+  'ru-RU',
+  'sr-SP',
+  'sv-SE',
+  'tr-TR',
+  'uk-UA',
+  'vi-VN',
+  'zh-CN',
+  'zh-TW',
+]
+function mapLocale(locale: string) {
+  if (locale.length === 2) {
+    return newLocales.find((l) => l.startsWith(locale)) ?? 'en'
+  }
+
+  return locale
+}
+
+// function to migrate users from old locale 2 letter code to new locale hyphenated string
+async function migrateUsersToNewLocale() {
+  const users = await prisma.user.findMany({
+    where: {
+      locale: {
+        not: PrismaClient.dbNull,
+      },
+    },
+    select: {
+      id: true,
+      locale: true,
+    },
+  })
+
+  const data = users.map((user) => ({
+    id: user.id,
+    locale: mapLocale(user.locale),
+  }))
+
+  // group by locale
+  const grouped = data.reduce<Record<string, string[]>>((acc, user) => {
+    if (!acc[user.locale]) {
+      acc[user.locale] = []
+    }
+
+    acc[user.locale].push(user.id)
+
+    return acc
+  }, {})
+
+  try {
+    for (const locale of Object.keys(grouped)) {
+      await prisma.user.updateMany({
+        data: {
+          locale: locale,
+        },
+        where: {
+          id: {
+            in: grouped[locale],
+          },
+        },
+      })
+    }
+  } catch (e) {
+    console.log(e)
   }
 }
 

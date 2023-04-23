@@ -1,4 +1,4 @@
-import { DBSettings } from '@dotabod/settings'
+import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { gsiHandlers } from '../../dota/lib/consts.js'
@@ -93,7 +93,18 @@ commandHandler.registerCommand('np', {
 
     const dotaClient = gsiHandlers.get(client.token)
     const matchPlayers = dotaClient?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi)
-    notablePlayers(client.locale, twitchChannelId, client.gsi?.map?.matchid, matchPlayers)
+    const enableCountries = getValueOrDefault(
+      DBSettings.notablePlayersOverlayFlagsCmd,
+      client.settings,
+    )
+    notablePlayers({
+      locale: client.locale,
+      twitchChannelId,
+      currentMatchId: client.gsi?.map?.matchid,
+      players: matchPlayers,
+      enableFlags: enableCountries,
+      steam32Id: client.steam32Id,
+    })
       .then((desc) => {
         chatClient.say(channel, desc.description)
       })

@@ -1,3 +1,5 @@
+import { EventSubListener } from '@twurple/eventsub-base'
+
 import { transformBetData } from './transformers/transformBetData.js'
 import { transformPollData } from './transformers/transformPollData.js'
 import { offlineEvent } from '../lib/offlineEvent.js'
@@ -9,35 +11,39 @@ interface Event {
   sendToSocket?: (data: any) => void
 }
 
-export const events: { [key in string]: Event } = {
-  subscribeToStreamOnlineEvents: {
+export const events: Partial<{ [key in keyof EventSubListener]: Event }> = {
+  onStreamOnline: {
     customHandler: onlineEvent,
   },
-  subscribeToStreamOfflineEvents: {
+  onStreamOffline: {
     customHandler: offlineEvent,
   },
-  subscribeToUserUpdateEvents: {
+  onUserUpdate: {
     customHandler: updateUserEvent,
   },
-  subscribeToChannelPredictionBeginEvents: {
+  onChannelPredictionBegin: {
     sendToSocket: transformBetData,
   },
-  subscribeToChannelPredictionProgressEvents: {
+  onChannelPredictionProgress: {
     sendToSocket: transformBetData,
   },
-  subscribeToChannelPredictionLockEvents: {
+  onChannelPredictionLock: {
     sendToSocket: transformBetData,
   },
-  subscribeToChannelPredictionEndEvents: {
+  onChannelPredictionEnd: {
     sendToSocket: transformBetData,
   },
-  subscribeToChannelPollBeginEvents: {
+  onChannelPollBegin: {
     sendToSocket: transformPollData,
   },
-  subscribeToChannelPollProgressEvents: {
+  onChannelPollProgress: {
     sendToSocket: transformPollData,
   },
-  subscribeToChannelPollEndEvents: {
+  onChannelPollEnd: {
     sendToSocket: transformPollData,
   },
 }
+
+// Self clearing set to try to solve this race condition from twitch:
+// https://github.com/dotabod/backend/issues/250
+export const onlineEvents = new Map<string, Date>()

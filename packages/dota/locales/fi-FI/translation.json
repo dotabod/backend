@@ -1,0 +1,192 @@
+{
+  "aegis": {
+    "denied": "{{- heroName}} kielsi aegiksen {{emote}}",
+    "expired": "{{- heroName}}-sankarin aegis vanhentui {{emote}}",
+    "pickup": "{{- heroName}} poimi aegiksen!",
+    "snatched": "{{- heroName}} nappasi aegiksen {{emote}}"
+  },
+  "apm_one": "Live APM: {{count}} {{emote}}",
+  "apm_other": "Live APM: {{count}} {{emote}}",
+  "averageRank": "Keskimääräinen rankki pelissä",
+  "betaFeature": "[beta-ominaisuus]",
+  "betaTester": "$t(betaTester_on)",
+  "betaTester_off": "{{channel}} ei ole enää beta-testaaja. Kirjoita !beta liittyäksesi uudelleen",
+  "betaTester_on": "{{channel}} on nyt beta-testaaja. Käy osoitteessa discord.dotabod.com nähdäksesi beta-ominaisuudet. Kumoa kirjoittamalla !beta",
+  "bets": {
+    "error": "Unable to open bets. $t(refreshToken)",
+    "lost": "Hävisimme, gg nt {{emote}} mennään seuraavaan",
+    "notScored": "Ottelua ei lasketa {{emote}} Ei lisätä tai poisteta MMR:ää ottelulle {{matchId}}.",
+    "open": "Vedot avattu {{emote}}",
+    "remade": "Sankari vaihdettu {{emote}} Vedot {{- oldHeroName}}-pelille palautettu ja uusi vedonlyönti {{- newHeroName}}-pelille avattu {{emote2}}",
+    "won": "Voitimme {{emote}} mennään seuraavaan"
+  },
+  "bounties": {
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) riimuista ({{totalBounties}}/4) {{emote}} Kiitti {{heroNames}} {{emote2}}",
+    "totalGold": "{{count}} kultaa"
+  },
+  "chatters": {
+    "died": "{{- heroName}} kuoli passiivisella {{itemNames}} {{emote}}",
+    "firstBloodDeath": "{{- heroName}} antaa ensiveren {{emote}}",
+    "midas": "{{emote}} Käytä midastasi",
+    "noTp": "{{channel}} missä sinun tp on {{emote}}",
+    "pause": "{{emote}} Kuka keskeytti pelin?",
+    "smoked": "{{emote}} {{- heroName}} käytti smoken!",
+    "tpFound": "{{channel}} hyvää työtä hankkia tp vihdoinkin, kesti $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
+    "tpFromDeath": "Tämän kuoleman ansiosta sait vihdoin tp:n. Ja se kesti vain $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
+  },
+  "colors": {
+    "blue": "Sininen",
+    "brown": "Ruskea",
+    "cyan": "Syaani",
+    "green": "Vihreä",
+    "olive": "Oliivinvihreä",
+    "orange": "Oranssi",
+    "pink": "Pinkki",
+    "purple": "Violetti",
+    "teal": "Sinivihreä",
+    "yellow": "Keltainen"
+  },
+  "commandDisabled": "Striimaaja poisti {{cmdName}}-komennon {{emote}} Tarkista !commands käytössä oleville",
+  "commands_everyone": "Jokainen voi käyttää: {{commandList}}",
+  "commands_mods": "Vain modien komennot: {{commandList}}",
+  "dota2pt": "Tarvitsetko ammattilaisen build-ideoita sankarille {{- heroName}}? Tarkista osoitteessa {{- url}}",
+  "dotabod": "Olen avoimen lähdekoodin botti jonka on tehnyt {{author}}. Lisätietoja: {{- url}}",
+  "gameNotFound": "Peliä ei löytynyt",
+  "gpm_zero": "",
+  "gpm_one": "Live GPM: {{num}}. {{heroKills}} sankaritapoista, {{creepKills}} kätyritapoista.",
+  "gpm_other": "Live GPM: {{num}}. {{heroKills}} sankaritapoista, {{creepKills}} kätyritapoista.",
+  "heroItems": {
+    "empty": "(2min viive) Esineitä ei löytynyt sankarille {{- heroName}}",
+    "list": "(2min viive) Sankarilla {{- heroName}} on: {{- itemNames}}"
+  },
+  "herostats": {
+    "noneColor": "{{color}} ei ole pelannut otteluita sankarina {{- heroName}} {{timeperiod}}",
+    "noneStreamer": "Ei pelattuja otteluita sankarina {{- heroName}} {{timeperiod}}",
+    "timeperiod": {
+      "days_one": "{{count}}pv",
+      "days_other": "{{count}}pv",
+      "lifetime": "kaikilta ajoilta"
+    },
+    "winrateColor": "",
+    "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrateStreamer": "",
+    "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
+  },
+  "invalidColor": "Virheellinen sankarin väri, paikka tai nimi. Kokeile 1-10, osittaista sankarin nimeä tai väriä näistä {{colorList}}",
+  "invalidMmr": "Virheellinen komento. Kokeile !setmmr 1234",
+  "killstreak": {
+    "lost_one": "{{- heroName}} menetti {{count}} tappoputken {{emote}}",
+    "lost_other": "{{- heroName}} menetti {{count}} tappoputken {{emote}}",
+    "won_one": "{{- heroName}}-sankarilla on {{count}} tappoputki {{emote}}",
+    "won_other": "{{- heroName}}-sankarilla on {{count}} tappoputki {{emote}}"
+  },
+  "lastgame": {
+    "link": "Tässä edellinen peli: {{- url}}",
+    "none": "Ei pelaa kenenkään kanssa edellisestä pelistä",
+    "player": "{{- currentMatchHero}} oli {{- lastMatchHero}}",
+    "total_one": "",
+    "total_other": "Playing with {{count}} players from last game."
+  },
+  "lastgamescore": {
+    "double": "Tuplaus",
+    "duration": "kesti {{minutes}}min",
+    "kda": "{{- kdavalue}} {{- heroName}}",
+    "lost": "Hävisi edellisen pelin",
+    "party": "Ryhmäottelu",
+    "unranked": "Ei rankattu",
+    "won": "Voitti edellisen pelin"
+  },
+  "lifetime": "Pelejä yhteensä",
+  "matchFound": "Ottelutiedot löydetty {{commandList}} komennot aktivoitu.",
+  "matchId": "Ottelutunnus: {{matchId}}",
+  "midasUsed": "Midas vihdoinkin käytetty, $t(seconds, {\"count\": {{seconds}} }) myöhään {{emote}}",
+  "missingMatchData": "Odotetaan tämänhetkisiä ottelutietoja {{emote}}",
+  "missingUser": "Käyttäjää ei löytynyt. Yritä kirjautua ulos ja sisään osoitteessa dotabod.com",
+  "modsOnly_off": "Vain modit-tila on nyt poistettu käytöstä. Kaikki voivat kirjoittaa.",
+  "modsOnly_on": "Vain modit-tila on nyt käytössä {{emote}}. Vain modit voivat kirjoittaa.",
+  "multiAccount": "Tämä Steam-tili on jo yhdistetty toiseen Dotabod-käyttäjään. Tarkista hallintapaneeli saadaksesi lisätietoja {{- url}}",
+  "noHero": "Sankaria ei löytynyt",
+  "noLastMatch": "Edellistä ottelua ei löytynyt {{emote}}",
+  "noNotable": "Ei merkittäviä pelaajia",
+  "notLive": "Striimi ei ole livenä {{emote}}",
+  "notPlaying": "Ei pelaa {{emote}}",
+  "npAdd": "Kokeile !np add <steam32id> <pelaajanimi>",
+  "npAdded": "{{name}} lisätty tämän kanavan !np:hen",
+  "npRemove": "Kokeile !np remove <steam32id>",
+  "npRemoved": "{{steamid}} poistettu tämän kanavan !np:stä",
+  "npUnknown": "Tällä kanavalla ei löytynyt {{steamid}}",
+  "overlayMissing": "Peittokuvaa ei löytynyt. {{command}}-komento vaatii peittokuvan lisäämisen.",
+  "ping": "Pong {{emote}}",
+  "pleb": "Yksi pleb SISÄÄN {{emote}}",
+  "pleb_off": "{{name}} {{emote}} hyvää työtä pleb",
+  "predictions": {
+    "no": "Ei",
+    "title": "Voitammeko sankarilla {{- heroName}}",
+    "yes": "Kyllä"
+  },
+  "privateProfile": "Striimaajan profiili on yksityinen. Komento {{command}} käyttää OpenDotaa ja vaatii ottamaan käyttöön 'Jaa julkinen otteluhistoria' Dota asetuksissa.",
+  "profileUrl": "Tässä on {{- channel}}: {{- url}}",
+  "rank": {
+    "nextRankAt": "Seuraava rankki",
+    "nextRankIn_one": "Yksi voitto vielä {{emote}}",
+    "nextRankIn_other": "{{count}} voitolla"
+  },
+  "ranked": "Rankattu",
+  "ranked_no": "Ei, tämä peli ei ole rankattu",
+  "ranked_yes": "Kyllä, tämä peli on rankattu",
+  "refresh": "Päivitetään peittokuvaa...",
+  "refreshToken": "Your Twitch account needs to be reconnected to Dotabod. {{channel}} logout and login on dotabod.com to fix this.",
+  "resetwl": "Nollataan voitto/tappio-arvo kanavalle {{channel}}",
+  "roshanAlive": "Roshan on tällä hetkellä elossa {{emote}}",
+  "roshanCount": {
+    "1": "Roshanin kuolemat: 1 · Seuraava droppi: agh's shard.",
+    "2": "Roshanin kuolemat: 2 · Seuraava droppi: juusto ja agh's blessing tai refresher shard.",
+    "3": "Roshanin kuolemat: 3 · Seuraava droppi: juusto, agh's blessing ja refresher shard.",
+    "more_one": "Roshanin kuolemat: {{count}} · Seuraava droppi: juusto, agh's blessing ja refresher shard.",
+    "more_other": "Roshanin kuolemat: {{count}} · Seuraava droppi: juusto, agh's blessing ja refresher shard."
+  },
+  "roshanKilled": "Roshan tapettiin! Seuraava roshan {{min}} ja {{max}} välillä",
+  "seconds_one": "{{count}} sekunti",
+  "seconds_other": "{{count}} sekuntia",
+  "setStreamDelay": "Asetetaan striimin viive: $t(seconds, {\"count\": {{seconds}} })",
+  "setStreamDelayNoArgs": "Virheellinen striimin viive, käytä !setdelay <sekuntia>",
+  "setStreamDelayRemoved": "Poistetaan striimin viive",
+  "stream": "$t(stream_on)",
+  "stream_off": "Dotabod kohtelee {{channel}}-kanavaa offline-tilassa. Kirjoita !online peruuttaaksesi",
+  "stream_on": "Dotabod kohtelee {{channel}}-kanavaa online-tilassa. Kirjoita !offline peruuttaaksesi",
+  "streamDelay": "Striimin viive: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "Kanavalla ei ole striimin viivettä",
+  "tip": {
+    "from": "Tippi sankarilta {{- heroName}} {{emote}}",
+    "to": "Tippaamme sankaria {{- heroName}} {{emote}}"
+  },
+  "toggle": "$t(toggle_enabled)",
+  "toggle_disabled": "Dotabod on nyt poistettu käytöstä. Ei enää vastaa komentoihin eikä katsele pelitapahtumia. Ota käyttöön kirjoittamalla !toggle uudelleen.",
+  "toggle_enabled": "Dotabod on nyt käytössä. Vastaa taas komentoihin ja katselee pelitapahtumia. Kirjoita !toggle uudelleen poistaaksesi käytöstä.",
+  "toggleMatch": "$t(toggleMatch_party)",
+  "toggleMatch_double": "Vaihdetaan tämä ottelu tupla mmr:äksi: {{- url}} Kirjoita !fixdd peruuttaaksesi",
+  "toggleMatch_party": "Vaihdetaan tämä ottelu ryhmä mmr:äksi: {{- url}} Kirjoita !fixparty peruuttaaksesi",
+  "toggleMatch_single": "Vaihdetaan tämä ottelu tavalliseksi mmr:äksi: {{- url}} Kirjoita !fixdd peruuttaaksesi",
+  "toggleMatch_solo": "Vaihdetaan tämä ottelu soolo mmr:äksi: {{- url}} Kirjoita !fixparty peruuttaaksesi",
+  "translated": {
+    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
+    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
+  },
+  "treadToggle_one": "Vaihdoimme treadsejä {{count}} kerran säästääksemme yhteensä {{manaCount}} manaa tässä ottelussa.",
+  "treadToggle_other": "Vaihdoimme treadsejä {{count}} kertaa säästääksemme yhteensä {{manaCount}} manaa tässä ottelussa.",
+  "uknownMmr": "En tiedä {{channel}}-kanavan MMR:ää vielä. Modien täytyy !setmmr 1234 tai asettaa se osoitteessa {{- url}}",
+  "unknown": "Tuntematon",
+  "unknownSteam": "Steam-tiliä ei löytynyt. Noudata asennuksen 2-vaihetta, pelaa bottipeli ja yritä uudelleen.",
+  "unranked": "Ei rankattu",
+  "updateMmr": "$t(updateMmr_manual)",
+  "updateMmr_auto": "MMR päivitetty arvoon {{mmr}}. !fixparty jos kyseessä on ryhmäottelu ja !fixdd jos tuplaus",
+  "updateMmr_manual": "MMR päivitetty arvoon {{mmr}}",
+  "updateMmrMulti": "Useita Steam-tilejä, päivittämässä sitä jolla olet tällä hetkellä kirjautuneena ({{steamId}})",
+  "version": {
+    "commit": "Palvelin käyttää versiota {{version}}, tässä mitä puuttuu viimeisimpään versioon verrattuna: {{- url}}",
+    "unknown": "Viimeistä git committia ei löytynyt, tässä osoitteessa repo {{- url}}"
+  },
+  "xpm": "Live XPM: {{num}}"
+}
