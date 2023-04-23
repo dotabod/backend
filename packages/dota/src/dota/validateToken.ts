@@ -1,11 +1,10 @@
-import { NextFunction, Request, Response } from 'express'
+import { FastifyReply } from 'fastify'
 
 import getDBUser from '../db/getDBUser.js'
 import { logger } from '../utils/logger.js'
 import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts.js'
-RawServer, RawRequest, RawReply, RouteGeneric, ContextConfig, SchemaCompiler, TypeProvider, Logger
-export function validateToken(req: Request, res: Response, next: NextFunction) {
-  // Sent from dota gsi config file
+
+export const validateToken = async (req: any, res: FastifyReply, done: any) => {
   const token = req.body?.auth?.token as string | undefined
 
   if (invalidTokens.has(token)) {
@@ -15,8 +14,8 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
 
   if (!token) {
     invalidTokens.add(token)
-    logger.info(`[GSI], Dropping message from IP: ${req.ip}, no valid auth token`)
-    res.status(401).json({
+    logger.info(`[GSI], Dropping messag no valid auth token`)
+    res.status(401).send({
       error: new Error('Invalid request!'),
     })
     return
@@ -31,29 +30,29 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
   }
 
   pendingCheckAuth.set(token, true)
-  getDBUser(token)
-    .then((client) => {
-      if (client?.token) {
-        client.gsi = req.body
-        pendingCheckAuth.delete(token)
+  try {
+    const client = await getDBUser(token)
+    if (client?.token) {
+      client.gsi = req.body
+      pendingCheckAuth.delete(token)
 
-        next()
-        return
-      }
+      done()
+      return
+    }
 
-      pendingCheckAuth.delete(token)
-      logger.info('[GSI] io.use Error checking auth 42', { token, client })
-      next(new Error('authentication error 42'))
+    pendingCheckAuth.delete(token)
+    logger.info('[GSI] io.use Error checking auth 42', { token, client })
+    res.status(401).send({
+      error: new Error('Invalid request 42!'),
     })
-    .catch((e) => {
-      logger.info('[GSI] io.use Error checking auth 48', { token, e })
-      invalidTokens.add(token)
-      pendingCheckAuth.delete(token)
-      next(new Error('authentication error 48'))
+  } catch (e) {
+    logger.info('[GSI] io.use Error checking auth 48', { token, e })
+    invalidTokens.add(token)
+    pendingCheckAuth.delete(token)
+    res.status(401).send({
+      error: new Error('Invalid request 48!'),
     })
-    // TODO: idk if finally runs when next() is called in a .then() earlier
-    // So adding the .deletes to .then and .catch until i figure that out lol
-    .finally(() => {
-      pendingCheckAuth.delete(token)
-    })
+  } finally {
+    pendingCheckAuth.delete(token)
+  }
 }

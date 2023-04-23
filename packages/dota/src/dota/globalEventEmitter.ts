@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { FastifyNextCallback, FastifyReply, FastifyRequest } from 'fastify'
+import { FastifyReply } from 'fastify'
 
 export const events = new EventEmitter()
 // I dont think we need 20, but just in case. Default is 11
@@ -39,17 +39,17 @@ function recursiveEmit(
 }
 
 export function processChanges(section: string) {
-  return function handle(req: FastifyRequest, res: FastifyReply, next: FastifyNextCallback) {
+  return function handle(req: any, res: FastifyReply, done) {
     if (req.body[section]) {
       const token = req.body.auth.token as string
       recursiveEmit('', req.body[section], req.body, token)
     }
-    next()
+    done()
   }
 }
 
-export function newData(req: FastifyRequest, res: FastifyReply) {
+export function newData(req: any, res: FastifyReply) {
   const token = req.body.auth.token as string
   events.emit('newdata', req.body, token)
-  res.end()
+  res.status(200).send('ok')
 }

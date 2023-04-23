@@ -19,7 +19,7 @@
   "dependencies": {
     "@dotabod/prisma": "^1.0.0",
     "@dotabod/settings": "^1.0.0",
-    "@fastify/cors": "^8.2.0",
+    "@fastify/cors": "^8.2.1",
     "@fastify/formbody": "^7.4.0",
     "@node-steam/id": "^1.2.0",
     "@twurple/eventsub-base": "^6.0.9",
@@ -52,6 +52,7 @@
     "@types/lodash.isequal": "^4.5.6",
     "@types/memoizee": "^0.4.8",
     "@types/retry": "^0.12.2",
-    "@types/steam": "^0.0.29"
+    "@types/steam": "^0.0.29",
+    "types-fastify-socket.io": "^0.0.1"
   }
 }
