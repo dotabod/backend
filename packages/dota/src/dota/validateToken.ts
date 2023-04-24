@@ -5,7 +5,7 @@ import { logger } from '../utils/logger.js'
 import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts.js'
 
 export function validateToken(req: Request, res: Response, next: NextFunction) {
-  const forwardedIp = req.headers['x-forwarded-for'] as string
+  const forwardedIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
 
   // Sent from dota gsi config file
   const token = req.body?.auth?.token as string | undefined
