@@ -781,80 +781,15 @@ export class GSIHandler {
     const localLobbyType = typeof this.playingLobbyType !== 'number' ? 7 : this.playingLobbyType
     const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
 
-    server.io
-      .in(this.getToken())
-      .fetchSockets()
-      .then((sockets: any) => {
-        if (sockets.length === 0) {
-          this.updateMMR({
-            scores: scores,
-            increase: won,
-            lobbyType: localLobbyType,
-            matchId: matchId,
-            isParty: isParty,
-            heroSlot,
-            heroName,
-          })
-          return
-        }
-
-        sockets[0]
-          .timeout(25000)
-          .emit(
-            'requestMatchData',
-            { matchId, heroSlot },
-            (err: any, response?: { isParty: boolean; matchId: number; isPrivate: boolean }) => {
-              if (err || !response) {
-                this.updateMMR({
-                  scores: scores,
-                  increase: won,
-                  lobbyType: localLobbyType,
-                  matchId: matchId,
-                  isParty: isParty,
-                  heroSlot,
-                  heroName,
-                })
-                return
-              }
-
-              const foundParty = typeof response.isParty === 'boolean' ? response.isParty : isParty
-              void redisClient.client.set(
-                `${this.getToken()}:isPrivate`,
-                response.isPrivate ? 1 : 0,
-              )
-
-              this.updateMMR({
-                scores: scores,
-                increase: won,
-                lobbyType: localLobbyType,
-                matchId: matchId,
-                isParty: foundParty,
-                heroSlot,
-                heroName,
-              })
-
-              logger.info('Found match data from overlay', {
-                matchId,
-                foundParty,
-                channel: this.getChannel(),
-                response,
-                err,
-              })
-            },
-          )
-      })
-      .catch((e) => {
-        // dont log errs
-        this.updateMMR({
-          scores: scores,
-          increase: won,
-          lobbyType: localLobbyType,
-          matchId: matchId,
-          isParty: isParty,
-          heroSlot,
-          heroName,
-        })
-      })
+    this.updateMMR({
+      scores: scores,
+      increase: won,
+      lobbyType: localLobbyType,
+      matchId: matchId,
+      isParty: isParty,
+      heroSlot,
+      heroName,
+    })
 
     getRankDetail(this.getMmr(), this.getSteam32())
       .then((response) => {
