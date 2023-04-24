@@ -28,7 +28,7 @@ class SetupSupabase {
   }
 
   toggleHandler = async (userId: string, enable: boolean) => {
-    const client = await getDBUser(userId)
+    const client = await getDBUser({ token: userId })
     if (!client) return
     if (this.IS_DEV && !this.DEV_CHANNELS.includes(client.name)) return
     if (!this.IS_DEV && this.DEV_CHANNELS.includes(client.name)) return

@@ -5,6 +5,8 @@ import { logger } from '../utils/logger.js'
 import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts.js'
 
 export function validateToken(req: Request, res: Response, next: NextFunction) {
+  const forwardedIp = req.headers['x-forwarded-for'] as string
+
   // Sent from dota gsi config file
   const token = req.body?.auth?.token as string | undefined
 
@@ -15,7 +17,7 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
 
   if (!token) {
     invalidTokens.add(token)
-    logger.info(`[GSI], Dropping message from IP: ${req.ip}, no valid auth token`)
+    logger.info(`[GSI], Dropping message, no valid auth token`, { token, forwardedIp })
     res.status(401).json({
       error: new Error('Invalid request!'),
     })
@@ -31,7 +33,7 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
   }
 
   pendingCheckAuth.set(token, true)
-  getDBUser(token)
+  getDBUser({ token })
     .then((client) => {
       if (client?.token) {
         client.gsi = req.body

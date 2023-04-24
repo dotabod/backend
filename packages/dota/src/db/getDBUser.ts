@@ -5,10 +5,10 @@ import { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
 
-export default async function getDBUser(
-  token?: string,
-  twitchId?: string,
-): Promise<SocketClient | null | undefined> {
+export default async function getDBUser({
+  token,
+  twitchId,
+}: { token?: string; twitchId?: string } = {}): Promise<SocketClient | null | undefined> {
   if (invalidTokens.has(token || twitchId)) return null
 
   const client = findUser(token) ?? findUserByTwitchId(twitchId)
@@ -92,7 +92,7 @@ export default async function getDBUser(
         logger.info('[GSI] Connecting new client', { token: theUser.id, name: theUser.name })
         const gsiHandler = new GSIHandler(theUser)
         gsiHandlers.set(theUser.id, gsiHandler)
-        twitchIdToToken.set(theUser.Account!.providerAccountId!, theUser.id)
+        twitchIdToToken.set(theUser.Account!.providerAccountId, theUser.id)
         lookingupToken.delete(token ?? twitchId ?? '')
         return gsiHandler.client
       }

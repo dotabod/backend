@@ -65,7 +65,7 @@ twitchChat.on(
 
     // So we can get the users settings cuz some commands are disabled
     // This runs every command, but its cached so no hit on db
-    const client = await getDBUser(undefined, channelId)
+    const client = await getDBUser({ token: undefined, twitchId: channelId })
     if (!client || !channelId) {
       chatClient.say(channel, t('missingUser', { lng: userInfo.locale }))
       return

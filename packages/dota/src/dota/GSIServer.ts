@@ -49,7 +49,7 @@ class GSIServer {
     this.io.use((socket, next) => {
       const { token } = socket.handshake.auth
 
-      getDBUser(token)
+      getDBUser({ token })
         .then((client) => {
           if (client?.token) {
             next()
