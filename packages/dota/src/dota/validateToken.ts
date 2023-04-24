@@ -33,7 +33,7 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
   }
 
   pendingCheckAuth.set(token, true)
-  getDBUser({ token })
+  getDBUser({ token, ip: forwardedIp })
     .then((client) => {
       if (client?.token) {
         client.gsi = req.body

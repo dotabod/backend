@@ -8,7 +8,10 @@ import { prisma } from './prisma.js'
 export default async function getDBUser({
   token,
   twitchId,
-}: { token?: string; twitchId?: string } = {}): Promise<SocketClient | null | undefined> {
+  ip,
+}: { token?: string; twitchId?: string; ip?: string } = {}): Promise<
+  SocketClient | null | undefined
+> {
   if (invalidTokens.has(token || twitchId)) return null
 
   const client = findUser(token) ?? findUserByTwitchId(twitchId)
@@ -19,7 +22,7 @@ export default async function getDBUser({
 
   if (lookingupToken.has(token ?? twitchId ?? '')) return null
 
-  logger.info('[GSI] Havent cached user token yet, checking db', { token: token ?? twitchId })
+  logger.info('[GSI] Havent cached user token yet, checking db', { ip, token: token ?? twitchId })
   lookingupToken.set(token ?? twitchId ?? '', true)
 
   return await prisma.user
