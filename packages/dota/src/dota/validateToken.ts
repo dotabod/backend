@@ -38,7 +38,7 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
       if (client?.token) {
         if (!client.stream_online) {
           pendingCheckAuth.delete(token)
-          next(new Error('authentication error 39'))
+          res.status(401).send('Stream offline')
           return
         }
 
