@@ -92,7 +92,10 @@ export default async function getDBUser({
       }
 
       if (!gsiHandlers.has(theUser.id)) {
-        logger.info('[GSI] Connecting new client', { token: theUser.id, name: theUser.name })
+        if (theUser.stream_online) {
+          logger.info('[GSI] Connecting new client', { token: theUser.id, name: theUser.name })
+        }
+
         const gsiHandler = new GSIHandler(theUser)
         gsiHandlers.set(theUser.id, gsiHandler)
         twitchIdToToken.set(theUser.Account!.providerAccountId, theUser.id)
