@@ -4,19 +4,19 @@ import { prisma } from '../../db/prisma.js'
 import { server } from '../../dota/index.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('online', {
   aliases: ['offline', 'forceonline', 'forceoffline'],
   permission: 2,
   cooldown: 0,
-  handler: (message: MessageType, args: string[]) => {
+  handler: (message, args, command) => {
     async function handler() {
       const {
         channel: { name: channel, client },
       } = message
 
-      const forceOnline = args[0] === 'forceonline' || args[0] === 'online'
+      const forceOnline = command === 'forceonline' || command === 'online'
       if (message.channel.client.stream_online === forceOnline) {
         chatClient.say(
           message.channel.name,
