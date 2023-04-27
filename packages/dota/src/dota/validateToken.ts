@@ -36,6 +36,12 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
   getDBUser({ token, ip: forwardedIp })
     .then((client) => {
       if (client?.token) {
+        if (!client.stream_online) {
+          pendingCheckAuth.delete(token)
+          next(new Error('authentication error 39'))
+          return
+        }
+
         client.gsi = req.body
         pendingCheckAuth.delete(token)
 

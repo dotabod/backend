@@ -52,6 +52,12 @@ class GSIServer {
       getDBUser({ token })
         .then((client) => {
           if (client?.token) {
+            if (!client.stream_online) {
+              socket.disconnect()
+              next(new Error('authentication error 50'))
+              return
+            }
+
             next()
             return
           }
@@ -78,6 +84,11 @@ class GSIServer {
       if (gsiHandlers.has(token)) {
         const handler = gsiHandlers.get(token)
         if (handler) {
+          // dont do anything if offline
+          if (handler.disabled) {
+            return
+          }
+
           if (handler.client.gsi && handler.client.beta_tester) {
             handler.emitMinimapBlockerStatus()
           }
