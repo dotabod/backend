@@ -11,14 +11,14 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
   const token = req.body?.auth?.token as string | undefined
 
   if (invalidTokens.has(token)) {
-    res.status(401).send('Invalid token, skipping auth check')
+    res.status(200).send('Invalid token, skipping auth check')
     return
   }
 
   if (!token) {
     invalidTokens.add(token)
     logger.info(`[GSI], Dropping message, no valid auth token`, { token, forwardedIp })
-    res.status(401).json({
+    res.status(200).json({
       error: new Error('Invalid request!'),
     })
     return
@@ -28,7 +28,7 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
   // so getDBUser was returning null, which means this was sending a new auth error and then
   // no longer doing authentications. i think adding the `lookingupToken` check here fixes that
   if (pendingCheckAuth.has(token) || lookingupToken.has(token)) {
-    res.status(401).send('Still validating token, skipping requests until auth')
+    res.status(200).send('Still validating token, skipping requests until auth')
     return
   }
 
@@ -38,7 +38,7 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
       if (client?.token) {
         if (!client.stream_online) {
           pendingCheckAuth.delete(token)
-          res.status(401).send('Stream offline')
+          res.status(200).send('Stream offline')
           return
         }
 
