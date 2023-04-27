@@ -183,7 +183,7 @@
   "unknownSteam": "Could not find steam account. Follow Step 2 of setup, play a bot match, and try again.",
   "unranked": "Unranked",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "Updated MMR to {{mmr}}. !fixparty for party and !fixdd for doubledown",
+  "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
   "version": {
