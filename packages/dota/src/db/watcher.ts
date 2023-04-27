@@ -102,6 +102,12 @@ class SetupSupabase {
           client.locale = newObj.locale
           client.beta_tester = newObj.beta_tester
           client.stream_online = newObj.stream_online
+
+          if (client.stream_online && !oldObj.stream_online) {
+            const connectedUser = gsiHandlers.get(client.token)
+            connectedUser?.enable()
+          }
+
           if (typeof newObj.stream_start_date === 'string') {
             client.stream_start_date = new Date(newObj.stream_start_date)
           } else {
