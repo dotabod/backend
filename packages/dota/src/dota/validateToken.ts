@@ -51,13 +51,13 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
 
       pendingCheckAuth.delete(token)
       logger.info('[GSI] io.use Error checking auth 42', { token, client })
-      next(new Error('authentication error 42'))
+      res.status(200).send('Invalid token, skipping auth check')
     })
     .catch((e) => {
       logger.info('[GSI] io.use Error checking auth 48', { token, e })
       invalidTokens.add(token)
       pendingCheckAuth.delete(token)
-      next(new Error('authentication error 48'))
+      res.status(200).send('Invalid token, skipping auth check')
     })
     // TODO: idk if finally runs when next() is called in a .then() earlier
     // So adding the .deletes to .then and .catch until i figure that out lol
