@@ -23,7 +23,9 @@ commandHandler.registerCommand('online', {
           t('stream', {
             lng: message.channel.client.locale,
             channel: message.channel.name,
-            state: message.channel.client.stream_online ? 'online' : 'offline',
+            state: message.channel.client.stream_online
+              ? t('online', { lng: message.channel.client.locale })
+              : t('offline', { lng: message.channel.client.locale }),
             command: message.channel.client.stream_online ? 'offline' : 'online',
             context: 'none',
           }),

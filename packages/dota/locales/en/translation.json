@@ -155,6 +155,8 @@
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Removing stream delay",
   "stream": "$t(stream_on)",
+  "online": "online",
+  "offline": "offline",
   "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
   "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "stream_none": "No changes made, user already {{state}}. Try !{{command}} to toggle.",
