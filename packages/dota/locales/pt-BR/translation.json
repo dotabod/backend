@@ -147,12 +147,12 @@
   "resetwl": "Redefinindo vitórias/derrotas para 0 em {{channel}}",
   "roshanAlive": "O roshan está vivo {{emote}}",
   "roshanCount": {
-    "1": "Mortes do Roshan: 1 · Próximo item a cair: fragmento de aghanim.",
-    "2": "Mortes do Roshan: 2 · Próximos itens a cair: queijo e benção de aghanim ou fragmento de orbe restaurador.",
-    "3": "Mortes do Roshan: 3 · Próximos itens a cair: queijo, benção de aghanim e fragmento de orbe restaurador.",
-    "more_one": "Mortes do Roshan: {{count}} · Próximos itens a cair: queijo, benção de aghanim e fragmento de orbe restaurador.",
+    "1": "Mortes do Roshan: 1 · Próximo item a cair: queijo.",
+    "2": "Mortes do Roshan: 2 · Próximos itens a cair: queijo, benção de aghanim ou fragmento de orbe restaurador.",
+    "3": "Mortes do Roshan: 3 · Próximos itens a cair: queijo, benção de aghanim ou fragmento de orbe restaurador.",
+    "more_one": "Mortes do Roshan: {{count}} · Próximos itens a cair: queijo, benção de aghanim ou fragmento de orbe restaurador.",
     "more_many": "",
-    "more_other": "Mortes do Roshan: {{count}} · Próximos itens a cair: queijo, benção de aghanim e fragmento de orbe restaurador."
+    "more_other": "Mortes do Roshan: {{count}} · Próximos itens a cair: queijo, benção de aghanim ou fragmento de orbe restaurador."
   },
   "roshanKilled": "Roshan morto! Próximo roshan entre {{min}} e {{max}} .",
   "seconds_one": "{{count}} segundo",
