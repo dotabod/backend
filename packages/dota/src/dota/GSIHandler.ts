@@ -83,14 +83,14 @@ export class GSIHandler {
     this.client = dotaClient
     this.mapBlocker = new DataBroadcaster(this.getToken())
 
-    if (!this.client.stream_online) {
+    const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, this.client.settings)
+    if (isBotDisabled) {
+      logger.info('[GSI] Bot is disabled for this user', { name: this.client.name })
       this.disable()
       return
     }
 
-    const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, this.client.settings)
-    if (isBotDisabled) {
-      logger.info('[GSI] Bot is disabled for this user', { name: this.client.name })
+    if (!this.client.stream_online) {
       this.disable()
       return
     }
