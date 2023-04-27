@@ -16,18 +16,35 @@ commandHandler.registerCommand('online', {
         channel: { name: channel, client },
       } = message
 
+      const forceOnline = args[0] === 'forceonline' || args[0] === 'online'
+      if (message.channel.client.stream_online === forceOnline) {
+        chatClient.say(
+          message.channel.name,
+          t('stream', {
+            lng: message.channel.client.locale,
+            channel: message.channel.name,
+            state: message.channel.client.stream_online ? 'online' : 'offline',
+            command: message.channel.client.stream_online ? 'offline' : 'online',
+            context: 'none',
+          }),
+        )
+        return
+      }
+
       await prisma.user.update({
         where: {
           id: message.channel.client.token,
         },
         data: {
-          stream_online: !message.channel.client.stream_online,
+          stream_online: forceOnline,
           stream_start_date: null,
         },
       })
 
-      chatClient.say(channel, t('refresh', { lng: message.channel.client.locale }))
-      server.io.to(client.token).emit('refresh')
+      if (forceOnline) {
+        chatClient.say(channel, t('refresh', { lng: message.channel.client.locale }))
+        server.io.to(client.token).emit('refresh')
+      }
 
       chatClient.say(
         message.channel.name,

@@ -157,6 +157,7 @@
   "stream": "$t(stream_on)",
   "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
   "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
+  "stream_none": "No changes made, user already {{state}}. Try !{{command}} to toggle.",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "There is no stream delay on this channel",
   "tip": {
