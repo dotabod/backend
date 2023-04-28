@@ -11,7 +11,7 @@ import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import { SocketClient } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../index.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 import { profileLink } from './stats.js'
 
 function formatItemList(itemList: string[]) {
@@ -101,7 +101,7 @@ commandHandler.registerCommand('items', {
   aliases: ['item'],
   onlyOnline: true,
   dbkey: DBSettings.commandItems,
-  handler: (message: MessageType, args: string[]) => {
+  handler: (message, args, command) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -117,6 +117,7 @@ commandHandler.registerCommand('items', {
 
     try {
       const profile = profileLink({
+        command,
         players:
           gsiHandlers.get(client.token)?.players?.matchPlayers ||
           getCurrentMatchPlayers(client.gsi),

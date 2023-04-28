@@ -9,7 +9,7 @@ import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js
 import { getHeroById, heroColors, translatedColor } from '../../dota/lib/heroes.js'
 import { isArcade } from '../../dota/lib/isArcade.js'
 import { chatClient } from '../index.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 import { profileLink } from './stats.js'
 
 const redisClient = RedisClient.getInstance()
@@ -73,7 +73,7 @@ function speakHeroStats({
 commandHandler.registerCommand('hero', {
   onlyOnline: true,
   dbkey: DBSettings.commandHero,
-  handler: (message: MessageType, args: string[]) => {
+  handler: (message, args, command) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -106,6 +106,7 @@ commandHandler.registerCommand('hero', {
 
       const ourHero = !args.length
       const profile = profileLink({
+        command,
         players: gsiHandle.players?.matchPlayers || getCurrentMatchPlayers(client.gsi),
         locale: client.locale,
         currentMatchId: client.gsi.map.matchid,

@@ -6,7 +6,7 @@ import { getHeroByName, getHeroNameById, heroColors } from '../../dota/lib/heroe
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../index.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
 interface Player {
   heroid: number
@@ -14,15 +14,28 @@ interface Player {
 }
 
 interface ProfileLinkParams {
+  command: string
   locale: string
   currentMatchId: string
   args: string[]
   players?: Player[]
 }
 
-export function getPlayerFromArgs(args: string[], players: Player[], locale: string) {
+export function getPlayerFromArgs({
+  args,
+  players,
+  locale,
+  command,
+}: {
+  args: string[]
+  players: Player[]
+  locale: string
+  command: string
+}) {
   if (!args.length) {
-    throw new CustomError(t('invalidColor', { colorList: heroColors.join(' · '), lng: locale }))
+    throw new CustomError(
+      t('invalidColorNew', { command, colorList: heroColors.join(' · '), lng: locale }),
+    )
   }
 
   // herokey is 0-9
@@ -30,11 +43,7 @@ export function getPlayerFromArgs(args: string[], players: Player[], locale: str
   const color = args[0].toLowerCase().trim()
   const heroColorIndex = heroColors.findIndex((heroColor) => heroColor.toLowerCase() === color)
 
-  const colorKey = Number(args[0])
-  if (colorKey && colorKey >= 1 && colorKey <= 10) {
-    // 1-10 input
-    heroKey = colorKey - 1
-  } else if (heroColorIndex !== -1) {
+  if (heroColorIndex !== -1) {
     // color input
     heroKey = heroColorIndex
   } else {
@@ -45,13 +54,15 @@ export function getPlayerFromArgs(args: string[], players: Player[], locale: str
   }
 
   if (heroKey < 0 || heroKey > 9) {
-    throw new CustomError(t('invalidColor', { colorList: heroColors.join(' '), lng: locale }))
+    throw new CustomError(
+      t('invalidColorNew', { command, colorList: heroColors.join(' '), lng: locale }),
+    )
   }
 
   return { heroKey, player: players[heroKey] }
 }
 
-export function profileLink({ players, locale, currentMatchId, args }: ProfileLinkParams) {
+export function profileLink({ command, players, locale, currentMatchId, args }: ProfileLinkParams) {
   if (!currentMatchId) {
     throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
   }
@@ -64,7 +75,7 @@ export function profileLink({ players, locale, currentMatchId, args }: ProfileLi
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
   }
 
-  const { player, heroKey } = getPlayerFromArgs(args, players, locale)
+  const { player, heroKey } = getPlayerFromArgs({ args, players, locale, command })
   return { heroKey, ...player }
 }
 
@@ -72,7 +83,7 @@ commandHandler.registerCommand('stats', {
   aliases: ['check', 'profile'],
   onlyOnline: true,
 
-  handler: (message: MessageType, args: string[]) => {
+  handler: (message, args, command) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -86,6 +97,7 @@ commandHandler.registerCommand('stats', {
 
     try {
       const profile = profileLink({
+        command,
         players:
           gsiHandlers.get(client.token)?.players?.matchPlayers ||
           getCurrentMatchPlayers(client.gsi),
