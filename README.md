@@ -1,3 +1,7 @@
+## Technical Overview
+
+[Read the technical and business guide on Dotabod](/TechnicalOverview.md)
+
 ## 🚀 Setup Guide
 
 To set up the Dotabod backend services, follow these steps:
