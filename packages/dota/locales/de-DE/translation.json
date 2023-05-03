@@ -75,6 +75,7 @@
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Ungültige Heldenfarbe, Slot oder Name. Versuchen Sie 1-10 einen Teil-Heldennamen oder eine Farbe von {{colorList}}",
+  "invalidColorNew": "Invalid command. Try `!{{command}} crystal` for Crystal Maiden or `!{{command}} teal` from {{colorList}}",
   "invalidMmr": "Ungültiger Befehl. Versuch !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} lost the {{count}} kill streak BibleThump",
@@ -117,6 +118,8 @@
   "npRemove": "Versuche !np remove <steam32id>",
   "npRemoved": "{{steamid}} für diesen Kanal aus !np entfernt",
   "npUnknown": "{{steamid}} konnte für diesen Kanal nicht gefunden werden",
+  "offline": "offline",
+  "online": "online",
   "overlayMissing": "Overlay nicht gefunden. Der {{command}} -Befehl erfordert das Hinzufügen des Overlay.",
   "ping": "Pong EZ Clap",
   "pleb": "One pleb IN 👇",
@@ -141,11 +144,11 @@
   "resetwl": "Resetting win/loss to 0 for {{channel}}",
   "roshanAlive": "Roshan is currently alive Happi",
   "roshanCount": {
-    "1": "Rosh-Tode: 1 · Nächster Drop: Agh's Shard.",
-    "2": "Rosh-Tode: 2 · Nächster Drop: Cheese und Agh's Segen oder refresher Shard.",
-    "3": "Rosh-Tode: 3 · Nächster Drop: Cheese, Agh's Segen und refresher Shard.",
-    "more_one": "Rosh-Tode: {{count}} · Nächster Drop: Cheese, Agh's Segen und Refresher Shard.",
-    "more_other": "Rosh-Tode: {{count}} · Nächster Drop: Cheese, Agh's Segen und Refresher Shard."
+    "1": "Rosh deaths: 1 · Next drop: cheese.",
+    "2": "Rosh deaths: 2 · Next drop: cheese, agh's blessing or refresher shard.",
+    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing or refresher shard.",
+    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
+    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
   "roshanKilled": "Roshan wurde getötet! Nächster Roshan zwischen {{min}} und {{max}}",
   "seconds_one": "{{count}} Sekunde",
@@ -154,6 +157,7 @@
   "setStreamDelayNoArgs": "Ungültige Streamverzögerung, !setdelay <seconds> verwenden",
   "setStreamDelayRemoved": "Streamverzögerung wird entfernt",
   "stream": "$t(stream_on)",
+  "stream_none": "No changes made, user already {{state}}. Try !{{command}} to toggle.",
   "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
   "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "streamDelay": "Streamverzögerung: $t(seconds, {\"count\": {{seconds}} })",
@@ -181,7 +185,7 @@
   "unknownSteam": "Konnte kein Steam-Account finden. Folge Schritt 2 des Setups, spiele ein Bot-Spiel und versuche es erneut.",
   "unranked": "Unranked",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "MMR wurde auf {{mmr}}aktualisiert. !fixparty für Gruppenspiel und !fixdd für Doubledown",
+  "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "Aktualisierte MMR:{{mmr}}",
   "updateMmrMulti": "Mehrere Steam-Konten, aktualisieren Sie den aktuell angemeldeten mit ({{steamId}})",
   "version": {

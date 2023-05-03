@@ -75,6 +75,7 @@
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Helytelen hero szín, slot vagy név. Próbáld 1-10ig, a hős nevét vagy a színt innen: {{colorList}}",
+  "invalidColorNew": "Invalid command. Try `!{{command}} crystal` for Crystal Maiden or `!{{command}} teal` from {{colorList}}",
   "invalidMmr": "Érvénytelen parancs. Próbáld így: !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} {{count}} killstreakjének vége. {{emote}}",
@@ -117,6 +118,8 @@
   "npRemove": "Próbáld az !np remove <steam32id>",
   "npRemoved": "{{steamid}} ismert játékos eltávolítva a csatornáról. (!np)",
   "npUnknown": "Nem található {{steamid}} azonosítójú játékos ezen a csatornán",
+  "offline": "offline",
+  "online": "online",
   "overlayMissing": "Overlay nem található. A {{command}} parancs eléréséhez szükség van az overlay hozzáadásához.",
   "ping": "Pong {{emote}}",
   "pleb": "Pong {{emote}}",
@@ -141,11 +144,11 @@
   "resetwl": "Win/loss arány visszaállítva 0-ra {{channel}}",
   "roshanAlive": "A Roshan életben van {{emote}}",
   "roshanCount": {
-    "1": "1. Roshan halál · Következő drop: aghanim's shard.",
-    "2": "2. Roshan halál · Következő drop: cheese és aghanim's blessing vagy refresher shard.",
-    "3": "3. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard.",
-    "more_one": "{{count}}. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard.",
-    "more_other": "{{count}}. Roshan halál · Következő drop: cheese, aghanim's blessing és refresher shard."
+    "1": "Rosh deaths: 1 · Next drop: cheese.",
+    "2": "Rosh deaths: 2 · Next drop: cheese, agh's blessing or refresher shard.",
+    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing or refresher shard.",
+    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
+    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
   "roshanKilled": "Roshan meghalt! Következő Roshan {{min}} és {{max}} perc között várható",
   "seconds_one": "{{count}} másodperc",
@@ -154,6 +157,7 @@
   "setStreamDelayNoArgs": "Helytelen stream delay, próbáld így: !setdelay <seconds>",
   "setStreamDelayRemoved": "Stream delay eltávoltva",
   "stream": "$t(stream_on)",
+  "stream_none": "No changes made, user already {{state}}. Try !{{command}} to toggle.",
   "stream_off": "Dotabot {{channel}} csatornáját mostantól offlineként kezeli. !online a visszavonáshoz.",
   "stream_on": "Dotabot {{channel}} csatornáját mostantól onlineként kezeli. !offline a visszavonáshoz.",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
@@ -181,7 +185,7 @@
   "unknownSteam": "Steam felhasználó nem található. Próbálj egy bot mérkőzést játszani, hogy hozzáadjam az accountod a Dotabodhoz.",
   "unranked": "Nem rangsorolt",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "MMR frissítve {{mmr}}-re. Próbáld a !fixparty -t party és !fixdd -t doubledown esetén",
+  "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "MMR frissítve {{mmr}}-re",
   "updateMmrMulti": "Több steam account található, frissítem a jelenleg belépettet: ({{steamId}})",
   "version": {
