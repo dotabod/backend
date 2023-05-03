@@ -24,7 +24,7 @@ Streamers have several manual processes:
    2. Current MMR
    3. Notable players streamer is playing with
    4. What items other players have
-5. Fully localized in collaberation with Dota 2 players in their native languages
+5. Fully localized in collaboration with Dota 2 players in their native languages
 
 ## Challenges
 
