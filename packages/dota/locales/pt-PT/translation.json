@@ -77,6 +77,7 @@
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
+  "invalidColorNew": "Invalid command. Try `!{{command}} crystal` for Crystal Maiden or `!{{command}} teal` from {{colorList}}",
   "invalidMmr": "Comando invalido. Tente !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
@@ -122,6 +123,8 @@
   "npRemove": "Tente !np remove <steam32id>",
   "npRemoved": "Removido {{steamid}} do !np para este canal",
   "npUnknown": "{{steamid}} não encontrado para este canal",
+  "offline": "offline",
+  "online": "online",
   "overlayMissing": "Overlay não encontrada. O {{command}} requer que uma overlay seja adicionada.",
   "ping": "Pong {{emote}}",
   "pleb": "Um pleb IN {{emote}}",
@@ -147,12 +150,12 @@
   "resetwl": "Reiniciando vitória/derrota em 0 para {{channel}}",
   "roshanAlive": "Roshan no momento está vivo {{emote}}",
   "roshanCount": {
-    "1": "Mortes do Roshan: 1 · próximo drop: fragmento de aghanim.",
-    "2": "Mortes do Roshan: 2 · Próximo drop: Queijo e benção de aghanim ou fragmento restaurador.",
-    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing, and refresher shard.",
-    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard.",
+    "1": "Rosh deaths: 1 · Next drop: cheese.",
+    "2": "Rosh deaths: 2 · Next drop: cheese, agh's blessing or refresher shard.",
+    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing or refresher shard.",
+    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
     "more_many": "",
-    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
   "roshanKilled": "Roshan morto! Próximo roshan em {{min}} e {{max}}",
   "seconds_one": "{{count}} segundo",
@@ -161,6 +164,7 @@
   "setStreamDelayNoArgs": "Intervalo de atraso da transmissão inválido, digite !setdelay <seconds>",
   "setStreamDelayRemoved": "Removendo atraso da transmissão",
   "stream": "$t(stream_on)",
+  "stream_none": "No changes made, user already {{state}}. Try !{{command}} to toggle.",
   "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
   "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "streamDelay": "Atraso da transmissão: $t(seconds, {\"count\": {{seconds}} })",
@@ -190,7 +194,7 @@
   "unknownSteam": "Conta steam não encontrado. Jogar contra bot para salvar sua conta em Dotabod!",
   "unranked": "Não ranqueada",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "MMR atualizado para {{mmr}}. Digite !fixparty para alterar para partida em equipe, ou !fixdd para partida com dobro mmr",
+  "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "MMR atualizado para {{mmr}}",
   "updateMmrMulti": "Vários contas steam, atualizando a logada no momento com ({{steamId}})",
   "version": {

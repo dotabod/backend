@@ -77,6 +77,7 @@
     "winrateStreamer_other": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partidas."
   },
   "invalidColor": "Espaço, nome ou cor de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
+  "invalidColorNew": "Comando inválido. Tente `!{{command}} cristal` para Crystal Maiden ou `!{{command}} teal` de {{colorList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
@@ -122,6 +123,8 @@
   "npRemove": "Tente !np remove <steam32id>",
   "npRemoved": "{{steamid}} foi removido do !np deste canal",
   "npUnknown": "{{steamid}} não encontrado para este canal",
+  "offline": "offline",
+  "online": "online",
   "overlayMissing": "Overlay não encontrada. O comando {{command}} requere que a overlay esteja adicionada.",
   "ping": "Pong {{emote}}",
   "pleb": "Pobre aqui {{emote}}",
@@ -161,6 +164,7 @@
   "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <seconds> .",
   "setStreamDelayRemoved": "Removendo delay de transmissão",
   "stream": "$t(stream_on)",
+  "stream_none": "Nenhuma alteração foi feita, usuário já {{state}}. Tente !{{command}} para alternar.",
   "stream_off": "Dotabod tratará {{channel}} como offline. Digite !online para desfazer",
   "stream_on": "Dotabod tratará {{channel}} como online. Digite !offline para desfazer",
   "streamDelay": "Delay de transmissão: $t(seconds, {\"count\": {{seconds}} })",
@@ -190,7 +194,7 @@
   "unknownSteam": "Conta da steam não encontrada. Siga os passos 2 do setup , tente jogar uma partida contra bots para salvar sua conta em Dotabod!",
   "unranked": "Não ranqueada",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "MMR atualizado para {{mmr}}. Digite !fixparty para alterar para MMR em equipe, ou !fixdd para partida com dobro de MMR",
+  "updateMmr_auto": "MMR atualizado para {{mmr}}",
   "updateMmr_manual": "MMR atualizado para {{mmr}}",
   "updateMmrMulti": "Múltiplas contas da steam, atualizando a conta logada no momento ({{steamId}})",
   "version": {

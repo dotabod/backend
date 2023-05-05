@@ -75,6 +75,7 @@
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Virheellinen sankarin väri, paikka tai nimi. Kokeile 1-10, osittaista sankarin nimeä tai väriä näistä {{colorList}}",
+  "invalidColorNew": "Invalid command. Try `!{{command}} crystal` for Crystal Maiden or `!{{command}} teal` from {{colorList}}",
   "invalidMmr": "Virheellinen komento. Kokeile !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} menetti {{count}} tappoputken {{emote}}",
@@ -117,6 +118,8 @@
   "npRemove": "Kokeile !np remove <steam32id>",
   "npRemoved": "{{steamid}} poistettu tämän kanavan !np:stä",
   "npUnknown": "Tällä kanavalla ei löytynyt {{steamid}}",
+  "offline": "offline",
+  "online": "online",
   "overlayMissing": "Peittokuvaa ei löytynyt. {{command}}-komento vaatii peittokuvan lisäämisen.",
   "ping": "Pong {{emote}}",
   "pleb": "Yksi pleb SISÄÄN {{emote}}",
@@ -141,11 +144,11 @@
   "resetwl": "Nollataan voitto/tappio-arvo kanavalle {{channel}}",
   "roshanAlive": "Roshan on tällä hetkellä elossa {{emote}}",
   "roshanCount": {
-    "1": "Roshanin kuolemat: 1 · Seuraava droppi: agh's shard.",
-    "2": "Roshanin kuolemat: 2 · Seuraava droppi: juusto ja agh's blessing tai refresher shard.",
-    "3": "Roshanin kuolemat: 3 · Seuraava droppi: juusto, agh's blessing ja refresher shard.",
-    "more_one": "Roshanin kuolemat: {{count}} · Seuraava droppi: juusto, agh's blessing ja refresher shard.",
-    "more_other": "Roshanin kuolemat: {{count}} · Seuraava droppi: juusto, agh's blessing ja refresher shard."
+    "1": "Rosh deaths: 1 · Next drop: cheese.",
+    "2": "Rosh deaths: 2 · Next drop: cheese, agh's blessing or refresher shard.",
+    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing or refresher shard.",
+    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
+    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
   "roshanKilled": "Roshan tapettiin! Seuraava roshan {{min}} ja {{max}} välillä",
   "seconds_one": "{{count}} sekunti",
@@ -154,6 +157,7 @@
   "setStreamDelayNoArgs": "Virheellinen striimin viive, käytä !setdelay <sekuntia>",
   "setStreamDelayRemoved": "Poistetaan striimin viive",
   "stream": "$t(stream_on)",
+  "stream_none": "No changes made, user already {{state}}. Try !{{command}} to toggle.",
   "stream_off": "Dotabod kohtelee {{channel}}-kanavaa offline-tilassa. Kirjoita !online peruuttaaksesi",
   "stream_on": "Dotabod kohtelee {{channel}}-kanavaa online-tilassa. Kirjoita !offline peruuttaaksesi",
   "streamDelay": "Striimin viive: $t(seconds, {\"count\": {{seconds}} })",
@@ -181,7 +185,7 @@
   "unknownSteam": "Steam-tiliä ei löytynyt. Noudata asennuksen 2-vaihetta, pelaa bottipeli ja yritä uudelleen.",
   "unranked": "Ei rankattu",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "MMR päivitetty arvoon {{mmr}}. !fixparty jos kyseessä on ryhmäottelu ja !fixdd jos tuplaus",
+  "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "MMR päivitetty arvoon {{mmr}}",
   "updateMmrMulti": "Useita Steam-tilejä, päivittämässä sitä jolla olet tällä hetkellä kirjautuneena ({{steamId}})",
   "version": {
