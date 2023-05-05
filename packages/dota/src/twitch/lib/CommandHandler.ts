@@ -130,14 +130,6 @@ class CommandHandler {
 
     // Check if the command is enabled
     if (!this.isEnabled(message.channel.settings, options.dbkey)) {
-      chatClient.say(
-        message.channel.name,
-        t('commandDisabled', {
-          emote: 'BibleThump',
-          lng: message.channel.client.locale,
-          cmdName: `!${command}`,
-        }),
-      )
       return
     }
 
