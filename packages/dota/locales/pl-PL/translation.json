@@ -85,6 +85,7 @@
     "winrateStreamer_other": "Wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów."
   },
   "invalidColor": "Zly kolor bohatera, slot, lub nazwa. Spróbuj od 1-10,  częściową nazwę bohatera lub podaj kolor z podanych: {{colorList}}",
+  "invalidColorNew": "Nieprawidłowa komenda. Spróbuj `!{{command}} crystal` dla Crystal Maiden lub `!{{command}} Morski` from {{colorList}}",
   "invalidMmr": "Zła komenda. Spróbuj !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} stracił serię {{count}} zabójstw {{emote}}",
@@ -133,6 +134,8 @@
   "npRemove": "Spróbuj !np remove <steam32id>",
   "npRemoved": "Usunięto {{steamid}} z !np dla tego kanału",
   "npUnknown": "Nie znaleziono {{steamid}} dla tego kanału",
+  "offline": "niedostępny(a)",
+  "online": "dostępny(a)",
   "overlayMissing": "Nie znaleziono nakładki. Komenda {{command}} wymaga dodanej nakładki, aby działać poprawnie.",
   "ping": "Pong {{emote}}",
   "pleb": "Jeden pleb więcej {{emote}}",
@@ -159,9 +162,9 @@
   "resetwl": "Resetowanie wskaźnika wygranych/przegranych do 0 dla {{channel}}",
   "roshanAlive": "Roshan jest obecnie żywy {{emote}}",
   "roshanCount": {
-    "1": "Śmierci Rosha: 1 · Następny drop: odłamek Aghanima.",
+    "1": "Śmierci Rosha: 1 · Następna nagroda: serek.",
     "2": "Śmierci Rosha: 2 · Następny drop: Serek oraz Błogosławieństwo Aghanima lub Refresher Shard.",
-    "3": "Śmierci Rosha: 3 · Następny drop: Serek, Błogosławieństwo Aghanima i Refresher Shard.",
+    "3": "Śmierci Rosha: 3 · Następny drop: Serek oraz Błogosławieństwo Aghanima lub Refresher Shard.",
     "more_one": "Śmierci Rosha: {{count}} · Następny drop: Serek oraz Błogosławieństwo Aghanima lub Refresher Shard.",
     "more_few": "Śmierci Rosha: {{count}} · Następny drop: Serek oraz Błogosławieństwo Aghanima lub Refresher Shard.",
     "more_many": "Śmierci Rosha: {{count}} · Następny drop: Serek oraz Błogosławieństwo Aghanima lub Refresher Shard.",
@@ -176,6 +179,7 @@
   "setStreamDelayNoArgs": "Nieprawidłowe opóźnienie transmisji, użyj !setdelay <seconds>",
   "setStreamDelayRemoved": "Usuwam opóźnienie transmisji",
   "stream": "$t(stream_on)",
+  "stream_none": "Nie wprowadzono żadnych zmian, użytkownik już {{state}}. Spróbuj !{{command}} by przełączyć.",
   "stream_off": "Dotabod będzie traktować {{channel}} jako offline. Wpisz !online, aby cofnąć",
   "stream_on": "Dotabod będzie traktować {{channel}} jako Na Żywo. Wpisz !offline, aby cofnąć",
   "streamDelay": "Aktualnie opóźnienie transmisji: $t(seconds, {\"count\": {{seconds}} })",
@@ -207,7 +211,7 @@
   "unknownSteam": "Nie można odnaleźć konta Steam. Postępuj zgodnie z Krokiem 2 konfiguracji, zagraj z botami i spróbuj ponownie.",
   "unranked": "Nierankingowy",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "Zaktualizowano MMR na {{mmr}}. Wpisz !fixparty dla gry drużynowej lub !fixdd dla podwojenia stawki MMR",
+  "updateMmr_auto": "Zaktualizowano MMR do {{mmr}}",
   "updateMmr_manual": "Zaktualizowano MMR na {{mmr}}",
   "updateMmrMulti": "Wiele kont Steam, aktualizuję to, z którego jesteś aktualnie zalogowany ({{steamId}})",
   "version": {

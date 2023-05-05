@@ -77,6 +77,7 @@
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Slot, nombre o color de héroe inválido. Intenta del 1-10, parte del nombre del héroe o un color de {{colorList}}",
+  "invalidColorNew": "Invalid command. Try `!{{command}} crystal` for Crystal Maiden or `!{{command}} teal` from {{colorList}}",
   "invalidMmr": "Comando inválido. Usa !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} perdió la racha de {{count}} kills {{emote}}",
@@ -122,6 +123,8 @@
   "npRemove": "Usa !np remove <steam32id>",
   "npRemoved": "Eliminado {{steamid}} de !np para este canal",
   "npUnknown": "No se pudo encontrar {{steamid}} para este canal",
+  "offline": "offline",
+  "online": "online",
   "overlayMissing": "El overlay no se ha encontrado. El comando {{command}} requiere que se añada el overlay.",
   "ping": "Pong {{emote}}",
   "pleb": "Un pleb aqui {{emote}}",
@@ -147,12 +150,12 @@
   "resetwl": "Restableciendo victorias/derrotas a 0 para {{channel}}",
   "roshanAlive": "Roshan esta vivo ahora! {{emote}}",
   "roshanCount": {
-    "1": "Muertes de Roshan: 1· Siguiente drop: Fragmento de aghanim's.",
-    "2": "Muertes De Roshan: 2 · Siguiente drop: Queso, Bendición de Aghanim o Esquirla Revigorizante.",
-    "3": "Muertes De Roshan: 3 · Siguiente drop: Queso, Bendición de Aghanim y Esquirla Revigorizante.",
-    "more_one": "Muertes De Roshan: {{count}} · Siguiente drop: Queso, Bendición de Aghanim y Esquirla Revigorizante.",
+    "1": "Rosh deaths: 1 · Next drop: cheese.",
+    "2": "Rosh deaths: 2 · Next drop: cheese, agh's blessing or refresher shard.",
+    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing or refresher shard.",
+    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
     "more_many": "",
-    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing, and refresher shard."
+    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
   "roshanKilled": "¡Roshan asesinado! Siguiente roshan entre {{min}} y {{max}}",
   "seconds_one": "{{count}} segundos",
@@ -161,6 +164,7 @@
   "setStreamDelayNoArgs": "Stream Delay no valido, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Eliminando el Delay del stream",
   "stream": "$t(stream_on)",
+  "stream_none": "No changes made, user already {{state}}. Try !{{command}} to toggle.",
   "stream_off": "Dotabod pondrá {{channel}} como fuera de línea, Escribir !online para deshacer",
   "stream_on": "Dotabod pondrá {{channel}} como en línea, Escribir !offline para deshacer",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
@@ -190,7 +194,7 @@
   "unknownSteam": "No se ha podido encontrar la cuenta de steam. Intenta jugar primero una partida de práctica para guardar tu cuenta en Dotabod",
   "unranked": "Unranked",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "Actualizado MMR a {{mmr}}. !fixparty para grupo y !fixdd para apostar doble",
+  "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "Actualizado MMR a {{mmr}}",
   "updateMmrMulti": "Múltiples cuentas de steam, actualización de la que está conectado ahora con ({{steamId}})",
   "version": {

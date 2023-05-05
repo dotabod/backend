@@ -75,6 +75,7 @@
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Geçersiz kahraman rengi, yuvası veya adı. 1-10, kısmi bir kahraman adı veya {{colorList}}'ten bir renk deneyin",
+  "invalidColorNew": "Invalid command. Try `!{{command}} crystal` for Crystal Maiden or `!{{command}} teal` from {{colorList}}",
   "invalidMmr": "Geçersiz komut. !set mmr 1234 komutunu deneyin",
   "killstreak": {
     "lost_one": "{{- heroName}} {{count}} kill streak'i kaybetti {{emote}}",
@@ -117,6 +118,8 @@
   "npRemove": "!np remove <steam32id> deneyebilirsiniz",
   "npRemoved": "Bu kanal için !np {{steamid}} kaldırıldı",
   "npUnknown": "Kanalın {{steamid}} 'si bulunamadı",
+  "offline": "offline",
+  "online": "online",
   "overlayMissing": "Kaplama bulunamadı. {{command}} komutu kaplamanın eklenmesini gerektirir.",
   "ping": "Pong {{emote}}",
   "pleb": "Bir pleb {{emote}}",
@@ -141,11 +144,11 @@
   "resetwl": "{{channel}} için galibiyet/mağlubiyet sıfırlanıyor",
   "roshanAlive": "Roshan şu anda yaşıyor{{emote}}",
   "roshanCount": {
-    "1": "Roshan ölüm sayısı: 1 Bir sonraki drop: aghanims shard.",
-    "2": "Roshan ölüm sayısı: 2 Bir sonraki drop: chese ve aghanim bless veya refresher shard.",
-    "3": "Roshan ölüm sayısı: 3 Bir sonraki drop: cheese, aghanims shard ve refresher shard.",
-    "more_one": "Roshan ölüm sayısı:{{count}} Bir sonraki drop: cheese, aghanims shard ve refresher shard.",
-    "more_other": "Roshan ölüm sayısı:{{count}} Bir sonraki drop: cheese, aghanims shard ve refresher shard."
+    "1": "Rosh deaths: 1 · Next drop: cheese.",
+    "2": "Rosh deaths: 2 · Next drop: cheese, agh's blessing or refresher shard.",
+    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing or refresher shard.",
+    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
+    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
   "roshanKilled": "Roshan öldürüldü! Bir sonraki Roshan {{min}} ve {{max}} dakika arasında yeniden doğacak",
   "seconds_one": "{{count}} saniye",
@@ -154,6 +157,7 @@
   "setStreamDelayNoArgs": "Geçersiz yayın gecikmesi, !setdelay <seconds> komutunu kullanın",
   "setStreamDelayRemoved": "Yayın gecikmesi kaldırılıyor",
   "stream": "$t(stream_on)",
+  "stream_none": "No changes made, user already {{state}}. Try !{{command}} to toggle.",
   "stream_off": "Dotabod {{channel}} kanalını çevrimdışı olarak görüyor. Geri almak için !online yazın",
   "stream_on": "Dotabod {{channel}} kanalını çevrimiçi olarak görüyor. Geri almak için !offline yazın",
   "streamDelay": "Yayın gecikmesi: $t(seconds, {\"count\": {{seconds}} })",
@@ -181,7 +185,7 @@
   "unknownSteam": "Steam hesabı bulunamadı. Kurulumun 2. adımını uygulayın, bir bot maçı yapın ve tekrar deneyin.",
   "unranked": "Derecesiz",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "MMR'ı {{mmr}} ayarla. !fixparty komutunu kullanarak party maçlar ve !fixdd komutunu kullanarak doubledown ayarlayabilirsin",
+  "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "Güncel MMR {{mmr}} ayarlandı",
   "updateMmrMulti": "Çoklu steam hesabı, {{steamId}} hesabı mevcut açık olan hesap olarak güncellenecektir",
   "version": {

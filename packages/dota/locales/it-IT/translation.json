@@ -77,6 +77,7 @@
     "winrateStreamer_other": "Il winrate è {{winrate}} con {{- heroName}} in {{timeperiod}} e {{count}} partite."
   },
   "invalidColor": "Colore, slot o nome dell'eroe non validi. Prova 1-10, parte del nome, o un colore da {{colorList}}",
+  "invalidColorNew": "Comando non valido. Prova `!{{command}} crystal` per Crystal Maiden o `!{{command}} teal` da {{colorList}}",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} ha perso la kill streak di {{count}} {{emote}}",
@@ -122,6 +123,8 @@
   "npRemove": "Prova !np remove <steam32id>",
   "npRemoved": "Rimosso {{steamid}} da !np per questo canale",
   "npUnknown": "Impossibile trovare {{steamid}} per questo canale",
+  "offline": "offline",
+  "online": "online",
   "overlayMissing": "Overlay non trovato. Il comando {{command}} richiede l'aggiunta dell'overlay.",
   "ping": "Pong {{emote}}",
   "pleb": "Un plebeo scrive {{emote}}",
@@ -147,12 +150,12 @@
   "resetwl": "Reimpostando win/loss a 0 per {{channel}}",
   "roshanAlive": "Roshan è vivo {{emote}}",
   "roshanCount": {
-    "1": "Morti di Rosh: 1 · Prossimo drop: Aghanim's Shard.",
-    "2": "Morti di Rosh: 2 · Prossimo drop: Cheese e Aghanim Blessing o Refresher Shard.",
-    "3": "Morti di Rosh: 3 · Prossimo drop: Cheese, Aghanim Blessing e Refresher Shard.",
-    "more_one": "Morti di Rosh: {{count}} · Prossimo drop: Cheese, Aghanim's Blessing e Refresher Shard.",
+    "1": "Morti di Rosh: 1 · Prossimo drop: cheese.",
+    "2": "Morti di Rosh: 2 · Prossimo drop: cheese, agh's blessing o refresher shard.",
+    "3": "Morti di Rosh: 3 · Prossimo drop: cheese, agh's blessing o refresher shard.",
+    "more_one": "Morti di Rosh: {{count}} · Prossimo drop: cheese, agh's blessing o refresher shard.",
     "more_many": "",
-    "more_other": "Morti di Rosh: {{count}} · Prossimo drop: Cheese, Aghanim's Blessing e Refresher Shard."
+    "more_other": "Morti di Rosh: {{count}} · Prossimo drop: cheese, agh's blessing o refresher shard."
   },
   "roshanKilled": "Roshan è stato ucciso! Il prossimo Roshan sarà tra {{min}} e {{max}}",
   "seconds_one": "{{count}} secondo",
@@ -161,6 +164,7 @@
   "setStreamDelayNoArgs": "Delay della stream invalido, usa !setdelay <seconds>",
   "setStreamDelayRemoved": "Rimuovendo il delay dello stream",
   "stream": "$t(stream_on)",
+  "stream_none": "Nessun cambiamento, l'utente è già {{state}}. Usa !{{command}} per cambiare.",
   "stream_off": "Dotabod considererà {{channel}} offline. Digita !online per annullare",
   "stream_on": "Dotabod considererà {{channel}} online. Digita !offline per annullare",
   "streamDelay": "Delay dello stream: $t(seconds, {\"count\": {{seconds}} })",
@@ -190,7 +194,7 @@
   "unknownSteam": "Impossibile trovare l'account Steam. Prova a giocare una partita di prova contro i bot per salvare il tuo account su Dotabod!",
   "unranked": "Non Classificata",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "Aggiornato MMR a {{mmr}}. !fixparty per party e !fixdd per doubledown",
+  "updateMmr_auto": "MMR aggiornato a {{mmr}}",
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
   "version": {
