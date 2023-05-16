@@ -5,7 +5,7 @@ import { t } from 'i18next'
 import { io } from 'socket.io-client'
 
 import getDBUser from '../db/getDBUser.js'
-import { modMode, plebMode } from '../dota/lib/consts.js'
+import { plebMode } from '../dota/lib/consts.js'
 import { logger } from '../utils/logger.js'
 import commandHandler from './lib/CommandHandler.js'
 
@@ -51,13 +51,6 @@ twitchChat.on(
         channel,
         t('pleb', { emote: 'EZ Clap', context: 'off', name: user, lng: userInfo.locale }),
       )
-      return
-    }
-
-    // Don't allow non mods to message
-    if (modMode.has(channelId) && !userInfo.isMod && !userInfo.isBroadcaster) {
-      // TODO: Disabling this feature until we fix the deleteMessage deprecation notice
-      // chatClient.deleteMessage(channel, messageId)
       return
     }
 
