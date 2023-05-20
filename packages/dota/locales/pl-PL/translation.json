@@ -85,7 +85,7 @@
     "winrateStreamer_other": "Wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów."
   },
   "invalidColor": "Zly kolor bohatera, slot, lub nazwa. Spróbuj od 1-10,  częściową nazwę bohatera lub podaj kolor z podanych: {{colorList}}",
-  "invalidColorNew": "Nieprawidłowa komenda. Spróbuj `!{{command}} crystal` dla Crystal Maiden lub `!{{command}} Morski` from {{colorList}}",
+  "invalidColorNew": "Nieprawidłowa komenda. Spróbuj `!{{command}} crystal` dla Crystal Maiden lub `!{{command}} teal` spośród {{colorList}}",
   "invalidMmr": "Zła komenda. Spróbuj !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} stracił serię {{count}} zabójstw {{emote}}",
