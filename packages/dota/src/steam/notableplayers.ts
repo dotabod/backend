@@ -55,7 +55,7 @@ export async function notablePlayers({
           $in: accountIds,
         },
         channel: {
-          $in: [twitchChannelId, null],
+          $in: [null, twitchChannelId],
         },
       },
       {
