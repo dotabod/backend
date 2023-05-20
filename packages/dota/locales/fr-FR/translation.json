@@ -15,7 +15,7 @@
   "betaTester_on": "{{channel}} est maintenant un bêta-testeur. Visitez discord.dotabod.com pour voir les fonctionnalités bêta. Tapez !beta pour annuler",
   "bets": {
     "error": "Impossible d'ouvrir les paris. $t(refreshToken)",
-    "lost": "We have lost, gg nt {{emote}} go next",
+    "lost": "Nous avons perdu, gg nt {{emote}} go next",
     "notScored": "Match non compté {{emote}} Aucun changement de MMR pour le match {{matchId}}.",
     "open": "Les paris sont ouverts {{emote}}",
     "remade": "Héros swap {{emote}} Les paris pour {{- oldHeroName}} ont été remboursé, nouveaux paris pour {{- newHeroName}} ouverts {{emote2}}",
