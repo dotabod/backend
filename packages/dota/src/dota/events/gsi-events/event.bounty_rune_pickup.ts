@@ -55,10 +55,18 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
 
     const bountyHeroNamesString = Object.keys(bountyHeroNames)
       .map((heroName) => {
-        const count = bountyHeroNames[heroName]
-        return count > 1 ? `${count}x ${heroName}` : heroName
+        const count = bountyHeroNames[heroName];
+        return count > 1 ? `${count}x ${heroName}` : heroName;
       })
-      .join(', ')
+      .reduce((acc, heroName, index, array) => {
+        if (array.length === 2 && index === 1) {
+          return `${acc} and ${heroName}`;
+        } else if (index === array.length - 1) {
+          return `${acc}, and ${heroName}`;
+        } else {
+          return `${acc}, ${heroName}`;
+        }
+      });
 
     dotaClient.bountyTimeout = setTimeout(() => {
       dotaClient.say(
