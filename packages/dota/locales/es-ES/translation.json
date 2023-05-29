@@ -14,7 +14,7 @@
   "betaTester_off": "{{channel}} ya no es beta tester. Escribe !beta para unirte de nuevo",
   "betaTester_on": "{{channel}} es ahora un beta tester. Visita discord.dotabod.com para ver las características de la beta. Escribe !beta para deshacer",
   "bets": {
-    "error": "Unable to open bets. $t(refreshToken)",
+    "error": "No se pueden abrir las apuestas. $t(refreshToken)",
     "lost": "Hemos perdido",
     "notScored": "Mecha no puntuado {{emote}} No añadir o quitar MMR para el partido {{matchId}}.",
     "open": "Apuestas abiertas {{emote}}",
@@ -77,7 +77,7 @@
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Slot, nombre o color de héroe inválido. Intenta del 1-10, parte del nombre del héroe o un color de {{colorList}}",
-  "invalidColorNew": "Invalid command. Try `!{{command}} crystal` for Crystal Maiden or `!{{command}} teal` from {{colorList}}",
+  "invalidColorNew": "Comando inválido. Prueba `!{{command}} crystal` para Crystal Maiden o `!{{command}} teal` de {{colorList}}",
   "invalidMmr": "Comando inválido. Usa !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} perdió la racha de {{count}} kills {{emote}}",
@@ -123,8 +123,8 @@
   "npRemove": "Usa !np remove <steam32id>",
   "npRemoved": "Eliminado {{steamid}} de !np para este canal",
   "npUnknown": "No se pudo encontrar {{steamid}} para este canal",
-  "offline": "offline",
-  "online": "online",
+  "offline": "desconectado",
+  "online": "en línea",
   "overlayMissing": "El overlay no se ha encontrado. El comando {{command}} requiere que se añada el overlay.",
   "ping": "Pong {{emote}}",
   "pleb": "Un pleb aqui {{emote}}",
@@ -146,14 +146,14 @@
   "ranked_no": "Nope este juego no está clasificado",
   "ranked_yes": "Sí, este juego está clasificado",
   "refresh": "Recargando superposición...",
-  "refreshToken": "Your Twitch account needs to be reconnected to Dotabod. {{channel}} logout and login on dotabod.com to fix this.",
+  "refreshToken": "Tu cuenta de Twitch necesita ser reconectada a Dotabod. {{channel}} cierra sesión e inicia sesión en dotabod.com para solucionar esto.",
   "resetwl": "Restableciendo victorias/derrotas a 0 para {{channel}}",
   "roshanAlive": "Roshan esta vivo ahora! {{emote}}",
   "roshanCount": {
-    "1": "Rosh deaths: 1 · Next drop: cheese.",
-    "2": "Rosh deaths: 2 · Next drop: cheese, agh's blessing or refresher shard.",
-    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing or refresher shard.",
-    "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
+    "1": "Muertes de Roshan: 1· Siguiente drop: Fragmento de aghanim's.",
+    "2": "Muertes De Roshan: 2 · Siguiente drop: Queso, Bendición de Aghanim o Esquirla Revigorizante.",
+    "3": "Muertes De Roshan: 3 · Siguiente drop: Queso, Bendición de Aghanim o Esquirla Revigorizante.",
+    "more_one": "Muertes De Roshan: {{count}} · Siguiente drop: Queso, Bendición de Aghanim y Esquirla Revigorizante.",
     "more_many": "",
     "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
@@ -164,7 +164,7 @@
   "setStreamDelayNoArgs": "Stream Delay no valido, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Eliminando el Delay del stream",
   "stream": "$t(stream_on)",
-  "stream_none": "No changes made, user already {{state}}. Try !{{command}} to toggle.",
+  "stream_none": "No se han hecho cambios, el usuario ya {{state}}. ¡Inténtalo!{{command}} para alternar.",
   "stream_off": "Dotabod pondrá {{channel}} como fuera de línea, Escribir !online para deshacer",
   "stream_on": "Dotabod pondrá {{channel}} como en línea, Escribir !offline para deshacer",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
@@ -182,9 +182,9 @@
   "toggleMatch_single": "Cambiando esta mecha a apostar mmr normalmente: {{- url}} Escriba !fixdd para deshacer",
   "toggleMatch_solo": "Cambiando este partido a solo mmr: {{- url}} Escriba !fixparty para deshacer",
   "translated": {
-    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
+    "by_one": "Dotabod está traducido por {{- translators}}. ¿Quieres ayudar a traducir o ver un error? Únete a nuestro canal de #traducciones de Discord {{- url}}",
     "by_many": "",
-    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
+    "by_other": "Dotabod está traducido por {{- translators}}. ¿Quieres ayudar a traducir o ver un error? Únete a nuestro canal de #traducciones de Discord {{- url}}"
   },
   "treadToggle_one": "Cambiamos las pisadas {{count}} vez para ahorrar un total de {{manaCount}} maná este partido.",
   "treadToggle_many": "",
@@ -192,9 +192,9 @@
   "uknownMmr": "Aún no conozco el MMR de {{channel}}. Mods tienen que !setmmr 1234 o establecerlo en {{- url}}",
   "unknown": "Desconocido",
   "unknownSteam": "No se ha podido encontrar la cuenta de steam. Intenta jugar primero una partida de práctica para guardar tu cuenta en Dotabod",
-  "unranked": "Unranked",
+  "unranked": "Sin clasificar",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "Updated MMR to {{mmr}}",
+  "updateMmr_auto": "MMR actualizado a {{mmr}}",
   "updateMmr_manual": "Actualizado MMR a {{mmr}}",
   "updateMmrMulti": "Múltiples cuentas de steam, actualización de la que está conectado ahora con ({{steamId}})",
   "version": {
