@@ -54,7 +54,7 @@
   "dotabod": "Soy un bot hecho por {{author}}. Mas información {{- url}}",
   "gameNotFound": "Juego no encontrado",
   "gpm_zero": "",
-  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_one": "OPM en vivo: {{num}}. {{heroKills}} asesinatos de héroes, {{creepKills}} asesinatos de creeps.",
   "gpm_other": "GPM en vivo:{{num}}. {{heroKills}} de matando Héroes. {{creepKills}} de matando grimas.",
   "heroItems": {
     "empty": "(2m de retraso) No se encontraron items para {{- heroName}}",
