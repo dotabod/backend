@@ -75,7 +75,7 @@
     "winrateStreamer_other": "Siegquote ist {{winrate}}% mit {{- heroName}} {{timeperiod}} von {{count}} spielen."
   },
   "invalidColor": "Ungültige Heldenfarbe, Slot oder Name. Versuchen Sie 1-10 einen Teil-Heldennamen oder eine Farbe von {{colorList}}",
-  "invalidColorNew": "Ungültiger Befehl. Versuche `!{{command}} Kristall` für Crystal Maiden oder `!{{command}} Blaugrün` von {{colorList}}",
+  "invalidColorNew": "Ungültiger Befehl. Versuche `!{{command}} Crystal` für Crystal Maiden oder `!{{command}} teal` von {{colorList}}",
   "invalidMmr": "Ungültiger Befehl. Versuch !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} lost the {{count}} kill streak BibleThump",
