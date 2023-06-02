@@ -77,7 +77,7 @@
     "winrateStreamer_other": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partidas."
   },
   "invalidColor": "Espaço, nome ou cor de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
-  "invalidColorNew": "Comando inválido. Tente `!{{command}} cristal` para Crystal Maiden ou `!{{command}} teal` de {{colorList}}",
+  "invalidColorNew": "Comando inválido. Tente `!{{command}} Crystal` para Crystal Maiden ou `!{{command}} teal` de {{colorList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
