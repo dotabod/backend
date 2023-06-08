@@ -24,6 +24,6 @@ if (($(echo "$MEMORY_USAGE_MiB > $MEMORY_LIMIT" | bc -l))); then
     echo "Dry run: Would restart the 'dota' container due to high memory usage."
   else
     # Restart the "dota" container using docker-compose
-    docker compose restart dota
+    docker restart "$CONTAINER_ID"
   fi
 fi
