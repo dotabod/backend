@@ -140,13 +140,13 @@
   "ranked_no": "Nej, denna match är inte rankad",
   "ranked_yes": "Ja, denna match är rankad",
   "refresh": "Uppdaterar överlägg...",
-  "refreshToken": "Your Twitch account needs to be reconnected to Dotabod. {{channel}} logout and login on dotabod.com to fix this.",
+  "refreshToken": "Ditt Twitch-konto måste återanslutas till Dotabod. {{channel}} logga ut och logga in på dotabod.com för att åtgärda detta.",
   "resetwl": "Återställer vinst/förlust till 0 för {{channel}}",
   "roshanAlive": "Roshan lever för tillfället {{emote}}",
   "roshanCount": {
-    "1": "Rosh deaths: 1 · Next drop: cheese.",
-    "2": "Rosh deaths: 2 · Next drop: cheese, agh's blessing or refresher shard.",
-    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing or refresher shard.",
+    "1": "Rosh död: 1 gång · Nästa droppar: cheese.",
+    "2": "Rosh död: 2 gånger · Nästa droppar: cheese, agh's blessing eller refresher shard.",
+    "3": "Rosh död: 3 gånger · Nästa droppar: cheese, agh's blessing eller refresher shard.",
     "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
     "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
@@ -185,7 +185,7 @@
   "unknownSteam": "Kunde inte hitta Steam-kontot. Följ steg 2 i konfigurationen, spela en bot match, och försök igen.",
   "unranked": "Orankad",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "Updated MMR to {{mmr}}",
+  "updateMmr_auto": "Uppdaterade MMR till {{mmr}}",
   "updateMmr_manual": "Uppdaterade MMR till {{mmr}}",
   "updateMmrMulti": "Flera Steam-konton, uppdaterar den du är inloggad med ({{steamId}})",
   "version": {
