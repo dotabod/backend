@@ -8,7 +8,7 @@ commandHandler.registerCommand('setmmr', {
   aliases: ['mmr=', 'mmrset'],
   permission: 2,
   cooldown: 0,
-  onlyOnline: true,
+  onlyOnline: false,
   handler: (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
