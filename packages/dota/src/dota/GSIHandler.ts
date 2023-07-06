@@ -480,7 +480,7 @@ export class GSIHandler {
       return
     }
 
-    const mmrSize = isParty ? 20 : 30
+    const mmrSize = isParty ? 20 : 25
     const newMMR = this.getMmr() + (increase ? mmrSize : -mmrSize)
     if (this.client.steam32Id) {
       const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], this.client.settings)

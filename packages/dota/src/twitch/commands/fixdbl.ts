@@ -14,7 +14,7 @@ interface DoubledownMmr {
 }
 
 export function toggleDoubledownMmr({ currentMmr, isParty, didWin, wasDoubledown }: DoubledownMmr) {
-  const change = isParty ? 20 : 30
+  const change = isParty ? 20 : 25
   return currentMmr + change * (didWin === wasDoubledown ? -1 : 1)
 }
 

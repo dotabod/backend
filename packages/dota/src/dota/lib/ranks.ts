@@ -100,7 +100,7 @@ export async function getRankDetail(mmr: string | number, steam32Id?: number | n
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const nextMMR = nextRank?.range[0] || myRank?.range[1]
   const mmrToNextRank = nextMMR - mmrNum
-  const winsToNextRank = Math.ceil(mmrToNextRank / 30)
+  const winsToNextRank = Math.ceil(mmrToNextRank / 25)
 
   return {
     mmr: mmrNum,
@@ -148,7 +148,7 @@ export async function getRankDescription({
     return myRank.title
   }
 
-  const count = mmrToNextRank <= 30 ? 1 : winsToNextRank
+  const count = mmrToNextRank <= 25 ? 1 : winsToNextRank
   const nextAt = t('rank.nextRankAt', { lng: locale })
   const nextIn = t('rank.nextRankIn', {
     emote: 'peepoClap',

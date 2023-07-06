@@ -57,7 +57,7 @@ export async function getWL({ lng, channelId, mmrEnabled, startDate }: WL) {
           }
 
           const wonMulti = match._count.won * (match.won ? 1 : -1)
-          const multiplier = match.is_party ? 20 : 30
+          const multiplier = match.is_party ? 20 : 25
           ranked.mmr += wonMulti * (match.is_doubledown ? multiplier * 2 : multiplier)
         } else {
           if (match.won) {

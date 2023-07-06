@@ -30,7 +30,7 @@ export function tellChatNewMMR({
 
   const newMmr = mmr - oldMmr
   if (mmrEnabled && tellChatNewMMR && newMmr !== 0 && mmr !== 0) {
-    const isAuto = [20, 30].includes(Math.abs(newMmr))
+    const isAuto = [20, 25].includes(Math.abs(newMmr))
     setTimeout(
       () => {
         chatClient.say(
