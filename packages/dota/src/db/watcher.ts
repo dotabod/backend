@@ -112,10 +112,20 @@ class SetupSupabase {
           client.locale = newObj.locale
           client.beta_tester = newObj.beta_tester
           client.stream_online = newObj.stream_online
+          const connectedUser = gsiHandlers.get(client.token)
 
           if (client.stream_online && !oldObj.stream_online) {
-            const connectedUser = gsiHandlers.get(client.token)
             connectedUser?.enable()
+          }
+
+          // they go offline
+          if (!client.stream_online && oldObj.stream_online) {
+            connectedUser?.disable()
+
+            // TODO: expire the cached gsi client by deleting it after N seconds
+            // perhaps if they dont come online in 30s?
+            // gsiHandlers.delete(client.token)
+            return
           }
 
           if (typeof newObj.stream_start_date === 'string') {
