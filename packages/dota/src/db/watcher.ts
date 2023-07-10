@@ -83,6 +83,16 @@ class SetupSupabase {
             }
             const authProvider = getAuthProvider()
             authProvider.addUser(newObj.providerAccountId, tokenData)
+
+            // Update the auth tokens of a cached user
+            // This fixes where i'd have to reboot the server after they relog xd
+            const client = findUser(newObj.userId)
+            if (!client?.Account) return
+            client.Account.access_token = tokenData.accessToken
+            client.Account.refresh_token = tokenData.refreshToken
+            client.Account.expires_in = tokenData.expiresIn
+            client.Account.obtainment_timestamp = new Date(tokenData.obtainmentTimestamp)
+            client.Account.scope = newObj.scope
           }
         },
       )
