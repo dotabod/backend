@@ -33,14 +33,6 @@ export async function getChannels() {
     .findMany({
       select: { settings: true, name: true },
       where: {
-        settings: {
-          none: {
-            key: 'commandDisable',
-            value: {
-              equals: true,
-            },
-          },
-        },
         NOT: {
           name: {
             in: process.env.DEV_CHANNELS?.split(',') ?? [],
