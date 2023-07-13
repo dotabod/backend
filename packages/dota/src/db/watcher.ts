@@ -231,23 +231,16 @@ class SetupSupabase {
           if (payload.eventType === 'DELETE') {
             logger.info('[WATCHER STEAM] Deleting steam account for', { name: client.name })
 
+            // A delete will reset their status in memory so they can reconnect anything
+            gsiHandlers.delete(client.token)
+
+            // We try deleting those users so they can attempt a new connection
             if (Array.isArray(oldObj.connectedUserIds)) {
               for (const connectedToken of oldObj.connectedUserIds) {
-                const connectedUser = gsiHandlers.get(connectedToken)
-                if (connectedUser) {
-                  connectedUser.client.multiAccount = undefined
-                }
+                gsiHandlers.delete(connectedToken)
               }
             }
 
-            const oldSteamIdx = client.SteamAccount.findIndex(
-              (s) => s.steam32Id === oldObj.steam32Id,
-            )
-            client.SteamAccount.splice(oldSteamIdx, 1)
-            if (client.steam32Id === oldObj.steam32Id) {
-              client.mmr = 0
-              client.steam32Id = null
-            }
             return
           }
 
