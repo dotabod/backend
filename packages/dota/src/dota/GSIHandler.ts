@@ -705,6 +705,32 @@ export class GSIHandler {
                             delay: false,
                           },
                         )
+
+                        logger.error(
+                          '[TWITCHSETUP] Failed to refresh twitch tokens in gsi handler',
+                          {
+                            twitchId: this.getChannelId(),
+                          },
+                        )
+
+                        prisma.account
+                          .update({
+                            where: {
+                              provider_providerAccountId: {
+                                provider: 'twitch',
+                                providerAccountId: this.getChannelId(),
+                              },
+                            },
+                            data: {
+                              requires_refresh: true,
+                            },
+                          })
+                          .then(() => {
+                            //
+                          })
+                          .catch((e) => {
+                            //
+                          })
                       }
                     } catch (e) {
                       // only interested in refresh token err
@@ -734,7 +760,7 @@ export class GSIHandler {
           channel,
           e: e?.message || e,
         })
-        this.openingBets = false
+        if ((e?.message || e).includes('error')) this.openingBets = false
       })
   }
 
