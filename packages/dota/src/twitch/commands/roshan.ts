@@ -10,6 +10,7 @@ import { generateRoshanMessage, RoshRes } from '../../dota/events/gsi-events/eve
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import { logger } from '../../utils/logger.js'
 
 const redisClient = RedisClient.getInstance()
 
@@ -54,6 +55,10 @@ commandHandler.registerCommand('roshan', {
       chatClient.say(channel, msgs.join(' · '))
     }
 
-    void handler()
+    try {
+      void handler()
+    } catch (e) {
+      logger.error('Error in roshan command', { e })
+    }
   },
 })

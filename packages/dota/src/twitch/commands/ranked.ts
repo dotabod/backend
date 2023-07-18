@@ -5,6 +5,7 @@ import { t } from 'i18next'
 import Mongo from '../../steam/mongo.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import { logger } from '../../utils/logger.js'
 
 const mongo = await Mongo.connect()
 commandHandler.registerCommand('ranked', {
@@ -65,6 +66,10 @@ commandHandler.registerCommand('ranked', {
       chatClient.say(channel, t('ranked', { context: 'no', lng: message.channel.client.locale }))
     }
 
-    void handler()
+    try {
+      void handler()
+    } catch (e) {
+      logger.error('Error in ranked command', { e })
+    }
   },
 })

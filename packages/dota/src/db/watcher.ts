@@ -169,7 +169,11 @@ class SetupSupabase {
               oldMmr: oldObj.mmr,
             })
 
-            void handler()
+            try {
+              void handler()
+            } catch (e) {
+              logger.error('Error in watcher postgres update', { e })
+            }
           }
         },
       )
@@ -184,7 +188,11 @@ class SetupSupabase {
             if (!client) {
               // in case they ban dotabod and we reboot server,
               // we'll never have the client cached, so we have to lookup the user again
-              void this.toggleHandler(newObj.userId, !!newObj.value)
+              try {
+                void this.toggleHandler(newObj.userId, !!newObj.value)
+              } catch (e) {
+                logger.error('Error in toggleHandler', { e })
+              }
             } else {
               if (this.IS_DEV && !this.DEV_CHANNELS.includes(client.name)) return
               if (!this.IS_DEV && this.DEV_CHANNELS.includes(client.name)) return

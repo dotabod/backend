@@ -172,7 +172,13 @@ class Dota {
 
     this.steamClient.on('error', (error: any) => {
       logger.info('[STEAM]steam error', { error })
-      if (process.env.NODE_ENV !== 'production') void this.exit()
+      if (process.env.NODE_ENV !== 'production') {
+        try {
+          void this.exit()
+        } catch (e) {
+          logger.error('err steam error', { e })
+        }
+      }
       // @ts-expect-error connect is there i swear
       if (process.env.NODE_ENV === 'production') this.steamClient.connect()
     })
@@ -214,17 +220,21 @@ class Dota {
     itemsOnly?: boolean
   }) => {
     return new Promise((resolveOuter: (response: delayedGames | null) => void) => {
-      void this.GetRealTimeStats({
-        steam_server_id: server_steamid,
-        token,
-        match_id,
-        itemsOnly,
-        waitForHeros: false,
-        refetchCards: refetchCards,
-        cb: (err, response) => {
-          resolveOuter(response)
-        },
-      })
+      try {
+        void this.GetRealTimeStats({
+          steam_server_id: server_steamid,
+          token,
+          match_id,
+          itemsOnly,
+          waitForHeros: false,
+          refetchCards: refetchCards,
+          cb: (err, response) => {
+            resolveOuter(response)
+          },
+        })
+      } catch (e) {
+        logger.error('err GetRealTimeStats cb promise', { e })
+      }
     })
   }
 
@@ -337,12 +347,16 @@ class Dota {
             // Come back in 8 attempts to save the hero ids. With no cb()
             if (!hasHeroes) {
               logger.info('Waiting for hero ids', { matchId: match_id })
-              void this.GetRealTimeStats({
-                match_id,
-                token,
-                steam_server_id: steam_server_id,
-                waitForHeros: true,
-              })
+              try {
+                void this.GetRealTimeStats({
+                  match_id,
+                  token,
+                  steam_server_id: steam_server_id,
+                  waitForHeros: true,
+                })
+              } catch (e) {
+                logger.error('err GetRealTimeStats', { e })
+              }
             }
           }
 

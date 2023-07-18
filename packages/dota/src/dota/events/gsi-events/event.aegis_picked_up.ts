@@ -9,6 +9,7 @@ import { server } from '../../index.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
+import { logger } from '../../../utils/logger.js'
 
 const redisClient = RedisClient.getInstance()
 
@@ -80,7 +81,11 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
       heroName,
     }
 
-    void redisClient.client.json.set(`${dotaClient.getToken()}:aegis`, '$', res)
+    try {
+      void redisClient.client.json.set(`${dotaClient.getToken()}:aegis`, '$', res)
+    } catch (e) {
+      logger.error('Error in aegis json set', { e })
+    }
 
     const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
     const {

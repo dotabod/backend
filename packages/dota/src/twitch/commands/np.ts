@@ -7,6 +7,7 @@ import Mongo from '../../steam/mongo.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import { logger } from '../../utils/logger.js'
 
 const mongo = await Mongo.connect()
 
@@ -87,7 +88,11 @@ commandHandler.registerCommand('np', {
       commandHandler.hasPermission(message.user, 2) &&
       (addOrRemove === 'add' || addOrRemove === 'remove')
     ) {
-      void addRemoveHandler()
+      try {
+        void addRemoveHandler()
+      } catch (e) {
+        logger.error('Error in addremovehandler command', { e })
+      }
       return
     }
 

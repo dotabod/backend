@@ -35,7 +35,13 @@ io.on('connection', (socket) => {
   // dota node app just connected
   // make it join our room
   console.log('Found a connection!')
-  void socket.join('twitch-chat-messages')
+  try {
+    void socket.join('twitch-chat-messages')
+  } catch (e) {
+    console.log('coudl not join twitch-chat-messages socket')
+    return
+  }
+
   hasDotabodSocket = true
 
   socket.on('disconnect', () => {
@@ -114,7 +120,11 @@ async function disableChannel(channel: string) {
 chatClient.onJoinFailure((channel, reason) => {
   if (['msg_banned', 'msg_banned_phone_number_alias', 'msg_channel_suspended'].includes(reason)) {
     // disable the channel in the database
-    void disableChannel(channel)
+    try {
+      void disableChannel(channel)
+    } catch (e) {
+      console.log('could not disable channel onJoinFailure', channel)
+    }
     return
   }
 
@@ -125,7 +135,11 @@ chatClient.onMessage(function (channel, user, text, msg) {
   if (!hasDotabodSocket) {
     // TODO: only commands that we register should be checked here
     if (text === '!ping') {
-      void chatClient.say(channel, t('rebooting', { emote: 'PauseChamp', lng: 'en' }))
+      try {
+        void chatClient.say(channel, t('rebooting', { emote: 'PauseChamp', lng: 'en' }))
+      } catch (e) {
+        console.log('could not type rebooting msg', e)
+      }
     }
 
     return

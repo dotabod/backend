@@ -11,6 +11,7 @@ import { isArcade } from '../../dota/lib/isArcade.js'
 import { chatClient } from '../index.js'
 import commandHandler from '../lib/CommandHandler.js'
 import { profileLink } from './stats.js'
+import { logger } from '../../utils/logger.js'
 
 const redisClient = RedisClient.getInstance()
 
@@ -135,17 +136,21 @@ commandHandler.registerCommand('hero', {
           lng: message.channel.client.locale,
         })
       } else {
-        void getHeroMsg({
-          hero,
-          channel,
-          ourHero,
-          profile,
-          steam32Id: profile.accountid,
-          allTime,
-          token: client.token,
-          gsi,
-          lng: message.channel.client.locale,
-        })
+        try {
+          void getHeroMsg({
+            hero,
+            channel,
+            ourHero,
+            profile,
+            steam32Id: profile.accountid,
+            allTime,
+            token: client.token,
+            gsi,
+            lng: message.channel.client.locale,
+          })
+        } catch (e) {
+          logger.error('error in getHeroMsg', { e })
+        }
       }
     } catch (e: any) {
       chatClient.say(

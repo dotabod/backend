@@ -8,6 +8,7 @@ import { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
+import { logger } from '../../../utils/logger.js'
 
 const redisClient = RedisClient.getInstance()
 
@@ -129,6 +130,10 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       emitRoshEvent(res, dotaClient.getToken())
     }
 
-    void redisHandler()
+    try {
+      void redisHandler()
+    } catch (e) {
+      logger.error('Error in redisHandler', { e })
+    }
   },
 })

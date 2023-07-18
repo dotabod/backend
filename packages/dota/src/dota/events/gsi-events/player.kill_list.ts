@@ -1,5 +1,6 @@
 import RedisClient from '../../../db/redis.js'
 import { Player } from '../../../types.js'
+import { logger } from '../../../utils/logger.js'
 import { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -19,11 +20,19 @@ eventHandler.registerEvent(`player:kill_list`, {
 
       // Remove aegis icon from the player we just killed
       if (Object.values(kill_list).includes(redisJson.playerId)) {
-        void redisClient.client.json.del(`${dotaClient.getToken()}:aegis`)
+        try {
+          void redisClient.client.json.del(`${dotaClient.getToken()}:aegis`)
+        } catch (e) {
+          logger.error('err redisClient aegis del', { e })
+        }
         server.io.to(dotaClient.getToken()).emit('aegis-picked-up', {})
       }
     }
 
-    void handler()
+    try {
+      void handler()
+    } catch (e) {
+      logger.error('err redisClient handler aegis del', { e })
+    }
   },
 })

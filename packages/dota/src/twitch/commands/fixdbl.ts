@@ -85,7 +85,7 @@ commandHandler.registerCommand('fixdbl', {
     try {
       void handler()
     } catch (e) {
-      logger.error('Error in fixparty command', e)
+      logger.error('Error in fixdbl command', { e })
     }
   },
 })

@@ -38,7 +38,11 @@ eventHandler.registerEvent(`newdata`, {
     const purchaser = dotaClient.client.gsi?.items?.teleport0?.purchaser
     if (typeof dotaClient.playingHeroSlot !== 'number' && typeof purchaser === 'number') {
       dotaClient.playingHeroSlot = purchaser
-      void dotaClient.saveMatchData()
+      try {
+        void dotaClient.saveMatchData()
+      } catch (e) {
+        logger.error('saveMatchData', { e })
+      }
       return
     }
 
@@ -47,11 +51,19 @@ eventHandler.registerEvent(`newdata`, {
       powerTreads: { enabled: treadsChatterEnabled },
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
     if (chattersEnabled && treadsChatterEnabled) {
-      void calculateManaSaved(dotaClient)
+      try {
+        void calculateManaSaved(dotaClient)
+      } catch (e) {
+        logger.error('err calculateManaSaved', { e })
+      }
     }
 
     // Always runs but only until steam is found
-    void dotaClient.saveMatchData()
+    try {
+      void dotaClient.saveMatchData()
+    } catch (e) {
+      logger.error('err saveMatchData', { e })
+    }
 
     // TODO: Move this to server.ts
     const newEvents = data.events?.filter((event) => {

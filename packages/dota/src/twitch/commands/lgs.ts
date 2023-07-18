@@ -5,6 +5,7 @@ import { prisma } from '../../db/prisma.js'
 import getHero, { HeroNames } from '../../dota/lib/getHero.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import { logger } from '../../utils/logger.js'
 
 commandHandler.registerCommand('lgs', {
   aliases: ['lastgamescore', 'lgscore', 'lgwl'],
@@ -100,6 +101,10 @@ commandHandler.registerCommand('lgs', {
       chatClient.say(message.channel.name, returnMsg.join(' · '))
     }
 
-    void handler()
+    try {
+      void handler()
+    } catch (e) {
+      logger.error('Error in lgs command', { e })
+    }
   },
 })

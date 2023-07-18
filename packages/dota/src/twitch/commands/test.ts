@@ -60,6 +60,10 @@ commandHandler.registerCommand('test', {
       )
     }
 
-    void handler()
+    try {
+      void handler()
+    } catch (e) {
+      logger.error('Error in test command', { e })
+    }
   },
 })

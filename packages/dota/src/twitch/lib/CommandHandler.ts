@@ -5,6 +5,7 @@ import { ADMIN_CHANNELS } from '../../dota/lib/consts.js'
 import Mongo from '../../steam/mongo.js'
 import { SocketClient } from '../../types.js'
 import { chatClient } from '../index.js'
+import { logger } from '../../utils/logger.js'
 
 const mongo = await Mongo.connect()
 
@@ -86,16 +87,20 @@ class CommandHandler {
       command,
     }
 
-    void mongo.collection('commandstats').updateOne(
-      { command, channel, date },
-      {
-        $set: data,
-        $inc: {
-          count: 1,
+    try {
+      void mongo.collection('commandstats').updateOne(
+        { command, channel, date },
+        {
+          $set: data,
+          $inc: {
+            count: 1,
+          },
         },
-      },
-      { upsert: true },
-    )
+        { upsert: true },
+      )
+    } catch (e) {
+      logger.error('Error in commandstats update', { e })
+    }
   }
 
   // Function for handling incoming Twitch chat messages

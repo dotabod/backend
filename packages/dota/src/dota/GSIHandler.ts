@@ -220,10 +220,14 @@ export class GSIHandler {
       lastRemindedDate: undefined,
     }
 
-    void redisClient.client.json.del(`${this.getSteam32() ?? ''}:medal`)
-    void redisClient.client.json.del(`${this.getToken()}:roshan`)
-    void redisClient.client.json.del(`${this.getToken()}:aegis`)
-    void redisClient.client.json.del(`${this.getToken()}:treadtoggle`)
+    try {
+      void redisClient.client.json.del(`${this.getSteam32() ?? ''}:medal`)
+      void redisClient.client.json.del(`${this.getToken()}:roshan`)
+      void redisClient.client.json.del(`${this.getToken()}:aegis`)
+      void redisClient.client.json.del(`${this.getToken()}:treadtoggle`)
+    } catch (e) {
+      logger.error('err resetClientState', { e })
+    }
 
     server.io.to(this.getToken()).emit('aegis-picked-up', {})
     server.io.to(this.getToken()).emit('roshan-killed', {})
@@ -876,7 +880,11 @@ export class GSIHandler {
       }
     }
 
-    void toggleHandler()
+    try {
+      void toggleHandler()
+    } catch (e) {
+      logger.error('err toggleHandler', { e })
+    }
 
     if (!betsEnabled || !this.client.stream_online) {
       logger.info('Bets are not enabled, stopping here', { name: this.getChannel() })
@@ -1054,7 +1062,11 @@ export class GSIHandler {
             this.emitMinimapBlockerStatus()
             this.emitBadgeUpdate()
             this.emitWLUpdate()
-            void this.maybeSendRoshAegisEvent()
+            try {
+              void this.maybeSendRoshAegisEvent()
+            } catch (e) {
+              logger.error('err maybeSendRoshAegisEvent', { e })
+            }
           }
         }
 

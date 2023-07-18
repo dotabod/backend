@@ -33,7 +33,7 @@ commandHandler.registerCommand('beta', {
     try {
       void handler()
     } catch (e) {
-      logger.error('Error in beta command', e)
+      logger.error('Error in beta command', { e })
     }
   },
 })

@@ -87,7 +87,7 @@ commandHandler.registerCommand('fixparty', {
     try {
       void handler()
     } catch (e) {
-      logger.error('Error in fixparty command', e)
+      logger.error('Error in fixparty command', { e })
     }
   },
 })
