@@ -235,7 +235,8 @@ token:${user.id} or
 userId:${user.id} or
 user:${user.id} or
 token:${user.Account?.providerAccountId ?? ''} or
-message:Starting!
+message:Starting! or
+twitchId:${user.Account?.providerAccountId ?? ''}
 `
 }
 
