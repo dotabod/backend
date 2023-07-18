@@ -120,29 +120,11 @@ services:
       - "mongodb_data:/data/db"
       - ./services/mongodb/src/init.js:/docker-entrypoint-initdb.d/init_mongo.js
 
-  # Backup service
-  backup:
-    container_name: backup
-    build:
-      context: ./services/backups
-      dockerfile: Dockerfile
-      args:
-        - AWS_ACCESS_KEY_ID
-        - AWS_SECRET_ACCESS_KEY
-        - AWS_REGION
-    environment:
-      - DATABASE_URL
-      - MONGO_URL
-      - AWS_BUCKET_NAME
-    volumes:
-      - backup_data:/app/psql_backups
-
 # Volumes are useful for data persistence, so the data will not be deleted
 # even later you call command docker-compose down.
 volumes:
   mongodb_data:
   steam_auth:
-  backup_data:
 networks:
   default:
     name: dotabod
