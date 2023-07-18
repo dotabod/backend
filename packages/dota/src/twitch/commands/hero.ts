@@ -186,6 +186,7 @@ async function getHeroMsg({
   }
 
   if (ourHero) {
+    // TODO: :isPrivate is not actually being set anywhere
     const isPrivate = await redisClient.client.get(`${token}:isPrivate`)
     if (Number(isPrivate) === 1) {
       chatClient.say(channel, t('privateProfile', { command: '!hero', lng }))
