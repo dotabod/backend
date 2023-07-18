@@ -11,8 +11,13 @@ class EventHandler {
     events.on(eventName, (data: any, token: string) => {
       if (!gsiHandlers.has(token)) return
       const client = gsiHandlers.get(token)
+
+      // if we disabled the backend processing from somewhere else
+      // we shouldn't process events
       if (client!.disabled) return
-      if (client!.client.stream_online) return
+
+      // if we r offline don't process events
+      if (!client!.client.stream_online) return
 
       options.handler(client!, data)
     })
