@@ -1,9 +1,10 @@
 import { Account, Setting, SteamAccount, User } from '@dotabod/prisma/dist/psql/index.js'
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 
+import { clearCacheForUser } from '../dota/GSIHandler.js'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
-import { gsiHandlers, twitchIdToToken } from '../dota/lib/consts.js'
+import { gsiHandlers } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
@@ -11,7 +12,6 @@ import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
 import supabase from './supabase.js'
-import { clearCacheForUser } from '../dota/GSIHandler.js'
 
 class SetupSupabase {
   channel: any
