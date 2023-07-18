@@ -27,10 +27,7 @@ class MongoDBSingleton {
       operation.attempt(async (currentAttempt) => {
         try {
           // Connect to MongoDB
-          const mongoURL =
-            process.env.NODE_ENV === 'production'
-              ? process.env.MONGO_URL!
-              : 'mongodb://mongodb:27017/dotabod'
+          const mongoURL = process.env.MONGO_URL!
           const client = await MongoClient.connect(mongoURL)
 
           // Resolve the promise with the client
