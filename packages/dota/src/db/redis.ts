@@ -11,7 +11,9 @@ export default class RedisClient {
     this.client = createClient({ url: 'redis://redis:6379' })
     this.subscriber = this.client.duplicate()
 
-    this.client.on('error', (err: any) => logger.error('Redis Client Error', { err }))
+    this.client.on('error', (err: any) => {
+      if (err?.code !== 'ENOTFOUND') return logger.error('Redis Client Error', { err })
+    })
     this.client.once('connect', () => {
       logger.info('[REDIS] Redis client connected')
     })
