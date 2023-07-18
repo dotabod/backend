@@ -55,12 +55,12 @@ export function openTwitchBet(
       : t('predictions.title', { lng: locale, heroName })
 
   const yes =
-    betsInfo.yes !== defaultSettings.betsInfo.yes
-      ? betsInfo.yes
-      : t('predictions.yes', { lng: locale })
+    betsInfo.yes === defaultSettings.betsInfo.yes
+      ? t('predictions.yes', { lng: locale })
+      : betsInfo.yes
 
   const no =
-    betsInfo.no !== defaultSettings.betsInfo.no ? betsInfo.no : t('predictions.no', { lng: locale })
+    betsInfo.no === defaultSettings.betsInfo.no ? t('predictions.no', { lng: locale }) : betsInfo.no
 
   return api.predictions
     .createPrediction(twitchId || '', {

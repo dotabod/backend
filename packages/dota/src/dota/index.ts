@@ -38,7 +38,7 @@ const setupTranslations = async () => {
       interval: 5000,
     })
     .on('all', (_event, filePath) => {
-      console.log({ _event, filePath })
+      logger.info('chokidar updated', { _event, filePath })
       const parsedPath = path.parse(filePath)
       const ns = parsedPath.name
       const lng = path.basename(parsedPath.dir)
