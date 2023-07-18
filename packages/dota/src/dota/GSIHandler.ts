@@ -18,7 +18,14 @@ import { emitRoshEvent, RoshRes } from './events/gsi-events/event.roshan_killed.
 import { DataBroadcaster } from './events/minimap/DataBroadcaster.js'
 import minimapParser from './events/minimap/parser.js'
 import { server } from './index.js'
-import { blockTypes, DelayedCommands, GLOBAL_DELAY, pickSates } from './lib/consts.js'
+import {
+  blockTypes,
+  DelayedCommands,
+  GLOBAL_DELAY,
+  gsiHandlers,
+  pickSates,
+  twitchIdToToken,
+} from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import { getCurrentMatchPlayers } from './lib/getCurrentMatchPlayers.js'
 import getHero, { HeroNames } from './lib/getHero.js'
@@ -42,6 +49,40 @@ interface MMR {
   isParty?: boolean
   heroSlot?: number | null
   heroName?: string | null
+}
+
+// three types of in-memory cache exists
+export function clearCacheForUser(client?: SocketClient | null) {
+  if (!client) return false
+
+  // mark the client as disabled while we cleanup everything
+  // just so new items won't get added while we do this
+  gsiHandlers.get(client.token)?.disable()
+
+  twitchIdToToken.delete(client.Account?.providerAccountId ?? '')
+
+  // TODO: should probably be cleaned up, two layers of catching errors lol
+  // was doing void redisClient.client... but i think void causes uncaught exceptions
+  // need to confirm that still
+  try {
+    Promise.all([
+      redisClient.client.json.del(`${client.steam32Id ?? ''}:medal`),
+      redisClient.client.json.del(`${client.token}:roshan`),
+      redisClient.client.json.del(`${client.token}:aegis`),
+      redisClient.client.json.del(`${client.token}:treadtoggle`),
+    ])
+      .then(() => {
+        // nothing
+      })
+      .catch((e) => {
+        // nothing
+      })
+  } catch (e) {
+    // ignore any redis issues with deletions
+  }
+
+  gsiHandlers.delete(client.token)
+  return true
 }
 
 // That means the user opened OBS and connected to Dota 2 GSI
@@ -100,10 +141,8 @@ export class GSIHandler {
   }
 
   public enable() {
-    if (this.disabled) {
-      this.disabled = false
-      chatClient.join(this.client.name)
-    }
+    this.disabled = false
+    chatClient.join(this.client.name)
   }
 
   public disable() {

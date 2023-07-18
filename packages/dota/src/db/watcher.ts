@@ -3,7 +3,7 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
-import { gsiHandlers } from '../dota/lib/consts.js'
+import { gsiHandlers, twitchIdToToken } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
@@ -11,6 +11,7 @@ import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
 import supabase from './supabase.js'
+import { clearCacheForUser } from '../dota/GSIHandler.js'
 
 class SetupSupabase {
   channel: any
@@ -51,8 +52,8 @@ class SetupSupabase {
           const client = findUser(oldObj.id)
           if (client) {
             logger.info('[WATCHER USER] Deleting user', { name: client.name })
-            gsiHandlers.get(client.token)?.disable()
-            gsiHandlers.delete(client.token)
+            clearCacheForUser(client)
+            return
           }
         },
       )
@@ -122,9 +123,10 @@ class SetupSupabase {
           if (!client.stream_online && oldObj.stream_online) {
             connectedUser?.disable()
 
-            // TODO: expire the cached gsi client by deleting it after N seconds
-            // perhaps if they dont come online in 30s?
-            // gsiHandlers.delete(client.token)
+            // expire the cached gsi client by deleting it after 2 minutes if still not online
+            setTimeout(() => {
+              clearCacheForUser(findUser(newObj.id))
+            }, 2 * 60 * 1000) // 2 minutes
             return
           }
 
@@ -232,12 +234,12 @@ class SetupSupabase {
             logger.info('[WATCHER STEAM] Deleting steam account for', { name: client.name })
 
             // A delete will reset their status in memory so they can reconnect anything
-            gsiHandlers.delete(client.token)
+            clearCacheForUser(client)
 
             // We try deleting those users so they can attempt a new connection
             if (Array.isArray(oldObj.connectedUserIds)) {
               for (const connectedToken of oldObj.connectedUserIds) {
-                gsiHandlers.delete(connectedToken)
+                clearCacheForUser(gsiHandlers.get(connectedToken)?.client)
               }
             }
 
