@@ -84,8 +84,8 @@ class GSIServer {
       if (gsiHandlers.has(token)) {
         const handler = gsiHandlers.get(token)
         if (handler) {
-          // dont do anything if offline
-          if (handler.disabled) {
+          // dont emit anything if offline
+          if (handler.disabled || !handler.client.stream_online) {
             return
           }
 

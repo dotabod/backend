@@ -12,6 +12,7 @@ class EventHandler {
       if (!gsiHandlers.has(token)) return
       const client = gsiHandlers.get(token)
       if (client!.disabled) return
+      if (client!.client.stream_online) return
 
       options.handler(client!, data)
     })
