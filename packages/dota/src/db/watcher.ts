@@ -75,25 +75,9 @@ class SetupSupabase {
             logger.info('[WATCHER ACCOUNT] Refreshing account', {
               twitchId: newObj.providerAccountId,
             })
-            const tokenData = {
-              scope: newObj.scope?.split(' ') ?? [],
-              expiresIn: newObj.expires_in ?? 0,
-              obtainmentTimestamp: newObj.obtainment_timestamp?.getTime() ?? 0,
-              accessToken: newObj.access_token,
-              refreshToken: newObj.refresh_token,
-            }
-            const authProvider = getAuthProvider()
-            authProvider.addUser(newObj.providerAccountId, tokenData)
 
-            // Update the auth tokens of a cached user
-            // This fixes where i'd have to reboot the server after they relog xd
             const client = findUser(newObj.userId)
-            if (!client?.Account) return
-            client.Account.access_token = tokenData.accessToken
-            client.Account.refresh_token = tokenData.refreshToken
-            client.Account.expires_in = tokenData.expiresIn
-            client.Account.obtainment_timestamp = new Date(tokenData.obtainmentTimestamp)
-            client.Account.scope = newObj.scope
+            clearCacheForUser(client)
           }
         },
       )

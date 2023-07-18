@@ -7,6 +7,7 @@ import RedisClient from '../db/redis.js'
 import { notablePlayers } from '../steam/notableplayers.js'
 import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
+import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
 import { DotaEvent, Player, SocketClient } from '../types.js'
@@ -60,6 +61,9 @@ export function clearCacheForUser(client?: SocketClient | null) {
   gsiHandlers.get(client.token)?.disable()
 
   twitchIdToToken.delete(client.Account?.providerAccountId ?? '')
+
+  const authProvider = getAuthProvider()
+  authProvider.removeUser(client.Account?.providerAccountId ?? '')
 
   // TODO: should probably be cleaned up, two layers of catching errors lol
   // was doing void redisClient.client... but i think void causes uncaught exceptions
