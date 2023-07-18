@@ -14,7 +14,7 @@
     "build": "tsc --build --verbose",
     "debug": "nodemon -L --ext ts --exec \"node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts\"",
     "dev": "nodemon -L --ext ts ./src/index.ts",
-    "test": "doppler run -- nodemon -L --ext ts ./src/dev/index.ts"
+    "test": "doppler run --fallback-only -- nodemon -L --ext ts ./src/dev/index.ts"
   },
   "dependencies": {
     "@dotabod/prisma": "^1.0.0",
