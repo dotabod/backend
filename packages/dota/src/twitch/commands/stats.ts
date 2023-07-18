@@ -55,7 +55,7 @@ export function getPlayerFromArgs({
 
   if (heroKey < 0 || heroKey > 9) {
     throw new CustomError(
-      t('invalidColorNew', { command, colorList: heroColors.join(' '), lng: locale }),
+      t('invalidColorNew', { command, colorList: heroColors.join(' · '), lng: locale }),
     )
   }
 
