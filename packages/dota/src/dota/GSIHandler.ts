@@ -214,6 +214,7 @@ export class GSIHandler {
     this.playingBetMatchId = null
     this.playingTeam = null
     this.treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
+    this.creatingSteamAccount = false
 
     this.noTpChatter = {
       timeout: undefined,
