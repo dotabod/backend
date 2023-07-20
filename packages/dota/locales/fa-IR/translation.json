@@ -1,16 +1,16 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} denied the aegis {{emote}}",
-    "expired": "{{- heroName}}'s aegis expired {{emote}}",
+    "denied": "{{- heroName}} پولدار رو ببین! آخ رو اتک داد {{emote}}",
+    "expired": " داداش تایم اخ تمام شد بمیری مردی {{- heroName}}' {{emote}}",
     "pickup": " میتونه یه غذای رایگان بده {{- heroName}}",
     "snatched": "{{- heroName}} آنخ رو دزدید {{emote}}"
   },
   "apm_one": "Live APM: {{count}} {{emote}}",
   "apm_other": "Live APM: {{count}} {{emote}}",
   "averageRank": "میانگین اکانت بایرهای این بازی",
-  "betaFeature": "[beta feature]",
-  "betaTester": "$t(betaTester_on)",
-  "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
+  "betaFeature": "ویژگی های بتا",
+  "betaTester": "قابلیت بتا فعال شد $t(betaTester_on)",
+  "betaTester_off": "{{channel}} دیگه قابلیت بتا نیست برای فعال سازی دوباره !beta  رو بزن",
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
   "bets": {
     "error": "Unable to open bets. $t(refreshToken)",
