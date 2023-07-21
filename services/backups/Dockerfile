@@ -1,5 +1,9 @@
 FROM debian:stable-slim
 
+LABEL org.opencontainers.image.source="https://github.com/dotabod/backend"
+LABEL org.opencontainers.image.description="Dota backup service"
+LABEL org.opencontainers.image.licenses="AGPL-3.0"
+
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
 ARG AWS_REGION

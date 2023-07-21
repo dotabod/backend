@@ -3,6 +3,10 @@
 #################
 FROM node:20.0-alpine as base
 
+LABEL org.opencontainers.image.source="https://github.com/dotabod/backend"
+LABEL org.opencontainers.image.description="Dota twitch chat service"
+LABEL org.opencontainers.image.licenses="AGPL-3.0"
+
 ARG BUILD_CONTEXT
 
 RUN apk add --no-cache git g++ make py3-pip

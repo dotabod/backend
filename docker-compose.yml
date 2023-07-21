@@ -6,7 +6,7 @@ services:
       - "6379:6379"
 
   twitch-chat:
-    image: "twitch-chat:latest"
+    image: "ghcr.io/dotabod/twitch-chat:latest"
     container_name: twitch-chat
     restart: on-failure
     build:
@@ -32,7 +32,7 @@ services:
       - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
   twitch-events:
-    image: "twitch-events:latest"
+    image: "ghcr.io/dotabod/twitch-events:latest"
     container_name: twitch-events
     restart: on-failure
     build:
@@ -59,7 +59,7 @@ services:
       - TWITCH_EVENTSUB_SECRET
 
   dota:
-    image: "dota:latest"
+    image: "ghcr.io/dotabod/dota:latest"
     container_name: dota
     restart: on-failure
     build:
