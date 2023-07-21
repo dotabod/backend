@@ -81,11 +81,24 @@ const startServer = () => {
 const main = async () => {
   logger.info('Starting on', { env: process.env.NODE_ENV })
 
-  await setupRedisClient()
-  await setupTranslations()
-  setupSupabaseWatcher()
+  try {
+    await setupRedisClient()
+    await setupTranslations()
+    setupSupabaseWatcher()
+  } catch (e) {
+    logger.error('Error in setup', { e })
+  }
 
   return startServer()
 }
+
+const logAndExit = (err: any) => {
+  logger.error('Unhandled error occurred. Exiting...', { error: err })
+  process.exit(1)
+}
+
+// Add event listeners to catch uncaught exceptions and unhandled rejections
+process.on('uncaughtException', logAndExit)
+process.on('unhandledRejection', logAndExit)
 
 export const server = await main()

@@ -62,7 +62,7 @@ logs app="":
 # Builds one image
 build app="":
     @echo -e "Running for {{app}} on {{dockerfile}} with {{COMMIT_HASH}}"
-    git pull || true
+    sudo git pull || true
     export COMMIT_HASH=`git rev-parse --short HEAD`
     @docker compose -f {{dockerfile}} build {{app}}
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
@@ -82,7 +82,7 @@ update:
     @if [ "${NODE_ENV}" = "production" ]; then \
         curl $DISCORD_SERVER_WEBHOOK -d "avatar_url=https%3A%2F%2Fstatic-cdn.jtvnw.net%2Fjtv_user_pictures%2Fd52ea619-5491-4a66-aeeb-f180a2668049-profile_image-70x70.png&username=Dotabod Server&content=Server%20update%2C%20restarting%20Dotabod%21%20Here%27s%20what%27s%20coming%3A%20https%3A%2F%2Fgithub.com%2Fdotabod%2Fbackend%2Fcompare%2F{{COMMIT_HASH}}...master"; \
     fi
-    git pull || true
+    sudo git pull || true
     export COMMIT_HASH=`git rev-parse --short HEAD`
     @docker compose -f {{dockerfile}} build
     @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
