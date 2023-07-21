@@ -15,7 +15,7 @@
     "lint": "yarn eslint -- . && yarn prettier -- . && echo 'Linting complete.'",
     "prettier": "prettier --write",
     "eslint": "eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx",
-    "update-np": "doppler run -- bash ../services/mongodb/updatenps.sh",
+    "update-np": "doppler run -- bash services/mongodb/updatenps.sh",
     "prepare": "husky install"
   },
   "dependencies": {
