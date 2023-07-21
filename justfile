@@ -51,6 +51,14 @@ restart:
     @docker compose -f {{dockerfile}} down
     @docker compose -f {{dockerfile}} up -d
 
+pull:
+    @docker compose -f {{dockerfile}} pull twitch-events dota twitch-chat
+
+push:
+    @just login
+    @just buildall
+    @docker compose -f {{dockerfile}} push twitch-events dota twitch-chat
+
 # Builds all images
 buildall:
     @docker compose -f {{dockerfile}} build
@@ -73,8 +81,12 @@ build app="":
 ssh app="":
     @docker exec -it {{app}} sh
 
+login:
+    @echo $DOCKER_PAT | docker login ghcr.io -u $DOCKER_USER --password-stdin
+
 # Starts images
 up:
+    @just login
     @echo "Starting server with database $NODE_ENV at {{dockerfile}}"
     @docker compose -f {{dockerfile}} up -d
 
