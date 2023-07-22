@@ -42,13 +42,13 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'users' },
-        (payload: any) => {
+        (payload: { old: User }) => {
           if (this.IS_DEV && !this.DEV_CHANNELS.includes(payload.old.name)) return
           if (!this.IS_DEV && this.DEV_CHANNELS.includes(payload.old.name)) return
 
           logger.info('Removing user', payload)
 
-          const oldObj = payload.old as User
+          const oldObj = payload.old
           const client = findUser(oldObj.id)
           if (client) {
             logger.info('[WATCHER USER] Deleting user', { name: client.name })
@@ -60,14 +60,14 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'accounts' },
-        (payload: any) => {
+        (payload: { new: Account; old: Account }) => {
           // watch the accounts table for requires_refresh to change from true to false
           // if it does, add the user to twurple authprovider again via addUser()
           if (this.IS_DEV && !this.DEV_CHANNELIDS.includes(payload.new?.providerAccountId)) return
           if (!this.IS_DEV && this.DEV_CHANNELIDS.includes(payload.new?.providerAccountId)) return
 
-          const newObj = payload.new as Account
-          const oldObj = payload.old as Account
+          const newObj = payload.new
+          const oldObj = payload.old
 
           // The frontend will set it to false when they relogin
           // Which allows us to update the authProvider object
