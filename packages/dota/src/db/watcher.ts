@@ -7,7 +7,7 @@ import findUser from '../dota/lib/connectedStreamers.js'
 import { gsiHandlers } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
-import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
+import { chatClient } from '../twitch/index.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
@@ -84,12 +84,33 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'users' },
-        (payload: any) => {
+        (payload: { new: User; old: User }) => {
           if (this.IS_DEV && !this.DEV_CHANNELS.includes(payload.new.name)) return
           if (!this.IS_DEV && this.DEV_CHANNELS.includes(payload.new.name)) return
 
-          const newObj = payload.new as User
-          const oldObj = payload.old as User
+          const newObj = payload.new
+          const oldObj = payload.old
+
+          if (!oldObj.displayName && newObj.displayName) {
+            console.log('[SUPABASE] New user to send bot to: ', newObj.name)
+            try {
+              chatClient.join(newObj.name)
+            } catch (e) {
+              console.error('[SUPABASE] Error joining channel: ', { e })
+            }
+          } else if (oldObj.name !== newObj.name) {
+            console.log('[SUPABASE] User changed name: ', {
+              oldName: oldObj.name,
+              newName: newObj.name,
+            })
+            try {
+              chatClient.part(oldObj.name)
+              chatClient.join(newObj.name)
+            } catch (e) {
+              console.error('[SUPABASE] Error joining channel: ', { e })
+            }
+          }
+
           const client = findUser(newObj.id)
           if (!client) return
 
@@ -109,11 +130,14 @@ class SetupSupabase {
             // the problem is even if they are offline, they could still be connecting to dotabod
             // 1. playing games while offline
             // 2. commands used in their chat while offline
-            setTimeout(() => {
-              // they may have come back online, in which case do nothing
-              const futureUser = findUser(newObj.id)
-              if (futureUser && !futureUser.stream_online) clearCacheForUser(futureUser)
-            }, 2 * 60 * 1000) // 2 minutes since going offline
+            setTimeout(
+              () => {
+                // they may have come back online, in which case do nothing
+                const futureUser = findUser(newObj.id)
+                if (futureUser && !futureUser.stream_online) clearCacheForUser(futureUser)
+              },
+              2 * 60 * 1000,
+            ) // 2 minutes since going offline
             return
           }
 
@@ -164,8 +188,8 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'settings' },
-        (payload: any) => {
-          const newObj = payload.new as Setting
+        (payload: { new: Setting }) => {
+          const newObj = payload.new
           const client = findUser(newObj.userId)
 
           if (newObj.key === DBSettings.commandDisable) {
@@ -214,9 +238,9 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'steam_accounts' },
-        (payload: any) => {
-          const newObj = payload.new as SteamAccount
-          const oldObj = payload.old as SteamAccount
+        (payload: { eventType: string; new: SteamAccount; old: SteamAccount }) => {
+          const newObj = payload.new
+          const oldObj = payload.old
           const client = findUser(newObj.userId || oldObj.userId)
 
           // Just here to update local memory

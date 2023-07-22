@@ -21,7 +21,6 @@ await use(FsBackend).init<FsBackendOptions>({
 
 console.log('Loaded i18n for chat')
 
-import './db/watcher.js'
 import { prisma } from './db/prisma.js'
 import { getChatClient } from './twitch/lib/getChatClient.js'
 
