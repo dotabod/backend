@@ -6,10 +6,6 @@ fam := os_family()
 export COMMIT_HASH := `git rev-parse --short HEAD`
 export BUILDKIT_PROGRESS := "plain"
 
-GREEN  := "\\u001b[32m"
-RESET  := "\\u001b[0m"
-CHECK  := `/usr/bin/printf "\xE2\x9C\x94"`
-
 # Lists Recipes
 default:
   @echo Environment is $NODE_ENV on commit {{COMMIT_HASH}}
@@ -64,7 +60,7 @@ push:
 # Builds all images
 buildall:
     @docker compose -f {{dockerfile}} build
-    @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
+    @echo -e "Successfully built!"
 
 logs app="":
     @docker compose logs -f {{app}}
@@ -75,9 +71,9 @@ build app="":
     git pull || true
     export COMMIT_HASH=`git rev-parse --short HEAD`
     @docker compose -f {{dockerfile}} build {{app}}
-    @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
+    @echo -e "Successfully built!"
     @docker compose -f {{dockerfile}} up -d {{app}}
-    @echo -e " {{GREEN}}{{CHECK}} Successfully ran! {{CHECK}} {{RESET}}"
+    @echo -e "Successfully ran!"
 
 # ssh one image
 ssh app="":
@@ -99,7 +95,7 @@ update:
     git pull || true
     export COMMIT_HASH=`git rev-parse --short HEAD`
     @just buildall
-    @echo -e " {{GREEN}}{{CHECK}} Successfully built! {{CHECK}} {{RESET}}"
+    @echo -e "Successfully built!"
     @just up
 
 pullall:
