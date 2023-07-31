@@ -59,8 +59,6 @@ const middleware = new EventSubMiddleware({
 // create an expressjs app
 const express = (await import('express')).default
 const app = express()
-app.use()
-
 middleware.apply(app)
 
 app.post('/webhooks', express.json(), express.urlencoded({ extended: true }), (req, res) => {
