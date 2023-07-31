@@ -31,11 +31,11 @@ const SubscribeEvents = (accountIds: string[]) => {
         }),
       )
     } catch (e) {
-      console.log(e)
+      console.log('[TWITCHEVENTS] could not sub', { e, userId })
     }
   })
 
-  console.log('[TWITCHEVENTS] Starting promise waiting for', accountIds.length)
+  console.log('[TWITCHEVENTS] Starting promise waiting for length', { length: accountIds.length })
   Promise.all(promises)
     .then(() =>
       console.log('[TWITCHEVENTS] done subbing to channelLength:', {
