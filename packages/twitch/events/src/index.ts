@@ -26,7 +26,7 @@ const SubscribeEvents = (accountIds: string[]) => {
               handleEvent(eventNameTyped, data),
             )
           } catch (error) {
-            console.error({ userId, error })
+            console.log('[TWITCHEVENTS] Could not sub userId error', { userId, error })
           }
         }),
       )
@@ -35,11 +35,15 @@ const SubscribeEvents = (accountIds: string[]) => {
     }
   })
 
-  console.log('Starting promise waiting for', accountIds.length)
+  console.log('[TWITCHEVENTS] Starting promise waiting for', accountIds.length)
   Promise.all(promises)
-    .then(() => console.log('done subbing to', accountIds.length, 'channels'))
+    .then(() =>
+      console.log('[TWITCHEVENTS] done subbing to channelLength:', {
+        channelLength: accountIds.length,
+      }),
+    )
     .catch((e) => {
-      console.log(e)
+      console.log('[TWITCHEVENTS] Could not sub due to error', { error: e })
     })
 }
 
@@ -76,10 +80,15 @@ app.post('/webhooks', (req: Request, res: Response) => {
 
     handleNewUser(user.providerAccountId)
       .then(() => {
-        console.log('done handling new user', { providerAccountId: user.providerAccountId })
+        console.log('[TWITCHEVENTS] done handling new user', {
+          providerAccountId: user.providerAccountId,
+        })
       })
       .catch((e) => {
-        console.error('error on handleNewUser', { e, providerAccountId: user.providerAccountId })
+        console.log('[TWITCHEVENTS] error on handleNewUser', {
+          e,
+          providerAccountId: user.providerAccountId,
+        })
       })
   }
 
@@ -92,10 +101,10 @@ app.listen(5010, () => {
   middleware
     .markAsReady()
     .then(() => {
-      console.log('Middleware is ready')
+      console.log('[TWITCHEVENTS] Middleware is ready')
     })
     .catch((e) => {
-      console.error('Failed to mark middleware as ready:', e)
+      console.log('[TWITCHEVENTS] Failed to mark middleware as ready:', { e })
     })
 
   console.log("Let's get started")
@@ -103,20 +112,20 @@ app.listen(5010, () => {
   // Load every account id when booting server
   getAccountIds()
     .then((accountIds) => {
-      console.log('Retrieved accountIds', accountIds.length)
+      console.log('[TWITCHEVENTS] Retrieved accountIds', { length: accountIds.length })
 
       SubscribeEvents(accountIds)
     })
     .catch((e) => {
-      console.log('error getting accountIds', e)
+      console.log('[TWITCHEVENTS] error getting accountIds', { e })
     })
 })
 
 async function handleNewUser(providerAccountId: string) {
-  console.log("New user, let's get their info", { userId: providerAccountId })
+  console.log("[TWITCHEVENTS] New user, let's get their info", { userId: providerAccountId })
 
   if (!providerAccountId) {
-    console.error("This should never happen, user doesn't have a providerAccountId", {
+    console.log("[TWITCHEVENTS] This should never happen, user doesn't have a providerAccountId", {
       providerAccountId,
     })
     return
@@ -158,18 +167,21 @@ async function handleNewUser(providerAccountId: string) {
         },
       })
       .then(() => {
-        console.log('updated user info for', providerAccountId)
+        console.log('[TWITCHEVENTS] updated user info for', providerAccountId)
       })
       .catch((e) => {
-        console.log(e, 'error saving new user info for', e.broadcasterId)
+        console.log('[TWITCHEVENTS] error saving new user info for', {
+          e,
+          providerAccountId: e.broadcasterId,
+        })
       })
   } catch (e) {
-    console.log(e, 'error on getStreamByUserId')
+    console.log('[TWITCHEVENTS] error on getStreamByUserId', { e })
   }
 
   try {
     SubscribeEvents([providerAccountId])
   } catch (e) {
-    console.log(e, 'error on handlenewuser')
+    console.log('[TWITCHEVENTS] error on handlenewuser', { e })
   }
 }
