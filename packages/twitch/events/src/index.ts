@@ -59,12 +59,11 @@ const middleware = new EventSubMiddleware({
 // create an expressjs app
 const express = (await import('express')).default
 const app = express()
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use()
 
 middleware.apply(app)
 
-app.post('/webhooks', (req: Request, res: Response) => {
+app.post('/webhooks', express.json(), express.urlencoded({ extended: true }), (req, res) => {
   // check authorization beaerer token
   if (req.headers.authorization !== process.env.TWITCH_EVENTSUB_SECRET) {
     return res.status(401).json({
