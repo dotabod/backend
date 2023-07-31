@@ -105,15 +105,6 @@ class SetupSupabase {
 
           // they go offline
           if (!client.stream_online && oldObj.stream_online) {
-            // expire the cached gsi client by deleting it
-            // the problem is even if they are offline, they could still be connecting to dotabod
-            // 1. playing games while offline
-            // 2. commands used in their chat while offline
-            setTimeout(() => {
-              // they may have come back online, in which case do nothing
-              const futureUser = findUser(newObj.id)
-              if (futureUser && !futureUser.stream_online) clearCacheForUser(futureUser)
-            }, 2 * 60 * 1000) // 2 minutes since going offline
             return
           }
 
