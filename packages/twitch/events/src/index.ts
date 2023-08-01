@@ -1,12 +1,20 @@
+import http from 'http'
+
 import { Account } from '@dotabod/prisma/dist/psql/index'
 import { EnvPortAdapter, EventSubHttpListener } from '@twurple/eventsub-http'
 import express from 'express'
-import { Server } from 'socket.io'
+import { Server as SocketServer } from 'socket.io'
 
 import { handleNewUser } from './handleNewUser.js'
 import { SubscribeEvents } from './SubscribeEvents.js'
 import BotAPI from './twitch/lib/BotApiSingleton.js'
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
+
+const socketApp = express()
+const webhookApp = express()
+
+const server = http.createServer(socketApp)
+const io = new SocketServer(server)
 
 if (!process.env.EVENTSUB_HOST || !process.env.TWITCH_EVENTSUB_SECRET) {
   throw new Error('Missing EVENTSUB_HOST or TWITCH_EVENTSUB_SECRET')
@@ -33,7 +41,6 @@ listener.start()
 console.log('[TWITCHEVENTS] Started the event sub listener')
 
 // the socketio hooks onto the listener http server that it creates
-export const io = new Server(5015)
 export const DOTABOD_EVENTS_ROOM = 'twitch-channel-events'
 export let eventsIOConnected = false
 
@@ -47,7 +54,12 @@ io.on('connection', (socket) => {
     return
   }
 
+  console.log('eventsIOConnected = true')
   eventsIOConnected = true
+
+  socket.on('connect_error', (err) => {
+    console.log(`connect_error due to ${err.message}`)
+  })
 
   socket.on('disconnect', () => {
     eventsIOConnected = false
@@ -65,9 +77,8 @@ getAccountIds()
     console.log('[TWITCHEVENTS] error getting accountIds', { e })
   })
 
-const app = express()
 // set the expressjs host name
-app.post('/', express.json(), express.urlencoded({ extended: true }), (req, res) => {
+webhookApp.post('/', express.json(), express.urlencoded({ extended: true }), (req, res) => {
   // check authorization beaerer token
   if (req.headers.authorization !== process.env.TWITCH_EVENTSUB_SECRET) {
     return res.status(401).json({
@@ -100,6 +111,10 @@ app.post('/', express.json(), express.urlencoded({ extended: true }), (req, res)
   })
 })
 
-app.listen(5011, () => {
-  console.log('[TWITCHEVENTS] Webhooks Listening on port 5011')
+webhookApp.listen(5015, () => {
+  console.log('[TWITCHEVENTS] Webhooks Listening on port 5015')
+})
+
+socketApp.listen(5010, () => {
+  console.log('[TWITCHEVENTS] Socket Listening on port 5010')
 })
