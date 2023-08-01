@@ -14,7 +14,7 @@ const socketApp = express()
 const webhookApp = express()
 
 const server = http.createServer(socketApp)
-const io = new SocketServer(server)
+export const io = new SocketServer(server)
 
 if (!process.env.EVENTSUB_HOST || !process.env.TWITCH_EVENTSUB_SECRET) {
   throw new Error('Missing EVENTSUB_HOST or TWITCH_EVENTSUB_SECRET')
