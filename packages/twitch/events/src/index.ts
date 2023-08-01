@@ -6,6 +6,7 @@ import { handleNewUser } from './handleNewUser.js'
 import { SubscribeEvents } from './SubscribeEvents.js'
 import BotAPI from './twitch/lib/BotApiSingleton.js'
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
+import './twitch/events/index.js'
 
 if (!process.env.EVENTSUB_HOST || !process.env.TWITCH_EVENTSUB_SECRET) {
   throw new Error('Missing EVENTSUB_HOST or TWITCH_EVENTSUB_SECRET')
@@ -41,3 +42,42 @@ getAccountIds()
   .catch((e) => {
     console.log('[TWITCHEVENTS] error getting accountIds', { e })
   })
+
+const app = express()
+// set the expressjs host name
+app.post('/', express.json(), express.urlencoded({ extended: true }), (req, res) => {
+  // check authorization beaerer token
+  if (req.headers.authorization !== process.env.TWITCH_EVENTSUB_SECRET) {
+    return res.status(401).json({
+      status: 'error',
+      message: 'Unauthorized',
+    })
+  }
+
+  if (req.body.type === 'INSERT' && req.body.table === 'accounts') {
+    const user = req.body.record as Account
+    if (IS_DEV && !DEV_CHANNELIDS.includes(user.providerAccountId)) return
+    if (!IS_DEV && DEV_CHANNELIDS.includes(user.providerAccountId)) return
+
+    handleNewUser(user.providerAccountId, listener)
+      .then(() => {
+        console.log('[TWITCHEVENTS] done handling new user', {
+          providerAccountId: user.providerAccountId,
+        })
+      })
+      .catch((e) => {
+        console.log('[TWITCHEVENTS] error on handleNewUser', {
+          e,
+          providerAccountId: user.providerAccountId,
+        })
+      })
+  }
+
+  res.status(200).json({
+    status: 'ok',
+  })
+})
+
+app.listen(5011, () => {
+  console.log('[TWITCHEVENTS] Webhooks Listening on port 5011')
+})
