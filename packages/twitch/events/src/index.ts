@@ -72,7 +72,7 @@ app.listen(5011, () => {
     .then((accountIds) => {
       console.log('[TWITCHEVENTS] Retrieved accountIds', { length: accountIds.length })
 
-      SubscribeEvents(accountIds)
+      SubscribeEvents(accountIds, listener)
     })
     .catch((e) => {
       console.log('[TWITCHEVENTS] error getting accountIds', { e })

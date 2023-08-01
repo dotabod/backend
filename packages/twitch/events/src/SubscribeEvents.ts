@@ -1,7 +1,9 @@
+import { EventSubHttpListener } from '@twurple/eventsub-http'
+
 import { events } from './twitch/events/events.js'
 import { handleEvent } from './twitch/events/handleEvent.js'
 
-export const SubscribeEvents = (accountIds: string[]) => {
+export const SubscribeEvents = (accountIds: string[], listener: EventSubHttpListener) => {
   const promises: Promise<unknown>[] = []
   accountIds.forEach((userId) => {
     try {
@@ -9,11 +11,9 @@ export const SubscribeEvents = (accountIds: string[]) => {
         ...Object.keys(events).map((eventName) => {
           const eventNameTyped = eventName as keyof typeof events
           try {
-            // @ts-expect-error asdf
+            // @ts-expect-error `listener[eventName]`
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            return middleware[eventName](userId, (data: unknown) =>
-              handleEvent(eventNameTyped, data),
-            )
+            return listener[eventName](userId, (data: unknown) => handleEvent(eventNameTyped, data))
           } catch (error) {
             console.log('[TWITCHEVENTS] Could not sub userId error', { userId, error })
           }
