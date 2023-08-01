@@ -55,6 +55,7 @@ services:
       - HOOKS_HOST
       - MONGO_URL
       - NODE_ENV
+      - PORT=5010
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
