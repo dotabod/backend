@@ -8,27 +8,6 @@ import { SubscribeEvents } from './SubscribeEvents.js'
 import BotAPI from './twitch/lib/BotApiSingleton.js'
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
 
-export const io = new Server(5015)
-export const DOTABOD_EVENTS_ROOM = 'twitch-channel-events'
-export let eventsIOConnected = false
-
-io.on('connection', (socket) => {
-  console.log('Joining socket')
-  try {
-    void socket.join(DOTABOD_EVENTS_ROOM)
-    console.log('Joined socket DOTABOD_EVENTS_ROOM')
-  } catch (e) {
-    console.log('could not join socket DOTABOD_EVENTS_ROOM', { e })
-    return
-  }
-
-  eventsIOConnected = true
-
-  socket.on('disconnect', () => {
-    eventsIOConnected = false
-  })
-})
-
 if (!process.env.EVENTSUB_HOST || !process.env.TWITCH_EVENTSUB_SECRET) {
   throw new Error('Missing EVENTSUB_HOST or TWITCH_EVENTSUB_SECRET')
 }
@@ -52,6 +31,28 @@ const listener = new EventSubHttpListener({
 console.log('[TWITCHEVENTS] Start the event sub listener')
 listener.start()
 console.log('[TWITCHEVENTS] Started the event sub listener')
+
+// the socketio hooks onto the listener http server that it creates
+export const io = new Server(5015)
+export const DOTABOD_EVENTS_ROOM = 'twitch-channel-events'
+export let eventsIOConnected = false
+
+io.on('connection', (socket) => {
+  console.log('Joining socket')
+  try {
+    void socket.join(DOTABOD_EVENTS_ROOM)
+    console.log('Joined socket DOTABOD_EVENTS_ROOM')
+  } catch (e) {
+    console.log('could not join socket DOTABOD_EVENTS_ROOM', { e })
+    return
+  }
+
+  eventsIOConnected = true
+
+  socket.on('disconnect', () => {
+    eventsIOConnected = false
+  })
+})
 
 // Load every account id when booting server
 getAccountIds()
