@@ -17,6 +17,7 @@ export async function getAccountIds() {
           providerAccountId: {
             in: dev_channelids,
           },
+          requires_refresh: true,
         },
       },
       orderBy: {
