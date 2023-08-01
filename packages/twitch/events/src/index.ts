@@ -47,7 +47,7 @@ app.post('/', express.json(), express.urlencoded({ extended: true }), (req, res)
     if (IS_DEV && !DEV_CHANNELIDS.includes(user.providerAccountId)) return
     if (!IS_DEV && DEV_CHANNELIDS.includes(user.providerAccountId)) return
 
-    handleNewUser(user.providerAccountId)
+    handleNewUser(user.providerAccountId, listener)
       .then(() => {
         console.log('[TWITCHEVENTS] done handling new user', {
           providerAccountId: user.providerAccountId,

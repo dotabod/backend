@@ -1,9 +1,11 @@
+import { EventSubHttpListener } from '@twurple/eventsub-http'
+
 import { prisma } from './db/prisma.js'
 import { SubscribeEvents } from './SubscribeEvents.js'
 import BotAPI from './twitch/lib/BotApiSingleton.js'
 
 const botApi = BotAPI.getInstance()
-export async function handleNewUser(providerAccountId: string) {
+export async function handleNewUser(providerAccountId: string, listener: EventSubHttpListener) {
   console.log("[TWITCHEVENTS] New user, let's get their info", { userId: providerAccountId })
 
   if (!providerAccountId) {
@@ -62,7 +64,7 @@ export async function handleNewUser(providerAccountId: string) {
   }
 
   try {
-    SubscribeEvents([providerAccountId])
+    SubscribeEvents([providerAccountId], listener)
   } catch (e) {
     console.log('[TWITCHEVENTS] error on handlenewuser', { e })
   }
