@@ -111,10 +111,10 @@ webhookApp.post('/', express.json(), express.urlencoded({ extended: true }), (re
   })
 })
 
-webhookApp.listen(5015, () => {
+webhookApp.listen(5011, () => {
   console.log('[TWITCHEVENTS] Webhooks Listening on port 5015')
 })
 
-socketApp.listen(5010, () => {
+socketApp.listen(5015, () => {
   console.log('[TWITCHEVENTS] Socket Listening on port 5010')
 })
