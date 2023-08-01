@@ -14,9 +14,6 @@ export async function getAccountIds() {
       select: { providerAccountId: true },
       where: {
         NOT: {
-          providerAccountId: {
-            in: dev_channelids,
-          },
           requires_refresh: true,
         },
       },
