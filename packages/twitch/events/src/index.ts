@@ -31,6 +31,17 @@ console.log('[TWITCHEVENTS] Start the event sub listener')
 listener.start()
 console.log('[TWITCHEVENTS] Started the event sub listener')
 
+// Load every account id when booting server
+getAccountIds()
+  .then((accountIds) => {
+    console.log('[TWITCHEVENTS] Retrieved accountIds', { length: accountIds.length })
+
+    SubscribeEvents(accountIds, listener)
+  })
+  .catch((e) => {
+    console.log('[TWITCHEVENTS] error getting accountIds', { e })
+  })
+
 const app = express()
 // set the expressjs host name
 app.post('/', express.json(), express.urlencoded({ extended: true }), (req, res) => {
@@ -67,14 +78,5 @@ app.post('/', express.json(), express.urlencoded({ extended: true }), (req, res)
 })
 
 app.listen(5011, () => {
-  // Load every account id when booting server
-  getAccountIds()
-    .then((accountIds) => {
-      console.log('[TWITCHEVENTS] Retrieved accountIds', { length: accountIds.length })
-
-      SubscribeEvents(accountIds, listener)
-    })
-    .catch((e) => {
-      console.log('[TWITCHEVENTS] error getting accountIds', { e })
-    })
+  console.log('[TWITCHEVENTS] Webhooks Listening on port 5011')
 })
