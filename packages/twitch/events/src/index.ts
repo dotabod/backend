@@ -1,12 +1,33 @@
 import { Account } from '@dotabod/prisma/dist/psql/index'
 import { EnvPortAdapter, EventSubHttpListener } from '@twurple/eventsub-http'
 import express from 'express'
+import { Server } from 'socket.io'
 
 import { handleNewUser } from './handleNewUser.js'
 import { SubscribeEvents } from './SubscribeEvents.js'
 import BotAPI from './twitch/lib/BotApiSingleton.js'
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
-import './twitch/events/index.js'
+
+export const io = new Server(5015)
+export const DOTABOD_EVENTS_ROOM = 'twitch-channel-events'
+export let eventsIOConnected = false
+
+io.on('connection', (socket) => {
+  console.log('Joining socket')
+  try {
+    void socket.join(DOTABOD_EVENTS_ROOM)
+    console.log('Joined socket DOTABOD_EVENTS_ROOM')
+  } catch (e) {
+    console.log('could not join socket DOTABOD_EVENTS_ROOM', { e })
+    return
+  }
+
+  eventsIOConnected = true
+
+  socket.on('disconnect', () => {
+    eventsIOConnected = false
+  })
+})
 
 if (!process.env.EVENTSUB_HOST || !process.env.TWITCH_EVENTSUB_SECRET) {
   throw new Error('Missing EVENTSUB_HOST or TWITCH_EVENTSUB_SECRET')
