@@ -1,67 +1,39 @@
 import { Account } from '@dotabod/prisma/dist/psql/index'
-import { EventSubMiddleware } from '@twurple/eventsub-http'
-import { Request, Response } from 'express'
+import { EnvPortAdapter, EventSubHttpListener } from '@twurple/eventsub-http'
+import express from 'express'
 
-import { prisma } from './db/prisma.js'
-import { events } from './twitch/events/events.js'
-import { handleEvent } from './twitch/events/handleEvent.js'
+import { handleNewUser } from './handleNewUser.js'
+import { SubscribeEvents } from './SubscribeEvents.js'
 import BotAPI from './twitch/lib/BotApiSingleton.js'
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
+
+if (!process.env.EVENTSUB_HOST || !process.env.TWITCH_EVENTSUB_SECRET) {
+  throw new Error('Missing EVENTSUB_HOST or TWITCH_EVENTSUB_SECRET')
+}
+
+const { EVENTSUB_HOST, TWITCH_EVENTSUB_SECRET } = process.env
 
 const IS_DEV = process.env.NODE_ENV !== 'production'
 const DEV_CHANNELIDS = process.env.DEV_CHANNELIDS?.split(',') ?? []
 const botApi = BotAPI.getInstance()
 
-const SubscribeEvents = (accountIds: string[]) => {
-  const promises: Promise<any>[] = []
-  accountIds.forEach((userId) => {
-    try {
-      promises.push(
-        ...Object.keys(events).map((eventName) => {
-          const eventNameTyped = eventName as keyof typeof events
-          try {
-            // @ts-expect-error asdf
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            return middleware[eventName](userId, (data: unknown) =>
-              handleEvent(eventNameTyped, data),
-            )
-          } catch (error) {
-            console.log('[TWITCHEVENTS] Could not sub userId error', { userId, error })
-          }
-        }),
-      )
-    } catch (e) {
-      console.log('[TWITCHEVENTS] could not sub', { e, userId })
-    }
-  })
-
-  console.log('[TWITCHEVENTS] Starting promise waiting for length', { length: accountIds.length })
-  Promise.all(promises)
-    .then(() =>
-      console.log('[TWITCHEVENTS] done subbing to channelLength:', {
-        channelLength: accountIds.length,
-      }),
-    )
-    .catch((e) => {
-      console.log('[TWITCHEVENTS] Could not sub due to error', { error: e })
-    })
-}
-
-const middleware = new EventSubMiddleware({
+const listener = new EventSubHttpListener({
   apiClient: botApi,
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  hostName: process.env.EVENTSUB_HOST!,
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  secret: process.env.TWITCH_EVENTSUB_SECRET!,
   legacySecrets: true,
+  adapter: new EnvPortAdapter({
+    hostName: EVENTSUB_HOST,
+  }),
+  secret: TWITCH_EVENTSUB_SECRET,
+  strictHostCheck: true,
 })
 
-// create an expressjs app
-const express = (await import('express')).default
-const app = express()
-middleware.apply(app)
+console.log('[TWITCHEVENTS] Start the event sub listener')
+listener.start()
+console.log('[TWITCHEVENTS] Started the event sub listener')
 
-app.post('/webhooks', express.json(), express.urlencoded({ extended: true }), (req, res) => {
+const app = express()
+// set the expressjs host name
+app.post('/', express.json(), express.urlencoded({ extended: true }), (req, res) => {
   // check authorization beaerer token
   if (req.headers.authorization !== process.env.TWITCH_EVENTSUB_SECRET) {
     return res.status(401).json({
@@ -94,18 +66,7 @@ app.post('/webhooks', express.json(), express.urlencoded({ extended: true }), (r
   })
 })
 
-app.listen(5010, () => {
-  middleware
-    .markAsReady()
-    .then(() => {
-      console.log('[TWITCHEVENTS] Middleware is ready')
-    })
-    .catch((e) => {
-      console.log('[TWITCHEVENTS] Failed to mark middleware as ready:', { e })
-    })
-
-  console.log("Let's get started")
-
+app.listen(5011, () => {
   // Load every account id when booting server
   getAccountIds()
     .then((accountIds) => {
@@ -117,68 +78,3 @@ app.listen(5010, () => {
       console.log('[TWITCHEVENTS] error getting accountIds', { e })
     })
 })
-
-async function handleNewUser(providerAccountId: string) {
-  console.log("[TWITCHEVENTS] New user, let's get their info", { userId: providerAccountId })
-
-  if (!providerAccountId) {
-    console.log("[TWITCHEVENTS] This should never happen, user doesn't have a providerAccountId", {
-      providerAccountId,
-    })
-    return
-  }
-
-  try {
-    const stream = await botApi.streams.getStreamByUserId(providerAccountId)
-    const streamer = await botApi.users.getUserById(providerAccountId)
-    const follows = botApi.users.getFollowsPaginated({
-      followedUser: providerAccountId,
-    })
-    const totalFollowerCount = await follows.getTotalCount()
-
-    const data = {
-      displayName: streamer?.displayName,
-      name: streamer?.name,
-      followers: totalFollowerCount,
-      stream_online: !!stream?.startDate,
-      stream_start_date: stream?.startDate ?? null,
-    }
-
-    // remove falsy values from data (like displayName: undefined)
-    const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([key, value]) => Boolean(value)),
-    )
-
-    prisma.account
-      .update({
-        data: {
-          user: {
-            update: filteredData,
-          },
-        },
-        where: {
-          provider_providerAccountId: {
-            provider: 'twitch',
-            providerAccountId: providerAccountId,
-          },
-        },
-      })
-      .then(() => {
-        console.log('[TWITCHEVENTS] updated user info for', providerAccountId)
-      })
-      .catch((e) => {
-        console.log('[TWITCHEVENTS] error saving new user info for', {
-          e,
-          providerAccountId: e.broadcasterId,
-        })
-      })
-  } catch (e) {
-    console.log('[TWITCHEVENTS] error on getStreamByUserId', { e })
-  }
-
-  try {
-    SubscribeEvents([providerAccountId])
-  } catch (e) {
-    console.log('[TWITCHEVENTS] error on handlenewuser', { e })
-  }
-}

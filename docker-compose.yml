@@ -44,6 +44,7 @@ services:
     ports:
       - "82:5010"
       - "5015:5015"
+      - "5011:5011"
     environment:
       - DATABASE_URL
       - DB_SECRET
@@ -51,9 +52,9 @@ services:
       - DEV_CHANNELS
       - DEV_CHANNELIDS
       - EVENTSUB_HOST
+      - HOOKS_HOST
       - MONGO_URL
       - NODE_ENV
-      - PORT=5010
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
@@ -108,6 +109,7 @@ services:
     environment:
       - NGINX_HOST
       - EVENTSUB_HOST
+      - HOOKS_HOST
       - TLS_CERT
       - TLS_KEY
 
