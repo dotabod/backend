@@ -13,8 +13,8 @@ export async function getAccountIds() {
     .findMany({
       select: { providerAccountId: true },
       where: {
-        NOT: {
-          requires_refresh: true,
+        requires_refresh: {
+          not: true,
         },
       },
       orderBy: {
