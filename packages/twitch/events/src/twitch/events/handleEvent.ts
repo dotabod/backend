@@ -1,12 +1,7 @@
 import { events } from './events.js'
-
-import { DOTABOD_EVENTS_ROOM, eventsIOConnected, io } from './index.js'
+import { DOTABOD_EVENTS_ROOM, eventsIOConnected, io } from '../../index.js'
 
 export const handleEvent = (eventName: keyof typeof events, data: any) => {
-  if (!eventsIOConnected) {
-    return
-  }
-
   const event = events[eventName]
 
   if (event?.customHandler) {
@@ -17,7 +12,7 @@ export const handleEvent = (eventName: keyof typeof events, data: any) => {
     }
   }
 
-  if (event?.sendToSocket) {
+  if (event?.sendToSocket && eventsIOConnected) {
     io.to(DOTABOD_EVENTS_ROOM).emit(
       'event',
       eventName,
