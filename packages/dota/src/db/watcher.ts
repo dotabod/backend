@@ -27,11 +27,17 @@ class SetupSupabase {
     logger.info('Starting watcher for', { dev: this.IS_DEV, channels: this.DEV_CHANNELS })
   }
 
+  shouldHandleDevChannel(name: string) {
+    return this.IS_DEV ? this.DEV_CHANNELS.includes(name) : !this.DEV_CHANNELS.includes(name)
+  }
+
+  shouldHandleDevChannelId(id: string) {
+    return this.IS_DEV ? this.DEV_CHANNELIDS.includes(id) : !this.DEV_CHANNELIDS.includes(id)
+  }
+
   toggleHandler = async (userId: string, enable: boolean) => {
     const client = await getDBUser({ token: userId })
-    if (!client) return
-    if (this.IS_DEV && !this.DEV_CHANNELS.includes(client.name)) return
-    if (!this.IS_DEV && this.DEV_CHANNELS.includes(client.name)) return
+    if (!client || !this.shouldHandleDevChannel(client.name)) return
 
     toggleDotabod(userId, enable, client.name, client.locale)
   }
@@ -105,12 +111,6 @@ class SetupSupabase {
           // they go offline
           if (!client.stream_online && oldObj.stream_online) {
             return
-          }
-
-          if (typeof newObj.stream_start_date === 'string') {
-            client.stream_start_date = new Date(newObj.stream_start_date)
-          } else {
-            client.stream_start_date = newObj.stream_start_date
           }
 
           if (typeof newObj.stream_start_date === 'string') {
