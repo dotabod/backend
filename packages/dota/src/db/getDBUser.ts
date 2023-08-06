@@ -5,6 +5,10 @@ import { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
 import { prisma } from './prisma.js'
 
+function deleteLookupToken(lookupToken: string) {
+  lookingupToken.delete(lookupToken)
+}
+
 export default async function getDBUser({
   token,
   twitchId,
@@ -12,18 +16,20 @@ export default async function getDBUser({
 }: { token?: string; twitchId?: string; ip?: string } = {}): Promise<
   SocketClient | null | undefined
 > {
-  if (invalidTokens.has(token || twitchId)) return null
+  const lookupToken = token ?? twitchId ?? ''
+
+  if (invalidTokens.has(lookupToken)) return null
 
   const client = findUser(token) ?? findUserByTwitchId(twitchId)
   if (client) {
-    lookingupToken.delete(token ?? twitchId ?? '')
+    deleteLookupToken(lookupToken)
     return client
   }
 
-  if (lookingupToken.has(token ?? twitchId ?? '')) return null
+  if (lookingupToken.has(lookupToken)) return null
 
-  logger.info('[GSI] Havent cached user token yet, checking db', { ip, token: token ?? twitchId })
-  lookingupToken.set(token ?? twitchId ?? '', true)
+  logger.info('[GSI] Haven’t cached user token yet, checking db', { ip, token: lookupToken })
+  lookingupToken.set(lookupToken, true)
 
   return await prisma.user
     .findFirstOrThrow({
@@ -72,43 +78,43 @@ export default async function getDBUser({
     })
     .then((user) => {
       if (!user.id) {
-        logger.info('Invalid token', { token: token ?? twitchId })
-        invalidTokens.add(token ?? twitchId)
-        lookingupToken.delete(token ?? twitchId ?? '')
+        logger.info('Invalid token', { token: lookupToken })
+        invalidTokens.add(lookupToken)
+        deleteLookupToken(lookupToken)
         return null
       }
 
       const client = findUser(user.id)
       if (client) {
-        lookingupToken.delete(token ?? twitchId ?? '')
+        deleteLookupToken(lookupToken)
         return client
       }
 
-      const theUser = {
+      const userInfo = {
         ...user,
         mmr: user.mmr || user.SteamAccount[0]?.mmr || 0,
         steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
         token: user.id,
       }
 
-      if (!gsiHandlers.has(theUser.id)) {
-        if (theUser.stream_online) {
-          logger.info('[GSI] Connecting new client', { token: theUser.id, name: theUser.name })
+      const gsiHandler = gsiHandlers.get(userInfo.id) || new GSIHandler(userInfo)
+
+      if (gsiHandler instanceof GSIHandler) {
+        if (userInfo.stream_online) {
+          logger.info('[GSI] Connecting new client', { token: userInfo.id, name: userInfo.name })
         }
 
-        const gsiHandler = new GSIHandler(theUser)
-        gsiHandlers.set(theUser.id, gsiHandler)
-        twitchIdToToken.set(theUser.Account!.providerAccountId, theUser.id)
-        lookingupToken.delete(token ?? twitchId ?? '')
-        return gsiHandler.client
+        gsiHandlers.set(userInfo.id, gsiHandler)
+        twitchIdToToken.set(userInfo.Account!.providerAccountId, userInfo.id)
+        deleteLookupToken(lookupToken)
       }
 
-      return theUser as SocketClient
+      return userInfo as SocketClient
     })
     .catch((e: any) => {
-      logger.error('[USER] Error checking auth', { token: token ?? twitchId, e })
-      invalidTokens.add(token ?? twitchId)
-      lookingupToken.delete(token ?? twitchId ?? '')
+      logger.error('[USER] Error checking auth', { token: lookupToken, e })
+      invalidTokens.add(lookupToken)
+      deleteLookupToken(lookupToken)
 
       return null
     })
