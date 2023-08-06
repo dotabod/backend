@@ -56,10 +56,16 @@ interface steamUserDetails {
 }
 
 const waitCustom = (time: number) => new Promise((resolve) => setTimeout(resolve, time || 0))
-const retryCustom = (cont: number, fn: () => Promise<any>, delay: number): Promise<any> =>
-  fn().catch((err) =>
-    cont > 0 ? waitCustom(delay).then(() => retryCustom(cont - 1, fn, delay)) : Promise.reject(err),
-  )
+const retryCustom = async (cont: number, fn: () => Promise<any>, delay: number): Promise<any> => {
+  for (let i = 0; i < cont; i++) {
+    try {
+      return await fn()
+    } catch (err) {
+      await waitCustom(delay)
+    }
+  }
+  return Promise.reject('Retry limit exceeded')
+}
 
 const mongo = await Mongo.connect()
 
@@ -170,11 +176,11 @@ class Dota {
       }
     })
 
-    this.steamClient.on('error', (error: any) => {
+    this.steamClient.on('error', async (error: any) => {
       logger.info('[STEAM]steam error', { error })
       if (process.env.NODE_ENV !== 'production') {
         try {
-          void this.exit()
+          await this.exit()
         } catch (e) {
           logger.error('err steam error', { e })
         }
@@ -220,21 +226,17 @@ class Dota {
     itemsOnly?: boolean
   }) => {
     return new Promise((resolveOuter: (response: delayedGames | null) => void) => {
-      try {
-        void this.GetRealTimeStats({
-          steam_server_id: server_steamid,
-          token,
-          match_id,
-          itemsOnly,
-          waitForHeros: false,
-          refetchCards: refetchCards,
-          cb: (err, response) => {
-            resolveOuter(response)
-          },
-        })
-      } catch (e) {
-        logger.error('err GetRealTimeStats cb promise', { e })
-      }
+      this.GetRealTimeStats({
+        steam_server_id: server_steamid,
+        token,
+        match_id,
+        itemsOnly,
+        waitForHeros: false,
+        refetchCards: refetchCards,
+        cb: (err, response) => {
+          resolveOuter(response)
+        },
+      }).catch((err) => logger.error('err GetRealTimeStats inner promise', { err }))
     })
   }
 
@@ -338,7 +340,7 @@ class Dota {
               // Force get new medals for this match. They could have updated!
               if (refetchCards) {
                 const { accountIds } = getAccountsFromMatch(game)
-                void this.getCards(accountIds, true)
+                await this.getCards(accountIds, true)
               }
             } catch (e) {
               logger.info('mongo error saving match', { e })
@@ -348,7 +350,7 @@ class Dota {
             if (!hasHeroes) {
               logger.info('Waiting for hero ids', { matchId: match_id })
               try {
-                void this.GetRealTimeStats({
+                await this.GetRealTimeStats({
                   match_id,
                   token,
                   steam_server_id: steam_server_id,
