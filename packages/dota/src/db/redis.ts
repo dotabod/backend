@@ -11,32 +11,37 @@ export default class RedisClient {
     this.client = createClient({ url: 'redis://redis:6379' })
     this.subscriber = this.client.duplicate()
 
-    this.client.on('error', (err: any) => {
-      if (err?.code !== 'ENOTFOUND') return logger.error('Redis Client Error', { err })
+    this.setupConnection(this.client, 'client')
+    this.setupConnection(this.subscriber, 'subscriber')
+  }
+
+  private setupConnection(connection: ReturnType<typeof createClient>, connectionName: string) {
+    connection.on('error', (err: any) => {
+      if (err?.code !== 'ENOTFOUND') return logger.error(`Redis ${connectionName} Error`, { err })
     })
-    this.client.once('connect', () => {
-      logger.info('[REDIS] Redis client connected')
+    connection.once('connect', () => {
+      logger.info(`[REDIS] Redis ${connectionName} connected`)
     })
   }
 
-  public async connectClient(): Promise<ReturnType<typeof createClient>> {
+  public async connect(
+    connection: ReturnType<typeof createClient>,
+  ): Promise<ReturnType<typeof createClient>> {
     try {
-      await this.client.connect()
-      return this.client
+      await connection.connect()
+      return connection
     } catch (error) {
       logger.error('REDIS CONNECT ERR', { error })
       throw error
     }
   }
 
-  public async connectSubscriber(): Promise<ReturnType<typeof createClient>> {
-    try {
-      await this.subscriber.connect()
-      return this.subscriber
-    } catch (error) {
-      logger.error('REDIS CONNECT ERR', { error })
-      throw error
-    }
+  public connectClient(): Promise<ReturnType<typeof createClient>> {
+    return this.connect(this.client)
+  }
+
+  public connectSubscriber(): Promise<ReturnType<typeof createClient>> {
+    return this.connect(this.subscriber)
   }
 
   public static getInstance(): RedisClient {
