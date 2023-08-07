@@ -11,9 +11,6 @@ services:
     restart: on-failure
     build:
       context: .
-      strategy:
-        # Disable parallel build
-        serial: true
       dockerfile: ./packages/Dockerfile.chat
       args:
         - BUILD_CONTEXT=packages/twitch/chat
@@ -40,9 +37,6 @@ services:
     restart: on-failure
     build:
       context: .
-      strategy:
-        # Disable parallel build
-        serial: true
       dockerfile: ./packages/Dockerfile.events
       args:
         - BUILD_CONTEXT=packages/twitch/events
@@ -72,9 +66,6 @@ services:
     restart: on-failure
     build:
       context: .
-      strategy:
-        # Disable parallel build
-        serial: true
       dockerfile: ./packages/Dockerfile.dota
       args:
         - BUILD_CONTEXT=packages/dota
@@ -118,10 +109,7 @@ services:
     volumes:
       - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
     build:
-      context: .
-      strategy:
-        # Disable parallel build
-        serial: true/services/nginx
+      context: ./services/nginx
       dockerfile: Dockerfile
     ports:
       - "80:80"
