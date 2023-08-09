@@ -39,14 +39,16 @@ eventHandler.registerEvent(`hero:name`, {
                     lng: dotaClient.client.locale,
                     emote: 'Okayeg 👍',
                     emote2: 'peepoGamble',
-                    oldHeroName: dotaClient.playingHero,
-                    newHeroName: name,
+                    oldHeroName: dotaClient.playingHero
+                      ? getHero(dotaClient.playingHero)?.localized_name ?? dotaClient.playingHero
+                      : dotaClient.playingHero,
+                    newHeroName: hero?.localized_name ?? name,
                   }),
                   { delay: false },
                 )
               logger.info('[BETS] remade bets', {
                 event: 'open_bets',
-                oldHeroName: dotaClient.playingHero,
+                oldHeroName: hero?.localized_name ?? dotaClient.playingHero,
                 newHeroName: name,
                 user: dotaClient.getToken(),
                 player_team: dotaClient.client.gsi?.player?.team_name,
