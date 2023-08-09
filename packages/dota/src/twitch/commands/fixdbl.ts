@@ -61,6 +61,7 @@ commandHandler.registerCommand('fixdbl', {
       )
 
       updateMmr({
+        tellChat: !message.channel.client.stream_online,
         currentMmr: message.channel.client.mmr,
         newMmr: toggleDoubledownMmr({
           currentMmr: message.channel.client.mmr,

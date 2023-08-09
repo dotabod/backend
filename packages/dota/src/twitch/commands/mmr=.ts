@@ -32,6 +32,7 @@ commandHandler.registerCommand('setmmr', {
           channel: channel,
           token: client.token,
           force: true,
+          tellChat: !client.stream_online,
         })
         return
       } else if (accounts.length === 1) {
@@ -41,6 +42,7 @@ commandHandler.registerCommand('setmmr', {
           newMmr: mmr,
           steam32Id: accounts[0].steam32Id,
           channel: channel,
+          tellChat: !client.stream_online,
         })
         return
       } else {
@@ -69,6 +71,7 @@ commandHandler.registerCommand('setmmr', {
             newMmr: mmr,
             steam32Id: Number(client.steam32Id),
             channel: channel,
+            tellChat: !client.stream_online,
           })
           return
         }

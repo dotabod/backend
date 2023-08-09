@@ -63,6 +63,7 @@ commandHandler.registerCommand('fixparty', {
       )
 
       updateMmr({
+        tellChat: !message.channel.client.stream_online,
         currentMmr: message.channel.client.mmr,
         newMmr: togglePartyMmr({
           currentMmr: message.channel.client.mmr,

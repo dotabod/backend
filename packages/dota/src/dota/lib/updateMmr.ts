@@ -50,6 +50,7 @@ export function tellChatNewMMR({
 }
 
 interface Mmr {
+  tellChat?: boolean
   newMmr: string | number
   steam32Id: number | null | undefined
   channel: string
