@@ -58,7 +58,15 @@ interface Mmr {
   force?: boolean
 }
 
-export function updateMmr({ force = false, currentMmr, newMmr, steam32Id, channel, token }: Mmr) {
+export function updateMmr({
+  tellChat = false,
+  force = false,
+  currentMmr,
+  newMmr,
+  steam32Id,
+  channel,
+  token,
+}: Mmr) {
   // uncalibrated (0) mmr do not deserve an update
   if (!currentMmr && !force) return
 
@@ -96,6 +104,19 @@ export function updateMmr({ force = false, currentMmr, newMmr, steam32Id, channe
           },
         },
       })
+      .then(() => {
+        const client = findUser(token)
+
+        if (client && tellChat) {
+          tellChatNewMMR({
+            streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
+            locale: client.locale,
+            token: client.token,
+            mmr,
+            oldMmr: currentMmr,
+          })
+        }
+      })
       .catch((e) => {
         logger.info('[UPDATE MMR] Error updating user table', { channel, e })
       })
@@ -105,6 +126,13 @@ export function updateMmr({ force = false, currentMmr, newMmr, steam32Id, channe
 
   prisma.steamAccount
     .update({
+      select: {
+        user: {
+          select: {
+            id: true,
+          },
+        },
+      },
       data: {
         user: {
           update: {
@@ -116,6 +144,19 @@ export function updateMmr({ force = false, currentMmr, newMmr, steam32Id, channe
       where: {
         steam32Id,
       },
+    })
+    .then((data) => {
+      const client = findUser(data.user.id)
+
+      if (client && tellChat) {
+        tellChatNewMMR({
+          streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
+          locale: client.locale,
+          token: client.token,
+          mmr,
+          oldMmr: currentMmr,
+        })
+      }
     })
     .catch((e) => {
       logger.error('[UPDATE MMR] Error updating account table', { channel, e })
