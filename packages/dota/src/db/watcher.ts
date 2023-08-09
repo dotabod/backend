@@ -130,6 +130,7 @@ class SetupSupabase {
           if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
             client.mmr = newObj.mmr
 
+            if (!client.stream_online) return
             logger.info('[WATCHER MMR] Sending mmr to socket', {
               name: client.name,
               mmr: newObj.mmr,
@@ -141,8 +142,6 @@ class SetupSupabase {
               mmr: newObj.mmr,
               oldMmr: oldObj.mmr,
             })
-
-            if (!client.stream_online) return
 
             try {
               void handler()
@@ -254,6 +253,7 @@ class SetupSupabase {
           if (client.steam32Id === newObj.steam32Id) {
             client.mmr = newObj.mmr
 
+            if (!client.stream_online) return
             tellChatNewMMR({
               locale: client.locale,
               token: client.token,
@@ -261,9 +261,6 @@ class SetupSupabase {
               mmr: newObj.mmr,
               oldMmr: oldObj.mmr,
             })
-
-            if (!client.stream_online) return
-
             getRankDetail(newObj.mmr, newObj.steam32Id)
               .then((deets) => {
                 server.io.to(client.token).emit('update-medal', deets)
