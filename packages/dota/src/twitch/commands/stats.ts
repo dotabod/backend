@@ -43,7 +43,11 @@ export function getPlayerFromArgs({
   const color = args[0].toLowerCase().trim()
   const heroColorIndex = heroColors.findIndex((heroColor) => heroColor.toLowerCase() === color)
 
-  if (heroColorIndex !== -1) {
+  const colorKey = Number(args[0])
+  if (colorKey && colorKey >= 1 && colorKey <= 10) {
+    // 1-10 input
+    heroKey = colorKey - 1
+  } else if (heroColorIndex !== -1) {
     // color input
     heroKey = heroColorIndex
   } else {
