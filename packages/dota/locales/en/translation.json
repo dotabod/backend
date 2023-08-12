@@ -111,7 +111,7 @@
   "noHero": "No hero found",
   "noLastMatch": "Did not find a last match {{emote}}",
   "noNotable": "No notable players",
-  "notLive": "Stream not live {{emote}} . Actually live? Type !online",
+  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Not playing {{emote}}",
   "npAdd": "Try !np add <steam32id> <playername>",
   "npAdded": "Added {{name}} to !np for this channel",
