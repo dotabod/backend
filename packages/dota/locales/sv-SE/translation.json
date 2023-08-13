@@ -75,7 +75,7 @@
     "winrateStreamer_other": "Winrate är {{winrate}}% med {{- heroName}} {{timeperiod}} från {{count}} matcher."
   },
   "invalidColor": "Ogiltig hjältefärg, plats, eller namn. Prova 1-10, ett partiellt hjältenamn eller en färg från {{colorList}}",
-  "invalidColorNew": "Invalid command. Try `!{{command}} crystal` for Crystal Maiden or `!{{command}} teal` from {{colorList}}",
+  "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
   "invalidMmr": "Ogiltigt kommando. Prova !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} miste sin {{count}} kill streak {{emote}}",
@@ -111,7 +111,7 @@
   "noHero": "Ingen hjälte hittades",
   "noLastMatch": "Hittade inte förra matchen {{emote}}",
   "noNotable": "Inga anmärkningsvärda spelare",
-  "notLive": "Streamen är inte live {{emote}}",
+  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Spelar inte {{emote}}",
   "npAdd": "Prova !np add <steam32id> <spelarnamn>",
   "npAdded": "Lade till {{name}} till !np för denna kanal",

@@ -75,7 +75,7 @@
     "winrateStreamer_other": "Siegquote ist {{winrate}}% mit {{- heroName}} {{timeperiod}} von {{count}} spielen."
   },
   "invalidColor": "Ungültige Heldenfarbe, Slot oder Name. Versuchen Sie 1-10 einen Teil-Heldennamen oder eine Farbe von {{colorList}}",
-  "invalidColorNew": "Ungültiger Befehl. Versuche `!{{command}} Crystal` für Crystal Maiden oder `!{{command}} teal` von {{colorList}}",
+  "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
   "invalidMmr": "Ungültiger Befehl. Versuch !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} lost the {{count}} kill streak BibleThump",
@@ -111,7 +111,7 @@
   "noHero": "Kein Held gefunden",
   "noLastMatch": "Did not find a last match PauseChamp",
   "noNotable": "Keine nennenswerten Spieler",
-  "notLive": "Stream not live PauseChamp",
+  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Not playing PauseChamp",
   "npAdd": "Versuche !np add <steam32id> <playername>",
   "npAdded": "{{name}} zu !np für diesen Kanal hinzugefügt",

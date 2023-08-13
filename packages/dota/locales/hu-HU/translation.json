@@ -75,7 +75,7 @@
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Helytelen hero szín, slot vagy név. Próbáld 1-10ig, a hős nevét vagy a színt innen: {{colorList}}",
-  "invalidColorNew": "Invalid command. Try `!{{command}} crystal` for Crystal Maiden or `!{{command}} teal` from {{colorList}}",
+  "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
   "invalidMmr": "Érvénytelen parancs. Próbáld így: !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} {{count}} killstreakjének vége. {{emote}}",
@@ -111,7 +111,7 @@
   "noHero": "Hős nem található",
   "noLastMatch": "Előző meccs nem található {{emote}}",
   "noNotable": "Ismert/híres játékos nem található",
-  "notLive": "A stream nem fut {{emote}}",
+  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Nem vagyunk mérkőzésben {{emote}}",
   "npAdd": "Próbáld az !np add <steam32id> <playername> parancsot ismert játékos hozzáadásához.",
   "npAdded": "{{name}} ismert játékos hozzáadva a csatornához. (!np)",
