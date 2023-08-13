@@ -9,14 +9,28 @@ import { findItem } from './findItem.js'
 export default function checkMidas(
   data: Packet,
   passiveMidas: { counter: number; used: number; timer: number },
-) {
-  // Find the midas
+): boolean | number {
   const midasItem = findItem('item_hand_of_midas', true, data)
 
-  // Doesn't have a midas
   if (!midasItem || !midasItem[0]) return false
 
-  // Midas was used recently, wait for it to be off CD
+  // If Midas has 2 charges and is not on cooldown, it's passive
+  if (midasItem[0].charges === 2 && !isMidasOnCooldown(midasItem[0])) {
+    passiveMidas.used = Date.now()
+    resetPassiveMidas(passiveMidas)
+    return true
+  }
+
+  // If Midas has 1 charge, it might have been used once
+  if (midasItem[0].charges === 1 && !isMidasOnCooldown(midasItem[0])) {
+    updatePassiveMidasTimer(passiveMidas)
+    if (passiveMidas.timer >= 10000 && !passiveMidas.used) {
+      passiveMidas.used = Date.now()
+      resetPassiveMidas(passiveMidas)
+      return true
+    }
+  }
+
   if (isMidasOnCooldown(midasItem[0])) {
     // Tell chat it was used after x seconds
     if (passiveMidas.used) {
@@ -24,18 +38,7 @@ export default function checkMidas(
       passiveMidas.used = 0
       return secondsToUse
     }
-
     resetPassiveMidas(passiveMidas)
-    return false
-  }
-
-  updatePassiveMidasTimer(passiveMidas)
-
-  // Every n seconds that it isn't used we say passive midas
-  if (passiveMidas.timer >= 10000 && !passiveMidas.used) {
-    passiveMidas.used = Date.now()
-    resetPassiveMidas(passiveMidas)
-    return true
   }
 
   return false
@@ -46,6 +49,10 @@ export default function checkMidas(
  * @param midasItem - The midas item data
  */
 function isMidasOnCooldown(midasItem: Item): boolean {
+  // If the Midas has any charge available, it's not on cooldown
+  if ((midasItem.charges || 0) > 0) return false
+
+  // Otherwise, check the cooldown
   return Number(midasItem.cooldown) > 0 || midasItem.can_cast !== true
 }
 
