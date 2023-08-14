@@ -46,7 +46,7 @@ export default function checkMidas(
  * @param midasItem - The midas item data
  */
 function isMidasOnCooldown(midasItem: Item): boolean {
-  return Number(midasItem.cooldown) > 0 && midasItem.can_cast !== true && midasItem.charges === 0
+  return (Number(midasItem.cooldown) > 0 && midasItem.charges === 0) || midasItem.can_cast !== true
 }
 
 /**
