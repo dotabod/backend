@@ -77,7 +77,7 @@
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Slot, nombre o color de héroe inválido. Intenta del 1-10, parte del nombre del héroe o un color de {{colorList}}",
-  "invalidColorNew": "Comando inválido. Prueba `!{{command}} crystal` para Crystal Maiden o `!{{command}} teal` de {{colorList}}",
+  "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
   "invalidMmr": "Comando inválido. Usa !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} perdió la racha de {{count}} kills {{emote}}",
@@ -116,7 +116,7 @@
   "noHero": "No se ha encontrado el héroe",
   "noLastMatch": "No se ha encontrado la ultimo partido {{emote}}",
   "noNotable": "No hay jugadores destacados",
-  "notLive": "Stream no esta vivo {{emote}}",
+  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "No esta jugando {{emote}}",
   "npAdd": "Usa !np add<steam32id> <playername>",
   "npAdded": "Añadido {{name}} a !np para este canal",

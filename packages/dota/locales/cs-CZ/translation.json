@@ -85,7 +85,7 @@
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
-  "invalidColorNew": "Invalid command. Try `!{{command}} crystal` for Crystal Maiden or `!{{command}} teal` from {{colorList}}",
+  "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
   "invalidMmr": "Neplatný příkaz. Zkus !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
@@ -127,7 +127,7 @@
   "noHero": "Nenalezen žádný hrdina",
   "noLastMatch": "Nenalezena data posledního zápasu {{emote}}",
   "noNotable": "Žádní známí hráči",
-  "notLive": "Stream nevysílá {{emote}}",
+  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Nehrajem {{emote}}",
   "npAdd": "Zkus !np add <steam32id> <playername>",
   "npAdded": "{{name}} přidán do !np pro tento kanál",

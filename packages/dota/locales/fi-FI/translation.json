@@ -75,7 +75,7 @@
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Virheellinen sankarin väri, paikka tai nimi. Kokeile 1-10, osittaista sankarin nimeä tai väriä näistä {{colorList}}",
-  "invalidColorNew": "Invalid command. Try `!{{command}} crystal` for Crystal Maiden or `!{{command}} teal` from {{colorList}}",
+  "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
   "invalidMmr": "Virheellinen komento. Kokeile !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} menetti {{count}} tappoputken {{emote}}",
@@ -111,7 +111,7 @@
   "noHero": "Sankaria ei löytynyt",
   "noLastMatch": "Edellistä ottelua ei löytynyt {{emote}}",
   "noNotable": "Ei merkittäviä pelaajia",
-  "notLive": "Striimi ei ole livenä {{emote}}",
+  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Ei pelaa {{emote}}",
   "npAdd": "Kokeile !np add <steam32id> <pelaajanimi>",
   "npAdded": "{{name}} lisätty tämän kanavan !np:hen",
