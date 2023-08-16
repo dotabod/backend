@@ -85,7 +85,7 @@
     "winrateStreamer_other": "Відсоток перемог: {{winrate}}% {{count}} матчів на {{- heroName}} {{timeperiod}} ."
   },
   "invalidColor": "Неправильний номер, ім'я або колір героя. Спробуйте ввести 1-10, часткове ім'я героя або один з кольорів: {{colorList}}",
-  "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidColorNew": "Неправильна команда. Спробуйте `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` з {{colorList}}",
   "invalidMmr": "Неправильна команда. Спробуйте !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} втратив серію з {{count}} вбивств {{emote}}",
@@ -127,7 +127,7 @@
   "noHero": "Герой не знайдений",
   "noLastMatch": "Не знайдено останню гру {{emote}}",
   "noNotable": "Немає відомих гравців",
-  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
+  "notLive": "Стрім офлайн {{emote}} . Насправді онлайн? Модератори, напишіть !online",
   "notPlaying": "Не грає {{emote}}",
   "npAdd": "Спробуйте !np add <steam32id> <playername>",
   "npAdded": "Гравець {{name}} доданий до !np для цього каналу",
