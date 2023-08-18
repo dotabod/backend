@@ -1,7 +1,7 @@
 #################
 #      BASE     #
 #################
-FROM node:20.0-alpine as base
+FROM node:latest as base
 
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend"
 LABEL org.opencontainers.image.description="Dota twitch chat service"
@@ -9,7 +9,7 @@ LABEL org.opencontainers.image.licenses="AGPL-3.0"
 
 ARG BUILD_CONTEXT
 
-RUN apk add --no-cache git g++ make py3-pip
+RUN npm install -g node-gyp
 
 WORKDIR /app/$BUILD_CONTEXT
 COPY ./$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/yarn.lock* ./
@@ -45,7 +45,7 @@ RUN yarn build
 #################
 #    RUNNER    #
 #################
-FROM node:20.0-alpine
+FROM node:latest
 
 ARG BUILD_CONTEXT
 
