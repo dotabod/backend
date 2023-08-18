@@ -14,6 +14,7 @@
     "build": "tsc --build --verbose",
     "debug": "nodemon -L --ext ts --exec 'node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
     "dev": "doppler run --fallback-only -- nodemon -L --ext ts --exec 'node --no-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
+    "dev-docker": "nodemon -L --ext ts --exec 'node --no-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
     "test": "doppler run --fallback-only -- nodemon -L --ext ts ./src/dev/index.ts"
   },
   "dependencies": {

@@ -25,9 +25,9 @@ COPY package.json yarn.lock* ./
 
 RUN yarn install --pure-lockfile --non-interactive
 
-#################
+##################
 #     BUILDER    #
-#################
+##################
 FROM base AS builder
 
 WORKDIR /app
@@ -47,7 +47,10 @@ COPY ./$BUILD_CONTEXT/tsconfig.json ./
 COPY ./$BUILD_CONTEXT/src ./src
 
 # Run 'yarn build' only in production environment
-RUN yarn build
+ARG NODE_ENV
+RUN echo "NODE_ENV is $NODE_ENV"
+
+CMD [ "sh", "-c", "if [ \"$NODE_ENV\" = 'development' ]; then echo 'Dev no build!'; else yarn build; fi" ]
 
 #################
 #     PROD      #
@@ -79,4 +82,7 @@ COPY --from=builder /app/$BUILD_CONTEXT/package.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/tsconfig.json ./
 RUN mkdir -p ./src/steam/volumes
 
-CMD [ "sh", "-c", "yarn start" ]
+ARG NODE_ENV
+RUN echo "NODE_ENV is $NODE_ENV"
+
+CMD [ "yarn", "dev-docker" ]

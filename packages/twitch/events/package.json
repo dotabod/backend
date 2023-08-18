@@ -12,6 +12,7 @@
   "scripts": {
     "start": "node --trace-warnings --trace-deprecation ./dist/index.js",
     "build": "tsc --build --verbose",
+    "dev-docker": "nodemon -L --ext ts --exec 'node --no-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
     "dev": "nodemon -L --ext ts ./src/index.ts"
   },
   "dependencies": {

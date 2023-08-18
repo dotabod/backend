@@ -68,4 +68,7 @@ COPY --from=builder /app/$BUILD_CONTEXT/package.json ./
 COPY --from=builder /app/$BUILD_CONTEXT/tsconfig.json ./
 RUN mkdir -p ./src/steam/volumes
 
-CMD [ "sh", "-c", "yarn start" ]
+ARG NODE_ENV
+RUN echo "NODE_ENV is $NODE_ENV"
+
+CMD [ "sh", "-c", "if [ \"$NODE_ENV\" = 'development' ]; then yarn dev-docker; else yarn start; fi" ]
