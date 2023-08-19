@@ -4,12 +4,11 @@ const heroes = {
   npc_dota_hero_antimage: {
     id: 1,
     localized_name: 'Anti-Mage',
-    alias: ['am', 'magina', 'andy'],
+    alias: ['am'],
   },
   npc_dota_hero_axe: {
     id: 2,
-    localized_name: 'Axe',
-    alias: ['khan'],
+    localized_name: 'Axe'
   },
   npc_dota_hero_bane: {
     id: 3,
@@ -18,17 +17,17 @@ const heroes = {
   npc_dota_hero_bloodseeker: {
     id: 4,
     localized_name: 'Bloodseeker',
-    alias: ['bs', 'blood', 'seeker'],
+    alias: ['bs'],
   },
   npc_dota_hero_crystal_maiden: {
     id: 5,
     localized_name: 'Crystal Maiden',
-    alias: ['cm', 'crystal', 'maiden', 'rylai'],
+    alias: ['cm', 'rylai'],
   },
   npc_dota_hero_drow_ranger: {
     id: 6,
     localized_name: 'Drow Ranger',
-    alias: ['drow', 'traxex', 'trax'],
+    alias: ['drow'],
   },
   npc_dota_hero_earthshaker: {
     id: 7,
@@ -38,12 +37,12 @@ const heroes = {
   npc_dota_hero_juggernaut: {
     id: 8,
     localized_name: 'Juggernaut',
-    alias: ['jugg', 'yunero'],
+    alias: ['jug'],
   },
   npc_dota_hero_mirana: {
     id: 9,
     localized_name: 'Mirana',
-    alias: ['mira', 'potm'],
+    alias: ['potm'],
   },
   npc_dota_hero_morphling: {
     id: 10,
@@ -53,22 +52,20 @@ const heroes = {
   npc_dota_hero_nevermore: {
     id: 11,
     localized_name: 'Shadow Fiend',
-    alias: ['sf', 'nevermore'],
+    alias: ['sf'],
   },
   npc_dota_hero_phantom_lancer: {
     id: 12,
     localized_name: 'Phantom Lancer',
-    alias: ['pl', 'lancer'],
+    alias: ['pl'],
   },
   npc_dota_hero_puck: {
     id: 13,
-    localized_name: 'Puck',
-    alias: ['faerie'],
+    localized_name: 'Puck'
   },
   npc_dota_hero_pudge: {
     id: 14,
-    localized_name: 'Pudge',
-    alias: ['butcher'],
+    localized_name: 'Pudge'
   },
   npc_dota_hero_razor: {
     id: 15,
@@ -77,12 +74,12 @@ const heroes = {
   npc_dota_hero_sand_king: {
     id: 16,
     localized_name: 'Sand King',
-    alias: ['sk', 'sand', 'crixalis', 'crix'],
+    alias: ['sk'],
   },
   npc_dota_hero_storm_spirit: {
     id: 17,
     localized_name: 'Storm Spirit',
-    alias: ['storm', 'raijin'],
+    alias: ['storm'],
   },
   npc_dota_hero_sven: {
     id: 18,
@@ -90,28 +87,25 @@ const heroes = {
   },
   npc_dota_hero_tiny: {
     id: 19,
-    localized_name: 'Tiny',
-    alias: ['tony'],
+    localized_name: 'Tiny'
   },
   npc_dota_hero_vengefulspirit: {
     id: 20,
     localized_name: 'Vengeful Spirit',
-    alias: ['venge', 'vengeful'],
+    alias: ['venge', 'vs'],
   },
   npc_dota_hero_windrunner: {
     id: 21,
     localized_name: 'Windranger',
-    alias: ['wr', 'wind', 'windrunner', 'lyralei'],
+    alias: ['wr'],
   },
   npc_dota_hero_zuus: {
     id: 22,
-    localized_name: 'Zeus',
-    alias: ['zuus'],
+    localized_name: 'Zeus'
   },
   npc_dota_hero_kunkka: {
     id: 23,
     localized_name: 'Kunkka',
-    alias: ['admiral', 'captain'],
   },
   npc_dota_hero_lina: {
     id: 25,
@@ -128,8 +122,7 @@ const heroes = {
   },
   npc_dota_hero_slardar: {
     id: 28,
-    localized_name: 'Slardar',
-    alias: ['slard'],
+    localized_name: 'Slardar'
   },
   npc_dota_hero_tidehunter: {
     id: 29,
@@ -139,7 +132,7 @@ const heroes = {
   npc_dota_hero_witch_doctor: {
     id: 30,
     localized_name: 'Witch Doctor',
-    alias: ['wd', 'doctor', 'voljin'],
+    alias: ['wd', 'doc'],
   },
   npc_dota_hero_lich: {
     id: 31,
@@ -147,23 +140,21 @@ const heroes = {
   },
   npc_dota_hero_riki: {
     id: 32,
-    localized_name: 'Riki',
-    alias: ['sa', 'rikimaru'],
+    localized_name: 'Riki'
   },
   npc_dota_hero_enigma: {
     id: 33,
     localized_name: 'Enigma',
-    alias: ['darchrow'],
+    alias: ['nigma'],
   },
   npc_dota_hero_tinker: {
     id: 34,
     localized_name: 'Tinker',
-    alias: ['tink', 'boush'],
+    alias: ['tink',],
   },
   npc_dota_hero_sniper: {
     id: 35,
     localized_name: 'Sniper',
-    alias: ['kardel'],
   },
   npc_dota_hero_necrolyte: {
     id: 36,
@@ -173,22 +164,22 @@ const heroes = {
   npc_dota_hero_warlock: {
     id: 37,
     localized_name: 'Warlock',
-    alias: ['lock'],
+    alias: ['wl'],
   },
   npc_dota_hero_beastmaster: {
     id: 38,
     localized_name: 'Beastmaster',
-    alias: ['bm', 'beast', 'rexxar'],
+    alias: ['bm', 'beast'],
   },
   npc_dota_hero_queenofpain: {
     id: 39,
     localized_name: 'Queen of Pain',
-    alias: ['qop', 'queen', 'akasha'],
+    alias: ['qop'],
   },
   npc_dota_hero_venomancer: {
     id: 40,
     localized_name: 'Venomancer',
-    alias: ['veno', 'mancer'],
+    alias: ['veno'],
   },
   npc_dota_hero_faceless_void: {
     id: 41,
@@ -198,17 +189,17 @@ const heroes = {
   npc_dota_hero_skeleton_king: {
     id: 42,
     localized_name: 'Wraith King',
-    alias: ['wk', 'wraith', 'king', 'skeleton', 'leoric', 'leo'],
+    alias: ['wk'],
   },
   npc_dota_hero_death_prophet: {
     id: 43,
     localized_name: 'Death Prophet',
-    alias: ['dp', 'death', 'krobelus', 'krob'],
+    alias: ['dp'],
   },
   npc_dota_hero_phantom_assassin: {
     id: 44,
     localized_name: 'Phantom Assassin',
-    alias: ['pa', 'phantom', 'mortred', 'mort'],
+    alias: ['pa'],
   },
   npc_dota_hero_pugna: {
     id: 45,
@@ -230,7 +221,7 @@ const heroes = {
   npc_dota_hero_dragon_knight: {
     id: 49,
     localized_name: 'Dragon Knight',
-    alias: ['dk', 'davion'],
+    alias: ['dk'],
   },
   npc_dota_hero_dazzle: {
     id: 50,
@@ -249,22 +240,21 @@ const heroes = {
   npc_dota_hero_furion: {
     id: 53,
     localized_name: "Nature's Prophet",
-    alias: ['np', 'natures', 'prophet', 'furion', 'furi'],
+    alias: ['np', 'natures', 'prophet', 'furion'],
   },
   npc_dota_hero_life_stealer: {
     id: 54,
     localized_name: 'Lifestealer',
-    alias: ['ls', 'life', 'naix'],
+    alias: ['ls', 'naix'],
   },
   npc_dota_hero_dark_seer: {
     id: 55,
     localized_name: 'Dark Seer',
-    alias: ['ds', 'dark', 'seer'],
+    alias: ['ds'],
   },
   npc_dota_hero_clinkz: {
     id: 56,
     localized_name: 'Clinkz',
-    alias: ['bone'],
   },
   npc_dota_hero_omniknight: {
     id: 57,
@@ -274,7 +264,7 @@ const heroes = {
   npc_dota_hero_enchantress: {
     id: 58,
     localized_name: 'Enchantress',
-    alias: ['ench', 'chantress', 'bambi'],
+    alias: ['ench'],
   },
   npc_dota_hero_huskar: {
     id: 59,
@@ -284,17 +274,17 @@ const heroes = {
   npc_dota_hero_night_stalker: {
     id: 60,
     localized_name: 'Night Stalker',
-    alias: ['ns', 'night', 'stalker', 'balanar'],
+    alias: ['ns'],
   },
   npc_dota_hero_broodmother: {
     id: 61,
     localized_name: 'Broodmother',
-    alias: ['brood', 'mother', 'arachnia', 'spider'],
+    alias: ['brood', 'bm'],
   },
   npc_dota_hero_bounty_hunter: {
     id: 62,
     localized_name: 'Bounty Hunter',
-    alias: ['bh', 'bounty', 'gondar'],
+    alias: ['bh', 'bounty'],
   },
   npc_dota_hero_weaver: {
     id: 63,
@@ -322,12 +312,11 @@ const heroes = {
   npc_dota_hero_ancient_apparition: {
     id: 68,
     localized_name: 'Ancient Apparition',
-    alias: ['aa', 'ancient', 'apparition', 'kaldr'],
+    alias: ['aa'],
   },
   npc_dota_hero_doom_bringer: {
     id: 69,
     localized_name: 'Doom',
-    alias: ['lucifer', 'luci'],
   },
   npc_dota_hero_ursa: {
     id: 70,
@@ -336,22 +325,22 @@ const heroes = {
   npc_dota_hero_spirit_breaker: {
     id: 71,
     localized_name: 'Spirit Breaker',
-    alias: ['sb', 'breaker', 'barathrum', 'bara'],
+    alias: ['sb', 'bara'],
   },
   npc_dota_hero_gyrocopter: {
     id: 72,
     localized_name: 'Gyrocopter',
-    alias: ['gyro', 'copter'],
+    alias: ['gyro'],
   },
   npc_dota_hero_alchemist: {
     id: 73,
     localized_name: 'Alchemist',
-    alias: ['alch', 'alche', 'chemist'],
+    alias: ['alch'],
   },
   npc_dota_hero_invoker: {
     id: 74,
     localized_name: 'Invoker',
-    alias: ['invo', 'voker', 'kael'],
+    alias: ['invo', 'voker'],
   },
   npc_dota_hero_silencer: {
     id: 75,
@@ -361,27 +350,26 @@ const heroes = {
   npc_dota_hero_obsidian_destroyer: {
     id: 76,
     localized_name: 'Outworld Destroyer',
-    alias: ['od', 'outworld', 'obsidian'],
+    alias: ['od'],
   },
   npc_dota_hero_lycan: {
     id: 77,
     localized_name: 'Lycan',
-    alias: ['lycanthrope', 'wolf'],
   },
   npc_dota_hero_brewmaster: {
     id: 78,
     localized_name: 'Brewmaster',
-    alias: ['brew', 'panda', 'mangix'],
+    alias: ['brew', 'panda'],
   },
   npc_dota_hero_shadow_demon: {
     id: 79,
     localized_name: 'Shadow Demon',
-    alias: ['sd', 'eredar'],
+    alias: ['sd'],
   },
   npc_dota_hero_lone_druid: {
     id: 80,
     localized_name: 'Lone Druid',
-    alias: ['ld', 'lone', 'druid', 'sylla'],
+    alias: ['ld', 'lone'],
   },
   npc_dota_hero_chaos_knight: {
     id: 81,
@@ -391,37 +379,36 @@ const heroes = {
   npc_dota_hero_meepo: {
     id: 82,
     localized_name: 'Meepo',
-    alias: ['geomancer'],
   },
   npc_dota_hero_treant: {
     id: 83,
     localized_name: 'Treant Protector',
-    alias: ['treant', 'tree', 'trellen'],
+    alias: ['treant', 'tree'],
   },
   npc_dota_hero_ogre_magi: {
     id: 84,
     localized_name: 'Ogre Magi',
-    alias: ['om', 'ogre'],
+    alias: ['ogre'],
   },
   npc_dota_hero_undying: {
     id: 85,
     localized_name: 'Undying',
-    alias: ['undy', 'dirge', 'zombie'],
+    alias: ['undy', 'und'],
   },
   npc_dota_hero_rubick: {
     id: 86,
     localized_name: 'Rubick',
-    alias: ['rub', 'rubi'],
+    alias: ['rub', 'rubi', 'rubik'],
   },
   npc_dota_hero_disruptor: {
     id: 87,
     localized_name: 'Disruptor',
-    alias: ['dis', 'dist', 'ruptor', 'thrall'],
+    alias: ['dis', 'thrall'],
   },
   npc_dota_hero_nyx_assassin: {
     id: 88,
     localized_name: 'Nyx Assassin',
-    alias: ['na', 'nyx'],
+    alias: ['nyx'],
   },
   npc_dota_hero_naga_siren: {
     id: 89,
@@ -449,7 +436,7 @@ const heroes = {
   npc_dota_hero_medusa: {
     id: 94,
     localized_name: 'Medusa',
-    alias: ['dusa', 'gorgon'],
+    alias: ['dusa', 'dussy'],
   },
   npc_dota_hero_troll_warlord: {
     id: 95,
@@ -464,12 +451,12 @@ const heroes = {
   npc_dota_hero_magnataur: {
     id: 97,
     localized_name: 'Magnus',
-    alias: ['mag', 'magnataur'],
+    alias: ['mag'],
   },
   npc_dota_hero_shredder: {
     id: 98,
     localized_name: 'Timbersaw',
-    alias: ['timber', 'rizzrak', 'shredder'],
+    alias: ['timber'],
   },
   npc_dota_hero_bristleback: {
     id: 99,
@@ -479,7 +466,7 @@ const heroes = {
   npc_dota_hero_tusk: {
     id: 100,
     localized_name: 'Tusk',
-    alias: ['tuskarr', 'ymir'],
+    alias: ['tuskarr'],
   },
   npc_dota_hero_skywrath_mage: {
     id: 101,
@@ -494,12 +481,12 @@ const heroes = {
   npc_dota_hero_elder_titan: {
     id: 103,
     localized_name: 'Elder Titan',
-    alias: ['et', 'elder', 'titan', 'tc'],
+    alias: ['et', 'elder'],
   },
   npc_dota_hero_legion_commander: {
     id: 104,
     localized_name: 'Legion Commander',
-    alias: ['lc', 'legion', 'commander', 'tresdin'],
+    alias: ['lc', 'legion'],
   },
   npc_dota_hero_techies: {
     id: 105,
@@ -509,12 +496,12 @@ const heroes = {
   npc_dota_hero_ember_spirit: {
     id: 106,
     localized_name: 'Ember Spirit',
-    alias: ['ember', 'xin'],
+    alias: ['ember'],
   },
   npc_dota_hero_earth_spirit: {
     id: 107,
     localized_name: 'Earth Spirit',
-    alias: ['earth', 'kaolin'],
+    alias: ['earth', 'es'],
   },
   npc_dota_hero_abyssal_underlord: {
     id: 108,
@@ -529,12 +516,10 @@ const heroes = {
   npc_dota_hero_phoenix: {
     id: 110,
     localized_name: 'Phoenix',
-    alias: ['phoe', 'icarus', 'bird'],
   },
   npc_dota_hero_oracle: {
     id: 111,
     localized_name: 'Oracle',
-    alias: ['nerif'],
   },
   npc_dota_hero_winter_wyvern: {
     id: 112,
@@ -544,7 +529,7 @@ const heroes = {
   npc_dota_hero_arc_warden: {
     id: 113,
     localized_name: 'Arc Warden',
-    alias: ['arc', 'warden', 'zet'],
+    alias: ['arc'],
   },
   npc_dota_hero_monkey_king: {
     id: 114,
@@ -554,7 +539,7 @@ const heroes = {
   npc_dota_hero_dark_willow: {
     id: 119,
     localized_name: 'Dark Willow',
-    alias: ['dw', 'willow', 'mireska'],
+    alias: ['dw', 'willow'],
   },
   npc_dota_hero_pangolier: {
     id: 120,
@@ -564,22 +549,22 @@ const heroes = {
   npc_dota_hero_grimstroke: {
     id: 121,
     localized_name: 'Grimstroke',
-    alias: ['gs', 'grim'],
+    alias: ['grim'],
   },
   npc_dota_hero_hoodwink: {
     id: 123,
     localized_name: 'Hoodwink',
-    alias: ['hw', 'hood', 'squirrel'],
+    alias: ['hw', 'hoodwinkle'],
   },
   npc_dota_hero_void_spirit: {
     id: 126,
     localized_name: 'Void Spirit',
-    alias: ['vs', 'inai'],
+    alias: ['vs'],
   },
   npc_dota_hero_snapfire: {
     id: 128,
     localized_name: 'Snapfire',
-    alias: ['snap', 'beatrix', 'mortimer', 'grandma'],
+    alias: ['snap', 'mortimer', 'grandma', 'granny'],
   },
   npc_dota_hero_mars: {
     id: 129,
