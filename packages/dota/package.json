@@ -10,7 +10,7 @@
   "packageManager": "yarn@1.22.19",
   "private": true,
   "scripts": {
-    "start": "node --max_old_space_size=400 --inspect=0.0.0.0:9229 ./dist/index.js",
+    "start": "node ./dist/index.js",
     "build": "tsc --build --verbose",
     "debug": "nodemon -L --ext ts --exec 'node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
     "dev": "doppler run --fallback-only -- nodemon -L --ext ts --exec 'node --no-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
@@ -38,6 +38,7 @@
     "lru-cache": "^10.0.0",
     "mongodb": "^5.7.0",
     "newrelic": "^10.6.1",
+    "node-gyp": "^9.4.0",
     "redis": "^4.6.7",
     "retry": "^0.13.1",
     "socket.io": "^4.7.1",
