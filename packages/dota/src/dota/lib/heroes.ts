@@ -8,7 +8,7 @@ const heroes = {
   },
   npc_dota_hero_axe: {
     id: 2,
-    localized_name: 'Axe'
+    localized_name: 'Axe',
   },
   npc_dota_hero_bane: {
     id: 3,
@@ -61,11 +61,11 @@ const heroes = {
   },
   npc_dota_hero_puck: {
     id: 13,
-    localized_name: 'Puck'
+    localized_name: 'Puck',
   },
   npc_dota_hero_pudge: {
     id: 14,
-    localized_name: 'Pudge'
+    localized_name: 'Pudge',
   },
   npc_dota_hero_razor: {
     id: 15,
@@ -87,7 +87,7 @@ const heroes = {
   },
   npc_dota_hero_tiny: {
     id: 19,
-    localized_name: 'Tiny'
+    localized_name: 'Tiny',
   },
   npc_dota_hero_vengefulspirit: {
     id: 20,
@@ -101,7 +101,7 @@ const heroes = {
   },
   npc_dota_hero_zuus: {
     id: 22,
-    localized_name: 'Zeus'
+    localized_name: 'Zeus',
   },
   npc_dota_hero_kunkka: {
     id: 23,
@@ -122,7 +122,7 @@ const heroes = {
   },
   npc_dota_hero_slardar: {
     id: 28,
-    localized_name: 'Slardar'
+    localized_name: 'Slardar',
   },
   npc_dota_hero_tidehunter: {
     id: 29,
@@ -140,7 +140,7 @@ const heroes = {
   },
   npc_dota_hero_riki: {
     id: 32,
-    localized_name: 'Riki'
+    localized_name: 'Riki',
   },
   npc_dota_hero_enigma: {
     id: 33,
@@ -150,7 +150,7 @@ const heroes = {
   npc_dota_hero_tinker: {
     id: 34,
     localized_name: 'Tinker',
-    alias: ['tink',],
+    alias: ['tink'],
   },
   npc_dota_hero_sniper: {
     id: 35,
