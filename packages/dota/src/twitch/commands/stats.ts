@@ -51,7 +51,7 @@ export function getPlayerFromArgs({
     // color input
     heroKey = heroColorIndex
   } else {
-    // hero name input
+    // hero name input or alias
     const heroName = args.join('').toLowerCase().trim()
     const hero = getHeroByName(heroName)
     heroKey = hero ? players.findIndex((player) => player.heroid === hero.id) : -1

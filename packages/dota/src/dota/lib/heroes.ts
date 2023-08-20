@@ -9,10 +9,12 @@ const heroes = {
   npc_dota_hero_axe: {
     id: 2,
     localized_name: 'Axe',
+    alias: [],
   },
   npc_dota_hero_bane: {
     id: 3,
     localized_name: 'Bane',
+    alias: [],
   },
   npc_dota_hero_bloodseeker: {
     id: 4,
@@ -62,14 +64,17 @@ const heroes = {
   npc_dota_hero_puck: {
     id: 13,
     localized_name: 'Puck',
+    alias: [],
   },
   npc_dota_hero_pudge: {
     id: 14,
     localized_name: 'Pudge',
+    alias: [],
   },
   npc_dota_hero_razor: {
     id: 15,
     localized_name: 'Razor',
+    alias: [],
   },
   npc_dota_hero_sand_king: {
     id: 16,
@@ -84,10 +89,12 @@ const heroes = {
   npc_dota_hero_sven: {
     id: 18,
     localized_name: 'Sven',
+    alias: [],
   },
   npc_dota_hero_tiny: {
     id: 19,
     localized_name: 'Tiny',
+    alias: [],
   },
   npc_dota_hero_vengefulspirit: {
     id: 20,
@@ -102,18 +109,22 @@ const heroes = {
   npc_dota_hero_zuus: {
     id: 22,
     localized_name: 'Zeus',
+    alias: [],
   },
   npc_dota_hero_kunkka: {
     id: 23,
     localized_name: 'Kunkka',
+    alias: [],
   },
   npc_dota_hero_lina: {
     id: 25,
     localized_name: 'Lina',
+    alias: [],
   },
   npc_dota_hero_lion: {
     id: 26,
     localized_name: 'Lion',
+    alias: [],
   },
   npc_dota_hero_shadow_shaman: {
     id: 27,
@@ -123,6 +134,7 @@ const heroes = {
   npc_dota_hero_slardar: {
     id: 28,
     localized_name: 'Slardar',
+    alias: [],
   },
   npc_dota_hero_tidehunter: {
     id: 29,
@@ -137,10 +149,12 @@ const heroes = {
   npc_dota_hero_lich: {
     id: 31,
     localized_name: 'Lich',
+    alias: [],
   },
   npc_dota_hero_riki: {
     id: 32,
     localized_name: 'Riki',
+    alias: [],
   },
   npc_dota_hero_enigma: {
     id: 33,
@@ -155,6 +169,7 @@ const heroes = {
   npc_dota_hero_sniper: {
     id: 35,
     localized_name: 'Sniper',
+    alias: [],
   },
   npc_dota_hero_necrolyte: {
     id: 36,
@@ -204,6 +219,7 @@ const heroes = {
   npc_dota_hero_pugna: {
     id: 45,
     localized_name: 'Pugna',
+    alias: [],
   },
   npc_dota_hero_templar_assassin: {
     id: 46,
@@ -213,10 +229,12 @@ const heroes = {
   npc_dota_hero_viper: {
     id: 47,
     localized_name: 'Viper',
+    alias: [],
   },
   npc_dota_hero_luna: {
     id: 48,
     localized_name: 'Luna',
+    alias: [],
   },
   npc_dota_hero_dragon_knight: {
     id: 49,
@@ -226,6 +244,7 @@ const heroes = {
   npc_dota_hero_dazzle: {
     id: 50,
     localized_name: 'Dazzle',
+    alias: [],
   },
   npc_dota_hero_rattletrap: {
     id: 51,
@@ -255,6 +274,7 @@ const heroes = {
   npc_dota_hero_clinkz: {
     id: 56,
     localized_name: 'Clinkz',
+    alias: [],
   },
   npc_dota_hero_omniknight: {
     id: 57,
@@ -289,6 +309,7 @@ const heroes = {
   npc_dota_hero_weaver: {
     id: 63,
     localized_name: 'Weaver',
+    alias: [],
   },
   npc_dota_hero_jakiro: {
     id: 64,
@@ -303,6 +324,7 @@ const heroes = {
   npc_dota_hero_chen: {
     id: 66,
     localized_name: 'Chen',
+    alias: [],
   },
   npc_dota_hero_spectre: {
     id: 67,
@@ -317,10 +339,12 @@ const heroes = {
   npc_dota_hero_doom_bringer: {
     id: 69,
     localized_name: 'Doom',
+    alias: [],
   },
   npc_dota_hero_ursa: {
     id: 70,
     localized_name: 'Ursa',
+    alias: [],
   },
   npc_dota_hero_spirit_breaker: {
     id: 71,
@@ -355,6 +379,7 @@ const heroes = {
   npc_dota_hero_lycan: {
     id: 77,
     localized_name: 'Lycan',
+    alias: [],
   },
   npc_dota_hero_brewmaster: {
     id: 78,
@@ -379,6 +404,7 @@ const heroes = {
   npc_dota_hero_meepo: {
     id: 82,
     localized_name: 'Meepo',
+    alias: [],
   },
   npc_dota_hero_treant: {
     id: 83,
@@ -428,10 +454,12 @@ const heroes = {
   npc_dota_hero_visage: {
     id: 92,
     localized_name: 'Visage',
+    alias: [],
   },
   npc_dota_hero_slark: {
     id: 93,
     localized_name: 'Slark',
+    alias: [],
   },
   npc_dota_hero_medusa: {
     id: 94,
@@ -516,10 +544,12 @@ const heroes = {
   npc_dota_hero_phoenix: {
     id: 110,
     localized_name: 'Phoenix',
+    alias: [],
   },
   npc_dota_hero_oracle: {
     id: 111,
     localized_name: 'Oracle',
+    alias: [],
   },
   npc_dota_hero_winter_wyvern: {
     id: 112,
@@ -569,6 +599,7 @@ const heroes = {
   npc_dota_hero_mars: {
     id: 129,
     localized_name: 'Mars',
+    alias: [],
   },
   npc_dota_hero_dawnbreaker: {
     id: 135,
@@ -578,6 +609,7 @@ const heroes = {
   npc_dota_hero_marci: {
     id: 136,
     localized_name: 'Marci',
+    alias: [],
   },
   npc_dota_hero_primal_beast: {
     id: 137,
@@ -587,6 +619,7 @@ const heroes = {
   npc_dota_hero_muerta: {
     id: 138,
     localized_name: 'Muerta',
+    alias: [],
   },
 }
 
@@ -642,7 +675,10 @@ export function getHeroByName(name: string) {
   if (!name) return null
 
   // only keep a-z in name
-  name = name.replace(/[^a-z]/gi, '')
+  name = name
+    .replace(/[^a-z]/gi, '')
+    .toLowerCase()
+    .trim()
 
   const hero = Object.values(heroes).find((h) => {
     const inName = h.localized_name
@@ -650,7 +686,16 @@ export function getHeroByName(name: string) {
       .replace(/[^a-z]/gi, '')
       .toLowerCase()
       .trim()
-    return inName.includes(name)
+
+    // check for alias
+    const hasAlias = h.alias.some(
+      (alias) =>
+        alias
+          .replace(/[^a-z]/gi, '')
+          .toLowerCase()
+          .trim() === name,
+    )
+    return inName.includes(name) || hasAlias
   })
 
   return hero
