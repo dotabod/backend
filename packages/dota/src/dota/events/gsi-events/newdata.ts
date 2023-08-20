@@ -4,7 +4,7 @@ import { t } from 'i18next'
 import { DotaEventTypes, Packet } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
-import { GSIHandler } from '../../GSIHandler.js'
+import { GSIHandler, redisClient } from '../../GSIHandler.js'
 import checkMidas from '../../lib/checkMidas.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -36,13 +36,16 @@ eventHandler.registerEvent(`newdata`, {
 
     // Can't just !dotaClient.heroSlot because it can be 0
     const purchaser = dotaClient.client.gsi?.items?.teleport0?.purchaser
-    if (typeof dotaClient.playingHeroSlot !== 'number' && typeof purchaser === 'number') {
-      dotaClient.playingHeroSlot = purchaser
-      try {
-        void dotaClient.saveMatchData()
-      } catch (e) {
-        logger.error('saveMatchData', { e })
-      }
+    const playingHeroSlot = Number(
+      await redisClient.client.get(`${dotaClient.getToken()}:playingHeroSlot`),
+    )
+    if (
+      typeof playingHeroSlot !== 'number' &&
+      !Number.isNaN(playingHeroSlot) &&
+      typeof purchaser === 'number'
+    ) {
+      await redisClient.client.set(`${dotaClient.getToken()}:playingHeroSlot`, purchaser)
+      await dotaClient.saveMatchData()
       return
     }
 

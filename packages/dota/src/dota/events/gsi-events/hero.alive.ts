@@ -8,7 +8,7 @@ import eventHandler from '../EventHandler.js'
 const redisClient = RedisClient.getInstance()
 
 eventHandler.registerEvent(`hero:alive`, {
-  handler: (dotaClient: GSIHandler, alive: boolean) => {
+  handler: async (dotaClient: GSIHandler, alive: boolean) => {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
@@ -16,7 +16,10 @@ eventHandler.registerEvent(`hero:alive`, {
       const redisJson = (await redisClient.client.json.get(`${dotaClient.getToken()}:aegis`)) as any
 
       // Case one, we had aegis, and we die with it. Triggers on an aegis death
-      if (!alive && redisJson?.playerId === dotaClient.playingHeroSlot) {
+      const playingHeroSlot = Number(
+        await redisClient.client.get(`${dotaClient.getToken()}:playingHeroSlot`),
+      )
+      if (!alive && redisJson?.playerId === playingHeroSlot) {
         try {
           void redisClient.client.json.del(`${dotaClient.getToken()}:aegis`)
         } catch (e) {

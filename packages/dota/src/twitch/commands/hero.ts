@@ -108,6 +108,9 @@ commandHandler.registerCommand('hero', {
       const gsi = gsiHandlers.get(client.token)
       if (!gsi) return // this would never happen but its to satisfy typescript
 
+      const playingHeroSlot = Number(
+        await redisClient.client.get(`${client.token}:playingHeroSlot`),
+      )
       const ourHero = !args.length
       const profile = profileLink({
         command,
@@ -115,7 +118,7 @@ commandHandler.registerCommand('hero', {
         locale: client.locale,
         currentMatchId: client.gsi.map.matchid,
         // defaults to the hero the user is playing
-        args: gsi.playingHeroSlot && ourHero ? [`${gsi.playingHeroSlot + 1}`] : args,
+        args: playingHeroSlot && ourHero ? [`${playingHeroSlot + 1}`] : args,
       })
 
       const hero = getHeroById(profile.heroid)

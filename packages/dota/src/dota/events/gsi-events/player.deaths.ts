@@ -2,9 +2,9 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { Item } from '../../../types.js'
-import { GSIHandler } from '../../GSIHandler.js'
+import { GSIHandler, redisClient } from '../../GSIHandler.js'
 import { findItem } from '../../lib/findItem.js'
-import handleGetHero from '../../lib/getHero.js'
+import handleGetHero, { HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 
@@ -20,7 +20,7 @@ const passiveItemNames = [
 ]
 
 eventHandler.registerEvent(`player:deaths`, {
-  handler: (dotaClient: GSIHandler, deaths: number) => {
+  handler: async (dotaClient: GSIHandler, deaths: number) => {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!deaths) return
@@ -30,9 +30,12 @@ eventHandler.registerEvent(`player:deaths`, {
 
     const chatters = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
+    const playingHero = (await redisClient.client.get(
+      `${dotaClient.getToken()}:playingHero`,
+    )) as HeroNames | null
+
     const heroName =
-      handleGetHero(dotaClient.playingHero ?? dotaClient.client.gsi?.hero?.name)?.localized_name ??
-      ''
+      handleGetHero(playingHero ?? dotaClient.client.gsi?.hero?.name)?.localized_name ?? ''
 
     firstBloodChat(chatters, dotaClient, heroName)
     passiveDeathChat(chatters, dotaClient, heroName)

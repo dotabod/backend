@@ -53,9 +53,6 @@ export class GSIHandler {
   blockCache: string | null = null
   playingBetMatchId: string | undefined | null = null
   playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
-  // hero slot can be 0-9
-  playingHeroSlot: number | undefined | null = null
-  playingHero: HeroNames | undefined | null = null
   playingLobbyType: number | undefined | null = null
   players: ReturnType<typeof getAccountsFromMatch> | undefined | null = null
   savingSteamServerId = false
@@ -153,8 +150,6 @@ export class GSIHandler {
   }
 
   private resetPlayerData() {
-    this.playingHero = null
-    this.playingHeroSlot = null
     this.events = []
     this.passiveMidas = { counter: 0, timer: 0, used: 0 }
     this.savingSteamServerId = false
@@ -189,6 +184,8 @@ export class GSIHandler {
       `${token}:aegis`,
       `${token}:treadtoggle`,
       `${token}:heroRecords`,
+      `${token}:playingHero`,
+      `${token}:playingHeroSlot`,
     ]
 
     const multi = redisClient.client.multi()
@@ -613,7 +610,10 @@ export class GSIHandler {
 
         this.playingBetMatchId = matchId
         this.playingTeam = this.client.gsi?.player?.team_name ?? null
-        this.playingHero = this.client.gsi?.hero?.name
+
+        redisClient.client
+          .set(`${this.getToken()}:playingHero`, this.client.gsi?.hero?.name as string)
+          .catch((e) => logger.error('[REDIS ERROR]', { e: e?.message || e }))
 
         prisma.bet
           .create({
@@ -760,8 +760,10 @@ export class GSIHandler {
 
     const matchId = this.playingBetMatchId
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
-    const heroSlot = this.playingHeroSlot
-    const heroName = this.playingHero
+    const heroSlot = Number(await redisClient.client.get(`${this.getToken()}:playingHeroSlot`))
+    const heroName = (await redisClient.client.get(
+      `${this.getToken()}:playingHero`,
+    )) as HeroNames | null
 
     // An early without waiting for ancient to blow up
     // We have to check every few seconds with an pi to see if the match is over
