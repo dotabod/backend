@@ -225,6 +225,7 @@ export class GSIHandler {
       void redisClient.client.json.del(`${this.getToken()}:roshan`)
       void redisClient.client.json.del(`${this.getToken()}:aegis`)
       void redisClient.client.json.del(`${this.getToken()}:treadtoggle`)
+      void redisClient.client.json.del(`${this.getToken()}:heroRecords`)
     } catch (e) {
       logger.error('err resetClientState', { e })
     }

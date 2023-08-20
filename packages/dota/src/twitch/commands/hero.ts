@@ -14,7 +14,7 @@ import { profileLink } from './stats.js'
 
 const redisClient = RedisClient.getInstance()
 
-type heroData =
+type heroRecords =
   | {
       win: number
       lose: number
@@ -122,10 +122,15 @@ commandHandler.registerCommand('hero', {
       if (!hero) return chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
 
       const allTime = args[0] === 'all'
-      const data = (await redisClient.client.json.get(`heroData:${profile.accountid}`)) as heroData
-      if (data) {
+      const heroRecords = (await redisClient.client.json.get(
+        `${client.token}:heroRecords`,
+      )) as Record<string, heroRecords>
+
+      const { win, lose } = heroRecords?.[profile.accountid] || {}
+      if (typeof win === 'number' && typeof lose === 'number') {
         return speakHeroStats({
-          ...data,
+          win,
+          lose,
           profile,
           ourHero,
           hero,
@@ -198,10 +203,10 @@ async function getHeroMsg({
 
   sockets[0]
     .timeout(15000)
-    .emit('requestHeroData', { data }, async (err: any, response: heroData) => {
+    .emit('requestHeroData', { data }, async (err: any, response: heroRecords) => {
       if (!response) return
 
-      await redisClient.client.json.set(`heroData:${steam32Id}`, '$', response)
+      await redisClient.client.json.set(`${token}:heroRecords`, `$.${steam32Id}}`, response)
       speakHeroStats({ ...response, ourHero, profile, hero, channel, allTime, lng })
     })
 }
