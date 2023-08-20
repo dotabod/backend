@@ -26,6 +26,12 @@ export function chatMidas(dotaClient: GSIHandler, isMidasPassive: number | boole
  * @param passiveMidas - The object with the passive midas data
  */
 export async function checkMidas(data: Packet, token: string) {
+  // Find the midas
+  const midasItem = findItem('item_hand_of_midas', true, data)
+
+  // Doesn't have a midas
+  if (!midasItem || !midasItem[0]) return false
+
   const passiveMidas = ((await redisClient.client.json.get(`${token}:passiveMidas`)) as {
     firstNoticedPassive: number
     timer: number
@@ -36,42 +42,27 @@ export async function checkMidas(data: Packet, token: string) {
     told: 0,
   }
 
-  // Find the midas
-  const midasItem = findItem('item_hand_of_midas', true, data)
+  const charges = Number(midasItem[0].charges)
+  const currentTime = new Date().getTime()
+  const passiveTimeThreshold = 10000
 
-  // Doesn't have a midas
-  if (!midasItem || !midasItem[0]) return false
-
-  // if 2 charges, the midas is passive, wait 10 seconds then tell chat
-  if (Number(midasItem[0].charges) === 2) {
-    if (!passiveMidas.told && !passiveMidas.firstNoticedPassive) {
-      await redisClient.client.json.set(
-        `${token}:passiveMidas`,
-        '$.firstNoticedPassive',
-        new Date().getTime(),
-      )
-      return false
-    }
-
-    if (new Date().getTime() - passiveMidas.firstNoticedPassive > 10000 && !passiveMidas.told) {
-      await redisClient.client.json.set(`${token}:passiveMidas`, '$.told', new Date().getTime())
-      return true
-    }
-
+  if (charges === 2 && !passiveMidas.told && !passiveMidas.firstNoticedPassive) {
+    await redisClient.client.json.set(`${token}:passiveMidas`, '$.firstNoticedPassive', currentTime)
     return false
-  }
-
-  // finally used the midas after who knows how long
-  if (Number(midasItem[0].charges) !== 2) {
-    if (passiveMidas.told) {
-      const secondsToUse = Math.round((Date.now() - passiveMidas.told + 10000) / 1000)
-      await resetPassiveTime(token)
-      return secondsToUse
-    } else {
-      // they used it within 10 seconds, avoiding the nag message
-      await resetPassiveTime(token)
-      return false
-    }
+  } else if (
+    charges === 2 &&
+    currentTime - passiveMidas.firstNoticedPassive > passiveTimeThreshold &&
+    !passiveMidas.told
+  ) {
+    await redisClient.client.json.set(`${token}:passiveMidas`, '$.told', currentTime)
+    return true
+  } else if (charges !== 2 && passiveMidas.told) {
+    const secondsToUse = Math.round((Date.now() - passiveMidas.told + passiveTimeThreshold) / 1000)
+    await resetPassiveTime(token)
+    return secondsToUse
+  } else if (charges !== 2) {
+    await resetPassiveTime(token)
+    return false
   }
 
   return false
