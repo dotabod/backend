@@ -70,4 +70,4 @@ RUN mkdir -p ./src/steam/volumes
 ARG NODE_ENV
 RUN echo "NODE_ENV is $NODE_ENV"
 
-CMD [ "sh", "-c", "yarn dev-docker" ]
+CMD [ "sh", "-c", "if [ \"$NODE_ENV\" = 'development' ]; then yarn dev-docker; else yarn start; fi" ]
