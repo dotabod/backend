@@ -1,7 +1,6 @@
 import { t } from 'i18next'
 
 import { Packet } from '../../types.js'
-import { logger } from '../../utils/logger.js'
 import { GSIHandler, redisClient } from '../GSIHandler.js'
 import { findItem } from './findItem.js'
 
@@ -20,7 +19,6 @@ export function chatMidas(dotaClient: GSIHandler, isMidasPassive: number | boole
       }),
     )
   } else if (isMidasPassive) {
-    logger.info('[MIDAS] Passive midas', { name: dotaClient.getChannel() })
     dotaClient.say(t('chatters.midas', { emote: 'massivePIDAS', lng: dotaClient.client.locale }))
   }
 }

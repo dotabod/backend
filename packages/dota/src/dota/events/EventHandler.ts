@@ -1,4 +1,3 @@
-import { logger } from '../../utils/logger.js'
 import { events } from '../globalEventEmitter.js'
 import { GSIHandler } from '../GSIHandler.js'
 import { gsiHandlers } from '../lib/consts.js'
