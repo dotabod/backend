@@ -65,7 +65,6 @@ export class GSIHandler {
   } = {}
   bountyTimeout?: NodeJS.Timeout
   killstreakTimeout?: NodeJS.Timeout
-  passiveMidas = { counter: 0, timer: 0, used: 0 }
 
   endingBets = false
   openingBets = false
@@ -151,12 +150,12 @@ export class GSIHandler {
 
   private resetPlayerData() {
     this.events = []
-    this.passiveMidas = { counter: 0, timer: 0, used: 0 }
     this.savingSteamServerId = false
     this.steamServerTries = 0
     this.treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
     this.creatingSteamAccount = false
   }
+
   private resetBetData() {
     // Bet stuff should be closed by endBets()
     // This should mean an entire match is over

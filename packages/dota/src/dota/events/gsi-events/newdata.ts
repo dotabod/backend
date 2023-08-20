@@ -1,11 +1,10 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
-import { t } from 'i18next'
 
 import { DotaEventTypes, Packet } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
 import { GSIHandler, redisClient } from '../../GSIHandler.js'
-import checkMidas from '../../lib/checkMidas.js'
+import { chatMidas, checkMidas } from '../../lib/checkMidas.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
@@ -90,26 +89,8 @@ eventHandler.registerEvent(`newdata`, {
       midas: { enabled: midasChatterEnabled },
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
     if (chattersEnabled && midasChatterEnabled && dotaClient.client.stream_online) {
-      const isMidasPassive = checkMidas(data, dotaClient.passiveMidas)
-
-      if (typeof isMidasPassive === 'number') {
-        dotaClient.say(
-          t('midasUsed', {
-            emote: 'Madge',
-            lng: dotaClient.client.locale,
-            seconds: isMidasPassive,
-          }),
-        )
-        return
-      }
-
-      if (isMidasPassive) {
-        logger.info('[MIDAS] Passive midas', { name: dotaClient.getChannel() })
-        dotaClient.say(
-          t('chatters.midas', { emote: 'massivePIDAS', lng: dotaClient.client.locale }),
-        )
-        return
-      }
+      const isMidasPassive = await checkMidas(data, dotaClient.getToken())
+      chatMidas(dotaClient, isMidasPassive)
     }
   },
 })
