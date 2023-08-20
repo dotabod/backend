@@ -4,8 +4,8 @@ import { t } from 'i18next'
 import { ADMIN_CHANNELS } from '../../dota/lib/consts.js'
 import Mongo from '../../steam/mongo.js'
 import { SocketClient } from '../../types.js'
-import { chatClient } from '../index.js'
 import { logger } from '../../utils/logger.js'
+import { chatClient } from '../index.js'
 
 const mongo = await Mongo.connect()
 
@@ -33,7 +33,7 @@ export interface CommandOptions {
   cooldown?: number
   onlyOnline?: boolean
   dbkey?: SettingKeys
-  handler: (message: MessageType, args: string[], commandUsed: string) => void
+  handler: (message: MessageType, args: string[], commandUsed: string) => Promise<void>
 }
 
 const defaultCooldown = 15000
@@ -104,7 +104,7 @@ class CommandHandler {
   }
 
   // Function for handling incoming Twitch chat messages
-  handleMessage(message: MessageType) {
+  async handleMessage(message: MessageType) {
     // Parse the message to get the command and its arguments
     const [command, ...args] = this.parseMessage(message)
 
@@ -159,7 +159,7 @@ class CommandHandler {
     this.updateCooldown(commandName, options.cooldown ?? defaultCooldown, message.channel.id)
 
     // Execute the command handler
-    options.handler(message, args, command)
+    await options.handler(message, args, command)
   }
 
   // Function for parsing a Twitch chat message to extract the command and its arguments

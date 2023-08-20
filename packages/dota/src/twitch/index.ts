@@ -75,7 +75,7 @@ twitchChat.on(
     }
 
     // Handle the incoming message using the command handler
-    commandHandler.handleMessage({
+    await commandHandler.handleMessage({
       channel: { name: channel, id: channelId, client, settings: client.settings },
       user: {
         name: user,

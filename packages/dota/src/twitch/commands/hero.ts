@@ -8,12 +8,19 @@ import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { getHeroById, heroColors, translatedColor } from '../../dota/lib/heroes.js'
 import { isArcade } from '../../dota/lib/isArcade.js'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler from '../lib/CommandHandler.js'
 import { profileLink } from './stats.js'
-import { logger } from '../../utils/logger.js'
 
 const redisClient = RedisClient.getInstance()
+
+type heroData =
+  | {
+      win: number
+      lose: number
+    }
+  | undefined
 
 function speakHeroStats({
   win,
@@ -74,7 +81,7 @@ function speakHeroStats({
 commandHandler.registerCommand('hero', {
   onlyOnline: true,
   dbkey: DBSettings.commandHero,
-  handler: (message, args, command) => {
+  handler: async (message, args, command) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -122,7 +129,7 @@ commandHandler.registerCommand('hero', {
       }
 
       const allTime = args[0] === 'all'
-      const data = gsi.heroDatas[profile.accountid]
+      const data = (await redisClient.client.json.get(`heroData:${profile.accountid}`)) as heroData
       if (data) {
         const { win, lose } = data
         speakHeroStats({
@@ -205,17 +212,22 @@ async function getHeroMsg({
     return
   }
 
-  sockets[0].timeout(15000).emit('requestHeroData', { data }, (err: any, response: any) => {
-    gsi.heroDatas[steam32Id] = response ?? null
-    speakHeroStats({
-      ourHero,
-      profile,
-      win: response?.win,
-      lose: response?.lose,
-      lng,
-      hero,
-      channel,
-      allTime,
+  sockets[0]
+    .timeout(15000)
+    .emit('requestHeroData', { data }, async (err: any, response: heroData) => {
+      if (!response) return
+
+      await redisClient.client.json.set(`heroData:${steam32Id}`, '$', response)
+
+      speakHeroStats({
+        ourHero,
+        profile,
+        win: response?.win,
+        lose: response?.lose,
+        lng,
+        hero,
+        channel,
+        allTime,
+      })
     })
-  })
 }
