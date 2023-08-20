@@ -85,7 +85,7 @@
     "winrateStreamer_other": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игра."
   },
   "invalidColor": "Неверный цвет героя, номер или имя. Попробуй 1-10, имя героя на английском или цвет из списка: {{colorList}}",
-  "invalidColorNew": "Неправильная команда. Попробуйте `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` из {{colorList}}",
+  "invalidColorNew": "Неправильная команда. Попробуйте `!{{command}} crystal maiden` или `!{{command}} 9` или `!{{command}} teal` из {{colorList}}",
   "invalidMmr": "Неверная команда. Попробуйте !setmmr <число ммр>",
   "killstreak": {
     "lost_one": "{{- heroName}} потерял серию из {{count}} убийства! {{emote}}",
