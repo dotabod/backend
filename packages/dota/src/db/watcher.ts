@@ -47,7 +47,7 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'users' },
-        (payload: { old: User }) => {
+        async (payload: { old: User }) => {
           if (this.IS_DEV && !this.DEV_CHANNELS.includes(payload.old.name)) return
           if (!this.IS_DEV && this.DEV_CHANNELS.includes(payload.old.name)) return
 
@@ -57,7 +57,7 @@ class SetupSupabase {
           const client = findUser(oldObj.id)
           if (client) {
             logger.info('[WATCHER USER] Deleting user', { name: client.name })
-            clearCacheForUser(client)
+            await clearCacheForUser(client)
             return
           }
         },
@@ -65,7 +65,7 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'accounts' },
-        (payload: { new: Account; old: Account }) => {
+        async (payload: { new: Account; old: Account }) => {
           // watch the accounts table for requires_refresh to change from true to false
           // if it does, add the user to twurple authprovider again via addUser()
           if (this.IS_DEV && !this.DEV_CHANNELIDS.includes(payload.new?.providerAccountId)) return
@@ -82,7 +82,7 @@ class SetupSupabase {
             })
 
             const client = findUser(newObj.userId)
-            clearCacheForUser(client)
+            await clearCacheForUser(client)
           }
         },
       )
@@ -204,7 +204,7 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'steam_accounts' },
-        (payload: any) => {
+        async (payload: any) => {
           const newObj = payload.new as SteamAccount
           const oldObj = payload.old as SteamAccount
           const client = findUser(newObj.userId || oldObj.userId)
@@ -219,12 +219,12 @@ class SetupSupabase {
             logger.info('[WATCHER STEAM] Deleting steam account for', { name: client.name })
 
             // A delete will reset their status in memory so they can reconnect anything
-            clearCacheForUser(client)
+            await clearCacheForUser(client)
 
             // We try deleting those users so they can attempt a new connection
             if (Array.isArray(oldObj.connectedUserIds)) {
               for (const connectedToken of oldObj.connectedUserIds) {
-                clearCacheForUser(gsiHandlers.get(connectedToken)?.client)
+                await clearCacheForUser(gsiHandlers.get(connectedToken)?.client)
               }
             }
 
