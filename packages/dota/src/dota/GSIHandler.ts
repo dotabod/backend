@@ -194,16 +194,17 @@ export class GSIHandler {
     }, this.getStreamDelay())
   }
 
-  // reset vars when a new match begins
-  public resetClientState() {
-    this.mapBlocker.resetData()
+  private resetPlayerData() {
     this.playingHero = null
     this.playingHeroSlot = null
     this.events = []
     this.passiveMidas = { counter: 0, timer: 0, used: 0 }
     this.savingSteamServerId = false
     this.steamServerTries = 0
-
+    this.treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
+    this.creatingSteamAccount = false
+  }
+  private resetBetData() {
     // Bet stuff should be closed by endBets()
     // This should mean an entire match is over
     this.players = null
@@ -212,26 +213,48 @@ export class GSIHandler {
     this.openingBets = false
     this.playingBetMatchId = null
     this.playingTeam = null
-    this.treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
-    this.creatingSteamAccount = false
+  }
 
+  private resetNoTpChatter() {
     this.noTpChatter = {
       timeout: undefined,
       lastRemindedDate: undefined,
     }
+  }
+
+  private async deleteRedisData() {
+    const steam32 = this.getSteam32() ?? ''
+    const token = this.getToken()
+    const keysToDelete = [
+      `${steam32}:medal`,
+      `${token}:roshan`,
+      `${token}:aegis`,
+      `${token}:treadtoggle`,
+      `${token}:heroRecords`,
+    ]
+
+    const multi = redisClient.client.multi()
+    keysToDelete.forEach((key) => multi.json.del(key))
 
     try {
-      void redisClient.client.json.del(`${this.getSteam32() ?? ''}:medal`)
-      void redisClient.client.json.del(`${this.getToken()}:roshan`)
-      void redisClient.client.json.del(`${this.getToken()}:aegis`)
-      void redisClient.client.json.del(`${this.getToken()}:treadtoggle`)
-      void redisClient.client.json.del(`${this.getToken()}:heroRecords`)
+      await multi.exec()
     } catch (e) {
-      logger.error('err resetClientState', { e })
+      logger.error('err deleteRedisData', { e })
     }
+  }
 
+  private emitClientResetEvents() {
     server.io.to(this.getToken()).emit('aegis-picked-up', {})
     server.io.to(this.getToken()).emit('roshan-killed', {})
+  }
+
+  public async resetClientState() {
+    this.mapBlocker.resetData()
+    this.resetPlayerData()
+    this.resetBetData()
+    this.resetNoTpChatter()
+    await this.deleteRedisData()
+    this.emitClientResetEvents()
   }
 
   // Runs every gametick
@@ -547,7 +570,7 @@ export class GSIHandler {
   // 2 Next, check if the prediction is still open
   // 3 If it is, steam dota2 api result of match
   // 4 Then, tell twitch to close bets based on win result
-  openBets() {
+  async openBets() {
     if (this.openingBets) {
       return
     }
@@ -566,7 +589,7 @@ export class GSIHandler {
         steamFromGSI: this.client.gsi.player?.steamid,
         token: this.getToken(),
       })
-      this.resetClientState()
+      await this.resetClientState()
     }
 
     // The bet was already made
@@ -764,7 +787,7 @@ export class GSIHandler {
       })
   }
 
-  closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
+  async closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
     if (this.openingBets || !this.playingBetMatchId || this.endingBets) {
       logger.info('[BETS] Not closing bets', {
         name: this.getChannel(),
@@ -773,7 +796,7 @@ export class GSIHandler {
         endingBets: this.endingBets,
       })
 
-      if (!this.playingBetMatchId) this.resetClientState()
+      if (!this.playingBetMatchId) await this.resetClientState()
       return
     }
 
@@ -850,7 +873,7 @@ export class GSIHandler {
             logger.error('ERROR refunding bets', { token: this.getToken(), e })
           })
       }
-      this.resetClientState()
+      await this.resetClientState()
       return
     }
 
@@ -915,7 +938,7 @@ export class GSIHandler {
 
     if (!betsEnabled || !this.client.stream_online) {
       logger.info('Bets are not enabled, stopping here', { name: this.getChannel() })
-      this.resetClientState()
+      await this.resetClientState()
       return
     }
 
@@ -940,7 +963,9 @@ export class GSIHandler {
             })
           })
           .finally(() => {
-            this.resetClientState()
+            this.resetClientState().catch((e) => {
+              logger.error('Error resetting client state', { e })
+            })
 
             const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
             const {
@@ -973,7 +998,7 @@ export class GSIHandler {
       .get(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
         params: { key: process.env.STEAM_WEB_API, match_id: matchId },
       })
-      .then((response: { data: any }) => {
+      .then(async (response: { data: any }) => {
         logger.info('Found an early dc match data', { matchId, channel: this.getChannel() })
 
         let winningTeam: 'radiant' | 'dire' | null = null
@@ -1000,11 +1025,11 @@ export class GSIHandler {
                 logger.error('ERROR refunding bets', { token: this.getToken(), e })
               })
           }
-          this.resetClientState()
+          await this.resetClientState()
           return
         }
 
-        this.closeBets(winningTeam)
+        await this.closeBets(winningTeam)
       })
       .catch((err) => {
         // this could mean match is not over yet. just give up checking after this long (like 3m)
@@ -1015,7 +1040,9 @@ export class GSIHandler {
           e: err?.message || err?.result || err?.data || err,
         })
 
-        this.resetClientState()
+        this.resetClientState().catch((e) => {
+          logger.error('Error resetting client state', { e })
+        })
       })
   }
 
@@ -1042,7 +1069,7 @@ export class GSIHandler {
       // picked, enemy can see now
       if hero.id > 0 && hero.name && hero.name.length
   */
-  setupOBSBlockers(state?: string) {
+  async setupOBSBlockers(state?: string) {
     if (isSpectator(this.client.gsi) || isArcade(this.client.gsi)) {
       const blockType = isSpectator(this.client.gsi) ? 'spectator' : 'arcade'
       if (this.blockCache === blockType) return
@@ -1117,7 +1144,7 @@ export class GSIHandler {
       })
 
       this.emitBlockEvent({ state, blockType: null })
-      this.closeBets()
+      await this.closeBets()
       return
     }
   }

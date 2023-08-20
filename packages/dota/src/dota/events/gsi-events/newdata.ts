@@ -13,13 +13,13 @@ import minimapParser from '../minimap/parser.js'
 
 // Catch all
 eventHandler.registerEvent(`newdata`, {
-  handler: (dotaClient: GSIHandler, data: Packet) => {
+  handler: async (dotaClient: GSIHandler, data: Packet) => {
     // New users who dont have a steamaccount saved yet
     // This needs to run first so we have client.steamid on multiple acts
     dotaClient.updateSteam32Id()
 
     // In case they connect to a game in progress and we missed the start event
-    dotaClient.setupOBSBlockers(data.map?.game_state ?? '')
+    await dotaClient.setupOBSBlockers(data.map?.game_state ?? '')
 
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
@@ -85,7 +85,7 @@ eventHandler.registerEvent(`newdata`, {
       })
     }
 
-    dotaClient.openBets()
+    await dotaClient.openBets()
 
     const {
       midas: { enabled: midasChatterEnabled },

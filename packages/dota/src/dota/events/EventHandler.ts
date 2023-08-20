@@ -3,7 +3,7 @@ import { GSIHandler } from '../GSIHandler.js'
 import { gsiHandlers } from '../lib/consts.js'
 
 export interface EventOptions {
-  handler: (dotaClient: GSIHandler, data: any) => void
+  handler: (dotaClient: GSIHandler, data: any) => Promise<void>
 }
 
 class EventHandler {
@@ -21,7 +21,9 @@ class EventHandler {
       // if we r offline don't process events
       if (!client.client.stream_online) return
 
-      options.handler(client, data)
+      options.handler(client, data).catch((err) => {
+        console.error('Error handling event:', err)
+      })
     })
   }
 }

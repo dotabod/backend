@@ -5,7 +5,7 @@ import eventHandler from '../EventHandler.js'
 
 // This wont get triggered if they click disconnect and dont wait for the ancient to go to 0
 eventHandler.registerEvent(`map:win_team`, {
-  handler: (dotaClient: GSIHandler, winningTeam: 'radiant' | 'dire') => {
+  handler: async (dotaClient: GSIHandler, winningTeam: 'radiant' | 'dire') => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
     logger.info('Map win team', {
@@ -13,6 +13,6 @@ eventHandler.registerEvent(`map:win_team`, {
       winningTeam,
     })
 
-    dotaClient.closeBets(winningTeam)
+    await dotaClient.closeBets(winningTeam)
   },
 })
