@@ -118,7 +118,7 @@ commandHandler.registerCommand('hero', {
         locale: client.locale,
         currentMatchId: client.gsi.map.matchid,
         // defaults to the hero the user is playing
-        args: playingHeroSlot && ourHero ? [`${playingHeroSlot + 1}`] : args,
+        args: playingHeroSlot >= 0 && ourHero ? [`${playingHeroSlot + 1}`] : args,
       })
 
       const hero = getHeroById(profile.heroid)

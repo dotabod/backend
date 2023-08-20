@@ -39,11 +39,7 @@ eventHandler.registerEvent(`newdata`, {
     const playingHeroSlot = Number(
       await redisClient.client.get(`${dotaClient.getToken()}:playingHeroSlot`),
     )
-    if (
-      typeof playingHeroSlot !== 'number' &&
-      !Number.isNaN(playingHeroSlot) &&
-      typeof purchaser === 'number'
-    ) {
+    if (!(playingHeroSlot >= 0) && typeof purchaser === 'number') {
       await redisClient.client.set(`${dotaClient.getToken()}:playingHeroSlot`, purchaser)
       await dotaClient.saveMatchData()
       return
