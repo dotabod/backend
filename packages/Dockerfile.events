@@ -34,10 +34,7 @@ COPY ./$BUILD_CONTEXT/tsconfig.json ./
 COPY ./$BUILD_CONTEXT/src ./src
 
 # Run 'yarn build' only in production environment
-ARG NODE_ENV
-RUN echo "NODE_ENV is $NODE_ENV"
-
-CMD [ "sh", "-c", "if [ \"$NODE_ENV\" = 'development' ]; then echo 'Dev no build!'; else yarn build; fi" ]
+RUN yarn build
 
 #################
 #    RUNNER    #
