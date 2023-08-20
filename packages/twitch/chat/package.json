@@ -22,6 +22,7 @@
     "eslint": "^8.45.0"
   },
   "dependencies": {
-    "@dotabod/prisma": "^1.0.0"
+    "@dotabod/prisma": "^1.0.0",
+    "node-gyp": "^9.4.0"
   }
 }
