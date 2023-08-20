@@ -90,6 +90,7 @@ eventHandler.registerEvent(`newdata`, {
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
     if (chattersEnabled && midasChatterEnabled && dotaClient.client.stream_online) {
       const isMidasPassive = await checkMidas(data, dotaClient.getToken())
+      console.log({ isMidasPassive })
       chatMidas(dotaClient, isMidasPassive)
     }
   },

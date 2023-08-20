@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { Item, Packet } from '../../types.js'
+import { Packet } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { GSIHandler, redisClient } from '../GSIHandler.js'
 import { findItem } from './findItem.js'
@@ -14,13 +14,9 @@ export function chatMidas(dotaClient: GSIHandler, isMidasPassive: number | boole
         seconds: isMidasPassive,
       }),
     )
-    return
-  }
-
-  if (isMidasPassive) {
+  } else if (isMidasPassive) {
     logger.info('[MIDAS] Passive midas', { name: dotaClient.getChannel() })
     dotaClient.say(t('chatters.midas', { emote: 'massivePIDAS', lng: dotaClient.client.locale }))
-    return
   }
 }
 
@@ -30,14 +26,14 @@ export function chatMidas(dotaClient: GSIHandler, isMidasPassive: number | boole
  * @param passiveMidas - The object with the passive midas data
  */
 export async function checkMidas(data: Packet, token: string) {
-  const passiveMidas = ((await redisClient.client.get(`${token}:passiveMidas`)) as {
-    counter: number
-    used: number
+  const passiveMidas = ((await redisClient.client.json.get(`${token}:passiveMidas`)) as {
+    firstNoticedPassive: number
     timer: number
+    told: number
   } | null) || {
-    counter: 0,
-    used: 0,
+    firstNoticedPassive: 0,
     timer: 0,
+    told: 0,
   }
 
   // Find the midas
@@ -46,65 +42,49 @@ export async function checkMidas(data: Packet, token: string) {
   // Doesn't have a midas
   if (!midasItem || !midasItem[0]) return false
 
-  // Midas was used recently, wait for it to be off CD
-  if (isMidasOnCooldown(midasItem[0])) {
-    // Tell chat it was used after x seconds
-    if (passiveMidas.used) {
-      const secondsToUse = Math.round((Date.now() - passiveMidas.used + 10000) / 1000)
-      await redisClient.client.json.set(`${token}:passiveMidas`, '$.used', 0)
-      return secondsToUse
+  // if 2 charges, the midas is passive, wait 10 seconds then tell chat
+  if (Number(midasItem[0].charges) === 2) {
+    if (!passiveMidas.told && !passiveMidas.firstNoticedPassive) {
+      await redisClient.client.json.set(
+        `${token}:passiveMidas`,
+        '$.firstNoticedPassive',
+        new Date().getTime(),
+      )
+      return false
     }
 
-    await resetPassiveMidas(token)
+    if (new Date().getTime() - passiveMidas.firstNoticedPassive > 10000 && !passiveMidas.told) {
+      await redisClient.client.json.set(`${token}:passiveMidas`, '$.told', new Date().getTime())
+      return true
+    }
+
     return false
   }
 
-  await updatePassiveMidasTimer(token, passiveMidas)
-
-  // Every n seconds that it isn't used we say passive midas
-  if (passiveMidas.timer >= 10000 && !passiveMidas.used) {
-    await redisClient.client.json.set(`${token}:passiveMidas`, '$.used', Date.now())
-    await resetPassiveMidas(token)
-    return true
+  // finally used the midas after who knows how long
+  if (Number(midasItem[0].charges) !== 2) {
+    if (passiveMidas.told) {
+      const secondsToUse = Math.round((Date.now() - passiveMidas.told + 10000) / 1000)
+      await resetPassiveTime(token)
+      return secondsToUse
+    } else {
+      // they used it within 10 seconds, avoiding the nag message
+      await resetPassiveTime(token)
+      return false
+    }
   }
 
   return false
 }
 
 /**
- * Checks if the midas is on cooldown or not
- * @param midasItem - The midas item data
- */
-function isMidasOnCooldown(midasItem: Item): boolean {
-  return (Number(midasItem.cooldown) > 0 && midasItem.charges === 0) || midasItem.can_cast !== true
-}
-/**
- * Updates the passive midas timer
- * @param token - The token associated with the data
- * @param passiveMidas - The object with the passive midas data
- */
-async function updatePassiveMidasTimer(
-  token: string,
-  passiveMidas: {
-    counter: number
-    used: number
-    timer: number
-  },
-): Promise<void> {
-  const currentTime = Date.now()
-  if (passiveMidas.counter !== 0) {
-    passiveMidas.timer += currentTime - passiveMidas.counter
-  }
-
-  passiveMidas.counter = currentTime
-  await redisClient.client.json.set(`${token}:passiveMidas`, '$', passiveMidas)
-}
-
-/**
  * Resets the passive midas data
  * @param passiveMidas - The object with the passive midas data
  */
-async function resetPassiveMidas(token: string) {
-  await redisClient.client.json.set(`${token}:passiveMidas`, '$.counter', 0)
-  await redisClient.client.json.set(`${token}:passiveMidas`, '$.timer', 0)
+async function resetPassiveTime(token: string) {
+  await redisClient.client.json.set(`${token}:passiveMidas`, '$', {
+    firstNoticedPassive: 0,
+    timer: 0,
+    told: 0,
+  })
 }
