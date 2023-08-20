@@ -33,7 +33,7 @@ export interface CommandOptions {
   cooldown?: number
   onlyOnline?: boolean
   dbkey?: SettingKeys
-  handler: (message: MessageType, args: string[], commandUsed: string) => Promise<void>
+  handler: (message: MessageType, args: string[], commandUsed: string) => Promise<void> | void
 }
 
 const defaultCooldown = 15000
