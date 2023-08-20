@@ -7,7 +7,6 @@ import RedisClient from '../db/redis.js'
 import { notablePlayers } from '../steam/notableplayers.js'
 import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
-import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
 import { DotaEvent, Player, SocketClient } from '../types.js'
@@ -19,14 +18,7 @@ import { emitRoshEvent, RoshRes } from './events/gsi-events/event.roshan_killed.
 import { DataBroadcaster } from './events/minimap/DataBroadcaster.js'
 import minimapParser from './events/minimap/parser.js'
 import { server } from './index.js'
-import {
-  blockTypes,
-  DelayedCommands,
-  GLOBAL_DELAY,
-  gsiHandlers,
-  pickSates,
-  twitchIdToToken,
-} from './lib/consts.js'
+import { blockTypes, DelayedCommands, GLOBAL_DELAY, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import { getCurrentMatchPlayers } from './lib/getCurrentMatchPlayers.js'
 import getHero, { HeroNames } from './lib/getHero.js'
@@ -35,7 +27,7 @@ import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
 
-const redisClient = RedisClient.getInstance()
+export const redisClient = RedisClient.getInstance()
 
 // Finally, we have a user and a GSI client
 interface MMR {
@@ -50,40 +42,6 @@ interface MMR {
   isParty?: boolean
   heroSlot?: number | null
   heroName?: string | null
-}
-
-// three types of in-memory cache exists
-export async function clearCacheForUser(client?: SocketClient | null) {
-  if (!client) return false
-
-  // mark the client as disabled while we cleanup everything
-  // just so new items won't get added while we do this
-  const handler = gsiHandlers.get(client.token)
-  if (handler) {
-    handler.disable()
-  }
-
-  const accountId = client.Account?.providerAccountId ?? ''
-  twitchIdToToken.delete(accountId)
-
-  const authProvider = getAuthProvider()
-  authProvider.removeUser(accountId)
-
-  const clientKeys = [
-    `${client.steam32Id ?? ''}:medal`,
-    `${client.token}:roshan`,
-    `${client.token}:aegis`,
-    `${client.token}:treadtoggle`,
-  ]
-
-  try {
-    await Promise.all(clientKeys.map((key) => redisClient.client.json.del(key)))
-  } catch (e) {
-    // ignore any redis issues with deletions
-  }
-
-  gsiHandlers.delete(client.token)
-  return true
 }
 
 // That means the user opened OBS and connected to Dota 2 GSI

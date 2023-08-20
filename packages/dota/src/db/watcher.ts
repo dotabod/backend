@@ -1,7 +1,7 @@
 import { Account, Setting, SteamAccount, User } from '@dotabod/prisma/dist/psql/index.js'
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 
-import { clearCacheForUser } from '../dota/GSIHandler.js'
+import { clearCacheForUser } from '../dota/clearCacheForUser.js'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
 import { gsiHandlers } from '../dota/lib/consts.js'
