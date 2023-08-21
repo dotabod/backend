@@ -99,10 +99,10 @@ commandHandler.registerCommand('hero', {
     const {
       channel: { name: channel, client },
     } = message
-    return
     if (!client.steam32Id) return handleNoSteam32Id(message)
 
     const gsi = gsiHandlers.get(client.token)
+    if (gsi) return
     if (!gsi || !client.gsi?.map?.matchid || isArcade(client.gsi)) return handleNotPlaying(message)
 
     try {
