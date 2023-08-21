@@ -99,6 +99,7 @@ commandHandler.registerCommand('hero', {
     const {
       channel: { name: channel, client },
     } = message
+    return
     if (!client.steam32Id) return handleNoSteam32Id(message)
 
     const gsi = gsiHandlers.get(client.token)
