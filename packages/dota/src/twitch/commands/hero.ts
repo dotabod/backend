@@ -102,7 +102,6 @@ commandHandler.registerCommand('hero', {
     if (!client.steam32Id) return handleNoSteam32Id(message)
 
     const gsi = gsiHandlers.get(client.token)
-    if (gsi) return
     if (!gsi || !client.gsi?.map?.matchid || isArcade(client.gsi)) return handleNotPlaying(message)
 
     try {
@@ -160,6 +159,7 @@ commandHandler.registerCommand('hero', {
         //
       }
     } catch (e: any) {
+      console.log(e)
       chatClient.say(
         message.channel.name,
         e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
@@ -210,7 +210,14 @@ async function getHeroMsg({
     .emit('requestHeroData', { data }, async (err: any, response: heroRecords) => {
       if (!response) return
 
-      await redisClient.client.json.set(`${token}:heroRecords`, `$.${steam32Id}}`, response)
+      const records =
+        ((await redisClient.client.json.get(`${token}:heroRecords`)) as Record<
+          string,
+          heroRecords
+        > | null) || {}
+      records[steam32Id] = response
+
+      await redisClient.client.json.set(`${token}:heroRecords`, `$`, response)
       speakHeroStats({ ...response, ourHero, profile, hero, channel, allTime, lng })
     })
 }
