@@ -94,6 +94,7 @@ const main = async () => {
 
 const logAndExit = (err: any) => {
   logger.error('Unhandled error occurred. Exiting...', { error: err })
+  console.log(err)
   process.exit(1)
 }
 
