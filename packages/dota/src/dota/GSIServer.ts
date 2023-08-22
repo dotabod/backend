@@ -64,10 +64,18 @@ class GSIServer {
     app.use(express.json({ limit: '1mb' }))
     app.use(express.urlencoded({ extended: true, limit: '1mb' }))
 
-    this.dota.dota2.on('ready', () => {
-      logger.info('[SERVER] Connected to dota game coordinator')
+    const setupPostRoute = () => {
       app.post('/', validateToken, processChanges('previously'), processChanges('added'), newData)
-    })
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      setupPostRoute()
+    } else {
+      this.dota.dota2.on('ready', () => {
+        logger.info('[SERVER] Connected to dota game coordinator')
+        setupPostRoute()
+      })
+    }
 
     app.get('/', (req: Request, res: Response) => {
       res.status(200).json({ status: 'ok' })

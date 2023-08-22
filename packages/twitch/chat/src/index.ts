@@ -50,6 +50,7 @@ io.on('connection', (socket) => {
   })
 
   socket.on('say', async function (channel: string, text: string) {
+    if (process.env.NODE_ENV === 'development') console.log(channel, text)
     await chatClient.say(channel, text || "I'm sorry, I can't do that")
   })
 
