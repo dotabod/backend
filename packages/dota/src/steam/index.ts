@@ -109,106 +109,129 @@ class Dota {
 
   constructor() {
     this.steamClient = new Steam.SteamClient()
-    // @ts-expect-error ???
+    // @ts-expect-error no types exist
     this.steamUser = new Steam.SteamUser(this.steamClient)
     this.dota2 = new Dota2.Dota2Client(this.steamClient, false, false)
 
-    const details: steamUserDetails = {
+    const details = this.getUserDetails()
+
+    this.loadServerList()
+    this.loadSentry(details)
+
+    this.setupClientEventHandlers(details)
+    this.setupUserEventHandlers()
+    this.setupDotaEventHandlers()
+
+    // @ts-expect-error no types exist
+    this.steamClient.connect()
+  }
+
+  getUserDetails() {
+    return {
       account_name: process.env.STEAM_USER!,
       password: process.env.STEAM_PASS!,
     }
+  }
 
-    // Load in server list if we've saved one before
-    if (fs.existsSync('./src/steam/volumes/servers.json')) {
+  loadServerList() {
+    const serverPath = './src/steam/volumes/servers.json'
+    if (fs.existsSync(serverPath)) {
       try {
-        Steam.servers = JSON.parse(fs.readFileSync('./src/steam/volumes/servers.json').toString())
+        Steam.servers = JSON.parse(fs.readFileSync(serverPath).toString())
       } catch (e) {
         // Ignore
       }
     }
+  }
 
-    if (fs.existsSync('./src/steam/volumes/sentry')) {
-      const sentry = fs.readFileSync('./src/steam/volumes/sentry')
+  loadSentry(details: steamUserDetails) {
+    const sentryPath = './src/steam/volumes/sentry'
+    if (fs.existsSync(sentryPath)) {
+      const sentry = fs.readFileSync(sentryPath)
       if (sentry.length) details.sha_sentryfile = sentry
     }
+  }
 
+  setupClientEventHandlers(details: steamUserDetails) {
     this.steamClient.on('connected', () => {
       this.steamUser.logOn(details)
     })
+    this.steamClient.on('logOnResponse', this.handleLogOnResponse.bind(this))
+    this.steamClient.on('loggedOff', this.handleLoggedOff.bind(this))
+    this.steamClient.on('error', this.handleClientError.bind(this))
+    this.steamClient.on('servers', this.handleServerUpdate.bind(this))
+  }
 
-    this.steamClient.on('logOnResponse', (logonResp: { eresult: any }) => {
-      // @ts-expect-error ???
-      if (logonResp.eresult == Steam.EResult.OK) {
-        logger.info('[STEAM] Logged on.')
+  handleLogOnResponse(logonResp: any) {
+    // @ts-expect-error no types exist
+    if (logonResp.eresult == Steam.EResult.OK) {
+      logger.info('[STEAM] Logged on.')
+      this.dota2.launch()
+    } else {
+      this.logSteamError(logonResp.eresult)
+    }
+  }
 
-        this.dota2.launch()
-      } else {
-        try {
-          steamErrors(logonResp.eresult, (err: any, errorObject: any) => {
-            logger.info('[STEAM]', { errorObject, err })
-          })
-        } catch (e) {
-          //
-        }
-      }
-    })
+  handleLoggedOff(eresult: any) {
+    // @ts-expect-error no types exist
+    if (this.isProduction()) this.steamClient.connect()
+    logger.info('[STEAM] Logged off from Steam.', { eresult })
+    this.logSteamError(eresult)
+  }
 
-    this.dota2.on('hellotimeout', () => {
-      // this.dota2.Logger.debug = () => {};
-      this.dota2.exit()
-      setTimeout(() => {
-        // @ts-expect-error loggedOn is there i swear
-        if (this.steamClient.loggedOn) this.dota2.launch()
-      }, 30000)
-      logger.info('[STEAM] hello time out!')
-    })
-    this.steamClient.on('loggedOff', (eresult: any) => {
-      // @ts-expect-error connect is there i swear
-      if (process.env.NODE_ENV === 'production') this.steamClient.connect()
-      logger.info('[STEAM] Logged off from Steam.', { eresult })
+  handleClientError(error: any) {
+    logger.info('[STEAM] steam error', { error })
+    if (!this.isProduction()) {
+      this.exit().catch((e) => logger.error('err steam error', { e }))
+    }
+    // @ts-expect-error no types exist
+    if (this.isProduction()) this.steamClient.connect()
+  }
 
-      try {
-        steamErrors(eresult, (err: any, errorObject: any) => {
-          logger.info('[STEAM]', { errorObject, err })
-        })
-      } catch (e) {
-        //
-      }
-    })
+  handleServerUpdate(servers: any) {
+    fs.writeFileSync('./src/steam/volumes/servers.json', JSON.stringify(servers))
+  }
 
-    this.steamClient.on('error', async (error: any) => {
-      logger.info('[STEAM]steam error', { error })
-      if (process.env.NODE_ENV !== 'production') {
-        try {
-          await this.exit()
-        } catch (e) {
-          logger.error('err steam error', { e })
-        }
-      }
-      // @ts-expect-error connect is there i swear
-      if (process.env.NODE_ENV === 'production') this.steamClient.connect()
-    })
-    this.steamClient.on('servers', (servers: { host: string; port: number }) => {
-      fs.writeFileSync('./src/steam/volumes/servers.json', JSON.stringify(servers))
-    })
+  setupUserEventHandlers() {
+    this.steamUser.on('updateMachineAuth', this.handleMachineAuth.bind(this))
+  }
 
-    this.steamUser.on(
-      'updateMachineAuth',
-      (sentry: { bytes: crypto.BinaryLike }, callback: (arg0: { sha_file: Buffer }) => void) => {
-        const hashedSentry = crypto.createHash('sha1').update(sentry.bytes).digest()
-        fs.writeFileSync('./src/steam/volumes/sentry', hashedSentry)
-        logger.info('[STEAM] sentryfile saved')
+  // @ts-expect-error no types exist
+  handleMachineAuth(sentry, callback) {
+    const hashedSentry = crypto.createHash('sha1').update(sentry.bytes).digest()
+    fs.writeFileSync('./src/steam/volumes/sentry', hashedSentry)
+    logger.info('[STEAM] sentryfile saved')
+    callback({ sha_file: hashedSentry })
+  }
 
-        callback({ sha_file: hashedSentry })
-      },
-    )
+  setupDotaEventHandlers() {
+    this.dota2.on('hellotimeout', this.handleHelloTimeout.bind(this))
+    this.dota2.on('unready', () => logger.info('[STEAM] disconnected from dota game coordinator'))
+  }
 
-    this.dota2.on('unready', () => {
-      logger.info('[STEAM] disconnected from dota game coordinator')
-    })
+  handleHelloTimeout() {
+    this.dota2.exit()
+    setTimeout(() => {
+      // @ts-expect-error no types exist
+      if (this.steamClient.loggedOn) this.dota2.launch()
+    }, 30000)
+    logger.info('[STEAM] hello time out!')
+  }
 
-    // @ts-expect-error connect is there
-    this.steamClient.connect()
+  // @ts-expect-error no types exist
+  logSteamError(eresult) {
+    try {
+      // @ts-expect-error no types exist
+      steamErrors(eresult, (err, errorObject) => {
+        logger.info('[STEAM]', { errorObject, err })
+      })
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  isProduction() {
+    return process.env.NODE_ENV === 'production'
   }
 
   // 2 minute delayed match data if it's out of our region
@@ -369,8 +392,6 @@ class Dota {
           operation.retry(new Error('Match not found'))
         })
     })
-
-    // return Promise.reject(new CustomError("Game wasn't found"))
   }
 
   public getGcMatchData(
