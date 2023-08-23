@@ -178,6 +178,7 @@ export class GSIHandler {
     const steam32 = this.getSteam32() ?? ''
     const token = this.getToken()
     const keysToDelete = [
+      `${token}:passiveMidas`,
       `${steam32}:medal`,
       `${token}:roshan`,
       `${token}:aegis`,
