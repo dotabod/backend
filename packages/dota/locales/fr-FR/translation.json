@@ -69,10 +69,8 @@
       "days_other": "dans {{count}}j",
       "lifetime": "› depuis toujours"
     },
-    "winrateColor": "",
     "winrateColor_one": "Le winrate de {{color}} est de {{winrate}}% avec {{- heroName}} {{timeperiod}} en {{count}} match.",
     "winrateColor_other": "Le winrate de {{color}} est de {{winrate}}% avec {{- heroName}} {{timeperiod}} en {{count}} matchs.",
-    "winrateStreamer": "",
     "winrateStreamer_one": "Le winrate est de {{winrate}}% avec {{- heroName}} {{timeperiod}} en {{count}} match.",
     "winrateStreamer_other": "Le winrate est de {{winrate}}% avec {{- heroName}} {{timeperiod}} en {{count}} matchs."
   },

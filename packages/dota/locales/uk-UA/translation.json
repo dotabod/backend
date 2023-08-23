@@ -73,12 +73,10 @@
       "days_other": "за {{count}} днів",
       "lifetime": "за весь час"
     },
-    "winrateColor": "",
     "winrateColor_one": "{{color}} має {{winrate}}% вінрейту за {{count}} матч на {{- heroName}} {{timeperiod}}.",
     "winrateColor_few": "{{color}} має {{winrate}}% вінрейту за {{count}} матчи на {{- heroName}} {{timeperiod}}.",
     "winrateColor_many": "{{color}} має {{winrate}}% вінрейту за {{count}} матчів на {{- heroName}} {{timeperiod}}.",
     "winrateColor_other": "{{color}} має {{winrate}}% вінрейту за {{count}} матчів на {{- heroName}} {{timeperiod}}.",
-    "winrateStreamer": "",
     "winrateStreamer_one": "Відсоток перемог: {{winrate}}% {{count}} матч на {{- heroName}} {{timeperiod}} .",
     "winrateStreamer_few": "Відсоток перемог: {{winrate}}% {{count}} матчі на {{- heroName}} {{timeperiod}} .",
     "winrateStreamer_many": "Відсоток перемог: {{winrate}}% {{count}} матчів на {{- heroName}} {{timeperiod}} .",

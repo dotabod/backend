@@ -67,10 +67,8 @@
       "days_other": "på {{count}} dagar",
       "lifetime": "av all tid"
     },
-    "winrateColor": "",
     "winrateColor_one": "{{color}}s winrate är {{winrate}}% med {{- heroName}} {{timeperiod}} från {{count}} match.",
     "winrateColor_other": "{{color}}s winrate är {{winrate}}% med {{- heroName}} {{timeperiod}} från {{count}} matcher.",
-    "winrateStreamer": "",
     "winrateStreamer_one": "Winrate är {{winrate}}% med {{- heroName}} {{timeperiod}} från {{count}} match.",
     "winrateStreamer_other": "Winrate är {{winrate}}% med {{- heroName}} {{timeperiod}} från {{count}} matcher."
   },

@@ -73,12 +73,10 @@
       "days_other": "w {{count}} dniach",
       "lifetime": "całego czasu"
     },
-    "winrateColor": "",
     "winrateColor_one": "{{color}} ma wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczu.",
     "winrateColor_few": "{{color}} ma wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów.",
     "winrateColor_many": "{{color}} ma wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów.",
     "winrateColor_other": "{{color}} ma wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów.",
-    "winrateStreamer": "",
     "winrateStreamer_one": "Wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczu.",
     "winrateStreamer_few": "Wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów.",
     "winrateStreamer_many": "Wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów.",

@@ -69,10 +69,8 @@
       "days_other": "em {{count}} dias",
       "lifetime": "de todos os tempos"
     },
-    "winrateColor": "",
     "winrateColor_one": "Taxa de vitória de {{color}} é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partida.",
     "winrateColor_other": "Taxa de vitória de {{color}} é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partidas.",
-    "winrateStreamer": "",
     "winrateStreamer_one": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partida.",
     "winrateStreamer_other": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partidas."
   },
