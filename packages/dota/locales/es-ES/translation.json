@@ -69,10 +69,8 @@
       "days_other": "en {{count}}d",
       "lifetime": "de todos los tiempos"
     },
-    "winrateColor": "",
     "winrateColor_one": "El porcentaje de victorias de {{color}} es {{winrate}}% con {{- heroName}} en {{timeperiod}} con {{count}} partidas jugadas.",
     "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
-    "winrateStreamer": "",
     "winrateStreamer_one": "Su porcentaje de victorias es: {{winrate}}% como {{- heroName}} en {{timeperiod}} de {{count}} partidas jugadas.",
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },

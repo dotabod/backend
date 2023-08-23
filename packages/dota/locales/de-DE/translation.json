@@ -67,10 +67,8 @@
       "days_other": "in {{count}} Tagen",
       "lifetime": "gesamter Zeitraum"
     },
-    "winrateColor": "",
     "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
     "winrateColor_other": "{{color}}'s Gewinnrate ist {{winrate}}% mit {{- heroName}} {{timeperiod}} von {{count}} spielen.",
-    "winrateStreamer": "",
     "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
     "winrateStreamer_other": "Siegquote ist {{winrate}}% mit {{- heroName}} {{timeperiod}} von {{count}} spielen."
   },

@@ -73,12 +73,10 @@
       "days_other": "за {{count}} дня",
       "lifetime": "за всё время"
     },
-    "winrateColor": "",
     "winrateColor_one": "У {{color}} винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игра.",
     "winrateColor_few": "У {{color}} винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игры.",
     "winrateColor_many": "У {{color}} винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игр.",
     "winrateColor_other": "У {{color}} винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игра.",
-    "winrateStreamer": "",
     "winrateStreamer_one": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игра.",
     "winrateStreamer_few": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игры.",
     "winrateStreamer_many": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игр.",
