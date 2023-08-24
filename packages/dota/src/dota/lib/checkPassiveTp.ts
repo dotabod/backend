@@ -20,8 +20,6 @@ export async function checkPassiveTp(client: SocketClient) {
     told: 0,
   }
 
-  console.log({ passiveTpData })
-
   const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
   const {
     noTp: { enabled: chatterEnabled },
