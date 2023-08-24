@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { Packet } from '../../types.js'
-import { GSIHandler, redisClient } from '../GSIHandler.js'
+import { GSIHandler, redisClient, say } from '../GSIHandler.js'
 import { findItem } from './findItem.js'
 
 /**
@@ -11,7 +11,7 @@ import { findItem } from './findItem.js'
  */
 export function chatMidas(dotaClient: GSIHandler, isMidasPassive: number | boolean) {
   if (typeof isMidasPassive === 'number') {
-    dotaClient.say(
+    say(
       dotaClient.client,
       t('midasUsed', {
         emote: 'Madge',
@@ -20,7 +20,7 @@ export function chatMidas(dotaClient: GSIHandler, isMidasPassive: number | boole
       }),
     )
   } else if (isMidasPassive) {
-    dotaClient.say(
+    say(
       dotaClient.client,
       t('chatters.midas', { emote: 'massivePIDAS', lng: dotaClient.client.locale }),
     )

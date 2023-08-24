@@ -44,6 +44,28 @@ interface MMR {
   heroName?: string | null
 }
 
+function getStreamDelay(settings: SocketClient['settings']) {
+  return Number(getValueOrDefault(DBSettings.streamDelay, settings)) + GLOBAL_DELAY
+}
+
+export function say(
+  client: SocketClient,
+  message: string,
+  { delay = true, beta = false }: { delay?: boolean; beta?: boolean } = {},
+) {
+  if (beta && !client.beta_tester) return
+
+  const msg = beta ? `${message} ${t('betaFeature', { lng: client.locale })}` : message
+  if (!delay) {
+    chatClient.say(client.name, msg)
+    return
+  }
+
+  setTimeout(() => {
+    client.name && chatClient.say(client.name, msg)
+  }, getStreamDelay(client.settings))
+}
+
 // That means the user opened OBS and connected to Dota 2 GSI
 export class GSIHandler {
   client: SocketClient
@@ -125,28 +147,6 @@ export class GSIHandler {
 
   public addSecondsToNow(seconds: number) {
     return new Date(new Date().getTime() + seconds * 1000)
-  }
-
-  public getStreamDelay() {
-    return Number(getValueOrDefault(DBSettings.streamDelay, this.client.settings)) + GLOBAL_DELAY
-  }
-
-  public say(
-    client: SocketClient,
-    message: string,
-    { delay = true, beta = false }: { delay?: boolean; beta?: boolean } = {},
-  ) {
-    if (beta && !this.client.beta_tester) return
-
-    const msg = beta ? `${message} ${t('betaFeature', { lng: this.client.locale })}` : message
-    if (!delay) {
-      chatClient.say(this.getChannel(), msg)
-      return
-    }
-
-    setTimeout(() => {
-      this.getChannel() && chatClient.say(this.getChannel(), msg)
-    }, this.getStreamDelay())
   }
 
   private resetPlayerData() {
@@ -270,7 +270,7 @@ export class GSIHandler {
       } = getValueOrDefault(DBSettings.chatters, this.client.settings)
 
       if (commands.length && chattersEnabled && chatterEnabled) {
-        this.say(
+        say(
           this.client,
           t('matchFound', {
             commandList: commands.map((c) => c.command).join(' · '),
@@ -397,7 +397,7 @@ export class GSIHandler {
     // this.getMmr() should return mmr from `user` table on new accounts without steam acts
     const mmr = this.client.SteamAccount.length ? 0 : this.getMmr()
 
-    logger.info('[STEAM32ID] Running steam account lookup to db', { name: this.getChannel() })
+    logger.info('[STEAM32ID] Running steam account lookup to db', { name: this.client.name })
 
     this.creatingSteamAccount = true
     // Get mmr from database for this steamid
@@ -406,7 +406,7 @@ export class GSIHandler {
       .then(async (res) => {
         // not found, need to make
         if (!res?.id) {
-          logger.info('[STEAM32ID] Adding steam32Id', { name: this.getChannel() })
+          logger.info('[STEAM32ID] Adding steam32Id', { name: this.client.name })
           await prisma.steamAccount.create({
             data: {
               mmr,
@@ -427,7 +427,7 @@ export class GSIHandler {
             this.client.steam32Id = steam32Id
           } else {
             // This means its currently being used by another account
-            logger.info('Found multi-account', { name: this.getChannel() })
+            logger.info('Found multi-account', { name: this.client.name })
             this.client.multiAccount = steam32Id
             // remove duplicates from userIds
             const userIds = [...res.connectedUserIds, this.getToken()].filter(
@@ -454,7 +454,7 @@ export class GSIHandler {
     const ranked = lobbyType === 7
 
     const extraInfo = {
-      name: this.getChannel(),
+      name: this.client.name,
       steam32Id: this.client.steam32Id,
       matchId,
       isParty,
@@ -539,7 +539,7 @@ export class GSIHandler {
     ) {
       // We have the wrong matchid, reset vars and start over
       logger.info('[BETS] openBets resetClientState because stuck on old match id', {
-        name: this.getChannel(),
+        name: this.client.name,
         playingMatchId: this.playingBetMatchId,
         matchId: this.client.gsi.map.matchid,
         steam32Id: this.getSteam32(),
@@ -575,13 +575,13 @@ export class GSIHandler {
     }
 
     logger.info('[BETS] Begin opening bets', {
-      name: this.getChannel(),
+      name: this.client.name,
       playingMatchId: this.playingBetMatchId,
       matchId: this.client.gsi.map.matchid,
       hero: this.client.gsi.hero.name,
     })
 
-    const channel = this.getChannel()
+    const channel = this.client.name
     const matchId = this.client.gsi.map.matchid
 
     this.openingBets = true
@@ -663,7 +663,7 @@ export class GSIHandler {
                     )
 
                     if (chattersEnabled && tellChatBets) {
-                      this.say(
+                      say(
                         this.client,
                         t('bets.open', { emote: 'peepoGamble', lng: this.client.locale }),
                         {
@@ -683,10 +683,10 @@ export class GSIHandler {
                     try {
                       // "message\": \"Invalid refresh token\"\n}" means they have to logout and login
                       if (JSON.parse(e?.body)?.message?.includes('refresh token')) {
-                        this.say(
+                        say(
                           this.client,
                           t('bets.error', {
-                            channel: `@${this.getChannel()}`,
+                            channel: `@${this.client.name}`,
                             lng: this.client.locale,
                           }),
                           {
@@ -732,11 +732,11 @@ export class GSIHandler {
 
                     this.openingBets = false
                   })
-            }, this.getStreamDelay())
+            }, getStreamDelay(this.client.settings))
           })
           .catch((e: any) => {
             logger.error(`[BETS] Could not add bet to channel`, {
-              channel: this.getChannel(),
+              channel: this.client.name,
               e: e?.message || e,
             })
             this.openingBets = false
@@ -755,7 +755,7 @@ export class GSIHandler {
   async closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
     if (this.openingBets || !this.playingBetMatchId || this.endingBets) {
       logger.info('[BETS] Not closing bets', {
-        name: this.getChannel(),
+        name: this.client.name,
         openingBets: this.openingBets,
         playingMatchId: this.playingBetMatchId,
         endingBets: this.endingBets,
@@ -796,24 +796,24 @@ export class GSIHandler {
       localWinner,
       myTeam,
       won,
-      channel: this.getChannel(),
+      channel: this.client.name,
     })
 
     // Both or one undefined
     if (!myTeam) {
       logger.error('[BETS] trying to end bets but did not find localWinner or myTeam', {
-        channel: this.getChannel(),
+        channel: this.client.name,
         matchId,
       })
       return
     }
 
     logger.info('[BETS] Running end bets to award mmr and close predictions', {
-      name: this.getChannel(),
+      name: this.client.name,
       matchId,
     })
 
-    const channel = this.getChannel()
+    const channel = this.client.name
     this.endingBets = true
 
     if (
@@ -822,7 +822,7 @@ export class GSIHandler {
       this.client.gsi?.map?.matchid
     ) {
       logger.info('This is likely a no stats recorded match', {
-        name: this.getChannel(),
+        name: this.client.name,
         matchId,
       })
 
@@ -830,10 +830,7 @@ export class GSIHandler {
         const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, this.client.settings)
         const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
         if (chattersEnabled && tellChatBets) {
-          this.say(
-            this.client,
-            t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }),
-          )
+          say(this.client, t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }))
         }
         refundTwitchBet(this.getChannelId())
           .then(() => {
@@ -889,7 +886,7 @@ export class GSIHandler {
       )) as unknown as typeof TreadToggleData | null
 
       if (treadToggleData?.treadToggles && this.client.stream_online) {
-        this.say(
+        say(
           this.client,
           t('treadToggle', {
             lng: this.client.locale,
@@ -908,7 +905,7 @@ export class GSIHandler {
     }
 
     if (!betsEnabled || !this.client.stream_online) {
-      logger.info('Bets are not enabled, stopping here', { name: this.getChannel() })
+      logger.info('Bets are not enabled, stopping here', { name: this.client.name })
       await this.resetClientState()
       return
     }
@@ -920,7 +917,7 @@ export class GSIHandler {
             logger.info('[BETS] end bets', {
               event: 'end_bets',
               matchId,
-              name: this.getChannel(),
+              name: this.client.name,
               winning_team: localWinner,
               player_team: myTeam,
               didWin: won,
@@ -951,14 +948,14 @@ export class GSIHandler {
               ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
               : t('bets.lost', { lng: this.client.locale, emote: 'Happi' })
 
-            this.say(this.client, message, { delay: false })
+            say(this.client, message, { delay: false })
           })
-    }, this.getStreamDelay())
+    }, getStreamDelay(this.client.settings))
   }
 
   private checkEarlyDCWinner(matchId: string) {
     logger.info('[BETS] Streamer exited the match before it ended with a winner', {
-      name: this.getChannel(),
+      name: this.client.name,
       matchId,
       openingBets: this.openingBets,
       endingBets: this.endingBets,
@@ -970,7 +967,7 @@ export class GSIHandler {
         params: { key: process.env.STEAM_WEB_API, match_id: matchId },
       })
       .then(async (response: { data: any }) => {
-        logger.info('Found an early dc match data', { matchId, channel: this.getChannel() })
+        logger.info('Found an early dc match data', { matchId, channel: this.client.name })
 
         let winningTeam: 'radiant' | 'dire' | null = null
         if (typeof response.data?.result?.radiant_win === 'boolean') {
@@ -979,14 +976,14 @@ export class GSIHandler {
 
         if (winningTeam === null) {
           logger.info('Early dc match wont be scored bc winner is null', {
-            name: this.getChannel(),
+            name: this.client.name,
           })
 
           if (this.client.stream_online) {
             const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, this.client.settings)
             const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
             if (chattersEnabled && tellChatBets) {
-              this.say(
+              say(
                 this.client,
                 t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }),
               )
@@ -1009,7 +1006,7 @@ export class GSIHandler {
         // this could mean match is not over yet. just give up checking after this long (like 3m)
         // resetting vars will mean it will just grab it again on match load
         logger.error('Early dc match didnt have data in it, match still going on?', {
-          channel: this.getChannel(),
+          channel: this.client.name,
           matchId,
           e: err?.message || err?.result || err?.data || err,
         })
@@ -1114,7 +1111,7 @@ export class GSIHandler {
         hasValidBlocker,
         state,
         blockCache: this.blockCache,
-        name: this.getChannel(),
+        name: this.client.name,
       })
 
       this.emitBlockEvent({ state, blockType: null })

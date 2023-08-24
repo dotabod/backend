@@ -2,7 +2,7 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
-import { GSIHandler } from '../../GSIHandler.js'
+import { GSIHandler, say } from '../../GSIHandler.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
@@ -23,7 +23,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
     if (chattersEnabled && chatterEnabled)
-      dotaClient.say(
+      say(
         dotaClient.client,
         t('aegis.denied', { lng: dotaClient.client.locale, heroName, emote: 'ICANT' }),
       )

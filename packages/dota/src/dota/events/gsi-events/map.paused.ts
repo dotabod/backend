@@ -1,7 +1,7 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { GSIHandler } from '../../GSIHandler.js'
+import { GSIHandler, say } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
@@ -20,7 +20,7 @@ eventHandler.registerEvent(`map:paused`, {
     server.io.to(dotaClient.getToken()).emit('paused', isPaused)
 
     if (isPaused && chattersEnabled && chatterEnabled) {
-      dotaClient.say(
+      say(
         dotaClient.client,
         t('chatters.pause', { emote: 'PauseChamp', lng: dotaClient.client.locale }),
       )

@@ -1,7 +1,7 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { GSIHandler, redisClient } from '../../GSIHandler.js'
+import { GSIHandler, redisClient, say } from '../../GSIHandler.js'
 import getHero, { HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
@@ -29,7 +29,7 @@ eventHandler.registerEvent(`player:kill_streak`, {
     if (lostStreak) {
       clearTimeout(dotaClient.killstreakTimeout)
 
-      dotaClient.say(
+      say(
         dotaClient.client,
         t('killstreak.lost', {
           emote: 'BibleThump',
@@ -45,7 +45,7 @@ eventHandler.registerEvent(`player:kill_streak`, {
 
     clearTimeout(dotaClient.killstreakTimeout)
     dotaClient.killstreakTimeout = setTimeout(() => {
-      dotaClient.say(
+      say(
         dotaClient.client,
         t('killstreak.won', {
           emote: 'POGGIES',

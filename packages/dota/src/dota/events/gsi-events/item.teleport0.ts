@@ -1,7 +1,7 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { GSIHandler } from '../../GSIHandler.js'
+import { GSIHandler, say } from '../../GSIHandler.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 
@@ -44,7 +44,7 @@ eventHandler.registerEvent(`items:teleport0:name`, {
         const seconds = Math.round(timeSinceLastReminder) + secondsToWait
 
         if (deadge) {
-          dotaClient.say(
+          say(
             dotaClient.client,
             t('chatters.tpFromDeath', {
               emote: 'Okayeg 👍',
@@ -56,7 +56,7 @@ eventHandler.registerEvent(`items:teleport0:name`, {
           return resetTimer()
         }
 
-        dotaClient.say(
+        say(
           dotaClient.client,
           t('chatters.tpFound', {
             emote: 'Okayeg 👍',
@@ -75,7 +75,7 @@ eventHandler.registerEvent(`items:teleport0:name`, {
         dotaClient.noTpChatter.lastRemindedDate = new Date()
         dotaClient.noTpChatter.timeout = undefined
 
-        dotaClient.say(
+        say(
           dotaClient.client,
           t('chatters.noTp', {
             channel: `@${dotaClient.client.name}`,

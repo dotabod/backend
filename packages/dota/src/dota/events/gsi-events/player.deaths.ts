@@ -2,7 +2,7 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { Item } from '../../../types.js'
-import { GSIHandler, redisClient } from '../../GSIHandler.js'
+import { GSIHandler, redisClient, say } from '../../GSIHandler.js'
 import { findItem } from '../../lib/findItem.js'
 import handleGetHero, { HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -53,7 +53,7 @@ function firstBloodChat(chatters: any, dotaClient: GSIHandler, heroName: string)
 
   if (!wasFirstBlood) return
 
-  dotaClient.say(
+  say(
     dotaClient.client,
     t('chatters.firstBloodDeath', { emote: 'PepeLaugh', heroName, lng: dotaClient.client.locale }),
   )
@@ -102,7 +102,7 @@ function passiveDeathChat(chatters: any, dotaClient: GSIHandler, heroName: strin
 
   if (!itemNames) return
 
-  dotaClient.say(
+  say(
     dotaClient.client,
     t('chatters.died', { emote: 'ICANT', heroName, itemNames, lng: dotaClient.client.locale }),
   )

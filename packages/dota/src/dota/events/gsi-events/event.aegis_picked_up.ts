@@ -4,12 +4,12 @@ import { t } from 'i18next'
 import RedisClient from '../../../db/redis.js'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
-import { GSIHandler } from '../../GSIHandler.js'
+import { logger } from '../../../utils/logger.js'
+import { GSIHandler, say } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
-import { logger } from '../../../utils/logger.js'
 
 const redisClient = RedisClient.getInstance()
 
@@ -93,7 +93,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
     if (chattersEnabled && chatterEnabled) {
-      dotaClient.say(dotaClient.client, generateAegisMessage(res, dotaClient.client.locale))
+      say(dotaClient.client, generateAegisMessage(res, dotaClient.client.locale))
     }
 
     emitAegisEvent(res, dotaClient.getToken())

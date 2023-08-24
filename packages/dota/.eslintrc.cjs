@@ -23,6 +23,7 @@ module.exports = {
   },
   plugins: ['@typescript-eslint', 'import', 'unused-imports', 'simple-import-sort', 'prettier'],
   rules: {
+    '@typescript-eslint/no-explicit-any': 'off',
     'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
     '@typescript-eslint/no-unsafe-call': 'off',

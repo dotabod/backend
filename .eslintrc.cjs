@@ -28,6 +28,7 @@ module.exports = {
   },
   plugins: ["@typescript-eslint", "import", "unused-imports", "simple-import-sort", "prettier"],
   rules: {
+    "@typescript-eslint/no-explicit-any": "off",
     semi: "off",
     "max-len": [1, { code: 100 }],
     "simple-import-sort/imports": "error",

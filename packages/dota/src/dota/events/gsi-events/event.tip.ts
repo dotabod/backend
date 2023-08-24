@@ -2,7 +2,7 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
-import { GSIHandler, redisClient } from '../../GSIHandler.js'
+import { GSIHandler, redisClient, say } from '../../GSIHandler.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
@@ -28,7 +28,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
       await redisClient.client.get(`${dotaClient.getToken()}:playingHeroSlot`),
     )
     if (event.receiver_player_id === playingHeroSlot) {
-      dotaClient.say(
+      say(
         dotaClient.client,
         t('tip.from', { emote: 'ICANT', lng: dotaClient.client.locale, heroName }),
       )
@@ -40,7 +40,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
         event.receiver_player_id,
       )
 
-      dotaClient.say(
+      say(
         dotaClient.client,
         t('tip.to', { emote: 'PepeLaugh', lng: dotaClient.client.locale, heroName: toHero }),
       )

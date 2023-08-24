@@ -4,7 +4,7 @@ import { t } from 'i18next'
 import RedisClient from '../../../db/redis.js'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
-import { GSIHandler } from '../../GSIHandler.js'
+import { GSIHandler, say } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
@@ -124,7 +124,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       await redisClient.client.json.set(`${dotaClient.getToken()}:roshan`, '$', res)
 
       if (chattersEnabled && chatterEnabled) {
-        dotaClient.say(dotaClient.client, generateRoshanMessage(res, dotaClient.client.locale))
+        say(dotaClient.client, generateRoshanMessage(res, dotaClient.client.locale))
       }
 
       emitRoshEvent(res, dotaClient.getToken())

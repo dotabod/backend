@@ -2,7 +2,7 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
-import { GSIHandler } from '../../GSIHandler.js'
+import { GSIHandler, say } from '../../GSIHandler.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
@@ -69,7 +69,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
       })
 
     dotaClient.bountyTimeout = setTimeout(() => {
-      dotaClient.say(
+      say(
         dotaClient.client,
         t('bounties.pickup', {
           emote: 'EZ Clap',

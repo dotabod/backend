@@ -1,7 +1,7 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { GSIHandler, redisClient } from '../../GSIHandler.js'
+import { GSIHandler, redisClient, say } from '../../GSIHandler.js'
 import getHero, { HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
@@ -25,7 +25,7 @@ eventHandler.registerEvent(`hero:smoked`, {
       const heroName =
         getHero(playingHero ?? dotaClient.client.gsi?.hero?.name)?.localized_name ?? 'We'
 
-      dotaClient.say(
+      say(
         dotaClient.client,
         t('chatters.smoked', { emote: 'Shush', heroName, lng: dotaClient.client.locale }),
       )
