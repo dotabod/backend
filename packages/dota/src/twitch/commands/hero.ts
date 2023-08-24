@@ -5,15 +5,12 @@ import RedisClient from '../../db/redis.js'
 import { GSIHandler } from '../../dota/GSIHandler.js'
 import { server } from '../../dota/index.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
-import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { getHeroById, heroColors, translatedColor } from '../../dota/lib/heroes.js'
 import { isArcade } from '../../dota/lib/isArcade.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 import { profileLink } from './stats.js'
-import { delayedGames } from '@dotabod/prisma/dist/mongo'
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { mongoClient } from '../../steam/index.js'
 
 const redisClient = RedisClient.getInstance()
 

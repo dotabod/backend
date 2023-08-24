@@ -1,7 +1,6 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import Mongo from '../../steam/mongo.js'
 import { notablePlayers } from '../../steam/notableplayers.js'

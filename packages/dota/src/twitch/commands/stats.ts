@@ -1,13 +1,11 @@
 import { t } from 'i18next'
 
-import { gsiHandlers } from '../../dota/lib/consts.js'
-import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { getHeroByName, getHeroNameById, heroColors } from '../../dota/lib/heroes.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../index.js'
 import commandHandler from '../lib/CommandHandler.js'
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 
 interface Player {
   heroid: number

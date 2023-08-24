@@ -8,9 +8,9 @@ import {
 } from '../../dota/events/gsi-events/event.aegis_picked_up.js'
 import { generateRoshanMessage, RoshRes } from '../../dota/events/gsi-events/event.roshan_killed.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
-import { logger } from '../../utils/logger.js'
 
 const redisClient = RedisClient.getInstance()
 

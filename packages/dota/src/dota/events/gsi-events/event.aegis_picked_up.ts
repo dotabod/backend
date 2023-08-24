@@ -7,13 +7,10 @@ import { fmtMSS } from '../../../utils/index.js'
 import { logger } from '../../../utils/logger.js'
 import { GSIHandler, say } from '../../GSIHandler.js'
 import { server } from '../../index.js'
+import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
-import { delayedGames } from '@dotabod/prisma/dist/mongo'
-import { mongoClient } from '../../../steam/index.js'
-import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
-import { getCurrentMatchPlayers } from '../../lib/getCurrentMatchPlayers.js'
 
 const redisClient = RedisClient.getInstance()
 

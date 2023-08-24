@@ -1,11 +1,8 @@
-import { delayedGames } from '@dotabod/prisma/dist/mongo'
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { calculateAvg } from '../../dota/lib/calculateAvg.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
-import { mongoClient } from '../../steam/index.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 

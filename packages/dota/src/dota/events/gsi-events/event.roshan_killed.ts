@@ -4,11 +4,11 @@ import { t } from 'i18next'
 import RedisClient from '../../../db/redis.js'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
+import { logger } from '../../../utils/logger.js'
 import { GSIHandler, say } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
-import { logger } from '../../../utils/logger.js'
 
 const redisClient = RedisClient.getInstance()
 

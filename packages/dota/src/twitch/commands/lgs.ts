@@ -3,9 +3,9 @@ import { t } from 'i18next'
 
 import { prisma } from '../../db/prisma.js'
 import getHero, { HeroNames } from '../../dota/lib/getHero.js'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
-import { logger } from '../../utils/logger.js'
 
 commandHandler.registerCommand('lgs', {
   aliases: ['lastgamescore', 'lgscore', 'lgwl'],

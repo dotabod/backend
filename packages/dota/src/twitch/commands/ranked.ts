@@ -3,9 +3,9 @@ import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import Mongo from '../../steam/mongo.js'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
-import { logger } from '../../utils/logger.js'
 
 const mongo = await Mongo.connect()
 commandHandler.registerCommand('ranked', {

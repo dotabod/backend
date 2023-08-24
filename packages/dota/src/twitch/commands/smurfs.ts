@@ -1,12 +1,10 @@
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { gsiHandlers } from '../../dota/lib/consts.js'
-import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { smurfs } from '../../steam/smurfs.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 
 commandHandler.registerCommand('smurfs', {
   aliases: ['lifetimes', 'totals', 'games', 'smurf'],
