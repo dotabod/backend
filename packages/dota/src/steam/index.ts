@@ -67,7 +67,7 @@ const retryCustom = async (cont: number, fn: () => Promise<any>, delay: number):
   return Promise.reject('Retry limit exceeded')
 }
 
-const mongo = await Mongo.connect()
+export const mongoClient = await Mongo.connect()
 
 interface RealTimeStats {
   steam_server_id: string
@@ -304,7 +304,7 @@ class Dota {
       return cb?.(new Error('Match not found'), null)
     }
 
-    const currentData = (await mongo
+    const currentData = (await mongoClient
       .collection('delayedGames')
       .findOne({ 'match.match_id': match_id })) as unknown as delayedGames | null
     const { hasAccountIds, hasHeroes } = hasSteamData(currentData)
@@ -353,10 +353,12 @@ class Dota {
 
             if (!itemsOnly) {
               logger.info('Saving match data with heroes', { matchid: match_id })
-              await mongo
+              await mongoClient
                 .collection('delayedGames')
                 .updateOne({ 'match.match_id': match_id }, { $set: delayedData }, { upsert: true })
-              events.emit('saveHeroesForMatchId', { matchId: match_id, players }, token)
+
+              // token only used to send to a specific user, but could instead be sent to the match id alone
+              events.emit('saveHeroesForMatchId', { matchId: match_id }, token)
             }
 
             cb?.(null, game)
@@ -373,7 +375,7 @@ class Dota {
           if (!waitForHeros) {
             logger.info('Saving match data', { matchId: match_id, hasHeroes })
             try {
-              await mongo
+              await mongoClient
                 .collection('delayedGames')
                 .updateOne({ 'match.match_id': match_id }, { $set: delayedData }, { upsert: true })
 
@@ -480,7 +482,7 @@ class Dota {
   > {
     return Promise.resolve().then(async () => {
       const promises = []
-      const cards = await mongo
+      const cards = await mongoClient
         .collection('cards')
         .find({ id: { $in: accounts } })
         .sort({ createdAt: -1 })
@@ -504,7 +506,7 @@ class Dota {
                   leaderboard_rank: temporaryCard.leaderboard_rank || 0,
                 }
                 if (temporaryCard.rank_tier !== -10) {
-                  await mongo.collection('cards').updateOne(
+                  await mongoClient.collection('cards').updateOne(
                     {
                       id: accounts[i],
                     },

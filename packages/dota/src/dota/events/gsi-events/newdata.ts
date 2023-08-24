@@ -1,14 +1,83 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
+import { t } from 'i18next'
 
-import { DotaEventTypes, Packet } from '../../../types.js'
+import { DotaEventTypes, Packet, SocketClient } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
-import { GSIHandler, redisClient } from '../../GSIHandler.js'
+import { GSIHandler, redisClient, say } from '../../GSIHandler'
+import { server } from '../../index.js'
 import { chatMidas, checkMidas } from '../../lib/checkMidas.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
+import { DelayedCommands } from '../../lib/consts.js'
+import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 import minimapParser from '../minimap/parser.js'
+
+function chatterMatchFound(client: SocketClient) {
+  if (!client.stream_online) return
+
+  const commands = DelayedCommands.filter((cmd) => getValueOrDefault(cmd.key, client.settings))
+
+  const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
+  const {
+    commandsReady: { enabled: chatterEnabled },
+  } = getValueOrDefault(DBSettings.chatters, client.settings)
+
+  if (commands.length && chattersEnabled && chatterEnabled) {
+    say(
+      client,
+      t('matchFound', {
+        commandList: commands.map((c) => c.command).join(' · '),
+        lng: client.locale,
+      }),
+      {
+        delay: false,
+      },
+    )
+  }
+}
+
+// Runs every gametick
+async function saveMatchData(client: SocketClient) {
+  // This now waits for the bet to complete before checking match data
+  // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
+  // the playingBetMatchId is saved when the hero is selected
+  const betsForMatchId = await redisClient.client.get(`${client.token}:betsForMatchId`)
+  if (!Number(betsForMatchId)) return
+
+  if (!client.steam32Id) return
+
+  let steamServerId = await redisClient.client.get(`${betsForMatchId}:steamServerId`)
+  if (steamServerId) return
+
+  steamServerId = await server.dota.getUserSteamServer(client.steam32Id)
+  if (!steamServerId) return
+
+  await redisClient.client.set(`${betsForMatchId}:steamServerId`, steamServerId)
+
+  const delayedData = await server.dota.getDelayedMatchData({
+    server_steamid: steamServerId,
+    match_id: betsForMatchId!,
+    refetchCards: true,
+    token: client.token,
+  })
+
+  if (!delayedData?.match.match_id) {
+    logger.info('No match data found!', {
+      name: client.name,
+      betsForMatchId,
+    })
+    return
+  }
+
+  await redisClient.client.set(`${betsForMatchId}:lobbyType`, delayedData.match.lobby_type)
+
+  const players = await getAccountsFromMatch(client.gsi)
+
+  // letting people know match data is available
+  if (players.accountIds.length) chatterMatchFound(client)
+}
 
 // Catch all
 eventHandler.registerEvent(`newdata`, {
@@ -40,7 +109,7 @@ eventHandler.registerEvent(`newdata`, {
     )
     if (!(playingHeroSlot >= 0) && typeof purchaser === 'number') {
       await redisClient.client.set(`${dotaClient.getToken()}:playingHeroSlot`, purchaser)
-      await dotaClient.saveMatchData(dotaClient.client)
+      await saveMatchData(dotaClient.client)
       return
     }
 
@@ -57,7 +126,7 @@ eventHandler.registerEvent(`newdata`, {
     }
 
     // saveMatchData checks and returns early if steam is found
-    await dotaClient.saveMatchData(dotaClient.client)
+    await saveMatchData(dotaClient.client)
 
     // TODO: Move this to server.ts
     const newEvents = data.events?.filter((event) => {

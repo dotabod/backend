@@ -1,7 +1,7 @@
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { gsiHandlers } from '../../dota/lib/consts.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import getHero from '../../dota/lib/getHero.js'
 import { getHeroNameById } from '../../dota/lib/heroes.js'
@@ -13,7 +13,7 @@ commandHandler.registerCommand('d2pt', {
   aliases: ['dota2pt', 'build', 'builds', 'getbuild'],
   onlyOnline: true,
   dbkey: DBSettings.commandBuilds,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -40,11 +40,11 @@ commandHandler.registerCommand('d2pt', {
 
     const hero = getHero(client.gsi?.hero?.name)
     const spectatorPlayers = getCurrentMatchPlayers(client.gsi)
-    const myPlayers = gsiHandlers.get(client.token)?.players?.matchPlayers
+    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
     const selectedPlayer = spectatorPlayers.find((a) => a.selected)
 
     if (!hero) {
-      if (!selectedPlayer && !myPlayers) {
+      if (!selectedPlayer && !matchPlayers.length) {
         chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
         return
       }

@@ -6,9 +6,13 @@ import { GSIHandler, say } from '../../GSIHandler.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
+import { delayedGames } from '@dotabod/prisma/dist/mongo'
+import { mongoClient } from '../../../steam/index.js'
+import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
+import { getCurrentMatchPlayers } from '../../lib/getCurrentMatchPlayers.js'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
-  handler: (dotaClient: GSIHandler, event: DotaEvent) => {
+  handler: async (dotaClient: GSIHandler, event: DotaEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 
@@ -25,17 +29,16 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
     )
       return
 
+    const { matchPlayers } = await getAccountsFromMatch(dotaClient.client.gsi)
+
     if (
-      typeof dotaClient.players?.matchPlayers[event.player_id].heroid !== 'number' ||
+      typeof matchPlayers[event.player_id].heroid !== 'number' ||
       typeof event.player_id !== 'number'
     )
       return
 
     clearTimeout(dotaClient.bountyTimeout)
-    const heroName = getHeroNameById(
-      dotaClient.players.matchPlayers[event.player_id].heroid,
-      event.player_id,
-    )
+    const heroName = getHeroNameById(matchPlayers[event.player_id].heroid, event.player_id)
 
     dotaClient.bountyHeroNames.push(heroName)
 

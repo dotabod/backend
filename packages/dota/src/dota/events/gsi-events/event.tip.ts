@@ -3,6 +3,7 @@ import { t } from 'i18next'
 
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { GSIHandler, redisClient, say } from '../../GSIHandler.js'
+import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
@@ -19,8 +20,10 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
 
     if (!chattersEnabled || !chatterEnabled) return
 
+    const { matchPlayers } = await getAccountsFromMatch(dotaClient.client.gsi)
+
     const heroName = getHeroNameById(
-      dotaClient.players?.matchPlayers[event.sender_player_id].heroid ?? 0,
+      matchPlayers[event.sender_player_id].heroid ?? 0,
       event.sender_player_id,
     )
 
@@ -36,7 +39,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
 
     if (event.sender_player_id === playingHeroSlot) {
       const toHero = getHeroNameById(
-        dotaClient.players?.matchPlayers[event.receiver_player_id].heroid ?? 0,
+        matchPlayers[event.receiver_player_id].heroid ?? 0,
         event.receiver_player_id,
       )
 

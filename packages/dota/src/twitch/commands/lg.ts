@@ -1,8 +1,7 @@
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { gsiHandlers } from '../../dota/lib/consts.js'
-import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import lastgame from '../../steam/lastgame.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
@@ -11,7 +10,7 @@ commandHandler.registerCommand('lg', {
   aliases: ['lastgame'],
   onlyOnline: true,
   dbkey: DBSettings.commandLG,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { client },
     } = message
@@ -29,11 +28,12 @@ commandHandler.registerCommand('lg', {
       return
     }
 
+    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+
     lastgame({
       currentMatchId: message.channel.client.gsi?.map?.matchid,
       locale: message.channel.client.locale,
-      currentPlayers:
-        gsiHandlers.get(client.token)?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi),
+      currentPlayers: matchPlayers,
       steam32Id: message.channel.client.steam32Id,
     })
       .then((desc) => {

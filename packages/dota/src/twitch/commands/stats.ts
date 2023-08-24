@@ -7,6 +7,7 @@ import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../index.js'
 import commandHandler from '../lib/CommandHandler.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 
 interface Player {
   heroid: number
@@ -87,7 +88,7 @@ commandHandler.registerCommand('stats', {
   aliases: ['check', 'profile'],
   onlyOnline: true,
 
-  handler: (message, args, command) => {
+  handler: async (message, args, command) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -99,12 +100,12 @@ commandHandler.registerCommand('stats', {
       return
     }
 
+    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+
     try {
       const profile = profileLink({
         command,
-        players:
-          gsiHandlers.get(client.token)?.players?.matchPlayers ||
-          getCurrentMatchPlayers(client.gsi),
+        players: matchPlayers,
         locale: client.locale,
         currentMatchId: client.gsi.map.matchid,
         args: args,

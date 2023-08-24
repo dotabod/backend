@@ -10,6 +10,10 @@ import { server } from '../../index.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
+import { delayedGames } from '@dotabod/prisma/dist/mongo'
+import { mongoClient } from '../../../steam/index.js'
+import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
+import { getCurrentMatchPlayers } from '../../lib/getCurrentMatchPlayers.js'
 
 const redisClient = RedisClient.getInstance()
 
@@ -53,7 +57,7 @@ export function emitAegisEvent(res: AegisRes, token: string) {
 }
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
-  handler: (dotaClient: GSIHandler, event: DotaEvent) => {
+  handler: async (dotaClient: GSIHandler, event: DotaEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 
@@ -67,10 +71,9 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     // server time
     const expireDate = dotaClient.addSecondsToNow(expireS)
 
-    const heroName = getHeroNameById(
-      dotaClient.players?.matchPlayers[event.player_id].heroid ?? 0,
-      event.player_id,
-    )
+    const { matchPlayers } = await getAccountsFromMatch(dotaClient.client.gsi)
+
+    const heroName = getHeroNameById(matchPlayers[event.player_id].heroid ?? 0, event.player_id)
 
     const res = {
       expireS,

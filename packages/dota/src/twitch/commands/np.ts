@@ -2,12 +2,12 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { gsiHandlers } from '../../dota/lib/consts.js'
-import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import Mongo from '../../steam/mongo.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
-import { logger } from '../../utils/logger.js'
 
 const mongo = await Mongo.connect()
 
@@ -15,7 +15,7 @@ commandHandler.registerCommand('np', {
   aliases: ['players', 'who'],
   onlyOnline: true,
   dbkey: DBSettings.commandNP,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[]) => {
     const [addOrRemove, forSteam32Id, ...name] = args
     const {
       user: { name: chatterName },
@@ -96,8 +96,7 @@ commandHandler.registerCommand('np', {
       return
     }
 
-    const dotaClient = gsiHandlers.get(client.token)
-    const matchPlayers = dotaClient?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
       client.settings,

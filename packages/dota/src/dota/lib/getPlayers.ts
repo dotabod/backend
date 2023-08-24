@@ -42,7 +42,7 @@ export async function getPlayers(
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
   }
 
-  const { matchPlayers, accountIds } = getAccountsFromMatch(
+  const { matchPlayers, accountIds } = await getAccountsFromMatch(
     response as unknown as delayedGames,
     players,
   )

@@ -11,6 +11,9 @@ import { isArcade } from '../../dota/lib/isArcade.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 import { profileLink } from './stats.js'
+import { delayedGames } from '@dotabod/prisma/dist/mongo'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
+import { mongoClient } from '../../steam/index.js'
 
 const redisClient = RedisClient.getInstance()
 
@@ -112,9 +115,11 @@ commandHandler.registerCommand('hero', {
         await redisClient.client.get(`${client.token}:playingHeroSlot`),
       )
       const ourHero = !args.length
+      const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+
       const profile = profileLink({
         command,
-        players: gsi.players?.matchPlayers || getCurrentMatchPlayers(client.gsi),
+        players: matchPlayers,
         locale: client.locale,
         currentMatchId: client.gsi.map.matchid,
         // defaults to the hero the user is playing

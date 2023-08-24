@@ -1,16 +1,18 @@
+import { delayedGames } from '@dotabod/prisma/dist/mongo'
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { calculateAvg } from '../../dota/lib/calculateAvg.js'
-import { gsiHandlers } from '../../dota/lib/consts.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
+import { mongoClient } from '../../steam/index.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('avg', {
   onlyOnline: true,
   dbkey: DBSettings.commandAvg,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { client },
     } = message
@@ -29,11 +31,12 @@ commandHandler.registerCommand('avg', {
 
     const avgDescriptor = ` - ${t('averageRank', { lng: client.locale })}`
 
+    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+
     calculateAvg({
       locale: client.locale,
       currentMatchId: message.channel.client.gsi?.map?.matchid,
-      players:
-        gsiHandlers.get(client.token)?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi),
+      players: matchPlayers,
     })
       .then((avg) => {
         chatClient.say(message.channel.name, `${avg}${avgDescriptor}`)

@@ -1,9 +1,11 @@
+import { delayedGames } from '@dotabod/prisma/dist/mongo'
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
 import RedisClient from '../db/redis.js'
+import { mongoClient } from '../steam/index.js'
 import { notablePlayers } from '../steam/notableplayers.js'
 import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
@@ -48,14 +50,6 @@ function getStreamDelay(settings: SocketClient['settings']) {
   return Number(getValueOrDefault(DBSettings.streamDelay, settings)) + GLOBAL_DELAY
 }
 
-async function hasMatchData(client: SocketClient) {
-  const steamServerId =
-    client.gsi?.map?.matchid &&
-    (await redisClient.client.get(`${client.gsi?.map?.matchid}:steamServerId`))
-
-  return !!(!client.steam32Id || client.gsi?.map?.matchid === '0' || steamServerId)
-}
-
 export function emitMinimapBlockerStatus(client: SocketClient) {
   if (!client.stream_online || !client.beta_tester || !client.gsi) return
 
@@ -94,7 +88,6 @@ export class GSIHandler {
   blockCache: string | null = null
   playingBetMatchId: string | undefined | null = null
   playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
-  players: ReturnType<typeof getAccountsFromMatch> | undefined | null = null
   events: DotaEvent[] = []
   bountyHeroNames: string[] = []
   noTpChatter: {
@@ -170,7 +163,6 @@ export class GSIHandler {
   private resetBetData() {
     // Bet stuff should be closed by endBets()
     // This should mean an entire match is over
-    this.players = null
     this.endingBets = false
     this.openingBets = false
     this.playingTeam = null
@@ -222,66 +214,6 @@ export class GSIHandler {
     this.emitClientResetEvents()
   }
 
-  // Runs every gametick
-  async saveMatchData(client: SocketClient) {
-    // This now waits for the bet to complete before checking match data
-    // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
-    // the playingBetMatchId is saved when the hero is selected
-    const betsForMatchId = await redisClient.client.get(`${client.token}:betsForMatchId`)
-    if (!Number(betsForMatchId)) return
-
-    if (await hasMatchData(client)) return
-
-    const steamServerId = await server.dota.getUserSteamServer(client.steam32Id!)
-    if (!steamServerId) return
-    await redisClient.client.set(`${betsForMatchId}:steamServerId`, steamServerId)
-
-    const delayedData = await server.dota.getDelayedMatchData({
-      server_steamid: steamServerId,
-      match_id: betsForMatchId!,
-      refetchCards: true,
-      token: client.token,
-    })
-
-    if (!delayedData?.match.match_id) {
-      logger.info('No match data found!', {
-        name: client.name,
-        betsForMatchId,
-      })
-      return
-    }
-
-    await redisClient.client.set(
-      `${delayedData?.match.match_id}:lobbyType`,
-      delayedData.match.lobby_type,
-    )
-    // await redisClient.client.json.set(`${client.token}`, '$', {})
-    this.players = getAccountsFromMatch(delayedData)
-
-    // letting people know match data is available
-    if (client.stream_online && this.players.accountIds.length) {
-      const commands = DelayedCommands.filter((cmd) => getValueOrDefault(cmd.key, client.settings))
-
-      const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
-      const {
-        commandsReady: { enabled: chatterEnabled },
-      } = getValueOrDefault(DBSettings.chatters, client.settings)
-
-      if (commands.length && chattersEnabled && chatterEnabled) {
-        say(
-          client,
-          t('matchFound', {
-            commandList: commands.map((c) => c.command).join(' · '),
-            lng: client.locale,
-          }),
-          {
-            delay: false,
-          },
-        )
-      }
-    }
-  }
-
   emitWLUpdate() {
     if (!this.client.stream_online) return
 
@@ -300,10 +232,11 @@ export class GSIHandler {
         // console.error('[MMR] emitWLUpdate Error getting WL', {e: e?.message || e})
       })
   }
-  emitNotablePlayers() {
+  async emitNotablePlayers() {
     if (!this.client.stream_online) return
 
-    const matchPlayers = this.players?.matchPlayers ?? getCurrentMatchPlayers(this.client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch(this.client.gsi)
+
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
       this.client.settings,

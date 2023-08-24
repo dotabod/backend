@@ -6,12 +6,13 @@ import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js
 import { smurfs } from '../../steam/smurfs.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 
 commandHandler.registerCommand('smurfs', {
   aliases: ['lifetimes', 'totals', 'games', 'smurf'],
   onlyOnline: true,
   dbkey: DBSettings.commandSmurfs,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { client },
     } = message
@@ -28,11 +29,10 @@ commandHandler.registerCommand('smurfs', {
       )
       return
     }
-    smurfs(
-      client.locale,
-      message.channel.client.gsi?.map?.matchid,
-      gsiHandlers.get(client.token)?.players?.matchPlayers || getCurrentMatchPlayers(client.gsi),
-    )
+
+    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+
+    smurfs(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {
         chatClient.say(message.channel.name, desc)
       })

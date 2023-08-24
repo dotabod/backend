@@ -6,6 +6,7 @@ import { t } from 'i18next'
 import { redisClient } from '../../dota/GSIHandler.js'
 import { server } from '../../dota/index.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import { getHeroNameById } from '../../dota/lib/heroes.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
@@ -51,10 +52,9 @@ async function getItems(
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: client.locale }))
   }
 
-  if (
-    !gsiHandlers.get(client.token)?.players?.matchPlayers.length &&
-    !getCurrentMatchPlayers(client.gsi).length
-  ) {
+  const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+
+  if (!matchPlayers.length) {
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: client.locale }))
   }
 
@@ -106,7 +106,7 @@ commandHandler.registerCommand('items', {
   aliases: ['item'],
   onlyOnline: true,
   dbkey: DBSettings.commandItems,
-  handler: (message, args, command) => {
+  handler: async (message, args, command) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -120,12 +120,12 @@ commandHandler.registerCommand('items', {
 
     const currentMatchId = client.gsi.map.matchid
 
+    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+
     try {
       const profile = profileLink({
         command,
-        players:
-          gsiHandlers.get(client.token)?.players?.matchPlayers ||
-          getCurrentMatchPlayers(client.gsi),
+        players: matchPlayers,
         locale: client.locale,
         currentMatchId,
         args: args,
