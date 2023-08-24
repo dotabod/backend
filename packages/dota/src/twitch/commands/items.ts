@@ -3,6 +3,7 @@ import DOTA_ITEM_IDS from 'dotaconstants/build/item_ids.json' assert { type: 'js
 import DOTA_ITEMS from 'dotaconstants/build/items.json' assert { type: 'json' }
 import { t } from 'i18next'
 
+import { redisClient } from '../../dota/GSIHandler.js'
 import { server } from '../../dota/index.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
@@ -42,7 +43,11 @@ async function getItems(
   profile: ReturnType<typeof profileLink>,
   matchId: string,
 ) {
-  if (!client.steamServerId) {
+  const steamServerId =
+    client.gsi?.map?.matchid &&
+    (await redisClient.client.get(`${client.gsi?.map?.matchid}:steamServerId`))
+
+  if (!steamServerId) {
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: client.locale }))
   }
 
@@ -54,7 +59,7 @@ async function getItems(
   }
 
   const delayedData = await server.dota.getDelayedMatchData({
-    server_steamid: client.steamServerId,
+    server_steamid: steamServerId,
     itemsOnly: true,
     token: client.token,
     match_id: matchId,

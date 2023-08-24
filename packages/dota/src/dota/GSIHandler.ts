@@ -38,7 +38,7 @@ interface MMR {
   }
   increase: boolean
   lobbyType: number
-  matchId: string
+  betsForMatchId: string
   isParty?: boolean
   heroSlot?: number | null
   heroName?: string | null
@@ -48,13 +48,12 @@ function getStreamDelay(settings: SocketClient['settings']) {
   return Number(getValueOrDefault(DBSettings.streamDelay, settings)) + GLOBAL_DELAY
 }
 
-function hasMatchData(client: SocketClient, matchId?: string | null) {
-  return !!(
-    !client.steam32Id ||
-    !Number(matchId) ||
-    client.gsi?.map?.matchid === '0' ||
-    client.steamServerId
-  )
+async function hasMatchData(client: SocketClient) {
+  const steamServerId =
+    client.gsi?.map?.matchid &&
+    (await redisClient.client.get(`${client.gsi?.map?.matchid}:steamServerId`))
+
+  return !!(!client.steam32Id || client.gsi?.map?.matchid === '0' || steamServerId)
 }
 
 export function emitMinimapBlockerStatus(client: SocketClient) {
@@ -95,9 +94,7 @@ export class GSIHandler {
   blockCache: string | null = null
   playingBetMatchId: string | undefined | null = null
   playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
-  playingLobbyType: number | undefined | null = null
   players: ReturnType<typeof getAccountsFromMatch> | undefined | null = null
-  steamServerTries = 0
   events: DotaEvent[] = []
   bountyHeroNames: string[] = []
   noTpChatter: {
@@ -117,7 +114,7 @@ export class GSIHandler {
 
   constructor(dotaClient: SocketClient) {
     this.client = dotaClient
-    this.mapBlocker = new DataBroadcaster(this.getToken())
+    this.mapBlocker = new DataBroadcaster(this.client.token)
 
     const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, this.client.settings)
     if (isBotDisabled) {
@@ -166,8 +163,6 @@ export class GSIHandler {
 
   private resetPlayerData() {
     this.events = []
-    this.savingSteamServerId = false
-    this.steamServerTries = 0
     this.treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
     this.creatingSteamAccount = false
   }
@@ -176,10 +171,8 @@ export class GSIHandler {
     // Bet stuff should be closed by endBets()
     // This should mean an entire match is over
     this.players = null
-    this.client.steamServerId = undefined
     this.endingBets = false
     this.openingBets = false
-    this.playingBetMatchId = null
     this.playingTeam = null
   }
 
@@ -192,7 +185,8 @@ export class GSIHandler {
 
   private async deleteRedisData() {
     const steam32 = this.getSteam32() ?? ''
-    const token = this.getToken()
+    const { token, gsi } = this.client
+
     const keysToDelete = [
       `${token}:passiveMidas`,
       `${steam32}:medal`,
@@ -215,70 +209,70 @@ export class GSIHandler {
   }
 
   private emitClientResetEvents() {
-    server.io.to(this.getToken()).emit('aegis-picked-up', {})
-    server.io.to(this.getToken()).emit('roshan-killed', {})
+    server.io.to(this.client.token).emit('aegis-picked-up', {})
+    server.io.to(this.client.token).emit('roshan-killed', {})
   }
 
   public async resetClientState() {
+    await this.deleteRedisData()
     this.mapBlocker.resetData()
     this.resetPlayerData()
     this.resetBetData()
     this.resetNoTpChatter()
-    await this.deleteRedisData()
     this.emitClientResetEvents()
   }
 
   // Runs every gametick
-  async saveMatchData() {
+  async saveMatchData(client: SocketClient) {
     // This now waits for the bet to complete before checking match data
     // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
     // the playingBetMatchId is saved when the hero is selected
-    const matchId = this.playingBetMatchId
+    const betsForMatchId = await redisClient.client.get(`${client.token}:betsForMatchId`)
+    if (!Number(betsForMatchId)) return
 
-    if (hasMatchData(this.client, matchId)) {
-      return
-    }
+    if (await hasMatchData(client)) return
 
-    const steamServerId = await server.dota.getUserSteamServer(this.client.steam32Id!)
+    const steamServerId = await server.dota.getUserSteamServer(client.steam32Id!)
     if (!steamServerId) return
-
-    this.client.steamServerId = steamServerId
+    await redisClient.client.set(`${betsForMatchId}:steamServerId`, steamServerId)
 
     const delayedData = await server.dota.getDelayedMatchData({
       server_steamid: steamServerId,
-      match_id: matchId!,
+      match_id: betsForMatchId!,
       refetchCards: true,
-      token: this.getToken(),
+      token: client.token,
     })
 
     if (!delayedData?.match.match_id) {
       logger.info('No match data found!', {
-        name: this.client.name,
-        matchId,
+        name: client.name,
+        betsForMatchId,
       })
       return
     }
 
-    this.playingLobbyType = delayedData.match.lobby_type
+    await redisClient.client.set(
+      `${delayedData?.match.match_id}:lobbyType`,
+      delayedData.match.lobby_type,
+    )
+    // await redisClient.client.json.set(`${client.token}`, '$', {})
     this.players = getAccountsFromMatch(delayedData)
 
     // letting people know match data is available
-    if (this.client.stream_online && this.players.accountIds.length) {
-      const commands = DelayedCommands.filter((cmd) =>
-        getValueOrDefault(cmd.key, this.client.settings),
-      )
+    if (client.stream_online && this.players.accountIds.length) {
+      const commands = DelayedCommands.filter((cmd) => getValueOrDefault(cmd.key, client.settings))
 
-      const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
+      const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
       const {
         commandsReady: { enabled: chatterEnabled },
-      } = getValueOrDefault(DBSettings.chatters, this.client.settings)
+      } = getValueOrDefault(DBSettings.chatters, client.settings)
 
       if (commands.length && chattersEnabled && chatterEnabled) {
         say(
-          this.client,
+          client,
           t('matchFound', {
             commandList: commands.map((c) => c.command).join(' · '),
-            lng: this.client.locale,
+            lng: client.locale,
           }),
           {
             delay: false,
@@ -299,7 +293,7 @@ export class GSIHandler {
       mmrEnabled,
     })
       .then(({ record }) => {
-        server.io.to(this.getToken()).emit('update-wl', record)
+        server.io.to(this.client.token).emit('update-wl', record)
       })
       .catch((e) => {
         // Stream not live
@@ -324,10 +318,10 @@ export class GSIHandler {
     })
       .then((response) => {
         if (response.playerList.length) {
-          server.io.to(this.getToken()).emit('notable-players', response.playerList)
+          server.io.to(this.client.token).emit('notable-players', response.playerList)
 
           setTimeout(() => {
-            server.io.to(this.getToken()).emit('notable-players', null)
+            server.io.to(this.client.token).emit('notable-players', null)
           }, 60 * 2000)
         }
       })
@@ -339,7 +333,7 @@ export class GSIHandler {
   emitBadgeUpdate() {
     getRankDetail(this.getMmr(), this.getSteam32())
       .then((deets) => {
-        server.io.to(this.getToken()).emit('update-medal', deets)
+        server.io.to(this.client.token).emit('update-medal', deets)
       })
       .catch((e) => {
         logger.error('[MMR] emitBadgeUpdate Error getting rank detail', { e: e?.message || e })
@@ -394,18 +388,18 @@ export class GSIHandler {
             data: {
               mmr,
               steam32Id,
-              userId: this.getToken(),
+              userId: this.client.token,
               name: this.client.gsi?.player?.name,
             },
           })
-          await prisma.user.update({ where: { id: this.getToken() }, data: { mmr: 0 } })
+          await prisma.user.update({ where: { id: this.client.token }, data: { mmr: 0 } })
           // Logged into a new account (smurfs vs mains)
           this.client.mmr = mmr
           this.client.steam32Id = steam32Id
           this.client.multiAccount = undefined
           this.emitBadgeUpdate()
         } else {
-          if (res.userId === this.getToken()) {
+          if (res.userId === this.client.token) {
             this.client.mmr = res.mmr
             this.client.steam32Id = steam32Id
           } else {
@@ -413,7 +407,7 @@ export class GSIHandler {
             logger.info('Found multi-account', { name: this.client.name })
             this.client.multiAccount = steam32Id
             // remove duplicates from userIds
-            const userIds = [...res.connectedUserIds, this.getToken()].filter(
+            const userIds = [...res.connectedUserIds, this.client.token].filter(
               (id, i, arr) => arr.indexOf(id) === i,
             )
 
@@ -433,13 +427,13 @@ export class GSIHandler {
       })
   }
 
-  updateMMR({ scores, increase, heroName, lobbyType, matchId, isParty, heroSlot }: MMR) {
+  updateMMR({ scores, increase, heroName, lobbyType, betsForMatchId, isParty, heroSlot }: MMR) {
     const ranked = lobbyType === 7
 
     const extraInfo = {
       name: this.client.name,
       steam32Id: this.client.steam32Id,
-      matchId,
+      betsForMatchId,
       isParty,
       ranked,
       increase,
@@ -453,8 +447,8 @@ export class GSIHandler {
       .update({
         where: {
           matchId_userId: {
-            matchId,
-            userId: this.getToken(),
+            betsForMatchId,
+            userId: this.client.token,
           },
         },
         data: {
@@ -475,7 +469,7 @@ export class GSIHandler {
       .catch((e) => {
         logger.error('[DATABASE ERROR MMR]', {
           e: e?.message || e,
-          matchId,
+          betsForMatchId,
           isParty,
           increase,
           lobbyType,
@@ -515,25 +509,27 @@ export class GSIHandler {
       return
     }
 
+    const betsForMatchId = await redisClient.client.get(`${this.client.token}:betsForMatchId`)
+
     if (
-      !!this.playingBetMatchId &&
+      !!betsForMatchId &&
       !!this.client.gsi?.map?.matchid &&
-      this.playingBetMatchId !== this.client.gsi.map.matchid
+      betsForMatchId !== this.client.gsi.map.matchid
     ) {
       // We have the wrong matchid, reset vars and start over
       logger.info('[BETS] openBets resetClientState because stuck on old match id', {
         name: this.client.name,
-        playingMatchId: this.playingBetMatchId,
-        matchId: this.client.gsi.map.matchid,
+        playingMatchId: betsForMatchId,
+        betsForMatchId: this.client.gsi.map.matchid,
         steam32Id: this.getSteam32(),
         steamFromGSI: this.client.gsi.player?.steamid,
-        token: this.getToken(),
+        token: this.client.token,
       })
       await this.resetClientState()
     }
 
     // The bet was already made
-    if (this.playingBetMatchId !== null) {
+    if (betsForMatchId !== null) {
       return
     }
 
@@ -559,13 +555,13 @@ export class GSIHandler {
 
     logger.info('[BETS] Begin opening bets', {
       name: this.client.name,
-      playingMatchId: this.playingBetMatchId,
-      matchId: this.client.gsi.map.matchid,
+      playingMatchId: betsForMatchId,
+      betsForMatchId: this.client.gsi.map.matchid,
       hero: this.client.gsi.hero.name,
     })
 
     const channel = this.client.name
-    const matchId = this.client.gsi.map.matchid
+    const betsForMatchId = this.client.gsi.map.matchid
 
     this.openingBets = true
 
@@ -575,37 +571,37 @@ export class GSIHandler {
         select: {
           id: true,
           myTeam: true,
-          matchId: true,
+          betsForMatchId: true,
         },
         where: {
-          userId: this.getToken(),
-          matchId,
+          userId: this.client.token,
+          betsForMatchId,
           won: null,
         },
       })
-      .then((bet) => {
+      .then(async (bet) => {
         // Saving to local memory so we don't have to query the db again
+        await redisClient.client.set(`${this.client.token}:betsForMatchId`, betsForMatchId)
+
         if (bet?.id) {
           logger.info('[BETS] Found a bet in the database', { id: bet.id })
-          this.playingBetMatchId = bet.matchId
           this.playingTeam = bet.myTeam as Player['team_name']
           this.openingBets = false
           return
         }
 
-        this.playingBetMatchId = matchId
         this.playingTeam = this.client.gsi?.player?.team_name ?? null
 
         redisClient.client
-          .set(`${this.getToken()}:playingHero`, this.client.gsi?.hero?.name as string)
+          .set(`${this.client.token}:playingHero`, this.client.gsi?.hero?.name as string)
           .catch((e) => logger.error('[REDIS ERROR]', { e: e?.message || e }))
 
         prisma.bet
           .create({
             data: {
-              predictionId: matchId,
-              matchId,
-              userId: this.getToken(),
+              predictionId: betsForMatchId,
+              betsForMatchId,
+              userId: this.client.token,
               myTeam: this.client.gsi?.player?.team_name ?? '',
               steam32Id: this.getSteam32(),
             },
@@ -628,7 +624,7 @@ export class GSIHandler {
             }
 
             setTimeout(() => {
-              this.getToken() &&
+              this.client.token &&
                 openTwitchBet(
                   this.client.locale,
                   this.getChannelId(),
@@ -657,8 +653,8 @@ export class GSIHandler {
                     this.openingBets = false
                     logger.info('[BETS] open bets', {
                       event: 'open_bets',
-                      matchId,
-                      user: this.getToken(),
+                      betsForMatchId,
+                      user: this.client.token,
                       player_team: this.client.gsi?.player?.team_name,
                     })
                   })
@@ -710,7 +706,7 @@ export class GSIHandler {
                     logger.error('[BETS] Error opening twitch bet', {
                       channel,
                       e: e?.message || e,
-                      matchId,
+                      betsForMatchId,
                     })
 
                     this.openingBets = false
@@ -727,7 +723,7 @@ export class GSIHandler {
       })
       .catch((e: any) => {
         logger.error('[BETS] Error opening bet', {
-          matchId,
+          betsForMatchId,
           channel,
           e: e?.message || e,
         })
@@ -736,29 +732,30 @@ export class GSIHandler {
   }
 
   async closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
-    if (this.openingBets || !this.playingBetMatchId || this.endingBets) {
+    const betsForMatchId = await redisClient.client.get(`${this.client.token}:betsForMatchId`)
+
+    if (this.openingBets || !betsForMatchId || this.endingBets) {
       logger.info('[BETS] Not closing bets', {
         name: this.client.name,
         openingBets: this.openingBets,
-        playingMatchId: this.playingBetMatchId,
+        playingMatchId: betsForMatchId,
         endingBets: this.endingBets,
       })
 
-      if (!this.playingBetMatchId) await this.resetClientState()
+      if (!betsForMatchId) await this.resetClientState()
       return
     }
 
-    const matchId = this.playingBetMatchId
     const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
-    const heroSlot = Number(await redisClient.client.get(`${this.getToken()}:playingHeroSlot`))
+    const heroSlot = Number(await redisClient.client.get(`${this.client.token}:playingHeroSlot`))
     const heroName = (await redisClient.client.get(
-      `${this.getToken()}:playingHero`,
+      `${this.client.token}:playingHero`,
     )) as HeroNames | null
 
     // An early without waiting for ancient to blow up
     // We have to check every few seconds with an pi to see if the match is over
     if (!winningTeam) {
-      this.checkEarlyDCWinner(matchId)
+      this.checkEarlyDCWinner(betsForMatchId)
       return
     }
 
@@ -775,7 +772,7 @@ export class GSIHandler {
     }
     const won = myTeam === localWinner
     logger.info('[BETS] end bets won data', {
-      playingMatchId: this.playingBetMatchId,
+      playingMatchId: betsForMatchId,
       localWinner,
       myTeam,
       won,
@@ -786,14 +783,14 @@ export class GSIHandler {
     if (!myTeam) {
       logger.error('[BETS] trying to end bets but did not find localWinner or myTeam', {
         channel: this.client.name,
-        matchId,
+        betsForMatchId,
       })
       return
     }
 
     logger.info('[BETS] Running end bets to award mmr and close predictions', {
       name: this.client.name,
-      matchId,
+      betsForMatchId,
     })
 
     const channel = this.client.name
@@ -806,36 +803,41 @@ export class GSIHandler {
     ) {
       logger.info('This is likely a no stats recorded match', {
         name: this.client.name,
-        matchId,
+        betsForMatchId,
       })
 
       if (this.client.stream_online) {
         const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, this.client.settings)
         const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
         if (chattersEnabled && tellChatBets) {
-          say(this.client, t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }))
+          say(
+            this.client,
+            t('bets.notScored', { emote: 'D:', lng: this.client.locale, betsForMatchId }),
+          )
         }
         refundTwitchBet(this.getChannelId())
           .then(() => {
             //
           })
           .catch((e) => {
-            logger.error('ERROR refunding bets', { token: this.getToken(), e })
+            logger.error('ERROR refunding bets', { token: this.client.token, e })
           })
       }
       await this.resetClientState()
       return
     }
 
-    // Default ranked
-    const localLobbyType = typeof this.playingLobbyType !== 'number' ? 7 : this.playingLobbyType
+    // Default to ranked
+    const playingLobbyType = Number(await redisClient.client.get(`${betsForMatchId}:lobbyType`))
+    const localLobbyType = playingLobbyType > 0 ? playingLobbyType : 7
+
     const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
 
     this.updateMMR({
       scores: scores,
       increase: won,
       lobbyType: localLobbyType,
-      matchId: matchId,
+      betsForMatchId: betsForMatchId,
       isParty: isParty,
       heroSlot,
       heroName,
@@ -865,7 +867,7 @@ export class GSIHandler {
     const TreadToggleData = this.treadsData
     const toggleHandler = async () => {
       const treadToggleData = (await redisClient.client.json.get(
-        `${this.getToken()}:treadtoggle`,
+        `${this.client.token}:treadtoggle`,
       )) as unknown as typeof TreadToggleData | null
 
       if (treadToggleData?.treadToggles && this.client.stream_online) {
@@ -875,7 +877,7 @@ export class GSIHandler {
             lng: this.client.locale,
             manaCount: treadToggleData.manaSaved,
             count: treadToggleData.treadToggles,
-            matchId,
+            betsForMatchId,
           }),
         )
       }
@@ -894,12 +896,12 @@ export class GSIHandler {
     }
 
     setTimeout(() => {
-      this.getToken() &&
+      this.client.token &&
         closeTwitchBet(won, this.getChannelId())
           .then(() => {
             logger.info('[BETS] end bets', {
               event: 'end_bets',
-              matchId,
+              betsForMatchId,
               name: this.client.name,
               winning_team: localWinner,
               player_team: myTeam,
@@ -910,7 +912,7 @@ export class GSIHandler {
             logger.error('[BETS] Error closing twitch bet', {
               channel,
               e: e?.message || e,
-              matchId,
+              betsForMatchId,
             })
           })
           .finally(() => {
@@ -936,10 +938,10 @@ export class GSIHandler {
     }, getStreamDelay(this.client.settings))
   }
 
-  private checkEarlyDCWinner(matchId: string) {
+  private checkEarlyDCWinner(betsForMatchId: string) {
     logger.info('[BETS] Streamer exited the match before it ended with a winner', {
       name: this.client.name,
-      matchId,
+      betsForMatchId,
       openingBets: this.openingBets,
       endingBets: this.endingBets,
     })
@@ -947,10 +949,10 @@ export class GSIHandler {
     // Check with steam to see if the match is over
     axios
       .get(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
-        params: { key: process.env.STEAM_WEB_API, match_id: matchId },
+        params: { key: process.env.STEAM_WEB_API, match_id: betsForMatchId },
       })
       .then(async (response: { data: any }) => {
-        logger.info('Found an early dc match data', { matchId, channel: this.client.name })
+        logger.info('Found an early dc match data', { betsForMatchId, channel: this.client.name })
 
         let winningTeam: 'radiant' | 'dire' | null = null
         if (typeof response.data?.result?.radiant_win === 'boolean') {
@@ -968,7 +970,7 @@ export class GSIHandler {
             if (chattersEnabled && tellChatBets) {
               say(
                 this.client,
-                t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }),
+                t('bets.notScored', { emote: 'D:', lng: this.client.locale, betsForMatchId }),
               )
             }
             refundTwitchBet(this.getChannelId())
@@ -976,7 +978,7 @@ export class GSIHandler {
                 //
               })
               .catch((e: any) => {
-                logger.error('ERROR refunding bets', { token: this.getToken(), e })
+                logger.error('ERROR refunding bets', { token: this.client.token, e })
               })
           }
           await this.resetClientState()
@@ -990,7 +992,7 @@ export class GSIHandler {
         // resetting vars will mean it will just grab it again on match load
         logger.error('Early dc match didnt have data in it, match still going on?', {
           channel: this.client.name,
-          matchId,
+          betsForMatchId,
           e: err?.message || err?.result || err?.data || err,
         })
 
@@ -1005,11 +1007,11 @@ export class GSIHandler {
 
     this.blockCache = blockType
 
-    server.io.to(this.getToken()).emit('block', {
+    server.io.to(this.client.token).emit('block', {
       type: blockType,
       state,
       team: this.client.gsi?.player?.team_name,
-      matchId: this.client.gsi?.map?.matchid ?? this.playingBetMatchId,
+      betsForMatchId: this.client.gsi?.map?.matchid,
     })
   }
 
@@ -1105,18 +1107,18 @@ export class GSIHandler {
 
   private async maybeSendRoshAegisEvent() {
     const aegisRes = (await redisClient.client.json.get(
-      `${this.getToken()}:aegis`,
+      `${this.client.token}:aegis`,
     )) as unknown as AegisRes | null
     const roshRes = (await redisClient.client.json.get(
-      `${this.getToken()}:roshan`,
+      `${this.client.token}:roshan`,
     )) as unknown as RoshRes | null
 
     if (aegisRes) {
-      emitAegisEvent(aegisRes, this.getToken())
+      emitAegisEvent(aegisRes, this.client.token)
     }
 
     if (roshRes) {
-      emitRoshEvent(roshRes, this.getToken())
+      emitRoshEvent(roshRes, this.client.token)
     }
   }
 }

@@ -40,7 +40,7 @@ eventHandler.registerEvent(`newdata`, {
     )
     if (!(playingHeroSlot >= 0) && typeof purchaser === 'number') {
       await redisClient.client.set(`${dotaClient.getToken()}:playingHeroSlot`, purchaser)
-      await dotaClient.saveMatchData()
+      await dotaClient.saveMatchData(dotaClient.client)
       return
     }
 
@@ -56,12 +56,8 @@ eventHandler.registerEvent(`newdata`, {
       }
     }
 
-    // Always runs but only until steam is found
-    try {
-      void dotaClient.saveMatchData()
-    } catch (e) {
-      logger.error('err saveMatchData', { e })
-    }
+    // saveMatchData checks and returns early if steam is found
+    await dotaClient.saveMatchData(dotaClient.client)
 
     // TODO: Move this to server.ts
     const newEvents = data.events?.filter((event) => {

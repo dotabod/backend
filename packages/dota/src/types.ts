@@ -2,7 +2,6 @@ import { HeroNames } from './dota/lib/getHero.js'
 
 export interface SocketClient {
   name: string
-  steamServerId?: string
   token: string
   stream_online: boolean
   stream_start_date: Date | null
