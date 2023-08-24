@@ -74,19 +74,20 @@ export async function checkPassiveTp(client: SocketClient) {
   const currentTime = Date.now()
   if (!hasTp && !passiveTpData.told && !passiveTpData.firstNoticedPassive) {
     // Set the time when passive midas was first noticed
-    await redisClient.client.json.set(
-      `${client.token}:passiveTp`,
-      '$.firstNoticedPassive',
-      currentTime,
-    )
+    await redisClient.client.json.set(`${client.token}:passiveTp`, '$', {
+      ...passiveTpData,
+      firstNoticedPassive: currentTime,
+    })
     return false
   } else if (
     !hasTp &&
     currentTime - passiveTpData.firstNoticedPassive > PASSIVE_THRESHOLD_SECONDS &&
     !passiveTpData.told
   ) {
-    await redisClient.client.json.set(`${client.token}:passiveTp`, '$.told', Date.now())
-
+    await redisClient.client.json.set(`${client.token}:passiveTp`, '$', {
+      ...passiveTpData,
+      told: Date.now(),
+    })
     say(
       client,
       t('chatters.noTp', {

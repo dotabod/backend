@@ -58,7 +58,10 @@ async function checkMidasIterator(client: SocketClient) {
 
   if (midasCharges === 2 && !passiveMidasData.told && !passiveMidasData.firstNoticedPassive) {
     // Set the time when passive midas was first noticed
-    await redisClient.client.json.set(`${token}:passiveMidas`, '$.firstNoticedPassive', currentTime)
+    await redisClient.client.json.set(`${token}:passiveMidas`, '$', {
+      ...passiveMidasData,
+      firstNoticedPassive: currentTime,
+    })
     return false
   } else if (
     midasCharges === 2 &&
@@ -66,7 +69,10 @@ async function checkMidasIterator(client: SocketClient) {
     !passiveMidasData.told
   ) {
     // Set the time when passive midas was told to chat
-    await redisClient.client.json.set(`${token}:passiveMidas`, '$.told', currentTime)
+    await redisClient.client.json.set(`${token}:passiveMidas`, '$', {
+      ...passiveMidasData,
+      told: currentTime,
+    })
     return true
   } else if (midasCharges !== 2 && passiveMidasData.told) {
     // Calculate the time taken to use midas after being passive
