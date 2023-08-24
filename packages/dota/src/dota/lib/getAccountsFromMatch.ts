@@ -1,8 +1,8 @@
 import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 
-import { mongoClient } from '../../steam'
-import { Packet } from '../../types'
-import { getCurrentMatchPlayers } from './getCurrentMatchPlayers'
+import { mongoClient } from '../../steam/index.js'
+import { Packet } from '../../types.js'
+import { getCurrentMatchPlayers } from './getCurrentMatchPlayers.js'
 
 export async function getAccountsFromMatch(
   gsi?: Packet,
