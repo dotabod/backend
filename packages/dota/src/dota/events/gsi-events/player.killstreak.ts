@@ -30,6 +30,7 @@ eventHandler.registerEvent(`player:kill_streak`, {
       clearTimeout(dotaClient.killstreakTimeout)
 
       dotaClient.say(
+        dotaClient.client,
         t('killstreak.lost', {
           emote: 'BibleThump',
           count: previousStreak,
@@ -45,6 +46,7 @@ eventHandler.registerEvent(`player:kill_streak`, {
     clearTimeout(dotaClient.killstreakTimeout)
     dotaClient.killstreakTimeout = setTimeout(() => {
       dotaClient.say(
+        dotaClient.client,
         t('killstreak.won', {
           emote: 'POGGIES',
           count: streak,

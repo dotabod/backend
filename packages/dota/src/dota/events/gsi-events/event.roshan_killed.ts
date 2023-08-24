@@ -124,7 +124,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       await redisClient.client.json.set(`${dotaClient.getToken()}:roshan`, '$', res)
 
       if (chattersEnabled && chatterEnabled) {
-        dotaClient.say(generateRoshanMessage(res, dotaClient.client.locale))
+        dotaClient.say(dotaClient.client, generateRoshanMessage(res, dotaClient.client.locale))
       }
 
       emitRoshEvent(res, dotaClient.getToken())

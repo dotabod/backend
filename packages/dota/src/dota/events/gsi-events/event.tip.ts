@@ -28,7 +28,10 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
       await redisClient.client.get(`${dotaClient.getToken()}:playingHeroSlot`),
     )
     if (event.receiver_player_id === playingHeroSlot) {
-      dotaClient.say(t('tip.from', { emote: 'ICANT', lng: dotaClient.client.locale, heroName }))
+      dotaClient.say(
+        dotaClient.client,
+        t('tip.from', { emote: 'ICANT', lng: dotaClient.client.locale, heroName }),
+      )
     }
 
     if (event.sender_player_id === playingHeroSlot) {
@@ -38,6 +41,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
       )
 
       dotaClient.say(
+        dotaClient.client,
         t('tip.to', { emote: 'PepeLaugh', lng: dotaClient.client.locale, heroName: toHero }),
       )
     }

@@ -12,6 +12,7 @@ import { findItem } from './findItem.js'
 export function chatMidas(dotaClient: GSIHandler, isMidasPassive: number | boolean) {
   if (typeof isMidasPassive === 'number') {
     dotaClient.say(
+      dotaClient.client,
       t('midasUsed', {
         emote: 'Madge',
         lng: dotaClient.client.locale,
@@ -19,7 +20,10 @@ export function chatMidas(dotaClient: GSIHandler, isMidasPassive: number | boole
       }),
     )
   } else if (isMidasPassive) {
-    dotaClient.say(t('chatters.midas', { emote: 'massivePIDAS', lng: dotaClient.client.locale }))
+    dotaClient.say(
+      dotaClient.client,
+      t('chatters.midas', { emote: 'massivePIDAS', lng: dotaClient.client.locale }),
+    )
   }
 }
 

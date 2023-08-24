@@ -45,6 +45,7 @@ eventHandler.registerEvent(`items:teleport0:name`, {
 
         if (deadge) {
           dotaClient.say(
+            dotaClient.client,
             t('chatters.tpFromDeath', {
               emote: 'Okayeg 👍',
               seconds,
@@ -56,6 +57,7 @@ eventHandler.registerEvent(`items:teleport0:name`, {
         }
 
         dotaClient.say(
+          dotaClient.client,
           t('chatters.tpFound', {
             emote: 'Okayeg 👍',
             seconds,
@@ -74,6 +76,7 @@ eventHandler.registerEvent(`items:teleport0:name`, {
         dotaClient.noTpChatter.timeout = undefined
 
         dotaClient.say(
+          dotaClient.client,
           t('chatters.noTp', {
             channel: `@${dotaClient.client.name}`,
             lng: dotaClient.client.locale,

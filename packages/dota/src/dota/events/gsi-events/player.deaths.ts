@@ -54,6 +54,7 @@ function firstBloodChat(chatters: any, dotaClient: GSIHandler, heroName: string)
   if (!wasFirstBlood) return
 
   dotaClient.say(
+    dotaClient.client,
     t('chatters.firstBloodDeath', { emote: 'PepeLaugh', heroName, lng: dotaClient.client.locale }),
   )
 }
@@ -102,6 +103,7 @@ function passiveDeathChat(chatters: any, dotaClient: GSIHandler, heroName: strin
   if (!itemNames) return
 
   dotaClient.say(
+    dotaClient.client,
     t('chatters.died', { emote: 'ICANT', heroName, itemNames, lng: dotaClient.client.locale }),
   )
 }

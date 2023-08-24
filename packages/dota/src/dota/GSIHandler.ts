@@ -132,6 +132,7 @@ export class GSIHandler {
   }
 
   public say(
+    client: SocketClient,
     message: string,
     { delay = true, beta = false }: { delay?: boolean; beta?: boolean } = {},
   ) {
@@ -270,6 +271,7 @@ export class GSIHandler {
 
       if (commands.length && chattersEnabled && chatterEnabled) {
         this.say(
+          this.client,
           t('matchFound', {
             commandList: commands.map((c) => c.command).join(' · '),
             lng: this.client.locale,
@@ -661,9 +663,13 @@ export class GSIHandler {
                     )
 
                     if (chattersEnabled && tellChatBets) {
-                      this.say(t('bets.open', { emote: 'peepoGamble', lng: this.client.locale }), {
-                        delay: false,
-                      })
+                      this.say(
+                        this.client,
+                        t('bets.open', { emote: 'peepoGamble', lng: this.client.locale }),
+                        {
+                          delay: false,
+                        },
+                      )
                     }
                     this.openingBets = false
                     logger.info('[BETS] open bets', {
@@ -678,6 +684,7 @@ export class GSIHandler {
                       // "message\": \"Invalid refresh token\"\n}" means they have to logout and login
                       if (JSON.parse(e?.body)?.message?.includes('refresh token')) {
                         this.say(
+                          this.client,
                           t('bets.error', {
                             channel: `@${this.getChannel()}`,
                             lng: this.client.locale,
@@ -823,7 +830,10 @@ export class GSIHandler {
         const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, this.client.settings)
         const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
         if (chattersEnabled && tellChatBets) {
-          this.say(t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }))
+          this.say(
+            this.client,
+            t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }),
+          )
         }
         refundTwitchBet(this.getChannelId())
           .then(() => {
@@ -880,6 +890,7 @@ export class GSIHandler {
 
       if (treadToggleData?.treadToggles && this.client.stream_online) {
         this.say(
+          this.client,
           t('treadToggle', {
             lng: this.client.locale,
             manaCount: treadToggleData.manaSaved,
@@ -940,7 +951,7 @@ export class GSIHandler {
               ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
               : t('bets.lost', { lng: this.client.locale, emote: 'Happi' })
 
-            this.say(message, { delay: false })
+            this.say(this.client, message, { delay: false })
           })
     }, this.getStreamDelay())
   }
@@ -975,7 +986,10 @@ export class GSIHandler {
             const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, this.client.settings)
             const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
             if (chattersEnabled && tellChatBets) {
-              this.say(t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }))
+              this.say(
+                this.client,
+                t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }),
+              )
             }
             refundTwitchBet(this.getChannelId())
               .then(() => {

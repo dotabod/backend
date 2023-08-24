@@ -93,7 +93,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
     if (chattersEnabled && chatterEnabled) {
-      dotaClient.say(generateAegisMessage(res, dotaClient.client.locale))
+      dotaClient.say(dotaClient.client, generateAegisMessage(res, dotaClient.client.locale))
     }
 
     emitAegisEvent(res, dotaClient.getToken())

@@ -39,6 +39,7 @@ eventHandler.registerEvent(`hero:name`, {
               )
               if (tellChatBets && chattersEnabled)
                 dotaClient.say(
+                  dotaClient.client,
                   t('bets.remade', {
                     lng: dotaClient.client.locale,
                     emote: 'Okayeg 👍',
