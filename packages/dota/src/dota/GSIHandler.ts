@@ -76,6 +76,31 @@ export function say(
   }, getStreamDelay(client.settings))
 }
 
+export async function deleteRedisData(client: SocketClient) {
+  const steam32 = client.steam32Id ?? ''
+  const { token } = client
+
+  const keysToDelete = [
+    `${token}:passiveMidas`,
+    `${steam32}:medal`,
+    `${token}:roshan`,
+    `${token}:aegis`,
+    `${token}:treadtoggle`,
+    `${token}:heroRecords`,
+    `${token}:playingHero`,
+    `${token}:playingHeroSlot`,
+  ]
+
+  const multi = redisClient.client.multi()
+  keysToDelete.forEach((key) => multi.json.del(key))
+
+  try {
+    await multi.exec()
+  } catch (e) {
+    logger.error('err deleteRedisData', { e })
+  }
+}
+
 // That means the user opened OBS and connected to Dota 2 GSI
 export class GSIHandler {
   client: SocketClient
@@ -171,38 +196,13 @@ export class GSIHandler {
     }
   }
 
-  private async deleteRedisData() {
-    const steam32 = this.getSteam32() ?? ''
-    const { token, gsi } = this.client
-
-    const keysToDelete = [
-      `${token}:passiveMidas`,
-      `${steam32}:medal`,
-      `${token}:roshan`,
-      `${token}:aegis`,
-      `${token}:treadtoggle`,
-      `${token}:heroRecords`,
-      `${token}:playingHero`,
-      `${token}:playingHeroSlot`,
-    ]
-
-    const multi = redisClient.client.multi()
-    keysToDelete.forEach((key) => multi.json.del(key))
-
-    try {
-      await multi.exec()
-    } catch (e) {
-      logger.error('err deleteRedisData', { e })
-    }
-  }
-
   private emitClientResetEvents() {
     server.io.to(this.client.token).emit('aegis-picked-up', {})
     server.io.to(this.client.token).emit('roshan-killed', {})
   }
 
   public async resetClientState() {
-    await this.deleteRedisData()
+    await deleteRedisData(this.client)
     this.mapBlocker.resetData()
     this.resetPlayerData()
     this.resetBetData()

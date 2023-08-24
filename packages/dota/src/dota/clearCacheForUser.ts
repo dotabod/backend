@@ -1,6 +1,6 @@
 import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
 import { SocketClient } from '../types.js'
-import { redisClient } from './GSIHandler.js'
+import { deleteRedisData } from './GSIHandler.js'
 import { gsiHandlers, twitchIdToToken } from './lib/consts.js'
 
 // three types of in-memory cache exists
@@ -21,18 +21,7 @@ export async function clearCacheForUser(client?: SocketClient | null) {
   const authProvider = getAuthProvider()
   authProvider.removeUser(accountId)
 
-  const clientKeys = [
-    `${client.steam32Id ?? ''}:medal`,
-    `${client.token}:roshan`,
-    `${client.token}:aegis`,
-    `${client.token}:treadtoggle`,
-  ]
-
-  try {
-    await Promise.all(clientKeys.map((key) => redisClient.client.json.del(key)))
-  } catch (e) {
-    // ignore any redis issues with deletions
-  }
+  await deleteRedisData(client)
 
   gsiHandlers.delete(client.token)
   return true
