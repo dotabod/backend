@@ -15,7 +15,7 @@ import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import { AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
 import { emitRoshEvent, RoshRes } from './events/gsi-events/event.roshan_killed.js'
-import { DataBroadcaster } from './events/minimap/DataBroadcaster.js'
+import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster.js'
 import minimapParser from './events/minimap/parser.js'
 import { server } from './index.js'
 import { blockTypes, DelayedCommands, GLOBAL_DELAY, pickSates } from './lib/consts.js'
@@ -46,6 +46,17 @@ interface MMR {
 
 function getStreamDelay(settings: SocketClient['settings']) {
   return Number(getValueOrDefault(DBSettings.streamDelay, settings)) + GLOBAL_DELAY
+}
+
+export function emitMinimapBlockerStatus(client: SocketClient) {
+  if (!client.stream_online || !client.beta_tester || !client.gsi) return
+
+  const enabled = getValueOrDefault(DBSettings['minimap-blocker'], client.settings)
+  if (!enabled) return
+
+  const parsedData = minimapParser.parse(client.gsi)
+  sendInitialData(client.token)
+  server.io.to(client.token).emit('STATUS', parsedData.status)
 }
 
 export function say(
@@ -131,10 +142,6 @@ export class GSIHandler {
 
   public getToken() {
     return this.client.token
-  }
-
-  public getChannel() {
-    return this.client.name
   }
 
   public getSteam32() {
@@ -340,17 +347,6 @@ export class GSIHandler {
       .catch((e) => {
         // stream not live
       })
-  }
-
-  emitMinimapBlockerStatus() {
-    if (!this.client.stream_online || !this.client.beta_tester || !this.client.gsi) return
-
-    const enabled = getValueOrDefault(DBSettings['minimap-blocker'], this.client.settings)
-    if (!enabled) return
-
-    const parsedData = minimapParser.parse(this.client.gsi)
-    this.mapBlocker.sendInitialData()
-    server.io.to(this.getToken()).emit('STATUS', parsedData.status)
   }
 
   emitBadgeUpdate() {
@@ -1084,7 +1080,7 @@ export class GSIHandler {
           this.emitBlockEvent({ state, blockType: blocker.type })
 
           if (blocker.type === 'playing') {
-            this.emitMinimapBlockerStatus()
+            emitMinimapBlockerStatus(this.client)
             this.emitBadgeUpdate()
             this.emitWLUpdate()
             try {

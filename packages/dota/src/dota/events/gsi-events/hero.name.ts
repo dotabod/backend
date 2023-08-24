@@ -61,7 +61,7 @@ eventHandler.registerEvent(`hero:name`, {
             })
             .catch((e: any) => {
               logger.error('[BETS] Error opening twitch bet', {
-                channel: dotaClient.getChannel(),
+                channel: dotaClient.client.name,
                 e: e?.message || e,
               })
             })

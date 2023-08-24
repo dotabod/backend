@@ -6,6 +6,7 @@ import getDBUser from '../db/getDBUser.js'
 import Dota from '../steam/index.js'
 import { logger } from '../utils/logger.js'
 import { newData, processChanges } from './globalEventEmitter.js'
+import { emitMinimapBlockerStatus } from './GSIHandler.js'
 import { gsiHandlers } from './lib/consts.js'
 import { validateToken } from './validateToken.js'
 
@@ -36,7 +37,7 @@ async function handleSocketConnection(socket: Socket) {
   const handler = gsiHandlers.get(token)
   if (handler && !handler.disabled && handler.client.stream_online) {
     if (handler.client.gsi && handler.client.beta_tester) {
-      handler.emitMinimapBlockerStatus()
+      emitMinimapBlockerStatus(handler.client)
     }
     handler.emitBadgeUpdate()
     handler.emitWLUpdate()
