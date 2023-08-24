@@ -43,7 +43,8 @@ export async function getPlayers(
   }
 
   const { matchPlayers, accountIds } = await getAccountsFromMatch(
-    response as unknown as delayedGames,
+    undefined,
+    currentMatchId,
     players,
   )
   const cards = await dota.getCards(accountIds)

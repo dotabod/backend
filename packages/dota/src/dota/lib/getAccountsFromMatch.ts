@@ -4,12 +4,21 @@ import { mongoClient } from '../../steam'
 import { Packet } from '../../types'
 import { getCurrentMatchPlayers } from './getCurrentMatchPlayers'
 
-export async function getAccountsFromMatch(gsi?: Packet) {
+export async function getAccountsFromMatch(
+  gsi?: Packet,
+  searchMatchId?: string,
+  searchPlayers?: {
+    heroid: number
+    accountid: number
+  }[],
+) {
   const response = (await mongoClient
     .collection('delayedGames')
-    .findOne({ 'match.match_id': gsi?.map?.matchid })) as unknown as delayedGames | undefined
+    .findOne({ 'match.match_id': searchMatchId || gsi?.map?.matchid })) as unknown as
+    | delayedGames
+    | undefined
 
-  const players = getCurrentMatchPlayers(gsi)
+  const players = searchPlayers?.length || getCurrentMatchPlayers(gsi)
 
   const matchPlayers =
     Array.isArray(players) && players.length

@@ -349,8 +349,6 @@ class Dota {
           } as delayedGames
 
           if ((waitForHeros && hasHeroes) || hasHeroes) {
-            const players = getAccountsFromMatch(delayedData)
-
             if (!itemsOnly) {
               logger.info('Saving match data with heroes', { matchid: match_id })
               await mongoClient
@@ -381,7 +379,7 @@ class Dota {
 
               // Force get new medals for this match. They could have updated!
               if (refetchCards) {
-                const { accountIds } = getAccountsFromMatch(game)
+                const { accountIds } = await getAccountsFromMatch(undefined, game.match.match_id)
                 await this.getCards(accountIds, true)
               }
             } catch (e) {

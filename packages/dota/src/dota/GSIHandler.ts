@@ -377,7 +377,7 @@ export class GSIHandler {
       .update({
         where: {
           matchId_userId: {
-            betsForMatchId,
+            matchId: betsForMatchId,
             userId: this.client.token,
           },
         },
@@ -450,7 +450,7 @@ export class GSIHandler {
       logger.info('[BETS] openBets resetClientState because stuck on old match id', {
         name: this.client.name,
         playingMatchId: betsForMatchId,
-        betsForMatchId: this.client.gsi.map.matchid,
+        gsiMatchId: this.client.gsi.map.matchid,
         steam32Id: this.getSteam32(),
         steamFromGSI: this.client.gsi.player?.steamid,
         token: this.client.token,
@@ -459,7 +459,7 @@ export class GSIHandler {
     }
 
     // The bet was already made
-    if (betsForMatchId !== null) {
+    if (Number(betsForMatchId) >= 0) {
       return
     }
 
@@ -491,7 +491,6 @@ export class GSIHandler {
     })
 
     const channel = this.client.name
-    const betsForMatchId = this.client.gsi.map.matchid
 
     this.openingBets = true
 
@@ -501,17 +500,20 @@ export class GSIHandler {
         select: {
           id: true,
           myTeam: true,
-          betsForMatchId: true,
+          matchId: true,
         },
         where: {
           userId: this.client.token,
-          betsForMatchId,
+          matchId: this.client.gsi.map.matchid,
           won: null,
         },
       })
       .then(async (bet) => {
         // Saving to local memory so we don't have to query the db again
-        await redisClient.client.set(`${this.client.token}:betsForMatchId`, betsForMatchId)
+        await redisClient.client.set(
+          `${this.client.token}:betsForMatchId`,
+          this.client?.gsi?.map?.matchid || '',
+        )
 
         if (bet?.id) {
           logger.info('[BETS] Found a bet in the database', { id: bet.id })
@@ -529,8 +531,8 @@ export class GSIHandler {
         prisma.bet
           .create({
             data: {
-              predictionId: betsForMatchId,
-              betsForMatchId,
+              predictionId: this.client?.gsi?.map?.matchid || '',
+              matchId: this.client?.gsi?.map?.matchid || '',
               userId: this.client.token,
               myTeam: this.client.gsi?.player?.team_name ?? '',
               steam32Id: this.getSteam32(),
@@ -583,7 +585,7 @@ export class GSIHandler {
                     this.openingBets = false
                     logger.info('[BETS] open bets', {
                       event: 'open_bets',
-                      betsForMatchId,
+                      matchId: this.client?.gsi?.map?.matchid || '',
                       user: this.client.token,
                       player_team: this.client.gsi?.player?.team_name,
                     })
@@ -636,7 +638,7 @@ export class GSIHandler {
                     logger.error('[BETS] Error opening twitch bet', {
                       channel,
                       e: e?.message || e,
-                      betsForMatchId,
+                      betsForMatchId: this.client?.gsi?.map?.matchid || '',
                     })
 
                     this.openingBets = false
@@ -653,7 +655,7 @@ export class GSIHandler {
       })
       .catch((e: any) => {
         logger.error('[BETS] Error opening bet', {
-          betsForMatchId,
+          betsForMatchId: this.client?.gsi?.map?.matchid || '',
           channel,
           e: e?.message || e,
         })
