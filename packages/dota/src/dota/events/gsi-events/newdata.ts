@@ -148,7 +148,7 @@ eventHandler.registerEvent(`newdata`, {
       })
     }
 
-    await dotaClient.openBets()
+    await dotaClient.openBets(dotaClient.client)
 
     const {
       midas: { enabled: midasChatterEnabled },

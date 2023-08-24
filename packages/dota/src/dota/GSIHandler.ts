@@ -162,7 +162,6 @@ export class GSIHandler {
     // This should mean an entire match is over
     this.endingBets = false
     this.openingBets = false
-    this.playingTeam = null
   }
 
   private resetNoTpChatter() {
@@ -434,26 +433,26 @@ export class GSIHandler {
   // 2 Next, check if the prediction is still open
   // 3 If it is, steam dota2 api result of match
   // 4 Then, tell twitch to close bets based on win result
-  async openBets() {
+  async openBets(client: SocketClient) {
     if (this.openingBets) {
       return
     }
 
-    const betsForMatchId = await redisClient.client.get(`${this.client.token}:betsForMatchId`)
+    const betsForMatchId = await redisClient.client.get(`${client.token}:betsForMatchId`)
 
     if (
       !!betsForMatchId &&
-      !!this.client.gsi?.map?.matchid &&
-      betsForMatchId !== this.client.gsi.map.matchid
+      !!client.gsi?.map?.matchid &&
+      betsForMatchId !== client.gsi.map.matchid
     ) {
       // We have the wrong matchid, reset vars and start over
       logger.info('[BETS] openBets resetClientState because stuck on old match id', {
-        name: this.client.name,
+        name: client.name,
         playingMatchId: betsForMatchId,
-        gsiMatchId: this.client.gsi.map.matchid,
-        steam32Id: this.getSteam32(),
-        steamFromGSI: this.client.gsi.player?.steamid,
-        token: this.client.token,
+        gsiMatchId: client.gsi.map.matchid,
+        steam32Id: client.steam32Id,
+        steamFromGSI: client.gsi.player?.steamid,
+        token: client.token,
       })
       await this.resetClientState()
     }
@@ -464,33 +463,33 @@ export class GSIHandler {
     }
 
     // Why open if not playing?
-    if (this.client.gsi?.player?.activity !== 'playing') {
+    if (client.gsi?.player?.activity !== 'playing') {
       return
     }
 
     // Why open if won?
-    if (this.client.gsi.map?.win_team !== 'none') {
+    if (client.gsi.map?.win_team !== 'none') {
       return
     }
 
     // We at least want the hero name so it can go in the twitch bet title
-    if (!this.client.gsi.hero?.name || !this.client.gsi.hero.name.length) {
+    if (!client.gsi.hero?.name || !client.gsi.hero.name.length) {
       return
     }
 
     // It's not a live game, so we don't want to open bets nor save it to DB
-    if (!this.client.gsi.map.matchid || this.client.gsi.map.matchid === '0') {
+    if (!client.gsi.map.matchid || client.gsi.map.matchid === '0') {
       return
     }
 
     logger.info('[BETS] Begin opening bets', {
-      name: this.client.name,
+      name: client.name,
       playingMatchId: betsForMatchId,
-      betsForMatchId: this.client.gsi.map.matchid,
-      hero: this.client.gsi.hero.name,
+      betsForMatchId: client.gsi.map.matchid,
+      hero: client.gsi.hero.name,
     })
 
-    const channel = this.client.name
+    const channel = client.name
 
     this.openingBets = true
 
@@ -503,91 +502,81 @@ export class GSIHandler {
           matchId: true,
         },
         where: {
-          userId: this.client.token,
-          matchId: this.client.gsi.map.matchid,
+          userId: client.token,
+          matchId: client.gsi.map.matchid,
           won: null,
         },
       })
       .then(async (bet) => {
-        // Saving to local memory so we don't have to query the db again
+        // Saving to redis so we don't have to query the db again
         await redisClient.client.set(
-          `${this.client.token}:betsForMatchId`,
-          this.client?.gsi?.map?.matchid || '',
+          `${client.token}:betsForMatchId`,
+          client?.gsi?.map?.matchid || '',
         )
+
+        const playingTeam = bet?.myTeam ?? client.gsi?.player?.team_name ?? ''
+        await redisClient.client.set(`${client.token}:playingTeam`, playingTeam)
+
+        redisClient.client
+          .set(`${client.token}:playingHero`, client.gsi?.hero?.name as string)
+          .catch((e) => logger.error('[REDIS ERROR]', { e: e?.message || e }))
 
         if (bet?.id) {
           logger.info('[BETS] Found a bet in the database', { id: bet.id })
-          this.playingTeam = bet.myTeam as Player['team_name']
           this.openingBets = false
           return
         }
 
-        this.playingTeam = this.client.gsi?.player?.team_name ?? null
-
-        redisClient.client
-          .set(`${this.client.token}:playingHero`, this.client.gsi?.hero?.name as string)
-          .catch((e) => logger.error('[REDIS ERROR]', { e: e?.message || e }))
-
         prisma.bet
           .create({
             data: {
-              predictionId: this.client?.gsi?.map?.matchid || '',
-              matchId: this.client?.gsi?.map?.matchid || '',
-              userId: this.client.token,
-              myTeam: this.client.gsi?.player?.team_name ?? '',
-              steam32Id: this.getSteam32(),
+              predictionId: client?.gsi?.map?.matchid || '',
+              matchId: client?.gsi?.map?.matchid || '',
+              userId: client.token,
+              myTeam: client.gsi?.player?.team_name ?? '',
+              steam32Id: client.steam32Id,
             },
           })
           .then(() => {
-            const hero = getHero(this.client.gsi?.hero?.name)
+            const hero = getHero(client.gsi?.hero?.name)
 
-            if (!this.client.stream_online) {
+            if (!client.stream_online) {
               logger.info('[BETS] Not opening bets bc stream is offline for', {
-                name: this.client.name,
+                name: client.name,
               })
               this.openingBets = false
               return
             }
 
-            const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
+            const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
             if (!betsEnabled) {
               this.openingBets = false
               return
             }
 
             setTimeout(() => {
-              this.client.token &&
+              client.token &&
                 openTwitchBet(
-                  this.client.locale,
+                  client.locale,
                   this.getChannelId(),
                   hero?.localized_name,
-                  this.client.settings,
+                  client.settings,
                 )
                   .then(() => {
-                    const tellChatBets = getValueOrDefault(
-                      DBSettings.tellChatBets,
-                      this.client.settings,
-                    )
-                    const chattersEnabled = getValueOrDefault(
-                      DBSettings.chatter,
-                      this.client.settings,
-                    )
+                    const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, client.settings)
+                    const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
 
                     if (chattersEnabled && tellChatBets) {
-                      say(
-                        this.client,
-                        t('bets.open', { emote: 'peepoGamble', lng: this.client.locale }),
-                        {
-                          delay: false,
-                        },
-                      )
+                      say(client, t('bets.open', { emote: 'peepoGamble', lng: client.locale }), {
+                        delay: false,
+                      })
                     }
                     this.openingBets = false
                     logger.info('[BETS] open bets', {
                       event: 'open_bets',
-                      matchId: this.client?.gsi?.map?.matchid || '',
-                      user: this.client.token,
-                      player_team: this.client.gsi?.player?.team_name,
+                      matchId: client?.gsi?.map?.matchid || '',
+                      user: client.token,
+                      player_team: client.gsi?.player?.team_name,
                     })
                   })
                   .catch((e: any) => {
@@ -595,10 +584,10 @@ export class GSIHandler {
                       // "message\": \"Invalid refresh token\"\n}" means they have to logout and login
                       if (JSON.parse(e?.body)?.message?.includes('refresh token')) {
                         say(
-                          this.client,
+                          client,
                           t('bets.error', {
-                            channel: `@${this.client.name}`,
-                            lng: this.client.locale,
+                            channel: `@${client.name}`,
+                            lng: client.locale,
                           }),
                           {
                             delay: false,
@@ -638,16 +627,16 @@ export class GSIHandler {
                     logger.error('[BETS] Error opening twitch bet', {
                       channel,
                       e: e?.message || e,
-                      betsForMatchId: this.client?.gsi?.map?.matchid || '',
+                      betsForMatchId: client?.gsi?.map?.matchid || '',
                     })
 
                     this.openingBets = false
                   })
-            }, getStreamDelay(this.client.settings))
+            }, getStreamDelay(client.settings))
           })
           .catch((e: any) => {
             logger.error(`[BETS] Could not add bet to channel`, {
-              channel: this.client.name,
+              channel: client.name,
               e: e?.message || e,
             })
             this.openingBets = false
@@ -655,7 +644,7 @@ export class GSIHandler {
       })
       .catch((e: any) => {
         logger.error('[BETS] Error opening bet', {
-          betsForMatchId: this.client?.gsi?.map?.matchid || '',
+          betsForMatchId: client?.gsi?.map?.matchid || '',
           channel,
           e: e?.message || e,
         })
@@ -665,6 +654,9 @@ export class GSIHandler {
 
   async closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
     const betsForMatchId = await redisClient.client.get(`${this.client.token}:betsForMatchId`)
+    const myTeam =
+      (await redisClient.client.get(`${this.client.token}:playingTeam`)) ??
+      this.client.gsi?.player?.team_name
 
     if (this.openingBets || !betsForMatchId || this.endingBets) {
       logger.info('[BETS] Not closing bets', {
@@ -692,7 +684,6 @@ export class GSIHandler {
     }
 
     const localWinner = winningTeam
-    const myTeam = this.playingTeam ?? this.client.gsi?.player?.team_name
     const scores = {
       kda: {
         kills: this.client.gsi?.player?.kills ?? null,

@@ -2,7 +2,7 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
-import { GSIHandler, say } from '../../GSIHandler.js'
+import { GSIHandler, redisClient, say } from '../../GSIHandler.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -19,12 +19,12 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
     if (!chattersEnabled || !chatterEnabled) return
 
+    const playingTeam =
+      (await redisClient.client.get(`${dotaClient.client.token}:playingTeam`)) ??
+      dotaClient.client.gsi?.player?.team_name
+
     // Only for first bounties
-    if (
-      event.team !== dotaClient.playingTeam ||
-      Number(dotaClient.client.gsi?.map?.clock_time) > 120
-    )
-      return
+    if (event.team !== playingTeam || Number(dotaClient.client.gsi?.map?.clock_time) > 120) return
 
     const { matchPlayers } = await getAccountsFromMatch(dotaClient.client.gsi)
 

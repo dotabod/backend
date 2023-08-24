@@ -37,18 +37,22 @@ eventHandler.registerEvent(`player:deaths`, {
     const heroName =
       handleGetHero(playingHero ?? dotaClient.client.gsi?.hero?.name)?.localized_name ?? ''
 
-    firstBloodChat(chatters, dotaClient, heroName)
+    await firstBloodChat(chatters, dotaClient, heroName)
     passiveDeathChat(chatters, dotaClient, heroName)
   },
 })
 
-function firstBloodChat(chatters: any, dotaClient: GSIHandler, heroName: string) {
+async function firstBloodChat(chatters: any, dotaClient: GSIHandler, heroName: string) {
   if (!chatters.firstBloodDeath.enabled) return
 
-  const otherTeam = dotaClient.playingTeam === 'radiant' ? 'dire' : 'radiant'
+  const playingTeam =
+    (await redisClient.client.get(`${dotaClient.client.token}:playingTeam`)) ??
+    dotaClient.client.gsi?.player?.team_name
+
+  const otherTeam = playingTeam === 'radiant' ? 'dire' : 'radiant'
   const wasFirstBlood =
-    dotaClient.playingTeam &&
-    dotaClient.client.gsi?.map?.[`${dotaClient.playingTeam as 'radiant' | 'dire'}_score`] === 0 &&
+    playingTeam &&
+    dotaClient.client.gsi?.map?.[`${playingTeam as 'radiant' | 'dire'}_score`] === 0 &&
     dotaClient.client.gsi.map[`${otherTeam}_score`] === 1
 
   if (!wasFirstBlood) return
