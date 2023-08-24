@@ -9,7 +9,7 @@ export async function calculateManaSaved(dotaClient: GSIHandler) {
   const data = dotaClient.client.gsi
 
   if (!data?.hero?.mana || !data.hero.max_mana) return
-  const hasPowerTreads = findItem('item_power_treads', false, data)
+  const hasPowerTreads = findItem({ itemName: 'item_power_treads', searchStashAlso: false, data })
   if (!hasPowerTreads || !hasPowerTreads[0]) return
 
   const maxMana = data.hero.max_mana

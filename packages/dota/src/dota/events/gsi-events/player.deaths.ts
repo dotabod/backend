@@ -76,11 +76,11 @@ function cantCastItem(item: Item, dotaClient: GSIHandler) {
 function passiveDeathChat(chatters: any, dotaClient: GSIHandler, heroName: string) {
   if (!chatters.passiveDeath.enabled) return
 
-  const couldHaveLivedWith = findItem(
-    passiveItemNames.map((i) => i.name),
-    false,
-    dotaClient.client.gsi,
-  )
+  const couldHaveLivedWith = findItem({
+    itemName: passiveItemNames.map((i) => i.name),
+    searchStashAlso: false,
+    data: dotaClient.client.gsi,
+  })
 
   // None found
   if (!Array.isArray(couldHaveLivedWith) || !couldHaveLivedWith.length) return

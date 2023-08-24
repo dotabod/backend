@@ -38,7 +38,7 @@ async function checkMidasIterator(client: SocketClient) {
   const { token, gsi: data } = client
 
   // Find the midas in player's inventory
-  const midasItem = findItem('item_hand_of_midas', true, data)
+  const midasItem = findItem({ itemName: 'item_hand_of_midas', searchStashAlso: true, data })
 
   // Check if player has a midas
   if (!midasItem || !midasItem[0]) return false
