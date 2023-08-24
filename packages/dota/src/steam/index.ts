@@ -263,14 +263,31 @@ class Dota {
     })
   }
 
-  public getUserSteamServer = (steam32Id: number | string) => {
-    return new Promise((resolveOuter: (serverSteamId: string | undefined) => void) => {
-      this.dota2.spectateFriendGame(
-        { steam_id: this.dota2.ToSteamID(Number(steam32Id)) },
-        (response: any, err: any) => {
-          resolveOuter(response?.server_steamid?.toString())
-        },
-      )
+  public getUserSteamServer = (steam32Id: number | string): Promise<string> => {
+    const steam_id = this.dota2.ToSteamID(Number(steam32Id))
+
+    // Set up the retry operation
+    const operation = retry.operation({
+      retries: 35, // Number of retries
+      factor: 2, // Exponential backoff factor
+      minTimeout: 1 * 1000, // Minimum retry timeout (1 second)
+      maxTimeout: 60 * 1000, // Maximum retry timeout (60 seconds)
+    })
+
+    return new Promise((resolve, reject) => {
+      operation.attempt((currentAttempt) => {
+        this.dota2.spectateFriendGame({ steam_id }, (response: any, err: any) => {
+          const theID = response?.server_steamid?.toString()
+
+          if (!theID) {
+            if (operation.retry(new Error('No ID yet, will keep trying.'))) return
+            reject('No spectator match found')
+          }
+
+          // Resolve the promise with the id
+          resolve(theID)
+        })
+      })
     })
   }
 

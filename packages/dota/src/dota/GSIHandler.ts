@@ -48,6 +48,15 @@ function getStreamDelay(settings: SocketClient['settings']) {
   return Number(getValueOrDefault(DBSettings.streamDelay, settings)) + GLOBAL_DELAY
 }
 
+function hasMatchData(client: SocketClient, matchId?: string | null) {
+  return !!(
+    !client.steam32Id ||
+    !Number(matchId) ||
+    client.gsi?.map?.matchid === '0' ||
+    client.steamServerId
+  )
+}
+
 export function emitMinimapBlockerStatus(client: SocketClient) {
   if (!client.stream_online || !client.beta_tester || !client.gsi) return
 
@@ -88,7 +97,6 @@ export class GSIHandler {
   playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
   playingLobbyType: number | undefined | null = null
   players: ReturnType<typeof getAccountsFromMatch> | undefined | null = null
-  savingSteamServerId = false
   steamServerTries = 0
   events: DotaEvent[] = []
   bountyHeroNames: string[] = []
@@ -227,25 +235,14 @@ export class GSIHandler {
     // the playingBetMatchId is saved when the hero is selected
     const matchId = this.playingBetMatchId
 
-    if (this.hasMatchData(matchId)) {
+    if (hasMatchData(this.client, matchId)) {
       return
     }
 
-    this.savingSteamServerId = true
     const steamServerId = await server.dota.getUserSteamServer(this.client.steam32Id!)
-    if (!steamServerId) {
-      if (this.steamServerTries > 35) {
-        return
-      }
-      setTimeout(() => {
-        this.steamServerTries += 1
-        this.savingSteamServerId = false
-      }, 5000)
-      return
-    }
+    if (!steamServerId) return
 
     this.client.steamServerId = steamServerId
-    this.savingSteamServerId = false
 
     const delayedData = await server.dota.getDelayedMatchData({
       server_steamid: steamServerId,
@@ -289,16 +286,6 @@ export class GSIHandler {
         )
       }
     }
-  }
-
-  private hasMatchData(matchId?: string | null) {
-    return (
-      !this.client.steam32Id ||
-      !Number(matchId) ||
-      this.client.gsi?.map?.matchid === '0' ||
-      this.client.steamServerId ||
-      this.savingSteamServerId
-    )
   }
 
   emitWLUpdate() {
