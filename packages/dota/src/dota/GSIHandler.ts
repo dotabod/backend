@@ -189,13 +189,6 @@ export class GSIHandler {
     this.openingBets = false
   }
 
-  private resetNoTpChatter() {
-    this.noTpChatter = {
-      timeout: undefined,
-      lastRemindedDate: undefined,
-    }
-  }
-
   private emitClientResetEvents() {
     server.io.to(this.client.token).emit('aegis-picked-up', {})
     server.io.to(this.client.token).emit('roshan-killed', {})
@@ -206,7 +199,6 @@ export class GSIHandler {
     this.mapBlocker.resetData()
     this.resetPlayerData()
     this.resetBetData()
-    this.resetNoTpChatter()
     this.emitClientResetEvents()
   }
 

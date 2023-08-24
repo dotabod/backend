@@ -1,38 +1,42 @@
+import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { Packet } from '../../types.js'
-import { GSIHandler, redisClient, say } from '../GSIHandler.js'
+import { SocketClient } from '../../types.js'
+import { redisClient, say } from '../GSIHandler.js'
 import { findItem } from './findItem.js'
-
-/**
- * Sends a chat message about Midas usage
- * @param dotaClient - The Dota client connection
- * @param isMidasPassive - Whether the Midas is passive or how long it took to use it
- */
-export function chatMidas(dotaClient: GSIHandler, isMidasPassive: number | boolean) {
-  if (typeof isMidasPassive === 'number') {
-    say(
-      dotaClient.client,
-      t('midasUsed', {
-        emote: 'Madge',
-        lng: dotaClient.client.locale,
-        seconds: isMidasPassive,
-      }),
-    )
-  } else if (isMidasPassive) {
-    say(
-      dotaClient.client,
-      t('chatters.midas', { emote: 'massivePIDAS', lng: dotaClient.client.locale }),
-    )
-  }
-}
 
 /**
  * Checks if the player has a midas and if it's on cooldown or not
  * @param data - The packet with all the player data
  * @param token - The token used for Redis operations
  */
-export async function checkMidas(data: Packet, token: string) {
+export async function checkPassiveMidas(client: SocketClient) {
+  const {
+    midas: { enabled: midasChatterEnabled },
+  } = getValueOrDefault(DBSettings.chatters, client.settings)
+
+  const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
+
+  if (chattersEnabled && midasChatterEnabled && client.stream_online) {
+    const isMidasPassive = await checkMidasIterator(client)
+    if (typeof isMidasPassive === 'number') {
+      say(
+        client,
+        t('midasUsed', {
+          emote: 'Madge',
+          lng: client.locale,
+          seconds: isMidasPassive,
+        }),
+      )
+    } else if (isMidasPassive) {
+      say(client, t('chatters.midas', { emote: 'massivePIDAS', lng: client.locale }))
+    }
+  }
+}
+
+async function checkMidasIterator(client: SocketClient) {
+  const { token, gsi: data } = client
+
   // Find the midas in player's inventory
   const midasItem = findItem('item_hand_of_midas', true, data)
 
@@ -42,11 +46,9 @@ export async function checkMidas(data: Packet, token: string) {
   // Get passive midas data from Redis
   const passiveMidasData = ((await redisClient.client.json.get(`${token}:passiveMidas`)) as {
     firstNoticedPassive: number
-    timer: number
     told: number
   } | null) || {
     firstNoticedPassive: 0,
-    timer: 0,
     told: 0,
   }
 
@@ -91,7 +93,6 @@ async function resetPassiveTime(token: string) {
   // Reset the passive midas data in Redis
   await redisClient.client.json.set(`${token}:passiveMidas`, '$', {
     firstNoticedPassive: 0,
-    timer: 0,
     told: 0,
   })
 }

@@ -6,7 +6,8 @@ import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
 import { GSIHandler, redisClient, say } from '../../GSIHandler.js'
 import { server } from '../../index.js'
-import { chatMidas, checkMidas } from '../../lib/checkMidas.js'
+import { checkPassiveMidas } from '../../lib/checkMidas.js'
+import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
 import { DelayedCommands } from '../../lib/consts.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
@@ -105,10 +106,10 @@ eventHandler.registerEvent(`newdata`, {
     // Can't just !dotaClient.heroSlot because it can be 0
     const purchaser = dotaClient.client.gsi?.items?.teleport0?.purchaser
     const playingHeroSlot = Number(
-      await redisClient.client.get(`${dotaClient.getToken()}:playingHeroSlot`),
+      await redisClient.client.get(`${dotaClient.client.token}:playingHeroSlot`),
     )
     if (!(playingHeroSlot >= 0) && typeof purchaser === 'number') {
-      await redisClient.client.set(`${dotaClient.getToken()}:playingHeroSlot`, purchaser)
+      await redisClient.client.set(`${dotaClient.client.token}:playingHeroSlot`, purchaser)
       await saveMatchData(dotaClient.client)
       return
     }
@@ -140,7 +141,7 @@ eventHandler.registerEvent(`newdata`, {
       dotaClient.events = [...dotaClient.events, ...newEvents]
 
       newEvents.forEach((event) => {
-        events.emit(`event:${event.event_type}`, event, dotaClient.getToken())
+        events.emit(`event:${event.event_type}`, event, dotaClient.client.token)
 
         if (!Object.values(DotaEventTypes).includes(event.event_type)) {
           logger.info('[NEWEVENT]', event)
@@ -150,12 +151,7 @@ eventHandler.registerEvent(`newdata`, {
 
     await dotaClient.openBets(dotaClient.client)
 
-    const {
-      midas: { enabled: midasChatterEnabled },
-    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-    if (chattersEnabled && midasChatterEnabled && dotaClient.client.stream_online) {
-      const isMidasPassive = await checkMidas(data, dotaClient.getToken())
-      chatMidas(dotaClient, isMidasPassive)
-    }
+    await checkPassiveMidas(dotaClient.client)
+    await checkPassiveTp(dotaClient.client)
   },
 })
