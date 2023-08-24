@@ -1005,7 +1005,7 @@ export class GSIHandler {
             this.emitBadgeUpdate()
             this.emitWLUpdate()
             try {
-              void this.maybeSendRoshAegisEvent()
+              void maybeSendRoshAegisEvent(this.client.token)
             } catch (e) {
               logger.error('err maybeSendRoshAegisEvent', { e })
             }
@@ -1036,21 +1036,21 @@ export class GSIHandler {
       return
     }
   }
+}
 
-  private async maybeSendRoshAegisEvent() {
-    const aegisRes = (await redisClient.client.json.get(
-      `${this.client.token}:aegis`,
-    )) as unknown as AegisRes | null
-    const roshRes = (await redisClient.client.json.get(
-      `${this.client.token}:roshan`,
-    )) as unknown as RoshRes | null
+async function maybeSendRoshAegisEvent(token: string) {
+  const aegisRes = (await redisClient.client.json.get(
+    `${token}:aegis`,
+  )) as unknown as AegisRes | null
+  const roshRes = (await redisClient.client.json.get(
+    `${token}:roshan`,
+  )) as unknown as RoshRes | null
 
-    if (aegisRes) {
-      emitAegisEvent(aegisRes, this.client.token)
-    }
+  if (aegisRes) {
+    emitAegisEvent(aegisRes, token)
+  }
 
-    if (roshRes) {
-      emitRoshEvent(roshRes, this.client.token)
-    }
+  if (roshRes) {
+    emitRoshEvent(roshRes, token)
   }
 }
