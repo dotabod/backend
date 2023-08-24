@@ -38,7 +38,7 @@ io.on('connection', (socket) => {
   try {
     void socket.join('twitch-chat-messages')
   } catch (e) {
-    console.log('coudl not join twitch-chat-messages socket')
+    console.log('Could not join twitch-chat-messages socket')
     return
   }
 

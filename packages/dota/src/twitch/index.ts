@@ -5,7 +5,7 @@ import { t } from 'i18next'
 import { io } from 'socket.io-client'
 
 import getDBUser from '../db/getDBUser.js'
-import { plebMode } from '../dota/lib/consts.js'
+import { isDev, plebMode } from '../dota/lib/consts.js'
 import { logger } from '../utils/logger.js'
 import commandHandler from './lib/CommandHandler.js'
 
@@ -22,6 +22,7 @@ export const chatClient = {
     twitchChat.emit('part', channel)
   },
   say: (channel: string, text: string) => {
+    if (isDev) console.log({ channel, text })
     twitchChat.emit('say', channel, text)
   },
 }
