@@ -967,7 +967,7 @@ export class GSIHandler {
       this.emitBlockEvent({ state, blockType })
 
       if (blockType === 'spectator') {
-        this.emitNotablePlayers()
+        await this.emitNotablePlayers()
       }
       return
     }
