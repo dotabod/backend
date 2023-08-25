@@ -23,7 +23,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
     const { matchPlayers } = await getAccountsFromMatch(dotaClient.client.gsi)
 
     const heroName = getHeroNameById(
-      matchPlayers[event.sender_player_id].heroid ?? 0,
+      matchPlayers[event.sender_player_id]?.heroid ?? 0,
       event.sender_player_id,
     )
 
@@ -39,7 +39,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
 
     if (event.sender_player_id === playingHeroSlot) {
       const toHero = getHeroNameById(
-        matchPlayers[event.receiver_player_id].heroid ?? 0,
+        matchPlayers[event.receiver_player_id]?.heroid ?? 0,
         event.receiver_player_id,
       )
 

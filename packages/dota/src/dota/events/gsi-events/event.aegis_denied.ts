@@ -15,7 +15,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
 
     const { matchPlayers } = await getAccountsFromMatch(dotaClient.client.gsi)
 
-    const heroName = getHeroNameById(matchPlayers[event.player_id].heroid ?? 0, event.player_id)
+    const heroName = getHeroNameById(matchPlayers[event.player_id]?.heroid ?? 0, event.player_id)
 
     const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
     const {

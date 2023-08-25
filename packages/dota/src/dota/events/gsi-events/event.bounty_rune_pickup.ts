@@ -34,13 +34,13 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
     const { matchPlayers } = await getAccountsFromMatch(dotaClient.client.gsi)
 
     if (
-      typeof matchPlayers[event.player_id].heroid !== 'number' ||
+      typeof matchPlayers[event.player_id]?.heroid !== 'number' ||
       typeof event.player_id !== 'number'
     )
       return
 
     clearTimeout(dotaClient.bountyTimeout)
-    const heroName = getHeroNameById(matchPlayers[event.player_id].heroid, event.player_id)
+    const heroName = getHeroNameById(matchPlayers[event.player_id]?.heroid, event.player_id)
 
     dotaClient.bountyHeroNames.push(heroName)
 

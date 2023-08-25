@@ -70,7 +70,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
 
     const { matchPlayers } = await getAccountsFromMatch(dotaClient.client.gsi)
 
-    const heroName = getHeroNameById(matchPlayers[event.player_id].heroid ?? 0, event.player_id)
+    const heroName = getHeroNameById(matchPlayers[event.player_id]?.heroid ?? 0, event.player_id)
 
     const res = {
       expireS,
