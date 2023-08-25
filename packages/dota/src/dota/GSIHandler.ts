@@ -265,7 +265,7 @@ export class GSIHandler {
   // This runs once per every match start
   // the user may have a steam account saved, but not this one for this match
   // so add to their list of steam accounts
-  updateSteam32Id() {
+  async updateSteam32Id() {
     if (this.creatingSteamAccount) return
     if (!this.client.gsi?.player?.steamid) return
     // TODO: Not sure if .accountid actually exists for a solo gsi in non spectate mode
@@ -298,54 +298,46 @@ export class GSIHandler {
     logger.info('[STEAM32ID] Running steam account lookup to db', { name: this.client.name })
 
     this.creatingSteamAccount = true
-    // Get mmr from database for this steamid
-    prisma.steamAccount
-      .findFirst({ where: { steam32Id } })
-      .then(async (res) => {
-        // not found, need to make
-        if (!res?.id) {
-          logger.info('[STEAM32ID] Adding steam32Id', { name: this.client.name })
-          await prisma.steamAccount.create({
-            data: {
-              mmr,
-              steam32Id,
-              userId: this.client.token,
-              name: this.client.gsi?.player?.name,
-            },
-          })
-          await prisma.user.update({ where: { id: this.client.token }, data: { mmr: 0 } })
-          // Logged into a new account (smurfs vs mains)
-          this.client.mmr = mmr
-          this.client.steam32Id = steam32Id
-          this.client.multiAccount = undefined
-          this.emitBadgeUpdate()
-        } else {
-          if (res.userId === this.client.token) {
-            this.client.mmr = res.mmr
-            this.client.steam32Id = steam32Id
-          } else {
-            // This means its currently being used by another account
-            logger.info('Found multi-account', { name: this.client.name })
-            this.client.multiAccount = steam32Id
-            // remove duplicates from userIds
-            const userIds = [...res.connectedUserIds, this.client.token].filter(
-              (id, i, arr) => arr.indexOf(id) === i,
-            )
+    const res = await prisma.steamAccount.findFirst({ where: { steam32Id } })
 
-            await prisma.steamAccount.update({
-              where: { id: res.id },
-              data: { connectedUserIds: userIds },
-            })
-          }
-        }
+    // not found, need to make
+    if (!res?.id) {
+      logger.info('[STEAM32ID] Adding steam32Id', { name: this.client.name })
+      await prisma.steamAccount.create({
+        data: {
+          mmr,
+          steam32Id,
+          userId: this.client.token,
+          name: this.client.gsi?.player?.name,
+        },
+      })
+      await prisma.user.update({ where: { id: this.client.token }, data: { mmr: 0 } })
+      // Logged into a new account (smurfs vs mains)
+      this.client.mmr = mmr
+      this.client.steam32Id = steam32Id
+      this.client.multiAccount = undefined
+      this.emitBadgeUpdate()
+    } else {
+      if (res.userId === this.client.token) {
+        this.client.mmr = res.mmr
+        this.client.steam32Id = steam32Id
+      } else {
+        // This means its currently being used by another account
+        logger.info('Found multi-account', { name: this.client.name })
+        this.client.multiAccount = steam32Id
+        // remove duplicates from userIds
+        const userIds = [...res.connectedUserIds, this.client.token].filter(
+          (id, i, arr) => arr.indexOf(id) === i,
+        )
 
-        this.creatingSteamAccount = false
-      })
-      .catch((e) => {
-        this.client.multiAccount = undefined
-        this.creatingSteamAccount = false
-        logger.error('[DATABASE ERROR]', { e: e?.message || e })
-      })
+        await prisma.steamAccount.update({
+          where: { id: res.id },
+          data: { connectedUserIds: userIds },
+        })
+      }
+    }
+
+    this.creatingSteamAccount = false
   }
 
   updateMMR({ scores, increase, heroName, lobbyType, betsForMatchId, isParty, heroSlot }: MMR) {

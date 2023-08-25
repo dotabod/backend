@@ -85,7 +85,7 @@ eventHandler.registerEvent(`newdata`, {
   handler: async (dotaClient: GSIHandler, data: Packet) => {
     // New users who dont have a steamaccount saved yet
     // This needs to run first so we have client.steamid on multiple acts
-    dotaClient.updateSteam32Id()
+    await dotaClient.updateSteam32Id()
 
     // In case they connect to a game in progress and we missed the start event
     await dotaClient.setupOBSBlockers(data.map?.game_state ?? '')
