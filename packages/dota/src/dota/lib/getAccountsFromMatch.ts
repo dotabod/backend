@@ -18,7 +18,7 @@ export async function getAccountsFromMatch(
     | delayedGames
     | undefined
 
-  const players = searchPlayers?.length || getCurrentMatchPlayers(gsi)
+  const players = searchPlayers?.length ? searchPlayers : getCurrentMatchPlayers(gsi)
 
   const matchPlayers =
     Array.isArray(players) && players.length
