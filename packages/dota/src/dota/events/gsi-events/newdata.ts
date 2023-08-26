@@ -44,17 +44,21 @@ async function saveMatchData(client: SocketClient) {
   // This now waits for the bet to complete before checking match data
   // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
   // the playingBetMatchId is saved when the hero is selected
-  const betsForMatchId = await redisClient.client.get(`${client.token}:betsForMatchId`)
+  const betsForMatchId =
+    (await redisClient.client.get(`${client.token}:betsForMatchId`)) ?? undefined
   if (!Number(betsForMatchId)) return
 
   if (!client.steam32Id) return
 
+  // did we already come here before?
   let steamServerId = await redisClient.client.get(`${betsForMatchId}:steamServerId`)
   if (steamServerId) return
 
+  // lookup a new steam server id
   steamServerId = await server.dota.getUserSteamServer(client.steam32Id)
   if (!steamServerId) return
 
+  // save the new server id now
   await redisClient.client.set(`${betsForMatchId}:steamServerId`, steamServerId)
 
   const delayedData = await server.dota.getDelayedMatchData({

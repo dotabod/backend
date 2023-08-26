@@ -422,7 +422,32 @@ export class GSIHandler {
       return
     }
 
-    const betsForMatchId = await redisClient.client.get(`${client.token}:betsForMatchId`)
+    // Why open if not playing?
+    if (client.gsi?.player?.activity !== 'playing') {
+      console.log(`if (client.gsi?.player?.activity !== 'playing') {`)
+      return
+    }
+
+    // Why open if won?
+    if (client.gsi.map?.win_team !== 'none') {
+      console.log(`if (client.gsi.map?.win_team !== 'none') {`)
+      return
+    }
+
+    // We at least want the hero name so it can go in the twitch bet title
+    if (!client.gsi.hero?.name || !client.gsi.hero.name.length) {
+      console.log(`if (!client.gsi.hero?.name || !client.gsi.hero.name.length) {`)
+      return
+    }
+
+    // It's not a live game, so we don't want to open bets nor save it to DB
+    if (!client.gsi.map.matchid || client.gsi.map.matchid === '0') {
+      console.log(`if (!client.gsi.map.matchid || client.gsi.map.matchid === '0') {`)
+      return
+    }
+
+    const betsForMatchId =
+      (await redisClient.client.get(`${client.token}:betsForMatchId`)) ?? undefined
 
     if (
       !!betsForMatchId &&
@@ -443,26 +468,7 @@ export class GSIHandler {
 
     // The bet was already made
     if (Number(betsForMatchId) >= 0) {
-      return
-    }
-
-    // Why open if not playing?
-    if (client.gsi?.player?.activity !== 'playing') {
-      return
-    }
-
-    // Why open if won?
-    if (client.gsi.map?.win_team !== 'none') {
-      return
-    }
-
-    // We at least want the hero name so it can go in the twitch bet title
-    if (!client.gsi.hero?.name || !client.gsi.hero.name.length) {
-      return
-    }
-
-    // It's not a live game, so we don't want to open bets nor save it to DB
-    if (!client.gsi.map.matchid || client.gsi.map.matchid === '0') {
+      console.log(`if (Number(betsForMatchId) >= 0) {`)
       return
     }
 
@@ -626,13 +632,15 @@ export class GSIHandler {
             this.openingBets = false
           })
       })
-      .catch((e: any) => {
+      .catch(async (e: any) => {
         logger.error('[BETS] Error opening bet', {
           betsForMatchId: client?.gsi?.map?.matchid || '',
           channel,
           e: e?.message || e,
         })
-        if ((e?.message || e).includes('error')) this.openingBets = false
+        if ((e?.message || e).includes('error')) {
+          this.openingBets = false
+        }
       })
   }
 

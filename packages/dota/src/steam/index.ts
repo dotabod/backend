@@ -17,6 +17,7 @@ import CustomError from '../utils/customError.js'
 import { promiseTimeout } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import Mongo from './mongo.js'
+import { isDev } from '../dota/lib/consts.js'
 
 function onGCSpectateFriendGameResponse(message: any, callback: any) {
   const response: { server_steamid: Long; watch_live_result: number } =
@@ -87,10 +88,13 @@ function hasSteamData(game?: delayedGames | null) {
     Array.isArray(game.teams[1].players) &&
     game.teams[0].players.length === 5 &&
     game.teams[1].players.length === 5
+
+  // Dev should be able to test in a lobby with bot matches
   const hasAccountIds =
-    hasPlayers &&
-    game.teams[0].players.every((player) => player.accountid) &&
-    game.teams[1].players.every((player) => player.accountid)
+    isDev ||
+    (hasPlayers &&
+      game.teams[0].players.every((player) => player.accountid) &&
+      game.teams[1].players.every((player) => player.accountid))
   const hasHeroes =
     hasPlayers &&
     game.teams[0].players.every((player) => player.heroid) &&
@@ -248,6 +252,7 @@ class Dota {
     refetchCards?: boolean
     itemsOnly?: boolean
   }) => {
+    console.log({ server_steamid })
     return new Promise((resolveOuter: (response: delayedGames | null) => void) => {
       this.GetRealTimeStats({
         steam_server_id: server_steamid,
@@ -300,6 +305,9 @@ class Dota {
     refetchCards = false,
     cb,
   }: RealTimeStats) => {
+    console.log({
+      steam_server_id,
+    })
     if (!steam_server_id) {
       return cb?.(new Error('Match not found'), null)
     }
@@ -308,6 +316,7 @@ class Dota {
       .collection('delayedGames')
       .findOne({ 'match.match_id': match_id })) as unknown as delayedGames | null
     const { hasAccountIds, hasHeroes } = hasSteamData(currentData)
+
     if (!itemsOnly && currentData && hasHeroes && hasAccountIds) {
       cb?.(null, currentData)
       return
@@ -325,6 +334,7 @@ class Dota {
           .STEAM_WEB_API!}&server_steam_id=${steam_server_id}`,
       )
         .then(async (response) => {
+          console.log({ response })
           const game = response.data as delayedGames | undefined
           const { hasAccountIds, hasHeroes } = hasSteamData(game)
 
