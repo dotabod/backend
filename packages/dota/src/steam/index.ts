@@ -15,9 +15,11 @@ import { isDev } from '../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import { GCMatchData } from '../types.js'
 import CustomError from '../utils/customError.js'
-import { promiseTimeout } from '../utils/index.js'
+import { retryCustom } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import Mongo from './mongo.js'
+
+export const mongoClient = await Mongo.connect()
 
 // Fetches data from MongoDB
 const fetchDataFromMongo = async (match_id: string) => {
@@ -90,21 +92,6 @@ interface steamUserDetails {
   password: string
   sha_sentryfile?: Buffer
 }
-
-const waitCustom = (time: number) => new Promise((resolve) => setTimeout(resolve, time || 0))
-const retryCustom = async (cont: number, fn: () => Promise<any>, delay: number): Promise<any> => {
-  for (let i = 0; i < cont; i++) {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return await fn()
-    } catch (err) {
-      await waitCustom(delay)
-    }
-  }
-  return Promise.reject('Retry limit exceeded')
-}
-
-export const mongoClient = await Mongo.connect()
 
 function hasSteamData(game?: delayedGames | null) {
   const hasTeams = Array.isArray(game?.teams) && game?.teams.length === 2
@@ -409,7 +396,7 @@ class Dota {
     return Dota.instance
   }
 
-  public async getCards(accounts: number[], refetchCards = false) {
+  public async getCards(accounts: number[], refetchCards = false): Promise<cards[]> {
     const cardsFromDb = await mongoClient
       .collection<cards>('cards')
       .find({ account_id: { $in: accounts.filter((a) => !!a) } })
@@ -419,16 +406,12 @@ class Dota {
     const cardsMap = new Map(cardsFromDb.map((card) => [card.account_id, card]))
 
     const fetchAndUpdateCard = async (accountId: number) => {
-      if (!accountId) return
-
-      const fetchedCard: cards | undefined = await retryCustom(
-        10,
-        () => this.getCard(accountId),
-        100,
-      ).catch(() => ({
-        rank_tier: -10,
-        leaderboard_rank: 0,
-      }))
+      const fetchedCard = accountId
+        ? await retryCustom(10, () => this.getCard(accountId), 1000).catch(() => ({
+            rank_tier: -10,
+            leaderboard_rank: 0,
+          }))
+        : undefined
 
       const card = {
         ...fetchedCard,
@@ -437,6 +420,8 @@ class Dota {
         rank_tier: fetchedCard?.rank_tier ?? 0,
         leaderboard_rank: fetchedCard?.leaderboard_rank ?? 0,
       } as cards
+
+      if (!accountId) return card
 
       if (fetchedCard?.rank_tier !== -10) {
         await mongoClient
@@ -447,8 +432,7 @@ class Dota {
       return card
     }
 
-    const promises = accounts.map(async (accountId, i) => {
-      if (!accountId) return []
+    const promises = accounts.map(async (accountId) => {
       const existingCard = cardsMap.get(accountId)
       if (refetchCards || !existingCard || typeof existingCard.rank_tier !== 'number') {
         return fetchAndUpdateCard(accountId)
@@ -460,21 +444,17 @@ class Dota {
   }
 
   public async getCard(account: number): Promise<cards> {
-    // @ts-expect-error no types exist
+    // @ts-expect-error no types exist for `loggedOn`
     if (!this.dota2._gcReady || !this.steamClient.loggedOn) {
       throw new CustomError('Error getting medal')
     }
 
-    return promiseTimeout(
-      new Promise((resolve, reject) => {
-        this.dota2.requestProfileCard(account, (err: any, card: cards) => {
-          if (err) reject(err)
-          else resolve(card)
-        })
-      }),
-      1000,
-      'Error getting medal',
-    )
+    return new Promise((resolve, reject) => {
+      this.dota2.requestProfileCard(account, (err: any, card: cards) => {
+        if (err) reject(err)
+        else resolve(card)
+      })
+    })
   }
 
   public exit(): Promise<boolean> {

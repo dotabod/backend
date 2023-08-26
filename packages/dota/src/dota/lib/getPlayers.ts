@@ -1,4 +1,4 @@
-import { cards, delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
+import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 import { t } from 'i18next'
 
 import Dota from '../../steam/index.js'
@@ -13,12 +13,7 @@ export async function getPlayers(
   locale: string,
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
-): Promise<{
-  matchPlayers: { heroid: number; accountid: number }[]
-  accountIds: number[]
-  cards: cards[]
-  gameMode?: number
-}> {
+) {
   if (!currentMatchId) {
     throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
   }

@@ -1,4 +1,4 @@
-import CustomError from './customError.js'
+import retry from 'retry'
 
 export function steamID64toSteamID32(steamID64: string) {
   if (!steamID64) return null
@@ -21,30 +21,29 @@ export function fmtMSS(totalSeconds: number) {
 }
 
 export const wait = (time: number) => new Promise((resolve) => setTimeout(resolve, time || 0))
-export const retry = (cont: number, fn: () => Promise<any>, delay: number): Promise<any> =>
-  fn().catch((err) =>
-    cont > 0 ? wait(delay).then(() => retry(cont - 1, fn, delay)) : Promise.reject(err),
-  )
 
-export const promiseTimeout = <T>(promise: Promise<T>, ms: number, reason: string): Promise<T> =>
-  new Promise((resolve, reject) => {
-    let timeoutCleared = false
-    const timeoutId = setTimeout(() => {
-      timeoutCleared = true
-      reject(new CustomError(reason))
-    }, ms)
+export const retryCustom = async <T>(
+  retries: number,
+  fn: () => Promise<T>,
+  minTimeout: number,
+): Promise<T> => {
+  return new Promise((resolve, reject) => {
+    const operation = retry.operation({
+      retries,
+      minTimeout,
+    })
 
-    promise
-      .then((result: T) => {
-        if (!timeoutCleared) {
-          clearTimeout(timeoutId)
-          resolve(result)
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    operation.attempt(async (currentAttempt) => {
+      console.log({ currentAttempt })
+      try {
+        const result = await fn()
+        resolve(result)
+      } catch (err: any) {
+        if (!operation.retry(err)) {
+          reject(operation.mainError())
         }
-      })
-      .catch((err: any) => {
-        if (!timeoutCleared) {
-          clearTimeout(timeoutId)
-          reject(err)
-        }
-      })
+      }
+    })
   })
+}

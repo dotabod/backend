@@ -197,7 +197,6 @@ export class GSIHandler {
   }
 
   public async resetClientState() {
-    console.log('resetting all data')
     await deleteRedisData(this.client)
     this.mapBlocker.resetData()
     this.resetPlayerData()
