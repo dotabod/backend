@@ -26,21 +26,22 @@ export const retry = (cont: number, fn: () => Promise<any>, delay: number): Prom
     cont > 0 ? wait(delay).then(() => retry(cont - 1, fn, delay)) : Promise.reject(err),
   )
 
-export const promiseTimeout = (promise: Promise<any>, ms: number, reason: string) =>
+export const promiseTimeout = <T>(promise: Promise<T>, ms: number, reason: string): Promise<T> =>
   new Promise((resolve, reject) => {
     let timeoutCleared = false
     const timeoutId = setTimeout(() => {
       timeoutCleared = true
       reject(new CustomError(reason))
     }, ms)
+
     promise
-      .then((result) => {
+      .then((result: T) => {
         if (!timeoutCleared) {
           clearTimeout(timeoutId)
           resolve(result)
         }
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (!timeoutCleared) {
           clearTimeout(timeoutId)
           reject(err)
