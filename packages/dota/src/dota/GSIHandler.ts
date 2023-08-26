@@ -9,7 +9,7 @@ import { chatClient } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
-import { DotaEvent, Player, SocketClient } from '../types.js'
+import { DotaEvent, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
@@ -77,32 +77,27 @@ export function say(
 }
 
 export async function deleteRedisData(client: SocketClient) {
-  const steam32 = client.steam32Id ?? ''
-  const { token } = client
-
-  const keysToDelete = [
-    `${token}:passiveMidas`,
-    `${steam32}:medal`,
-    `${token}:roshan`,
-    `${token}:aegis`,
-    `${token}:treadtoggle`,
-    `${token}:heroRecords`,
-    `${token}:playingHero`,
-    `${token}:playingHeroSlot`,
-    `${token}:playingTeam`,
-    `${token}:lobbyType`,
-    `${token}:passiveTp`,
-    `${token}:heroRecords`,
-    `${token}:betsForMatchId`,
-    `${token}:steamServerId`,
-  ]
-
-  const multi = redisClient.client.multi()
-  keysToDelete.forEach((key) => multi.json.del(key))
-  keysToDelete.forEach((key) => multi.del(key))
+  const { steam32Id, token } = client
+  const matchId =
+    (await redisClient.client.get(`${token}:betsForMatchId`)) ?? client.gsi?.map?.matchid
 
   try {
-    await multi.exec()
+    await redisClient.client
+      .multi()
+      .del(`${matchId}:lobbyType`)
+      .del(`${matchId}:steamServerId`)
+      .del(`${steam32Id}:medal`)
+      .del(`${token}:aegis`)
+      .del(`${token}:betsForMatchId`)
+      .del(`${token}:heroRecords`)
+      .del(`${token}:passiveMidas`)
+      .del(`${token}:passiveTp`)
+      .del(`${token}:playingHero`)
+      .del(`${token}:playingHeroSlot`)
+      .del(`${token}:playingTeam`)
+      .del(`${token}:roshan`)
+      .del(`${token}:treadtoggle`)
+      .exec()
   } catch (e) {
     logger.error('err deleteRedisData', { e })
   }
@@ -202,6 +197,7 @@ export class GSIHandler {
   }
 
   public async resetClientState() {
+    console.log('resetting all data')
     await deleteRedisData(this.client)
     this.mapBlocker.resetData()
     this.resetPlayerData()
@@ -230,7 +226,7 @@ export class GSIHandler {
   async emitNotablePlayers() {
     if (!this.client.stream_online) return
 
-    const { matchPlayers } = await getAccountsFromMatch(this.client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: this.client.gsi })
 
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
@@ -426,31 +422,31 @@ export class GSIHandler {
   // 4 Then, tell twitch to close bets based on win result
   async openBets(client: SocketClient) {
     if (this.openingBets) {
-      console.log('still opening')
+      // console.log('still opening')
       return
     }
 
     // Why open if not playing?
     if (client.gsi?.player?.activity !== 'playing') {
-      console.log(`if (client.gsi?.player?.activity !== 'playing') {`)
+      // console.log(`if (client.gsi?.player?.activity !== 'playing') {`)
       return
     }
 
     // Why open if won?
     if (client.gsi.map?.win_team !== 'none') {
-      console.log(`if (client.gsi.map?.win_team !== 'none') {`)
+      // console.log(`if (client.gsi.map?.win_team !== 'none') {`)
       return
     }
 
     // We at least want the hero name so it can go in the twitch bet title
     if (!client.gsi.hero?.name || !client.gsi.hero.name.length) {
-      console.log(`if (!client.gsi.hero?.name || !client.gsi.hero.name.length) {`)
+      // console.log(`if (!client.gsi.hero?.name || !client.gsi.hero.name.length) {`)
       return
     }
 
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!client.gsi.map.matchid || client.gsi.map.matchid === '0') {
-      console.log(`if (!client.gsi.map.matchid || client.gsi.map.matchid === '0') {`)
+      // console.log(`if (!client.gsi.map.matchid || client.gsi.map.matchid === '0') {`)
       return
     }
 
@@ -477,7 +473,6 @@ export class GSIHandler {
 
     // The bet was already made
     if (Number(betsForMatchId) >= 0) {
-      console.log(`if (Number(betsForMatchId) >= 0) {`)
       return
     }
 
@@ -641,7 +636,7 @@ export class GSIHandler {
             this.openingBets = false
           })
       })
-      .catch(async (e: any) => {
+      .catch((e: any) => {
         logger.error('[BETS] Error opening bet', {
           betsForMatchId: client?.gsi?.map?.matchid || '',
           channel,

@@ -1,16 +1,31 @@
 import { createLogger, format, transports } from 'winston'
+const { combine, printf, errors, json, timestamp } = format
+
 const isDev = process.env.NODE_ENV === 'development'
 
-const prodFormats = format.combine(format.errors({ stack: true }), format.json())
-const devFormats = format.combine(
-  format.errors({ stack: true }),
-  format.json(),
-  format.printf(({ message, level, timestamp, ...rest }) => {
-    return `[${timestamp as string}] ${level}: ${message as string} ${JSON.stringify(rest)}`
+const handleErrors = format((info) => {
+  if (info instanceof Error) {
+    return Object.assign({}, info, { stack: info.stack })
+  }
+  if (info.e instanceof Error) {
+    return Object.assign({}, info, { 'e.stack': info.e.stack })
+  }
+  return info
+})
+
+const prodFormats = combine(handleErrors(), errors({ stack: true }), json())
+
+const devFormats = combine(
+  handleErrors(),
+  errors({ stack: true }),
+  json(),
+  timestamp(),
+  printf(({ message, level, timestamp, ...rest }) => {
+    return `[${timestamp}] ${level}: ${message} ${JSON.stringify(rest, null, 2)}`
   }),
 )
 
 export const logger = createLogger({
-  format: !isDev ? prodFormats : devFormats,
+  format: isDev ? devFormats : prodFormats,
   transports: [new transports.Console()],
 })

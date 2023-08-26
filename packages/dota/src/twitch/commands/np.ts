@@ -95,7 +95,7 @@ commandHandler.registerCommand('np', {
       return
     }
 
-    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
       client.settings,

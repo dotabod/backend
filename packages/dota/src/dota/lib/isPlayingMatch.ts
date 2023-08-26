@@ -8,6 +8,7 @@ import { isSpectator } from './isSpectator.js'
 
 export function isPlayingMatch(gsi?: Packet) {
   if (!gsi) return false
+  if (gsi?.player?.activity !== 'playing') return false
 
   if (isDev && isArcade(gsi)) return true
 

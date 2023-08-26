@@ -69,14 +69,10 @@ class GSIServer {
       app.post('/', validateToken, processChanges('previously'), processChanges('added'), newData)
     }
 
-    if (process.env.NODE_ENV === 'development') {
+    this.dota.dota2.on('ready', () => {
+      logger.info('[SERVER] Connected to dota game coordinator')
       setupPostRoute()
-    } else {
-      this.dota.dota2.on('ready', () => {
-        logger.info('[SERVER] Connected to dota game coordinator')
-        setupPostRoute()
-      })
-    }
+    })
 
     app.get('/', (req: Request, res: Response) => {
       res.status(200).json({ status: 'ok' })

@@ -40,7 +40,7 @@ commandHandler.registerCommand('d2pt', {
 
     const hero = getHero(client.gsi?.hero?.name)
     const spectatorPlayers = getCurrentMatchPlayers(client.gsi)
-    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
     const selectedPlayer = spectatorPlayers.find((a) => a.selected)
 
     if (!hero) {

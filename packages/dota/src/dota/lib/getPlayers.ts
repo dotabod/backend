@@ -1,4 +1,4 @@
-import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
+import { cards, delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 import { t } from 'i18next'
 
 import Dota from '../../steam/index.js'
@@ -16,14 +16,7 @@ export async function getPlayers(
 ): Promise<{
   matchPlayers: { heroid: number; accountid: number }[]
   accountIds: number[]
-  cards: {
-    id: number
-    lobby_id: number
-    createdAt: Date
-    rank_tier: number
-    leaderboard_rank: number
-    lifetime_games: number
-  }[]
+  cards: cards[]
   gameMode?: number
 }> {
   if (!currentMatchId) {
@@ -42,11 +35,11 @@ export async function getPlayers(
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
   }
 
-  const { matchPlayers, accountIds } = await getAccountsFromMatch(
-    undefined,
-    currentMatchId,
-    players,
-  )
+  const { matchPlayers, accountIds } = await getAccountsFromMatch({
+    searchMatchId: currentMatchId,
+    searchPlayers: players,
+  })
+
   const cards = await dota.getCards(accountIds)
 
   return {

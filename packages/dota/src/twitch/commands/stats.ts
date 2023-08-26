@@ -6,13 +6,14 @@ import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../index.js'
 import commandHandler from '../lib/CommandHandler.js'
+import { profileLink } from './profileLink.js'
 
 interface Player {
   heroid: number
   accountid: number // steam32 id
 }
 
-interface ProfileLinkParams {
+export interface ProfileLinkParams {
   command: string
   locale: string
   currentMatchId: string
@@ -65,23 +66,6 @@ export function getPlayerFromArgs({
   return { heroKey, player: players[heroKey] }
 }
 
-export function profileLink({ command, players, locale, currentMatchId, args }: ProfileLinkParams) {
-  if (!currentMatchId) {
-    throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
-  }
-
-  if (!Number(currentMatchId)) {
-    throw new CustomError(t('gameNotFound', { lng: locale }))
-  }
-
-  if (!players?.length) {
-    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
-  }
-
-  const { player, heroKey } = getPlayerFromArgs({ args, players, locale, command })
-  return { heroKey, ...player }
-}
-
 commandHandler.registerCommand('stats', {
   aliases: ['check', 'profile'],
   onlyOnline: true,
@@ -98,7 +82,7 @@ commandHandler.registerCommand('stats', {
       return
     }
 
-    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
 
     try {
       const profile = profileLink({

@@ -10,7 +10,7 @@ import { getHeroById, heroColors, translatedColor } from '../../dota/lib/heroes.
 import { isArcade } from '../../dota/lib/isArcade.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
-import { profileLink } from './stats.js'
+import { profileLink } from './profileLink.js'
 
 const redisClient = RedisClient.getInstance()
 
@@ -112,7 +112,7 @@ commandHandler.registerCommand('hero', {
         await redisClient.client.get(`${client.token}:playingHeroSlot`),
       )
       const ourHero = !args.length
-      const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+      const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
 
       const profile = profileLink({
         command,

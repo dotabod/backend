@@ -13,7 +13,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 
-    const { matchPlayers } = await getAccountsFromMatch(dotaClient.client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
 
     const heroName = getHeroNameById(matchPlayers[event.player_id]?.heroid ?? 0, event.player_id)
 

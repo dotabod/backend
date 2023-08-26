@@ -28,7 +28,7 @@ commandHandler.registerCommand('avg', {
 
     const avgDescriptor = ` - ${t('averageRank', { lng: client.locale })}`
 
-    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
 
     calculateAvg({
       locale: client.locale,

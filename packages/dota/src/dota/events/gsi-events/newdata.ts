@@ -10,7 +10,6 @@ import { checkPassiveMidas } from '../../lib/checkMidas.js'
 import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
 import { DelayedCommands } from '../../lib/consts.js'
-import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 import minimapParser from '../minimap/parser.js'
@@ -39,49 +38,57 @@ function chatterMatchFound(client: SocketClient) {
   }
 }
 
+const steamServerLookupMap = new Map()
+const steamDelayDataLookupMap = new Map()
+
 // Runs every gametick
 async function saveMatchData(client: SocketClient) {
   // This now waits for the bet to complete before checking match data
   // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
   // the playingBetMatchId is saved when the hero is selected
-  const betsForMatchId =
-    (await redisClient.client.get(`${client.token}:betsForMatchId`)) ?? undefined
+  const betsForMatchId = await redisClient.client.get(`${client.token}:betsForMatchId`)
   if (!Number(betsForMatchId)) return
 
   if (!client.steam32Id) return
 
   // did we already come here before?
-  let steamServerId = await redisClient.client.get(`${betsForMatchId}:steamServerId`)
-  if (steamServerId) return
+  let [steamServerId, lobbyType] = await redisClient.client
+    .multi()
+    .get(`${betsForMatchId}:steamServerId`)
+    .get(`${betsForMatchId}:lobbyType`)
+    .exec()
 
-  // lookup a new steam server id
-  steamServerId = await server.dota.getUserSteamServer(client.steam32Id)
-  if (!steamServerId) return
+  if (steamServerId && lobbyType) return
 
-  // save the new server id now
-  await redisClient.client.set(`${betsForMatchId}:steamServerId`, steamServerId)
+  if (!steamServerId && !lobbyType) {
+    if (steamServerLookupMap.has(betsForMatchId)) return
 
-  const delayedData = await server.dota.getDelayedMatchData({
-    server_steamid: steamServerId,
-    match_id: betsForMatchId!,
-    refetchCards: true,
-    token: client.token,
-  })
+    const promise = server.dota.getUserSteamServer(client.steam32Id)
+    steamServerLookupMap.set(betsForMatchId, promise)
+    steamServerId = await promise
+    steamServerLookupMap.delete(betsForMatchId) // Remove the promise once it's resolved
 
-  if (!delayedData?.match.match_id) {
-    logger.info('No match data found!', {
-      name: client.name,
-      betsForMatchId,
-    })
-    return
+    if (!steamServerId) return
+    await redisClient.client.set(`${betsForMatchId}:steamServerId`, steamServerId.toString())
   }
 
-  await redisClient.client.set(`${betsForMatchId}:lobbyType`, delayedData.match.lobby_type)
+  if (steamServerId && !lobbyType) {
+    if (steamDelayDataLookupMap.has(betsForMatchId)) return
 
-  const players = await getAccountsFromMatch(client.gsi)
+    const promise = server.dota.GetRealTimeStats({
+      match_id: betsForMatchId!,
+      refetchCards: true,
+      steam_server_id: steamServerId.toString(),
+      token: client.token,
+    })
+    steamDelayDataLookupMap.set(betsForMatchId, promise)
+    const delayedData = await promise
+    steamDelayDataLookupMap.delete(betsForMatchId) // Remove the promise once it's resolved
 
-  // letting people know match data is available
-  if (players.accountIds.length) chatterMatchFound(client)
+    if (!delayedData?.match.lobby_type) return
+    await redisClient.client.set(`${betsForMatchId}:lobbyType`, delayedData.match.lobby_type)
+    chatterMatchFound(client)
+  }
 }
 
 // Catch all

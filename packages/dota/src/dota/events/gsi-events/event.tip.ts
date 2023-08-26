@@ -20,7 +20,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
 
     if (!chattersEnabled || !chatterEnabled) return
 
-    const { matchPlayers } = await getAccountsFromMatch(dotaClient.client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
 
     const heroName = getHeroNameById(
       matchPlayers[event.sender_player_id]?.heroid ?? 0,

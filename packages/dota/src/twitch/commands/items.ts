@@ -12,7 +12,7 @@ import { SocketClient } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../index.js'
 import commandHandler from '../lib/CommandHandler.js'
-import { profileLink } from './stats.js'
+import { profileLink } from './profileLink.js'
 
 function formatItemList(itemList: string[]) {
   const itemCounts = {} as Record<string, number>
@@ -50,17 +50,16 @@ async function getItems(
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: client.locale }))
   }
 
-  const { matchPlayers } = await getAccountsFromMatch(client.gsi)
-
+  const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
   if (!matchPlayers.length) {
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: client.locale }))
   }
 
-  const delayedData = await server.dota.getDelayedMatchData({
-    server_steamid: steamServerId,
-    itemsOnly: true,
-    token: client.token,
+  const delayedData = await server.dota.GetRealTimeStats({
     match_id: matchId,
+    forceRefetchAll: true,
+    steam_server_id: steamServerId,
+    token: client.token,
   })
 
   if (!delayedData) {
@@ -118,7 +117,7 @@ commandHandler.registerCommand('items', {
 
     const currentMatchId = client.gsi.map.matchid
 
-    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
 
     try {
       const profile = profileLink({

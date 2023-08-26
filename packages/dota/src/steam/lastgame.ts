@@ -89,10 +89,9 @@ export default async function lastgame({
   }
 
   const newMatchPlayers = currentPlayers
-  const { matchPlayers: oldMatchPlayers } = await getAccountsFromMatch(
-    undefined,
-    oldGame.match.match_id,
-  )
+  const { matchPlayers: oldMatchPlayers } = await getAccountsFromMatch({
+    searchMatchId: oldGame.match.match_id,
+  })
 
   const playersFromLastGame = newMatchPlayers
     .map((currentGamePlayer, i) => {

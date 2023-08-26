@@ -28,7 +28,7 @@ commandHandler.registerCommand('lg', {
       return
     }
 
-    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
 
     lastgame({
       currentMatchId: message.channel.client.gsi?.map?.matchid,

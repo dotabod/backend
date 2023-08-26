@@ -27,7 +27,7 @@ commandHandler.registerCommand('gm', {
       return
     }
 
-    const { matchPlayers } = await getAccountsFromMatch(client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
 
     gameMedals(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {
