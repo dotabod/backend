@@ -89,10 +89,17 @@ export async function deleteRedisData(client: SocketClient) {
     `${token}:heroRecords`,
     `${token}:playingHero`,
     `${token}:playingHeroSlot`,
+    `${token}:playingTeam`,
+    `${token}:lobbyType`,
+    `${token}:passiveTp`,
+    `${token}:heroRecords`,
+    `${token}:betsForMatchId`,
+    `${token}:steamServerId`,
   ]
 
   const multi = redisClient.client.multi()
   keysToDelete.forEach((key) => multi.json.del(key))
+  keysToDelete.forEach((key) => multi.del(key))
 
   try {
     await multi.exec()
@@ -419,6 +426,7 @@ export class GSIHandler {
   // 4 Then, tell twitch to close bets based on win result
   async openBets(client: SocketClient) {
     if (this.openingBets) {
+      console.log('still opening')
       return
     }
 
@@ -464,6 +472,7 @@ export class GSIHandler {
         token: client.token,
       })
       await this.resetClientState()
+      return
     }
 
     // The bet was already made
