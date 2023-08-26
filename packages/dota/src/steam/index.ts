@@ -42,7 +42,6 @@ const saveMatch = async ({
   game: delayedGames
   refetchCards?: boolean
 }) => {
-  logger.info('Saving match data', { matchId: match_id })
   await mongoClient
     .collection<delayedGames>('delayedGames')
     .updateOne({ 'match.match_id': match_id }, { $set: game }, { upsert: true })
@@ -305,7 +304,6 @@ class Dota {
     token: string
   }): Promise<delayedGames> => {
     let waitForHeros = forceRefetchAll || false
-    console.log(`[STEAM] GetRealTimeStats called with steam_server_id: '${steam_server_id}'`)
 
     if (!steam_server_id) {
       throw new Error('Match not found')
@@ -328,8 +326,6 @@ class Dota {
     return new Promise((resolve, reject) => {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       operation.attempt(async (currentAttempt) => {
-        console.log({ currentAttempt, waitForHeros, forceRefetchAll }, 'GetRealTimeStats')
-
         const game = (await axios<delayedGames>(getApiUrl(steam_server_id)))?.data
         const { hasAccountIds, hasHeroes } = hasSteamData(game)
 
@@ -353,7 +349,6 @@ class Dota {
         }
 
         if (!waitForHeros) {
-          console.log('shouldSaveMatch')
           await saveMatch({ match_id, game: gamePlusMore, refetchCards })
           waitForHeros = true
           operation.retry(new Error())
@@ -364,6 +359,7 @@ class Dota {
     })
   }
 
+  // @DEPRECATED
   public getGcMatchData(
     matchId: number | string,
     cb: (err: number | null, body: GCMatchData | null) => void,
@@ -433,7 +429,6 @@ class Dota {
         rank_tier: -10,
         leaderboard_rank: 0,
       }))
-      logger.info('[fetchcard] fetchedCard', { fetchedCard })
 
       const card = {
         ...fetchedCard,
@@ -443,7 +438,6 @@ class Dota {
         leaderboard_rank: fetchedCard?.leaderboard_rank ?? 0,
       } as cards
 
-      logger.info('[fetchcard] rank_tier', fetchedCard?.rank_tier)
       if (fetchedCard?.rank_tier !== -10) {
         await mongoClient
           .collection<cards>('cards')
@@ -466,7 +460,6 @@ class Dota {
   }
 
   public async getCard(account: number): Promise<cards> {
-    logger.info('[fetchcard]', 'getcard')
     // @ts-expect-error no types exist
     if (!this.dota2._gcReady || !this.steamClient.loggedOn) {
       throw new CustomError('Error getting medal')
@@ -475,8 +468,8 @@ class Dota {
     return promiseTimeout(
       new Promise((resolve, reject) => {
         this.dota2.requestProfileCard(account, (err: any, card: cards) => {
-          if (err) return reject(err)
-          resolve(card)
+          if (err) reject(err)
+          else resolve(card)
         })
       }),
       1000,
