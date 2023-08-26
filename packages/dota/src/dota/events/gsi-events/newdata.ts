@@ -1,7 +1,7 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { DotaEventTypes, Packet, SocketClient } from '../../../types.js'
+import { Packet, SocketClient, validEventTypes } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
 import { GSIHandler, redisClient, say } from '../../GSIHandler.js'
@@ -133,25 +133,7 @@ eventHandler.registerEvent(`newdata`, {
     // saveMatchData checks and returns early if steam is found
     await saveMatchData(dotaClient.client)
 
-    // TODO: Move this to server.ts
-    const newEvents = data.events?.filter((event) => {
-      const existingEvent = dotaClient.events.find(
-        (e) => e.game_time === event.game_time && e.event_type === event.event_type,
-      )
-      return !existingEvent
-    })
-
-    if (newEvents?.length) {
-      dotaClient.events = [...dotaClient.events, ...newEvents]
-
-      newEvents.forEach((event) => {
-        events.emit(`event:${event.event_type}`, event, dotaClient.client.token)
-
-        if (!Object.values(DotaEventTypes).includes(event.event_type)) {
-          logger.info('[NEWEVENT]', event)
-        }
-      })
-    }
+    handleNewEvents(data, dotaClient)
 
     await dotaClient.openBets(dotaClient.client)
 
@@ -159,3 +141,26 @@ eventHandler.registerEvent(`newdata`, {
     await checkPassiveTp(dotaClient.client)
   },
 })
+
+function handleNewEvents(data: Packet, dotaClient: GSIHandler) {
+  // Create a set for faster lookup of existing events
+  const existingEventsSet = new Set(dotaClient.events.map((e) => `${e.game_time}-${e.event_type}`))
+
+  // Filter new events
+  const newEvents = data.events?.filter(
+    ({ game_time, event_type }) => !existingEventsSet.has(`${game_time}-${event_type}`),
+  )
+
+  if (newEvents?.length) {
+    // Merge new and existing events
+    dotaClient.events = [...dotaClient.events, ...newEvents]
+
+    // Emit events and log if necessary
+    newEvents.forEach((event) => {
+      events.emit(`event:${event.event_type}`, event, dotaClient.client.token)
+      if (!validEventTypes.has(event.event_type)) {
+        logger.info('[NEWEVENT]', event)
+      }
+    })
+  }
+}

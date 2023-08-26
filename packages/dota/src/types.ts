@@ -343,6 +343,8 @@ export enum DotaEventTypes {
   CourierKilled = 'courier_killed', // spectator only
 }
 
+export const validEventTypes = new Set(Object.values(DotaEventTypes))
+
 export interface DotaEvent {
   game_time: number // 810,
   event_type: DotaEventTypes
