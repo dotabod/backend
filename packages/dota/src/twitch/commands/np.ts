@@ -2,13 +2,11 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import Mongo from '../../steam/mongo.js'
+import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
-
-const mongo = await Mongo.connect()
 
 commandHandler.registerCommand('np', {
   aliases: ['players', 'who'],
@@ -42,21 +40,31 @@ commandHandler.registerCommand('np', {
           return
         }
 
-        await mongo.collection('notablePlayers').updateOne(
-          { account_id: Number(forSteam32Id), channel: twitchChannelId },
-          {
-            $set: {
-              account_id: Number(forSteam32Id),
-              name: forName,
-              channel: twitchChannelId,
-              addedBy: chatterName,
-              createdAt: new Date(),
+        const mongo = new MongoDBSingleton()
+        const db = await mongo.connect()
+
+        try {
+          await db.collection('notablePlayers').updateOne(
+            { account_id: Number(forSteam32Id), channel: twitchChannelId },
+            {
+              $set: {
+                account_id: Number(forSteam32Id),
+                name: forName,
+                channel: twitchChannelId,
+                addedBy: chatterName,
+                createdAt: new Date(),
+              },
             },
-          },
-          { upsert: true },
-        )
-        chatClient.say(channel, t('npAdded', { name: forName, lng: message.channel.client.locale }))
-        return
+            { upsert: true },
+          )
+          chatClient.say(
+            channel,
+            t('npAdded', { name: forName, lng: message.channel.client.locale }),
+          )
+          return
+        } finally {
+          await mongo.close()
+        }
       }
 
       if (addOrRemove === 'remove') {
@@ -65,21 +73,28 @@ commandHandler.registerCommand('np', {
           return
         }
 
-        const removed = await mongo
-          .collection('notablePlayers')
-          .deleteOne({ channel: twitchChannelId, account_id: Number(forSteam32Id) })
-        if (removed.deletedCount) {
-          chatClient.say(
-            channel,
-            t('npRemoved', { steamid: forSteam32Id, lng: message.channel.client.locale }),
-          )
-        } else {
-          chatClient.say(
-            channel,
-            t('npUnknown', { steamid: forSteam32Id, lng: message.channel.client.locale }),
-          )
+        const mongo = new MongoDBSingleton()
+        const db = await mongo.connect()
+
+        try {
+          const removed = await db
+            .collection('notablePlayers')
+            .deleteOne({ channel: twitchChannelId, account_id: Number(forSteam32Id) })
+          if (removed.deletedCount) {
+            chatClient.say(
+              channel,
+              t('npRemoved', { steamid: forSteam32Id, lng: message.channel.client.locale }),
+            )
+          } else {
+            chatClient.say(
+              channel,
+              t('npUnknown', { steamid: forSteam32Id, lng: message.channel.client.locale }),
+            )
+          }
+          return
+        } finally {
+          await mongo.close()
         }
-        return
       }
     }
 

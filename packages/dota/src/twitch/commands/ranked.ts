@@ -2,12 +2,11 @@ import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import Mongo from '../../steam/mongo.js'
+import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
-const mongo = await Mongo.connect()
 commandHandler.registerCommand('ranked', {
   aliases: ['isranked'],
   onlyOnline: true,
@@ -46,23 +45,32 @@ commandHandler.registerCommand('ranked', {
         return
       }
 
-      const response = await mongo
-        .collection<delayedGames>('delayedGames')
-        .findOne({ 'match.match_id': currentMatchId })
+      const mongo = new MongoDBSingleton()
+      const db = await mongo.connect()
 
-      if (!response) {
-        chatClient.say(
-          channel,
-          t('missingMatchData', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-        )
-        return
+      try {
+        const response = await db
+          .collection<delayedGames>('delayedGames')
+          .findOne({ 'match.match_id': currentMatchId })
+
+        if (!response) {
+          chatClient.say(
+            channel,
+            t('missingMatchData', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+          )
+          return
+        }
+
+        if (response.match.lobby_type === 7) {
+          chatClient.say(
+            channel,
+            t('ranked', { context: 'yes', lng: message.channel.client.locale }),
+          )
+          return
+        }
+      } finally {
+        await mongo.close()
       }
-
-      if (response.match.lobby_type === 7) {
-        chatClient.say(channel, t('ranked', { context: 'yes', lng: message.channel.client.locale }))
-        return
-      }
-
       chatClient.say(channel, t('ranked', { context: 'no', lng: message.channel.client.locale }))
     }
 

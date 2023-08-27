@@ -4,9 +4,7 @@ import { t } from 'i18next'
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
 import CustomError from '../utils/customError.js'
-import Mongo from './mongo.js'
-
-const mongo = await Mongo.connect()
+import MongoDBSingleton from './MongoDBSingleton.js'
 
 const generateMessage = (
   locale: string,
@@ -50,76 +48,85 @@ export default async function lastgame({
   currentMatchId,
   currentPlayers,
 }: LastgameParams) {
-  const gameHistory = await mongo
-    .collection<delayedGames>('delayedGames')
-    .find(
-      {
-        'teams.players.accountid': Number(steam32Id),
-      },
-      { sort: { createdAt: -1 }, limit: 2 },
-    )
-    .toArray()
+  const mongo = new MongoDBSingleton()
+  const db = await mongo.connect()
 
-  if (!Number(currentMatchId)) {
-    const msg = !currentMatchId
-      ? t('notPlaying', { emote: 'PauseChamp', lng: locale })
-      : t('gameNotFound', { lng: locale })
-    return gameHistory[0]?.match?.match_id
-      ? `${msg} · ${t('lastgame.link', {
-          lng: locale,
-          url: `dotabuff.com/matches/${gameHistory[0].match.match_id}`,
-        })}`
-      : msg
-  }
+  try {
+    const gameHistory = await db
+      .collection<delayedGames>('delayedGames')
+      .find(
+        {
+          'teams.players.accountid': Number(steam32Id),
+        },
+        { sort: { createdAt: -1 }, limit: 2 },
+      )
+      .toArray()
 
-  if (!gameHistory.length)
-    throw new CustomError(t('noLastMatch', { emote: 'PauseChamp', lng: locale }))
-  if (gameHistory.length !== 2)
-    throw new CustomError(t('noLastMatch', { emote: 'PauseChamp', lng: locale }))
+    if (!Number(currentMatchId)) {
+      const msg = !currentMatchId
+        ? t('notPlaying', { emote: 'PauseChamp', lng: locale })
+        : t('gameNotFound', { lng: locale })
+      return gameHistory[0]?.match?.match_id
+        ? `${msg} · ${t('lastgame.link', {
+            lng: locale,
+            url: `dotabuff.com/matches/${gameHistory[0].match.match_id}`,
+          })}`
+        : msg
+    }
 
-  const [gameOne, gameTwo] = gameHistory as unknown as delayedGames[]
-  const oldGame = gameOne.match.match_id === currentMatchId ? gameTwo : gameOne
+    if (!gameHistory.length)
+      throw new CustomError(t('noLastMatch', { emote: 'PauseChamp', lng: locale }))
+    if (gameHistory.length !== 2)
+      throw new CustomError(t('noLastMatch', { emote: 'PauseChamp', lng: locale }))
 
-  if (!currentPlayers?.length) {
-    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
-  }
+    const [gameOne, gameTwo] = gameHistory as unknown as delayedGames[]
+    const oldGame = gameOne.match.match_id === currentMatchId ? gameTwo : gameOne
 
-  if (!Number(oldGame.match.match_id) || oldGame.match.match_id === currentMatchId) {
-    throw new CustomError(t('lastgame.none', { lng: locale }))
-  }
+    if (!currentPlayers?.length) {
+      throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
+    }
 
-  const newMatchPlayers = currentPlayers
-  const { matchPlayers: oldMatchPlayers } = await getAccountsFromMatch({
-    searchMatchId: oldGame.match.match_id,
-  })
+    if (!Number(oldGame.match.match_id) || oldGame.match.match_id === currentMatchId) {
+      throw new CustomError(t('lastgame.none', { lng: locale }))
+    }
 
-  const playersFromLastGame = newMatchPlayers
-    .map((currentGamePlayer, i) => {
-      if (steam32Id === currentGamePlayer.accountid) {
-        return null
-      }
-
-      const old = oldMatchPlayers.find((player) => player.accountid === currentGamePlayer.accountid)
-      if (!old) return null
-
-      return {
-        old,
-        current: currentGamePlayer,
-        currentIdx: i,
-      }
+    const newMatchPlayers = currentPlayers
+    const { matchPlayers: oldMatchPlayers } = await getAccountsFromMatch({
+      searchMatchId: oldGame.match.match_id,
     })
-    .flatMap((f) => f ?? [])
 
-  const msg = generateMessage(locale, playersFromLastGame)
-  const totalPlayers =
-    playersFromLastGame.length > 1
-      ? t('lastgame.total', {
-          lng: locale,
-          count: playersFromLastGame.length,
-        })
-      : ''
-  return `${totalPlayers} ${msg}. ${t('lastgame.link', {
-    lng: locale,
-    url: `dotabuff.com/matches/${oldGame.match.match_id}`,
-  })}`.trim()
+    const playersFromLastGame = newMatchPlayers
+      .map((currentGamePlayer, i) => {
+        if (steam32Id === currentGamePlayer.accountid) {
+          return null
+        }
+
+        const old = oldMatchPlayers.find(
+          (player) => player.accountid === currentGamePlayer.accountid,
+        )
+        if (!old) return null
+
+        return {
+          old,
+          current: currentGamePlayer,
+          currentIdx: i,
+        }
+      })
+      .flatMap((f) => f ?? [])
+
+    const msg = generateMessage(locale, playersFromLastGame)
+    const totalPlayers =
+      playersFromLastGame.length > 1
+        ? t('lastgame.total', {
+            lng: locale,
+            count: playersFromLastGame.length,
+          })
+        : ''
+    return `${totalPlayers} ${msg}. ${t('lastgame.link', {
+      lng: locale,
+      url: `dotabuff.com/matches/${oldGame.match.match_id}`,
+    })}`.trim()
+  } finally {
+    await mongo.close()
+  }
 }

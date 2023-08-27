@@ -17,15 +17,18 @@ import { GCMatchData } from '../types.js'
 import CustomError from '../utils/customError.js'
 import { retryCustom } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
-import Mongo from './mongo.js'
-
-export const mongoClient = await Mongo.connect()
+import MongoDBSingleton from './MongoDBSingleton.js'
 
 // Fetches data from MongoDB
 const fetchDataFromMongo = async (match_id: string) => {
-  return await mongoClient
-    .collection<delayedGames>('delayedGames')
-    .findOne({ 'match.match_id': match_id })
+  const mongo = new MongoDBSingleton()
+  const db = await mongo.connect()
+
+  try {
+    return await db.collection<delayedGames>('delayedGames').findOne({ 'match.match_id': match_id })
+  } finally {
+    await mongo.close()
+  }
 }
 
 // Constructs the API URL
@@ -44,15 +47,22 @@ const saveMatch = async ({
   game: delayedGames
   refetchCards?: boolean
 }) => {
-  await mongoClient
-    .collection<delayedGames>('delayedGames')
-    .updateOne({ 'match.match_id': match_id }, { $set: game }, { upsert: true })
+  const mongo = new MongoDBSingleton()
+  const db = await mongo.connect()
 
-  if (refetchCards) {
-    const { accountIds } = await getAccountsFromMatch({
-      searchMatchId: game.match.match_id,
-    })
-    await dota.getCards(accountIds, true)
+  try {
+    await db
+      .collection<delayedGames>('delayedGames')
+      .updateOne({ 'match.match_id': match_id }, { $set: game }, { upsert: true })
+
+    if (refetchCards) {
+      const { accountIds } = await getAccountsFromMatch({
+        searchMatchId: game.match.match_id,
+      })
+      await dota.getCards(accountIds, true)
+    }
+  } finally {
+    await mongo.close()
   }
 }
 
@@ -401,55 +411,69 @@ class Dota {
     return Dota.instance
   }
 
-  public async getCards(accounts: number[], refetchCards = false): Promise<cards[]> {
-    const cardsFromDb = await mongoClient
-      .collection<cards>('cards')
-      .find({ account_id: { $in: accounts.filter((a) => !!a) } })
-      .sort({ createdAt: -1 })
-      .toArray()
+  fetchAndUpdateCard = async (accountId: number) => {
+    const fetchedCard = accountId
+      ? await retryCustom({
+          retries: 10,
+          fn: () => this.getCard(accountId),
+          minTimeout: 1000,
+        }).catch(() => ({
+          rank_tier: -10,
+          leaderboard_rank: 0,
+        }))
+      : undefined
 
-    const cardsMap = new Map(cardsFromDb.map((card) => [card.account_id, card]))
+    const card = {
+      ...fetchedCard,
+      account_id: accountId,
+      createdAt: new Date(),
+      rank_tier: fetchedCard?.rank_tier ?? 0,
+      leaderboard_rank: fetchedCard?.leaderboard_rank ?? 0,
+    } as cards
 
-    const fetchAndUpdateCard = async (accountId: number) => {
-      const fetchedCard = accountId
-        ? await retryCustom({
-            retries: 10,
-            fn: () => this.getCard(accountId),
-            minTimeout: 1000,
-          }).catch(() => ({
-            rank_tier: -10,
-            leaderboard_rank: 0,
-          }))
-        : undefined
+    if (!accountId) return card
 
-      const card = {
-        ...fetchedCard,
-        account_id: accountId,
-        createdAt: new Date(),
-        rank_tier: fetchedCard?.rank_tier ?? 0,
-        leaderboard_rank: fetchedCard?.leaderboard_rank ?? 0,
-      } as cards
+    if (fetchedCard?.rank_tier !== -10) {
+      const mongo = new MongoDBSingleton()
+      const db = await mongo.connect()
 
-      if (!accountId) return card
-
-      if (fetchedCard?.rank_tier !== -10) {
-        await mongoClient
+      try {
+        await db
           .collection<cards>('cards')
           .updateOne({ account_id: accountId }, { $set: card }, { upsert: true })
+      } finally {
+        await mongo.close()
       }
-
-      return card
     }
 
-    const promises = accounts.map(async (accountId) => {
-      const existingCard = cardsMap.get(accountId)
-      if (refetchCards || !existingCard || typeof existingCard.rank_tier !== 'number') {
-        return fetchAndUpdateCard(accountId)
-      }
-      return existingCard
-    })
+    return card
+  }
 
-    return Promise.all(promises)
+  public async getCards(accounts: number[], refetchCards = false): Promise<cards[]> {
+    const mongo = new MongoDBSingleton()
+    const db = await mongo.connect()
+
+    try {
+      const cardsFromDb = await db
+        .collection<cards>('cards')
+        .find({ account_id: { $in: accounts.filter((a) => !!a) } })
+        .sort({ createdAt: -1 })
+        .toArray()
+
+      const cardsMap = new Map(cardsFromDb.map((card) => [card.account_id, card]))
+
+      const promises = accounts.map(async (accountId) => {
+        const existingCard = cardsMap.get(accountId)
+        if (refetchCards || !existingCard || typeof existingCard.rank_tier !== 'number') {
+          return this.fetchAndUpdateCard(accountId)
+        }
+        return existingCard
+      })
+
+      return Promise.all(promises)
+    } finally {
+      await mongo.close()
+    }
   }
 
   public async getCard(account: number): Promise<cards> {
