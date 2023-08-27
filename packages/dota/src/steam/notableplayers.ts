@@ -1,3 +1,4 @@
+import { notablePlayers } from '@dotabod/prisma/dist/mongo'
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
 
@@ -48,7 +49,7 @@ export async function notablePlayers({
     : { name: null }
 
   const nps = await mongo
-    .collection('notablePlayers')
+    .collection<notablePlayers>('notablePlayers')
     .find(
       {
         account_id: {

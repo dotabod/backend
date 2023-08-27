@@ -46,9 +46,9 @@ commandHandler.registerCommand('ranked', {
         return
       }
 
-      const response = (await mongo
-        .collection('delayedGames')
-        .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames | undefined
+      const response = await mongo
+        .collection<delayedGames>('delayedGames')
+        .findOne({ 'match.match_id': currentMatchId })
 
       if (!response) {
         chatClient.say(

@@ -1,4 +1,4 @@
-import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
+import { delayedGames } from '@dotabod/prisma/dist/mongo'
 import { t } from 'i18next'
 
 import Dota from '../../steam/index.js'
@@ -22,9 +22,9 @@ export async function getPlayers(
     throw new CustomError(t('gameNotFound', { lng: locale }))
   }
 
-  const response = (await mongo
-    .collection('delayedGames')
-    .findOne({ 'match.match_id': currentMatchId })) as unknown as delayedGames | null
+  const response = await mongo
+    .collection<delayedGames>('delayedGames')
+    .findOne({ 'match.match_id': currentMatchId })
 
   if (!response && !players?.length) {
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))

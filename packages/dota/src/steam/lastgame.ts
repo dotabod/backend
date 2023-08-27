@@ -50,15 +50,15 @@ export default async function lastgame({
   currentMatchId,
   currentPlayers,
 }: LastgameParams) {
-  const gameHistory = (await mongo
-    .collection('delayedGames')
+  const gameHistory = await mongo
+    .collection<delayedGames>('delayedGames')
     .find(
       {
         'teams.players.accountid': Number(steam32Id),
       },
       { sort: { createdAt: -1 }, limit: 2 },
     )
-    .toArray()) as unknown as delayedGames[]
+    .toArray()
 
   if (!Number(currentMatchId)) {
     const msg = !currentMatchId
