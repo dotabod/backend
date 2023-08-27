@@ -313,7 +313,12 @@ class Dota {
     return new Promise((resolve, reject) => {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       operation.attempt(async (currentAttempt) => {
-        const game = (await axios<delayedGames>(getApiUrl(steam_server_id)))?.data
+        let game: delayedGames
+        try {
+          game = (await axios<delayedGames>(getApiUrl(steam_server_id)))?.data
+        } catch (e) {
+          return operation.retry(new Error('Match not found'))
+        }
         const { hasAccountIds, hasHeroes } = hasSteamData(game)
 
         // needs account ids
