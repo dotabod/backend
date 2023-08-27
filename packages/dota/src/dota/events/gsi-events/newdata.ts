@@ -63,7 +63,10 @@ async function saveMatchData(client: SocketClient) {
   if (!steamServerId && !lobbyType) {
     if (steamServerLookupMap.has(betsForMatchId)) return
 
-    const promise = server.dota.getUserSteamServer(client.steam32Id)
+    const promise = server.dota.getUserSteamServer(client.steam32Id).catch((e) => {
+      logger.error('err getUserSteamServer', { e })
+      return null
+    })
     steamServerLookupMap.set(betsForMatchId, promise)
     steamServerId = await promise
     steamServerLookupMap.delete(betsForMatchId) // Remove the promise once it's resolved
@@ -75,12 +78,17 @@ async function saveMatchData(client: SocketClient) {
   if (steamServerId && !lobbyType) {
     if (steamDelayDataLookupMap.has(betsForMatchId)) return
 
-    const promise = server.dota.GetRealTimeStats({
-      match_id: betsForMatchId!,
-      refetchCards: true,
-      steam_server_id: steamServerId.toString(),
-      token: client.token,
-    })
+    const promise = server.dota
+      .GetRealTimeStats({
+        match_id: betsForMatchId!,
+        refetchCards: true,
+        steam_server_id: steamServerId.toString(),
+        token: client.token,
+      })
+      .catch((e) => {
+        logger.error('err GetRealTimeStats', { e })
+        return null
+      })
     steamDelayDataLookupMap.set(betsForMatchId, promise)
     const delayedData = await promise
     steamDelayDataLookupMap.delete(betsForMatchId) // Remove the promise once it's resolved
