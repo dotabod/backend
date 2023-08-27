@@ -22,17 +22,21 @@ export function fmtMSS(totalSeconds: number) {
 
 export const wait = (time: number) => new Promise((resolve) => setTimeout(resolve, time || 0))
 
-export const retryCustom = async <T>(
-  retries: number,
-  fn: () => Promise<T>,
-  minTimeout: number,
-): Promise<T> => {
-  return new Promise((resolve, reject) => {
-    const operation = retry.operation({
-      retries,
-      minTimeout,
-    })
+export const retryCustom = async <T>({
+  retries,
+  fn,
+  minTimeout,
+}: {
+  retries: number
+  fn: () => Promise<T>
+  minTimeout: number
+}): Promise<T> => {
+  const operation = retry.operation({
+    retries,
+    minTimeout,
+  })
 
+  return new Promise((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     operation.attempt(async (currentAttempt) => {
       console.log({ currentAttempt })
@@ -40,7 +44,7 @@ export const retryCustom = async <T>(
         const result = await fn()
         resolve(result)
       } catch (err: any) {
-        if (!operation.retry(err)) {
+        if (!operation.retry(new Error('retrying'))) {
           reject(operation.mainError())
         }
       }

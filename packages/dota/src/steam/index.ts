@@ -407,7 +407,11 @@ class Dota {
 
     const fetchAndUpdateCard = async (accountId: number) => {
       const fetchedCard = accountId
-        ? await retryCustom(10, () => this.getCard(accountId), 1000).catch(() => ({
+        ? await retryCustom({
+            retries: 10,
+            fn: () => this.getCard(accountId),
+            minTimeout: 1000,
+          }).catch(() => ({
             rank_tier: -10,
             leaderboard_rank: 0,
           }))

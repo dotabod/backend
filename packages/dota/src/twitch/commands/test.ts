@@ -2,6 +2,8 @@ import { t } from 'i18next'
 
 import { server } from '../../dota/index.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
+import Dota from '../../steam/index.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
@@ -19,6 +21,17 @@ commandHandler.registerCommand('test', {
       await handler?.resetClientState()
 
       chatClient.say(channel, 'Reset')
+      return
+    }
+
+    if (args[0] === 'cards') {
+      const { accountIds } = await getAccountsFromMatch({
+        gsi: client.gsi,
+      })
+      const dota = Dota.getInstance()
+      await dota.getCards(accountIds, true)
+
+      chatClient.say(channel, `cards! ${client.gsi?.map?.matchid}`)
       return
     }
 
