@@ -39,7 +39,6 @@ export const retryCustom = async <T>({
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     operation.attempt(async (currentAttempt) => {
-      console.log({ currentAttempt })
       try {
         const result = await fn()
         resolve(result)
