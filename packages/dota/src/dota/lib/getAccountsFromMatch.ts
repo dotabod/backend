@@ -1,6 +1,6 @@
 import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 
-import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
+import { mongoClient } from '../../steam/index.js'
 import { Packet } from '../../types.js'
 import { getCurrentMatchPlayers } from './getCurrentMatchPlayers.js'
 
@@ -26,34 +26,26 @@ export async function getAccountsFromMatch({
   }
 
   const matchId = searchMatchId || gsi?.map?.matchid
+  const response = await mongoClient
+    .collection<delayedGames>('delayedGames')
+    .findOne({ 'match.match_id': matchId })
 
-  const mongo = new MongoDBSingleton()
-  const db = await mongo.connect()
+  let matchPlayers = [] as { heroid: number; accountid: number }[]
+  if (Array.isArray(response?.teams) && response?.teams.length === 2) {
+    matchPlayers = [
+      ...response.teams[0].players.map((a) => ({
+        heroid: a.heroid,
+        accountid: Number(a.accountid),
+      })),
+      ...response.teams[1].players.map((a) => ({
+        heroid: a.heroid,
+        accountid: Number(a.accountid),
+      })),
+    ]
+  }
 
-  try {
-    const response = await db
-      .collection<delayedGames>('delayedGames')
-      .findOne({ 'match.match_id': matchId })
-
-    const matchPlayers =
-      Array.isArray(response?.teams) && response?.teams.length === 2
-        ? [
-            ...response.teams[0].players.map((a) => ({
-              heroid: a.heroid,
-              accountid: Number(a.accountid),
-            })),
-            ...response.teams[1].players.map((a) => ({
-              heroid: a.heroid,
-              accountid: Number(a.accountid),
-            })),
-          ]
-        : ([] as { heroid: number; accountid: number }[])
-
-    return {
-      matchPlayers,
-      accountIds: matchPlayers.map((player) => player.accountid),
-    }
-  } finally {
-    await mongo.close()
+  return {
+    matchPlayers,
+    accountIds: matchPlayers.map((player) => player.accountid),
   }
 }

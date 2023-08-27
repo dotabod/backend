@@ -2,10 +2,12 @@ import { getValueOrDefault, SettingKeys } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { ADMIN_CHANNELS } from '../../dota/lib/consts.js'
-import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
+import Mongo from '../../steam/mongo.js'
 import { SocketClient } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../index.js'
+
+const mongo = await Mongo.connect()
 
 export interface UserType {
   name: string
@@ -69,7 +71,7 @@ class CommandHandler {
     }
   }
 
-  async logCommand(commandName: string, message: MessageType) {
+  logCommand(commandName: string, message: MessageType) {
     // Log statistics for this command
     const {
       channel: { name: channel, id: channelId },
@@ -85,11 +87,8 @@ class CommandHandler {
       command,
     }
 
-    const mongo = new MongoDBSingleton()
-    const db = await mongo.connect()
-
     try {
-      await db.collection('commandstats').updateOne(
+      void mongo.collection('commandstats').updateOne(
         { command, channel, date },
         {
           $set: data,
@@ -101,8 +100,6 @@ class CommandHandler {
       )
     } catch (e) {
       logger.error('Error in commandstats update', { e })
-    } finally {
-      await mongo.close()
     }
   }
 
@@ -126,7 +123,7 @@ class CommandHandler {
     if (!options) return
 
     // Log statistics for this command
-    await this.logCommand(command, message)
+    this.logCommand(command, message)
 
     if (options.onlyOnline && !message.channel.client.stream_online) {
       chatClient.say(

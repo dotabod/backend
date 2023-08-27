@@ -5,7 +5,6 @@ import { logger } from '../utils/logger.js'
 
 class MongoDBSingleton {
   private clientPromise: Promise<Db> | null = null
-  private mongoClient: MongoClient | null = null // Store the MongoClient object
 
   async connect(): Promise<Db> {
     // If the client promise is already resolved, return it
@@ -30,7 +29,6 @@ class MongoDBSingleton {
           // Connect to MongoDB
           const mongoURL = process.env.MONGO_URL!
           const client = await MongoClient.connect(mongoURL)
-          this.mongoClient = client // Store the MongoClient object
 
           // Resolve the promise with the client
           resolve(client.db())
@@ -47,12 +45,6 @@ class MongoDBSingleton {
 
     return this.clientPromise
   }
-
-  async close(): Promise<void> {
-    if (this.mongoClient) {
-      await this.mongoClient.close()
-    }
-  }
 }
 
-export default MongoDBSingleton
+export default new MongoDBSingleton()
