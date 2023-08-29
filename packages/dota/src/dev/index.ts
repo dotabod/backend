@@ -5,6 +5,10 @@ import { prisma } from '../db/prisma.js'
 import { getBotAPI_DEV_ONLY } from '../twitch/lib/getBotAPI_DEV_ONLY.js'
 import { logger } from '../utils/logger.js'
 
+if (process.env.NODE_ENV !== 'production') {
+  throw new Error('NODE_ENV must be production')
+}
+
 const botApi = await getBotAPI_DEV_ONLY()
 
 console.log('running dev script')
