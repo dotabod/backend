@@ -44,8 +44,8 @@ async function main() {
         providerAccountId: generateUniqueProviderAccountId(),
         refresh_token: faker.string.alphanumeric(30),
         access_token: faker.string.alphanumeric(30),
-        expires_at: faker.date.future().getTime(),
-        expires_in: faker.number.int({ min: 1000, max: 10000 }),
+        expires_at: faker.date.future().getUTCMilliseconds(),
+        expires_in: faker.number.int({ min: 1_000, max: 10_000 }),
         requires_refresh: faker.datatype.boolean({ probability: 0.1 }),
       },
     })
