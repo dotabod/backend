@@ -2,7 +2,8 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { SocketClient } from '../../types.js'
-import { redisClient, say } from '../GSIHandler.js'
+import { redisClient } from '../GSIHandler.js'
+import { say } from '../say.js'
 import { findItem } from './findItem.js'
 
 /**

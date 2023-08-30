@@ -2,10 +2,11 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
-import { GSIHandler, redisClient, say } from '../../GSIHandler.js'
+import { GSIHandler, redisClient } from '../../GSIHandler.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {

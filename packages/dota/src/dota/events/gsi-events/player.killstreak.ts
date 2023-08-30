@@ -1,9 +1,10 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { GSIHandler, redisClient, say } from '../../GSIHandler.js'
+import { GSIHandler, redisClient } from '../../GSIHandler.js'
 import getHero, { HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent(`player:kill_streak`, {

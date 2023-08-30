@@ -1,9 +1,10 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { GSIHandler, say } from '../../GSIHandler.js'
+import { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent(`map:paused`, {

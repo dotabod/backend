@@ -25,6 +25,7 @@ import { isArcade } from './lib/isArcade.js'
 import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
+import { say } from './say.js'
 
 export const redisClient = RedisClient.getInstance()
 
@@ -43,7 +44,7 @@ interface MMR {
   heroName?: string | null
 }
 
-function getStreamDelay(settings: SocketClient['settings']) {
+export function getStreamDelay(settings: SocketClient['settings']) {
   return Number(getValueOrDefault(DBSettings.streamDelay, settings)) + GLOBAL_DELAY
 }
 
@@ -56,24 +57,6 @@ export function emitMinimapBlockerStatus(client: SocketClient) {
   const parsedData = minimapParser.parse(client.gsi)
   sendInitialData(client.token)
   server.io.to(client.token).emit('STATUS', parsedData.status)
-}
-
-export function say(
-  client: SocketClient,
-  message: string,
-  { delay = true, beta = false }: { delay?: boolean; beta?: boolean } = {},
-) {
-  if (beta && !client.beta_tester) return
-
-  const msg = beta ? `${message} ${t('betaFeature', { lng: client.locale })}` : message
-  if (!delay) {
-    chatClient.say(client.name, msg)
-    return
-  }
-
-  setTimeout(() => {
-    client.name && chatClient.say(client.name, msg)
-  }, getStreamDelay(client.settings))
 }
 
 export async function deleteRedisData(client: SocketClient) {

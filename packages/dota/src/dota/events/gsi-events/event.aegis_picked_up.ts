@@ -5,11 +5,12 @@ import RedisClient from '../../../db/redis.js'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
 import { logger } from '../../../utils/logger.js'
-import { GSIHandler, say } from '../../GSIHandler.js'
+import { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameById } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 
 const redisClient = RedisClient.getInstance()

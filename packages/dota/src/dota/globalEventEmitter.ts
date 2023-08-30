@@ -2,6 +2,7 @@ import { EventEmitter } from 'events'
 import { NextFunction, Request, Response } from 'express'
 
 export const events = new EventEmitter()
+
 // I dont think we need 20, but just in case. Default is 11
 events.setMaxListeners(20)
 

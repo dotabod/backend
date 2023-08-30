@@ -4,9 +4,10 @@ import { t } from 'i18next'
 import { openTwitchBet } from '../../../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../../../twitch/lib/refundTwitchBets.js'
 import { logger } from '../../../utils/logger.js'
-import { GSIHandler, redisClient, say } from '../../GSIHandler.js'
+import { GSIHandler, redisClient } from '../../GSIHandler.js'
 import getHero, { HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent(`hero:name`, {
