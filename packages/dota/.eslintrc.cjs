@@ -5,6 +5,8 @@ module.exports = {
     es2021: true,
     node: true,
   },
+  ignorePatterns: ['packages/settings/dist/index.js'],
+
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',

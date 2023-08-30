@@ -52,5 +52,5 @@ export function processChanges(section: string) {
 export function newData(req: Request, res: Response) {
   const token = req.body.auth.token as string
   events.emit('newdata', req.body, token)
-  res.end()
+  res.status(200).json({ status: 'ok' })
 }

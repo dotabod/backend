@@ -103,6 +103,7 @@ async function saveMatchData(client: SocketClient) {
 // Catch all
 eventHandler.registerEvent(`newdata`, {
   handler: async (dotaClient: GSIHandler, data: Packet) => {
+    console.log('newdata', data)
     // New users who dont have a steamaccount saved yet
     // This needs to run first so we have client.steamid on multiple acts
     await dotaClient.updateSteam32Id()
