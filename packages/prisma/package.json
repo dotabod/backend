@@ -14,17 +14,24 @@
   },
   "type": "module",
   "license": "MIT",
+  "prisma": {
+    "seed": "node --loader ts-node/esm ./src/seed.ts"
+  },
   "scripts": {
     "build": "prisma generate --schema ./src/mongo.prisma && prisma generate --schema ./src/postgres.prisma",
     "pull:mongo": "doppler run -- prisma db pull --schema ./src/mongo.prisma --force",
     "pull:psql": "doppler run -- prisma db pull --schema ./src/postgres.prisma",
-    "push:psql": "doppler run -- prisma db push --schema ./src/postgres.prisma"
+    "push:psql": "doppler run -- prisma db push --schema ./src/postgres.prisma",
+    "seed": "doppler run -- npx prisma db seed",
+    "reset": "doppler run -- npx prisma migrate reset --schema ./src/postgres.prisma"
   },
   "devDependencies": {
     "@types/node": "^20.5.6",
-    "prisma": "^5.2.0"
+    "prisma": "^5.2.0",
+    "ts-node": "^10.9.1"
   },
   "dependencies": {
+    "@faker-js/faker": "^8.0.2",
     "@prisma/client": "^5.2.0"
   }
 }
