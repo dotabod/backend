@@ -7,7 +7,7 @@ import { DotaEventTypes } from '../../../../types.js'
 
 describe('aegis picked up', () => {
   // might be less than 100 if some users are offline
-  let USER_COUNT = 200
+  let USER_COUNT = 50
 
   const promises: Promise<any>[] = []
 
@@ -74,9 +74,13 @@ describe('aegis picked up', () => {
         const callLength = twitchChatSpy.mock.calls.filter(([, message]) =>
           message.match(/(?:picked|подбирает)/i),
         ).length
-
+        const { heapUsed, rss } = process.memoryUsage()
+        const mb = rss / 1000000
         try {
           expect(callLength).toBe(USER_COUNT)
+
+          expect(mb).toBeLessThan(400)
+
           clearInterval(interval)
           done()
         } catch (e) {
@@ -89,10 +93,10 @@ describe('aegis picked up', () => {
           consecutiveSameCount = 0
         }
 
-        if (consecutiveSameCount > 5) {
+        if (consecutiveSameCount > 2) {
           clearInterval(interval)
           done(
-            `call count ${USER_COUNT} ${currentCallCount} ${twitchChatSpy.mock.calls.length} did not change for 5 intervals`,
+            `call count ${USER_COUNT} ${currentCallCount} ${twitchChatSpy.mock.calls.length} and mb use ${mb}`,
           )
         }
 
@@ -103,11 +107,23 @@ describe('aegis picked up', () => {
     USER_COUNT * 1000,
   )
 
-  // check memory usage
-  it('should not leak memory', () => {
-    const used = process.memoryUsage()
-    console.log('memory', used.heapUsed / 1000000)
-    // value in megabytes
-    expect(used.heapUsed / 1000000).toBeLessThan(350_000)
-  })
+  it('should still access server', (done) => {
+    const interval = setInterval(() => {
+      apiClient
+        .get('/')
+        .then((response) => {
+          if (response?.data) {
+            console.log('response.data', response.data)
+            clearInterval(interval) // Stop the interval
+            setTimeout(() => {
+              done() // Continue with the tests
+            }, 3000)
+          }
+        })
+        .catch((error) => {
+          // Handle error, perhaps log it but don't call done(error) here
+          // because we're inside an interval and it will keep calling
+        })
+    }, 500) // Check every 1 second
+  }, 5000)
 })

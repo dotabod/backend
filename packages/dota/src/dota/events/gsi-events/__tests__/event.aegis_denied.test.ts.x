@@ -105,9 +105,9 @@ describe('aegis denied', () => {
 
   // check memory usage
   it('should not leak memory', () => {
-    const used = process.memoryUsage()
-    console.log('memory', used.heapUsed / 1000000)
+    const { heapUsed } = process.memoryUsage()
+    const mb = heapUsed / 1000000
     // value in megabytes
-    expect(used.heapUsed / 1000000).toBeLessThan(350_000)
+    expect(mb).toBeLessThan(350)
   })
 })

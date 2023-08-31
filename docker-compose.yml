@@ -74,7 +74,7 @@ services:
         - BUILD_CONTEXT=packages/dota
     hostname: dota
     ports:
-      - "81:5000"
+      - "81:5120"
       - "9229:9229"
     environment:
       - D2PT_TOKEN

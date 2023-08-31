@@ -14,11 +14,14 @@ beforeAll((done) => {
 
   const interval = setInterval(() => {
     apiClient
-      .post('/')
+      .get('/')
       .then((response) => {
         if (response?.data) {
+          console.log('response.data', response.data)
           clearInterval(interval) // Stop the interval
-          done() // Continue with the tests
+          setTimeout(() => {
+            done() // Continue with the tests
+          }, 3000)
         }
       })
       .catch((error) => {
