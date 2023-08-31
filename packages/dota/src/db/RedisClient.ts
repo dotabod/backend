@@ -2,7 +2,7 @@ import { createClient } from 'redis'
 
 import { logger } from '../utils/logger.js'
 
-export default class RedisClient {
+class RedisClient {
   private static instance: RedisClient
   public client: ReturnType<typeof createClient>
   public subscriber: ReturnType<typeof createClient>
@@ -10,18 +10,6 @@ export default class RedisClient {
   private constructor() {
     this.client = createClient({ url: 'redis://redis:6379' })
     this.subscriber = this.client.duplicate()
-
-    this.setupConnection(this.client, 'client')
-    this.setupConnection(this.subscriber, 'subscriber')
-  }
-
-  private setupConnection(connection: ReturnType<typeof createClient>, connectionName: string) {
-    connection.on('error', (err: any) => {
-      if (err?.code !== 'ENOTFOUND') return logger.error(`Redis ${connectionName} Error`, { err })
-    })
-    connection.once('connect', () => {
-      logger.info(`[REDIS] Redis ${connectionName} connected`)
-    })
   }
 
   public async connect(
@@ -49,3 +37,5 @@ export default class RedisClient {
     return RedisClient.instance
   }
 }
+
+export default RedisClient

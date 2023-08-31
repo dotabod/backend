@@ -1,7 +1,7 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import RedisClient from '../../../db/redis.js'
+import RedisClient from '../../../db/RedisClient.js'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
 import { logger } from '../../../utils/logger.js'

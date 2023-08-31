@@ -22,7 +22,7 @@
     "pull:mongo": "doppler run -- prisma db pull --schema ./src/mongo.prisma --force",
     "pull:psql": "doppler run -- prisma db pull --schema ./src/postgres.prisma",
     "push:psql": "doppler run -- prisma db push --schema ./src/postgres.prisma",
-    "seed": "doppler run -- npx prisma db seed",
+    "seed": "yarn push:psql && doppler run -- npx prisma db seed",
     "reset": "doppler run -- npx prisma migrate reset --schema ./src/postgres.prisma"
   },
   "devDependencies": {

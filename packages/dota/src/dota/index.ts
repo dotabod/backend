@@ -6,7 +6,7 @@ import i18next from 'i18next'
 import FsBackend, { FsBackendOptions } from 'i18next-fs-backend'
 import path, { join } from 'path'
 
-import RedisClient from '../db/redis.js'
+import RedisClient from '../db/RedisClient.js'
 import SetupSupabase from '../db/watcher.js'
 import { logger } from '../utils/logger.js'
 import GSIServer from './GSIServer.js'

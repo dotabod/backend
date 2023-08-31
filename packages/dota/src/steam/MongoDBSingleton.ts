@@ -4,8 +4,8 @@ import retry from 'retry'
 import { logger } from '../utils/logger.js'
 
 class MongoDBSingleton {
-  private clientPromise: Promise<Db> | null = null
-  private mongoClient: MongoClient | null = null // Store the MongoClient object
+  clientPromise: Promise<Db> | null = null
+  mongoClient: MongoClient | null = null // Store the MongoClient object
 
   async connect(): Promise<Db> {
     // If the client promise is already resolved, return it

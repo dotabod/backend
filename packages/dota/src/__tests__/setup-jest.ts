@@ -1,15 +1,22 @@
-import { afterAll, beforeAll } from '@jest/globals'
+import { beforeAll, jest } from '@jest/globals'
 
-import { server } from '../dota/index'
-import { apiClient } from './utils'
+import { apiClient } from './utils.js'
 
 beforeAll((done) => {
-  server.dota // not used
+  global.console = {
+    ...console,
+    log: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    // warn: jest.fn(),
+    // error: jest.fn(),
+  }
+
   const interval = setInterval(() => {
     apiClient
       .post('/')
       .then((response) => {
-        if (response.data && response.data) {
+        if (response?.data) {
           clearInterval(interval) // Stop the interval
           done() // Continue with the tests
         }
@@ -24,14 +31,14 @@ beforeAll((done) => {
   // then call done() to end the test
 }, 20_000)
 
-afterAll((done) => {
-  Promise.all([server.dota.exit()])
-    .then(() => {
-      console.log('Successfully exited')
-      done()
-    })
-    .catch((e) => {
-      console.error('Error during teardown:', e)
-      done(e)
-    })
-}, 10_000)
+// afterAll((done) => {
+//   const interval = setInterval(() => {
+//     apiClient.post('/').catch((error) => {
+//       clearInterval(interval) // Stop the interval
+//       done() // Continue with the tests
+//     })
+//   }, 1000) // Check every 1 second
+
+//   // keep calling axios.get until it returns {status: 'ok'
+//   // then call done() to end the test
+// }, 20_000)

@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import RedisClient from '../../db/redis.js'
+import RedisClient from '../../db/RedisClient.js'
 import { logger } from '../../utils/logger.js'
 import { server } from '../index.js'
 import { leaderRanks, ranks } from './consts.js'

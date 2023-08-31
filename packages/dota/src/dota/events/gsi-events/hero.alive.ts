@@ -1,4 +1,4 @@
-import RedisClient from '../../../db/redis.js'
+import RedisClient from '../../../db/RedisClient.js'
 import { logger } from '../../../utils/logger.js'
 import { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'

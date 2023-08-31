@@ -2,11 +2,11 @@ import { faker } from '@faker-js/faker'
 import { beforeAll, describe, it, jest } from '@jest/globals'
 
 import { apiClient } from '../../../../__tests__/utils.js'
-import { prisma } from '../../../../db/prisma'
+import { prisma } from '../../../../db/prisma.js'
 import { chatClient } from '../../../../twitch/chatClient.js'
 import { DotaEventTypes } from '../../../../types.js'
 
-describe('aegis denied', () => {
+describe('aegis picked up', () => {
   const twitchChatSpy = jest.spyOn(chatClient, 'say')
 
   // might be less than 100 if some users are offline
@@ -39,7 +39,7 @@ describe('aegis denied', () => {
                 },
                 events: [
                   {
-                    event_type: DotaEventTypes.AegisDenied,
+                    event_type: DotaEventTypes.AegisPickedUp,
                     player_id: faker.number.int({ min: 0, max: 9 }),
                     game_time: faker.number.int({ min: 0, max: 1_000_000 }),
                   },
@@ -73,9 +73,8 @@ describe('aegis denied', () => {
       let consecutiveSameCount = 0
 
       const interval = setInterval(() => {
-        // loop twitchChatSpy.mock.calls and check that it was called with our argumnets
         const callLength = twitchChatSpy.mock.calls.filter(([, message]) =>
-          message.match(/(?:denied|уничтожает)/i),
+          message.match(/(?:picked|подбирает)/i),
         ).length
 
         try {

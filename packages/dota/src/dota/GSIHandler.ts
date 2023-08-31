@@ -3,7 +3,7 @@ import { t } from 'i18next'
 
 import { getWL } from '../db/getWL.js'
 import { prisma } from '../db/prisma.js'
-import RedisClient from '../db/redis.js'
+import RedisClient from '../db/RedisClient.js'
 import { notablePlayers } from '../steam/notableplayers.js'
 import { chatClient } from '../twitch/chatClient.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
