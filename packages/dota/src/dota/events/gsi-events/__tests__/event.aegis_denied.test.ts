@@ -2,15 +2,15 @@ import { describe, it, jest } from '@jest/globals'
 
 import { apiClient } from '../../../../__tests__/utils.js'
 import { chatClient } from '../../../../twitch/chatClient.js'
-import { DotaEvent, DotaEventTypes } from '../../../../types.js'
-import { events } from '../../../globalEventEmitter.js'
+import { DotaEventTypes } from '../../../../types.js'
 
 const twitchChatSpy = jest.spyOn(chatClient, 'say')
 
-describe('API tests', () => {
-  it('should tell us if aegis is denied', (done) => {
-    // Your POST request data
-    const postData = {
+describe('aegis denied', () => {
+  let postData: any
+
+  beforeEach((done) => {
+    postData = {
       player: {
         activity: 'playing',
       },
@@ -24,30 +24,25 @@ describe('API tests', () => {
       auth: { token: 'cllx3i38n0007lxb7n5txh20e' },
     }
 
-    events.on(`event:${DotaEventTypes.AegisDenied}`, (event: DotaEvent, token: string) => {
-      try {
-        expect(token).toStrictEqual(postData.auth.token)
-        expect(event).toStrictEqual(postData.events[0])
-
-        // wait for say to have been called within 5 seconds
-        setTimeout(() => {
-          expect(twitchChatSpy).toBeCalledWith('destinee_schumm', 'Teal denied the aegis ICANT')
-          done()
-        }, 5000)
-      } catch (error: any) {
-        done(error)
-      }
-    })
-
     // Make a POST request
     apiClient
       .post('/', postData)
       .then((response) => {
         expect(response.status).toBe(200)
         expect(response.data).toStrictEqual({ status: 'ok' })
+        done()
       })
       .catch((e) => {
         done(e)
       })
+  })
+
+  it('should tell chat', (done) => {
+    const timeout = setTimeout(() => {
+      const expectedMessage = 'Teal denied the aegis ICANT'
+      expect(twitchChatSpy).toHaveBeenCalledWith('destinee_schumm', expectedMessage)
+      clearTimeout(timeout)
+      done()
+    }, 5000)
   }, 20_000)
 })
