@@ -1,12 +1,3 @@
-import SegfaultHandler from 'segfault-handler'
-
-SegfaultHandler.registerHandler('crash.log', function (signal, address, stack) {
-  // Do what you want with the signal, address, or stack (array)
-  // This callback will execute before the signal is forwarded on.
-
-  console.log({ signal, address, stack })
-})
-
 export function initServer() {
   Promise.all([
     import('./dota/index.js'),
