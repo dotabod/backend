@@ -3,7 +3,7 @@ import { t } from 'i18next'
 
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { smurfs } from '../../steam/smurfs.js'
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('smurfs', {

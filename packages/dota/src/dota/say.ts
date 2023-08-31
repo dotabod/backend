@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { chatClient } from '../twitch/index.js'
+import { chatClient } from '../twitch/chatClient.js'
 import { SocketClient } from '../types.js'
 import { getStreamDelay } from './GSIHandler.js'
 

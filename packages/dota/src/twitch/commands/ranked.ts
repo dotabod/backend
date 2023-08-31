@@ -4,7 +4,7 @@ import { t } from 'i18next'
 
 import Mongo from '../../steam/mongo.js'
 import { logger } from '../../utils/logger.js'
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 const mongo = await Mongo.connect()

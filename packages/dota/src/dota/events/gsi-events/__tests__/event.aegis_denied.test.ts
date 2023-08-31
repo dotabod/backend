@@ -1,14 +1,24 @@
 import axios from 'axios'
 
-import { chatClient } from '../../../../twitch/index.js'
+import { initServer } from '../../../../index.js'
+import { chatClient } from '../../../../twitch/chatClient.js'
 import { DotaEvent, DotaEventTypes } from '../../../../types.js'
 import { events } from '../../../globalEventEmitter.js'
 
-const mockedSay = jest.mocked(chatClient.say)
+jest.mock('../../../../twitch/chatClient.js', () => {
+  return {
+    join: jest.fn(),
+    part: jest.fn(),
+    say: jest.fn(),
+  }
+})
 
-// Set base URL for axios, assuming your API runs on localhost:81
 const apiClient = axios.create({
-  baseURL: 'http://localhost:81',
+  baseURL: 'http://localhost:5120',
+})
+
+beforeAll(() => {
+  initServer()
 })
 
 describe('API tests', () => {
@@ -27,6 +37,14 @@ describe('API tests', () => {
       ],
       auth: { token: 'cllx3i38n0007lxb7n5txh20e' },
     }
+    events.on(`event:${DotaEventTypes.AegisDenied}`, (event: DotaEvent, token: string) => {
+      try {
+        expect(event).toStrictEqual(postData.events[0])
+        done()
+      } catch (error) {
+        done(error)
+      }
+    })
 
     // Make a POST request
     apiClient
@@ -34,37 +52,12 @@ describe('API tests', () => {
       .then((response) => {
         expect(response.status).toBe(200)
         expect(response.data).toStrictEqual({ status: 'ok' })
-
-        events.once(`event:${DotaEventTypes.AegisDenied}`, (event: DotaEvent) => {
-          try {
-            expect(event).toStrictEqual({
-              event_type: DotaEventTypes.AegisDenied,
-              player_id: 1,
-              game_time: 50,
-            })
-
-            // wait for say to have been called within 5 seconds
-            setTimeout(() => {
-              expect(mockedSay).toBeCalledWith('destinee_schumm', 'Teal denied the aegis ICANT')
-              done()
-            }, 5000)
-          } catch (error) {
-            done(error)
-          }
-        })
-
-        events.emit(
-          `event:${DotaEventTypes.AegisDenied}`,
-          {
-            event_type: DotaEventTypes.AegisDenied,
-            player_id: 1,
-            game_time: 50,
-          } as DotaEvent,
-          'cllx3i38n0007lxb7n5txh20e',
-        )
       })
       .catch((e) => {
         done(e)
       })
+
+    // wait for say to have been called within 5 seconds
+    expect(chatClient.say).toBeCalledWith('destinee_schumm', 'Teal denied the aegis ICANT')
   })
 })

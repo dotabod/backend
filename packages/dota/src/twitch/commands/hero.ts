@@ -8,7 +8,7 @@ import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { getHeroById, heroColors, translatedColor } from '../../dota/lib/heroes.js'
 import { isArcade } from '../../dota/lib/isArcade.js'
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 import { profileLink } from './profileLink.js'
 

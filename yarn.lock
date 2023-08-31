@@ -2366,6 +2366,11 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-3.0.1.tgz#5f8f2bca0a5863cb69bc0b0acd88c96cb1d4ae10"
   integrity sha512-Y4XFY5VJAuw0FgAqPNd6NNoV44jbq9Bz2L7Rh/J6jLTiHBSBJa9fxqQIvkIld4GsoDOcCbvzOUAbLPsSKKg+uA==
 
+"@types/newrelic@^9.14.0":
+  version "9.14.0"
+  resolved "https://registry.yarnpkg.com/@types/newrelic/-/newrelic-9.14.0.tgz#822b442001b695f75dc2ee4fd3fdd30930f49e91"
+  integrity sha512-1jqbAMf6pKjAPJ8NC6VqZoylpBR6kejuw4qL3Mk8dworih+AXADki4WaUIWTzo7ERm6aykPl8xt1/J1invp6Mg==
+
 "@types/node-fetch@^2.5.7":
   version "2.6.3"
   resolved "https://registry.yarnpkg.com/@types/node-fetch/-/node-fetch-2.6.3.tgz#175d977f5e24d93ad0f57602693c435c57ad7e80"

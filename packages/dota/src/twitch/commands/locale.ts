@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 const contributors = [

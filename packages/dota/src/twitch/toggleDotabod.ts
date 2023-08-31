@@ -2,7 +2,7 @@ import { t } from 'i18next'
 
 import { gsiHandlers } from '../dota/lib/consts.js'
 import { logger } from '../utils/logger.js'
-import { chatClient } from './index.js'
+import { chatClient } from './chatClient.js'
 
 export function toggleDotabod(token: string, isBotDisabled: boolean, channel: string, lng = 'en') {
   if (!isBotDisabled) {

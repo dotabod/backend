@@ -2,7 +2,7 @@ import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('gpm', {

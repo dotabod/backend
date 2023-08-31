@@ -10,6 +10,7 @@ services:
   dota:
     volumes:
       - ./packages/dota/src:/app/packages/dota/src
+      - ./packages/dota/jest.config.ts:/app/packages/dota/jest.config.ts
 
   nginx:
     profiles:

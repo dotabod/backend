@@ -9,7 +9,7 @@ import { server } from '../../index.js'
 import { checkPassiveMidas } from '../../lib/checkMidas.js'
 import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
-import { DelayedCommands } from '../../lib/consts.js'
+import { DelayedCommands } from '../../lib/DelayedCommands.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
@@ -103,7 +103,6 @@ async function saveMatchData(client: SocketClient) {
 // Catch all
 eventHandler.registerEvent(`newdata`, {
   handler: async (dotaClient: GSIHandler, data: Packet) => {
-    console.log('newdata', data)
     // New users who dont have a steamaccount saved yet
     // This needs to run first so we have client.steamid on multiple acts
     await dotaClient.updateSteam32Id()

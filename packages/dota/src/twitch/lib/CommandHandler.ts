@@ -5,7 +5,7 @@ import { ADMIN_CHANNELS } from '../../dota/lib/consts.js'
 import Mongo from '../../steam/mongo.js'
 import { SocketClient } from '../../types.js'
 import { logger } from '../../utils/logger.js'
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 
 const mongo = await Mongo.connect()
 

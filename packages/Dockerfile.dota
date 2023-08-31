@@ -18,6 +18,7 @@ COPY ./packages/settings/package.json ./packages/settings/yarn.lock* ./
 WORKDIR /app/packages/prisma
 COPY ./packages/prisma/package.json ./packages/prisma/yarn.lock* ./
 
+# Yarn workspace root
 WORKDIR /app
 COPY package.json yarn.lock* ./
 
@@ -28,6 +29,7 @@ RUN yarn install --pure-lockfile --non-interactive
 ##################
 FROM base AS builder
 
+# Main workspace
 WORKDIR /app
 COPY tsconfig.json ./
 
@@ -40,6 +42,7 @@ WORKDIR /app/packages/prisma
 COPY ./packages/prisma/src ./src
 RUN yarn build
 
+# dota package
 WORKDIR /app/$BUILD_CONTEXT
 COPY ./$BUILD_CONTEXT/tsconfig.json ./
 COPY ./$BUILD_CONTEXT/src ./src

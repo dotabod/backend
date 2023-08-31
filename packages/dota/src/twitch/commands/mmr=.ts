@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { updateMmr } from '../../dota/lib/updateMmr.js'
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('setmmr', {

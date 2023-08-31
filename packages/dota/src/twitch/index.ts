@@ -2,30 +2,14 @@ import './commandLoader.js'
 
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
-import { io } from 'socket.io-client'
 
 import getDBUser from '../db/getDBUser.js'
-import { isDev, plebMode } from '../dota/lib/consts.js'
+import { plebMode } from '../dota/lib/consts.js'
 import { logger } from '../utils/logger.js'
+import { chatClient, twitchChat } from './chatClient.js'
 import commandHandler from './lib/CommandHandler.js'
 
 logger.info("Starting 'twitch' package")
-
-// Our docker chat forwarder instance
-const twitchChat = io('ws://twitch-chat:5005')
-
-export const chatClient = {
-  join: (channel: string) => {
-    twitchChat.emit('join', channel)
-  },
-  part: (channel: string) => {
-    twitchChat.emit('part', channel)
-  },
-  say: (channel: string, text: string) => {
-    if (isDev) console.log({ channel, text })
-    twitchChat.emit('say', channel, text)
-  },
-}
 
 twitchChat.on('connect', () => {
   logger.info('We alive on dotabod chat server!')

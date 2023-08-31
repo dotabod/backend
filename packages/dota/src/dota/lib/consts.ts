@@ -1,5 +1,3 @@
-import { DBSettings, SettingKeys } from '@dotabod/settings'
-
 import { GSIHandler } from '../GSIHandler.js'
 
 // just here for reference, not being used
@@ -110,30 +108,3 @@ export const gsiHandlers = new Map<string, GSIHandler>()
 export const twitchIdToToken = new Map<string, string>()
 export const pendingCheckAuth = new Map<string, boolean>()
 export const lookingupToken = new Map<string, boolean>()
-
-export const DelayedCommands: { command: string; key: SettingKeys }[] = [
-  {
-    command: '!np',
-    key: DBSettings.commandNP,
-  },
-  {
-    command: '!smurfs',
-    key: DBSettings.commandSmurfs,
-  },
-  {
-    command: '!gm',
-    key: DBSettings.commandGM,
-  },
-  {
-    command: '!lg',
-    key: DBSettings.commandLG,
-  },
-  {
-    command: '!avg',
-    key: DBSettings.commandAvg,
-  },
-  {
-    command: '!items',
-    key: DBSettings.commandItems,
-  },
-]

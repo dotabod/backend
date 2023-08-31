@@ -2,7 +2,7 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { prisma } from '../../db/prisma.js'
-import { chatClient } from '../../twitch/index.js'
+import { chatClient } from '../../twitch/chatClient.js'
 import { logger } from '../../utils/logger.js'
 import findUser from './connectedStreamers.js'
 import { GLOBAL_DELAY } from './consts.js'

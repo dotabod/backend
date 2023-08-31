@@ -5,7 +5,7 @@ import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import Mongo from '../../steam/mongo.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
 import { logger } from '../../utils/logger.js'
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 const mongo = await Mongo.connect()

@@ -4,7 +4,7 @@ import { t } from 'i18next'
 import { prisma } from '../../db/prisma.js'
 import getHero, { HeroNames } from '../../dota/lib/getHero.js'
 import { logger } from '../../utils/logger.js'
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('lgs', {

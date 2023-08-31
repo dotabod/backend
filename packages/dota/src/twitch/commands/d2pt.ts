@@ -6,7 +6,7 @@ import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js
 import getHero from '../../dota/lib/getHero.js'
 import { getHeroNameById } from '../../dota/lib/heroes.js'
 import { isArcade } from '../../dota/lib/isArcade.js'
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('d2pt', {

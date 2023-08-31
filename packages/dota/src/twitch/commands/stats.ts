@@ -4,7 +4,7 @@ import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { getHeroByName, getHeroNameById, heroColors } from '../../dota/lib/heroes.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import CustomError from '../../utils/customError.js'
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 import { profileLink } from './profileLink.js'
 

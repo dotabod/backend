@@ -3,7 +3,7 @@ import { t } from 'i18next'
 import { prisma } from '../../db/prisma.js'
 import { server } from '../../dota/index.js'
 import { logger } from '../../utils/logger.js'
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('online', {

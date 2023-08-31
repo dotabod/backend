@@ -3,7 +3,7 @@ import { t } from 'i18next'
 
 import { getWL } from '../../db/getWL.js'
 import { logger } from '../../utils/logger.js'
-import { chatClient } from '../index.js'
+import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('wl', {
