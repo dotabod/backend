@@ -49,9 +49,12 @@ class MongoDBSingleton {
   }
 
   async close(): Promise<void> {
-    if (this.mongoClient) {
-      await this.mongoClient.close()
-    }
+    // for now, don't close, because we call mongo so often i think it will
+    // cause more problems than it solves
+    // if (this.mongoClient) {
+    //   await this.mongoClient.close()
+    // }
+    return Promise.resolve()
   }
 }
 
