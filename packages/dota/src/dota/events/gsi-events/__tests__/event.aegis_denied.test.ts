@@ -1,48 +1,11 @@
-import { beforeAll, describe, it, jest } from '@jest/globals'
-import axios from 'axios'
+import { describe, it, jest } from '@jest/globals'
 
+import { apiClient } from '../../../../__tests__/utils.js'
 import { chatClient } from '../../../../twitch/chatClient.js'
 import { DotaEvent, DotaEventTypes } from '../../../../types.js'
 import { events } from '../../../globalEventEmitter.js'
-import { server } from '../../../index'
+
 const twitchChatSpy = jest.spyOn(chatClient, 'say')
-
-const apiClient = axios.create({
-  baseURL: 'http://localhost:5120',
-})
-
-beforeAll((done) => {
-  server.dota // not used
-  const interval = setInterval(() => {
-    apiClient
-      .post('/')
-      .then((response) => {
-        if (response.data && response.data) {
-          clearInterval(interval) // Stop the interval
-          done() // Continue with the tests
-        }
-      })
-      .catch((error) => {
-        // Handle error, perhaps log it but don't call done(error) here
-        // because we're inside an interval and it will keep calling
-      })
-  }, 1000) // Check every 1 second
-
-  // keep calling axios.get until it returns {status: 'ok'
-  // then call done() to end the test
-}, 20_000)
-
-afterAll((done) => {
-  Promise.all([server.dota.exit()])
-    .then(() => {
-      console.log('Successfully exited')
-      done()
-    })
-    .catch((e) => {
-      console.error('Error during teardown:', e)
-      done(e)
-    })
-}, 10_000)
 
 describe('API tests', () => {
   it('should tell us if aegis is denied', (done) => {
