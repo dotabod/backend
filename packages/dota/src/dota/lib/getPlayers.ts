@@ -2,11 +2,10 @@ import { delayedGames } from '@dotabod/prisma/dist/mongo'
 import { t } from 'i18next'
 
 import Dota from '../../steam/index.js'
-import Mongo from '../../steam/mongo.js'
+import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import CustomError from '../../utils/customError.js'
 import { getAccountsFromMatch } from './getAccountsFromMatch.js'
 
-const mongo = await Mongo.connect()
 const dota = Dota.getInstance()
 
 export async function getPlayers(
@@ -22,25 +21,32 @@ export async function getPlayers(
     throw new CustomError(t('gameNotFound', { lng: locale }))
   }
 
-  const response = await mongo
-    .collection<delayedGames>('delayedGames')
-    .findOne({ 'match.match_id': currentMatchId })
+  const mongo = new MongoDBSingleton()
+  const db = await mongo.connect()
 
-  if (!response && !players?.length) {
-    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
-  }
+  try {
+    const response = await db
+      .collection<delayedGames>('delayedGames')
+      .findOne({ 'match.match_id': currentMatchId })
 
-  const { matchPlayers, accountIds } = await getAccountsFromMatch({
-    searchMatchId: currentMatchId,
-    searchPlayers: players,
-  })
+    if (!response && !players?.length) {
+      throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
+    }
 
-  const cards = await dota.getCards(accountIds)
+    const { matchPlayers, accountIds } = await getAccountsFromMatch({
+      searchMatchId: currentMatchId,
+      searchPlayers: players,
+    })
 
-  return {
-    gameMode: response ? Number(response.match.game_mode) : undefined,
-    matchPlayers,
-    accountIds,
-    cards,
+    const cards = await dota.getCards(accountIds)
+
+    return {
+      gameMode: response ? Number(response.match.game_mode) : undefined,
+      matchPlayers,
+      accountIds,
+      cards,
+    }
+  } finally {
+    await mongo.close()
   }
 }
