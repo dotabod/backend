@@ -1,14 +1,11 @@
 import { faker } from '@faker-js/faker'
-import { beforeAll, describe, it, jest } from '@jest/globals'
+import { beforeAll, describe, it } from '@jest/globals'
 
-import { apiClient } from '../../../../__tests__/utils.js'
-import { prisma } from '../../../../db/prisma'
-import { chatClient } from '../../../../twitch/chatClient.js'
+import { apiClient, twitchChatSpy } from '../../../../__tests__/utils.js'
+import { prisma } from '../../../../db/prisma.js'
 import { DotaEventTypes } from '../../../../types.js'
 
 describe('aegis denied', () => {
-  const twitchChatSpy = jest.spyOn(chatClient, 'say')
-
   // might be less than 100 if some users are offline
   let USER_COUNT = 70
 

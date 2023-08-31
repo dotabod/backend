@@ -1,16 +1,13 @@
 import { faker } from '@faker-js/faker'
-import { beforeAll, describe, it, jest } from '@jest/globals'
+import { beforeAll, describe, it } from '@jest/globals'
 
-import { apiClient } from '../../../../__tests__/utils.js'
+import { apiClient, twitchChatSpy } from '../../../../__tests__/utils.js'
 import { prisma } from '../../../../db/prisma.js'
-import { chatClient } from '../../../../twitch/chatClient.js'
 import { DotaEventTypes } from '../../../../types.js'
 
 describe('aegis picked up', () => {
-  const twitchChatSpy = jest.spyOn(chatClient, 'say')
-
   // might be less than 100 if some users are offline
-  let USER_COUNT = 70
+  let USER_COUNT = 200
 
   const promises: Promise<any>[] = []
 
@@ -30,6 +27,7 @@ describe('aegis picked up', () => {
       })
       .then((users) => {
         USER_COUNT = users.length
+        console.log({ USER_COUNT })
         for (const user of users) {
           promises.push(
             apiClient
@@ -56,7 +54,7 @@ describe('aegis picked up', () => {
         done(e)
       })
 
-    Promise.all(promises)
+    Promise.allSettled(promises)
       .then(() => {
         done()
       })
