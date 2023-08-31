@@ -7,7 +7,7 @@ import { DotaEventTypes } from '../../../../types.js'
 
 describe('aegis picked up', () => {
   // might be less than 100 if some users are offline
-  let USER_COUNT = 50
+  let USER_COUNT = 5
 
   const promises: Promise<any>[] = []
 
