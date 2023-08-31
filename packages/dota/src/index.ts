@@ -1,9 +1,17 @@
 export function initServer() {
-  import('./dota/index.js')
-  import('./twitch/index.js')
-  import('./twitch/events.js')
+  Promise.all([
+    import('./dota/index.js'),
+    import('./twitch/index.js'),
+    import('./twitch/events.js'),
+  ])
+    .then(() => {
+      // All imports are now loaded
+      console.log('Modules loaded')
+    })
+    .catch((e) => {
+      console.error('Error during setup:', e)
+    })
   // ... any other setup you might need
 }
 
-console.log('geczy', process.env.NODE_ENV)
 initServer()

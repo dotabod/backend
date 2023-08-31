@@ -1,28 +1,51 @@
+import { beforeAll, describe, it, jest } from '@jest/globals'
 import axios from 'axios'
 
-import { initServer } from '../../../../index.js'
 import { chatClient } from '../../../../twitch/chatClient.js'
 import { DotaEvent, DotaEventTypes } from '../../../../types.js'
 import { events } from '../../../globalEventEmitter.js'
-
-jest.mock('../../../../twitch/chatClient.js', () => {
-  return {
-    join: jest.fn(),
-    part: jest.fn(),
-    say: jest.fn(),
-  }
-})
+import { server } from '../../../index'
+const twitchChatSpy = jest.spyOn(chatClient, 'say')
 
 const apiClient = axios.create({
   baseURL: 'http://localhost:5120',
 })
 
-beforeAll(() => {
-  initServer()
-})
+beforeAll((done) => {
+  server.dota // not used
+  const interval = setInterval(() => {
+    apiClient
+      .post('/')
+      .then((response) => {
+        if (response.data && response.data) {
+          clearInterval(interval) // Stop the interval
+          done() // Continue with the tests
+        }
+      })
+      .catch((error) => {
+        // Handle error, perhaps log it but don't call done(error) here
+        // because we're inside an interval and it will keep calling
+      })
+  }, 1000) // Check every 1 second
+
+  // keep calling axios.get until it returns {status: 'ok'
+  // then call done() to end the test
+}, 20_000)
+
+afterAll((done) => {
+  Promise.all([server.dota.exit()])
+    .then(() => {
+      console.log('Successfully exited')
+      done()
+    })
+    .catch((e) => {
+      console.error('Error during teardown:', e)
+      done(e)
+    })
+}, 10_000)
 
 describe('API tests', () => {
-  it('should respond correctly to POST request', (done) => {
+  it('should tell us if aegis is denied', (done) => {
     // Your POST request data
     const postData = {
       player: {
@@ -32,16 +55,23 @@ describe('API tests', () => {
         {
           event_type: DotaEventTypes.AegisDenied,
           player_id: 1,
-          game_time: Math.random() * 1000,
+          game_time: Math.round(Math.random() * 1000),
         },
       ],
       auth: { token: 'cllx3i38n0007lxb7n5txh20e' },
     }
+
     events.on(`event:${DotaEventTypes.AegisDenied}`, (event: DotaEvent, token: string) => {
       try {
+        expect(token).toStrictEqual(postData.auth.token)
         expect(event).toStrictEqual(postData.events[0])
-        done()
-      } catch (error) {
+
+        // wait for say to have been called within 5 seconds
+        setTimeout(() => {
+          expect(twitchChatSpy).toBeCalledWith('destinee_schumm', 'Teal denied the aegis ICANT')
+          done()
+        }, 5000)
+      } catch (error: any) {
         done(error)
       }
     })
@@ -56,8 +86,5 @@ describe('API tests', () => {
       .catch((e) => {
         done(e)
       })
-
-    // wait for say to have been called within 5 seconds
-    expect(chatClient.say).toBeCalledWith('destinee_schumm', 'Teal denied the aegis ICANT')
-  })
+  }, 20_000)
 })

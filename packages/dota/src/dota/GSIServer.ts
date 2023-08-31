@@ -7,7 +7,7 @@ import Dota from '../steam/index.js'
 import { logger } from '../utils/logger.js'
 import { newData, processChanges } from './globalEventEmitter.js'
 import { emitMinimapBlockerStatus } from './GSIHandler.js'
-import { gsiHandlers } from './lib/consts.js'
+import { gsiHandlers, isDev } from './lib/consts.js'
 import { validateToken } from './validateToken.js'
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
@@ -69,10 +69,14 @@ class GSIServer {
       app.post('/', validateToken, processChanges('previously'), processChanges('added'), newData)
     }
 
-    this.dota.dota2.on('ready', () => {
-      logger.info('[SERVER] Connected to dota game coordinator')
+    if (isDev) {
       setupPostRoute()
-    })
+    } else {
+      this.dota.dota2.on('ready', () => {
+        logger.info('[SERVER] Connected to dota game coordinator')
+        setupPostRoute()
+      })
+    }
 
     app.get('/', (req: Request, res: Response) => {
       res.status(200).json({ status: 'ok' })

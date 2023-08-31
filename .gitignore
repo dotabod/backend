@@ -12,3 +12,4 @@ newrelic_agent.log
 !**/locales/en/translation.json
 *.key
 *.tsbuildinfo
+coverage
