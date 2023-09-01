@@ -22,7 +22,7 @@ export const getBotAuthProvider = async function () {
     const tokenData = {
       scope: botTokens.scope?.split(' ') ?? [],
       expiresIn: botTokens.expires_in ?? 0,
-      obtainmentTimestamp: botTokens.obtainment_timestamp?.getTime() ?? 0,
+      obtainmentTimestamp: new Date(botTokens.obtainment_timestamp || '')?.getTime(),
       accessToken: botTokens.access_token,
       refreshToken: botTokens.refresh_token,
     }

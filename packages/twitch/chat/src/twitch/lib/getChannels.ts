@@ -6,22 +6,18 @@ export async function getChannels(): Promise<string[]> {
   const isDevMode = process.env.NODE_ENV === 'development'
 
   if (isDevMode) {
+    console.log(process.env.DEV_CHANNELS?.split(','))
     const { data: users, error } = await supabase
-      .from('user')
+      .from('users')
       .select('name')
       .in('name', process.env.DEV_CHANNELS?.split(',') ?? [])
       .order('followers', { ascending: false })
+    console.log({ users, error })
     return users ? users.map((user) => `${user.name}`) : []
   }
 
-  const queryFilter = {
-    name: {
-      notIn: process.env.DEV_CHANNELS?.split(',') ?? [],
-    },
-  }
-
   const { data: users } = await supabase
-    .from('user')
+    .from('users')
     .select('name')
     .not('name', 'in', process.env.DEV_CHANNELS?.split(',') ?? [])
     .order('followers', { ascending: false })

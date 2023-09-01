@@ -22,7 +22,7 @@ export const getTwitchAPI = function (twitchId: string): ApiClient {
     const tokenData = {
       scope: twitchTokens.Account.scope?.split(' ') ?? [],
       expiresIn: twitchTokens.Account.expires_in ?? 0,
-      obtainmentTimestamp: twitchTokens.Account.obtainment_timestamp?.getTime() ?? 0,
+      obtainmentTimestamp: new Date(twitchTokens.Account.obtainment_timestamp || '')?.getTime(),
       accessToken: twitchTokens.Account.access_token,
       refreshToken: twitchTokens.Account.refresh_token,
     }

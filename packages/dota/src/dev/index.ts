@@ -6,7 +6,7 @@ import { getBotAPI_DEV_ONLY } from '../twitch/lib/getBotAPI_DEV_ONLY.js'
 import { logger } from '../utils/logger.js'
 
 if (process.env.NODE_ENV !== 'production') {
-  throw new Error('NODE_ENV must be production')
+  console.log('NODE_ENV is development')
 }
 
 const botApi = await getBotAPI_DEV_ONLY()

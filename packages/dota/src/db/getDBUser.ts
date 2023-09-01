@@ -17,16 +17,16 @@ function deleteLookupToken(lookupToken: string) {
 
 export default async function getDBUser({
   token,
-  twitchId,
+  twitchId: providerAccountId,
   ip,
 }: { token?: string; twitchId?: string; ip?: string } = {}): Promise<
   SocketClient | null | undefined
 > {
-  const lookupToken = token ?? twitchId ?? ''
+  const lookupToken = token ?? providerAccountId ?? ''
 
   if (!isDev && invalidTokens.has(lookupToken)) return null
 
-  let client = findUser(token) ?? findUserByTwitchId(twitchId)
+  let client = findUser(token) ?? findUserByTwitchId(providerAccountId)
   if (client) {
     deleteLookupToken(lookupToken)
     return client
@@ -37,8 +37,32 @@ export default async function getDBUser({
   logger.info('[GSI] Haven’t cached user token yet, checking db', { ip, token: lookupToken })
   lookingupToken.set(lookupToken, true)
 
+  if (!lookupToken) {
+    logger.error('[USER] Error checking auth', { token: lookupToken, error: 'No token' })
+    invalidTokens.add(lookupToken)
+    deleteLookupToken(lookupToken)
+    return null
+  }
+
+  let userId = token || null
+  if (providerAccountId) {
+    const { data } = await supabase
+      .from('accounts')
+      .select('userId')
+      .eq('providerAccountId', providerAccountId)
+      .single()
+    userId = data?.userId ?? null
+  }
+
+  if (!userId) {
+    logger.error('[USER] Error checking auth', { token: lookupToken, error: 'No token' })
+    invalidTokens.add(lookupToken)
+    deleteLookupToken(lookupToken)
+    return null
+  }
+
   // Fetch user by `twitchId` and `token`
-  const { data: userData, error: userError } = await supabase
+  const { data: user, error: userError } = await supabase
     .from('users')
     .select(
       `
@@ -72,7 +96,8 @@ export default async function getDBUser({
     )
   `,
     )
-    .eq(twitchId ? 'Account.providerAccountId' : 'id', twitchId ?? token ?? '')
+    .eq('id', userId)
+    .single()
 
   // Handle errors
   if (userError) {
@@ -82,9 +107,7 @@ export default async function getDBUser({
     return null
   }
 
-  const [user] = userData ?? []
-
-  if (!user.id) {
+  if (!user || !user.id) {
     logger.info('Invalid token', { token: lookupToken })
     invalidTokens.add(lookupToken)
     deleteLookupToken(lookupToken)
