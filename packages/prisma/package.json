@@ -26,12 +26,12 @@
     "reset": "doppler run -- npx prisma migrate reset --schema ./src/postgres.prisma"
   },
   "devDependencies": {
-    "@types/node": "^20.5.6",
-    "prisma": "^5.2.0",
+    "@types/node": "^20.5.7",
+    "prisma": "5.2.0",
     "ts-node": "^10.9.1"
   },
   "dependencies": {
     "@faker-js/faker": "^8.0.2",
-    "@prisma/client": "^5.2.0"
+    "@prisma/client": "5.2.0"
   }
 }
