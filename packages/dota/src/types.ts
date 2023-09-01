@@ -11,7 +11,7 @@ export interface SocketClient {
   steam32Id: number | null // currently connected steam id
   mmr: number // currently connected mmr
   gsi?: Packet
-  Account?: {
+  Account: {
     refresh_token: string
     access_token: string
     expires_at: number | null

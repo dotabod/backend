@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { prisma } from '../../db/prisma.js'
+import supabase from '../../db/supabase.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
@@ -11,14 +11,12 @@ commandHandler.registerCommand('beta', {
   cooldown: 0,
   handler: (message: MessageType, args: string[]) => {
     async function handler() {
-      await prisma.user.update({
-        where: {
-          id: message.channel.client.token,
-        },
-        data: {
+      await supabase
+        .from('users')
+        .update({
           beta_tester: !message.channel.client.beta_tester,
-        },
-      })
+        })
+        .eq('id', message.channel.client.token)
 
       chatClient.say(
         message.channel.name,

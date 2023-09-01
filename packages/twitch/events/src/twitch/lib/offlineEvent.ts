@@ -1,6 +1,6 @@
 import { EventSubStreamOfflineEvent } from '@twurple/eventsub-base'
 
-import { prisma } from '../../db/prisma.js'
+import supabase from '../../db/supabase.js'
 import { onlineEvents } from '../events/events.js'
 
 export function offlineEvent(e: EventSubStreamOfflineEvent) {
@@ -10,6 +10,7 @@ export function offlineEvent(e: EventSubStreamOfflineEvent) {
   // if we do, then we can safely assume that the offline event is a false positive
   setTimeout(() => {
     if (onlineEvents.has(e.broadcasterId)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const onlineEventDate = onlineEvents.get(e.broadcasterId)!
       const now = new Date()
       const diff = now.getTime() - onlineEventDate.getTime()
@@ -21,27 +22,14 @@ export function offlineEvent(e: EventSubStreamOfflineEvent) {
       onlineEvents.delete(e.broadcasterId)
     }
 
-    prisma.account
+    void supabase
+      .from('users')
       .update({
-        data: {
-          user: {
-            update: {
-              stream_online: false,
-            },
-          },
-        },
-        where: {
-          provider_providerAccountId: {
-            provider: 'twitch',
-            providerAccountId: e.broadcasterId,
-          },
-        },
+        stream_online: false,
       })
+      .eq('accounts.providerAccountId', e.broadcasterId)
       .then(() => {
-        console.log('updated offline event', e.broadcasterId)
-      })
-      .catch((e) => {
-        console.log(e, 'offline save error', e.broadcasterId)
+        console.log('updated online event', e.broadcasterId)
       })
   }, 10000)
 }

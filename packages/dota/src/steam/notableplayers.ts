@@ -2,7 +2,7 @@ import { notablePlayers } from '@dotabod/prisma/dist/mongo'
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
 
-import { prisma } from '../db/prisma.js'
+import supabase from '../db/supabase.js'
 import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
@@ -73,27 +73,18 @@ export async function notablePlayers({
       .toArray()
 
     // get the list of users in the Dotabod postgresql database according to steam id
-    const dotabodPlayers = await prisma.user.findMany({
-      select: {
-        image: true,
-        displayName: true,
-        SteamAccount: {
-          take: 1,
-          select: {
-            steam32Id: true,
-          },
-        },
-      },
-      where: {
-        SteamAccount: {
-          some: {
-            steam32Id: {
-              in: accountIds,
-            },
-          },
-        },
-      },
-    })
+    const { data: dotabodPlayers } = await supabase
+      .from('users')
+      .select(
+        `
+    image,
+    displayName,
+    SteamAccount:steam_accounts (
+      steam32Id
+    )
+  `,
+      )
+      .in('SteamAccount.steam32Id', accountIds)
 
     // Description text
     const avg = await calculateAvg({
@@ -124,7 +115,7 @@ export async function notablePlayers({
 
     // Connect all players to dotabod users
     allPlayers.forEach((player) => {
-      const user = dotabodPlayers.find(
+      const user = dotabodPlayers?.find(
         (user) => user.SteamAccount[0].steam32Id === player.account_id,
       )
       if (user) {

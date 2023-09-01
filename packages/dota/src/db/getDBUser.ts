@@ -1,9 +1,15 @@
 import { GSIHandler } from '../dota/GSIHandler.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
-import { gsiHandlers, invalidTokens, lookingupToken, twitchIdToToken } from '../dota/lib/consts.js'
+import {
+  gsiHandlers,
+  invalidTokens,
+  isDev,
+  lookingupToken,
+  twitchIdToToken,
+} from '../dota/lib/consts.js'
 import { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
-import { prisma } from './prisma.js'
+import supabase from './supabase.js'
 
 function deleteLookupToken(lookupToken: string) {
   lookingupToken.delete(lookupToken)
@@ -18,9 +24,9 @@ export default async function getDBUser({
 > {
   const lookupToken = token ?? twitchId ?? ''
 
-  if (invalidTokens.has(lookupToken)) return null
+  if (!isDev && invalidTokens.has(lookupToken)) return null
 
-  const client = findUser(token) ?? findUserByTwitchId(twitchId)
+  let client = findUser(token) ?? findUserByTwitchId(twitchId)
   if (client) {
     deleteLookupToken(lookupToken)
     return client
@@ -31,91 +37,95 @@ export default async function getDBUser({
   logger.info('[GSI] Haven’t cached user token yet, checking db', { ip, token: lookupToken })
   lookingupToken.set(lookupToken, true)
 
-  return await prisma.user
-    .findFirstOrThrow({
-      select: {
-        settings: {
-          select: {
-            key: true,
-            value: true,
-          },
-        },
-        Account: {
-          select: {
-            refresh_token: true,
-            scope: true,
-            expires_at: true,
-            expires_in: true,
-            obtainment_timestamp: true,
-            access_token: true,
-            providerAccountId: true,
-          },
-        },
-        SteamAccount: {
-          select: {
-            mmr: true,
-            connectedUserIds: true,
-            steam32Id: true,
-            name: true,
-            leaderboard_rank: true,
-          },
-        },
-        id: true,
-        name: true,
-        mmr: true,
-        steam32Id: true,
-        stream_online: true,
-        stream_start_date: true,
-        beta_tester: true,
-        locale: true,
-      },
-      where: {
-        Account: {
-          providerAccountId: twitchId,
-        },
-        id: token,
-      },
-    })
-    .then((user) => {
-      if (!user.id) {
-        logger.info('Invalid token', { token: lookupToken })
-        invalidTokens.add(lookupToken)
-        deleteLookupToken(lookupToken)
-        return null
-      }
+  // Fetch user by `twitchId` and `token`
+  const { data: userData, error: userError } = await supabase
+    .from('users')
+    .select(
+      `
+    id,
+    name,
+    mmr,
+    steam32Id,
+    stream_online,
+    stream_start_date,
+    beta_tester,
+    locale,
+    Account:accounts (
+      refresh_token,
+      scope,
+      expires_at,
+      expires_in,
+      obtainment_timestamp,
+      access_token,
+      providerAccountId
+    ),
+    SteamAccount:steam_accounts (
+      mmr,
+      connectedUserIds,
+      steam32Id,
+      name,
+      leaderboard_rank
+    ),
+    settings (
+      key,
+      value
+    )
+  `,
+    )
+    .eq(twitchId ? 'Account.providerAccountId' : 'id', twitchId ?? token ?? '')
 
-      const client = findUser(user.id)
-      if (client) {
-        deleteLookupToken(lookupToken)
-        return client
-      }
+  // Handle errors
+  if (userError) {
+    logger.error('[USER] Error checking auth', { token: lookupToken, error: userError })
+    invalidTokens.add(lookupToken)
+    deleteLookupToken(lookupToken)
+    return null
+  }
 
-      const userInfo = {
-        ...user,
-        mmr: user.mmr || user.SteamAccount[0]?.mmr || 0,
-        steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
-        token: user.id,
-      }
+  const [user] = userData ?? []
 
-      const gsiHandler = gsiHandlers.get(userInfo.id) || new GSIHandler(userInfo)
+  if (!user.id) {
+    logger.info('Invalid token', { token: lookupToken })
+    invalidTokens.add(lookupToken)
+    deleteLookupToken(lookupToken)
+    return null
+  }
 
-      if (gsiHandler instanceof GSIHandler) {
-        if (userInfo.stream_online) {
-          logger.info('[GSI] Connecting new client', { token: userInfo.id, name: userInfo.name })
-        }
+  client = findUser(user.id)
+  if (client) {
+    deleteLookupToken(lookupToken)
+    return client
+  }
 
-        gsiHandlers.set(userInfo.id, gsiHandler)
-        twitchIdToToken.set(userInfo.Account!.providerAccountId, userInfo.id)
-        deleteLookupToken(lookupToken)
-      }
+  const Account = user.Account.shift()
+  if (!Account) return null
 
-      return userInfo as SocketClient
-    })
-    .catch((e: any) => {
-      logger.error('[USER] Error checking auth', { token: lookupToken, e })
-      invalidTokens.add(lookupToken)
-      deleteLookupToken(lookupToken)
+  const userInfo = {
+    ...user,
+    mmr: user.mmr || user.SteamAccount[0]?.mmr || 0,
+    steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
+    token: user.id,
+    stream_start_date: user.stream_start_date ? new Date(user.stream_start_date) : null,
+    Account: {
+      ...Account,
+      obtainment_timestamp: Account.obtainment_timestamp
+        ? new Date(Account.obtainment_timestamp)
+        : null,
+    },
+  }
 
-      return null
-    })
+  const gsiHandler = gsiHandlers.get(userInfo.id) || new GSIHandler(userInfo)
+
+  if (gsiHandler instanceof GSIHandler) {
+    if (userInfo.stream_online) {
+      logger.info('[GSI] Connecting new client', { token: userInfo.id, name: userInfo.name })
+    }
+
+    gsiHandlers.set(userInfo.id, gsiHandler)
+    twitchIdToToken.set(Account.providerAccountId, userInfo.id)
+  }
+
+  deleteLookupToken(lookupToken)
+
+  return userInfo as SocketClient
 }

@@ -1,9 +1,10 @@
 import { EventSubUserUpdateEvent } from '@twurple/eventsub-base'
 
-import { prisma } from '../../db/prisma.js'
+import supabase from '../../db/supabase.js'
 
 export async function updateUserEvent(e: EventSubUserUpdateEvent) {
   console.log(`${e.userId} updateUserEvent`)
+
   try {
     const streamer = await e.getUser()
 
@@ -19,19 +20,10 @@ export async function updateUserEvent(e: EventSubUserUpdateEvent) {
       Object.entries(data).filter(([key, value]) => Boolean(value)),
     )
 
-    await prisma.account.update({
-      data: {
-        user: {
-          update: filteredData,
-        },
-      },
-      where: {
-        provider_providerAccountId: {
-          provider: 'twitch',
-          providerAccountId: e.userId,
-        },
-      },
-    })
+    await supabase
+      .from('users')
+      .update(filteredData as typeof data)
+      .eq('accounts.providerAccountId', e.userId)
   } catch (err) {
     console.error(err, 'updateUserEvent error', e.userId)
   }

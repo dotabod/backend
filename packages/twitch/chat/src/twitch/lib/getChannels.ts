@@ -1,47 +1,30 @@
-import { prisma } from '../../db/prisma.js'
+import supabase from '../../db/supabase.js'
 
-export async function getChannels() {
+export async function getChannels(): Promise<string[]> {
   console.log('[TWITCHSETUP] Running getChannels in chat listener')
 
-  if (process.env.NODE_ENV === 'development') {
-    const users = prisma.user
-      .findMany({
-        select: { settings: true, name: true },
-        where: {
-          name: {
-            in: process.env.DEV_CHANNELS?.split(',') ?? [],
-          },
-          settings: {
-            none: {
-              key: 'commandDisable',
-              value: {
-                equals: true,
-              },
-            },
-          },
-        },
-        orderBy: {
-          followers: 'desc',
-        },
-      })
-      .then((users) => users.map((user) => user.name))
+  const isDevMode = process.env.NODE_ENV === 'development'
 
-    return users ?? []
+  if (isDevMode) {
+    const { data: users, error } = await supabase
+      .from('user')
+      .select('name')
+      .in('name', process.env.DEV_CHANNELS?.split(',') ?? [])
+      .order('followers', { ascending: false })
+    return users ? users.map((user) => `${user.name}`) : []
   }
 
-  return prisma.user
-    .findMany({
-      select: { settings: true, name: true },
-      where: {
-        NOT: {
-          name: {
-            in: process.env.DEV_CHANNELS?.split(',') ?? [],
-          },
-        },
-      },
-      orderBy: {
-        followers: 'desc',
-      },
-    })
-    .then((users) => users.map((user) => user.name))
+  const queryFilter = {
+    name: {
+      notIn: process.env.DEV_CHANNELS?.split(',') ?? [],
+    },
+  }
+
+  const { data: users } = await supabase
+    .from('user')
+    .select('name')
+    .not('name', 'in', process.env.DEV_CHANNELS?.split(',') ?? [])
+    .order('followers', { ascending: false })
+
+  return users ? users.map((user) => `${user.name}`) : []
 }

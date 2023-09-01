@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { prisma } from '../../db/prisma.js'
+import supabase from '../../db/supabase.js'
 import { updateMmr } from '../../dota/lib/updateMmr.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
@@ -24,24 +24,14 @@ commandHandler.registerCommand('fixparty', {
   permission: 2,
   cooldown: 0,
   handler: async (message: MessageType, args: string[]) => {
-    const bet = await prisma.bet.findFirst({
-      where: {
-        userId: message.channel.client.token,
-        won: {
-          not: null,
-        },
-      },
-      select: {
-        matchId: true,
-        won: true,
-        is_party: true,
-        id: true,
-        is_doubledown: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+    const { data } = await supabase
+      .from('bets')
+      .select('matchId, won, is_party, id, is_doubledown')
+      .eq('userId', message.channel.client.token)
+      .neq('won', null)
+      .order('createdAt', { ascending: false })
+      .limit(1)
+    const bet = data ? data[0] : null
 
     if (!bet) {
       chatClient.say(
@@ -73,13 +63,11 @@ commandHandler.registerCommand('fixparty', {
       channel: message.channel.name,
     })
 
-    await prisma.bet.update({
-      where: {
-        id: bet.id,
-      },
-      data: {
+    await supabase
+      .from('bets')
+      .update({
         is_party: !bet.is_party,
-      },
-    })
+      })
+      .eq('id', bet.id)
   },
 })

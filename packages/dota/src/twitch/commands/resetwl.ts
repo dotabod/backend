@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { prisma } from '../../db/prisma.js'
+import supabase from '../../db/supabase.js'
 import { server } from '../../dota/index.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
@@ -15,14 +15,12 @@ commandHandler.registerCommand('resetwl', {
         channel: { name: channel, client },
       } = message
 
-      await prisma.user.update({
-        where: {
-          id: message.channel.client.token,
-        },
-        data: {
-          stream_start_date: new Date(),
-        },
-      })
+      await supabase
+        .from('users')
+        .update({
+          stream_start_date: new Date().toISOString(),
+        })
+        .eq('id', message.channel.client.token)
 
       chatClient.say(channel, t('refresh', { lng: message.channel.client.locale }))
       server.io.to(client.token).emit('refresh')

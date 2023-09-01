@@ -1,7 +1,7 @@
 import { DBSettings, defaultSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { prisma } from '../../db/prisma.js'
+import supabase from '../../db/supabase.js'
 import { getTokenFromTwitchId } from '../../dota/lib/connectedStreamers.js'
 import { say } from '../../dota/say.js'
 import { SocketClient } from '../../types.js'
@@ -9,35 +9,20 @@ import { logger } from '../../utils/logger.js'
 import { getTwitchAPI } from './getTwitchAPI.js'
 
 // Disable the bet in settings for this user
-export function disableBetsForTwitchId(twitchId: string) {
+export async function disableBetsForTwitchId(twitchId: string) {
   const token = getTokenFromTwitchId(twitchId)
   if (!token) return
 
-  prisma.setting
-    .upsert({
-      where: {
-        key_userId: {
-          key: DBSettings.bets,
-          userId: token,
-        },
-      },
-      create: {
-        userId: token,
-        key: DBSettings.bets,
-        value: false,
-      },
-      update: {
-        value: false,
-      },
-    })
-    .then(() => {
-      logger.info('[BETS] Disabled bets for user', {
-        token,
-      })
-    })
-    .catch((e) => {
-      logger.error('[BETS] Error disabling bets', { e, token })
-    })
+  await supabase.from('settings').upsert(
+    {
+      userId: token,
+      key: DBSettings.bets,
+      value: false,
+    },
+    {
+      onConflict: 'userId, key',
+    },
+  )
 }
 
 export const openTwitchBet = async ({
@@ -78,7 +63,7 @@ export const openTwitchBet = async ({
     .catch(async (e) => {
       try {
         if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {
-          disableBetsForTwitchId(twitchId)
+          await disableBetsForTwitchId(twitchId)
           logger.info('[PREDICT] [BETS] Channel points not enabled for', {
             twitchId,
           })
@@ -101,17 +86,13 @@ export const openTwitchBet = async ({
             twitchId,
           })
 
-          await prisma.account.update({
-            where: {
-              provider_providerAccountId: {
-                provider: 'twitch',
-                providerAccountId: twitchId,
-              },
-            },
-            data: {
+          await supabase
+            .from('accounts')
+            .update({
               requires_refresh: true,
-            },
-          })
+            })
+            .eq('providerAccountId', twitchId)
+            .eq('provider', 'twitch')
         }
       } catch (e) {
         // just means couldn't json parse the message for the two cases above

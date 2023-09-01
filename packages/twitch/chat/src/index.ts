@@ -22,7 +22,7 @@ await use(FsBackend).init<FsBackendOptions>({
 console.log('Loaded i18n for chat')
 
 import './db/watcher.js'
-import { prisma } from './db/prisma.js'
+import supabase from './db/supabase.js'
 import { getChatClient } from './twitch/lib/getChatClient.js'
 
 // Setup twitch chatbot client FIRST
@@ -76,18 +76,19 @@ io.on('connection', (socket) => {
 
 async function disableChannel(channel: string) {
   const name = channel.replace('#', '')
-  const user = await prisma.user.findFirst({
-    select: {
-      id: true,
-      settings: {
-        select: {
-          key: true,
-          value: true,
-        },
-      },
-    },
-    where: { name },
-  })
+  const { data: user } = await supabase
+    .from('users')
+    .select(
+      `
+    id,
+    settings (
+      key,
+      value
+    )
+    `,
+    )
+    .eq('name', name)
+    .single()
 
   if (!user) {
     console.log('Failed to find user', name)
@@ -100,22 +101,16 @@ async function disableChannel(channel: string) {
   }
 
   console.log('Disabling user', name)
-  await prisma.setting.upsert({
-    where: {
-      key_userId: {
-        userId: user.id,
-        key: 'commandDisable',
-      },
-    },
-    create: {
+  await supabase.from('settings').upsert(
+    {
       userId: user.id,
       key: 'commandDisable',
       value: true,
     },
-    update: {
-      value: true,
+    {
+      onConflict: 'userId, key',
     },
-  })
+  )
 }
 
 chatClient.onJoinFailure((channel, reason) => {

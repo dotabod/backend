@@ -1,6 +1,6 @@
 import { EventSubHttpListener } from '@twurple/eventsub-http'
 
-import { prisma } from './db/prisma.js'
+import supabase from './db/supabase.js'
 import { SubscribeEvents } from './SubscribeEvents.js'
 import BotAPI from './twitch/lib/BotApiSingleton.js'
 
@@ -36,29 +36,10 @@ export async function handleNewUser(providerAccountId: string, listener: EventSu
       Object.entries(data).filter(([key, value]) => Boolean(value)),
     )
 
-    prisma.account
-      .update({
-        data: {
-          user: {
-            update: filteredData,
-          },
-        },
-        where: {
-          provider_providerAccountId: {
-            provider: 'twitch',
-            providerAccountId: providerAccountId,
-          },
-        },
-      })
-      .then(() => {
-        console.log('[TWITCHEVENTS] updated user info for', providerAccountId)
-      })
-      .catch((e) => {
-        console.log('[TWITCHEVENTS] error saving new user info for', {
-          e,
-          providerAccountId: e.broadcasterId,
-        })
-      })
+    await supabase
+      .from('users')
+      .update(filteredData as typeof data)
+      .eq('accounts.providerAccountId', providerAccountId)
   } catch (e) {
     console.log('[TWITCHEVENTS] error on getStreamByUserId', { e })
   }

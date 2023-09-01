@@ -1,17 +1,13 @@
-import { prisma } from '../../db/prisma.js'
+import supabase from '../../db/supabase.js'
 
 export async function getBotTokens() {
-  return await prisma.account.findFirst({
-    select: {
-      refresh_token: true,
-      access_token: true,
-      expires_in: true,
-      scope: true,
-      obtainment_timestamp: true,
-    },
-    where: {
-      provider: 'twitch',
-      providerAccountId: process.env.TWITCH_BOT_PROVIDERID,
-    },
-  })
+  const { data } = await supabase
+    .from('accounts')
+    .select('refresh_token, access_token, expires_in, scope, obtainment_timestamp')
+    .eq('provider', 'twitch')
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    .eq('providerAccountId', process.env.TWITCH_BOT_PROVIDERID!)
+    .single()
+
+  return data
 }

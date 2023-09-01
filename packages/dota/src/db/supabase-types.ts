@@ -365,7 +365,21 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_grouped_bets: {
+        Args: {
+          channel_id: string
+          start_date: string
+        }
+        Returns: {
+          won: boolean
+          lobby_type: number
+          is_party: boolean
+          is_doubledown: boolean
+          _count_won: number
+          _count_is_party: number
+          _count_is_doubledown: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,7 +1,7 @@
-import { prisma } from '../../db/prisma.js'
+import supabase from '../../db/supabase.js'
 
 const dev_channelids = process.env.DEV_CHANNELIDS?.split(',') ?? []
-export async function getAccountIds() {
+export async function getAccountIds(): Promise<string[]> {
   console.log('[TWITCHSETUP] Running getAccountIds')
 
   if (process.env.NODE_ENV === 'development') {
@@ -9,19 +9,11 @@ export async function getAccountIds() {
     return dev_channelids
   }
 
-  return prisma.account
-    .findMany({
-      select: { providerAccountId: true },
-      where: {
-        requires_refresh: {
-          not: true,
-        },
-      },
-      orderBy: {
-        user: {
-          followers: 'desc',
-        },
-      },
-    })
-    .then((users) => users.map((user) => user.providerAccountId))
+  const { data: users } = await supabase
+    .from('accounts')
+    .select('providerAccountId')
+    .neq('requires_refresh', true)
+    .order('user:followers', { ascending: false })
+
+  return users?.map((user) => `${user.providerAccountId}`) ?? []
 }
