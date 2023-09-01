@@ -2,7 +2,11 @@
   "compilerOptions": {
     /* Basic Options */
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "types": [
+      "jest",
+      "node"
+    ],
   },
   "include": [
     "src/**/*",

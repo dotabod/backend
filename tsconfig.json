@@ -10,7 +10,6 @@
     "sourceMap": true,
     "strictNullChecks": true,
     "types": [
-      "jest",
       "node"
     ],
     "allowJs": true,
