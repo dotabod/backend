@@ -13,7 +13,7 @@ import getDBUser from './getDBUser.js'
 import supabase from './supabase.js'
 
 class SetupSupabase {
-  channel: any
+  channel: ReturnType<typeof supabase.channel>
   IS_DEV: boolean
   DEV_CHANNELS: string[]
   DEV_CHANNELIDS: string[]

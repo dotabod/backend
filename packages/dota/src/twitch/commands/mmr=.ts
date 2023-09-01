@@ -9,7 +9,7 @@ commandHandler.registerCommand('setmmr', {
   permission: 2,
   cooldown: 0,
   onlyOnline: false,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -25,7 +25,7 @@ commandHandler.registerCommand('setmmr', {
       if (accounts.length === 0) {
         // Sends a `0` steam32Id so we can save it to the db,
         // but server will update with steam later when they join a match
-        updateMmr({
+        await updateMmr({
           currentMmr: client.mmr,
           newMmr: mmr,
           steam32Id: Number(client.steam32Id),
@@ -36,7 +36,7 @@ commandHandler.registerCommand('setmmr', {
         })
         return
       } else if (accounts.length === 1) {
-        updateMmr({
+        await updateMmr({
           force: true,
           currentMmr: client.mmr,
           newMmr: mmr,
@@ -65,7 +65,7 @@ commandHandler.registerCommand('setmmr', {
               lng: message.channel.client.locale,
             }),
           )
-          updateMmr({
+          await updateMmr({
             force: true,
             currentMmr: client.mmr,
             newMmr: mmr,

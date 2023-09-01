@@ -2,8 +2,8 @@ import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { getWL } from '../db/getWL.js'
-import { prisma } from '../db/prisma.js'
 import RedisClient from '../db/RedisClient.js'
+import supabase from '../db/supabase.js'
 import { notablePlayers } from '../steam/notableplayers.js'
 import { chatClient } from '../twitch/chatClient.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
@@ -251,81 +251,96 @@ export class GSIHandler {
   // the user may have a steam account saved, but not this one for this match
   // so add to their list of steam accounts
   async updateSteam32Id() {
-    if (this.creatingSteamAccount) return
-    if (!this.client.gsi?.player?.steamid) return
-    // TODO: Not sure if .accountid actually exists for a solo gsi in non spectate mode
-    if (this.getSteam32() === Number(this.client.gsi.player.accountid)) return
+    if (this.creatingSteamAccount || !this.client.gsi?.player?.steamid) return
 
     const steam32Id = steamID64toSteamID32(this.client.gsi.player.steamid)
     if (!steam32Id) return
 
-    // Its a multi account, no need to create a new act
-    if (this.client.multiAccount === steam32Id) return
+    // TODO: Not sure if .accountid actually exists for a solo gsi in non spectate mode
+    const isSameAccountId = this.getSteam32() === Number(this.client.gsi.player.accountid)
+    const isSameSteam32Id = this.getSteam32() === steam32Id
+    const isMultiAccount = this.client.multiAccount === steam32Id
 
-    // It's the same user, no need to create a new act
-    if (this.getSteam32() === steam32Id) return
+    if (isSameSteam32Id || isMultiAccount || isSameAccountId) return
 
     // User already has a steam32Id and its saved to the `steam_accounts` table
     const foundAct = this.client.SteamAccount.find((act) => act.steam32Id === steam32Id)
-    // Logged into a new account (smurfs vs mains)
     if (foundAct) {
-      this.client.mmr = foundAct.mmr
-      this.client.steam32Id = steam32Id
-      this.client.multiAccount = undefined
+      // Logged into a new steam account on the same twitch channel
+      Object.assign(this.client, { mmr: foundAct.mmr, steam32Id, multiAccount: undefined })
       this.emitBadgeUpdate()
       return
-    } // else we create this act in db
+    }
 
+    // Continue to create this act in db
     // Default to the mmr from `users` table for this brand new steam account
     // this.getMmr() should return mmr from `user` table on new accounts without steam acts
     const mmr = this.client.SteamAccount.length ? 0 : this.getMmr()
 
-    logger.info('[STEAM32ID] Running steam account lookup to db', { name: this.client.name })
-
     this.creatingSteamAccount = true
-    const res = await prisma.steamAccount.findFirst({ where: { steam32Id } })
+    const { data } = await supabase
+      .from('steam_accounts')
+      .select('id, userId, mmr, connectedUserIds')
+      .eq('steam32Id', steam32Id)
+    const res = data?.[0]
 
-    // not found, need to make
-    if (!res?.id) {
-      logger.info('[STEAM32ID] Adding steam32Id', { name: this.client.name })
-      await prisma.steamAccount.create({
-        data: {
-          mmr,
-          steam32Id,
-          userId: this.client.token,
-          name: this.client.gsi?.player?.name,
-        },
-      })
-      await prisma.user.update({ where: { id: this.client.token }, data: { mmr: 0 } })
-      // Logged into a new account (smurfs vs mains)
-      this.client.mmr = mmr
-      this.client.steam32Id = steam32Id
-      this.client.multiAccount = undefined
-      this.emitBadgeUpdate()
+    if (res?.id) {
+      await this.handleExistingAccount(res, steam32Id)
     } else {
-      if (res.userId === this.client.token) {
-        this.client.mmr = res.mmr
-        this.client.steam32Id = steam32Id
-      } else {
-        // This means its currently being used by another account
-        logger.info('Found multi-account', { name: this.client.name })
-        this.client.multiAccount = steam32Id
-        // remove duplicates from userIds
-        const userIds = [...res.connectedUserIds, this.client.token].filter(
-          (id, i, arr) => arr.indexOf(id) === i,
-        )
-
-        await prisma.steamAccount.update({
-          where: { id: res.id },
-          data: { connectedUserIds: userIds },
-        })
-      }
+      await this.createNewSteamAccount(mmr, steam32Id)
     }
 
     this.creatingSteamAccount = false
   }
 
-  updateMMR({ scores, increase, heroName, lobbyType, betsForMatchId, isParty, heroSlot }: MMR) {
+  async handleExistingAccount(
+    res: {
+      id: string
+      userId: string
+      mmr: number
+      connectedUserIds: string[] | null
+    },
+    steam32Id: number,
+  ) {
+    if (res.userId === this.client.token) {
+      Object.assign(this.client, { mmr: res.mmr, steam32Id })
+    } else {
+      this.client.multiAccount = steam32Id
+      const uniqueUserIds = Array.from(
+        new Set([...(res?.connectedUserIds ?? []), this.client.token]),
+      )
+      await supabase
+        .from('steam_accounts')
+        .update({ connectedUserIds: uniqueUserIds })
+        .eq('id', res.id)
+    }
+  }
+
+  async createNewSteamAccount(mmr: number, steam32Id: number) {
+    logger.info('[STEAM32ID] Adding steam32Id', { name: this.client.name })
+
+    await supabase.from('steam_accounts').insert({
+      mmr,
+      steam32Id,
+      userId: this.client.token,
+      name: this.client.gsi?.player?.name,
+    })
+
+    await supabase.from('users').update({ mmr: 0 }).eq('id', this.client.token)
+
+    Object.assign(this.client, { mmr, steam32Id, multiAccount: undefined })
+    this.emitBadgeUpdate()
+  }
+
+  async updateMMR({
+    scores,
+    increase,
+    heroName,
+    lobbyType,
+    betsForMatchId,
+    isParty,
+    heroSlot,
+  }: MMR) {
     const ranked = lobbyType === 7
 
     const extraInfo = {
@@ -341,38 +356,22 @@ export class GSIHandler {
     logger.info('[MMR Update] Begin updating mmr', extraInfo)
 
     // This also updates WL for the unranked matches
-    prisma.bet
+    await supabase
+      .from('bets')
       .update({
-        where: {
-          matchId_userId: {
-            matchId: betsForMatchId,
-            userId: this.client.token,
-          },
-        },
-        data: {
-          won: increase,
-          lobby_type: lobbyType,
-          hero_slot: heroSlot,
-          is_party: isParty,
-          hero_name: heroName,
-          kda: scores.kda,
-          radiant_score: scores.radiant_score,
-          dire_score: scores.dire_score,
-        },
+        won: increase,
+        lobby_type: lobbyType,
+        hero_slot: heroSlot,
+        is_party: isParty,
+        hero_name: heroName,
+        kda: scores.kda,
+        radiant_score: scores.radiant_score,
+        dire_score: scores.dire_score,
       })
-      .then(() => {
-        logger.info('[DATABASE] Updated bet with winnings', extraInfo)
-        this.emitWLUpdate()
-      })
-      .catch((e) => {
-        logger.error('[DATABASE ERROR MMR]', {
-          e: e?.message || e,
-          betsForMatchId,
-          isParty,
-          increase,
-          lobbyType,
-        })
-      })
+      .match({ match_id: betsForMatchId, userId: this.client.token })
+
+    logger.info('[DATABASE] Updated bet with winnings', extraInfo)
+    this.emitWLUpdate()
 
     if (!ranked) {
       logger.info('[MMR] Not ranked game, wont update mmr', extraInfo)
@@ -385,7 +384,7 @@ export class GSIHandler {
       const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], this.client.settings)
       if (mmrEnabled) {
         logger.info('[MMR] Found steam32Id, updating mmr', extraInfo)
-        updateMmr({
+        await updateMmr({
           currentMmr: this.getMmr(),
           newMmr: newMMR,
           steam32Id: this.client.steam32Id,
@@ -465,169 +464,115 @@ export class GSIHandler {
       hero: client.gsi.hero.name,
     })
 
-    const channel = client.name
-
     this.openingBets = true
 
+    const { data: bet } = await supabase
+      .from('bets')
+      .select('matchId, myTeam, id')
+      .match({ matchId: client.gsi.map.matchid, userId: client.token, won: null })
+
+    // Saving to redis so we don't have to query the db again
+    await redisClient.client.set(`${client.token}:betsForMatchId`, client?.gsi?.map?.matchid || '')
+
+    const playingTeam = bet?.[0]?.myTeam ?? client.gsi?.player?.team_name ?? ''
+    await redisClient.client.set(`${client.token}:playingTeam`, playingTeam)
+    await redisClient.client.set(`${client.token}:playingHero`, client.gsi?.hero?.name as string)
+
     // Check if this bet for this match id already exists, dont continue if it does
-    prisma.bet
-      .findFirst({
-        select: {
-          id: true,
-          myTeam: true,
-          matchId: true,
-        },
-        where: {
-          userId: client.token,
-          matchId: client.gsi.map.matchid,
-          won: null,
-        },
+    if (bet?.[0]?.id) {
+      logger.info('[BETS] Found a bet in the database', { id: bet?.[0]?.id })
+      this.openingBets = false
+      return
+    }
+
+    await supabase.from('bets').insert({
+      predictionId: client?.gsi?.map?.matchid || '',
+      matchId: client?.gsi?.map?.matchid || '',
+      userId: client.token,
+      myTeam: client.gsi?.player?.team_name ?? '',
+      steam32Id: client.steam32Id,
+    })
+
+    if (!client.stream_online) {
+      logger.info('[BETS] Not opening bets bc stream is offline for', {
+        name: client.name,
       })
-      .then(async (bet) => {
-        // Saving to redis so we don't have to query the db again
-        await redisClient.client.set(
-          `${client.token}:betsForMatchId`,
-          client?.gsi?.map?.matchid || '',
-        )
+      this.openingBets = false
+      return
+    }
 
-        const playingTeam = bet?.myTeam ?? client.gsi?.player?.team_name ?? ''
-        await redisClient.client.set(`${client.token}:playingTeam`, playingTeam)
+    const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
+    if (!betsEnabled) {
+      this.openingBets = false
+      return
+    }
 
-        redisClient.client
-          .set(`${client.token}:playingHero`, client.gsi?.hero?.name as string)
-          .catch((e) => logger.error('[REDIS ERROR]', { e: e?.message || e }))
+    if (!client.token) {
+      this.openingBets = false
+      return
+    }
 
-        if (bet?.id) {
-          logger.info('[BETS] Found a bet in the database', { id: bet.id })
-          this.openingBets = false
-          return
-        }
+    setTimeout(this.openTheBet, getStreamDelay(client.settings))
 
-        prisma.bet
-          .create({
-            data: {
-              predictionId: client?.gsi?.map?.matchid || '',
-              matchId: client?.gsi?.map?.matchid || '',
-              userId: client.token,
-              myTeam: client.gsi?.player?.team_name ?? '',
-              steam32Id: client.steam32Id,
-            },
-          })
-          .then(() => {
-            const hero = getHero(client.gsi?.hero?.name)
+    // .catch((e: any) => {
+    //   logger.error(`[BETS] Could not add bet to channel`, {
+    //     channel: client.name,
+    //     e: e?.message || e,
+    //   })
+    //   this.openingBets = false
+    // })
 
-            if (!client.stream_online) {
-              logger.info('[BETS] Not opening bets bc stream is offline for', {
-                name: client.name,
-              })
-              this.openingBets = false
-              return
-            }
+    // .catch((e: any) => {
+    //   logger.error('[BETS] Error opening bet', {
+    //     betsForMatchId: client?.gsi?.map?.matchid || '',
+    //     channel,
+    //     e: e?.message || e,
+    //   })
+    //   if ((e?.message || e).includes('error')) {
+    //     this.openingBets = false
+    //   }
+    // })
+  }
 
-            const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
-            if (!betsEnabled) {
-              this.openingBets = false
-              return
-            }
+  openTheBet = () => {
+    const { client } = this
+    const hero = getHero(client.gsi?.hero?.name)
 
-            setTimeout(() => {
-              client.token &&
-                openTwitchBet(
-                  client.locale,
-                  this.getChannelId(),
-                  hero?.localized_name,
-                  client.settings,
-                )
-                  .then(() => {
-                    const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, client.settings)
-                    const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
-
-                    if (chattersEnabled && tellChatBets) {
-                      say(client, t('bets.open', { emote: 'peepoGamble', lng: client.locale }), {
-                        delay: false,
-                      })
-                    }
-                    this.openingBets = false
-                    logger.info('[BETS] open bets', {
-                      event: 'open_bets',
-                      matchId: client?.gsi?.map?.matchid || '',
-                      user: client.token,
-                      player_team: client.gsi?.player?.team_name,
-                    })
-                  })
-                  .catch((e: any) => {
-                    try {
-                      // "message\": \"Invalid refresh token\"\n}" means they have to logout and login
-                      if (JSON.parse(e?.body)?.message?.includes('refresh token')) {
-                        say(
-                          client,
-                          t('bets.error', {
-                            channel: `@${client.name}`,
-                            lng: client.locale,
-                          }),
-                          {
-                            delay: false,
-                          },
-                        )
-
-                        logger.error(
-                          '[TWITCHSETUP] Failed to refresh twitch tokens in gsi handler',
-                          {
-                            twitchId: this.getChannelId(),
-                          },
-                        )
-
-                        prisma.account
-                          .update({
-                            where: {
-                              provider_providerAccountId: {
-                                provider: 'twitch',
-                                providerAccountId: this.getChannelId(),
-                              },
-                            },
-                            data: {
-                              requires_refresh: true,
-                            },
-                          })
-                          .then(() => {
-                            //
-                          })
-                          .catch((e) => {
-                            //
-                          })
-                      }
-                    } catch (e) {
-                      // only interested in refresh token err
-                    }
-
-                    logger.error('[BETS] Error opening twitch bet', {
-                      channel,
-                      e: e?.message || e,
-                      betsForMatchId: client?.gsi?.map?.matchid || '',
-                    })
-
-                    this.openingBets = false
-                  })
-            }, getStreamDelay(client.settings))
-          })
-          .catch((e: any) => {
-            logger.error(`[BETS] Could not add bet to channel`, {
-              channel: client.name,
-              e: e?.message || e,
-            })
-            this.openingBets = false
-          })
-      })
-      .catch((e: any) => {
-        logger.error('[BETS] Error opening bet', {
-          betsForMatchId: client?.gsi?.map?.matchid || '',
-          channel,
-          e: e?.message || e,
+    const handler = async () => {
+      try {
+        await openTwitchBet({
+          heroName: hero?.localized_name,
+          client: client,
         })
-        if ((e?.message || e).includes('error')) {
-          this.openingBets = false
-        }
+      } catch (e: any) {
+        logger.error('[BETS] Error opening twitch bet', {
+          channel: client.name,
+          e: e?.message || e,
+          betsForMatchId: client?.gsi?.map?.matchid || '',
+        })
+
+        this.openingBets = false
+        return
+      }
+
+      const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, client.settings)
+      const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
+
+      if (chattersEnabled && tellChatBets) {
+        say(client, t('bets.open', { emote: 'peepoGamble', lng: client.locale }), {
+          delay: false,
+        })
+      }
+      this.openingBets = false
+      logger.info('[BETS] open bets', {
+        event: 'open_bets',
+        matchId: client?.gsi?.map?.matchid || '',
+        user: client.token,
+        player_team: client.gsi?.player?.team_name,
       })
+    }
+
+    void handler()
   }
 
   async closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
@@ -716,13 +661,7 @@ export class GSIHandler {
             t('bets.notScored', { emote: 'D:', lng: this.client.locale, betsForMatchId }),
           )
         }
-        refundTwitchBet(this.getChannelId())
-          .then(() => {
-            //
-          })
-          .catch((e) => {
-            logger.error('ERROR refunding bets', { token: this.client.token, e })
-          })
+        await refundTwitchBet(this.getChannelId())
       }
       await this.resetClientState()
       return
@@ -734,7 +673,7 @@ export class GSIHandler {
 
     const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
 
-    this.updateMMR({
+    await this.updateMMR({
       scores: scores,
       increase: won,
       lobbyType: localLobbyType,
@@ -744,26 +683,13 @@ export class GSIHandler {
       heroName,
     })
 
-    getRankDetail(this.getMmr(), this.getSteam32())
-      .then((response) => {
-        if (!this.getSteam32() || !response || !('standing' in response)) return
+    const response = await getRankDetail(this.getMmr(), this.getSteam32())
+    if (!this.client.steam32Id || !response || !('standing' in response)) return
 
-        prisma.steamAccount
-          .update({
-            where: {
-              steam32Id: this.getSteam32() ?? undefined,
-            },
-            data: {
-              leaderboard_rank: response.standing,
-            },
-          })
-          .catch((e) => {
-            logger.error('Error updating leaderboard rank', { e })
-          })
-      })
-      .catch((e) => {
-        // nothing to do here, user probably doesn't have a rank
-      })
+    await supabase
+      .from('steam_accounts')
+      .update({ leaderboard_rank: response.standing })
+      .eq('steam32Id', this.client.steam32Id)
 
     const TreadToggleData = this.treadsData
     const toggleHandler = async () => {
@@ -874,13 +800,7 @@ export class GSIHandler {
                 t('bets.notScored', { emote: 'D:', lng: this.client.locale, betsForMatchId }),
               )
             }
-            refundTwitchBet(this.getChannelId())
-              .then(() => {
-                //
-              })
-              .catch((e: any) => {
-                logger.error('ERROR refunding bets', { token: this.client.token, e })
-              })
+            await refundTwitchBet(this.getChannelId())
           }
           await this.resetClientState()
           return

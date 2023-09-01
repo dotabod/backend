@@ -1,7 +1,7 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { prisma } from '../../db/prisma.js'
+import supabase from '../../db/supabase.js'
 import { chatClient } from '../../twitch/chatClient.js'
 import { logger } from '../../utils/logger.js'
 import findUser from './connectedStreamers.js'
@@ -59,7 +59,7 @@ interface Mmr {
   force?: boolean
 }
 
-export function updateMmr({
+export async function updateMmr({
   tellChat = false,
   force = false,
   currentMmr,
@@ -90,21 +90,12 @@ export function updateMmr({
       },
     )
 
-    // Have to lookup by channel id because name is case sensitive in the db
-    // Not sure if twitch returns channel names or display names
-    prisma.account
+    await supabase
+      .from('users')
       .update({
-        where: {
-          userId: token,
-        },
-        data: {
-          user: {
-            update: {
-              mmr: mmr,
-            },
-          },
-        },
+        mmr, // New MMR value
       })
+      .eq('id', token)
       .then(() => {
         const client = findUser(token)
 
@@ -118,48 +109,35 @@ export function updateMmr({
           })
         }
       })
-      .catch((e) => {
-        logger.info('[UPDATE MMR] Error updating user table', { channel, e })
-      })
 
     return
   }
 
-  prisma.steamAccount
-    .update({
-      select: {
-        user: {
-          select: {
-            id: true,
-          },
-        },
-      },
-      data: {
-        user: {
-          update: {
-            mmr: 0,
-          },
-        },
-        mmr: mmr,
-      },
-      where: {
-        steam32Id,
-      },
-    })
-    .then((data) => {
-      const client = findUser(data.user.id)
+  const data = await supabase
+    .from('steam_accounts')
+    .update({ mmr })
+    .eq('steam32_id', steam32Id)
+    .select('userId')
 
-      if (client && tellChat) {
-        tellChatNewMMR({
-          streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
-          locale: client.locale,
-          token: client.token,
-          mmr,
-          oldMmr: currentMmr,
-        })
-      }
+  const foundToken = data.data?.[0]?.userId
+  if (!foundToken) return
+
+  await supabase
+    .from('users')
+    .update({
+      mmr: 0, // New MMR value
     })
-    .catch((e) => {
-      logger.error('[UPDATE MMR] Error updating account table', { channel, e })
+    .eq('id', foundToken)
+
+  const client = findUser(foundToken)
+
+  if (client && tellChat) {
+    tellChatNewMMR({
+      streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
+      locale: client.locale,
+      token: client.token,
+      mmr,
+      oldMmr: currentMmr,
     })
+  }
 }
