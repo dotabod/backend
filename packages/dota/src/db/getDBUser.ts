@@ -1,12 +1,6 @@
 import { GSIHandler } from '../dota/GSIHandler.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
-import {
-  gsiHandlers,
-  invalidTokens,
-  isDev,
-  lookingupToken,
-  twitchIdToToken,
-} from '../dota/lib/consts.js'
+import { gsiHandlers, invalidTokens, lookingupToken, twitchIdToToken } from '../dota/lib/consts.js'
 import { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
 import supabase from './supabase.js'
@@ -24,7 +18,7 @@ export default async function getDBUser({
 > {
   const lookupToken = token ?? providerAccountId ?? ''
 
-  if (!isDev && invalidTokens.has(lookupToken)) return null
+  if (invalidTokens.has(lookupToken)) return null
 
   let client = findUser(token) ?? findUserByTwitchId(providerAccountId)
   if (client) {
@@ -38,7 +32,7 @@ export default async function getDBUser({
   lookingupToken.set(lookupToken, true)
 
   if (!lookupToken) {
-    logger.error('[USER] Error checking auth', { token: lookupToken, error: 'No token' })
+    logger.error('[USER] 1 Error checking auth', { token: lookupToken, error: 'No token' })
     invalidTokens.add(lookupToken)
     deleteLookupToken(lookupToken)
     return null
@@ -55,7 +49,7 @@ export default async function getDBUser({
   }
 
   if (!userId) {
-    logger.error('[USER] Error checking auth', { token: lookupToken, error: 'No token' })
+    logger.error('[USER] 2 Error checking auth', { token: lookupToken, error: 'No token' })
     invalidTokens.add(lookupToken)
     deleteLookupToken(lookupToken)
     return null
@@ -101,7 +95,7 @@ export default async function getDBUser({
 
   // Handle errors
   if (userError) {
-    logger.error('[USER] Error checking auth', { token: lookupToken, error: userError })
+    logger.error('[USER] 3 Error checking auth', { token: lookupToken, error: userError })
     invalidTokens.add(lookupToken)
     deleteLookupToken(lookupToken)
     return null

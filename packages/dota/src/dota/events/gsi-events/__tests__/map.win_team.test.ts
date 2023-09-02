@@ -1,9 +1,9 @@
 import { fdescribe, it } from '@jest/globals'
 
-import { gameEnd } from '../../../../__tests__/play-by-plays'
+import { gameEnd } from '../../../../__tests__/play-by-plays.js'
 import { apiClient } from '../../../../__tests__/utils.js'
-import { checkCallAndMemory } from './checkCallAndMemory'
-import { fetchOnlineUsers } from './fetchOnlineUsers'
+import { checkCallAndMemory } from './checkCallAndMemory.js'
+import { fetchOnlineUsers } from './fetchOnlineUsers.js'
 
 const USER_COUNT = 1
 
