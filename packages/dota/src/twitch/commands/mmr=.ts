@@ -74,12 +74,19 @@ commandHandler.registerCommand('setmmr', {
       return
     }
 
-    if (
-      !isNumberValid(steam32FromArg) ||
-      !accounts.some((a) => a.steam32Id === Number(steam32FromArg))
-    ) {
+    const accountFromArg = accounts.find((a) => a.steam32Id === Number(steam32FromArg))
+    if (!Number(steam32FromArg) || !accountFromArg) {
       const key = client.multiAccount ? 'multiAccount' : 'unknownSteam'
       sendMessage(channel, locale, key, { url: 'dotabod.com/dashboard/features' })
+      return
     }
+
+    await performMmrUpdate({
+      currentMmr: accountFromArg.mmr,
+      newMmr: mmrFromArg,
+      steam32Id: accountFromArg.steam32Id,
+      channel,
+      token: client.token,
+    })
   },
 })
