@@ -104,7 +104,7 @@
   "missingMatchData": "Väntar på aktuell matchdata {{emote}}",
   "missingUser": "Användaren hittades inte. Försök logga ut och in på dotabod.com",
   "modsOnly_off": "Endast mods-läge är nu av. Alla kan skriva.",
-  "modsOnly_on": "Endast mods-läge är nu på {{emote}}. Endast mods kan skriva.",
+  "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Detta Steam-konto är redan anslutet till en annan Dotabod användare. Kontrollera instrumentpanelen för mer information {{- url}}",
   "noHero": "Ingen hjälte hittades",
   "noLastMatch": "Hittade inte förra matchen {{emote}}",
@@ -186,6 +186,7 @@
   "updateMmr_auto": "Uppdaterade MMR till {{mmr}}",
   "updateMmr_manual": "Uppdaterade MMR till {{mmr}}",
   "updateMmrMulti": "Flera Steam-konton, uppdaterar den du är inloggad med ({{steamId}})",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "Servern kör version {{version}}, här är vad som saknas jämfört med den senaste versionen: {{- url}}",
     "unknown": "Kunde inte hitta den senaste git-commiten, här är repot {{- url}}"

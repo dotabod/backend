@@ -104,7 +104,7 @@
   "missingMatchData": "Waiting for current match data PauseChamp",
   "missingUser": "Benutzer nicht gefunden. Versuchen Sie sich auf dotabod.com erneut anzumelden",
   "modsOnly_off": "Nur Mod Modus ist jetzt aus. Jeder kann schreiben.",
-  "modsOnly_on": "Mods only mode is now on BASED Clap. Only mods can type.",
+  "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Dieser Stream Account ist bereits verbunden mit einem anderen Dotabod-Nutzer. Überprüfen Sie Ihr Dashboard für mehr Informationen: {{- url}}",
   "noHero": "Kein Held gefunden",
   "noLastMatch": "Did not find a last match PauseChamp",
@@ -186,6 +186,7 @@
   "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "Aktualisierte MMR:{{mmr}}",
   "updateMmrMulti": "Mehrere Steam-Konten, aktualisieren Sie den aktuell angemeldeten mit ({{steamId}})",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "Server mit Version {{version}}, hier gehts zur neuesten Version: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"

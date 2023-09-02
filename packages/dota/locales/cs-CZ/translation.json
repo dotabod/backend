@@ -120,7 +120,7 @@
   "missingMatchData": "Waiting for current match data {{emote}}",
   "missingUser": "Uživatel nenalezen. Zkus se znovu připojit na dotabod.com",
   "modsOnly_off": "Mód pouze pro moderátory vypnut. Všichni mohou psát",
-  "modsOnly_on": "Mód pouze pro moderátory zapnut {{emote}} Pouze moderátoři mohou psát",
+  "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
   "noHero": "Nenalezen žádný hrdina",
   "noLastMatch": "Nenalezena data posledního zápasu {{emote}}",
@@ -212,6 +212,7 @@
   "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "Aktualizované MMR na {{mmr}}",
   "updateMmrMulti": "Vícero steam účtů, aktualizuji ten který je nyní přihlášený - {{steamId}}",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"

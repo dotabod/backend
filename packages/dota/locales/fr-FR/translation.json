@@ -109,7 +109,7 @@
   "missingMatchData": "En attente des données du match {{emote}}",
   "missingUser": "Utilisateur introuvable. Essayez de vous déconnecter et vous reconnecter de dotabod.com",
   "modsOnly_off": "Le mode 'modérateur uniquement' a été désactivé. Tout le monde peut écrire.",
-  "modsOnly_on": "Le mode 'modérateur uniquement' a été activé {{emote}}. Seuls les modérateurs peuvent écrire.",
+  "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Ce compte steam est déja connecté a un autre utilisateur Dotabod. Vérifier le dashboard pour plus d'informations {{- url}}",
   "noHero": "No hero found",
   "noLastMatch": "Did not find a last match {{emote}}",
@@ -195,6 +195,7 @@
   "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "MMR mis à jour : {{mmr}}",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"

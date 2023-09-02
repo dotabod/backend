@@ -104,7 +104,7 @@
   "missingMatchData": "Waiting for current match data {{emote}}",
   "missingUser": "User not found. Try logging out and in of dotabod.com",
   "modsOnly_off": "فقط مادها خاموش شد! همه میتونن چت کنن",
-  "modsOnly_on": "فقط مادها! کسی دیگه نمیتونه چت کنه {{emote}}",
+  "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
   "noHero": "قهرمانی پیدا نشد",
   "noLastMatch": "بازی قبلی پیدا نشد {{emote}}",
@@ -186,6 +186,7 @@
   "updateMmr_auto": "ام ام آر به {{mmr}} به روز رسانی شد",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"

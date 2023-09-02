@@ -120,7 +120,7 @@
   "missingMatchData": "Czekanie na aktualny identyfikator meczu {{emote}}",
   "missingUser": "Użytkownik nie został znaleziony. Spróbuj ponownie zalogować się na dotabod.com",
   "modsOnly_off": "Czat tylko dla moderatorów został wyłączony. Teraz już każdy może pisać.",
-  "modsOnly_on": "Czat tylko dla moderatorów został włączony {{emote}}. Tylko moderatorzy mogą go używać.",
+  "modsOnly_on": "Czat w trybie tylko dla Moderatorów jest włączony {{emote}} . Tylko moderatorzy mogą pisać.",
   "multiAccount": "To konto Steam jest już połączone z innym użytkownikiem Dotaboda. Sprawdź panel nawigacyjny, aby uzyskać więcej informacji {{- url}}",
   "noHero": "Nie znaleziono bohatera",
   "noLastMatch": "Nie znaleziono ostatniej gry {{emote}}",
@@ -212,6 +212,7 @@
   "updateMmr_auto": "Zaktualizowano MMR do {{mmr}}",
   "updateMmr_manual": "Zaktualizowano MMR na {{mmr}}",
   "updateMmrMulti": "Wiele kont Steam, aktualizuję to, z którego jesteś aktualnie zalogowany ({{steamId}})",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "Serwer działa w wersji {{version}}, tutaj co się zmieniło w najnowszej wersji: {{- url}}",
     "unknown": "Nie można znaleźć ostatniego commitu git tutaj, oto repozytorium {{- url}}"

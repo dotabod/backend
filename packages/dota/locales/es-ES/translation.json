@@ -109,7 +109,7 @@
   "missingMatchData": "Esperando datos de la partida reciente {{emote}}",
   "missingUser": "No se encuentra el usuario. Trata de salir y acceso el login de nuevo en dotabod.com",
   "modsOnly_off": "Solomente Mods ahora esta apagado. Todos pueden usar chat.",
-  "modsOnly_on": "Solomente Mods esta prendido {{emote}}. Solo mods pueden usar chat",
+  "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Esta cuenta de Steam ya está conectada a otro usuario de Dotabod. Comprueba el panel de control para más información {{- url}}",
   "noHero": "No se ha encontrado el héroe",
   "noLastMatch": "No se ha encontrado la ultimo partido {{emote}}",
@@ -195,6 +195,7 @@
   "updateMmr_auto": "MMR actualizado a {{mmr}}",
   "updateMmr_manual": "Actualizado MMR a {{mmr}}",
   "updateMmrMulti": "Múltiples cuentas de steam, actualización de la que está conectado ahora con ({{steamId}})",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "El servidor esta ejecutando la versión {{version}}, esto es lo que falta en comparación con la última versión: {{- url}}",
     "unknown": "No se pudo encontrar el último git commit, aquí está el repositorio {{- url}}"
