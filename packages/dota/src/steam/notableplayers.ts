@@ -2,7 +2,6 @@ import { notablePlayers } from '@dotabod/prisma/dist/mongo'
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
 
-import supabase from '../db/supabase.js'
 import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameById } from '../dota/lib/heroes.js'
@@ -72,20 +71,6 @@ export async function notablePlayers({
       )
       .toArray()
 
-    // get the list of users in the Dotabod postgresql database according to steam id
-    const { data: dotabodPlayers } = await supabase
-      .from('users')
-      .select(
-        `
-    image,
-    displayName,
-    SteamAccount:steam_accounts (
-      steam32Id
-    )
-  `,
-      )
-      .in('SteamAccount.steam32Id', accountIds)
-
     // Description text
     const avg = await calculateAvg({
       locale: locale,
@@ -93,7 +78,6 @@ export async function notablePlayers({
       players: players,
     })
 
-    const regularPlayers: NotablePlayer[] = []
     const proPlayers: NotablePlayer[] = []
     matchPlayers.forEach((player: Player, i: number) => {
       const np = nps.find((np) => np.account_id === player.accountid)
@@ -108,20 +92,6 @@ export async function notablePlayers({
       }
 
       if (np) proPlayers.push(props)
-      else regularPlayers.push(props)
-    })
-
-    const allPlayers = [...proPlayers, ...regularPlayers]
-
-    // Connect all players to dotabod users
-    allPlayers.forEach((player) => {
-      const user = dotabodPlayers?.find(
-        (user) => user.SteamAccount[0].steam32Id === player.account_id,
-      )
-      if (user) {
-        player.name = user.displayName ?? player.name
-        player.image = user.image ?? undefined
-      }
     })
 
     const modeText =

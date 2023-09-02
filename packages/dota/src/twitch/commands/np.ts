@@ -103,7 +103,7 @@ commandHandler.registerCommand('np', {
       (addOrRemove === 'add' || addOrRemove === 'remove')
     ) {
       try {
-        void addRemoveHandler()
+        await addRemoveHandler()
       } catch (e) {
         logger.error('Error in addremovehandler command', { e })
       }
