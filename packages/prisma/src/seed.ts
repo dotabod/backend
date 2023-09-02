@@ -34,7 +34,7 @@ main()
   })
 
 async function seedUser(providerAccountId?: string) {
-  const username = faker.internet.userName().replace(".", "_")
+  const username = faker.internet.userName().replace(".", "_").replace("-", "_")
   const user = await prisma.user.create({
     data: {
       stream_online: faker.datatype.boolean({ probability: 0.75 }),
