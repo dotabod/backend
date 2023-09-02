@@ -28,6 +28,8 @@ commandHandler.registerCommand('online', {
           context: 'none',
         }),
       )
+
+      server.io.to(client.token).emit('refresh-settings')
       return
     }
 
@@ -41,7 +43,7 @@ commandHandler.registerCommand('online', {
 
     if (forceOnline) {
       chatClient.say(channel, t('refresh', { lng: message.channel.client.locale }))
-      server.io.to(client.token).emit('refresh')
+      server.io.to(client.token).emit('refresh-settings')
     }
 
     chatClient.say(
