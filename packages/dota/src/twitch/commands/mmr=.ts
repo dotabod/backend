@@ -35,13 +35,6 @@ commandHandler.registerCommand('setmmr', {
     if (!steam32FromArg) {
       if (!accounts.length || accounts.length === 1) {
         const steam32Id = accounts.length ? accounts[0].steam32Id : client.steam32Id
-        console.log({
-          currentMmr: client.mmr,
-          newMmr: mmrFromArg,
-          steam32Id,
-          channel,
-          token: client.token,
-        })
         await performMmrUpdate({
           currentMmr: client.mmr,
           newMmr: mmrFromArg,

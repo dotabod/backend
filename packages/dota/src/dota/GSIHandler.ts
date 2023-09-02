@@ -828,6 +828,8 @@ export class GSIHandler {
 
     this.blockCache = blockType
 
+    console.log(this.client.gsi?.map?.matchid, 'geczy')
+
     server.io.to(this.client.token).emit('block', {
       type: blockType,
       state,
