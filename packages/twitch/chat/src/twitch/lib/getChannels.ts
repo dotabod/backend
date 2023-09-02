@@ -11,7 +11,7 @@ export async function getChannels(): Promise<string[]> {
       .from('users')
       .select('name')
       .in('name', process.env.DEV_CHANNELS?.split(',') ?? [])
-      .order('followers', { ascending: false })
+      .order('followers', { ascending: false, nullsFirst: false })
     console.log({ users, error })
     return users ? users.map((user) => `${user.name}`) : []
   }
@@ -20,7 +20,7 @@ export async function getChannels(): Promise<string[]> {
     .from('users')
     .select('name')
     .not('name', 'in', process.env.DEV_CHANNELS?.split(',') ?? [])
-    .order('followers', { ascending: false })
+    .order('followers', { ascending: false, nullsFirst: false })
 
   return users ? users.map((user) => `${user.name}`) : []
 }

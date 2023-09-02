@@ -64,26 +64,19 @@ async function handleNewUser(providerAccountId: string) {
       Object.entries(data).filter(([key, value]) => Boolean(value)),
     )
 
-    prisma.account
-      .update({
-        data: {
-          user: {
-            update: filteredData,
-          },
+    await prisma.account.update({
+      data: {
+        user: {
+          update: filteredData,
         },
-        where: {
-          provider_providerAccountId: {
-            provider: 'twitch',
-            providerAccountId: providerAccountId,
-          },
+      },
+      where: {
+        provider_providerAccountId: {
+          provider: 'twitch',
+          providerAccountId: providerAccountId,
         },
-      })
-      .then(() => {
-        console.log('updated user info for', { providerAccountId, data: filteredData })
-      })
-      .catch((e) => {
-        console.log(e, 'error saving new user info for', e.broadcasterId)
-      })
+      },
+    })
   } catch (e) {
     console.log(e, 'error on getStreamByUserId')
   }
@@ -271,7 +264,7 @@ async function onlineEvent({ userId, startDate }: { userId: string; startDate: D
   return await prisma.user.update({
     data: {
       stream_online: true,
-      stream_start_date: startDate,
+      stream_start_date: startDate.toISOString(),
     },
     where: {
       id: userId,

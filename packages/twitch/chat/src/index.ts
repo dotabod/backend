@@ -56,14 +56,9 @@ io.on('connection', (socket) => {
 
   socket.on('join', function (channel: string) {
     try {
-      chatClient
-        .join(channel)
-        .then(() => {
-          //
-        })
-        .catch((e) => {
-          console.log('[ENABLE GSI] Failed to enable client inside promise', { channel, error: e })
-        })
+      chatClient.join(channel).catch((e) => {
+        console.log('[ENABLE GSI] Failed to enable client inside promise', { channel, error: e })
+      })
     } catch (e) {
       console.log('[ENABLE GSI] Failed to enable client', { channel, error: e })
     }

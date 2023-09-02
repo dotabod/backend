@@ -24,27 +24,26 @@ commandHandler.registerCommand('lgs', {
     }
 
     const { steam32Id } = message.channel.client
-    const { data } = await supabase
+    const { data: lg } = await supabase
       .from('bets')
       .select(
         `
-    won,
-    is_party,
-    is_doubledown,
-    matchId,
-    kda,
-    lobby_type,
-    hero_name,
-    created_at,
-    updated_at
-  `,
+          won,
+          is_party,
+          is_doubledown,
+          matchId,
+          kda,
+          lobby_type,
+          hero_name,
+          created_at,
+          updated_at
+        `,
       )
       .eq('steam32Id', steam32Id)
-      .neq('won', null)
+      .not('won', 'is', null)
       .order('created_at', { ascending: false })
       .limit(1)
-
-    const lg = data ? data[0] : null
+      .single()
 
     if (!lg) {
       chatClient.say(

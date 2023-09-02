@@ -27,7 +27,7 @@ export const getAuthProvider = function () {
               (newTokenData.expiresIn ?? 0),
           ),
           expires_in: newTokenData.expiresIn ?? 0,
-          obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp),
+          obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp).toISOString(),
         })
         .eq('providerAccountId', twitchId)
         .then(() => {

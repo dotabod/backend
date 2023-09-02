@@ -18,17 +18,12 @@ channel
     if (!oldUser.displayName && newUser.displayName) {
       console.log('[SUPABASE] New user to send bot to: ', newUser.name)
       try {
-        chatClient
-          .join(newUser.name)
-          .then(() => {
-            //
+        chatClient.join(newUser.name).catch((e) => {
+          console.log('[New user] Failed to enable client inside promise', {
+            channel,
+            error: e,
           })
-          .catch((e) => {
-            console.log('[New user] Failed to enable client inside promise', {
-              channel,
-              error: e,
-            })
-          })
+        })
       } catch (e) {
         console.error('[SUPABASE] Error joining channel: ', { e })
       }
@@ -39,17 +34,12 @@ channel
       })
       try {
         chatClient.part(oldUser.name)
-        chatClient
-          .join(newUser.name)
-          .then(() => {
-            //
+        chatClient.join(newUser.name).catch((e) => {
+          console.log('[Name change] Failed to enable client inside promise', {
+            channel,
+            error: e,
           })
-          .catch((e) => {
-            console.log('[Name change] Failed to enable client inside promise', {
-              channel,
-              error: e,
-            })
-          })
+        })
       } catch (e) {
         console.error('[SUPABASE] Error joining channel: ', { e })
       }

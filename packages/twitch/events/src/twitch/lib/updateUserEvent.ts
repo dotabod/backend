@@ -20,10 +20,21 @@ export async function updateUserEvent(e: EventSubUserUpdateEvent) {
       Object.entries(data).filter(([key, value]) => Boolean(value)),
     )
 
+    const { data: user } = await supabase
+      .from('accounts')
+      .select('userId')
+      .eq('providerAccountId', e.userId)
+      .single()
+
+    if (!user || !user.userId) {
+      console.log('[TWITCHEVENTS] user not found', { twitchId: e.userId })
+      return
+    }
+
     await supabase
       .from('users')
       .update(filteredData as typeof data)
-      .eq('accounts.providerAccountId', e.userId)
+      .eq('id', user.userId)
   } catch (err) {
     console.error(err, 'updateUserEvent error', e.userId)
   }

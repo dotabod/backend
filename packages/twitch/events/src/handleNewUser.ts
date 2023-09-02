@@ -28,7 +28,7 @@ export async function handleNewUser(providerAccountId: string, listener: EventSu
       name: streamer?.name,
       followers: totalFollowerCount,
       stream_online: !!stream?.startDate,
-      stream_start_date: stream?.startDate ?? null,
+      stream_start_date: stream?.startDate.toISOString() ?? null,
     }
 
     // remove falsy values from data (like displayName: undefined)
@@ -36,10 +36,21 @@ export async function handleNewUser(providerAccountId: string, listener: EventSu
       Object.entries(data).filter(([key, value]) => Boolean(value)),
     )
 
+    const { data: user } = await supabase
+      .from('accounts')
+      .select('userId')
+      .eq('providerAccountId', providerAccountId)
+      .single()
+
+    if (!user || !user.userId) {
+      console.log('[TWITCHEVENTS] user not found', { providerAccountId })
+      return
+    }
+
     await supabase
       .from('users')
       .update(filteredData as typeof data)
-      .eq('accounts.providerAccountId', providerAccountId)
+      .eq('id', user.userId)
   } catch (e) {
     console.log('[TWITCHEVENTS] error on getStreamByUserId', { e })
   }

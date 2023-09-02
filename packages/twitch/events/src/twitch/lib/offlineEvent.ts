@@ -22,14 +22,29 @@ export function offlineEvent(e: EventSubStreamOfflineEvent) {
       onlineEvents.delete(e.broadcasterId)
     }
 
-    void supabase
-      .from('users')
-      .update({
-        stream_online: false,
-      })
-      .eq('accounts.providerAccountId', e.broadcasterId)
-      .then(() => {
-        console.log('updated online event', e.broadcasterId)
-      })
+    async function handler() {
+      const { data: user } = await supabase
+        .from('accounts')
+        .select('userId')
+        .eq('providerAccountId', e.broadcasterId)
+        .single()
+
+      if (!user || !user.userId) {
+        console.log('[TWITCHEVENTS] user not found', { twitchId: e.broadcasterId })
+        return
+      }
+
+      await supabase
+        .from('users')
+        .update({
+          stream_online: false,
+        })
+        .eq('id', user.userId)
+        .then(() => {
+          console.log('updated online event', e.broadcasterId)
+        })
+    }
+
+    void handler()
   }, 10000)
 }

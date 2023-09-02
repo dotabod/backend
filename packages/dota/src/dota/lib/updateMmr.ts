@@ -100,19 +100,17 @@ export async function updateMmr({
         mmr, // New MMR value
       })
       .eq('id', token)
-      .then(() => {
-        const client = findUser(token)
 
-        if (client && tellChat) {
-          tellChatNewMMR({
-            streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
-            locale: client.locale,
-            token: client.token,
-            mmr,
-            oldMmr: currentMmr,
-          })
-        }
+    const client = findUser(token)
+    if (client && tellChat) {
+      tellChatNewMMR({
+        streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
+        locale: client.locale,
+        token: client.token,
+        mmr,
+        oldMmr: currentMmr,
       })
+    }
 
     return
   }

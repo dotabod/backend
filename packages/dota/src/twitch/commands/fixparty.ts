@@ -28,8 +28,8 @@ commandHandler.registerCommand('fixparty', {
       .from('bets')
       .select('matchId, won, is_party, id, is_doubledown')
       .eq('userId', message.channel.client.token)
-      .neq('won', null)
-      .order('createdAt', { ascending: false })
+      .not('won', 'is', null)
+      .order('created_at', { ascending: false })
       .limit(1)
     const bet = data ? data[0] : null
 

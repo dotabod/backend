@@ -277,11 +277,11 @@ export class GSIHandler {
     const mmr = this.client.SteamAccount.length ? 0 : this.getMmr()
 
     this.creatingSteamAccount = true
-    const { data } = await supabase
+    const { data: res } = await supabase
       .from('steam_accounts')
       .select('id, userId, mmr, connectedUserIds')
       .eq('steam32Id', steam32Id)
-    const res = data?.[0]
+      .single()
 
     if (res?.id) {
       await this.handleExistingAccount(res, steam32Id)
@@ -358,8 +358,9 @@ export class GSIHandler {
         kda: scores.kda,
         radiant_score: scores.radiant_score,
         dire_score: scores.dire_score,
+        updated_at: new Date().toISOString(),
       })
-      .match({ match_id: matchId, userId: this.client.token })
+      .match({ matchId: matchId, userId: this.client.token })
 
     logger.info('[DATABASE] Updated bet with winnings', extraInfo)
     this.emitWLUpdate()
@@ -455,7 +456,9 @@ export class GSIHandler {
     const { data: bet } = await supabase
       .from('bets')
       .select('matchId, myTeam, id')
-      .match({ matchId: client.gsi.map.matchid, userId: client.token, won: null })
+      .eq('matchId', client.gsi.map.matchid)
+      .eq('userId', client.token)
+      .is('won', null)
 
     // Saving to redis so we don't have to query the db again
     await redisClient.client.set(`${client.token}:matchId`, client?.gsi?.map?.matchid || '')
@@ -667,12 +670,12 @@ export class GSIHandler {
     })
 
     const response = await getRankDetail(this.getMmr(), this.getSteam32())
-    if (!this.client.steam32Id || !response || !('standing' in response)) return
-
-    await supabase
-      .from('steam_accounts')
-      .update({ leaderboard_rank: response.standing })
-      .eq('steam32Id', this.client.steam32Id)
+    if (this.client.steam32Id && response && 'standing' in response) {
+      await supabase
+        .from('steam_accounts')
+        .update({ leaderboard_rank: response.standing })
+        .eq('steam32Id', this.client.steam32Id)
+    }
 
     const TreadToggleData = this.treadsData
     const toggleHandler = async () => {
@@ -699,52 +702,53 @@ export class GSIHandler {
       logger.error('err toggleHandler', { e })
     }
 
-    if (!betsEnabled || !this.client.stream_online) {
-      logger.info('Bets are not enabled, stopping here', { name: this.client.name })
-      await this.resetClientState()
-      return
-    }
-
     setTimeout(() => {
-      this.client.token &&
-        closeTwitchBet(won, this.getChannelId())
-          .then(() => {
-            logger.info('[BETS] end bets', {
-              event: 'end_bets',
-              matchId,
-              name: this.client.name,
-              winning_team: localWinner,
-              player_team: myTeam,
-              didWin: won,
-            })
+      const message = won
+        ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
+        : t('bets.lost', { lng: this.client.locale, emote: 'Happi' })
+
+      say(this.client, message, { delay: false })
+
+      if (!betsEnabled) {
+        logger.info('Bets are not enabled, stopping here', { name: this.client.name })
+        this.resetClientState().catch(() => {
+          //
+        })
+        return
+      }
+
+      closeTwitchBet(won, this.getChannelId())
+        .then(() => {
+          logger.info('[BETS] end bets', {
+            event: 'end_bets',
+            matchId,
+            name: this.client.name,
+            winning_team: localWinner,
+            player_team: myTeam,
+            didWin: won,
           })
-          .catch((e: any) => {
-            logger.error('[BETS] Error closing twitch bet', {
-              channel,
-              e: e?.message || e,
-              matchId,
-            })
+        })
+        .catch((e: any) => {
+          logger.error('[BETS] Error closing twitch bet', {
+            channel,
+            e: e?.message || e,
+            matchId,
           })
-          .finally(() => {
-            this.resetClientState().catch((e) => {
-              logger.error('Error resetting client state', { e })
-            })
-
-            const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
-            const {
-              matchOutcome: { enabled: chatterEnabled },
-            } = getValueOrDefault(DBSettings.chatters, this.client.settings)
-
-            if (!chattersEnabled || !chatterEnabled) {
-              return
-            }
-
-            const message = won
-              ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
-              : t('bets.lost', { lng: this.client.locale, emote: 'Happi' })
-
-            say(this.client, message, { delay: false })
+        })
+        .finally(() => {
+          this.resetClientState().catch((e) => {
+            logger.error('Error resetting client state', { e })
           })
+
+          const chattersEnabled = getValueOrDefault(DBSettings.chatter, this.client.settings)
+          const {
+            matchOutcome: { enabled: chatterEnabled },
+          } = getValueOrDefault(DBSettings.chatters, this.client.settings)
+
+          if (!chattersEnabled || !chatterEnabled) {
+            return
+          }
+        })
     }, getStreamDelay(this.client.settings))
   }
 

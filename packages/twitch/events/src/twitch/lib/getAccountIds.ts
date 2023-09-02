@@ -10,10 +10,13 @@ export async function getAccountIds(): Promise<string[]> {
   }
 
   const { data: users } = await supabase
-    .from('accounts')
-    .select('providerAccountId')
-    .neq('requires_refresh', true)
-    .order('user:followers', { ascending: false })
+    .from('users')
+    .select('id,accounts(providerAccountId)')
+    .neq('accounts.requires_refresh', true)
+    .order('followers', { ascending: false, nullsFirst: false })
 
-  return users?.map((user) => `${user.providerAccountId}`) ?? []
+  const accountIds =
+    users?.map((user) => user.accounts?.[0]?.providerAccountId).filter(Boolean) ?? []
+
+  return accountIds
 }
