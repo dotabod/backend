@@ -16,24 +16,25 @@ commandHandler.registerCommand('apm', {
       channel: { name: channel, client },
     } = message
 
-    const hero = getHero(client.gsi?.hero?.name)
+    const myHero = getHero(client.gsi?.hero?.name)
     const spectatorPlayers = getCurrentMatchPlayers(client.gsi)
     const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
     const selectedPlayer = spectatorPlayers.find((a) => a.selected)
 
-    if (!hero) {
+    if (!myHero) {
       if (!selectedPlayer && !matchPlayers.length) {
         chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
         return
       }
     }
 
-    if (!selectedPlayer || !matchPlayers.length) {
+    if (!selectedPlayer && !matchPlayers.length && !myHero) {
       chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
       return
     }
 
-    const { player } = findGSIByAccountId(client.gsi, selectedPlayer.accountid)
+    const specPlayer = findGSIByAccountId(client.gsi, selectedPlayer?.accountid)
+    const player = client.gsi?.player || specPlayer.player
     const commandsIssued = player?.commands_issued ?? 0
     const gameTime = client.gsi?.map?.game_time ?? 1
     const apm = commandsIssued ? Math.round(commandsIssued / (gameTime / 60)) : 0

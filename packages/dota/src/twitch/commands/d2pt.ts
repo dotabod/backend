@@ -5,7 +5,6 @@ import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
 import getHero from '../../dota/lib/getHero.js'
 import { getHeroNameById } from '../../dota/lib/heroes.js'
-import { isArcade } from '../../dota/lib/isArcade.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -30,27 +29,24 @@ commandHandler.registerCommand('d2pt', {
       return
     }
 
-    if (isArcade(client.gsi)) {
-      chatClient.say(
-        channel,
-        t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-      )
-      return
-    }
-
-    const hero = getHero(client.gsi?.hero?.name)
+    const myHero = getHero(client.gsi?.hero?.name)
     const spectatorPlayers = getCurrentMatchPlayers(client.gsi)
     const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
     const selectedPlayer = spectatorPlayers.find((a) => a.selected)
 
-    if (!hero) {
+    if (!myHero) {
       if (!selectedPlayer && !matchPlayers.length) {
         chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
         return
       }
     }
 
-    const heroName = hero ? hero.localized_name : getHeroNameById(selectedPlayer?.heroid ?? 0)
+    if (!selectedPlayer && !matchPlayers.length && !myHero) {
+      chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
+      return
+    }
+
+    const heroName = myHero ? myHero.localized_name : getHeroNameById(selectedPlayer?.heroid ?? 0)
 
     chatClient.say(
       channel,

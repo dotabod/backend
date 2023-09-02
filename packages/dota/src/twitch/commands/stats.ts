@@ -1,11 +1,14 @@
 import { t } from 'i18next'
 
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
+import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
+import getHero from '../../dota/lib/getHero.js'
 import { getHeroByName, getHeroNameById, heroColors } from '../../dota/lib/heroes.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
+import { findGSIByAccountId } from './findGSIByAccountId.js'
 import { profileLink } from './profileLink.js'
 
 interface Player {
@@ -16,7 +19,7 @@ interface Player {
 export interface ProfileLinkParams {
   command: string
   locale: string
-  currentMatchId: string
+  currentMatchId?: string
   args: string[]
   players?: Player[]
 }
@@ -74,7 +77,8 @@ commandHandler.registerCommand('stats', {
     const {
       channel: { name: channel, client },
     } = message
-    if (!client.gsi?.map?.matchid || !isPlayingMatch(client.gsi)) {
+
+    if (!isPlayingMatch(client.gsi)) {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
@@ -82,14 +86,32 @@ commandHandler.registerCommand('stats', {
       return
     }
 
+    const myHero = getHero(client.gsi?.hero?.name)
+    const spectatorPlayers = getCurrentMatchPlayers(client.gsi)
     const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
+    const selectedPlayer = spectatorPlayers.find((a) => a.selected)
+
+    if (!myHero) {
+      if (!selectedPlayer && !matchPlayers.length) {
+        chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
+        return
+      }
+    }
+
+    if (!selectedPlayer && !matchPlayers.length && !myHero) {
+      chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
+      return
+    }
+
+    const specPlayer = findGSIByAccountId(client.gsi, selectedPlayer?.accountid)
+    const player = client.gsi?.player || specPlayer.player
 
     try {
       const profile = profileLink({
         command,
         players: matchPlayers,
         locale: client.locale,
-        currentMatchId: client.gsi.map.matchid,
+        currentMatchId: client.gsi?.map?.matchid,
         args: args,
       })
 

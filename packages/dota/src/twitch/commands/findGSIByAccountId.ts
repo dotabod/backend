@@ -2,7 +2,7 @@ import { Hero, Items, Packet, Player } from '../../types'
 
 export function findSpectatorIdx(
   packet: Packet | undefined,
-  heroOrAccountId: number,
+  heroOrAccountId: number | undefined,
 ): { playerIdx: string; teamIdx: string } | null {
   const teams = ['team2', 'team3']
 
@@ -25,7 +25,7 @@ export function findSpectatorIdx(
 
 export function findGSIByAccountId(
   packet: Packet | undefined,
-  accountId: number,
+  accountId: number | undefined,
 ): { player: Player; items?: Items; hero: Hero } {
   const { playerIdx, teamIdx } = findSpectatorIdx(packet, accountId) ?? {}
 

@@ -2,8 +2,9 @@ import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
+import { isArcade } from '../../dota/lib/isArcade.js'
+import { isSpectator } from '../../dota/lib/isSpectator.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
-import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -11,7 +12,7 @@ commandHandler.registerCommand('ranked', {
   aliases: ['isranked'],
   onlyOnline: true,
   dbkey: DBSettings.commandRanked,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -31,53 +32,42 @@ commandHandler.registerCommand('ranked', {
 
     const currentMatchId = client.gsi?.map?.matchid
 
-    async function handler() {
-      if (!currentMatchId) {
+    if (isArcade(client.gsi) || currentMatchId === '0') {
+      chatClient.say(channel, t('ranked_no', { lng: message.channel.client.locale }))
+      return
+    }
+
+    if (!currentMatchId || !Number(currentMatchId) || isSpectator(client.gsi)) {
+      chatClient.say(
+        channel,
+        t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+      )
+      return
+    }
+
+    const mongo = new MongoDBSingleton()
+    const db = await mongo.connect()
+
+    try {
+      const response = await db
+        .collection<delayedGames>('delayedGames')
+        .findOne({ 'match.match_id': currentMatchId })
+
+      if (!response) {
         chatClient.say(
           channel,
-          t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+          t('missingMatchData', { emote: 'PauseChamp', lng: message.channel.client.locale }),
         )
         return
       }
 
-      if (!Number(currentMatchId)) {
-        chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
+      if (response.match.lobby_type === 7) {
+        chatClient.say(channel, t('ranked', { context: 'yes', lng: message.channel.client.locale }))
         return
       }
-
-      const mongo = new MongoDBSingleton()
-      const db = await mongo.connect()
-
-      try {
-        const response = await db
-          .collection<delayedGames>('delayedGames')
-          .findOne({ 'match.match_id': currentMatchId })
-
-        if (!response) {
-          chatClient.say(
-            channel,
-            t('missingMatchData', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-          )
-          return
-        }
-
-        if (response.match.lobby_type === 7) {
-          chatClient.say(
-            channel,
-            t('ranked', { context: 'yes', lng: message.channel.client.locale }),
-          )
-          return
-        }
-      } finally {
-        await mongo.close()
-      }
-      chatClient.say(channel, t('ranked', { context: 'no', lng: message.channel.client.locale }))
+    } finally {
+      await mongo.close()
     }
-
-    try {
-      void handler()
-    } catch (e) {
-      logger.error('Error in ranked command', { e })
-    }
+    chatClient.say(channel, t('ranked', { context: 'no', lng: message.channel.client.locale }))
   },
 })
