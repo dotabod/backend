@@ -104,7 +104,7 @@
   "missingMatchData": "Várakozás a meccs adataira. {{emote}}",
   "missingUser": "Felhasználó nem található. Próbálj újra bejelentkezni a dotabod.com-on",
   "modsOnly_off": "Moderátor mód kikapcsolva. Mindenki cseveghet.",
-  "modsOnly_on": "Moderátor csevegés bekapcsolva. {{emote}}. Csak a modok írhatnak.",
+  "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Ehhez a steam accounthoz már van hozzárendelve Dotabod felhasználó. Nézd meg a kezelőfelületet további inromációkért: {{- url}}",
   "noHero": "Hős nem található",
   "noLastMatch": "Előző meccs nem található {{emote}}",
@@ -186,6 +186,7 @@
   "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "MMR frissítve {{mmr}}-re",
   "updateMmrMulti": "Több steam account található, frissítem a jelenleg belépettet: ({{steamId}})",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "Szerveren futó verzió: {{version}}, itt megtalálod mi változott az előző verzióhoz képest: {{- url}}",
     "unknown": "Nem találom az utolsó git commitot, a repot itt éred el: {{- url}}"

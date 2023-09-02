@@ -104,7 +104,7 @@
   "missingMatchData": "Odotetaan tämänhetkisiä ottelutietoja {{emote}}",
   "missingUser": "Käyttäjää ei löytynyt. Yritä kirjautua ulos ja sisään osoitteessa dotabod.com",
   "modsOnly_off": "Vain modit-tila on nyt poistettu käytöstä. Kaikki voivat kirjoittaa.",
-  "modsOnly_on": "Vain modit-tila on nyt käytössä {{emote}}. Vain modit voivat kirjoittaa.",
+  "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Tämä Steam-tili on jo yhdistetty toiseen Dotabod-käyttäjään. Tarkista hallintapaneeli saadaksesi lisätietoja {{- url}}",
   "noHero": "Sankaria ei löytynyt",
   "noLastMatch": "Edellistä ottelua ei löytynyt {{emote}}",
@@ -186,6 +186,7 @@
   "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "MMR päivitetty arvoon {{mmr}}",
   "updateMmrMulti": "Useita Steam-tilejä, päivittämässä sitä jolla olet tällä hetkellä kirjautuneena ({{steamId}})",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "Palvelin käyttää versiota {{version}}, tässä mitä puuttuu viimeisimpään versioon verrattuna: {{- url}}",
     "unknown": "Viimeistä git committia ei löytynyt, tässä osoitteessa repo {{- url}}"

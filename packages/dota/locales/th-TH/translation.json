@@ -93,7 +93,7 @@
   "missingMatchData": "Waiting for current match data {{emote}}",
   "missingUser": "User not found. Try logging out and in of dotabod.com",
   "modsOnly_off": "Mods only mode is now off. Everyone can type.",
-  "modsOnly_on": "Mods only mode is now on {{emote}}. Only mods can type.",
+  "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
   "noHero": "No hero found",
   "noLastMatch": "Did not find a last match {{emote}}",
@@ -167,6 +167,7 @@
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
   "version": {
     "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",

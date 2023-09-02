@@ -109,12 +109,12 @@
   "missingMatchData": "In attesa delle informazioni del match {{emote}}",
   "missingUser": "Utente non trovato. Prova a sloggare e riloggare su dotabod.com",
   "modsOnly_off": "È stata disattivata la modalità solo moderatori. Ora tutti possono scrivere.",
-  "modsOnly_on": "È stata attivata la modalità solo moderatori {{emote}} Ora solo i mod possono scrivere",
+  "modsOnly_on": "Modalità solo mods attiva {{emote}} . Solo i moderatori possono scrivere.",
   "multiAccount": "Questo account Steam è già connesso a un altro utente Dotabod. Controlla la dashboard per maggiori informazioni {{- url}}",
   "noHero": "Nessun eroe trovato",
   "noLastMatch": "Non è stato trovato un match precedente {{emote}}",
   "noNotable": "Nessun player famoso",
-  "notLive": "Lo stream non live {{emote}}. In realtà lo è? I moderatori possono usare !online",
+  "notLive": "Lo stream non è live {{emote}} . In realtà lo è? I moderatori possono usare !online",
   "notPlaying": "Non sta giocando {{emote}}",
   "npAdd": "Prova !np add <steam32id> <playername>",
   "npAdded": "Aggiunto {{name}} a !np per questo canale",
@@ -195,6 +195,7 @@
   "updateMmr_auto": "MMR aggiornato a {{mmr}}",
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "La versione corrente del server è {{version}}, ecco cosa manca rispetto all'ultima versione: {{- url}}",
     "unknown": "Impossibile trovare l'ultimo git commit, ecco il repo {{- url}}"

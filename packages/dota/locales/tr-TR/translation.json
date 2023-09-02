@@ -104,7 +104,7 @@
   "missingMatchData": "Mevcut maç verileri bekleniyor {{emote}}",
   "missingUser": "Kullanıcı bulunamadı. dotabod.com'da oturumu kapatıp açmayı deneyin",
   "modsOnly_off": "Yalnızca modlar modu kapalı. Herkes yazabilir.",
-  "modsOnly_on": "Yalnızca modlar modu açık {{emote}}. Sadece modlar yazabilir.",
+  "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Bu Steam kullanıcısı zaten başka bir Dotabod kullanıcısıyla bağlantılı. Daha fazla bilgi için {{- url}} ziyaret edin",
   "noHero": "Kahraman bulunamadı",
   "noLastMatch": "Son bir eşleşme bulunamadı {{emote}}",
@@ -186,6 +186,7 @@
   "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "Güncel MMR {{mmr}} ayarlandı",
   "updateMmrMulti": "Çoklu steam hesabı, {{steamId}} hesabı mevcut açık olan hesap olarak güncellenecektir",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "Mevcut sunucu versiyonu {{version}}, işte en son sürüme kıyasla eksik olan şeyler: {{- url}}",
     "unknown": "Son git bulunamadı, raporlar burada {{- url}}"

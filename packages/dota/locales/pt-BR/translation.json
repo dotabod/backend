@@ -114,7 +114,7 @@
   "noHero": "Nenhum herói encontrado",
   "noLastMatch": "Última partida não foi encontrada {{emote}}",
   "noNotable": "Nenhum jogador notável",
-  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
+  "notLive": "A transmissão não está ao vivo {{emote}}. Está ao vivo? Mods, digite \"!online\"",
   "notPlaying": "Não está jogando {{emote}}",
   "npAdd": "Tente  !np add <steam32id> <playername>",
   "npAdded": "{{name}} foi adicionado ao !np deste canal",
@@ -195,6 +195,7 @@
   "updateMmr_auto": "MMR atualizado para {{mmr}}",
   "updateMmr_manual": "MMR atualizado para {{mmr}}",
   "updateMmrMulti": "Múltiplas contas da steam, atualizando a conta logada no momento ({{steamId}})",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "Servidor executando a versão {{version}}, aqui está o que falta em comparação com a versão mais recente: {{- url}}",
     "unknown": "Não foi possível encontrar o último git commit, aqui está o repositório {{- url}}"
