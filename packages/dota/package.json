@@ -17,7 +17,7 @@
     "dev-docker": "nodemon -L --ext ts --ignore '__tests__/*' --exec 'node --inspect=0.0.0.0:9229 --no-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
     "fix-users": "doppler run --fallback-only -- nodemon -L --ext ts ./src/dev/index.ts",
     "fix-users-dev-docker": "node --no-warnings -r ts-node/register --loader ts-node/esm src/dev/index.ts",
-    "test": "NODE_OPTIONS=--experimental-vm-modules doppler run --fallback-only -- yarn jest --config ./jest.config.ts"
+    "test": "doppler run --fallback-only -- yarn jest --config ./jest.config.ts"
   },
   "dependencies": {
     "@dotabod/prisma": "^1.0.0",
