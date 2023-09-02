@@ -47,41 +47,41 @@ async function saveMatchData(client: SocketClient) {
   // This now waits for the bet to complete before checking match data
   // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
   // the playingBetMatchId is saved when the hero is selected
-  const betsForMatchId = await redisClient.client.get(`${client.token}:betsForMatchId`)
-  if (!Number(betsForMatchId)) return
+  const matchId = await redisClient.client.get(`${client.token}:matchId`)
+  if (!Number(matchId)) return
 
   if (!client.steam32Id) return
 
   // did we already come here before?
   let [steamServerId, lobbyType] = await redisClient.client
     .multi()
-    .get(`${betsForMatchId}:steamServerId`)
-    .get(`${betsForMatchId}:lobbyType`)
+    .get(`${matchId}:steamServerId`)
+    .get(`${matchId}:lobbyType`)
     .exec()
 
   if (steamServerId && lobbyType) return
 
   if (!steamServerId && !lobbyType) {
-    if (steamServerLookupMap.has(betsForMatchId)) return
+    if (steamServerLookupMap.has(matchId)) return
 
     const promise = server.dota.getUserSteamServer(client.steam32Id).catch((e) => {
       logger.error('err getUserSteamServer', { e })
       return null
     })
-    steamServerLookupMap.set(betsForMatchId, promise)
+    steamServerLookupMap.set(matchId, promise)
     steamServerId = await promise
-    steamServerLookupMap.delete(betsForMatchId) // Remove the promise once it's resolved
+    steamServerLookupMap.delete(matchId) // Remove the promise once it's resolved
 
     if (!steamServerId) return
-    await redisClient.client.set(`${betsForMatchId}:steamServerId`, steamServerId.toString())
+    await redisClient.client.set(`${matchId}:steamServerId`, steamServerId.toString())
   }
 
   if (steamServerId && !lobbyType) {
-    if (steamDelayDataLookupMap.has(betsForMatchId)) return
+    if (steamDelayDataLookupMap.has(matchId)) return
 
     const promise = server.dota
       .GetRealTimeStats({
-        match_id: betsForMatchId!,
+        match_id: matchId!,
         refetchCards: true,
         steam_server_id: steamServerId.toString(),
         token: client.token,
@@ -90,12 +90,12 @@ async function saveMatchData(client: SocketClient) {
         logger.error('err GetRealTimeStats', { e })
         return null
       })
-    steamDelayDataLookupMap.set(betsForMatchId, promise)
+    steamDelayDataLookupMap.set(matchId, promise)
     const delayedData = await promise
-    steamDelayDataLookupMap.delete(betsForMatchId) // Remove the promise once it's resolved
+    steamDelayDataLookupMap.delete(matchId) // Remove the promise once it's resolved
 
     if (!delayedData?.match.lobby_type) return
-    await redisClient.client.set(`${betsForMatchId}:lobbyType`, delayedData.match.lobby_type)
+    await redisClient.client.set(`${matchId}:lobbyType`, delayedData.match.lobby_type)
     chatterMatchFound(client)
   }
 }
