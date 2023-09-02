@@ -81,8 +81,8 @@ class GSIServer {
       res.status(200).json({ status: 'ok' })
     })
 
-    httpServer.listen(5000, () => {
-      logger.info(`[GSI] Dota 2 GSI listening on *:${5000}`)
+    httpServer.listen(5120, () => {
+      logger.info(`[GSI] Dota 2 GSI listening on *:${5120}`)
     })
 
     this.io.use(handleSocketAuth)
