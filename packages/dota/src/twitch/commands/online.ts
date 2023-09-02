@@ -41,10 +41,8 @@ commandHandler.registerCommand('online', {
       })
       .eq('id', message.channel.client.token)
 
-    if (forceOnline) {
-      chatClient.say(channel, t('refresh', { lng: message.channel.client.locale }))
-      server.io.to(client.token).emit('refresh-settings')
-    }
+    chatClient.say(channel, t('refresh', { lng: message.channel.client.locale }))
+    server.io.to(client.token).emit('refresh-settings')
 
     chatClient.say(
       message.channel.name,
