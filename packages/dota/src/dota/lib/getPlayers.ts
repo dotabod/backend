@@ -8,11 +8,15 @@ import { getAccountsFromMatch } from './getAccountsFromMatch.js'
 
 const dota = Dota.getInstance()
 
-export async function getPlayers(
-  locale: string,
-  currentMatchId?: string,
-  players?: { heroid: number; accountid: number }[],
-) {
+export async function getPlayers({
+  locale,
+  currentMatchId,
+  players,
+}: {
+  locale: string
+  currentMatchId?: string
+  players?: { heroid: number; accountid: number }[]
+}) {
   if (!currentMatchId) {
     throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
   }

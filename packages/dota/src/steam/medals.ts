@@ -12,7 +12,7 @@ export async function gameMedals(
   currentMatchId?: string,
   players?: { heroid: number; accountid: number }[],
 ): Promise<string> {
-  const { matchPlayers, cards } = await getPlayers(locale, currentMatchId, players)
+  const { matchPlayers, cards } = await getPlayers({ locale, currentMatchId, players })
 
   const mongo = new MongoDBSingleton()
   const db = await mongo.connect()

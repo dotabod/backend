@@ -1,39 +1,48 @@
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
+import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
+import getHero from '../../dota/lib/getHero.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import { findGSIByAccountId } from './findGSIByAccountId.js'
 
 commandHandler.registerCommand('gpm', {
   onlyOnline: true,
   dbkey: DBSettings.commandGPM,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message
 
-    if (!client.gsi?.hero?.name) {
+    const hero = getHero(client.gsi?.hero?.name)
+    const spectatorPlayers = getCurrentMatchPlayers(client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
+    const selectedPlayer = spectatorPlayers.find((a) => a.selected)
+
+    if (!hero) {
+      if (!selectedPlayer && !matchPlayers.length) {
+        chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
+        return
+      }
+    }
+
+    if (!selectedPlayer || !matchPlayers.length) {
       chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
       return
     }
-    if (!isPlayingMatch(client.gsi)) {
-      chatClient.say(
-        channel,
-        t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-      )
-      return
-    }
 
-    const gpm = client.gsi.player?.gpm
+    const { player } = findGSIByAccountId(client.gsi, selectedPlayer.accountid)
+    const gpm = player?.gpm
 
     if (!gpm) {
       chatClient.say(channel, t('gpm_zero', { num: 0, lng: message.channel.client.locale }))
       return
     }
 
-    const gold_from_hero_kills = client.gsi.player?.gold_from_hero_kills
-    const gold_from_creep_kills = client.gsi.player?.gold_from_creep_kills
+    const gold_from_hero_kills = player?.gold_from_hero_kills
+    const gold_from_creep_kills = player?.gold_from_creep_kills
 
     chatClient.say(
       channel,

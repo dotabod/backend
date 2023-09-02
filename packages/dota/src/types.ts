@@ -128,6 +128,7 @@ export type Minimap = Record<string, Entity>
 export interface Player {
   team2?: { player0: Player; player1: Player; player2: Player; player3: Player; player4: Player }
   team3?: { player5: Player; player6: Player; player7: Player; player8: Player; player9: Player }
+  id?: number // hero id
   steamid: string // "76561198352664103",
   accountid: string //  "392398375",
   name: string // "Valhalla",
@@ -245,6 +246,9 @@ export interface Ability {
 }
 
 export interface Items {
+  team2?: { player0: Items; player1: Items; player2: Items; player3: Items; player4: Items }
+  team3?: { player5: Items; player6: Items; player7: Items; player8: Items; player9: Items }
+
   // set once the game starts, i.e. game_state is set to "DOTA_GAMERULES_STATE_PRE_GAME"
   slot0?: Item
   slot1?: Item

@@ -37,7 +37,11 @@ export async function notablePlayers({
   enableFlags?: boolean
   steam32Id: number | null
 }) {
-  const { matchPlayers, accountIds, gameMode } = await getPlayers(locale, currentMatchId, players)
+  const { matchPlayers, accountIds, gameMode } = await getPlayers({
+    locale,
+    currentMatchId,
+    players,
+  })
 
   const mongo = new MongoDBSingleton()
   const db = await mongo.connect()

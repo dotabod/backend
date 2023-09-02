@@ -1,32 +1,41 @@
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
+import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
+import getHero from '../../dota/lib/getHero.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import { findGSIByAccountId } from './findGSIByAccountId.js'
 
 commandHandler.registerCommand('apm', {
   onlyOnline: true,
   dbkey: DBSettings.commandAPM,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message
-    if (!client.gsi?.hero?.name) {
+
+    const hero = getHero(client.gsi?.hero?.name)
+    const spectatorPlayers = getCurrentMatchPlayers(client.gsi)
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
+    const selectedPlayer = spectatorPlayers.find((a) => a.selected)
+
+    if (!hero) {
+      if (!selectedPlayer && !matchPlayers.length) {
+        chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
+        return
+      }
+    }
+
+    if (!selectedPlayer || !matchPlayers.length) {
       chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
       return
     }
 
-    if (!isPlayingMatch(client.gsi)) {
-      chatClient.say(
-        channel,
-        t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-      )
-      return
-    }
-
-    const commandsIssued = client.gsi.player?.commands_issued ?? 0
-    const gameTime = client.gsi.map?.game_time ?? 1
+    const { player } = findGSIByAccountId(client.gsi, selectedPlayer.accountid)
+    const commandsIssued = player?.commands_issued ?? 0
+    const gameTime = client.gsi?.map?.game_time ?? 1
     const apm = commandsIssued ? Math.round(commandsIssued / (gameTime / 60)) : 0
 
     chatClient.say(

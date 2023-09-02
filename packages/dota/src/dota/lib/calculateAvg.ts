@@ -8,7 +8,7 @@ interface Avg {
 }
 
 export async function calculateAvg({ locale, currentMatchId, players }: Avg): Promise<string> {
-  const { cards } = await getPlayers(locale, currentMatchId, players)
+  const { cards } = await getPlayers({ locale, currentMatchId, players })
 
   const mmrs: number[] = []
   const leaderranks: number[] = []
