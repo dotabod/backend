@@ -75,7 +75,7 @@
     "winrateStreamer_other": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partidas."
   },
   "invalidColor": "Espaço, nome ou cor de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
-  "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidColorNew": "Comando inválido. Tente `!{{command}} crystal maiden` ou `!{{command}} 9` ou `!{{command}} teal` de {{colorList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
@@ -109,7 +109,7 @@
   "missingMatchData": "Esperando os dados da partida {{emote}}",
   "missingUser": "Usuário não encontrado. Tente sair e entrar novamente em dotabod.com",
   "modsOnly_off": "Modo somente mods desativado. Todos podem digitar agora.",
-  "modsOnly_on": "Modo somente mods ativado {{emote}}. Só mods podem digitar.",
+  "modsOnly_on": "Modo somente mods ativado {{emote}} . Só moderadores podem digitar.",
   "multiAccount": "Esta conta steam já está conectada a outro usuário do Dotabod. Confira o painel de controle para mais informações: {{- url}}",
   "noHero": "Nenhum herói encontrado",
   "noLastMatch": "Última partida não foi encontrada {{emote}}",
