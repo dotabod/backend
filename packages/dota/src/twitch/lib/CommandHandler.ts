@@ -168,7 +168,8 @@ class CommandHandler {
   // Function for parsing a Twitch chat message to extract the command and its arguments
   parseMessage(message: MessageType) {
     // Use a regular expression to match the command and its arguments
-    const match = message.content.match(/^!(\w+=?)\s*(.*)/)
+    // `/\uDB40\uDC00/g` is unicode empty space that 7tv adds to spam a command
+    const match = message.content.replace(/\uDB40\uDC00/g, '').match(/^!(\w+=?)\s*(.*)/)
 
     if (!match) {
       return [] // Return an empty array if the message is not a command
@@ -177,18 +178,18 @@ class CommandHandler {
     // Split the arguments on spaces, while taking into account quoted strings
     const args = match[2].match(/\S+|"[^"]+"/g)
     if (args === null) {
-      return [match[1].toLowerCase()] // Return the command if there are no arguments
+      return [match[1].toLowerCase().trim()] // Return the command if there are no arguments
     }
 
     // Strip the quotes from the quoted arguments
     for (let i = 0; i < args.length; i++) {
       if (args[i].startsWith('"')) {
-        args[i] = args[i].slice(1, -1)
+        args[i] = args[i].slice(1, -1).trim()
       }
     }
 
     // Return the command and its arguments
-    return [match[1].toLowerCase(), ...args]
+    return [match[1].toLowerCase().trim(), ...args]
   }
 
   // Function for checking if a command is on cooldown
