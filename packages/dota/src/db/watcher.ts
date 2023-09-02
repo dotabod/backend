@@ -254,13 +254,7 @@ class SetupSupabase {
             client.mmr = newObj.mmr
 
             if (!client.stream_online) return
-            tellChatNewMMR({
-              locale: client.locale,
-              token: client.token,
-              streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
-              mmr: newObj.mmr,
-              oldMmr: oldObj.mmr,
-            })
+
             getRankDetail(newObj.mmr, newObj.steam32Id)
               .then((deets) => {
                 server.io.to(client.token).emit('update-medal', deets)

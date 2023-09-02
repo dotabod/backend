@@ -30,26 +30,30 @@ export function tellChatNewMMR({
   const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
 
   const newMmr = mmr - oldMmr
-  if (mmrEnabled && chattersEnabled && tellChatNewMMR && newMmr !== 0 && mmr !== 0) {
-    const isAuto = [20, 25].includes(Math.abs(newMmr))
-    setTimeout(
-      () => {
-        chatClient.say(
-          client.name,
-          t('updateMmr', {
-            context: isAuto ? 'auto' : 'manual',
-            mmr,
-            delta: `${newMmr > 0 ? '+' : ''}${newMmr}`,
-            lng: locale,
-          }),
-        )
-      },
-      isAuto ? streamDelay + GLOBAL_DELAY : 0,
-    )
+  if (mmrEnabled && chattersEnabled && tellChatNewMMR && mmr !== 0) {
+    if (newMmr !== 0) {
+      const isAuto = [20, 25].includes(Math.abs(newMmr))
+      setTimeout(
+        () => {
+          chatClient.say(
+            client.name,
+            t('updateMmr', {
+              context: isAuto ? 'auto' : 'manual',
+              mmr,
+              delta: `${newMmr > 0 ? '+' : ''}${newMmr}`,
+              lng: locale,
+            }),
+          )
+        },
+        isAuto ? streamDelay + GLOBAL_DELAY : 0,
+      )
+    } else {
+      chatClient.say(client.name, t('updateMmrNoChange', { mmr, lng: locale }))
+    }
   }
 }
 
-interface Mmr {
+export interface UpdateMmrParams {
   tellChat?: boolean
   newMmr: string | number
   steam32Id: number | null | undefined
@@ -67,7 +71,7 @@ export async function updateMmr({
   steam32Id,
   channel,
   token,
-}: Mmr) {
+}: UpdateMmrParams) {
   // uncalibrated (0) mmr do not deserve an update
   if (!currentMmr && !force) return
 
@@ -116,11 +120,14 @@ export async function updateMmr({
   const data = await supabase
     .from('steam_accounts')
     .update({ mmr })
-    .eq('steam32_id', steam32Id)
+    .eq('steam32Id', steam32Id)
     .select('userId')
 
   const foundToken = data.data?.[0]?.userId
-  if (!foundToken) return
+  if (!foundToken) {
+    logger.info('[UPDATE MMR] No token found, will not update user table', { channel })
+    return
+  }
 
   await supabase
     .from('users')
