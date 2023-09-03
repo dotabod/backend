@@ -4,14 +4,11 @@ import { t } from 'i18next'
 import RedisClient from '../../../db/RedisClient.js'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
-import { logger } from '../../../utils/logger.js'
 import { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
-
-const redisClient = RedisClient.getInstance()
 
 export interface RoshRes {
   minS: number
@@ -80,7 +77,7 @@ export function emitRoshEvent(res: RoshRes, token: string) {
 }
 
 eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
-  handler: (dotaClient: GSIHandler, event: DotaEvent) => {
+  handler: async (dotaClient: GSIHandler, event: DotaEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 
@@ -106,35 +103,28 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       roshanKilled: { enabled: chatterEnabled },
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
 
+    const redisClient = RedisClient.getInstance()
     // TODO: move this to a redis handler
-    async function redisHandler() {
-      const redisJson = (await redisClient.client.json.get(
-        `${dotaClient.getToken()}:roshan`,
-      )) as RoshRes | null
-      const count = redisJson ? Number(redisJson.count) : 0
-      const res = {
-        minS,
-        maxS,
-        minTime: fmtMSS(minTime),
-        maxTime: fmtMSS(maxTime),
-        minDate,
-        maxDate,
-        count: count + 1,
-      }
-
-      await redisClient.client.json.set(`${dotaClient.getToken()}:roshan`, '$', res)
-
-      if (chattersEnabled && chatterEnabled) {
-        say(dotaClient.client, generateRoshanMessage(res, dotaClient.client.locale))
-      }
-
-      emitRoshEvent(res, dotaClient.getToken())
+    const redisJson = (await redisClient.client.json.get(
+      `${dotaClient.getToken()}:roshan`,
+    )) as RoshRes | null
+    const count = redisJson ? Number(redisJson.count) : 0
+    const res = {
+      minS,
+      maxS,
+      minTime: fmtMSS(minTime),
+      maxTime: fmtMSS(maxTime),
+      minDate,
+      maxDate,
+      count: count + 1,
     }
 
-    try {
-      void redisHandler()
-    } catch (e) {
-      logger.error('Error in redisHandler', { e })
+    await redisClient.client.json.set(`${dotaClient.getToken()}:roshan`, '$', res)
+
+    if (chattersEnabled && chatterEnabled) {
+      say(dotaClient.client, generateRoshanMessage(res, dotaClient.client.locale))
     }
+
+    emitRoshEvent(res, dotaClient.getToken())
   },
 })

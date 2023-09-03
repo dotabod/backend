@@ -1,6 +1,6 @@
 import { Packet } from '../../types.js'
 
-export function getCurrentMatchPlayers(gsi?: Packet) {
+export function getSpectatorPlayers(gsi?: Packet) {
   let matchPlayers: { heroid: number; accountid: number; selected: boolean }[] = []
   if (gsi?.hero?.team2 && gsi.hero.team3) {
     matchPlayers = [

@@ -1,73 +1,9 @@
 import { t } from 'i18next'
 
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
-import getHero from '../../dota/lib/getHero.js'
-import { getHeroByName, getHeroNameById, heroColors } from '../../dota/lib/heroes.js'
-import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
-import CustomError from '../../utils/customError.js'
+import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
-import { findGSIByAccountId } from './findGSIByAccountId.js'
-import { profileLink } from './profileLink.js'
-
-interface Player {
-  heroid: number
-  accountid: number // steam32 id
-}
-
-export interface ProfileLinkParams {
-  command: string
-  locale: string
-  currentMatchId?: string
-  args: string[]
-  players?: Player[]
-}
-
-export function getPlayerFromArgs({
-  args,
-  players,
-  locale,
-  command,
-}: {
-  args: string[]
-  players: Player[]
-  locale: string
-  command: string
-}) {
-  if (!args.length) {
-    throw new CustomError(
-      t('invalidColorNew', { command, colorList: heroColors.join(' · '), lng: locale }),
-    )
-  }
-
-  // herokey is 0-9
-  let heroKey: number | undefined
-  const color = args[0].toLowerCase().trim()
-  const heroColorIndex = heroColors.findIndex((heroColor) => heroColor.toLowerCase() === color)
-
-  const colorKey = Number(args[0])
-  if (colorKey && colorKey >= 1 && colorKey <= 10) {
-    // 1-10 input
-    heroKey = colorKey - 1
-  } else if (heroColorIndex !== -1) {
-    // color input
-    heroKey = heroColorIndex
-  } else {
-    // hero name input or alias
-    const heroName = args.join('').toLowerCase().trim()
-    const hero = getHeroByName(heroName)
-    heroKey = hero ? players.findIndex((player) => player.heroid === hero.id) : -1
-  }
-
-  if (heroKey < 0 || heroKey > 9) {
-    throw new CustomError(
-      t('invalidColorNew', { command, colorList: heroColors.join(' · '), lng: locale }),
-    )
-  }
-
-  return { heroKey, player: players[heroKey] }
-}
+import { findAccountFromCmd } from './findGSIByAccountId.js'
 
 commandHandler.registerCommand('stats', {
   aliases: ['check', 'profile'],
@@ -75,50 +11,16 @@ commandHandler.registerCommand('stats', {
 
   handler: async (message, args, command) => {
     const {
-      channel: { name: channel, client },
+      channel: { client },
     } = message
 
-    if (!isPlayingMatch(client.gsi)) {
-      chatClient.say(
-        channel,
-        t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-      )
-      return
-    }
-
-    const myHero = getHero(client.gsi?.hero?.name)
-    const spectatorPlayers = getCurrentMatchPlayers(client.gsi)
-    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
-    const selectedPlayer = spectatorPlayers.find((a) => a.selected)
-
-    if (!myHero) {
-      if (!selectedPlayer && !matchPlayers.length) {
-        chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
-        return
-      }
-    }
-
-    if (!selectedPlayer && !matchPlayers.length && !myHero) {
-      chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
-      return
-    }
-
-    const specPlayer = findGSIByAccountId(client.gsi, selectedPlayer?.accountid)
-    const player = client.gsi?.player || specPlayer.player
-
     try {
-      const profile = profileLink({
-        command,
-        players: matchPlayers,
-        locale: client.locale,
-        currentMatchId: client.gsi?.map?.matchid,
-        args: args,
-      })
+      const { player, hero } = await findAccountFromCmd(client.gsi, args, client.locale, command)
 
       const desc = t('profileUrl', {
         lng: client.locale,
-        channel: getHeroNameById(profile.heroid, profile.heroKey),
-        url: `dotabuff.com/players/${profile.accountid}`,
+        channel: getHeroNameOrColor(hero?.id ?? 0),
+        url: `dotabuff.com/players/${player?.accountid ?? ''}`,
       })
 
       chatClient.say(message.channel.name, desc)

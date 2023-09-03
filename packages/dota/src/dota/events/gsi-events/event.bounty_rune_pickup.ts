@@ -4,7 +4,7 @@ import { t } from 'i18next'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { GSIHandler, redisClient } from '../../GSIHandler.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
-import { getHeroNameById } from '../../lib/heroes.js'
+import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
@@ -36,7 +36,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
       return
 
     clearTimeout(dotaClient.bountyTimeout)
-    const heroName = getHeroNameById(matchPlayers[event.player_id]?.heroid, event.player_id)
+    const heroName = getHeroNameOrColor(matchPlayers[event.player_id]?.heroid, event.player_id)
 
     dotaClient.bountyHeroNames.push(heroName)
 

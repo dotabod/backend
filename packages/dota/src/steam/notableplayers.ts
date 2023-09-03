@@ -4,7 +4,7 @@ import { t } from 'i18next'
 
 import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
-import { getHeroNameById } from '../dota/lib/heroes.js'
+import { getHeroNameOrColor } from '../dota/lib/heroes.js'
 import MongoDBSingleton from './MongoDBSingleton.js'
 
 interface NotablePlayer {
@@ -89,7 +89,7 @@ export async function notablePlayers({
         account_id: player.accountid,
         heroId: player.heroid,
         position: i,
-        heroName: getHeroNameById(player.heroid, i),
+        heroName: getHeroNameOrColor(player.heroid, i),
         name: np?.name ?? `Player ${i + 1}`,
         country_code: np?.country_code ?? '',
         isMe: steam32Id === player.accountid,

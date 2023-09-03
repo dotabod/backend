@@ -2,7 +2,7 @@ import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 import { t } from 'i18next'
 
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
-import { getHeroNameById } from '../dota/lib/heroes.js'
+import { getHeroNameOrColor } from '../dota/lib/heroes.js'
 import CustomError from '../utils/customError.js'
 import MongoDBSingleton from './MongoDBSingleton.js'
 
@@ -28,8 +28,8 @@ const generateMessage = (
     .map((player, oldIdx) =>
       t('lastgame.player', {
         lng: locale,
-        currentMatchHero: getHeroNameById(player.current.heroid, player.currentIdx),
-        lastMatchHero: getHeroNameById(player.old.heroid, oldIdx),
+        currentMatchHero: getHeroNameOrColor(player.current.heroid, player.currentIdx),
+        lastMatchHero: getHeroNameOrColor(player.old.heroid, oldIdx),
       }),
     )
     .join(' · ')

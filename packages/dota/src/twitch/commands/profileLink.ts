@@ -1,9 +1,19 @@
 import { t } from 'i18next'
 
+import { Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'
-import { getPlayerFromArgs, ProfileLinkParams } from './stats.js'
+import { findAccountFromCmd } from './findGSIByAccountId.js'
 
-export function profileLink({ command, players, locale, currentMatchId, args }: ProfileLinkParams) {
+interface ProfileLinkParams {
+  command: string
+  locale: string
+  args: string[]
+  packet?: Packet
+}
+
+export async function profileLink({ command, args, packet, locale }: ProfileLinkParams) {
+  const currentMatchId = packet?.map?.matchid
+
   if (!currentMatchId) {
     throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
   }
@@ -12,10 +22,11 @@ export function profileLink({ command, players, locale, currentMatchId, args }: 
     throw new CustomError(t('gameNotFound', { lng: locale }))
   }
 
-  if (!players?.length) {
+  const playerData = await findAccountFromCmd(packet, args, locale, command)
+
+  if (!playerData?.hero) {
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
   }
 
-  const { player, heroKey } = getPlayerFromArgs({ args, players, locale, command })
-  return { heroKey, ...player }
+  return { ...playerData }
 }

@@ -5,14 +5,13 @@ import { t } from 'i18next'
 
 import { redisClient } from '../../dota/GSIHandler.js'
 import { server } from '../../dota/index.js'
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { getHeroNameById } from '../../dota/lib/heroes.js'
+import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
-import { Item, SocketClient } from '../../types.js'
+import { Item, Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
-import { findGSIByAccountId } from './findGSIByAccountId.js'
+import { findAccountFromCmd } from './findGSIByAccountId.js'
 import { profileLink } from './profileLink.js'
 
 function formatItemList(itemList: string[]) {
@@ -38,23 +37,35 @@ function formatItemList(itemList: string[]) {
   return result
 }
 
-async function getItems(
-  client: SocketClient,
-  profile: ReturnType<typeof profileLink>,
-  matchId: string,
-) {
-  const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
-  if (!matchPlayers.length) {
-    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: client.locale }))
-  }
+async function getItems({
+  token,
+  packet,
+  args,
+  locale,
+  command,
+}: {
+  token: string
+  packet?: Packet
+  args: string[]
+  locale: string
+  command: string
+}) {
+  const { player, hero, items, playerIdx } = await findAccountFromCmd(packet, args, locale, command)
+
+  const profile = await profileLink({
+    command,
+    packet,
+    locale,
+    args: args,
+  })
 
   let itemList: string[] | false | undefined = false
-  if (isSpectator(client.gsi)) {
-    const { items } = findGSIByAccountId(client.gsi, profile.accountid)
+  if (isSpectator(packet)) {
     itemList =
       items &&
       Object.values(items)
-        .map((item: Item) => {
+        .map((itemN) => {
+          const item = itemN as Item
           const itemShortname = item.name.replace('item_', '') as unknown as keyof typeof DOTA_ITEMS
           const itemFound = DOTA_ITEMS[itemShortname]
           const itemName: string | boolean = itemFound && 'dname' in itemFound && itemFound.dname
@@ -65,26 +76,28 @@ async function getItems(
         .filter((item) => item !== 'empty')
   } else {
     const steamServerId =
-      client.gsi?.map?.matchid &&
-      (await redisClient.client.get(`${client.gsi?.map?.matchid}:steamServerId`))
+      packet?.map?.matchid &&
+      (await redisClient.client.get(`${packet?.map?.matchid}:steamServerId`))
 
     if (!steamServerId) {
-      throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: client.locale }))
+      throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
 
     const delayedData = await server.dota.GetRealTimeStats({
-      match_id: matchId,
+      match_id: packet?.map?.matchid ?? '',
       forceRefetchAll: true,
       steam_server_id: steamServerId,
-      token: client.token,
+      token,
     })
 
     if (!delayedData) {
-      throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: client.locale }))
+      throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
 
-    const teamIndex = profile.heroKey > 4 ? 1 : 0
-    const teamPlayerIdx = profile.heroKey % 5
+    if (!profile) return
+
+    const teamIndex = profile.playerIdx ?? 0 > 4 ? 1 : 0
+    const teamPlayerIdx = profile.playerIdx ?? 0 % 5
     const itemIds = delayedData.teams[teamIndex]?.players[teamPlayerIdx]?.items
 
     itemList =
@@ -105,16 +118,16 @@ async function getItems(
   if (!itemList || !itemList.length) {
     throw new CustomError(
       t('heroItems.empty', {
-        heroName: getHeroNameById(profile.heroid, profile.heroKey),
-        lng: client.locale,
+        heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
+        lng: locale,
       }),
     )
   }
 
   return {
-    heroName: getHeroNameById(profile.heroid, profile.heroKey),
+    heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
     itemNames: formatItemList(itemList).join(' · '),
-    lng: client.locale,
+    lng: locale,
   }
 }
 
@@ -136,25 +149,15 @@ commandHandler.registerCommand('items', {
       return
     }
 
-    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
-
     try {
-      const profile = profileLink({
-        command,
-        players: matchPlayers,
+      const res = await getItems({
+        token: client.token,
+        packet: client.gsi,
+        args,
         locale: client.locale,
-        currentMatchId,
-        args: args,
+        command,
       })
-
-      getItems(client, profile, currentMatchId)
-        .then((res) => {
-          chatClient.say(client.name, t('heroItems.list', res))
-        })
-        .catch((e: any) => {
-          const msg = !e?.message ? t('gameNotFound', { lng: client.locale }) : e?.message
-          chatClient.say(client.name, msg)
-        })
+      chatClient.say(client.name, t('heroItems.list', res))
     } catch (e: any) {
       const msg = !e?.message ? t('gameNotFound', { lng: client.locale }) : e?.message
       chatClient.say(client.name, msg)

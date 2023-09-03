@@ -4,16 +4,13 @@ import { t } from 'i18next'
 import RedisClient from '../../../db/RedisClient.js'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
-import { logger } from '../../../utils/logger.js'
 import { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
-import { getHeroNameById } from '../../lib/heroes.js'
+import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
-
-const redisClient = RedisClient.getInstance()
 
 export interface AegisRes {
   expireS: number
@@ -71,7 +68,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
 
-    const heroName = getHeroNameById(matchPlayers[event.player_id]?.heroid ?? 0, event.player_id)
+    const heroName = getHeroNameOrColor(matchPlayers[event.player_id]?.heroid ?? 0, event.player_id)
 
     const res = {
       expireS,
@@ -82,11 +79,8 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
       heroName,
     }
 
-    try {
-      void redisClient.client.json.set(`${dotaClient.getToken()}:aegis`, '$', res)
-    } catch (e) {
-      logger.error('Error in aegis json set', { e })
-    }
+    const redisClient = RedisClient.getInstance()
+    await redisClient.client.json.set(`${dotaClient.getToken()}:aegis`, '$', res)
 
     const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
     const {

@@ -4,7 +4,7 @@ import { t } from 'i18next'
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
 import { GSIHandler } from '../../GSIHandler.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
-import { getHeroNameById } from '../../lib/heroes.js'
+import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
@@ -16,7 +16,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
 
-    const heroName = getHeroNameById(matchPlayers[event.player_id]?.heroid ?? 0, event.player_id)
+    const heroName = getHeroNameOrColor(matchPlayers[event.player_id]?.heroid ?? 0, event.player_id)
 
     const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
     const {

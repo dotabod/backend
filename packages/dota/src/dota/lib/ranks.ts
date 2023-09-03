@@ -5,8 +5,6 @@ import { logger } from '../../utils/logger.js'
 import { server } from '../index.js'
 import { leaderRanks, ranks } from './consts.js'
 
-const redisClient = RedisClient.getInstance()
-
 export function rankTierToMmr(rankTier: string | number) {
   if (!Number(rankTier)) {
     return 0
@@ -51,6 +49,7 @@ export async function lookupLeaderRank(
   const cacheKey = `${steam32Id}:medal`
   let result
 
+  const redisClient = RedisClient.getInstance()
   // Try to get the cached result first
   const medalCache = await redisClient.client.json.get(cacheKey)
   if (medalCache) {

@@ -2,7 +2,7 @@ import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import { Packet } from '../../types.js'
-import { getCurrentMatchPlayers } from './getCurrentMatchPlayers.js'
+import { getSpectatorPlayers } from './getSpectatorPlayers.js'
 
 export async function getAccountsFromMatch({
   gsi,
@@ -16,8 +16,9 @@ export async function getAccountsFromMatch({
     accountid: number
   }[]
 } = {}) {
-  const players = searchPlayers?.length ? searchPlayers : getCurrentMatchPlayers(gsi)
+  const players = searchPlayers?.length ? searchPlayers : getSpectatorPlayers(gsi)
 
+  // spectator account ids
   if (Array.isArray(players) && players.length) {
     return {
       matchPlayers: players,

@@ -1,52 +1,22 @@
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
-import getHero from '../../dota/lib/getHero.js'
-import { getHeroNameById } from '../../dota/lib/heroes.js'
+import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import { findAccountFromCmd } from './findGSIByAccountId.js'
 
 commandHandler.registerCommand('d2pt', {
   aliases: ['dota2pt', 'build', 'builds', 'getbuild'],
   onlyOnline: true,
   dbkey: DBSettings.commandBuilds,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[], command) => {
     const {
       channel: { name: channel, client },
     } = message
-    if (!client.steam32Id) {
-      chatClient.say(
-        channel,
-        message.channel.client.multiAccount
-          ? t('multiAccount', {
-              lng: message.channel.client.locale,
-              url: 'dotabod.com/dashboard/features',
-            })
-          : t('unknownSteam', { lng: message.channel.client.locale }),
-      )
-      return
-    }
 
-    const myHero = getHero(client.gsi?.hero?.name)
-    const spectatorPlayers = getCurrentMatchPlayers(client.gsi)
-    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
-    const selectedPlayer = spectatorPlayers.find((a) => a.selected)
-
-    if (!myHero) {
-      if (!selectedPlayer && !matchPlayers.length) {
-        chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
-        return
-      }
-    }
-
-    if (!selectedPlayer && !matchPlayers.length && !myHero) {
-      chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
-      return
-    }
-
-    const heroName = myHero ? myHero.localized_name : getHeroNameById(selectedPlayer?.heroid ?? 0)
+    const { hero, playerIdx } = await findAccountFromCmd(client.gsi, args, client.locale, command)
+    const heroName = getHeroNameOrColor(hero?.id ?? 0, playerIdx)
 
     chatClient.say(
       channel,

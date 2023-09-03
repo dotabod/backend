@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { getPlayers } from '../dota/lib/getPlayers.js'
-import { getHeroNameById } from '../dota/lib/heroes.js'
+import { getHeroNameOrColor } from '../dota/lib/heroes.js'
 
 export async function smurfs(
   locale: string,
@@ -13,7 +13,7 @@ export async function smurfs(
   const result: { heroName: string; lifetime_games?: number }[] = []
   matchPlayers.forEach((player: { heroid: number; accountid: number }, i: number) => {
     result.push({
-      heroName: getHeroNameById(player.heroid, i),
+      heroName: getHeroNameOrColor(player.heroid, i),
       lifetime_games: cards[i]?.lifetime_games,
     })
   })

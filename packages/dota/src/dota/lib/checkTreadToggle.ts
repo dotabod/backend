@@ -2,8 +2,6 @@ import RedisClient from '../../db/RedisClient.js'
 import { GSIHandler } from '../GSIHandler.js'
 import { findItem } from './findItem.js'
 
-const redisClient = RedisClient.getInstance()
-
 export async function calculateManaSaved(dotaClient: GSIHandler) {
   const { treadsData } = dotaClient
   const data = dotaClient.client.gsi
@@ -18,6 +16,7 @@ export async function calculateManaSaved(dotaClient: GSIHandler) {
   const didToggleToInt = maxMana - prevMaxMana === 120
   const didToggleOffInt = maxMana - prevMaxMana === -120
 
+  const redisClient = RedisClient.getInstance()
   if (didToggleToInt) {
     treadsData.manaAtLastToggle = data.hero.mana
 

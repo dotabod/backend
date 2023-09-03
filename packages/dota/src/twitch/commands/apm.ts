@@ -1,48 +1,45 @@
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { getCurrentMatchPlayers } from '../../dota/lib/getCurrentMatchPlayers.js'
-import getHero from '../../dota/lib/getHero.js'
+import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
-import { findGSIByAccountId } from './findGSIByAccountId.js'
+import { profileLink } from './profileLink.js'
 
 commandHandler.registerCommand('apm', {
   onlyOnline: true,
   dbkey: DBSettings.commandAPM,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[], command) => {
     const {
       channel: { name: channel, client },
     } = message
 
-    const myHero = getHero(client.gsi?.hero?.name)
-    const spectatorPlayers = getCurrentMatchPlayers(client.gsi)
-    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
-    const selectedPlayer = spectatorPlayers.find((a) => a.selected)
+    try {
+      const { player, hero, playerIdx } = await profileLink({
+        command,
+        packet: client.gsi,
+        locale: client.locale,
+        args: args,
+      })
 
-    if (!myHero) {
-      if (!selectedPlayer && !matchPlayers.length) {
-        chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
-        return
-      }
+      const commandsIssued = player?.commands_issued ?? 0
+      const gameTime = client.gsi?.map?.game_time ?? 1
+      const apm = commandsIssued ? Math.round(commandsIssued / (gameTime / 60)) : 0
+
+      chatClient.say(
+        channel,
+        t('apm', {
+          heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
+          emote: 'Chatting',
+          lng: message.channel.client.locale,
+          count: apm,
+        }),
+      )
+    } catch (e: any) {
+      chatClient.say(
+        message.channel.name,
+        e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+      )
     }
-
-    if (!selectedPlayer && !matchPlayers.length && !myHero) {
-      chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
-      return
-    }
-
-    const specPlayer = findGSIByAccountId(client.gsi, selectedPlayer?.accountid)
-    const player = client.gsi?.player || specPlayer.player
-    const commandsIssued = player?.commands_issued ?? 0
-    const gameTime = client.gsi?.map?.game_time ?? 1
-    const apm = commandsIssued ? Math.round(commandsIssued / (gameTime / 60)) : 0
-
-    chatClient.say(
-      channel,
-      t('apm', { emote: 'Chatting', lng: message.channel.client.locale, count: apm }),
-    )
-    return
   },
 })

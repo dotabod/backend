@@ -8,17 +8,14 @@ import {
 } from '../../dota/events/gsi-events/event.aegis_picked_up.js'
 import { generateRoshanMessage, RoshRes } from '../../dota/events/gsi-events/event.roshan_killed.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
-import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
-
-const redisClient = RedisClient.getInstance()
 
 commandHandler.registerCommand('roshan', {
   onlyOnline: true,
   aliases: ['rosh', 'aegis'],
   dbkey: DBSettings.commandRosh,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -33,32 +30,23 @@ commandHandler.registerCommand('roshan', {
       return
     }
 
-    async function handler() {
-      const roshJson = (await redisClient.client.json.get(
-        `${client.token}:roshan`,
-      )) as RoshRes | null
-      const aegisRes = (await redisClient.client.json.get(
-        `${client.token}:aegis`,
-      )) as unknown as AegisRes | null
+    const redisClient = RedisClient.getInstance()
+    const roshJson = (await redisClient.client.json.get(`${client.token}:roshan`)) as RoshRes | null
+    const aegisRes = (await redisClient.client.json.get(
+      `${client.token}:aegis`,
+    )) as unknown as AegisRes | null
 
-      if (!roshJson?.minS && !roshJson?.maxS) {
-        chatClient.say(channel, t('roshanAlive', { emote: 'Happi', lng: client.locale }))
-        return
-      }
-
-      const msgs = [generateRoshanMessage(roshJson, client.locale)]
-
-      if (aegisRes) {
-        msgs.push(generateAegisMessage(aegisRes, client.locale))
-      }
-
-      chatClient.say(channel, msgs.join(' · '))
+    if (!roshJson?.minS && !roshJson?.maxS) {
+      chatClient.say(channel, t('roshanAlive', { emote: 'Happi', lng: client.locale }))
+      return
     }
 
-    try {
-      void handler()
-    } catch (e) {
-      logger.error('Error in roshan command', { e })
+    const msgs = [generateRoshanMessage(roshJson, client.locale)]
+
+    if (aegisRes) {
+      msgs.push(generateAegisMessage(aegisRes, client.locale))
     }
+
+    chatClient.say(channel, msgs.join(' · '))
   },
 })
