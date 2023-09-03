@@ -28,5 +28,5 @@ export async function profileLink({ command, args, packet, locale }: ProfileLink
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
   }
 
-  return { ...playerData }
+  return playerData
 }
