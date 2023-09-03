@@ -20,7 +20,9 @@ commandHandler.registerCommand('gpm', {
         client.locale,
         command,
       )
-      const heroName = getHeroNameOrColor(hero?.id ?? 0, playerIdx)
+      const heroName = player?.gpm
+        ? getHeroNameOrColor(hero?.id ?? 0, playerIdx)
+        : getHeroNameOrColor(client?.gsi?.hero?.id ?? 0)
 
       const gpm = player?.gpm ?? client.gsi?.player?.gpm
 

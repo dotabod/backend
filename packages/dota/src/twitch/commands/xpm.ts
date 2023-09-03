@@ -20,8 +20,10 @@ commandHandler.registerCommand('xpm', {
       client.locale,
       command,
     )
-    const heroName = getHeroNameOrColor(hero?.id ?? 0, playerIdx)
-    const xpm = player?.xpm ?? 0
+    const heroName = player?.xpm
+      ? getHeroNameOrColor(hero?.id ?? 0, playerIdx)
+      : getHeroNameOrColor(client?.gsi?.hero?.id ?? 0)
+    const xpm = player?.xpm ?? client.gsi?.player?.xpm ?? 0
     chatClient.say(channel, t('xpm', { heroName, lng: client.locale, num: xpm }))
   },
 })

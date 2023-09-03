@@ -42,17 +42,27 @@ export async function findAccountFromCmd(
 
   let playerIdx: number | undefined
 
-  try {
-    if (args.length) {
-      const data = await getPlayerFromArgs({ args, packet, locale, command })
-      accountIdFromArgs = data?.player?.accountid
-      playerIdx = data?.playerIdx
+  if (args.length && !isSpectator(packet)) {
+    const data = await getPlayerFromArgs({ args, packet, locale, command })
+    accountIdFromArgs = data?.player?.accountid
+    playerIdx = data?.playerIdx
+
+    // the missing data (items) gets filled out from delayedGames data
+    return {
+      ourHero: false,
+      playerIdx,
+      accountIdFromArgs,
+      player: { accountid: accountIdFromArgs },
+      hero: { id: data.player.heroid },
     }
-  } catch (e) {
-    //
   }
 
   if (isSpectator(packet)) {
+    if (args.length) {
+      const data = await getPlayerFromArgs({ args, packet, locale, command })
+      accountIdFromArgs = data?.player?.accountid
+    }
+
     const spectatorPlayers = getSpectatorPlayers(packet)
     const selectedPlayer = spectatorPlayers.find((a) => !!a.selected)
     accountIdFromArgs = accountIdFromArgs ?? selectedPlayer?.accountid
@@ -66,10 +76,11 @@ export async function findAccountFromCmd(
     // @ts-expect-error we can iterate by team2 and team3
     const hero = packet?.hero?.[teamN]?.[playerN]
 
-    return { playerIdx, accountIdFromArgs, player, items, hero }
+    return { ourHero: false, playerIdx, accountIdFromArgs, player, items, hero }
   }
 
   return {
+    ourHero: true,
     playerIdx,
     accountIdFromArgs,
     player: packet?.player,

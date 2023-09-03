@@ -11,7 +11,6 @@ import { Item, Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
-import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
 import { profileLink } from './profileLink.js'
 
 function formatItemList(itemList: string[]) {
@@ -50,9 +49,7 @@ async function getItems({
   locale: string
   command: string
 }) {
-  const { player, hero, items, playerIdx } = await findAccountFromCmd(packet, args, locale, command)
-
-  const profile = await profileLink({
+  const { hero, items, playerIdx, player } = await profileLink({
     command,
     packet,
     locale,
@@ -94,10 +91,8 @@ async function getItems({
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
 
-    if (!profile) return
-
-    const teamIndex = profile.playerIdx ?? 0 > 4 ? 1 : 0
-    const teamPlayerIdx = profile.playerIdx ?? 0 % 5
+    const teamIndex = (playerIdx ?? 0) > 4 ? 1 : 0
+    const teamPlayerIdx = (playerIdx ?? 0) % 5
     const itemIds = delayedData.teams[teamIndex]?.players[teamPlayerIdx]?.items
 
     itemList =
