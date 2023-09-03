@@ -15,16 +15,23 @@ commandHandler.registerCommand('d2pt', {
       channel: { name: channel, client },
     } = message
 
-    const { hero, playerIdx } = await findAccountFromCmd(client.gsi, args, client.locale, command)
-    const heroName = getHeroNameOrColor(hero?.id ?? 0, playerIdx)
+    try {
+      const { hero, playerIdx } = await findAccountFromCmd(client.gsi, args, client.locale, command)
+      const heroName = getHeroNameOrColor(hero?.id ?? 0, playerIdx)
 
-    chatClient.say(
-      channel,
-      t('dota2pt', {
-        heroName,
-        url: `dota2protracker.com/hero/${encodeURI(heroName).replace(/'/g, '%27')}`,
-        lng: message.channel.client.locale,
-      }),
-    )
+      chatClient.say(
+        channel,
+        t('dota2pt', {
+          heroName,
+          url: `dota2protracker.com/hero/${encodeURI(heroName).replace(/'/g, '%27')}`,
+          lng: message.channel.client.locale,
+        }),
+      )
+    } catch (e: any) {
+      chatClient.say(
+        message.channel.name,
+        e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+      )
+    }
   },
 })

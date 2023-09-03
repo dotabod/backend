@@ -1,6 +1,9 @@
+import { t } from 'i18next'
+
 import { getSpectatorPlayers } from '../../dota/lib/getSpectatorPlayers.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
 import { Packet, Player } from '../../types.js'
+import CustomError from '../../utils/customError.js'
 import { getPlayerFromArgs } from './getPlayerFromArgs.js'
 
 export function findSpectatorIdx(packet: Packet | undefined, heroOrAccountId: number | undefined) {
@@ -47,6 +50,10 @@ export async function findAccountFromCmd(
     accountIdFromArgs = data?.player?.accountid
     playerIdx = data?.playerIdx
 
+    if (!data?.player?.heroid) {
+      throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
+    }
+
     // the missing data (items) gets filled out from delayedGames data
     return {
       ourHero: false,
@@ -77,6 +84,10 @@ export async function findAccountFromCmd(
     const hero = packet?.hero?.[teamN]?.[playerN]
 
     return { ourHero: false, playerIdx, accountIdFromArgs, player, items, hero }
+  }
+
+  if (!packet?.hero?.id) {
+    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
   }
 
   return {

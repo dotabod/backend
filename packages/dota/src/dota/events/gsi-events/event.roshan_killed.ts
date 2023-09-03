@@ -86,6 +86,8 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
     const gameTimeDiff =
       (dotaClient.client.gsi?.map?.game_time ?? event.game_time) - event.game_time
 
+    // TODO: Turbo is 3 minutes min 8 minutes max
+
     // min spawn for rosh in 5 + 3 minutes
     const minS = 5 * 60 + 3 * 60 - gameTimeDiff
     const minTime = (dotaClient.client.gsi?.map?.clock_time ?? 0) + minS
