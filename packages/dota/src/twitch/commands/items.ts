@@ -11,7 +11,7 @@ import { Item, Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
-import { findAccountFromCmd } from './findGSIByAccountId.js'
+import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
 import { profileLink } from './profileLink.js'
 
 function formatItemList(itemList: string[]) {

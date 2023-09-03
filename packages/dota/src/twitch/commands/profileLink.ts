@@ -2,7 +2,7 @@ import { t } from 'i18next'
 
 import { Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'
-import { findAccountFromCmd } from './findGSIByAccountId.js'
+import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
 
 interface ProfileLinkParams {
   command: string

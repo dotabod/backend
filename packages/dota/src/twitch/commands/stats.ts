@@ -3,7 +3,7 @@ import { t } from 'i18next'
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
-import { findAccountFromCmd } from './findGSIByAccountId.js'
+import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
 
 commandHandler.registerCommand('stats', {
   aliases: ['check', 'profile'],

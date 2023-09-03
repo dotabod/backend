@@ -6,7 +6,7 @@ import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
-import { findAccountFromCmd } from './findGSIByAccountId.js'
+import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
 
 commandHandler.registerCommand('hero', {
   onlyOnline: true,
