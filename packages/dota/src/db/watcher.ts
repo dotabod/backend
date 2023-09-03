@@ -1,12 +1,11 @@
 import { Account, Setting, SteamAccount, User } from '@dotabod/prisma/dist/psql/index.js'
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
+import { DBSettings } from '@dotabod/settings'
 
 import { clearCacheForUser } from '../dota/clearCacheForUser.js'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
 import { gsiHandlers } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
-import { tellChatNewMMR } from '../dota/lib/updateMmr.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
@@ -135,14 +134,6 @@ class SetupSupabase {
               name: client.name,
               mmr: newObj.mmr,
             })
-            tellChatNewMMR({
-              streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
-              locale: client.locale,
-              token: client.token,
-              mmr: newObj.mmr,
-              oldMmr: oldObj.mmr,
-            })
-
             try {
               void handler()
             } catch (e) {

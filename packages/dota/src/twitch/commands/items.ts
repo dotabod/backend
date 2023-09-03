@@ -3,7 +3,7 @@ import DOTA_ITEM_IDS from 'dotaconstants/build/item_ids.json' assert { type: 'js
 import DOTA_ITEMS from 'dotaconstants/build/items.json' assert { type: 'json' }
 import { t } from 'i18next'
 
-import { redisClient } from '../../dota/GSIHandler.js'
+import RedisClient from '../../db/RedisClient.js'
 import { server } from '../../dota/index.js'
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
@@ -72,6 +72,7 @@ async function getItems({
         .filter(Boolean)
         .filter((item) => item !== 'empty')
   } else {
+    const redisClient = RedisClient.getInstance()
     const steamServerId =
       packet?.map?.matchid &&
       (await redisClient.client.get(`${packet?.map?.matchid}:steamServerId`))
