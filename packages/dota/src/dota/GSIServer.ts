@@ -14,7 +14,7 @@ function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
 
   getDBUser({ token })
     .then((client) => {
-      if (client?.token && client.stream_online) {
+      if (client?.token) {
         next()
       } else {
         socket.disconnect()
