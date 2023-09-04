@@ -114,7 +114,7 @@ export default async function getDBUser({
     return client
   }
 
-  const Account = user?.Account?.shift()
+  const Account = Array.isArray(user?.Account) ? user.Account[0] : user.Account
   if (!Account) {
     logger.info('Invalid token missing Account??', { token: lookupToken })
     invalidTokens.add(lookupToken)
