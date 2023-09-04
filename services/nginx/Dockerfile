@@ -2,7 +2,7 @@ FROM nginx:1.23.4-alpine
 
 RUN echo "$TLS_CERT" > public.key
 RUN echo "$TLS_KEY" > private.key
-RUN mv *.key /etc/ssl/
+COPY ./*.key /etc/ssl/
 
 # Move the default conf out of the way
 RUN mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf_orig
