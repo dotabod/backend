@@ -18,7 +18,6 @@ export async function getChannels(): Promise<string[]> {
   const { data: users } = await supabase
     .from('users')
     .select('name')
-    .not('name', 'in', process.env.DEV_CHANNELS?.split(',') ?? [])
     .order('followers', { ascending: false, nullsFirst: false })
 
   console.log('joining ', users?.length ?? 0, ' channels')
