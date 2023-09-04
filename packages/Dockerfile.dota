@@ -10,13 +10,13 @@ LABEL org.opencontainers.image.licenses="AGPL-3.0"
 ARG BUILD_CONTEXT
 
 WORKDIR /app/$BUILD_CONTEXT
-COPY ./$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/yarn.lock* ./
+COPY ./$BUILD_CONTEXT/package.json ./
 
 WORKDIR /app/packages/settings
-COPY ./packages/settings/package.json ./packages/settings/yarn.lock* ./
+COPY ./packages/settings/package.json ./
 
 WORKDIR /app/packages/prisma
-COPY ./packages/prisma/package.json ./packages/prisma/yarn.lock* ./
+COPY ./packages/prisma/package.json ./
 
 WORKDIR /app
 COPY package.json yarn.lock* ./
