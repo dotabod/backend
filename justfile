@@ -50,6 +50,7 @@ restart:
     @just up
 
 pull:
+    @just login
     @docker compose -f {{dockerfile}} pull twitch-events dota twitch-chat nginx
 
 push:
