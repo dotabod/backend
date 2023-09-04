@@ -50,12 +50,12 @@ restart:
     @just up
 
 pull:
-    @docker compose -f {{dockerfile}} pull twitch-events dota twitch-chat
+    @docker compose -f {{dockerfile}} pull twitch-events dota twitch-chat nginx
 
 push:
     @just login
     @just buildall
-    @docker compose -f {{dockerfile}} push twitch-events dota twitch-chat
+    @docker compose -f {{dockerfile}} push twitch-events dota twitch-chat nginx
 
 # Builds all images
 buildall:
