@@ -6,6 +6,17 @@ fam := os_family()
 export COMMIT_HASH := `git rev-parse --short HEAD`
 export BUILDKIT_PROGRESS := "plain"
 
+backup:
+    @echo "Backing up database"
+    @echo "URL is: ${DATABASE_URL}"
+    /opt/homebrew/opt/libpq/bin/pg_dump "${DATABASE_URL%\?*}" --no-comments -F c -N _realtime > ok.sql
+
+restore:
+    @echo "Backing up database"
+    @echo "URL is: ${DATABASE_URL}"
+    /opt/homebrew/opt/libpq/bin/pg_restore -d "${DATABASE_URL%\?*}" ok.sql
+    @rm ok.sql
+
 # Lists Recipes
 default:
   @echo Environment is $NODE_ENV on commit {{COMMIT_HASH}}
