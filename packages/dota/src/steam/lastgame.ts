@@ -48,7 +48,7 @@ export default async function lastgame({
   currentMatchId,
   currentPlayers,
 }: LastgameParams) {
-  const mongo = new MongoDBSingleton()
+  const mongo = MongoDBSingleton
   const db = await mongo.connect()
 
   try {

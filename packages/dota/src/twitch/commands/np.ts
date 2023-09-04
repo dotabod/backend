@@ -40,7 +40,7 @@ commandHandler.registerCommand('np', {
           return
         }
 
-        const mongo = new MongoDBSingleton()
+        const mongo = MongoDBSingleton
         const db = await mongo.connect()
 
         try {
@@ -73,7 +73,7 @@ commandHandler.registerCommand('np', {
           return
         }
 
-        const mongo = new MongoDBSingleton()
+        const mongo = MongoDBSingleton
         const db = await mongo.connect()
 
         try {

@@ -58,4 +58,4 @@ class MongoDBSingleton {
   }
 }
 
-export default MongoDBSingleton
+export default new MongoDBSingleton()

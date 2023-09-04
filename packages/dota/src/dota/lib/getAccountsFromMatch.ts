@@ -28,7 +28,7 @@ export async function getAccountsFromMatch({
 
   const matchId = searchMatchId || gsi?.map?.matchid
 
-  const mongo = new MongoDBSingleton()
+  const mongo = MongoDBSingleton
   const db = await mongo.connect()
 
   try {

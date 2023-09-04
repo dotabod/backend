@@ -21,7 +21,7 @@ import MongoDBSingleton from './MongoDBSingleton.js'
 
 // Fetches data from MongoDB
 const fetchDataFromMongo = async (match_id: string) => {
-  const mongo = new MongoDBSingleton()
+  const mongo = MongoDBSingleton
   const db = await mongo.connect()
 
   try {
@@ -47,7 +47,7 @@ const saveMatch = async ({
   game: delayedGames
   refetchCards?: boolean
 }) => {
-  const mongo = new MongoDBSingleton()
+  const mongo = MongoDBSingleton
   const db = await mongo.connect()
 
   try {
@@ -434,7 +434,7 @@ class Dota {
     if (!accountId) return card
 
     if (fetchedCard?.rank_tier !== -10) {
-      const mongo = new MongoDBSingleton()
+      const mongo = MongoDBSingleton
       const db = await mongo.connect()
 
       try {
@@ -450,7 +450,7 @@ class Dota {
   }
 
   public async getCards(accounts: number[], refetchCards = false): Promise<cards[]> {
-    const mongo = new MongoDBSingleton()
+    const mongo = MongoDBSingleton
     const db = await mongo.connect()
 
     try {

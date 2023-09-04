@@ -25,7 +25,7 @@ export async function getPlayers({
     throw new CustomError(t('gameNotFound', { lng: locale }))
   }
 
-  const mongo = new MongoDBSingleton()
+  const mongo = MongoDBSingleton
   const db = await mongo.connect()
 
   try {

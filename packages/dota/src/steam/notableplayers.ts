@@ -43,7 +43,7 @@ export async function notablePlayers({
     players,
   })
 
-  const mongo = new MongoDBSingleton()
+  const mongo = MongoDBSingleton
   const db = await mongo.connect()
 
   try {
