@@ -6,7 +6,7 @@ services:
       - "6379:6379"
 
   twitch-chat:
-    image: "ghcr.io/dotabod/twitch-chat:latest"
+    image: "ghcr.io/dotabod/twitch-chat:${NODE_ENV}"
     container_name: twitch-chat
     restart: on-failure
     build:
@@ -33,7 +33,7 @@ services:
       - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
   twitch-events:
-    image: "ghcr.io/dotabod/twitch-events:latest"
+    image: "ghcr.io/dotabod/twitch-events:${NODE_ENV}"
     container_name: twitch-events
     restart: on-failure
     build:
@@ -63,7 +63,7 @@ services:
       - TWITCH_EVENTSUB_SECRET
 
   dota:
-    image: "ghcr.io/dotabod/dota:latest"
+    image: "ghcr.io/dotabod/dota:${NODE_ENV}"
     container_name: dota
     restart: on-failure
     build:
@@ -108,7 +108,7 @@ services:
   nginx:
     container_name: nginx
     restart: on-failure
-    image: "nginx:latest"
+    image: "ghcr.io/dotabod/nginx:${NODE_ENV}"
     volumes:
       - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
     build:
