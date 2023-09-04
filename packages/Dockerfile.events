@@ -1,70 +1,66 @@
-#################
-#      BASE     #
-#################
-FROM node:latest as base
+# Using a more specific version to ensure reproducibility
+FROM node:16-alpine3.17 as base
 
+# Add Git, Python3, make, g++ in a single RUN command
+RUN apk add --no-cache git python3 make g++ \
+    && yarn cache clean
+
+# Set build context and work directories
 ARG BUILD_CONTEXT
-
-WORKDIR /app/$BUILD_CONTEXT
-COPY ./$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/yarn.lock* ./
-
-WORKDIR /app/packages/prisma
-COPY ./packages/prisma/package.json ./packages/prisma/yarn.lock* ./
-
 WORKDIR /app
-COPY package.json yarn.lock* ./
 
-# Only install production dependencies for production builds
+# Copy just the relevant package.json and yarn.lock files
+COPY package.json yarn.lock* ./
+COPY packages/prisma/package.json ./packages/prisma/
+COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
+
+# Install dependencies
 RUN yarn install --pure-lockfile --non-interactive
 
-#################
-#     BUILDER   #
-#################
-FROM base AS builder
+#-------------------------
 
-WORKDIR /app
+FROM base as builder
+
+# Copy source code and build configurations
 COPY tsconfig.json ./
+COPY packages/prisma/src packages/prisma/src/
+COPY $BUILD_CONTEXT/tsconfig.json $BUILD_CONTEXT/
+COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 
-WORKDIR /app/packages/prisma
-COPY ./packages/prisma/src ./src
+WORKDIR /app/
 RUN yarn build
 
-WORKDIR /app/$BUILD_CONTEXT
-COPY ./$BUILD_CONTEXT/tsconfig.json ./
-COPY ./$BUILD_CONTEXT/src ./src
+#-------------------------
 
-# Run 'yarn build' only in production environment
-RUN yarn build
-
-#################
-#    RUNNER    #
-#################
-FROM node:latest
+FROM node:16-alpine3.17 as prod
 
 ARG BUILD_CONTEXT
-
-LABEL org.opencontainers.image.source="https://github.com/dotabod/backend"
-LABEL org.opencontainers.image.description="Dota twitch events service"
-LABEL org.opencontainers.image.licenses="AGPL-3.0"
-
-WORKDIR /app
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/tsconfig.json ./
-
-WORKDIR /app/packages/prisma
-COPY --from=base /app/packages/prisma/node_modules* ./node_modules
-COPY --from=builder /app/packages/prisma/dist ./dist
-COPY --from=builder /app/packages/prisma/package.json ./
-
-WORKDIR /app/$BUILD_CONTEXT
-COPY --from=base /app/$BUILD_CONTEXT/node_modules* ./node_modules
-COPY --from=builder /app/$BUILD_CONTEXT/dist* ./dist
-COPY --from=builder /app/$BUILD_CONTEXT/package.json ./
-COPY --from=builder /app/$BUILD_CONTEXT/tsconfig.json ./
-RUN mkdir -p ./src/steam/volumes
-
 ARG NODE_ENV
-RUN echo "NODE_ENV is $NODE_ENV"
 
-CMD [ "sh", "-c", "if [ \"$NODE_ENV\" = 'development' ]; then yarn dev-docker; else yarn start; fi" ]
+# Meta-data and labels
+LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
+      org.opencontainers.image.description="Dotabod container: ${BUILD_CONTEXT}" \
+      org.opencontainers.image.licenses="AGPL-3.0"
+
+# Create unprivileged user and switch to it
+RUN adduser -D dotadockeruser
+USER dotadockeruser
+
+# Copy relevant build artifacts
+WORKDIR /app
+COPY --from=builder --chown=dotadockeruser /app/package.json /app/tsconfig.json ./
+COPY --from=builder --chown=dotadockeruser /app/packages/prisma/package.json /app/packages/prisma/
+COPY --from=builder --chown=dotadockeruser /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
+COPY --from=builder --chown=dotadockeruser /app/packages/prisma/dist packages/prisma/dist/
+COPY --from=builder --chown=dotadockeruser /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
+
+# Create required directories
+RUN mkdir -p $BUILD_CONTEXT/src/steam/volumes
+
+# Copy node_modules
+COPY --from=base --chown=dotadockeruser /app/node_modules ./node_modules
+
+# Environment and CMD
+WORKDIR /app/$BUILD_CONTEXT
+ENV NODE_ENV=$NODE_ENV
+CMD yarn docker:$NODE_ENV
