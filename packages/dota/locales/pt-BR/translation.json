@@ -5,9 +5,9 @@
     "pickup": "{{- heroName}} pegou o aegis!",
     "snatched": "{{- heroName}} roubou o aegis! {{emote}}"
   },
-  "apm_one": "APM ao vivo: {{count}} {{emote}}",
+  "apm_one": "APM ao vivo de {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
-  "apm_other": "APM ao vivo: {{count}} {{emote}}",
+  "apm_other": "APM ao vivo de {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Rank médio neste jogo",
   "betaFeature": "[recurso beta]",
   "betaTester": "$t(betaTester_on)",
@@ -54,8 +54,8 @@
   "dotabod": "Eu sou um bot open source feito pelo {{author}}. Mais informações: {{- url}}",
   "gameNotFound": "Jogo não encontrado",
   "gpm_zero": "",
-  "gpm_one": "GPM ao vivo: {{num}}. {{heroKills}} de heróis, {{creepKills}} de creeps.",
-  "gpm_other": "GPM ao vivo: {{num}}. {{heroKills}} de heróis, {{creepKills}} de creeps.",
+  "gpm_one": "GPM ao vivo de {{- heroName}}: {{num}}. {{heroKills}} de abates de heróis, {{creepKills}} de abates de creep.",
+  "gpm_other": "GPM ao vivo de {{- heroName}}: {{num}}. {{heroKills}} de abates de heróis, {{creepKills}} de abates de creep.",
   "heroItems": {
     "empty": "(2 min de atraso) Nenhum item encontrado para {{- heroName}}",
     "list": "(2 min de atraso) {{- heroName}} possui: {{- itemNames}}"
@@ -195,10 +195,10 @@
   "updateMmr_auto": "MMR atualizado para {{mmr}}",
   "updateMmr_manual": "MMR atualizado para {{mmr}}",
   "updateMmrMulti": "Múltiplas contas da steam, atualizando a conta logada no momento ({{steamId}})",
-  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
+  "updateMmrNoChange": "O MMR já é {{mmr}}, nenhuma alteração foi feita",
   "version": {
     "commit": "Servidor executando a versão {{version}}, aqui está o que falta em comparação com a versão mais recente: {{- url}}",
     "unknown": "Não foi possível encontrar o último git commit, aqui está o repositório {{- url}}"
   },
-  "xpm": "XPM ao vivo: {{num}}"
+  "xpm": "XPM ao vivo de {{- heroName}}: {{num}}"
 }
