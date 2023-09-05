@@ -9,7 +9,7 @@ export BUILDKIT_PROGRESS := "plain"
 backup:
     @echo "Backing up database"
     @echo "URL is: ${DATABASE_URL}"
-    /opt/homebrew/opt/libpq/bin/pg_dump "${DATABASE_URL%\?*}" --no-comments -F c -N _realtime > ok.sql
+    /opt/homebrew/opt/libpq/bin/pg_dump "${DATABASE_URL%\?*}" --no-comments -F c -N _realtime -N supabase_functions > ok.sql
 
 restore:
     @echo "Backing up database"
