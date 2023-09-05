@@ -4,35 +4,49 @@ export async function getAccountIds(): Promise<string[]> {
   console.log('[TWITCHSETUP] Running getAccountIds')
 
   const devIds = process.env.DEV_CHANNELIDS?.split(',') ?? []
+  const devChannels = process.env.DEV_CHANNELS?.split(',') ?? []
   const isDevMode = process.env.NODE_ENV === 'development'
-  let providerIds: string[] = []
+  const providerIds: string[] = []
 
-  if (isDevMode) {
-    if (!devIds.length) throw new Error('Missing DEV_CHANNELIDS')
-
-    const { data } = await supabase
-      .from('users')
-      .select('id,accounts(providerAccountId)')
-      .in('name', process.env.DEV_CHANNELS?.split(',') ?? [])
-      .neq('accounts.requires_refresh', true)
-      .order('followers', { ascending: false, nullsFirst: false })
-
-    providerIds =
-      data?.map((user) => user?.accounts?.[0]?.providerAccountId as string) ?? providerIds
-  } else {
-    const { data } = await supabase
-      .from('users')
-      .select('id,accounts(providerAccountId)')
-      .not('name', 'in', `(${process.env.DEV_CHANNELS})`)
-      .neq('accounts.requires_refresh', true)
-      .order('followers', { ascending: false, nullsFirst: false })
-
-    providerIds =
-      data?.map((user) => user?.accounts?.[0]?.providerAccountId as string) ?? providerIds
+  if (isDevMode && !devIds.length) {
+    throw new Error('Missing DEV_CHANNELIDS')
   }
 
-  providerIds = providerIds.filter(Boolean)
-  console.log('joining', providerIds.length, 'channels')
+  const pageSize = 1000
+  let offset = 0
+  let moreDataExists = true
 
-  return providerIds
+  while (moreDataExists) {
+    const baseQuery = supabase
+      .from('users')
+      .select('id,accounts(providerAccountId)')
+      .neq('accounts.requires_refresh', true)
+      .order('followers', { ascending: false, nullsFirst: false })
+
+    const query = isDevMode
+      ? baseQuery.in('name', devChannels)
+      : baseQuery.not('name', 'in', `(${process.env.DEV_CHANNELS})`)
+
+    const { data } = await query.range(offset, offset + pageSize - 1)
+
+    if (data?.length) {
+      const newProviderIds = data.map((user) => {
+        return Array.isArray(user?.accounts)
+          ? user?.accounts[0]?.providerAccountId
+          : // @ts-expect-error supabase ts expects an array but its not
+            (user?.accounts?.providerAccountId as string)
+      })
+
+      providerIds.push(...newProviderIds)
+      offset += pageSize
+    } else {
+      moreDataExists = false
+    }
+  }
+
+  // Filter out undefined values, if any.
+  const filteredProviderIds = providerIds.filter(Boolean)
+
+  console.log('joining', filteredProviderIds.length, 'channels')
+  return filteredProviderIds
 }
