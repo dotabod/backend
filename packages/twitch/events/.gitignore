@@ -5,7 +5,6 @@ dist
 build
 config.js
 **/volumes
-prisma/generated
 private.key
 public.key
 .idea

@@ -13,7 +13,6 @@
     "./.eslintrc.js"
   ],
   "exclude": [
-    "prisma/generated",
     "node_modules",
   ],
   "ts-node": {

@@ -10,7 +10,6 @@ dist
 build
 config.js
 **/volumes
-**/prisma/generated
 newrelic_agent.log
 .idea
 !**/locales/en/translation.json

@@ -1,10 +1,10 @@
 import http from 'http'
 
-import { Account } from '@dotabod/prisma/dist/psql/index'
 import { EnvPortAdapter, EventSubHttpListener } from '@twurple/eventsub-http'
 import express from 'express'
 import { Server as SocketServer } from 'socket.io'
 
+import { Tables } from './db/supabase-types.js'
 import { handleNewUser } from './handleNewUser.js'
 import { SubscribeEvents } from './SubscribeEvents.js'
 import BotAPI from './twitch/lib/BotApiSingleton.js'
@@ -88,7 +88,7 @@ webhookApp.post('/', express.json(), express.urlencoded({ extended: true }), (re
   }
 
   if (req.body.type === 'INSERT' && req.body.table === 'accounts') {
-    const user = req.body.record as Account
+    const user: Tables<'accounts'> = req.body.record
     if (IS_DEV && !DEV_CHANNELIDS.includes(user.providerAccountId)) return
     if (!IS_DEV && DEV_CHANNELIDS.includes(user.providerAccountId)) return
 

@@ -1,4 +1,3 @@
-import { Account, Setting, SteamAccount, User } from '@dotabod/prisma/dist/psql/index.js'
 import { DBSettings } from '@dotabod/settings'
 
 import { clearCacheForUser } from '../dota/clearCacheForUser.js'
@@ -10,6 +9,7 @@ import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
 import supabase from './supabase.js'
+import { Tables } from './supabase-types.js'
 
 class SetupSupabase {
   channel: any // ReturnType<typeof supabase.channel>
@@ -46,7 +46,7 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'users' },
-        async (payload: { old: User }) => {
+        async (payload: { old: Tables<'users'> }) => {
           if (this.IS_DEV && !this.DEV_CHANNELS.includes(payload.old.name)) return
           if (!this.IS_DEV && this.DEV_CHANNELS.includes(payload.old.name)) return
 
@@ -64,7 +64,7 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'accounts' },
-        async (payload: { new: Account; old: Account }) => {
+        async (payload: { new: Tables<'accounts'>; old: Tables<'accounts'> }) => {
           // watch the accounts table for requires_refresh to change from true to false
           // if it does, add the user to twurple authprovider again via addUser()
           if (this.IS_DEV && !this.DEV_CHANNELIDS.includes(payload.new?.providerAccountId)) return
@@ -92,8 +92,8 @@ class SetupSupabase {
           if (this.IS_DEV && !this.DEV_CHANNELS.includes(payload.new.name)) return
           if (!this.IS_DEV && this.DEV_CHANNELS.includes(payload.new.name)) return
 
-          const newObj = payload.new as User
-          const oldObj = payload.old as User
+          const newObj: Tables<'users'> = payload.new
+          const oldObj: Tables<'users'> = payload.old
           const client = findUser(newObj.id)
           if (!client) return
 
@@ -146,7 +146,7 @@ class SetupSupabase {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'settings' },
         (payload: any) => {
-          const newObj = payload.new as Setting
+          const newObj: Tables<'settings'> = payload.new
           const client = findUser(newObj.userId)
 
           if (newObj.key === DBSettings.commandDisable) {
@@ -196,8 +196,8 @@ class SetupSupabase {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'steam_accounts' },
         async (payload: any) => {
-          const newObj = payload.new as SteamAccount
-          const oldObj = payload.old as SteamAccount
+          const newObj: Tables<'steam_accounts'> = payload.new
+          const oldObj: Tables<'steam_accounts'> = payload.old
           const client = findUser(newObj.userId || oldObj.userId)
 
           // Just here to update local memory

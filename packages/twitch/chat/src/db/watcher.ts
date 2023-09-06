@@ -1,5 +1,4 @@
-import { User } from '@dotabod/prisma/dist/psql/index.js'
-
+import { Tables } from './supabase-types.js'
 import supabase from './supabase.js'
 import { chatClient } from '../index.js'
 
@@ -8,9 +7,9 @@ const DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
 const channel = supabase.channel(`${IS_DEV ? 'dev-' : ''}twitch-chat`)
 
 channel
-  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload) => {
-    const oldUser = payload.old as User
-    const newUser = payload.new as User
+  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, (payload: any) => {
+    const oldUser: Tables<'users'> = payload.old
+    const newUser: Tables<'users'> = payload.new
 
     if (IS_DEV && !DEV_CHANNELS.includes(newUser.name)) return
     if (!IS_DEV && DEV_CHANNELS.includes(newUser.name)) return
