@@ -95,10 +95,10 @@ login:
     @echo $DOCKER_PAT | docker login ghcr.io -u $DOCKER_USER --password-stdin
 
 # Starts images
-up:
+up app="":
     @just login
     @echo "Starting server with database $NODE_ENV at {{dockerfile}}"
-    @docker compose -f {{dockerfile}} up -d
+    @docker compose -f {{dockerfile}} up -d {{app}}
 
 update:
     @if [ "${NODE_ENV}" = "production" ]; then \
