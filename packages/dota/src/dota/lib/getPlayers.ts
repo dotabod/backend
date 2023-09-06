@@ -1,8 +1,8 @@
-import { delayedGames } from '@dotabod/prisma/dist/mongo'
 import { t } from 'i18next'
 
 import Dota from '../../steam/index.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
+import { DelayedGames } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { getAccountsFromMatch } from './getAccountsFromMatch.js'
 
@@ -30,7 +30,7 @@ export async function getPlayers({
 
   try {
     const response = await db
-      .collection<delayedGames>('delayedGames')
+      .collection<DelayedGames>('delayedGames')
       .findOne({ 'match.match_id': currentMatchId })
 
     if (!response && !players?.length) {

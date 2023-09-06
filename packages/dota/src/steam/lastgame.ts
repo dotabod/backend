@@ -1,8 +1,8 @@
-import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 import { t } from 'i18next'
 
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import { getHeroNameOrColor } from '../dota/lib/heroes.js'
+import { DelayedGames } from '../types.js'
 import CustomError from '../utils/customError.js'
 import MongoDBSingleton from './MongoDBSingleton.js'
 
@@ -53,7 +53,7 @@ export default async function lastgame({
 
   try {
     const gameHistory = await db
-      .collection<delayedGames>('delayedGames')
+      .collection<DelayedGames>('delayedGames')
       .find(
         {
           'teams.players.accountid': Number(steam32Id),
@@ -79,7 +79,7 @@ export default async function lastgame({
     if (gameHistory.length !== 2)
       throw new CustomError(t('noLastMatch', { emote: 'PauseChamp', lng: locale }))
 
-    const [gameOne, gameTwo] = gameHistory as unknown as delayedGames[]
+    const [gameOne, gameTwo] = gameHistory as unknown as DelayedGames[]
     const oldGame = gameOne.match.match_id === currentMatchId ? gameTwo : gameOne
 
     if (!currentPlayers?.length) {

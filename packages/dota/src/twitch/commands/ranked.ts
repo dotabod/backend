@@ -1,10 +1,10 @@
-import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { isArcade } from '../../dota/lib/isArcade.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
+import { DelayedGames } from '../../types.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 
@@ -50,7 +50,7 @@ commandHandler.registerCommand('ranked', {
 
     try {
       const response = await db
-        .collection<delayedGames>('delayedGames')
+        .collection<DelayedGames>('delayedGames')
         .findOne({ 'match.match_id': currentMatchId })
 
       if (!response) {

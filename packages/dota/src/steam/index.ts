@@ -1,4 +1,3 @@
-import { cards, delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
 import axios from 'axios'
 import crypto from 'crypto'
 // @ts-expect-error ???
@@ -13,7 +12,7 @@ import steamErrors from 'steam-errors'
 import { events } from '../dota/globalEventEmitter.js'
 import { isDev } from '../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
-import { GCMatchData } from '../types.js'
+import { Cards, DelayedGames, GCMatchData } from '../types.js'
 import CustomError from '../utils/customError.js'
 import { retryCustom } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
@@ -25,7 +24,7 @@ const fetchDataFromMongo = async (match_id: string) => {
   const db = await mongo.connect()
 
   try {
-    return await db.collection<delayedGames>('delayedGames').findOne({ 'match.match_id': match_id })
+    return await db.collection<DelayedGames>('delayedGames').findOne({ 'match.match_id': match_id })
   } finally {
     await mongo.close()
   }
@@ -44,7 +43,7 @@ const saveMatch = async ({
   refetchCards = false,
 }: {
   match_id: string
-  game: delayedGames
+  game: DelayedGames
   refetchCards?: boolean
 }) => {
   const mongo = MongoDBSingleton
@@ -52,7 +51,7 @@ const saveMatch = async ({
 
   try {
     await db
-      .collection<delayedGames>('delayedGames')
+      .collection<DelayedGames>('delayedGames')
       .updateOne({ 'match.match_id': match_id }, { $set: game }, { upsert: true })
 
     if (refetchCards) {
@@ -103,7 +102,7 @@ interface steamUserDetails {
   sha_sentryfile?: Buffer
 }
 
-function hasSteamData(game?: delayedGames | null) {
+function hasSteamData(game?: DelayedGames | null) {
   const hasTeams = Array.isArray(game?.teams) && game?.teams.length === 2
   const hasPlayers =
     hasTeams &&
@@ -299,7 +298,7 @@ class Dota {
     refetchCards?: boolean
     steam_server_id: string
     token: string
-  }): Promise<delayedGames> => {
+  }): Promise<DelayedGames> => {
     let waitForHeros = forceRefetchAll || false
 
     if (!steam_server_id) {
@@ -323,9 +322,9 @@ class Dota {
     return new Promise((resolve, reject) => {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       operation.attempt(async (currentAttempt) => {
-        let game: delayedGames
+        let game: DelayedGames
         try {
-          game = (await axios<delayedGames>(getApiUrl(steam_server_id)))?.data
+          game = (await axios<DelayedGames>(getApiUrl(steam_server_id)))?.data
         } catch (e) {
           return operation.retry(new Error('Match not found'))
         }
@@ -429,7 +428,7 @@ class Dota {
       createdAt: new Date(),
       rank_tier: fetchedCard?.rank_tier ?? 0,
       leaderboard_rank: fetchedCard?.leaderboard_rank ?? 0,
-    } as cards
+    } as Cards
 
     if (!accountId) return card
 
@@ -439,7 +438,7 @@ class Dota {
 
       try {
         await db
-          .collection<cards>('cards')
+          .collection<Cards>('cards')
           .updateOne({ account_id: accountId }, { $set: card }, { upsert: true })
       } finally {
         await mongo.close()
@@ -449,13 +448,13 @@ class Dota {
     return card
   }
 
-  public async getCards(accounts: number[], refetchCards = false): Promise<cards[]> {
+  public async getCards(accounts: number[], refetchCards = false): Promise<Cards[]> {
     const mongo = MongoDBSingleton
     const db = await mongo.connect()
 
     try {
       const cardsFromDb = await db
-        .collection<cards>('cards')
+        .collection<Cards>('cards')
         .find({ account_id: { $in: accounts.filter((a) => !!a) } })
         .sort({ createdAt: -1 })
         .toArray()
@@ -476,14 +475,14 @@ class Dota {
     }
   }
 
-  public async getCard(account: number): Promise<cards> {
+  public async getCard(account: number): Promise<Cards> {
     // @ts-expect-error no types exist for `loggedOn`
     if (!this.dota2._gcReady || !this.steamClient.loggedOn) {
       throw new CustomError('Error getting medal')
     }
 
     return new Promise((resolve, reject) => {
-      this.dota2.requestProfileCard(account, (err: any, card: cards) => {
+      this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
         if (err) reject(err)
         else resolve(card)
       })

@@ -158,10 +158,6 @@ update() {
     up
 }
 
-pullall() {
-    cd ./packages/prisma && yarn pull:psql && yarn build
-}
-
 # Main script
 case "$1" in
 gentypes) gentypes ;;
@@ -184,6 +180,5 @@ ssh) ssh ;;
 login) login ;;
 up) up ;;
 update) update ;;
-pullall) pullall ;;
 *) echo "Invalid command: $1" ;;
 esac

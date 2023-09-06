@@ -1,25 +1,21 @@
-import { notablePlayers } from '@dotabod/prisma/dist/mongo'
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
 
 import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameOrColor } from '../dota/lib/heroes.js'
+import { NotablePlayer } from '../types.js'
 import MongoDBSingleton from './MongoDBSingleton.js'
-
-interface NotablePlayer {
-  heroId: number
-  account_id: number
-  position: number
-  heroName: string
-  name: string
-  image?: string
-  country_code: string
-}
 
 export interface Player {
   accountid: number
   heroid: number
+}
+
+export interface NotablePlayers {
+  account_id: number
+  name: string
+  country_code: string
 }
 
 export async function notablePlayers({
@@ -54,7 +50,7 @@ export async function notablePlayers({
       : { name: null }
 
     const nps = await db
-      .collection<notablePlayers>('notablePlayers')
+      .collection<NotablePlayers>('notablePlayers')
       .find(
         {
           account_id: {

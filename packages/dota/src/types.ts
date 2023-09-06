@@ -484,3 +484,43 @@ export interface PermanentBuff {
   stack_count: number
   grant_time: number
 }
+
+export interface NotablePlayer {
+  heroId: number
+  account_id: number
+  position: number
+  heroName: string
+  name: string
+  image?: string
+  country_code: string
+}
+
+export interface Medals {
+  id: string
+  name: string
+  rank_tier: number
+}
+
+export interface DelayedGames {
+  _id: string
+  match: {
+    server_steam_id: string
+    match_id: string
+    game_mode: number
+    lobby_type: number
+  }
+  teams: {
+    players: {
+      items: number[]
+      heroid: number
+      accountid: string
+    }[]
+  }[]
+}
+export interface Cards {
+  lifetime_games: number
+  account_id: number
+  leaderboard_rank: number
+  rank_tier: number
+  createdAt: Date
+}

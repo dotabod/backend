@@ -2,7 +2,6 @@
   "name": "dotabod",
   "private": true,
   "workspaces": [
-    "packages/prisma",
     "packages/settings",
     "packages/twitch/events",
     "packages/twitch/chat",
@@ -10,7 +9,6 @@
   ],
   "scripts": {
     "up": "yarn upgrade-interactive --latest",
-    "studio": "doppler run -- yarn prisma studio --schema ./packages/prisma/src/postgres.prisma",
     "build": "yarn workspaces run build",
     "lint": "yarn eslint -- . && yarn prettier -- . && echo 'Linting complete.'",
     "prettier": "prettier --write",
@@ -21,7 +19,6 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@prisma/client": "5.2.0",
     "@supabase/supabase-js": "^2.33.1",
     "@twurple/api": "6.0.9",
     "@twurple/auth": "6.0.9",

@@ -1,7 +1,5 @@
-import { delayedGames } from '@dotabod/prisma/dist/mongo/index.js'
-
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
-import { Packet } from '../../types.js'
+import { DelayedGames, Packet } from '../../types'
 import { getSpectatorPlayers } from './getSpectatorPlayers.js'
 
 export async function getAccountsFromMatch({
@@ -33,7 +31,7 @@ export async function getAccountsFromMatch({
 
   try {
     const response = await db
-      .collection<delayedGames>('delayedGames')
+      .collection<DelayedGames>('delayedGames')
       .findOne({ 'match.match_id': matchId })
 
     const matchPlayers =

@@ -11,7 +11,6 @@ WORKDIR /app
 
 # Copy just the relevant package.json and yarn.lock files
 COPY package.json yarn.lock* ./
-COPY packages/prisma/package.json ./packages/prisma/
 COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 
 # Install dependencies
@@ -23,7 +22,6 @@ FROM base as builder
 
 # Copy source code and build configurations
 COPY tsconfig.json ./
-COPY packages/prisma/src packages/prisma/src/
 COPY $BUILD_CONTEXT/tsconfig.json $BUILD_CONTEXT/
 COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 
@@ -49,9 +47,7 @@ USER dotadockeruser
 # Copy relevant build artifacts
 WORKDIR /app
 COPY --from=builder --chown=dotadockeruser /app/package.json /app/tsconfig.json ./
-COPY --from=builder --chown=dotadockeruser /app/packages/prisma/package.json /app/packages/prisma/
 COPY --from=builder --chown=dotadockeruser /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
-COPY --from=builder --chown=dotadockeruser /app/packages/prisma/dist packages/prisma/dist/
 COPY --from=builder --chown=dotadockeruser /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
 
 # Create required directories

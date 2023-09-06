@@ -52,12 +52,12 @@ Streamers have several manual processes:
 
 Dotabod started as a small node.js app, and a simple admin dashboard. It has since grown to a large monorepo with 5 microservices, 2 socket servers, a frontend, and a discord server for community support. Overall, the backend architecture of Dotabod is designed to be modular and scalable, allowing for easy expansion and maintenance of the app. The typescript backend is built on-top of Express.js framework and uses MongoDB for data storage, Redis for caching, and Nginx for load balancing. The backend is hosted on AWS EC2 instances and is deployed using Docker.
 
-The dotabod frontend is a typescript web app built using the Next.js framework. The app uses React for rendering UI components and Redux for state management, including several UI libraries such as Tailwindcss and Ant Design, as well as i18next for internationalization and Socket.IO for real-time communication. The project also uses Prisma as an ORM for database access.
+The dotabod frontend is a typescript web app built using the Next.js framework. The app uses React for rendering UI components and Redux for state management, including several UI libraries such as Tailwindcss and Ant Design, as well as i18next for internationalization and Socket.IO for real-time communication. The project also uses supabasejs as an ORM for database access.
 
 Secrets management uses Doppler, and injects into every Docker build on the fly.
 
 - **Backend**: Node.js, Express.js, MongoDB, Redis, Supabase, Nginx, Docker, hosted on AWS EC2, backups on AWS S3
-- **Frontend**: Next.js, Tailwindcss, Ant.design, i18next, Socket.IO, Prisma, Supabase, NextAuth, hosted and auto deploying with Vercel
+- **Frontend**: Next.js, Tailwindcss, Ant.design, i18next, Socket.IO, Supabase, NextAuth, hosted and auto deploying with Vercel
 - **Other**: Doppler for secrets, New Relic for server monitoring and alerts, Sentry for frontend error tracking, Discord for community support
 
 ## Design Tradeoffs
@@ -138,7 +138,6 @@ graph TD;
   services-->redis;
   services-->nginx;
   packages-->twitch-chat;
-  packages-->prisma-db;
   packages-->dota;
   packages-->twitch-events;
   packages-->settings

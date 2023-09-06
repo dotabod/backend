@@ -16,7 +16,6 @@
     "host:development": "nodemon -L --ext ts ./src/index.ts"
   },
   "dependencies": {
-    "@dotabod/prisma": "^1.0.0",
     "@twurple/eventsub-base": "6.0.9",
     "@twurple/eventsub-http": "6.0.9",
     "express": "^4.18.2",
