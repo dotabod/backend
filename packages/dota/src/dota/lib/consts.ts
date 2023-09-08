@@ -27,6 +27,7 @@ export const playingStates = [
 ]
 
 export const dontBlockStates = [
+  'DOTA_GAMERULES_STATE_INIT',
   'DOTA_GAMERULES_STATE_PLAYER_DRAFT',
   'DOTA_GAMERULES_STATE_WAIT_FOR_PLAYERS_TO_LOAD',
   'DOTA_GAMERULES_STATE_POST_GAME',
