@@ -65,7 +65,7 @@ async function fixNewUsers() {
 
 await fixNewUsers()
 
-async function handleNewUser(providerAccountId: string, botApi) {
+async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
   if (!botApi) return
   try {
     const stream = await botApi.streams.getStreamByUserId(providerAccountId)
