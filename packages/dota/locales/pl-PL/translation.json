@@ -5,10 +5,10 @@
     "pickup": "{{- heroName}} podniósł aegisa!",
     "snatched": "{{- heroName}} podwędził aegisa {{emote}}"
   },
-  "apm_one": "Aktualny APM: {{count}} {{emote}}",
-  "apm_few": "Aktualny APM: {{count}} {{emote}}",
-  "apm_many": "Aktualny APM: {{count}} {{emote}}",
-  "apm_other": "Aktualny APM: {{count}} {{emote}}",
+  "apm_one": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
+  "apm_few": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
+  "apm_many": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Średni ranking w tej grze",
   "betaFeature": "[funkcje beta]",
   "betaTester": "$t(betaTester_on)",
@@ -55,10 +55,10 @@
   "dotabod": "Jestem otwartoźródłowym botem stworzonym przez {{author}}. Więcej informacji: {{- url}}",
   "gameNotFound": "Gra nie została znaleziona",
   "gpm_zero": "",
-  "gpm_one": "Złoto na minutę (GPM): {{num}}. {{heroKills}} z zabójstw bohaterów, {{creepKills}} z dobić creepów.",
-  "gpm_few": "Złoto na minutę (GPM): {{num}}. {{heroKills}} z zabójstw bohaterów, {{creepKills}} z dobić creepów.",
-  "gpm_many": "Złoto na minutę (GPM): {{num}}. {{heroKills}} z zabójstw bohaterów, {{creepKills}} z dobić creepów.",
-  "gpm_other": "Złoto na minutę (GPM): {{num}}. {{heroKills}} z zabójstw bohaterów, {{creepKills}} z dobić creepów.",
+  "gpm_one": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstwa bohatera, z {{creepKills}} zabójstw creepów.",
+  "gpm_few": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstw bohaterów, z {{creepKills}} zabójstw creepów.",
+  "gpm_many": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstw bohaterów, z {{creepKills}} zabójstw creepów.",
+  "gpm_other": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstw bohaterów, z {{creepKills}} zabójstw creepów.",
   "heroItems": {
     "empty": "(2min opóźnienia) Nie znaleziono przedmiotów dla {{- heroName}}",
     "list": "(2min opóźnienia) {{- heroName}} posiada: {{- itemNames}}"
@@ -212,10 +212,10 @@
   "updateMmr_auto": "Zaktualizowano MMR do {{mmr}}",
   "updateMmr_manual": "Zaktualizowano MMR na {{mmr}}",
   "updateMmrMulti": "Wiele kont Steam, aktualizuję to, z którego jesteś aktualnie zalogowany ({{steamId}})",
-  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
+  "updateMmrNoChange": "MMR jest już ustawiony na {{mmr}}, nie wprowadzono żadnych zmian",
   "version": {
     "commit": "Serwer działa w wersji {{version}}, tutaj co się zmieniło w najnowszej wersji: {{- url}}",
     "unknown": "Nie można znaleźć ostatniego commitu git tutaj, oto repozytorium {{- url}}"
   },
-  "xpm": "Aktualny XPM: {{num}}"
+  "xpm": "Aktualny XPM dla {{- heroName}}: {{num}}"
 }

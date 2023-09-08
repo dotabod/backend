@@ -167,15 +167,15 @@
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Updated MMR to {{mmr}}",
   "updateMmr_manual": "Updated MMR to {{mmr}}",
-  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
+  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
     "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
   },
-  "xpm": "Live XPM: {{num}}",
-  "apm_other": "Live APM: {{count}} {{emote}}",
-  "gpm_other": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "xpm": "Live XPM for {{- heroName}}: {{num}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "seconds_other": "{{count}} seconds",
   "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match."
 }
