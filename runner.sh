@@ -2,14 +2,19 @@
 
 [ -z "$NODE_ENV" ] && echo "NODE_ENV is not set. Missing doppler or .env secrets" && exit 1
 
+app=${2:-""}
+
 dockerfile_set() {
     [ "$NODE_ENV" = "production" ] && echo "docker-compose.yml" || echo "docker-compose.yml -f docker-compose-dev.yml"
 }
 
 docker_command() {
-    docker compose -f "$dockerfile" "$@"
+    if [ -z "$app" ]; then
+        eval docker compose -f "$dockerfile" "$@"
+    else
+        eval docker compose -f "$dockerfile" "$@" "$app"
+    fi
 }
-
 discord_notify() {
     json_payload=$(jq -n \
         --arg avatar_url "https://static-cdn.jtvnw.net/jtv_user_pictures/d52ea619-5491-4a66-aeeb-f180a2668049-profile_image-70x70.png" \
@@ -26,7 +31,6 @@ docker_login() {
     echo "$DOCKER_PAT" | docker login ghcr.io -u "$DOCKER_USER" --password-stdin
 }
 
-app=${2:-""}
 dockerfile=$(dockerfile_set)
 COMMIT_HASH=$(git rev-parse --short HEAD)
 export COMMIT_HASH
