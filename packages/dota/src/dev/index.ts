@@ -1,7 +1,43 @@
+import { ApiClient } from '@twurple/api'
+
 import supabase from '../db/supabase.js'
+import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
+import { getBotTokens_DEV_ONLY } from '../twitch/lib/getBotTokens.js'
+import { logger } from '../utils/logger.js'
 
 if (process.env.NODE_ENV !== 'production') {
   console.log('NODE_ENV is development')
+}
+
+async function getBotAPI_DEV_ONLY() {
+  const authProvider = getAuthProvider()
+  const botTokens = await getBotTokens_DEV_ONLY()
+
+  const twitchId = process.env.TWITCH_BOT_PROVIDERID!
+
+  if (!botTokens?.access_token || !botTokens.refresh_token) {
+    logger.info('[TWITCHSETUP] Missing bot tokens', {
+      twitchId,
+    })
+    return false
+  }
+
+  const tokenData = {
+    scope: botTokens.scope?.split(' ') ?? [],
+    expiresIn: botTokens.expires_in ?? 0,
+    obtainmentTimestamp: botTokens.obtainment_timestamp
+      ? new Date(botTokens.obtainment_timestamp).getTime()
+      : 0,
+    accessToken: botTokens.access_token,
+    refreshToken: botTokens.refresh_token,
+  }
+
+  authProvider.addUser(twitchId, tokenData, ['chat'])
+
+  const api = new ApiClient({ authProvider })
+  logger.info('[TWITCH] Retrieved twitch dotabod api')
+
+  return api
 }
 
 console.log('running dev script')
@@ -14,6 +50,7 @@ async function fixNewUsers() {
 
   if (!users) return
 
+  const botApi = await getBotAPI_DEV_ONLY()
   for (const user of users) {
     // @ts-expect-error its not an array
     if (!user.Account?.providerAccountId) {
@@ -21,54 +58,58 @@ async function fixNewUsers() {
       continue
     }
     // @ts-expect-error its not an array
-    await handleNewUser(user.Account.providerAccountId)
+    await handleNewUser(user.Account.providerAccountId, botApi)
   }
   return
 }
 
 await fixNewUsers()
 
-// const botApi = await getBotAPI_DEV_ONLY()
-// async function handleNewUser(providerAccountId: string) {
-//   if (!botApi) return
-//   try {
-//     const stream = await botApi.streams.getStreamByUserId(providerAccountId)
-//     const streamer = await botApi.users.getUserById(providerAccountId)
-//     const follows = botApi.users.getFollowsPaginated({
-//       followedUser: providerAccountId,
-//     })
-//     const totalFollowerCount = await follows.getTotalCount()
+async function handleNewUser(providerAccountId: string, botApi) {
+  if (!botApi) return
+  try {
+    const stream = await botApi.streams.getStreamByUserId(providerAccountId)
+    const streamer = await botApi.users.getUserById(providerAccountId)
+    const follows = botApi.users.getFollowsPaginated({
+      followedUser: providerAccountId,
+    })
+    const totalFollowerCount = await follows.getTotalCount()
 
-//     const data = {
-//       displayName: streamer?.displayName,
-//       name: streamer?.name,
-//       followers: totalFollowerCount,
-//       stream_online: !!stream?.startDate,
-//       stream_start_date: stream?.startDate ?? null,
-//     }
+    const data = {
+      displayName: streamer?.displayName,
+      name: streamer?.name,
+      followers: totalFollowerCount,
+      stream_online: !!stream?.startDate,
+      stream_start_date: stream?.startDate ?? null,
+    }
 
-//     // remove falsy values from data (like displayName: undefined)
-//     const filteredData = Object.fromEntries(
-//       Object.entries(data).filter(([key, value]) => Boolean(value)),
-//     )
+    // remove falsy values from data (like displayName: undefined)
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([key, value]) => Boolean(value)),
+    )
 
-//     await prisma.account.update({
-//       data: {
-//         user: {
-//           update: filteredData,
-//         },
-//       },
-//       where: {
-//         provider_providerAccountId: {
-//           provider: 'twitch',
-//           providerAccountId: providerAccountId,
-//         },
-//       },
-//     })
-//   } catch (e) {
-//     console.log(e, 'error on getStreamByUserId')
-//   }
-// }
+    let userId: string | null = null
+    if (providerAccountId) {
+      const { data } = await supabase
+        .from('accounts')
+        .select('userId')
+        .eq('providerAccountId', providerAccountId)
+        .single()
+      userId = data?.userId ?? null
+    }
+
+    console.log({ userId, filteredData })
+
+    if (!userId) {
+      logger.error('[USER] 2 Error checking auth', { error: 'No token' })
+      return null
+    }
+
+    await supabase.from('users').update(filteredData).eq('id', userId)
+  } catch (e) {
+    console.log(e, 'error on getStreamByUserId')
+  }
+}
 
 // async function getAccounts() {
 //   // const steam32id = 1234
