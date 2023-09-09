@@ -5,9 +5,9 @@
     "pickup": "{{- heroName}} a ramassé l'Aegis of the Immortal !",
     "snatched": "{{- heroName}} a dérobé l'Aegis of the Immortal ! {{emote}}"
   },
-  "apm_one": "Live APM: {{count}} {{emote}}",
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
-  "apm_other": "Live APM: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Rang moyen de ce match",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -54,8 +54,8 @@
   "dotabod": "Je suis un bot open source crée par {{author}}. Plus d'infos: {{- url}}",
   "gameNotFound": "La partie est introuvable",
   "gpm_zero": "",
-  "gpm_one": "OPM actuel : {{num}}. {{heroKills}} provenant de héros tués, {{creepKills}} provenant de creeps.",
-  "gpm_other": "OPM actuel : {{num}}. {{heroKills}} provenant de héros tués, {{creepKills}} provenant de creeps.",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2m délai) Pas d'items trouvé pour {{- heroName}}",
     "list": "(2m délai) {{- heroName}} possède : {{- itemNames}}"
@@ -200,5 +200,5 @@
     "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
   },
-  "xpm": "Live XPM: {{num}}"
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

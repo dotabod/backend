@@ -5,8 +5,8 @@
     "pickup": "{{- heroName}} plockade upp aegisen!",
     "snatched": "{{- heroName}} snodde åt sig aegisen {{emote}}"
   },
-  "apm_one": "Live APM: {{count}} {{emote}}",
-  "apm_other": "Live APM: {{count}} {{emote}}",
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Genomsnittlig rank i denna match",
   "betaFeature": "[beta-funktion]",
   "betaTester": "$t(betaTester_on)",
@@ -53,8 +53,8 @@
   "dotabod": "Jag är en bot med öppen källkod skapad av {{author}}. Mer info: {{- url}}",
   "gameNotFound": "Matchen hittades inte",
   "gpm_zero": "",
-  "gpm_one": "Live GPM: {{num}}. {{heroKills}} från hero kills, {{creepKills}} från creep kills.",
-  "gpm_other": "Live GPM: {{num}}. {{heroKills}} från hero kills, {{creepKills}} från creep kills.",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2min fördröjning) Inga föremål hittades för {{- heroName}}",
     "list": "(2min fördröjning) {{- heroName}} har: {{- itemNames}}"
@@ -191,5 +191,5 @@
     "commit": "Servern kör version {{version}}, här är vad som saknas jämfört med den senaste versionen: {{- url}}",
     "unknown": "Kunde inte hitta den senaste git-commiten, här är repot {{- url}}"
   },
-  "xpm": "Live XPM: {{num}}"
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

@@ -5,8 +5,8 @@
     "pickup": "{{- heroName}} hat die Aegis aufgehoben!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
-  "apm_one": "Live APM: {{count}} Chatting",
-  "apm_other": "Live APM: {{count}} Chatting",
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Durchschnittlicher Rang in diesem Spiel",
   "betaFeature": "[Beta-Funktion]",
   "betaTester": "$t(betaTester_on)",
@@ -53,8 +53,8 @@
   "dotabod": "Ich bin ein Open-Source-Bot erstellt von {{author}}. Weitere Infos: {{- url}}",
   "gameNotFound": "Spiel wurde nicht gefunden",
   "gpm_zero": "",
-  "gpm_one": "Live GPM: {{num}}. {{heroKills}} von Helden kills, {{creepKills}} von creep kills.",
-  "gpm_other": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2m Verzögerung) Keine Items für {{- heroName}} gefunden",
     "list": "(2m Verzögerung) {{- heroName}} hat {{- itemNames}}"
@@ -191,5 +191,5 @@
     "commit": "Server mit Version {{version}}, hier gehts zur neuesten Version: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
   },
-  "xpm": "Live XPM: {{num}}"
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

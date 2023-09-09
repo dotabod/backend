@@ -5,8 +5,8 @@
     "pickup": "{{- heroName}} Aegis'i aldı!",
     "snatched": "{{- heroName}} Aegis'i çaldı {{emote}}"
   },
-  "apm_one": "Anlık APM: {{count}} {{emote}}",
-  "apm_other": "Anlık APM: {{count}} {{emote}}",
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Oyunun ortalama sıralaması",
   "betaFeature": "Beta özellikleri",
   "betaTester": "$t(betaTester_on)",
@@ -53,8 +53,8 @@
   "dotabod": "Ben {{author}} tarafından yaratılan açık kaynaklı bir botum. Daha detaylı bilgi için {{- url}}",
   "gameNotFound": "Oyun bulunamadı",
   "gpm_zero": "",
-  "gpm_one": "Anlık GPM:{{num}} {{heroKills}} kahraman ölümlerinden, {{creepKills}} creep ölümlerinden.",
-  "gpm_other": "Anlık GPM:{{num}} {{heroKills}} kahraman ölümlerinden, {{creepKills}} creep ölümlerinden.",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2 dakika gecikme) {{- heroName}} için item bulunamadı",
     "list": "(2 dakika gecikme) {{- heroName}} {{- itemNames}} var"
@@ -191,5 +191,5 @@
     "commit": "Mevcut sunucu versiyonu {{version}}, işte en son sürüme kıyasla eksik olan şeyler: {{- url}}",
     "unknown": "Son git bulunamadı, raporlar burada {{- url}}"
   },
-  "xpm": "Anlık XPM: {{num}}"
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

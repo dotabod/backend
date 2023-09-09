@@ -5,10 +5,10 @@
     "pickup": "{{- heroName}} підібрав Аєгіс!",
     "snatched": "{{- heroName}} викрав Аєгіс {{emote}}"
   },
-  "apm_one": "Поточний APM: {{count}} {{emote}}",
-  "apm_few": "Поточний APM: {{count}} {{emote}}",
-  "apm_many": "Поточний APM: {{count}} {{emote}}",
-  "apm_other": "Поточний APM: {{count}} {{emote}}",
+  "apm_one": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
+  "apm_few": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
+  "apm_many": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Середній рейтинг цієї гри",
   "betaFeature": "[бета-функція]",
   "betaTester": "$t(betaTester_on)",
@@ -212,10 +212,10 @@
   "updateMmr_auto": "Рейтинг змінено до {{mmr}} MMR",
   "updateMmr_manual": "Рейтинг змінено до {{mmr}} MMR",
   "updateMmrMulti": "Кілька облікових записів Steam. Оновлення акаунту, з якого ви увійшли наразі ({{steamId}})",
-  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
+  "updateMmrNoChange": "MMR вже {{mmr}}, змін не було здійснено",
   "version": {
     "commit": "Версія запущеного серверу {{version}}, ось що пропущено порівняно з останньою версією: {{- url}}",
     "unknown": "Не вдалося знайти останній коміт, тому посилання на репозиторій {{- url}}"
   },
-  "xpm": "Поточний XPM: {{num}}"
+  "xpm": "Поточний XPM для {{- heroName}}: {{num}}"
 }

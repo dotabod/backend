@@ -5,9 +5,9 @@
     "pickup": "¡{{- heroName}} recogió el aegis!",
     "snatched": "{{- heroName}} robó el aegis {{emote}}"
   },
-  "apm_one": "APM en vivo: {{count}} {{emote}}",
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
-  "apm_other": "APM en vivo: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "La media de este juego es",
   "betaFeature": "[función beta]",
   "betaTester": "$t(betaTester_on)",
@@ -54,8 +54,8 @@
   "dotabod": "Soy un bot hecho por {{author}}. Mas información {{- url}}",
   "gameNotFound": "Juego no encontrado",
   "gpm_zero": "",
-  "gpm_one": "OPM en vivo: {{num}}. {{heroKills}} asesinatos de héroes, {{creepKills}} asesinatos de creeps.",
-  "gpm_other": "GPM en vivo:{{num}}. {{heroKills}} de matando Héroes. {{creepKills}} de matando grimas.",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2m de retraso) No se encontraron items para {{- heroName}}",
     "list": "(2m de retraso) {{- heroName}} tiene: {{- itemNames}}"
@@ -200,5 +200,5 @@
     "commit": "El servidor esta ejecutando la versión {{version}}, esto es lo que falta en comparación con la última versión: {{- url}}",
     "unknown": "No se pudo encontrar el último git commit, aquí está el repositorio {{- url}}"
   },
-  "xpm": "XPM en vivo: {{num}}"
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

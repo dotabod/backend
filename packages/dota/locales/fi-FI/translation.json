@@ -5,8 +5,8 @@
     "pickup": "{{- heroName}} poimi aegiksen!",
     "snatched": "{{- heroName}} nappasi aegiksen {{emote}}"
   },
-  "apm_one": "Live APM: {{count}} {{emote}}",
-  "apm_other": "Live APM: {{count}} {{emote}}",
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Keskimääräinen rankki pelissä",
   "betaFeature": "[beta-ominaisuus]",
   "betaTester": "$t(betaTester_on)",
@@ -53,8 +53,8 @@
   "dotabod": "Olen avoimen lähdekoodin botti jonka on tehnyt {{author}}. Lisätietoja: {{- url}}",
   "gameNotFound": "Peliä ei löytynyt",
   "gpm_zero": "",
-  "gpm_one": "Live GPM: {{num}}. {{heroKills}} sankaritapoista, {{creepKills}} kätyritapoista.",
-  "gpm_other": "Live GPM: {{num}}. {{heroKills}} sankaritapoista, {{creepKills}} kätyritapoista.",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2min viive) Esineitä ei löytynyt sankarille {{- heroName}}",
     "list": "(2min viive) Sankarilla {{- heroName}} on: {{- itemNames}}"
@@ -191,5 +191,5 @@
     "commit": "Palvelin käyttää versiota {{version}}, tässä mitä puuttuu viimeisimpään versioon verrattuna: {{- url}}",
     "unknown": "Viimeistä git committia ei löytynyt, tässä osoitteessa repo {{- url}}"
   },
-  "xpm": "Live XPM: {{num}}"
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }
