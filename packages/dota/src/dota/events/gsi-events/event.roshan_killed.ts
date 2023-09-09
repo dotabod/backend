@@ -1,4 +1,3 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import RedisClient from '../../../db/RedisClient.js'
@@ -100,11 +99,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
     const minDate = dotaClient.addSecondsToNow(minS)
     const maxDate = dotaClient.addSecondsToNow(maxS)
 
-    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
-    const {
-      roshanKilled: { enabled: chatterEnabled },
-    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-
     const redisClient = RedisClient.getInstance()
     // TODO: move this to a redis handler
     const redisJson = (await redisClient.client.json.get(
@@ -123,9 +117,9 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
 
     await redisClient.client.json.set(`${dotaClient.getToken()}:roshan`, '$', res)
 
-    if (chattersEnabled && chatterEnabled) {
-      say(dotaClient.client, generateRoshanMessage(res, dotaClient.client.locale))
-    }
+    say(dotaClient.client, generateRoshanMessage(res, dotaClient.client.locale), {
+      chattersKey: 'roshanKilled',
+    })
 
     emitRoshEvent(res, dotaClient.getToken())
   },

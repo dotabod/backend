@@ -1,4 +1,3 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { SocketClient } from '../../types.js'
@@ -20,15 +19,6 @@ export async function checkPassiveTp(client: SocketClient) {
   } | null) || {
     firstNoticedPassive: 0,
     told: 0,
-  }
-
-  const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
-  const {
-    noTp: { enabled: chatterEnabled },
-  } = getValueOrDefault(DBSettings.chatters, client.settings)
-
-  if (!chattersEnabled || !chatterEnabled) {
-    return
   }
 
   const tp = client.gsi?.items?.teleport0
@@ -55,6 +45,7 @@ export async function checkPassiveTp(client: SocketClient) {
             channel: `@${client.name}`,
             lng: client.locale,
           }),
+          { chattersKey: 'noTp' },
         )
         return resetPassiveTime(client.token)
       }
@@ -67,6 +58,7 @@ export async function checkPassiveTp(client: SocketClient) {
           channel: `@${client.name}`,
           lng: client.locale,
         }),
+        { chattersKey: 'noTp' },
       )
 
       return resetPassiveTime(client.token)
@@ -97,6 +89,7 @@ export async function checkPassiveTp(client: SocketClient) {
         lng: client.locale,
         emote: 'HECANT',
       }),
+      { chattersKey: 'noTp' },
     )
     return true
   }
