@@ -1,12 +1,73 @@
+import { faker } from '@faker-js/faker'
 import { ApiClient } from '@twurple/api'
+import axios from 'axios'
 
+import { gameEnd } from '../__tests__/play-by-plays.js'
 import supabase from '../db/supabase.js'
+import { fetchOnlineUsers } from '../dota/events/gsi-events/__tests__/fetchOnlineUsers.js'
 import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
 import { getBotTokens_DEV_ONLY } from '../twitch/lib/getBotTokens.js'
+import { DotaEventTypes } from '../types.js'
 import { logger } from '../utils/logger.js'
 
 if (process.env.NODE_ENV !== 'production') {
   console.log('NODE_ENV is development')
+}
+
+const USER_COUNT = 300
+
+export const apiClient = axios.create({
+  baseURL: 'http://localhost:5120',
+})
+
+async function postWinEventsForUsers(
+  users: {
+    id: string
+  }[],
+  win_team: 'radiant' | 'dire' = 'radiant',
+) {
+  const promises = users.map((user) => {
+    return gameEnd({
+      win_team,
+      matchId: `123`,
+      steam32: `123`,
+      steam64: `123456`,
+      token: user.id,
+    }).map((step) => {
+      return apiClient.post('/', step)
+    })
+  })
+  return await Promise.allSettled(promises)
+}
+
+export async function postEventsForUsers(
+  users: {
+    id: string
+  }[],
+  eventType: DotaEventTypes,
+) {
+  const promises = users.map((user) =>
+    apiClient.post('/', {
+      player: {
+        activity: 'playing',
+      },
+      events: [
+        {
+          event_type: eventType,
+          player_id: faker.number.int({ min: 0, max: 9 }),
+          game_time: faker.number.int({ min: 0, max: 1_000_000 }),
+        },
+      ],
+      auth: { token: user.id },
+    }),
+  )
+  await Promise.allSettled(promises)
+}
+
+async function testAegis() {
+  const users = await fetchOnlineUsers(USER_COUNT)
+  await postWinEventsForUsers(users, 'radiant')
+  await postEventsForUsers(users, DotaEventTypes.AegisPickedUp)
 }
 
 async function getBotAPI_DEV_ONLY() {
@@ -63,7 +124,7 @@ async function fixNewUsers() {
   return
 }
 
-await fixNewUsers()
+await testAegis()
 
 async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
   if (!botApi) return

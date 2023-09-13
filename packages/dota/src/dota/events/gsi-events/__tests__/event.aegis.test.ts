@@ -8,7 +8,7 @@ import { fetchOnlineUsers } from './fetchOnlineUsers.js'
 
 const USER_COUNT = 1
 
-async function postEventsForUsers(
+export async function postEventsForUsers(
   users: {
     id: string
   }[],
