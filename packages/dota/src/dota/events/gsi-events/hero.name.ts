@@ -32,8 +32,7 @@ eventHandler.registerEvent(`hero:name`, {
       }
 
       const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, dotaClient.client.settings)
-      const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
-      if (tellChatBets && chattersEnabled)
+      if (tellChatBets)
         say(
           dotaClient.client,
           t('bets.remade', {

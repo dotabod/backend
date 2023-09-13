@@ -1,4 +1,3 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
@@ -18,15 +17,10 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
 
     const heroName = getHeroNameOrColor(matchPlayers[event.player_id]?.heroid ?? 0, event.player_id)
 
-    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
-    const {
-      roshDeny: { enabled: chatterEnabled },
-    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-
-    if (chattersEnabled && chatterEnabled)
-      say(
-        dotaClient.client,
-        t('aegis.denied', { lng: dotaClient.client.locale, heroName, emote: 'ICANT' }),
-      )
+    say(
+      dotaClient.client,
+      t('aegis.denied', { lng: dotaClient.client.locale, heroName, emote: 'ICANT' }),
+      { chattersKey: 'roshDeny' },
+    )
   },
 })

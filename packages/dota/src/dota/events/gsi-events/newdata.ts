@@ -20,12 +20,7 @@ function chatterMatchFound(client: SocketClient) {
 
   const commands = DelayedCommands.filter((cmd) => getValueOrDefault(cmd.key, client.settings))
 
-  const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
-  const {
-    commandsReady: { enabled: chatterEnabled },
-  } = getValueOrDefault(DBSettings.chatters, client.settings)
-
-  if (commands.length && chattersEnabled && chatterEnabled) {
+  if (commands.length) {
     say(
       client,
       t('matchFound', {
@@ -33,6 +28,7 @@ function chatterMatchFound(client: SocketClient) {
         lng: client.locale,
       }),
       {
+        chattersKey: 'commandsReady',
         delay: false,
       },
     )
@@ -53,11 +49,14 @@ async function saveMatchData(client: SocketClient) {
   if (!client.steam32Id) return
 
   // did we already come here before?
-  let [steamServerId, lobbyType] = await redisClient.client
+  const res = await redisClient.client
     .multi()
     .get(`${matchId}:steamServerId`)
     .get(`${matchId}:lobbyType`)
     .exec()
+
+  let [steamServerId] = res
+  const [, lobbyType] = res
 
   if (steamServerId && lobbyType) return
 
@@ -134,13 +133,12 @@ eventHandler.registerEvent(`newdata`, {
       return
     }
 
-    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
     const {
       powerTreads: { enabled: treadsChatterEnabled },
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-    if (chattersEnabled && treadsChatterEnabled) {
+    if (treadsChatterEnabled) {
       try {
-        void calculateManaSaved(dotaClient)
+        await calculateManaSaved(dotaClient)
       } catch (e) {
         logger.error('err calculateManaSaved', { e })
       }

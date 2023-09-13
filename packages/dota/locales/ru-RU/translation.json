@@ -5,10 +5,10 @@
     "pickup": "{{- heroName}} подбирает аегис!",
     "snatched": "{{- heroName}} крадёт аегис {{emote}}"
   },
-  "apm_one": "Текущий APM: {{count}} {{emote}}",
-  "apm_few": "Текущий APM: {{count}} {{emote}}",
-  "apm_many": "Текущий APM: {{count}} {{emote}}",
-  "apm_other": "Текущий APM: {{count}} {{emote}}",
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_few": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_many": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Средний ранг этой игры",
   "betaFeature": "[бета-функция]",
   "betaTester": "$t(betaTester_on)",
@@ -55,10 +55,10 @@
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "gameNotFound": "Игра не найдена",
   "gpm_zero": "",
-  "gpm_one": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_few": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_many": "Текущий GPM: {{num}}. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_other": "Текущий GPM: {{num}}. {{heroKills}} от убийств героев, {{creepKills}} от убийств крипов.",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_few": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_many": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2 мин. задержка) Не найдено предметов у {{- heroName}}",
     "list": "(2 мин. задержка) {{- heroName}} имеет: {{- itemNames}}"
@@ -217,5 +217,5 @@
     "commit": "Сервер работает на версии {{version}}, вот что отсутствует по сравнению с последней версией: {{- url}}",
     "unknown": "Не удалось найти последний коммит git, репозиторий находится здесь {{- url}}"
   },
-  "xpm": "Текущий XPM: {{num}}"
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

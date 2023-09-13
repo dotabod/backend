@@ -5,8 +5,8 @@
     "pickup": "{{- heroName}} felvette az aegist!",
     "snatched": "{{- heroName}} ellopta az aegis-t {{emote}}"
   },
-  "apm_one": "Élő APM: {{count}} {{emote}}",
-  "apm_other": "Élő APM: {{count}} {{emote}}",
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Átlagos rank ezen a meccsen",
   "betaFeature": "[beta funkció]",
   "betaTester": "$t(betaTester_on)",
@@ -53,8 +53,8 @@
   "dotabod": "Nyílt forráskódú bot vagyok, {{author}} tervezett. Több információért {{- url}}",
   "gameNotFound": "Meccs nem található",
   "gpm_zero": "",
-  "gpm_one": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
-  "gpm_other": "Élő GPM: {{num}}. Amiből {{heroKills}} killekből, {{creepKills}} creepekből származó gold.",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2p delay) Itemek nem találhatóak {{- heroName}}-hez.",
     "list": "(2p delay) {{- heroName}} itemjei: {{- itemNames}}"
@@ -191,5 +191,5 @@
     "commit": "Szerveren futó verzió: {{version}}, itt megtalálod mi változott az előző verzióhoz képest: {{- url}}",
     "unknown": "Nem találom az utolsó git commitot, a repot itt éred el: {{- url}}"
   },
-  "xpm": "Élő XPM: {{num}}"
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

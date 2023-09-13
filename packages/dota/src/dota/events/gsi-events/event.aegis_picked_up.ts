@@ -1,4 +1,3 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import RedisClient from '../../../db/RedisClient.js'
@@ -82,14 +81,9 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     const redisClient = RedisClient.getInstance()
     await redisClient.client.json.set(`${dotaClient.getToken()}:aegis`, '$', res)
 
-    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
-    const {
-      roshPickup: { enabled: chatterEnabled },
-    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-
-    if (chattersEnabled && chatterEnabled) {
-      say(dotaClient.client, generateAegisMessage(res, dotaClient.client.locale))
-    }
+    say(dotaClient.client, generateAegisMessage(res, dotaClient.client.locale), {
+      chattersKey: 'roshPickup',
+    })
 
     emitAegisEvent(res, dotaClient.getToken())
   },

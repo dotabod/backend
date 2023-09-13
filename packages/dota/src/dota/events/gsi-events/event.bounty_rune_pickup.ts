@@ -1,4 +1,3 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
@@ -14,12 +13,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
     if (Number(dotaClient.client.gsi?.map?.clock_time) > 120) return
-
-    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
-    const {
-      bounties: { enabled: chatterEnabled },
-    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-    if (!chattersEnabled || !chatterEnabled) return
 
     const playingTeam =
       (await redisClient.client.get(`${dotaClient.client.token}:playingTeam`)) ??
@@ -80,6 +73,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
           totalBounties: dotaClient.bountyHeroNames.length,
           heroNames: bountyHeroNamesString,
         }),
+        { chattersKey: 'bounties' },
       )
       dotaClient.bountyHeroNames = []
     }, 15000)

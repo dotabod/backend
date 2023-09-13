@@ -5,9 +5,9 @@
     "pickup": "{{- heroName}} ha preso l'egida",
     "snatched": "{{- heroName}} ha rubato l'egida {{emote}}"
   },
-  "apm_one": "APM live: {{count}} {{emote}}",
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
-  "apm_other": "APM live: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "$t(betaTester_on)",
@@ -54,8 +54,8 @@
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
   "gpm_zero": "",
-  "gpm_one": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
-  "gpm_other": "GPM Live: {{num}}. {{heroKills}} da kill, {{creepKills}} da creep.",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(Delay di 2m) Nessun oggetto trovato per {{- heroName}}",
     "list": "(Delay di 2m) {{- heroName}} ha: {{- itemNames}}"
@@ -200,5 +200,5 @@
     "commit": "La versione corrente del server è {{version}}, ecco cosa manca rispetto all'ultima versione: {{- url}}",
     "unknown": "Impossibile trovare l'ultimo git commit, ecco il repo {{- url}}"
   },
-  "xpm": "XPM Live: {{num}}"
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

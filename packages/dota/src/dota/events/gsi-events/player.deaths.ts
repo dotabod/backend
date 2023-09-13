@@ -1,4 +1,3 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { Item } from '../../../types.js'
@@ -26,11 +25,6 @@ eventHandler.registerEvent(`player:deaths`, {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!deaths) return
 
-    const chatterEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
-    if (!chatterEnabled) return
-
-    const chatters = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-
     const playingHero = (await redisClient.client.get(
       `${dotaClient.getToken()}:playingHero`,
     )) as HeroNames | null
@@ -38,14 +32,12 @@ eventHandler.registerEvent(`player:deaths`, {
     const heroName =
       handleGetHero(playingHero ?? dotaClient.client.gsi?.hero?.name)?.localized_name ?? ''
 
-    await firstBloodChat(chatters, dotaClient, heroName)
-    passiveDeathChat(chatters, dotaClient, heroName)
+    await firstBloodChat(dotaClient, heroName)
+    passiveDeathChat(dotaClient, heroName)
   },
 })
 
-async function firstBloodChat(chatters: any, dotaClient: GSIHandler, heroName: string) {
-  if (!chatters.firstBloodDeath.enabled) return
-
+async function firstBloodChat(dotaClient: GSIHandler, heroName: string) {
   const playingTeam =
     (await redisClient.client.get(`${dotaClient.client.token}:playingTeam`)) ??
     dotaClient.client.gsi?.player?.team_name
@@ -61,6 +53,7 @@ async function firstBloodChat(chatters: any, dotaClient: GSIHandler, heroName: s
   say(
     dotaClient.client,
     t('chatters.firstBloodDeath', { emote: 'PepeLaugh', heroName, lng: dotaClient.client.locale }),
+    { chattersKey: 'firstBloodDeath' },
   )
 }
 
@@ -74,9 +67,7 @@ function cantCastItem(item: Item, dotaClient: GSIHandler) {
   )
 }
 
-function passiveDeathChat(chatters: any, dotaClient: GSIHandler, heroName: string) {
-  if (!chatters.passiveDeath.enabled) return
-
+function passiveDeathChat(dotaClient: GSIHandler, heroName: string) {
   const couldHaveLivedWith = findItem({
     itemName: passiveItemNames.map((i) => i.name),
     searchStashAlso: false,
@@ -110,5 +101,6 @@ function passiveDeathChat(chatters: any, dotaClient: GSIHandler, heroName: strin
   say(
     dotaClient.client,
     t('chatters.died', { emote: 'ICANT', heroName, itemNames, lng: dotaClient.client.locale }),
+    { chattersKey: 'passiveDeath' },
   )
 }

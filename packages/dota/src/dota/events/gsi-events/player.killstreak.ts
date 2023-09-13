@@ -1,4 +1,3 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { GSIHandler, redisClient } from '../../GSIHandler.js'
@@ -11,13 +10,6 @@ eventHandler.registerEvent(`player:kill_streak`, {
   handler: async (dotaClient: GSIHandler, streak: number) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
-
-    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
-    const {
-      killstreak: { enabled: chatterEnabled },
-    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-
-    if (!chattersEnabled || !chatterEnabled) return
 
     const playingHero = (await redisClient.client.get(
       `${dotaClient.getToken()}:playingHero`,
@@ -38,6 +30,7 @@ eventHandler.registerEvent(`player:kill_streak`, {
           heroName,
           lng: dotaClient.client.locale,
         }),
+        { chattersKey: 'killstreak' },
       )
       return
     }

@@ -1,4 +1,3 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { SocketClient } from '../../types.js'
@@ -12,13 +11,7 @@ import { findItem } from './findItem.js'
  * @param token - The token used for Redis operations
  */
 export async function checkPassiveMidas(client: SocketClient) {
-  const {
-    midas: { enabled: midasChatterEnabled },
-  } = getValueOrDefault(DBSettings.chatters, client.settings)
-
-  const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
-
-  if (chattersEnabled && midasChatterEnabled && client.stream_online) {
+  if (client.stream_online) {
     const isMidasPassive = await checkMidasIterator(client)
     if (typeof isMidasPassive === 'number') {
       say(
@@ -28,9 +21,12 @@ export async function checkPassiveMidas(client: SocketClient) {
           lng: client.locale,
           seconds: isMidasPassive,
         }),
+        { chattersKey: 'midas' },
       )
     } else if (isMidasPassive) {
-      say(client, t('chatters.midas', { emote: 'massivePIDAS', lng: client.locale }))
+      say(client, t('chatters.midas', { emote: 'massivePIDAS', lng: client.locale }), {
+        chattersKey: 'midas',
+      })
     }
   }
 }

@@ -5,10 +5,10 @@
     "pickup": "{{- heroName}} získal aegis!",
     "snatched": "{{- heroName}} snatched the aegis {{emote}}"
   },
-  "apm_one": "Live APM: {{count}} {{emote}}",
-  "apm_few": "Live APM: {{count}} {{emote}}",
-  "apm_many": "Live APM: {{count}} {{emote}}",
-  "apm_other": "Live APM: {{count}} {{emote}}",
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_few": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_many": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Průměrný rank této hry",
   "betaFeature": "[beta funkce]",
   "betaTester": "$t(betaTester_on)",
@@ -55,10 +55,10 @@
   "dotabod": "Jsem open-source bot vytvořený {{author}}. Více info na {{- url}}",
   "gameNotFound": "Hra nebyla nalezena",
   "gpm_zero": "",
-  "gpm_one": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_few": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_many": "Live GPM: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_other": "Aktuální GPM: {{num}}. {{heroKills}} ze zabitých hrdinů, {{creepKills}} z creepů.",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_few": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_many": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2m delay) No items found for {{- heroName}}",
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
@@ -217,5 +217,5 @@
     "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
   },
-  "xpm": "Aktuální XPM: {{num}}"
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

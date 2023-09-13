@@ -1,4 +1,3 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { DotaEvent, DotaEventTypes } from '../../../types.js'
@@ -14,13 +13,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
-    const chattersEnabled = getValueOrDefault(DBSettings.chatter, dotaClient.client.settings)
-    const {
-      tip: { enabled: chatterEnabled },
-    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
-
-    if (!chattersEnabled || !chatterEnabled) return
-
     const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
 
     const heroName = getHeroNameOrColor(
@@ -35,6 +27,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
       say(
         dotaClient.client,
         t('tip.from', { emote: 'ICANT', lng: dotaClient.client.locale, heroName }),
+        { chattersKey: 'tip' },
       )
     }
 
@@ -47,6 +40,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
       say(
         dotaClient.client,
         t('tip.to', { emote: 'PepeLaugh', lng: dotaClient.client.locale, heroName: toHero }),
+        { chattersKey: 'tip' },
       )
     }
   },
