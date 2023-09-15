@@ -1,11 +1,10 @@
-// Only call to update our local players variable with hero ids
-
-import { GSIHandler } from '../../GSIHandler.js'
+import { GSIHandler, redisClient } from '../../GSIHandler'
 import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent(`saveHeroesForMatchId`, {
   handler: async (dotaClient: GSIHandler, { matchId }: { matchId: string }) => {
-    if (dotaClient.playingBetMatchId && dotaClient.playingBetMatchId === matchId) {
+    const playingMatchId = await redisClient.client.get(`${dotaClient.getToken()}:matchId`)
+    if (playingMatchId && playingMatchId === matchId) {
       await dotaClient.emitNotablePlayers()
     }
   },

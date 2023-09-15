@@ -91,9 +91,8 @@ export class GSIHandler {
 
   // Server could reboot and lose these in memory
   // But that's okay they will get reset based on current match state
+
   blockCache: string | null = null
-  playingBetMatchId: string | undefined | null = null
-  playingTeam: 'radiant' | 'dire' | 'spectator' | undefined | null = null
   events: DotaEvent[] = []
   bountyHeroNames: string[] = []
   noTpChatter: {

@@ -42,7 +42,7 @@ const steamDelayDataLookupMap = new Map()
 async function saveMatchData(client: SocketClient) {
   // This now waits for the bet to complete before checking match data
   // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
-  // the playingBetMatchId is saved when the hero is selected
+  // the matchid is saved when the hero is selected
   const matchId = await redisClient.client.get(`${client.token}:matchId`)
   if (!Number(matchId)) return
 
