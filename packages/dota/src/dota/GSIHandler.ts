@@ -95,10 +95,6 @@ export class GSIHandler {
   blockCache: string | null = null
   events: DotaEvent[] = []
   bountyHeroNames: string[] = []
-  noTpChatter: {
-    timeout?: NodeJS.Timeout
-    lastRemindedDate?: Date
-  } = {}
   bountyTimeout?: NodeJS.Timeout
   killstreakTimeout?: NodeJS.Timeout
 

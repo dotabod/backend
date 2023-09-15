@@ -18,7 +18,10 @@ export default async function getDBUser({
 > {
   const lookupToken = token ?? providerAccountId ?? ''
 
-  if (invalidTokens.has(lookupToken)) return null
+  if (invalidTokens.has(lookupToken)) {
+    logger.info('[GSI] Invalid token', { ip, token: lookupToken })
+    return null
+  }
 
   let client = findUser(token) ?? findUserByTwitchId(providerAccountId)
   if (client) {

@@ -1,8 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { ApiClient } from '@twurple/api'
 import axios from 'axios'
-import http from 'http'
-import https from 'https'
 
 import { gameEnd } from '../__tests__/play-by-plays.js'
 import supabase from '../db/supabase.js'
@@ -16,13 +14,10 @@ if (process.env.NODE_ENV !== 'production') {
   console.log('NODE_ENV is development')
 }
 
-const USER_COUNT = 300
+const USER_COUNT = 11
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: 'http://localhost:5120',
-  // Add the `family` option to force IPv4
-  httpAgent: new http.Agent({ family: 4 }),
-  httpsAgent: new https.Agent({ family: 4 }),
 })
 
 async function postWinEventsForUsers(
@@ -34,9 +29,9 @@ async function postWinEventsForUsers(
   const promises = users.map((user) => {
     return gameEnd({
       win_team,
-      matchId: `123`,
-      steam32: `123`,
-      steam64: `123456`,
+      matchId: faker.number.int({ min: 9990, max: 999999 }).toString(),
+      steam32: faker.number.int({ min: 9990, max: 999999 }).toString(),
+      steam64: faker.number.int({ min: 9990, max: 999999 }).toString(),
       token: user.id,
     }).map((step) => {
       return apiClient.post('/', step)
@@ -51,8 +46,9 @@ export async function postEventsForUsers(
   }[],
   eventType: DotaEventTypes,
 ) {
-  const promises = users.map((user) =>
-    apiClient.post('/', {
+  const promises = users.map((user) => {
+    console.log(user.id)
+    return apiClient.post('/', {
       player: {
         activity: 'playing',
       },
@@ -64,14 +60,15 @@ export async function postEventsForUsers(
         },
       ],
       auth: { token: user.id },
-    }),
-  )
-  await Promise.allSettled(promises)
+    })
+  })
+  return await Promise.all(promises)
 }
 
 async function testAegis() {
   const users = await fetchOnlineUsers(USER_COUNT)
-  await postWinEventsForUsers(users, 'radiant')
+  console.log(users)
+  // await postWinEventsForUsers(users, 'radiant')
   await postEventsForUsers(users, DotaEventTypes.AegisPickedUp)
 }
 

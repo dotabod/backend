@@ -24,7 +24,7 @@ class EventHandler {
       // check if options.handler is a promise first
 
       options.handler(client, data)?.catch((err) => {
-        console.error('Error handling event:', { token, eventName, err })
+        console.error('Error handling event:', { token, data, eventName, err })
       })
     })
   }

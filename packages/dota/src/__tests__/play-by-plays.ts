@@ -44,7 +44,7 @@ export const gameEnd = ({
     player: {
       steamid: steam64,
       accountid: steam32,
-      name: 'loremipsum',
+      name: steam32,
       activity: 'playing',
       kills: 0,
       deaths: 0,
