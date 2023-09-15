@@ -1,15 +1,18 @@
 services:
   twitch-chat:
+    platform: linux/arm64
     image: "ghcr.io/dotabod/twitch-chat:v2.0"
     volumes:
       - ./packages/twitch/chat/src:/app/packages/twitch/chat/src
 
   twitch-events:
+    platform: linux/arm64
     image: "ghcr.io/dotabod/twitch-events:v2.0"
     volumes:
       - ./packages/twitch/events/src:/app/packages/twitch/events/src
 
   dota:
+    platform: linux/arm64
     image: "ghcr.io/dotabod/dota:v2.0"
     volumes:
       - ./packages/dota/src:/app/packages/dota/src

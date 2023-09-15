@@ -1,6 +1,8 @@
 import { faker } from '@faker-js/faker'
 import { ApiClient } from '@twurple/api'
 import axios from 'axios'
+import http from 'http'
+import https from 'https'
 
 import { gameEnd } from '../__tests__/play-by-plays.js'
 import supabase from '../db/supabase.js'
@@ -16,8 +18,11 @@ if (process.env.NODE_ENV !== 'production') {
 
 const USER_COUNT = 300
 
-export const apiClient = axios.create({
+const apiClient = axios.create({
   baseURL: 'http://localhost:5120',
+  // Add the `family` option to force IPv4
+  httpAgent: new http.Agent({ family: 4 }),
+  httpsAgent: new https.Agent({ family: 4 }),
 })
 
 async function postWinEventsForUsers(

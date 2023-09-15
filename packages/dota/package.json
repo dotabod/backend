@@ -10,8 +10,7 @@
   "packageManager": "yarn@1.22.19",
   "private": true,
   "scripts": {
-    "docker:production": "node ./dist/index.js",
-    "docker:development": "nodemon -L --ext ts --ignore '__tests__/*' --exec 'node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
+    "docker:development": "node --inspect=0.0.0.0:9229 ./dist/index.js",
     "host:development": "doppler run --fallback-only -- nodemon -L --ext ts --ignore '__tests__/*' --exec 'node --no-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
     "build": "tsc --build --verbose",
     "debug": "nodemon -L --ext ts --ignore '__tests__/*' --exec 'node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
