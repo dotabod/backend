@@ -22,7 +22,7 @@
   },
   "bounties": {
     "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) {{emote}} Thanks {{heroNames}} {{emote2}}",
-    "totalGold": "{{count}} gold"
+    "totalGold": "{{count}} گلد"
   },
   "chatters": {
     "died": "درخشیدی {{- heroName}} . {{itemNames}}  را نگه دار واسه بازی بعد {{emote}}",
@@ -36,21 +36,21 @@
   },
   "colors": {
     "blue": "آبی",
-    "brown": "Brown",
-    "cyan": "Cyan",
-    "green": "Green",
-    "olive": "Olive",
-    "orange": "Orange",
-    "pink": "Pink",
-    "purple": "Purple",
-    "teal": "Teal",
-    "yellow": "Yellow"
+    "brown": "قهوه\u200cای",
+    "cyan": "آبی",
+    "green": "سبز",
+    "olive": "زیتونی",
+    "orange": "نارنجی",
+    "pink": "صورتی",
+    "purple": "بنفش",
+    "teal": "فیروزه ای",
+    "yellow": "زرد"
   },
   "commandDisabled": "Streamer disabled {{cmdName}} command {{emote}} Check !commands for the enabled ones",
   "commands_everyone": "کامندهای همگانی: {{commandList}}",
   "commands_mods": "کامندهای مادها {{commandList}}",
   "dota2pt": "میخوای چیز جدید واسه قهرمان {{- heroName}} یاد بگیری؟ این اینک رو چک کن {{- url}}",
-  "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
+  "dotabod": "من یک ربات سورس باز هستم. سازنده من {{author}}. اطلاعات بیشتر: {{- url}}",
   "gameNotFound": "بازی پیدا نشد",
   "gpm_zero": "",
   "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
@@ -65,7 +65,7 @@
     "timeperiod": {
       "days_one": "in {{count}}d",
       "days_other": "in {{count}}d",
-      "lifetime": "of all time"
+      "lifetime": "تمام مدت"
     },
     "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
     "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
@@ -90,7 +90,7 @@
   },
   "lastgamescore": {
     "double": "بریم دوبله رنک رو به فنا بدیم",
-    "duration": "{{minutes}}m long",
+    "duration": "{{minutes}} دقیقه طول کشید",
     "kda": "{{- kdavalue}} on {{- heroName}}",
     "lost": "بازی قبلی: فقط غذا دادم و باختیم",
     "party": "توی یک پارتی غذا میدیم",
@@ -99,7 +99,7 @@
   },
   "lifetime": "تمام بازی ها",
   "matchFound": "بازی شروع شد. تمام این کامندها فعال است {{commandList}}",
-  "matchId": "Match ID: {{matchId}}",
+  "matchId": "ایدی مچ: {{matchId}}",
   "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",
   "missingMatchData": "Waiting for current match data {{emote}}",
   "missingUser": "User not found. Try logging out and in of dotabod.com",
@@ -109,7 +109,7 @@
   "noHero": "قهرمانی پیدا نشد",
   "noLastMatch": "بازی قبلی پیدا نشد {{emote}}",
   "noNotable": "غذا دهنده معروفی در بازی نیست",
-  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
+  "notLive": "استریم لایو نیس. {{emote}} . لایو هست? مادرتورا لطفا این کامند رو بزنید اگه لایو هست !online",
   "notPlaying": "بازی نمیکنه {{emote}}",
   "npAdd": "Try !np add <steam32id> <playername>",
   "npAdded": "{{name}} برای این کانال اضافه شد. !np",
@@ -117,7 +117,7 @@
   "npRemoved": "{{steamid}} را از !np برای این کانال حذف شد",
   "npUnknown": "{{steamid}} برای این کانال پیدا نشد",
   "offline": "آفلاین",
-  "online": "online",
+  "online": "آنلاین",
   "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
   "ping": "Pong {{emote}}",
   "pleb": "پایینی یک pleb {{emote}}",
@@ -159,7 +159,7 @@
   "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
   "stream_on": "بات چنل {{channel}} را آنلاین فرض میکنم. برای آفلاین شدن از !offline استفاده کنید",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
-  "streamDelayNone": "There is no stream delay on this channel",
+  "streamDelayNone": "استریم تاخیر نداره",
   "tip": {
     "from": "{{- heroName}} تیپش کرد {{emote}}",
     "to": "{{- heroName}} تیپش کردم {{emote}}"
