@@ -91,6 +91,14 @@ class GSIServer {
   }
 
   init() {
+    // Every 5 seconds log the current memory usage
+    setInterval(() => {
+      const used = process.memoryUsage()
+      for (const key in used) {
+        logger.info(`[MEMORY] ${key} ${Math.round((used[key] / 1024 / 1024) * 100) / 100} MB`)
+      }
+    }, 5000)
+
     return this
   }
 }

@@ -14,7 +14,7 @@ if (process.env.NODE_ENV !== 'production') {
   console.log('NODE_ENV is development')
 }
 
-const USER_COUNT = 11
+const USER_COUNT = 300
 
 export const apiClient = axios.create({
   baseURL: 'http://localhost:5120',
@@ -68,7 +68,7 @@ export async function postEventsForUsers(
 async function testAegis() {
   const users = await fetchOnlineUsers(USER_COUNT)
   console.log(users)
-  // await postWinEventsForUsers(users, 'radiant')
+  await postWinEventsForUsers(users, 'radiant')
   await postEventsForUsers(users, DotaEventTypes.AegisPickedUp)
 }
 

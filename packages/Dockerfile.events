@@ -37,8 +37,8 @@ ARG NODE_ENV
 
 # Meta-data and labels
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
-      org.opencontainers.image.description="Dotabod container: ${BUILD_CONTEXT}" \
-      org.opencontainers.image.licenses="AGPL-3.0"
+    org.opencontainers.image.description="Dotabod container: ${BUILD_CONTEXT}" \
+    org.opencontainers.image.licenses="AGPL-3.0"
 
 # Create unprivileged user and switch to it
 RUN adduser -D dotadockeruser
