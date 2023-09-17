@@ -2,10 +2,12 @@ import crypto from 'crypto'
 import fs from 'fs'
 
 import axios from 'axios'
+// @ts-expect-error no types exist
 import Dota2 from 'dota2'
 import { Long } from 'mongodb'
 import retry from 'retry'
 import Steam from 'steam'
+// @ts-expect-error no types exist
 import steamErrors from 'steam-errors'
 
 import MongoDBSingleton from './MongoDBSingleton.js'

@@ -14,6 +14,10 @@ dota.dota2.on('ready', () => {
   isConnectedToSteam = true
 })
 
+interface callback {
+  (err: any, response: any): void
+}
+
 io.on('connection', (socket) => {
   // dota node app just connected
   // make it join our room
@@ -28,28 +32,45 @@ io.on('connection', (socket) => {
   hasDotabodSocket = true
 
   socket.on('disconnect', () => {
+    console.log('disconnect')
     console.log('We lost the server! Respond to all messages with "server offline"')
     hasDotabodSocket = false
   })
 
-  socket.on('getCards', async function (accountIds: number[]) {
+  socket.on('getCards', async function (accountIds: number[], callback: callback) {
     if (!isConnectedToSteam) return
-    return await dota.getCards(accountIds)
+    try {
+      callback(null, await dota.getCards(accountIds))
+    } catch (e: any) {
+      callback(e.message, null)
+    }
   })
 
-  socket.on('getCard', async function (accountId: number) {
+  socket.on('getCard', async function (accountId: number, callback: callback) {
     if (!isConnectedToSteam) return
-    return await dota.getCard(accountId)
+    try {
+      callback(null, await dota.getCard(accountId))
+    } catch (e: any) {
+      callback(e.message, null)
+    }
   })
 
-  socket.on('getUserSteamServer', async function (steam32Id: number) {
+  socket.on('getUserSteamServer', async function (steam32Id: number, callback: callback) {
     if (!isConnectedToSteam) return
-    return await dota.getUserSteamServer(steam32Id)
+    try {
+      callback(null, await dota.getUserSteamServer(steam32Id))
+    } catch (e: any) {
+      callback(e.message, null)
+    }
   })
 
-  socket.on('getRealTimeStats', async function (data: any) {
+  socket.on('getRealTimeStats', async function (data: any, callback: callback) {
     if (!isConnectedToSteam) return
-    return await dota.GetRealTimeStats(data)
+    try {
+      callback(null, await dota.GetRealTimeStats(data))
+    } catch (e: any) {
+      callback(e.message, null)
+    }
   })
 })
 

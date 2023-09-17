@@ -28,10 +28,21 @@ commandHandler.registerCommand('test', {
         gsi: client.gsi,
       })
       steamSocket.emit('getCards', accountIds, (err: any, response: any) => {
-        console.log(response) // one response per client
+        console.log(response, err) // one response per client
       })
 
       chatClient.say(channel, `cards! ${client.gsi?.map?.matchid}`)
+      return
+    }
+
+    if (args[0] === 'card') {
+      const [, accountId] = args
+
+      steamSocket.emit('getCard', Number(accountId), (err: any, response: any) => {
+        console.log({ response, err }) // one response per client
+      })
+
+      chatClient.say(channel, `card!`)
       return
     }
 
@@ -41,6 +52,7 @@ commandHandler.registerCommand('test', {
       'getUserSteamServer',
       steam32Id || client.steam32Id,
       (err: any, steamserverid: string) => {
+        console.log({ steamserverid })
         if (!steamserverid) {
           chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
           return
