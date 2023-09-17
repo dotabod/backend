@@ -1,8 +1,9 @@
 import { t } from 'i18next'
 
 import RedisClient from '../../db/RedisClient.js'
+import { steamSocket } from '../../steam/ws.js'
+import { Cards } from '../../types.js'
 import { logger } from '../../utils/logger.js'
-import { server } from '../index.js'
 import { leaderRanks, ranks } from './consts.js'
 
 export function rankTierToMmr(rankTier: string | number) {
@@ -56,8 +57,18 @@ export async function lookupLeaderRank(
     result = medalCache as unknown as LeaderRankData
   } else {
     try {
+      const getCardPromise = new Promise<Cards>((resolve, reject) => {
+        steamSocket.emit('getCard', steam32Id, (err: any, card: Cards) => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(card)
+          }
+        })
+      })
+
       // Fetch the leaderboard rank from the Dota 2 server
-      const data = await server.dota.getCard(steam32Id)
+      const data = await getCardPromise
       const standing: number = data?.leaderboard_rank
 
       // If the rank is not available, return default values

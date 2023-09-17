@@ -5,7 +5,8 @@
     "packages/settings",
     "packages/twitch/events",
     "packages/twitch/chat",
-    "packages/dota"
+    "packages/dota",
+    "packages/steam"
   ],
   "scripts": {
     "up": "yarn upgrade-interactive --latest",

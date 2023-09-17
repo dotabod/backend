@@ -3,11 +3,10 @@ import http from 'http'
 import { Server, Socket } from 'socket.io'
 
 import getDBUser from '../db/getDBUser.js'
-import Dota from '../steam/index.js'
 import { logger } from '../utils/logger.js'
 import { newData, processChanges } from './globalEventEmitter.js'
 import { emitMinimapBlockerStatus } from './GSIHandler.js'
-import { gsiHandlers, isDev } from './lib/consts.js'
+import { gsiHandlers } from './lib/consts.js'
 import { validateToken } from './validateToken.js'
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
@@ -47,11 +46,9 @@ async function handleSocketConnection(socket: Socket) {
 
 class GSIServer {
   io: Server
-  dota: Dota
 
   constructor() {
     logger.info('Starting GSI Server!')
-    this.dota = Dota.getInstance()
 
     const app = express()
     const httpServer = http.createServer(app)
@@ -65,18 +62,7 @@ class GSIServer {
     app.use(express.json({ limit: '1mb' }))
     app.use(express.urlencoded({ extended: true, limit: '1mb' }))
 
-    const setupPostRoute = () => {
-      app.post('/', validateToken, processChanges('previously'), processChanges('added'), newData)
-    }
-
-    if (isDev) {
-      setupPostRoute()
-    } else {
-      this.dota.dota2.on('ready', () => {
-        logger.info('[SERVER] Connected to dota game coordinator')
-        setupPostRoute()
-      })
-    }
+    app.post('/', validateToken, processChanges('previously'), processChanges('added'), newData)
 
     app.get('/', (req: Request, res: Response) => {
       res.status(200).json({ status: 'ok' })

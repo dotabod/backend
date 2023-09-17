@@ -1,12 +1,10 @@
 import { t } from 'i18next'
 
-import Dota from '../../steam/index.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
-import { DelayedGames } from '../../types.js'
+import { steamSocket } from '../../steam/ws.js'
+import { Cards, DelayedGames } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { getAccountsFromMatch } from './getAccountsFromMatch.js'
-
-const dota = Dota.getInstance()
 
 export async function getPlayers({
   locale,
@@ -42,7 +40,17 @@ export async function getPlayers({
       searchPlayers: players,
     })
 
-    const cards = await dota.getCards(accountIds)
+    const getCardsPromise = new Promise<Cards[]>((resolve, reject) => {
+      steamSocket.emit('getCards', accountIds, (err: any, cards: any) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(cards)
+        }
+      })
+    })
+
+    const cards = await getCardsPromise
 
     return {
       gameMode: response ? Number(response.match.game_mode) : undefined,

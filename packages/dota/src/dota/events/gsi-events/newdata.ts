@@ -1,11 +1,11 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { Packet, SocketClient, validEventTypes } from '../../../types.js'
+import { steamSocket } from '../../../steam/ws.js'
+import { DelayedGames, Packet, SocketClient, validEventTypes } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
 import { GSIHandler, redisClient } from '../../GSIHandler.js'
-import { server } from '../../index.js'
 import { checkPassiveMidas } from '../../lib/checkMidas.js'
 import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
@@ -35,8 +35,8 @@ function chatterMatchFound(client: SocketClient) {
   }
 }
 
-const steamServerLookupMap = new Map()
-const steamDelayDataLookupMap = new Map()
+const steamServerLookupMap = new Set()
+const steamDelayDataLookupMap = new Set()
 
 // Runs every gametick
 async function saveMatchData(client: SocketClient) {
@@ -55,7 +55,7 @@ async function saveMatchData(client: SocketClient) {
     .get(`${matchId}:lobbyType`)
     .exec()
 
-  let [steamServerId] = res
+  const [steamServerId] = res
   const [, lobbyType] = res
 
   if (steamServerId && lobbyType) return
@@ -63,12 +63,19 @@ async function saveMatchData(client: SocketClient) {
   if (!steamServerId && !lobbyType) {
     if (steamServerLookupMap.has(matchId)) return
 
-    const promise = server.dota.getUserSteamServer(client.steam32Id).catch((e) => {
-      logger.error('err getUserSteamServer', { e })
-      return null
+    // Wrap the steamSocket.emit in a Promise
+    const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
+      steamSocket.emit('getUserSteamServer', client.steam32Id, (err: any, cards: any) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(cards)
+        }
+      })
     })
-    steamServerLookupMap.set(matchId, promise)
-    steamServerId = await promise
+
+    steamServerLookupMap.add(matchId)
+    const steamServerId = await getDelayedDataPromise
     steamServerLookupMap.delete(matchId) // Remove the promise once it's resolved
 
     if (!steamServerId) return
@@ -78,20 +85,28 @@ async function saveMatchData(client: SocketClient) {
   if (steamServerId && !lobbyType) {
     if (steamDelayDataLookupMap.has(matchId)) return
 
-    const promise = server.dota
-      .GetRealTimeStats({
-        match_id: matchId!,
-        refetchCards: true,
-        steam_server_id: steamServerId.toString(),
-        token: client.token,
-      })
-      .catch((e) => {
-        logger.error('err GetRealTimeStats', { e })
-        return null
-      })
-    steamDelayDataLookupMap.set(matchId, promise)
-    const delayedData = await promise
-    steamDelayDataLookupMap.delete(matchId) // Remove the promise once it's resolved
+    steamDelayDataLookupMap.add(matchId)
+    const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
+      steamSocket.emit(
+        'getRealTimeStats',
+        {
+          match_id: matchId!,
+          refetchCards: true,
+          steam_server_id: steamServerId?.toString(),
+          token: client.token,
+        },
+        (err: any, data: DelayedGames) => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(data)
+          }
+        },
+      )
+    })
+
+    const delayedData = await getDelayedDataPromise
+    steamDelayDataLookupMap.delete(matchId)
 
     if (!delayedData?.match.lobby_type) return
     await redisClient.client.set(`${matchId}:lobbyType`, delayedData.match.lobby_type)

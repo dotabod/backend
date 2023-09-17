@@ -4,10 +4,10 @@ import DOTA_ITEMS from 'dotaconstants/build/items.json' assert { type: 'json' }
 import { t } from 'i18next'
 
 import RedisClient from '../../db/RedisClient.js'
-import { server } from '../../dota/index.js'
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
-import { Item, Packet } from '../../types.js'
+import { steamSocket } from '../../steam/ws.js'
+import { DelayedGames, Item, Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
@@ -81,12 +81,27 @@ async function getItems({
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
 
-    const delayedData = await server.dota.GetRealTimeStats({
-      match_id: packet?.map?.matchid ?? '',
-      forceRefetchAll: true,
-      steam_server_id: steamServerId,
-      token,
+    // Wrap the steamSocket.emit in a Promise
+    const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
+      steamSocket.emit(
+        'getRealTimeStats',
+        {
+          match_id: packet?.map?.matchid ?? '',
+          forceRefetchAll: true,
+          steam_server_id: steamServerId,
+          token,
+        },
+        (err: any, cards: any) => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(cards)
+          }
+        },
+      )
     })
+
+    const delayedData = await getDelayedDataPromise
 
     if (!delayedData) {
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))

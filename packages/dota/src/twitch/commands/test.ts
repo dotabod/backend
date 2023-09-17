@@ -1,9 +1,8 @@
 import { t } from 'i18next'
 
-import { server } from '../../dota/index.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import Dota from '../../steam/index.js'
+import { steamSocket } from '../../steam/ws.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
@@ -28,43 +27,36 @@ commandHandler.registerCommand('test', {
       const { accountIds } = await getAccountsFromMatch({
         gsi: client.gsi,
       })
-      const dota = Dota.getInstance()
-      await dota.getCards(accountIds, true)
+      steamSocket.emit('getCards', accountIds, (err: any, response: any) => {
+        console.log(response) // one response per client
+      })
 
       chatClient.say(channel, `cards! ${client.gsi?.map?.matchid}`)
       return
     }
 
     const [steam32Id] = args
-    if (!client.steam32Id || !steam32Id) {
-      chatClient.say(
-        channel,
-        message.channel.client.multiAccount
-          ? t('multiAccount', {
-              lng: message.channel.client.locale,
-              url: 'dotabod.com/dashboard/features',
-            })
-          : t('unknownSteam', { lng: message.channel.client.locale }),
-      )
-      return
-    }
 
-    const steamserverid = await server.dota.getUserSteamServer(steam32Id || client.steam32Id)
+    steamSocket.emit(
+      'getUserSteamServer',
+      steam32Id || client.steam32Id,
+      (err: any, steamserverid: string) => {
+        if (!steamserverid) {
+          chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
+          return
+        }
 
-    if (!steamserverid) {
-      chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
-      return
-    }
+        logger.info('test command', {
+          command: 'TEST',
+          steam32Id: steam32Id || client.steam32Id,
+          steamserverid,
+        })
 
-    logger.info('test command', {
-      command: 'TEST',
-      steam32Id: steam32Id || client.steam32Id,
-      steamserverid,
-    })
-
-    logger.info(
-      `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env
-        .STEAM_WEB_API!}&server_steam_id=${steamserverid}`,
+        logger.info(
+          `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env
+            .STEAM_WEB_API!}&server_steam_id=${steamserverid}`,
+        )
+      },
     )
   },
 })

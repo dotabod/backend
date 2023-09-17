@@ -1,6 +1,6 @@
 {
-  "name": "@dotabod/dota",
-  "description": "By leveraging insights from the Dota 2 official API, Dotabod will know exactly when to hide sensitive streamer information or engage with your Twitch audience.",
+  "name": "@dotabod/steam",
+  "description": "Forward twitch chat to dotabod.",
   "version": "1.0.0",
   "license": "GPL-3.0-or-later",
   "author": "Geczy",
@@ -10,17 +10,16 @@
   "packageManager": "yarn@1.22.19",
   "private": true,
   "scripts": {
-    "docker:production": "node ./dist/index.js",
-    "docker:development": "nodemon -L --ext ts --ignore '__tests__/*' --exec 'node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
-    "host:development": "doppler run --fallback-only -- nodemon -L --ext ts --ignore '__tests__/*' --exec 'node --no-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
     "build": "tsc --build --verbose",
-    "debug": "nodemon -L --ext ts --ignore '__tests__/*' --exec 'node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
-    "fix-users": "doppler run --fallback-only -- nodemon -L --ext ts ./src/dev/index.ts",
-    "fix-users-dev-docker": "node --no-warnings -r ts-node/register --loader ts-node/esm src/dev/index.ts",
-    "test": "doppler run --fallback-only -- yarn jest --config ./jest.config.ts"
+    "docker:production": "node --trace-warnings ./dist/index.js",
+    "docker:development": "nodemon -L --ext ts --exec 'node --no-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
+    "host:development": "nodemon -L --ext ts ./src/index.ts"
   },
-  "dependencies": {
-    "@dotabod/settings": "^1.0.0",
+  "devDependencies": {
+    "@types/node": "^20.5.7",
+    "@typescript-eslint/eslint-plugin": "^6.5.0",
+    "@typescript-eslint/parser": "^6.5.0",
+    "eslint": "^8.48.0",
     "@node-steam/id": "^1.2.0",
     "@supabase/supabase-js": "^2.33.1",
     "@twurple/eventsub-base": "^6.0.9",
@@ -31,6 +30,7 @@
     "body-parser": "^1.20.2",
     "chokidar": "^3.5.3",
     "country-code-emoji": "^2.3.0",
+    "dota2": "https://github.com/dotabod/node-dota2.git",
     "dotaconstants": "^7.18.0",
     "express": "^4.18.2",
     "lodash.isequal": "^4.5.0",
@@ -42,9 +42,12 @@
     "retry": "^0.13.1",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.2",
+    "steam": "https://github.com/dotabod/node-steam",
+    "steam-errors": "^1.0.0",
     "winston": "^3.10.0"
   },
-  "devDependencies": {
+  "dependencies": {
+    "node-gyp": "^9.4.0",
     "@faker-js/faker": "^8.0.2",
     "@jest/globals": "^29.6.4",
     "@testing-library/dom": "^9.3.1",

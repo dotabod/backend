@@ -33,6 +33,29 @@ services:
     volumes:
       - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
+  steam:
+    image: "ghcr.io/dotabod/steam:v2.0"
+    platform: linux/amd64
+    container_name: steam
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: ./packages/Dockerfile.steam
+      args:
+        - NODE_ENV=${NODE_ENV:-development}
+        - BUILD_CONTEXT=packages/steam
+    hostname: steam
+    ports:
+      - "5035:5035"
+    environment:
+      - MONGO_URL
+      - STEAM_PASS
+      - STEAM_USER
+      - STEAM_WEB_API
+      - NODE_ENV
+    volumes:
+      - ./packages/steam/locales:/app/packages/steam/locales
+
   twitch-events:
     image: "ghcr.io/dotabod/twitch-events:v2.0"
     platform: linux/amd64
@@ -97,8 +120,6 @@ services:
       - NEW_RELIC_LOG=stdout
       - NEW_RELIC_LICENSE_KEY
       - NODE_ENV
-      - STEAM_PASS
-      - STEAM_USER
       - STEAM_WEB_API
       - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
