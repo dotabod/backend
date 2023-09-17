@@ -1,5 +1,3 @@
-import { t } from 'i18next'
-
 const heroes = {
   npc_dota_hero_antimage: {
     id: 1,
@@ -621,84 +619,6 @@ const heroes = {
     localized_name: 'Muerta',
     alias: [],
   },
-}
-
-export const translatedColor = (color: string, lng: string) => {
-  if (lng === 'en') return color
-
-  const props = { lng }
-  switch (color) {
-    case 'Blue':
-      return t('colors.blue', props)
-    case 'Teal':
-      return t('colors.teal', props)
-    case 'Purple':
-      return t('colors.purple', props)
-    case 'Yellow':
-      return t('colors.yellow', props)
-    case 'Orange':
-      return t('colors.orange', props)
-    case 'Pink':
-      return t('colors.pink', props)
-    case 'Olive':
-      return t('colors.olive', props)
-    case 'Cyan':
-      return t('colors.cyan', props)
-    case 'Green':
-      return t('colors.green', props)
-    case 'Brown':
-      return t('colors.brown', props)
-    default:
-      return color
-  }
-}
-
-export const heroColors = 'Blue,Teal,Purple,Yellow,Orange,Pink,Olive,Cyan,Green,Brown'.split(',')
-export function getHeroNameOrColor(id: number, index?: number) {
-  if (!id && typeof index === 'number') return heroColors[index]
-
-  const name = getHeroById(id)?.localized_name
-  if (!name && typeof index === 'number') {
-    return heroColors[index]
-  }
-
-  return name ?? 'Unknown'
-}
-
-export function getHeroById(id: number) {
-  if (!id) return null
-
-  return Object.values(heroes).find((h) => h.id === id)
-}
-
-export function getHeroByName(name: string) {
-  if (!name) return null
-
-  // only keep a-z in name
-  name = name
-    .replace(/[^a-z]/gi, '')
-    .toLowerCase()
-    .trim()
-
-  const hero = Object.values(heroes).find((h) => {
-    const inName = h.localized_name
-      // replace all spaces with nothing, and only keep a-z
-      .replace(/[^a-z]/gi, '')
-      .toLowerCase()
-      .trim()
-
-    // check for alias
-    const hasAlias = h.alias.some(
-      (alias) =>
-        alias
-          .replace(/[^a-z]/gi, '')
-          .toLowerCase()
-          .trim() === name,
-    )
-    return inName.includes(name) || hasAlias
-  })
-
-  return hero
 }
 
 export default heroes
