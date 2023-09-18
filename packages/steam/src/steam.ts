@@ -274,10 +274,10 @@ class Dota {
 
     // Set up the retry operation
     const operation = retry.operation({
-      retries: 35, // Number of retries
-      factor: 1, // Exponential backoff factor
-      minTimeout: 1 * 1000, // Minimum retry timeout (1 second)
-      maxTimeout: 60 * 1000, // Maximum retry timeout (60 seconds)
+      retries: 35,
+      factor: 1.1,
+      minTimeout: 5000, // Minimum retry timeout (1 second)
+      maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
     })
 
     return new Promise((resolve, reject) => {
@@ -323,10 +323,10 @@ class Dota {
     }
 
     const operation = retry.operation({
-      retries: 19,
+      retries: 35,
       factor: 1.1,
-      minTimeout: 1 * 5000, // Minimum retry timeout (1 second)
-      maxTimeout: 60 * 1000, // Maximum retry timeout (60 seconds)
+      minTimeout: 5000, // Minimum retry timeout (1 second)
+      maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
     })
 
     return new Promise((resolve, reject) => {
@@ -381,7 +381,7 @@ class Dota {
     const operation = retry.operation({
       retries: 8,
       factor: 1,
-      minTimeout: 2 * 1000,
+      minTimeout: 2000,
     })
 
     operation.attempt((currentAttempt: number) => {
@@ -425,11 +425,7 @@ class Dota {
 
   fetchAndUpdateCard = async (accountId: number) => {
     const fetchedCard = accountId
-      ? await retryCustom({
-          retries: 10,
-          fn: () => this.getCard(accountId),
-          minTimeout: 1000,
-        }).catch(() => ({
+      ? await retryCustom(() => this.getCard(accountId)).catch(() => ({
           rank_tier: -10,
           leaderboard_rank: 0,
         }))
