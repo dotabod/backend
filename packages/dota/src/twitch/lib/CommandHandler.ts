@@ -42,6 +42,31 @@ class CommandHandler {
   cooldowns = new Map() // Map for storing command cooldowns
   bypassCooldownUsers: string[] = [] // List of users that are allowed to bypass the cooldown
 
+  constructor() {
+    const cleanupIntervalMinutes = 5 // Adjust this interval as needed
+    const cleanupIntervalMillis = cleanupIntervalMinutes * 60 * 1000 // Convert to milliseconds
+
+    setInterval(this.cleanupCooldowns, cleanupIntervalMillis)
+  }
+
+  cleanupCooldowns = () => {
+    const now = Date.now()
+    for (const key of this.cooldowns.keys()) {
+      const [, command] = key.split('.')
+      const cooldownTime = this.cooldowns.get(key)
+      const timeDiff = now - cooldownTime
+
+      // Get the command cooldown from options or use defaultCooldown
+      const commandOptions = this.commands.get(command)
+      const cooldown = commandOptions?.cooldown ?? defaultCooldown
+
+      // Remove the cooldown entry if it has expired
+      if (timeDiff >= cooldown) {
+        this.cooldowns.delete(key)
+      }
+    }
+  }
+
   // Function for adding a user to the list of users that are allowed to bypass the cooldown
   addUserToBypassList(username: string | string[]) {
     if (Array.isArray(username)) {

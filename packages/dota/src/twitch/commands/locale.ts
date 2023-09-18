@@ -24,7 +24,6 @@ const contributors = [
 commandHandler.registerCommand('locale', {
   aliases: ['translation', 'translatedby'],
   permission: 0,
-  cooldown: 0,
   handler: (message: MessageType, args: string[]) => {
     const translators = contributors.find((c) => c.locale === message.channel.client.locale)
     if (!translators) {
