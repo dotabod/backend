@@ -323,9 +323,10 @@ class Dota {
     }
 
     const operation = retry.operation({
-      retries: 35,
+      retries: 19,
       factor: 1.1,
-      minTimeout: 1 * 5000,
+      minTimeout: 1 * 5000, // Minimum retry timeout (1 second)
+      maxTimeout: 60 * 1000, // Maximum retry timeout (60 seconds)
     })
 
     return new Promise((resolve, reject) => {
@@ -356,7 +357,7 @@ class Dota {
           await saveMatch({ match_id, game: gamePlusMore })
           if (!forceRefetchAll) {
             // forward the msg to dota node app
-            io.to('steam').emit('saveHeroesForMatchId', { matchId: match_id }, token)
+            io.to('steam').emit('saveHeroesForMatchId', { matchId: match_id, token })
           }
           return resolve(gamePlusMore)
         }
@@ -379,7 +380,7 @@ class Dota {
   ) {
     const operation = retry.operation({
       retries: 8,
-      factor: 2,
+      factor: 1,
       minTimeout: 2 * 1000,
     })
 
