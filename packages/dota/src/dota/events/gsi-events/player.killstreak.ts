@@ -47,6 +47,7 @@ eventHandler.registerEvent(`player:kill_streak`, {
           heroName,
           lng: dotaClient.client.locale,
         }),
+        { chattersKey: 'killstreak' },
       )
     }, 15000)
   },
