@@ -15,7 +15,7 @@
     "host:development": "doppler run --fallback-only -- nodemon -L --ext ts --ignore '__tests__/*' --exec 'node --no-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
     "build": "tsc --build --verbose",
     "debug": "nodemon -L --ext ts --ignore '__tests__/*' --exec 'node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
-    "fix-users": "doppler run --fallback-only -- nodemon -L --ext ts ./src/dev/index.ts",
+    "fix-users": "doppler run -- node --no-warnings -r ts-node/register --loader ts-node/esm ./src/dev/index.ts",
     "fix-users-dev-docker": "node --no-warnings -r ts-node/register --loader ts-node/esm src/dev/index.ts",
     "test": "doppler run --fallback-only -- yarn jest --config ./jest.config.ts"
   },
