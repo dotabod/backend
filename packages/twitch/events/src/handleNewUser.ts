@@ -18,10 +18,10 @@ export async function handleNewUser(providerAccountId: string, listener: EventSu
   try {
     const stream = await botApi.streams.getStreamByUserId(providerAccountId)
     const streamer = await botApi.users.getUserById(providerAccountId)
-    const follows = botApi.users.getFollowsPaginated({
-      followedUser: providerAccountId,
-    })
-    const totalFollowerCount = await follows.getTotalCount()
+    // const follows = botApi.users.getFollowsPaginated({
+    //   followedUser: providerAccountId,
+    // })
+    const totalFollowerCount = null
 
     const data = {
       displayName: streamer?.displayName,
