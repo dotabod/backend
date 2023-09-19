@@ -50,7 +50,7 @@ export async function findAccountFromCmd(
     accountIdFromArgs = data?.player?.accountid
     playerIdx = data?.playerIdx
 
-    if (!data?.player?.heroid) {
+    if (!accountIdFromArgs) {
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
 
@@ -86,7 +86,7 @@ export async function findAccountFromCmd(
     return { ourHero: false, playerIdx, accountIdFromArgs, player, items, hero }
   }
 
-  if (!packet?.hero?.id) {
+  if (!accountIdFromArgs) {
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
   }
 
