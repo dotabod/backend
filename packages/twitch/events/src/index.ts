@@ -1,8 +1,8 @@
 import { listener } from './listener.js'
 import { SubscribeEvents } from './SubscribeEvents.js'
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
-import { setupSocketIO } from './utils/socketUtils'
-import { setupWebhooks } from './utils/webhookUtils'
+import { setupSocketIO } from './utils/socketUtils.js'
+import { setupWebhooks } from './utils/webhookUtils.js'
 
 listener.start()
 

@@ -12,15 +12,9 @@ export const DOTABOD_EVENTS_ROOM = 'twitch-channel-events'
 export let eventsIOConnected = false
 
 export const setupSocketIO = () => {
-  socketIo.on('connection', (socket) => {
+  socketIo.on('connection', async (socket) => {
     console.log('Joining socket')
-    try {
-      void socket.join(DOTABOD_EVENTS_ROOM)
-      console.log('Joined socket DOTABOD_EVENTS_ROOM')
-    } catch (e) {
-      console.log('could not join socket DOTABOD_EVENTS_ROOM', { e })
-      return
-    }
+    await socket.join(DOTABOD_EVENTS_ROOM)
 
     console.log('eventsIOConnected = true')
     eventsIOConnected = true
