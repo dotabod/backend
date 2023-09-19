@@ -43,6 +43,37 @@ export const setupWebhooks = () => {
             providerAccountId: user.providerAccountId,
           })
         })
+    } else if (req.body.type === 'UPDATE' && req.body.table === 'accounts') {
+      const { body } = req
+      const oldUser = body.old_record as UpdatePayload<Tables<'accounts'>>['old_record']
+      const newUser = body.record as UpdatePayload<Tables<'accounts'>>['record']
+
+      if (IS_DEV && !DEV_CHANNELIDS.includes(newUser.providerAccountId)) return
+      if (!IS_DEV && DEV_CHANNELIDS.includes(newUser.providerAccountId)) return
+
+      // couldn't inline these two variables because of
+      // typescript thinking they're strings in an if statement
+      const newreq = newUser.requires_refresh
+      const oldreq = oldUser.requires_refresh
+
+      if (oldreq !== newreq && newreq !== true) {
+        console.log('[SUPABASE] Refresh token changed, updating chat client', {
+          providerAccountId: newUser.providerAccountId,
+        })
+
+        handleNewUser(newUser.providerAccountId)
+          .then(() => {
+            console.log('[TWITCHEVENTS] done handling new user', {
+              providerAccountId: newUser.providerAccountId,
+            })
+          })
+          .catch((e) => {
+            console.log('[TWITCHEVENTS] error on handleNewUser', {
+              e,
+              providerAccountId: newUser.providerAccountId,
+            })
+          })
+      }
     } else if (req.body.type === 'UPDATE' && req.body.table === 'users') {
       const { body } = req
       const oldUser = body.old_record as UpdatePayload<Tables<'users'>>['old_record']
