@@ -5,6 +5,7 @@ import express from 'express'
 import { Server as SocketServer } from 'socket.io'
 import { io } from 'socket.io-client'
 
+import { Tables } from './db/supabase-types.js'
 import { handleNewUser } from './handleNewUser.js'
 import { SubscribeEvents } from './SubscribeEvents.js'
 import BotAPI from './twitch/lib/BotApiSingleton.js'
@@ -127,7 +128,7 @@ webhookApp.post('/', express.json(), express.urlencoded({ extended: true }), (re
 
   if (req.body.type === 'INSERT' && req.body.table === 'accounts') {
     const { body } = req
-    const user = body.record
+    const user = body.record as InsertPayload<Tables<'accounts'>>['record']
     if (IS_DEV && !DEV_CHANNELIDS.includes(user.providerAccountId)) return
     if (!IS_DEV && DEV_CHANNELIDS.includes(user.providerAccountId)) return
 
@@ -145,8 +146,8 @@ webhookApp.post('/', express.json(), express.urlencoded({ extended: true }), (re
       })
   } else if (req.body.type === 'UPDATE' && req.body.table === 'users') {
     const { body } = req
-    const oldUser = body.old_record
-    const newUser = body.record
+    const oldUser = body.old_record as UpdatePayload<Tables<'users'>>['old_record']
+    const newUser = body.record as UpdatePayload<Tables<'users'>>['record']
 
     if (IS_DEV && !DEV_CHANNELS.includes(newUser.name)) return
     if (!IS_DEV && DEV_CHANNELS.includes(newUser.name)) return
