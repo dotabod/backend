@@ -1,9 +1,8 @@
-import { EventSubHttpListener } from '@twurple/eventsub-http'
-
+import { listener } from './listener.js'
 import { events } from './twitch/events/events.js'
 import { handleEvent } from './twitch/events/handleEvent.js'
 
-export const SubscribeEvents = (accountIds: string[], listener: EventSubHttpListener) => {
+export const SubscribeEvents = (accountIds: string[]) => {
   const promises: Promise<unknown>[] = []
   accountIds.forEach((userId) => {
     try {

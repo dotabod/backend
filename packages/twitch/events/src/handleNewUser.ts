@@ -1,11 +1,9 @@
-import { EventSubHttpListener } from '@twurple/eventsub-http'
-
 import supabase from './db/supabase.js'
 import { SubscribeEvents } from './SubscribeEvents.js'
 import BotAPI from './twitch/lib/BotApiSingleton.js'
 
 const botApi = BotAPI.getInstance()
-export async function handleNewUser(providerAccountId: string, listener: EventSubHttpListener) {
+export async function handleNewUser(providerAccountId: string) {
   console.log("[TWITCHEVENTS] New user, let's get their info", { userId: providerAccountId })
 
   if (!providerAccountId) {
@@ -56,7 +54,7 @@ export async function handleNewUser(providerAccountId: string, listener: EventSu
   }
 
   try {
-    SubscribeEvents([providerAccountId], listener)
+    SubscribeEvents([providerAccountId])
   } catch (e) {
     console.log('[TWITCHEVENTS] error on handlenewuser', { e })
   }
