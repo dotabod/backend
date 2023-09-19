@@ -90,6 +90,14 @@
     "total_one": "",
     "total_other": "Playing with {{count}} players from last game."
   },
+  "connections": {
+    "overlay_zero": "No one connected to the overlay right now",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_other": "{{count}} streamers using the overlay",
+    "gsi_zero": "No one using the Dotabod GSI right now",
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI"
+  },
   "lastgamescore": {
     "double": "Double down",
     "duration": "{{minutes}}m long",
