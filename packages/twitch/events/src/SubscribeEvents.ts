@@ -3,20 +3,19 @@ import { events } from './twitch/events/events.js'
 import { handleEvent } from './twitch/events/handleEvent.js'
 
 export const SubscribeEvents = (accountIds: string[]) => {
-  const promises: Promise<unknown>[] = []
+  const promises: Promise<void>[] = []
   accountIds.forEach((userId) => {
     try {
       promises.push(
         ...Object.keys(events).map((eventName) => {
           const eventNameTyped = eventName as keyof typeof events
           try {
-            // @ts-expect-error `middleware[eventName]`
+            const middlewareEvent = middleware[eventNameTyped]
+            // @ts-expect-error asdf
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            return middleware[eventName](userId, (data: unknown) =>
-              handleEvent(eventNameTyped, data),
-            )
+            return middlewareEvent(userId, (data) => handleEvent(eventNameTyped, data))
           } catch (error) {
-            console.log('[TWITCHEVENTS] Could not sub userId error', { userId, error })
+            console.error('[TWITCHEVENTS] Could not sub userId error', { userId, error })
           }
         }),
       )

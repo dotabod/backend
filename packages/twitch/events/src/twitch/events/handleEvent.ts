@@ -4,9 +4,9 @@ import { DOTABOD_EVENTS_ROOM, eventsIOConnected, socketIo } from '../../utils/so
 export const handleEvent = (eventName: keyof typeof events, data: any) => {
   const event = events[eventName]
 
-  if (event?.customHandler) {
+  if ('customHandler' in event) {
     try {
-      void event.customHandler(data)
+      void event?.customHandler?.(data)
     } catch (e) {
       console.error('could not handle custom event handler', { eventName, e })
     }

@@ -10,7 +10,7 @@ if (!EVENTSUB_HOST || !TWITCH_EVENTSUB_SECRET) {
 export const middleware = new EventSubMiddleware({
   apiClient: BotAPI.getInstance(),
   legacySecrets: true,
-  hostName: EVENTSUB_HOST,
-  secret: TWITCH_EVENTSUB_SECRET,
+  hostName: 'localhost',
+  secret: '1231231231234',
   strictHostCheck: true,
 })
