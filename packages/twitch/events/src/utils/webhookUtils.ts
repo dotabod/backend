@@ -5,6 +5,8 @@ import { chatClient } from '../chatClient.js'
 import { Tables } from '../db/supabase-types.js'
 import { handleNewUser } from '../handleNewUser.js'
 import { middleware } from '../listener.js'
+import { SubscribeEvents } from '../SubscribeEvents.js'
+import { getAccountIds } from '../twitch/lib/getAccountIds.js'
 import { InsertPayload, UpdatePayload } from '../types.js'
 
 export const setupWebhooks = () => {
@@ -112,8 +114,15 @@ export const setupWebhooks = () => {
     },
   )
 
-  webhookApp.listen(5010, () => {
-    void middleware.markAsReady()
+  // Why can't i use async on express listen?
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  webhookApp.listen(5010, async () => {
+    await middleware.markAsReady()
+
+    // Load every account id when booting server
+    const accountIds = await getAccountIds()
+    SubscribeEvents(accountIds)
+
     console.log('[TWITCHEVENTS] Webhooks Listening on port 5010')
   })
 }
