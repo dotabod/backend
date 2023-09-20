@@ -2,8 +2,6 @@ services:
   redis:
     container_name: redis
     image: "redis/redis-stack-server:latest"
-    ports:
-      - "6379:6379"
 
   twitch-chat:
     image: "ghcr.io/dotabod/twitch-chat:v2.0"
@@ -17,8 +15,6 @@ services:
         - NODE_ENV=${NODE_ENV:-development}
         - BUILD_CONTEXT=packages/twitch/chat
     hostname: twitch-chat
-    ports:
-      - "5005:5005"
     environment:
       - DATABASE_URL
       - DB_SECRET
@@ -45,8 +41,6 @@ services:
         - NODE_ENV=${NODE_ENV:-development}
         - BUILD_CONTEXT=packages/steam
     hostname: steam
-    ports:
-      - "5035:5035"
     environment:
       - MONGO_URL
       - STEAM_PASS
@@ -68,9 +62,6 @@ services:
         - NODE_ENV=${NODE_ENV:-development}
         - BUILD_CONTEXT=packages/twitch/events
     hostname: twitch-events
-    ports:
-      - "5010:5010" # db webhook & twitch events expressjs
-      - "5015:5015" # socketio
     environment:
       - DATABASE_URL
       - DB_SECRET
@@ -98,8 +89,7 @@ services:
         - BUILD_CONTEXT=packages/dota
     hostname: dota
     ports:
-      - "5120:5120"
-      - "9229:9229"
+      - "9229:9229" # just in case we want to enable node inspecting
     environment:
       - D2PT_TOKEN
       - ADMIN_CHANNELS
