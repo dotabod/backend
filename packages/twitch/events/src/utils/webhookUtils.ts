@@ -22,6 +22,7 @@ export const setupWebhooks = () => {
       console.log('[TWITCHEVENTS] Unauthorized request', {
         headers: req.headers,
         body: req.body,
+        ip: req.ip,
       })
 
       return res.status(401).json({
