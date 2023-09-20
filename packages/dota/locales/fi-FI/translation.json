@@ -49,6 +49,12 @@
   "commandDisabled": "Striimaaja poisti {{cmdName}}-komennon {{emote}} Tarkista !commands käytössä oleville",
   "commands_everyone": "Jokainen voi käyttää: {{commandList}}",
   "commands_mods": "Vain modien komennot: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Tarvitsetko ammattilaisen build-ideoita sankarille {{- heroName}}? Tarkista osoitteessa {{- url}}",
   "dotabod": "Olen avoimen lähdekoodin botti jonka on tehnyt {{author}}. Lisätietoja: {{- url}}",
   "gameNotFound": "Peliä ei löytynyt",

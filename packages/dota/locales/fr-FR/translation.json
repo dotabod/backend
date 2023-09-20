@@ -50,6 +50,14 @@
   "commandDisabled": "Le streameur a désactivé la commande {{cmdName}} {{emote}} Tapez !commands pour voir les commandes actives",
   "commands_everyone": "Tout le monde peut utiliser : {{commandList}}",
   "commands_mods": "Commandes modérateurs : {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_many": "",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_many": "",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Besoin d'idées de pro build pour {{- heroName}}? C'est ici {{- url}}",
   "dotabod": "Je suis un bot open source crée par {{author}}. Plus d'infos: {{- url}}",
   "gameNotFound": "La partie est introuvable",
