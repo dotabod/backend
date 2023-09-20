@@ -32,6 +32,12 @@ export const setupWebhooks = () => {
     (req, res) => {
       // check authorization beaerer token
       if (!isAuthenticated(req)) {
+        console.log('[TWITCHEVENTS] Unauthorized request', {
+          headers: req.headers,
+          body: req.body,
+          ip: req.ip,
+        })
+
         return res.status(401).json({
           status: 'error',
           message: 'Unauthorized',
