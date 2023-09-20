@@ -1,5 +1,5 @@
 # Using a more specific version to ensure reproducibility
-FROM node:16-alpine3.17 as base
+FROM node:20-alpine3.17 as base
 
 # Add Git, Python3, make, g++ in a single RUN command
 RUN apk add --no-cache git python3 make g++ \
@@ -30,7 +30,7 @@ RUN yarn build
 
 #-------------------------
 
-FROM node:16-alpine3.17 as prod
+FROM node:20-alpine3.17 as prod
 
 ARG BUILD_CONTEXT
 ARG NODE_ENV

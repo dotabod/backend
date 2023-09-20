@@ -23,7 +23,6 @@
     "@dotabod/settings": "^1.0.0",
     "@node-steam/id": "^1.2.0",
     "@supabase/supabase-js": "^2.34.0",
-    "@twurple/eventsub-base": "^7.0.2",
     "@types/long": "^5.0.0",
     "@types/lru-cache": "^7.10.10",
     "axios": "1.2.0-alpha.1",
