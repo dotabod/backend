@@ -69,9 +69,8 @@ services:
         - BUILD_CONTEXT=packages/twitch/events
     hostname: twitch-events
     ports:
-      - "82:5010"
-      - "5015:5015"
-      - "5011:5011"
+      - "5010:5010" # db webhook & twitch events expressjs
+      - "5015:5015" # socketio
     environment:
       - DATABASE_URL
       - DB_SECRET
@@ -82,7 +81,6 @@ services:
       - HOOKS_HOST
       - MONGO_URL
       - NODE_ENV
-      - PORT=5010
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
