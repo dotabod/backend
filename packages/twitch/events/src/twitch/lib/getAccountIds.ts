@@ -47,6 +47,6 @@ export async function getAccountIds(): Promise<string[]> {
   // Filter out undefined values, if any.
   const filteredProviderIds = providerIds.filter(Boolean)
 
-  console.log('joining', filteredProviderIds.length, 'channels')
+  console.log('[TWITCHEVENTS] joining', filteredProviderIds.length, 'channels')
   return filteredProviderIds
 }
