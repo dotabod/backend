@@ -12,7 +12,7 @@ export async function getChatClient() {
     webSocket: true,
   })
 
-  await chatClient.connect()
+  chatClient.connect()
   console.log('[TWITCHSETUP] Connected to chat client')
 
   return chatClient
