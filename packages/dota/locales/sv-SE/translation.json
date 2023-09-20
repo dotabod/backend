@@ -49,6 +49,12 @@
   "commandDisabled": "Streamern inaktiverade {{cmdName}}-kommandot {{emote}} Kolla !commands för de aktiverade",
   "commands_everyone": "Alla kan använda: {{commandList}}",
   "commands_mods": "Mod-kommandon: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Behöver du build-idéer av proffs för {{- heroName}}? Kolla här {{- url}}",
   "dotabod": "Jag är en bot med öppen källkod skapad av {{author}}. Mer info: {{- url}}",
   "gameNotFound": "Matchen hittades inte",

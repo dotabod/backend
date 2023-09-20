@@ -49,6 +49,12 @@
   "commandDisabled": "Streamer disabled {{cmdName}} command BibleThump Check !commands for the enabled ones",
   "commands_everyone": "Jeder kann benutzen: {{commandList}}",
   "commands_mods": "Nur Mod Befehle: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Benötigen Sie Profi-Build-Ideen für {{- heroName}}? Sieh hier {{- url}}",
   "dotabod": "Ich bin ein Open-Source-Bot erstellt von {{author}}. Weitere Infos: {{- url}}",
   "gameNotFound": "Spiel wurde nicht gefunden",

@@ -49,6 +49,12 @@
   "commandDisabled": "Yayıncı devre dışı {{cmdName}} komutu {{emote}} !commands komutu ile aktif olanları kontrol edebilirsin",
   "commands_everyone": "Herkes kullanabilir: {{commandList}}",
   "commands_mods": "Sadece mod komutları: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Daha iyi item tavsiyelerine mi ihtiyacın var {{- heroName}}? Buraya tıkla {{- url}}",
   "dotabod": "Ben {{author}} tarafından yaratılan açık kaynaklı bir botum. Daha detaylı bilgi için {{- url}}",
   "gameNotFound": "Oyun bulunamadı",

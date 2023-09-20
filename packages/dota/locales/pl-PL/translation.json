@@ -51,6 +51,16 @@
   "commandDisabled": "Streamer wyłączył komendę {{cmdName}} {{emote}} Wpisz !commands żeby sprawdzić aktywne komendy",
   "commands_everyone": "Wszyscy mogą używać: {{commandList}}",
   "commands_mods": "Komendy tylko dla moderatorów: {{commandList}}",
+  "connections": {
+    "gsi_one": "Aktualnie {{count}} streamer jest podłączony do Dotabod GSI",
+    "gsi_few": "Aktualnie {{count}} streamerów jest podłączonych do Dotabod GSI",
+    "gsi_many": "Aktualnie {{count}} streamerów jest podłączonych do Dotabod GSI",
+    "gsi_other": "Aktualnie {{count}} streamerów jest podłączonych do Dotabod GSI",
+    "overlay_one": "Aktualnie {{count}} streamer używa nakładki",
+    "overlay_few": "Aktualnie {{count}} streamerów używa nakładki",
+    "overlay_many": "Aktualnie {{count}} streamerów używa nakładki",
+    "overlay_other": "Aktualnie {{count}} streamerów używa nakładki"
+  },
   "dota2pt": "Potrzebujesz profesjonalnych porad odnośnie {{- heroName}}? Sprawdź tutaj {{- url}}",
   "dotabod": "Jestem otwartoźródłowym botem stworzonym przez {{author}}. Więcej informacji: {{- url}}",
   "gameNotFound": "Gra nie została znaleziona",

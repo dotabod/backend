@@ -50,6 +50,14 @@
   "commandDisabled": "O streamer desativou o comando {{cmdName}} {{emote}} Digite !commands para verificar os comandos habilitados",
   "commands_everyone": "Todos podem usar: {{commandList}}",
   "commands_mods": "Comandos exclusivos para mods: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer conectado ao Dotabod GSI",
+    "gsi_many": "",
+    "gsi_other": "{{count}} streamers conectados ao Dotabod GSI",
+    "overlay_one": "{{count}} streamer usando o overlay",
+    "overlay_many": "",
+    "overlay_other": "{{count}} streamers usando o overlay"
+  },
   "dota2pt": "Precisa de builds profissionais para {{- heroName}} ? Dê uma olhada aqui {{- url}}",
   "dotabod": "Eu sou um bot open source feito pelo {{author}}. Mais informações: {{- url}}",
   "gameNotFound": "Jogo não encontrado",
