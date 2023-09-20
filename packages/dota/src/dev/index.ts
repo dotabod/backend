@@ -124,22 +124,21 @@ async function fixNewUsers() {
   return
 }
 
-await testAegis()
+await fixNewUsers()
 
 async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
   if (!botApi) return
   try {
     const stream = await botApi.streams.getStreamByUserId(providerAccountId)
     const streamer = await botApi.users.getUserById(providerAccountId)
-    const follows = botApi.users.getFollowsPaginated({
-      followedUser: providerAccountId,
-    })
-    const totalFollowerCount = await follows.getTotalCount()
+    // const follows = botApi.users.getFollowsPaginated({
+    //   followedUser: providerAccountId,
+    // })
+    // const totalFollowerCount = await follows.getTotalCount()
 
     const data = {
       displayName: streamer?.displayName,
       name: streamer?.name,
-      followers: totalFollowerCount,
       stream_online: !!stream?.startDate,
       stream_start_date: stream?.startDate ?? null,
     }
