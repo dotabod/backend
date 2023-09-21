@@ -10,11 +10,14 @@ ARG BUILD_CONTEXT
 WORKDIR /app
 
 # Copy just the relevant package.json and yarn.lock files
-COPY package.json yarn.lock* ./
+COPY package.json .yarnrc.yml yarn.lock ./
+COPY .yarn/releases/ ./.yarn/releases/
+COPY .yarn/cache/ ./.yarn/cache/
 COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 
 # Install dependencies
-RUN yarn install --pure-lockfile --non-interactive
+RUN yarn set version berry
+RUN yarn install
 
 #-------------------------
 
@@ -26,7 +29,7 @@ COPY $BUILD_CONTEXT/tsconfig.json $BUILD_CONTEXT/
 COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 
 WORKDIR /app/
-RUN yarn build
+RUN yarn buildte
 
 #-------------------------
 
@@ -54,9 +57,8 @@ COPY --from=builder --chown=dotadockeruser /app/$BUILD_CONTEXT/dist $BUILD_CONTE
 RUN mkdir -p $BUILD_CONTEXT/src/steam/volumes
 
 # Copy node_modules
-COPY --from=base --chown=dotadockeruser /app/node_modules ./node_modules
+COPY --from=builder --chown=dotadockeruser /app/node_modules ./node_modules
 
 # Environment and CMD
-WORKDIR /app/$BUILD_CONTEXT
 ENV NODE_ENV=$NODE_ENV
-CMD yarn docker:$NODE_ENV
+CMD yarn workspace @dotabod/twitch-events run docker:$NODE_ENV

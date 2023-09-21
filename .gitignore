@@ -14,10 +14,9 @@ newrelic_agent.log
 coverage
 
 # yarn v2
-.pnp.*
 .yarn/*
-!.yarn/patches
-!.yarn/plugins
+!.yarn/cache
 !.yarn/releases
+!.yarn/plugins
 !.yarn/sdks
 !.yarn/versions

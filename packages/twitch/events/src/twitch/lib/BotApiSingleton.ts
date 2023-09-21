@@ -12,9 +12,9 @@ function getInstance() {
     )
     const api = new ApiClient({
       authProvider,
-      logger: {
-        minLevel: 'trace',
-      },
+      // logger: {
+      //   minLevel: 'trace',
+      // },
     })
     console.log('[TWITCH] Retrieved twitch dotabod api')
     instance = api
