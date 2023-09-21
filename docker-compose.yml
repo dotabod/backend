@@ -88,8 +88,8 @@ services:
         - NODE_ENV=${NODE_ENV:-development}
         - BUILD_CONTEXT=packages/dota
     hostname: dota
-    ports:
-      - "9229:9229" # just in case we want to enable node inspecting
+    #ports:
+    #- "9229:9229" # just in case we want to enable node inspecting
     environment:
       - D2PT_TOKEN
       - ADMIN_CHANNELS

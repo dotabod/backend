@@ -1,4 +1,4 @@
-import { middleware } from './listener.js'
+import { listener } from './listener.js'
 import { transformBetData } from './twitch/events/transformers/transformBetData.js'
 import { transformPollData } from './twitch/events/transformers/transformPollData.js'
 import { offlineEvent } from './twitch/lib/offlineEvent.js'
@@ -15,47 +15,47 @@ export const SubscribeEvents = (accountIds: string[]) => {
   const promises: any[] = []
   accountIds.forEach((userId) => {
     try {
-      promises.push(middleware.onStreamOnline(userId, onlineEvent))
-      promises.push(middleware.onStreamOffline(userId, offlineEvent))
-      promises.push(middleware.onUserUpdate(userId, updateUserEvent))
+      promises.push(listener.onStreamOnline(userId, onlineEvent))
+      promises.push(listener.onStreamOffline(userId, offlineEvent))
+      promises.push(listener.onUserUpdate(userId, updateUserEvent))
       promises.push(
-        middleware.onChannelPredictionBegin(userId, (data) =>
+        listener.onChannelPredictionBegin(userId, (data) =>
           handleEvent('onChannelPredictionBegin', transformBetData(data)),
         ),
       )
       promises.push(
-        middleware.onChannelPredictionProgress(userId, (data) =>
+        listener.onChannelPredictionProgress(userId, (data) =>
           handleEvent('onChannelPredictionProgress', transformBetData(data)),
         ),
       )
       promises.push(
-        middleware.onChannelPredictionLock(userId, (data) =>
+        listener.onChannelPredictionLock(userId, (data) =>
           handleEvent('onChannelPredictionLock', transformBetData(data)),
         ),
       )
       promises.push(
-        middleware.onChannelPredictionEnd(userId, (data) =>
+        listener.onChannelPredictionEnd(userId, (data) =>
           handleEvent('onChannelPredictionEnd', transformBetData(data)),
         ),
       )
       promises.push(
-        middleware.onChannelPollBegin(userId, (data) =>
+        listener.onChannelPollBegin(userId, (data) =>
           handleEvent('onChannelPollBegin', transformPollData(data)),
         ),
       )
       promises.push(
-        middleware.onChannelPollProgress(userId, (data) =>
+        listener.onChannelPollProgress(userId, (data) =>
           handleEvent('onChannelPollProgress', transformPollData(data)),
         ),
       )
       promises.push(
-        middleware.onChannelPollEnd(userId, (data) =>
+        listener.onChannelPollEnd(userId, (data) =>
           handleEvent('onChannelPollEnd', transformPollData(data)),
         ),
       )
 
       promises.push(
-        middleware.onChannelPredictionBegin(userId, (data) =>
+        listener.onChannelPredictionBegin(userId, (data) =>
           handleEvent('onChannelPredictionBegin', data),
         ),
       )
