@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "up": "yarn upgrade-interactive --latest",
-    "build": "yarn workspaces run build",
+    "build": "yarn workspace @dotabod/dota run build && yarn workspace @dotabod/steam run build && yarn workspace @dotabod/twitch-events run build && yarn workspace @dotabod/twitch-chat run build && yarn workspace @dotabod/settings run build",
     "lint": "yarn eslint -- . && yarn prettier -- . && echo 'Linting complete.'",
     "prettier": "prettier --write",
     "eslint": "eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx",
