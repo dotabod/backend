@@ -13,7 +13,7 @@ services:
       dockerfile: ./packages/Dockerfile.chat
       args:
         - NODE_ENV=${NODE_ENV:-development}
-        - BUILD_CONTEXT=packages/twitch/chat
+        - BUILD_CONTEXT=packages/twitch-chat
     hostname: twitch-chat
     environment:
       - DATABASE_URL
@@ -27,7 +27,7 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
     volumes:
-      - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
+      - ./packages/twitch-chat/locales:/app/packages/twitch-chat/locales
 
   steam:
     image: "ghcr.io/dotabod/steam:v2.0"
@@ -60,7 +60,7 @@ services:
       dockerfile: ./packages/Dockerfile.events
       args:
         - NODE_ENV=${NODE_ENV:-development}
-        - BUILD_CONTEXT=packages/twitch/events
+        - BUILD_CONTEXT=packages/twitch-events
     hostname: twitch-events
     environment:
       - DATABASE_URL
