@@ -9,9 +9,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "tsc --build --verbose",
-    "docker:production": "node --trace-warnings ./dist/index.js",
-    "docker:development": "nodemon -L --ext ts --exec 'node --no-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
-    "host:development": "nodemon -L --ext ts ./src/index.ts"
+    "docker:production": "bun ./dist/index.js",
+    "docker:development": "bun --watch src/index.ts",
+    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
   }
 }

@@ -7,8 +7,8 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --build",
-    "start": "node --inspect=0.0.0.0:9229 ./dist/index.js",
-    "dev": "nodemon -L --ext ts ./src/index.ts"
+    "docker:production": "bun ./dist/index.js",
+    "docker:development": "bun --watch src/index.ts",
+    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
   }
 }
