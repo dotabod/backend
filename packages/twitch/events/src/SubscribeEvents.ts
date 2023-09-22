@@ -53,12 +53,6 @@ export const SubscribeEvents = (accountIds: string[]) => {
           handleEvent('onChannelPollEnd', transformPollData(data)),
         ),
       )
-
-      promises.push(
-        listener.onChannelPredictionBegin(userId, (data) =>
-          handleEvent('onChannelPredictionBegin', data),
-        ),
-      )
     } catch (e) {
       console.log('[TWITCHEVENTS] could not sub', { e, userId })
     }
