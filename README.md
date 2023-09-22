@@ -10,7 +10,7 @@ To set up the Dotabod backend services, follow these steps:
 2. Set up a free Supabase account at <https://app.supabase.com/>.
 3. Set up a free Twitch Developer app to get a client ID and secret from <https://dev.twitch.tv/console/apps/>.
 4. Copy the example environment file: `cp .env.example .env` and update the variables with your Supabase and Twitch credentials.
-5. Run `yarn just update` to start the services, and you're ready to get started! 🚀
+5. Run `bun run just update` to start the services, and you're ready to get started! 🚀
 
 ## 🛠️ Services
 

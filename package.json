@@ -6,13 +6,7 @@
   ],
   "scripts": {
     "up": "bun upgrade-interactive --latest",
-    "buildst": "bun workspace @dotabod/steam run build",
-    "builds": "bun workspace @dotabod/settings run build",
-    "buildd": "bun workspace @dotabod/dota run build",
-    "buildtc": "bun workspace @dotabod/twitch-chat run build",
-    "buildte": "bun workspace @dotabod/twitch-events run build",
-    "runc": "bun workspace @dotabod/twitch-chat run docker:development",
-    "lint": "bun eslint -- . && bun prettier -- . && echo 'Linting complete.'",
+    "lint": "bun run eslint -- . && bun prettier -- . && echo 'Linting complete.'",
     "prettier": "prettier --write",
     "eslint": "eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx",
     "nps": "doppler run -- bash services/mongodb/updatenps.sh",
@@ -21,6 +15,9 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "express": "^4.18.2",
+    "node-gyp": "^9.4.0",
+    "socket.io-client": "^4.7.2",
     "@supabase/supabase-js": "^2.34.0",
     "@twurple/api": "6.0.9",
     "@twurple/auth": "6.0.9",
@@ -33,6 +30,7 @@
     "winston": "^3.10.0"
   },
   "devDependencies": {
+    "@types/express": "^4.17.17",
     "@types/node": "^20.6.2",
     "@typescript-eslint/eslint-plugin": "^6.7.2",
     "@typescript-eslint/parser": "^6.7.2",
@@ -53,11 +51,11 @@
   },
   "lint-staged": {
     "*.+(js|jsx|ts|tsx|json|css|md)": [
-      "yarn prettier"
+      "bun run prettier"
     ],
     "*.+(js|jsx|ts|tsx)": [
-      "yarn eslint"
+      "bun run eslint"
     ]
   },
-  "packageManager": "yarn@3.6.3"
+  "packageManager": "bun@1.0.2"
 }

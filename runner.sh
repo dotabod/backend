@@ -130,14 +130,14 @@ buildall() {
 }
 
 logs() {
-    docker_command logs -f "$app"
+    docker_command logs -f
 }
 
 build() {
     git pull || true
-    docker_command build "$app"
+    docker_command build
     echo -e "Successfully built!"
-    docker_command up -d "$app"
+    docker_command up -d
     echo -e "Successfully ran!"
 }
 
@@ -152,7 +152,7 @@ login() {
 up() {
     docker_login
     echo "Starting server with database $NODE_ENV at $dockerfile"
-    docker_command up -d "$app"
+    docker_command up -d
 }
 
 update() {
