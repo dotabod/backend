@@ -13,14 +13,5 @@
     "docker:production": "node --trace-warnings ./dist/index.js",
     "docker:development": "nodemon -L --ext ts --exec 'node --no-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
     "host:development": "nodemon -L --ext ts ./src/index.ts"
-  },
-  "devDependencies": {
-    "@types/node": "^20.6.2",
-    "@typescript-eslint/eslint-plugin": "^6.7.2",
-    "@typescript-eslint/parser": "^6.7.2",
-    "eslint": "^8.49.0"
-  },
-  "dependencies": {
-    "node-gyp": "^9.4.0"
   }
 }
