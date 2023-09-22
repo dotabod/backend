@@ -970,6 +970,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@d-fischer/cross-fetch@npm:^4.0.2":
+  version: 4.2.1
+  resolution: "@d-fischer/cross-fetch@npm:4.2.1"
+  dependencies:
+    node-fetch: ^2.6.11
+  checksum: a858884df6fb2c0b6eeb2601d09edcadb2b96906d1c590577bf1e27c8faa92746c9a59458ac54b2e2da4bf8bf35d87d05e625cfc28ab67632d7041c8d4b8e936
+  languageName: node
+  linkType: hard
+
 "@d-fischer/cross-fetch@npm:^5.0.1":
   version: 5.0.2
   resolution: "@d-fischer/cross-fetch@npm:5.0.2"
@@ -1065,7 +1074,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@d-fischer/shared-utils@npm:^3.0.1, @d-fischer/shared-utils@npm:^3.2.0, @d-fischer/shared-utils@npm:^3.5.0, @d-fischer/shared-utils@npm:^3.6.1":
+"@d-fischer/shared-utils@npm:^3.0.1, @d-fischer/shared-utils@npm:^3.2.0, @d-fischer/shared-utils@npm:^3.4.0, @d-fischer/shared-utils@npm:^3.5.0, @d-fischer/shared-utils@npm:^3.6.1":
   version: 3.6.3
   resolution: "@d-fischer/shared-utils@npm:3.6.3"
   dependencies:
@@ -1222,6 +1231,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dotabod/twitch-events@workspace:packages/twitch/events"
   dependencies:
+    "@twurple/api": 6.0.9
+    "@twurple/auth": 6.0.9
+    "@twurple/eventsub-base": 6.0.9
+    "@twurple/eventsub-http": 6.0.9
     "@types/express": ^4.17.17
     express: ^4.18.2
     node-gyp: ^9.4.0
@@ -2557,6 +2570,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@twurple/api-call@npm:6.0.9":
+  version: 6.0.9
+  resolution: "@twurple/api-call@npm:6.0.9"
+  dependencies:
+    "@d-fischer/cross-fetch": ^4.0.2
+    "@d-fischer/qs": ^7.0.2
+    "@d-fischer/shared-utils": ^3.4.0
+    "@twurple/common": 6.0.9
+    "@types/node-fetch": ^2.5.7
+    tslib: ^2.0.3
+  checksum: e6a3f9c689a476b41d9014af9aa3989ab061c5377cea041dc9e12b37268e60fab68770790c405905a45af01dbde0771a3d86e06005a5da51ccf858f749f921ab
+  languageName: node
+  linkType: hard
+
 "@twurple/api-call@npm:7.0.2":
   version: 7.0.2
   resolution: "@twurple/api-call@npm:7.0.2"
@@ -2570,24 +2597,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@twurple/api@https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/api":
-  version: 7.0.2
-  resolution: "@twurple/api@https://github.com/dotabod/twurple.git#workspace=%40twurple%2Fapi&commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6"
+"@twurple/api@npm:6.0.9":
+  version: 6.0.9
+  resolution: "@twurple/api@npm:6.0.9"
   dependencies:
     "@d-fischer/cache-decorators": ^3.0.0
-    "@d-fischer/cross-fetch": ^5.0.1
     "@d-fischer/detect-node": ^3.0.1
     "@d-fischer/logger": ^4.2.1
     "@d-fischer/rate-limiter": ^0.7.2
-    "@d-fischer/shared-utils": ^3.6.1
-    "@d-fischer/typed-event-emitter": ^3.3.1
-    "@twurple/api-call": 7.0.2
-    "@twurple/common": 7.0.2
+    "@d-fischer/shared-utils": ^3.4.0
+    "@twurple/api-call": 6.0.9
+    "@twurple/common": 6.0.9
     retry: ^0.13.1
     tslib: ^2.0.3
   peerDependencies:
-    "@twurple/auth": 7.0.2
-  checksum: f2ecbc76dd275fb9001b6543838e226fb595350e58f4d9fee7a84968857fa91d4fbc7000999daba1adebdefd316fed40ce91ff5441b98adcc8bdd42c66ee09e3
+    "@twurple/auth": 6.0.9
+  checksum: b0fd0e7d5ce3ebba65c73111e22867264b907177e8a58137b89c9c92d1e06160813a4bef708d8d08c9140a300c8a5d2f47ad8f898ca78d5878d353ad4eba9115
   languageName: node
   linkType: hard
 
@@ -2612,17 +2637,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@twurple/auth@https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/auth":
-  version: 7.0.2
-  resolution: "@twurple/auth@https://github.com/dotabod/twurple.git#workspace=%40twurple%2Fauth&commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6"
+"@twurple/auth@npm:6.0.9":
+  version: 6.0.9
+  resolution: "@twurple/auth@npm:6.0.9"
   dependencies:
     "@d-fischer/logger": ^4.2.1
-    "@d-fischer/shared-utils": ^3.6.1
-    "@d-fischer/typed-event-emitter": ^3.3.1
-    "@twurple/api-call": 7.0.2
-    "@twurple/common": 7.0.2
+    "@d-fischer/shared-utils": ^3.4.0
+    "@twurple/api-call": 6.0.9
+    "@twurple/common": 6.0.9
     tslib: ^2.0.3
-  checksum: 1a9621e44d589b5d32633925346dfe8be1255e7341508e7078e5ce188ded377f79536228575e59b519581db0bbd5526a34d25f6717fe1673bbb3867f62237acf
+  checksum: 81cb101d36d61a2e1c3e595a478232929f63f865c99f41cf3d8420b2763ba6277b3f31dd8aa0b73920926eda95d9780235475ed02471bc4288925399c4875112
   languageName: node
   linkType: hard
 
@@ -2640,9 +2664,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@twurple/chat@https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/chat":
+"@twurple/chat@npm:7.0.2":
   version: 7.0.2
-  resolution: "@twurple/chat@https://github.com/dotabod/twurple.git#workspace=%40twurple%2Fchat&commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6"
+  resolution: "@twurple/chat@npm:7.0.2"
   dependencies:
     "@d-fischer/cache-decorators": ^3.0.0
     "@d-fischer/deprecate": ^2.0.2
@@ -2655,7 +2679,18 @@ __metadata:
     tslib: ^2.0.3
   peerDependencies:
     "@twurple/auth": 7.0.2
-  checksum: 6e45e8d14ea634781e350138a04371168ebf3ac54dfa7fa43f9993ec56cd03d4b0a132f762c8e6d37dd48ba33dac2bc3ec7329d8bc7b7a59e48f043052ed5712
+  checksum: 1597d0bb8a2ca9321550d0914eae17ff01fcde39ed8d78cbdb6fca722b8c547fa24d280a942afe39a6f399b1181fbd58023ce7513bed7672fe1ce9258115ab14
+  languageName: node
+  linkType: hard
+
+"@twurple/common@npm:6.0.9":
+  version: 6.0.9
+  resolution: "@twurple/common@npm:6.0.9"
+  dependencies:
+    "@d-fischer/shared-utils": ^3.4.0
+    klona: ^2.0.4
+    tslib: ^2.0.3
+  checksum: 27e957ced83c125fef67f232ae813e7c9bae2c05386db51e52b282df869b18b3a30a40e4df95c033627358c49ff48808a0b12f8289b4146dde303ed6fe79e111
   languageName: node
   linkType: hard
 
@@ -2670,18 +2705,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@twurple/eventsub-base@https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/eventsub-base":
-  version: 7.0.2
-  resolution: "@twurple/eventsub-base@https://github.com/dotabod/twurple.git#workspace=%40twurple%2Feventsub-base&commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6"
+"@twurple/eventsub-base@npm:6.0.9":
+  version: 6.0.9
+  resolution: "@twurple/eventsub-base@npm:6.0.9"
   dependencies:
     "@d-fischer/logger": ^4.2.1
-    "@d-fischer/shared-utils": ^3.6.1
+    "@d-fischer/shared-utils": ^3.4.0
     "@d-fischer/typed-event-emitter": ^3.3.0
-    "@twurple/api": 7.0.2
-    "@twurple/auth": 7.0.2
-    "@twurple/common": 7.0.2
+    "@twurple/api": 6.0.9
+    "@twurple/auth": 6.0.9
+    "@twurple/common": 6.0.9
     tslib: ^2.0.3
-  checksum: c6fa5cf4913e9435e6d54774f4bb66566ccbc85dfeee3b5a351ddc3116391761d1cb7842a10112c1027f045a767b3158fdf099fcaad7015ba86ffb10703f411f
+  checksum: e4351605d8b43c897370cac6887a40c8ec846b35bc05bf0d8d27a39af456ed86739a0092fba6f6af33b79cb83f614b3c3db670f984a2887b5f353537438f19ae
   languageName: node
   linkType: hard
 
@@ -2700,23 +2735,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@twurple/eventsub-http@https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/eventsub-http":
-  version: 7.0.2
-  resolution: "@twurple/eventsub-http@https://github.com/dotabod/twurple.git#workspace=%40twurple%2Feventsub-http&commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6"
+"@twurple/eventsub-http@npm:6.0.9":
+  version: 6.0.9
+  resolution: "@twurple/eventsub-http@npm:6.0.9"
   dependencies:
     "@d-fischer/logger": ^4.2.1
     "@d-fischer/raw-body": ^2.4.3
-    "@d-fischer/shared-utils": ^3.6.1
+    "@d-fischer/shared-utils": ^3.4.0
     "@d-fischer/typed-event-emitter": ^3.3.0
-    "@twurple/auth": 7.0.2
-    "@twurple/common": 7.0.2
-    "@twurple/eventsub-base": 7.0.2
+    "@twurple/auth": 6.0.9
+    "@twurple/common": 6.0.9
+    "@twurple/eventsub-base": 6.0.9
     "@types/express-serve-static-core": ^4.17.24
     httpanda: ^0.4.6
     tslib: ^2.0.3
   peerDependencies:
-    "@twurple/api": 7.0.2
-  checksum: 57b4e0ce7070eb0a01ba8ea6d901b985350da9a45597737b0c539516df43737e188b1166c24449031f90fcb0f055920c6d0790ea32ec9714a87ae0941b2da127
+    "@twurple/api": 6.0.9
+  checksum: f7b31e25b08b16a390776114a6841ab7a8395a2ddab98ab961766119392c743832f7c7bad254157401d6eb963fdf4c33ae92e62f598c8f7139d16ef9f861cb62
   languageName: node
   linkType: hard
 
@@ -2986,6 +3021,16 @@ __metadata:
   version: 9.14.0
   resolution: "@types/newrelic@npm:9.14.0"
   checksum: 7f7bfc77e035479cbb1ee9384433beafbe5e693501659c4bffcf6ea2907fdee490e16e36694d29393ca57f8242d82315ec55f856ed49b47d7f924be3383d4bc4
+  languageName: node
+  linkType: hard
+
+"@types/node-fetch@npm:^2.5.7":
+  version: 2.6.5
+  resolution: "@types/node-fetch@npm:2.6.5"
+  dependencies:
+    "@types/node": "*"
+    form-data: ^4.0.0
+  checksum: 686ee0d52bb82d73f82c0da0bb025d4af1ba7bd8df4edd09336f6179eb838b6d4b5f0a524677a8faec2b00918d1b08a1690d50fa592c9741a5df6a8041a52495
   languageName: node
   linkType: hard
 
@@ -4775,11 +4820,10 @@ __metadata:
   resolution: "dotabod@workspace:."
   dependencies:
     "@supabase/supabase-js": ^2.34.0
-    "@twurple/api": "https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/api"
-    "@twurple/auth": "https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/auth"
-    "@twurple/chat": "https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/chat"
-    "@twurple/eventsub-base": "https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/eventsub-base"
-    "@twurple/eventsub-http": "https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/eventsub-http"
+    "@twurple/api": 7.0.2
+    "@twurple/auth": 7.0.2
+    "@twurple/chat": 7.0.2
+    "@twurple/eventsub-base": 7.0.2
     "@types/node": ^20.6.2
     "@typescript-eslint/eslint-plugin": ^6.7.2
     "@typescript-eslint/parser": ^6.7.2
