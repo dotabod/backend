@@ -13,7 +13,7 @@
     "docker:development": "bun --watch src/index.ts",
     "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js",
     "fix-users": "doppler run -- bun ./src/dev/index.ts",
-    "test": "doppler run -- bun jest --config ./jest.config.ts"
+    "test": "doppler run -- bun jest"
   },
   "dependencies": {
     "winston": "^3.10.0",

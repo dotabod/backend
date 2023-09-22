@@ -18,7 +18,6 @@ services:
     image: "ghcr.io/dotabod/dota:v2.0-dev"
     volumes:
       - ./packages/dota/src:/app/packages/dota/src
-      - ./packages/dota/jest.config.ts:/app/packages/dota/jest.config.ts
 
   nginx:
     profiles:
