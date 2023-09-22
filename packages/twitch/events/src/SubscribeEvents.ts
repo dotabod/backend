@@ -6,13 +6,11 @@ import { onlineEvent } from './twitch/lib/onlineEvent.js'
 import { updateUserEvent } from './twitch/lib/updateUserEvent.js'
 import { DOTABOD_EVENTS_ROOM, eventsIOConnected, socketIo } from './utils/socketUtils.js'
 
-export const handleEvent = (eventName: any, data: any) => {
+export const handleEvent = (eventName: any, broadcasterId: string, data: any) => {
   if (!eventsIOConnected) {
-    console.log('[TWITCHEVENTS] No socket connection')
     return
   }
-  console.log('[TWITCHEVENTS] Emitting event', { eventName, data })
-  socketIo.to(DOTABOD_EVENTS_ROOM).emit('event', eventName, data.broadcasterId, data)
+  socketIo.to(DOTABOD_EVENTS_ROOM).emit('event', eventName, broadcasterId, data)
 }
 
 export const SubscribeEvents = (accountIds: string[]) => {
@@ -24,37 +22,37 @@ export const SubscribeEvents = (accountIds: string[]) => {
       promises.push(listener.onUserUpdate(userId, updateUserEvent))
       promises.push(
         listener.onChannelPredictionBegin(userId, (data) =>
-          handleEvent('onChannelPredictionBegin', transformBetData(data)),
+          handleEvent('onChannelPredictionBegin', userId, transformBetData(data)),
         ),
       )
       promises.push(
         listener.onChannelPredictionProgress(userId, (data) =>
-          handleEvent('onChannelPredictionProgress', transformBetData(data)),
+          handleEvent('onChannelPredictionProgress', userId, transformBetData(data)),
         ),
       )
       promises.push(
         listener.onChannelPredictionLock(userId, (data) =>
-          handleEvent('onChannelPredictionLock', transformBetData(data)),
+          handleEvent('onChannelPredictionLock', userId, transformBetData(data)),
         ),
       )
       promises.push(
         listener.onChannelPredictionEnd(userId, (data) =>
-          handleEvent('onChannelPredictionEnd', transformBetData(data)),
+          handleEvent('onChannelPredictionEnd', userId, transformBetData(data)),
         ),
       )
       promises.push(
         listener.onChannelPollBegin(userId, (data) =>
-          handleEvent('onChannelPollBegin', transformPollData(data)),
+          handleEvent('onChannelPollBegin', userId, transformPollData(data)),
         ),
       )
       promises.push(
         listener.onChannelPollProgress(userId, (data) =>
-          handleEvent('onChannelPollProgress', transformPollData(data)),
+          handleEvent('onChannelPollProgress', userId, transformPollData(data)),
         ),
       )
       promises.push(
         listener.onChannelPollEnd(userId, (data) =>
-          handleEvent('onChannelPollEnd', transformPollData(data)),
+          handleEvent('onChannelPollEnd', userId, transformPollData(data)),
         ),
       )
     } catch (e) {

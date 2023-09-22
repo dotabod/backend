@@ -121,7 +121,7 @@ pull() {
 push() {
     docker_login
     buildall
-    docker_command push twitch-events dota twitch-chat steam
+    docker_command push twitch-events
 }
 
 buildall() {
