@@ -955,7 +955,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@d-fischer/connection@npm:^8.0.5":
+"@d-fischer/connection@npm:^8.0.2":
   version: 8.0.5
   resolution: "@d-fischer/connection@npm:8.0.5"
   dependencies:
@@ -976,15 +976,6 @@ __metadata:
   dependencies:
     node-fetch: ^2.6.11
   checksum: a858884df6fb2c0b6eeb2601d09edcadb2b96906d1c590577bf1e27c8faa92746c9a59458ac54b2e2da4bf8bf35d87d05e625cfc28ab67632d7041c8d4b8e936
-  languageName: node
-  linkType: hard
-
-"@d-fischer/cross-fetch@npm:^5.0.1":
-  version: 5.0.2
-  resolution: "@d-fischer/cross-fetch@npm:5.0.2"
-  dependencies:
-    node-fetch: ^2.6.11
-  checksum: 541efa11b5a1769951e542b3d8dff4acdd88356d209ba2f3578be9343713a64fc07ef7783701985a0c86ef1a32970450621883220c412297edda86fad43aef99
   languageName: node
   linkType: hard
 
@@ -1074,7 +1065,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@d-fischer/shared-utils@npm:^3.0.1, @d-fischer/shared-utils@npm:^3.2.0, @d-fischer/shared-utils@npm:^3.4.0, @d-fischer/shared-utils@npm:^3.5.0, @d-fischer/shared-utils@npm:^3.6.1":
+"@d-fischer/shared-utils@npm:^3.0.1, @d-fischer/shared-utils@npm:^3.2.0, @d-fischer/shared-utils@npm:^3.4.0, @d-fischer/shared-utils@npm:^3.5.0":
   version: 3.6.3
   resolution: "@d-fischer/shared-utils@npm:3.6.3"
   dependencies:
@@ -1083,7 +1074,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@d-fischer/typed-event-emitter@npm:^3.3.0, @d-fischer/typed-event-emitter@npm:^3.3.1":
+"@d-fischer/typed-event-emitter@npm:^3.3.0":
   version: 3.3.2
   resolution: "@d-fischer/typed-event-emitter@npm:3.3.2"
   dependencies:
@@ -1231,10 +1222,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dotabod/twitch-events@workspace:packages/twitch/events"
   dependencies:
-    "@twurple/api": 6.0.9
-    "@twurple/auth": 6.0.9
-    "@twurple/eventsub-base": 6.0.9
-    "@twurple/eventsub-http": 6.0.9
     "@types/express": ^4.17.17
     express: ^4.18.2
     node-gyp: ^9.4.0
@@ -2584,19 +2571,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@twurple/api-call@npm:7.0.2":
-  version: 7.0.2
-  resolution: "@twurple/api-call@npm:7.0.2"
-  dependencies:
-    "@d-fischer/cross-fetch": ^5.0.1
-    "@d-fischer/qs": ^7.0.2
-    "@d-fischer/shared-utils": ^3.6.1
-    "@twurple/common": 7.0.2
-    tslib: ^2.0.3
-  checksum: a662de7f1159c0090fc1b92c2b1c6396548bec201a2c0cc877cf96cde87b16b93d44a1f1cf66c47bf8033ebaa62e3834e497281bd3496fa846697c14d792251f
-  languageName: node
-  linkType: hard
-
 "@twurple/api@npm:6.0.9":
   version: 6.0.9
   resolution: "@twurple/api@npm:6.0.9"
@@ -2616,27 +2590,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@twurple/api@npm:7.0.2":
-  version: 7.0.2
-  resolution: "@twurple/api@npm:7.0.2"
-  dependencies:
-    "@d-fischer/cache-decorators": ^3.0.0
-    "@d-fischer/cross-fetch": ^5.0.1
-    "@d-fischer/detect-node": ^3.0.1
-    "@d-fischer/logger": ^4.2.1
-    "@d-fischer/rate-limiter": ^0.7.2
-    "@d-fischer/shared-utils": ^3.6.1
-    "@d-fischer/typed-event-emitter": ^3.3.1
-    "@twurple/api-call": 7.0.2
-    "@twurple/common": 7.0.2
-    retry: ^0.13.1
-    tslib: ^2.0.3
-  peerDependencies:
-    "@twurple/auth": 7.0.2
-  checksum: 7a2d98ef2b934b6f77c61e4999d0e0e45b8587c47abf410be4b37d88f64952f5f2739ca2ccd2d3333b243d7f525e23c4a097aac7268b08ae956726421476c243
-  languageName: node
-  linkType: hard
-
 "@twurple/auth@npm:6.0.9":
   version: 6.0.9
   resolution: "@twurple/auth@npm:6.0.9"
@@ -2650,36 +2603,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@twurple/auth@npm:7.0.2":
-  version: 7.0.2
-  resolution: "@twurple/auth@npm:7.0.2"
-  dependencies:
-    "@d-fischer/logger": ^4.2.1
-    "@d-fischer/shared-utils": ^3.6.1
-    "@d-fischer/typed-event-emitter": ^3.3.1
-    "@twurple/api-call": 7.0.2
-    "@twurple/common": 7.0.2
-    tslib: ^2.0.3
-  checksum: 339301ca5ad6dcb4cb1ee53c5e65b941cbb83cbb73a5910cb6f4bab176e0437145137afc4358f59d5e533933daecf818af11c82ce38a432a13246ec988a8fe30
-  languageName: node
-  linkType: hard
-
-"@twurple/chat@npm:7.0.2":
-  version: 7.0.2
-  resolution: "@twurple/chat@npm:7.0.2"
+"@twurple/chat@npm:6.0.9":
+  version: 6.0.9
+  resolution: "@twurple/chat@npm:6.0.9"
   dependencies:
     "@d-fischer/cache-decorators": ^3.0.0
     "@d-fischer/deprecate": ^2.0.2
     "@d-fischer/logger": ^4.2.1
     "@d-fischer/rate-limiter": ^0.7.2
-    "@d-fischer/shared-utils": ^3.6.1
+    "@d-fischer/shared-utils": ^3.4.0
     "@d-fischer/typed-event-emitter": ^3.3.0
-    "@twurple/common": 7.0.2
-    ircv3: ^0.32.3
+    "@twurple/common": 6.0.9
+    ircv3: ^0.31.6
     tslib: ^2.0.3
   peerDependencies:
-    "@twurple/auth": 7.0.2
-  checksum: 1597d0bb8a2ca9321550d0914eae17ff01fcde39ed8d78cbdb6fca722b8c547fa24d280a942afe39a6f399b1181fbd58023ce7513bed7672fe1ce9258115ab14
+    "@twurple/auth": 6.0.9
+  checksum: 0f35cacdb5cd7a36d886a51379e7efcb2af0c3e117b775d2e842dcabf9b5e7b4bfe2e2706da779aa3a0bf9150ae78a8fdec3071e9ade8fdfc593ff6aa59ae034
   languageName: node
   linkType: hard
 
@@ -2691,17 +2630,6 @@ __metadata:
     klona: ^2.0.4
     tslib: ^2.0.3
   checksum: 27e957ced83c125fef67f232ae813e7c9bae2c05386db51e52b282df869b18b3a30a40e4df95c033627358c49ff48808a0b12f8289b4146dde303ed6fe79e111
-  languageName: node
-  linkType: hard
-
-"@twurple/common@npm:7.0.2":
-  version: 7.0.2
-  resolution: "@twurple/common@npm:7.0.2"
-  dependencies:
-    "@d-fischer/shared-utils": ^3.6.1
-    klona: ^2.0.4
-    tslib: ^2.0.3
-  checksum: 2c79cd1728ae401670172fdf70c1caf8354eaa66e0b92e063a40ef739409ad56df36258d53743c17f3f6417b63be65d59b5b5c80f98610f64a5c56e6823059e8
   languageName: node
   linkType: hard
 
@@ -2717,21 +2645,6 @@ __metadata:
     "@twurple/common": 6.0.9
     tslib: ^2.0.3
   checksum: e4351605d8b43c897370cac6887a40c8ec846b35bc05bf0d8d27a39af456ed86739a0092fba6f6af33b79cb83f614b3c3db670f984a2887b5f353537438f19ae
-  languageName: node
-  linkType: hard
-
-"@twurple/eventsub-base@npm:7.0.2":
-  version: 7.0.2
-  resolution: "@twurple/eventsub-base@npm:7.0.2"
-  dependencies:
-    "@d-fischer/logger": ^4.2.1
-    "@d-fischer/shared-utils": ^3.6.1
-    "@d-fischer/typed-event-emitter": ^3.3.0
-    "@twurple/api": 7.0.2
-    "@twurple/auth": 7.0.2
-    "@twurple/common": 7.0.2
-    tslib: ^2.0.3
-  checksum: 04601cd49181f802da8fd84b1021a3d1bd1fc8bef507c5c0a4e9243ea523f86206c80493795d4eed90510fa2952579ef7be93ac4cdd05ad7337964eb63f59f42
   languageName: node
   linkType: hard
 
@@ -3048,7 +2961,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^14.11.2":
+"@types/node@npm:^14.11.2, @types/node@npm:^14.14.19":
   version: 14.18.62
   resolution: "@types/node@npm:14.18.62"
   checksum: 1335b4d58d2a21c7f60b8b78d0902ec0653a44f1ead4e921c37dd5f836910e0b00370abfde02c57bc3a73a35ebcbf4ef86b598be9a9ec13981a9a6d40e98fab0
@@ -4820,10 +4733,11 @@ __metadata:
   resolution: "dotabod@workspace:."
   dependencies:
     "@supabase/supabase-js": ^2.34.0
-    "@twurple/api": 7.0.2
-    "@twurple/auth": 7.0.2
-    "@twurple/chat": 7.0.2
-    "@twurple/eventsub-base": 7.0.2
+    "@twurple/api": 6.0.9
+    "@twurple/auth": 6.0.9
+    "@twurple/chat": 6.0.9
+    "@twurple/eventsub-base": 6.0.9
+    "@twurple/eventsub-http": 6.0.9
     "@types/node": ^20.6.2
     "@typescript-eslint/eslint-plugin": ^6.7.2
     "@typescript-eslint/parser": ^6.7.2
@@ -6499,18 +6413,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ircv3@npm:^0.32.3":
-  version: 0.32.3
-  resolution: "ircv3@npm:0.32.3"
+"ircv3@npm:^0.31.6":
+  version: 0.31.7
+  resolution: "ircv3@npm:0.31.7"
   dependencies:
-    "@d-fischer/connection": ^8.0.5
+    "@d-fischer/connection": ^8.0.2
     "@d-fischer/escape-string-regexp": ^5.0.0
     "@d-fischer/logger": ^4.2.1
     "@d-fischer/shared-utils": ^3.5.0
     "@d-fischer/typed-event-emitter": ^3.3.0
+    "@types/node": ^14.14.19
     klona: ^2.0.5
     tslib: ^2.4.1
-  checksum: e63e4971210baf2591f3a4cace5381af1eb485509661ee9271f614caf3951e863a9f47ca180b0da1c0d4df5cae7cfd7d62d4c24b20fc70cec1267824c2bac7cf
+  checksum: 767242bf8d4dd8ce473cf99b1f3447e1764df0474bd5c59810f6b79da6bf5aa43421ea58e994bb65209192aaee35e158ac9332e55ed62b10f2c6f2da381aa0b1
   languageName: node
   linkType: hard
 
