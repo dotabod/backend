@@ -10,7 +10,12 @@
   ],
   "scripts": {
     "up": "yarn upgrade-interactive --latest",
-    "build": "yarn workspaces run build",
+    "buildst": "yarn workspace @dotabod/steam run build",
+    "builds": "yarn workspace @dotabod/settings run build",
+    "buildd": "yarn workspace @dotabod/dota run build",
+    "buildtc": "yarn workspace @dotabod/twitch-chat run build",
+    "buildte": "yarn workspace @dotabod/twitch-events run build",
+    "runc": "yarn workspace @dotabod/twitch-chat run docker:development",
     "lint": "yarn eslint -- . && yarn prettier -- . && echo 'Linting complete.'",
     "prettier": "prettier --write",
     "eslint": "eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx",
@@ -20,20 +25,22 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.33.1",
-    "@twurple/api": "6.0.9",
-    "@twurple/auth": "6.0.9",
-    "@twurple/chat": "6.0.9",
-    "i18next": "^23.4.6",
-    "i18next-fs-backend": "^2.1.1",
+    "@supabase/supabase-js": "^2.34.0",
+    "@twurple/api": "https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/api",
+    "@twurple/auth": "https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/auth",
+    "@twurple/chat": "https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/chat",
+    "@twurple/eventsub-base": "https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/eventsub-base",
+    "@twurple/eventsub-http": "https://github.com/dotabod/twurple#commit=7a2f4fc93443ba5ed9aa1bc96a4fab875f3ea4e6&workspace=@twurple/eventsub-http",
+    "i18next": "^23.5.1",
+    "i18next-fs-backend": "^2.2.0",
     "socket.io": "^4.7.2",
     "winston": "^3.10.0"
   },
   "devDependencies": {
-    "@types/node": "^20.5.7",
-    "@typescript-eslint/eslint-plugin": "^6.5.0",
-    "@typescript-eslint/parser": "^6.5.0",
-    "eslint": "^8.48.0",
+    "@types/node": "^20.6.2",
+    "@typescript-eslint/eslint-plugin": "^6.7.2",
+    "@typescript-eslint/parser": "^6.7.2",
+    "eslint": "^8.49.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.0",
     "eslint-plugin-import": "^2.28.1",
@@ -55,5 +62,6 @@
     "*.+(js|jsx|ts|tsx)": [
       "yarn eslint"
     ]
-  }
+  },
+  "packageManager": "yarn@3.6.3"
 }

@@ -60,8 +60,12 @@ twitchChat.on(
     }
 
     // Handle the incoming message using the command handler
+
+    // to address v7 twurple removing #, but my db having # for command stats
+    // add a hashtag to the beginning of the channel name if its not there already
+    const channelName = channel.startsWith('#') ? channel : `#${channel}`
     await commandHandler.handleMessage({
-      channel: { name: channel, id: channelId, client, settings: client.settings },
+      channel: { name: channelName, id: channelId, client, settings: client.settings },
       user: {
         name: user,
         permission: userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0,
