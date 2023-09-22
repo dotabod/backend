@@ -7,7 +7,11 @@ import { updateUserEvent } from './twitch/lib/updateUserEvent.js'
 import { DOTABOD_EVENTS_ROOM, eventsIOConnected, socketIo } from './utils/socketUtils.js'
 
 export const handleEvent = (eventName: any, data: any) => {
-  if (!eventsIOConnected) return
+  if (!eventsIOConnected) {
+    console.log('[TWITCHEVENTS] No socket connection')
+    return
+  }
+  console.log('[TWITCHEVENTS] Emitting event', { eventName, data })
   socketIo.to(DOTABOD_EVENTS_ROOM).emit('event', eventName, data.broadcasterId, data)
 }
 
