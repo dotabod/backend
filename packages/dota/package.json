@@ -16,6 +16,27 @@
     "test": "doppler run -- bun jest --config ./jest.config.ts"
   },
   "dependencies": {
-    "@dotabod/settings": "workspace:packages/settings"
+    "winston": "^3.10.0",
+    "newrelic": "^11.1.0",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2",
+    "redis": "^4.6.9",
+    "country-code-emoji": "^2.3.0",
+    "i18next": "^23.5.1",
+    "i18next-fs-backend": "^2.2.0",
+    "chokidar": "^3.5.3",
+    "express": "^4.18.2",
+    "dotaconstants": "^7.18.0",
+    "@supabase/supabase-js": "^2.34.0",
+    "mongodb": "^6.1.0",
+    "lodash.isequal": "^4.5.0",
+    "@dotabod/settings": "workspace:packages/settings",
+    "axios": "1.2.0-alpha.1",
+    "axios-retry": "^3.3.1"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@faker-js/faker": "^8.1.0",
+    "@types/lodash.isequal": "^4.5.6"
   }
 }

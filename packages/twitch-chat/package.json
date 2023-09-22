@@ -12,5 +12,11 @@
     "docker:production": "bun ./dist/index.js",
     "docker:development": "bun --watch src/index.ts",
     "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
+  },
+  "dependencies": {
+    "socket.io": "^4.7.2",
+    "i18next": "^23.5.1",
+    "i18next-fs-backend": "^2.2.0",
+    "@supabase/supabase-js": "^2.34.0"
   }
 }

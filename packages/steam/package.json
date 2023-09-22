@@ -12,5 +12,15 @@
     "docker:production": "bun ./dist/index.js",
     "docker:development": "bun --watch src/index.ts",
     "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
+  },
+  "dependencies": {
+    "winston": "^3.10.0",
+    "steam-errors": "^1.0.0",
+    "steam": "https://github.com/dotabod/node-steam#master",
+    "socket.io": "^4.7.2",
+    "axios": "1.2.0-alpha.1",
+    "mongodb": "^6.1.0",
+    "dota2": "https://github.com/dotabod/node-dota2#staging"
   }
 }
+
