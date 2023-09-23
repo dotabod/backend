@@ -4,7 +4,7 @@ services:
     image: "redis/redis-stack-server:latest"
 
   twitch-chat:
-    image: "ghcr.io/dotabod/twitch-chat:v2.0"
+    image: "ghcr.io/dotabod/twitch-chat:v2.1"
     platform: linux/amd64
     container_name: twitch-chat
     restart: on-failure
@@ -30,7 +30,7 @@ services:
       - ./packages/twitch-chat/locales:/app/packages/twitch-chat/locales
 
   steam:
-    image: "ghcr.io/dotabod/steam:v2.0"
+    image: "ghcr.io/dotabod/steam:v2.1"
     platform: linux/amd64
     container_name: steam
     restart: on-failure
@@ -51,7 +51,7 @@ services:
       - ./packages/steam/locales:/app/packages/steam/locales
 
   twitch-events:
-    image: "ghcr.io/dotabod/twitch-events:v2.0"
+    image: "ghcr.io/dotabod/twitch-events:v2.1"
     platform: linux/amd64
     container_name: twitch-events
     restart: on-failure
@@ -77,7 +77,7 @@ services:
       - TWITCH_EVENTSUB_SECRET
 
   dota:
-    image: "ghcr.io/dotabod/dota:v2.0"
+    image: "ghcr.io/dotabod/dota:v2.1"
     platform: linux/amd64
     container_name: dota
     restart: on-failure
@@ -120,7 +120,7 @@ services:
   nginx:
     container_name: nginx
     restart: on-failure
-    image: "ghcr.io/dotabod/nginx:v2.0"
+    image: "ghcr.io/dotabod/nginx:v2.1"
     platform: linux/amd64
     volumes:
       - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template

@@ -1,21 +1,21 @@
 services:
   twitch-chat:
-    image: "ghcr.io/dotabod/twitch-chat:v2.0-dev"
+    image: "ghcr.io/dotabod/twitch-chat:v2.1-dev"
     volumes:
       - ./packages/twitch-chat/src:/app/packages/twitch-chat/src
 
   steam:
-    image: "ghcr.io/dotabod/steam:v2.0-dev"
+    image: "ghcr.io/dotabod/steam:v2.1-dev"
     volumes:
       - ./packages/steam/src:/app/packages/steam/src
 
   twitch-events:
-    image: "ghcr.io/dotabod/twitch-events:v2.0-dev"
+    image: "ghcr.io/dotabod/twitch-events:v2.1-dev"
     volumes:
       - ./packages/twitch-events/src:/app/packages/twitch-events/src
 
   dota:
-    image: "ghcr.io/dotabod/dota:v2.0-dev"
+    image: "ghcr.io/dotabod/dota:v2.1-dev"
     volumes:
       - ./packages/dota/src:/app/packages/dota/src
 
