@@ -5,7 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "cache:clean": "bun pm cache rm && rm -rf node_modules && rm bun.lockb",
+    "cache:clean": "rm -rf $(echo bun pm cache) && rm -rf node_modules && rm bun.lockb",
     "up": "bun upgrade-interactive --latest",
     "lint": "bun run eslint -- . && bun prettier -- . && echo 'Linting complete.'",
     "prettier": "prettier --write",
