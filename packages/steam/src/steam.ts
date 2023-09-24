@@ -3,10 +3,10 @@ import fs from 'fs'
 
 import axios from 'axios'
 // @ts-expect-error no types exist
-import Dota2 from 'dota2'
+import Dota2 from 'dota2-fork'
 import { Long } from 'mongodb'
 import retry from 'retry'
-import Steam from 'steam'
+import Steam from 'steam-fork'
 // @ts-expect-error no types exist
 import steamErrors from 'steam-errors'
 
