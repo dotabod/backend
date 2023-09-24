@@ -12,11 +12,5 @@ newrelic_agent.log
 *.key
 *.tsbuildinfo
 coverage
-
-# yarn v2
-.yarn/*
-!.yarn/cache
-!.yarn/releases
-!.yarn/plugins
-!.yarn/sdks
-!.yarn/versions
+private.key
+public.key

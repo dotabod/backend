@@ -1,6 +1,6 @@
 {
-  "name": "@dotabod/steam",
-  "description": "Forward twitch chat to dotabod.",
+  "name": "@dotabod/twitch-events",
+  "description": "We forward twitch events to dotabod.",
   "version": "1.0.0",
   "license": "GPL-3.0-or-later",
   "author": "Geczy",
@@ -14,13 +14,9 @@
     "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
   },
   "dependencies": {
-    "winston": "^3.10.0",
-    "steam-errors": "^1.0.0",
-    "steam-fork": "https://github.com/k0mar12/node-steam",
     "socket.io": "^4.7.2",
-    "axios": "1.2.0-alpha.1",
-    "mongodb": "^6.1.0",
-    "dota2-fork": "https://github.com/k0mar12/node-dota2#staging"
+    "socket.io-client": "^4.7.2",
+    "express": "^4.18.2",
+    "@supabase/supabase-js": "^2.34.0"
   }
 }
-
