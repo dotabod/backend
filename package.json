@@ -50,7 +50,8 @@
     "lint-staged": "^14.0.1"
   },
   "trustedDependencies": [
-    "steam-resources"
+    "steam-resources-fork",
+    "steam-fork"
   ],
   "lint-staged": {
     "*.+(js|jsx|ts|tsx|json|css|md)": [

@@ -257,7 +257,7 @@ class SetupSupabase {
         },
       )
       .subscribe((status: string, err: any) => {
-        logger.info('[SUPABASE] Subscription status on dota:', { status, err })
+        // logger.info('[SUPABASE] Subscription status on dota:', { status, err })
       })
   }
 }

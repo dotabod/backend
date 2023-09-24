@@ -16,11 +16,11 @@
   "dependencies": {
     "winston": "^3.10.0",
     "steam-errors": "^1.0.0",
-    "steam": "https://github.com/dotabod/node-steam#master",
+    "steam-fork": "https://github.com/k0mar12/node-steam",
     "socket.io": "^4.7.2",
     "axios": "1.2.0-alpha.1",
     "mongodb": "^6.1.0",
-    "dota2": "https://github.com/dotabod/node-dota2#staging"
+    "dota2-fork": "https://github.com/k0mar12/node-dota2#staging"
   }
 }
 
