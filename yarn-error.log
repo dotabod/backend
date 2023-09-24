@@ -1,0 +1,100 @@
+Arguments: 
+  /usr/bin/node /mnt/c/Program Files/nodejs/node_modules/yarn/bin/yarn.js
+
+PATH: 
+  /home/matt/.bun/bin:/home/matt/.vscode-server/bin/abd2f3db4bdb28f9e95536dfa84d8479f1eb312d/bin/remote-cli:/home/matt/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/c/Program Files/Git/cmd:/mnt/c/Program Files/NVIDIA Corporation/NVIDIA NvDLISR:/mnt/c/Users/ioste/AppData/Local/Microsoft/WinGet/Packages/Doppler.doppler_Microsoft.Winget.Source_8wekyb3d8bbwe:/mnt/c/Users/ioste/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-6.0-full_build/bin:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/mnt/c/Users/ioste/AppData/Local/Microsoft/WinGet/Packages/jqlang.jq_Microsoft.Winget.Source_8wekyb3d8bbwe:/mnt/c/Program Files/Go/bin:/mnt/c/Users/ioste/AppData/Roaming/nvm:/mnt/c/Program Files/nodejs:/Docker/host/bin:/mnt/c/Users/ioste/AppData/Local/Programs/Python/Python311/Scripts/:/mnt/c/Users/ioste/AppData/Local/Programs/Python/Python311/:/mnt/c/Users/ioste/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/ioste/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/ioste/AppData/Local/Microsoft/WinGet/Packages/cURL.cURL_Microsoft.Winget.Source_8wekyb3d8bbwe:/mnt/c/Users/ioste/AppData/Local/Microsoft/WinGet/Packages/pnpm.pnpm_Microsoft.Winget.Source_8wekyb3d8bbwe:/mnt/c/Users/ioste/AppData/Local/GitHubDesktop/bin:/mnt/c/Users/ioste/AppData/Roaming/npm:/mnt/c/Users/ioste/AppData/Local/Microsoft/WinGet/Packages/Doppler.doppler_Microsoft.Winget.Source_8wekyb3d8bbwe:/mnt/c/Users/ioste/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-6.0-full_build/bin:/mnt/c/Users/ioste/go/bin:/mnt/c/Users/ioste/Downloads/bin:/mnt/c/Users/ioste/AppData/Roaming/nvm:/mnt/c/Program Files/nodejs:/snap/bin
+
+Yarn version: 
+  1.22.19
+
+Node version: 
+  12.22.9
+
+Platform: 
+  linux x64
+
+Trace: 
+  Error: Cannot find module "."
+      at webpackMissingModule (/mnt/c/Users/ioste/AppData/Roaming/nvm/v19.9.0/node_modules/yarn/lib/cli.js:118255:64)
+      at pkg (/mnt/c/Users/ioste/AppData/Roaming/nvm/v19.9.0/node_modules/yarn/lib/cli.js:118255:142)
+      at again (/mnt/c/Users/ioste/AppData/Roaming/nvm/v19.9.0/node_modules/yarn/lib/cli.js:118210:22)
+      at depsFor (/mnt/c/Users/ioste/AppData/Roaming/nvm/v19.9.0/node_modules/yarn/lib/cli.js:118224:4)
+      at /mnt/c/Users/ioste/AppData/Roaming/nvm/v19.9.0/node_modules/yarn/lib/cli.js:42622:30
+      at Generator.next (<anonymous>)
+      at step (/mnt/c/Users/ioste/AppData/Roaming/nvm/v19.9.0/node_modules/yarn/lib/cli.js:310:30)
+      at /mnt/c/Users/ioste/AppData/Roaming/nvm/v19.9.0/node_modules/yarn/lib/cli.js:321:13
+
+npm manifest: 
+  {
+    "name": "dotabod",
+    "private": true,
+    "workspaces": [
+      "packages/settings",
+      "packages/twitch/events",
+      "packages/twitch/chat",
+      "packages/dota",
+      "packages/steam"
+    ],
+    "scripts": {
+      "up": "yarn upgrade-interactive --latest",
+      "buildst": "yarn workspace @dotabod/steam run build",
+      "builds": "yarn workspace @dotabod/settings run build",
+      "buildd": "yarn workspace @dotabod/dota run build",
+      "buildtc": "yarn workspace @dotabod/twitch-chat run build",
+      "buildte": "yarn workspace @dotabod/twitch-events run build",
+      "runc": "yarn workspace @dotabod/twitch-chat run docker:development",
+      "lint": "yarn eslint -- . && yarn prettier -- . && echo 'Linting complete.'",
+      "prettier": "prettier --write",
+      "eslint": "eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx",
+      "nps": "doppler run -- bash services/mongodb/updatenps.sh",
+      "exportnps": "doppler run -- bash services/mongodb/export.sh",
+      "just": "doppler run -- bash runner.sh",
+      "prepare": "husky install"
+    },
+    "dependencies": {
+      "@supabase/supabase-js": "^2.34.0",
+      "@twurple/api": "6.0.9",
+      "@twurple/auth": "6.0.9",
+      "@twurple/chat": "6.0.9",
+      "@twurple/eventsub-base": "6.0.9",
+      "@twurple/eventsub-http": "6.0.9",
+      "i18next": "^23.5.1",
+      "i18next-fs-backend": "^2.2.0",
+      "socket.io": "^4.7.2",
+      "winston": "^3.10.0"
+    },
+    "devDependencies": {
+      "@types/node": "^20.6.2",
+      "@typescript-eslint/eslint-plugin": "^6.7.2",
+      "@typescript-eslint/parser": "^6.7.2",
+      "eslint": "^8.49.0",
+      "eslint-config-prettier": "^9.0.0",
+      "eslint-import-resolver-typescript": "^3.6.0",
+      "eslint-plugin-import": "^2.28.1",
+      "eslint-plugin-prettier": "^5.0.0",
+      "eslint-plugin-simple-import-sort": "^10.0.0",
+      "eslint-plugin-unused-imports": "^3.0.0",
+      "husky": "^8.0.3",
+      "lint-staged": "^14.0.1",
+      "nodemon": "^3.0.1",
+      "prettier": "^3.0.3",
+      "ts-node": "^10.9.1",
+      "tsconfig-paths": "^4.2.0",
+      "typescript": "^5.2.2"
+    },
+    "lint-staged": {
+      "*.+(js|jsx|ts|tsx|json|css|md)": [
+        "yarn prettier"
+      ],
+      "*.+(js|jsx|ts|tsx)": [
+        "yarn eslint"
+      ]
+    },
+    "packageManager": "yarn@3.6.3"
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
