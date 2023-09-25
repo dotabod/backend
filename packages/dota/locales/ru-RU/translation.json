@@ -53,12 +53,12 @@
   "commands_mods": "Команды только для модераторов: {{commandList}}",
   "connections": {
     "gsi_one": "{{count}} стример подключён к Dotabod GSI",
-    "gsi_few": "{{count}} streamers connected to Dotabod GSI",
-    "gsi_many": "{{count}} streamers connected to Dotabod GSI",
+    "gsi_few": "{{count}} стримера подключёны к Dotabod GSI",
+    "gsi_many": "{{count}} стримеров подключёны к Dotabod GSI",
     "gsi_other": "{{count}} стримеров подключено к Dotabod GSI",
     "overlay_one": "{{count}} стример использует оверлей",
-    "overlay_few": "{{count}} streamers using the overlay",
-    "overlay_many": "{{count}} streamers using the overlay",
+    "overlay_few": "{{count}} стримера использует оверлей",
+    "overlay_many": "{{count}} стримеров использует оверлей",
     "overlay_other": "{{count}} стримеров использует оверлей"
   },
   "dota2pt": "Нужны сборки от про-игроков для  {{- heroName}}? Посмотри здесь {{- url}}",

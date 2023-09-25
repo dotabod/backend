@@ -47,6 +47,10 @@
   "commandDisabled": "Streamer disabled {{cmdName}} command {{emote}} Check !commands for the enabled ones",
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
+  "connections": {
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "gameNotFound": "Game was not found",
@@ -76,10 +80,6 @@
     "none": "Not playing with anyone from last game",
     "player": "{{- currentMatchHero}} was {{- lastMatchHero}}",
     "total_other": "Playing with {{count}} players from last game."
-  },
-  "connections": {
-    "overlay_other": "{{count}} streamers using the overlay",
-    "gsi_other": "{{count}} streamers connected to Dotabod GSI"
   },
   "lastgamescore": {
     "double": "Double down",

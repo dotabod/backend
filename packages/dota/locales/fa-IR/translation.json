@@ -63,7 +63,7 @@
   "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2m delay) No items found for {{- heroName}}",
-    "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
+    "list": "(با 2 دقیقه تاخیر) {{- heroName}} {{- itemNames}} دارد"
   },
   "herostats": {
     "noneColor": "{{color}} has no matches played as {{- heroName}} {{timeperiod}}",
@@ -190,7 +190,7 @@
   "unranked": "بازی نرمال ( آنرنکد)",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "ام ام آر به {{mmr}} به روز رسانی شد",
-  "updateMmr_manual": "Updated MMR to {{mmr}}",
+  "updateMmr_manual": "ام ام آر به {{mmr}} به روز رسانی شد",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
   "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
