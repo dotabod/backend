@@ -4,7 +4,12 @@ import { t } from 'i18next'
 
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { steamSocket } from '../../steam/ws.js'
+import {
+  getCardSocket,
+  getCardsSocket,
+  getUserSteamServerSocket,
+  steamSocket,
+} from '../../steam/ws.js'
 import { DelayedGames } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
@@ -30,68 +35,72 @@ commandHandler.registerCommand('test', {
       const [, matchId, steam32Id] = args
       let itemList: string[] | false | undefined = false
 
-      steamSocket.emit('getUserSteamServer', steam32Id, async (err: any, steamServerId: string) => {
-        console.log({ steamServerId })
-        if (!steamServerId) {
-          chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
-          return
-        }
+      getUserSteamServerSocket.emit(
+        'getUserSteamServer',
+        steam32Id,
+        async (err: any, steamServerId: string) => {
+          console.log({ steamServerId })
+          if (!steamServerId) {
+            chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
+            return
+          }
 
-        logger.info('test command', {
-          command: 'TEST',
-          steam32Id: steam32Id || client.steam32Id,
-          steamServerId,
-        })
+          logger.info('test command', {
+            command: 'TEST',
+            steam32Id: steam32Id || client.steam32Id,
+            steamServerId,
+          })
 
-        // Wrap the steamSocket.emit in a Promise
-        const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
-          steamSocket.emit(
-            'getRealTimeStats',
-            {
-              match_id: matchId,
-              forceRefetchAll: true,
-              steam_server_id: steamServerId,
-              token: client.token,
-            },
-            (err: any, cards: any) => {
-              if (err) {
-                reject(err)
-              } else {
-                resolve(cards)
-              }
-            },
-          )
-        })
+          // Wrap the steamSocket.emit in a Promise
+          const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
+            steamSocket.emit(
+              'getRealTimeStats',
+              {
+                match_id: matchId,
+                forceRefetchAll: true,
+                steam_server_id: steamServerId,
+                token: client.token,
+              },
+              (err: any, cards: any) => {
+                if (err) {
+                  reject(err)
+                } else {
+                  resolve(cards)
+                }
+              },
+            )
+          })
 
-        const playerIdx = 1
-        const delayedData = await getDelayedDataPromise
-        const teamIndex = (playerIdx ?? 0) > 4 ? 1 : 0
-        const teamPlayerIdx = (playerIdx ?? 0) % 5
-        const itemIds = delayedData.teams[teamIndex]?.players[teamPlayerIdx]?.items
+          const playerIdx = 1
+          const delayedData = await getDelayedDataPromise
+          const teamIndex = (playerIdx ?? 0) > 4 ? 1 : 0
+          const teamPlayerIdx = (playerIdx ?? 0) % 5
+          const itemIds = delayedData.teams[teamIndex]?.players[teamPlayerIdx]?.items
 
-        itemList =
-          Array.isArray(itemIds) &&
-          itemIds.length > 0 &&
-          itemIds
-            .map((itemId) => {
-              const id = itemId as unknown as keyof typeof DOTA_ITEM_IDS
-              const itemShortname = DOTA_ITEM_IDS[id] as keyof typeof DOTA_ITEMS
-              const item = DOTA_ITEMS[itemShortname]
-              const itemName: string | boolean = item && 'dname' in item && item.dname
+          itemList =
+            Array.isArray(itemIds) &&
+            itemIds.length > 0 &&
+            itemIds
+              .map((itemId) => {
+                const id = itemId as unknown as keyof typeof DOTA_ITEM_IDS
+                const itemShortname = DOTA_ITEM_IDS[id] as keyof typeof DOTA_ITEMS
+                const item = DOTA_ITEMS[itemShortname]
+                const itemName: string | boolean = item && 'dname' in item && item.dname
 
-              return itemName || itemShortname
-            })
-            .filter(Boolean)
+                return itemName || itemShortname
+              })
+              .filter(Boolean)
 
-        console.log(itemList)
-      })
+          console.log(itemList)
+        },
+      )
     }
 
     if (args[0] === 'cards') {
       const { accountIds } = await getAccountsFromMatch({
         gsi: client.gsi,
       })
-      steamSocket.emit('getCards', accountIds, (err: any, response: any) => {
+      getCardsSocket.emit('getCards', accountIds, (err: any, response: any) => {
         console.log(response, err) // one response per client
       })
 
@@ -102,7 +111,7 @@ commandHandler.registerCommand('test', {
     if (args[0] === 'card') {
       const [, accountId] = args
 
-      steamSocket.emit('getCard', Number(accountId), (err: any, response: any) => {
+      getCardSocket.emit('getCard', Number(accountId), (err: any, response: any) => {
         console.log({ response, err }) // one response per client
       })
 

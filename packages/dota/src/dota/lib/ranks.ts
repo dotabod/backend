@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import RedisClient from '../../db/RedisClient.js'
-import { steamSocket } from '../../steam/ws.js'
+import { getCardSocket, steamSocket } from '../../steam/ws.js'
 import { Cards } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { leaderRanks, ranks } from './consts.js'
@@ -58,7 +58,7 @@ export async function lookupLeaderRank(
   } else {
     try {
       const getCardPromise = new Promise<Cards>((resolve, reject) => {
-        steamSocket.emit('getCard', steam32Id, (err: any, card: Cards) => {
+        getCardSocket.emit('getCard', steam32Id, (err: any, card: Cards) => {
           if (err) {
             reject(err)
           } else {
