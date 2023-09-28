@@ -6,7 +6,7 @@ import { logger } from './utils/logger.js'
 let hasDotabodSocket = false
 let isConnectedToSteam = false
 
-const io = new Server(5035)
+const io = new Server(5038)
 const dota = Dota.getInstance()
 
 dota.dota2.on('ready', () => {
@@ -37,10 +37,10 @@ io.on('connection', (socket) => {
     hasDotabodSocket = false
   })
 
-  socket.on('getRealTimeStats', async function (data: any, callback: callback) {
+  socket.on('getUserSteamServer', async function (steam32Id: number, callback: callback) {
     if (!isConnectedToSteam) return
     try {
-      callback(null, await dota.GetRealTimeStats(data))
+      callback(null, await dota.getUserSteamServer(steam32Id))
     } catch (e: any) {
       callback(e.message, null)
     }

@@ -1,100 +1,22 @@
 import crypto from 'crypto'
 import fs from 'fs'
 
-import axios from 'axios'
 // @ts-expect-error no types exist
 import Dota2 from 'dota2'
-import retry from 'retry'
 import Steam from 'steam'
 // @ts-expect-error no types exist
 import steamErrors from 'steam-errors'
 
 import MongoDBSingleton from './MongoDBSingleton.js'
-import { Cards, DelayedGames } from './types/index.js'
+import { Cards } from './types/index.js'
 import CustomError from './utils/customError.js'
-import { getAccountsFromMatch } from './utils/getAccountsFromMatch.js'
 import { logger } from './utils/logger.js'
 import { retryCustom } from './utils/retry.js'
-
-import io from './index.js'
-
-const isDev = process.env.NODE_ENV === 'development'
-
-// Fetches data from MongoDB
-const fetchDataFromMongo = async (match_id: string) => {
-  const mongo = MongoDBSingleton
-  const db = await mongo.connect()
-
-  try {
-    return await db.collection<DelayedGames>('delayedGames').findOne({ 'match.match_id': match_id })
-  } finally {
-    await mongo.close()
-  }
-}
-
-// Constructs the API URL
-const getApiUrl = (steam_server_id: string) => {
-  if (!process.env.STEAM_WEB_API) throw new CustomError('STEAM_WEB_API not set')
-
-  return `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steam_server_id}`
-}
-
-// Saves the match to MongoDB and fetches new medals if needed
-const saveMatch = async ({
-  match_id,
-  game,
-  refetchCards = false,
-}: {
-  match_id: string
-  game: DelayedGames
-  refetchCards?: boolean
-}) => {
-  const mongo = MongoDBSingleton
-  const db = await mongo.connect()
-
-  try {
-    await db
-      .collection<DelayedGames>('delayedGames')
-      .updateOne({ 'match.match_id': match_id }, { $set: game }, { upsert: true })
-
-    if (refetchCards) {
-      const { accountIds } = await getAccountsFromMatch({
-        searchMatchId: game.match.match_id,
-      })
-      const dota = Dota.getInstance()
-      await dota.getCards(accountIds, true)
-    }
-  } finally {
-    await mongo.close()
-  }
-}
 
 interface steamUserDetails {
   account_name: string
   password: string
   sha_sentryfile?: Buffer
-}
-
-function hasSteamData(game?: DelayedGames | null) {
-  const hasTeams = Array.isArray(game?.teams) && game?.teams.length === 2
-  const hasPlayers =
-    hasTeams &&
-    Array.isArray(game.teams[0].players) &&
-    Array.isArray(game.teams[1].players) &&
-    game.teams[0].players.length === 5 &&
-    game.teams[1].players.length === 5
-
-  // Dev should be able to test in a lobby with bot matches
-  const hasAccountIds = isDev
-    ? hasPlayers // dev local lobby just needs the players array
-    : hasPlayers &&
-      game.teams[0].players.every((player) => player.accountid) &&
-      game.teams[1].players.every((player) => player.accountid)
-  const hasHeroes =
-    hasPlayers &&
-    game.teams[0].players.every((player) => player.heroid) &&
-    game.teams[1].players.every((player) => player.heroid)
-  return { hasAccountIds, hasPlayers, hasHeroes }
 }
 
 class Dota {
@@ -235,84 +157,6 @@ class Dota {
 
   isProduction() {
     return process.env.NODE_ENV === 'production'
-  }
-
-  public GetRealTimeStats = async ({
-    match_id,
-    refetchCards = false,
-    steam_server_id,
-    token,
-    forceRefetchAll = false,
-  }: {
-    forceRefetchAll?: boolean
-    match_id: string
-    refetchCards?: boolean
-    steam_server_id: string
-    token: string
-  }): Promise<DelayedGames> => {
-    let waitForHeros = forceRefetchAll || false
-
-    if (!steam_server_id) {
-      throw new Error('Match not found')
-    }
-
-    const currentData = await fetchDataFromMongo(match_id)
-    const { hasAccountIds, hasHeroes } = hasSteamData(currentData)
-
-    // can early exit if we have all the data we need
-    if (currentData && hasHeroes && hasAccountIds && !forceRefetchAll) {
-      return currentData
-    }
-
-    const operation = retry.operation({
-      retries: 35,
-      factor: 1.1,
-      minTimeout: 5000, // Minimum retry timeout (1 second)
-      maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
-    })
-
-    return new Promise((resolve, reject) => {
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      operation.attempt(async (currentAttempt) => {
-        let game: DelayedGames
-        try {
-          game = (await axios<DelayedGames>(getApiUrl(steam_server_id)))?.data
-        } catch (e) {
-          return operation.retry(new Error('Match not found'))
-        }
-        const { hasAccountIds, hasHeroes } = hasSteamData(game)
-
-        // needs account ids
-        const retryAttempt = !hasAccountIds || !game ? new Error() : undefined
-        if (operation.retry(retryAttempt)) return
-
-        // needs hero data
-        const retryAttempt2 = waitForHeros && !hasHeroes ? new Error() : undefined
-        if (operation.retry(retryAttempt2)) return
-
-        // 2-minute delay gives "0" match id, so we use the gsi match id instead
-        game.match.match_id = match_id
-        game.match.server_steam_id = steam_server_id
-        const gamePlusMore = { ...game, createdAt: new Date() }
-
-        if (hasHeroes) {
-          await saveMatch({ match_id, game: gamePlusMore })
-          if (!forceRefetchAll) {
-            // forward the msg to dota node app
-            io.to('steam').emit('saveHeroesForMatchId', { matchId: match_id, token })
-          }
-          return resolve(gamePlusMore)
-        }
-
-        if (!waitForHeros) {
-          await saveMatch({ match_id, game: gamePlusMore, refetchCards })
-          waitForHeros = true
-          operation.retry(new Error())
-        }
-
-        return resolve(gamePlusMore)
-      })
-    })
   }
 
   public static getInstance(): Dota {
