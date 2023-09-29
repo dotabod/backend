@@ -115,13 +115,13 @@ restart() {
 
 pull() {
     docker_login
-    docker_command pull twitch-events dota twitch-chat steam steam-getCard steam-getCards steam-GetUserSteamServer
+    docker_command pull
 }
 
 push() {
     docker_login
     buildall
-    docker_command push twitch-events dota twitch-chat steam steam-getCard steam-getCards steam-GetUserSteamServer
+    docker_command push
 }
 
 buildall() {
