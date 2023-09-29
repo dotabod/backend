@@ -7,8 +7,8 @@ import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import {
   getCardSocket,
   getCardsSocket,
+  getRealTimeStatsSocket,
   getUserSteamServerSocket,
-  steamSocket,
 } from '../../steam/ws.js'
 import { DelayedGames } from '../../types.js'
 import { logger } from '../../utils/logger.js'
@@ -51,9 +51,8 @@ commandHandler.registerCommand('test', {
             steamServerId,
           })
 
-          // Wrap the steamSocket.emit in a Promise
           const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
-            steamSocket.emit(
+            getRealTimeStatsSocket.emit(
               'getRealTimeStats',
               {
                 match_id: matchId,
@@ -121,7 +120,7 @@ commandHandler.registerCommand('test', {
 
     const [steam32Id] = args
 
-    steamSocket.emit(
+    getUserSteamServerSocket.emit(
       'getUserSteamServer',
       steam32Id || client.steam32Id,
       (err: any, steamServerId: string) => {

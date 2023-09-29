@@ -6,7 +6,7 @@ import { t } from 'i18next'
 import RedisClient from '../../db/RedisClient.js'
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
-import { steamSocket } from '../../steam/ws.js'
+import { getRealTimeStatsSocket } from '../../steam/ws.js'
 import { DelayedGames, Item, Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../chatClient.js'
@@ -81,9 +81,8 @@ async function getItems({
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
 
-    // Wrap the steamSocket.emit in a Promise
     const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
-      steamSocket.emit(
+      getRealTimeStatsSocket.emit(
         'getRealTimeStats',
         {
           match_id: packet?.map?.matchid ?? '',
