@@ -53,13 +53,13 @@
   "commands_mods": "Команди лише для модераторів: {{commandList}}",
   "connections": {
     "gsi_one": "{{count}} стрімер підключений до Dotabod GSI",
-    "gsi_few": "{{count}} streamers connected to Dotabod GSI",
-    "gsi_many": "{{count}} streamers connected to Dotabod GSI",
-    "gsi_other": "{{count}} стрімерів підключено до Dotabod GSI",
+    "gsi_few": "{{count}} стрімери підключені до Dotabod GSI",
+    "gsi_many": "{{count}} стрімери підключені до Dotabod GSI",
+    "gsi_other": "{{count}} стрімери підключені до Dotabod GSI",
     "overlay_one": "{{count}} стрімер використовує оверлей",
-    "overlay_few": "{{count}} streamers using the overlay",
-    "overlay_many": "{{count}} streamers using the overlay",
-    "overlay_other": "{{count}} стрімерів використовує оверлей"
+    "overlay_few": "{{count}} стрімери використовують оверлей",
+    "overlay_many": "{{count}} стрімери використовують оверлей",
+    "overlay_other": "{{count}} стрімери використовують оверлей"
   },
   "dota2pt": "Ти не знаєш що купити на {{- heroName}}?  Подивись тут {{- url}}",
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",
