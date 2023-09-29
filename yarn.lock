@@ -1150,6 +1150,168 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dotabod/steam-getCard@workspace:packages/steam-getCard":
+  version: 0.0.0-use.local
+  resolution: "@dotabod/steam-getCard@workspace:packages/steam-getCard"
+  dependencies:
+    "@faker-js/faker": ^8.1.0
+    "@jest/globals": ^29.7.0
+    "@node-steam/id": ^1.2.0
+    "@supabase/supabase-js": ^2.34.0
+    "@testing-library/dom": ^9.3.3
+    "@types/body-parser": ^1.19.3
+    "@types/express": ^4.17.17
+    "@types/jest": ^29.5.5
+    "@types/lodash.isequal": ^4.5.6
+    "@types/long": ^5.0.0
+    "@types/lru-cache": ^7.10.10
+    "@types/memoizee": ^0.4.8
+    "@types/newrelic": ^9.14.0
+    "@types/node": ^20.5.7
+    "@types/retry": ^0.12.2
+    "@types/steam": ^0.0.29
+    "@typescript-eslint/eslint-plugin": ^6.5.0
+    "@typescript-eslint/parser": ^6.5.0
+    axios: 1.2.0-alpha.1
+    axios-retry: ^3.3.1
+    body-parser: ^1.20.2
+    chokidar: ^3.5.3
+    country-code-emoji: ^2.3.0
+    dota2: "https://github.com/dotabod/node-dota2#head=staging"
+    dotaconstants: ^7.18.0
+    eslint: ^8.48.0
+    eslint-plugin-prettier: ^5.0.0
+    eslint-plugin-unused-imports: ^3.0.0
+    express: ^4.18.2
+    jest: ^29.7.0
+    lint-staged: ^14.0.1
+    lodash.isequal: ^4.5.0
+    lru-cache: ^10.0.1
+    mongodb: ^6.1.0
+    newrelic: ^11.1.0
+    node-gyp: ^9.4.0
+    nodemon: ^3.0.1
+    prettier: ^3.0.3
+    redis: ^4.6.9
+    retry: ^0.13.1
+    socket.io: ^4.7.2
+    socket.io-client: ^4.7.2
+    steam: "https://github.com/dotabod/node-steam#head=master"
+    steam-errors: ^1.0.0
+    ts-jest: ^29.1.1
+    typescript: ^5.2.2
+    winston: ^3.10.0
+  languageName: unknown
+  linkType: soft
+
+"@dotabod/steam-getCards@workspace:packages/steam-getCards":
+  version: 0.0.0-use.local
+  resolution: "@dotabod/steam-getCards@workspace:packages/steam-getCards"
+  dependencies:
+    "@faker-js/faker": ^8.1.0
+    "@jest/globals": ^29.7.0
+    "@node-steam/id": ^1.2.0
+    "@supabase/supabase-js": ^2.34.0
+    "@testing-library/dom": ^9.3.3
+    "@types/body-parser": ^1.19.3
+    "@types/express": ^4.17.17
+    "@types/jest": ^29.5.5
+    "@types/lodash.isequal": ^4.5.6
+    "@types/long": ^5.0.0
+    "@types/lru-cache": ^7.10.10
+    "@types/memoizee": ^0.4.8
+    "@types/newrelic": ^9.14.0
+    "@types/node": ^20.5.7
+    "@types/retry": ^0.12.2
+    "@types/steam": ^0.0.29
+    "@typescript-eslint/eslint-plugin": ^6.5.0
+    "@typescript-eslint/parser": ^6.5.0
+    axios: 1.2.0-alpha.1
+    axios-retry: ^3.3.1
+    body-parser: ^1.20.2
+    chokidar: ^3.5.3
+    country-code-emoji: ^2.3.0
+    dota2: "https://github.com/dotabod/node-dota2#head=staging"
+    dotaconstants: ^7.18.0
+    eslint: ^8.48.0
+    eslint-plugin-prettier: ^5.0.0
+    eslint-plugin-unused-imports: ^3.0.0
+    express: ^4.18.2
+    jest: ^29.7.0
+    lint-staged: ^14.0.1
+    lodash.isequal: ^4.5.0
+    lru-cache: ^10.0.1
+    mongodb: ^6.1.0
+    newrelic: ^11.1.0
+    node-gyp: ^9.4.0
+    nodemon: ^3.0.1
+    prettier: ^3.0.3
+    redis: ^4.6.9
+    retry: ^0.13.1
+    socket.io: ^4.7.2
+    socket.io-client: ^4.7.2
+    steam: "https://github.com/dotabod/node-steam#head=master"
+    steam-errors: ^1.0.0
+    ts-jest: ^29.1.1
+    typescript: ^5.2.2
+    winston: ^3.10.0
+  languageName: unknown
+  linkType: soft
+
+"@dotabod/steam-getUserSteamServer@workspace:packages/steam-getUserSteamServer":
+  version: 0.0.0-use.local
+  resolution: "@dotabod/steam-getUserSteamServer@workspace:packages/steam-getUserSteamServer"
+  dependencies:
+    "@faker-js/faker": ^8.1.0
+    "@jest/globals": ^29.7.0
+    "@node-steam/id": ^1.2.0
+    "@supabase/supabase-js": ^2.34.0
+    "@testing-library/dom": ^9.3.3
+    "@types/body-parser": ^1.19.3
+    "@types/express": ^4.17.17
+    "@types/jest": ^29.5.5
+    "@types/lodash.isequal": ^4.5.6
+    "@types/long": ^5.0.0
+    "@types/lru-cache": ^7.10.10
+    "@types/memoizee": ^0.4.8
+    "@types/newrelic": ^9.14.0
+    "@types/node": ^20.5.7
+    "@types/retry": ^0.12.2
+    "@types/steam": ^0.0.29
+    "@typescript-eslint/eslint-plugin": ^6.5.0
+    "@typescript-eslint/parser": ^6.5.0
+    axios: 1.2.0-alpha.1
+    axios-retry: ^3.3.1
+    body-parser: ^1.20.2
+    chokidar: ^3.5.3
+    country-code-emoji: ^2.3.0
+    dota2: "https://github.com/dotabod/node-dota2#head=staging"
+    dotaconstants: ^7.18.0
+    eslint: ^8.48.0
+    eslint-plugin-prettier: ^5.0.0
+    eslint-plugin-unused-imports: ^3.0.0
+    express: ^4.18.2
+    jest: ^29.7.0
+    lint-staged: ^14.0.1
+    lodash.isequal: ^4.5.0
+    lru-cache: ^10.0.1
+    mongodb: ^6.1.0
+    newrelic: ^11.1.0
+    node-gyp: ^9.4.0
+    nodemon: ^3.0.1
+    prettier: ^3.0.3
+    redis: ^4.6.9
+    retry: ^0.13.1
+    socket.io: ^4.7.2
+    socket.io-client: ^4.7.2
+    steam: "https://github.com/dotabod/node-steam#head=master"
+    steam-errors: ^1.0.0
+    ts-jest: ^29.1.1
+    typescript: ^5.2.2
+    winston: ^3.10.0
+  languageName: unknown
+  linkType: soft
+
 "@dotabod/steam@workspace:packages/steam":
   version: 0.0.0-use.local
   resolution: "@dotabod/steam@workspace:packages/steam"
@@ -1177,7 +1339,7 @@ __metadata:
     body-parser: ^1.20.2
     chokidar: ^3.5.3
     country-code-emoji: ^2.3.0
-    dota2-fork: "https://github.com/dotabod/node-dota2-fork"
+    dota2: "https://github.com/dotabod/node-dota2#head=staging"
     dotaconstants: ^7.18.0
     eslint: ^8.48.0
     eslint-plugin-prettier: ^5.0.0
@@ -1196,8 +1358,8 @@ __metadata:
     retry: ^0.13.1
     socket.io: ^4.7.2
     socket.io-client: ^4.7.2
+    steam: "https://github.com/dotabod/node-steam#head=master"
     steam-errors: ^1.0.0
-    steam-fork: "https://github.com/dotabod/node-steam-fork"
     ts-jest: ^29.1.1
     typescript: ^5.2.2
     winston: ^3.10.0
@@ -3887,6 +4049,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bufferview@npm:~1":
+  version: 1.0.1
+  resolution: "bufferview@npm:1.0.1"
+  checksum: 000fbc48db49fb0bc934fac243d7d6de90694a8cf0d0a284548687099a5145d7f6f518e2d9e5df52f974f55769eb562de3b0882874c4b78f9d8592d2c0dec776
+  languageName: node
+  linkType: hard
+
 "bundle-name@npm:^3.0.0":
   version: 3.0.0
   resolution: "bundle-name@npm:3.0.0"
@@ -3896,12 +4065,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bytebuffer@npm:^5.0, bytebuffer@npm:~5":
+"bytebuffer@npm:^5.0":
   version: 5.0.1
   resolution: "bytebuffer@npm:5.0.1"
   dependencies:
     long: ~3
   checksum: d95db66499df77394d6f769b216054b596e492783905f53a06e7c0b7091b24d7b0477de133d08300672e0cd5e140eab81728cdd31ccd9367f7dc4944cdaf913b
+  languageName: node
+  linkType: hard
+
+"bytebuffer@npm:~4 >=4.1":
+  version: 4.1.0
+  resolution: "bytebuffer@npm:4.1.0"
+  dependencies:
+    bufferview: ~1
+    long: ~2 >=2.3.0
+  checksum: 5479a97624d10f4171f489d2076cc300bdd5afd5360a4ee675ea44839091c693774472802dece282793e2a1f5c3d2e010e8477fa8c531c83c312f6ca46a7043b
   languageName: node
   linkType: hard
 
@@ -3991,16 +4170,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:4.x, chalk@npm:^4.0.0, chalk@npm:^4.1.0":
-  version: 4.1.2
-  resolution: "chalk@npm:4.1.2"
-  dependencies:
-    ansi-styles: ^4.1.0
-    supports-color: ^7.1.0
-  checksum: fe75c9d5c76a7a98d45495b91b2172fa3b7a09e0cc9370e5c8feb1c567b85c4288e2b3fded7cfdd7359ac28d6b3844feb8b82b8686842e93d23c827c417e83fc
-  languageName: node
-  linkType: hard
-
 "chalk@npm:5.3.0":
   version: 5.3.0
   resolution: "chalk@npm:5.3.0"
@@ -4016,6 +4185,16 @@ __metadata:
     escape-string-regexp: ^1.0.5
     supports-color: ^5.3.0
   checksum: ec3661d38fe77f681200f878edbd9448821924e0f93a9cefc0e26a33b145f1027a2084bf19967160d11e1f03bfe4eaffcabf5493b89098b2782c3fe0b03d80c2
+  languageName: node
+  linkType: hard
+
+"chalk@npm:^4.0.0, chalk@npm:^4.1.0":
+  version: 4.1.2
+  resolution: "chalk@npm:4.1.2"
+  dependencies:
+    ansi-styles: ^4.1.0
+    supports-color: ^7.1.0
+  checksum: fe75c9d5c76a7a98d45495b91b2172fa3b7a09e0cc9370e5c8feb1c567b85c4288e2b3fded7cfdd7359ac28d6b3844feb8b82b8686842e93d23c827c417e83fc
   languageName: node
   linkType: hard
 
@@ -4118,38 +4297,6 @@ __metadata:
     strip-ansi: ^6.0.1
     wrap-ansi: ^7.0.0
   checksum: 79648b3b0045f2e285b76fb2e24e207c6db44323581e421c3acbd0e86454cba1b37aea976ab50195a49e7384b871e6dfb2247ad7dec53c02454ac6497394cb56
-  languageName: node
-  linkType: hard
-
-"clone-buffer@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "clone-buffer@npm:1.0.0"
-  checksum: a39a35e7fd081e0f362ba8195bd15cbc8205df1fbe4598bb4e09c1f9a13c0320a47ab8a61a8aa83561e4ed34dc07666d73254ee952ddd3985e4286b082fe63b9
-  languageName: node
-  linkType: hard
-
-"clone-stats@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "clone-stats@npm:1.0.0"
-  checksum: 654c0425afc5c5c55a4d95b2e0c6eccdd55b5247e7a1e7cca9000b13688b96b0a157950c72c5307f9fd61f17333ad796d3cd654778f2d605438012391cc4ada5
-  languageName: node
-  linkType: hard
-
-"clone@npm:^2.1.1":
-  version: 2.1.2
-  resolution: "clone@npm:2.1.2"
-  checksum: aaf106e9bc025b21333e2f4c12da539b568db4925c0501a1bf4070836c9e848c892fa22c35548ce0d1132b08bbbfa17a00144fe58fccdab6fa900fec4250f67d
-  languageName: node
-  linkType: hard
-
-"cloneable-readable@npm:^1.0.0":
-  version: 1.1.3
-  resolution: "cloneable-readable@npm:1.1.3"
-  dependencies:
-    inherits: ^2.0.1
-    process-nextick-args: ^2.0.0
-    readable-stream: ^2.3.5
-  checksum: 23b3741225a80c1760dff58aafb6a45383d5ee2d42de7124e4e674387cfad2404493d685b35ebfca9098f99c296e5c5719e748c9750c13838a2016ea2d2bb83a
   languageName: node
   linkType: hard
 
@@ -4704,18 +4851,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dota2-fork@https://github.com/dotabod/node-dota2-fork":
-  version: 7.1.4
-  resolution: "dota2-fork@https://github.com/dotabod/node-dota2-fork.git#commit=f0f2a7d2af777bb90f1e51db31543f4001de846f"
+"dota2@https://github.com/dotabod/node-dota2#head=staging":
+  version: 7.0.3
+  resolution: "dota2@https://github.com/dotabod/node-dota2.git#commit=e3f31d11df35677f83490aa389c47216269faf6f"
   dependencies:
     deferred: ^0.7.10
     long: ^4.0.0
     merge: ^1.2.1
-    mkdirp: ^1.0.4
-    steam-fork: "https://github.com/dotabod/node-steam-fork"
-    steam-resources-fork: ^1.0.4
+    steam: "github:odota/node-steam"
+    steam-resources: "github:odota/node-steam-resources"
     winston: ^3.2.1
-  checksum: 03807397075be632a987b6a6123c2ae099bbb01304953647c4ec2fb18eea2b8c55b50324da3b384fbdb9a25060737b2dd3be342706f2f8e4303e3d20acfb90a0
+  checksum: 38637f9eb785d64c710218163cea452f767b070180e54b3e85d8d625a048e0cbff0418faa4cae55a15e66e6aa856b4836bbe9e03d7fbe8ec2e62f4d39880ecaf
   languageName: node
   linkType: hard
 
@@ -5890,7 +6036,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^7.0.5, glob@npm:^7.1.3, glob@npm:^7.1.4":
+"glob@npm:^5.0.10":
+  version: 5.0.15
+  resolution: "glob@npm:5.0.15"
+  dependencies:
+    inflight: ^1.0.4
+    inherits: 2
+    minimatch: 2 || 3
+    once: ^1.3.0
+    path-is-absolute: ^1.0.0
+  checksum: f9742448303460672607e569457f1b57e486a79a985e269b69465834d2075b243378225f65dc54c09fcd4b75e4fb34442aec88f33f8c65fa4abccc8ee2dc2f5d
+  languageName: node
+  linkType: hard
+
+"glob@npm:^7.1.3, glob@npm:^7.1.4":
   version: 7.2.3
   resolution: "glob@npm:7.2.3"
   dependencies:
@@ -5940,59 +6099,6 @@ __metadata:
     merge2: ^1.4.1
     slash: ^3.0.0
   checksum: b4be8885e0cfa018fc783792942d53926c35c50b3aefd3fdcfb9d22c627639dc26bd2327a40a0b74b074100ce95bb7187bfeae2f236856aa3de183af7a02aea6
-  languageName: node
-  linkType: hard
-
-"google-closure-compiler-java@npm:^20221102.0.1":
-  version: 20221102.0.1
-  resolution: "google-closure-compiler-java@npm:20221102.0.1"
-  checksum: 373db2650045bb45a96b06e888ca62c09b7bd43c4763b23af4a54ce46c460e23f01eda2df1d8f70902ae266b6adadaed0a67361555bb43e2e23e9f9105982043
-  languageName: node
-  linkType: hard
-
-"google-closure-compiler-linux@npm:^20221102.0.1":
-  version: 20221102.0.1
-  resolution: "google-closure-compiler-linux@npm:20221102.0.1"
-  conditions: os=linux & (cpu=x32 | cpu=x64)
-  languageName: node
-  linkType: hard
-
-"google-closure-compiler-osx@npm:^20221102.0.1":
-  version: 20221102.0.1
-  resolution: "google-closure-compiler-osx@npm:20221102.0.1"
-  conditions: os=darwin & (cpu=x32 | cpu=x64 | cpu=arm64)
-  languageName: node
-  linkType: hard
-
-"google-closure-compiler-windows@npm:^20221102.0.1":
-  version: 20221102.0.1
-  resolution: "google-closure-compiler-windows@npm:20221102.0.1"
-  conditions: os=win32 & (cpu=x32 | cpu=x64)
-  languageName: node
-  linkType: hard
-
-"google-closure-compiler@npm:^20221102.0.1":
-  version: 20221102.0.1
-  resolution: "google-closure-compiler@npm:20221102.0.1"
-  dependencies:
-    chalk: 4.x
-    google-closure-compiler-java: ^20221102.0.1
-    google-closure-compiler-linux: ^20221102.0.1
-    google-closure-compiler-osx: ^20221102.0.1
-    google-closure-compiler-windows: ^20221102.0.1
-    minimist: 1.x
-    vinyl: 2.x
-    vinyl-sourcemaps-apply: ^0.2.0
-  dependenciesMeta:
-    google-closure-compiler-linux:
-      optional: true
-    google-closure-compiler-osx:
-      optional: true
-    google-closure-compiler-windows:
-      optional: true
-  bin:
-    google-closure-compiler: cli.js
-  checksum: 10715f1b5fe946764e5a6290d4c64e2f9f6bb3f898be75a7acd38ebc69b020ca093d0c60e9f2632e231ec58ae827c7b5e823c2f8a420d57e107a4e2135505120
   languageName: node
   linkType: hard
 
@@ -6345,7 +6451,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"inherits@npm:2, inherits@npm:2.0.4, inherits@npm:^2.0.1, inherits@npm:^2.0.3, inherits@npm:~2.0.3":
+"inherits@npm:2, inherits@npm:2.0.4, inherits@npm:^2.0.3, inherits@npm:~2.0.3":
   version: 2.0.4
   resolution: "inherits@npm:2.0.4"
   checksum: 4a48a733847879d6cf6691860a6b1e3f0f4754176e4d71494c41f3475553768b10f84b5ce1d40fbd0e34e6bfbb864ee35858ad4dd2cf31e02fc4a154b724d7f1
@@ -7630,6 +7736,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"long@npm:~2 >=2.3.0":
+  version: 2.4.0
+  resolution: "long@npm:2.4.0"
+  checksum: e24fd5e14be90ba6ec3faa43b3b0f1c4ac88bfdc52471d90f63e173572f6db27c45873e847f8af58283ca3140eb42d7ba11708102f3cc0956793b03305c737e0
+  languageName: node
+  linkType: hard
+
 "long@npm:~3":
   version: 3.2.0
   resolution: "long@npm:3.2.0"
@@ -7831,7 +7944,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^3.0.4, minimatch@npm:^3.0.5, minimatch@npm:^3.1.1, minimatch@npm:^3.1.2":
+"minimatch@npm:2 || 3, minimatch@npm:^3.0.4, minimatch@npm:^3.0.5, minimatch@npm:^3.1.1, minimatch@npm:^3.1.2":
   version: 3.1.2
   resolution: "minimatch@npm:3.1.2"
   dependencies:
@@ -7849,7 +7962,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimist@npm:1.x, minimist@npm:^1.2.0, minimist@npm:^1.2.6":
+"minimist@npm:^1.2.0, minimist@npm:^1.2.6":
   version: 1.2.8
   resolution: "minimist@npm:1.2.8"
   checksum: 75a6d645fb122dad29c06a7597bddea977258957ed88d7a6df59b5cd3fe4a527e253e9bbf2e783e4b73657f9098b96a5fe96ab8a113655d4109108577ecf85b0
@@ -7940,7 +8053,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mkdirp@npm:^1.0.3, mkdirp@npm:^1.0.4":
+"mkdirp@npm:^1.0.3":
   version: 1.0.4
   resolution: "mkdirp@npm:1.0.4"
   bin:
@@ -8636,7 +8749,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"process-nextick-args@npm:^2.0.0, process-nextick-args@npm:~2.0.0":
+"process-nextick-args@npm:~2.0.0":
   version: 2.0.1
   resolution: "process-nextick-args@npm:2.0.1"
   checksum: 1d38588e520dab7cea67cbbe2efdd86a10cc7a074c09657635e34f035277b59fbb57d09d8638346bf7090f8e8ebc070c96fa5fd183b777fff4f5edff5e9466cf
@@ -8672,18 +8785,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"protobufjs-dota@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "protobufjs-dota@npm:1.0.1"
+"protobufjs@npm:^4.1":
+  version: 4.1.3
+  resolution: "protobufjs@npm:4.1.3"
   dependencies:
     ascli: ~1
-    bytebuffer: ~5
-    glob: ^7.0.5
-    google-closure-compiler: ^20221102.0.1
+    bytebuffer: ~4 >=4.1
+    glob: ^5.0.10
     yargs: ^3.10.0
   bin:
-    pbjs: bin/pbjs
-  checksum: 4a38fa47ada188d77365c64e28a9e61555489ebbaf06efeff4a69af61759a63b08eedd2c47babafae292476efd55c8bf2908c98876e2690fdb7276749ae7e302
+    pbjs: ./bin/pbjs
+  checksum: d615fa3483b72d351ddd0618a649873367b4a4e30d80b7382b4302b689270b457848f211e65236a5591e111fb0a8c8529087798baa7de145e7aab3e3e58c6e01
   languageName: node
   linkType: hard
 
@@ -8815,7 +8927,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:^2.2.2, readable-stream@npm:^2.3.5":
+"readable-stream@npm:^2.2.2":
   version: 2.3.8
   resolution: "readable-stream@npm:2.3.8"
   dependencies:
@@ -8879,20 +8991,6 @@ __metadata:
     define-properties: ^1.2.0
     set-function-name: ^2.0.0
   checksum: 869edff00288442f8d7fa4c9327f91d85f3b3acf8cbbef9ea7a220345cf23e9241b6def9263d2c1ebcf3a316b0aa52ad26a43a84aa02baca3381717b3e307f47
-  languageName: node
-  linkType: hard
-
-"remove-trailing-separator@npm:^1.0.1":
-  version: 1.1.0
-  resolution: "remove-trailing-separator@npm:1.1.0"
-  checksum: d3c20b5a2d987db13e1cca9385d56ecfa1641bae143b620835ac02a6b70ab88f68f117a0021838db826c57b31373d609d52e4f31aca75fc490c862732d595419
-  languageName: node
-  linkType: hard
-
-"replace-ext@npm:^1.0.0":
-  version: 1.0.1
-  resolution: "replace-ext@npm:1.0.1"
-  checksum: 4994ea1aaa3d32d152a8d98ff638988812c4fa35ba55485630008fe6f49e3384a8a710878e6fd7304b42b38d1b64c1cd070e78ece411f327735581a79dd88571
   languageName: node
   linkType: hard
 
@@ -9361,13 +9459,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"source-map@npm:^0.5.1":
-  version: 0.5.7
-  resolution: "source-map@npm:0.5.7"
-  checksum: 5dc2043b93d2f194142c7f38f74a24670cd7a0063acdaf4bf01d2964b402257ae843c2a8fa822ad5b71013b5fcafa55af7421383da919752f22ff488bc553f4d
-  languageName: node
-  linkType: hard
-
 "source-map@npm:^0.6.0, source-map@npm:^0.6.1":
   version: 0.6.1
   resolution: "source-map@npm:0.6.1"
@@ -9444,27 +9535,51 @@ __metadata:
   languageName: node
   linkType: hard
 
-"steam-fork@https://github.com/dotabod/node-steam-fork":
-  version: 1.0.3
-  resolution: "steam-fork@https://github.com/dotabod/node-steam-fork.git#commit=79b77164190870cb4d647438e366de6839c085a3"
+"steam-resources@github:dotabod/node-steam-resources":
+  version: 1.2.2
+  resolution: "steam-resources@https://github.com/dotabod/node-steam-resources.git#commit=57ee94899194c3c5a090722632ef3b5df00a3e45"
+  dependencies:
+    bytebuffer: ^5.0
+    csv-parse: ^4.0.1
+    protobufjs: ^4.1
+  checksum: 9a2706a5894a13c102b5a030934afd2e57bd892b2928f6d52b75a65676388508252d3c7c8a7c4b3e49faa916c878a5d58cba00ea3c36c4fe0879879ac4592ab1
+  languageName: node
+  linkType: hard
+
+"steam-resources@github:odota/node-steam-resources":
+  version: 1.2.2
+  resolution: "steam-resources@https://github.com/odota/node-steam-resources.git#commit=57ee94899194c3c5a090722632ef3b5df00a3e45"
+  dependencies:
+    bytebuffer: ^5.0
+    csv-parse: ^4.0.1
+    protobufjs: ^4.1
+  checksum: 9a2706a5894a13c102b5a030934afd2e57bd892b2928f6d52b75a65676388508252d3c7c8a7c4b3e49faa916c878a5d58cba00ea3c36c4fe0879879ac4592ab1
+  languageName: node
+  linkType: hard
+
+"steam@github:odota/node-steam":
+  version: 1.4.1
+  resolution: "steam@https://github.com/odota/node-steam.git#commit=2ec120baea7b53857b243e5a7e3f16d1839467e4"
   dependencies:
     adm-zip: ^0.4
     buffer-crc32: ^0.2
     bytebuffer: ^5.0
     steam-crypto: ^0.0
-    steam-resources-fork: ^1.0.4
-  checksum: 6c6093885f35026af5f2b79fa9e3346b8628c048390a931247fce61863aad712110ea159c6306df698468af41f975924afce2e8fe8f67e8ec37c17eda638025f
+    steam-resources: "github:odota/node-steam-resources"
+  checksum: 0cc7ca468b1c9904b466bb1fcf535f57227c6a9a3e1e3533927b32b886cb2fe3d0cff6db42abc60115018aab6ab6c7a17dd4371270bfd3e1f7165bcd575d1b39
   languageName: node
   linkType: hard
 
-"steam-resources-fork@npm:^1.0.4":
-  version: 1.0.4
-  resolution: "steam-resources-fork@npm:1.0.4"
+"steam@https://github.com/dotabod/node-steam#head=master":
+  version: 1.4.1
+  resolution: "steam@https://github.com/dotabod/node-steam.git#commit=938d67b2116502ee4328aa9c8210c8a448aa57d5"
   dependencies:
+    adm-zip: ^0.4
+    buffer-crc32: ^0.2
     bytebuffer: ^5.0
-    csv-parse: ^4.0.1
-    protobufjs-dota: ^1.0.1
-  checksum: 097a297a117d72e90862658d8117558958d5d4e35ecede4f54aa4985827422dbe7dd08d2f453d8f28228ebe42a256fdcca2adc8591f5894997c912d77c98c640
+    steam-crypto: ^0.0
+    steam-resources: "github:dotabod/node-steam-resources"
+  checksum: 0323689f97970111b3a9b1fa9675e5a8dcd6a509ca65ab85d76c14b51547935cfc5e8aa090d8253149d118aeb3ade0b1bed823f03297c632211736cd763a865b
   languageName: node
   linkType: hard
 
@@ -10306,29 +10421,6 @@ __metadata:
   version: 1.1.2
   resolution: "vary@npm:1.1.2"
   checksum: ae0123222c6df65b437669d63dfa8c36cee20a504101b2fcd97b8bf76f91259c17f9f2b4d70a1e3c6bbcee7f51b28392833adb6b2770b23b01abec84e369660b
-  languageName: node
-  linkType: hard
-
-"vinyl-sourcemaps-apply@npm:^0.2.0":
-  version: 0.2.1
-  resolution: "vinyl-sourcemaps-apply@npm:0.2.1"
-  dependencies:
-    source-map: ^0.5.1
-  checksum: c1a81b085fc2ee7c140ab26cb1a87031b79590c22a992dafcbc47f8db74e58fbfca2689200df6a08c341e65a67b539dcee14a7fd80e6fdeaa2e88bfe2622f361
-  languageName: node
-  linkType: hard
-
-"vinyl@npm:2.x":
-  version: 2.2.1
-  resolution: "vinyl@npm:2.2.1"
-  dependencies:
-    clone: ^2.1.1
-    clone-buffer: ^1.0.0
-    clone-stats: ^1.0.0
-    cloneable-readable: ^1.0.0
-    remove-trailing-separator: ^1.0.1
-    replace-ext: ^1.0.0
-  checksum: 1f663973f1362f2d074b554f79ff7673187667082373b3d3e628beb1fc2a7ff33024f10b492fbd8db421a09ea3b7b22c3d3de4a0f0e73ead7b4685af570b906f
   languageName: node
   linkType: hard
 
