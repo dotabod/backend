@@ -1,5 +1,5 @@
 {
-  "name": "@dotabod/steam",
+  "name": "@dotabod/steam-getCards",
   "description": "Forward twitch chat to dotabod.",
   "version": "1.0.0",
   "license": "GPL-3.0-or-later",

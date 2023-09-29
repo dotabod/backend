@@ -6,11 +6,17 @@
     "packages/twitch/events",
     "packages/twitch/chat",
     "packages/dota",
-    "packages/steam"
+    "packages/steam",
+    "packages/steam-getCard",
+    "packages/steam-getCards",
+    "packages/steam-getUserSteamServer"
   ],
   "scripts": {
     "up": "yarn upgrade-interactive --latest",
     "buildst": "yarn workspace @dotabod/steam run build",
+    "buildst1": "yarn workspace @dotabod/steam-getCard run build",
+    "buildst2": "yarn workspace @dotabod/steam-getCards run build",
+    "buildst3": "yarn workspace @dotabod/steam-getUserSteamServer run build",
     "builds": "yarn workspace @dotabod/settings run build",
     "buildd": "yarn workspace @dotabod/dota run build",
     "buildtc": "yarn workspace @dotabod/twitch-chat run build",
@@ -21,7 +27,7 @@
     "eslint": "eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx",
     "nps": "doppler run -- bash services/mongodb/updatenps.sh",
     "exportnps": "doppler run -- bash services/mongodb/export.sh",
-    "just": "doppler run -- bash runner.sh",
+    "just": "doppler run --fallback-only -- bash runner.sh",
     "prepare": "husky install"
   },
   "dependencies": {
