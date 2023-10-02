@@ -13,5 +13,17 @@ export const [getRealTimeStatsSocket, getCardSocket, getCardsSocket, getUserStea
   steamSockets
 
 getRealTimeStatsSocket.on('connect', () => {
-  logger.info('We alive on dotabod steam server!')
+  logger.info('We alive on getRealTimeStatsSocket steam server!')
+})
+
+getCardSocket.on('connect', () => {
+  logger.info('We alive on getCardSocket steam server!')
+})
+
+getCardsSocket.on('connect', () => {
+  logger.info('We alive on getCardsSocket steam server!')
+})
+
+getUserSteamServerSocket.on('connect', () => {
+  logger.info('We alive on getUserSteamServerSocket steam server!')
 })
