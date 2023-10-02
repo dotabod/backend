@@ -120,8 +120,8 @@ pull() {
 
 push() {
     docker_login
-    buildall
-    docker_command push
+    docker_command build "$app"
+    docker_command push "$app"
 }
 
 buildall() {
