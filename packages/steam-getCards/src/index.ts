@@ -37,14 +37,17 @@ io.on('connection', (socket) => {
     hasDotabodSocket = false
   })
 
-  socket.on('getCards', async function (accountIds: number[], callback: callback) {
-    if (!isConnectedToSteam) return
-    try {
-      callback(null, await dota.getCards(accountIds))
-    } catch (e: any) {
-      callback(e.message, null)
-    }
-  })
+  socket.on(
+    'getCards',
+    async function (accountIds: number[], refetchCards: boolean, callback: callback) {
+      if (!isConnectedToSteam) return
+      try {
+        callback(null, await dota.getCards(accountIds, refetchCards))
+      } catch (e: any) {
+        callback(e.message, null)
+      }
+    },
+  )
 })
 
 export default io

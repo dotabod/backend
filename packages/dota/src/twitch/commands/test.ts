@@ -99,7 +99,7 @@ commandHandler.registerCommand('test', {
       const { accountIds } = await getAccountsFromMatch({
         gsi: client.gsi,
       })
-      getCardsSocket.emit('getCards', accountIds, (err: any, response: any) => {
+      getCardsSocket.emit('getCards', accountIds, false, (err: any, response: any) => {
         console.log(response, err) // one response per client
       })
 
