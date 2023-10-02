@@ -59,4 +59,4 @@ RUN mkdir -p $BUILD_CONTEXT/src/steam/volumes $BUILD_CONTEXT/dist/steam/volumes
 
 # Environment and CMD
 ENV NODE_ENV=$NODE_ENV
-CMD yarn workspace @dotabod/getCards run docker:$NODE_ENV
+CMD yarn workspace @dotabod/steam-getCards run docker:$NODE_ENV
