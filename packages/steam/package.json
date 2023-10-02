@@ -41,7 +41,7 @@
     "retry": "^0.13.1",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.2",
-    "steam": "https://github.com/dotabod/node-steam#head=master",
+    "steam": "https://github.com/odota/node-steam#head=master",
     "steam-errors": "^1.0.0",
     "winston": "^3.10.0"
   },

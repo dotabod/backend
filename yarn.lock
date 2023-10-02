@@ -1196,7 +1196,7 @@ __metadata:
     retry: ^0.13.1
     socket.io: ^4.7.2
     socket.io-client: ^4.7.2
-    steam: "https://github.com/dotabod/node-steam#head=master"
+    steam: "https://github.com/odota/node-steam#head=master"
     steam-errors: ^1.0.0
     ts-jest: ^29.1.1
     typescript: ^5.2.2
@@ -9373,17 +9373,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"steam-resources@github:dotabod/node-steam-resources":
-  version: 1.2.2
-  resolution: "steam-resources@https://github.com/dotabod/node-steam-resources.git#commit=57ee94899194c3c5a090722632ef3b5df00a3e45"
-  dependencies:
-    bytebuffer: ^5.0
-    csv-parse: ^4.0.1
-    protobufjs: ^4.1
-  checksum: 9a2706a5894a13c102b5a030934afd2e57bd892b2928f6d52b75a65676388508252d3c7c8a7c4b3e49faa916c878a5d58cba00ea3c36c4fe0879879ac4592ab1
-  languageName: node
-  linkType: hard
-
 "steam-resources@github:odota/node-steam-resources":
   version: 1.2.2
   resolution: "steam-resources@https://github.com/odota/node-steam-resources.git#commit=57ee94899194c3c5a090722632ef3b5df00a3e45"
@@ -9395,7 +9384,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"steam@github:odota/node-steam":
+"steam@github:odota/node-steam, steam@https://github.com/odota/node-steam#head=master":
   version: 1.4.1
   resolution: "steam@https://github.com/odota/node-steam.git#commit=2ec120baea7b53857b243e5a7e3f16d1839467e4"
   dependencies:
@@ -9405,19 +9394,6 @@ __metadata:
     steam-crypto: ^0.0
     steam-resources: "github:odota/node-steam-resources"
   checksum: 0cc7ca468b1c9904b466bb1fcf535f57227c6a9a3e1e3533927b32b886cb2fe3d0cff6db42abc60115018aab6ab6c7a17dd4371270bfd3e1f7165bcd575d1b39
-  languageName: node
-  linkType: hard
-
-"steam@https://github.com/dotabod/node-steam#head=master":
-  version: 1.4.1
-  resolution: "steam@https://github.com/dotabod/node-steam.git#commit=938d67b2116502ee4328aa9c8210c8a448aa57d5"
-  dependencies:
-    adm-zip: ^0.4
-    buffer-crc32: ^0.2
-    bytebuffer: ^5.0
-    steam-crypto: ^0.0
-    steam-resources: "github:dotabod/node-steam-resources"
-  checksum: 0323689f97970111b3a9b1fa9675e5a8dcd6a509ca65ab85d76c14b51547935cfc5e8aa090d8253149d118aeb3ade0b1bed823f03297c632211736cd763a865b
   languageName: node
   linkType: hard
 
