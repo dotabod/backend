@@ -27,7 +27,7 @@
     "eslint": "eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx",
     "nps": "doppler run -- bash services/mongodb/updatenps.sh",
     "exportnps": "doppler run -- bash services/mongodb/export.sh",
-    "just": "doppler run --fallback-only -- bash runner.sh",
+    "just": "doppler run -- bash runner.sh",
     "prepare": "husky install"
   },
   "dependencies": {

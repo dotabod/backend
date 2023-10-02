@@ -137,8 +137,6 @@ build() {
     git pull || true
     docker_command build "$app"
     echo -e "Successfully built!"
-    docker_command up -d "$app"
-    echo -e "Successfully ran!"
 }
 
 ssh() {
