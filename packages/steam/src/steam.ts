@@ -126,13 +126,15 @@ class Dota {
   }
 
   getUserDetails() {
-    if (!process.env.STEAM_USER || !process.env.STEAM_PASS) {
+    const usernames = process.env.STEAM_USER?.split('|') ?? []
+    const passwords = process.env.STEAM_PASS?.split('|') ?? []
+    if (!usernames.length || !passwords.length) {
       throw new Error('STEAM_USER or STEAM_PASS not set')
     }
 
     return {
-      account_name: process.env.STEAM_USER,
-      password: process.env.STEAM_PASS,
+      account_name: usernames[0],
+      password: passwords[0],
     }
   }
 
