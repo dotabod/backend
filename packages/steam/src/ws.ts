@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client'
 
-import { logger } from './utils/logger'
+import { logger } from './utils/logger.js'
 
 export const steamSockets = [io('ws://steam-getCard:5036'), io('ws://steam-getCards:5037')]
 
