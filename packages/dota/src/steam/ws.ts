@@ -4,9 +4,9 @@ import { logger } from '../utils/logger.js'
 
 export const steamSockets = [
   io('ws://steam:5035'),
-  io('ws://steam:5036'),
-  io('ws://steam:5037'),
-  io('ws://steam:5038'),
+  io('ws://steam-getCard:5036'),
+  io('ws://steam-getCards:5037'),
+  io('ws://steam-getUserSteamServer:5038'),
 ]
 
 export const [getRealTimeStatsSocket, getCardSocket, getCardsSocket, getUserSteamServerSocket] =

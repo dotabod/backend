@@ -115,13 +115,12 @@ restart() {
 
 pull() {
     docker_login
-    docker_command pull
+    docker_command pull "$app"
 }
 
 push() {
     docker_login
-    buildall
-    docker_command push
+    docker_command push "$app"
 }
 
 buildall() {
