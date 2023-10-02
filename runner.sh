@@ -120,6 +120,7 @@ pull() {
 
 push() {
     docker_login
+    docker_command build "$app"
     docker_command push "$app"
 }
 
