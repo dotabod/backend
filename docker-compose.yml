@@ -2,6 +2,7 @@ services:
   redis:
     container_name: redis
     image: "redis/redis-stack-server:latest"
+    restart: on-failure
 
   twitch-chat:
     image: "ghcr.io/dotabod/twitch-chat:v2.0"
