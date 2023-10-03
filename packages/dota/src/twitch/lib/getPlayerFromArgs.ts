@@ -38,8 +38,10 @@ export async function getPlayerFromArgs({
     // color input
     playerIdx = heroColorIndex
   } else {
+    const heroIdsInMatch = players.map((player) => player.heroid)
+
     // hero name input or alias
-    const hero = getHeroByName(args.join('').toLowerCase().trim())
+    const hero = getHeroByName(args.join('').toLowerCase().trim(), heroIdsInMatch)
     playerIdx = hero ? players.findIndex((player) => player.heroid === hero.id) : -1
   }
 
