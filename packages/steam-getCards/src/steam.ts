@@ -12,7 +12,7 @@ import { Cards } from './types/index.js'
 import CustomError from './utils/customError.js'
 import { logger } from './utils/logger.js'
 import { retryCustom } from './utils/retry.js'
-import { getCardSocket } from '../../steam/src/ws.js'
+import { getCardSocket } from './ws.js'
 
 interface steamUserDetails {
   account_name: string

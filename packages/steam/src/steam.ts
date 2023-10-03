@@ -14,8 +14,7 @@ import { Cards, DelayedGames } from './types/index.js'
 import CustomError from './utils/customError.js'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch.js'
 import { logger } from './utils/logger.js'
-import { retryCustom } from './utils/retry.js'
-import { getCardSocket, getCardsSocket } from './ws.js'
+import { getCardsSocket } from './ws.js'
 
 import io from './index.js'
 
