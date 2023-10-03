@@ -164,7 +164,47 @@ class Dota {
     return Dota.instance
   }
 
-  public async getCard(account: number): Promise<Cards> {
+  promiseTimeout = (promise: Promise<any>, ms: number, reason: string) =>
+    new Promise((resolve, reject) => {
+      let timeoutCleared = false
+      const timeoutId = setTimeout(() => {
+        timeoutCleared = true
+        reject(new CustomError(reason))
+      }, ms)
+      promise
+        .then((result) => {
+          if (!timeoutCleared) {
+            clearTimeout(timeoutId)
+            resolve(result)
+          }
+        })
+        .catch((err) => {
+          if (!timeoutCleared) {
+            clearTimeout(timeoutId)
+            reject(err)
+          }
+        })
+    })
+
+  public async getCard(account: number): Promise<any> {
+    return this.promiseTimeout(
+      new Promise<Cards>((resolve, reject) => {
+        // @ts-expect-error no types exist for `loggedOn`
+        if (!this.dota2._gcReady || !this.steamClient.loggedOn)
+          reject(new CustomError('Error getting medal'))
+        else {
+          this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
+            if (err) reject(err)
+            resolve(card)
+          })
+        }
+      }),
+      1000,
+      'Error getting medal',
+    )
+  }
+
+  public async getCardUNUSED(account: number): Promise<Cards> {
     // Promise that rejects after 1 second
     const timeoutPromise = new Promise<Cards>((_, reject) => {
       setTimeout(() => reject(new CustomError('Operation timed out after 1 second')), 1000)
