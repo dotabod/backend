@@ -115,7 +115,7 @@ restart() {
 
 pull() {
     docker_login
-    docker_command pull
+    docker_command pull "$app"
 }
 
 push() {
