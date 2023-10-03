@@ -165,17 +165,24 @@ class Dota {
   }
 
   public async getCard(account: number): Promise<Cards> {
-    // @ts-expect-error no types exist for `loggedOn`
-    if (!this.dota2._gcReady || !this.steamClient.loggedOn) {
-      throw new CustomError('Error getting medal')
-    }
+    // Promise that rejects after 1 second
+    const timeoutPromise = new Promise<Cards>((_, reject) => {
+      setTimeout(() => reject(new CustomError('Operation timed out after 1 second')), 1000)
+    })
 
-    return new Promise((resolve, reject) => {
+    const cardPromise = new Promise<Cards>((resolve, reject) => {
+      // @ts-expect-error no types exist for `loggedOn`
+      if (!this.dota2._gcReady || !this.steamClient.loggedOn) {
+        reject(new CustomError('Error getting medal'))
+      }
+
       this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
         if (err) reject(err)
         else resolve(card)
       })
     })
+
+    return Promise.race([cardPromise, timeoutPromise])
   }
 
   public exit(): Promise<boolean> {
