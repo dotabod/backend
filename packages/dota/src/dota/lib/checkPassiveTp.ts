@@ -11,7 +11,7 @@ const PASSIVE_THRESHOLD_SECONDS = 30 * 1000
 export async function checkPassiveTp(client: SocketClient) {
   if (!isPlayingMatch(client.gsi)) return
   if (!client.stream_online) return
-  if (Number(client.gsi?.map?.clock_time) <= 0) return
+  if (Number(client.gsi?.map?.clock_time) <= 30) return
 
   const passiveTpData = ((await redisClient.client.json.get(`${client.token}:passiveTp`)) as {
     firstNoticedPassive: number
