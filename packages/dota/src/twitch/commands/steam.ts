@@ -1,3 +1,4 @@
+import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { chatClient } from '../chatClient.js'
@@ -6,6 +7,7 @@ import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 commandHandler.registerCommand('steam', {
   aliases: ['steamid', 'account'],
   permission: 2,
+  dbkey: DBSettings.commandSteam,
 
   handler: (message: MessageType, args: string[]) => {
     const {

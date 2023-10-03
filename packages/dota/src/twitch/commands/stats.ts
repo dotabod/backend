@@ -1,3 +1,4 @@
+import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
@@ -8,6 +9,7 @@ import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
 commandHandler.registerCommand('stats', {
   aliases: ['check', 'profile'],
   onlyOnline: true,
+  dbkey: DBSettings.commandProfile,
 
   handler: async (message, args, command) => {
     const {
