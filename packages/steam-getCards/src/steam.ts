@@ -12,6 +12,7 @@ import { Cards } from './types/index.js'
 import CustomError from './utils/customError.js'
 import { logger } from './utils/logger.js'
 import { retryCustom } from './utils/retry.js'
+import { getCardSocket } from '../../steam/src/ws.js'
 
 interface steamUserDetails {
   account_name: string
@@ -167,12 +168,27 @@ class Dota {
   }
 
   fetchAndUpdateCard = async (accountId: number) => {
-    const fetchedCard = accountId
-      ? await retryCustom(() => this.getCard(accountId)).catch(() => ({
-          rank_tier: -10,
-          leaderboard_rank: 0,
-        }))
-      : undefined
+    let fetchedCard = {
+      rank_tier: -10,
+      leaderboard_rank: 0,
+    }
+
+    if (accountId) {
+      fetchedCard = await retryCustom(() => {
+        return new Promise<Cards>((resolve, reject) => {
+          getCardSocket.emit('getCard', accountId, (err: any, card: Cards) => {
+            if (err) {
+              reject(err)
+            } else {
+              resolve(card)
+            }
+          })
+        })
+      }).catch(() => ({
+        rank_tier: -10,
+        leaderboard_rank: 0,
+      }))
+    }
 
     const card = {
       ...fetchedCard,

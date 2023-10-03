@@ -332,55 +332,6 @@ class Dota {
     return Dota.instance
   }
 
-  fetchAndUpdateCard = async (accountId: number) => {
-    let fetchedCard = {
-      rank_tier: -10,
-      leaderboard_rank: 0,
-    }
-
-    if (accountId) {
-      fetchedCard = await retryCustom(() => {
-        return new Promise<Cards>((resolve, reject) => {
-          getCardSocket.emit('getCard', accountId, (err: any, card: Cards) => {
-            if (err) {
-              reject(err)
-            } else {
-              resolve(card)
-            }
-          })
-        })
-      }).catch(() => ({
-        rank_tier: -10,
-        leaderboard_rank: 0,
-      }))
-    }
-
-    const card = {
-      ...fetchedCard,
-      account_id: accountId,
-      createdAt: new Date(),
-      rank_tier: fetchedCard?.rank_tier ?? 0,
-      leaderboard_rank: fetchedCard?.leaderboard_rank ?? 0,
-    } as Cards
-
-    if (!accountId) return card
-
-    if (fetchedCard?.rank_tier !== -10) {
-      const mongo = MongoDBSingleton
-      const db = await mongo.connect()
-
-      try {
-        await db
-          .collection<Cards>('cards')
-          .updateOne({ account_id: accountId }, { $set: card }, { upsert: true })
-      } finally {
-        await mongo.close()
-      }
-    }
-
-    return card
-  }
-
   public exit(): Promise<boolean> {
     return new Promise((resolve) => {
       this.dota2.exit()
