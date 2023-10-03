@@ -671,7 +671,7 @@ export function getHeroById(id: number) {
   return Object.values(heroes).find((h) => h.id === id)
 }
 
-export function getHeroByName(name: string) {
+export function getHeroByName(name: string, heroIdsInMatch: number[]) {
   if (!name) return null
 
   // only keep a-z in name
@@ -680,13 +680,8 @@ export function getHeroByName(name: string) {
     .toLowerCase()
     .trim()
 
-  const hero = Object.values(heroes).find((h) => {
-    const inName = h.localized_name
-      // replace all spaces with nothing, and only keep a-z
-      .replace(/[^a-z]/gi, '')
-      .toLowerCase()
-      .trim()
-
+  const lookInHeroes = Object.values(heroes).filter((hero) => heroIdsInMatch.includes(hero.id))
+  const hero = lookInHeroes.find((h) => {
     // check for alias
     const hasAlias = h.alias.some(
       (alias) =>
@@ -695,7 +690,16 @@ export function getHeroByName(name: string) {
           .toLowerCase()
           .trim() === name,
     )
-    return inName.includes(name) || hasAlias
+
+    if (hasAlias) return true
+
+    const inName = h.localized_name
+      // replace all spaces with nothing, and only keep a-z
+      .replace(/[^a-z]/gi, '')
+      .toLowerCase()
+      .trim()
+
+    return inName.includes(name)
   })
 
   return hero
