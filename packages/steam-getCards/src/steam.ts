@@ -9,7 +9,6 @@ import steamErrors from 'steam-errors'
 
 import MongoDBSingleton from './MongoDBSingleton.js'
 import { Cards } from './types/index.js'
-import CustomError from './utils/customError.js'
 import { logger } from './utils/logger.js'
 import { retryCustom } from './utils/retry.js'
 import { getCardSocket } from './ws.js'
@@ -241,20 +240,6 @@ class Dota {
     } finally {
       await mongo.close()
     }
-  }
-
-  public async getCard(account: number): Promise<Cards> {
-    // @ts-expect-error no types exist for `loggedOn`
-    if (!this.dota2._gcReady || !this.steamClient.loggedOn) {
-      throw new CustomError('Error getting medal')
-    }
-
-    return new Promise((resolve, reject) => {
-      this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
-        if (err) reject(err)
-        else resolve(card)
-      })
-    })
   }
 
   public exit(): Promise<boolean> {
