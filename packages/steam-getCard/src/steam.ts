@@ -17,7 +17,17 @@ interface steamUserDetails {
   sha_sentryfile?: Buffer
 }
 
+interface CacheEntry {
+  timestamp: number
+  card: Cards
+}
+
+const MAX_CACHE_SIZE = 5000
+const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+
 class Dota {
+  private cache: Map<number, CacheEntry> = new Map()
+
   private static instance: Dota
 
   private steamClient
@@ -30,7 +40,7 @@ class Dota {
     this.steamClient = new Steam.SteamClient()
     // @ts-expect-error no types exist
     this.steamUser = new Steam.SteamUser(this.steamClient)
-    this.dota2 = new Dota2.Dota2Client(this.steamClient, false, false)
+    this.dota2 = new Dota2.Dota2Client(this.steamClient, true, true)
 
     const details = this.getUserDetails()
 
@@ -164,8 +174,8 @@ class Dota {
     return Dota.instance
   }
 
-  promiseTimeout = (promise: Promise<any>, ms: number, reason: string) =>
-    new Promise((resolve, reject) => {
+  promiseTimeout = <T>(promise: Promise<T>, ms: number, reason: string): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
       let timeoutCleared = false
       const timeoutId = setTimeout(() => {
         timeoutCleared = true
@@ -186,43 +196,69 @@ class Dota {
         })
     })
 
+  private async fetchProfileCard(account: number): Promise<Cards> {
+    return new Promise<Cards>((resolve, reject) => {
+      // @ts-expect-error no types exist for `loggedOn`
+      if (!this.dota2._gcReady || !this.steamClient.loggedOn)
+        reject(new CustomError('Error getting medal'))
+      else {
+        this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
+          if (err) reject(err)
+          resolve(card)
+        })
+      }
+    })
+  }
+
   public async getCard(account: number): Promise<any> {
-    return this.promiseTimeout(
-      new Promise<Cards>((resolve, reject) => {
-        // @ts-expect-error no types exist for `loggedOn`
-        if (!this.dota2._gcReady || !this.steamClient.loggedOn)
-          reject(new CustomError('Error getting medal'))
-        else {
-          this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
-            if (err) reject(err)
-            resolve(card)
-          })
-        }
-      }),
+    const now = Date.now()
+    const cacheEntry = this.cache.get(account)
+
+    if (cacheEntry && now - cacheEntry.timestamp < CACHE_TTL) {
+      return cacheEntry.card
+    }
+
+    // If not cached or cache is stale, fetch the profile card
+    const card = await this.promiseTimeout(
+      this.fetchProfileCard(account),
       1000,
       'Error getting medal',
     )
+
+    this.evictOldCacheEntries() // Evict entries based on time
+    this.cache.set(account, {
+      timestamp: now,
+      card: card,
+    })
+
+    this.evictExtraCacheEntries() // Evict extra entries if cache size exceeds MAX_CACHE_SIZE
+
+    return card
   }
 
-  public async getCardUNUSED(account: number): Promise<Cards> {
-    // Promise that rejects after 1 second
-    const timeoutPromise = new Promise<Cards>((_, reject) => {
-      setTimeout(() => reject(new CustomError('Operation timed out after 1 second')), 1000)
-    })
-
-    const cardPromise = new Promise<Cards>((resolve, reject) => {
-      // @ts-expect-error no types exist for `loggedOn`
-      if (!this.dota2._gcReady || !this.steamClient.loggedOn) {
-        reject(new CustomError('Error getting medal'))
+  private evictOldCacheEntries() {
+    const now = Date.now()
+    for (const [key, value] of this.cache.entries()) {
+      if (now - value.timestamp > CACHE_TTL) {
+        this.cache.delete(key)
       }
+    }
+  }
 
-      this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
-        if (err) reject(err)
-        else resolve(card)
-      })
-    })
+  private evictExtraCacheEntries() {
+    while (this.cache.size > MAX_CACHE_SIZE) {
+      const oldestKey = [...this.cache.entries()].reduce(
+        (oldest, [key, entry]) => {
+          if (!oldest) return key
+          return entry.timestamp < this.cache.get(oldest)!.timestamp ? key : oldest
+        },
+        null as number | null,
+      )
 
-    return Promise.race([cardPromise, timeoutPromise])
+      if (oldestKey !== null) {
+        this.cache.delete(oldestKey)
+      }
+    }
   }
 
   public exit(): Promise<boolean> {
