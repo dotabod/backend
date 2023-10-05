@@ -8,6 +8,7 @@ import { newData, processChanges } from './globalEventEmitter.js'
 import { emitMinimapBlockerStatus } from './GSIHandler.js'
 import { gsiHandlers } from './lib/consts.js'
 import { validateToken } from './validateToken.js'
+import { checkForInactiveTokens, tokenLastPostTimestamps } from './clearCacheForUser.js'
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
   const { token } = socket.handshake.auth
@@ -63,6 +64,21 @@ class GSIServer {
     app.use(express.urlencoded({ extended: true, limit: '1mb' }))
 
     app.post('/', validateToken, processChanges('previously'), processChanges('added'), newData)
+    app.post(
+      '/',
+      validateToken,
+      (req: Request, res: Response, next: () => void) => {
+        const token = req.body.auth.token as string
+
+        // Update the timestamp for this token
+        tokenLastPostTimestamps.set(token, Date.now())
+
+        next()
+      },
+      processChanges('previously'),
+      processChanges('added'),
+      newData,
+    )
 
     app.get('/', (req: Request, res: Response) => {
       res.status(200).json({ status: 'ok' })
@@ -74,6 +90,9 @@ class GSIServer {
 
     this.io.use(handleSocketAuth)
     this.io.on('connection', handleSocketConnection)
+
+    // Set up the repeating timer
+    setInterval(checkForInactiveTokens, 60 * 1000) // Run every minute
   }
 
   init() {
