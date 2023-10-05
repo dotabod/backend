@@ -17,11 +17,16 @@ commandHandler.registerCommand('stats', {
     } = message
 
     try {
-      const { player, hero } = await findAccountFromCmd(client.gsi, args, client.locale, command)
+      const { player, playerIdx, hero } = await findAccountFromCmd(
+        client.gsi,
+        args,
+        client.locale,
+        command,
+      )
 
       const desc = t('profileUrl', {
         lng: client.locale,
-        channel: getHeroNameOrColor(hero?.id ?? 0),
+        channel: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
         url: `dotabuff.com/players/${player?.accountid ?? ''}`,
       })
 
