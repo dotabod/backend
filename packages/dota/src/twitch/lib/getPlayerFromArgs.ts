@@ -20,7 +20,7 @@ export async function getPlayerFromArgs({
   const heroIdsInMatch = players.map((player) => player.heroid)
   const heroList = heroIdsInMatch
     .map((heroId) => getHeroById(heroId))
-    .map((hero) => hero?.alias?.[0] ?? hero?.localized_name)
+    .map((hero) => hero?.localized_name)
     .join(' · ')
 
   if (!args.length) {

@@ -658,7 +658,7 @@ export function getHeroNameOrColor(id: number, index?: number) {
   if (!id && typeof index === 'number') return heroColors[index]
 
   const hero = getHeroById(id)
-  const name = hero?.alias?.[0] ?? hero?.localized_name
+  const name = hero?.localized_name
   if (!name && typeof index === 'number') {
     return heroColors[index]
   }
