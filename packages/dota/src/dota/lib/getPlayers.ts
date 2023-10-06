@@ -41,7 +41,7 @@ export async function getPlayers({
     })
 
     const getCardsPromise = new Promise<Cards[]>((resolve, reject) => {
-      steamSocket.emit('getCards', accountIds, (err: any, cards: any) => {
+      steamSocket.emit('getCards', accountIds, false, (err: any, cards: any) => {
         if (err) {
           reject(err)
         } else {

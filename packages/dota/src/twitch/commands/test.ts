@@ -43,7 +43,6 @@ commandHandler.registerCommand('test', {
           steamServerId,
         })
 
-        // Wrap the steamSocket.emit in a Promise
         const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
           steamSocket.emit(
             'getRealTimeStats',
@@ -91,7 +90,7 @@ commandHandler.registerCommand('test', {
       const { accountIds } = await getAccountsFromMatch({
         gsi: client.gsi,
       })
-      steamSocket.emit('getCards', accountIds, (err: any, response: any) => {
+      steamSocket.emit('getCards', accountIds, false, (err: any, response: any) => {
         console.log(response, err) // one response per client
       })
 

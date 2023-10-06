@@ -49,7 +49,7 @@ async function getItems({
   locale: string
   command: string
 }) {
-  const { hero, items, playerIdx, player } = await profileLink({
+  const { hero, items, playerIdx } = await profileLink({
     command,
     packet,
     locale,
@@ -81,7 +81,6 @@ async function getItems({
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
 
-    // Wrap the steamSocket.emit in a Promise
     const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
       steamSocket.emit(
         'getRealTimeStats',
