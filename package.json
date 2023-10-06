@@ -6,17 +6,11 @@
     "packages/twitch/events",
     "packages/twitch/chat",
     "packages/dota",
-    "packages/steam",
-    "packages/steam-getCard",
-    "packages/steam-getCards",
-    "packages/steam-getUserSteamServer"
+    "packages/steam"
   ],
   "scripts": {
     "up": "yarn upgrade-interactive --latest",
     "buildst": "yarn workspace @dotabod/steam run build",
-    "buildst1": "yarn workspace @dotabod/steam-getCard run build",
-    "buildst2": "yarn workspace @dotabod/steam-getCards run build",
-    "buildst3": "yarn workspace @dotabod/steam-getUserSteamServer run build",
     "builds": "yarn workspace @dotabod/settings run build",
     "buildd": "yarn workspace @dotabod/dota run build",
     "buildtc": "yarn workspace @dotabod/twitch-chat run build",

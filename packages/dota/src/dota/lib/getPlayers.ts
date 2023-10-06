@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
-import { getCardsSocket } from '../../steam/ws.js'
+import { steamSocket } from '../../steam/ws.js'
 import { Cards, DelayedGames } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { getAccountsFromMatch } from './getAccountsFromMatch.js'
@@ -41,7 +41,7 @@ export async function getPlayers({
     })
 
     const getCardsPromise = new Promise<Cards[]>((resolve, reject) => {
-      getCardsSocket.emit('getCards', accountIds, false, (err: any, cards: any) => {
+      steamSocket.emit('getCards', accountIds, false, (err: any, cards: any) => {
         if (err) {
           reject(err)
         } else {

@@ -1,7 +1,7 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
-import { getRealTimeStatsSocket, getUserSteamServerSocket } from '../../../steam/ws.js'
+import { steamSocket } from '../../../steam/ws.js'
 import { DelayedGames, Packet, SocketClient, validEventTypes } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
@@ -64,17 +64,13 @@ async function saveMatchData(client: SocketClient) {
     if (steamServerLookupMap.has(matchId)) return
 
     const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
-      getUserSteamServerSocket.emit(
-        'getUserSteamServer',
-        client.steam32Id,
-        (err: any, cards: any) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve(cards)
-          }
-        },
-      )
+      steamSocket.emit('getUserSteamServer', client.steam32Id, (err: any, cards: any) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(cards)
+        }
+      })
     })
 
     steamServerLookupMap.add(matchId)
@@ -90,7 +86,7 @@ async function saveMatchData(client: SocketClient) {
 
     steamDelayDataLookupMap.add(matchId)
     const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
-      getRealTimeStatsSocket.emit(
+      steamSocket.emit(
         'getRealTimeStats',
         {
           match_id: matchId!,

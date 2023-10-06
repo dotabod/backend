@@ -4,6 +4,7 @@ import fs from 'fs'
 import axios from 'axios'
 // @ts-expect-error no types exist
 import Dota2 from 'dota2'
+import { Long } from 'mongodb'
 import retry from 'retry'
 import Steam from 'steam'
 // @ts-expect-error no types exist
@@ -14,11 +15,56 @@ import { Cards, DelayedGames } from './types/index.js'
 import CustomError from './utils/customError.js'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch.js'
 import { logger } from './utils/logger.js'
-import { getCardsSocket } from './ws.js'
+import { retryCustom } from './utils/retry.js'
 
 import io from './index.js'
 
+interface steamUserDetails {
+  account_name: string
+  password: string
+  sha_sentryfile?: Buffer
+}
+
+interface CacheEntry {
+  timestamp: number
+  card: Cards
+}
+
+const MAX_CACHE_SIZE = 5000
+const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+
 const isDev = process.env.NODE_ENV === 'development'
+
+function onGCSpectateFriendGameResponse(message: any, callback: any) {
+  const response: { server_steamid: Long; watch_live_result: number } =
+    Dota2.schema.CMsgSpectateFriendGameResponse.decode(message)
+  if (callback !== undefined) {
+    callback(response)
+  }
+}
+
+Dota2.Dota2Client.prototype.spectateFriendGame = function (
+  friend: { steam_id: number; live: boolean },
+  callback: any,
+) {
+  callback = callback || null
+  if (!this._gcReady) {
+    logger.info("[STEAM] GC not ready, please listen for the 'ready' event.")
+    return null
+  }
+  // CMsgSpectateFriendGame
+  const payload = new Dota2.schema.CMsgSpectateFriendGame(friend)
+  this.sendToGC(
+    Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGame,
+    payload,
+    onGCSpectateFriendGameResponse,
+    callback,
+  )
+}
+
+const handlers = Dota2.Dota2Client.prototype._handlers
+handlers[Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGameResponse] =
+  onGCSpectateFriendGameResponse
 
 // Fetches data from MongoDB
 const fetchDataFromMongo = async (match_id: string) => {
@@ -61,27 +107,12 @@ const saveMatch = async ({
       const { accountIds } = await getAccountsFromMatch({
         searchMatchId: game.match.match_id,
       })
-      const getCardsPromise = new Promise<Cards[]>((resolve, reject) => {
-        getCardsSocket.emit('getCards', accountIds, true, (err: any, cards: any) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve(cards)
-          }
-        })
-      })
-
-      await getCardsPromise
+      const dota = Dota.getInstance()
+      await dota.getCards(accountIds, true)
     }
   } finally {
     await mongo.close()
   }
-}
-
-interface steamUserDetails {
-  account_name: string
-  password: string
-  sha_sentryfile?: Buffer
 }
 
 function hasSteamData(game?: DelayedGames | null) {
@@ -108,6 +139,7 @@ function hasSteamData(game?: DelayedGames | null) {
 
 class Dota {
   private static instance: Dota
+  private cache: Map<number, CacheEntry> = new Map()
 
   private steamClient
 
@@ -246,6 +278,183 @@ class Dota {
 
   isProduction() {
     return process.env.NODE_ENV === 'production'
+  }
+
+  public getUserSteamServer = (steam32Id: number | string): Promise<string> => {
+    const steam_id = this.dota2.ToSteamID(Number(steam32Id))
+
+    // Set up the retry operation
+    const operation = retry.operation({
+      retries: 35,
+      factor: 1.1,
+      minTimeout: 5000, // Minimum retry timeout (1 second)
+      maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
+    })
+
+    return new Promise((resolve, reject) => {
+      operation.attempt(() => {
+        this.dota2.spectateFriendGame({ steam_id }, (response: any, err: any) => {
+          const theID = response?.server_steamid?.toString()
+
+          const shouldRetry = !theID ? new Error('No ID yet, will keep trying.') : undefined
+          if (operation.retry(shouldRetry)) return
+
+          if (theID) resolve(theID)
+          else reject('No spectator match found')
+        })
+      })
+    })
+  }
+
+  fetchAndUpdateCard = async (accountId: number) => {
+    let fetchedCard = {
+      rank_tier: -10,
+      leaderboard_rank: 0,
+    }
+
+    if (accountId) {
+      fetchedCard = await retryCustom(() => this.getCard(accountId)).catch(() => fetchedCard)
+    }
+
+    const card = {
+      ...fetchedCard,
+      account_id: accountId,
+      createdAt: new Date(),
+      rank_tier: fetchedCard?.rank_tier ?? 0,
+      leaderboard_rank: fetchedCard?.leaderboard_rank ?? 0,
+    } as Cards
+
+    if (!accountId) return card
+
+    if (fetchedCard?.rank_tier !== -10) {
+      const mongo = MongoDBSingleton
+      const db = await mongo.connect()
+
+      try {
+        await db
+          .collection<Cards>('cards')
+          .updateOne({ account_id: accountId }, { $set: card }, { upsert: true })
+      } finally {
+        await mongo.close()
+      }
+    }
+
+    return card
+  }
+
+  private async fetchProfileCard(account: number): Promise<Cards> {
+    return new Promise<Cards>((resolve, reject) => {
+      // @ts-expect-error no types exist for `loggedOn`
+      if (!this.dota2._gcReady || !this.steamClient.loggedOn)
+        reject(new CustomError('Error getting medal'))
+      else {
+        this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
+          if (err) reject(err)
+          resolve(card)
+        })
+      }
+    })
+  }
+
+  promiseTimeout = <T>(promise: Promise<T>, ms: number, reason: string): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
+      let timeoutCleared = false
+      const timeoutId = setTimeout(() => {
+        timeoutCleared = true
+        reject(new CustomError(reason))
+      }, ms)
+      promise
+        .then((result) => {
+          if (!timeoutCleared) {
+            clearTimeout(timeoutId)
+            resolve(result)
+          }
+        })
+        .catch((err) => {
+          if (!timeoutCleared) {
+            clearTimeout(timeoutId)
+            reject(err)
+          }
+        })
+    })
+
+  public async getCard(account: number): Promise<Cards> {
+    const now = Date.now()
+    const cacheEntry = this.cache.get(account)
+
+    if (cacheEntry && now - cacheEntry.timestamp < CACHE_TTL) {
+      return cacheEntry.card
+    }
+
+    // If not cached or cache is stale, fetch the profile card
+    const card = await this.promiseTimeout(
+      this.fetchProfileCard(account),
+      1000,
+      'Error getting medal',
+    )
+
+    this.evictOldCacheEntries() // Evict entries based on time
+    this.cache.set(account, {
+      timestamp: now,
+      card: card,
+    })
+
+    this.evictExtraCacheEntries() // Evict extra entries if cache size exceeds MAX_CACHE_SIZE
+
+    return card
+  }
+
+  private evictOldCacheEntries() {
+    const now = Date.now()
+    for (const [key, value] of this.cache.entries()) {
+      if (now - value.timestamp > CACHE_TTL) {
+        this.cache.delete(key)
+      }
+    }
+  }
+
+  private evictExtraCacheEntries() {
+    while (this.cache.size > MAX_CACHE_SIZE) {
+      const oldestKey = [...this.cache.entries()].reduce(
+        (oldest, [key, entry]) => {
+          if (!oldest) return key
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          return entry.timestamp < this.cache.get(oldest)!.timestamp ? key : oldest
+        },
+        null as number | null,
+      )
+
+      if (oldestKey !== null) {
+        this.cache.delete(oldestKey)
+      }
+    }
+  }
+
+  public async getCards(accounts: number[], refetchCards = false): Promise<Cards[]> {
+    const mongo = MongoDBSingleton
+    const db = await mongo.connect()
+
+    try {
+      const cardsFromDb = await db
+        .collection<Cards>('cards')
+        .find({ account_id: { $in: accounts.filter((a) => !!a) } })
+        .sort({ createdAt: -1 })
+        .toArray()
+
+      const cardsMap = new Map(cardsFromDb.map((card) => [card.account_id, card]))
+
+      const promises = accounts.map(async (accountId) => {
+        const existingCard = cardsMap.get(accountId)
+        if (refetchCards || !existingCard || typeof existingCard.rank_tier !== 'number') {
+          return this.fetchAndUpdateCard(accountId)
+        }
+        return existingCard
+      })
+
+      return Promise.all(promises)
+    } finally {
+      await mongo.close()
+    }
   }
 
   public GetRealTimeStats = async ({

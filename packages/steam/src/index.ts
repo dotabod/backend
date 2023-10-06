@@ -37,6 +37,33 @@ io.on('connection', (socket) => {
     hasDotabodSocket = false
   })
 
+  socket.on('getCards', async function (accountIds: number[], callback: callback) {
+    if (!isConnectedToSteam) return
+    try {
+      callback(null, await dota.getCards(accountIds))
+    } catch (e: any) {
+      callback(e.message, null)
+    }
+  })
+
+  socket.on('getCard', async function (accountId: number, callback: callback) {
+    if (!isConnectedToSteam) return
+    try {
+      callback(null, await dota.getCard(accountId))
+    } catch (e: any) {
+      callback(e.message, null)
+    }
+  })
+
+  socket.on('getUserSteamServer', async function (steam32Id: number, callback: callback) {
+    if (!isConnectedToSteam) return
+    try {
+      callback(null, await dota.getUserSteamServer(steam32Id))
+    } catch (e: any) {
+      callback(e.message, null)
+    }
+  })
+
   socket.on('getRealTimeStats', async function (data: any, callback: callback) {
     if (!isConnectedToSteam) return
     try {

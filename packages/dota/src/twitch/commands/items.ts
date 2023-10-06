@@ -6,7 +6,7 @@ import { t } from 'i18next'
 import RedisClient from '../../db/RedisClient.js'
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
-import { getRealTimeStatsSocket } from '../../steam/ws.js'
+import { steamSocket } from '../../steam/ws.js'
 import { DelayedGames, Item, Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../chatClient.js'
@@ -49,7 +49,7 @@ async function getItems({
   locale: string
   command: string
 }) {
-  const { hero, items, playerIdx, player } = await profileLink({
+  const { hero, items, playerIdx } = await profileLink({
     command,
     packet,
     locale,
@@ -82,7 +82,7 @@ async function getItems({
     }
 
     const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
-      getRealTimeStatsSocket.emit(
+      steamSocket.emit(
         'getRealTimeStats',
         {
           match_id: packet?.map?.matchid ?? '',
