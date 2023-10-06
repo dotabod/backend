@@ -80,6 +80,7 @@
   },
   "invalidColor": "Ogiltig hjältefärg, plats, eller namn. Prova 1-10, ett partiellt hjältenamn eller en färg från {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Ogiltigt kommando. Prova !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} miste sin {{count}} kill streak {{emote}}",

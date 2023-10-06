@@ -84,6 +84,7 @@
   },
   "invalidColor": "Couleur de Héros, emplacement ou nom non valide. Essayez 1-10, un nom de Héros partiel, ou une couleur de {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Commande invalide. Essayer !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} a perdu son kill streak de {{count}} {{emote}}",

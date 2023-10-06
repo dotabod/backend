@@ -80,6 +80,7 @@
   },
   "invalidColor": "Virheellinen sankarin väri, paikka tai nimi. Kokeile 1-10, osittaista sankarin nimeä tai väriä näistä {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Virheellinen komento. Kokeile !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} menetti {{count}} tappoputken {{emote}}",

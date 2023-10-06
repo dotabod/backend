@@ -84,6 +84,7 @@
   },
   "invalidColor": "Espaço, nome ou cor de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
   "invalidColorNew": "Comando inválido. Tente `!{{command}} crystal maiden` ou `!{{command}} 9` ou `!{{command}} teal` de {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
