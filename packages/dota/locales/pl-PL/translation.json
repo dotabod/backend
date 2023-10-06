@@ -94,6 +94,7 @@
   },
   "invalidColor": "Zly kolor bohatera, slot, lub nazwa. Spróbuj od 1-10,  częściową nazwę bohatera lub podaj kolor z podanych: {{colorList}}",
   "invalidColorNew": "Nieprawidłowa komenda. Spróbuj `!{{command}} crystal maiden` lub `!{{command}} 9` lub `!{{command}} teal` spośród {{colorList}}",
+  "invalidHero": "Nieprawidłowy bohater. Spróbuj `!{{command}} x` spośród {{heroList}}",
   "invalidMmr": "Zła komenda. Spróbuj !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} stracił serię {{count}} zabójstw {{emote}}",

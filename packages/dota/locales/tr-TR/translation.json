@@ -80,6 +80,7 @@
   },
   "invalidColor": "Geçersiz kahraman rengi, yuvası veya adı. 1-10, kısmi bir kahraman adı veya {{colorList}}'ten bir renk deneyin",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Geçersiz komut. !set mmr 1234 komutunu deneyin",
   "killstreak": {
     "lost_one": "{{- heroName}} {{count}} kill streak'i kaybetti {{emote}}",
