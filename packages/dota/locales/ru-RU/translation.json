@@ -94,7 +94,7 @@
   },
   "invalidColor": "Неверный цвет героя, номер или имя. Попробуй 1-10, имя героя на английском или цвет из списка: {{colorList}}",
   "invalidColorNew": "Неправильная команда. Попробуйте `!{{command}} crystal maiden` или `!{{command}} 9` или `!{{command}} teal` из {{colorList}}",
-  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
+  "invalidHero": "Такого героя нет. Попробуйте \"!{{command}} x\" из {{heroList}}",
   "invalidMmr": "Неверная команда. Попробуйте !setmmr <число ммр>",
   "killstreak": {
     "lost_one": "{{- heroName}} потерял серию из {{count}} убийства! {{emote}}",
