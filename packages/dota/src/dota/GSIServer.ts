@@ -69,15 +69,17 @@ class GSIServer {
 
     app.post(
       '/',
-      validateToken,
       (req: Request, res: Response, next: () => void) => {
-        const token = req.body.auth.token as string
+        const token = req.body?.auth?.token as string | undefined
 
-        // Update the timestamp for this token
-        tokenLastPostTimestamps.set(token, Date.now())
+        if (token) {
+          // Update the timestamp for this token
+          tokenLastPostTimestamps.set(token, Date.now())
+        }
 
         next()
       },
+      validateToken,
       processChanges('previously'),
       processChanges('added'),
       newData,
