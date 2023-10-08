@@ -4,7 +4,11 @@ import { Server, Socket } from 'socket.io'
 
 import getDBUser from '../db/getDBUser.js'
 import { logger } from '../utils/logger.js'
-import { checkForInactiveTokens, tokenLastPostTimestamps } from './clearCacheForUser.js'
+import {
+  checkForInactiveTokens,
+  TOKEN_TIMEOUT,
+  tokenLastPostTimestamps,
+} from './clearCacheForUser.js'
 import { newData, processChanges } from './globalEventEmitter.js'
 import { emitMinimapBlockerStatus } from './GSIHandler.js'
 import { gsiHandlers } from './lib/consts.js'
@@ -92,7 +96,7 @@ class GSIServer {
 
     // Set up the repeating timer
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    setInterval(checkForInactiveTokens, 60 * 1000) // Run every minute
+    setInterval(checkForInactiveTokens, TOKEN_TIMEOUT)
   }
 
   init() {
