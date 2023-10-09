@@ -1,13 +1,13 @@
 import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 
 import supabase from '../../db/supabase.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('toggle', {
-  aliases: ['mute', 'unmute'],
+  aliases: ['disable', 'enable'],
   permission: 2,
   cooldown: 0,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message, args) => {
     const {
       channel: { client },
     } = message
