@@ -3,13 +3,13 @@ import { t } from 'i18next'
 
 import supabase from '../../db/supabase.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('setdelay', {
   aliases: ['delay=', 'setstreamdelay', 'streamdelay='],
   permission: 2,
   cooldown: 0,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message, args) => {
     if (isNaN(Number(args[0]))) {
       chatClient.say(
         message.channel.name,

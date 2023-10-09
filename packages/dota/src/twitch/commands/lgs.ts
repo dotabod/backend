@@ -4,12 +4,12 @@ import { t } from 'i18next'
 import supabase from '../../db/supabase.js'
 import getHero, { HeroNames } from '../../dota/lib/getHero.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('lgs', {
   aliases: ['lastgamescore', 'lgscore', 'lgwl'],
   dbkey: DBSettings.commandLGS,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message, args) => {
     if (!message.channel.client.steam32Id) {
       chatClient.say(
         message.channel.name,

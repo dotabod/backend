@@ -9,13 +9,13 @@ import {
 import { generateRoshanMessage, RoshRes } from '../../dota/events/gsi-events/event.roshan_killed.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('roshan', {
   onlyOnline: true,
   aliases: ['rosh', 'aegis'],
   dbkey: DBSettings.commandRosh,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message, args) => {
     const {
       channel: { name: channel, client },
     } = message

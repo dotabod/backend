@@ -8,12 +8,12 @@ import { steamSocket } from '../../steam/ws.js'
 import { DelayedGames } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('test', {
   permission: 4, // Only admin is 4, not even streamer
 
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message, args) => {
     const {
       channel: { name: channel, client },
     } = message

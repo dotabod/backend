@@ -3,14 +3,14 @@ import { t } from 'i18next'
 
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
 
 commandHandler.registerCommand('d2pt', {
   aliases: ['dota2pt', 'build', 'builds', 'getbuild'],
   onlyOnline: true,
   dbkey: DBSettings.commandBuilds,
-  handler: async (message: MessageType, args: string[], command) => {
+  handler: async (message, args, command) => {
     const {
       channel: { name: channel, client },
     } = message

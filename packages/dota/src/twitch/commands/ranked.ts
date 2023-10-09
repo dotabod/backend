@@ -6,13 +6,13 @@ import { isSpectator } from '../../dota/lib/isSpectator.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import { DelayedGames } from '../../types.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('ranked', {
   aliases: ['isranked'],
   onlyOnline: true,
   dbkey: DBSettings.commandRanked,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message, args) => {
     const {
       channel: { name: channel, client },
     } = message

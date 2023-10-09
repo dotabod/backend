@@ -4,13 +4,13 @@ import { t } from 'i18next'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import lastgame from '../../steam/lastgame.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('lg', {
   aliases: ['lastgame'],
   onlyOnline: true,
   dbkey: DBSettings.commandLG,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message, args) => {
     const {
       channel: { client },
     } = message

@@ -6,13 +6,13 @@ import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('np', {
   aliases: ['players', 'who'],
   onlyOnline: true,
   dbkey: DBSettings.commandNP,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message, args) => {
     const [addOrRemove, forSteam32Id, ...name] = args
     const {
       user: { name: chatterName },

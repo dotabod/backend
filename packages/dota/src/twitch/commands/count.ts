@@ -3,10 +3,10 @@ import { t } from 'i18next'
 import { server } from '../../dota/index.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('count', {
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message, args) => {
     const sockets = (await server.io.fetchSockets()).length
     const gsiSize = gsiHandlers.size
 
