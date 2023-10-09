@@ -258,7 +258,7 @@ const heroes = {
   },
   npc_dota_hero_furion: {
     id: 53,
-    localized_name: "Nature's Prophet",
+    localized_name: 'Natures Prophet',
     alias: ['np', 'natures prophet', 'furion'],
   },
   npc_dota_hero_life_stealer: {

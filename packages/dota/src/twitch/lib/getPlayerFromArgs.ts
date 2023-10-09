@@ -24,7 +24,7 @@ export async function getPlayerFromArgs({
     .join(' · ')
 
   if (!args.length) {
-    if (heroIdsInMatch.length > 1) {
+    if (heroIdsInMatch.filter(Boolean).length > 1) {
       throw new CustomError(t('invalidHero', { command, heroList, lng: locale }))
     }
 
@@ -53,7 +53,7 @@ export async function getPlayerFromArgs({
   }
 
   if (playerIdx < 0 || playerIdx > 9) {
-    if (heroIdsInMatch.length > 1) {
+    if (heroIdsInMatch.filter(Boolean).length > 1) {
       throw new CustomError(t('invalidHero', { command, heroList, lng: locale }))
     }
 
