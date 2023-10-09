@@ -7,6 +7,8 @@
   },
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
+  "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
+  "unmuted": "Will now auto chat on game events. Type !mute to undo",
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
