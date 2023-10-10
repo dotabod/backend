@@ -119,7 +119,6 @@ services:
   nginx:
     container_name: nginx
     restart: on-failure
-    image: "ghcr.io/dotabod/nginx:v2.1"
     platform: linux/amd64
     volumes:
       - $PWD/services/nginx/default.conf:/etc/nginx/templates/default.conf.template
