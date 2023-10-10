@@ -17,6 +17,13 @@ services:
         - BUILD_CONTEXT=packages/twitch/chat
     hostname: twitch-chat
     environment:
+      - NEW_RELIC_NO_CONFIG_FILE
+      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
+      - NEW_RELIC_APP_NAME
+      - NEW_RELIC_ENABLED
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      - NEW_RELIC_LOG=stdout
+      - NEW_RELIC_LICENSE_KEY
       - DATABASE_URL
       - DB_SECRET
       - DB_URL
@@ -43,6 +50,13 @@ services:
         - BUILD_CONTEXT=packages/steam
     hostname: steam
     environment:
+      - NEW_RELIC_NO_CONFIG_FILE
+      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
+      - NEW_RELIC_APP_NAME
+      - NEW_RELIC_ENABLED
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      - NEW_RELIC_LOG=stdout
+      - NEW_RELIC_LICENSE_KEY
       - MONGO_URL
       - STEAM_PASS
       - STEAM_USER
@@ -62,6 +76,13 @@ services:
         - BUILD_CONTEXT=packages/twitch/events
     hostname: twitch-events
     environment:
+      - NEW_RELIC_NO_CONFIG_FILE
+      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
+      - NEW_RELIC_APP_NAME
+      - NEW_RELIC_ENABLED
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      - NEW_RELIC_LOG=stdout
+      - NEW_RELIC_LICENSE_KEY
       - DATABASE_URL
       - DB_SECRET
       - DB_URL

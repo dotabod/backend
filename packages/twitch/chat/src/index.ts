@@ -1,3 +1,4 @@
+import 'newrelic'
 import { lstatSync, readdirSync } from 'fs'
 import { join } from 'path'
 

@@ -31,8 +31,10 @@
     "@twurple/chat": "6.0.9",
     "@twurple/eventsub-base": "6.0.9",
     "@twurple/eventsub-http": "6.0.9",
+    "@types/newrelic": "^9.14.1",
     "i18next": "^23.5.1",
     "i18next-fs-backend": "^2.2.0",
+    "newrelic": "^11.1.0",
     "socket.io": "^4.7.2",
     "winston": "^3.10.0"
   },

@@ -2918,7 +2918,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/newrelic@npm:^9.14.0":
+"@types/newrelic@npm:^9.14.0, @types/newrelic@npm:^9.14.1":
   version: 9.14.1
   resolution: "@types/newrelic@npm:9.14.1"
   checksum: 1c1196e01b19a58f629de37385179ac42595fd7d8f5eec2b6298a130f1177f23c2812036d2aa2324d1cfa371997c45b6892a7f5dd16f5e86b5c60cae8c5cb87a
@@ -4713,6 +4713,7 @@ __metadata:
     "@twurple/chat": 6.0.9
     "@twurple/eventsub-base": 6.0.9
     "@twurple/eventsub-http": 6.0.9
+    "@types/newrelic": ^9.14.1
     "@types/node": ^20.6.2
     "@typescript-eslint/eslint-plugin": ^6.7.2
     "@typescript-eslint/parser": ^6.7.2
@@ -4727,6 +4728,7 @@ __metadata:
     i18next: ^23.5.1
     i18next-fs-backend: ^2.2.0
     lint-staged: ^14.0.1
+    newrelic: ^11.1.0
     nodemon: ^3.0.1
     prettier: ^3.0.3
     socket.io: ^4.7.2
