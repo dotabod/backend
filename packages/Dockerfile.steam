@@ -1,5 +1,5 @@
 # Using a more specific version to ensure reproducibility
-FROM node:16-alpine3.17 as base
+FROM node:20-alpine3.17 as base
 
 # Add Git, Python3, make, g++ in a single RUN command
 RUN apk add --no-cache git python3 make g++ \
@@ -10,11 +10,14 @@ ARG BUILD_CONTEXT
 WORKDIR /app
 
 # Copy just the relevant package.json and yarn.lock files
-COPY package.json yarn.lock* ./
+COPY package.json .yarnrc.yml yarn.lock ./
+COPY .yarn/releases/ ./.yarn/releases/
+COPY .yarn/cache/ ./.yarn/cache/
 COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 
 # Install dependencies
-RUN yarn install --pure-lockfile --non-interactive
+RUN yarn set version berry
+RUN yarn install
 
 #-------------------------
 
@@ -26,11 +29,11 @@ COPY $BUILD_CONTEXT/tsconfig.json $BUILD_CONTEXT/
 COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 
 WORKDIR /app/
-RUN yarn build
+RUN yarn buildst
 
 #-------------------------
 
-FROM node:16-alpine3.17 as prod
+FROM node:20-alpine3.17 as prod
 
 ARG BUILD_CONTEXT
 ARG NODE_ENV
@@ -49,14 +52,11 @@ WORKDIR /app
 COPY --from=builder --chown=dotadockeruser /app/package.json /app/tsconfig.json ./
 COPY --from=builder --chown=dotadockeruser /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 COPY --from=builder --chown=dotadockeruser /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
+COPY --from=builder --chown=dotadockeruser /app/node_modules ./node_modules
 
 # Create required directories
-RUN mkdir -p $BUILD_CONTEXT/src/steam/volumes
-
-# Copy node_modules
-COPY --from=base --chown=dotadockeruser /app/node_modules ./node_modules
+RUN mkdir -p $BUILD_CONTEXT/src/steam/volumes $BUILD_CONTEXT/dist/steam/volumes
 
 # Environment and CMD
-WORKDIR /app/$BUILD_CONTEXT
 ENV NODE_ENV=$NODE_ENV
-CMD yarn docker:$NODE_ENV
+CMD yarn workspace @dotabod/steam run docker:$NODE_ENV

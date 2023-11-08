@@ -50,6 +50,14 @@
   "commandDisabled": "El streamer ha dehabilitado el comando {{cmdName}} {{emote}}, escribe !commands para ver los disponibles",
   "commands_everyone": "Todos pueden usar: {{commandList}}",
   "commands_mods": "Mod sólo comandos: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_many": "",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_many": "",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Necesitas builds para {{- heroName}}? Encuéntralas aquí {{- url}}",
   "dotabod": "Soy un bot hecho por {{author}}. Mas información {{- url}}",
   "gameNotFound": "Juego no encontrado",
@@ -76,6 +84,7 @@
   },
   "invalidColor": "Slot, nombre o color de héroe inválido. Intenta del 1-10, parte del nombre del héroe o un color de {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Comando inválido. Usa !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} perdió la racha de {{count}} kills {{emote}}",
@@ -111,6 +120,7 @@
   "modsOnly_off": "Solomente Mods ahora esta apagado. Todos pueden usar chat.",
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Esta cuenta de Steam ya está conectada a otro usuario de Dotabod. Comprueba el panel de control para más información {{- url}}",
+  "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
   "noHero": "No se ha encontrado el héroe",
   "noLastMatch": "No se ha encontrado la ultimo partido {{emote}}",
   "noNotable": "No hay jugadores destacados",
@@ -190,6 +200,7 @@
   "uknownMmr": "Aún no conozco el MMR de {{channel}}. Mods tienen que !setmmr 1234 o establecerlo en {{- url}}",
   "unknown": "Desconocido",
   "unknownSteam": "No se ha podido encontrar la cuenta de steam. Intenta jugar primero una partida de práctica para guardar tu cuenta en Dotabod",
+  "unmuted": "Will now auto chat on game events. Type !mute to undo",
   "unranked": "Sin clasificar",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "MMR actualizado a {{mmr}}",

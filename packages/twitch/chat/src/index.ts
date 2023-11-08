@@ -1,9 +1,13 @@
+import 'newrelic'
 import { lstatSync, readdirSync } from 'fs'
 import { join } from 'path'
 
 import { t, use } from 'i18next'
 import FsBackend, { FsBackendOptions } from 'i18next-fs-backend'
 import { Server } from 'socket.io'
+
+import supabase from './db/supabase.js'
+import { getChatClient } from './twitch/lib/getChatClient.js'
 
 await use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
@@ -20,10 +24,6 @@ await use(FsBackend).init<FsBackendOptions>({
 })
 
 console.log('Loaded i18n for chat')
-
-import './db/watcher.js'
-import supabase from './db/supabase.js'
-import { getChatClient } from './twitch/lib/getChatClient.js'
 
 // Setup twitch chatbot client FIRST
 export const chatClient = await getChatClient()

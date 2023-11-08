@@ -11,7 +11,7 @@ import Steam from 'steam'
 import steamErrors from 'steam-errors'
 
 import MongoDBSingleton from './MongoDBSingleton.js'
-import { Cards, DelayedGames, GCMatchData } from './types/index.js'
+import { Cards, DelayedGames } from './types/index.js'
 import CustomError from './utils/customError.js'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch.js'
 import { logger } from './utils/logger.js'
@@ -19,7 +19,52 @@ import { retryCustom } from './utils/retry.js'
 
 import io from './index.js'
 
+interface steamUserDetails {
+  account_name: string
+  password: string
+  sha_sentryfile?: Buffer
+}
+
+interface CacheEntry {
+  timestamp: number
+  card: Cards
+}
+
+const MAX_CACHE_SIZE = 5000
+const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+
 const isDev = process.env.NODE_ENV === 'development'
+
+function onGCSpectateFriendGameResponse(message: any, callback: any) {
+  const response: { server_steamid: Long; watch_live_result: number } =
+    Dota2.schema.CMsgSpectateFriendGameResponse.decode(message)
+  if (callback !== undefined) {
+    callback(response)
+  }
+}
+
+Dota2.Dota2Client.prototype.spectateFriendGame = function (
+  friend: { steam_id: number; live: boolean },
+  callback: any,
+) {
+  callback = callback || null
+  if (!this._gcReady) {
+    logger.info("[STEAM] GC not ready, please listen for the 'ready' event.")
+    return null
+  }
+  // CMsgSpectateFriendGame
+  const payload = new Dota2.schema.CMsgSpectateFriendGame(friend)
+  this.sendToGC(
+    Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGame,
+    payload,
+    onGCSpectateFriendGameResponse,
+    callback,
+  )
+}
+
+const handlers = Dota2.Dota2Client.prototype._handlers
+handlers[Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGameResponse] =
+  onGCSpectateFriendGameResponse
 
 // Fetches data from MongoDB
 const fetchDataFromMongo = async (match_id: string) => {
@@ -70,43 +115,6 @@ const saveMatch = async ({
   }
 }
 
-function onGCSpectateFriendGameResponse(message: any, callback: any) {
-  const response: { server_steamid: Long; watch_live_result: number } =
-    Dota2.schema.CMsgSpectateFriendGameResponse.decode(message)
-  if (callback !== undefined) {
-    callback(response)
-  }
-}
-
-Dota2.Dota2Client.prototype.spectateFriendGame = function (
-  friend: { steam_id: number; live: boolean },
-  callback: any,
-) {
-  callback = callback || null
-  if (!this._gcReady) {
-    logger.info("[STEAM] GC not ready, please listen for the 'ready' event.")
-    return null
-  }
-  // CMsgSpectateFriendGame
-  const payload = new Dota2.schema.CMsgSpectateFriendGame(friend)
-  this.sendToGC(
-    Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGame,
-    payload,
-    onGCSpectateFriendGameResponse,
-    callback,
-  )
-}
-
-const handlers = Dota2.Dota2Client.prototype._handlers
-handlers[Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGameResponse] =
-  onGCSpectateFriendGameResponse
-
-interface steamUserDetails {
-  account_name: string
-  password: string
-  sha_sentryfile?: Buffer
-}
-
 function hasSteamData(game?: DelayedGames | null) {
   const hasTeams = Array.isArray(game?.teams) && game?.teams.length === 2
   const hasPlayers =
@@ -131,6 +139,7 @@ function hasSteamData(game?: DelayedGames | null) {
 
 class Dota {
   private static instance: Dota
+  private cache: Map<number, CacheEntry> = new Map()
 
   private steamClient
 
@@ -158,13 +167,15 @@ class Dota {
   }
 
   getUserDetails() {
-    if (!process.env.STEAM_USER || !process.env.STEAM_PASS) {
+    const usernames = process.env.STEAM_USER?.split('|') ?? []
+    const passwords = process.env.STEAM_PASS?.split('|') ?? []
+    if (!usernames.length || !passwords.length) {
       throw new Error('STEAM_USER or STEAM_PASS not set')
     }
 
     return {
-      account_name: process.env.STEAM_USER,
-      password: process.env.STEAM_PASS,
+      account_name: usernames[0],
+      password: passwords[0],
     }
   }
 
@@ -274,10 +285,10 @@ class Dota {
 
     // Set up the retry operation
     const operation = retry.operation({
-      retries: 35, // Number of retries
-      factor: 1, // Exponential backoff factor
-      minTimeout: 1 * 1000, // Minimum retry timeout (1 second)
-      maxTimeout: 60 * 1000, // Maximum retry timeout (60 seconds)
+      retries: 35,
+      factor: 1.1,
+      minTimeout: 5000, // Minimum retry timeout (1 second)
+      maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
     })
 
     return new Promise((resolve, reject) => {
@@ -293,6 +304,157 @@ class Dota {
         })
       })
     })
+  }
+
+  fetchAndUpdateCard = async (accountId: number) => {
+    let fetchedCard = {
+      rank_tier: -10,
+      leaderboard_rank: 0,
+    }
+
+    if (accountId) {
+      fetchedCard = await retryCustom(() => this.getCard(accountId)).catch(() => fetchedCard)
+    }
+
+    const card = {
+      ...fetchedCard,
+      account_id: accountId,
+      createdAt: new Date(),
+      rank_tier: fetchedCard?.rank_tier ?? 0,
+      leaderboard_rank: fetchedCard?.leaderboard_rank ?? 0,
+    } as Cards
+
+    if (!accountId) return card
+
+    if (fetchedCard?.rank_tier !== -10) {
+      const mongo = MongoDBSingleton
+      const db = await mongo.connect()
+
+      try {
+        await db
+          .collection<Cards>('cards')
+          .updateOne({ account_id: accountId }, { $set: card }, { upsert: true })
+      } finally {
+        await mongo.close()
+      }
+    }
+
+    return card
+  }
+
+  private async fetchProfileCard(account: number): Promise<Cards> {
+    return new Promise<Cards>((resolve, reject) => {
+      // @ts-expect-error no types exist for `loggedOn`
+      if (!this.dota2._gcReady || !this.steamClient.loggedOn)
+        reject(new CustomError('Error getting medal'))
+      else {
+        this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
+          if (err) reject(err)
+          resolve(card)
+        })
+      }
+    })
+  }
+
+  promiseTimeout = <T>(promise: Promise<T>, ms: number, reason: string): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
+      let timeoutCleared = false
+      const timeoutId = setTimeout(() => {
+        timeoutCleared = true
+        reject(new CustomError(reason))
+      }, ms)
+      promise
+        .then((result) => {
+          if (!timeoutCleared) {
+            clearTimeout(timeoutId)
+            resolve(result)
+          }
+        })
+        .catch((err) => {
+          if (!timeoutCleared) {
+            clearTimeout(timeoutId)
+            reject(err)
+          }
+        })
+    })
+
+  public async getCard(account: number): Promise<Cards> {
+    const now = Date.now()
+    const cacheEntry = this.cache.get(account)
+
+    if (cacheEntry && now - cacheEntry.timestamp < CACHE_TTL) {
+      return cacheEntry.card
+    }
+
+    // If not cached or cache is stale, fetch the profile card
+    const card = await this.promiseTimeout(
+      this.fetchProfileCard(account),
+      1000,
+      'Error getting medal',
+    )
+
+    this.evictOldCacheEntries() // Evict entries based on time
+    this.cache.set(account, {
+      timestamp: now,
+      card: card,
+    })
+
+    this.evictExtraCacheEntries() // Evict extra entries if cache size exceeds MAX_CACHE_SIZE
+
+    return card
+  }
+
+  private evictOldCacheEntries() {
+    const now = Date.now()
+    for (const [key, value] of this.cache.entries()) {
+      if (now - value.timestamp > CACHE_TTL) {
+        this.cache.delete(key)
+      }
+    }
+  }
+
+  private evictExtraCacheEntries() {
+    while (this.cache.size > MAX_CACHE_SIZE) {
+      const oldestKey = [...this.cache.entries()].reduce(
+        (oldest, [key, entry]) => {
+          if (!oldest) return key
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          return entry.timestamp < this.cache.get(oldest)!.timestamp ? key : oldest
+        },
+        null as number | null,
+      )
+
+      if (oldestKey !== null) {
+        this.cache.delete(oldestKey)
+      }
+    }
+  }
+
+  public async getCards(accounts: number[], refetchCards = false): Promise<Cards[]> {
+    const mongo = MongoDBSingleton
+    const db = await mongo.connect()
+
+    try {
+      const cardsFromDb = await db
+        .collection<Cards>('cards')
+        .find({ account_id: { $in: accounts.filter((a) => !!a) } })
+        .sort({ createdAt: -1 })
+        .toArray()
+
+      const cardsMap = new Map(cardsFromDb.map((card) => [card.account_id, card]))
+
+      const promises = accounts.map(async (accountId) => {
+        const existingCard = cardsMap.get(accountId)
+        if (refetchCards || !existingCard || typeof existingCard.rank_tier !== 'number') {
+          return this.fetchAndUpdateCard(accountId)
+        }
+        return existingCard
+      })
+
+      return Promise.all(promises)
+    } finally {
+      await mongo.close()
+    }
   }
 
   public GetRealTimeStats = async ({
@@ -325,7 +487,8 @@ class Dota {
     const operation = retry.operation({
       retries: 35,
       factor: 1.1,
-      minTimeout: 1 * 5000,
+      minTimeout: 5000, // Minimum retry timeout (1 second)
+      maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
     })
 
     return new Promise((resolve, reject) => {
@@ -356,7 +519,7 @@ class Dota {
           await saveMatch({ match_id, game: gamePlusMore })
           if (!forceRefetchAll) {
             // forward the msg to dota node app
-            io.to('steam').emit('saveHeroesForMatchId', { matchId: match_id }, token)
+            io.to('steam').emit('saveHeroesForMatchId', { matchId: match_id, token })
           }
           return resolve(gamePlusMore)
         }
@@ -372,133 +535,9 @@ class Dota {
     })
   }
 
-  // @DEPRECATED
-  public getGcMatchData(
-    matchId: number | string,
-    cb: (err: number | null, body: GCMatchData | null) => void,
-  ) {
-    const operation = retry.operation({
-      retries: 8,
-      factor: 2,
-      minTimeout: 2 * 1000,
-    })
-
-    operation.attempt((currentAttempt: number) => {
-      logger.info('[STEAM] requesting match', { matchId, currentAttempt })
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return this.dota2.requestMatchDetails(
-        Number(matchId),
-        (err: number | null, body: GCMatchData | null) => {
-          err && logger.error(err)
-          if (operation.retry(err ? new Error('Match not found') : undefined)) return
-
-          let arr: Error | undefined
-          if (body?.match?.players) {
-            body.match.players = body.match.players.map((p: any) => {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-              return {
-                ...p,
-                party_size: body.match?.players.filter(
-                  (matchPlayer: any) => matchPlayer.party_id?.low === p.party_id?.low,
-                ).length,
-              }
-            })
-
-            logger.info('[STEAM] received match', { matchId })
-          } else {
-            arr = new Error('Match not found')
-          }
-
-          if (operation.retry(arr)) return
-
-          cb(err, body)
-        },
-      )
-    })
-  }
-
   public static getInstance(): Dota {
     if (!Dota.instance) Dota.instance = new Dota()
     return Dota.instance
-  }
-
-  fetchAndUpdateCard = async (accountId: number) => {
-    const fetchedCard = accountId
-      ? await retryCustom({
-          retries: 10,
-          fn: () => this.getCard(accountId),
-          minTimeout: 1000,
-        }).catch(() => ({
-          rank_tier: -10,
-          leaderboard_rank: 0,
-        }))
-      : undefined
-
-    const card = {
-      ...fetchedCard,
-      account_id: accountId,
-      createdAt: new Date(),
-      rank_tier: fetchedCard?.rank_tier ?? 0,
-      leaderboard_rank: fetchedCard?.leaderboard_rank ?? 0,
-    } as Cards
-
-    if (!accountId) return card
-
-    if (fetchedCard?.rank_tier !== -10) {
-      const mongo = MongoDBSingleton
-      const db = await mongo.connect()
-
-      try {
-        await db
-          .collection<Cards>('cards')
-          .updateOne({ account_id: accountId }, { $set: card }, { upsert: true })
-      } finally {
-        await mongo.close()
-      }
-    }
-
-    return card
-  }
-
-  public async getCards(accounts: number[], refetchCards = false): Promise<Cards[]> {
-    const mongo = MongoDBSingleton
-    const db = await mongo.connect()
-
-    try {
-      const cardsFromDb = await db
-        .collection<Cards>('cards')
-        .find({ account_id: { $in: accounts.filter((a) => !!a) } })
-        .sort({ createdAt: -1 })
-        .toArray()
-
-      const cardsMap = new Map(cardsFromDb.map((card) => [card.account_id, card]))
-
-      const promises = accounts.map(async (accountId) => {
-        const existingCard = cardsMap.get(accountId)
-        if (refetchCards || !existingCard || typeof existingCard.rank_tier !== 'number') {
-          return this.fetchAndUpdateCard(accountId)
-        }
-        return existingCard
-      })
-
-      return Promise.all(promises)
-    } finally {
-      await mongo.close()
-    }
-  }
-
-  public async getCard(account: number): Promise<Cards> {
-    // @ts-expect-error no types exist for `loggedOn`
-    if (!this.dota2._gcReady || !this.steamClient.loggedOn) {
-      throw new CustomError('Error getting medal')
-    }
-
-    return new Promise((resolve, reject) => {
-      this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
-        if (err) reject(err)
-        else resolve(card)
-      })
-    })
   }
 
   public exit(): Promise<boolean> {

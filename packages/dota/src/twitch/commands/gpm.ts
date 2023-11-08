@@ -3,13 +3,13 @@ import { t } from 'i18next'
 
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
 
 commandHandler.registerCommand('gpm', {
   onlyOnline: true,
   dbkey: DBSettings.commandGPM,
-  handler: async (message: MessageType, args: string[], command) => {
+  handler: async (message, args, command) => {
     const {
       channel: { name: channel, client },
     } = message

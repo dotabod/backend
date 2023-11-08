@@ -5,9 +5,9 @@
     "pickup": "{{- heroName}} ha preso l'egida",
     "snatched": "{{- heroName}} ha rubato l'egida {{emote}}"
   },
-  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_one": "APM live per {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
-  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "APM live per {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "$t(betaTester_on)",
@@ -50,12 +50,20 @@
   "commandDisabled": "Lo streamer ha disabilitato il comando {{cmdName}} {{emote}} Usa !commands per quelli abilitati",
   "commands_everyone": "Tutti possono usare: {{commandList}}",
   "commands_mods": "Comandi esclusivi per i mod: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer connesso al GSI di Dotabod",
+    "gsi_many": "",
+    "gsi_other": "{{count}} streamer connessi al GSI di Dotabod",
+    "overlay_one": "{{count}} streamer sta usando l'overlay",
+    "overlay_many": "",
+    "overlay_other": "{{count}} streamer stanno usando l'overlay"
+  },
   "dota2pt": "Hai bisogno di build pro per {{- heroName}}? Vai qui {{- url}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
   "gameNotFound": "La partita non è stata trovata",
   "gpm_zero": "",
-  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_one": "GPM live per {{- heroName}}: {{num}}. {{heroKills}} da eroi, {{creepKills}} da creep.",
+  "gpm_other": "GPM live per {{- heroName}}: {{num}}. {{heroKills}} da eroi, {{creepKills}} da creep.",
   "heroItems": {
     "empty": "(Delay di 2m) Nessun oggetto trovato per {{- heroName}}",
     "list": "(Delay di 2m) {{- heroName}} ha: {{- itemNames}}"
@@ -76,6 +84,7 @@
   },
   "invalidColor": "Colore, slot o nome dell'eroe non validi. Prova 1-10, parte del nome, o un colore da {{colorList}}",
   "invalidColorNew": "Comando non valido. Prova '!{{command}} crystal maiden', !{{command}} 9' oppure '!{{command}} teal' da {{colorList}}",
+  "invalidHero": "Eroe indicato non esistente. Usa`!{{command}} x` da {{heroList}}",
   "invalidMmr": "Comando invalido. Prova !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} ha perso la kill streak di {{count}} {{emote}}",
@@ -111,6 +120,7 @@
   "modsOnly_off": "È stata disattivata la modalità solo moderatori. Ora tutti possono scrivere.",
   "modsOnly_on": "Modalità solo mods attiva {{emote}} . Solo i moderatori possono scrivere.",
   "multiAccount": "Questo account Steam è già connesso a un altro utente Dotabod. Controlla la dashboard per maggiori informazioni {{- url}}",
+  "muted": "Non chatterà per gli eventi in game, ma risponderà ai comandi. Scrivi !unmute per annullare",
   "noHero": "Nessun eroe trovato",
   "noLastMatch": "Non è stato trovato un match precedente {{emote}}",
   "noNotable": "Nessun player famoso",
@@ -190,15 +200,16 @@
   "uknownMmr": "Ancora non so l'MMR di {{channel}}. I mod devono usare !setmmr 1234 o settarlo su {{- url}}",
   "unknown": "Sconosciuto",
   "unknownSteam": "Impossibile trovare l'account Steam. Prova a giocare una partita di prova contro i bot per salvare il tuo account su Dotabod!",
+  "unmuted": "Chatterà per gli eventi in game. Scrivi !mute per disabilitarlo",
   "unranked": "Non Classificata",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "MMR aggiornato a {{mmr}}",
   "updateMmr_manual": "Aggiornato MMR a {{mmr}}",
   "updateMmrMulti": "Molteplici account Steam, aggiornerò quello con cui si è attualmente connessi ({{steamId}})",
-  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
+  "updateMmrNoChange": "MMR è già {{mmr}}, nessun cambio effettuato",
   "version": {
     "commit": "La versione corrente del server è {{version}}, ecco cosa manca rispetto all'ultima versione: {{- url}}",
     "unknown": "Impossibile trovare l'ultimo git commit, ecco il repo {{- url}}"
   },
-  "xpm": "Live XPM for {{- heroName}}: {{num}}"
+  "xpm": "XPM live per {{- heroName}}: {{num}}"
 }

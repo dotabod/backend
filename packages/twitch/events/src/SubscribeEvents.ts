@@ -1,23 +1,59 @@
-import { EventSubHttpListener } from '@twurple/eventsub-http'
+import { listener } from './listener.js'
+import { transformBetData } from './twitch/events/transformers/transformBetData.js'
+import { transformPollData } from './twitch/events/transformers/transformPollData.js'
+import { offlineEvent } from './twitch/lib/offlineEvent.js'
+import { onlineEvent } from './twitch/lib/onlineEvent.js'
+import { updateUserEvent } from './twitch/lib/updateUserEvent.js'
+import { DOTABOD_EVENTS_ROOM, eventsIOConnected, socketIo } from './utils/socketUtils.js'
 
-import { events } from './twitch/events/events.js'
-import { handleEvent } from './twitch/events/handleEvent.js'
+export const handleEvent = (eventName: any, broadcasterId: string, data: any) => {
+  if (!eventsIOConnected) {
+    return
+  }
+  socketIo.to(DOTABOD_EVENTS_ROOM).emit('event', eventName, broadcasterId, data)
+}
 
-export const SubscribeEvents = (accountIds: string[], listener: EventSubHttpListener) => {
-  const promises: Promise<unknown>[] = []
+export const SubscribeEvents = (accountIds: string[]) => {
+  const promises: any[] = []
   accountIds.forEach((userId) => {
     try {
+      promises.push(listener.onStreamOnline(userId, onlineEvent))
+      promises.push(listener.onStreamOffline(userId, offlineEvent))
+      promises.push(listener.onUserUpdate(userId, updateUserEvent))
       promises.push(
-        ...Object.keys(events).map((eventName) => {
-          const eventNameTyped = eventName as keyof typeof events
-          try {
-            // @ts-expect-error `listener[eventName]`
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            return listener[eventName](userId, (data: unknown) => handleEvent(eventNameTyped, data))
-          } catch (error) {
-            console.log('[TWITCHEVENTS] Could not sub userId error', { userId, error })
-          }
-        }),
+        listener.onChannelPredictionBegin(userId, (data) =>
+          handleEvent('onChannelPredictionBegin', userId, transformBetData(data)),
+        ),
+      )
+      promises.push(
+        listener.onChannelPredictionProgress(userId, (data) =>
+          handleEvent('onChannelPredictionProgress', userId, transformBetData(data)),
+        ),
+      )
+      promises.push(
+        listener.onChannelPredictionLock(userId, (data) =>
+          handleEvent('onChannelPredictionLock', userId, transformBetData(data)),
+        ),
+      )
+      promises.push(
+        listener.onChannelPredictionEnd(userId, (data) =>
+          handleEvent('onChannelPredictionEnd', userId, transformBetData(data)),
+        ),
+      )
+      promises.push(
+        listener.onChannelPollBegin(userId, (data) =>
+          handleEvent('onChannelPollBegin', userId, transformPollData(data)),
+        ),
+      )
+      promises.push(
+        listener.onChannelPollProgress(userId, (data) =>
+          handleEvent('onChannelPollProgress', userId, transformPollData(data)),
+        ),
+      )
+      promises.push(
+        listener.onChannelPollEnd(userId, (data) =>
+          handleEvent('onChannelPollEnd', userId, transformPollData(data)),
+        ),
       )
     } catch (e) {
       console.log('[TWITCHEVENTS] could not sub', { e, userId })

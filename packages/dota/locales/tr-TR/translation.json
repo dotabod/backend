@@ -49,6 +49,12 @@
   "commandDisabled": "Yayıncı devre dışı {{cmdName}} komutu {{emote}} !commands komutu ile aktif olanları kontrol edebilirsin",
   "commands_everyone": "Herkes kullanabilir: {{commandList}}",
   "commands_mods": "Sadece mod komutları: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Daha iyi item tavsiyelerine mi ihtiyacın var {{- heroName}}? Buraya tıkla {{- url}}",
   "dotabod": "Ben {{author}} tarafından yaratılan açık kaynaklı bir botum. Daha detaylı bilgi için {{- url}}",
   "gameNotFound": "Oyun bulunamadı",
@@ -74,6 +80,7 @@
   },
   "invalidColor": "Geçersiz kahraman rengi, yuvası veya adı. 1-10, kısmi bir kahraman adı veya {{colorList}}'ten bir renk deneyin",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Geçersiz komut. !set mmr 1234 komutunu deneyin",
   "killstreak": {
     "lost_one": "{{- heroName}} {{count}} kill streak'i kaybetti {{emote}}",
@@ -106,6 +113,7 @@
   "modsOnly_off": "Yalnızca modlar modu kapalı. Herkes yazabilir.",
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Bu Steam kullanıcısı zaten başka bir Dotabod kullanıcısıyla bağlantılı. Daha fazla bilgi için {{- url}} ziyaret edin",
+  "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
   "noHero": "Kahraman bulunamadı",
   "noLastMatch": "Son bir eşleşme bulunamadı {{emote}}",
   "noNotable": "Kayda değer oyuncu yok",
@@ -181,6 +189,7 @@
   "uknownMmr": "{{channel}} mevcut MMR'ını henüz bilmiyorum. !setmmr (mevcut mmr) komutunu kullanarak ya da {{- url}} link üzerinden ayarlayarak işlemi tamamlayabilirsin",
   "unknown": "Bilinmiyor",
   "unknownSteam": "Steam hesabı bulunamadı. Kurulumun 2. adımını uygulayın, bir bot maçı yapın ve tekrar deneyin.",
+  "unmuted": "Will now auto chat on game events. Type !mute to undo",
   "unranked": "Derecesiz",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Updated MMR to {{mmr}}",

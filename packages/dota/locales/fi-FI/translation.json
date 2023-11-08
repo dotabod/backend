@@ -49,6 +49,12 @@
   "commandDisabled": "Striimaaja poisti {{cmdName}}-komennon {{emote}} Tarkista !commands käytössä oleville",
   "commands_everyone": "Jokainen voi käyttää: {{commandList}}",
   "commands_mods": "Vain modien komennot: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Tarvitsetko ammattilaisen build-ideoita sankarille {{- heroName}}? Tarkista osoitteessa {{- url}}",
   "dotabod": "Olen avoimen lähdekoodin botti jonka on tehnyt {{author}}. Lisätietoja: {{- url}}",
   "gameNotFound": "Peliä ei löytynyt",
@@ -74,6 +80,7 @@
   },
   "invalidColor": "Virheellinen sankarin väri, paikka tai nimi. Kokeile 1-10, osittaista sankarin nimeä tai väriä näistä {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Virheellinen komento. Kokeile !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} menetti {{count}} tappoputken {{emote}}",
@@ -106,6 +113,7 @@
   "modsOnly_off": "Vain modit-tila on nyt poistettu käytöstä. Kaikki voivat kirjoittaa.",
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Tämä Steam-tili on jo yhdistetty toiseen Dotabod-käyttäjään. Tarkista hallintapaneeli saadaksesi lisätietoja {{- url}}",
+  "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
   "noHero": "Sankaria ei löytynyt",
   "noLastMatch": "Edellistä ottelua ei löytynyt {{emote}}",
   "noNotable": "Ei merkittäviä pelaajia",
@@ -181,6 +189,7 @@
   "uknownMmr": "En tiedä {{channel}}-kanavan MMR:ää vielä. Modien täytyy !setmmr 1234 tai asettaa se osoitteessa {{- url}}",
   "unknown": "Tuntematon",
   "unknownSteam": "Steam-tiliä ei löytynyt. Noudata asennuksen 2-vaihetta, pelaa bottipeli ja yritä uudelleen.",
+  "unmuted": "Will now auto chat on game events. Type !mute to undo",
   "unranked": "Ei rankattu",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Updated MMR to {{mmr}}",

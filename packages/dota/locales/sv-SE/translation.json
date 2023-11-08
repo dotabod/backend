@@ -49,6 +49,12 @@
   "commandDisabled": "Streamern inaktiverade {{cmdName}}-kommandot {{emote}} Kolla !commands för de aktiverade",
   "commands_everyone": "Alla kan använda: {{commandList}}",
   "commands_mods": "Mod-kommandon: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Behöver du build-idéer av proffs för {{- heroName}}? Kolla här {{- url}}",
   "dotabod": "Jag är en bot med öppen källkod skapad av {{author}}. Mer info: {{- url}}",
   "gameNotFound": "Matchen hittades inte",
@@ -74,6 +80,7 @@
   },
   "invalidColor": "Ogiltig hjältefärg, plats, eller namn. Prova 1-10, ett partiellt hjältenamn eller en färg från {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Ogiltigt kommando. Prova !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} miste sin {{count}} kill streak {{emote}}",
@@ -106,6 +113,7 @@
   "modsOnly_off": "Endast mods-läge är nu av. Alla kan skriva.",
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Detta Steam-konto är redan anslutet till en annan Dotabod användare. Kontrollera instrumentpanelen för mer information {{- url}}",
+  "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
   "noHero": "Ingen hjälte hittades",
   "noLastMatch": "Hittade inte förra matchen {{emote}}",
   "noNotable": "Inga anmärkningsvärda spelare",
@@ -181,6 +189,7 @@
   "uknownMmr": "Jag vet inte {{channel}}s MMR ännu. Mods måste skriva !setmmr 1234 eller ställa in det i {{- url}}",
   "unknown": "Okänd",
   "unknownSteam": "Kunde inte hitta Steam-kontot. Följ steg 2 i konfigurationen, spela en bot match, och försök igen.",
+  "unmuted": "Will now auto chat on game events. Type !mute to undo",
   "unranked": "Orankad",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Uppdaterade MMR till {{mmr}}",

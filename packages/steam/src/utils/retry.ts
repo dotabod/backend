@@ -1,22 +1,16 @@
 import retry from 'retry'
 
-export const retryCustom = async <T>({
-  retries,
-  fn,
-  minTimeout,
-}: {
-  retries: number
-  fn: () => Promise<T>
-  minTimeout: number
-}): Promise<T> => {
+export const retryCustom = async <T>(fn: () => Promise<T>): Promise<T> => {
   const operation = retry.operation({
-    retries,
-    minTimeout,
+    factor: 1,
+    retries: 10,
+    minTimeout: 1_000,
+    maxTimeout: 10_000,
   })
 
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    operation.attempt(async (currentAttempt) => {
+    operation.attempt(async () => {
       try {
         const result = await fn()
         resolve(result)

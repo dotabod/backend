@@ -4,12 +4,12 @@ import { t } from 'i18next'
 import { calculateAvg } from '../../dota/lib/calculateAvg.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('avg', {
   onlyOnline: true,
   dbkey: DBSettings.commandAvg,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message, args) => {
     const {
       channel: { client },
     } = message

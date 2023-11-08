@@ -2,24 +2,28 @@ services:
   redis:
     container_name: redis
     image: "redis/redis-stack-server:latest"
-    ports:
-      - "6379:6379"
+    restart: on-failure
 
   twitch-chat:
-    image: "ghcr.io/dotabod/twitch-chat:v2.0"
+    image: "ghcr.io/dotabod/twitch-chat:v2.1"
     platform: linux/amd64
     container_name: twitch-chat
     restart: on-failure
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.chat
+      dockerfile: $PWD/packages/Dockerfile.chat
       args:
         - NODE_ENV=${NODE_ENV:-development}
         - BUILD_CONTEXT=packages/twitch/chat
     hostname: twitch-chat
-    ports:
-      - "5005:5005"
     environment:
+      - NEW_RELIC_NO_CONFIG_FILE
+      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
+      - NEW_RELIC_APP_NAME=twitch-chat
+      - NEW_RELIC_ENABLED
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      - NEW_RELIC_LOG=stdout
+      - NEW_RELIC_LICENSE_KEY
       - DATABASE_URL
       - DB_SECRET
       - DB_URL
@@ -31,48 +35,54 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
     volumes:
-      - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
+      - $PWD/packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
   steam:
-    image: "ghcr.io/dotabod/steam:v2.0"
+    image: "ghcr.io/dotabod/steam:v2.1"
     platform: linux/amd64
     container_name: steam
     restart: on-failure
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.steam
+      dockerfile: $PWD/packages/Dockerfile.steam
       args:
         - NODE_ENV=${NODE_ENV:-development}
         - BUILD_CONTEXT=packages/steam
     hostname: steam
-    ports:
-      - "5035:5035"
     environment:
+      - NEW_RELIC_NO_CONFIG_FILE
+      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
+      - NEW_RELIC_APP_NAME=steam
+      - NEW_RELIC_ENABLED
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      - NEW_RELIC_LOG=stdout
+      - NEW_RELIC_LICENSE_KEY
       - MONGO_URL
       - STEAM_PASS
       - STEAM_USER
       - STEAM_WEB_API
       - NODE_ENV
-    volumes:
-      - ./packages/steam/locales:/app/packages/steam/locales
 
   twitch-events:
-    image: "ghcr.io/dotabod/twitch-events:v2.0"
+    image: "ghcr.io/dotabod/twitch-events:v2.1"
     platform: linux/amd64
     container_name: twitch-events
     restart: on-failure
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.events
+      dockerfile: $PWD/packages/Dockerfile.events
       args:
         - NODE_ENV=${NODE_ENV:-development}
         - BUILD_CONTEXT=packages/twitch/events
     hostname: twitch-events
-    ports:
-      - "82:5010"
-      - "5015:5015"
-      - "5011:5011"
     environment:
+      - NEW_RELIC_NO_CONFIG_FILE
+      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
+      - NEW_RELIC_APP_NAME=twitch-events
+      - NEW_RELIC_ENABLED
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      - NEW_RELIC_LOG=stdout
+      - NEW_RELIC_LICENSE_KEY
       - DATABASE_URL
       - DB_SECRET
       - DB_URL
@@ -82,26 +92,24 @@ services:
       - HOOKS_HOST
       - MONGO_URL
       - NODE_ENV
-      - PORT=5010
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
 
   dota:
-    image: "ghcr.io/dotabod/dota:v2.0"
+    image: "ghcr.io/dotabod/dota:v2.1"
     platform: linux/amd64
     container_name: dota
     restart: on-failure
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.dota
+      dockerfile: $PWD/packages/Dockerfile.dota
       args:
         - NODE_ENV=${NODE_ENV:-development}
         - BUILD_CONTEXT=packages/dota
     hostname: dota
-    ports:
-      - "5120:5120"
-      - "9229:9229"
+    #ports:
+    #- "9229:9229" # just in case we want to enable node inspecting
     environment:
       - D2PT_TOKEN
       - ADMIN_CHANNELS
@@ -126,18 +134,17 @@ services:
       - TWITCH_CLIENT_SECRET
     volumes:
       # Storing locales in a volume so that they can be edited without rebuilding the image
-      - ./packages/dota/locales:/app/packages/dota/locales
+      - $PWD/packages/dota/locales:/app/packages/dota/locales
       - steam_auth:/app/packages/dota/src/steam/volumes
 
   nginx:
     container_name: nginx
     restart: on-failure
-    image: "ghcr.io/dotabod/nginx:v2.0"
     platform: linux/amd64
     volumes:
-      - ./services/nginx/default.conf:/etc/nginx/templates/default.conf.template
+      - $PWD/services/nginx/default.conf:/etc/nginx/templates/default.conf.template
     build:
-      context: ./services/nginx
+      context: $PWD/services/nginx
       dockerfile: Dockerfile
     ports:
       - "80:80"

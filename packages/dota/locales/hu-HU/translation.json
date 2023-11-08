@@ -49,6 +49,12 @@
   "commandDisabled": "A streamer kikapcsolta a {{cmdName}} parancsot {{emote}} Elérhető parancsok megtekinthetőek a !commands paranccsal.",
   "commands_everyone": "Mindenki számára elérhető parancsok: {{commandList}}",
   "commands_mods": "Moderátor parancsok: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Profi {{- heroName}} buildeket keresel? Itt találsz párat: {{- url}}",
   "dotabod": "Nyílt forráskódú bot vagyok, {{author}} tervezett. Több információért {{- url}}",
   "gameNotFound": "Meccs nem található",
@@ -74,6 +80,7 @@
   },
   "invalidColor": "Helytelen hero szín, slot vagy név. Próbáld 1-10ig, a hős nevét vagy a színt innen: {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Érvénytelen parancs. Próbáld így: !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} {{count}} killstreakjének vége. {{emote}}",
@@ -106,6 +113,7 @@
   "modsOnly_off": "Moderátor mód kikapcsolva. Mindenki cseveghet.",
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Ehhez a steam accounthoz már van hozzárendelve Dotabod felhasználó. Nézd meg a kezelőfelületet további inromációkért: {{- url}}",
+  "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
   "noHero": "Hős nem található",
   "noLastMatch": "Előző meccs nem található {{emote}}",
   "noNotable": "Ismert/híres játékos nem található",
@@ -181,6 +189,7 @@
   "uknownMmr": "Nem tudom {{channel}} MMR-jét. Moderátorok beállíthatják !setmmr 1234 vagy {{- url}} paranccsal.",
   "unknown": "Ismeretlen",
   "unknownSteam": "Steam felhasználó nem található. Próbálj egy bot mérkőzést játszani, hogy hozzáadjam az accountod a Dotabodhoz.",
+  "unmuted": "Will now auto chat on game events. Type !mute to undo",
   "unranked": "Nem rangsorolt",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Updated MMR to {{mmr}}",

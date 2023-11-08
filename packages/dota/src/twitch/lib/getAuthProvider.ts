@@ -13,24 +13,23 @@ export const getAuthProvider = function () {
   authProvider = new RefreshingAuthProvider({
     clientId: process.env.TWITCH_CLIENT_ID ?? '',
     clientSecret: process.env.TWITCH_CLIENT_SECRET ?? '',
-    onRefreshFailure(twitchId) {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    onRefreshFailure: async (twitchId) => {
       logger.error('[TWITCHSETUP] Failed to refresh twitch tokens', { twitchId })
 
-      void supabase
+      await supabase
         .from('accounts')
         .update({
           requires_refresh: true,
         })
         .eq('providerAccountId', twitchId)
         .eq('provider', 'twitch')
-        .then(() => {
-          //
-        })
     },
-    onRefresh: (twitchId, newTokenData) => {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    onRefresh: async (twitchId, newTokenData) => {
       logger.info('[TWITCHSETUP] Refreshing twitch tokens', { twitchId })
 
-      void supabase
+      await supabase
         .from('accounts')
         .update({
           scope: newTokenData.scope.join(' '),
@@ -45,9 +44,6 @@ export const getAuthProvider = function () {
         })
         .eq('providerAccountId', twitchId)
         .eq('provider', 'twitch')
-        .then(() => {
-          //
-        })
     },
   })
 

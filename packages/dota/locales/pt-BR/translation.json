@@ -50,6 +50,14 @@
   "commandDisabled": "O streamer desativou o comando {{cmdName}} {{emote}} Digite !commands para verificar os comandos habilitados",
   "commands_everyone": "Todos podem usar: {{commandList}}",
   "commands_mods": "Comandos exclusivos para mods: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer conectado ao Dotabod GSI",
+    "gsi_many": "",
+    "gsi_other": "{{count}} streamers conectados ao Dotabod GSI",
+    "overlay_one": "{{count}} streamer usando o overlay",
+    "overlay_many": "",
+    "overlay_other": "{{count}} streamers usando o overlay"
+  },
   "dota2pt": "Precisa de builds profissionais para {{- heroName}} ? Dê uma olhada aqui {{- url}}",
   "dotabod": "Eu sou um bot open source feito pelo {{author}}. Mais informações: {{- url}}",
   "gameNotFound": "Jogo não encontrado",
@@ -76,6 +84,7 @@
   },
   "invalidColor": "Espaço, nome ou cor de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
   "invalidColorNew": "Comando inválido. Tente `!{{command}} crystal maiden` ou `!{{command}} 9` ou `!{{command}} teal` de {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
@@ -111,6 +120,7 @@
   "modsOnly_off": "Modo somente mods desativado. Todos podem digitar agora.",
   "modsOnly_on": "Modo somente mods ativado {{emote}} . Só moderadores podem digitar.",
   "multiAccount": "Esta conta steam já está conectada a outro usuário do Dotabod. Confira o painel de controle para mais informações: {{- url}}",
+  "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
   "noHero": "Nenhum herói encontrado",
   "noLastMatch": "Última partida não foi encontrada {{emote}}",
   "noNotable": "Nenhum jogador notável",
@@ -190,6 +200,7 @@
   "uknownMmr": "Ainda não sei o MMR de {{channel}}. Mods precisam digitar !setmmr 1234 ou configurar em {{- url}}",
   "unknown": "Desconhecido",
   "unknownSteam": "Conta da steam não encontrada. Siga os passos 2 do setup , tente jogar uma partida contra bots para salvar sua conta em Dotabod!",
+  "unmuted": "Will now auto chat on game events. Type !mute to undo",
   "unranked": "Não ranqueada",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "MMR atualizado para {{mmr}}",

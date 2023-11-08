@@ -49,6 +49,14 @@
   "commandDisabled": "Streamer disabled {{cmdName}} command {{emote}} Check !commands for the enabled ones",
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
+  "connections": {
+    "gsi_zero": "No one using the Dotabod GSI right now",
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_zero": "No one connected to the overlay right now",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "gameNotFound": "Game was not found",
@@ -75,6 +83,7 @@
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Invalid command. Try !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
@@ -108,6 +117,7 @@
   "modsOnly_off": "Mods only mode is now off. Everyone can type.",
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
+  "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
   "noHero": "No hero found",
   "noLastMatch": "Did not find a last match {{emote}}",
   "noNotable": "No notable players",
@@ -185,6 +195,7 @@
   "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",
   "unknown": "Unknown",
   "unknownSteam": "Could not find steam account. Follow Step 2 of setup, play a bot match, and try again.",
+  "unmuted": "Will now auto chat on game events. Type !mute to undo",
   "unranked": "Unranked",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Updated MMR to {{mmr}}",

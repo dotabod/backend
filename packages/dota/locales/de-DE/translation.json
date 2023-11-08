@@ -49,6 +49,12 @@
   "commandDisabled": "Streamer disabled {{cmdName}} command BibleThump Check !commands for the enabled ones",
   "commands_everyone": "Jeder kann benutzen: {{commandList}}",
   "commands_mods": "Nur Mod Befehle: {{commandList}}",
+  "connections": {
+    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_other": "{{count}} streamers using the overlay"
+  },
   "dota2pt": "Benötigen Sie Profi-Build-Ideen für {{- heroName}}? Sieh hier {{- url}}",
   "dotabod": "Ich bin ein Open-Source-Bot erstellt von {{author}}. Weitere Infos: {{- url}}",
   "gameNotFound": "Spiel wurde nicht gefunden",
@@ -74,6 +80,7 @@
   },
   "invalidColor": "Ungültige Heldenfarbe, Slot oder Name. Versuchen Sie 1-10 einen Teil-Heldennamen oder eine Farbe von {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
+  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Ungültiger Befehl. Versuch !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} lost the {{count}} kill streak BibleThump",
@@ -106,6 +113,7 @@
   "modsOnly_off": "Nur Mod Modus ist jetzt aus. Jeder kann schreiben.",
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Dieser Stream Account ist bereits verbunden mit einem anderen Dotabod-Nutzer. Überprüfen Sie Ihr Dashboard für mehr Informationen: {{- url}}",
+  "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
   "noHero": "Kein Held gefunden",
   "noLastMatch": "Did not find a last match PauseChamp",
   "noNotable": "Keine nennenswerten Spieler",
@@ -181,6 +189,7 @@
   "uknownMmr": "Ich kenne die MMR von {{channel}}noch nicht. Mods müssen !setmmr 1234 oder in {{- url}} gesetzt werden",
   "unknown": "Unbekannt",
   "unknownSteam": "Konnte kein Steam-Account finden. Folge Schritt 2 des Setups, spiele ein Bot-Spiel und versuche es erneut.",
+  "unmuted": "Will now auto chat on game events. Type !mute to undo",
   "unranked": "Unranked",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "Updated MMR to {{mmr}}",

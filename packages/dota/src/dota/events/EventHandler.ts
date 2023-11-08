@@ -21,8 +21,10 @@ class EventHandler {
       // if we r offline don't process events
       if (!client.client.stream_online) return
 
-      // check if options.handler is a promise first
+      // dont send events if someone is sharing a computer for another steam account
+      if (client.client.multiAccount) return
 
+      // check if options.handler is a promise first
       options.handler(client, data)?.catch((err) => {
         console.error('Error handling event:', { token, eventName, err })
       })

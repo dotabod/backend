@@ -12,10 +12,11 @@ export const getAuthProvider = function () {
   authProvider = new RefreshingAuthProvider({
     clientId: process.env.TWITCH_CLIENT_ID ?? '',
     clientSecret: process.env.TWITCH_CLIENT_SECRET ?? '',
-    onRefresh: (twitchId, newTokenData) => {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    onRefresh: async (twitchId, newTokenData) => {
       console.log('[TWITCHSETUP] Refreshing twitch tokens', { twitchId })
 
-      void supabase
+      await supabase
         .from('accounts')
         .update({
           scope: newTokenData.scope.join(' '),
@@ -30,9 +31,6 @@ export const getAuthProvider = function () {
           obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp).toISOString(),
         })
         .eq('providerAccountId', twitchId)
-        .then(() => {
-          console.log('[TWITCHSETUP] Updated bot tokens', { twitchId })
-        })
     },
   })
 

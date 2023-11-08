@@ -1,10 +1,22 @@
-import { EventSubChannelPollChoice, EventSubChannelPollProgressEvent } from '@twurple/eventsub-base'
+import {
+  EventSubChannelPollBeginEvent,
+  EventSubChannelPollEndEvent,
+  EventSubChannelPollProgressEvent,
+} from '@twurple/eventsub-base'
 
-export const transformPollData = (data: EventSubChannelPollProgressEvent) => ({
-  choices: data.choices.map((choice: EventSubChannelPollChoice) => ({
-    totalVotes: choice.totalVotes,
-    title: choice.title,
-  })),
+export const transformPollData = (
+  data:
+    | EventSubChannelPollBeginEvent
+    | EventSubChannelPollProgressEvent
+    | EventSubChannelPollEndEvent,
+) => ({
+  choices: data.choices.map((choice) => {
+    const hasVotes = 'totalVotes' in choice
+    return {
+      totalVotes: hasVotes ? choice.totalVotes : 0,
+      title: choice.title,
+    }
+  }),
   title: data.title,
   endDate: data.endDate,
 })

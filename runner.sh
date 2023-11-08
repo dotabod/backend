@@ -115,13 +115,13 @@ restart() {
 
 pull() {
     docker_login
-    docker_command pull twitch-events dota twitch-chat steam
+    docker_command pull "$app"
 }
 
 push() {
     docker_login
-    buildall
-    docker_command push twitch-events dota twitch-chat steam
+    docker_command build "$app"
+    docker_command push "$app"
 }
 
 buildall() {
@@ -137,8 +137,6 @@ build() {
     git pull || true
     docker_command build "$app"
     echo -e "Successfully built!"
-    docker_command up -d "$app"
-    echo -e "Successfully ran!"
 }
 
 ssh() {

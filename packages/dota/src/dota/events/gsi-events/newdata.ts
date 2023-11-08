@@ -63,7 +63,6 @@ async function saveMatchData(client: SocketClient) {
   if (!steamServerId && !lobbyType) {
     if (steamServerLookupMap.has(matchId)) return
 
-    // Wrap the steamSocket.emit in a Promise
     const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
       steamSocket.emit('getUserSteamServer', client.steam32Id, (err: any, cards: any) => {
         if (err) {

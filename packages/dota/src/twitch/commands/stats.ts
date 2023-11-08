@@ -1,3 +1,4 @@
+import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
@@ -8,6 +9,7 @@ import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
 commandHandler.registerCommand('stats', {
   aliases: ['check', 'profile'],
   onlyOnline: true,
+  dbkey: DBSettings.commandProfile,
 
   handler: async (message, args, command) => {
     const {
@@ -15,11 +17,16 @@ commandHandler.registerCommand('stats', {
     } = message
 
     try {
-      const { player, hero } = await findAccountFromCmd(client.gsi, args, client.locale, command)
+      const { player, playerIdx, hero } = await findAccountFromCmd(
+        client.gsi,
+        args,
+        client.locale,
+        command,
+      )
 
       const desc = t('profileUrl', {
         lng: client.locale,
-        channel: getHeroNameOrColor(hero?.id ?? 0),
+        channel: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
         url: `dotabuff.com/players/${player?.accountid ?? ''}`,
       })
 
