@@ -1147,7 +1147,7 @@ __metadata:
     "@types/steam": ^0.0.29
     "@typescript-eslint/eslint-plugin": ^6.7.2
     "@typescript-eslint/parser": ^6.7.2
-    axios: 1.2.0-alpha.1
+    axios: 1.6.0
     axios-retry: ^3.3.1
     body-parser: ^1.20.2
     chokidar: ^3.5.3
@@ -1204,7 +1204,7 @@ __metadata:
     "@types/steam": ^0.0.29
     "@typescript-eslint/eslint-plugin": ^6.5.0
     "@typescript-eslint/parser": ^6.5.0
-    axios: 1.2.0-alpha.1
+    axios: 1.6.0
     axios-retry: ^3.3.1
     body-parser: ^1.20.2
     chokidar: ^3.5.3
@@ -3650,14 +3650,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.2.0-alpha.1":
-  version: 1.2.0-alpha.1
-  resolution: "axios@npm:1.2.0-alpha.1"
+"axios@npm:1.6.0":
+  version: 1.6.0
+  resolution: "axios@npm:1.6.0"
   dependencies:
     follow-redirects: ^1.15.0
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
-  checksum: 30d5352811e1f0fa402810d18e9d88aaee7e5794ea94b76d715ab7a190ec5f7fe692ec32456c0857915bbf896ced332a9825042e8745515f2b5dab17c5c971a5
+  checksum: c7c9f2ae9e0b9bad7d6f9a4dff030930b12ee667dedf54c3c776714f91681feb743c509ac0796ae5c01e12c4ab4a2bee74905068dd200fbc1ab86f9814578fb0
   languageName: node
   linkType: hard
 
