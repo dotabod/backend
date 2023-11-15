@@ -5,7 +5,7 @@ services:
     restart: on-failure
 
   twitch-chat:
-    image: "ghcr.io/dotabod/twitch-chat:v2.1"
+    image: "ghcr.io/dotabod/twitch-chat:v2.15"
     platform: linux/amd64
     container_name: twitch-chat
     restart: on-failure
@@ -100,7 +100,7 @@ services:
       - TWITCH_EVENTSUB_SECRET
 
   dota:
-    image: "ghcr.io/dotabod/dota:v2.1"
+    image: "ghcr.io/dotabod/dota:v2.15"
     platform: linux/amd64
     container_name: dota
     restart: on-failure

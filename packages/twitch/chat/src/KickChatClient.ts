@@ -35,7 +35,7 @@ export default class KickChatClient extends ChatPlatformClient {
 
     console.log('[KICK] Connected to chat client')
 
-    const channels = await getChannels()
+    const channels = await getChannels('kick')
     await Promise.all(channels.map((channel) => this.join(channel)))
   }
 
