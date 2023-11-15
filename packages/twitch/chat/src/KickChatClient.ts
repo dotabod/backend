@@ -1,10 +1,10 @@
-// path/filename: src/chat/KickChatClient.js
-
 import { Kient } from 'kient'
+import totp from 'totp-generator'
 
-import ChatPlatformClient from './ChatPlatformClient'
+import ChatPlatformClient from './ChatPlatformClient.js'
+import { getChannels } from './twitch/lib/getChannels.js'
 
-import { MessageCallback } from '.'
+import { MessageCallback } from './index.js'
 
 /**
  * Kick chat client implementation.
@@ -21,23 +21,32 @@ export default class KickChatClient extends ChatPlatformClient {
    * Connect to Kick chat.
    */
   async connect() {
+    if (!process.env.KICK_EMAIL || !process.env.KICK_PASSWORD || !process.env.KICK_2FA_SECRET) {
+      throw new Error('No Kick credentials found')
+    }
+
     this.client = await Kient.create()
+
     await this.client.api.authentication.login({
-      email: 'info@x.com', // Replace with actual credentials or configuration
-      password: 'x', // Replace with actual credentials or configuration
+      email: process.env.KICK_EMAIL,
+      otc: totp(process.env.KICK_2FA_SECRET),
+      password: process.env.KICK_PASSWORD,
     })
 
     console.log('[KICK] Connected to chat client')
+
+    const channels = await getChannels()
+    await Promise.all(channels.map((channel) => this.join(channel)))
   }
 
   /**
    * Send a message to a Kick channel.
    * This might need adjustment based on Kick API capabilities.
-   * @param {string} channel - The channel to send the message to.
+   * @param {string} channelId - The channel ID to send the message to.
    * @param {string} message - The message to send.
    */
-  async say(channel: string, message: string) {
-    // Implementation depends on Kick API's capabilities
+  async say(channelId: string, message: string) {
+    await this.client?.api.chat.sendMessage(channelId, message)
   }
 
   /**
@@ -48,9 +57,12 @@ export default class KickChatClient extends ChatPlatformClient {
   async join(channelSlug: string) {
     try {
       const channel = await this.client?.api.channel.getChannel(channelSlug)
-      if (channel) await this.client?.ws.chatroom.listen(channel.chatroom.id)
+      if (channel?.chatroom?.id) {
+        await this.client?.ws.chatroom.listen(channel.chatroom.id)
+        console.log('[KICK] Joined channel', channelSlug)
+      }
     } catch (e: any) {
-      console.log(e, 'couldnt join kick channel')
+      console.log('[KICK]', e, 'couldnt join kick channel', channelSlug)
     }
   }
 
@@ -60,8 +72,7 @@ export default class KickChatClient extends ChatPlatformClient {
    * @param {string} channel - The channel to leave.
    */
   async part(channel: string) {
-    // Implementation depends on Kick API's capabilities
-    // TODO
+    await this.client?.ws.chatroom.disconnect(channel)
   }
 
   /**
@@ -70,12 +81,15 @@ export default class KickChatClient extends ChatPlatformClient {
    */
   onMessage(callback: (msg: MessageCallback) => void) {
     this.client?.on('onMessage', (msg) => {
-      const isMod = false // TODO
-      const isSubscriber = false // TODO
-      const isBroadcaster = false // TODO
+      const isMod = msg.chatterIs('moderator')
+      const isSubscriber = msg.chatterIs('subscriber')
+      const isBroadcaster = msg.chatterIs('broadcaster')
+
+      console.log(msg)
 
       // Forward the message to the Dota node app
       callback({
+        provider: 'kick',
         channel: msg.chatroom_id.toString(), // TODO username of channel
         user: msg.sender.username,
         text: msg.content,

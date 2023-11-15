@@ -21,6 +21,7 @@ twitchChat.on(
     channel: string,
     user: string,
     text: string,
+    provider: 'kick' | 'twitch',
     { channelId, userInfo, messageId }: any,
   ) {
     if (!channelId) return

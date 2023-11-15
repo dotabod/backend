@@ -1,4 +1,4 @@
-import { MessageCallback } from './index'
+import { MessageCallback } from './index.js'
 /**
  * Abstract class to define a standard interface for chat platform clients.
  * This will ensure that all chat platform clients have a consistent interface.

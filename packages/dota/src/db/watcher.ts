@@ -42,6 +42,10 @@ class SetupSupabase {
   }
 
   init() {
+    // disable subscribing to events in dev for now
+    // some issue prevents us from subbing idk, i think my db is down
+    if (process.env.NODE_ENV !== 'production') return
+
     this.channel
       .on(
         'postgres_changes',

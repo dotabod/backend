@@ -34,6 +34,9 @@ services:
       - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
+      - KICK_EMAIL
+      - KICK_PASSWORD
+      - KICK_2FA_SECRET
     volumes:
       - $PWD/packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 

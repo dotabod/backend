@@ -2,10 +2,31 @@ import 'newrelic'
 
 import { Server } from 'socket.io'
 
+import KickChatClient from './KickChatClient.js'
 import TwitchChatClient from './TwitchChatClient.js'
 
+const defaultCallback = ({
+  channel,
+  user,
+  text,
+  channelId,
+  userInfo: { isMod, isBroadcaster, isSubscriber },
+  messageId,
+}: MessageCallback) => {
+  io.to('twitch-chat-messages').emit('msg', channel, user, text, {
+    channelId,
+    userInfo: { isMod, isBroadcaster, isSubscriber },
+    messageId,
+  })
+}
+
 const twitchClient = new TwitchChatClient()
+const kickClient = new KickChatClient()
 await twitchClient.connect()
+await kickClient.connect()
+
+twitchClient.onMessage(defaultCallback)
+kickClient.onMessage(defaultCallback)
 
 const io = new Server(5005)
 
@@ -46,6 +67,7 @@ export interface MessageCallback {
   channel: string
   user: string
   text: string
+  provider: 'kick' | 'twitch'
   channelId: string | null
   userInfo: {
     isMod: boolean
@@ -53,21 +75,6 @@ export interface MessageCallback {
     isSubscriber: boolean
   }
   messageId: string
-}
-
-const defaultCallback = ({
-  channel,
-  user,
-  text,
-  channelId,
-  userInfo: { isMod, isBroadcaster, isSubscriber },
-  messageId,
-}: MessageCallback) => {
-  io.to('twitch-chat-messages').emit('msg', channel, user, text, {
-    channelId,
-    userInfo: { isMod, isBroadcaster, isSubscriber },
-    messageId,
-  })
 }
 
 export default io

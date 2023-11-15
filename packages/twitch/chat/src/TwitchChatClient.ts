@@ -2,10 +2,10 @@
 
 import { ChatClient } from '@twurple/chat'
 
-import ChatPlatformClient from './ChatPlatformClient'
+import ChatPlatformClient from './ChatPlatformClient.js'
 import { disableChannel } from './db/disableChannel.js'
-import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider'
-import { getChannels } from './twitch/lib/getChannels'
+import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider.js'
+import { getChannels } from './twitch/lib/getChannels.js'
 
 import { MessageCallback } from './index'
 
