@@ -59,7 +59,6 @@ export default class KickChatClient extends ChatPlatformClient {
       const channel = await this.client?.api.channel.getChannel(channelSlug)
       if (channel?.chatroom?.id) {
         await this.client?.ws.chatroom.listen(channel.chatroom.id)
-        console.log('[KICK] Joined channel', channelSlug)
       }
     } catch (e: any) {
       console.log('[KICK]', e, 'couldnt join kick channel', channelSlug)
@@ -87,13 +86,12 @@ export default class KickChatClient extends ChatPlatformClient {
 
       console.log(msg)
 
-      // Forward the message to the Dota node app
       callback({
         provider: 'kick',
-        channel: msg.chatroom_id.toString(), // TODO username of channel
+        channel: `kick:${msg.chatroom_id.toString()}`,
         user: msg.sender.username,
         text: msg.content,
-        channelId: msg.chatroom_id.toString(),
+        channelId: `kick:${msg.chatroom_id.toString()}`,
         userInfo: { isMod, isBroadcaster, isSubscriber },
         messageId: msg.id,
       })

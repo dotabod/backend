@@ -40,12 +40,22 @@ export default async function getDBUser({
 
   let userId = token || null
   if (providerAccountId) {
-    const { data } = await supabase
-      .from('accounts')
-      .select('userId')
-      .eq('providerAccountId', providerAccountId)
-      .single()
-    userId = data?.userId ?? null
+    if (providerAccountId.includes('kick:')) {
+      providerAccountId = providerAccountId.split(':')[1] || providerAccountId
+      const { data } = await supabase
+        .from('users')
+        .select('id')
+        .eq('kick', providerAccountId)
+        .single()
+      userId = data?.id ?? null
+    } else {
+      const { data } = await supabase
+        .from('accounts')
+        .select('userId')
+        .eq('providerAccountId', providerAccountId)
+        .single()
+      userId = data?.userId ?? null
+    }
   }
 
   if (!userId) {

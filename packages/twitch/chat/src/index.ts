@@ -24,6 +24,7 @@ const twitchClient = new TwitchChatClient()
 const kickClient = new KickChatClient()
 await twitchClient.connect()
 await kickClient.connect()
+await kickClient.join('proximuspl')
 
 twitchClient.onMessage(defaultCallback)
 kickClient.onMessage(defaultCallback)
@@ -47,11 +48,25 @@ io.on('connection', (socket) => {
 
   socket.on('say', async function (channel: string, text: string) {
     if (process.env.NODE_ENV === 'development') console.log(channel, text)
-    await twitchClient.say(channel, text || "I'm sorry, I can't do that")
+    try {
+      if (channel.includes('kick:')) {
+        channel = channel.split(':')[1] || channel
+
+        return await kickClient.say(channel, text || "I'm sorry, I can't do that")
+      }
+      await twitchClient.say(channel, text || "I'm sorry, I can't do that")
+    } catch (e) {
+      console.log('[CHAT] Failed to send message', { channel, text, error: e })
+    }
   })
 
   socket.on('join', async function (channel: string) {
     try {
+      if (channel.includes('kick:')) {
+        channel = channel.split(':')[1] || channel
+
+        return await kickClient.join(channel)
+      }
       await twitchClient.join(channel)
     } catch (e) {
       console.log('[ENABLE GSI] Failed to enable client', { channel, error: e })
@@ -59,6 +74,11 @@ io.on('connection', (socket) => {
   })
 
   socket.on('part', function (channel: string) {
+    if (channel.includes('kick:')) {
+      channel = channel.split(':')[1] || channel
+
+      return kickClient.part(channel)
+    }
     twitchClient.part(channel)
   })
 })

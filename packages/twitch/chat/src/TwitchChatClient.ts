@@ -35,6 +35,7 @@ export default class TwitchChatClient extends ChatPlatformClient {
     })
 
     await this.client.connect()
+    this.setupEventHandlers()
     console.log('[TWITCH] Connected to chat client')
   }
 
@@ -94,6 +95,7 @@ export default class TwitchChatClient extends ChatPlatformClient {
 
       // Forward the message to the Dota node app
       callback({
+        provider: 'twitch',
         channel,
         user,
         text,
