@@ -50,9 +50,12 @@ gentypes() {
     )
 
     echo "Generating types for project $PROJECT_ID on $NODE_ENV"
+    # Save the npx command output to a variable
+    NPX_OUTPUT=$(npx supabase gen types typescript --project-id "$PROJECT_ID" --schema public)
+
     for OUTPUT_DIR in "${OUTPUT_DIRS[@]}"; do
         OUTPUT_FILE="$OUTPUT_DIR/supabase-types.ts"
-        npx supabase gen types typescript --project-id "$PROJECT_ID" --schema public >"$OUTPUT_FILE"
+        echo "$NPX_OUTPUT" >"$OUTPUT_FILE"
         echo 'export type Tables<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Row"];' | cat - "$OUTPUT_FILE" >temp && mv temp "$OUTPUT_FILE"
         npx prettier --write "$OUTPUT_FILE"
     done

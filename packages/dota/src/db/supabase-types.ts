@@ -67,6 +67,7 @@ export interface Database {
           {
             foreignKeyName: 'accounts_userId_fkey'
             columns: ['userId']
+            isOneToOne: true
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -134,6 +135,7 @@ export interface Database {
           {
             foreignKeyName: 'bets_userId_fkey'
             columns: ['userId']
+            isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -168,12 +170,43 @@ export interface Database {
           {
             foreignKeyName: 'mods_mod_user_id_fkey'
             columns: ['mod_user_id']
+            isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
           {
             foreignKeyName: 'mods_streamer_user_id_fkey'
             columns: ['streamer_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          expires: string
+          id: string
+          sessionToken: string
+          userId: string
+        }
+        Insert: {
+          expires: string
+          id: string
+          sessionToken: string
+          userId: string
+        }
+        Update: {
+          expires?: string
+          id?: string
+          sessionToken?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'sessions_userId_fkey'
+            columns: ['userId']
+            isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -208,6 +241,7 @@ export interface Database {
           {
             foreignKeyName: 'settings_userId_fkey'
             columns: ['userId']
+            isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -251,6 +285,7 @@ export interface Database {
           {
             foreignKeyName: 'steam_accounts_userId_fkey'
             columns: ['userId']
+            isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -300,6 +335,7 @@ export interface Database {
           {
             foreignKeyName: 'streams_userId_fkey'
             columns: ['userId']
+            isOneToOne: true
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -315,14 +351,16 @@ export interface Database {
           followers: number | null
           id: string
           image: string | null
+          kick: number | null
           locale: string
           mmr: number
-          name: string
+          name: string | null
           steam32Id: number | null
           stream_delay: number | null
           stream_online: boolean
           stream_start_date: string | null
           updated_at: string
+          youtube: string | null
         }
         Insert: {
           beta_tester?: boolean
@@ -333,14 +371,16 @@ export interface Database {
           followers?: number | null
           id?: string
           image?: string | null
+          kick?: number | null
           locale?: string
           mmr?: number
-          name?: string
+          name?: string | null
           steam32Id?: number | null
           stream_delay?: number | null
           stream_online?: boolean
           stream_start_date?: string | null
           updated_at?: string
+          youtube?: string | null
         }
         Update: {
           beta_tester?: boolean
@@ -351,14 +391,34 @@ export interface Database {
           followers?: number | null
           id?: string
           image?: string | null
+          kick?: number | null
           locale?: string
           mmr?: number
-          name?: string
+          name?: string | null
           steam32Id?: number | null
           stream_delay?: number | null
           stream_online?: boolean
           stream_start_date?: string | null
           updated_at?: string
+          youtube?: string | null
+        }
+        Relationships: []
+      }
+      verificationtokens: {
+        Row: {
+          expires: string
+          identifier: string
+          token: string
+        }
+        Insert: {
+          expires: string
+          identifier: string
+          token: string
+        }
+        Update: {
+          expires?: string
+          identifier?: string
+          token?: string
         }
         Relationships: []
       }
