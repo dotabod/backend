@@ -37,6 +37,11 @@ services:
       - KICK_EMAIL
       - KICK_PASSWORD
       - KICK_2FA_SECRET
+      - YOUTUBE_CLIENT_ID
+      - YOUTUBE_CLIENT_SECRET
+      - YOUTUBE_REDIRECT_URI
+      - YOUTUBE_ACCESS_TOKEN
+      - YOUTUBE_REFRESH_TOKEN
     volumes:
       - $PWD/packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 

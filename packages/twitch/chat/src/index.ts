@@ -4,6 +4,7 @@ import { Server } from 'socket.io'
 
 import KickChatClient from './KickChatClient.js'
 import TwitchChatClient from './TwitchChatClient.js'
+import YoutubeChatClient from './YoutubeChatClient.js'
 
 const io = new Server(5005)
 
@@ -22,7 +23,7 @@ export interface MessageCallback {
 }
 
 // Default message callback
-const emitChatMessage = (message: MessageCallback) => {
+export const emitChatMessage = (message: MessageCallback) => {
   const { channel, user, text, channelId, userInfo, messageId } = message
   io.to('twitch-chat-messages').emit('msg', channel, user, text, { channelId, userInfo, messageId })
 }
@@ -48,6 +49,11 @@ twitchClient.onMessage(emitChatMessage)
 // const kickClient = new KickChatClient()
 // await kickClient.connect()
 // kickClient.onMessage(emitChatMessage)
+
+// Youtube Client Setup
+const youtubeClient = new YoutubeChatClient()
+youtubeClient.connect()
+await youtubeClient.onMessage(emitChatMessage)
 
 io.on('connection', (socket) => {
   console.log('[CHAT] Found a connection!')

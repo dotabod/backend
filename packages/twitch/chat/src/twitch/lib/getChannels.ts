@@ -1,6 +1,6 @@
 import supabase from '../../db/supabase.js'
 
-export async function getChannels(provider: 'twitch' | 'kick' = 'twitch'): Promise<string[]> {
+export async function getChannels(provider?: 'twitch' | 'kick' | 'youtube'): Promise<string[]> {
   console.log('[TWITCHSETUP] Running getChannels in chat listener')
 
   const isDevMode = process.env.NODE_ENV === 'development'
@@ -21,8 +21,8 @@ export async function getChannels(provider: 'twitch' | 'kick' = 'twitch'): Promi
       ? baseQuery.in('name', devChannels)
       : baseQuery.not('name', 'in', `(${process.env.DEV_CHANNELS})`)
 
-    if (provider === 'kick') {
-      query = query.not('kick', 'is', null)
+    if (provider) {
+      query = query.not(provider, 'is', null)
     }
 
     const { data } = await query.range(offset, offset + pageSize - 1)
@@ -38,7 +38,7 @@ export async function getChannels(provider: 'twitch' | 'kick' = 'twitch'): Promi
   // Filter out undefined values, if any.
   const filteredUsers = users.filter(Boolean)
 
-  console.log('joining', filteredUsers.length, 'channels')
+  console.log('joining', filteredUsers.length, 'channels for', provider || 'twitch')
 
   return filteredUsers
 }
