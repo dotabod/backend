@@ -20,18 +20,26 @@ export default class KickChatClient extends ChatPlatformClient {
       throw new Error('No Kick credentials found')
     }
 
-    this.client = await Kient.create()
+    try {
+      this.client = await Kient.create()
 
-    await this.client.api.authentication.login({
-      email: process.env.KICK_EMAIL,
-      otc: totp(process.env.KICK_2FA_SECRET),
-      password: process.env.KICK_PASSWORD,
-    })
+      await this.client.api.authentication.login({
+        email: process.env.KICK_EMAIL,
+        otc: totp(process.env.KICK_2FA_SECRET),
+        password: process.env.KICK_PASSWORD,
+      })
 
-    console.log('[KICK] Connected to chat client')
+      console.log('[KICK] Connected to chat client')
+    } catch (e) {
+      console.log('[KICK] Could not connect to chat client', e)
+    }
 
-    const channels = await getChannels('kick')
-    await Promise.all(channels.map((channel) => this.join(channel)))
+    try {
+      const channels = await getChannels('kick')
+      await Promise.all(channels.map((channel) => this.join(channel)))
+    } catch (e) {
+      console.log('[KICK] Could not join channels', e)
+    }
   }
 
   /**
