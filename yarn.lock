@@ -90,8 +90,8 @@ __metadata:
   linkType: hard
 
 "@aws-sdk/client-lambda@npm:^3.405.0":
-  version: 3.452.0
-  resolution: "@aws-sdk/client-lambda@npm:3.452.0"
+  version: 3.453.0
+  resolution: "@aws-sdk/client-lambda@npm:3.453.0"
   dependencies:
     "@aws-crypto/sha256-browser": "npm:3.0.0"
     "@aws-crypto/sha256-js": "npm:3.0.0"
@@ -137,7 +137,7 @@ __metadata:
     "@smithy/util-utf8": "npm:^2.0.2"
     "@smithy/util-waiter": "npm:^2.0.13"
     tslib: "npm:^2.5.0"
-  checksum: 8bd315fcb9009cfc1b9944aad1951ceb59d201d8a21826efdf89cfa14d9ec424cc239875c4529ffe42b752a049c69606d2fe75ff6b14009e2d5189b2c07322e2
+  checksum: 51f765972e020fe583136450ad9d2e19281162fb768c98a96eaa71fb4aa8cb7135bbcaf5a33075c8621cd4022fa8459619667003ac0a358a41c6fe0b79326474
   languageName: node
   linkType: hard
 
@@ -1339,12 +1339,12 @@ __metadata:
   linkType: hard
 
 "@grpc/grpc-js@npm:^1.9.4":
-  version: 1.9.10
-  resolution: "@grpc/grpc-js@npm:1.9.10"
+  version: 1.9.11
+  resolution: "@grpc/grpc-js@npm:1.9.11"
   dependencies:
     "@grpc/proto-loader": "npm:^0.7.8"
     "@types/node": "npm:>=12.12.47"
-  checksum: 001c59e9bdc8a499d73a1f8584f5fef3c5dff62f8f9dc7c853bceae9300162bb3fef13ee727f9ba0c50a36768ad6fc747fcfa3413e3f0b2d09fa2b00a31cdba4
+  checksum: fae920deed1983636031c58fdaf9beda5d27db3d131df1c25bf38b0b5fbd0dfb84b8f2d0b6f937d96f7649b44ef67969cba1ef3e465ed80fcb9d654c8b8080c4
   languageName: node
   linkType: hard
 
@@ -2554,11 +2554,11 @@ __metadata:
   linkType: hard
 
 "@supabase/node-fetch@npm:^2.6.14":
-  version: 2.6.14
-  resolution: "@supabase/node-fetch@npm:2.6.14"
+  version: 2.6.15
+  resolution: "@supabase/node-fetch@npm:2.6.15"
   dependencies:
     whatwg-url: "npm:^5.0.0"
-  checksum: 645db87873ba9bb661cf41c46b05b52a8a769ca66abf1ac7b9f3b900e6dd5e7a97dfa421897db0ace21dd3acb409ba35f22225818bf5860e4af92a38e102be86
+  checksum: 98d25cab2eba53c93c59e730d52d50065b1a7fe216c65224471e83e2064ebd45ae51ad09cb39ec263c3cb59e3d41870fc2e789ea2e9587480d7ba212b85daf38
   languageName: node
   linkType: hard
 
@@ -3038,11 +3038,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*, @types/node@npm:>=10.0.0, @types/node@npm:>=12.12.47, @types/node@npm:>=13.7.0, @types/node@npm:^20.5.7, @types/node@npm:^20.6.2":
-  version: 20.9.0
-  resolution: "@types/node@npm:20.9.0"
+  version: 20.9.1
+  resolution: "@types/node@npm:20.9.1"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 755d07de735eafda4e20af75ad9d03bdbfddef327d790e9a896142eac7493db5d8501591376e1c8227aa12eeb88e522bc727c6024504842ed40e539e8a466db9
+  checksum: 0cb52c0840fe9a2e8f988564da6823bb3141e34fef8cb7264762c851c0dac5d9ef4859db422dfa41cd1a864ad126a9bd3b588d0285bc9af6de814de3280da9b3
   languageName: node
   linkType: hard
 
@@ -3183,13 +3183,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/whatwg-url@npm:^8.2.1":
-  version: 8.2.2
-  resolution: "@types/whatwg-url@npm:8.2.2"
+"@types/whatwg-url@npm:^11.0.2":
+  version: 11.0.3
+  resolution: "@types/whatwg-url@npm:11.0.3"
   dependencies:
-    "@types/node": "npm:*"
     "@types/webidl-conversions": "npm:*"
-  checksum: 7e5b6837daff8c6d189b13d19cc6d69e3bf954751f4f8a92d9a762c7f32ba75464d8e686a69c7d70e5092499c8ac14933c0ed416cf563689b04c4e10bff95e40
+  checksum: 99dd4e2f0f6270c91cadb206c9241964391b7cbd47a669af73a161334ce251227be9bdac04fcfb57a51fc3d6cdb139767da5b3e1cd6e345c063616bd1b63d241
   languageName: node
   linkType: hard
 
@@ -3739,12 +3738,12 @@ __metadata:
   linkType: hard
 
 "axios-retry@npm:^3.3.1":
-  version: 3.9.0
-  resolution: "axios-retry@npm:3.9.0"
+  version: 3.9.1
+  resolution: "axios-retry@npm:3.9.1"
   dependencies:
     "@babel/runtime": "npm:^7.15.4"
     is-retry-allowed: "npm:^2.2.0"
-  checksum: fab38b186521ccbfc39a5d1c770f28a7a1da5751527a49e19dcc60e4181c123c615a1287d9b80823ee6b5854bdb4bdfacd0813daad39f5ad244e347c68d53030
+  checksum: 2360e59b241509b821cb6fee43bcbe0c41be4af3c50a58fa94c7b76d4705d334fa1e30160ee3be3db638e518c84c70e8ca20fb1a62987db2a415fff51c6bf5a9
   languageName: node
   linkType: hard
 
@@ -4965,9 +4964,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.535":
-  version: 1.4.584
-  resolution: "electron-to-chromium@npm:1.4.584"
-  checksum: 3c24f3d4adaa8edbe8de921365197bb13cae62aa5b9b4d4729848676f82012e0eff34ee253aa005ec6cc13fe73c16370893dfa8f70caac4cd2f4fb8301a33edb
+  version: 1.4.586
+  resolution: "electron-to-chromium@npm:1.4.586"
+  checksum: fd491b54701753c5c957f474a479b0eef95d3565509aab631d6a5508736f1ffdaaa148882ebb9c08da8766945f52eb594cab2b43ec94326ef59e4ad6345a1b92
   languageName: node
   linkType: hard
 
@@ -6469,9 +6468,9 @@ __metadata:
   linkType: hard
 
 "ignore@npm:^5.2.0, ignore@npm:^5.2.4":
-  version: 5.2.4
-  resolution: "ignore@npm:5.2.4"
-  checksum: 7c7cd90edd9fea6e037f9b9da4b01bf0a86b198ce78345f9bbd983929d68ff14830be31111edc5d70c264921f4962404d75b7262b4d9cc3bc12381eccbd03096
+  version: 5.3.0
+  resolution: "ignore@npm:5.3.0"
+  checksum: dc06bea5c23aae65d0725a957a0638b57e235ae4568dda51ca142053ed2c352de7e3bc93a69b2b32ac31966a1952e9a93c5ef2e2ab7c6b06aef9808f6b55b571
   languageName: node
   linkType: hard
 
@@ -8240,23 +8239,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mongodb-connection-string-url@npm:^2.6.0":
-  version: 2.6.0
-  resolution: "mongodb-connection-string-url@npm:2.6.0"
+"mongodb-connection-string-url@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "mongodb-connection-string-url@npm:3.0.0"
   dependencies:
-    "@types/whatwg-url": "npm:^8.2.1"
-    whatwg-url: "npm:^11.0.0"
-  checksum: 1e26b045063f4b3eb58fe445bfaf4e1ac3b9b9ceebc30c6deef5e769323cadb00e62cbe1d26a15fda457643d40a9ef9a24a94a1e993addb9261d87cad1fbf0ae
+    "@types/whatwg-url": "npm:^11.0.2"
+    whatwg-url: "npm:^13.0.0"
+  checksum: f2b779f51869da20b2ba2af5157a1d04376be938241fee741c0a0572ecbbd4c97f169fb2b33d19eec5c9537e0d9a6c48e6d4cc8cc3b6b330ab57159760f6a4cf
   languageName: node
   linkType: hard
 
 "mongodb@npm:^6.1.0":
-  version: 6.2.0
-  resolution: "mongodb@npm:6.2.0"
+  version: 6.3.0
+  resolution: "mongodb@npm:6.3.0"
   dependencies:
     "@mongodb-js/saslprep": "npm:^1.1.0"
     bson: "npm:^6.2.0"
-    mongodb-connection-string-url: "npm:^2.6.0"
+    mongodb-connection-string-url: "npm:^3.0.0"
   peerDependencies:
     "@aws-sdk/credential-providers": ^3.188.0
     "@mongodb-js/zstd": ^1.1.0
@@ -8280,7 +8279,7 @@ __metadata:
       optional: true
     socks:
       optional: true
-  checksum: aa806b7a01989310d1a713f0f3b409af98a9e8d374391d6d4319053a9e5cf982411e7b8514394eb33919d5f0305daee010720e0fc7259686edac038530e86662
+  checksum: e846c941b739c503b34c02500db56f966fdb8930420db24214d4305ac987415464ebc9eefaf5da1ffb7521844fc733177433b4cc7ba43c423f55eed4f2670cfe
   languageName: node
   linkType: hard
 
@@ -9085,7 +9084,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"punycode@npm:^2.1.0, punycode@npm:^2.1.1":
+"punycode@npm:^2.1.0, punycode@npm:^2.1.1, punycode@npm:^2.3.0":
   version: 2.3.1
   resolution: "punycode@npm:2.3.1"
   checksum: 14f76a8206bc3464f794fb2e3d3cc665ae416c01893ad7a02b23766eb07159144ee612ad67af5e84fa4479ccfe67678c4feb126b0485651b302babf66f04f9e9
@@ -9843,18 +9842,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"steam-resources@github:seishun/node-steam-resources#v1.2.0":
-  version: 1.2.0
-  resolution: "steam-resources@https://github.com/seishun/node-steam-resources.git#commit=0c5c52a524db3440fb7b753c70a8c16977f85252"
-  dependencies:
-    bytebuffer: "npm:^5.0"
-    csv-parse: "npm:^4.0.1"
-    protobufjs: "npm:^4.1"
-  checksum: be59dbc44241bed6a9a833b504a55863e6aae905edbbff56f7a288c0373b6e39204a50fbe2ab7800111a7bcc99a36bdd7d4777c0b18df45ff6f7718a911d4c9c
-  languageName: node
-  linkType: hard
-
-"steam@https://github.com/odota/node-steam":
+"steam@https://github.com/odota/node-steam, steam@npm:^1.4.1":
   version: 1.4.1
   resolution: "steam@https://github.com/odota/node-steam.git#commit=2ec120baea7b53857b243e5a7e3f16d1839467e4"
   dependencies:
@@ -9864,19 +9852,6 @@ __metadata:
     steam-crypto: "npm:^0.0"
     steam-resources: "github:odota/node-steam-resources"
   checksum: 5e38e712964678c3194367867a8018c4f8b132f3e4a6c288c5e73cb3df5c115bc623d230b9b0d40c3e36d27af42fa59134d20988ebdfcdb1731fd1b806dc1c13
-  languageName: node
-  linkType: hard
-
-"steam@npm:^1.4.1":
-  version: 1.4.1
-  resolution: "steam@npm:1.4.1"
-  dependencies:
-    adm-zip: "npm:^0.4"
-    buffer-crc32: "npm:^0.2"
-    bytebuffer: "npm:^5.0"
-    steam-crypto: "npm:^0.0"
-    steam-resources: "github:seishun/node-steam-resources#v1.2.0"
-  checksum: 50c850899dc780e001270849ec8a7886ff6a23cd47b2928ddb69e18bb5d1636cbdaa340357c3ca7e801455c1cf52b5b5433c8b68cd231368c15f81fe66fcfcf2
   languageName: node
   linkType: hard
 
@@ -10306,12 +10281,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tr46@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "tr46@npm:3.0.0"
+"tr46@npm:^4.1.1":
+  version: 4.1.1
+  resolution: "tr46@npm:4.1.1"
   dependencies:
-    punycode: "npm:^2.1.1"
-  checksum: cdc47cad3a9d0b6cb293e39ccb1066695ae6fdd39b9e4f351b010835a1f8b4f3a6dc3a55e896b421371187f22b48d7dac1b693de4f6551bdef7b6ab6735dfe3b
+    punycode: "npm:^2.3.0"
+  checksum: 92085dcf186f56a49ba4124a581d9ae6a5d0cd4878107c34e2e670b9ddc49da85e4950084bb3e75015195cc23f37ae1c02d45064e94dd6018f5e789aa51d93a8
   languageName: node
   linkType: hard
 
@@ -10849,13 +10824,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"whatwg-url@npm:^11.0.0":
-  version: 11.0.0
-  resolution: "whatwg-url@npm:11.0.0"
+"whatwg-url@npm:^13.0.0":
+  version: 13.0.0
+  resolution: "whatwg-url@npm:13.0.0"
   dependencies:
-    tr46: "npm:^3.0.0"
+    tr46: "npm:^4.1.1"
     webidl-conversions: "npm:^7.0.0"
-  checksum: f7ec264976d7c725e0696fcaf9ebe056e14422eacbf92fdbb4462034609cba7d0c85ffa1aab05e9309d42969bcf04632ba5ed3f3882c516d7b093053315bf4c1
+  checksum: 06b0c1808bb80eaab6582087bd8be594a1947843cbb0ce1a90635841a549a5849dff5be2b28f5b1b596ef70ea4c3df5c599d35b160899d12343334149851e688
   languageName: node
   linkType: hard
 
