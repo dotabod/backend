@@ -118,6 +118,11 @@ pull() {
     docker_command pull "$app"
 }
 
+bu() {
+    build "$app"
+    up "$app"
+}
+
 push() {
     docker_login
     docker_command build "$app"
@@ -177,6 +182,7 @@ pull) pull ;;
 push) push ;;
 buildall) buildall ;;
 logs) logs ;;
+bu) bu ;;
 build) build ;;
 ssh) ssh ;;
 login) login ;;
