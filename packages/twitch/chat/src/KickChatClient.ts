@@ -10,12 +10,7 @@ import { MessageCallback } from './index.js'
  * Kick chat client implementation.
  */
 export default class KickChatClient extends ChatPlatformClient {
-  client: Kient | null
-
-  constructor() {
-    super()
-    this.client = null
-  }
+  client: Kient | null = null
 
   /**
    * Connect to Kick chat.
@@ -96,5 +91,13 @@ export default class KickChatClient extends ChatPlatformClient {
         messageId: msg.id,
       })
     })
+  }
+
+  isKickChannel(channel: string) {
+    return channel.includes('kick:')
+  }
+
+  cleanKickChannel(channel: string) {
+    return channel.split(':')[1] || channel
   }
 }
