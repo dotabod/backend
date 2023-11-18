@@ -11,7 +11,7 @@ commandHandler.registerCommand('apm', {
   dbkey: DBSettings.commandAPM,
   handler: async (message, args, command) => {
     const {
-      channel: { name: channel, client },
+      channel: { client },
     } = message
 
     try {
@@ -31,7 +31,7 @@ commandHandler.registerCommand('apm', {
         : getHeroNameOrColor(client?.gsi?.hero?.id ?? 0)
 
       chatClient.say(
-        channel,
+        message.channel.name,
         t('apm', {
           heroName,
           emote: 'Chatting',

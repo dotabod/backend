@@ -38,12 +38,14 @@ export function say(
   if (chattersKey && !chatterSpecific[chattersKey].enabled) return
 
   const msg = beta ? `${message} ${t('betaFeature', { lng: client.locale })}` : message
+
+  // TODO: Determine all the providers to send to
   if (!delay) {
     chatClient.say(client.name, msg)
     return
   }
 
   setTimeout(() => {
-    client.name && chatClient.say(client.name, msg)
+    client.token && chatClient.say(client.name, msg)
   }, getStreamDelay(client.settings))
 }

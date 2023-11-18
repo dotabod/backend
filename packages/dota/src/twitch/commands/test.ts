@@ -15,14 +15,14 @@ commandHandler.registerCommand('test', {
 
   handler: async (message, args) => {
     const {
-      channel: { name: channel, client },
+      channel: { client },
     } = message
 
     if (args[0] === 'reset') {
       const handler = gsiHandlers.get(client.token)
       await handler?.resetClientState()
 
-      chatClient.say(channel, 'Reset')
+      chatClient.say(message.channel.name, 'Reset')
       return
     }
 
@@ -33,7 +33,10 @@ commandHandler.registerCommand('test', {
       steamSocket.emit('getUserSteamServer', steam32Id, async (err: any, steamServerId: string) => {
         console.log({ steamServerId })
         if (!steamServerId) {
-          chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
+          chatClient.say(
+            message.channel.name,
+            t('gameNotFound', { lng: message.channel.client.locale }),
+          )
           return
         }
 
@@ -94,7 +97,7 @@ commandHandler.registerCommand('test', {
         console.log(response, err) // one response per client
       })
 
-      chatClient.say(channel, `cards! ${client.gsi?.map?.matchid}`)
+      chatClient.say(message.channel.name, `cards! ${client.gsi?.map?.matchid}`)
       return
     }
 
@@ -105,7 +108,7 @@ commandHandler.registerCommand('test', {
         console.log({ response, err }) // one response per client
       })
 
-      chatClient.say(channel, `card!`)
+      chatClient.say(message.channel.name, `card!`)
       return
     }
 
@@ -117,7 +120,10 @@ commandHandler.registerCommand('test', {
       (err: any, steamServerId: string) => {
         console.log({ steamServerId })
         if (!steamServerId) {
-          chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
+          chatClient.say(
+            message.channel.name,
+            t('gameNotFound', { lng: message.channel.client.locale }),
+          )
           return
         }
 

@@ -29,7 +29,7 @@ commandHandler.registerCommand('commands', {
     const others = filtered.filter((v) => v.permission > 0).map((v) => `!${v.command}`)
 
     chatClient.say(
-      channel,
+      message.channel.name,
       t('commands', {
         context: 'everyone',
         commandList: everyone.join(' · '),
@@ -39,7 +39,7 @@ commandHandler.registerCommand('commands', {
 
     if (others.length === 0) return
     chatClient.say(
-      channel,
+      message.channel.name,
       t('commands', {
         context: 'mods',
         commandList: others.join(' · '),

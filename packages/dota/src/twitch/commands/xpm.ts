@@ -25,7 +25,7 @@ commandHandler.registerCommand('xpm', {
         ? getHeroNameOrColor(hero?.id ?? 0, playerIdx)
         : getHeroNameOrColor(client?.gsi?.hero?.id ?? 0)
       const xpm = player?.xpm ?? client.gsi?.player?.xpm ?? 0
-      chatClient.say(channel, t('xpm', { heroName, lng: client.locale, num: xpm }))
+      chatClient.say(message.channel.name, t('xpm', { heroName, lng: client.locale, num: xpm }))
     } catch (e: any) {
       chatClient.say(message.channel.name, e?.message ?? t('gameNotFound', { lng: client.locale }))
     }

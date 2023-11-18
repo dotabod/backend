@@ -79,6 +79,7 @@ export default async function getDBUser({
     beta_tester,
     locale,
     Account:accounts (
+      provider,
       refresh_token,
       scope,
       expires_at,

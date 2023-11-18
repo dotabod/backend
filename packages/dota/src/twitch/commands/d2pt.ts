@@ -20,7 +20,7 @@ commandHandler.registerCommand('d2pt', {
       const heroName = getHeroNameOrColor(hero?.id ?? 0, playerIdx)
 
       chatClient.say(
-        channel,
+        message.channel.name,
         t('dota2pt', {
           heroName,
           url: `dota2protracker.com/hero/${encodeURI(heroName).replace(/'/g, '%27')}`,

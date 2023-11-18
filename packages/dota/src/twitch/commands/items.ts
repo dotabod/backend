@@ -153,7 +153,7 @@ commandHandler.registerCommand('items', {
     const currentMatchId = client.gsi?.map?.matchid
     if (!currentMatchId) {
       chatClient.say(
-        channel,
+        message.channel.name,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
       )
       return
@@ -167,10 +167,10 @@ commandHandler.registerCommand('items', {
         locale: client.locale,
         command,
       })
-      chatClient.say(client.name, t('heroItems.list', res))
+      chatClient.say(message.channel.name, t('heroItems.list', res))
     } catch (e: any) {
       const msg = !e?.message ? t('gameNotFound', { lng: client.locale }) : e?.message
-      chatClient.say(client.name, msg)
+      chatClient.say(message.channel.name, msg)
     }
   },
 })

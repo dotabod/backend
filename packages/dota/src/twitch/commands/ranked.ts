@@ -19,7 +19,7 @@ commandHandler.registerCommand('ranked', {
 
     if (!client.steam32Id) {
       chatClient.say(
-        channel,
+        message.channel.name,
         message.channel.client.multiAccount
           ? t('multiAccount', {
               lng: message.channel.client.locale,
@@ -33,13 +33,13 @@ commandHandler.registerCommand('ranked', {
     const currentMatchId = client.gsi?.map?.matchid
 
     if (isArcade(client.gsi) || currentMatchId === '0') {
-      chatClient.say(channel, t('ranked_no', { lng: message.channel.client.locale }))
+      chatClient.say(message.channel.name, t('ranked_no', { lng: message.channel.client.locale }))
       return
     }
 
     if (!currentMatchId || !Number(currentMatchId) || isSpectator(client.gsi)) {
       chatClient.say(
-        channel,
+        message.channel.name,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
       )
       return
@@ -55,19 +55,25 @@ commandHandler.registerCommand('ranked', {
 
       if (!response) {
         chatClient.say(
-          channel,
+          message.channel.name,
           t('missingMatchData', { emote: 'PauseChamp', lng: message.channel.client.locale }),
         )
         return
       }
 
       if (response.match.lobby_type === 7) {
-        chatClient.say(channel, t('ranked', { context: 'yes', lng: message.channel.client.locale }))
+        chatClient.say(
+          message.channel.name,
+          t('ranked', { context: 'yes', lng: message.channel.client.locale }),
+        )
         return
       }
     } finally {
       await mongo.close()
     }
-    chatClient.say(channel, t('ranked', { context: 'no', lng: message.channel.client.locale }))
+    chatClient.say(
+      message.channel.name,
+      t('ranked', { context: 'no', lng: message.channel.client.locale }),
+    )
   },
 })

@@ -28,7 +28,7 @@ commandHandler.registerCommand('setmmr', {
     const accounts = client.SteamAccount
 
     if (!isNumberValid(mmrFromArg)) {
-      sendMessage(channel, locale, 'invalidMmr')
+      sendMessage(message.channel.name, locale, 'invalidMmr')
       return
     }
 
@@ -50,7 +50,7 @@ commandHandler.registerCommand('setmmr', {
           ? 'multiAccount'
           : 'unknownSteam'
         : 'updateMmrMulti'
-      sendMessage(channel, locale, key, {
+      sendMessage(message.channel.name, locale, key, {
         url: 'dotabod.com/dashboard/features',
         steamId: Number(client.steam32Id),
       })
@@ -70,7 +70,7 @@ commandHandler.registerCommand('setmmr', {
     const accountFromArg = accounts.find((a) => a.steam32Id === Number(steam32FromArg))
     if (!Number(steam32FromArg) || !accountFromArg) {
       const key = client.multiAccount ? 'multiAccount' : 'unknownSteam'
-      sendMessage(channel, locale, key, { url: 'dotabod.com/dashboard/features' })
+      sendMessage(message.channel.name, locale, key, { url: 'dotabod.com/dashboard/features' })
       return
     }
 

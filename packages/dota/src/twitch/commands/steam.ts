@@ -15,12 +15,12 @@ commandHandler.registerCommand('steam', {
     } = message
 
     if (client.steam32Id && Number(client.steam32Id)) {
-      chatClient.say(channel, `steamid.xyz/${client.steam32Id.toString()}`)
+      chatClient.say(message.channel.name, `steamid.xyz/${client.steam32Id.toString()}`)
       return
     }
 
     chatClient.say(
-      channel,
+      message.channel.name,
       message.channel.client.multiAccount
         ? t('multiAccount', {
             lng: message.channel.client.locale,

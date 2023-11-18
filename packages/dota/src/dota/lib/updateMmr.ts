@@ -4,8 +4,9 @@ import { t } from 'i18next'
 import supabase from '../../db/supabase.js'
 import { chatClient } from '../../twitch/chatClient.js'
 import { logger } from '../../utils/logger.js'
-import findUser from './connectedStreamers.js'
+import findUser, { findGSIHandler } from './connectedStreamers.js'
 import { GLOBAL_DELAY } from './consts.js'
+import { say } from '../say.js'
 
 interface TellChatNewMMRParams {
   locale: string
@@ -35,8 +36,8 @@ export function tellChatNewMMR({
       const isAuto = [20, 25].includes(Math.abs(newMmr))
       setTimeout(
         () => {
-          chatClient.say(
-            client.name,
+          say(
+            client,
             t('updateMmr', {
               context: isAuto ? 'auto' : 'manual',
               mmr,
@@ -48,7 +49,7 @@ export function tellChatNewMMR({
         isAuto ? streamDelay + GLOBAL_DELAY : 0,
       )
     } else {
-      chatClient.say(client.name, t('updateMmrNoChange', { mmr, lng: locale }))
+      say(client, t('updateMmrNoChange', { mmr, lng: locale }))
     }
   }
 }

@@ -13,7 +13,7 @@ commandHandler.registerCommand('dotabuff', {
 
     if (client.steam32Id && Number(client.steam32Id)) {
       chatClient.say(
-        channel,
+        message.channel.name,
         t('profileUrl', {
           channel: client.name,
           lng: message.channel.client.locale,
@@ -24,7 +24,7 @@ commandHandler.registerCommand('dotabuff', {
     }
 
     chatClient.say(
-      channel,
+      message.channel.name,
       message.channel.client.multiAccount
         ? t('multiAccount', {
             lng: message.channel.client.locale,

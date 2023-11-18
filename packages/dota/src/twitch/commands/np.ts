@@ -21,7 +21,7 @@ commandHandler.registerCommand('np', {
 
     if (!client.steam32Id) {
       chatClient.say(
-        channel,
+        message.channel.name,
         message.channel.client.multiAccount
           ? t('multiAccount', {
               lng: message.channel.client.locale,
@@ -36,7 +36,7 @@ commandHandler.registerCommand('np', {
       if (addOrRemove === 'add') {
         const forName = name.join(' ')
         if (!Number(forSteam32Id) || !forName) {
-          chatClient.say(channel, t('npAdd', { lng: message.channel.client.locale }))
+          chatClient.say(message.channel.name, t('npAdd', { lng: message.channel.client.locale }))
           return
         }
 
@@ -58,7 +58,7 @@ commandHandler.registerCommand('np', {
             { upsert: true },
           )
           chatClient.say(
-            channel,
+            message.channel.name,
             t('npAdded', { name: forName, lng: message.channel.client.locale }),
           )
           return
@@ -69,7 +69,10 @@ commandHandler.registerCommand('np', {
 
       if (addOrRemove === 'remove') {
         if (!Number(forSteam32Id)) {
-          chatClient.say(channel, t('npRemove', { lng: message.channel.client.locale }))
+          chatClient.say(
+            message.channel.name,
+            t('npRemove', { lng: message.channel.client.locale }),
+          )
           return
         }
 
@@ -82,12 +85,12 @@ commandHandler.registerCommand('np', {
             .deleteOne({ channel: twitchChannelId, account_id: Number(forSteam32Id) })
           if (removed.deletedCount) {
             chatClient.say(
-              channel,
+              message.channel.name,
               t('npRemoved', { steamid: forSteam32Id, lng: message.channel.client.locale }),
             )
           } else {
             chatClient.say(
-              channel,
+              message.channel.name,
               t('npUnknown', { steamid: forSteam32Id, lng: message.channel.client.locale }),
             )
           }
@@ -124,11 +127,11 @@ commandHandler.registerCommand('np', {
       steam32Id: client.steam32Id,
     })
       .then((desc) => {
-        chatClient.say(channel, desc.description)
+        chatClient.say(message.channel.name, desc.description)
       })
       .catch((e) => {
         chatClient.say(
-          channel,
+          message.channel.name,
           e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
         )
       })

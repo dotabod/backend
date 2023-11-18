@@ -16,7 +16,7 @@ commandHandler.registerCommand('wl', {
 
     if (!client.steam32Id) {
       chatClient.say(
-        channel,
+        message.channel.name,
         message.channel.client.multiAccount
           ? t('multiAccount', {
               lng: message.channel.client.locale,
@@ -42,7 +42,7 @@ commandHandler.registerCommand('wl', {
     })
       .then((res: any) => {
         if (res?.msg) {
-          chatClient.say(channel, res.msg)
+          chatClient.say(message.channel.name, res.msg)
         }
       })
       .catch((e) => {

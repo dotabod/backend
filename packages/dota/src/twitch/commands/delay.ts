@@ -16,7 +16,7 @@ commandHandler.registerCommand('delay', {
     const delay = Number(getValueOrDefault(DBSettings.streamDelay, client.settings)) || 0
 
     chatClient.say(
-      channel,
+      message.channel.name,
       delay / 1000 <= 0
         ? t('streamDelayNone', { lng: message.channel.client.locale })
         : t('streamDelay', { lng: message.channel.client.locale, seconds: delay / 1000 }),

@@ -14,7 +14,7 @@ commandHandler.registerCommand('hero', {
   handler: async (message, args, command) => {
     const { locale } = message.channel.client
     const {
-      channel: { name: channel, client },
+      channel: { client },
     } = message
 
     const gsi = gsiHandlers.get(client.token)
@@ -30,7 +30,7 @@ commandHandler.registerCommand('hero', {
 
       await getHeroMsg({
         heroId: hero?.id ?? 0,
-        channel,
+        channel: message.channel.name,
         hasHero: !!hero?.id,
         heroNameOrColor: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
         steam32Id: player.accountid,

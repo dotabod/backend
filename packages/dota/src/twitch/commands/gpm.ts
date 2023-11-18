@@ -28,7 +28,7 @@ commandHandler.registerCommand('gpm', {
 
       if (!gpm) {
         chatClient.say(
-          channel,
+          message.channel.name,
           t('gpm_zero', { heroName, num: 0, lng: message.channel.client.locale }),
         )
         return
@@ -38,7 +38,7 @@ commandHandler.registerCommand('gpm', {
       const gold_from_creep_kills = player?.gold_from_creep_kills
 
       chatClient.say(
-        channel,
+        message.channel.name,
         t('gpm_other', {
           heroName,
           num: gpm,

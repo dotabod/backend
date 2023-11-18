@@ -27,7 +27,7 @@ commandHandler.registerCommand('mmr', {
     // Didn't have a new account made yet on the new steamaccount table
     if (!client.SteamAccount.length) {
       if (client.mmr === 0) {
-        chatClient.say(channel, unknownMsg)
+        chatClient.say(message.channel.name, unknownMsg)
         return
       }
 
@@ -39,7 +39,7 @@ commandHandler.registerCommand('mmr', {
       })
         .then((description) => {
           if (description === null || description.length) {
-            chatClient.say(channel, description ?? unknownMsg)
+            chatClient.say(message.channel.name, description ?? unknownMsg)
           }
         })
         .catch((e) => {
@@ -51,7 +51,7 @@ commandHandler.registerCommand('mmr', {
     const act = client.SteamAccount.find((a) => a.steam32Id === client.steam32Id)
     if (!act) {
       chatClient.say(
-        channel,
+        message.channel.name,
         message.channel.client.multiAccount
           ? t('multiAccount', {
               lng: message.channel.client.locale,
@@ -71,7 +71,7 @@ commandHandler.registerCommand('mmr', {
       .then((description) => {
         if (description === null || description.length) {
           const msg = act.name ? description ?? unknownMsg : ''
-          chatClient.say(channel, msg || unknownMsg)
+          chatClient.say(message.channel.name, msg || unknownMsg)
         }
       })
       .catch((e) => {

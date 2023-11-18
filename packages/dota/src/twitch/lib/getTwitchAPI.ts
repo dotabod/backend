@@ -14,17 +14,18 @@ export const getTwitchAPI = function (twitchId: string): ApiClient {
     authProvider.getCurrentScopesForUser(twitchId)
   } catch (e) {
     const twitchTokens = findUserByTwitchId(twitchId)
-    if (!twitchTokens?.Account?.access_token || !twitchTokens.Account.refresh_token) {
+    const twitchAccount = twitchTokens?.accounts?.find((a) => a.provider === 'twitch')
+    if (!twitchAccount || !twitchTokens) {
       logger.info('[TWITCHSETUP] Missing twitch tokens', { twitchId })
       throw new Error('Missing twitch tokens')
     }
 
     const tokenData = {
-      scope: twitchTokens.Account.scope?.split(' ') ?? [],
-      expiresIn: twitchTokens.Account.expires_in ?? 0,
-      obtainmentTimestamp: new Date(twitchTokens.Account.obtainment_timestamp || '')?.getTime(),
-      accessToken: twitchTokens.Account.access_token,
-      refreshToken: twitchTokens.Account.refresh_token,
+      scope: twitchAccount.scope?.split(' ') ?? [],
+      expiresIn: twitchAccount.expires_in ?? 0,
+      obtainmentTimestamp: new Date(twitchAccount.obtainment_timestamp || '')?.getTime(),
+      accessToken: twitchAccount.access_token,
+      refreshToken: twitchAccount.refresh_token,
     }
 
     authProvider.addUser(twitchId, tokenData)

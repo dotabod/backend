@@ -1,7 +1,7 @@
 import { HeroNames } from './dota/lib/getHero.js'
 
 export interface SocketClient {
-  name: string
+  name: string | null
   token: string
   stream_online: boolean
   stream_start_date: Date | null
@@ -11,15 +11,16 @@ export interface SocketClient {
   steam32Id: number | null // currently connected steam id
   mmr: number // currently connected mmr
   gsi?: Packet
-  Account: {
+  accounts: {
     refresh_token: string
     access_token: string
     expires_at: number | null
     scope: string | null
+    provider: string
     obtainment_timestamp: Date | null
     expires_in: number | null
     providerAccountId: string
-  } | null
+  }[]
   SteamAccount: {
     mmr: number
     leaderboard_rank: number | null

@@ -12,9 +12,14 @@ export function getTokenFromTwitchId(twitchId?: string | null) {
   return token
 }
 
-export default function findUser(token?: string): SocketClient | null {
+export default function findUser(token?: string) {
   if (!token || !gsiHandlers.has(token)) return null
   return gsiHandlers.get(token)?.client ?? null
+}
+
+export function findGSIHandler(token?: string) {
+  if (!token || !gsiHandlers.has(token)) return null
+  return gsiHandlers.get(token) ?? null
 }
 
 export function findUserByTwitchId(twitchId?: string): SocketClient | null {
