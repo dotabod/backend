@@ -30,7 +30,9 @@ export default class TwitchChatClient extends ChatPlatformClient {
       isAlwaysMod: true,
       botLevel: process.env.NODE_ENV === 'production' ? 'verified' : undefined,
       authProvider: await getBotAuthProvider(),
-      channels: (await getChannels()).map((channel) => channel.name).filter(Boolean) as string[],
+      channels: (await getChannels('twitch'))
+        .map((channel) => channel.name)
+        .filter(Boolean) as string[],
       webSocket: true,
     })
 

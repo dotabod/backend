@@ -12,7 +12,7 @@ export interface MessageCallback {
   channel: string
   user: string
   text: string
-  provider: 'kick' | 'twitch'
+  provider: 'kick' | 'twitch' | 'youtube'
   channelId: string | null
   userInfo: {
     isMod: boolean
@@ -52,7 +52,7 @@ twitchClient.onMessage(emitChatMessage)
 
 // Youtube Client Setup
 const youtubeClient = new YoutubeChatClient()
-youtubeClient.connect()
+await youtubeClient.connect()
 await youtubeClient.onMessage(emitChatMessage)
 
 io.on('connection', (socket) => {

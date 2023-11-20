@@ -1,7 +1,11 @@
 import { OAuth2Client } from 'google-auth-library'
 import { google, youtube_v3 } from 'googleapis'
 
+import supabase from './db/supabase.js'
+import fetchLiveChatId from './fetchYouTubeData.js'
 import { getChannels } from './twitch/lib/getChannels.js'
+
+import { MessageCallback } from './index.js'
 
 export default class YouTubeChatClient {
   client: youtube_v3.Youtube | null = null
@@ -19,15 +23,20 @@ export default class YouTubeChatClient {
   /**
    * Connect to YouTube using OAuth2.
    */
-  connect() {
-    // TODO: use db to retrieve tokens
-    if (!process.env.YOUTUBE_ACCESS_TOKEN || !process.env.YOUTUBE_REFRESH_TOKEN) {
+  async connect() {
+    const dotabodChatter = await supabase
+      .from('accounts')
+      .select('access_token,refresh_token,provider')
+      .match({ providerAccountId: '110967312833250495548', provider: 'google' })
+      .single()
+
+    if (!dotabodChatter?.data) {
       throw new Error('No YouTube credentials found')
     }
 
     this.auth?.setCredentials({
-      access_token: process.env.YOUTUBE_ACCESS_TOKEN,
-      refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
+      access_token: dotabodChatter?.data.access_token,
+      refresh_token: dotabodChatter?.data.refresh_token,
     })
 
     // Additional logic to refresh token or handle authentication flow can be added here
@@ -59,12 +68,7 @@ export default class YouTubeChatClient {
     }
   }
 
-  async join(liveChatId: string, callback: (msg: any) => void) {
-    console.log(`[YOUTUBE] Joined chat: ${liveChatId}`)
-    await this.pollMessages(liveChatId, callback)
-  }
-
-  private async pollMessages(liveChatId: string, callback: (msg: any) => void) {
+  private async join(liveChatId: string, callback: (msg: MessageCallback) => void) {
     try {
       const response = await this.client?.liveChatMessages.list({
         liveChatId: liveChatId,
@@ -73,14 +77,26 @@ export default class YouTubeChatClient {
       })
 
       response?.data.items?.forEach((item) => {
-        console.log(item)
-        callback(item)
+        const msg = {
+          channel: `youtube:${liveChatId}`,
+          user: item.authorDetails?.displayName || '',
+          text: item.snippet?.displayMessage || '',
+          channelId: `youtube:${liveChatId}` || '',
+          userInfo: {
+            isMod: item.authorDetails?.isChatModerator || false,
+            isBroadcaster: item.authorDetails?.isChatOwner || false,
+            isSubscriber: item.authorDetails?.isChatSponsor || false,
+          },
+          messageId: item.id || '',
+          provider: 'youtube' as const,
+        }
+        callback(msg)
       })
 
       // Set next polling interval based on response details
       setTimeout(
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        async () => await this.pollMessages(liveChatId, callback),
+        async () => await this.join(liveChatId, callback),
         response?.data.pollingIntervalMillis || 10000,
       )
     } catch (e) {
@@ -89,12 +105,29 @@ export default class YouTubeChatClient {
     }
   }
 
-  async onMessage(callback: (msg: any) => void) {
+  async onMessage(callback: (msg: MessageCallback) => void) {
     try {
-      const channels = (await getChannels('youtube'))
-        .map((channel) => channel.youtube)
-        .filter(Boolean) as string[]
-      await Promise.all(channels.map((channel) => this.join(channel, callback)))
+      const liveChatIdPromises: Promise<string | null | undefined>[] = []
+      const channels = await getChannels('youtube')
+      channels.forEach((user) => {
+        const provider = Array.isArray(user.accounts)
+          ? user.accounts.find((p) => p.provider === 'google')
+          : user.accounts.provider === 'google'
+            ? user.accounts
+            : null
+        if (provider)
+          liveChatIdPromises.push(fetchLiveChatId(provider?.access_token, provider?.refresh_token))
+      })
+      const liveChatIds = await Promise.all(liveChatIdPromises)
+      await Promise.all(
+        liveChatIds.map((liveChatId) => {
+          if (liveChatId) {
+            console.log('[YOUTUBE] Joining channel', liveChatId)
+            return this.join(liveChatId, callback)
+          }
+          return false
+        }),
+      )
     } catch (e) {
       console.log('[YOUTUBE] Could not join channels', e)
     }
