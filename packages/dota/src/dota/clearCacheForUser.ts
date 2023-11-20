@@ -28,7 +28,8 @@ export async function clearCacheForUser(client?: SocketClient | null) {
   // just so new items won't get added while we do this
   gsiHandlers.get(client.token)?.disable()
 
-  const accountId = client.Account?.providerAccountId ?? ''
+  const twitchAccount = client.accounts?.find((a) => a.provider === 'twitch')
+  const accountId = twitchAccount?.providerAccountId ?? ''
   twitchIdToToken.delete(accountId)
 
   const authProvider = getAuthProvider()

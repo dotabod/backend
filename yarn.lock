@@ -1179,7 +1179,7 @@ __metadata:
     lint-staged: "npm:^14.0.1"
     lodash.isequal: "npm:^4.5.0"
     lru-cache: "npm:^10.0.1"
-    mongodb: "npm:^6.1.0"
+    mongodb: "npm:^6.3.0"
     newrelic: "npm:^11.1.0"
     node-gyp: "npm:^9.4.0"
     nodemon: "npm:^3.0.1"
@@ -1237,7 +1237,7 @@ __metadata:
     lint-staged: "npm:^14.0.1"
     lodash.isequal: "npm:^4.5.0"
     lru-cache: "npm:^10.0.1"
-    mongodb: "npm:^6.1.0"
+    mongodb: "npm:^6.3.0"
     newrelic: "npm:^11.1.0"
     node-gyp: "npm:^9.4.0"
     nodemon: "npm:^3.0.1"
@@ -8365,7 +8365,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mongodb@npm:^6.1.0":
+"mongodb@npm:^6.3.0":
   version: 6.3.0
   resolution: "mongodb@npm:6.3.0"
   dependencies:

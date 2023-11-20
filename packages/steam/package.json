@@ -34,7 +34,7 @@
     "express": "^4.18.2",
     "lodash.isequal": "^4.5.0",
     "lru-cache": "^10.0.1",
-    "mongodb": "^6.1.0",
+    "mongodb": "^6.3.0",
     "newrelic": "^11.1.0",
     "node-gyp": "^9.4.0",
     "redis": "^4.6.9",

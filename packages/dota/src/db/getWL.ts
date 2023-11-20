@@ -5,6 +5,7 @@ import { Database } from './supabase-types.js'
 
 interface WL {
   lng: string
+  token: string
   channelId: string
   mmrEnabled: false
   startDate?: Date | null
@@ -35,13 +36,14 @@ const updateStats = (
   }
 }
 
-export async function getWL({ lng, channelId, mmrEnabled, startDate }: WL) {
+export async function getWL({ lng, token, channelId, mmrEnabled, startDate }: WL) {
   if (!channelId) {
     return Promise.resolve({ record: [{ win: 0, lose: 0, type: 'U' }], msg: null })
   }
 
   const { data: matches, error } = await supabase.rpc('get_grouped_bets', {
-    channel_id: channelId,
+    // sending token for channel_id because couldn't change the function param
+    channel_id: token,
     start_date:
       startDate?.toISOString() ??
       new Date(new Date().getTime() - 12 * 60 * 60 * 1000).toISOString(),

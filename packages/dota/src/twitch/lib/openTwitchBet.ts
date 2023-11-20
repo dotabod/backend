@@ -33,7 +33,7 @@ export const openTwitchBet = async ({
   client: SocketClient
 }) => {
   const { settings, locale } = client
-  const twitchId = client.Account?.providerAccountId ?? ''
+  const twitchId = client.accounts?.find((a) => a.provider === 'twitch')?.providerAccountId ?? ''
 
   const api = getTwitchAPI(twitchId)
   const betsInfo = getValueOrDefault(DBSettings.betsInfo, settings)

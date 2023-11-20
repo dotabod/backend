@@ -2,6 +2,8 @@ import { HeroNames } from './dota/lib/getHero.js'
 
 export interface SocketClient {
   name: string | null
+  kick: number | null
+  youtube: string | null
   token: string
   stream_online: boolean
   stream_start_date: Date | null

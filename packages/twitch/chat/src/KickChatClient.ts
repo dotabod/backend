@@ -35,7 +35,9 @@ export default class KickChatClient extends ChatPlatformClient {
     }
 
     try {
-      const channels = await getChannels('kick')
+      const channels = (await getChannels('kick'))
+        .map((channel) => `${channel.kick}`)
+        .filter(Boolean)
       await Promise.all(channels.map((channel) => this.join(channel)))
     } catch (e) {
       console.log('[KICK] Could not join channels', e)

@@ -1,11 +1,11 @@
 import supabase from '../../db/supabase.js'
 
-export async function getChannels(provider?: 'twitch' | 'kick' | 'youtube'): Promise<string[]> {
+export async function getChannels(provider?: 'twitch' | 'kick' | 'youtube') {
   console.log('[TWITCHSETUP] Running getChannels in chat listener')
 
   const isDevMode = process.env.NODE_ENV === 'development'
   const devChannels = process.env.DEV_CHANNELS?.split(',') ?? []
-  const users: string[] = []
+  const users: { name: string | null; youtube: string | null; kick: number | null }[] = []
 
   const pageSize = 1000
   let offset = 0
@@ -14,11 +14,13 @@ export async function getChannels(provider?: 'twitch' | 'kick' | 'youtube'): Pro
   while (moreDataExists) {
     const baseQuery = supabase
       .from('users')
-      .select('name')
+      .select('name,youtube,kick')
       .order('followers', { ascending: false, nullsFirst: false })
 
     let query = isDevMode
-      ? baseQuery.in('name', devChannels)
+      ? provider === 'twitch'
+        ? baseQuery.in('name', devChannels)
+        : baseQuery
       : baseQuery.not('name', 'in', `(${process.env.DEV_CHANNELS})`)
 
     if (provider) {
@@ -28,7 +30,7 @@ export async function getChannels(provider?: 'twitch' | 'kick' | 'youtube'): Pro
     const { data } = await query.range(offset, offset + pageSize - 1)
 
     if (data?.length) {
-      users.push(...data.map((user) => user.name))
+      users.push(...data)
       offset += pageSize
     } else {
       moreDataExists = false

@@ -40,12 +40,14 @@ export function say(
   const msg = beta ? `${message} ${t('betaFeature', { lng: client.locale })}` : message
 
   // TODO: Determine all the providers to send to
+  // Right now it just goes down the list until one matches
+  // Need to send to all
   if (!delay) {
-    chatClient.say(client.name, msg)
+    chatClient.say(`${client.kick || client.youtube || client.name}`, msg)
     return
   }
 
   setTimeout(() => {
-    client.token && chatClient.say(client.name, msg)
+    client.token && chatClient.say(`${client.kick || client.youtube || client.name}`, msg)
   }, getStreamDelay(client.settings))
 }

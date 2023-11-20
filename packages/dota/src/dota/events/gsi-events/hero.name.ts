@@ -19,7 +19,7 @@ eventHandler.registerEvent(`hero:name`, {
     )) as HeroNames | null
 
     if (playingHero && playingHero !== name) {
-      await refundTwitchBet(dotaClient.getChannelId())
+      await refundTwitchBet(dotaClient.getTwitchUsername())
       const hero = getHero(name)
 
       try {

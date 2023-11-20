@@ -1,20 +1,27 @@
 services:
   twitch-chat:
+    platform: linux/arm64
     image: "ghcr.io/dotabod/twitch-chat:v2.0-dev"
     volumes:
       - $PWD/packages/twitch/chat/src/:/app/packages/twitch/chat/src/
 
   steam:
+    platform: linux/arm64
+
     image: "ghcr.io/dotabod/steam:v2.0-dev"
     volumes:
       - $PWD/packages/steam/src:/app/packages/steam/src
 
   twitch-events:
+    platform: linux/arm64
+
     image: "ghcr.io/dotabod/twitch-events:v2.0-dev"
     volumes:
       - $PWD/packages/twitch/events/src:/app/packages/twitch/events/src
 
   dota:
+    platform: linux/arm64
+
     image: "ghcr.io/dotabod/dota:v2.0-dev"
     volumes:
       - $PWD/packages/dota/src:/app/packages/dota/src
@@ -27,6 +34,8 @@ services:
       - donotstart
 
   mongodb:
+    platform: linux/arm64
+
     container_name: mongodb
     image: "mongo:latest"
     volumes:

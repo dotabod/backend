@@ -91,7 +91,9 @@ export default class YouTubeChatClient {
 
   async onMessage(callback: (msg: any) => void) {
     try {
-      const channels = await getChannels('youtube')
+      const channels = (await getChannels('youtube'))
+        .map((channel) => channel.youtube)
+        .filter(Boolean) as string[]
       await Promise.all(channels.map((channel) => this.join(channel, callback)))
     } catch (e) {
       console.log('[YOUTUBE] Could not join channels', e)

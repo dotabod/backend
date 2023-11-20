@@ -132,7 +132,7 @@ export class GSIHandler {
 
   public enable() {
     this.disabled = false
-    chatClient.join(this.client.name)
+    chatClient.join(`${this.client.youtube || this.client.kick || this.client.name}`)
   }
 
   public disable() {
@@ -151,8 +151,9 @@ export class GSIHandler {
     return this.client.steam32Id
   }
 
-  public getChannelId(): string {
-    return this.client.Account?.providerAccountId ?? ''
+  public getTwitchUsername(): string {
+    const twitchAccount = this.client.accounts?.find((a) => a.provider === 'twitch')
+    return twitchAccount?.providerAccountId ?? ''
   }
 
   public addSecondsToNow(seconds: number) {
@@ -191,7 +192,8 @@ export class GSIHandler {
     const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], this.client.settings)
     getWL({
       lng: this.client.locale,
-      channelId: this.getChannelId(),
+      channelId: this.getTwitchUsername(),
+      token: this.client.token,
       startDate: this.client.stream_start_date,
       mmrEnabled,
     })
@@ -214,11 +216,12 @@ export class GSIHandler {
     )
     notablePlayers({
       locale: this.client.locale,
-      twitchChannelId: this.getChannelId(),
+      twitchChannelId: this.getTwitchUsername(),
       currentMatchId: this.client.gsi?.map?.matchid,
       players: matchPlayers,
       enableFlags: enableCountries,
       steam32Id: this.getSteam32(),
+      token: this.client.token,
     })
       .then((response) => {
         if (response.playerList.length) {
@@ -379,7 +382,7 @@ export class GSIHandler {
           currentMmr: this.getMmr(),
           newMmr: newMMR,
           steam32Id: this.client.steam32Id,
-          channel: this.client.name,
+          channel: `${this.client.youtube || this.client.kick || this.client.name}`,
         })
       }
     } else {
@@ -646,7 +649,7 @@ export class GSIHandler {
             key: DBSettings.tellChatBets,
           }),
         )
-        await refundTwitchBet(this.getChannelId())
+        await refundTwitchBet(this.getTwitchUsername())
       }
       await this.resetClientState()
       return
@@ -718,7 +721,7 @@ export class GSIHandler {
         return
       }
 
-      closeTwitchBet(won, this.getChannelId())
+      closeTwitchBet(won, this.getTwitchUsername())
         .then(() => {
           logger.info('[BETS] end bets', {
             event: 'end_bets',
@@ -778,7 +781,7 @@ export class GSIHandler {
                 t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }),
               )
             }
-            await refundTwitchBet(this.getChannelId())
+            await refundTwitchBet(this.getTwitchUsername())
           }
           await this.resetClientState()
           return

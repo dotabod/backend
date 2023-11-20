@@ -25,6 +25,7 @@ export async function notablePlayers({
   players,
   enableFlags,
   steam32Id,
+  token,
 }: {
   locale: string
   twitchChannelId: string
@@ -32,6 +33,7 @@ export async function notablePlayers({
   players?: { heroid: number; accountid: number }[]
   enableFlags?: boolean
   steam32Id: number | null
+  token: string
 }) {
   const { matchPlayers, accountIds, gameMode } = await getPlayers({
     locale,
@@ -57,7 +59,7 @@ export async function notablePlayers({
             $in: accountIds,
           },
           channel: {
-            $in: [null, twitchChannelId],
+            $in: [null, twitchChannelId, token],
           },
         },
         {

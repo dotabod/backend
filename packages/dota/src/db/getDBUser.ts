@@ -73,12 +73,14 @@ export default async function getDBUser({
     id,
     name,
     mmr,
+    kick,
+    youtube,
     steam32Id,
     stream_online,
     stream_start_date,
     beta_tester,
     locale,
-    Account:accounts (
+    accounts (
       provider,
       refresh_token,
       scope,
@@ -125,9 +127,8 @@ export default async function getDBUser({
     return client
   }
 
-  const Account = Array.isArray(user?.Account) ? user.Account[0] : user.Account
-  if (!Account) {
-    logger.info('Invalid token missing Account??', { token: lookupToken })
+  if (!user.accounts.length) {
+    logger.info('Invalid token missing any accounts', { token: lookupToken })
     invalidTokens.add(lookupToken)
     deleteLookupToken(lookupToken)
     return
@@ -139,12 +140,10 @@ export default async function getDBUser({
     steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
     token: user.id,
     stream_start_date: user.stream_start_date ? new Date(user.stream_start_date) : null,
-    Account: {
-      ...Account,
-      obtainment_timestamp: Account.obtainment_timestamp
-        ? new Date(Account.obtainment_timestamp)
-        : null,
-    },
+    accounts: user.accounts.map((a) => ({
+      ...a,
+      obtainment_timestamp: a.obtainment_timestamp ? new Date(a.obtainment_timestamp) : null,
+    })),
   }
 
   const gsiHandler = gsiHandlers.get(userInfo.id) || new GSIHandler(userInfo)
@@ -155,7 +154,10 @@ export default async function getDBUser({
     }
 
     gsiHandlers.set(userInfo.id, gsiHandler)
-    twitchIdToToken.set(Account.providerAccountId, userInfo.id)
+    const twitchAccount = user.accounts?.find((a) => a.provider === 'twitch')
+    if (twitchAccount) {
+      twitchIdToToken.set(twitchAccount.providerAccountId, userInfo.id)
+    }
   }
 
   deleteLookupToken(lookupToken)

@@ -37,6 +37,7 @@ commandHandler.registerCommand('wl', {
     getWL({
       lng: client.locale,
       channelId: channelId,
+      token: client.token,
       mmrEnabled: mmrEnabled,
       startDate: client.stream_start_date,
     })

@@ -125,6 +125,7 @@ commandHandler.registerCommand('np', {
       players: matchPlayers,
       enableFlags: enableCountries,
       steam32Id: client.steam32Id,
+      token: client.token,
     })
       .then((desc) => {
         chatClient.say(message.channel.name, desc.description)
