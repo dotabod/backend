@@ -137,6 +137,12 @@ function hasSteamData(game?: DelayedGames | null) {
   return { hasAccountIds, hasPlayers, hasHeroes }
 }
 
+function sortPlayersBySlot(game: DelayedGames) {
+  for (const team of game.teams) {
+    team.players = team.players.sort((a, b) => a.team_slot - b.team_slot)
+  }
+}
+
 class Dota {
   private static instance: Dota
   private cache: Map<number, CacheEntry> = new Map()
@@ -509,6 +515,9 @@ class Dota {
         // needs hero data
         const retryAttempt2 = waitForHeros && !hasHeroes ? new Error() : undefined
         if (operation.retry(retryAttempt2)) return
+
+        // sort players by team_slot
+        sortPlayersBySlot(game)
 
         // 2-minute delay gives "0" match id, so we use the gsi match id instead
         game.match.match_id = match_id
