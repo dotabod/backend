@@ -139,7 +139,7 @@ function hasSteamData(game?: DelayedGames | null) {
 
 function sortPlayersBySlot(game: DelayedGames) {
   for (const team of game.teams) {
-    team.players = team.players.sort((a, b) => a.team_slot - b.team_slot)
+    team.players.sort((a, b) => a.team_slot - b.team_slot)
   }
 }
 
