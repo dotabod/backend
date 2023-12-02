@@ -514,6 +514,7 @@ export interface DelayedGames {
       items: number[]
       heroid: number
       accountid: string
+      team_slot: number
     }[]
   }[]
 }
