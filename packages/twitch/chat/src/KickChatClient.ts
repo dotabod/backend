@@ -1,4 +1,4 @@
-import { Kient } from 'kient'
+// import { Kient } from 'kient'
 import totp from 'totp-generator'
 
 import ChatPlatformClient from './ChatPlatformClient.js'
@@ -10,7 +10,7 @@ import { MessageCallback } from './index.js'
  * Kick chat client implementation.
  */
 export default class KickChatClient extends ChatPlatformClient {
-  client: Kient | null = null
+  client: any = null
 
   /**
    * Connect to Kick chat.
@@ -21,13 +21,13 @@ export default class KickChatClient extends ChatPlatformClient {
     }
 
     try {
-      this.client = await Kient.create()
+      // this.client = await Kient.create()
 
-      await this.client.api.authentication.login({
-        email: process.env.KICK_EMAIL,
-        otc: totp(process.env.KICK_2FA_SECRET),
-        password: process.env.KICK_PASSWORD,
-      })
+      // await this.client.api.authentication.login({
+      //   email: process.env.KICK_EMAIL,
+      //   otc: totp(process.env.KICK_2FA_SECRET),
+      //   password: process.env.KICK_PASSWORD,
+      // })
 
       console.log('[KICK] Connected to chat client')
     } catch (e) {
@@ -84,7 +84,7 @@ export default class KickChatClient extends ChatPlatformClient {
    * @param {function} callback - The callback function to handle messages.
    */
   onMessage(callback: (msg: MessageCallback) => void) {
-    this.client?.on('onMessage', (msg) => {
+    this.client?.on('onMessage', (msg: any) => {
       const isMod = msg.chatterIs('moderator')
       const isSubscriber = msg.chatterIs('subscriber')
       const isBroadcaster = msg.chatterIs('broadcaster')
