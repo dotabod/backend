@@ -2,7 +2,6 @@ import 'newrelic'
 
 import { Server } from 'socket.io'
 
-import KickChatClient from './KickChatClient.js'
 import TwitchChatClient from './TwitchChatClient.js'
 import YoutubeChatClient from './YoutubeChatClient.js'
 
@@ -30,7 +29,7 @@ export const emitChatMessage = (message: MessageCallback) => {
 
 const determineChatClient = (channel: string) => {
   const cleanedChannel = channel
-  const client: TwitchChatClient | KickChatClient = twitchClient
+  const client: TwitchChatClient = twitchClient
 
   // if (channel.includes('kick:')) {
   //   cleanedChannel = channel.replace(/^(#?kick:)/, '')

@@ -9,7 +9,9 @@ export async function getChannels(provider: 'twitch' | 'kick' | 'youtube') {
     name: string | null
     youtube: string | null
     kick: number | null
-    accounts: { access_token: string; refresh_token: string }[]
+    accounts:
+      | { access_token: string; refresh_token: string; provider: string }[]
+      | { access_token: string; refresh_token: string; provider: string }
   }[] = []
 
   const pageSize = 1000
