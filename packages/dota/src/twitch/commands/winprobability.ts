@@ -33,9 +33,9 @@ commandHandler.registerCommand('winprobability', {
       return
     }
 
-    if (!apiCooldown[matchId] || Date.now() - apiCooldown[matchId] >= API_COOLDOWN_SEC * 1000) {
+    if (!apiCooldown[channel] || Date.now() - apiCooldown[channel] >= API_COOLDOWN_SEC * 1000) {
       try {
-        apiCooldown[matchId] = Date.now()
+        apiCooldown[channel] = Date.now()
         const matchDetails = await GetLiveMatch(parseInt(matchId, 10))
         const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
         if (
@@ -52,7 +52,7 @@ commandHandler.registerCommand('winprobability', {
             emote: winRate > 50 ? 'Pog' : 'BibleThump',
             gameTime: lastWinRate.time,
             remainingCooldown: Math.floor(
-              (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[matchId])) / 1000,
+              (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[channel])) / 1000,
             ),
           }
         } else {
@@ -66,13 +66,18 @@ commandHandler.registerCommand('winprobability', {
 
     if (WinRateCache[channel]) {
       WinRateCache[channel]!.remainingCooldown = Math.floor(
-        (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[matchId])) / 1000,
+        (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[channel])) / 1000,
       )
     }
 
     const response = WinRateCache[channel]
       ? t('winprobability.winProbability', WinRateCache[channel]!)
-      : t('winprobability.winProbabilityDataNotAvailable')
+      : t('winprobability.winProbabilityDataNotAvailable', {
+          lng: message.channel.client.locale,
+          remainingCooldown: Math.floor(
+            (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[channel])) / 1000,
+          ),
+        })
 
     chatClient.say(channel, response)
   },
