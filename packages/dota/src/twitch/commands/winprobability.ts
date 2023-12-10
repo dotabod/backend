@@ -47,6 +47,15 @@ commandHandler.registerCommand('winprobability', {
             emote: winRate > 50 ? 'Pog' : 'BibleThump',
             time: lastWinRate.time,
           })
+
+          WinRateCache[channel] += t('winprobability.cooldown', {
+            remainingCooldown: Math.floor(
+              (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[matchId])) / 1000,
+            ),
+            count: Math.floor(
+              (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[matchId])) / 1000,
+            ),
+          })
         } else {
           WinRateCache[channel] = t('winprobability.winProbabilityDataNotAvailable')
         }
@@ -55,10 +64,12 @@ commandHandler.registerCommand('winprobability', {
         WinRateCache[channel] = t('winprobability.winProbabilityDataNotAvailable')
       }
     } else {
-      const remainingCooldown = Math.ceil(
-        (apiCooldown[matchId] + API_COOLDOWN_SEC * 1000 - Date.now()) / 1000,
-      )
-      WinRateCache[channel] = t('winprobability.cooldown', { remainingCooldown })
+      WinRateCache[channel] = t('winprobability.cooldown', {
+        remainingCooldown: Math.floor(
+          (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[matchId])) / 1000,
+        ),
+        count: Math.floor((API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[matchId])) / 1000),
+      })
     }
 
     chatClient.say(channel, WinRateCache[channel])
