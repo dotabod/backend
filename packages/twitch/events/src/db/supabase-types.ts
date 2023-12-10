@@ -67,6 +67,7 @@ export interface Database {
           {
             foreignKeyName: 'accounts_userId_fkey'
             columns: ['userId']
+            isOneToOne: true
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -134,6 +135,7 @@ export interface Database {
           {
             foreignKeyName: 'bets_userId_fkey'
             columns: ['userId']
+            isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -168,12 +170,43 @@ export interface Database {
           {
             foreignKeyName: 'mods_mod_user_id_fkey'
             columns: ['mod_user_id']
+            isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
           {
             foreignKeyName: 'mods_streamer_user_id_fkey'
             columns: ['streamer_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          expires: string
+          id: string
+          sessionToken: string
+          userId: string
+        }
+        Insert: {
+          expires: string
+          id: string
+          sessionToken: string
+          userId: string
+        }
+        Update: {
+          expires?: string
+          id?: string
+          sessionToken?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'sessions_userId_fkey'
+            columns: ['userId']
+            isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -208,6 +241,7 @@ export interface Database {
           {
             foreignKeyName: 'settings_userId_fkey'
             columns: ['userId']
+            isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -251,6 +285,7 @@ export interface Database {
           {
             foreignKeyName: 'steam_accounts_userId_fkey'
             columns: ['userId']
+            isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -300,6 +335,7 @@ export interface Database {
           {
             foreignKeyName: 'streams_userId_fkey'
             columns: ['userId']
+            isOneToOne: true
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -315,14 +351,16 @@ export interface Database {
           followers: number | null
           id: string
           image: string | null
+          kick: number | null
           locale: string
           mmr: number
-          name: string
+          name: string | null
           steam32Id: number | null
           stream_delay: number | null
           stream_online: boolean
           stream_start_date: string | null
           updated_at: string
+          youtube: string | null
         }
         Insert: {
           beta_tester?: boolean
@@ -333,14 +371,16 @@ export interface Database {
           followers?: number | null
           id?: string
           image?: string | null
+          kick?: number | null
           locale?: string
           mmr?: number
-          name?: string
+          name?: string | null
           steam32Id?: number | null
           stream_delay?: number | null
           stream_online?: boolean
           stream_start_date?: string | null
           updated_at?: string
+          youtube?: string | null
         }
         Update: {
           beta_tester?: boolean
@@ -351,14 +391,34 @@ export interface Database {
           followers?: number | null
           id?: string
           image?: string | null
+          kick?: number | null
           locale?: string
           mmr?: number
-          name?: string
+          name?: string | null
           steam32Id?: number | null
           stream_delay?: number | null
           stream_online?: boolean
           stream_start_date?: string | null
           updated_at?: string
+          youtube?: string | null
+        }
+        Relationships: []
+      }
+      verificationtokens: {
+        Row: {
+          expires: string
+          identifier: string
+          token: string
+        }
+        Insert: {
+          expires: string
+          identifier: string
+          token: string
+        }
+        Update: {
+          expires?: string
+          identifier?: string
+          token?: string
         }
         Relationships: []
       }
@@ -391,3 +451,76 @@ export interface Database {
     }
   }
 }
+
+export type Tables<
+  PublicTableNameOrOptions extends
+    | keyof (Database['public']['Tables'] & Database['public']['Views'])
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions['schema']]['Tables'] &
+        Database[PublicTableNameOrOptions['schema']]['Views'])
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions['schema']]['Tables'] &
+      Database[PublicTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : PublicTableNameOrOptions extends keyof (Database['public']['Tables'] &
+      Database['public']['Views'])
+  ? (Database['public']['Tables'] & Database['public']['Views'])[PublicTableNameOrOptions] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : never
+
+export type TablesInsert<
+  PublicTableNameOrOptions extends keyof Database['public']['Tables'] | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : PublicTableNameOrOptions extends keyof Database['public']['Tables']
+  ? Database['public']['Tables'][PublicTableNameOrOptions] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : never
+
+export type TablesUpdate<
+  PublicTableNameOrOptions extends keyof Database['public']['Tables'] | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : PublicTableNameOrOptions extends keyof Database['public']['Tables']
+  ? Database['public']['Tables'][PublicTableNameOrOptions] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : never
+
+export type Enums<
+  PublicEnumNameOrOptions extends keyof Database['public']['Enums'] | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions['schema']]['Enums']
+    : never = never,
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : PublicEnumNameOrOptions extends keyof Database['public']['Enums']
+  ? Database['public']['Enums'][PublicEnumNameOrOptions]
+  : never
