@@ -207,11 +207,8 @@
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
   },
   "winprobability": {
-    "cooldown_zero": "Win probability on cooldown, wait {{remainingCooldown}} seconds",
-    "cooldown_one": "Win probability on cooldown, wait {{remainingCooldown}} second",
-    "cooldown_other": "Win probability on cooldown, wait {{remainingCooldown}} seconds",
     "winProbabilityDataNotAvailable": "Win probability is not available yet",
-    "winProbability": "{{winRate}}% win probability {{emote}} {{time}}:00 ⏲"
+    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s"
   },
   "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

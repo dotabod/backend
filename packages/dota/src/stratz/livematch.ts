@@ -1,20 +1,21 @@
-import axios from '../utils/axios.js'
+import axios from 'axios'
 
 const STRATZ_GQL = 'https://api.stratz.com/graphql'
 
-// Currently we are only interested in the liveWinRateValues field
-const LiveMatchDetailsQuery = (matchId: number) => `{
-  live {
-    match(id: ${matchId}) {
-      liveWinRateValues {
-        time
-        winRate
+const LiveMatchDetailsQuery = `
+  query GetLiveMatch($matchId: Long!) {
+    live {
+      match(id: $matchId) {
+        liveWinRateValues {
+          time
+          winRate
+        }
+        completed
+        isUpdating
       }
-      completed
-      isUpdating
     }
   }
-}`
+`
 
 type StratzLiveMatchResponse = {
   data: {
@@ -38,12 +39,12 @@ export const GetLiveMatch = async (
     return
   }
 
-  return (
-    await axios.post<StratzLiveMatchResponse>(
+  try {
+    const response = await axios.post<StratzLiveMatchResponse>(
       STRATZ_GQL,
       {
-        query: LiveMatchDetailsQuery(matchId),
-        variables: {},
+        query: LiveMatchDetailsQuery,
+        variables: { matchId }, // Pass the matchId as a variable
       },
       {
         headers: {
@@ -51,5 +52,10 @@ export const GetLiveMatch = async (
         },
       },
     )
-  ).data
+
+    return response.data
+  } catch (error) {
+    // console.error(error?.response?.data?.errors ?? error?.data ?? error)
+    return undefined
+  }
 }

@@ -2,11 +2,17 @@ import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { GetLiveMatch } from '../../stratz/livematch.js'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 
 const WinRateCache: {
-  [id: string]: string
+  [id: string]: {
+    winRate: number
+    emote: string
+    gameTime: number
+    remainingCooldown: number
+  } | null
 } = {}
 
 const API_COOLDOWN_SEC = 60
@@ -31,7 +37,6 @@ commandHandler.registerCommand('winprobability', {
       try {
         apiCooldown[matchId] = Date.now()
         const matchDetails = await GetLiveMatch(parseInt(matchId, 10))
-
         const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
         if (
           lastWinRate &&
@@ -42,36 +47,33 @@ commandHandler.registerCommand('winprobability', {
           const winRate = Math.floor(
             (isRadiant ? lastWinRate.winRate : 1 - lastWinRate.winRate) * 100,
           )
-          WinRateCache[channel] = t('winprobability.winProbability', {
+          WinRateCache[channel] = {
             winRate,
             emote: winRate > 50 ? 'Pog' : 'BibleThump',
-            time: lastWinRate.time,
-          })
-
-          WinRateCache[channel] += t('winprobability.cooldown', {
+            gameTime: lastWinRate.time,
             remainingCooldown: Math.floor(
               (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[matchId])) / 1000,
             ),
-            count: Math.floor(
-              (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[matchId])) / 1000,
-            ),
-          })
+          }
         } else {
-          WinRateCache[channel] = t('winprobability.winProbabilityDataNotAvailable')
+          WinRateCache[channel] = null
         }
       } catch (error) {
-        console.error('Error fetching win probability:', error)
-        WinRateCache[channel] = t('winprobability.winProbabilityDataNotAvailable')
+        logger.error('Error fetching win probability:', error)
+        WinRateCache[channel] = null
       }
-    } else {
-      WinRateCache[channel] = t('winprobability.cooldown', {
-        remainingCooldown: Math.floor(
-          (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[matchId])) / 1000,
-        ),
-        count: Math.floor((API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[matchId])) / 1000),
-      })
     }
 
-    chatClient.say(channel, WinRateCache[channel])
+    if (WinRateCache[channel]) {
+      WinRateCache[channel]!.remainingCooldown = Math.floor(
+        (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[matchId])) / 1000,
+      )
+    }
+
+    const response = WinRateCache[channel]
+      ? t('winprobability.winProbability', WinRateCache[channel]!)
+      : t('winprobability.winProbabilityDataNotAvailable')
+
+    chatClient.say(channel, response)
   },
 })
