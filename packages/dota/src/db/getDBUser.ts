@@ -39,17 +39,32 @@ export default async function getDBUser({
   }
 
   let userId = token || null
-  if (providerAccountId) {
-    const { data } = await supabase
+  if (providerAccountId || lookupToken) {
+    const { data, error } = await supabase
       .from('accounts')
       .select('userId')
-      .eq('providerAccountId', providerAccountId)
+      .eq('providerAccountId', providerAccountId || lookupToken)
       .single()
     userId = data?.userId ?? null
+
+    if (error) {
+      logger.error('[USER] 2 Error checking auth', {
+        lookupToken,
+        providerAccountId,
+        error,
+      })
+      invalidTokens.add(lookupToken)
+      deleteLookupToken(lookupToken)
+      return null
+    }
   }
 
   if (!userId) {
-    logger.error('[USER] 2 Error checking auth', { token: lookupToken, error: 'No token' })
+    logger.error('[USER] 2 Error checking auth', {
+      lookupToken,
+      providerAccountId,
+      error: 'No token',
+    })
     invalidTokens.add(lookupToken)
     deleteLookupToken(lookupToken)
     return null
