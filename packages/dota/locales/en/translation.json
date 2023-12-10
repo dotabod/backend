@@ -206,5 +206,10 @@
     "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
   },
+  "winprobability": {
+    "cooldown": "Win probability on cooldown, wait {{remainingCooldown}} seconds",
+    "winProbabilityDataNotAvailable": "Win probability is not available yet",
+    "winProbability": "{{winRate}}% win probability {{emote}} {{time}}:00 ⏲"
+  },
   "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

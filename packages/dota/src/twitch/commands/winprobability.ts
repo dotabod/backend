@@ -42,19 +42,23 @@ commandHandler.registerCommand('winprobability', {
           const winRate = Math.floor(
             (isRadiant ? lastWinRate.winRate : 1 - lastWinRate.winRate) * 100,
           )
-          WinRateCache[channel] = `${winRate}% win probability GabeN ${lastWinRate.time}:00 ⏲`
+          WinRateCache[channel] = t('winprobability.winProbability', {
+            winRate,
+            emote: winRate > 50 ? 'Pog' : 'BibleThump',
+            time: lastWinRate.time,
+          })
         } else {
-          WinRateCache[channel] = 'Win probability data is not available yet'
+          WinRateCache[channel] = t('winprobability.winProbabilityDataNotAvailable')
         }
       } catch (error) {
         console.error('Error fetching win probability:', error)
-        WinRateCache[channel] = 'An error occurred while fetching win probability'
+        WinRateCache[channel] = t('winprobability.winProbabilityDataNotAvailable')
       }
     } else {
       const remainingCooldown = Math.ceil(
         (apiCooldown[matchId] + API_COOLDOWN_SEC * 1000 - Date.now()) / 1000,
       )
-      WinRateCache[channel] = `Cooldown: ${remainingCooldown} seconds`
+      WinRateCache[channel] = t('winprobability.cooldown', { remainingCooldown })
     }
 
     chatClient.say(channel, WinRateCache[channel])
