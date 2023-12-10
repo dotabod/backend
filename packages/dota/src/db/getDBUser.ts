@@ -39,11 +39,11 @@ export default async function getDBUser({
   }
 
   let userId = token || null
-  if (providerAccountId || lookupToken) {
+  if (providerAccountId) {
     const { data, error } = await supabase
       .from('accounts')
       .select('userId')
-      .eq('providerAccountId', providerAccountId || lookupToken)
+      .eq('providerAccountId', providerAccountId)
       .single()
     userId = data?.userId ?? null
 

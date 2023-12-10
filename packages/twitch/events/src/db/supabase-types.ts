@@ -1,5 +1,3 @@
-export type Tables<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Row']
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
@@ -183,35 +181,6 @@ export interface Database {
           },
         ]
       }
-      sessions: {
-        Row: {
-          expires: string
-          id: string
-          sessionToken: string
-          userId: string
-        }
-        Insert: {
-          expires: string
-          id: string
-          sessionToken: string
-          userId: string
-        }
-        Update: {
-          expires?: string
-          id?: string
-          sessionToken?: string
-          userId?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'sessions_userId_fkey'
-            columns: ['userId']
-            isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       settings: {
         Row: {
           created_at: string
@@ -354,7 +323,7 @@ export interface Database {
           kick: number | null
           locale: string
           mmr: number
-          name: string | null
+          name: string
           steam32Id: number | null
           stream_delay: number | null
           stream_online: boolean
@@ -374,7 +343,7 @@ export interface Database {
           kick?: number | null
           locale?: string
           mmr?: number
-          name?: string | null
+          name?: string
           steam32Id?: number | null
           stream_delay?: number | null
           stream_online?: boolean
@@ -394,31 +363,13 @@ export interface Database {
           kick?: number | null
           locale?: string
           mmr?: number
-          name?: string | null
+          name?: string
           steam32Id?: number | null
           stream_delay?: number | null
           stream_online?: boolean
           stream_start_date?: string | null
           updated_at?: string
           youtube?: string | null
-        }
-        Relationships: []
-      }
-      verificationtokens: {
-        Row: {
-          expires: string
-          identifier: string
-          token: string
-        }
-        Insert: {
-          expires: string
-          identifier: string
-          token: string
-        }
-        Update: {
-          expires?: string
-          identifier?: string
-          token?: string
         }
         Relationships: []
       }
