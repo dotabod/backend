@@ -30,7 +30,7 @@ commandHandler.registerCommand('winprobability', {
     if (!apiCooldown[matchId] || Date.now() - apiCooldown[matchId] >= API_COOLDOWN_SEC * 1000) {
       try {
         apiCooldown[matchId] = Date.now()
-        const matchDetails = await GetLiveMatch(matchId)
+        const matchDetails = await GetLiveMatch(parseInt(matchId, 10))
 
         const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
         if (

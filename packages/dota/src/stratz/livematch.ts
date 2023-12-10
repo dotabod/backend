@@ -3,7 +3,7 @@ import axios from '../utils/axios.js'
 const STRATZ_GQL = 'https://api.stratz.com/graphql'
 
 // Currently we are only interested in the liveWinRateValues field
-const LiveMatchDetailsQuery = (matchId: string) => `{
+const LiveMatchDetailsQuery = (matchId: number) => `{
   live {
     match(id: ${matchId}) {
       liveWinRateValues {
@@ -32,16 +32,24 @@ type StratzLiveMatchResponse = {
 }
 
 export const GetLiveMatch = async (
-  matchId: string,
+  matchId: number,
 ): Promise<StratzLiveMatchResponse | undefined> => {
   if (!process.env.STRATZ_TOKEN) {
     return
   }
 
   return (
-    await axios.post<StratzLiveMatchResponse>(STRATZ_GQL, {
-      query: LiveMatchDetailsQuery(matchId),
-      variables: {},
-    })
+    await axios.post<StratzLiveMatchResponse>(
+      STRATZ_GQL,
+      {
+        query: LiveMatchDetailsQuery(matchId),
+        variables: {},
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.STRATZ_TOKEN}`,
+        },
+      },
+    )
   ).data
 }
