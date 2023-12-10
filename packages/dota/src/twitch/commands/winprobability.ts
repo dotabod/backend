@@ -1,16 +1,16 @@
 import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
+import { GetLiveMatch } from '../../stratz/livematch'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
-import { GetLiveMatch } from '../../stratz/livematch'
 
 const WinRateCache: {
   [id: string]: string
 } = {}
 
 const API_COOLDOWN_SEC = 60
-const apiCooldown: { [key: string]: boolean } = {}
+const apiCooldown: { [key: string]: number } = {}
 
 commandHandler.registerCommand('winprobability', {
   aliases: ['win%', 'wp'],
@@ -27,27 +27,34 @@ commandHandler.registerCommand('winprobability', {
       return
     }
 
-    if (!apiCooldown[matchId]) {
-      apiCooldown[matchId] = true
-      setTimeout(() => delete apiCooldown[matchId], API_COOLDOWN_SEC * 1000)
+    if (!apiCooldown[matchId] || Date.now() - apiCooldown[matchId] >= API_COOLDOWN_SEC * 1000) {
+      try {
+        apiCooldown[matchId] = Date.now()
+        const matchDetails = await GetLiveMatch(matchId)
 
-      const matchDetails = await GetLiveMatch(matchId)
-
-      const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
-      if (
-        lastWinRate &&
-        !matchDetails?.data.live.match?.completed &&
-        matchDetails?.data.live.match?.isUpdating
-      ) {
-        const isRadiant = client.gsi?.player?.team_name === 'radiant'
-        const winRate = Math.floor(
-          (isRadiant ? lastWinRate.winRate : 1 - lastWinRate.winRate) * 100,
-        )
-
-        WinRateCache[channel] = `${winRate}% win probability GabeN ${lastWinRate.time}:00 ⏲`
-      } else {
-        WinRateCache[channel] = 'Win probability data is not available yet'
+        const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
+        if (
+          lastWinRate &&
+          !matchDetails?.data.live.match?.completed &&
+          matchDetails?.data.live.match?.isUpdating
+        ) {
+          const isRadiant = client.gsi?.player?.team_name === 'radiant'
+          const winRate = Math.floor(
+            (isRadiant ? lastWinRate.winRate : 1 - lastWinRate.winRate) * 100,
+          )
+          WinRateCache[channel] = `${winRate}% win probability GabeN ${lastWinRate.time}:00 ⏲`
+        } else {
+          WinRateCache[channel] = 'Win probability data is not available yet'
+        }
+      } catch (error) {
+        console.error('Error fetching win probability:', error)
+        WinRateCache[channel] = 'An error occurred while fetching win probability'
       }
+    } else {
+      const remainingCooldown = Math.ceil(
+        (apiCooldown[matchId] + API_COOLDOWN_SEC * 1000 - Date.now()) / 1000,
+      )
+      WinRateCache[channel] = `Cooldown: ${remainingCooldown} seconds`
     }
 
     chatClient.say(channel, WinRateCache[channel])
