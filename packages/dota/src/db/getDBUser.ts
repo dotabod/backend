@@ -28,7 +28,7 @@ export default async function getDBUser({
 
   if (lookingupToken.has(lookupToken)) return null
 
-  logger.info('[GSI] Haven’t cached user token yet, checking db', { ip, token: lookupToken })
+  logger.info('[GSI] Haven’t cached user token yet, checking db', { ip, lookupToken })
   lookingupToken.set(lookupToken, true)
 
   if (!lookupToken) {

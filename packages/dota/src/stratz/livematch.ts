@@ -1,4 +1,4 @@
-import axios from '../utils/axios'
+import axios from '../utils/axios.js'
 
 const STRATZ_GQL = 'https://api.stratz.com/graphql'
 
