@@ -230,5 +230,9 @@
     "commit": "Сервер работает на версии {{version}}, вот что отсутствует по сравнению с последней версией: {{- url}}",
     "unknown": "Не удалось найти последний коммит git, репозиторий находится здесь {{- url}}"
   },
+  "winprobability": {
+    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
+    "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
+  },
   "xpm": "Текущий XPM у {{- heroName}}: {{num}} опыта"
 }
