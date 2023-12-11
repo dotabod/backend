@@ -200,5 +200,9 @@
     "commit": "Server mit Version {{version}}, hier gehts zur neuesten Version: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
   },
+  "winprobability": {
+    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
+    "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
+  },
   "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

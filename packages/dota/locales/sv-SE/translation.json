@@ -200,5 +200,9 @@
     "commit": "Servern kör version {{version}}, här är vad som saknas jämfört med den senaste versionen: {{- url}}",
     "unknown": "Kunde inte hitta den senaste git-commiten, här är repot {{- url}}"
   },
+  "winprobability": {
+    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
+    "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
+  },
   "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

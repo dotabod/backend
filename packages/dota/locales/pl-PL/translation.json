@@ -230,5 +230,9 @@
     "commit": "Serwer działa w wersji {{version}}, tutaj co się zmieniło w najnowszej wersji: {{- url}}",
     "unknown": "Nie można znaleźć ostatniego commitu git tutaj, oto repozytorium {{- url}}"
   },
+  "winprobability": {
+    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
+    "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
+  },
   "xpm": "Aktualny XPM dla {{- heroName}}: {{num}}"
 }

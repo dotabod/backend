@@ -211,5 +211,9 @@
     "commit": "El servidor esta ejecutando la versión {{version}}, esto es lo que falta en comparación con la última versión: {{- url}}",
     "unknown": "No se pudo encontrar el último git commit, aquí está el repositorio {{- url}}"
   },
+  "winprobability": {
+    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
+    "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
+  },
   "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

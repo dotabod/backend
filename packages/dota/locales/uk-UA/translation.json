@@ -230,5 +230,9 @@
     "commit": "Версія запущеного серверу {{version}}, ось що пропущено порівняно з останньою версією: {{- url}}",
     "unknown": "Не вдалося знайти останній коміт, тому посилання на репозиторій {{- url}}"
   },
+  "winprobability": {
+    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
+    "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
+  },
   "xpm": "Поточний XPM для {{- heroName}}: {{num}}"
 }
