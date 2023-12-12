@@ -2,8 +2,7 @@
 FROM node:20-alpine3.17 as base
 
 # Add Git, Python3, make, g++ in a single RUN command
-RUN apk add --no-cache git python3 make g++ \
-    && yarn cache clean
+RUN apk add --no-cache git python3 make g++ && yarn cache clean
 
 # Set build context and work directories
 ARG BUILD_CONTEXT
@@ -40,12 +39,11 @@ RUN yarn buildd
 FROM node:20-alpine3.17 as prod
 
 ARG BUILD_CONTEXT
-ARG NODE_ENV
 
 # Meta-data and labels
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
-      org.opencontainers.image.description="Dotabod container: ${BUILD_CONTEXT}" \
-      org.opencontainers.image.licenses="AGPL-3.0"
+    org.opencontainers.image.description="Dotabod container: ${BUILD_CONTEXT}" \
+    org.opencontainers.image.licenses="AGPL-3.0"
 
 # Create unprivileged user and switch to it
 RUN adduser -D dotadockeruser
@@ -63,5 +61,4 @@ COPY --from=builder --chown=dotadockeruser /app/$BUILD_CONTEXT/dist $BUILD_CONTE
 COPY --from=builder --chown=dotadockeruser /app/node_modules ./node_modules
 
 # Environment and CMD
-ENV NODE_ENV=$NODE_ENV
-CMD yarn workspace @dotabod/dota run docker:$NODE_ENV
+CMD yarn workspace @dotabod/dota run docker:production
