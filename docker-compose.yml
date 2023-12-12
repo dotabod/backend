@@ -127,18 +127,6 @@ services:
       - ./packages/dota/locales:/app/packages/dota/locales
       - steam_auth:/app/packages/dota/src/steam/volumes
 
-  mongodb:
-    container_name: mongodb
-    image: "mongo:latest"
-    volumes:
-      - "mongodb_data:/data/db"
-      - ./services/mongodb/src/init.js:/docker-entrypoint-initdb.d/init_mongo.js
-
-# Volumes are useful for data persistence, so the data will not be deleted
-# even later you call command docker-compose down.
-volumes:
-  mongodb_data:
-  steam_auth:
 networks:
   default:
     name: dotabod
