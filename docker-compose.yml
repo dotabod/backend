@@ -9,7 +9,7 @@ services:
     restart: on-failure
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.chat
+      dockerfile: $PWD/packages/Dockerfile.chat
       args:
         - NODE_ENV=${NODE_ENV:-development}
     hostname: twitch-chat
@@ -32,14 +32,14 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
     volumes:
-      - ./packages/twitch/chat/locales:/app/packages/twitch/chat/locales
+      - $PWD/packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
   steam:
     container_name: steam
     restart: on-failure
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.steam
+      dockerfile: $PWD/packages/Dockerfile.steam
       args:
         - NODE_ENV=${NODE_ENV:-development}
     hostname: steam
@@ -62,7 +62,7 @@ services:
     restart: on-failure
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.events
+      dockerfile: $PWD/packages/Dockerfile.events
       args:
         - NODE_ENV=${NODE_ENV:-development}
     hostname: twitch-events
@@ -92,7 +92,7 @@ services:
     restart: on-failure
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.dota
+      dockerfile: $PWD/packages/Dockerfile.dota
       args:
         - NODE_ENV=${NODE_ENV:-development}
 
@@ -124,9 +124,21 @@ services:
       - TWITCH_CLIENT_SECRET
     volumes:
       # Storing locales in a volume so that they can be edited without rebuilding the image
-      - ./packages/dota/locales:/app/packages/dota/locales
+      - $PWD/packages/dota/locales:/app/packages/dota/locales
       - steam_auth:/app/packages/dota/src/steam/volumes
 
+  mongodb:
+    container_name: mongodb
+    image: "mongo:latest"
+    volumes:
+      - "mongodb_data:/data/db"
+      - $PWD/services/mongodb/src/init.js:/docker-entrypoint-initdb.d/init_mongo.js
+
+# Volumes are useful for data persistence, so the data will not be deleted
+# even later you call command docker-compose down.
+volumes:
+  mongodb_data:
+  steam_auth:
 networks:
   default:
     name: dotabod
