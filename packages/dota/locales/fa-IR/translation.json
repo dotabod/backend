@@ -28,7 +28,7 @@
     "died": "درخشیدی {{- heroName}} . {{itemNames}}  را نگه دار واسه بازی بعد {{emote}}",
     "firstBloodDeath": "اولین غذا را داد {{- heroName}} {{emote}}",
     "midas": "{{emote}} میداس رو استفاده کن",
-    "noTp": "{{channel}} where's your tp {{emote}}",
+    "noTp": "استاد TP نداری {{emote}}",
     "pause": "{{emote}} کی وسط شکار ریدنش گرفت؟",
     "smoked": "{{emote}} {{- heroName}} سبحان الله غیب شد",
     "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
