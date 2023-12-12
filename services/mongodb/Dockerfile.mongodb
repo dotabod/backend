@@ -1,0 +1,8 @@
+# Dockerfile.mongo
+FROM mongo:latest
+
+# Copy your custom init.js file to the appropriate location
+COPY ./services/mongodb/src/init.js /docker-entrypoint-initdb.d/init.js
+
+# Set the execution permissions for the init.js file
+RUN chmod +x /docker-entrypoint-initdb.d/init.js
