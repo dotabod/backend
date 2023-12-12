@@ -25,6 +25,7 @@ FROM base as builder
 COPY tsconfig.json ./
 COPY ./packages/twitch/chat/tsconfig.json ./packages/twitch/chat/
 COPY ./packages/twitch/chat/src ./packages/twitch/chat/src/
+COPY ./packages/twitch/chat/locales ./packages/twitch/chat/locales/
 
 WORKDIR /app/
 RUN yarn buildtc
@@ -47,6 +48,7 @@ WORKDIR /app
 COPY --from=builder --chown=dotadockeruser /app/package.json /app/tsconfig.json ./
 COPY --from=builder --chown=dotadockeruser /app/./packages/twitch/chat/package.json ././packages/twitch/chat/
 COPY --from=builder --chown=dotadockeruser /app/./packages/twitch/chat/dist ./packages/twitch/chat/dist/
+COPY --from=builder --chown=dotadockeruser /app/./packages/twitch/chat/locales ./packages/twitch/chat/locales/
 
 # Copy node_modules
 COPY --from=builder --chown=dotadockeruser /app/node_modules ./node_modules

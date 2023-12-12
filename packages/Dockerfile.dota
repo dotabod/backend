@@ -28,6 +28,7 @@ COPY packages/settings/tsconfig.json packages/settings/
 COPY packages/settings/src packages/settings/src/
 COPY ./packages/dota/tsconfig.json ./packages/dota/
 COPY ./packages/dota/src ./packages/dota/src/
+COPY ./packages/dota/locales ./packages/dota/locales/
 
 WORKDIR /app/
 RUN yarn builds
@@ -53,6 +54,7 @@ COPY --from=builder --chown=dotadockeruser /app/packages/settings/package.json /
 COPY --from=builder --chown=dotadockeruser /app/./packages/dota/package.json ././packages/dota/
 COPY --from=builder --chown=dotadockeruser /app/packages/settings/dist packages/settings/dist/
 COPY --from=builder --chown=dotadockeruser /app/./packages/dota/dist ./packages/dota/dist/
+COPY --from=builder --chown=dotadockeruser /app/./packages/dota/locales ./packages/dota/locales/
 
 # Copy node_modules
 COPY --from=builder --chown=dotadockeruser /app/node_modules ./node_modules
