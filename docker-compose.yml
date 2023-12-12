@@ -12,7 +12,6 @@ services:
       dockerfile: ./packages/Dockerfile.chat
       args:
         - NODE_ENV=${NODE_ENV:-development}
-        - BUILD_CONTEXT=./packages/twitch/chat
     hostname: twitch-chat
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -43,7 +42,6 @@ services:
       dockerfile: ./packages/Dockerfile.steam
       args:
         - NODE_ENV=${NODE_ENV:-development}
-        - BUILD_CONTEXT=./packages/steam
     hostname: steam
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -67,7 +65,6 @@ services:
       dockerfile: ./packages/Dockerfile.events
       args:
         - NODE_ENV=${NODE_ENV:-development}
-        - BUILD_CONTEXT=./packages/twitch/events
     hostname: twitch-events
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -98,7 +95,6 @@ services:
       dockerfile: ./packages/Dockerfile.dota
       args:
         - NODE_ENV=${NODE_ENV:-development}
-        - BUILD_CONTEXT=./packages/dota
     hostname: dota
     # ports:
     # - "9229:9229" # just in case we want to enable node inspecting
