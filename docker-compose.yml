@@ -9,7 +9,7 @@ services:
     restart: on-failure
     build:
       context: .
-      dockerfile: $PWD/packages/Dockerfile.chat
+      dockerfile: ./packages/Dockerfile.chat
       args:
         - NODE_ENV=${NODE_ENV:-development}
     hostname: twitch-chat
@@ -31,15 +31,13 @@ services:
       - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
-    volumes:
-      - $PWD/packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
   steam:
     container_name: steam
     restart: on-failure
     build:
       context: .
-      dockerfile: $PWD/packages/Dockerfile.steam
+      dockerfile: ./packages/Dockerfile.steam
       args:
         - NODE_ENV=${NODE_ENV:-development}
     hostname: steam
@@ -62,7 +60,7 @@ services:
     restart: on-failure
     build:
       context: .
-      dockerfile: $PWD/packages/Dockerfile.events
+      dockerfile: ./packages/Dockerfile.events
       args:
         - NODE_ENV=${NODE_ENV:-development}
     hostname: twitch-events
@@ -92,7 +90,7 @@ services:
     restart: on-failure
     build:
       context: .
-      dockerfile: $PWD/packages/Dockerfile.dota
+      dockerfile: ./packages/Dockerfile.dota
       args:
         - NODE_ENV=${NODE_ENV:-development}
 
@@ -123,8 +121,6 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
     volumes:
-      # Storing locales in a volume so that they can be edited without rebuilding the image
-      - $PWD/packages/dota/locales:/app/packages/dota/locales
       - steam_auth:/app/packages/dota/src/steam/volumes
 
   mongodb:
@@ -132,7 +128,7 @@ services:
     image: "mongo:latest"
     volumes:
       - "mongodb_data:/data/db"
-      - $PWD/services/mongodb/src/init.js:/docker-entrypoint-initdb.d/init_mongo.js
+      - ./services/mongodb/src/init.js:/docker-entrypoint-initdb.d/init_mongo.js
 
 # Volumes are useful for data persistence, so the data will not be deleted
 # even later you call command docker-compose down.
