@@ -212,8 +212,8 @@
     "unknown": "Não foi possível encontrar o último git commit, aqui está o repositório {{- url}}"
   },
   "winprobability": {
-    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
-    "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
+    "winProbability": "{{winRate}}% de chance de vitória {{emote}} em {{gameTime}}⏲️ · Próxima atualização em {{remainingCooldown}}s",
+    "winProbabilityDataNotAvailable": "Chance de vitória não está disponível ainda · Tente novamente em {{remainingCooldown}}s"
   },
   "xpm": "XPM ao vivo de {{- heroName}}: {{num}}"
 }
