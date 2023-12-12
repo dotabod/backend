@@ -2,23 +2,23 @@ services:
   twitch-chat:
     image: "ghcr.io/dotabod/twitch-chat:v2.0-dev"
     volumes:
-      - packages/twitch/chat/src/:/app/packages/twitch/chat/src/
+      - $CWD/packages/twitch/chat/src/:/app/packages/twitch/chat/src/
 
   steam:
     image: "ghcr.io/dotabod/steam:v2.0-dev"
     volumes:
-      - packages/steam/src:/app/packages/steam/src
+      - $CWD/packages/steam/src:/app/packages/steam/src
 
   twitch-events:
     image: "ghcr.io/dotabod/twitch-events:v2.0-dev"
     volumes:
-      - packages/twitch/events/src:/app/packages/twitch/events/src
+      - $CWD/packages/twitch/events/src:/app/packages/twitch/events/src
 
   dota:
     image: "ghcr.io/dotabod/dota:v2.0-dev"
     volumes:
-      - packages/dota/src:/app/packages/dota/src
-      - packages/dota/jest.config.ts:/app/packages/dota/jest.config.ts
+      - $CWD/packages/dota/src:/app/packages/dota/src
+      - $CWD/packages/dota/jest.config.ts:/app/packages/dota/jest.config.ts
     ports:
       - "5120:5120"
 
@@ -31,4 +31,4 @@ services:
     image: "mongo:latest"
     volumes:
       - "mongodb_data:/data/db"
-      - services/mongodb/src/init.js:/docker-entrypoint-initdb.d/init_mongo.js
+      - $CWD/services/mongodb/src/init.js:/docker-entrypoint-initdb.d/init_mongo.js
