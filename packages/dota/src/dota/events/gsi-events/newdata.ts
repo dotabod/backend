@@ -14,6 +14,8 @@ import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 import minimapParser from '../minimap/parser.js'
+import { server } from '../../index'
+import { GetLiveMatch } from '../../../stratz/livematch'
 
 function chatterMatchFound(client: SocketClient) {
   if (!client.stream_online) return
@@ -129,6 +131,29 @@ eventHandler.registerEvent(`newdata`, {
     const hasWon =
       dotaClient.client.gsi?.map?.win_team && dotaClient.client.gsi.map.win_team !== 'none'
     if (hasWon) return
+
+    const winChanceEnabled = getValueOrDefault(
+      DBSettings.winProbabilityOverlay,
+      dotaClient.client.settings,
+    )
+    if (winChanceEnabled) {
+      const updateInterval = getValueOrDefault(
+        DBSettings.winProbabilityOverlayIntervalMinutes,
+        dotaClient.client.settings,
+      )
+
+      if (
+        dotaClient.client.gsi?.map?.clock_time &&
+        dotaClient.client.gsi?.map?.clock_time % (updateInterval * 60) === 0
+      ) {
+        const matchDetails = await GetLiveMatch(parseInt(dotaClient.client.gsi?.map?.matchid, 10))
+        const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
+        server.io.to(dotaClient.client.token).emit('update-radiant-win-chance', {
+          value: lastWinRate?.winRate,
+          time: lastWinRate?.time,
+        })
+      }
+    }
 
     // only if they're in a match ^ and they're a beta tester
     if (dotaClient.client.beta_tester && dotaClient.client.stream_online) {

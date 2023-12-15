@@ -105,6 +105,8 @@ export const defaultSettings = {
   notablePlayersOverlay: true,
   notablePlayersOverlayFlags: true,
   notablePlayersOverlayFlagsCmd: true,
+  winProbabilityOverlay: true,
+  winProbabilityOverlayIntervalMinutes: 10,
   tellChatNewMMR: true,
   tellChatBets: true,
   queueBlocker: false,
