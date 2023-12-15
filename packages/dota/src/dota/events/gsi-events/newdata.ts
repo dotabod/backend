@@ -148,10 +148,15 @@ eventHandler.registerEvent(`newdata`, {
       ) {
         const matchDetails = await GetLiveMatch(parseInt(dotaClient.client.gsi?.map?.matchid, 10))
         const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
-        server.io.to(dotaClient.client.token).emit('update-radiant-win-chance', {
-          value: lastWinRate?.winRate,
-          time: lastWinRate?.time,
-        })
+        if (lastWinRate) {
+          server.io.to(dotaClient.client.token).emit('update-radiant-win-chance', {
+            value: lastWinRate?.winRate,
+            time: lastWinRate?.time,
+          })
+          setTimeout(() => {
+            server.io.to(dotaClient.client.token).emit('update-radiant-win-chance', null)
+          }, 10 * 1000)
+        }
       }
     }
 
