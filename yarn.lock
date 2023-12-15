@@ -1209,7 +1209,7 @@ __metadata:
     body-parser: ^1.20.2
     chokidar: ^3.5.3
     country-code-emoji: ^2.3.0
-    dota2: "https://github.com/dotabod/node-dota2#head=staging"
+    dota2: "https://github.com/dotabod/node-dota2"
     dotaconstants: ^7.18.0
     eslint: ^8.48.0
     eslint-plugin-prettier: ^5.0.0
@@ -4721,17 +4721,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dota2@https://github.com/dotabod/node-dota2#head=staging":
+"dota2@https://github.com/dotabod/node-dota2":
   version: 7.0.3
-  resolution: "dota2@https://github.com/dotabod/node-dota2.git#commit=e3f31d11df35677f83490aa389c47216269faf6f"
+  resolution: "dota2@https://github.com/dotabod/node-dota2.git#commit=b19fe7bcc135fb5780167639d6f16f610dae52ae"
   dependencies:
     deferred: ^0.7.10
     long: ^4.0.0
     merge: ^1.2.1
-    steam: "github:odota/node-steam"
+    steam: ^1.4.1
     steam-resources: "github:odota/node-steam-resources"
     winston: ^3.2.1
-  checksum: 38637f9eb785d64c710218163cea452f767b070180e54b3e85d8d625a048e0cbff0418faa4cae55a15e66e6aa856b4836bbe9e03d7fbe8ec2e62f4d39880ecaf
+  checksum: 365215445072727772278b32cb235b094b2f4802336e433dd698ba7fd0ef61fbb5a5e7fcdba97898849548976871a783014202afb67c2a69ce0707dffa8d16ee
   languageName: node
   linkType: hard
 
@@ -9418,7 +9418,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"steam@github:odota/node-steam, steam@https://github.com/odota/node-steam#head=master":
+"steam-resources@github:seishun/node-steam-resources#v1.2.0":
+  version: 1.2.0
+  resolution: "steam-resources@https://github.com/seishun/node-steam-resources.git#commit=0c5c52a524db3440fb7b753c70a8c16977f85252"
+  dependencies:
+    bytebuffer: ^5.0
+    csv-parse: ^4.0.1
+    protobufjs: ^4.1
+  checksum: 745fb324c50bc522bec5f0e4d1c91f95251ddbdc9ad3a04bf4a74b680ecb5375edb3811c95214305eafc1e9fb7a67c21950bba3472dc7bb2b7a0a3c807c4b38c
+  languageName: node
+  linkType: hard
+
+"steam@https://github.com/odota/node-steam#head=master":
   version: 1.4.1
   resolution: "steam@https://github.com/odota/node-steam.git#commit=2ec120baea7b53857b243e5a7e3f16d1839467e4"
   dependencies:
@@ -9428,6 +9439,19 @@ __metadata:
     steam-crypto: ^0.0
     steam-resources: "github:odota/node-steam-resources"
   checksum: 0cc7ca468b1c9904b466bb1fcf535f57227c6a9a3e1e3533927b32b886cb2fe3d0cff6db42abc60115018aab6ab6c7a17dd4371270bfd3e1f7165bcd575d1b39
+  languageName: node
+  linkType: hard
+
+"steam@npm:^1.4.1":
+  version: 1.4.1
+  resolution: "steam@npm:1.4.1"
+  dependencies:
+    adm-zip: ^0.4
+    buffer-crc32: ^0.2
+    bytebuffer: ^5.0
+    steam-crypto: ^0.0
+    steam-resources: "github:seishun/node-steam-resources#v1.2.0"
+  checksum: 51c1764bd314e878fe6e6078fc5d8fa82c76b4e3f53e423203f972ad27fba9c759e0ee1255050bcfd3d0b12111d1c6b08a5822b2d5e3d05d3f30f0275f93a1e0
   languageName: node
   linkType: hard
 
