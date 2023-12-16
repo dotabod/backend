@@ -151,7 +151,7 @@ eventHandler.registerEvent(`newdata`, {
         if (lastWinRate) {
           server.io.to(dotaClient.client.token).emit('update-radiant-win-chance', {
             value: lastWinRate?.winRate,
-            time: lastWinRate?.time,
+            time: lastWinRate?.time * 60, // time in seconds
           })
           setTimeout(() => {
             server.io.to(dotaClient.client.token).emit('update-radiant-win-chance', null)
