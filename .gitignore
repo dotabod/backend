@@ -1,8 +1,8 @@
 .env*
+!.env.example
 .idea
 node_modules
 assets
-dist
 build
 config.js
 **/volumes
@@ -10,9 +10,9 @@ newrelic_agent.log
 .idea
 !**/locales/en/translation.json
 *.key
-*.tsbuildinfo
 coverage
-
+dist
+*.tsbuildinfo
 # yarn v2
 .yarn/*
 !.yarn/cache

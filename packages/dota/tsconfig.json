@@ -1,12 +1,19 @@
 {
   "compilerOptions": {
-    /* Basic Options */
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["jest", "node"]
+    "types": [
+      "jest",
+      "node"
+    ]
   },
-  "include": ["src/**/*", "./.eslintrc.js"],
-  "exclude": ["node_modules"],
+  "include": [
+    "src/**/*",
+    "./.eslintrc.js"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
   "ts-node": {
     "transpileOnly": true,
     "typeCheck": false

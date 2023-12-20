@@ -2,11 +2,9 @@
 FROM node:20-alpine3.17 as base
 
 # Add Git, Python3, make, g++ in a single RUN command
-RUN apk add --no-cache git python3 make g++ \
-    && yarn cache clean
+RUN apk add --no-cache git python3 make g++ && yarn cache clean
 
 # Set build context and work directories
-ARG BUILD_CONTEXT
 WORKDIR /app
 
 # Copy just the relevant package.json and yarn.lock files
@@ -14,10 +12,10 @@ COPY package.json .yarnrc.yml yarn.lock ./
 COPY packages/settings/package.json ./packages/settings/
 COPY .yarn/releases/ ./.yarn/releases/
 COPY .yarn/cache/ ./.yarn/cache/
-COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
+COPY ./packages/dota/package.json ././packages/dota/
 
 # Install dependencies
-RUN yarn set version berry
+RUN yarn set version 4.0.2
 RUN yarn install
 
 #-------------------------
@@ -28,8 +26,9 @@ FROM base as builder
 COPY tsconfig.json ./
 COPY packages/settings/tsconfig.json packages/settings/
 COPY packages/settings/src packages/settings/src/
-COPY $BUILD_CONTEXT/tsconfig.json $BUILD_CONTEXT/
-COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
+COPY ./packages/dota/tsconfig.json ./packages/dota/
+COPY ./packages/dota/src ./packages/dota/src/
+COPY ./packages/dota/locales ./packages/dota/locales/
 
 WORKDIR /app/
 RUN yarn builds
@@ -39,13 +38,10 @@ RUN yarn buildd
 
 FROM node:20-alpine3.17 as prod
 
-ARG BUILD_CONTEXT
-ARG NODE_ENV
-
 # Meta-data and labels
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
-      org.opencontainers.image.description="Dotabod container: ${BUILD_CONTEXT}" \
-      org.opencontainers.image.licenses="AGPL-3.0"
+    org.opencontainers.image.description="Dotabod container: ./packages/dota" \
+    org.opencontainers.image.licenses="AGPL-3.0"
 
 # Create unprivileged user and switch to it
 RUN adduser -D dotadockeruser
@@ -55,13 +51,13 @@ USER dotadockeruser
 WORKDIR /app
 COPY --from=builder --chown=dotadockeruser /app/package.json /app/tsconfig.json ./
 COPY --from=builder --chown=dotadockeruser /app/packages/settings/package.json /app/packages/settings/
-COPY --from=builder --chown=dotadockeruser /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
+COPY --from=builder --chown=dotadockeruser /app/./packages/dota/package.json ././packages/dota/
 COPY --from=builder --chown=dotadockeruser /app/packages/settings/dist packages/settings/dist/
-COPY --from=builder --chown=dotadockeruser /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
+COPY --from=builder --chown=dotadockeruser /app/./packages/dota/dist ./packages/dota/dist/
+COPY --from=builder --chown=dotadockeruser /app/./packages/dota/locales ./packages/dota/locales/
 
 # Copy node_modules
 COPY --from=builder --chown=dotadockeruser /app/node_modules ./node_modules
 
 # Environment and CMD
-ENV NODE_ENV=$NODE_ENV
-CMD yarn workspace @dotabod/dota run docker:$NODE_ENV
+CMD yarn workspace @dotabod/dota run docker:production

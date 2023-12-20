@@ -1,0 +1,32 @@
+name: Map and Notify On Registry Package Update
+
+on:
+  registry_package:
+    types: [updated]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check for image tag information and valid package name
+        if: |
+          github.event.registry_package.package_version.container_metadata.tag.name != '' &&
+          (
+            github.event.registry_package.name == 'dota' ||
+            github.event.registry_package.name == 'twitch-events' ||
+            github.event.registry_package.name == 'twitch-chat' ||
+            github.event.registry_package.name == 'steam'
+          )
+
+        run: |
+          # Map package name to UUID
+          case "${{ github.event.registry_package.name }}" in
+            "dota") UUID="esgckgc" ;;
+            "twitch-events") UUID="aopskdk" ;;
+            "twitch-chat") UUID="gahgag" ;;
+            "steam") UUID="asldja" ;;
+          esac
+
+          # Use curl to call a GET webhook with the mapped UUID and API key from secrets
+          curl -X GET -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}" "https://${{ secrets.COOLIFY_HOST }}/api/v1/deploy?uuid=${UUID}&force=false"
