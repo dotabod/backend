@@ -2,11 +2,11 @@ services:
   redis:
     container_name: redis
     image: "redis/redis-stack-server:latest"
-    restart: on-failure
+    restart: on-failure:5
 
   twitch-chat:
     container_name: twitch-chat
-    restart: on-failure
+    restart: on-failure:5
     build:
       context: .
       dockerfile: ./packages/Dockerfile.chat
@@ -34,7 +34,7 @@ services:
 
   steam:
     container_name: steam
-    restart: on-failure
+    restart: on-failure:5
     build:
       context: .
       dockerfile: ./packages/Dockerfile.steam
@@ -57,7 +57,7 @@ services:
 
   twitch-events:
     container_name: twitch-events
-    restart: on-failure
+    restart: on-failure:5
     build:
       context: .
       dockerfile: ./packages/Dockerfile.events
@@ -87,7 +87,7 @@ services:
 
   dota:
     container_name: dota
-    restart: on-failure
+    restart: on-failure:5
     build:
       context: .
       dockerfile: ./packages/Dockerfile.dota
@@ -124,6 +124,7 @@ services:
       - steam_auth:/app/packages/dota/src/steam/volumes
 
   mongodb:
+    restart: on-failure:5
     build:
       context: ./
       dockerfile: services/mongodb/Dockerfile.mongodb
