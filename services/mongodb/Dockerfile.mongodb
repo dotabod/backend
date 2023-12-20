@@ -1,5 +1,5 @@
 # Dockerfile.mongo
-FROM mongo:4.4.26
+FROM mongo:4.4
 
 # Copy your custom init.js file to the appropriate location
 COPY ./services/mongodb/src/init.js /docker-entrypoint-initdb.d/init.js
