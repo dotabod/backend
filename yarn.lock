@@ -1188,7 +1188,7 @@ __metadata:
     "@types/newrelic": "npm:^9.14.0"
     "@types/node": "npm:^20.5.7"
     "@types/retry": "npm:^0.12.2"
-    "@types/steam": "npm:^0.0.29"
+    "@types/steam": "npm:^0.0.32"
     "@typescript-eslint/eslint-plugin": "npm:^6.5.0"
     "@typescript-eslint/parser": "npm:^6.5.0"
     axios: "npm:1.2.0-alpha.1"
@@ -1215,7 +1215,7 @@ __metadata:
     retry: "npm:^0.13.1"
     socket.io: "npm:^4.7.2"
     socket.io-client: "npm:^4.7.2"
-    steam: "https://github.com/odota/node-steam#head=master"
+    steam: "https://github.com/dotabod/node-steam#head=master"
     steam-errors: "npm:^1.0.0"
     ts-jest: "npm:^29.1.1"
     typescript: "npm:^5.3.3"
@@ -3105,6 +3105,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/steam@npm:^0.0.32":
+  version: 0.0.32
+  resolution: "@types/steam@npm:0.0.32"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: b756b7dd9bb6871fe70c4d291ad3851ba8ffde0b75a72ae68837d5d95a9bc628b8c238993e8c1d9d6460afe3a2f8465c38668c939d46fb6f91bfaf345b5f7cac
+  languageName: node
+  linkType: hard
+
 "@types/triple-beam@npm:^1.3.2":
   version: 1.3.5
   resolution: "@types/triple-beam@npm:1.3.5"
@@ -4786,15 +4795,15 @@ __metadata:
 
 "dota2@https://github.com/dotabod/node-dota2#head=staging":
   version: 7.0.3
-  resolution: "dota2@https://github.com/dotabod/node-dota2.git#commit=b19fe7bcc135fb5780167639d6f16f610dae52ae"
+  resolution: "dota2@https://github.com/dotabod/node-dota2.git#commit=5b477fefe3df26f61c2678ec428aaf284314c3ba"
   dependencies:
     deferred: "npm:^0.7.10"
     long: "npm:^4.0.0"
     merge: "npm:^1.2.1"
-    steam: "npm:^1.4.1"
-    steam-resources: "github:odota/node-steam-resources"
+    steam: "https://github.com/dotabod/node-steam#head=master"
+    steam-resources: "https://github.com/dotabod/node-steam-resources#head=master"
     winston: "npm:^3.2.1"
-  checksum: 634a0e27ea786b6f9b6c13b5a1bdf58ac45d842ea49d219b953ca7ca8327c1c6b12853d4b47bb588135962ebde530e5eaf33b74eb90b7e474676d7e436d9d8ac
+  checksum: a06aa4e7179bc728dae314fb2adbf2659aae3f17818f7a351620c126fce488a653608b34ac84eca6bf04133cab7166a24bf1f64976daf94f90ab9b9ad7b66783
   languageName: node
   linkType: hard
 
@@ -9632,9 +9641,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"steam-resources@github:odota/node-steam-resources":
+"steam-resources@https://github.com/dotabod/node-steam-resources#head=master":
   version: 1.2.2
-  resolution: "steam-resources@https://github.com/odota/node-steam-resources.git#commit=57ee94899194c3c5a090722632ef3b5df00a3e45"
+  resolution: "steam-resources@https://github.com/dotabod/node-steam-resources.git#commit=57ee94899194c3c5a090722632ef3b5df00a3e45"
   dependencies:
     bytebuffer: "npm:^5.0"
     csv-parse: "npm:^4.0.1"
@@ -9643,40 +9652,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"steam-resources@github:seishun/node-steam-resources#v1.2.0":
-  version: 1.2.0
-  resolution: "steam-resources@https://github.com/seishun/node-steam-resources.git#commit=0c5c52a524db3440fb7b753c70a8c16977f85252"
-  dependencies:
-    bytebuffer: "npm:^5.0"
-    csv-parse: "npm:^4.0.1"
-    protobufjs: "npm:^4.1"
-  checksum: 7763a1f7de218af922e58f30862fa8239026d63b6267d2d0034f6d79cb87899628458df2ee5a9479b319233432c197cadbf1ca0fa6cf528151cf1fee60e09409
-  languageName: node
-  linkType: hard
-
-"steam@https://github.com/odota/node-steam#head=master":
+"steam@https://github.com/dotabod/node-steam#head=master":
   version: 1.4.1
-  resolution: "steam@https://github.com/odota/node-steam.git#commit=2ec120baea7b53857b243e5a7e3f16d1839467e4"
+  resolution: "steam@https://github.com/dotabod/node-steam.git#commit=c4d5c6ba2aaaf37280a336aa0ae5ea847ed5071f"
   dependencies:
     adm-zip: "npm:^0.4"
     buffer-crc32: "npm:^0.2"
     bytebuffer: "npm:^5.0"
     steam-crypto: "npm:^0.0"
-    steam-resources: "github:odota/node-steam-resources"
-  checksum: ca10d94b3baf182fc6b9bf19c5a10732488bde66662cf4ae6138ce23f79d262c5151a731d3ce1bf429b2e69eabe99c3afdea6dc3d8d0f64b20157f8ff0266a8d
-  languageName: node
-  linkType: hard
-
-"steam@npm:^1.4.1":
-  version: 1.4.1
-  resolution: "steam@npm:1.4.1"
-  dependencies:
-    adm-zip: "npm:^0.4"
-    buffer-crc32: "npm:^0.2"
-    bytebuffer: "npm:^5.0"
-    steam-crypto: "npm:^0.0"
-    steam-resources: "github:seishun/node-steam-resources#v1.2.0"
-  checksum: 7795e3239036e262c5792892aee7e26edb162128de4bd42b28524cbb52ee4691c945ef5b9234cabd5188fd1d38c862ca2fec31b2bcbdcbbdf721e00cd1cbfdb8
+    steam-resources: "https://github.com/dotabod/node-steam-resources#head=master"
+  checksum: dddbad5be76d7c8dd4e85a61543ba0a80e85683c884add630a03150989a4351742ae66ce49a6a3b65ad8aeb22b6f542fda6460e54ae00e108283675a7676afa5
   languageName: node
   linkType: hard
 
