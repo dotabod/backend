@@ -20,15 +20,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Build and push
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: .
-      #     push: true
-      #     target: main
-      #     tags: ghcr.io/<name>/<image-name>:latest
-      #     cache-from: type=registry,ref=ghcr.io/<name>/<image-name>:latest
-      #     cache-to: type=inline
       - name: Build the Docker image
         run: |
           docker compose -f ./docker-compose.yml build
