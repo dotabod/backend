@@ -117,8 +117,7 @@ async function fixNewUsers() {
       console.log('no account for user', user.id)
       continue
     }
-    // @ts-expect-error its not an array
-    await handleNewUser(user.Account.providerAccountId, botApi)
+    if (botApi) await handleNewUser(user.Account.providerAccountId, botApi)
   }
   return
 }
