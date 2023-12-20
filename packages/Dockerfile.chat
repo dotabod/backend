@@ -14,7 +14,7 @@ COPY .yarn/cache/ ./.yarn/cache/
 COPY ./packages/twitch/chat/package.json ././packages/twitch/chat/
 
 # Install dependencies
-RUN yarn set version berry
+RUN yarn set version 4.0.2
 RUN yarn install
 
 #-------------------------

@@ -15,7 +15,7 @@ COPY .yarn/cache/ ./.yarn/cache/
 COPY ./packages/dota/package.json ././packages/dota/
 
 # Install dependencies
-RUN yarn set version berry
+RUN yarn set version 4.0.2
 RUN yarn install
 
 #-------------------------
