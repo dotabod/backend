@@ -10,7 +10,8 @@ newrelic_agent.log
 !**/locales/en/translation.json
 *.key
 coverage
-
+dist
+*.tsbuildinfo
 # yarn v2
 .yarn/*
 !.yarn/cache
