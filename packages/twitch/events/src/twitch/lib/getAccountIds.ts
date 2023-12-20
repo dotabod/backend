@@ -33,8 +33,7 @@ export async function getAccountIds(): Promise<string[]> {
       const newProviderIds = data.map((user) => {
         return Array.isArray(user?.accounts)
           ? user?.accounts[0]?.providerAccountId
-          : // @ts-expect-error supabase ts expects an array but its not
-            (user?.accounts?.providerAccountId as string)
+          : (user?.accounts?.providerAccountId as string)
       })
 
       providerIds.push(...newProviderIds)

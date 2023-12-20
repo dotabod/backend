@@ -113,7 +113,6 @@ async function fixNewUsers() {
 
   const botApi = await getBotAPI_DEV_ONLY()
   for (const user of users) {
-    // @ts-expect-error its not an array
     if (!user.Account?.providerAccountId) {
       console.log('no account for user', user.id)
       continue
