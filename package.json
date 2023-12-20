@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "up": "yarn upgrade-interactive --latest",
+    "build": "yarn buildst && yarn builds && yarn buildd && yarn buildtc && yarn buildte",
     "buildst": "yarn workspace @dotabod/steam run build",
     "builds": "yarn workspace @dotabod/settings run build",
     "buildd": "yarn workspace @dotabod/dota run build",
@@ -55,7 +56,7 @@
     "prettier": "^3.0.3",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.3"
   },
   "lint-staged": {
     "*.+(js|jsx|ts|tsx|json|css|md)": [

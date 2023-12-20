@@ -1,0 +1,1 @@
+{"version":3,"file":"isSpectator.js","sourceRoot":"","sources":["../../../src/dota/lib/isSpectator.ts"],"names":[],"mappings":"AAEA,MAAM,UAAU,WAAW,CAAC,GAAY;IACtC,IAAI,CAAC,GAAG;QAAE,OAAO,KAAK,CAAA;IACtB,OAAO,GAAG,CAAC,MAAM,EAAE,SAAS,KAAK,WAAW,IAAI,OAAO,IAAI,CAAC,GAAG,CAAC,MAAM,IAAI,EAAE,CAAC,CAAA;AAC/E,CAAC"}

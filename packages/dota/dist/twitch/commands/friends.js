@@ -1,0 +1,21 @@
+import { t } from 'i18next';
+import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js';
+import { chatClient } from '../chatClient.js';
+import commandHandler from '../lib/CommandHandler.js';
+commandHandler.registerCommand('friends', {
+    permission: 4,
+    handler: (message, args) => {
+        const { channel: { name: channel, client }, } = message;
+        const matchId = client.gsi?.map?.matchid;
+        if (!client.gsi?.hero?.name) {
+            chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }));
+            return;
+        }
+        if (!isPlayingMatch(client.gsi) || !matchId) {
+            chatClient.say(channel, t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }));
+            return;
+        }
+        chatClient.say(channel, t('matchId', { lng: message.channel.client.locale, matchId }));
+    },
+});
+//# sourceMappingURL=friends.js.map

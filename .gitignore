@@ -2,7 +2,6 @@
 .idea
 node_modules
 assets
-dist
 build
 config.js
 **/volumes
@@ -10,7 +9,6 @@ newrelic_agent.log
 .idea
 !**/locales/en/translation.json
 *.key
-*.tsbuildinfo
 coverage
 
 # yarn v2

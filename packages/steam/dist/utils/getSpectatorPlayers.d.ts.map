@@ -1,0 +1,1 @@
+{"version":3,"file":"getSpectatorPlayers.d.ts","sourceRoot":"","sources":["../../src/utils/getSpectatorPlayers.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,MAAM,EAAE,MAAM,mBAAmB,CAAA;AAE1C,wBAAgB,mBAAmB,CAAC,GAAG,CAAC,EAAE,MAAM;YAClB,MAAM;eAAa,MAAM;cAAY,OAAO;IAuBzE"}
