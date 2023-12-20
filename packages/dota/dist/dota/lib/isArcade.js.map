@@ -1,1 +1,0 @@
-{"version":3,"file":"isArcade.js","sourceRoot":"","sources":["../../../src/dota/lib/isArcade.ts"],"names":[],"mappings":"AAEA,MAAM,UAAU,QAAQ,CAAC,GAAY;IACnC,IAAI,CAAC,GAAG;QAAE,OAAO,KAAK,CAAA;IACtB,OAAO,GAAG,CAAC,GAAG,EAAE,cAAc,KAAK,EAAE,IAAI,GAAG,CAAC,GAAG,EAAE,cAAc,KAAK,SAAS,CAAA;AAChF,CAAC"}
