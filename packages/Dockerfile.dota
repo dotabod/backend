@@ -12,10 +12,9 @@ COPY package.json .yarnrc.yml yarn.lock ./
 COPY packages/settings/package.json ./packages/settings/
 COPY .yarn/releases/ ./.yarn/releases/
 COPY .yarn/cache/ ./.yarn/cache/
-COPY ./packages/dota/package.json ././packages/dota/
+COPY ./packages/dota/package.json ./packages/dota/
 
 # Install dependencies
-RUN yarn set version 4.0.2
 RUN yarn install
 
 #-------------------------
@@ -51,7 +50,7 @@ USER dotadockeruser
 WORKDIR /app
 COPY --from=builder --chown=dotadockeruser /app/package.json /app/tsconfig.json ./
 COPY --from=builder --chown=dotadockeruser /app/packages/settings/package.json /app/packages/settings/
-COPY --from=builder --chown=dotadockeruser /app/./packages/dota/package.json ././packages/dota/
+COPY --from=builder --chown=dotadockeruser /app/./packages/dota/package.json ./packages/dota/
 COPY --from=builder --chown=dotadockeruser /app/packages/settings/dist packages/settings/dist/
 COPY --from=builder --chown=dotadockeruser /app/./packages/dota/dist ./packages/dota/dist/
 COPY --from=builder --chown=dotadockeruser /app/./packages/dota/locales ./packages/dota/locales/

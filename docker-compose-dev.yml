@@ -31,3 +31,6 @@ services:
     volumes:
       - "mongodb_data:/data/db"
       - $PWD/services/mongodb/src/init.js:/docker-entrypoint-initdb.d/init_mongo.js
+
+volumes:
+  mongodb_data:
