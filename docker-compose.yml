@@ -99,8 +99,6 @@ services:
         - NODE_ENV=${NODE_ENV:-development}
 
     hostname: dota
-    # ports:
-    # - "9229:9229" # just in case we want to enable node inspecting
     environment:
       - D2PT_TOKEN
       - ADMIN_CHANNELS
@@ -127,19 +125,7 @@ services:
     volumes:
       - steam_auth:/app/packages/dota/src/steam/volumes
 
-  mongodb:
-    restart: on-failure:5
-    build:
-      context: ./
-      dockerfile: services/mongodb/Dockerfile.mongodb
-    container_name: mongodb
-    volumes:
-      - "mongodb_data:/data/db"
-
-# Volumes are useful for data persistence, so the data will not be deleted
-# even later you call command docker-compose down.
 volumes:
-  mongodb_data:
   steam_auth:
 networks:
   default:
