@@ -38,6 +38,8 @@ services:
     image: "ghcr.io/dotabod/steam:v2.1"
     restart: on-failure:5
     build:
+      tags:
+        - "ghcr.io/dotabod/steam:v2.1"
       context: .
       dockerfile: ./packages/Dockerfile.steam
       args:
