@@ -11,8 +11,6 @@ services:
     build:
       context: .
       dockerfile: ./packages/Dockerfile.chat
-      args:
-        - NODE_ENV=${NODE_ENV:-development}
     hostname: twitch-chat
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -42,8 +40,10 @@ services:
         - "ghcr.io/dotabod/steam:v2.1"
       context: .
       dockerfile: ./packages/Dockerfile.steam
-      args:
-        - NODE_ENV=${NODE_ENV:-development}
+      x-bake:
+        platforms:
+          - linux/amd64
+          - linux/arm64
     hostname: steam
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -66,8 +66,6 @@ services:
     build:
       context: .
       dockerfile: ./packages/Dockerfile.events
-      args:
-        - NODE_ENV=${NODE_ENV:-development}
     hostname: twitch-events
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -97,9 +95,6 @@ services:
     build:
       context: .
       dockerfile: ./packages/Dockerfile.dota
-      args:
-        - NODE_ENV=${NODE_ENV:-development}
-
     hostname: dota
     environment:
       - D2PT_TOKEN
