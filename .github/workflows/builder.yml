@@ -21,7 +21,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build the Docker image
-        run: |
-          docker compose -f ./docker-compose.yml build
-          docker compose -f ./docker-compose.yml push
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
