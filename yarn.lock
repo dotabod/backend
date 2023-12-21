@@ -1173,39 +1173,18 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dotabod/steam@workspace:packages/steam"
   dependencies:
-    "@faker-js/faker": "npm:^8.1.0"
-    "@jest/globals": "npm:^29.7.0"
-    "@node-steam/id": "npm:^1.2.0"
-    "@supabase/supabase-js": "npm:^2.34.0"
-    "@testing-library/dom": "npm:^9.3.3"
-    "@types/body-parser": "npm:^1.19.3"
-    "@types/express": "npm:^4.17.17"
-    "@types/jest": "npm:^29.5.5"
-    "@types/lodash.isequal": "npm:^4.5.6"
     "@types/long": "npm:^5.0.0"
-    "@types/lru-cache": "npm:^7.10.10"
     "@types/memoizee": "npm:^0.4.8"
     "@types/newrelic": "npm:^9.14.0"
-    "@types/node": "npm:^20.5.7"
+    "@types/node": "npm:^20.6.2"
     "@types/retry": "npm:^0.12.2"
     "@types/steam": "npm:^0.0.32"
-    "@typescript-eslint/eslint-plugin": "npm:^6.5.0"
-    "@typescript-eslint/parser": "npm:^6.5.0"
     axios: "npm:1.2.0-alpha.1"
-    axios-retry: "npm:^3.3.1"
-    body-parser: "npm:^1.20.2"
-    chokidar: "npm:^3.5.3"
-    country-code-emoji: "npm:^2.3.0"
     dota2: "https://github.com/dotabod/node-dota2#head=staging"
-    dotaconstants: "npm:^7.18.0"
-    eslint: "npm:^8.48.0"
+    eslint: "npm:^8.49.0"
     eslint-plugin-prettier: "npm:^5.0.0"
     eslint-plugin-unused-imports: "npm:^3.0.0"
-    express: "npm:^4.18.2"
-    jest: "npm:^29.7.0"
     lint-staged: "npm:^14.0.1"
-    lodash.isequal: "npm:^4.5.0"
-    lru-cache: "npm:^10.0.1"
     mongodb: "npm:^6.1.0"
     newrelic: "npm:^11.1.0"
     node-gyp: "npm:^9.4.0"
@@ -1217,7 +1196,6 @@ __metadata:
     socket.io-client: "npm:^4.7.2"
     steam: "https://github.com/dotabod/node-steam#head=master"
     steam-errors: "npm:^1.0.0"
-    ts-jest: "npm:^29.1.1"
     typescript: "npm:^5.3.3"
     winston: "npm:^3.10.0"
   languageName: unknown
@@ -3003,7 +2981,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=10.0.0, @types/node@npm:>=12.12.47, @types/node@npm:>=13.7.0, @types/node@npm:^20.5.7, @types/node@npm:^20.6.2":
+"@types/node@npm:*, @types/node@npm:>=10.0.0, @types/node@npm:>=12.12.47, @types/node@npm:>=13.7.0, @types/node@npm:^20.6.2":
   version: 20.10.4
   resolution: "@types/node@npm:20.10.4"
   dependencies:
@@ -3171,7 +3149,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:^6.5.0, @typescript-eslint/eslint-plugin@npm:^6.7.2":
+"@typescript-eslint/eslint-plugin@npm:^6.7.2":
   version: 6.14.0
   resolution: "@typescript-eslint/eslint-plugin@npm:6.14.0"
   dependencies:
@@ -3196,7 +3174,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:^6.5.0, @typescript-eslint/parser@npm:^6.7.2":
+"@typescript-eslint/parser@npm:^6.7.2":
   version: 6.14.0
   resolution: "@typescript-eslint/parser@npm:6.14.0"
   dependencies:
@@ -5301,7 +5279,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^8.48.0, eslint@npm:^8.49.0":
+"eslint@npm:^8.49.0":
   version: 8.55.0
   resolution: "eslint@npm:8.55.0"
   dependencies:
