@@ -36,14 +36,8 @@ services:
     image: "ghcr.io/dotabod/steam:v2.1"
     restart: on-failure:5
     build:
-      tags:
-        - "ghcr.io/dotabod/steam:v2.1"
       context: .
       dockerfile: ./packages/Dockerfile.steam
-      x-bake:
-        platforms:
-          - linux/amd64
-          - linux/arm64
     hostname: steam
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
