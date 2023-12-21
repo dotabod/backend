@@ -22,10 +22,6 @@ services:
     ports:
       - "5120:5120"
 
-  nginx:
-    profiles:
-      - donotstart
-
   mongodb:
     container_name: mongodb
     image: "mongo:latest"
