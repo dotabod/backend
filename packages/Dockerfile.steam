@@ -2,7 +2,7 @@
 FROM node:20-alpine3.17 as base
 
 # Add Git, Python3, make, g++ in a single RUN command
-RUN apk add --no-cache git python3 make g++ && yarn cache clean
+RUN apk add git python3 make g++
 
 # Set build context and work directories
 WORKDIR /app
