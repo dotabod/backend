@@ -25,4 +25,4 @@ jobs:
         with:
           push: true
           set: |
-            *.platform=linux/amd64,linux/arm64
+            *.platform=linux/arm64
