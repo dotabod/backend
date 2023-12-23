@@ -24,5 +24,7 @@ jobs:
         uses: docker/bake-action@v4
         with:
           push: true
+          sbom: false
+          provenance: false
           set: |
             *.platform=linux/arm64
