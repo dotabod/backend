@@ -3,8 +3,6 @@ name: Docker Image CI
 on:
   push:
     branches: ["master"]
-  pull_request:
-    branches: ["master"]
 
 jobs:
   build:
@@ -21,7 +19,12 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build the Docker image
-        run: |
-          docker compose -f ./docker-compose.yml build
-          docker compose -f ./docker-compose.yml push
+
+      - name: Build and push
+        uses: docker/bake-action@v4
+        with:
+          push: true
+          sbom: false
+          provenance: false
+          set: |
+            *.platform=linux/arm64

@@ -2,7 +2,7 @@
 FROM node:20-alpine3.17 as base
 
 # Add Git, Python3, make, g++ in a single RUN command
-RUN apk add --no-cache git python3 make g++ && yarn cache clean
+RUN apk add git python3 make g++
 
 # Set build context and work directories
 WORKDIR /app
@@ -11,10 +11,9 @@ WORKDIR /app
 COPY package.json .yarnrc.yml yarn.lock ./
 COPY .yarn/releases/ ./.yarn/releases/
 COPY .yarn/cache/ ./.yarn/cache/
-COPY ./packages/twitch/chat/package.json ././packages/twitch/chat/
+COPY ./packages/twitch/chat/package.json ./packages/twitch/chat/
 
 # Install dependencies
-RUN yarn set version 4.0.2
 RUN yarn install
 
 #-------------------------
@@ -46,7 +45,7 @@ USER dotadockeruser
 # Copy relevant build artifacts
 WORKDIR /app
 COPY --from=builder --chown=dotadockeruser /app/package.json /app/tsconfig.json ./
-COPY --from=builder --chown=dotadockeruser /app/./packages/twitch/chat/package.json ././packages/twitch/chat/
+COPY --from=builder --chown=dotadockeruser /app/./packages/twitch/chat/package.json ./packages/twitch/chat/
 COPY --from=builder --chown=dotadockeruser /app/./packages/twitch/chat/dist ./packages/twitch/chat/dist/
 COPY --from=builder --chown=dotadockeruser /app/./packages/twitch/chat/locales ./packages/twitch/chat/locales/
 
