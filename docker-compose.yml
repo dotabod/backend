@@ -90,6 +90,10 @@ services:
       context: .
       dockerfile: ./packages/Dockerfile.dota
     hostname: dota
+    x-bake:
+      platforms:
+        # no matching manifest for linux/arm64/v8 in the manifest list entries
+        - linux/arm64
     environment:
       - D2PT_TOKEN
       - ADMIN_CHANNELS
