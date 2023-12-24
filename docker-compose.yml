@@ -11,6 +11,11 @@ services:
     build:
       context: .
       dockerfile: ./packages/Dockerfile.chat
+      x-bake:
+        cache-from:
+          - "ghcr.io/dotabod/twitch-chat:v2.1"
+        cache-to:
+          - "ghcr.io/dotabod/twitch-chat:v2.1"
     hostname: twitch-chat
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -38,6 +43,11 @@ services:
     build:
       context: .
       dockerfile: ./packages/Dockerfile.steam
+      x-bake:
+        cache-from:
+          - "ghcr.io/dotabod/steam:v2.1"
+        cache-to:
+          - "ghcr.io/dotabod/steam:v2.1"
     hostname: steam
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -60,6 +70,11 @@ services:
     build:
       context: .
       dockerfile: ./packages/Dockerfile.events
+      x-bake:
+        cache-from:
+          - "ghcr.io/dotabod/twitch-events:v2.1"
+        cache-to:
+          - "ghcr.io/dotabod/twitch-events:v2.1"
     hostname: twitch-events
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -89,6 +104,11 @@ services:
     build:
       context: .
       dockerfile: ./packages/Dockerfile.dota
+      x-bake:
+        cache-from:
+          - "ghcr.io/dotabod/dota:v2.1"
+        cache-to:
+          - "ghcr.io/dotabod/dota:v2.1"
     hostname: dota
     environment:
       - D2PT_TOKEN
