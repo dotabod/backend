@@ -1,4 +1,4 @@
-import { DBSettings, SettingKeys } from '@dotabod/settings'
+import { DBSettings, SettingKeys } from '../../settings.js'
 
 export const DelayedCommands: { command: string; key: SettingKeys }[] = [
   {

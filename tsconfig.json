@@ -22,9 +22,6 @@
     "skipLibCheck": true,
     "incremental": true
   },
-  "include": [
-    "./.eslintrc.cjs"
-  ],
   "ts-node": {
     "esm": true,
     "files": false,

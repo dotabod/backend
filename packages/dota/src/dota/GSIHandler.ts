@@ -1,9 +1,9 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { getWL } from '../db/getWL.js'
 import RedisClient from '../db/RedisClient.js'
 import supabase from '../db/supabase.js'
+import { DBSettings, getValueOrDefault } from '../settings.js'
 import { notablePlayers } from '../steam/notableplayers.js'
 import { chatClient } from '../twitch/chatClient.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'

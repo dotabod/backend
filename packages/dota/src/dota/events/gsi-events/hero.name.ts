@@ -1,6 +1,6 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
+import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { openTwitchBet } from '../../../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../../../twitch/lib/refundTwitchBets.js'
 import { logger } from '../../../utils/logger.js'

@@ -9,10 +9,9 @@
     "packages/steam"
   ],
   "scripts": {
-    "up": "yarn upgrade-interactive --latest",
-    "build": "yarn buildst && yarn builds && yarn buildd && yarn buildtc && yarn buildte",
+    "up": "yarn upgrade-interactive",
+    "build": "yarn buildst && yarn buildd && yarn buildtc && yarn buildte",
     "buildst": "yarn workspace @dotabod/steam run build",
-    "builds": "yarn workspace @dotabod/settings run build",
     "buildd": "yarn workspace @dotabod/dota run build",
     "buildtc": "yarn workspace @dotabod/twitch-chat run build",
     "buildte": "yarn workspace @dotabod/twitch-events run build",
@@ -32,10 +31,8 @@
     "@twurple/chat": "6.0.9",
     "@twurple/eventsub-base": "6.0.9",
     "@twurple/eventsub-http": "6.0.9",
-    "@types/newrelic": "^9.14.1",
     "i18next": "^23.5.1",
     "i18next-fs-backend": "^2.2.0",
-    "newrelic": "^11.1.0",
     "socket.io": "^4.7.2",
     "winston": "^3.10.0"
   },
@@ -66,5 +63,5 @@
       "yarn eslint"
     ]
   },
-  "packageManager": "yarn@4.0.2"
+  "packageManager": "yarn@3.7.0"
 }

@@ -1,33 +1,28 @@
 # Using a more specific version to ensure reproducibility
 FROM node:20-alpine3.17 as base
 
-# Add Git, Python3, make, g++ in a single RUN command
-RUN apk add --no-cache git python3 make g++ && yarn cache clean
-
 # Set build context and work directories
-WORKDIR /app
+WORKDIR /app/packages/twitch/events
 
 # Copy just the relevant package.json and yarn.lock files
-COPY package.json .yarnrc.yml yarn.lock ./
+COPY ./packages/twitch/events/package.json ./packages/dota/.yarnrc.yml ./packages/twitch/events/yarn.deploy.lock ./
+RUN mv ./yarn.deploy.lock ./yarn.lock
 COPY .yarn/releases/ ./.yarn/releases/
 COPY .yarn/cache/ ./.yarn/cache/
-COPY ./packages/twitch/events/package.json ././packages/twitch/events/
 
 # Install dependencies
-RUN yarn set version 4.0.2
-RUN yarn install
+RUN yarn install --immutable
 
 #-------------------------
 
 FROM base as builder
 
 # Copy source code and build configurations
-COPY tsconfig.json ./
-COPY ./packages/twitch/events/tsconfig.json ./packages/twitch/events/
-COPY ./packages/twitch/events/src ./packages/twitch/events/src/
+COPY tsconfig.json /app/
+COPY ./packages/twitch/events/tsconfig.json /app/packages/twitch/events/tsconfig.json
+COPY ./packages/twitch/events/src /app/packages/twitch/events/src/
 
-WORKDIR /app/
-RUN yarn buildte
+RUN cd /app/packages/twitch/events && yarn build
 
 #-------------------------
 
@@ -38,21 +33,12 @@ LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
     org.opencontainers.image.description="Dotabod container: ./packages/twitch/events" \
     org.opencontainers.image.licenses="AGPL-3.0"
 
-# Create unprivileged user and switch to it
-RUN adduser -D dotadockeruser
-USER dotadockeruser
-
 # Copy relevant build artifacts
-WORKDIR /app
-COPY --from=builder --chown=dotadockeruser /app/package.json /app/tsconfig.json ./
-COPY --from=builder --chown=dotadockeruser /app/./packages/twitch/events/package.json ././packages/twitch/events/
-COPY --from=builder --chown=dotadockeruser /app/./packages/twitch/events/dist ./packages/twitch/events/dist/
+COPY --from=builder /app/packages/twitch/events/package.json /app/packages/twitch/events/package.json
+COPY --from=builder /app/packages/twitch/events/dist /app/packages/twitch/events/dist/
+COPY --from=builder /app/packages/twitch/events/node_modules /app/packages/twitch/events/node_modules
 
-# Create required directories
-RUN mkdir -p ./packages/twitch/events/src/steam/volumes
-
-# Copy node_modules
-COPY --from=builder --chown=dotadockeruser /app/node_modules ./node_modules
+WORKDIR /app/packages/twitch/events
 
 # Environment and CMD
-CMD yarn workspace @dotabod/twitch-events run docker:production
+CMD yarn docker:production

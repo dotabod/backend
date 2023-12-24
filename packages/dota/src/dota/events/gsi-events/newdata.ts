@@ -1,6 +1,6 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
+import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { steamSocket } from '../../../steam/ws.js'
 import { DelayedGames, Packet, SocketClient, validEventTypes } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'

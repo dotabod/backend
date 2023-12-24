@@ -1,4 +1,3 @@
-import 'newrelic'
 import { Server } from 'socket.io'
 
 import Dota from './steam.js'

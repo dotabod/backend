@@ -1,4 +1,3 @@
-import { DBSettings } from '@dotabod/settings'
 import DOTA_ITEM_IDS from 'dotaconstants/build/item_ids.json' assert { type: 'json' }
 import DOTA_ITEMS from 'dotaconstants/build/items.json' assert { type: 'json' }
 import { t } from 'i18next'
@@ -6,6 +5,7 @@ import { t } from 'i18next'
 import RedisClient from '../../db/RedisClient.js'
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
+import { DBSettings } from '../../settings.js'
 import { steamSocket } from '../../steam/ws.js'
 import { DelayedGames, Item, Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'

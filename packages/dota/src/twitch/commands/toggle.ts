@@ -1,6 +1,5 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
-
 import supabase from '../../db/supabase.js'
+import { DBSettings, getValueOrDefault } from '../../settings.js'
 import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('toggle', {

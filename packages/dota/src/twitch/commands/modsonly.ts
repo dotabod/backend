@@ -1,7 +1,7 @@
-import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { modMode } from '../../dota/lib/consts.js'
+import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'
 

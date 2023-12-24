@@ -1,10 +1,10 @@
 import './commandLoader.js'
 
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import getDBUser from '../db/getDBUser.js'
 import { plebMode } from '../dota/lib/consts.js'
+import { DBSettings, getValueOrDefault } from '../settings.js'
 import { logger } from '../utils/logger.js'
 import { chatClient, twitchChat } from './chatClient.js'
 import commandHandler from './lib/CommandHandler.js'

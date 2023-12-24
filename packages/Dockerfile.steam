@@ -1,33 +1,28 @@
 # Using a more specific version to ensure reproducibility
 FROM node:20-alpine3.17 as base
 
-# Add Git, Python3, make, g++ in a single RUN command
-RUN apk add --no-cache git python3 make g++ && yarn cache clean
-
 # Set build context and work directories
-WORKDIR /app
+WORKDIR /app/packages/steam
 
 # Copy just the relevant package.json and yarn.lock files
-COPY package.json .yarnrc.yml yarn.lock ./
+COPY ./packages/steam/package.json ./packages/dota/.yarnrc.yml ./packages/steam/yarn.deploy.lock ./
+RUN mv ./yarn.deploy.lock ./yarn.lock
 COPY .yarn/releases/ ./.yarn/releases/
 COPY .yarn/cache/ ./.yarn/cache/
-COPY ./packages/steam/package.json ././packages/steam/
 
 # Install dependencies
-RUN yarn set version 4.0.2
-RUN yarn install
+RUN yarn install --immutable
 
 #-------------------------
 
 FROM base as builder
 
 # Copy source code and build configurations
-COPY tsconfig.json ./
-COPY ./packages/steam/tsconfig.json ./packages/steam/
-COPY ./packages/steam/src ./packages/steam/src/
+COPY tsconfig.json /app/
+COPY ./packages/steam/tsconfig.json /app/packages/steam/tsconfig.json
+COPY ./packages/steam/src /app/packages/steam/src/
 
-WORKDIR /app/
-RUN yarn buildst
+RUN cd /app/packages/steam && yarn build
 
 #-------------------------
 
@@ -38,19 +33,12 @@ LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
     org.opencontainers.image.description="Dotabod container: ./packages/steam" \
     org.opencontainers.image.licenses="AGPL-3.0"
 
-# Create unprivileged user and switch to it
-RUN adduser -D dotadockeruser
-USER dotadockeruser
-
 # Copy relevant build artifacts
-WORKDIR /app
-COPY --from=builder --chown=dotadockeruser /app/package.json /app/tsconfig.json ./
-COPY --from=builder --chown=dotadockeruser /app/./packages/steam/package.json ././packages/steam/
-COPY --from=builder --chown=dotadockeruser /app/./packages/steam/dist ./packages/steam/dist/
-COPY --from=builder --chown=dotadockeruser /app/node_modules ./node_modules
+COPY --from=builder /app/packages/steam/package.json /app/packages/steam/package.json
+COPY --from=builder /app/packages/steam/dist /app/packages/steam/dist/
+COPY --from=builder /app/packages/steam/node_modules /app/packages/steam/node_modules
 
-# Create required directories
-RUN mkdir -p ./packages/steam/src/steam/volumes ./packages/steam/dist/steam/volumes
+WORKDIR /app/packages/steam
 
 # Environment and CMD
-CMD yarn workspace @dotabod/steam run docker:production
+CMD yarn docker:production
