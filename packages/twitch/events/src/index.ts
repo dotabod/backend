@@ -4,3 +4,5 @@ import { setupWebhooks } from './utils/webhookUtils.js'
 
 setupSocketIO()
 setupWebhooks()
+
+console.log('test')
