@@ -1,31 +1,38 @@
-name: Map and Notify On Registry Package Update
+name: Release to Coolify
 
 on:
   registry_package:
-    types: [updated]
+    types: [published]
 
 jobs:
-  notify:
+  release:
+    if: ${{ github.event.registry_package.package_version.container_metadata.labels.description != '' }}
     runs-on: ubuntu-latest
+    environment: prod
     steps:
-      - name: Check for image tag information and valid package name
-        if: |
-          github.event.registry_package.package_version.container_metadata.tag.name != '' &&
-          (
-            github.event.registry_package.name == 'dota' ||
-            github.event.registry_package.name == 'twitch-events' ||
-            github.event.registry_package.name == 'twitch-chat' ||
-            github.event.registry_package.name == 'steam'
-          )
-
+      - name: "Release to Prod and Dev"
         run: |
-          # Map package name to UUID
-          case "${{ github.event.registry_package.name }}" in
-            "dota") UUID="esgckgc" ;;
-            "twitch-events") UUID="aopskdk" ;;
-            "twitch-chat") UUID="gahgag" ;;
-            "steam") UUID="asldja" ;;
-          esac
+          notify_coolify() {
+            local env_name=$1
+            local uuid_map=$2
 
-          # Use curl to call a GET webhook with the mapped UUID and API key from secrets
-          curl -X GET -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}" "https://${{ secrets.COOLIFY_HOST }}/api/v1/deploy?uuid=${UUID}&force=false"
+            # Map package name to UUID
+            case "${{ github.event.registry_package.name }}" in
+              "dota") UUID=${uuid_map["dota"]} ;;
+              "twitch-events") UUID=${uuid_map["twitch-events"]} ;;
+              "twitch-chat") UUID=${uuid_map["twitch-chat"]} ;;
+              "steam") UUID=${uuid_map["steam"]} ;;
+            esac
+
+            # Notify Coolify
+            echo "Notifying Coolify for $env_name environment: $UUID"
+            curl -s -X GET -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}" "https://${{ secrets.COOLIFY_HOST }}/api/v1/deploy?uuid=${UUID}&force=false"
+          }
+
+          # UUID mappings for prod and dev
+          declare -A prod_uuids=( ["dota"]="i8gccg8" ["twitch-events"]="zwg4g4c" ["twitch-chat"]="zwgkg48" ["steam"]="wsgwk8s" )
+          declare -A dev_uuids=( ["dota"]="esgckgc" ["twitch-events"]="kkk04os" ["twitch-chat"]="qgosw80" ["steam"]="q88g0c8" )
+
+          # Notify for prod and dev
+          notify_coolify "Prod" prod_uuids
+          notify_coolify "Dev" dev_uuids
