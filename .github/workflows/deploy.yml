@@ -14,15 +14,17 @@ jobs:
         run: |
           notify_coolify() {
             local env_name=$1
-            local uuid_map=$2
+            local -n uuid_map=$2 # Use nameref for associative array
 
             # Map package name to UUID
-            case "${{ github.event.registry_package.name }}" in
-              "dota") UUID=${uuid_map["dota"]} ;;
-              "twitch-events") UUID=${uuid_map["twitch-events"]} ;;
-              "twitch-chat") UUID=${uuid_map["twitch-chat"]} ;;
-              "steam") UUID=${uuid_map["steam"]} ;;
-            esac
+            local package_name="${{ github.event.registry_package.name }}"
+            local UUID=${uuid_map[$package_name]}
+
+            # Check if UUID is empty
+            if [ -z "$UUID" ]; then
+              echo "UUID not found for package $package_name"
+              return 1
+            fi
 
             # Notify Coolify
             echo "Notifying Coolify for $env_name environment: $UUID"
