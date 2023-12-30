@@ -8,7 +8,7 @@ class RedisClient {
   public subscriber: ReturnType<typeof createClient>
 
   private constructor() {
-    this.client = createClient({ url: 'redis://redis:6379' })
+    this.client = createClient({ url: `redis://${process.env.HOST_REDIS}:6379` })
     this.subscriber = this.client.duplicate()
   }
 
