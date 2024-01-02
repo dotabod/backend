@@ -1,4 +1,5 @@
-import express, { Request, Response } from 'express'
+import express, { json, Request, Response, urlencoded } from 'express'
+import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import http from 'http'
 import { Server, Socket } from 'socket.io'
 
@@ -64,8 +65,15 @@ class GSIServer {
       },
     })
 
-    app.use(express.json({ limit: '1mb' }))
-    app.use(express.urlencoded({ extended: true, limit: '1mb' }))
+    app.use(json({ limit: '1mb' }))
+    app.use(urlencoded({ extended: true, limit: '1mb' }))
+    app.use(
+      bodyParserErrorHandler({
+        onError: (err, req, res) => {
+          logger.error('[GSI] Error parsing body', { err, req, res })
+        },
+      }),
+    )
 
     app.post(
       '/',
