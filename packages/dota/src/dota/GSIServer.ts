@@ -1,3 +1,4 @@
+import cors from 'cors'
 import express, { json, Request, Response, urlencoded } from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import http from 'http'
@@ -50,6 +51,7 @@ async function handleSocketConnection(socket: Socket) {
   }
 }
 
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'https://dotabod.com']
 class GSIServer {
   io: Server
 
@@ -60,11 +62,11 @@ class GSIServer {
     const httpServer = http.createServer(app)
     this.io = new Server(httpServer, {
       cors: {
-        origin: ['http://localhost:3000', 'http://localhost:3001', 'https://dotabod.com'],
-        methods: ['GET', 'POST'],
+        origin: allowedOrigins,
       },
     })
 
+    app.use(cors({ origin: allowedOrigins }))
     app.use(json({ limit: '1mb' }))
     app.use(urlencoded({ extended: true, limit: '1mb' }))
     app.use(
