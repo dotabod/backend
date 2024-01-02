@@ -1,10 +1,14 @@
 services:
   redis:
+    ports:
+      - "6379:6379"
     container_name: redis
     image: "redis/redis-stack-server:latest"
     restart: on-failure:5
 
   twitch-chat:
+    ports:
+      - "5005:5005"
     container_name: twitch-chat
     image: "ghcr.io/dotabod/twitch-chat:v2.1"
     restart: on-failure:5
@@ -37,6 +41,8 @@ services:
       - TWITCH_CLIENT_SECRET
 
   steam:
+    ports:
+      - "5035:5035"
     container_name: steam
     image: "ghcr.io/dotabod/steam:v2.2"
     restart: on-failure:5
@@ -64,6 +70,10 @@ services:
       - NODE_ENV
 
   twitch-events:
+    ports:
+      - "5010:5010"
+      - "5011:5011"
+      - "5015:5015"
     container_name: twitch-events
     image: "ghcr.io/dotabod/twitch-events:v2.1"
     restart: on-failure:5
@@ -98,6 +108,8 @@ services:
       - TWITCH_EVENTSUB_SECRET
 
   dota:
+    ports:
+      - "5120:5120"
     container_name: dota
     image: "ghcr.io/dotabod/dota:v2.16"
     restart: on-failure:5
