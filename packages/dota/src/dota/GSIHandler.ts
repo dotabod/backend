@@ -464,7 +464,10 @@ export class GSIHandler {
 
     const playingTeam = bet?.[0]?.myTeam ?? client.gsi?.player?.team_name ?? ''
     await redisClient.client.set(`${client.token}:playingTeam`, playingTeam)
-    await redisClient.client.set(`${client.token}:playingHero`, client.gsi?.hero?.name as string)
+    await redisClient.client.set(
+      `${client.token}:playingHero`,
+      (client.gsi?.hero?.name as string) || '',
+    )
 
     // Check if this bet for this match id already exists, dont continue if it does
     if (bet?.[0]?.id) {
