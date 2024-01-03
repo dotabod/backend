@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { DBSettings } from '../../settings.js'
-import { GetLiveMatch } from '../../stratz/livematch.js'
+import { getWinProbability2MinAgo } from '../../stratz/livematch.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
@@ -36,7 +36,7 @@ commandHandler.registerCommand('winprobability', {
     if (!apiCooldown[channel] || Date.now() - apiCooldown[channel] >= API_COOLDOWN_SEC * 1000) {
       try {
         apiCooldown[channel] = Date.now()
-        const matchDetails = await GetLiveMatch(parseInt(matchId, 10))
+        const matchDetails = await getWinProbability2MinAgo(parseInt(matchId, 10))
         const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
         if (
           lastWinRate &&

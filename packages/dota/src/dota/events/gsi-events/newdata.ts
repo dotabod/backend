@@ -2,7 +2,7 @@ import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { steamSocket } from '../../../steam/ws.js'
-import { GetLiveMatch } from '../../../stratz/livematch.js'
+import { getWinProbability2MinAgo } from '../../../stratz/livematch.js'
 import { DelayedGames, Packet, SocketClient, validEventTypes } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
@@ -146,7 +146,9 @@ eventHandler.registerEvent(`newdata`, {
         dotaClient.client.gsi?.map?.clock_time &&
         dotaClient.client.gsi?.map?.clock_time % (updateInterval * 60) === 0
       ) {
-        const matchDetails = await GetLiveMatch(parseInt(dotaClient.client.gsi?.map?.matchid, 10))
+        const matchDetails = await getWinProbability2MinAgo(
+          parseInt(dotaClient.client.gsi?.map?.matchid, 10),
+        )
         const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
         if (lastWinRate) {
           server.io.to(dotaClient.client.token).emit('update-radiant-win-chance', {

@@ -32,7 +32,7 @@ type StratzLiveMatchResponse = {
   }
 }
 
-export const GetLiveMatch = async (
+export const getWinProbability2MinAgo = async (
   matchId: number,
 ): Promise<StratzLiveMatchResponse | undefined> => {
   if (!process.env.STRATZ_TOKEN) {
