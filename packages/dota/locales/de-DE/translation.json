@@ -192,17 +192,17 @@
   "unmuted": "Will now auto chat on game events. Type !mute to undo",
   "unranked": "Unranked",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "Updated MMR to {{mmr}}",
+  "updateMmr_auto": "MMR auf {{mmr}} aktualisiert",
   "updateMmr_manual": "Aktualisierte MMR:{{mmr}}",
   "updateMmrMulti": "Mehrere Steam-Konten, aktualisieren Sie den aktuell angemeldeten mit ({{steamId}})",
-  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
+  "updateMmrNoChange": "MMR sind bereits {{mmr}}, es wurde keine Änderung vorgenommen",
   "version": {
     "commit": "Server mit Version {{version}}, hier gehts zur neuesten Version: {{- url}}",
-    "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
+    "unknown": "Der letzte Git-Commit konnte nicht gefunden werden, hier ist das Repository {{- url}}"
   },
   "winprobability": {
     "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
-  "xpm": "Live XPM for {{- heroName}}: {{num}}"
+  "xpm": "Live EPM für {{- heroName}}: {{num}}"
 }
