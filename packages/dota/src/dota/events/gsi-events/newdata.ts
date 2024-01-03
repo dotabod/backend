@@ -1,11 +1,13 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
+import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { steamSocket } from '../../../steam/ws.js'
+import { GetLiveMatch } from '../../../stratz/livematch.js'
 import { DelayedGames, Packet, SocketClient, validEventTypes } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
 import { GSIHandler, redisClient } from '../../GSIHandler.js'
+import { server } from '../../index.js'
 import { checkPassiveMidas } from '../../lib/checkMidas.js'
 import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
@@ -14,8 +16,6 @@ import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 import minimapParser from '../minimap/parser.js'
-import { server } from '../../index'
-import { GetLiveMatch } from '../../../stratz/livematch'
 
 function chatterMatchFound(client: SocketClient) {
   if (!client.stream_online) return

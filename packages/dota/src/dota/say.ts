@@ -1,6 +1,6 @@
-import { DBSettings, defaultSettings, getValueOrDefault, SettingKeys } from '@dotabod/settings'
 import { t } from 'i18next'
 
+import { DBSettings, defaultSettings, getValueOrDefault, SettingKeys } from '../settings.js'
 import { chatClient } from '../twitch/chatClient.js'
 import { SocketClient } from '../types.js'
 import { getStreamDelay } from './GSIHandler.js'

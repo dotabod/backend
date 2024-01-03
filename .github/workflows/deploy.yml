@@ -1,0 +1,40 @@
+name: Release to Coolify
+
+on:
+  registry_package:
+    types: [published]
+
+jobs:
+  release:
+    if: ${{ github.event.registry_package.package_version.container_metadata.labels.description != '' }}
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: "Release to Prod and Dev"
+        run: |
+          notify_coolify() {
+            local env_name=$1
+            local -n uuid_map=$2 # Use nameref for associative array
+
+            # Map package name to UUID
+            local package_name="${{ github.event.registry_package.name }}"
+            local UUID=${uuid_map[$package_name]}
+
+            # Check if UUID is empty
+            if [ -z "$UUID" ]; then
+              echo "UUID not found for package $package_name"
+              return 1
+            fi
+
+            # Notify Coolify
+            echo "Notifying Coolify for $env_name environment: $UUID"
+            curl -s -X GET -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}" "https://${{ secrets.COOLIFY_HOST }}/api/v1/deploy?uuid=${UUID}&force=false"
+          }
+
+          # UUID mappings for prod and dev
+          declare -A prod_uuids=( ["dota"]="i8gccg8" ["twitch-events"]="zwg4g4c" ["twitch-chat"]="zwgkg48" ["steam"]="wsgwk8s" )
+          declare -A dev_uuids=( ["dota"]="esgckgc" ["twitch-events"]="kkk04os" ["twitch-chat"]="qgosw80" ["steam"]="q88g0c8" )
+
+          # Notify for prod and dev
+          # notify_coolify "Prod" prod_uuids
+          # notify_coolify "Dev" dev_uuids

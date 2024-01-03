@@ -1,34 +1,36 @@
 services:
   twitch-chat:
-    image: "ghcr.io/dotabod/twitch-chat:v2.0-dev"
+    image: "ghcr.io/dotabod/twitch-chat:v2.1"
     volumes:
       - $PWD/packages/twitch/chat/src/:/app/packages/twitch/chat/src/
 
   steam:
-    image: "ghcr.io/dotabod/steam:v2.0-dev"
+    image: "ghcr.io/dotabod/steam:v2.2"
     volumes:
       - $PWD/packages/steam/src:/app/packages/steam/src
 
   twitch-events:
-    image: "ghcr.io/dotabod/twitch-events:v2.0-dev"
+    image: "ghcr.io/dotabod/twitch-events:v2.1"
     volumes:
       - $PWD/packages/twitch/events/src:/app/packages/twitch/events/src
 
   dota:
-    image: "ghcr.io/dotabod/dota:v2.0-dev"
+    image: "ghcr.io/dotabod/dota:v2.16"
     volumes:
       - $PWD/packages/dota/src:/app/packages/dota/src
       - $PWD/packages/dota/jest.config.ts:/app/packages/dota/jest.config.ts
     ports:
       - "5120:5120"
 
-  nginx:
-    profiles:
-      - donotstart
-
   mongodb:
+    restart: on-failure:5
+    build:
+      context: ./
+      dockerfile: services/mongodb/Dockerfile.mongodb
     container_name: mongodb
-    image: "mongo:latest"
     volumes:
       - "mongodb_data:/data/db"
       - $PWD/services/mongodb/src/init.js:/docker-entrypoint-initdb.d/init_mongo.js
+
+volumes:
+  mongodb_data:

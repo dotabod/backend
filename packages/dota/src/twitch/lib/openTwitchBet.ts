@@ -1,9 +1,9 @@
-import { DBSettings, defaultSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import supabase from '../../db/supabase.js'
 import { getTokenFromTwitchId } from '../../dota/lib/connectedStreamers.js'
 import { say } from '../../dota/say.js'
+import { DBSettings, defaultSettings, getValueOrDefault } from '../../settings.js'
 import { SocketClient } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { getTwitchAPI } from './getTwitchAPI.js'

@@ -18,7 +18,6 @@ To set up the Dotabod backend services, follow these steps:
 - `twitch`: Contains code for the Twitch chat bot and event handling. 💬
 - `settings`: Contains configuration settings for the services. ⚙️
 - `mongodb`: Contains code for MongoDB database interactions. 🗄️
-- `nginx`: Contains configuration for the Nginx web server. 🌐
 - `services`: Contains additional services, such as backups and crowdin. 📦
 
 ## 📊 Analytics

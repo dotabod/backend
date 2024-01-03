@@ -1,6 +1,6 @@
-import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
+import { DBSettings } from '../../settings.js'
 import { GetLiveMatch } from '../../stratz/livematch.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'

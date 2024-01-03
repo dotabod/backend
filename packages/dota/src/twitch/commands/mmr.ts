@@ -1,8 +1,8 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { toUserName } from '@twurple/chat'
 import { t } from 'i18next'
 
 import { getRankDescription } from '../../dota/lib/ranks.js'
+import { DBSettings, getValueOrDefault } from '../../settings.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { MessageType } from '../lib/CommandHandler.js'

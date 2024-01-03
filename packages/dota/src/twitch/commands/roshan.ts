@@ -1,4 +1,3 @@
-import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import RedisClient from '../../db/RedisClient.js'
@@ -8,6 +7,7 @@ import {
 } from '../../dota/events/gsi-events/event.aegis_picked_up.js'
 import { generateRoshanMessage, RoshRes } from '../../dota/events/gsi-events/event.roshan_killed.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
+import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 

@@ -1,7 +1,7 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import supabase from '../../db/supabase.js'
+import { DBSettings, getValueOrDefault } from '../../settings.js'
 import { chatClient } from '../../twitch/chatClient.js'
 import { logger } from '../../utils/logger.js'
 import findUser from './connectedStreamers.js'

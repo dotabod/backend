@@ -1,7 +1,7 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
+import { DBSettings, getValueOrDefault } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
 import { logger } from '../../utils/logger.js'

@@ -1,4 +1,3 @@
-import 'newrelic'
 import { Server } from 'socket.io'
 
 import Dota from './steam.js'
@@ -11,7 +10,7 @@ const io = new Server(5035)
 const dota = Dota.getInstance()
 
 dota.dota2.on('ready', () => {
-  logger.info('[SERVER] Connected to dota game coordinator')
+  logger.info('[SERVER] Connected to dota game server')
   isConnectedToSteam = true
 })
 

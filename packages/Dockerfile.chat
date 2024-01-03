@@ -1,61 +1,46 @@
 # Using a more specific version to ensure reproducibility
 FROM node:20-alpine3.17 as base
 
-# Add Git, Python3, make, g++ in a single RUN command
-RUN apk add --no-cache git python3 make g++ \
-    && yarn cache clean
-
 # Set build context and work directories
-ARG BUILD_CONTEXT
-WORKDIR /app
+WORKDIR /app/packages/twitch/chat
 
 # Copy just the relevant package.json and yarn.lock files
-COPY package.json .yarnrc.yml yarn.lock ./
+COPY ./packages/twitch/chat/package.json ./packages/dota/.yarnrc.yml ./packages/twitch/chat/yarn.deploy.lock ./
+RUN mv ./yarn.deploy.lock ./yarn.lock
 COPY .yarn/releases/ ./.yarn/releases/
 COPY .yarn/cache/ ./.yarn/cache/
-COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 
 # Install dependencies
-RUN yarn set version berry
-RUN yarn install
+RUN yarn install --immutable
 
 #-------------------------
 
 FROM base as builder
 
 # Copy source code and build configurations
-COPY tsconfig.json ./
-COPY $BUILD_CONTEXT/tsconfig.json $BUILD_CONTEXT/
-COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
+COPY tsconfig.json /app/
+COPY ./packages/twitch/chat/tsconfig.json /app/packages/twitch/chat/tsconfig.json
+COPY ./packages/twitch/chat/src /app/packages/twitch/chat/src/
+COPY ./packages/twitch/chat/locales /app/packages/twitch/chat/locales/
 
-WORKDIR /app/
-RUN yarn buildtc
+RUN cd /app/packages/twitch/chat && yarn build
 
 #-------------------------
 
 FROM node:20-alpine3.17 as prod
 
-ARG BUILD_CONTEXT
-ARG NODE_ENV
-
 # Meta-data and labels
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
-      org.opencontainers.image.description="Dotabod container: ${BUILD_CONTEXT}" \
-      org.opencontainers.image.licenses="AGPL-3.0"
-
-# Create unprivileged user and switch to it
-RUN adduser -D dotadockeruser
-USER dotadockeruser
+    org.opencontainers.image.description="Dotabod container: ./packages/twitch/chat" \
+    org.opencontainers.image.licenses="AGPL-3.0"
 
 # Copy relevant build artifacts
-WORKDIR /app
-COPY --from=builder --chown=dotadockeruser /app/package.json /app/tsconfig.json ./
-COPY --from=builder --chown=dotadockeruser /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
-COPY --from=builder --chown=dotadockeruser /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
+COPY --from=builder /app/packages/twitch/chat/package.json /app/packages/twitch/chat/package.json
+COPY --from=builder /app/packages/twitch/chat/dist /app/packages/twitch/chat/dist/
+COPY --from=builder /app/packages/twitch/chat/node_modules /app/packages/twitch/chat/node_modules
+COPY --from=builder /app/packages/twitch/chat/locales /app/packages/twitch/chat/locales/
 
-# Copy node_modules
-COPY --from=builder --chown=dotadockeruser /app/node_modules ./node_modules
+WORKDIR /app/packages/twitch/chat
 
 # Environment and CMD
-ENV NODE_ENV=$NODE_ENV
-CMD yarn workspace @dotabod/twitch-chat run docker:$NODE_ENV
+CMD yarn docker:production

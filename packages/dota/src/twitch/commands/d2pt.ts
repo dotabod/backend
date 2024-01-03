@@ -1,7 +1,7 @@
-import { DBSettings } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
+import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'

@@ -2,19 +2,20 @@ services:
   redis:
     container_name: redis
     image: "redis/redis-stack-server:latest"
-    restart: on-failure
+    restart: on-failure:5
 
   twitch-chat:
-    image: "ghcr.io/dotabod/twitch-chat:v2.1"
-    platform: linux/amd64
     container_name: twitch-chat
-    restart: on-failure
+    image: "ghcr.io/dotabod/twitch-chat:v2.1"
+    restart: on-failure:5
     build:
       context: .
-      dockerfile: $PWD/packages/Dockerfile.chat
-      args:
-        - NODE_ENV=${NODE_ENV:-development}
-        - BUILD_CONTEXT=packages/twitch/chat
+      dockerfile: ./packages/Dockerfile.chat
+      x-bake:
+        cache-from:
+          - "ghcr.io/dotabod/cache-twitch-chat:v2.1"
+        cache-to:
+          - "ghcr.io/dotabod/cache-twitch-chat:v2.1"
     hostname: twitch-chat
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -34,20 +35,19 @@ services:
       - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
-    volumes:
-      - $PWD/packages/twitch/chat/locales:/app/packages/twitch/chat/locales
 
   steam:
-    image: "ghcr.io/dotabod/steam:v2.1"
-    platform: linux/amd64
     container_name: steam
-    restart: on-failure
+    image: "ghcr.io/dotabod/steam:v2.2"
+    restart: on-failure:5
     build:
       context: .
-      dockerfile: $PWD/packages/Dockerfile.steam
-      args:
-        - NODE_ENV=${NODE_ENV:-development}
-        - BUILD_CONTEXT=packages/steam
+      dockerfile: ./packages/Dockerfile.steam
+      x-bake:
+        cache-from:
+          - "ghcr.io/dotabod/cache-steam:v2.2"
+        cache-to:
+          - "ghcr.io/dotabod/cache-steam:v2.2"
     hostname: steam
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -64,16 +64,20 @@ services:
       - NODE_ENV
 
   twitch-events:
-    image: "ghcr.io/dotabod/twitch-events:v2.1"
-    platform: linux/amd64
+    ports:
+      - "5010:5010"
+      - "5011:5011"
     container_name: twitch-events
-    restart: on-failure
+    image: "ghcr.io/dotabod/twitch-events:v2.1"
+    restart: on-failure:5
     build:
       context: .
-      dockerfile: $PWD/packages/Dockerfile.events
-      args:
-        - NODE_ENV=${NODE_ENV:-development}
-        - BUILD_CONTEXT=packages/twitch/events
+      dockerfile: ./packages/Dockerfile.events
+      x-bake:
+        cache-from:
+          - "ghcr.io/dotabod/cache-twitch-events:v2.1"
+        cache-to:
+          - "ghcr.io/dotabod/cache-twitch-events:v2.1"
     hostname: twitch-events
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -95,21 +99,24 @@ services:
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
+      - HOST_TWITCH_CHAT
 
   dota:
-    image: "ghcr.io/dotabod/dota:v2.1"
-    platform: linux/amd64
+    ports:
+      - "5120:5120"
     container_name: dota
-    restart: on-failure
+    image: "ghcr.io/dotabod/dota:v2.16"
+    restart: on-failure:5
+    # random
     build:
       context: .
-      dockerfile: $PWD/packages/Dockerfile.dota
-      args:
-        - NODE_ENV=${NODE_ENV:-development}
-        - BUILD_CONTEXT=packages/dota
+      dockerfile: ./packages/Dockerfile.dota
+      x-bake:
+        cache-from:
+          - "ghcr.io/dotabod/cache-dota:v2.16"
+        cache-to:
+          - "ghcr.io/dotabod/cache-dota:v2.16"
     hostname: dota
-    #ports:
-    #- "9229:9229" # just in case we want to enable node inspecting
     environment:
       - D2PT_TOKEN
       - ADMIN_CHANNELS
@@ -133,34 +140,14 @@ services:
       - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
+      - HOST_REDIS
+      - HOST_STEAM
+      - HOST_TWITCH_CHAT
+      - HOST_TWITCH_EVENTS
     volumes:
-      # Storing locales in a volume so that they can be edited without rebuilding the image
-      - $PWD/packages/dota/locales:/app/packages/dota/locales
       - steam_auth:/app/packages/dota/src/steam/volumes
 
-  nginx:
-    container_name: nginx
-    restart: on-failure
-    platform: linux/amd64
-    volumes:
-      - $PWD/services/nginx/default.conf:/etc/nginx/templates/default.conf.template
-    build:
-      context: $PWD/services/nginx
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - NGINX_HOST
-      - EVENTSUB_HOST
-      - HOOKS_HOST
-      - TLS_CERT
-      - TLS_KEY
-
-# Volumes are useful for data persistence, so the data will not be deleted
-# even later you call command docker-compose down.
 volumes:
-  mongodb_data:
   steam_auth:
 networks:
   default:

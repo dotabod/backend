@@ -1,9 +1,9 @@
-import { DBSettings, getValueOrDefault } from '@dotabod/settings'
 import { t } from 'i18next'
 
 import { getWL } from '../db/getWL.js'
 import RedisClient from '../db/RedisClient.js'
 import supabase from '../db/supabase.js'
+import { DBSettings, getValueOrDefault } from '../settings.js'
 import { notablePlayers } from '../steam/notableplayers.js'
 import { chatClient } from '../twitch/chatClient.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
@@ -459,12 +459,21 @@ export class GSIHandler {
       .eq('userId', client.token)
       .is('won', null)
 
-    // Saving to redis so we don't have to query the db again
-    await redisClient.client.set(`${client.token}:matchId`, client?.gsi?.map?.matchid || '')
+    try {
+      // Saving to redis so we don't have to query the db again
+      await redisClient.client.set(`${client.token}:matchId`, client?.gsi?.map?.matchid || '')
 
-    const playingTeam = bet?.[0]?.myTeam ?? client.gsi?.player?.team_name ?? ''
-    await redisClient.client.set(`${client.token}:playingTeam`, playingTeam)
-    await redisClient.client.set(`${client.token}:playingHero`, client.gsi?.hero?.name as string)
+      const playingTeam = bet?.[0]?.myTeam ?? client.gsi?.player?.team_name ?? ''
+      await redisClient.client.set(`${client.token}:playingTeam`, playingTeam)
+      await redisClient.client.set(`${client.token}:playingHero`, client.gsi?.hero?.name || '')
+    } catch (error) {
+      logger.error('Error while saving data to Redis:', {
+        error,
+        client: client.name,
+        matchId: client?.gsi?.map?.matchid || '',
+        token: client.token,
+      })
+    }
 
     // Check if this bet for this match id already exists, dont continue if it does
     if (bet?.[0]?.id) {
