@@ -16,4 +16,7 @@ export const chatClient = {
     if (isDev) console.log({ channel, text })
     twitchChat.emit('say', channel, text)
   },
+  whisper: (channel: string, text: string) => {
+    twitchChat.emit('whisper', channel, text)
+  },
 }
