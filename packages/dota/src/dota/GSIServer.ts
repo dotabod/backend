@@ -61,6 +61,7 @@ class GSIServer {
     const app = express()
     const httpServer = http.createServer(app)
     this.io = new Server(httpServer, {
+      pingTimeout: 60_000,
       cors: {
         origin: allowedOrigins,
       },
