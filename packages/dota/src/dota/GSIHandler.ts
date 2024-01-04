@@ -417,7 +417,7 @@ export class GSIHandler {
     }
 
     // It's not a live game, so we don't want to open bets nor save it to DB
-    if (!client.gsi.map.matchid || client.gsi.map.matchid === '0') {
+    if (!client.gsi.map?.matchid || client.gsi.map?.matchid === '0') {
       // console.log(`if (!client.gsi.map.matchid || client.gsi.map.matchid === '0') {`)
       return
     }
