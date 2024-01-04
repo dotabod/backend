@@ -11,6 +11,10 @@ import { server } from '../../index.js'
 import { checkPassiveMidas } from '../../lib/checkMidas.js'
 import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
+<<<<<<< HEAD
+=======
+import { isDev } from '../../lib/consts.js'
+>>>>>>> 661b21760545423e52eb047b760cfa3e5964de73
 import { DelayedCommands } from '../../lib/DelayedCommands.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
