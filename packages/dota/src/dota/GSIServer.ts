@@ -103,6 +103,9 @@ class GSIServer {
     this.io.on('connect_error', (err) => {
       logger.info('[GSI] io connect_error', { err })
     })
+    this.io.on('disconnect', (reason) => {
+      logger.info('[GSI] io disconnect', { reason })
+    })
 
     // Set up the repeating timer
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
