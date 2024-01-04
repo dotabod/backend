@@ -1,4 +1,4 @@
-export function initServer() {
+function initServer() {
   Promise.all([
     import('./dota/index.js'),
     import('./twitch/index.js'),

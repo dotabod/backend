@@ -7,6 +7,8 @@ import { Server } from 'socket.io'
 
 import supabase from './db/supabase.js'
 import { getChatClient } from './twitch/lib/getChatClient.js'
+import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider.js'
+import { ApiClient } from '@twurple/api'
 
 await use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
@@ -60,6 +62,18 @@ io.on('connection', (socket) => {
       })
     } catch (e) {
       console.log('[ENABLE GSI] Failed to enable client', { channel, error: e })
+    }
+  })
+
+  socket.on('whisper', async function (channel: string, text: string) {
+    try {
+      if (!process.env.TWITCH_BOT_PROVIDERID) throw new Error('TWITCH_BOT_PROVIDERID not set')
+
+      const authProvider = await getBotAuthProvider()
+      const api = new ApiClient({ authProvider })
+      await api.whispers.sendWhisper(process.env.TWITCH_BOT_PROVIDERID, channel, text)
+    } catch (e) {
+      console.error('could not whisper', e)
     }
   })
 

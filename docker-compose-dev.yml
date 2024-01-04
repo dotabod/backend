@@ -18,7 +18,6 @@ services:
     image: "ghcr.io/dotabod/dota:v2.16"
     volumes:
       - $PWD/packages/dota/src:/app/packages/dota/src
-      - $PWD/packages/dota/jest.config.ts:/app/packages/dota/jest.config.ts
     ports:
       - "5120:5120"
 
