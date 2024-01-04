@@ -41,6 +41,7 @@ class SetupSupabase {
   }
 
   init() {
+    if (process.env.NODE_ENV !== 'production') return
     this.channel
       .on(
         'postgres_changes',
