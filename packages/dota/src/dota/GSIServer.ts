@@ -99,6 +99,9 @@ class GSIServer {
 
     this.io.use(handleSocketAuth)
     this.io.on('connection', handleSocketConnection)
+    this.io.on('connect_error', (err) => {
+      logger.info('[GSI] io connect_error', { err })
+    })
 
     // Set up the repeating timer
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
