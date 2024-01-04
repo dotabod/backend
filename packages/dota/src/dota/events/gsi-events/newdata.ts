@@ -2,13 +2,16 @@ import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { steamSocket } from '../../../steam/ws.js'
+import { getWinProbability2MinAgo } from '../../../stratz/livematch.js'
 import { DelayedGames, Packet, SocketClient, validEventTypes } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
 import { GSIHandler, redisClient } from '../../GSIHandler.js'
+import { server } from '../../index.js'
 import { checkPassiveMidas } from '../../lib/checkMidas.js'
 import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
+import { isDev } from '../../lib/consts.js'
 import { DelayedCommands } from '../../lib/DelayedCommands.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
@@ -130,6 +133,8 @@ eventHandler.registerEvent(`newdata`, {
       dotaClient.client.gsi?.map?.win_team && dotaClient.client.gsi.map.win_team !== 'none'
     if (hasWon) return
 
+    await showProbability(dotaClient)
+
     // only if they're in a match ^ and they're a beta tester
     if (dotaClient.client.beta_tester && dotaClient.client.stream_online) {
       const enabled = getValueOrDefault(DBSettings['minimap-blocker'], dotaClient.client.settings)
@@ -169,6 +174,39 @@ eventHandler.registerEvent(`newdata`, {
     await checkPassiveTp(dotaClient.client)
   },
 })
+
+async function showProbability(dotaClient: GSIHandler) {
+  const winChanceEnabled = getValueOrDefault(
+    DBSettings.winProbabilityOverlay,
+    dotaClient.client.settings,
+  )
+
+  if (winChanceEnabled) {
+    const updateInterval = getValueOrDefault(
+      DBSettings.winProbabilityOverlayIntervalMinutes,
+      dotaClient.client.settings,
+    )
+
+    if (
+      dotaClient.client.gsi?.map?.clock_time &&
+      (dotaClient.client.gsi?.map?.clock_time || 0) % (updateInterval * 60) === 0
+    ) {
+      const matchDetails = await getWinProbability2MinAgo(
+        parseInt(dotaClient.client.gsi?.map?.matchid, 10),
+      )
+      const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
+      if (lastWinRate) {
+        server.io.to(dotaClient.client.token).emit('update-radiant-win-chance', {
+          value: lastWinRate?.winRate,
+          time: lastWinRate?.time * 60, // time in seconds
+        })
+        setTimeout(() => {
+          server.io.to(dotaClient.client.token).emit('update-radiant-win-chance', null)
+        }, 10 * 1000)
+      }
+    }
+  }
+}
 
 function handleNewEvents(data: Packet, dotaClient: GSIHandler) {
   // Create a set for faster lookup of existing events
