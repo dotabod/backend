@@ -42,7 +42,7 @@ COPY --from=builder /app/packages/dota/package.json /app/packages/dota/package.j
 COPY --from=builder /app/packages/dota/tsconfig.json /app/packages/dota/tsconfig.json
 COPY --from=builder /app/packages/dota/node_modules /app/packages/dota/node_modules
 COPY --from=builder /app/packages/dota/locales /app/packages/dota/locales/
-COPY --from=builder /app/packages/dota/dist* /app/packages/dota/dist*
+COPY --from=builder /app/packages/dota/dist /app/packages/dota/dist
 
 WORKDIR /app/packages/dota
 
