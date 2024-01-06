@@ -122,7 +122,7 @@ export const setupWebhooks = () => {
   // Why can't i use async on express listen?
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   webhookApp.listen(5011, async () => {
-    console.log('[TWITCHEVENTS] Webhooks Listening on port 5010')
+    console.log('[TWITCHEVENTS] Webhooks Listening on port 5011')
 
     listener.start()
 
