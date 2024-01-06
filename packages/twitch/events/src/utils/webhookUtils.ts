@@ -1,4 +1,5 @@
 import express from 'express'
+import bodyParserErrorHandler from 'express-body-parser-error-handler'
 
 import { isAuthenticated } from './authUtils.js'
 import { chatClient } from '../chatClient.js'
@@ -17,6 +18,8 @@ export const setupWebhooks = () => {
   const IS_DEV = NODE_ENV !== 'production'
   const DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
   const DEV_CHANNELIDS = process.env.DEV_CHANNELIDS?.split(',') ?? []
+
+  webhookApp.use(bodyParserErrorHandler())
 
   webhookApp.get('/webhook', (req, res) => {
     res.status(200).json({

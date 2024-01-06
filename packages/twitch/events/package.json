@@ -23,6 +23,7 @@
     "@twurple/eventsub-base": "6.0.9",
     "@twurple/eventsub-http": "6.0.9",
     "express": "^4.18.2",
+    "express-body-parser-error-handler": "^1.0.7",
     "i18next": "^23.5.1",
     "i18next-fs-backend": "^2.2.0",
     "socket.io": "^4.7.2",

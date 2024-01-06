@@ -193,10 +193,19 @@ async function showProbability(dotaClient: GSIHandler) {
       const matchDetails = await getWinProbability2MinAgo(
         parseInt(dotaClient.client.gsi?.map?.matchid, 10),
       )
+
       const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
-      if (lastWinRate) {
+      if (
+        lastWinRate &&
+        !matchDetails?.data.live.match?.completed &&
+        matchDetails?.data.live.match?.isUpdating
+      ) {
+        const isRadiant = dotaClient.client.gsi?.player?.team_name === 'radiant'
+        const winRate = Math.floor(
+          (isRadiant ? lastWinRate.winRate : 1 - lastWinRate.winRate) * 100,
+        )
         server.io.to(dotaClient.client.token).emit('update-radiant-win-chance', {
-          value: lastWinRate?.winRate,
+          value: winRate,
           time: lastWinRate?.time * 60, // time in seconds
         })
         setTimeout(() => {

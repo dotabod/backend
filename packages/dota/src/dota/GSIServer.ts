@@ -61,6 +61,7 @@ class GSIServer {
     const app = express()
     const httpServer = http.createServer(app)
     this.io = new Server(httpServer, {
+      pingTimeout: 60_000,
       cors: {
         origin: allowedOrigins,
       },
@@ -99,6 +100,12 @@ class GSIServer {
 
     this.io.use(handleSocketAuth)
     this.io.on('connection', handleSocketConnection)
+    this.io.on('connect_error', (err) => {
+      logger.info('[GSI] io connect_error', { err })
+    })
+    this.io.on('disconnect', (reason) => {
+      logger.info('[GSI] io disconnect', { reason })
+    })
 
     // Set up the repeating timer
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
