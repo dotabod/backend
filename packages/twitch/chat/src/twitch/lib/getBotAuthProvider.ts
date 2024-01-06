@@ -28,7 +28,7 @@ export const getBotAuthProvider = async function () {
     }
 
     authProvider.addUser(twitchId, tokenData, ['chat'])
-    console.log('[PREDICT] Retrieved bot twitch provider, must have been the first user', {
+    console.log('[PREDICT] Retrieved bot twitch provider', {
       twitchId,
     })
   }
