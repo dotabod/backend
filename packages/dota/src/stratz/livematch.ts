@@ -1,5 +1,7 @@
 import axios from 'axios'
 
+// Credits to Stratz for the GraphQL query for live match details
+// They do awesome work and you should check them out at https://stratz.com/
 const STRATZ_GQL = 'https://api.stratz.com/graphql'
 
 const LiveMatchDetailsQuery = `

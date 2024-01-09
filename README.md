@@ -1,7 +1,3 @@
-## Technical Overview
-
-[Read the technical and business guide on Dotabod](/TechnicalOverview.md)
-
 ## 🚀 Setup Guide
 
 To set up the Dotabod backend services, follow these steps:
@@ -21,6 +17,10 @@ To set up the Dotabod backend services, follow these steps:
 - `nginx`: Contains configuration for the Nginx web server. 🌐
 - `services`: Contains additional services, such as backups and crowdin. 📦
 
+## Technical Overview
+
+[Read the technical and business guide on Dotabod](/TechnicalOverview.md)
+
 ## 📊 Analytics
 
 ![Alt](https://repobeats.axiom.co/api/embed/943063b4aa73d534ab5d3c1a2f2406c1bf73ba1a.svg "Repobeats analytics image")
@@ -28,6 +28,8 @@ To set up the Dotabod backend services, follow these steps:
 ## 📄 License
 
 This project is licensed under the terms of the [LICENSE](LICENSE) file.
+
+We would like to extend our gratitude to [stratz.com](https://stratz.com/) for providing the win probability data that we use in the !wp command and win probability overlay. Their data has greatly enhanced the functionality and user experience of our repository. Thank you, [stratz.com](https://stratz.com/), for your valuable contribution.
 
 ## 🤝 Contributing
 
