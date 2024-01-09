@@ -144,6 +144,8 @@ services:
       - HOST_STEAM
       - HOST_TWITCH_CHAT
       - HOST_TWITCH_EVENTS
+      - TWITCH_EXT_CLIENT_ID
+      - TWITCH_EXT_SECRET
     volumes:
       - steam_auth:/app/packages/dota/src/steam/volumes
 

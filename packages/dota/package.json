@@ -24,6 +24,7 @@
     "@twurple/api": "6.0.9",
     "@twurple/auth": "6.0.9",
     "@twurple/chat": "6.0.9",
+    "@twurple/ebs-helper": "6.0.9",
     "@twurple/eventsub-base": "6.0.9",
     "@twurple/eventsub-http": "6.0.9",
     "@types/long": "^5.0.0",
