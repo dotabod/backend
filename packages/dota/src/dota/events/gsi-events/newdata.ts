@@ -1,3 +1,4 @@
+import { sendExtensionPubSubBroadcastMessage } from '@twurple/ebs-helper'
 import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
@@ -118,21 +119,22 @@ async function saveMatchData(client: SocketClient) {
 // Catch all
 eventHandler.registerEvent(`newdata`, {
   handler: async (dotaClient: GSIHandler, data: Packet) => {
-    // New users who dont have a steamaccount saved yet
+    // New users who don't have a steam account saved yet
     // This needs to run first so we have client.steamid on multiple acts
-    await dotaClient.updateSteam32Id()
+    const updateSteam32IdPromise = dotaClient.updateSteam32Id()
 
     // In case they connect to a game in progress and we missed the start event
-    await dotaClient.setupOBSBlockers(data.map?.game_state ?? '')
+    const setupOBSBlockersPromise = dotaClient.setupOBSBlockers(data.map?.game_state ?? '')
 
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
+    if (!isPlayingMatch(dotaClient.client.gsi)) {
+      await Promise.all([updateSteam32IdPromise, setupOBSBlockersPromise])
+      return
+    }
 
     // Everything below here requires an ongoing match, not a finished match
     const hasWon =
       dotaClient.client.gsi?.map?.win_team && dotaClient.client.gsi.map.win_team !== 'none'
     if (hasWon) return
-
-    await showProbability(dotaClient)
 
     // only if they're in a match ^ and they're a beta tester
     if (dotaClient.client.beta_tester && dotaClient.client.stream_online) {
@@ -146,31 +148,62 @@ eventHandler.registerEvent(`newdata`, {
       await redisClient.client.get(`${dotaClient.client.token}:playingHeroSlot`),
     )
     if (!(playingHeroSlot >= 0) && typeof purchaser === 'number') {
-      await redisClient.client.set(`${dotaClient.client.token}:playingHeroSlot`, purchaser)
-      await saveMatchData(dotaClient.client)
+      await Promise.all([
+        redisClient.client.set(`${dotaClient.client.token}:playingHeroSlot`, purchaser),
+        saveMatchData(dotaClient.client),
+      ])
+
+      // This is the first time we've seen the hero slot, so we can't check anthing else yet
       return
+    }
+
+    const showProbabilityPromise = showProbability(dotaClient)
+
+    let sendExtensionPubSubBroadcastPromise: Promise<void> | undefined
+    if (data.added?.items) {
+      const config = {
+        clientId: process.env.TWITCH_EXT_CLIENT_ID!,
+        secret: process.env.TWITCH_EXT_SECRET!,
+        ownerId: process.env.TWITCH_BOT_PROVIDERID!,
+      }
+      sendExtensionPubSubBroadcastPromise = sendExtensionPubSubBroadcastMessage(
+        config,
+        123,
+        'message',
+      )
     }
 
     const {
       powerTreads: { enabled: treadsChatterEnabled },
     } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
+    let calculateManaSavedPromise: Promise<void> | undefined
     if (treadsChatterEnabled) {
       try {
-        await calculateManaSaved(dotaClient)
+        calculateManaSavedPromise = calculateManaSaved(dotaClient)
       } catch (e) {
         logger.error('err calculateManaSaved', { e })
       }
     }
 
     // saveMatchData checks and returns early if steam is found
-    await saveMatchData(dotaClient.client)
+    const saveMatchDataPromise = saveMatchData(dotaClient.client)
+    const handleNewEventsPromise = handleNewEvents(data, dotaClient)
+    const openBetsPromise = dotaClient.openBets(dotaClient.client)
+    const checkPassiveMidasPromise = checkPassiveMidas(dotaClient.client)
+    const checkPassiveTpPromise = checkPassiveTp(dotaClient.client)
 
-    handleNewEvents(data, dotaClient)
-
-    await dotaClient.openBets(dotaClient.client)
-
-    await checkPassiveMidas(dotaClient.client)
-    await checkPassiveTp(dotaClient.client)
+    await Promise.all([
+      updateSteam32IdPromise,
+      setupOBSBlockersPromise,
+      showProbabilityPromise,
+      saveMatchDataPromise,
+      handleNewEventsPromise,
+      openBetsPromise,
+      calculateManaSavedPromise,
+      sendExtensionPubSubBroadcastPromise,
+      checkPassiveMidasPromise,
+      checkPassiveTpPromise,
+    ])
   },
 })
 
