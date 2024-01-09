@@ -160,15 +160,18 @@ eventHandler.registerEvent(`newdata`, {
     const showProbabilityPromise = showProbability(dotaClient)
 
     let sendExtensionPubSubBroadcastPromise: Promise<void> | undefined
+    // TODO: Check for new items, and if there are, send a pubsub message to the extension
     if (data.added?.items) {
       const config = {
         clientId: process.env.TWITCH_EXT_CLIENT_ID!,
         secret: process.env.TWITCH_EXT_SECRET!,
         ownerId: process.env.TWITCH_BOT_PROVIDERID!,
       }
+
+      const accountId = dotaClient.client.Account?.providerAccountId ?? ''
       sendExtensionPubSubBroadcastPromise = sendExtensionPubSubBroadcastMessage(
         config,
-        123,
+        accountId,
         'message',
       )
     }

@@ -1,9 +1,5 @@
 function initServer() {
-  Promise.all([
-    import('./dota/index.js'),
-    import('./twitch/index.js'),
-    import('./twitch/events.js'),
-  ])
+  Promise.all([import('./dota/index.js'), import('./twitch/index.js')])
     .then(() => {
       // All imports are now loaded
       console.log('Modules loaded')
