@@ -5,6 +5,7 @@ import http from 'http'
 import { Server, Socket } from 'socket.io'
 
 import getDBUser from '../db/getDBUser.js'
+import { Ability, Item } from '../types.js'
 import { logger } from '../utils/logger.js'
 import {
   checkForInactiveTokens,
@@ -14,6 +15,7 @@ import {
 import { newData, processChanges } from './globalEventEmitter.js'
 import { emitMinimapBlockerStatus } from './GSIHandler.js'
 import { gsiHandlers } from './lib/consts.js'
+import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import { validateToken } from './validateToken.js'
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
@@ -89,6 +91,33 @@ class GSIServer {
       processChanges('added'),
       newData,
     )
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    app.get('/tooltips/:channelId', async (req: Request, res: Response) => {
+      // make sure channel id is a number
+      if (!req.params.channelId.match(/^\d+$/)) return res.status(200).json({ status: 'ok' })
+
+      const { channelId } = req.params
+      const user = await getDBUser({ twitchId: channelId })
+      if (!user?.gsi) return res.status(200).json({ status: 'ok' })
+
+      const dotaClient = user.gsi
+      const inv = Object.values(dotaClient?.items ?? {})
+      const items: Item[] = inv.slice(0, 9)
+      const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient })
+
+      const messageToSend = {
+        items: items.map((item) => item.name),
+        neutral: dotaClient?.items?.neutral0?.name,
+        hero: dotaClient?.hero?.id,
+        abilities: dotaClient?.abilities
+          ? Object.values(dotaClient?.abilities).map((ability: Ability) => ability.name)
+          : [],
+        heroes: matchPlayers.map((player) => player.heroid),
+      }
+
+      res.status(200).json(messageToSend)
+    })
 
     app.get('/', (req: Request, res: Response) => {
       res.status(200).json({ status: 'ok' })

@@ -24,7 +24,7 @@ export async function getChannels(): Promise<string[]> {
     const { data } = await query.range(offset, offset + pageSize - 1)
 
     if (data?.length) {
-      users.push(...data.map((user) => user.name as string))
+      users.push(...data.map((user) => user.name))
       offset += pageSize
     } else {
       moreDataExists = false
@@ -35,6 +35,9 @@ export async function getChannels(): Promise<string[]> {
   const filteredUsers = users.filter(Boolean)
 
   console.log('joining', filteredUsers.length, 'channels')
+  if (filteredUsers.length < 10) {
+    console.log(filteredUsers)
+  }
 
   return filteredUsers
 }

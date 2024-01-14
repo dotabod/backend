@@ -21,15 +21,5 @@ services:
     ports:
       - "5120:5120"
 
-  mongodb:
-    restart: on-failure:5
-    build:
-      context: ./
-      dockerfile: services/mongodb/Dockerfile.mongodb
-    container_name: mongodb
-    volumes:
-      - "mongodb_data:/data/db"
-      - $PWD/services/mongodb/src/init.js:/docker-entrypoint-initdb.d/init_mongo.js
-
 volumes:
   mongodb_data:
