@@ -94,6 +94,9 @@ class GSIServer {
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     app.get('/tooltips/:channelId', async (req: Request, res: Response) => {
+      // make sure channel id is a number
+      if (!req.params.channelId.match(/^\d+$/)) return res.status(200).json({ status: 'ok' })
+
       const { channelId } = req.params
       const user = await getDBUser({ twitchId: channelId })
       if (!user?.gsi) return res.status(200).json({ status: 'ok' })
