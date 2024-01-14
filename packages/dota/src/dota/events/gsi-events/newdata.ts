@@ -130,15 +130,12 @@ const tooltipsConfig = {
   ownerId: process.env.TWITCH_BOT_PROVIDERID!,
 }
 
-const sendExtensionPubSubBroadcastMessageIfChanged = async (
+export const sendExtensionPubSubBroadcastMessageIfChanged = async (
   dotaClient: GSIHandler,
   messageToSend: any,
 ) => {
   const { client } = dotaClient
-  const matchId = await redisClient.client.get(`${client.token}:matchId`)
-  if (!Number(matchId)) return
-
-  const redisKey = `${client.token}:matchId:${matchId}:lastMessage`
+  const redisKey = `${client.token}:lastMessage`
 
   // Retrieve the previous message from Redis
   const prevMessageString = await redisClient.client.get(redisKey)

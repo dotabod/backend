@@ -15,6 +15,7 @@ import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import { AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
 import { emitRoshEvent, RoshRes } from './events/gsi-events/event.roshan_killed.js'
+import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/newdata.js'
 import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster.js'
 import minimapParser from './events/minimap/parser.js'
 import { server } from './index.js'
@@ -907,6 +908,7 @@ export class GSIHandler {
         name: this.client.name,
       })
 
+      await sendExtensionPubSubBroadcastMessageIfChanged(this, null)
       this.emitBlockEvent({ state, blockType: null })
       await this.closeBets()
       return
