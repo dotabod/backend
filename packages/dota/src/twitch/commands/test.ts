@@ -27,6 +27,7 @@ commandHandler.registerCommand('test', {
       }
 
       const accountId = client.Account?.providerAccountId ?? ''
+
       await sendExtensionPubSubBroadcastMessage(
         config,
         accountId,

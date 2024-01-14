@@ -4,7 +4,14 @@ import { t } from 'i18next'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { steamSocket } from '../../../steam/ws.js'
 import { getWinProbability2MinAgo } from '../../../stratz/livematch.js'
-import { DelayedGames, Packet, SocketClient, validEventTypes } from '../../../types.js'
+import {
+  Ability,
+  DelayedGames,
+  Item,
+  Packet,
+  SocketClient,
+  validEventTypes,
+} from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
 import { GSIHandler, redisClient } from '../../GSIHandler.js'
@@ -13,6 +20,7 @@ import { checkPassiveMidas } from '../../lib/checkMidas.js'
 import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
 import { DelayedCommands } from '../../lib/DelayedCommands.js'
+import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
@@ -161,7 +169,7 @@ eventHandler.registerEvent(`newdata`, {
 
     let sendExtensionPubSubBroadcastPromise: Promise<void> | undefined
     // TODO: Check for new items, and if there are, send a pubsub message to the extension
-    if (data.added?.items) {
+    if (dotaClient.client.beta_tester && dotaClient.client.stream_online) {
       const config = {
         clientId: process.env.TWITCH_EXT_CLIENT_ID!,
         secret: process.env.TWITCH_EXT_SECRET!,
@@ -169,11 +177,20 @@ eventHandler.registerEvent(`newdata`, {
       }
 
       const accountId = dotaClient.client.Account?.providerAccountId ?? ''
-      sendExtensionPubSubBroadcastPromise = sendExtensionPubSubBroadcastMessage(
-        config,
-        accountId,
-        'message',
-      )
+      const inv = Object.values(dotaClient.client.gsi?.items ?? {})
+      const items: Item[] = inv.slice(0, 9)
+      const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
+
+      const messageToSend = {
+        items: items.map((item) => item.name),
+        neutral: dotaClient.client.gsi?.items?.neutral0?.name,
+        hero: dotaClient.client.gsi?.hero?.id,
+        abilities: dotaClient.client.gsi?.abilities
+          ? Object.values(dotaClient.client.gsi?.abilities).map((ability: Ability) => ability.name)
+          : [],
+        heroes: matchPlayers.map((player) => player.heroid),
+      }
+      await sendExtensionPubSubBroadcastMessage(config, accountId, JSON.stringify(messageToSend))
     }
 
     const {
