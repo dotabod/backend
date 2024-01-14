@@ -203,13 +203,6 @@ eventHandler.registerEvent(`newdata`, {
     let sendExtensionPubSubBroadcastPromise: Promise<void> | undefined
     // TODO: Check for new items, and if there are, send a pubsub message to the extension
     if (dotaClient.client.beta_tester && dotaClient.client.stream_online) {
-      const config = {
-        clientId: process.env.TWITCH_EXT_CLIENT_ID!,
-        secret: process.env.TWITCH_EXT_SECRET!,
-        ownerId: process.env.TWITCH_BOT_PROVIDERID!,
-      }
-
-      const accountId = dotaClient.client.Account?.providerAccountId ?? ''
       const inv = Object.values(dotaClient.client.gsi?.items ?? {})
       const items: Item[] = inv.slice(0, 9)
       const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
@@ -223,7 +216,10 @@ eventHandler.registerEvent(`newdata`, {
           : [],
         heroes: matchPlayers.map((player) => player.heroid),
       }
-      await sendExtensionPubSubBroadcastMessage(config, accountId, JSON.stringify(messageToSend))
+      sendExtensionPubSubBroadcastPromise = sendExtensionPubSubBroadcastMessageIfChanged(
+        dotaClient,
+        messageToSend,
+      )
     }
 
     const {
