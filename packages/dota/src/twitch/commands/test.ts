@@ -1,3 +1,4 @@
+import { sendExtensionPubSubBroadcastMessage } from '@twurple/ebs-helper'
 import DOTA_ITEM_IDS from 'dotaconstants/build/item_ids.json' assert { type: 'json' }
 import DOTA_ITEMS from 'dotaconstants/build/items.json' assert { type: 'json' }
 import { t } from 'i18next'
@@ -17,6 +18,33 @@ commandHandler.registerCommand('test', {
     const {
       channel: { name: channel, client },
     } = message
+
+    if (args[0] === 'pub') {
+      const config = {
+        clientId: process.env.TWITCH_EXT_CLIENT_ID!,
+        secret: process.env.TWITCH_EXT_SECRET!,
+        ownerId: process.env.TWITCH_BOT_PROVIDERID!,
+      }
+
+      const accountId = client.Account?.providerAccountId ?? ''
+
+      await sendExtensionPubSubBroadcastMessage(
+        config,
+        accountId,
+        JSON.stringify({
+          items: ['blink', 'bottle', 'boots'],
+          neutral: 'enchanted_mango',
+          hero: 70,
+          abilities: [
+            'antimage_mana_break',
+            'antimage_blink',
+            'antimage_spell_shield',
+            'antimage_mana_void',
+          ],
+          heroes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        }),
+      )
+    }
 
     if (args[0] === 'user') {
       const accountId = client.Account?.providerAccountId ?? ''
