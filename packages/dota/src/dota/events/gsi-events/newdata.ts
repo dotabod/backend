@@ -4,10 +4,14 @@ import { t } from 'i18next'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { steamSocket } from '../../../steam/ws.js'
 import { getWinProbability2MinAgo } from '../../../stratz/livematch.js'
+import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId.js'
 import {
+  Abilities,
   Ability,
   DelayedGames,
+  Hero,
   Item,
+  Items,
   Packet,
   SocketClient,
   validEventTypes,
@@ -21,7 +25,9 @@ import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
 import { DelayedCommands } from '../../lib/DelayedCommands.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
+import { getSpectatorPlayers } from '../../lib/getSpectatorPlayers.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import { isSpectator } from '../../lib/isSpectator.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 import minimapParser from '../minimap/parser.js'
@@ -154,8 +160,46 @@ export const sendExtensionPubSubBroadcastMessageIfChanged = async (
   }
 }
 
+const maybeSendTooltipData = async (dotaClient: GSIHandler) => {
+  let hero: Hero | undefined
+  let items: Items | undefined
+  let abilities: Abilities | undefined
+
+  if (isSpectator(dotaClient.client.gsi)) {
+    const spectatorPlayers = getSpectatorPlayers(dotaClient.client.gsi)
+    const selectedPlayer = spectatorPlayers.find((a) => !!a.selected)
+
+    const { playerN, teamN } =
+      findSpectatorIdx(dotaClient.client.gsi, selectedPlayer?.accountid) ?? {}
+
+    // @ts-expect-error we can iterate by team2 and team3
+    items = dotaClient.client.gsi?.items?.[teamN]?.[playerN]
+    // @ts-expect-error we can iterate by team2 and team3
+    hero = dotaClient.client.gsi?.hero?.[teamN]?.[playerN]
+  } else {
+    hero = dotaClient.client.gsi?.hero
+    items = dotaClient.client.gsi?.items
+    abilities = dotaClient.client.gsi?.abilities
+  }
+
+  if (!hero || !items || !abilities) return
+
+  const inv = Object.values(items ?? {})
+  const backpackItems: Item[] = inv.slice(0, 9)
+  const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
+
+  const messageToSend = {
+    items: backpackItems.map((item) => item.name),
+    neutral: items?.neutral0?.name,
+    hero: hero?.id,
+    abilities: abilities ? Object.values(abilities).map((ability: Ability) => ability.name) : [],
+    heroes: matchPlayers.map((player) => player.heroid),
+  }
+  return sendExtensionPubSubBroadcastMessageIfChanged(dotaClient, messageToSend)
+}
+
 // Catch all
-eventHandler.registerEvent(`newdata`, {
+eventHandler.registerEvent('newdata', {
   handler: async (dotaClient: GSIHandler, data: Packet) => {
     // New users who don't have a steam account saved yet
     // This needs to run first so we have client.steamid on multiple acts
@@ -164,8 +208,17 @@ eventHandler.registerEvent(`newdata`, {
     // In case they connect to a game in progress and we missed the start event
     const setupOBSBlockersPromise = dotaClient.setupOBSBlockers(data.map?.game_state ?? '')
 
+    let sendExtensionPubSubBroadcastPromise: Promise<void> | undefined
+    if (isSpectator(dotaClient.client.gsi)) {
+      sendExtensionPubSubBroadcastPromise = maybeSendTooltipData(dotaClient)
+    }
+
     if (!isPlayingMatch(dotaClient.client.gsi)) {
-      await Promise.all([updateSteam32IdPromise, setupOBSBlockersPromise])
+      await Promise.all([
+        updateSteam32IdPromise,
+        setupOBSBlockersPromise,
+        sendExtensionPubSubBroadcastPromise,
+      ])
       return
     }
 
@@ -196,28 +249,7 @@ eventHandler.registerEvent(`newdata`, {
     }
 
     const showProbabilityPromise = showProbability(dotaClient)
-
-    let sendExtensionPubSubBroadcastPromise: Promise<void> | undefined
-    // TODO: Check for new items, and if there are, send a pubsub message to the extension
-    if (dotaClient.client.beta_tester && dotaClient.client.stream_online) {
-      const inv = Object.values(dotaClient.client.gsi?.items ?? {})
-      const items: Item[] = inv.slice(0, 9)
-      const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
-
-      const messageToSend = {
-        items: items.map((item) => item.name),
-        neutral: dotaClient.client.gsi?.items?.neutral0?.name,
-        hero: dotaClient.client.gsi?.hero?.id,
-        abilities: dotaClient.client.gsi?.abilities
-          ? Object.values(dotaClient.client.gsi?.abilities).map((ability: Ability) => ability.name)
-          : [],
-        heroes: matchPlayers.map((player) => player.heroid),
-      }
-      sendExtensionPubSubBroadcastPromise = sendExtensionPubSubBroadcastMessageIfChanged(
-        dotaClient,
-        messageToSend,
-      )
-    }
+    sendExtensionPubSubBroadcastPromise = maybeSendTooltipData(dotaClient)
 
     const {
       powerTreads: { enabled: treadsChatterEnabled },
