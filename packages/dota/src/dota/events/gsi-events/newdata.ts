@@ -161,6 +161,10 @@ export const sendExtensionPubSubBroadcastMessageIfChanged = async (
 }
 
 const maybeSendTooltipData = async (dotaClient: GSIHandler) => {
+  if (!dotaClient.client.beta_tester || !dotaClient.client.stream_online) {
+    return
+  }
+
   let hero: Hero | undefined
   let items: Items | undefined
   let abilities: Abilities | undefined
