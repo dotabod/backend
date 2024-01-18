@@ -1,5 +1,6 @@
 import './commandLoader.js'
 
+import { ChatUser } from '@twurple/chat'
 import { t } from 'i18next'
 
 import getDBUser from '../db/getDBUser.js'
@@ -17,12 +18,20 @@ twitchChat.on('connect', () => {
 
 twitchChat.on(
   'msg',
-  async function (
+  async (
     channel: string,
     user: string,
     text: string,
-    { channelId, userInfo, messageId }: any,
-  ) {
+    {
+      channelId,
+      userInfo,
+      messageId,
+    }: {
+      channelId: string
+      userInfo: ChatUser
+      messageId: string
+    },
+  ) => {
     if (!channelId) return
 
     // Letting one pleb in
@@ -34,7 +43,7 @@ twitchChat.on(
       chatClient.say(channel, '/subscribers')
       chatClient.say(
         channel,
-        t('pleb', { emote: 'EZ Clap', context: 'off', name: user, lng: userInfo.locale }),
+        t('pleb', { emote: 'EZ Clap', context: 'off', name: user, lng: 'en' }),
       )
       return
     }
@@ -45,7 +54,7 @@ twitchChat.on(
     // This runs every command, but its cached so no hit on db
     const client = await getDBUser({ token: undefined, twitchId: channelId })
     if (!client || !channelId) {
-      chatClient.say(channel, t('missingUser', { lng: userInfo.locale }))
+      chatClient.say(channel, t('missingUser', { lng: 'en' }))
       return
     }
 
@@ -60,7 +69,6 @@ twitchChat.on(
     }
 
     // Handle the incoming message using the command handler
-
     // to address v7 twurple removing #, but my db having # for command stats
     // add a hashtag to the beginning of the channel name if its not there already
     const channelName = channel.startsWith('#') ? channel : `#${channel}`
@@ -68,6 +76,7 @@ twitchChat.on(
       channel: { name: channelName, id: channelId, client, settings: client.settings },
       user: {
         name: user,
+        userId: userInfo.userId,
         permission: userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0,
       },
       content: text,

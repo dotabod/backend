@@ -10,6 +10,7 @@ import { chatClient } from '../chatClient.js'
 export interface UserType {
   name: string
   permission: number
+  userId: string
 }
 
 interface ChannelType {

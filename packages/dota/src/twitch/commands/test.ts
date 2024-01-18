@@ -16,6 +16,7 @@ commandHandler.registerCommand('test', {
 
   handler: async (message, args) => {
     const {
+      user: { userId },
       channel: { name: channel, client },
     } = message
 
@@ -48,8 +49,7 @@ commandHandler.registerCommand('test', {
 
     if (args[0] === 'user') {
       const accountId = client.Account?.providerAccountId ?? ''
-
-      chatClient.whisper(accountId, `${channel} ${accountId} ${client.steam32Id} ${client.token}`)
+      chatClient.whisper(userId, `${channel} ${accountId} ${client.steam32Id} ${client.token}`)
     }
 
     if (args[0] === 'reset') {

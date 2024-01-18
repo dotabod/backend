@@ -1,14 +1,14 @@
 import { lstatSync, readdirSync } from 'fs'
 import { join } from 'path'
 
+import { ApiClient } from '@twurple/api'
 import { t, use } from 'i18next'
 import FsBackend, { FsBackendOptions } from 'i18next-fs-backend'
 import { Server } from 'socket.io'
 
 import supabase from './db/supabase.js'
-import { getChatClient } from './twitch/lib/getChatClient.js'
 import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider.js'
-import { ApiClient } from '@twurple/api'
+import { getChatClient } from './twitch/lib/getChatClient.js'
 
 await use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
@@ -50,12 +50,12 @@ io.on('connection', (socket) => {
     hasDotabodSocket = false
   })
 
-  socket.on('say', async function (channel: string, text: string) {
+  socket.on('say', async (channel: string, text: string) => {
     if (process.env.NODE_ENV === 'development') console.log(channel, text)
     await chatClient.say(channel, text || "I'm sorry, I can't do that")
   })
 
-  socket.on('join', function (channel: string) {
+  socket.on('join', (channel: string) => {
     try {
       chatClient.join(channel).catch((e) => {
         console.log('[ENABLE GSI] Failed to enable client inside promise', { channel, error: e })
@@ -65,7 +65,7 @@ io.on('connection', (socket) => {
     }
   })
 
-  socket.on('whisper', async function (channel: string, text: string) {
+  socket.on('whisper', async (channel: string, text: string) => {
     try {
       if (!process.env.TWITCH_BOT_PROVIDERID) throw new Error('TWITCH_BOT_PROVIDERID not set')
 
@@ -77,7 +77,7 @@ io.on('connection', (socket) => {
     }
   })
 
-  socket.on('part', function (channel: string) {
+  socket.on('part', (channel: string) => {
     chatClient.part(channel)
   })
 })
@@ -135,7 +135,7 @@ chatClient.onJoinFailure((channel, reason) => {
   console.log('Failed to join channel', channel, reason)
 })
 
-chatClient.onMessage(function (channel, user, text, msg) {
+chatClient.onMessage((channel, user, text, msg) => {
   if (!hasDotabodSocket) {
     // TODO: only commands that we register should be checked here
     if (text === '!ping') {
@@ -150,12 +150,12 @@ chatClient.onMessage(function (channel, user, text, msg) {
   }
 
   const { channelId, userInfo, id: messageId } = msg
-  const { isMod, isBroadcaster, isSubscriber } = userInfo
+  const { isMod, isBroadcaster, isSubscriber, userId } = userInfo
 
   // forward the msg to dota node app
   io.to('twitch-chat-messages').emit('msg', channel, user, text, {
     channelId,
-    userInfo: { isMod, isBroadcaster, isSubscriber },
+    userInfo: { isMod, isBroadcaster, isSubscriber, userId },
     messageId,
   })
 })
