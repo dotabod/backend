@@ -39,7 +39,7 @@ export async function findAccountFromCmd(
   locale: string,
   command: string,
 ) {
-  let accountIdFromArgs = isNaN(Number(packet?.player?.accountid))
+  let accountIdFromArgs = Number.isNaN(Number(packet?.player?.accountid))
     ? undefined
     : Number(packet?.player?.accountid)
 
