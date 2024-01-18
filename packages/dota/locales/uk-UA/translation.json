@@ -231,8 +231,8 @@
     "unknown": "Не вдалося знайти останній коміт, тому посилання на репозиторій {{- url}}"
   },
   "winprobability": {
-    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
-    "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
+    "winProbability": "{{winRate}}% ймовірності виграшу {{emote}} о {{gameTime}}:00 ⏲ · Наступне оновлення через {{remainingCooldown}} с",
+    "winProbabilityDataNotAvailable": "Ймовірність перемоги ще не доступна · Спробуйте ще раз через {{remainingCooldown}} с"
   },
   "xpm": "Поточний XPM для {{- heroName}}: {{num}}"
 }
