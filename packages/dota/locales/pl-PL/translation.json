@@ -5,10 +5,6 @@
     "pickup": "{{- heroName}} podniósł aegisa!",
     "snatched": "{{- heroName}} podwędził aegisa {{emote}}"
   },
-  "apm_one": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
-  "apm_few": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
-  "apm_many": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
-  "apm_other": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Średni ranking w tej grze",
   "betaFeature": "[funkcje beta]",
   "betaTester": "$t(betaTester_on)",
@@ -52,23 +48,18 @@
   "commands_everyone": "Wszyscy mogą używać: {{commandList}}",
   "commands_mods": "Komendy tylko dla moderatorów: {{commandList}}",
   "connections": {
-    "gsi_one": "Aktualnie {{count}} streamer jest podłączony do Dotabod GSI",
     "gsi_few": "Aktualnie {{count}} streamerów jest podłączonych do Dotabod GSI",
     "gsi_many": "Aktualnie {{count}} streamerów jest podłączonych do Dotabod GSI",
+    "gsi_one": "Aktualnie {{count}} streamer jest podłączony do Dotabod GSI",
     "gsi_other": "Aktualnie {{count}} streamerów jest podłączonych do Dotabod GSI",
-    "overlay_one": "Aktualnie {{count}} streamer używa nakładki",
     "overlay_few": "Aktualnie {{count}} streamerów używa nakładki",
     "overlay_many": "Aktualnie {{count}} streamerów używa nakładki",
+    "overlay_one": "Aktualnie {{count}} streamer używa nakładki",
     "overlay_other": "Aktualnie {{count}} streamerów używa nakładki"
   },
   "dota2pt": "Potrzebujesz profesjonalnych porad odnośnie {{- heroName}}? Sprawdź tutaj {{- url}}",
   "dotabod": "Jestem otwartoźródłowym botem stworzonym przez {{author}}. Więcej informacji: {{- url}}",
   "gameNotFound": "Gra nie została znaleziona",
-  "gpm_zero": "",
-  "gpm_one": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstwa bohatera, z {{creepKills}} zabójstw creepów.",
-  "gpm_few": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstw bohaterów, z {{creepKills}} zabójstw creepów.",
-  "gpm_many": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstw bohaterów, z {{creepKills}} zabójstw creepów.",
-  "gpm_other": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstw bohaterów, z {{creepKills}} zabójstw creepów.",
   "heroItems": {
     "empty": "(2min opóźnienia) Nie znaleziono przedmiotów dla {{- heroName}}",
     "list": "(2min opóźnienia) {{- heroName}} posiada: {{- itemNames}}"
@@ -77,19 +68,19 @@
     "noneColor": "{{color}} nie ma żadnych meczów zagranych jako {{- heroName}} {{timeperiod}}",
     "noneStreamer": "Brak rozegranych meczów jako {{- heroName}} {{timeperiod}}",
     "timeperiod": {
+      "lifetime": "całego czasu",
       "days_one": "w {{count}} dzień",
       "days_few": "w {{count}} dniach",
       "days_many": "w {{count}} dniach",
-      "days_other": "w {{count}} dniach",
-      "lifetime": "całego czasu"
+      "days_other": "w {{count}} dniach"
     },
-    "winrateColor_one": "{{color}} ma wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczu.",
     "winrateColor_few": "{{color}} ma wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów.",
     "winrateColor_many": "{{color}} ma wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów.",
+    "winrateColor_one": "{{color}} ma wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczu.",
     "winrateColor_other": "{{color}} ma wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów.",
-    "winrateStreamer_one": "Wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczu.",
     "winrateStreamer_few": "Wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów.",
     "winrateStreamer_many": "Wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów.",
+    "winrateStreamer_one": "Wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczu.",
     "winrateStreamer_other": "Wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów."
   },
   "invalidColor": "Zly kolor bohatera, slot, lub nazwa. Spróbuj od 1-10,  częściową nazwę bohatera lub podaj kolor z podanych: {{colorList}}",
@@ -110,9 +101,9 @@
     "link": "Oto ostatnia gra: {{- url}}",
     "none": "W tej grze nie ma nikogo z poprzedniej gry",
     "player": "{{- currentMatchHero}} grał jako {{- lastMatchHero}}",
-    "total_one": "",
     "total_few": "Playing with {{count}} players from last game.",
     "total_many": "Playing with {{count}} players from last game.",
+    "total_one": "",
     "total_other": "Playing with {{count}} players from last game."
   },
   "lastgamescore": {
@@ -181,10 +172,6 @@
     "more_other": "Śmierci Rosha: {{count}} · Następny drop: Serek oraz Błogosławieństwo Aghanima lub Refresher Shard."
   },
   "roshanKilled": "Roshan zabity! Następny Roshan pomiędzy {{min}} a {{max}}",
-  "seconds_one": "{{count}} sekundy",
-  "seconds_few": "{{count}} sekund",
-  "seconds_many": "{{count}} sekund",
-  "seconds_other": "{{count}} sekund",
   "setStreamDelay": "Ustawiam opóźnienie transmisji na: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Nieprawidłowe opóźnienie transmisji, użyj !setdelay <seconds>",
   "setStreamDelayRemoved": "Usuwam opóźnienie transmisji",
@@ -207,15 +194,11 @@
   "toggleMatch_single": "Ustawiono standardową stawkę MMR dla tego meczu: {{- url}} Wpisz !fixdd, aby cofnąć",
   "toggleMatch_solo": "Ustawiono stawkę MMR dla rozgrywki w pojedynkę dla tego meczu: {{- url}} Wpisz !fixparty, aby cofnąć",
   "translated": {
-    "by_one": "Dotabod przetłumaczył przez {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? {{- url}}",
     "by_few": "Dotabod przetłumaczyli {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? {{- url}}",
     "by_many": "Dotabod przetłumaczyli {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? {{- url}}",
+    "by_one": "Dotabod przetłumaczył przez {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? {{- url}}",
     "by_other": "Dotabod przetłumaczyli {{- translators}}. Chcesz pomóc w tłumaczeniu lub zgłosić błąd? {{- url}}"
   },
-  "treadToggle_one": "Przełączyliśmy Trzewiki Mocy już {{count}} raz, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
-  "treadToggle_few": "Przełączyliśmy Trzewiki Mocy już {{count}} razy, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
-  "treadToggle_many": "Przełączyliśmy Trzewiki Mocy już {{count}} razy, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
-  "treadToggle_other": "Przełączyliśmy Trzewiki Mocy już {{count}} razy, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
   "uknownMmr": "Nie znam jeszcze MMR-u {{channel}}. Moderatorzy muszą użyć komendy !setmmr 1234 lub ustawić go tutaj: {{- url}}",
   "unknown": "Nieznany",
   "unknownSteam": "Nie można odnaleźć konta Steam. Postępuj zgodnie z Krokiem 2 konfiguracji, zagraj z botami i spróbuj ponownie.",
@@ -234,5 +217,21 @@
     "winProbability": "Prawdopodobieństwo wygrania: {{winRate}}% {{emote}} w {{gameTime}}:00 ⏲ · Następna aktualizacja za {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Prawdopodobieństwo wygrania nie jest jeszcze dostępne · Spróbuj ponownie za {{remainingCooldown}}s"
   },
-  "xpm": "Aktualny XPM dla {{- heroName}}: {{num}}"
+  "xpm": "Aktualny XPM dla {{- heroName}}: {{num}}",
+  "apm_one": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
+  "apm_few": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
+  "apm_many": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
+  "gpm_one": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstwa bohatera, z {{creepKills}} zabójstw creepów.",
+  "gpm_few": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstw bohaterów, z {{creepKills}} zabójstw creepów.",
+  "gpm_many": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstw bohaterów, z {{creepKills}} zabójstw creepów.",
+  "gpm_other": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstw bohaterów, z {{creepKills}} zabójstw creepów.",
+  "seconds_few": "{{count}} sekund",
+  "seconds_many": "{{count}} sekund",
+  "seconds_one": "{{count}} sekundy",
+  "seconds_other": "{{count}} sekund",
+  "treadToggle_one": "Przełączyliśmy Trzewiki Mocy już {{count}} raz, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
+  "treadToggle_few": "Przełączyliśmy Trzewiki Mocy już {{count}} razy, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
+  "treadToggle_many": "Przełączyliśmy Trzewiki Mocy już {{count}} razy, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu.",
+  "treadToggle_other": "Przełączyliśmy Trzewiki Mocy już {{count}} razy, aby zaoszczędzić łącznie {{manaCount}} many w tym meczu."
 }
