@@ -5,8 +5,6 @@
     "pickup": "{{- heroName}} Aegis'i aldı!",
     "snatched": "{{- heroName}} Aegis'i çaldı {{emote}}"
   },
-  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
-  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Oyunun ortalama sıralaması",
   "betaFeature": "Beta özellikleri",
   "betaTester": "$t(betaTester_on)",
@@ -58,9 +56,6 @@
   "dota2pt": "Daha iyi item tavsiyelerine mi ihtiyacın var {{- heroName}}? Buraya tıkla {{- url}}",
   "dotabod": "Ben {{author}} tarafından yaratılan açık kaynaklı bir botum. Daha detaylı bilgi için {{- url}}",
   "gameNotFound": "Oyun bulunamadı",
-  "gpm_zero": "",
-  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2 dakika gecikme) {{- heroName}} için item bulunamadı",
     "list": "(2 dakika gecikme) {{- heroName}} {{- itemNames}} var"
@@ -69,9 +64,9 @@
     "noneColor": "{{color}} has no matches played as {{- heroName}} {{timeperiod}}",
     "noneStreamer": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
+      "lifetime": "tüm zamanlar",
       "days_one": "{{count}}",
-      "days_other": "{{count}}",
-      "lifetime": "tüm zamanlar"
+      "days_other": "{{count}}"
     },
     "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
     "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
@@ -157,8 +152,6 @@
     "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
   "roshanKilled": "Roshan öldürüldü! Bir sonraki Roshan {{min}} ve {{max}} dakika arasında yeniden doğacak",
-  "seconds_one": "{{count}} saniye",
-  "seconds_other": "{{count}} saniye",
   "setStreamDelay": "Yayın gecikme ayarı: $t(seconds, {\"count\": {{seconds}} }) ayarlanıyor",
   "setStreamDelayNoArgs": "Geçersiz yayın gecikmesi, !setdelay <seconds> komutunu kullanın",
   "setStreamDelayRemoved": "Yayın gecikmesi kaldırılıyor",
@@ -184,8 +177,6 @@
     "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
     "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
   },
-  "treadToggle_one": "{{count}} Powertreads toggle yaparak bu maç toplamda {{manaCount}} mana kurtardın.",
-  "treadToggle_other": "{{count}} Powertreads toggle yaparak bu maç toplamda {{manaCount}} mana kurtardın.",
   "uknownMmr": "{{channel}} mevcut MMR'ını henüz bilmiyorum. !setmmr (mevcut mmr) komutunu kullanarak ya da {{- url}} link üzerinden ayarlayarak işlemi tamamlayabilirsin",
   "unknown": "Bilinmiyor",
   "unknownSteam": "Steam hesabı bulunamadı. Kurulumun 2. adımını uygulayın, bir bot maçı yapın ve tekrar deneyin.",
@@ -204,5 +195,13 @@
     "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
-  "xpm": "Live XPM for {{- heroName}}: {{num}}"
+  "xpm": "Live XPM for {{- heroName}}: {{num}}",
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "seconds_one": "{{count}} saniye",
+  "seconds_other": "{{count}} saniye",
+  "treadToggle_one": "{{count}} Powertreads toggle yaparak bu maç toplamda {{manaCount}} mana kurtardın.",
+  "treadToggle_other": "{{count}} Powertreads toggle yaparak bu maç toplamda {{manaCount}} mana kurtardın."
 }

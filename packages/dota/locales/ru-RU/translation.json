@@ -5,10 +5,6 @@
     "pickup": "{{- heroName}} подбирает аегис!",
     "snatched": "{{- heroName}} крадёт аегис {{emote}}"
   },
-  "apm_one": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
-  "apm_few": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
-  "apm_many": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
-  "apm_other": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Средний ранг этой игры",
   "betaFeature": "[бета-функция]",
   "betaTester": "$t(betaTester_on)",
@@ -52,23 +48,18 @@
   "commands_everyone": "Каждый может использовать: {{commandList}}",
   "commands_mods": "Команды только для модераторов: {{commandList}}",
   "connections": {
-    "gsi_one": "{{count}} стример подключён к Dotabod GSI",
     "gsi_few": "{{count}} стримера подключёны к Dotabod GSI",
     "gsi_many": "{{count}} стримеров подключёны к Dotabod GSI",
+    "gsi_one": "{{count}} стример подключён к Dotabod GSI",
     "gsi_other": "{{count}} стримеров подключено к Dotabod GSI",
-    "overlay_one": "{{count}} стример использует оверлей",
     "overlay_few": "{{count}} стримера использует оверлей",
     "overlay_many": "{{count}} стримеров использует оверлей",
+    "overlay_one": "{{count}} стример использует оверлей",
     "overlay_other": "{{count}} стримеров использует оверлей"
   },
   "dota2pt": "Нужны сборки от про-игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "gameNotFound": "Игра не найдена",
-  "gpm_zero": "",
-  "gpm_one": "Текущий GPM у {{- heroName}}: {{num}} золотой. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_few": "Текущий GPM у {{- heroName}}: {{num}} золота. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_many": "Текущий GPM у {{- heroName}}: {{num}} золотых. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
-  "gpm_other": "Текущий GPM у {{- heroName}}: {{num}} золотых. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
   "heroItems": {
     "empty": "(2 мин. задержка) Не найдено предметов у {{- heroName}}",
     "list": "(2 мин. задержка) {{- heroName}} имеет: {{- itemNames}}"
@@ -77,19 +68,19 @@
     "noneColor": "У {{color}} нет сыгранных игр на {{- heroName}} {{timeperiod}}",
     "noneStreamer": "Нет сыгранных игр на {{- heroName}} {{timeperiod}}",
     "timeperiod": {
+      "lifetime": "за всё время",
       "days_one": "за {{count}} день",
       "days_few": "за {{count}} дня",
       "days_many": "за {{count}} дней",
-      "days_other": "за {{count}} дня",
-      "lifetime": "за всё время"
+      "days_other": "за {{count}} дня"
     },
-    "winrateColor_one": "У {{color}} винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игра.",
     "winrateColor_few": "У {{color}} винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игры.",
     "winrateColor_many": "У {{color}} винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игр.",
+    "winrateColor_one": "У {{color}} винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игра.",
     "winrateColor_other": "У {{color}} винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игра.",
-    "winrateStreamer_one": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игра.",
     "winrateStreamer_few": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игры.",
     "winrateStreamer_many": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игр.",
+    "winrateStreamer_one": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игра.",
     "winrateStreamer_other": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игра."
   },
   "invalidColor": "Неверный цвет героя, номер или имя. Попробуй 1-10, имя героя на английском или цвет из списка: {{colorList}}",
@@ -110,9 +101,9 @@
     "link": "ID последнего матча: {{- url}}",
     "none": "Не найдено игроков из прошлой игры",
     "player": "{{- currentMatchHero}} был {{- lastMatchHero}}",
-    "total_one": "",
     "total_few": "Playing with {{count}} players from last game.",
     "total_many": "Playing with {{count}} players from last game.",
+    "total_one": "",
     "total_other": "Playing with {{count}} players from last game."
   },
   "lastgamescore": {
@@ -181,10 +172,6 @@
     "more_other": "Смертей Рошана: {{count}} • Следующая награда: Сыр, Аганим или Рефрешер."
   },
   "roshanKilled": "Рошан убит! Следующий рошан между {{min}} и {{max}}",
-  "seconds_one": "{{count}} секунду",
-  "seconds_few": "{{count}} секунды",
-  "seconds_many": "{{count}} секунд",
-  "seconds_other": "{{count}} секунд",
   "setStreamDelay": "Теперь задержка стрима - $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Неверная задержка стрима, используйте !setdelay <seconds>",
   "setStreamDelayRemoved": "Отключаю задержку стрима",
@@ -207,15 +194,11 @@
   "toggleMatch_single": "Изменение этого матча на стандартный рейтинг {{- url}} Введите !fixdd для отмены",
   "toggleMatch_solo": "Изменение этого матча на одиночный рейтинг: {{- url}} Введите !fixparty для отмены",
   "translated": {
-    "by_one": "Dotabod перевел {{- translators}}. Хотите помочь с переводом или увидели ошибку? {{- url}}",
     "by_few": "Dotabod переведён {{- translators}} Хотите помочь с переводом или увидели ошибку? {{- url}}",
     "by_many": "Dotabod переведён {{- translators}} Хотите помочь с переводом или увидели ошибку? {{- url}}",
+    "by_one": "Dotabod перевел {{- translators}}. Хотите помочь с переводом или увидели ошибку? {{- url}}",
     "by_other": "Dotabod переведён {{- translators}} Хотите помочь с переводом или увидели ошибку? {{- url}}"
   },
-  "treadToggle_one": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_few": "Power Treads были переключены {{count}} раза, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_many": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
-  "treadToggle_other": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
   "uknownMmr": "Я еще не знаю рейтинг {{channel}}. Модераторы или стример должны сами ввести команду, пример: !setmmr 1234 или установить его вручную на сайте {{- url}}",
   "unknown": "Неизвестно",
   "unknownSteam": "Не удалось найти учетную запись Steam. Попробуйте сначала сыграть тренировочный матч с ботом, чтобы сохранить свой аккаунт в Dotabod!",
@@ -234,5 +217,21 @@
     "winProbability": "Вероятность победы - {{winRate}}%  {{emote}} на время {{gameTime}}:00 ⏲ · Следущее обновление вероятности через {{remainingCooldown}} сек.",
     "winProbabilityDataNotAvailable": "Вероятность победы пока недоступна. Попробуйте снова через {{remainingCooldown}} сек"
   },
-  "xpm": "Текущий XPM у {{- heroName}}: {{num}} опыта"
+  "xpm": "Текущий XPM у {{- heroName}}: {{num}} опыта",
+  "apm_one": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
+  "apm_few": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
+  "apm_many": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
+  "gpm_one": "Текущий GPM у {{- heroName}}: {{num}} золотой. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "gpm_few": "Текущий GPM у {{- heroName}}: {{num}} золота. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "gpm_many": "Текущий GPM у {{- heroName}}: {{num}} золотых. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "gpm_other": "Текущий GPM у {{- heroName}}: {{num}} золотых. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
+  "seconds_few": "{{count}} секунды",
+  "seconds_many": "{{count}} секунд",
+  "seconds_one": "{{count}} секунду",
+  "seconds_other": "{{count}} секунд",
+  "treadToggle_one": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_few": "Power Treads были переключены {{count}} раза, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_many": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче.",
+  "treadToggle_other": "Power Treads были переключены {{count}} раз, в общей сложности сэкономлено {{manaCount}} маны в этом матче."
 }
