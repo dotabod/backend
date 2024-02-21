@@ -483,24 +483,10 @@ export class GSIHandler {
       return
     }
 
-    await supabase.from('bets').insert({
-      predictionId: client?.gsi?.map?.matchid || '',
-      matchId: client?.gsi?.map?.matchid || '',
-      userId: client.token,
-      myTeam: client.gsi?.player?.team_name ?? '',
-      steam32Id: client.steam32Id,
-    })
-
     if (!client.stream_online) {
       logger.info('[BETS] Not opening bets bc stream is offline for', {
         name: client.name,
       })
-      this.openingBets = false
-      return
-    }
-
-    const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
-    if (!betsEnabled) {
       this.openingBets = false
       return
     }
@@ -510,6 +496,7 @@ export class GSIHandler {
       return
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setTimeout(this.openTheBet, getStreamDelay(client.settings))
 
     // .catch((e: any) => {
@@ -532,41 +519,56 @@ export class GSIHandler {
     // })
   }
 
-  openTheBet = () => {
+  openTheBet = async () => {
     const { client } = this
     const hero = getHero(client.gsi?.hero?.name)
 
-    const handler = async () => {
-      try {
-        await openTwitchBet({
+    const matchId = client?.gsi?.map?.matchid || ''
+    let betId = matchId
+
+    const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
+
+    try {
+      if (betsEnabled) {
+        const bet = await openTwitchBet({
           heroName: hero?.localized_name,
-          client: client,
-        })
-      } catch (e: any) {
-        logger.error('[BETS] Error opening twitch bet', {
-          channel: client.name,
-          e: e?.message || e,
-          matchId: client?.gsi?.map?.matchid || '',
+          client,
         })
 
-        this.openingBets = false
-        return
+        betId = bet?.id
       }
-
-      say(client, t('bets.open', { emote: 'peepoGamble', lng: client.locale }), {
-        delay: false,
-        key: DBSettings.tellChatBets,
+    } catch (e: any) {
+      logger.error('[BETS] Error opening twitch bet', {
+        channel: client.name,
+        e: e?.message || e,
+        matchId,
       })
+
+      return
+    } finally {
       this.openingBets = false
-      logger.info('[BETS] open bets', {
-        event: 'open_bets',
-        matchId: client?.gsi?.map?.matchid || '',
-        user: client.token,
-        player_team: client.gsi?.player?.team_name,
+
+      // we fill in hero name later when match ends in case they swap heroes
+      await supabase.from('bets').insert({
+        predictionId: betId,
+        matchId,
+        userId: client.token,
+        myTeam: client.gsi?.player?.team_name ?? '',
+        steam32Id: client.steam32Id,
       })
     }
 
-    void handler()
+    say(client, t('bets.open', { emote: 'peepoGamble', lng: client.locale }), {
+      delay: false,
+      key: DBSettings.tellChatBets,
+    })
+
+    logger.info('[BETS] open bets', {
+      event: 'open_bets',
+      matchId,
+      user: client.token,
+      player_team: client.gsi?.player?.team_name,
+    })
   }
 
   async closeBets(winningTeam: 'radiant' | 'dire' | null = null) {

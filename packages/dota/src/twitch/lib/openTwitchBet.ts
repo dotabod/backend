@@ -54,7 +54,7 @@ export const openTwitchBet = async ({
   const isValidDuration = betsInfo.duration >= 30 && betsInfo.duration <= 1800
   const autoLockAfter = isValidDuration ? betsInfo.duration : 240 // 4 min default
 
-  await api.predictions
+  return await api.predictions
     .createPrediction(twitchId || '', {
       title: title.substring(0, 45),
       outcomes: [yes.substring(0, 25), no.substring(0, 25)],
