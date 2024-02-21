@@ -5,6 +5,9 @@
     "pickup": "{{- heroName}} picked up the aegis!",
     "snatched": "{{- heroName}} snatched the aegis {{emote}}"
   },
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_few": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -48,16 +51,20 @@
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
   "connections": {
-    "gsi_few": "{{count}} streamers connected to Dotabod GSI",
     "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_few": "{{count}} streamers connected to Dotabod GSI",
     "gsi_other": "{{count}} streamers connected to Dotabod GSI",
-    "overlay_few": "{{count}} streamers using the overlay",
     "overlay_one": "{{count}} streamer using the overlay",
+    "overlay_few": "{{count}} streamers using the overlay",
     "overlay_other": "{{count}} streamers using the overlay"
   },
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "gameNotFound": "Game was not found",
+  "gpm_zero": "",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_few": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2m delay) No items found for {{- heroName}}",
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
@@ -66,16 +73,16 @@
     "noneColor": "{{color}} has no matches played as {{- heroName}} {{timeperiod}}",
     "noneStreamer": "No matches played as {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "lifetime": "of all time",
       "days_one": "in {{count}}d",
       "days_few": "in {{count}}d",
-      "days_other": "in {{count}}d"
+      "days_other": "in {{count}}d",
+      "lifetime": "of all time"
     },
-    "winrateColor_few": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
     "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateColor_few": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
     "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
-    "winrateStreamer_few": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
     "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
+    "winrateStreamer_few": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
@@ -94,8 +101,8 @@
     "link": "Here's last game: {{- url}}",
     "none": "Not playing with anyone from last game",
     "player": "{{- currentMatchHero}} was {{- lastMatchHero}}",
-    "total_few": "Playing with {{count}} players from last game.",
     "total_one": "",
+    "total_few": "Playing with {{count}} players from last game.",
     "total_other": "Playing with {{count}} players from last game."
   },
   "lastgamescore": {
@@ -162,6 +169,9 @@
     "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
   "roshanKilled": "Roshan killed! Next roshan between {{min}} and {{max}}",
+  "seconds_one": "{{count}} second",
+  "seconds_few": "{{count}} seconds",
+  "seconds_other": "{{count}} seconds",
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Removing stream delay",
@@ -184,10 +194,13 @@
   "toggleMatch_single": "Changing this match to single down mmr: {{- url}} Type !fixdd to undo",
   "toggleMatch_solo": "Changing this match to solo mmr: {{- url}} Type !fixparty to undo",
   "translated": {
-    "by_few": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
     "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
+    "by_few": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
     "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
   },
+  "treadToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
+  "treadToggle_few": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
+  "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
   "uknownMmr": "I don't know {{channel}}'s MMR yet. Mods have to !setmmr 1234 or set it in {{- url}}",
   "unknown": "Unknown",
   "unknownSteam": "Could not find steam account. Follow Step 2 of setup, play a bot match, and try again.",
@@ -206,17 +219,5 @@
     "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
-  "xpm": "Live XPM for {{- heroName}}: {{num}}",
-  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
-  "apm_few": "Live APM for {{- heroName}}: {{count}} {{emote}}",
-  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
-  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_few": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "seconds_few": "{{count}} seconds",
-  "seconds_one": "{{count}} second",
-  "seconds_other": "{{count}} seconds",
-  "treadToggle_one": "We toggled treads {{count}} time to save a total {{manaCount}} mana this match.",
-  "treadToggle_few": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
-  "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match."
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

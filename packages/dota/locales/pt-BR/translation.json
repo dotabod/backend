@@ -5,6 +5,9 @@
     "pickup": "{{- heroName}} pegou o aegis!",
     "snatched": "{{- heroName}} roubou o aegis! {{emote}}"
   },
+  "apm_one": "APM ao vivo de {{- heroName}}: {{count}} {{emote}}",
+  "apm_many": "",
+  "apm_other": "APM ao vivo de {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Rank médio neste jogo",
   "betaFeature": "[recurso beta]",
   "betaTester": "$t(betaTester_on)",
@@ -49,13 +52,18 @@
   "commands_mods": "Comandos exclusivos para mods: {{commandList}}",
   "connections": {
     "gsi_one": "{{count}} streamer conectado ao Dotabod GSI",
+    "gsi_many": "",
     "gsi_other": "{{count}} streamers conectados ao Dotabod GSI",
     "overlay_one": "{{count}} streamer usando o overlay",
+    "overlay_many": "",
     "overlay_other": "{{count}} streamers usando o overlay"
   },
   "dota2pt": "Precisa de builds profissionais para {{- heroName}} ? Dê uma olhada aqui {{- url}}",
   "dotabod": "Eu sou um bot open source feito pelo {{author}}. Mais informações: {{- url}}",
   "gameNotFound": "Jogo não encontrado",
+  "gpm_zero": "",
+  "gpm_one": "GPM ao vivo de {{- heroName}}: {{num}}. {{heroKills}} de abates de heróis, {{creepKills}} de abates de creep.",
+  "gpm_other": "GPM ao vivo de {{- heroName}}: {{num}}. {{heroKills}} de abates de heróis, {{creepKills}} de abates de creep.",
   "heroItems": {
     "empty": "(2 min de atraso) Nenhum item encontrado para {{- heroName}}",
     "list": "(2 min de atraso) {{- heroName}} possui: {{- itemNames}}"
@@ -64,9 +72,10 @@
     "noneColor": "{{color}} não tem nenhuma partida jogada de {{- heroName}} {{timeperiod}}",
     "noneStreamer": "Nenhuma partida jogada de {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "lifetime": "de todos os tempos",
       "days_one": "em {{count}} dia",
-      "days_other": "em {{count}} dias"
+      "days_many": "",
+      "days_other": "em {{count}} dias",
+      "lifetime": "de todos os tempos"
     },
     "winrateColor_one": "Taxa de vitória de {{color}} é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partida.",
     "winrateColor_other": "Taxa de vitória de {{color}} é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partidas.",
@@ -79,8 +88,10 @@
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
+    "lost_many": "",
     "lost_other": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
     "won_one": "{{- heroName}} tem uma killstreak de {{count}} {{emote}}",
+    "won_many": "",
     "won_other": "{{- heroName}} tem uma killstreak de {{count}} {{emote}}"
   },
   "lastgame": {
@@ -88,6 +99,7 @@
     "none": "Não está jogando com nenhum jogador da partida anterior.",
     "player": "{{- currentMatchHero}} era {{- lastMatchHero}}",
     "total_one": "",
+    "total_many": "",
     "total_other": "Playing with {{count}} players from last game."
   },
   "lastgamescore": {
@@ -135,6 +147,7 @@
   "rank": {
     "nextRankAt": "Próximo rank em",
     "nextRankIn_one": "Mais uma vitória {{emote}}",
+    "nextRankIn_many": "",
     "nextRankIn_other": "em {{count}} vitórias"
   },
   "ranked": "Ranqueada",
@@ -149,9 +162,12 @@
     "2": "Mortes do Roshan: 2 · Próximos itens a cair: queijo, benção de aghanim ou fragmento de orbe restaurador.",
     "3": "Mortes do Roshan: 3 · Próximos itens a cair: queijo, benção de aghanim ou fragmento de orbe restaurador.",
     "more_one": "Mortes do Roshan: {{count}} · Próximos itens a cair: queijo, benção de aghanim ou fragmento de orbe restaurador.",
+    "more_many": "",
     "more_other": "Mortes do Roshan: {{count}} · Próximos itens a cair: queijo, benção de aghanim ou fragmento de orbe restaurador."
   },
   "roshanKilled": "Roshan morto! Próximo roshan entre {{min}} e {{max}} .",
+  "seconds_one": "{{count}} segundo",
+  "seconds_other": "{{count}} segundos",
   "setStreamDelay": "Configurando delay de transmissão para: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <seconds> .",
   "setStreamDelayRemoved": "Removendo delay de transmissão",
@@ -175,8 +191,12 @@
   "toggleMatch_solo": "Mudando partida para MMR solo: {{- url}} Digite !fixparty para desfazer",
   "translated": {
     "by_one": "Dotabod é traduzido por {{- translators}}. Quer ajudar a traduzir, ou corrigir um erro? {{- url}}",
+    "by_many": "",
     "by_other": "Dotabod é traduzido por {{- translators}}. Quer ajudar a traduzir, ou corrigir um erro? {{- url}}"
   },
+  "treadToggle_one": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
+  "treadToggle_many": "",
+  "treadToggle_other": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
   "uknownMmr": "Ainda não sei o MMR de {{channel}}. Mods precisam digitar !setmmr 1234 ou configurar em {{- url}}",
   "unknown": "Desconhecido",
   "unknownSteam": "Conta da steam não encontrada. Siga os passos 2 do setup , tente jogar uma partida contra bots para salvar sua conta em Dotabod!",
@@ -195,13 +215,5 @@
     "winProbability": "{{winRate}}% de chance de vitória {{emote}} em {{gameTime}}⏲️ · Próxima atualização em {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Chance de vitória não está disponível ainda · Tente novamente em {{remainingCooldown}}s"
   },
-  "xpm": "XPM ao vivo de {{- heroName}}: {{num}}",
-  "apm_one": "APM ao vivo de {{- heroName}}: {{count}} {{emote}}",
-  "apm_other": "APM ao vivo de {{- heroName}}: {{count}} {{emote}}",
-  "gpm_one": "GPM ao vivo de {{- heroName}}: {{num}}. {{heroKills}} de abates de heróis, {{creepKills}} de abates de creep.",
-  "gpm_other": "GPM ao vivo de {{- heroName}}: {{num}}. {{heroKills}} de abates de heróis, {{creepKills}} de abates de creep.",
-  "seconds_one": "{{count}} segundo",
-  "seconds_other": "{{count}} segundos",
-  "treadToggle_one": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
-  "treadToggle_other": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida."
+  "xpm": "XPM ao vivo de {{- heroName}}: {{num}}"
 }

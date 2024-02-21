@@ -5,6 +5,8 @@
     "pickup": "{{- heroName}} plockade upp aegisen!",
     "snatched": "{{- heroName}} snodde åt sig aegisen {{emote}}"
   },
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Genomsnittlig rank i denna match",
   "betaFeature": "[beta-funktion]",
   "betaTester": "$t(betaTester_on)",
@@ -56,6 +58,9 @@
   "dota2pt": "Behöver du build-idéer av proffs för {{- heroName}}? Kolla här {{- url}}",
   "dotabod": "Jag är en bot med öppen källkod skapad av {{author}}. Mer info: {{- url}}",
   "gameNotFound": "Matchen hittades inte",
+  "gpm_zero": "",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2min fördröjning) Inga föremål hittades för {{- heroName}}",
     "list": "(2min fördröjning) {{- heroName}} har: {{- itemNames}}"
@@ -64,9 +69,9 @@
     "noneColor": "{{color}} har inga matcher spelade som {{- heroName}} {{timeperiod}}",
     "noneStreamer": "Inga matcher spelade som {{- heroName}} {{timeperiod}}",
     "timeperiod": {
-      "lifetime": "av all tid",
       "days_one": "på {{count}} dag",
-      "days_other": "på {{count}} dagar"
+      "days_other": "på {{count}} dagar",
+      "lifetime": "av all tid"
     },
     "winrateColor_one": "{{color}}s winrate är {{winrate}}% med {{- heroName}} {{timeperiod}} från {{count}} match.",
     "winrateColor_other": "{{color}}s winrate är {{winrate}}% med {{- heroName}} {{timeperiod}} från {{count}} matcher.",
@@ -152,6 +157,8 @@
     "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
   "roshanKilled": "Roshan dödades! Nästa roshan mellan {{min}} och {{max}}",
+  "seconds_one": "{{count}} sekund",
+  "seconds_other": "{{count}} sekunder",
   "setStreamDelay": "Ställer in streamens fördröjning till: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Ogiltig stream fördröjning, använd !setdelay <sekunder>",
   "setStreamDelayRemoved": "Tar bort stream fördröjningen",
@@ -177,6 +184,8 @@
     "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
     "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
   },
+  "treadToggle_one": "Vi växlade treads {{count}} gång för att spara totalt {{manaCount}} mana denna match.",
+  "treadToggle_other": "Vi växlade treads {{count}} gånger för att spara totalt {{manaCount}} mana denna match.",
   "uknownMmr": "Jag vet inte {{channel}}s MMR ännu. Mods måste skriva !setmmr 1234 eller ställa in det i {{- url}}",
   "unknown": "Okänd",
   "unknownSteam": "Kunde inte hitta Steam-kontot. Följ steg 2 i konfigurationen, spela en bot match, och försök igen.",
@@ -195,13 +204,5 @@
     "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
-  "xpm": "Live XPM for {{- heroName}}: {{num}}",
-  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
-  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
-  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "seconds_one": "{{count}} sekund",
-  "seconds_other": "{{count}} sekunder",
-  "treadToggle_one": "Vi växlade treads {{count}} gång för att spara totalt {{manaCount}} mana denna match.",
-  "treadToggle_other": "Vi växlade treads {{count}} gånger för att spara totalt {{manaCount}} mana denna match."
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }
