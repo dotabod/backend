@@ -5,6 +5,8 @@
     "pickup": "{{- heroName}} hat die Aegis aufgehoben!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
+  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Durchschnittlicher Rang in diesem Spiel",
   "betaFeature": "[Beta-Funktion]",
   "betaTester": "$t(betaTester_on)",
@@ -56,6 +58,9 @@
   "dota2pt": "Benötigen Sie Profi-Build-Ideen für {{- heroName}}? Sieh hier {{- url}}",
   "dotabod": "Ich bin ein Open-Source-Bot erstellt von {{author}}. Weitere Infos: {{- url}}",
   "gameNotFound": "Spiel wurde nicht gefunden",
+  "gpm_zero": "",
+  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2m Verzögerung) Keine Items für {{- heroName}} gefunden",
     "list": "(2m Verzögerung) {{- heroName}} hat {{- itemNames}}"
@@ -64,9 +69,9 @@
     "noneColor": "{{color}} hat noch keine Spiele als {{- heroName}} gespielt {{timeperiod}}",
     "noneStreamer": "Keine Spiele als {{- heroName}} gespielt {{timeperiod}}",
     "timeperiod": {
-      "lifetime": "gesamter Zeitraum",
       "days_one": "{{count}}Tagen",
-      "days_other": "in {{count}} Tagen"
+      "days_other": "in {{count}} Tagen",
+      "lifetime": "gesamter Zeitraum"
     },
     "winrateColor_one": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
     "winrateColor_other": "{{color}}'s Gewinnrate ist {{winrate}}% mit {{- heroName}} {{timeperiod}} von {{count}} spielen.",
@@ -152,6 +157,8 @@
     "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
   "roshanKilled": "Roshan wurde getötet! Nächster Roshan zwischen {{min}} und {{max}}",
+  "seconds_one": "{{count}} Sekunde",
+  "seconds_other": "{{count}} Sekunden",
   "setStreamDelay": "Setze Streamverzögerung auf: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Ungültige Streamverzögerung, !setdelay <seconds> verwenden",
   "setStreamDelayRemoved": "Streamverzögerung wird entfernt",
@@ -177,6 +184,8 @@
     "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
     "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
   },
+  "treadToggle_one": "Wir wechselten Treads {{count}}-mal um insgesamt {{manaCount}} Mana in diesem Spiel zu erhalten.",
+  "treadToggle_other": "Wir wechselten treads {{count}}-mal um insgesamt {{manaCount}} Mana in diesem Spiel zu erhalten.",
   "uknownMmr": "Ich kenne die MMR von {{channel}}noch nicht. Mods müssen !setmmr 1234 oder in {{- url}} gesetzt werden",
   "unknown": "Unbekannt",
   "unknownSteam": "Konnte kein Steam-Account finden. Folge Schritt 2 des Setups, spiele ein Bot-Spiel und versuche es erneut.",
@@ -195,13 +204,5 @@
     "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
-  "xpm": "Live EPM für {{- heroName}}: {{num}}",
-  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
-  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
-  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
-  "seconds_one": "{{count}} Sekunde",
-  "seconds_other": "{{count}} Sekunden",
-  "treadToggle_one": "Wir wechselten Treads {{count}}-mal um insgesamt {{manaCount}} Mana in diesem Spiel zu erhalten.",
-  "treadToggle_other": "Wir wechselten treads {{count}}-mal um insgesamt {{manaCount}} Mana in diesem Spiel zu erhalten."
+  "xpm": "Live EPM für {{- heroName}}: {{num}}"
 }
