@@ -1,6 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       accounts: {
@@ -84,7 +84,7 @@ export interface Database {
           lobby_type: number | null
           matchId: string
           myTeam: string
-          predictionId: string
+          predictionId: string | null
           radiant_score: number | null
           steam32Id: number | null
           updated_at: string
@@ -103,7 +103,7 @@ export interface Database {
           lobby_type?: number | null
           matchId: string
           myTeam: string
-          predictionId: string
+          predictionId?: string | null
           radiant_score?: number | null
           steam32Id?: number | null
           updated_at?: string
@@ -122,7 +122,7 @@ export interface Database {
           lobby_type?: number | null
           matchId?: string
           myTeam?: string
-          predictionId?: string
+          predictionId?: string | null
           radiant_score?: number | null
           steam32Id?: number | null
           updated_at?: string
@@ -419,13 +419,14 @@ export type Tables<
     ? R
     : never
   : PublicTableNameOrOptions extends keyof (Database['public']['Tables'] &
-      Database['public']['Views'])
-  ? (Database['public']['Tables'] & Database['public']['Views'])[PublicTableNameOrOptions] extends {
-      Row: infer R
-    }
-    ? R
+        Database['public']['Views'])
+    ? (Database['public']['Tables'] &
+        Database['public']['Views'])[PublicTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
     : never
-  : never
 
 export type TablesInsert<
   PublicTableNameOrOptions extends keyof Database['public']['Tables'] | { schema: keyof Database },
@@ -439,12 +440,12 @@ export type TablesInsert<
     ? I
     : never
   : PublicTableNameOrOptions extends keyof Database['public']['Tables']
-  ? Database['public']['Tables'][PublicTableNameOrOptions] extends {
-      Insert: infer I
-    }
-    ? I
+    ? Database['public']['Tables'][PublicTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
     : never
-  : never
 
 export type TablesUpdate<
   PublicTableNameOrOptions extends keyof Database['public']['Tables'] | { schema: keyof Database },
@@ -458,12 +459,12 @@ export type TablesUpdate<
     ? U
     : never
   : PublicTableNameOrOptions extends keyof Database['public']['Tables']
-  ? Database['public']['Tables'][PublicTableNameOrOptions] extends {
-      Update: infer U
-    }
-    ? U
+    ? Database['public']['Tables'][PublicTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
     : never
-  : never
 
 export type Enums<
   PublicEnumNameOrOptions extends keyof Database['public']['Enums'] | { schema: keyof Database },
@@ -473,5 +474,5 @@ export type Enums<
 > = PublicEnumNameOrOptions extends { schema: keyof Database }
   ? Database[PublicEnumNameOrOptions['schema']]['Enums'][EnumName]
   : PublicEnumNameOrOptions extends keyof Database['public']['Enums']
-  ? Database['public']['Enums'][PublicEnumNameOrOptions]
-  : never
+    ? Database['public']['Enums'][PublicEnumNameOrOptions]
+    : never
