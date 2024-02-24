@@ -524,7 +524,7 @@ export class GSIHandler {
     const hero = getHero(client.gsi?.hero?.name)
 
     const matchId = client?.gsi?.map?.matchid || ''
-    let betId = matchId
+    let betId: null | string = null
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
 
