@@ -9,8 +9,6 @@ import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('np', {
-  aliases: ['players', 'who'],
-  onlyOnline: true,
   dbkey: DBSettings.commandNP,
   handler: async (message, args) => {
     const [addOrRemove, forSteam32Id, ...name] = args
@@ -107,6 +105,14 @@ commandHandler.registerCommand('np', {
       } catch (e) {
         logger.error('Error in addremovehandler command', { e })
       }
+      return
+    }
+
+    if (!message.channel.client.stream_online) {
+      chatClient.say(
+        message.channel.name,
+        t('notLive', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+      )
       return
     }
 
