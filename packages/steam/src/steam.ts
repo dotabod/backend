@@ -138,6 +138,9 @@ function hasSteamData(game?: DelayedGames | null) {
 }
 
 function sortPlayersBySlot(game: DelayedGames) {
+  if (!game.teams || !Array.isArray(game.teams) || game.teams.length !== 2) return
+  if (!Array.isArray(game.teams[0].players) || !Array.isArray(game.teams[1].players)) return
+
   for (const team of game.teams) {
     team.players.sort((a, b) => a.team_slot - b.team_slot)
   }
@@ -516,15 +519,15 @@ class Dota {
         const retryAttempt2 = waitForHeros && !hasHeroes ? new Error() : undefined
         if (operation.retry(retryAttempt2)) return
 
-        // sort players by team_slot
-        sortPlayersBySlot(game)
-
         // 2-minute delay gives "0" match id, so we use the gsi match id instead
         game.match.match_id = match_id
         game.match.server_steam_id = steam_server_id
         const gamePlusMore = { ...game, createdAt: new Date() }
 
         if (hasHeroes) {
+          // sort players by team_slot
+          sortPlayersBySlot(game)
+
           await saveMatch({ match_id, game: gamePlusMore })
           if (!forceRefetchAll) {
             // forward the msg to dota node app
@@ -534,6 +537,9 @@ class Dota {
         }
 
         if (!waitForHeros) {
+          // sort players by team_slot
+          sortPlayersBySlot(game)
+
           await saveMatch({ match_id, game: gamePlusMore, refetchCards })
           waitForHeros = true
           operation.retry(new Error())
