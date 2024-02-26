@@ -65,7 +65,11 @@ commandHandler.registerCommand('test', {
       let itemList: string[] | false | undefined = false
 
       steamSocket.emit('getUserSteamServer', steam32Id, async (err: any, steamServerId: string) => {
-        console.log({ steamServerId })
+        chatClient.whisper(
+          userId,
+          `${channel} ${steamServerId} ${client.steam32Id} ${client.token}`,
+        )
+
         if (!steamServerId) {
           chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
           return
@@ -139,7 +143,7 @@ commandHandler.registerCommand('test', {
         console.log({ response, err }) // one response per client
       })
 
-      chatClient.say(channel, `card!`)
+      chatClient.say(channel, 'card!')
       return
     }
 
@@ -161,9 +165,11 @@ commandHandler.registerCommand('test', {
           steamServerId,
         })
 
-        logger.info(
-          `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env
-            .STEAM_WEB_API!}&server_steam_id=${steamServerId}`,
+        chatClient.whisper(
+          userId,
+          `${channel} https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process
+            .env
+            .STEAM_WEB_API!}&server_steam_id=${steamServerId} ${client.steam32Id} ${client.token}`,
         )
       },
     )
