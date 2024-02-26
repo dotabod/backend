@@ -658,7 +658,10 @@ export class GSIHandler {
             key: DBSettings.tellChatBets,
           }),
         )
-        await refundTwitchBet(this.getChannelId())
+        const oldBetId = await refundTwitchBet(this.getChannelId())
+        if (oldBetId) {
+          await supabase.from('bets').update({ predictionId: null }).eq('predictionId', oldBetId)
+        }
       }
       await this.resetClientState()
       return
