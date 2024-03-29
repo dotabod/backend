@@ -1,6 +1,5 @@
 import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
 import { SocketClient } from '../types.js'
-import { logger } from '../utils/logger.js'
 import { deleteRedisData } from './GSIHandler.js'
 import { gsiHandlers, twitchIdToToken } from './lib/consts.js'
 
@@ -36,20 +35,8 @@ export async function clearCacheForUser(client?: SocketClient | null) {
 
   await deleteRedisData(client)
 
-  logger.info('Cleared cache for user before', {
-    size: gsiHandlers.size,
-    accountId,
-    token: client.token,
-  })
-
   gsiHandlers.delete(client.token)
   tokenLastPostTimestamps.delete(client.token)
-
-  logger.info('Cleared cache for user after', {
-    size: gsiHandlers.size,
-    accountId,
-    token: client.token,
-  })
 
   return true
 }

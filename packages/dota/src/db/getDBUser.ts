@@ -87,6 +87,7 @@ export default async function getDBUser({
       refresh_token,
       scope,
       expires_at,
+      requires_refresh,
       expires_in,
       obtainment_timestamp,
       access_token,

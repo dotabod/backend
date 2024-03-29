@@ -12,6 +12,7 @@ export interface SocketClient {
   mmr: number // currently connected mmr
   gsi?: Packet
   Account: {
+    requires_refresh: boolean
     refresh_token: string
     access_token: string
     expires_at: number | null

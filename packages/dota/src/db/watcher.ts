@@ -1,9 +1,12 @@
+import { t } from 'i18next'
+
 import { clearCacheForUser } from '../dota/clearCacheForUser.js'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
 import { gsiHandlers } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
-import { DBSettings } from '../settings.js'
+import { DBSettings, getValueOrDefault } from '../settings.js'
+import { chatClient } from '../twitch/chatClient.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
@@ -101,15 +104,28 @@ class SetupSupabase {
           client.locale = newObj.locale
           client.beta_tester = newObj.beta_tester
           client.stream_online = newObj.stream_online
-          const connectedUser = gsiHandlers.get(client.token)
 
-          if (client.stream_online && !oldObj.stream_online) {
-            connectedUser?.enable()
-          }
-
-          // they go offline
+          // They go offline
           if (!client.stream_online && oldObj.stream_online) {
             return
+          }
+
+          // They come online
+          if (client.stream_online && !oldObj.stream_online) {
+            const connectedUser = gsiHandlers.get(client.token)
+            if (!connectedUser) return
+
+            const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
+            if (connectedUser.client.Account?.requires_refresh && betsEnabled) {
+              chatClient.say(
+                connectedUser.client.name,
+                t('refreshToken', {
+                  lng: connectedUser.client.locale,
+                  channel: connectedUser.client.name,
+                }),
+              )
+            }
+            connectedUser.enable()
           }
 
           if (typeof newObj.stream_start_date === 'string') {
