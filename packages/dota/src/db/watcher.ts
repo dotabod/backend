@@ -91,7 +91,7 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'users' },
-        (payload: any) => {
+        async (payload: any) => {
           if (this.IS_DEV && !this.DEV_CHANNELS.includes(payload.new.name)) return
           if (!this.IS_DEV && this.DEV_CHANNELS.includes(payload.new.name)) return
 
@@ -116,14 +116,33 @@ class SetupSupabase {
             if (!connectedUser) return
 
             const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
-            if (connectedUser.client.Account?.requires_refresh && betsEnabled) {
-              chatClient.say(
-                connectedUser.client.name,
-                t('refreshToken', {
-                  lng: connectedUser.client.locale,
-                  channel: connectedUser.client.name,
-                }),
-              )
+            const steam32Id = connectedUser.getSteam32()
+            if (connectedUser.client.Account?.requires_refresh && betsEnabled && steam32Id) {
+              // We don't want to spam people who don't play dota 2
+              const { data: lg } = await supabase
+                .from('bets')
+                .select('won,created_at,updated_at')
+                .eq('steam32Id', steam32Id)
+                // Check if they've had a match in the last 24 hours
+                .gte('created_at', new Date(Date.now() - 86400000).toISOString())
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single()
+
+              if (lg) {
+                logger.info('[WATCHER USER] Sending refresh token messsage', {
+                  name: connectedUser.client.name,
+                  twitchId: connectedUser.client.Account.providerAccountId,
+                  token: connectedUser.client.token,
+                })
+                chatClient.say(
+                  connectedUser.client.name,
+                  t('refreshToken', {
+                    lng: connectedUser.client.locale,
+                    channel: connectedUser.client.name,
+                  }),
+                )
+              }
             }
             connectedUser.enable()
           }
