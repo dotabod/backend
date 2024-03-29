@@ -6,19 +6,19 @@ import { steamSocket } from '../../../steam/ws.js'
 import { getWinProbability2MinAgo } from '../../../stratz/livematch.js'
 import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId.js'
 import {
-  Abilities,
-  Ability,
-  DelayedGames,
-  Hero,
-  Item,
-  Items,
-  Packet,
-  SocketClient,
+  type Abilities,
+  type Ability,
+  type DelayedGames,
+  type Hero,
+  type Item,
+  type Items,
+  type Packet,
+  type SocketClient,
   validEventTypes,
 } from '../../../types.js'
 import { logger } from '../../../utils/logger.js'
 import { events } from '../../globalEventEmitter.js'
-import { GSIHandler, redisClient } from '../../GSIHandler.js'
+import { type GSIHandler, redisClient } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { checkPassiveMidas } from '../../lib/checkMidas.js'
 import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
@@ -190,7 +190,9 @@ const maybeSendTooltipData = async (dotaClient: GSIHandler) => {
 
   const inv = Object.values(items ?? {})
   const backpackItems: Item[] = inv.slice(0, 9)
-  const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
+  const { matchPlayers } = await getAccountsFromMatch({
+    gsi: dotaClient.client.gsi,
+  })
 
   const messageToSend = {
     items: backpackItems.map((item) => item.name),
@@ -212,17 +214,8 @@ eventHandler.registerEvent('newdata', {
     // In case they connect to a game in progress and we missed the start event
     const setupOBSBlockersPromise = dotaClient.setupOBSBlockers(data.map?.game_state ?? '')
 
-    let sendExtensionPubSubBroadcastPromise: Promise<void> | undefined
-    if (isSpectator(dotaClient.client.gsi)) {
-      sendExtensionPubSubBroadcastPromise = maybeSendTooltipData(dotaClient)
-    }
-
     if (!isPlayingMatch(dotaClient.client.gsi)) {
-      await Promise.all([
-        updateSteam32IdPromise,
-        setupOBSBlockersPromise,
-        sendExtensionPubSubBroadcastPromise,
-      ])
+      await Promise.all([updateSteam32IdPromise, setupOBSBlockersPromise])
       return
     }
 
@@ -253,7 +246,6 @@ eventHandler.registerEvent('newdata', {
     }
 
     const showProbabilityPromise = showProbability(dotaClient)
-    sendExtensionPubSubBroadcastPromise = maybeSendTooltipData(dotaClient)
 
     const {
       powerTreads: { enabled: treadsChatterEnabled },
@@ -282,7 +274,6 @@ eventHandler.registerEvent('newdata', {
       handleNewEventsPromise,
       openBetsPromise,
       calculateManaSavedPromise,
-      sendExtensionPubSubBroadcastPromise,
       checkPassiveMidasPromise,
       checkPassiveTpPromise,
     ])
@@ -306,7 +297,7 @@ async function showProbability(dotaClient: GSIHandler) {
       (dotaClient.client.gsi?.map?.clock_time || 0) % (updateInterval * 60) === 0
     ) {
       const matchDetails = await getWinProbability2MinAgo(
-        parseInt(dotaClient.client.gsi?.map?.matchid, 10),
+        Number.parseInt(dotaClient.client.gsi?.map?.matchid, 10),
       )
 
       const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
