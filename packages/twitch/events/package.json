@@ -22,7 +22,7 @@
     "@twurple/chat": "6.0.9",
     "@twurple/eventsub-base": "6.0.9",
     "@twurple/eventsub-http": "6.0.9",
-    "express": "^4.18.2",
+    "express": "^4.19.2",
     "express-body-parser-error-handler": "^1.0.7",
     "i18next": "^23.9.0",
     "i18next-fs-backend": "^2.3.1",
