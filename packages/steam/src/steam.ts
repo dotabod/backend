@@ -137,7 +137,7 @@ function hasSteamData(game?: DelayedGames | null) {
   return { hasAccountIds, hasPlayers, hasHeroes }
 }
 
-function sortPlayersBySlot(game: DelayedGames) {
+export function sortPlayersBySlot(game: DelayedGames) {
   if (!game.teams || !Array.isArray(game.teams) || game.teams.length !== 2) return
   if (!Array.isArray(game.teams[0].players) || !Array.isArray(game.teams[1].players)) return
 

@@ -13,6 +13,7 @@ import { logger } from '../utils/logger.js'
 if (process.env.NODE_ENV !== 'production') {
   console.log('NODE_ENV is development')
 }
+console.log('running dev script')
 
 const USER_COUNT = 300
 
@@ -101,7 +102,6 @@ async function getBotAPI_DEV_ONLY() {
   return api
 }
 
-console.log('running dev script')
 async function fixNewUsers() {
   console.log('running fixNewUsers')
   const { data: users, error } = await supabase
@@ -122,7 +122,7 @@ async function fixNewUsers() {
   return
 }
 
-await fixNewUsers()
+// await fixNewUsers()
 
 async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
   if (!botApi) return

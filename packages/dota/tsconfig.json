@@ -1,16 +1,12 @@
 {
   "compilerOptions": {
-    "lib": [
-      "ESNext"
-    ],
+    "lib": ["ESNext"],
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "node",
     "sourceMap": true,
     "strictNullChecks": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "allowJs": true,
     "checkJs": false,
     "resolveJsonModule": true,
@@ -23,22 +19,14 @@
     "outDir": "dist",
     "rootDir": "src"
   },
-  "include": [
-    "src/**/*",
-  ],
-  "exclude": [
-    "node_modules"
-  ],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"],
   "ts-node": {
     "esm": true,
     "files": false,
     "transpileOnly": true,
     "typeCheck": false,
-    "require": [
-      "tsconfig-paths/register"
-    ],
-    "ignore": [
-      "(?:^|/)node_modules/"
-    ]
+    "require": ["tsconfig-paths/register"],
+    "ignore": ["(?:^|/)node_modules/"]
   }
 }
