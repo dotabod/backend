@@ -11,7 +11,7 @@ import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
 import supabase from './supabase.js'
-import { Tables } from './supabase-types.js'
+import type { Tables } from './supabase-types.js'
 
 class SetupSupabase {
   channel: any // ReturnType<typeof supabase.channel>
@@ -25,7 +25,10 @@ class SetupSupabase {
     this.DEV_CHANNELIDS = process.env.DEV_CHANNELIDS?.split(',') ?? []
     this.channel = supabase.channel(`${this.IS_DEV ? 'dev-' : ''}dota`)
 
-    logger.info('Starting watcher for', { dev: this.IS_DEV, channels: this.DEV_CHANNELS })
+    logger.info('Starting watcher for', {
+      dev: this.IS_DEV,
+      channels: this.DEV_CHANNELS,
+    })
   }
 
   shouldHandleDevChannel(name: string) {
@@ -116,20 +119,18 @@ class SetupSupabase {
             if (!connectedUser) return
 
             const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
-            const steam32Id = connectedUser.getSteam32()
-            if (connectedUser.client.Account?.requires_refresh && betsEnabled && steam32Id) {
-              // We don't want to spam people who don't play dota 2
-              const { data: lg } = await supabase
-                .from('bets')
-                .select('won,created_at,updated_at')
-                .eq('steam32Id', steam32Id)
-                // Check if they've had a match in the last 24 hours
-                .gte('created_at', new Date(Date.now() - 86400000).toISOString())
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single()
+            const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
+            const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
 
-              if (lg) {
+            if (connectedUser.client.Account?.requires_refresh && betsEnabled) {
+              const { data, error } = await supabase
+                .from('bets')
+                .select('created_at')
+                .eq('userId', client.token)
+                .gte('created_at', dayAgo)
+                .range(0, 0)
+
+              if (data?.length && !error) {
                 logger.info('[WATCHER USER] Sending refresh token messsage', {
                   name: connectedUser.client.name,
                   twitchId: connectedUser.client.Account.providerAccountId,
@@ -242,7 +243,9 @@ class SetupSupabase {
           if (!this.IS_DEV && this.DEV_CHANNELS.includes(client.name)) return
 
           if (payload.eventType === 'DELETE') {
-            logger.info('[WATCHER STEAM] Deleting steam account for', { name: client.name })
+            logger.info('[WATCHER STEAM] Deleting steam account for', {
+              name: client.name,
+            })
 
             // A delete will reset their status in memory so they can reconnect anything
             await clearCacheForUser(client)
@@ -257,7 +260,9 @@ class SetupSupabase {
             return
           }
 
-          logger.info('[WATCHER STEAM] Updating steam accounts for', { name: client.name })
+          logger.info('[WATCHER STEAM] Updating steam accounts for', {
+            name: client.name,
+          })
 
           const currentSteamIdx = client.SteamAccount.findIndex(
             (s) => s.steam32Id === newObj.steam32Id,
