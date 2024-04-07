@@ -39,7 +39,7 @@ interface LastgameParams {
   locale: string
   steam32Id: number
   currentMatchId?: string
-  currentPlayers?: { heroid: number; accountid: number }[]
+  currentPlayers?: { heroid: number; accountid: number; playerid: number }[]
 }
 
 export default async function lastgame({

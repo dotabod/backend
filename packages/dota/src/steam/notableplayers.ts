@@ -29,7 +29,7 @@ export async function notablePlayers({
   locale: string
   twitchChannelId: string
   currentMatchId?: string
-  players?: { heroid: number; accountid: number }[]
+  players?: { heroid: number; accountid: number; playerid: number }[]
   enableFlags?: boolean
   steam32Id: number | null
 }) {

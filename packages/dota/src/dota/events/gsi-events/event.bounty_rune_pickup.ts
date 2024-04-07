@@ -25,11 +25,14 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
     if (
       typeof matchPlayers[event.player_id]?.heroid !== 'number' ||
       typeof event.player_id !== 'number'
-    )
+    ) {
       return
+    }
 
     clearTimeout(dotaClient.bountyTimeout)
-    const heroName = getHeroNameOrColor(matchPlayers[event.player_id]?.heroid, event.player_id)
+    const playerIdIndex =
+      matchPlayers.findIndex((p) => p.playerid === event.player_id) ?? event.player_id
+    const heroName = getHeroNameOrColor(matchPlayers[playerIdIndex]?.heroid ?? 0, playerIdIndex)
 
     dotaClient.bountyHeroNames.push(heroName)
 

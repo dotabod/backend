@@ -67,11 +67,13 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
 
-    const heroName = getHeroNameOrColor(matchPlayers[event.player_id]?.heroid ?? 0, event.player_id)
+    const playerIdIndex =
+      matchPlayers.findIndex((p) => p.playerid === event.player_id) ?? event.player_id
+    const heroName = getHeroNameOrColor(matchPlayers[playerIdIndex]?.heroid ?? 0, playerIdIndex)
 
     const res = {
       expireS,
-      playerId: event.player_id,
+      playerId: playerIdIndex,
       expireTime: fmtMSS(expireTime),
       expireDate,
       snatched: event.snatched,

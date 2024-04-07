@@ -10,6 +10,7 @@ export async function getAccountsFromMatch({
   gsi?: Packet
   searchMatchId?: string
   searchPlayers?: {
+    playerid: number
     heroid: number
     accountid: number
   }[]
@@ -40,13 +41,15 @@ export async function getAccountsFromMatch({
             ...response.teams[0].players.map((a) => ({
               heroid: a.heroid,
               accountid: Number(a.accountid),
+              playerid: a.playerid,
             })),
             ...response.teams[1].players.map((a) => ({
               heroid: a.heroid,
               accountid: Number(a.accountid),
+              playerid: a.playerid,
             })),
           ]
-        : ([] as { heroid: number; accountid: number }[])
+        : ([] as { heroid: number; accountid: number; playerid: number }[])
 
     return {
       matchPlayers,

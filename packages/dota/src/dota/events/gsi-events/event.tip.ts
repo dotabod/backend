@@ -15,15 +15,23 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
 
+    const senderPlayerIdIndex =
+      matchPlayers.findIndex((p) => p.playerid === event.sender_player_id) ?? event.sender_player_id
+
+    const receiverPlayerIdIndex =
+      matchPlayers.findIndex((p) => p.playerid === event.receiver_player_id) ??
+      event.receiver_player_id
+
     const heroName = getHeroNameOrColor(
-      matchPlayers[event.sender_player_id]?.heroid ?? 0,
-      event.sender_player_id,
+      matchPlayers[senderPlayerIdIndex]?.heroid ?? 0,
+      senderPlayerIdIndex,
     )
 
     const playingHeroSlot = Number(
       await redisClient.client.get(`${dotaClient.getToken()}:playingHeroSlot`),
     )
-    if (event.receiver_player_id === playingHeroSlot) {
+
+    if (receiverPlayerIdIndex === playingHeroSlot) {
       say(
         dotaClient.client,
         t('tip.from', { emote: 'ICANT', lng: dotaClient.client.locale, heroName }),
@@ -31,10 +39,10 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
       )
     }
 
-    if (event.sender_player_id === playingHeroSlot) {
+    if (senderPlayerIdIndex === playingHeroSlot) {
       const toHero = getHeroNameOrColor(
-        matchPlayers[event.receiver_player_id]?.heroid ?? 0,
-        event.receiver_player_id,
+        matchPlayers[receiverPlayerIdIndex]?.heroid ?? 0,
+        receiverPlayerIdIndex,
       )
 
       say(
