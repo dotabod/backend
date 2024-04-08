@@ -15,13 +15,17 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
 
-    const senderPlayerIdIndex =
-      matchPlayers.findIndex((p) => p.playerid === event.sender_player_id) ?? event.sender_player_id
+    let senderPlayerIdIndex = matchPlayers.findIndex((p) => p.playerid === event.sender_player_id)
+    if (senderPlayerIdIndex === -1) {
+      senderPlayerIdIndex = event.player_id
+    }
 
-    const receiverPlayerIdIndex =
-      matchPlayers.findIndex((p) => p.playerid === event.receiver_player_id) ??
-      event.receiver_player_id
-
+    let receiverPlayerIdIndex = matchPlayers.findIndex(
+      (p) => p.playerid === event.receiver_player_id,
+    )
+    if (receiverPlayerIdIndex === -1) {
+      receiverPlayerIdIndex = event.player_id
+    }
     const heroName = getHeroNameOrColor(
       matchPlayers[senderPlayerIdIndex]?.heroid ?? 0,
       senderPlayerIdIndex,

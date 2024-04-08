@@ -15,8 +15,10 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
 
-    const playerIdIndex =
-      matchPlayers.findIndex((p) => p.playerid === event.player_id) ?? event.player_id
+    let playerIdIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
+    if (playerIdIndex === -1) {
+      playerIdIndex = event.player_id
+    }
     const heroName = getHeroNameOrColor(matchPlayers[playerIdIndex]?.heroid ?? 0, playerIdIndex)
 
     say(
