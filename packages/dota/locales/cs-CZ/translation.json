@@ -1,21 +1,21 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} denied the aegis {{emote}}",
-    "expired": "{{- heroName}}'s aegis expired {{emote}}",
+    "denied": "{{- heroName}} zničil aegis {{emote}}",
+    "expired": "Vypršel {{- heroName}} aegis {{emote}}",
     "pickup": "{{- heroName}} získal aegis!",
-    "snatched": "{{- heroName}} snatched the aegis {{emote}}"
+    "snatched": "{{- heroName}} ukradl aegis {{emote}}"
   },
-  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_one": "Aktuální APM za {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Live APM for {{- heroName}}: {{count}} {{emote}}",
-  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Aktuální APM za {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Průměrný rank této hry",
   "betaFeature": "[beta funkce]",
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} již nepatří mezi beta testery. Napiš !beta pro znovupřipojení",
   "betaTester_on": "{{channel}} je nyní beta tester. Navštiv discord.dotabod.com a podívej se na seznam beta funkcí. Nebo znovu napiš !beta pro zrušení",
   "bets": {
-    "error": "Unable to open bets. $t(refreshToken)",
+    "error": "Nelze otevřít sázky. $t(refreshToken)",
     "lost": "Prohráli jsme",
     "notScored": "Zápas se nepočítá {{emote}} Žádná ztráta ani zisk MMR za zápas {{matchId}}.",
     "open": "Sázky otevřeny {{emote}}",
@@ -30,23 +30,23 @@
     "died": "{{- heroName}} umřel bez použití {{itemNames}} {{emote}}",
     "firstBloodDeath": "{{- heroName}} daroval First Blood {{emote}}",
     "midas": "{{emote}} Použij midas",
-    "noTp": "{{channel}} where's your tp {{emote}}",
+    "noTp": "{{channel}} kde máš svůj teleport? {{emote}}",
     "pause": "{{emote}} Kdo to pauznul?",
     "smoked": "Ticho! {{- heroName}} použil smoke",
-    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
+    "tpFound": "{{channel}} dobrá práce, úspěšně sis pořídil tp po $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Thanks to this death you finally got a tp. And it only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
   "colors": {
-    "blue": "Blue",
-    "brown": "Brown",
-    "cyan": "Cyan",
-    "green": "Green",
-    "olive": "Olive",
-    "orange": "Orange",
-    "pink": "Pink",
-    "purple": "Purple",
-    "teal": "Teal",
-    "yellow": "Yellow"
+    "blue": "Modrý",
+    "brown": "Hnědý",
+    "cyan": "Tyrkysový",
+    "green": "Zelený",
+    "olive": "Olivový",
+    "orange": "Oranžový",
+    "pink": "Růžový",
+    "purple": "Fialový",
+    "teal": "Modrozelený",
+    "yellow": "Žlutý"
   },
   "commandDisabled": "Streamer disabled {{cmdName}} command {{emote}} Check !commands for the enabled ones",
   "commands_everyone": "Všichni mohou použít: {{commandList}}",
@@ -55,17 +55,17 @@
     "gsi_one": "{{count}} streamer connected to Dotabod GSI",
     "gsi_few": "{{count}} streamers connected to Dotabod GSI",
     "gsi_many": "{{count}} streamers connected to Dotabod GSI",
-    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
+    "gsi_other": "{{count}} streameři připojený na Dotabod GSI",
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_few": "{{count}} streamers using the overlay",
     "overlay_many": "{{count}} streamers using the overlay",
-    "overlay_other": "{{count}} streamers using the overlay"
+    "overlay_other": "{{count}} streameři využívají overlay"
   },
   "dota2pt": "Potřebuješ poradit co kupovat na {{- heroName}}? Nápady najdeš zde {{- url}}",
   "dotabod": "Jsem open-source bot vytvořený {{author}}. Více info na {{- url}}",
   "gameNotFound": "Hra nebyla nalezena",
   "gpm_zero": "",
-  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_one": "Aktuální GPM za {{- heroName}}: {{num}}. ze zabitých hrdinů {{heroKills}}, ze zabitých creepů {{creepKills}}.",
   "gpm_few": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_many": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
@@ -116,7 +116,7 @@
     "total_other": "Playing with {{count}} players from last game."
   },
   "lastgamescore": {
-    "double": "Double down",
+    "double": "Zdvojnásobení",
     "duration": "{{minutes}}m dlouhý",
     "kda": "{{- kdavalue}} za {{- heroName}}",
     "lost": "Poslední hra byla prohra",
@@ -144,8 +144,8 @@
   "npRemove": "Zkus !np remove <steam32id>",
   "npRemoved": "{{steamid}} odebrán z !np pro tento kanál",
   "npUnknown": "Nenalezeno {{steamid}} pro tento kanál",
-  "offline": "offline",
-  "online": "online",
+  "offline": "odpojeno",
+  "online": "připojený",
   "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
   "ping": "Pong {{emote}}",
   "pleb": "Jeden bleb tu {{emote}}",
@@ -164,7 +164,7 @@
     "nextRankIn_many": "in {{count}} wins",
     "nextRankIn_other": "za {{count}} výher"
   },
-  "ranked": "Ranked",
+  "ranked": "Hodnocený",
   "ranked_no": "Nope, tenhle zápas není hodnocený",
   "ranked_yes": "Yep, tahle hra je hodnocená",
   "refresh": "Obnovuji overlay..",
@@ -184,7 +184,7 @@
   "seconds_one": "{{count}} second",
   "seconds_few": "{{count}} seconds",
   "seconds_many": "{{count}} seconds",
-  "seconds_other": "{{count}} seconds",
+  "seconds_other": "{{count}} vteřin",
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Neplatné zpoždění streamu, použijte !setdelay <seconds>",
   "setStreamDelayRemoved": "Odstraňeno zpoždění vysílání",
@@ -192,8 +192,8 @@
   "stream_none": "No changes made, user already {{state}}. Try !{{command}} to toggle.",
   "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
   "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
-  "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
-  "streamDelayNone": "There is no stream delay on this channel",
+  "streamDelay": "Zpoždění vysílání: $t(seconds, {\"count\": {{seconds}} })",
+  "streamDelayNone": "Na tomto kanálu není žádné zpoždění vysílání",
   "tip": {
     "from": "Tip od {{- heroName}} {{emote}}",
     "to": "Tip pro {{- heroName}} {{emote}}"
@@ -210,7 +210,7 @@
     "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
     "by_few": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
     "by_many": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
-    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
+    "by_other": "Dotabod byl přeložen {{- translators}}. Chceš pomoci s překladem nebo vidíš chybu? {{- url}}"
   },
   "treadToggle_one": "Přepnuli jsme threadky {{count}} krát a ušetřili dohromady {{manaCount}} many.",
   "treadToggle_few": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match.",
@@ -220,12 +220,12 @@
   "unknown": "Neznámé",
   "unknownSteam": "Nenalezen steam účet. Postupuj podle kroku 2, odehraj zápas s boty a zkus to znovu.",
   "unmuted": "Will now auto chat on game events. Type !mute to undo",
-  "unranked": "Unranked",
+  "unranked": "Nehodnocený",
   "updateMmr": "$t(updateMmr_manual)",
-  "updateMmr_auto": "Updated MMR to {{mmr}}",
+  "updateMmr_auto": "Aktualizováno MMR na {{mmr}}",
   "updateMmr_manual": "Aktualizované MMR na {{mmr}}",
   "updateMmrMulti": "Vícero steam účtů, aktualizuji ten který je nyní přihlášený - {{steamId}}",
-  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
+  "updateMmrNoChange": "MMR je již {{mmr}}, nedošlo ke změně",
   "version": {
     "commit": "Server běží na verzi {{version}}, zde je to, co chybí ve srovnání s nejnovější verzí: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
@@ -234,5 +234,5 @@
     "winProbability": "Pravděpodobnost vítězství je {{winRate}}% {{emote}} v čase {{gameTime}}:00 ⏲ · Další aktualizace za {{remainingCooldown}} sekund",
     "winProbabilityDataNotAvailable": "Pravděpodobnost výher ještě není k dispozici · Zkuste to znovu za {{remainingCooldown}} sekund"
   },
-  "xpm": "Live XPM for {{- heroName}}: {{num}}"
+  "xpm": "Aktuální XPM za {{- heroName}}: {{num}}"
 }
