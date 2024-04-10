@@ -23,8 +23,8 @@
     "won": "Vyhráli jsme"
   },
   "bounties": {
-    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) {{emote}} Thanks {{heroNames}} {{emote2}}",
-    "totalGold": "{{count}} gold"
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) za bountyny ({{totalBounties}}/4) {{emote}} děkujeme hráči(ům) {{heroNames}} {{emote2}}",
+    "totalGold": "{{count}} zlatých"
   },
   "chatters": {
     "died": "{{- heroName}} umřel bez použití {{itemNames}} {{emote}}",
@@ -70,8 +70,8 @@
   "gpm_many": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
-    "empty": "(2m delay) No items found for {{- heroName}}",
-    "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
+    "empty": "(2m zpoždění) Nebyli nalezeny žádné položky pro {{- heroName}}",
+    "list": "(2m zpoždění) {{- heroName}} má: {{- itemNames}}"
   },
   "herostats": {
     "noneColor": "{{color}} has no matches played as {{- heroName}} {{timeperiod}}",
@@ -97,7 +97,7 @@
   "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
   "invalidMmr": "Neplatný příkaz. Zkus !setmmr 1234",
   "killstreak": {
-    "lost_one": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
+    "lost_one": "{{- heroName}} ztratil {{count}} sérii zabití {{emote}}",
     "lost_few": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
     "lost_many": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
     "lost_other": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
@@ -118,7 +118,7 @@
   "lastgamescore": {
     "double": "Double down",
     "duration": "{{minutes}}m dlouhý",
-    "kda": "{{- kdavalue}} on {{- heroName}}",
+    "kda": "{{- kdavalue}} za {{- heroName}}",
     "lost": "Poslední hra byla prohra",
     "party": "Skupinový zápas",
     "unranked": "Nehodnocená",
@@ -126,9 +126,9 @@
   },
   "lifetime": "Celkem her",
   "matchFound": "Data zápasu nalezena, příkazy {{commandList}} aktivovány.",
-  "matchId": "Match ID: {{matchId}}",
-  "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",
-  "missingMatchData": "Waiting for current match data {{emote}}",
+  "matchId": "ID zápasu: {{matchId}}",
+  "midasUsed": "Midas byl úspěšně použit o $t(seconds, {\"count\": {{seconds}} }) sekund později {{emote}}",
+  "missingMatchData": "Čekám na aktuální data o zápasu {{emote}}",
   "missingUser": "Uživatel nenalezen. Zkus se znovu připojit na dotabod.com",
   "modsOnly_off": "Mód pouze pro moderátory vypnut. Všichni mohou psát",
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
@@ -168,17 +168,17 @@
   "ranked_no": "Nope, tenhle zápas není hodnocený",
   "ranked_yes": "Yep, tahle hra je hodnocená",
   "refresh": "Obnovuji overlay..",
-  "refreshToken": "Your Twitch account needs to be reconnected to Dotabod. {{channel}} logout and login on dotabod.com to fix this.",
-  "resetwl": "Resetting win/loss to 0 for {{channel}}",
-  "roshanAlive": "Roshan is currently alive {{emote}}",
+  "refreshToken": "Váš Twitch účet musí být znovu připojen k Dotabodu. {{channel}} se odhlásil a znovu přihlaste se na dotabod.com pro opravu.",
+  "resetwl": "Resetuji výhry/prohry na 0 pro {{channel}}",
+  "roshanAlive": "Roshan je nyní naživu {{emote}}",
   "roshanCount": {
-    "1": "Rosh deaths: 1 · Next drop: cheese.",
-    "2": "Rosh deaths: 2 · Next drop: cheese, agh's blessing or refresher shard.",
-    "3": "Rosh deaths: 3 · Next drop: cheese, agh's blessing or refresher shard.",
+    "1": "Rosh zabit: 1x · Příště dropne: cheese.",
+    "2": "Rosh zabit: 2x · Příště dropne: cheese, agh's blessing nebo refresher shard.",
+    "3": "Rosh zabit: 3x · Příště dropne: cheese, agh's blessing nebo refresher shard.",
     "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
     "more_few": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
     "more_many": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
-    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
+    "more_other": "Rosh zabit: {{count}} x · Příště drop: cheese, agh's blessing nebo refresher shard."
   },
   "roshanKilled": "Roshan zabit! Další spawne mezi {{min}} a {{max}}",
   "seconds_one": "{{count}} second",
@@ -186,8 +186,8 @@
   "seconds_many": "{{count}} seconds",
   "seconds_other": "{{count}} seconds",
   "setStreamDelay": "Setting stream delay to: $t(seconds, {\"count\": {{seconds}} })",
-  "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
-  "setStreamDelayRemoved": "Removing stream delay",
+  "setStreamDelayNoArgs": "Neplatné zpoždění streamu, použijte !setdelay <seconds>",
+  "setStreamDelayRemoved": "Odstraňeno zpoždění vysílání",
   "stream": "$t(stream_on)",
   "stream_none": "No changes made, user already {{state}}. Try !{{command}} to toggle.",
   "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",
@@ -227,12 +227,12 @@
   "updateMmrMulti": "Vícero steam účtů, aktualizuji ten který je nyní přihlášený - {{steamId}}",
   "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
   "version": {
-    "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
+    "commit": "Server běží na verzi {{version}}, zde je to, co chybí ve srovnání s nejnovější verzí: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
   },
   "winprobability": {
-    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
-    "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
+    "winProbability": "Pravděpodobnost vítězství je {{winRate}}% {{emote}} v čase {{gameTime}}:00 ⏲ · Další aktualizace za {{remainingCooldown}} sekund",
+    "winProbabilityDataNotAvailable": "Pravděpodobnost výher ještě není k dispozici · Zkuste to znovu za {{remainingCooldown}} sekund"
   },
   "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }
