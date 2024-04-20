@@ -27,11 +27,6 @@ commandHandler.registerCommand('wl', {
       return
     }
 
-    logger.info('[WL] Checking WL for steam32Id', {
-      steam32Id: client.steam32Id,
-      name: client.name,
-    })
-
     const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], client.settings)
 
     getWL({

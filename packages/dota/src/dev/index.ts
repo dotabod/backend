@@ -288,43 +288,7 @@ async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
 //   )
 // }
 
-// const getLogQuery = async (name: string) => {
-//   const user = await prisma.user.findFirst({
-//     select: {
-//       name: true,
-//       id: true,
-//       Account: {
-//         select: {
-//           providerAccountId: true,
-//         },
-//       },
-//       SteamAccount: {
-//         select: {
-//           steam32Id: true,
-//         },
-//       },
-//     },
-//     where: {
-//       name,
-//     },
-//   })
-
-//   if (!user) return ''
-
-//   return `
-// channel:${user.name} or
-// name:${user.name} or
-// ${user.SteamAccount.map((a) => `steam32Id:${a.steam32Id} or`).join(' ')}
-// token:${user.id} or
-// userId:${user.id} or
-// user:${user.id} or
-// token:${user.Account?.providerAccountId ?? ''} or
-// message:Starting! or
-// twitchId:${user.Account?.providerAccountId ?? ''}
-// `
-// }
-
-// // console.log(await getLogQuery('grubby'))
+// console.log(await getLogQuery('gorgc'))
 
 // /*
 // server.dota.dota2.on('ready', async () => {
