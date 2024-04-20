@@ -92,7 +92,7 @@ commandHandler.registerCommand('test', {
     }
 
     if (args[0] === 'logs') {
-      const query = await getLogQuery(channel)
+      const query = await getLogQuery(channel.replace('#', ''))
       chatClient.whisper(userId, query || "Couldn't find user")
       return
     }
