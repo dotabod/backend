@@ -602,6 +602,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dotabod/dota@workspace:packages/dota"
   dependencies:
+    "@dotabod/prisma": 1.0.0
     "@faker-js/faker": ^8.4.1
     "@jest/globals": ^29.7.0
     "@node-steam/id": ^1.2.0
@@ -664,7 +665,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@dotabod/prisma@workspace:packages/prisma":
+"@dotabod/prisma@1.0.0, @dotabod/prisma@workspace:packages/prisma":
   version: 0.0.0-use.local
   resolution: "@dotabod/prisma@workspace:packages/prisma"
   dependencies:
