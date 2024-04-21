@@ -2,13 +2,14 @@
   "name": "dotabod",
   "private": true,
   "workspaces": [
-    "packages/settings",
+    "packages/prisma",
     "packages/twitch/events",
     "packages/twitch/chat",
     "packages/dota",
     "packages/steam"
   ],
   "scripts": {
+    "studio": "doppler run -- yarn prisma studio --schema ./packages/prisma/src/postgres.prisma",
     "up": "yarn upgrade-interactive",
     "devscript": "yarn workspace @dotabod/dota run devscript",
     "build": "yarn buildst && yarn buildd && yarn buildtc && yarn buildte",

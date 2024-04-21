@@ -19,6 +19,7 @@
     "fix-users-dev-docker": "node --no-warnings -r ts-node/register --loader ts-node/esm src/dev/index.ts"
   },
   "dependencies": {
+    "@dotabod/prisma": "1.0.0",
     "@node-steam/id": "^1.2.0",
     "@supabase/supabase-js": "^2.42.5",
     "@twurple/api": "6.0.9",
