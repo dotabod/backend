@@ -664,6 +664,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dotabod/prisma@workspace:packages/prisma":
+  version: 0.0.0-use.local
+  resolution: "@dotabod/prisma@workspace:packages/prisma"
+  dependencies:
+    "@faker-js/faker": ^8.4.1
+    "@prisma/client": 5.12.1
+    "@types/node": ^20.12.7
+    prisma: 5.12.1
+    ts-node: ^10.9.2
+  languageName: unknown
+  linkType: soft
+
 "@dotabod/steam@workspace:packages/steam":
   version: 0.0.0-use.local
   resolution: "@dotabod/steam@workspace:packages/steam"
@@ -1426,6 +1438,64 @@ __metadata:
     picocolors: ^1.0.0
     tslib: ^2.6.0
   checksum: 24e04c121269317d259614cd32beea3af38277151c4002df5883c4be920b8e3490bb897748e844f9d46bf68230f86dabd4e8f093773130e7e60529a769a132fc
+  languageName: node
+  linkType: hard
+
+"@prisma/client@npm:5.12.1":
+  version: 5.12.1
+  resolution: "@prisma/client@npm:5.12.1"
+  peerDependencies:
+    prisma: "*"
+  peerDependenciesMeta:
+    prisma:
+      optional: true
+  checksum: fcea460faf6256fdb6e948bad87a6fe881dffdc6e1f83f6a34297d17b289b88982bc19c999acf56a6e9de6edda6c46aefe452a069f0aef2ef083329a30ab5508
+  languageName: node
+  linkType: hard
+
+"@prisma/debug@npm:5.12.1":
+  version: 5.12.1
+  resolution: "@prisma/debug@npm:5.12.1"
+  checksum: f61e1fafc810959d0ec0f332519cff7937955bba54301f6cf780d4cccfb32e43e7e4bc85b669749a4378fffd20d1ec71780e75b9030fc6b8230948194bfacfd3
+  languageName: node
+  linkType: hard
+
+"@prisma/engines-version@npm:5.12.0-21.473ed3124229e22d881cb7addf559799debae1ab":
+  version: 5.12.0-21.473ed3124229e22d881cb7addf559799debae1ab
+  resolution: "@prisma/engines-version@npm:5.12.0-21.473ed3124229e22d881cb7addf559799debae1ab"
+  checksum: d227b5eb99932d078b1ffb44aa6049bd88e261b581468a7b881dce16cf32c42dead15c09d07c3af06a7eef4054f3a6cf0d555dd66e3120d445d28ea67935853d
+  languageName: node
+  linkType: hard
+
+"@prisma/engines@npm:5.12.1":
+  version: 5.12.1
+  resolution: "@prisma/engines@npm:5.12.1"
+  dependencies:
+    "@prisma/debug": 5.12.1
+    "@prisma/engines-version": 5.12.0-21.473ed3124229e22d881cb7addf559799debae1ab
+    "@prisma/fetch-engine": 5.12.1
+    "@prisma/get-platform": 5.12.1
+  checksum: d216b20c97d2391e1f4411198c0f25e5515bbae2bb4ae7430686983ee53e54ad914365e21407dd02756d4750382ccf35fdb33b50b38db926e6c6466440a41d6c
+  languageName: node
+  linkType: hard
+
+"@prisma/fetch-engine@npm:5.12.1":
+  version: 5.12.1
+  resolution: "@prisma/fetch-engine@npm:5.12.1"
+  dependencies:
+    "@prisma/debug": 5.12.1
+    "@prisma/engines-version": 5.12.0-21.473ed3124229e22d881cb7addf559799debae1ab
+    "@prisma/get-platform": 5.12.1
+  checksum: a1790042581ebaf96504c514dc4d321957ca3636ce61160624f89ee5d2b1691965b2566990749c6df08f6cd02cfd6f7b80646b6fd7fa6f5b883a8a21ab9bf91d
+  languageName: node
+  linkType: hard
+
+"@prisma/get-platform@npm:5.12.1":
+  version: 5.12.1
+  resolution: "@prisma/get-platform@npm:5.12.1"
+  dependencies:
+    "@prisma/debug": 5.12.1
+  checksum: 3aa901767e343763a7841ddff7a954cafc20b826ebde26bea142d3615b6f260f5fc70fc6e0b96bcc5c3d1e789ba2f9d1651dd242baaff264f401622c119a356c
   languageName: node
   linkType: hard
 
@@ -7285,6 +7355,17 @@ __metadata:
     ansi-styles: ^5.0.0
     react-is: ^18.0.0
   checksum: 032c1602383e71e9c0c02a01bbd25d6759d60e9c7cf21937dde8357aa753da348fcec5def5d1002c9678a8524d5fe099ad98861286550ef44de8808cc61e43b6
+  languageName: node
+  linkType: hard
+
+"prisma@npm:5.12.1":
+  version: 5.12.1
+  resolution: "prisma@npm:5.12.1"
+  dependencies:
+    "@prisma/engines": 5.12.1
+  bin:
+    prisma: build/index.js
+  checksum: 6f20237779456d61fb908fbba355b3fb64f8c8a6f141bb4800d78b945261f58f3a7e83b2ba1c635dcdef69d6cd3d03400bd4153a253e2c2a2b331bdfd50dd0cd
   languageName: node
   linkType: hard
 
