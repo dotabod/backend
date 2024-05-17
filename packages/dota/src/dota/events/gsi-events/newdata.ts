@@ -30,7 +30,7 @@ import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { isSpectator } from '../../lib/isSpectator.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
-import minimapParser from '../minimap/parser.js'
+import { minimapParser } from '../minimap/parser.js'
 
 function chatterMatchFound(client: SocketClient) {
   if (!client.stream_online) return
@@ -106,7 +106,7 @@ async function saveMatchData(client: SocketClient) {
       steamSocket.emit(
         'getRealTimeStats',
         {
-          match_id: matchId!,
+          match_id: matchId,
           refetchCards: true,
           steam_server_id: steamServerId?.toString(),
           token: client.token,
@@ -131,9 +131,9 @@ async function saveMatchData(client: SocketClient) {
 }
 
 const tooltipsConfig = {
-  clientId: process.env.TWITCH_EXT_CLIENT_ID!,
-  secret: process.env.TWITCH_EXT_SECRET!,
-  ownerId: process.env.TWITCH_BOT_PROVIDERID!,
+  clientId: process.env.TWITCH_EXT_CLIENT_ID || '',
+  secret: process.env.TWITCH_EXT_SECRET || '',
+  ownerId: process.env.TWITCH_BOT_PROVIDERID || '',
 }
 
 export const sendExtensionPubSubBroadcastMessageIfChanged = async (

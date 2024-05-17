@@ -17,7 +17,7 @@ import { type AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_p
 import { type RoshRes, emitRoshEvent } from './events/gsi-events/event.roshan_killed.js'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/newdata.js'
 import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster.js'
-import minimapParser from './events/minimap/parser.js'
+import { minimapParser } from './events/minimap/parser.js'
 import { server } from './index.js'
 import { GLOBAL_DELAY, blockTypes, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'

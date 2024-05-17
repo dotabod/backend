@@ -294,4 +294,4 @@ class MinimapParser {
   }
 }
 
-export default MinimapParser
+export const minimapParser = new MinimapParser()
