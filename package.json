@@ -36,6 +36,7 @@
     "winston": "^3.13.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.7.3",
     "@types/node": "^20.12.7",
     "@typescript-eslint/eslint-plugin": "^7.7.0",
     "@typescript-eslint/parser": "^7.7.0",
