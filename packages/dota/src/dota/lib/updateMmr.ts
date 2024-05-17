@@ -102,14 +102,17 @@ export async function updateMmr({
       .eq('id', token)
 
     const client = findUser(token)
-    if (client && tellChat) {
-      tellChatNewMMR({
-        streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
-        locale: client.locale,
-        token: client.token,
-        mmr,
-        oldMmr: currentMmr,
-      })
+    if (client) {
+      client.mmr = mmr
+      if (tellChat) {
+        tellChatNewMMR({
+          streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
+          locale: client.locale,
+          token: client.token,
+          mmr,
+          oldMmr: currentMmr,
+        })
+      }
     }
 
     return

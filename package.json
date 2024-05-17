@@ -61,7 +61,7 @@
       "yarn prettier"
     ],
     "*.+(js|jsx|ts|tsx)": [
-      "yarn eslint"
+      "eslint --cache --fix"
     ]
   },
   "packageManager": "yarn@3.7.0"
