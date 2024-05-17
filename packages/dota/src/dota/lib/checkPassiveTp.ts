@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { SocketClient } from '../../types.js'
+import type { SocketClient } from '../../types.js'
 import { redisClient } from '../GSIHandler.js'
 import { say } from '../say.js'
 import { isPlayingMatch } from './isPlayingMatch.js'

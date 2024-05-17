@@ -3,7 +3,7 @@ import { join } from 'path'
 
 import { ApiClient } from '@twurple/api'
 import { t, use } from 'i18next'
-import FsBackend, { FsBackendOptions } from 'i18next-fs-backend'
+import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 import { Server } from 'socket.io'
 
 import supabase from './db/supabase.js'

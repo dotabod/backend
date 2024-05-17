@@ -1,4 +1,4 @@
-import { EventSubUserUpdateEvent } from '@twurple/eventsub-base'
+import type { EventSubUserUpdateEvent } from '@twurple/eventsub-base'
 
 import supabase from '../../db/supabase.js'
 

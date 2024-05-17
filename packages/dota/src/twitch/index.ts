@@ -1,6 +1,6 @@
 import './commandLoader.js'
 
-import { ChatUser } from '@twurple/chat'
+import type { ChatUser } from '@twurple/chat'
 import { t } from 'i18next'
 
 import getDBUser from '../db/getDBUser.js'

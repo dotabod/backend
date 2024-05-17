@@ -1,4 +1,4 @@
-import { HeroNames } from './dota/lib/getHero.js'
+import type { HeroNames } from './dota/lib/getHero.js'
 
 export interface SocketClient {
   name: string

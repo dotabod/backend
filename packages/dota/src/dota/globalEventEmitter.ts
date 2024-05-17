@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { NextFunction, Request, Response } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 
 export const events = new EventEmitter()
 

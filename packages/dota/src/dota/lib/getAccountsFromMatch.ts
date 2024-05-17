@@ -1,5 +1,5 @@
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
-import { DelayedGames, Packet } from '../../types'
+import type { DelayedGames, Packet } from '../../types'
 import { getSpectatorPlayers } from './getSpectatorPlayers.js'
 
 export async function getAccountsFromMatch({

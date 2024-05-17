@@ -1,9 +1,9 @@
 import { t } from 'i18next'
 
-import { Item } from '../../../types.js'
-import { GSIHandler, redisClient } from '../../GSIHandler.js'
+import type { Item } from '../../../types.js'
+import { type GSIHandler, redisClient } from '../../GSIHandler.js'
 import { findItem } from '../../lib/findItem.js'
-import handleGetHero, { HeroNames } from '../../lib/getHero.js'
+import handleGetHero, { type HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'

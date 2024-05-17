@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 
-import { Database } from './supabase-types'
+import type { Database } from './supabase-types'
 
 const supabaseUrl = process.env.DB_URL ?? ''
 const supabaseKey = process.env.DB_SECRET ?? ''

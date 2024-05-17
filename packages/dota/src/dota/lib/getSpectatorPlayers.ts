@@ -1,4 +1,4 @@
-import { Packet } from '../../types.js'
+import type { Packet } from '../../types.js'
 
 export function getSpectatorPlayers(gsi?: Packet) {
   let matchPlayers: { heroid: number; accountid: number; selected: boolean; playerid: number }[] =

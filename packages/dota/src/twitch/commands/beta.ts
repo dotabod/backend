@@ -3,7 +3,7 @@ import { t } from 'i18next'
 import supabase from '../../db/supabase.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('beta', {
   aliases: ['joinbeta', 'leavebeta', 'betaoff', 'betaon'],

@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { Packet } from '../../types.js'
+import type { Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
 

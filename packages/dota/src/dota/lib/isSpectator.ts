@@ -1,4 +1,4 @@
-import { Packet } from '../../types.js'
+import type { Packet } from '../../types.js'
 
 export function isSpectator(gsi?: Packet) {
   if (!gsi) return false

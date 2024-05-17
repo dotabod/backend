@@ -2,7 +2,7 @@ import { t } from 'i18next'
 
 import RedisClient from '../../db/RedisClient.js'
 import { steamSocket } from '../../steam/ws.js'
-import { Cards } from '../../types.js'
+import type { Cards } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { leaderRanks, ranks } from './consts.js'
 

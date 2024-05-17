@@ -1,4 +1,4 @@
-import { HeroNames } from '../getHero.js'
+import type { HeroNames } from '../getHero.js'
 
 export interface SocketClient {
   name: string

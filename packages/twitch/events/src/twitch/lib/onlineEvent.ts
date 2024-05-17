@@ -1,4 +1,4 @@
-import { EventSubStreamOnlineEvent } from '@twurple/eventsub-base'
+import type { EventSubStreamOnlineEvent } from '@twurple/eventsub-base'
 
 import supabase from '../../db/supabase.js'
 import { onlineEvents } from '../events/events.js'

@@ -1,5 +1,5 @@
-import { SocketClient } from '../../types.js'
-import { GSIHandler } from '../GSIHandler.js'
+import type { SocketClient } from '../../types.js'
+import type { GSIHandler } from '../GSIHandler.js'
 import { gsiHandlers, twitchIdToToken } from './consts.js'
 
 export function getTokenFromTwitchId(twitchId?: string | null) {

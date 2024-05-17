@@ -1,4 +1,4 @@
-import { Db, MongoClient } from 'mongodb'
+import { type Db, MongoClient } from 'mongodb'
 import retry from 'retry'
 
 import { logger } from './utils/logger.js'

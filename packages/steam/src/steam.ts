@@ -4,14 +4,14 @@ import fs from 'fs'
 import axios from 'axios'
 // @ts-expect-error no types exist
 import Dota2 from 'dota2'
-import { Long } from 'mongodb'
+import type { Long } from 'mongodb'
 import retry from 'retry'
 import Steam from 'steam'
 // @ts-expect-error no types exist
 import steamErrors from 'steam-errors'
 
 import MongoDBSingleton from './MongoDBSingleton.js'
-import { Cards, DelayedGames } from './types/index.js'
+import type { Cards, DelayedGames } from './types/index.js'
 import CustomError from './utils/customError.js'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch.js'
 import { logger } from './utils/logger.js'

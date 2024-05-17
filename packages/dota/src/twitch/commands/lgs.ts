@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import supabase from '../../db/supabase.js'
-import getHero, { HeroNames } from '../../dota/lib/getHero.js'
+import getHero, { type HeroNames } from '../../dota/lib/getHero.js'
 import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'

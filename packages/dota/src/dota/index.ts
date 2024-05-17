@@ -3,7 +3,7 @@ import './events/gsiEventLoader.js'
 import chokidar from 'chokidar'
 import { lstatSync, readdirSync } from 'fs'
 import i18next from 'i18next'
-import FsBackend, { FsBackendOptions } from 'i18next-fs-backend'
+import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 import path, { join } from 'path'
 
 import RedisClient from '../db/RedisClient.js'

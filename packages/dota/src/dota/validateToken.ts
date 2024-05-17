@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 
 import getDBUser from '../db/getDBUser.js'
 import { logger } from '../utils/logger.js'

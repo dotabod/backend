@@ -1,5 +1,5 @@
 import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
-import { SocketClient } from '../types.js'
+import type { SocketClient } from '../types.js'
 import { deleteRedisData } from './GSIHandler.js'
 import { gsiHandlers, twitchIdToToken } from './lib/consts.js'
 

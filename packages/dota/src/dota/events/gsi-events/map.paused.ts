@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { GSIHandler } from '../../GSIHandler.js'
+import type { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'

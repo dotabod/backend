@@ -1,4 +1,4 @@
-import { Item, Packet } from '../../types.js'
+import type { Item, Packet } from '../../types.js'
 
 export function findItem({
   itemName,

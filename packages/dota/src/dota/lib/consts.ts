@@ -1,4 +1,4 @@
-import { GSIHandler } from '../GSIHandler.js'
+import type { GSIHandler } from '../GSIHandler.js'
 
 // just here for reference, not being used
 // full list at https://github.com/SteamDatabase/GameTracking-Dota2/blob/master/Protobufs/dota_shared_enums.proto

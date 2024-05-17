@@ -1,4 +1,4 @@
-import { Packet } from '../../types.js'
+import type { Packet } from '../../types.js'
 import { isDev } from './consts.js'
 import { isArcade } from './isArcade.js'
 import { isSpectator } from './isSpectator.js'

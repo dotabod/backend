@@ -1,6 +1,6 @@
-import { Entity, MapData, Packet, Player } from '../../../types.js'
+import type { Entity, MapData, Packet, Player } from '../../../types.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import { DataBroadcaster } from './DataBroadcaster.js'
+import type { DataBroadcaster } from './DataBroadcaster.js'
 
 class MinimapParser {
   lastBroadcastTime = 0

@@ -1,5 +1,5 @@
 import RedisClient from '../../db/RedisClient.js'
-import { GSIHandler } from '../GSIHandler.js'
+import type { GSIHandler } from '../GSIHandler.js'
 import { findItem } from './findItem.js'
 
 export async function calculateManaSaved(dotaClient: GSIHandler) {

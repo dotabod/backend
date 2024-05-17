@@ -4,7 +4,7 @@ import supabase from '../../db/supabase.js'
 import { server } from '../../dota/index.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { MessageType } from '../lib/CommandHandler.js'
+import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('resetwl', {
   permission: 2,
