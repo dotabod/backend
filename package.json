@@ -17,9 +17,7 @@
     "buildtc": "yarn workspace @dotabod/twitch-chat run build",
     "buildte": "yarn workspace @dotabod/twitch-events run build",
     "runc": "yarn workspace @dotabod/twitch-chat run docker:development",
-    "lint": "yarn eslint -- . && yarn prettier -- . && echo 'Linting complete.'",
     "prettier": "prettier --write",
-    "eslint": "eslint --fix --ignore-path .gitignore --ext .ts,.tsx,.js,.jsx",
     "nps": "doppler run -- bash services/mongodb/updatenps.sh",
     "exportnps": "doppler run -- bash services/mongodb/export.sh",
     "just": "doppler run -- bash runner.sh",
@@ -59,9 +57,6 @@
   "lint-staged": {
     "*.+(js|jsx|ts|tsx|json|css|md)": [
       "yarn prettier"
-    ],
-    "*.+(js|jsx|ts|tsx)": [
-      "eslint --cache --fix"
     ]
   },
   "packageManager": "yarn@3.7.0"
