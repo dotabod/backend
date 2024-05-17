@@ -2,9 +2,9 @@ import { t } from 'i18next'
 
 import {
   DBSettings,
+  type SettingKeys,
   type defaultSettings,
   getValueOrDefault,
-  type SettingKeys,
 } from '../settings.js'
 import { chatClient } from '../twitch/chatClient.js'
 import type { SocketClient } from '../types.js'

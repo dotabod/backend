@@ -1,5 +1,5 @@
-import supabase from './db/supabase.js'
 import { SubscribeEvents } from './SubscribeEvents.js'
+import supabase from './db/supabase.js'
 import BotAPI from './twitch/lib/BotApiSingleton.js'
 
 const botApi = BotAPI.getInstance()

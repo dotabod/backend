@@ -1,7 +1,7 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
 
-import { hasTokens } from './hasTokens.js'
 import supabase from '../../db/supabase.js'
+import { hasTokens } from './hasTokens.js'
 
 let authProvider: RefreshingAuthProvider | null = null
 

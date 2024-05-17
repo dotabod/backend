@@ -6,8 +6,8 @@ import {
   generateAegisMessage,
 } from '../../dota/events/gsi-events/event.aegis_picked_up.js'
 import {
-  generateRoshanMessage,
   type RoshRes,
+  generateRoshanMessage,
 } from '../../dota/events/gsi-events/event.roshan_killed.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import { DBSettings } from '../../settings.js'

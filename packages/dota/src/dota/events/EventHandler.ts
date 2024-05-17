@@ -1,5 +1,5 @@
-import { events } from '../globalEventEmitter.js'
 import type { GSIHandler } from '../GSIHandler.js'
+import { events } from '../globalEventEmitter.js'
 import { gsiHandlers } from '../lib/consts.js'
 
 export interface EventOptions {

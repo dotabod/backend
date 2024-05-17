@@ -10,8 +10,8 @@ import { chatClient } from '../twitch/chatClient.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
-import supabase from './supabase.js'
 import type { Tables } from './supabase-types.js'
+import supabase from './supabase.js'
 
 class SetupSupabase {
   channel: any // ReturnType<typeof supabase.channel>

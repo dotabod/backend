@@ -1,10 +1,10 @@
 import './events/gsiEventLoader.js'
 
-import chokidar from 'chokidar'
 import { lstatSync, readdirSync } from 'node:fs'
+import path, { join } from 'node:path'
+import chokidar from 'chokidar'
 import i18next from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
-import path, { join } from 'node:path'
 
 import RedisClient from '../db/RedisClient.js'
 import SetupSupabase from '../db/watcher.js'

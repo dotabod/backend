@@ -1,6 +1,6 @@
-import { getSpectatorPlayers } from './getSpectatorPlayers.js'
 import MongoDBSingleton from '../MongoDBSingleton.js'
 import type { DelayedGames, Packet } from '../types/index.js'
+import { getSpectatorPlayers } from './getSpectatorPlayers.js'
 
 export async function getAccountsFromMatch({
   gsi,

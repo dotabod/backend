@@ -1,14 +1,14 @@
 import express from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
 
-import { isAuthenticated } from './authUtils.js'
+import { SubscribeEvents } from '../SubscribeEvents.js'
 import { chatClient } from '../chatClient.js'
 import type { Tables } from '../db/supabase-types.js'
 import { handleNewUser } from '../handleNewUser.js'
 import { listener } from '../listener.js'
-import { SubscribeEvents } from '../SubscribeEvents.js'
 import { getAccountIds } from '../twitch/lib/getAccountIds.js'
 import type { InsertPayload, UpdatePayload } from '../types.js'
+import { isAuthenticated } from './authUtils.js'
 
 export const setupWebhooks = () => {
   const webhookApp = express()

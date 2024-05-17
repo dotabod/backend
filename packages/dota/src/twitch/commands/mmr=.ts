@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { updateMmr, type UpdateMmrParams } from '../../dota/lib/updateMmr.js'
+import { type UpdateMmrParams, updateMmr } from '../../dota/lib/updateMmr.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 

@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { ADMIN_CHANNELS } from '../../dota/lib/consts.js'
-import { getValueOrDefault, type SettingKeys } from '../../settings.js'
+import { type SettingKeys, getValueOrDefault } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import type { SocketClient } from '../../types.js'
 import { logger } from '../../utils/logger.js'

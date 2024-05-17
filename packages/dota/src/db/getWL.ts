@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
-import supabase from './supabase.js'
 import type { Database } from './supabase-types.js'
+import supabase from './supabase.js'
 
 interface WL {
   lng: string
