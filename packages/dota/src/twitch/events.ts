@@ -34,7 +34,7 @@ const events = {
 
 export type Events = keyof typeof events
 
-twitchEvent.on('event', function (eventName: Events, broadcasterId: string, data: any) {
+twitchEvent.on('event', (eventName: Events, broadcasterId: string, data: any) => {
   // Can start doing something with the events
 
   const token = getTokenFromTwitchId(broadcasterId)

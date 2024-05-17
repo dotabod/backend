@@ -5,7 +5,7 @@ import { logger } from '../../utils/logger.js'
 import { getAuthProvider } from './getAuthProvider.js'
 
 let api: ApiClient | null = null
-export const getTwitchAPI = function (twitchId: string): ApiClient {
+export const getTwitchAPI = (twitchId: string): ApiClient => {
   const authProvider = getAuthProvider()
 
   // User has not been added to the twurple provider yet

@@ -4,7 +4,7 @@ import { logger } from '../../utils/logger.js'
 import { getAuthProvider } from './getAuthProvider.js'
 import { getBotTokens_DEV_ONLY } from './getBotTokens.js'
 
-export const getBotAPI_DEV_ONLY = async function () {
+export const getBotAPI_DEV_ONLY = async () => {
   const authProvider = getAuthProvider()
   const botTokens = await getBotTokens_DEV_ONLY()
 

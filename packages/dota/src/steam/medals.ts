@@ -71,7 +71,7 @@ export async function gameMedals(
       }
 
       if (a.startsWith('#') || b.startsWith('#')) {
-        return parseInt(b.substring(1)) - parseInt(a.substring(1))
+        return Number.parseInt(b.substring(1)) - Number.parseInt(a.substring(1))
       }
 
       return 0

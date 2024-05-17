@@ -6,7 +6,7 @@ import { hasTokens } from './hasTokens.js'
 
 let authProvider: RefreshingAuthProvider | null = null
 
-export const getAuthProvider = function () {
+export const getAuthProvider = () => {
   if (!hasTokens) throw new Error('Missing twitch tokens')
   if (authProvider) return authProvider
 

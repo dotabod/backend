@@ -1,7 +1,7 @@
 import { getAuthProvider } from './getAuthProvider.js'
 import { getBotTokens } from './getBotTokens.js'
 
-export const getBotAuthProvider = async function () {
+export const getBotAuthProvider = async () => {
   const authProvider = getAuthProvider()
   const twitchId = process.env.TWITCH_BOT_PROVIDERID
   if (!twitchId || twitchId === '') {
