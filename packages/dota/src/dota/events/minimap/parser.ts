@@ -134,7 +134,7 @@ class MinimapParser {
       }
 
       const percentage = (entity.xpos / this.minimapWidth) * 100
-      entity.xposP = percentage.toFixed(3) + '%'
+      entity.xposP = `${percentage.toFixed(3)}%`
     }
 
     if (entity.ypos !== undefined) {
@@ -145,7 +145,7 @@ class MinimapParser {
       }
 
       const percentage = (entity.ypos / this.minimapHeight) * 100
-      entity.yposP = percentage.toFixed(3) + '%'
+      entity.yposP = `${percentage.toFixed(3)}%`
     }
 
     if (entity.yaw !== undefined) {
@@ -205,8 +205,8 @@ class MinimapParser {
       active: true,
       paused: this.isGamePaused(data.map!),
       playing: this.isPlaying(data.player!),
-      hero: this.isPlaying(data.player!) ? data.hero!.name : data.hero!.team2?.player0.name,
-      team: this.isPlaying(data.player!) ? data.player!.team_name : 'radiant',
+      hero: this.isPlaying(data.player!) ? data.hero?.name : data.hero?.team2?.player0.name,
+      team: this.isPlaying(data.player!) ? data.player?.team_name : 'radiant',
     }
 
     // Parse Minimap
@@ -222,12 +222,11 @@ class MinimapParser {
     const entities = Object.keys(data.minimap!)
 
     entities.forEach((key) => {
-      const entity = data.minimap![key]
+      const entity = data.minimap?.[key]
 
       // Heroes
       if (
-        entity.unitname &&
-        entity.unitname.includes('npc_dota_hero') &&
+        entity.unitname?.includes('npc_dota_hero') &&
         this.isEntityAlive(entity) &&
         this.isValidHero(entity)
       ) {

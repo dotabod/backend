@@ -779,7 +779,7 @@ export class GSIHandler {
 
     // Check with steam to see if the match is over
     axios
-      .get(`https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/`, {
+      .get('https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/', {
         params: { key: process.env.STEAM_WEB_API, match_id: matchId },
       })
       .then(async (response: { data: any }) => {
@@ -875,7 +875,7 @@ export class GSIHandler {
 
     const heroName = this.client.gsi?.hero?.name
     const heroPicked = this.client.gsi?.hero?.id && this.client.gsi.hero.id > 0
-    const heroLockedIn = heroName && heroName.startsWith('npc_')
+    const heroLockedIn = heroName?.startsWith('npc_')
     const heroNotLockedIn = (heroName as string) === ''
     const pickingPhase = pickSates.includes(state ?? '')
 

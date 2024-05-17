@@ -1,7 +1,7 @@
 import cors from 'cors'
 import express, { json, type Request, type Response, urlencoded } from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
-import http from 'http'
+import http from 'node:http'
 import { Server, type Socket } from 'socket.io'
 
 import getDBUser from '../db/getDBUser.js'

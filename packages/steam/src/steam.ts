@@ -1,5 +1,5 @@
-import crypto from 'crypto'
-import fs from 'fs'
+import crypto from 'node:crypto'
+import fs from 'node:fs'
 
 import axios from 'axios'
 // @ts-expect-error no types exist
@@ -219,7 +219,7 @@ class Dota {
 
   handleLogOnResponse(logonResp: any) {
     // @ts-expect-error no types exist
-    if (logonResp.eresult == Steam.EResult.OK) {
+    if (logonResp.eresult === Steam.EResult.OK) {
       logger.info('[STEAM] Logged on.')
       this.dota2.launch()
     } else {
@@ -428,7 +428,7 @@ class Dota {
         (oldest, [key, entry]) => {
           if (!oldest) return key
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          return entry.timestamp < this.cache.get(oldest)!.timestamp ? key : oldest
+          return entry.timestamp < this.cache.get(oldest)?.timestamp ? key : oldest
         },
         null as number | null,
       )

@@ -10,7 +10,7 @@ commandHandler.registerCommand('setdelay', {
   permission: 2,
   cooldown: 0,
   handler: async (message, args) => {
-    if (isNaN(Number(args[0]))) {
+    if (Number.isNaN(Number(args[0]))) {
       chatClient.say(
         message.channel.name,
         t('setStreamDelayNoArgs', {

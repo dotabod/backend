@@ -7,7 +7,7 @@ import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 
 // TODO: check kill list value
-eventHandler.registerEvent(`player:kill_list`, {
+eventHandler.registerEvent('player:kill_list', {
   handler: async (dotaClient: GSIHandler, kill_list: Player['kill_list']) => {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return

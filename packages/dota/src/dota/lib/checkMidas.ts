@@ -60,7 +60,8 @@ async function checkMidasIterator(client: SocketClient) {
       firstNoticedPassive: currentTime,
     })
     return false
-  } else if (
+  }
+  if (
     midasCharges === 2 &&
     currentTime - passiveMidasData.firstNoticedPassive > passiveMidasThreshold &&
     !passiveMidasData.told
@@ -71,7 +72,8 @@ async function checkMidasIterator(client: SocketClient) {
       told: currentTime,
     })
     return true
-  } else if (midasCharges !== 2 && passiveMidasData.told) {
+  }
+  if (midasCharges !== 2 && passiveMidasData.told) {
     // Calculate the time taken to use midas after being passive
     const secondsToUse = Math.round(
       (Date.now() - passiveMidasData.told + passiveMidasThreshold) / 1000,
@@ -79,7 +81,8 @@ async function checkMidasIterator(client: SocketClient) {
     // Reset passive midas data
     await resetPassiveTime(token)
     return secondsToUse
-  } else if (midasCharges !== 2) {
+  }
+  if (midasCharges !== 2) {
     // Reset passive midas data
     await resetPassiveTime(token)
     return false

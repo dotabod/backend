@@ -6,7 +6,7 @@ import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 
-eventHandler.registerEvent(`map:paused`, {
+eventHandler.registerEvent('map:paused', {
   handler: (dotaClient: GSIHandler, isPaused: boolean) => {
     if (!dotaClient.client.stream_online) return
 

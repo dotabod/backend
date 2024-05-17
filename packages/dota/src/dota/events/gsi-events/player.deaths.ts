@@ -19,7 +19,7 @@ const passiveItemNames = [
   { name: 'item_guardian_greaves', title: 'greaves' },
 ]
 
-eventHandler.registerEvent(`player:deaths`, {
+eventHandler.registerEvent('player:deaths', {
   handler: async (dotaClient: GSIHandler, deaths: number) => {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return

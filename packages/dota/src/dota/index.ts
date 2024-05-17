@@ -1,10 +1,10 @@
 import './events/gsiEventLoader.js'
 
 import chokidar from 'chokidar'
-import { lstatSync, readdirSync } from 'fs'
+import { lstatSync, readdirSync } from 'node:fs'
 import i18next from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
-import path, { join } from 'path'
+import path, { join } from 'node:path'
 
 import RedisClient from '../db/RedisClient.js'
 import SetupSupabase from '../db/watcher.js'
@@ -45,10 +45,10 @@ const setupTranslations = async () => {
       i18next
         .reloadResources([lng], [ns])
         .then(() => {
-          logger.info(`Translation reloaded`, { filePath })
+          logger.info('Translation reloaded', { filePath })
         })
         .catch((error) => {
-          logger.info(`Translation error on reloading`, { error })
+          logger.info('Translation error on reloading', { error })
         })
     })
 

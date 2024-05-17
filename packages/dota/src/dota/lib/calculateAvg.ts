@@ -26,11 +26,11 @@ export async function calculateAvg({ locale, currentMatchId, players }: Avg): Pr
   )
   const rank = await getRankDetail(avg)
 
-  if (!rank && !avgLeader) return `Immortal`
+  if (!rank && !avgLeader) return 'Immortal'
   if (!rank) return `${avg || `#${avgLeader}`}`
 
   if ('standing' in rank || avgLeader) {
-    return `Immortal`
+    return 'Immortal'
   }
 
   return `${avg} · ${rank.myRank.title}`

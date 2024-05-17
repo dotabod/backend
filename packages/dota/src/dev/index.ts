@@ -30,9 +30,9 @@ async function postWinEventsForUsers(
   const promises = users.map((user) => {
     return gameEnd({
       win_team,
-      matchId: `123`,
-      steam32: `123`,
-      steam64: `123456`,
+      matchId: '123',
+      steam32: '123',
+      steam64: '123456',
       token: user.id,
     }).map((step) => {
       return apiClient.post('/', step)

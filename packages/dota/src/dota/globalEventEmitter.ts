@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import type { NextFunction, Request, Response } from 'express'
 
 export const events = new EventEmitter()

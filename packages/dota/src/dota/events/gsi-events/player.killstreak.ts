@@ -6,7 +6,7 @@ import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 
-eventHandler.registerEvent(`player:kill_streak`, {
+eventHandler.registerEvent('player:kill_streak', {
   handler: async (dotaClient: GSIHandler, streak: number) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return

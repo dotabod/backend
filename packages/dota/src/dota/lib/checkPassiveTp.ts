@@ -73,7 +73,8 @@ export async function checkPassiveTp(client: SocketClient) {
       firstNoticedPassive: currentTime,
     })
     return false
-  } else if (
+  }
+  if (
     !hasTp &&
     currentTime - passiveTpData.firstNoticedPassive > PASSIVE_THRESHOLD_SECONDS &&
     !passiveTpData.told

@@ -60,11 +60,11 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
       .reduce((acc, heroName, index, array) => {
         if (array.length === 2 && index === 1) {
           return `${acc} and ${heroName}`
-        } else if (index === array.length - 1) {
-          return `${acc}, and ${heroName}`
-        } else {
-          return `${acc}, ${heroName}`
         }
+        if (index === array.length - 1) {
+          return `${acc}, and ${heroName}`
+        }
+        return `${acc}, ${heroName}`
       })
 
     dotaClient.bountyTimeout = setTimeout(() => {

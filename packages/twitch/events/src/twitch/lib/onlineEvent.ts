@@ -14,7 +14,7 @@ export function onlineEvent(data: EventSubStreamOnlineEvent) {
       .eq('providerAccountId', data.broadcasterId)
       .single()
 
-    if (user && user.userId) {
+    if (user?.userId) {
       await supabase
         .from('users')
         .update({

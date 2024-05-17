@@ -17,7 +17,7 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
 
   if (!token) {
     invalidTokens.add(token)
-    logger.info(`[GSI], Dropping message, no valid auth token`, { token, forwardedIp })
+    logger.info('[GSI], Dropping message, no valid auth token', { token, forwardedIp })
     res.status(200).json({
       error: new Error('Invalid request!'),
     })
