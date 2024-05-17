@@ -113,8 +113,9 @@ commandHandler.registerCommand('test', {
           chatClient.whisper(
             userId,
             `${channel} https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process
-              .env
-              .STEAM_WEB_API!}&server_steam_id=${steamServerId} ${client.steam32Id} ${client.token}`,
+              .env.STEAM_WEB_API!}&server_steam_id=${steamServerId} ${client.steam32Id} ${
+              client.token
+            }`,
           )
         },
       )

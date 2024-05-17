@@ -9,19 +9,19 @@ import { chatClient } from '../twitch/chatClient.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
-import { DotaEvent, SocketClient } from '../types.js'
+import type { DotaEvent, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
-import { AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
-import { emitRoshEvent, RoshRes } from './events/gsi-events/event.roshan_killed.js'
+import { type AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
+import { emitRoshEvent, type RoshRes } from './events/gsi-events/event.roshan_killed.js'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/newdata.js'
 import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster.js'
 import minimapParser from './events/minimap/parser.js'
 import { server } from './index.js'
 import { blockTypes, GLOBAL_DELAY, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
-import getHero, { HeroNames } from './lib/getHero.js'
+import getHero, { type HeroNames } from './lib/getHero.js'
 import { isArcade } from './lib/isArcade.js'
 import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
@@ -117,7 +117,9 @@ export class GSIHandler {
 
     const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, this.client.settings)
     if (isBotDisabled) {
-      logger.info('[GSI] Bot is disabled for this user', { name: this.client.name })
+      logger.info('[GSI] Bot is disabled for this user', {
+        name: this.client.name,
+      })
       this.disable()
       return
     }
@@ -207,7 +209,9 @@ export class GSIHandler {
   async emitNotablePlayers() {
     if (!this.client.stream_online) return
 
-    const { matchPlayers } = await getAccountsFromMatch({ gsi: this.client.gsi })
+    const { matchPlayers } = await getAccountsFromMatch({
+      gsi: this.client.gsi,
+    })
 
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
@@ -241,7 +245,9 @@ export class GSIHandler {
         server.io.to(this.client.token).emit('update-medal', deets)
       })
       .catch((e) => {
-        logger.error('[MMR] emitBadgeUpdate Error getting rank detail', { e: e?.message || e })
+        logger.error('[MMR] emitBadgeUpdate Error getting rank detail', {
+          e: e?.message || e,
+        })
       })
   }
 
@@ -266,7 +272,11 @@ export class GSIHandler {
     const foundAct = this.client.SteamAccount.find((act) => act.steam32Id === steam32Id)
     if (foundAct) {
       // Logged into a new steam account on the same twitch channel
-      Object.assign(this.client, { mmr: foundAct.mmr, steam32Id, multiAccount: undefined })
+      Object.assign(this.client, {
+        mmr: foundAct.mmr,
+        steam32Id,
+        multiAccount: undefined,
+      })
       this.emitBadgeUpdate()
       return
     }
@@ -773,7 +783,10 @@ export class GSIHandler {
         params: { key: process.env.STEAM_WEB_API, match_id: matchId },
       })
       .then(async (response: { data: any }) => {
-        logger.info('Found an early dc match data', { matchId, channel: this.client.name })
+        logger.info('Found an early dc match data', {
+          matchId,
+          channel: this.client.name,
+        })
 
         let winningTeam: 'radiant' | 'dire' | null = null
         if (typeof response.data?.result?.radiant_win === 'boolean') {
@@ -790,7 +803,11 @@ export class GSIHandler {
             if (tellChatBets) {
               say(
                 this.client,
-                t('bets.notScored', { emote: 'D:', lng: this.client.locale, matchId }),
+                t('bets.notScored', {
+                  emote: 'D:',
+                  lng: this.client.locale,
+                  matchId,
+                }),
               )
             }
             await refundTwitchBet(this.getChannelId())
