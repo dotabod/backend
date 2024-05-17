@@ -200,13 +200,21 @@ class MinimapParser {
       }
     }
 
+    if (!data.hero || !data.player || !data.map || !data.minimap) {
+      return {
+        status: {
+          active: false,
+        },
+      }
+    }
+
     // Parse Status
     const status: any = {
       active: true,
-      paused: this.isGamePaused(data.map!),
-      playing: this.isPlaying(data.player!),
-      hero: this.isPlaying(data.player!) ? data.hero?.name : data.hero?.team2?.player0.name,
-      team: this.isPlaying(data.player!) ? data.player?.team_name : 'radiant',
+      paused: this.isGamePaused(data.map),
+      playing: this.isPlaying(data.player),
+      hero: this.isPlaying(data.player) ? data.hero?.name : data.hero?.team2?.player0.name,
+      team: this.isPlaying(data.player) ? data.player?.team_name : 'radiant',
     }
 
     // Parse Minimap
@@ -219,10 +227,11 @@ class MinimapParser {
       tp: [],
       scan: [],
     }
-    const entities = Object.keys(data.minimap!)
+    const entities = Object.keys(data.minimap)
 
     entities.forEach((key) => {
       const entity = data.minimap?.[key]
+      if (!entity) return
 
       // Heroes
       if (
@@ -285,5 +294,4 @@ class MinimapParser {
   }
 }
 
-const minimapParser = new MinimapParser()
-export default minimapParser
+export default MinimapParser

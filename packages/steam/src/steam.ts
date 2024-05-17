@@ -47,7 +47,7 @@ Dota2.Dota2Client.prototype.spectateFriendGame = function (
   friend: { steam_id: number; live: boolean },
   callback: any,
 ) {
-  callback = callback || null
+  const localCallback = callback || null
   if (!this._gcReady) {
     logger.info("[STEAM] GC not ready, please listen for the 'ready' event.")
     return null
@@ -58,7 +58,7 @@ Dota2.Dota2Client.prototype.spectateFriendGame = function (
     Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGame,
     payload,
     onGCSpectateFriendGameResponse,
-    callback,
+    localCallback,
   )
 }
 
@@ -428,7 +428,7 @@ class Dota {
         (oldest, [key, entry]) => {
           if (!oldest) return key
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          return entry.timestamp < this.cache.get(oldest)?.timestamp ? key : oldest
+          return entry.timestamp < (this.cache.get(oldest)?.timestamp || 0) ? key : oldest
         },
         null as number | null,
       )
