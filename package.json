@@ -45,7 +45,9 @@
     "typescript": "^5.4.5"
   },
   "lint-staged": {
-    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --files-ignore-unknown=true"]
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --files-ignore-unknown=true"
+    ]
   },
   "packageManager": "yarn@3.7.0"
 }
