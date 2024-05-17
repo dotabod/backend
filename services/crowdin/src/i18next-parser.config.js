@@ -1,14 +1,14 @@
 export default {
-  contextSeparator: "_",
+  contextSeparator: '_',
   // Key separator used in your translation keys
 
   createOldCatalogs: false,
   // Save the \_old files
 
-  defaultNamespace: "translation",
+  defaultNamespace: 'translation',
   // Default namespace used in your i18next config
 
-  defaultValue: "",
+  defaultValue: '',
   // Default value to give to keys with no value
   // You may also specify a function accepting the locale, namespace, key, and value as arguments
 
@@ -18,69 +18,69 @@ export default {
   keepRemoved: true,
   // Keep keys from the catalog that are no longer in code
 
-  keySeparator: ".",
+  keySeparator: '.',
   // Key separator used in your translation keys
   // If you want to use plain english keys, separators such as `.` and `:` will conflict. You might want to set `keySeparator: false` and `namespaceSeparator: false`. That way, `t('Status: Loading...')` will not think that there are a namespace and three separator dots for instance.
 
   // see below for more details
   lexers: {
-    js: ["JavascriptLexer"], // if you're writing jsx inside .js files, change this to JsxLexer
-    ts: ["JavascriptLexer"],
-    default: ["JavascriptLexer"],
+    js: ['JavascriptLexer'], // if you're writing jsx inside .js files, change this to JsxLexer
+    ts: ['JavascriptLexer'],
+    default: ['JavascriptLexer'],
   },
 
-  lineEnding: "auto",
+  lineEnding: 'auto',
   // Control the line ending. See options at https://github.com/ryanve/eol
 
   locales: [
-    "en",
-    "af-ZA",
-    "ar-SA",
-    "ca-ES",
-    "cs-CZ",
-    "da-DK",
-    "de-DE",
-    "el-GR",
-    "es-ES",
-    "fa-IR",
-    "fi-FI",
-    "fr-FR",
-    "he-IL",
-    "hu-HU",
-    "it-IT",
-    "ja-JP",
-    "ko-KR",
-    "nl-NL",
-    "no-NO",
-    "pl-PL",
-    "pt-BR",
-    "pt-PT",
-    "ro-RO",
-    "ru-RU",
-    "sr-SP",
-    "sv-SE",
-    "tr-TR",
-    "uk-UA",
-    "vi-VN",
-    "zh-CN",
-    "zh-TW",
+    'en',
+    'af-ZA',
+    'ar-SA',
+    'ca-ES',
+    'cs-CZ',
+    'da-DK',
+    'de-DE',
+    'el-GR',
+    'es-ES',
+    'fa-IR',
+    'fi-FI',
+    'fr-FR',
+    'he-IL',
+    'hu-HU',
+    'it-IT',
+    'ja-JP',
+    'ko-KR',
+    'nl-NL',
+    'no-NO',
+    'pl-PL',
+    'pt-BR',
+    'pt-PT',
+    'ro-RO',
+    'ru-RU',
+    'sr-SP',
+    'sv-SE',
+    'tr-TR',
+    'uk-UA',
+    'vi-VN',
+    'zh-CN',
+    'zh-TW',
   ],
   // An array of the locales in your applications
 
-  namespaceSeparator: ":",
+  namespaceSeparator: ':',
   // Namespace separator used in your translation keys
   // If you want to use plain english keys, separators such as `.` and `:` will conflict. You might want to set `keySeparator: false` and `namespaceSeparator: false`. That way, `t('Status: Loading...')` will not think that there are a namespace and three separator dots for instance.
 
-  output: "packages/dota/locales/$LOCALE/$NAMESPACE.json",
+  output: 'packages/dota/locales/$LOCALE/$NAMESPACE.json',
   // Supports $LOCALE and $NAMESPACE injection
   // Supports JSON (.json) and YAML (.yml) file formats
   // Where to write the locale files relative to process.cwd()
 
-  pluralSeparator: "_",
+  pluralSeparator: '_',
   // Plural separator used in your translation keys
   // If you want to use plain english keys, separators such as `_` might conflict. You might want to set `pluralSeparator` to a different string that does not occur in your keys.
 
-  input: "../../../packages/dota/src/**/*.ts",
+  input: '../../../packages/dota/src/**/*.ts',
   // An array of globs that describe where to look for source files
   // relative to the location of the configuration file
 
