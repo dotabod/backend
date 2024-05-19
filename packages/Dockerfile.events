@@ -2,10 +2,10 @@
 FROM node:20-alpine3.17 as base
 
 # Set build context and work directories
-WORKDIR /app/packages/twitch/events
+WORKDIR /app/packages/twitch-events
 
 # Copy just the relevant package.json and yarn.lock files
-COPY ./packages/twitch/events/package.json ./packages/dota/.yarnrc.yml ./packages/twitch/events/yarn.deploy.lock ./
+COPY ./packages/twitch-events/package.json ./packages/dota/.yarnrc.yml ./packages/twitch-events/yarn.deploy.lock ./
 RUN mv ./yarn.deploy.lock ./yarn.lock
 COPY .yarn/releases/ ./.yarn/releases/
 COPY .yarn/cache/ ./.yarn/cache/
@@ -19,10 +19,10 @@ FROM base as builder
 
 # Copy source code and build configurations
 COPY tsconfig.json /app/
-COPY ./packages/twitch/events/tsconfig.json /app/packages/twitch/events/tsconfig.json
-COPY ./packages/twitch/events/src /app/packages/twitch/events/src/
+COPY ./packages/twitch-events/tsconfig.json /app/packages/twitch-events/tsconfig.json
+COPY ./packages/twitch-events/src /app/packages/twitch-events/src/
 
-RUN cd /app/packages/twitch/events && yarn build
+RUN cd /app/packages/twitch-events && yarn build
 
 #-------------------------
 
@@ -30,15 +30,15 @@ FROM node:20-alpine3.17 as prod
 
 # Meta-data and labels
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
-    org.opencontainers.image.description="Dotabod container: ./packages/twitch/events" \
+    org.opencontainers.image.description="Dotabod container: ./packages/twitch-events" \
     org.opencontainers.image.licenses="AGPL-3.0"
 
 # Copy relevant build artifacts
-COPY --from=builder /app/packages/twitch/events/package.json /app/packages/twitch/events/package.json
-COPY --from=builder /app/packages/twitch/events/dist /app/packages/twitch/events/dist/
-COPY --from=builder /app/packages/twitch/events/node_modules /app/packages/twitch/events/node_modules
+COPY --from=builder /app/packages/twitch-events/package.json /app/packages/twitch-events/package.json
+COPY --from=builder /app/packages/twitch-events/dist /app/packages/twitch-events/dist/
+COPY --from=builder /app/packages/twitch-events/node_modules /app/packages/twitch-events/node_modules
 
-WORKDIR /app/packages/twitch/events
+WORKDIR /app/packages/twitch-events
 
 # Environment and CMD
 CMD yarn docker:production

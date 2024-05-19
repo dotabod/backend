@@ -2,7 +2,7 @@
   "i18n-ally.localesPaths": [
     "packages/dota/locales",
     "packages/steam/locales",
-    "packages/twitch/chat/locales",
-    "packages/twitch/events/locales"
+    "packages/twitch-chat/locales",
+    "packages/twitch-events/locales"
   ]
 }

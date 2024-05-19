@@ -45,8 +45,8 @@ gentypes() {
     # Print the subdomain
     OUTPUT_DIRS=(
         "packages/dota/src/db"
-        "packages/twitch/chat/src/db"
-        "packages/twitch/events/src/db"
+        "packages/twitch-chat/src/db"
+        "packages/twitch-events/src/db"
     )
 
     echo "Generating types for project $PROJECT_ID on $NODE_ENV"

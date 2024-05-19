@@ -55,7 +55,6 @@ jobs:
       - name: Organize translations
         run: |
           sudo chown -R $(id -u):$(id -g) packages/**/locales/*
-          sudo chown -R $(id -u):$(id -g) packages/twitch/**/locales/*
           i18next -c 'services/crowdin/src/i18next-parser.config.js'
 
       - name: Count lines
@@ -76,4 +75,3 @@ jobs:
           delete-branch: true
           add-paths: |
             packages/**/locales/*
-            packages/twitch/**/locales/*

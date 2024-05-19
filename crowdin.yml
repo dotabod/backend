@@ -4,6 +4,3 @@ files:
   - source: /packages/**/locales/en/translation.json
     translation: /packages/**/locales/%locale%/%original_file_name%
     type: i18next_json
-  - source: /packages/twitch/**/locales/en/translation.json
-    translation: /packages/twitch/**/locales/%locale%/%original_file_name%
-    type: i18next_json

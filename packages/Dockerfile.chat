@@ -2,10 +2,10 @@
 FROM node:20-alpine3.17 as base
 
 # Set build context and work directories
-WORKDIR /app/packages/twitch/chat
+WORKDIR /app/packages/twitch-chat
 
 # Copy just the relevant package.json and yarn.lock files
-COPY ./packages/twitch/chat/package.json ./packages/dota/.yarnrc.yml ./packages/twitch/chat/yarn.deploy.lock ./
+COPY ./packages/twitch-chat/package.json ./packages/dota/.yarnrc.yml ./packages/twitch-chat/yarn.deploy.lock ./
 RUN mv ./yarn.deploy.lock ./yarn.lock
 COPY .yarn/releases/ ./.yarn/releases/
 COPY .yarn/cache/ ./.yarn/cache/
@@ -19,11 +19,11 @@ FROM base as builder
 
 # Copy source code and build configurations
 COPY tsconfig.json /app/
-COPY ./packages/twitch/chat/tsconfig.json /app/packages/twitch/chat/tsconfig.json
-COPY ./packages/twitch/chat/src /app/packages/twitch/chat/src/
-COPY ./packages/twitch/chat/locales /app/packages/twitch/chat/locales/
+COPY ./packages/twitch-chat/tsconfig.json /app/packages/twitch-chat/tsconfig.json
+COPY ./packages/twitch-chat/src /app/packages/twitch-chat/src/
+COPY ./packages/twitch-chat/locales /app/packages/twitch-chat/locales/
 
-RUN cd /app/packages/twitch/chat && yarn build
+RUN cd /app/packages/twitch-chat && yarn build
 
 #-------------------------
 
@@ -31,16 +31,16 @@ FROM node:20-alpine3.17 as prod
 
 # Meta-data and labels
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
-    org.opencontainers.image.description="Dotabod container: ./packages/twitch/chat" \
+    org.opencontainers.image.description="Dotabod container: ./packages/twitch-chat" \
     org.opencontainers.image.licenses="AGPL-3.0"
 
 # Copy relevant build artifacts
-COPY --from=builder /app/packages/twitch/chat/package.json /app/packages/twitch/chat/package.json
-COPY --from=builder /app/packages/twitch/chat/dist /app/packages/twitch/chat/dist/
-COPY --from=builder /app/packages/twitch/chat/node_modules /app/packages/twitch/chat/node_modules
-COPY --from=builder /app/packages/twitch/chat/locales /app/packages/twitch/chat/locales/
+COPY --from=builder /app/packages/twitch-chat/package.json /app/packages/twitch-chat/package.json
+COPY --from=builder /app/packages/twitch-chat/dist /app/packages/twitch-chat/dist/
+COPY --from=builder /app/packages/twitch-chat/node_modules /app/packages/twitch-chat/node_modules
+COPY --from=builder /app/packages/twitch-chat/locales /app/packages/twitch-chat/locales/
 
-WORKDIR /app/packages/twitch/chat
+WORKDIR /app/packages/twitch-chat
 
 # Environment and CMD
 CMD yarn docker:production
