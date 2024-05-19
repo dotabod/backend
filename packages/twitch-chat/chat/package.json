@@ -1,0 +1,37 @@
+{
+  "name": "@dotabod/twitch-chat",
+  "description": "Forward twitch chat to dotabod.",
+  "version": "1.0.0",
+  "license": "GPL-3.0-or-later",
+  "author": "Geczy",
+  "main": "src/index.ts",
+  "exports": "./dist/index.js",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "docker:production": "bun ./dist/index.js",
+    "docker:development": "bun --watch src/index.ts",
+    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.42.5",
+    "@twurple/api": "6.0.9",
+    "@twurple/auth": "6.0.9",
+    "@twurple/chat": "6.0.9",
+    "@twurple/eventsub-base": "6.0.9",
+    "@twurple/eventsub-http": "6.0.9",
+    "i18next": "^23.11.2",
+    "i18next-fs-backend": "^2.3.1",
+    "socket.io": "^4.7.5",
+    "winston": "^3.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "nodemon": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.4.5"
+  }
+}
