@@ -18,6 +18,7 @@ FROM base as builder
 
 # Copy source code and build configurations
 COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
+COPY $BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
 
 WORKDIR $BUILD_CONTEXT/
 RUN bun run build
@@ -36,6 +37,7 @@ LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
 
 WORKDIR /app
 COPY --from=builder /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
+COPY --from=builder /app/$BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
 COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 COPY --from=builder /app/node_modules ./node_modules
 
