@@ -11,9 +11,9 @@ export function offlineEvent(e: EventSubStreamOfflineEvent) {
   setTimeout(() => {
     if (onlineEvents.has(e.broadcasterId)) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const onlineEventDate = onlineEvents.get(e.broadcasterId)!
+      const onlineEventDate = onlineEvents.get(e.broadcasterId)
       const now = new Date()
-      const diff = now.getTime() - onlineEventDate.getTime()
+      const diff = now.getTime() - (onlineEventDate?.getTime() ?? now.getTime())
       if (diff < 10000) {
         console.log('ignoring offline event for', e.broadcasterId)
         return
@@ -30,7 +30,9 @@ export function offlineEvent(e: EventSubStreamOfflineEvent) {
         .single()
 
       if (!user || !user.userId) {
-        console.log('[TWITCHEVENTS] user not found', { twitchId: e.broadcasterId })
+        console.log('[TWITCHEVENTS] user not found', {
+          twitchId: e.broadcasterId,
+        })
         return
       }
 

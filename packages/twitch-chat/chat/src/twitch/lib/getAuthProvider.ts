@@ -16,13 +16,15 @@ export const getAuthProvider = () => {
     onRefresh: async (twitchId, newTokenData) => {
       console.log('[TWITCHSETUP] Refreshing twitch tokens', { twitchId })
 
+      if (!newTokenData.refreshToken) throw new Error('Missing refresh token')
+
       await supabase
         .from('accounts')
         .update({
           scope: newTokenData.scope.join(' '),
           access_token: newTokenData.accessToken,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          refresh_token: newTokenData.refreshToken!,
+          refresh_token: newTokenData.refreshToken,
           expires_at: Math.floor(
             new Date(newTokenData.obtainmentTimestamp).getTime() / 1000 +
               (newTokenData.expiresIn ?? 0),
