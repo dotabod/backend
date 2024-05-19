@@ -9,13 +9,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "docker:production": "node --inspect=0.0.0.0:9229 ./dist/index.js",
-    "docker:development": "tsx watch src/index.ts",
-    "host:development": "doppler run --fallback-only -- bun docker:development",
-    "build": "tsc --build --verbose",
-    "debug": "nodemon -L --ext ts --ignore '__tests__/*' --exec 'node --inspect=0.0.0.0:9229 --trace-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
-    "devscript": "doppler run -- node --no-warnings -r ts-node/register --loader ts-node/esm ./src/dev/index.ts",
-    "fix-users-dev-docker": "node --no-warnings -r ts-node/register --loader ts-node/esm src/dev/index.ts"
+    "docker:production": "bun ./dist/index.js",
+    "docker:development": "bun --watch src/index.ts",
+    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js",
+    "fix-users": "doppler run -- bun ./src/dev/index.ts",
+    "test": "doppler run -- bun jest"
   },
   "dependencies": {
     "@node-steam/id": "^1.2.0",

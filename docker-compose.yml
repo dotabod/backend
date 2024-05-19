@@ -11,6 +11,9 @@ services:
     build:
       context: .
       dockerfile: ./packages/Dockerfile.chat
+      args:
+        - NODE_ENV=${NODE_ENV:-development}
+        - BUILD_CONTEXT=packages/twitch-chat
       x-bake:
         cache-from:
           - "ghcr.io/dotabod/cache-twitch-chat:v2.1"
@@ -43,6 +46,9 @@ services:
     build:
       context: .
       dockerfile: ./packages/Dockerfile.steam
+      args:
+        - NODE_ENV=${NODE_ENV:-development}
+        - BUILD_CONTEXT=packages/steam
       x-bake:
         cache-from:
           - "ghcr.io/dotabod/cache-steam:v2.2"
@@ -73,6 +79,9 @@ services:
     build:
       context: .
       dockerfile: ./packages/Dockerfile.events
+      args:
+        - NODE_ENV=${NODE_ENV:-development}
+        - BUILD_CONTEXT=packages/twitch-events
       x-bake:
         cache-from:
           - "ghcr.io/dotabod/cache-twitch-events:v2.1"
@@ -111,6 +120,9 @@ services:
     build:
       context: .
       dockerfile: ./packages/Dockerfile.dota
+      args:
+        - NODE_ENV=${NODE_ENV:-development}
+        - BUILD_CONTEXT=packages/dota
       x-bake:
         cache-from:
           - "ghcr.io/dotabod/cache-dota:v2.16"

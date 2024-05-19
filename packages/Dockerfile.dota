@@ -1,49 +1,56 @@
-# Using a more specific version to ensure reproducibility
-FROM node:21-alpine3.17 as base
+FROM oven/bun:latest as base
 
 # Set build context and work directories
-WORKDIR /app/packages/dota
+ARG BUILD_CONTEXT
+ARG HUSKY=0
+WORKDIR /app
 
 # Copy just the relevant package.json and yarn.lock files
-COPY ./packages/dota/package.json ./packages/dota/.yarnrc.yml ./packages/dota/yarn.deploy.lock ./
-RUN mv ./yarn.deploy.lock ./yarn.lock
-COPY .yarn/releases/ ./.yarn/releases/
-COPY .yarn/cache/ ./.yarn/cache/
+COPY package.json ./
+COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
+COPY packages/settings/package.json ./packages/settings/
 
 # Install dependencies
-RUN yarn install --immutable
+RUN bun install
 
 #-------------------------
 
 FROM base as builder
 
 # Copy source code and build configurations
-COPY ./packages/dota/tsconfig.json /app/packages/dota/tsconfig.json
-COPY ./packages/dota/src /app/packages/dota/src/
-COPY ./packages/dota/locales /app/packages/dota/locales/
+COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
+COPY packages/settings/src packages/settings/src/
 
-RUN cd /app/packages/dota && yarn build
+WORKDIR /app/packages/settings/
+RUN bun run build
+
+WORKDIR /app/$BUILD_CONTEXT/
+RUN bun run build
 
 #-------------------------
 
-FROM node:21-alpine3.17 as prod
+FROM oven/bun:latest as prod
 
+ARG BUILD_CONTEXT
 ARG NODE_ENV
-ENV NODE_ENV=$NODE_ENV
 
 # Meta-data and labels
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
-    org.opencontainers.image.description="Dotabod container: ./packages/dota" \
+    org.opencontainers.image.description="Dotabod container: ${BUILD_CONTEXT}" \
     org.opencontainers.image.licenses="AGPL-3.0"
 
-# Copy relevant build artifacts
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
 
-COPY --from=builder /app/packages/dota/package.json /app/packages/dota/package.json
-COPY --from=builder /app/packages/dota/tsconfig.json /app/packages/dota/tsconfig.json
-COPY --from=builder /app/packages/dota/node_modules /app/packages/dota/node_modules
-COPY --from=builder /app/packages/dota/locales /app/packages/dota/locales/
-COPY --from=builder /app/packages/dota/dist /app/packages/dota/dist
+# Settings app
+COPY --from=builder /app/packages/settings/dist ./packages/settings/dist/
+COPY --from=builder /app/packages/settings/package.json ./packages/settings/
 
-WORKDIR /app/packages/dota
+# Dota app
+COPY --from=builder /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
+COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 
-CMD yarn docker:$NODE_ENV
+# Environment and CMD
+WORKDIR /app/$BUILD_CONTEXT/
+ENV NODE_ENV=$NODE_ENV
+CMD bun run docker:$NODE_ENV

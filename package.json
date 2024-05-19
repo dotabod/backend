@@ -3,18 +3,14 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
+    "cache:clean": "rm -rf $(echo bun pm cache) && rm -rf node_modules && rm bun.lockb",
     "up": "bun upgrade-interactive --latest",
-    "buildst": "bun workspace @dotabod/steam run build",
-    "builds": "bun workspace @dotabod/settings run build",
-    "buildd": "bun workspace @dotabod/dota run build",
-    "buildtc": "bun workspace @dotabod/twitch-chat run build",
-    "buildte": "bun workspace @dotabod/twitch-events run build",
-    "runc": "bun workspace @dotabod/twitch-chat run docker:development",
     "nps": "doppler run -- bash services/mongodb/updatenps.sh",
     "exportnps": "doppler run -- bash services/mongodb/export.sh",
     "just": "doppler run -- bash runner.sh",
     "prepare": "husky install"
   },
+  "trustedDependencies": ["steam-resources-fork", "steam-fork"],
   "dependencies": {
     "@supabase/supabase-js": "^2.42.5",
     "@twurple/api": "6.0.9",
