@@ -1,14 +1,11 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
-
 import axios from 'axios'
-// @ts-expect-error no types exist
-import Dota2 from 'dota2'
+import Dota2 from 'dota2-fork'
 import type { Long } from 'mongodb'
 import retry from 'retry'
-import Steam from 'steam'
-// @ts-expect-error no types exist
 import steamErrors from 'steam-errors'
+import Steam from 'steam-fork'
 
 import MongoDBSingleton from './MongoDBSingleton.js'
 import type { Cards, DelayedGames } from './types/index.js'
