@@ -8,7 +8,6 @@ WORKDIR /app
 # Copy just the relevant package.json and yarn.lock files
 COPY package.json ./
 COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
-COPY packages/settings/package.json ./packages/settings/
 
 # Install dependencies
 RUN bun install
@@ -19,10 +18,6 @@ FROM base as builder
 
 # Copy source code and build configurations
 COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
-COPY packages/settings/src packages/settings/src/
-
-WORKDIR /app/packages/settings/
-RUN bun run build
 
 WORKDIR /app/$BUILD_CONTEXT/
 RUN bun run build
@@ -41,10 +36,6 @@ LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
 
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
-
-# Settings app
-COPY --from=builder /app/packages/settings/dist ./packages/settings/dist/
-COPY --from=builder /app/packages/settings/package.json ./packages/settings/
 
 # Dota app
 COPY --from=builder /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
