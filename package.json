@@ -1,22 +1,15 @@
 {
   "name": "dotabod",
   "private": true,
-  "workspaces": [
-    "packages/settings",
-    "packages/twitch/events",
-    "packages/twitch/chat",
-    "packages/dota",
-    "packages/steam"
-  ],
+  "workspaces": ["packages/*"],
   "scripts": {
-    "up": "yarn upgrade-interactive",
-    "devscript": "yarn workspace @dotabod/dota run devscript",
-    "build": "yarn buildst && yarn buildd && yarn buildtc && yarn buildte",
-    "buildst": "yarn workspace @dotabod/steam run build",
-    "buildd": "yarn workspace @dotabod/dota run build",
-    "buildtc": "yarn workspace @dotabod/twitch-chat run build",
-    "buildte": "yarn workspace @dotabod/twitch-events run build",
-    "runc": "yarn workspace @dotabod/twitch-chat run docker:development",
+    "up": "bun upgrade-interactive --latest",
+    "buildst": "bun workspace @dotabod/steam run build",
+    "builds": "bun workspace @dotabod/settings run build",
+    "buildd": "bun workspace @dotabod/dota run build",
+    "buildtc": "bun workspace @dotabod/twitch-chat run build",
+    "buildte": "bun workspace @dotabod/twitch-events run build",
+    "runc": "bun workspace @dotabod/twitch-chat run docker:development",
     "nps": "doppler run -- bash services/mongodb/updatenps.sh",
     "exportnps": "doppler run -- bash services/mongodb/export.sh",
     "just": "doppler run -- bash runner.sh",
@@ -45,9 +38,7 @@
     "typescript": "^5.4.5"
   },
   "lint-staged": {
-    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-      "biome check --files-ignore-unknown=true"
-    ]
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --files-ignore-unknown=true"]
   },
   "packageManager": "yarn@3.7.0"
 }
