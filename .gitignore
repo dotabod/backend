@@ -13,10 +13,3 @@ newrelic_agent.log
 coverage
 dist
 *.tsbuildinfo
-# yarn v2
-.yarn/*
-!.yarn/cache
-!.yarn/releases
-!.yarn/plugins
-!.yarn/sdks
-!.yarn/versions

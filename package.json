@@ -40,5 +40,5 @@
   "lint-staged": {
     "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --files-ignore-unknown=true"]
   },
-  "packageManager": "yarn@3.7.0"
+  "packageManager": "bun@1.1.8"
 }
