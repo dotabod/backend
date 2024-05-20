@@ -4,11 +4,13 @@ FROM node:20-alpine3.17 as base
 # Set build context and work directories
 WORKDIR /app/packages/steam
 
+RUN apk add --no-cache git
+
 # Copy just the relevant package.json and yarn.lock files
-COPY ./packages/steam/package.json ./packages/dota/.yarnrc.yml ./packages/steam/yarn.deploy.lock ./
+COPY ./packages/steam/package.json ./packages/steam/yarn.deploy.lock ./
 RUN mv ./yarn.deploy.lock ./yarn.lock
-COPY .yarn/releases/ ./.yarn/releases/
-COPY .yarn/cache/ ./.yarn/cache/
+# COPY .yarn/releases/ ./.yarn/releases/
+# COPY .yarn/cache/ ./.yarn/cache/
 
 # Install dependencies
 RUN yarn install --immutable

@@ -1,27 +1,16 @@
 {
   "name": "dotabod",
   "private": true,
-  "workspaces": [
-    "packages/settings",
-    "packages/twitch/events",
-    "packages/twitch/chat",
-    "packages/dota",
-    "packages/steam"
-  ],
+  "workspaces": ["packages/*"],
   "scripts": {
-    "up": "yarn upgrade-interactive",
-    "devscript": "yarn workspace @dotabod/dota run devscript",
-    "build": "yarn buildst && yarn buildd && yarn buildtc && yarn buildte",
-    "buildst": "yarn workspace @dotabod/steam run build",
-    "buildd": "yarn workspace @dotabod/dota run build",
-    "buildtc": "yarn workspace @dotabod/twitch-chat run build",
-    "buildte": "yarn workspace @dotabod/twitch-events run build",
-    "runc": "yarn workspace @dotabod/twitch-chat run docker:development",
+    "cache:clean": "rm -rf $(echo bun pm cache) && rm -rf node_modules && rm bun.lockb || true",
+    "up": "bun upgrade-interactive --latest",
     "nps": "doppler run -- bash services/mongodb/updatenps.sh",
     "exportnps": "doppler run -- bash services/mongodb/export.sh",
     "just": "doppler run -- bash runner.sh",
     "prepare": "husky install"
   },
+  "trustedDependencies": ["steam-resources-fork", "steam-fork"],
   "dependencies": {
     "@supabase/supabase-js": "^2.42.5",
     "@twurple/api": "6.0.9",
@@ -45,9 +34,6 @@
     "typescript": "^5.4.5"
   },
   "lint-staged": {
-    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-      "biome check --files-ignore-unknown=true"
-    ]
-  },
-  "packageManager": "yarn@3.7.0"
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --files-ignore-unknown=true"]
+  }
 }
