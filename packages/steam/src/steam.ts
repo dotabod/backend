@@ -6,6 +6,7 @@ import Dota2 from 'dota2'
 import type { Long } from 'mongodb'
 import retry from 'retry'
 import Steam from 'steam'
+// @ts-expect-error no types
 import steamErrors from 'steam-errors'
 import MongoDBSingleton from './MongoDBSingleton.js'
 import type { Cards, DelayedGames } from './types/index.js'
