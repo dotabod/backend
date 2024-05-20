@@ -150,7 +150,7 @@ login() {
 up() {
     docker_login
     echo "Starting server with database $NODE_ENV at $dockerfile"
-    docker_command up -d "$app"
+    docker_command watch "$app"
 }
 
 update() {

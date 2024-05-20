@@ -16,8 +16,13 @@ services:
 
   dota:
     image: "ghcr.io/dotabod/dota:v2.16"
-    volumes:
-      - $PWD/packages/dota/src:/app/packages/dota/src
+    develop:
+      watch:
+        - action: sync
+          path: $PWD/packages/dota/src
+          target: /app/packages/dota/src
+        - action: rebuild
+          path: $PWD/packages/dota/package.json
     ports:
       - "5120:5120"
 

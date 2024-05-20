@@ -40,6 +40,7 @@ COPY --from=builder /app/node_modules ./node_modules
 
 # Dota app
 COPY --from=builder /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
+COPY --from=builder /app/$BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 COPY --from=builder /app/$BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
 COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 
