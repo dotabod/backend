@@ -7,11 +7,13 @@
   "main": "src/index.ts",
   "exports": "./dist/index.js",
   "type": "module",
+  "packageManager": "yarn@3.7.0",
   "private": true,
   "scripts": {
-    "docker:production": "bun ./dist/index.js",
-    "docker:development": "bun --watch src/index.ts",
-    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
+    "build": "tsc --build --verbose",
+    "docker:production": "node --trace-warnings ./dist/index.js",
+    "docker:development": "nodemon -L --ext ts --exec 'node --no-warnings -r ts-node/register --loader ts-node/esm src/index.ts'",
+    "host:development": "nodemon -L --ext ts ./src/index.ts"
   },
   "devDependencies": {
     "@types/long": "^5.0.0",
@@ -35,7 +37,7 @@
     "@twurple/eventsub-http": "6.0.9",
     "@types/node": "^20.12.7",
     "axios": "1.2.0-alpha.1",
-    "dota2-fork": "https://github.com/dotabod/node-dota2-fork",
+    "dota2": "https://github.com/dotabod/node-dota2",
     "husky": "^9.0.11",
     "i18next": "^23.11.2",
     "i18next-fs-backend": "^2.3.1",
@@ -44,7 +46,7 @@
     "nodemon": "^3.1.0",
     "redis": "^4.6.13",
     "socket.io": "^4.7.5",
-    "steam-fork": "https://github.com/dotabod/node-steam-fork",
+    "steam": "https://github.com/dotabod/node-steam",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.4.5",
