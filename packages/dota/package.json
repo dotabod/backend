@@ -9,7 +9,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "docker:production": "bun ./dist/index.js",
+    "docker:production": "bun src/index.ts",
     "docker:development": "bun --watch src/index.ts",
     "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js",
     "fix-users": "doppler run -- bun ./src/dev/index.ts",
