@@ -10,7 +10,7 @@ export function closeTwitchBet(won: boolean, twitchId: string) {
     })
     .then(({ data: predictions }) => {
       if (!Array.isArray(predictions) || !predictions.length) {
-        logger.info('[PREDICT] No predictions found', { token: twitchId, predictions })
+        logger.info('[PREDICT] Close bets - no predictions found', { token: twitchId, predictions })
         return
       }
 

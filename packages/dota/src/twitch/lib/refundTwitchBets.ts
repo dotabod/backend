@@ -8,12 +8,16 @@ export const refundTwitchBet = async (twitchId: string) => {
     const predictions = await api.predictions.getPredictions(twitchId, {
       limit: 1,
     })
-    if (!Array.isArray(predictions) || !predictions.length) {
-      logger.info('[PREDICT] No predictions found', { twitchId, predictions })
+    if (!Array.isArray(predictions?.data) || !predictions?.data.length) {
+      logger.info('[PREDICT] No predictions found', {
+        twitchId,
+        predictions,
+        data: predictions?.data?.[0],
+      })
       return
     }
 
-    const betId = (predictions?.[0]?.id as string) || predictions.data?.[0]?.id
+    const betId = predictions?.data?.[0]?.id
     await api.predictions.cancelPrediction(twitchId || '', betId)
     return betId
   } catch (e) {
