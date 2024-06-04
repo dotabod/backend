@@ -28,7 +28,7 @@ jobs:
 
             # Notify Coolify
             echo "Notifying Coolify for $env_name environment: $UUID"
-            curl -s -X GET -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}" "https://${{ secrets.COOLIFY_HOST }}/api/v1/deploy?uuid=${UUID}&force=false"
+            # curl -s -X GET -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}" "https://${{ secrets.COOLIFY_HOST }}/api/v1/deploy?uuid=${UUID}&force=false"
           }
 
           # UUID mappings for prod and dev
@@ -36,5 +36,5 @@ jobs:
           declare -A dev_uuids=( ["dota"]="esgckgc" ["twitch-events"]="kkk04os" ["twitch-chat"]="qgosw80" ["steam"]="q88g0c8" )
 
           # Notify for prod and dev
-          # notify_coolify "Prod" prod_uuids
+          notify_coolify "Prod" prod_uuids
           # notify_coolify "Dev" dev_uuids
