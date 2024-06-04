@@ -231,7 +231,7 @@
     "unknown": "Не удалось найти последний коммит git, репозиторий находится здесь {{- url}}"
   },
   "winprobability": {
-    "winProbability": "Вероятность победы - {{winRate}}%  {{emote}} на время {{gameTime}}:00 ⏲ · Следущее обновление вероятности через {{remainingCooldown}} сек.",
+    "winProbability": "Вероятность победы - {{winRate}}% на момент - {{gameTime}}:00 · Следующий перерасчет в {{remainingCooldown}} сек",
     "winProbabilityDataNotAvailable": "Вероятность победы пока недоступна. Попробуйте снова через {{remainingCooldown}} сек"
   },
   "xpm": "Текущий XPM у {{- heroName}}: {{num}} опыта"
