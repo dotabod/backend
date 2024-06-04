@@ -28,7 +28,7 @@ jobs:
 
             # Notify Coolify
             echo "Notifying Coolify for $env_name environment: $UUID"
-            curl -s -X GET -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}" "https://${{ secrets.COOLIFY_HOST }}/api/v1/deploy?uuid=${UUID}&force=false"
+            # curl -s -X GET -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}" "https://${{ secrets.COOLIFY_HOST }}/api/v1/deploy?uuid=${UUID}&force=false"
           }
 
           # UUID mappings for prod and dev
