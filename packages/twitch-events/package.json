@@ -14,7 +14,7 @@
     "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.42.5",
+    "@supabase/supabase-js": "^2.43.4",
     "@twurple/api": "6.0.9",
     "@twurple/auth": "6.0.9",
     "@twurple/chat": "6.0.9",
@@ -22,7 +22,7 @@
     "@twurple/eventsub-http": "6.0.9",
     "express": "^4.19.2",
     "express-body-parser-error-handler": "^1.0.7",
-    "i18next": "^23.11.2",
+    "i18next": "^23.11.5",
     "i18next-fs-backend": "^2.3.1",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
@@ -30,10 +30,9 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
-    "@types/node": "^20.12.7",
+    "@types/node": "^20.14.1",
     "husky": "^9.0.11",
-    "lint-staged": "^15.2.2",
-    "nodemon": "^3.1.0",
+    "lint-staged": "^15.2.5",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.4.5"
