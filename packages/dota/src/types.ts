@@ -173,6 +173,7 @@ export interface Hero {
   team2?: { player0: Hero; player1: Hero; player2: Hero; player3: Hero; player4: Hero }
   team3?: { player5: Hero; player6: Hero; player7: Hero; player8: Hero; player9: Hero }
   id: number // -1 if hero not yet set
+  facet?: number // 1 | 2,
   name?: HeroNames // e.g. 'npc_dota_hero_antimage' once set
   xpos?: number // -5422,
   ypos?: number // -4771,

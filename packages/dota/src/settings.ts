@@ -78,6 +78,7 @@ export const defaultSettings = {
   commandSteam: true,
   commandXPM: true,
   commandWinProbability: true,
+  commandFacet: true,
   'minimap-blocker': true,
   minimapRight: false,
   mmr: null,
