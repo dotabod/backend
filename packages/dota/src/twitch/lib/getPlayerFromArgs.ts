@@ -17,7 +17,7 @@ export async function getPlayerFromArgs({
   command: string
 }) {
   const { matchPlayers: players } = await getAccountsFromMatch({ gsi: packet })
-  const heroIdsInMatch = players.map((player) => player.heroid)
+  const heroIdsInMatch = players.map((player) => player.heroid || 0)
   const heroList = heroIdsInMatch
     .map((heroId) => getHeroById(heroId))
     .map((hero) => hero?.localized_name)
@@ -49,7 +49,12 @@ export async function getPlayerFromArgs({
   } else {
     // hero name input or alias
     const hero = getHeroByName(args.join('').toLowerCase().trim(), heroIdsInMatch)
-    playerIdx = hero ? players.findIndex((player) => player.heroid === hero.id) : -1
+
+    if (packet?.hero?.id === hero?.id) {
+      playerIdx = players.findIndex((player) => player.heroid === hero?.id)
+    } else {
+      playerIdx = hero ? players.findIndex((player) => player.heroid === hero.id) : -1
+    }
   }
 
   if (playerIdx < 0 || playerIdx > 9) {
@@ -62,5 +67,5 @@ export async function getPlayerFromArgs({
     )
   }
 
-  return { playerIdx, player: players[playerIdx] }
+  return { playerIdx, player: { ...packet?.player, ...packet?.hero, ...players[playerIdx] } }
 }

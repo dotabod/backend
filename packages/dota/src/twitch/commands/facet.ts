@@ -1,7 +1,7 @@
 import DOTA_HERO_ABILITIES from 'dotaconstants/build/hero_abilities.json' assert { type: 'json' }
 import { t } from 'i18next'
 import { gsiHandlers } from '../../dota/lib/consts.js'
-import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
+import { getHeroById, getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
@@ -26,20 +26,24 @@ commandHandler.registerCommand('facet', {
 
     try {
       const { hero, playerIdx } = await findAccountFromCmd(client.gsi, args, client.locale, command)
-      if (typeof hero?.id !== 'number') {
+      const heroData = getHeroById(hero?.id)
+
+      if (typeof hero?.id !== 'number' || !heroData) {
         chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
         return
       }
 
       const facet =
-        DOTA_HERO_ABILITIES?.[hero.name as keyof typeof DOTA_HERO_ABILITIES]?.facets[hero.facet - 1]
+        DOTA_HERO_ABILITIES?.[heroData.key as keyof typeof DOTA_HERO_ABILITIES]?.facets[
+          hero.facet - 1
+        ]
 
       if (!facet) {
         chatClient.say(
           channel,
           t('facetNotFound', {
             lng: message.channel.client.locale,
-            heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
+            heroName: heroData?.localized_name ?? 'Unknown',
           }),
         )
         return

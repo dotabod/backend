@@ -60,7 +60,7 @@ export async function findAccountFromCmd(
       playerIdx,
       accountIdFromArgs,
       player: { accountid: accountIdFromArgs },
-      hero: { id: data?.player?.heroid },
+      hero: { id: data?.player?.heroid, facet: data?.player?.facet },
     }
   }
 

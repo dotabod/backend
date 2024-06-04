@@ -51,11 +51,24 @@ export async function getAccountsFromMatch({
           ]
         : ([] as { heroid: number; accountid: number; playerid: number }[])
 
-    return {
-      matchPlayers,
-      accountIds: matchPlayers.map((player) => player.accountid),
+    if (matchPlayers.length) {
+      return {
+        matchPlayers,
+        accountIds: matchPlayers.map((player) => player.accountid),
+      }
     }
   } finally {
     await mongo.close()
+  }
+
+  return {
+    matchPlayers: [
+      {
+        heroid: gsi?.hero?.id,
+        accountid: Number(gsi?.player?.accountid),
+        playerid: 0,
+      },
+    ],
+    accountIds: [gsi?.player?.accountid],
   }
 }

@@ -666,17 +666,23 @@ export function getHeroNameOrColor(id: number, index?: number) {
   return name ?? 'Unknown'
 }
 
-export function getHeroById(id: number) {
+export function getHeroById(id?: number) {
   if (!id) return null
 
-  return Object.values(heroes).find((h) => h.id === id)
+  for (const [key, hero] of Object.entries(heroes)) {
+    if (hero.id === id) {
+      return { ...hero, key }
+    }
+  }
+
+  return null
 }
 
 export function getHeroByName(name: string, heroIdsInMatch: number[]) {
   if (!name) return null
 
   // only keep a-z in name
-  name = name
+  const localName = name
     .replace(/[^a-z]/gi, '')
     .toLowerCase()
     .trim()
@@ -690,7 +696,7 @@ export function getHeroByName(name: string, heroIdsInMatch: number[]) {
         alias
           .replace(/[^a-z]/gi, '')
           .toLowerCase()
-          .trim() === name,
+          .trim() === localName,
     )
 
     if (hasAlias) return true
@@ -705,7 +711,7 @@ export function getHeroByName(name: string, heroIdsInMatch: number[]) {
         .toLowerCase()
         .trim()
 
-      return inName.includes(name)
+      return inName.includes(localName)
     })
   }
 
