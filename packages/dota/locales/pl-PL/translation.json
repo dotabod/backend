@@ -63,6 +63,8 @@
   },
   "dota2pt": "Potrzebujesz profesjonalnych porad odnośnie {{- heroName}}? Sprawdź tutaj {{- url}}",
   "dotabod": "Jestem otwartoźródłowym botem stworzonym przez {{author}}. Więcej informacji: {{- url}}",
+  "facet": "Asepkt {{- heroName}}: {{- facetTitle}} · {{- facetDescription}}",
+  "facetNotFound": "Aspekt {{- heroName}} nie został odnaleziony · W meczach na żywo dostępny jest tylko aspekt streamera",
   "gameNotFound": "Gra nie została znaleziona",
   "gpm_zero": "",
   "gpm_one": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstwa bohatera, z {{creepKills}} zabójstw creepów.",
@@ -231,7 +233,7 @@
     "unknown": "Nie można znaleźć ostatniego commitu git tutaj, oto repozytorium {{- url}}"
   },
   "winprobability": {
-    "winProbability": "Prawdopodobieństwo wygrania: {{winRate}}% {{emote}} w {{gameTime}}:00 ⏲ · Następna aktualizacja za {{remainingCooldown}}s",
+    "winProbability": "Prawdopodobieństwo wygrania: {{winRate}}% w {{gameTime}}:00 ⏲ · Następna aktualizacja za {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Prawdopodobieństwo wygrania nie jest jeszcze dostępne · Spróbuj ponownie za {{remainingCooldown}}s"
   },
   "xpm": "Aktualny XPM dla {{- heroName}}: {{num}}"

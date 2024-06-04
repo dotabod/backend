@@ -57,6 +57,8 @@
   },
   "dota2pt": "Benötigen Sie Profi-Build-Ideen für {{- heroName}}? Sieh hier {{- url}}",
   "dotabod": "Ich bin ein Open-Source-Bot erstellt von {{author}}. Weitere Infos: {{- url}}",
+  "facet": "{{- heroName}} facet: {{- facetTitle}} · {{- facetDescription}}",
+  "facetNotFound": "{{- heroName}} facet cannot be found · Live matches can only get streamer's facet",
   "gameNotFound": "Spiel wurde nicht gefunden",
   "gpm_zero": "",
   "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
@@ -201,7 +203,7 @@
     "unknown": "Der letzte Git-Commit konnte nicht gefunden werden, hier ist das Repository {{- url}}"
   },
   "winprobability": {
-    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
+    "winProbability": "{{winRate}}% win probability at {{gameTime}}:00 · Next update in {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
   "xpm": "Live EPM für {{- heroName}}: {{num}}"
