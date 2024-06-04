@@ -57,6 +57,8 @@
   },
   "dota2pt": "Tarvitsetko ammattilaisen build-ideoita sankarille {{- heroName}}? Tarkista osoitteessa {{- url}}",
   "dotabod": "Olen avoimen lähdekoodin botti jonka on tehnyt {{author}}. Lisätietoja: {{- url}}",
+  "facet": "{{- heroName}} facet: {{- facetTitle}} · {{- facetDescription}}",
+  "facetNotFound": "{{- heroName}} facet cannot be found · Live matches can only get streamer's facet",
   "gameNotFound": "Peliä ei löytynyt",
   "gpm_zero": "",
   "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
@@ -201,7 +203,7 @@
     "unknown": "Viimeistä git committia ei löytynyt, tässä osoitteessa repo {{- url}}"
   },
   "winprobability": {
-    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
+    "winProbability": "{{winRate}}% win probability at {{gameTime}}:00 · Next update in {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
   "xpm": "Live XPM for {{- heroName}}: {{num}}"

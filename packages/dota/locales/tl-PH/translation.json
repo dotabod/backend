@@ -99,6 +99,8 @@
     "unranked": "Not ranked",
     "won": "Won last game"
   },
+  "facet": "{{- heroName}} facet: {{- facetTitle}} · {{- facetDescription}}",
+  "facetNotFound": "{{- heroName}} facet cannot be found · Live matches can only get streamer's facet",
   "lifetime": "Lifetime games",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
@@ -192,7 +194,7 @@
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
   },
   "winprobability": {
-    "winProbability": "{{winRate}}% win probability {{emote}} at {{gameTime}}:00 ⏲ · Next update in {{remainingCooldown}}s",
+    "winProbability": "{{winRate}}% win probability at {{gameTime}}:00 · Next update in {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
   "xpm": "Live XPM for {{- heroName}}: {{num}}",

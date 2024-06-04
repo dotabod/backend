@@ -59,6 +59,8 @@
   },
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
+  "facet": "{{- heroName}} facet: {{- facetTitle}} · {{- facetDescription}}",
+  "facetNotFound": "{{- heroName}} facet cannot be found · Live matches can only get streamer's facet",
   "gameNotFound": "Game was not found",
   "gpm_zero": "Live GPM for {{- heroName}}: {{num}}",
   "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
@@ -108,8 +110,6 @@
     "unranked": "Not ranked",
     "won": "Won last game"
   },
-  "facet": "{{- heroName}} facet: {{- facetTitle}} · {{- facetDescription}}",
-  "facetNotFound": "{{- heroName}} facet cannot be found · Live matches can only get streamer's facet",
   "lifetime": "Lifetime games",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
