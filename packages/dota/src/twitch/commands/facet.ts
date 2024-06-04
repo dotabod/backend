@@ -34,6 +34,17 @@ commandHandler.registerCommand('facet', {
       const facet =
         DOTA_HERO_ABILITIES?.[hero.name as keyof typeof DOTA_HERO_ABILITIES]?.facets[hero.facet - 1]
 
+      if (!facet) {
+        chatClient.say(
+          channel,
+          t('facetNotFound', {
+            lng: message.channel.client.locale,
+            heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
+          }),
+        )
+        return
+      }
+
       chatClient.say(
         channel,
         t('facet', {
