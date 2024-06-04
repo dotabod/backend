@@ -98,7 +98,11 @@ commandHandler.registerCommand('test', {
     }
 
     if (args[0] === 'server') {
-      const [steam32Id] = args
+      const [, steam32Id] = args
+
+      if (!process.env.STEAM_WEB_API) {
+        return
+      }
 
       steamSocket.emit(
         'getUserSteamServer',
@@ -112,10 +116,7 @@ commandHandler.registerCommand('test', {
 
           chatClient.whisper(
             userId,
-            `${channel} https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process
-              .env.STEAM_WEB_API!}&server_steam_id=${steamServerId} ${client.steam32Id} ${
-              client.token
-            }`,
+            `${channel} https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamServerId} ${client.steam32Id} ${client.token}`,
           )
         },
       )
