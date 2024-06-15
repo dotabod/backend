@@ -34,7 +34,7 @@ export const getAuthProvider = () => {
         .update({
           scope: newTokenData.scope.join(' '),
           access_token: newTokenData.accessToken,
-          refresh_token: newTokenData.refreshToken!,
+          refresh_token: newTokenData.refreshToken,
           expires_at: Math.floor(
             new Date(newTokenData.obtainmentTimestamp).getTime() / 1000 +
               (newTokenData.expiresIn ?? 0),

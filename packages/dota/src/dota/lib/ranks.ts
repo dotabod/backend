@@ -48,7 +48,7 @@ export async function lookupLeaderRank(
   }
 
   const cacheKey = `${steam32Id}:medal`
-  let result
+  let result: LeaderRankData | null = null
 
   const redisClient = RedisClient.getInstance()
   // Try to get the cached result first
@@ -168,9 +168,4 @@ export async function getRankDescription({
 
   const msgs = []
   msgs.push(mmr)
-  msgs.push(myRank.title)
-  msgs.push(`${nextAt} ${nextMMR}${count !== 1 ? ` ${nextIn}` : ''}`)
-  if (count === 1) msgs.push(nextIn)
-
-  return msgs.join(' · ')
-}
+  msgs.push

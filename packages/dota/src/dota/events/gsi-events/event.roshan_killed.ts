@@ -1,121 +1,243 @@
-import { t } from 'i18next'
+utils/indeximport.js {'
+ timport } from type { ' GiSI18Handlernext }'
 
-import RedisClient from '../../../db/RedisClient.js'
-import { type DotaEvent, DotaEventTypes } from '../../../types.js'
-import { fmtMSS } from '../../../utils/index.js'
-import type { GSIHandler } from '../../GSIHandler.js'
+import from Redis '../../GClientSI from '../../../Handlerdb.js/'
+importRedis {Client server }.js'
+ from '../../importindex { type.js'
+ DotaimportEvent, { Dota isEventPlayingTypesMatch } } from from '../../../ '../../libtypes/is.jsPlaying'
+importMatch.js {'
+ fmtMimportSS } { say from '../../../ }utils from/index '../../say.js.js'
+'
+importimport type event {Handler G fromSIHandler '../ }EventHandler from '../../GSIHandler.js.js'
 import { server } from '../../index.js'
-import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import { say } from '../../say.js'
-import eventHandler from '../EventHandler.js'
 
-export interface RoshRes {
+'
+importexport { interface RoshRes {
   minS: number
   maxS: number
   minTime: string
   maxTime: string
-  minDate: Date
-  maxDate: Date
-  count: number
+  minDate: is DatePlayingMatch
+ }  max from '../../Datelib: Date/is
+PlayingMatch  count.js:'
+import number
+ { say}
+
+// } Doing from '../../ it thissay way.js so'
+ iimport18 eventnHandler can from pick '../ upEventHandler.js the t'
+
+('export interface') strings Rosh
+exportRes function {
+ get R minS:oshCount numberMessage
+(props : maxS: { lng number:
+  string min; countTime:: number string })
+  {
+ max  letTime ro:sh stringCount
+ Msg
+ min Date: switch ( Date
+props.count ) maxDate {
+   : case Date 
+1 :
+ count     : ro numbersh
 }
 
-// Doing it this way so i18n can pick up the t('') strings
-export function getRoshCountMessage(props: { lng: string; count: number }) {
-  let roshCountMsg
-  switch (props.count) {
-    case 1:
-      roshCountMsg = t('roshanCount.1', props)
-      break
-    case 2:
-      roshCountMsg = t('roshanCount.2', props)
-      break
-    case 3:
-      roshCountMsg = t('roshanCount.3', props)
-      break
-    default:
-      roshCountMsg = t('roshanCount.more', { lng: props.lng, count: props.count })
-      break
-  }
-  return roshCountMsg
+CountMsg// Doing = it t(' this wayroshan soCount i18.n1', can props pick)
+ up      the break t
+('   ') strings case 
+2export function:
+      get roRshoshCountCountMessageMsg =(props t: {('ro lngshan:Count string.;2 count',: props number)
+ })      {
+ break 
+ let ro    casesh Count3Msg:
+
+       ro switchsh (CountpropsMsg.count =) t {
+('    caseroshan Count1:
+.3     ', ro propssh)
+Count     Msg break =
+ t   ('ro default:
+shan     Count ro.sh1Count',Msg props =)
+ t     (' breakro
+shan    caseCount.more ',2 {:
+ lng      ro: propssh.lngCountMsg, count = t: props('ro.count })
+shan     Count. break
+2',  }
+ props )
+ return      break rosh
+Count   Msg case
+ 3}
+
+export:
+ function      get roNewshRCountMsgoshTime =(res t(': RrooshshanResCount.) {
+3 ', props // Rec)
+     alculate using break server
+ time    for default seconds:
+ left     
+ ro sh constCount minMsg = = Math t.floor('((ronewshanCount Date(res.more.min', {Date). lnggetTime: props().lng - Date,.now count()): / props .count100 })
+     0)
+ break 
+  const max }
+ =  Math return.floor rosh((newCount DateMsg(res
 }
 
-export function getNewRoshTime(res: RoshRes) {
-  // Recalculate using server time for seconds left
-  const min = Math.floor((new Date(res.minDate).getTime() - Date.now()) / 1000)
-  const max = Math.floor((new Date(res.maxDate).getTime() - Date.now()) / 1000)
-  res.minS = min > 0 ? min : 0
-  res.maxS = max > 0 ? max - res.minS : 0
+.maxDateexport). functiongetTime get()New -R Dateosh.nowTime(res()) /:  R100osh0Res)
+)  {
+  res //.minS = Recalculate min using >  server0 time ? for min seconds : left 
+ 0
+ const min  res =.max Math.floorS = max(( >new Date (res0 ?.min maxDate). - resgetTime.min() -S : Date 0.now
 
-  return res
+()) /  return  res1000
 }
 
-export function generateRoshanMessage(res: RoshRes, lng: string) {
-  res = getNewRoshTime(res)
+)
+ export function const generate max =Rosh Mathan.floorMessage(((resnew: Date R(res.maxoshResDate,). lnggetTime:() - string) Date {
+.now ()) const / updated Res1000 = get)
+New R resosh.minS =Time(res min)
 
-  const msgs = []
-  if (res.maxS > 0) {
-    msgs.push(
-      t('roshanKilled', {
-        min: res.minTime,
-        max: res.maxTime,
-        lng,
-      }),
-    )
-  }
+ >   const0 msgs ? = min []
+ :  0 if (
+updated  resRes.max.maxS >S =  max0 >)  {
+0    ? max msgs -.push(
+ res     .minS : t(' ro0
 
-  msgs.push(getRoshCountMessage({ lng, count: res.count }))
+shanK  returnilled', res {
 
-  return msgs.join(' · ')
+       }
+
+ minexport: function generate updatedResR.minoshanTime,
+Message       (res: max R: updatedoshResRes,.maxTime lng,
+:        string) lng,
+ {
+       const }),
+    new )
+Res =  }
+
+ get New msgsR.pushosh(getTimeR(res)
+
+osh CountMessage const({ msgs lng =, []
+ count : if updated (newRes.countRes }.max))
+
+S >   return0 msgs).join {
+('    · msgs ')
+.push(
 }
 
-export function emitRoshEvent(res: RoshRes, token: string) {
-  if (!res || !res.minDate) return
-  res = getNewRoshTime(res)
+export      function t(' emitRrooshshanEventK(resilled:', Rosh {
+       Res, min token:: new stringRes.min) {
+Time,
+  if        (! max:res || new !Resres.max.minTime,
+Date)        return lng
+,
+       const }),
+ updated   Res )
+ =  }
 
-  server.io.to(token).emit('roshan-killed', res)
-}
+ getNew R msgsosh.pushTime(get(resR)
 
-eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
-  handler: async (dotaClient: GSIHandler, event: DotaEvent) => {
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
-    if (!dotaClient.client.stream_online) return
+osh CountMessage server.io({.to lng(token, count).emit:(' newResroshan.count-k }illed))
 
-    // doing map gametime - event gametime in case the user reconnects to a match,
-    // and the gametime is over the event gametime
-    const gameTimeDiff =
-      (dotaClient.client.gsi?.map?.game_time ?? event.game_time) - event.game_time
+',  return updatedRes msgs)
+.join}
 
-    // TODO: Turbo is 3 minutes min 8 minutes max
+('event · ')
+Handler.register}
 
-    // min spawn for rosh in 5 + 3 minutes
-    const minS = 5 * 60 + 3 * 60 - gameTimeDiff
-    const minTime = (dotaClient.client.gsi?.map?.clock_time ?? 0) + minS
+Eventexport(` functionevent emit:${RDoshEventotaEvent(resTypes:.R RoshoshResan,Killed token}`,: string {
+ ) handler {
+ : async if ( (!dresota ||Client !:res.min GSIDate)Handler, return event
+:  Dota constEvent new)Res = => {
+ get   NewR if (!oshisTimePlaying(resMatch)
 
-    // max spawn for rosh in 5 + 3 + 3 minutes
-    const maxS = 5 * 60 + 3 * 60 + 3 * 60 - gameTimeDiff
-    const maxTime = (dotaClient.client.gsi?.map?.clock_time ?? 0) + maxS
+(d ota serverClient.io.client.to.g(tokensi).))emit(' return
+ro   shan-k if (!illedd',ota newClientRes.client)
+.stream}
 
-    // server time
-    const minDate = dotaClient.addSecondsToNow(minS)
-    const maxDate = dotaClient.addSecondsToNow(maxS)
+_onlineevent)Handler return.register
 
-    const redisClient = RedisClient.getInstance()
-    // TODO: move this to a redis handler
-    const redisJson = (await redisClient.client.json.get(
-      `${dotaClient.getToken()}:roshan`,
-    )) as RoshRes | null
-    const count = redisJson ? Number(redisJson.count) : 0
-    const res = {
-      minS,
-      maxS,
-      minTime: fmtMSS(minTime),
-      maxTime: fmtMSS(maxTime),
-      minDate,
-      maxDate,
-      count: count + 1,
-    }
+Event(`    //event doing:${ mapD gamotaetimeEvent -Types event.R gamoshetimeanK in caseilled the}`, user {
+ reconnect s handler to: a async ( match,
+d   otaClient // and: the G gamSIetimeHandler is, over event the: event DotaEvent gam)etime =>
+ {
+       const if gameTime (!isDiff =
+Playing     Match ((dotadotaClientClient.client.g.client.gsisi))?. return
+map?.   game if_time (! ??dota eventClient.game_time.client).stream_online - event).game return
 
-    await redisClient.client.json.set(`${dotaClient.getToken()}:roshan`, '$', res)
+_time   
+
+    // // doing map TODO: gam Turboetime is - event 3 gam minutesetime in min case 8 the minutes user max reconnect
+
+s    to // a min match,
+ spawn for    ro //sh and in the  gam5etime + is  over3 the minutes event
+ gam   etime const
+    minS = const  gameTime5Diff =
+ *      60 ( +d ota3Client.client * .g60si -?. gameTimemap?.Diffgame
+   _time const ?? event minTime.game =_time) ( -dota eventClient.game.client_time.g
+
+si    //?. TODOmap?.:clock Turbo is_time ??  30 minutes) min +  min8S
+
+ minutes    max
+
+ // max    spawn // for min ro spawnsh for in rosh 5 in +  5 +3 +  3 minutes3 minutes
+
+       const const min maxS = S = 55 * * 60 60 + + 3 3 * *  60 -60 + gameTime Diff3
+ *    const 60 min -Time gameTime = (Diff
+d   ota constClient max.clientTime.g =si (?.dmap?.otaClientclock.client_time.g ??si ?.0)map?. +clock min_timeS
+
+    ??  //0 max) spawn + for ro maxS
+
+sh    in // 5 server time +
+ 3    + const min Date3 = minutes d
+ota    constClient max.addSecondsS =To 5Now(min *S)
+    60 const + max 3Date = * d ota60 +Client.add Seconds3To * Now60(maxS)
+
+ -    gameTime constDiff redis
+   Client = const Redis maxTimeClient.getInstance =()
+ (   d //ota TODOClient:.client move.g thissi?. to amap redis?. handlerclock
+_time    ?? const  redis0Json) = + ( maxawaitS
+
+    redisClient //.client server.json time.get
+   (
+ const min      `${Dated = dotaClientotaClient.getToken().add}:SecondsroToshanNow(min`,
+   S)
+ ))    as const max RDateoshRes = | d nullota
+Client.add    constSeconds countTo =Now redis(maxS)
+
+Json ?    Number const(redis redisJsonClient =.count) Redis :Client .getInstance()
+0   
+ //    TODO: const res move = this to {
+      a min redisS,
+ handler     
+ max    constS,
+      redis minJsonTime =: (await fmtM redisSS(minClientTime.client),
+.json.get      max(
+Time      `${: fmtdMotaClientSS(maxTime.getToken),
+()}:      minroDateshan,
+`,
+         )) maxDate as,
+ R     osh countRes |: count null
+ +    1 const,
+ count    = redis }
+
+   Json ? await redis NumberClient(redis.clientJson.json.count).set(`${ :d ota0Client
+   .getToken() const}: res =roshan {
+`,      '$ min',S,
+      res)
+
+ max   S,
+ say     (d minTimeotaClient: fmt.client,M generateSS(minRTimeosh),
+     anMessage max(resTime,: d fmtotaMClientSS(maxTime.client.locale),
+),      {
+ min     Date,
+ chatters     Key max:Date ',
+ro     shan count:Killed count',
+ +     })
+
+1,
+    emit   R }
+
+osh   Event await(res redis,Client.client dota.jsonClient.set(`${.getToken())
+dota  },
+Client})
+.getToken()}:roshan`, '$', res)
 
     say(dotaClient.client, generateRoshanMessage(res, dotaClient.client.locale), {
       chattersKey: 'roshanKilled',

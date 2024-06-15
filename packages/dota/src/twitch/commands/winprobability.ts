@@ -1,79 +1,155 @@
-import { t } from 'i18next'
+ematch.jsimport'
+ {import { t } logger } from ' from '../../i18utilsnext/logger.js'
 
-import { DBSettings } from '../../settings.js'
-import { getWinProbability2MinAgo } from '../../stratz/livematch.js'
-import { logger } from '../../utils/logger.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
+import'
+ {import DB {Settings chat }Client from } '../../ fromsettings '../.jschat'
+Clientimport.js {'
+ getimportWin commandProbabilityHandler2 fromMin '../Alibgo/ }Command fromHandler '../../.jsstr'
 
-const WinRateCache: {
-  [id: string]: {
-    winRate: number
-    emote: string
-    gameTime: number
-    remainingCooldown: number
-  } | null
-} = {}
+atzconst/l WinivRateemCacheatch:.js {
+'
+ import [ {id: logger } string from]: '../../ {
+   utils/logger win.jsRate'
+:import number {
+    chatClient em }ote: from '../ string
+chatClient    gameTime.js'
+:import number command
+Handler    remaining from '../Cooldownlib:/ numberCommand
+Handler .js }'
 
-const API_COOLDOWN_SEC = 60
-const apiCooldown: { [key: string]: number } = {}
+ |const null Win
+Rate} =Cache: {}
 
-commandHandler.registerCommand('winprobability', {
-  aliases: ['win%', 'wp'],
-  onlyOnline: true,
-  dbkey: DBSettings.commandWinProbability,
-  handler: async (message) => {
-    const {
-      channel: { name: channel, client },
-    } = message
+const {
+  API_CO [idOLD:OWN string_SEC]: = {
+    60 win
+Rateconst: api numberCooldown
+:    { [ emotekey:: string string]:
+    number } gameTime: = number {}
 
-    const matchId = client.gsi?.map?.matchid
-    if (!matchId) {
+
+command   Handler.register remainingCooldownCommand(': numberwinprobability
+',  } {
+ |  null aliases
+:} ['win = {}
+
+%', 'const APIwp'],
+_COOLD OWN only_SECOnline =:  true60,
+
+ const db apikeyCooldown:: DB {Settings [.commandkeyWin:Probability string,
+]:  number handler }: = async {}
+
+ (commandmessageHandler).register =>Command {
+('   win constprobability {
+',      {
+ channel : aliases {: name [':win channel%',, ' clientwp },
+'],
+     } only =Online message:
+
+ true   ,
+ const  matchId db =key: client DB.gsiSettings.command?.mapWinProbability?.match,
+ id
+ handler:    if async ( (!matchmessage)Id =>) {
+ {
+         const chat {
+Client     .say channel(channel:, { t name(':game channelNotFound,', client { lng },
+   : message } =.channel.client message
+
+.locale    }))
+      const match returnId
+ =    client }
+
+.g    ifsi?. (!mapapi?.Cooldownmatch[channelid]
+ ||    Date.now() - apiCooldown[channel] if >= API_COOLDOWN (!_SEC * match1000)Id {
+) {
       chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
       return
     }
 
-    if (!apiCooldown[channel] || Date.now() - apiCooldown[channel] >= API_COOLDOWN_SEC * 1000) {
-      try {
-        apiCooldown[channel] = Date.now()
-        const matchDetails = await getWinProbability2MinAgo(Number.parseInt(matchId, 10))
-        const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
-        if (
-          lastWinRate &&
-          !matchDetails?.data.live.match?.completed &&
-          matchDetails?.data.live.match?.isUpdating
-        ) {
-          const isRadiant = client.gsi?.player?.team_name === 'radiant'
-          const winRate = Math.floor(
-            (isRadiant ? lastWinRate.winRate : 1 - lastWinRate.winRate) * 100,
-          )
+    if (!api     Cooldown try[channel {
+       ] || api DateCooldown[channel.now]() = - api Date.nowCooldown[channel()
+       ] const >= match API_CODetails =OLDOWN await get_SEC *Win Probability10020Min)Ago {
+     (Number try.parseInt {
+(matchId        api,Cooldown [channel10]))
+ =        Date const.now last()
+WinRate        const = match matchDetailsDetails =?. awaitdata.live getWin.matchProbability?.2liveMinWinARateValuesgo(Number.slice.parseInt(-(match1Id).,pop ()
+10       ))
+ if        (
+ const          last lastWinWinRateRate = &&
+          matchDetails !match?.dataDetails.live?..matchdata?..livelive.matchWin?.RatecompletedValues &&
+.slice          match(-Details1).?.popdata()
+.live       .match if?.is (
+         Updating
+ lastWin        )Rate &&
+ {
+                   const !match isDetailsRadi?.antdata =.live client.g.match?.sicompleted?. &&
+player          match?.Detailsteam?._namedata ===.live 'radi.match?.ant'
+is         Updating
+ const win        )Rate {
+ =          Math.floor const is(
+           Radiant (is = clientRadiant.g ?si?. lastWinplayer?.Rateteam.win_nameRate === : ' radi1ant - last'
+         WinRate const.win winRateRate) * 100,
+          = )
           WinRateCache[channel] = {
-            winRate,
-            emote: winRate > 50 ? 'Pog' : 'BibleThump',
-            gameTime: lastWinRate.time,
-            remainingCooldown: Math.floor(
-              (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[channel])) / 1000,
-            ),
-          }
-        } else {
-          WinRateCache[channel] = null
-        }
-      } catch (error) {
-        logger.error('Error fetching win probability:', error)
-        WinRateCache[channel] = null
-      }
-    }
+            win MathRate,
+.floor           (
+            emote (isRadiant ? lastWinRate.winRate : 1 - lastWinRate.winRate) * 100,
+          )
+          WinRateCache[channel]: = winRate {
+ >            win Rate50 ?,
+ '           P emogote:' : win 'RateB > ibleTh50 ?ump',
+ '           Pog gameTime:' last : 'WinRateB.timeibleTh,
+           ump',
+ remainingCooldown           : gameTime Math: last.floor(
+WinRate              (.time,
+API           _COOLD remainingOWNCooldown:_SEC * Math.floor (
+1000              ( - (APIDate_CO.nowOLD()OWN_SEC - * apiCooldown 100[channel]))0 / - 100 (Date0,
+.now           () ),
+ - api          }
+Cooldown[channel        }])) / else  {
+1000          Win,
+           Rate ),
+Cache         [channel }
+       ] = } else null
+ {
+                 Win }
+     RateCache } catch[channel (]error = null) {
 
-    if (WinRateCache[channel]) {
-      WinRateCache[channel]!.remainingCooldown = Math.floor(
-        (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[channel])) / 1000,
-      )
-    }
+               logger }
+     .error }('Error catch ( fetching winerror probability):', {
+ error       )
+ logger.error        Win('ErrorRateCache fetching[channel win probability] =:', error null
+)
+             Win }
+Rate    }
 
-    const response = WinRateCache[channel]
-      ? t('winprobability.winProbability', WinRateCache[channel]!)
-      : t('winprobability.winProbabilityDataNotAvailable', {
-          lng: message.channel.client.locale,
+Cache   [channel] const win =Rate null
+Cache      = Win }
+   RateCache }
+
+[channel    const];
+    response = if ( WinRatewinCacheRateCache[channel)]
+ {
+           ? win tRate('winCache.remainingprobability.winCooldown =Probability', Math Win.floor(
+RateCache        ([channelAPI] ??_CO {})
+OLDOWN      :_SEC * t(' 100win0probability.win - (ProbabilityDataDate.nowNot()Available', - {
+ apiCooldown          lng[channel: message])).channel / .client100.locale,
+0,
+          remaining     Cooldown )
+   : Math }
+
+   .floor(
+ const response            = (API winRate_COOLDCache
+OWN     _SEC ? *  t('1000winprobability - (.winDateProbability',.now() winRate -Cache api)
+Cooldown     [channel :])) / t(' 100winprobability0.win,
+         ProbabilityData ),
+Not        })
+
+Available',    {
+ chatClient          lng.say(channel: message, response.channel.client)
+ .locale,
+ },
+})
           remainingCooldown: Math.floor(
             (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[channel])) / 1000,
           ),
