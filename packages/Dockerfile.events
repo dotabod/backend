@@ -19,7 +19,7 @@ FROM base as builder
 # Copy source code and build configurations
 COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 
-WORKDIR $BUILD_CONTEXT/
+WORKDIR /app/$BUILD_CONTEXT/
 RUN bun run build
 
 #-------------------------
@@ -35,11 +35,14 @@ LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
     org.opencontainers.image.licenses="AGPL-3.0"
 
 WORKDIR /app
-COPY --from=builder /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
-COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 COPY --from=builder /app/node_modules ./node_modules
 
+COPY --from=builder /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
+COPY --from=builder /app/$BUILD_CONTEXT/src $BUILD_CONTEXT/src/
+COPY --from=builder /app/$BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
+COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
+
 # Environment and CMD
-WORKDIR $BUILD_CONTEXT/
+WORKDIR /app/$BUILD_CONTEXT/
 ENV NODE_ENV=$NODE_ENV
 CMD bun run docker:$NODE_ENV
