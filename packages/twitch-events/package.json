@@ -10,7 +10,7 @@
   "private": true,
   "scripts": {
     "docker:production": "bun ./dist/index.js",
-    "docker:development": "bun --watch src/index.ts",
+    "docker:development": "bun src/index.ts",
     "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
   },
   "dependencies": {
