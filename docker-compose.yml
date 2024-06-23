@@ -10,7 +10,7 @@ services:
     restart: on-failure:5
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.chat
+      dockerfile: ./packages/Dockerfile.bun
       args:
         - NODE_ENV=${NODE_ENV:-development}
         - BUILD_CONTEXT=packages/twitch-chat
@@ -78,7 +78,7 @@ services:
     restart: on-failure:5
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.events
+      dockerfile: ./packages/Dockerfile.bun
       args:
         - NODE_ENV=${NODE_ENV:-development}
         - BUILD_CONTEXT=packages/twitch-events
@@ -119,7 +119,7 @@ services:
     # random
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.dota
+      dockerfile: ./packages/Dockerfile.bun
       args:
         - NODE_ENV=${NODE_ENV:-development}
         - BUILD_CONTEXT=packages/dota
