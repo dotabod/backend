@@ -11,8 +11,13 @@ services:
 
   twitch-events:
     image: "ghcr.io/dotabod/twitch-events:v2.1"
-    volumes:
-      - $PWD/packages/twitch-events/src:/app/packages/twitch-events/src
+    develop:
+      watch:
+        - action: sync
+          path: $PWD/packages/twitch-events/src
+          target: /app/packages/twitch-events/src
+        - action: rebuild
+          path: $PWD/packages/twitch-events/package.json
 
   dota:
     image: "ghcr.io/dotabod/dota:v2.16"
