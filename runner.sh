@@ -60,15 +60,50 @@ gentypes() {
 
 backup() {
     echo "Backing up database"
+    DATABASE_URL=""
     echo "URL is: ${DATABASE_URL}"
-    /opt/homebrew/opt/libpq/bin/pg_dump "${DATABASE_URL%\?*}" --no-comments -F c -N _realtime -N supabase_functions >ok.sql
+    supabase db dump --db-url "${DATABASE_URL%\?*}" -f ./roles.sql --role-only
+    supabase db dump --db-url "${DATABASE_URL%\?*}" -f ./schema.sql
+    supabase db dump --db-url "${DATABASE_URL%\?*}" -f ./seed.sql --use-copy --data-only
+
+    # Determine the correct pg_dump command
+    if command -v pg_dump >/dev/null; then
+        PG_DUMP_COMMAND=(pg_dump)
+    else
+        PG_DUMP_COMMAND=("C:/Program Files/PostgreSQL/15/bin/pg_dump.exe")
+    fi
+
+    "${PG_DUMP_COMMAND[@]}" -t '"cron"."job"' --data-only --column-inserts --file=cron.sql "${DATABASE_URL%\?*}"
 }
 
 restore() {
     echo "Restoring database"
     echo "URL is: ${DATABASE_URL}"
-    /opt/homebrew/opt/libpq/bin/pg_restore -d "${DATABASE_URL%\?*}" ok.sql
-    rm ok.sql
+    if command -v psql >/dev/null; then
+        PSQL_COMMAND=(psql)
+    else
+        PSQL_COMMAND=("C:/Program Files/PostgreSQL/15/bin/psql.exe")
+    fi
+    DB_URL=""
+    "${PSQL_COMMAND[@]}" -c "DELETE FROM cron.job" "$DB_URL"
+    "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.users CASCADE" "$DB_URL"
+    "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.streams CASCADE" "$DB_URL"
+    "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.steam_accounts CASCADE" "$DB_URL"
+    "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.settings CASCADE" "$DB_URL"
+    "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.mods CASCADE" "$DB_URL"
+    "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.bets CASCADE" "$DB_URL"
+    "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.accounts CASCADE" "$DB_URL"
+    # Removed for now: --file roles.sql \
+    "${PSQL_COMMAND[@]}" \
+        --single-transaction \
+        --variable ON_ERROR_STOP=1 \
+        --file schema.sql \
+        --file cron.sql \
+        --command 'SET session_replication_role = replica' \
+        --file seed.sql \
+        "$DB_URL"
+
+    # rm -f roles.sql schema.sql data.sql
 }
 
 changelog() {

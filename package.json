@@ -8,6 +8,7 @@
     "nps": "doppler run -- bash services/mongodb/updatenps.sh",
     "exportnps": "doppler run -- bash services/mongodb/export.sh",
     "just": "doppler run -- bash runner.sh",
+    "just-prod": "DOPPLER_CONFIG=prd doppler run -- bash runner.sh",
     "prepare": "husky install"
   },
   "trustedDependencies": ["steam-resources-fork", "steam-fork"],
