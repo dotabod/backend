@@ -20,7 +20,7 @@ class SetupSupabase {
   DEV_CHANNELIDS: string[]
 
   constructor() {
-    this.IS_DEV = process.env.NODE_ENV !== 'production'
+    this.IS_DEV = process.env.DOTABOD_ENV !== 'production'
     this.DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
     this.DEV_CHANNELIDS = process.env.DEV_CHANNELIDS?.split(',') ?? []
     this.channel = supabase.channel(`${this.IS_DEV ? 'dev-' : ''}dota`)

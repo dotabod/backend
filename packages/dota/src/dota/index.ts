@@ -79,7 +79,7 @@ const startServer = () => {
 }
 
 const main = async () => {
-  logger.info('Starting on', { env: process.env.NODE_ENV })
+  logger.info('Starting on', { env: process.env.DOTABOD_ENV })
 
   try {
     await setupRedisClient()

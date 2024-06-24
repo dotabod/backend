@@ -28,7 +28,7 @@ RUN bun run build
 FROM oven/bun:latest as prod
 
 ARG BUILD_CONTEXT
-ARG NODE_ENV
+ARG DOTABOD_ENV
 
 # Meta-data and labels
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
@@ -45,5 +45,5 @@ COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 
 # Environment and CMD
 WORKDIR /app/$BUILD_CONTEXT/
-ENV NODE_ENV=$NODE_ENV
-CMD bun run docker:$NODE_ENV
+ENV DOTABOD_ENV=$DOTABOD_ENV
+CMD bun run docker:$DOTABOD_ENV

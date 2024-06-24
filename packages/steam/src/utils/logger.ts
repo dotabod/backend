@@ -1,7 +1,7 @@
 import { createLogger, format, transports } from 'winston'
 const { combine, printf, errors, json, timestamp } = format
 
-const isDev = process.env.NODE_ENV === 'development'
+const isDev = process.env.DOTABOD_ENV === 'development'
 
 const handleErrors = format((info) => {
   if (info instanceof Error) {

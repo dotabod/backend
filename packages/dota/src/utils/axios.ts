@@ -22,7 +22,7 @@ axios.interceptors.response.use((response) => {
 })
 
 axiosRetry(axios, {
-  retries: process.env.NODE_ENV === 'development' ? 2 : 7, // number of retries
+  retries: process.env.DOTABOD_ENV === 'development' ? 2 : 7, // number of retries
   retryDelay: (retryCount: number) => {
     return retryCount * 4000 // time interval between retries
   },

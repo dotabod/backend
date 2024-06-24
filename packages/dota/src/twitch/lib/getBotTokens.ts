@@ -5,6 +5,7 @@ export async function getBotTokens_DEV_ONLY() {
     .from('accounts')
     .select('refresh_token, access_token, expires_in, scope, obtainment_timestamp')
     .eq('provider', 'twitch')
+    // biome-ignore lint/style/noNonNullAssertion: <explanation>
     .eq('providerAccountId', process.env.TWITCH_BOT_PROVIDERID!)
     .single()
 

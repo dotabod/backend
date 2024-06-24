@@ -12,7 +12,7 @@ services:
       context: .
       dockerfile: ./packages/Dockerfile.bun
       args:
-        - NODE_ENV=${NODE_ENV:-development}
+        - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/twitch-chat
       x-bake:
         cache-from:
@@ -34,7 +34,7 @@ services:
       - DEV_CHANNELS
       - DEV_CHANNELIDS
       - MONGO_URL
-      - NODE_ENV
+      - DOTABOD_ENV
       - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
@@ -47,7 +47,7 @@ services:
       context: .
       dockerfile: ./packages/Dockerfile.steam
       args:
-        - NODE_ENV=${NODE_ENV:-development}
+        - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/steam
       x-bake:
         cache-from:
@@ -67,7 +67,7 @@ services:
       - STEAM_PASS
       - STEAM_USER
       - STEAM_WEB_API
-      - NODE_ENV
+      - DOTABOD_ENV
 
   twitch-events:
     ports:
@@ -80,7 +80,7 @@ services:
       context: .
       dockerfile: ./packages/Dockerfile.bun
       args:
-        - NODE_ENV=${NODE_ENV:-development}
+        - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/twitch-events
       x-bake:
         cache-from:
@@ -104,7 +104,7 @@ services:
       - EVENTSUB_HOST
       - HOOKS_HOST
       - MONGO_URL
-      - NODE_ENV
+      - DOTABOD_ENV
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
@@ -121,7 +121,7 @@ services:
       context: .
       dockerfile: ./packages/Dockerfile.bun
       args:
-        - NODE_ENV=${NODE_ENV:-development}
+        - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/dota
       x-bake:
         cache-from:
@@ -146,7 +146,7 @@ services:
       - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
       - NEW_RELIC_LOG=stdout
       - NEW_RELIC_LICENSE_KEY
-      - NODE_ENV
+      - DOTABOD_ENV
       - STEAM_WEB_API
       - STRATZ_TOKEN
       - TWITCH_BOT_PROVIDERID

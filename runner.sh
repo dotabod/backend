@@ -1,11 +1,11 @@
 #!/bin/bash
 
-[ -z "$NODE_ENV" ] && echo "NODE_ENV is not set. Missing doppler or .env secrets" && exit 1
+[ -z "$DOTABOD_ENV" ] && echo "DOTABOD_ENV is not set. Missing doppler or .env secrets" && exit 1
 
 app=${2:-""}
 
 dockerfile_set() {
-    [ "$NODE_ENV" = "production" ] && echo "docker-compose.yml" || echo "docker-compose.yml -f docker-compose-dev.yml"
+    [ "$DOTABOD_ENV" = "production" ] && echo "docker-compose.yml" || echo "docker-compose.yml -f docker-compose-dev.yml"
 }
 
 docker_command() {
@@ -49,7 +49,7 @@ gentypes() {
         "packages/twitch-events/src/db"
     )
 
-    echo "Generating types for project $PROJECT_ID on $NODE_ENV"
+    echo "Generating types for project $PROJECT_ID on $DOTABOD_ENV"
     for OUTPUT_DIR in "${OUTPUT_DIRS[@]}"; do
         OUTPUT_FILE="$OUTPUT_DIR/supabase-types.ts"
         npx supabase gen types typescript --project-id "$PROJECT_ID" --schema public >"$OUTPUT_FILE"
@@ -108,7 +108,7 @@ stop() {
 }
 
 restart() {
-    [ "$NODE_ENV" = "production" ] && discord_notify "Server update, restarting Dotabod!"
+    [ "$DOTABOD_ENV" = "production" ] && discord_notify "Server update, restarting Dotabod!"
     down
     up
 }
@@ -149,12 +149,12 @@ login() {
 
 up() {
     docker_login
-    echo "Starting server with database $NODE_ENV at $dockerfile"
+    echo "Starting server with database $DOTABOD_ENV at $dockerfile"
     docker_command watch "$app"
 }
 
 update() {
-    [ "$NODE_ENV" = "production" ] && discord_notify "Server update, restarting Dotabod! Here's what's coming: https://github.com/dotabod/backend/compare/$COMMIT_HASH...master"
+    [ "$DOTABOD_ENV" = "production" ] && discord_notify "Server update, restarting Dotabod! Here's what's coming: https://github.com/dotabod/backend/compare/$COMMIT_HASH...master"
     git pull || true
     buildall
     up

@@ -6,7 +6,7 @@ import { getChannels } from './getChannels.js'
 export async function getChatClient() {
   const chatClient = new ChatClient({
     isAlwaysMod: true,
-    botLevel: process.env.NODE_ENV === 'production' ? 'verified' : undefined,
+    botLevel: process.env.DOTABOD_ENV === 'production' ? 'verified' : undefined,
     authProvider: await getBotAuthProvider(),
     channels: getChannels,
     webSocket: true,

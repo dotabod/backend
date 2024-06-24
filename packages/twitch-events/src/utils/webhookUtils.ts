@@ -13,9 +13,9 @@ import { isAuthenticated } from './authUtils.js'
 export const setupWebhooks = () => {
   const webhookApp = express()
 
-  const { NODE_ENV } = process.env
+  const { DOTABOD_ENV } = process.env
 
-  const IS_DEV = NODE_ENV !== 'production'
+  const IS_DEV = DOTABOD_ENV !== 'production'
   const DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
   const DEV_CHANNELIDS = process.env.DEV_CHANNELIDS?.split(',') ?? []
 

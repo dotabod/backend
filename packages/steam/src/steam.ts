@@ -31,7 +31,7 @@ interface CacheEntry {
 const MAX_CACHE_SIZE = 5000
 const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 
-const isDev = process.env.NODE_ENV === 'development'
+const isDev = process.env.DOTABOD_ENV === 'development'
 
 function onGCSpectateFriendGameResponse(message: any, callback: any) {
   const response: { server_steamid: Long; watch_live_result: number } =
@@ -284,7 +284,7 @@ class Dota {
   }
 
   isProduction() {
-    return process.env.NODE_ENV === 'production'
+    return process.env.DOTABOD_ENV === 'production'
   }
 
   public getUserSteamServer = (steam32Id: number | string): Promise<string> => {
