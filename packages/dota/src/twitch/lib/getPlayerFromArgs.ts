@@ -17,7 +17,7 @@ export async function getPlayerFromArgs({
   command: string
 }) {
   const { matchPlayers: players } = await getAccountsFromMatch({ gsi: packet })
-  const heroIdsInMatch = players.map((player) => player.heroid || 0)
+  const heroIdsInMatch = players.map((player) => player.heroid)
   const heroList = heroIdsInMatch
     .map((heroId) => getHeroById(heroId))
     .map((hero) => hero?.localized_name)

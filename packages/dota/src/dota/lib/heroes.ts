@@ -678,7 +678,7 @@ export function getHeroById(id?: number) {
   return null
 }
 
-export function getHeroByName(name: string, heroIdsInMatch: number[]) {
+export function getHeroByName(name: string, heroIdsInMatch: (number | undefined)[]) {
   if (!name) return null
 
   // only keep a-z in name

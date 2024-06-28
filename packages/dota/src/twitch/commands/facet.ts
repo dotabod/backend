@@ -43,7 +43,7 @@ commandHandler.registerCommand('facet', {
           channel,
           t('facetNotFound', {
             lng: message.channel.client.locale,
-            heroName: heroData?.localized_name ?? 'Unknown',
+            heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
           }),
         )
         return
