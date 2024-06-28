@@ -11,59 +11,71 @@ commandHandler.registerCommand('facet', {
   dbkey: DBSettings.commandFacet,
   handler: async (message, args, command) => {
     const {
-      channel: { name: channel, client },
+      channel: { name: channelName, client: channelClient },
     } = message
 
-    const gsi = gsiHandlers.get(client.token)
+    const gsiHandler = gsiHandlers.get(channelClient.token)
 
-    if (!gsi || !client.gsi?.map?.matchid) {
-      chatClient.say(
-        message.channel.name,
-        t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-      )
+    if (!isValidGSIHandler(gsiHandler, channelClient.gsi?.map?.matchid)) {
+      sendMessage(channelName, t('notPlaying', { emote: 'PauseChamp', lng: channelClient.locale }))
       return
     }
 
     try {
-      const { hero, playerIdx } = await findAccountFromCmd(client.gsi, args, client.locale, command)
-      const heroData = getHeroById(hero?.id)
-
-      if (typeof hero?.id !== 'number' || !heroData) {
-        chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
+      const { hero, playerIdx } = await findAccountFromCmd(
+        channelClient.gsi,
+        args,
+        channelClient.locale,
+        command,
+      )
+      if (!isValidHero(hero)) {
+        sendMessage(channelName, t('gameNotFound', { lng: channelClient.locale }))
         return
       }
 
-      const facet =
-        DOTA_HERO_ABILITIES?.[heroData.key as keyof typeof DOTA_HERO_ABILITIES]?.facets[
-          hero.facet - 1
-        ]
+      const heroData = getHeroById(hero.id)
+      const heroFacet = getHeroFacet(heroData, hero.facet)
 
-      if (!facet) {
-        chatClient.say(
-          channel,
+      if (!heroFacet) {
+        sendMessage(
+          channelName,
           t('facetNotFound', {
-            lng: message.channel.client.locale,
-            heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
+            lng: channelClient.locale,
+            heroName: getHeroNameOrColor(hero.id, playerIdx),
           }),
         )
         return
       }
 
-      chatClient.say(
-        channel,
+      sendMessage(
+        channelName,
         t('facet', {
-          lng: message.channel.client.locale,
-          heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
-          facetTitle: facet.title,
-          facetDescription: facet.description,
+          lng: channelClient.locale,
+          heroName: getHeroNameOrColor(hero.id, playerIdx),
+          facetTitle: heroFacet.title,
+          facetDescription: heroFacet.description,
         }),
       )
-      return
-    } catch (e: any) {
-      chatClient.say(
-        message.channel.name,
-        e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-      )
+    } catch (error: any) {
+      sendMessage(channelName, error.message ?? t('gameNotFound', { lng: channelClient.locale }))
     }
   },
 })
+
+const isValidGSIHandler = (gsiHandler: any, matchId: any): boolean => {
+  return !!gsiHandler && !!matchId
+}
+
+const isValidHero = (hero: any): boolean => {
+  return typeof hero?.id === 'number' && !!getHeroById(hero.id)
+}
+
+const getHeroFacet = (heroData: any, facetIndex: number) => {
+  return DOTA_HERO_ABILITIES?.[heroData.key as keyof typeof DOTA_HERO_ABILITIES]?.facets[
+    facetIndex - 1
+  ]
+}
+
+const sendMessage = (channelName: string, message: string) => {
+  chatClient.say(channelName, message)
+}
