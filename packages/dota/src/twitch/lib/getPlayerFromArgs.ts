@@ -38,6 +38,8 @@ export async function getPlayerFromArgs({
 
   const firstArg = args[0].toLowerCase().trim()
   const heroColorIndex = heroColors.findIndex((heroColor) => heroColor.toLowerCase() === firstArg)
+  // hero name input or alias
+  const hero = getHeroByName(args.join('').toLowerCase().trim(), heroIdsInMatch)
 
   // 1-10 input
   const slotRequest = Number(firstArg)
@@ -47,9 +49,6 @@ export async function getPlayerFromArgs({
     // color input
     playerIdx = heroColorIndex
   } else {
-    // hero name input or alias
-    const hero = getHeroByName(args.join('').toLowerCase().trim(), heroIdsInMatch)
-
     if (packet?.hero?.id === hero?.id) {
       playerIdx = players.findIndex((player) => player.heroid === hero?.id)
     } else {
@@ -67,5 +66,7 @@ export async function getPlayerFromArgs({
     )
   }
 
-  return { playerIdx, player: { ...packet?.player, ...packet?.hero, ...players[playerIdx] } }
+  const hasMoreDataForCurrentHero = packet?.hero?.id === hero?.id
+  const moreData = hasMoreDataForCurrentHero ? { ...packet?.player, ...packet?.hero } : {}
+  return { playerIdx, player: { ...players[playerIdx], ...moreData } }
 }
