@@ -16,6 +16,8 @@ twitchChat.on('connect', () => {
   logger.info('We alive on dotabod chat server!')
 })
 
+const lastMissingUserMessageTimestamps: Record<string, number> = {}
+
 twitchChat.on(
   'msg',
   async (
@@ -54,15 +56,20 @@ twitchChat.on(
     // This runs every command, but its cached so no hit on db
     const client = await getDBUser({ token: undefined, twitchId: channelId })
     if (!client || !channelId) {
-      chatClient.say(channel, t('missingUser', { lng: 'en' }))
+      const now = Date.now()
+      const lastMessageTime = lastMissingUserMessageTimestamps[channel] || 0
+      if (now - lastMessageTime > 10000) {
+        chatClient.say(channel, t('missingUser', { lng: 'en' }))
+        lastMissingUserMessageTimestamps[channel] = now
+      }
       return
     }
 
     const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, client.settings)
-    const toggleCommand = commandHandler.commands.get('toggle')!
+    const toggleCommand = commandHandler.commands.get('toggle')
     if (
       isBotDisabled &&
-      !toggleCommand.aliases?.includes(text.replace('!', '').split(' ')[0]) &&
+      !toggleCommand?.aliases?.includes(text.replace('!', '').split(' ')[0]) &&
       text.split(' ')[0] !== '!toggle'
     ) {
       return
