@@ -13,3 +13,5 @@ newrelic_agent.log
 coverage
 dist
 *.tsbuildinfo
+!.vscode/extensions.json
+!.vscode/settings.json
