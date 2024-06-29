@@ -14,13 +14,20 @@ commandHandler.registerCommand('online', {
     } = message
 
     const isOnlineCommand = command === 'online'
+    const oppositeCommand = isOnlineCommand ? 'offline' : 'online'
+    const state = isOnlineCommand
+      ? t('online', { lng: client.locale })
+      : t('offline', { lng: client.locale })
+
     const streamOnline = client.stream_online
-
-    if ((streamOnline && isOnlineCommand) || (!streamOnline && !isOnlineCommand)) {
-      const state = streamOnline ? 'online' : 'offline'
-      const oppositeCommand = isOnlineCommand ? 'offline' : 'online'
-
-      notifyStreamStatus(message.channel.name, client.locale, state, oppositeCommand)
+    if ((!streamOnline && isOnlineCommand) || (streamOnline && !isOnlineCommand)) {
+      notifyStreamStatus(
+        message.channel.name,
+        client.locale,
+        state,
+        oppositeCommand,
+        isOnlineCommand ? 'on' : 'off',
+      )
       refreshSettings(client.token)
       return
     }
@@ -28,7 +35,7 @@ commandHandler.registerCommand('online', {
     await updateStreamStatus(client.token, isOnlineCommand)
 
     refreshSettings(client.token)
-    notifyStreamStatus(message.channel.name, client.locale, '', isOnlineCommand ? 'on' : 'off')
+    notifyStreamStatus(message.channel.name, client.locale, state, oppositeCommand)
   },
 })
 
@@ -44,7 +51,7 @@ const notifyStreamStatus = (
     t('stream', {
       lng: locale,
       channel: channelName,
-      state: t(state, { lng: locale }),
+      state,
       command,
       context,
     }),
