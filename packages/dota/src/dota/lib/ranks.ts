@@ -12,6 +12,11 @@ export function rankTierToMmr(rankTier: string | number) {
   }
   const intRankTier = Number(rankTier)
 
+  // Just gonna guess an immortal without standing is 6k mmr
+  if (intRankTier > 77) {
+    return 6000
+  }
+
   // Floor to 5
   const stars = intRankTier % 10 > 5 ? 5 : intRankTier % 10
   const rank = ranks.find((rank) =>
@@ -48,7 +53,7 @@ export async function lookupLeaderRank(
   }
 
   const cacheKey = `${steam32Id}:medal`
-  let result
+  let result: LeaderRankData
 
   const redisClient = RedisClient.getInstance()
   // Try to get the cached result first
