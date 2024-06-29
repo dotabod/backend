@@ -28,8 +28,9 @@ export async function calculateAvg({ locale, currentMatchId, players }: Avg): Pr
 
   if (!rank && !avgLeader) return 'Immortal'
   if (!rank) return `${avg || `#${avgLeader}`}`
+  if (avgLeader) return `#${avgLeader}`
 
-  if ('standing' in rank || avgLeader) {
+  if ('standing' in rank) {
     return 'Immortal'
   }
 
