@@ -5,7 +5,7 @@ export async function getAccountIds(): Promise<string[]> {
 
   const devIds = process.env.DEV_CHANNELIDS?.split(',') ?? []
   const devChannels = process.env.DEV_CHANNELS?.split(',') ?? []
-  const isDevMode = process.env.NODE_ENV === 'development'
+  const isDevMode = process.env.DOTABOD_ENV === 'development'
   const providerIds: string[] = []
 
   if (isDevMode && !devIds.length) {

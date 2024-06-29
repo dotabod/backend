@@ -3,7 +3,7 @@ import supabase from '../../db/supabase.js'
 export async function getChannels(): Promise<string[]> {
   console.log('[TWITCHSETUP] Running getChannels in chat listener')
 
-  const isDevMode = process.env.NODE_ENV === 'development'
+  const isDevMode = process.env.DOTABOD_ENV === 'development'
   const devChannels = process.env.DEV_CHANNELS?.split(',') ?? []
   const users: string[] = []
 
