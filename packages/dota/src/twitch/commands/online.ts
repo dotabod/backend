@@ -28,14 +28,12 @@ commandHandler.registerCommand('online', {
         oppositeCommand,
         isOnlineCommand ? 'on' : 'off',
       )
-      client.stream_online = isOnlineCommand
+      // client.stream_online = isOnlineCommand
       refreshSettings(client.token)
+      await updateStreamStatus(client.token, isOnlineCommand)
       return
     }
 
-    await updateStreamStatus(client.token, isOnlineCommand)
-
-    refreshSettings(client.token)
     notifyStreamStatus(message.channel.name, client.locale, state, oppositeCommand)
   },
 })
