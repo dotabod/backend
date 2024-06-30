@@ -28,6 +28,7 @@ commandHandler.registerCommand('online', {
         oppositeCommand,
         isOnlineCommand ? 'on' : 'off',
       )
+      client.stream_online = isOnlineCommand
       refreshSettings(client.token)
       return
     }
