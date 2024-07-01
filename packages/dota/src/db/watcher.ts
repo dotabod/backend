@@ -119,7 +119,7 @@ class SetupSupabase {
           client.stream_online = newObj.stream_online
 
           // They go offline
-          if (!client.stream_online && oldObj.stream_online) {
+          if (!newObj.stream_online && oldObj.stream_online) {
             return
           }
 
