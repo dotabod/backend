@@ -1,7 +1,7 @@
 import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
 import type { SocketClient } from '../types.js'
 import { deleteRedisData } from './GSIHandler.js'
-import { gsiHandlers, twitchIdToToken } from './lib/consts.js'
+import { gsiHandlers, twitchIdToToken, twitchNameToToken } from './lib/consts.js'
 
 // This will hold the last POST request timestamp for each token
 export const tokenLastPostTimestamps: Map<string, number> = new Map()
@@ -29,6 +29,7 @@ export async function clearCacheForUser(client?: SocketClient | null) {
 
   const accountId = client.Account?.providerAccountId ?? ''
   twitchIdToToken.delete(accountId)
+  twitchNameToToken.delete(client.name)
 
   const authProvider = getAuthProvider()
   authProvider.removeUser(accountId)

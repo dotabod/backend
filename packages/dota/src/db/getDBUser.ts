@@ -1,6 +1,12 @@
 import { GSIHandler } from '../dota/GSIHandler.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
-import { gsiHandlers, invalidTokens, lookingupToken, twitchIdToToken } from '../dota/lib/consts.js'
+import {
+  gsiHandlers,
+  invalidTokens,
+  lookingupToken,
+  twitchIdToToken,
+  twitchNameToToken,
+} from '../dota/lib/consts.js'
 import type { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
 import supabase from './supabase.js'
@@ -161,6 +167,7 @@ export default async function getDBUser({
 
     gsiHandlers.set(userInfo.id, gsiHandler)
     twitchIdToToken.set(Account.providerAccountId, userInfo.id)
+    twitchNameToToken.set(userInfo.name.toLowerCase(), userInfo.id)
   }
 
   deleteLookupToken(lookupToken)

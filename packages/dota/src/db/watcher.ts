@@ -3,10 +3,11 @@ import { t } from 'i18next'
 import { clearCacheForUser } from '../dota/clearCacheForUser.js'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
-import { gsiHandlers } from '../dota/lib/consts.js'
+import { didTellUser, gsiHandlers } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
 import { chatClient } from '../twitch/chatClient.js'
+import { twitchChat } from '../twitch/index.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
@@ -40,8 +41,11 @@ class SetupSupabase {
   }
 
   toggleHandler = async (userId: string, enable: boolean) => {
+    if (this.IS_DEV && !this.DEV_CHANNELIDS.includes(userId)) return
+    if (!this.IS_DEV && this.DEV_CHANNELIDS.includes(userId)) return
+
     const client = await getDBUser({ token: userId })
-    if (!client || !this.shouldHandleDevChannel(client.name)) return
+    if (!client) return
 
     toggleDotabod(userId, enable, client.name, client.locale)
   }
@@ -78,6 +82,13 @@ class SetupSupabase {
           const newObj = payload.new
           const oldObj = payload.old
 
+          if (newObj.scope !== oldObj.scope) {
+            const client = findUser(newObj.userId)
+            if (client?.Account) {
+              client.Account.scope = newObj.scope
+            }
+          }
+
           // The frontend will set it to false when they relogin
           // Which allows us to update the authProvider object
           if (newObj.requires_refresh === false && oldObj.requires_refresh === true) {
@@ -108,20 +119,20 @@ class SetupSupabase {
           client.stream_online = newObj.stream_online
 
           // They go offline
-          if (!client.stream_online && oldObj.stream_online) {
+          if (!newObj.stream_online && oldObj.stream_online) {
             return
           }
 
           // They come online
           if (client.stream_online && !oldObj.stream_online) {
-            const connectedUser = gsiHandlers.get(client.token)
-            if (!connectedUser) return
-
-            const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
             const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
             const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
 
-            if (connectedUser.client.Account?.requires_refresh && betsEnabled) {
+            const hasNewestScopes = client.Account?.scope?.includes('channel:bot')
+            const requiresRefresh = client.Account?.requires_refresh
+            if ((!hasNewestScopes || requiresRefresh) && !didTellUser.has(client.name)) {
+              didTellUser.add(client.name)
+
               const { data, error } = await supabase
                 .from('bets')
                 .select('created_at')
@@ -131,33 +142,25 @@ class SetupSupabase {
 
               if (data?.length && !error) {
                 logger.info('[WATCHER USER] Sending refresh token messsage', {
-                  name: connectedUser.client.name,
-                  twitchId: connectedUser.client.Account.providerAccountId,
-                  token: connectedUser.client.token,
+                  name: client.name,
+                  twitchId: client.Account?.providerAccountId,
+                  token: client.token,
                 })
                 chatClient.say(
-                  connectedUser.client.name,
+                  client.name,
                   t('refreshToken', {
-                    lng: connectedUser.client.locale,
-                    channel: connectedUser.client.name,
+                    lng: client.locale,
+                    channel: client.name,
                   }),
                 )
               }
             }
-            connectedUser.enable()
           }
 
           if (typeof newObj.stream_start_date === 'string') {
             client.stream_start_date = new Date(newObj.stream_start_date)
           } else {
             client.stream_start_date = newObj.stream_start_date
-          }
-
-          async function handler() {
-            if (!client) return
-
-            const deets = await getRankDetail(newObj.mmr, client.steam32Id)
-            server.io.to(client.token).emit('update-medal', deets)
           }
 
           // dont overwrite with 0 because we use this variable to track currently logged in mmr
@@ -170,7 +173,8 @@ class SetupSupabase {
               mmr: newObj.mmr,
             })
             try {
-              void handler()
+              const deets = await getRankDetail(newObj.mmr, client.steam32Id)
+              server.io.to(client.token).emit('update-medal', deets)
             } catch (e) {
               logger.error('Error in watcher postgres update', { e })
             }

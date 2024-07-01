@@ -14,11 +14,6 @@
     "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.43.4",
-    "@twurple/api": "6.0.9",
-    "@twurple/auth": "6.0.9",
-    "@twurple/chat": "6.0.9",
-    "@twurple/eventsub-base": "6.0.9",
     "@twurple/eventsub-http": "6.0.9",
     "express": "^4.19.2",
     "express-body-parser-error-handler": "^1.0.7",
