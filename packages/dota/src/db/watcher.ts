@@ -134,12 +134,11 @@ class SetupSupabase {
 
             const hasNewestScopes = client.Account?.scope?.includes('channel:bot')
             if (!hasNewestScopes && !didTellUser.has(client.name.toLowerCase())) {
-              twitchChat.emit(
-                'say',
-                client.name.toLowerCase(),
+              chatClient.say(
+                connectedUser.client.name,
                 t('refreshToken', {
-                  lng: client.locale,
-                  channel: `@${client.name.toLowerCase().replace('#', '')}`,
+                  lng: connectedUser.client.locale,
+                  channel: connectedUser.client.name,
                 }),
               )
               didTellUser.add(client.name.toLowerCase())
