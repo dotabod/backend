@@ -82,6 +82,13 @@ class SetupSupabase {
           const newObj = payload.new
           const oldObj = payload.old
 
+          if (newObj.scope !== oldObj.scope) {
+            const client = findUser(newObj.userId)
+            if (client?.Account) {
+              client.Account.scope = newObj.scope
+            }
+          }
+
           // The frontend will set it to false when they relogin
           // Which allows us to update the authProvider object
           if (newObj.requires_refresh === false && oldObj.requires_refresh === true) {
@@ -136,10 +143,7 @@ class SetupSupabase {
                 }),
               )
               didTellUser.add(client.name.toLowerCase())
-              return
-            }
-
-            if (connectedUser.client.Account?.requires_refresh && betsEnabled) {
+            } else if (connectedUser.client.Account?.requires_refresh && betsEnabled) {
               const { data, error } = await supabase
                 .from('bets')
                 .select('created_at')
