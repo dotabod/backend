@@ -163,13 +163,6 @@ class SetupSupabase {
             client.stream_start_date = newObj.stream_start_date
           }
 
-          async function handler() {
-            if (!client) return
-
-            const deets = await getRankDetail(newObj.mmr, client.steam32Id)
-            server.io.to(client.token).emit('update-medal', deets)
-          }
-
           // dont overwrite with 0 because we use this variable to track currently logged in mmr
           if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
             client.mmr = newObj.mmr
@@ -180,7 +173,8 @@ class SetupSupabase {
               mmr: newObj.mmr,
             })
             try {
-              void handler()
+              const deets = await getRankDetail(newObj.mmr, client.steam32Id)
+              server.io.to(client.token).emit('update-medal', deets)
             } catch (e) {
               logger.error('Error in watcher postgres update', { e })
             }
