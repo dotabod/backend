@@ -6,8 +6,8 @@ import findUser from '../dota/lib/connectedStreamers.js'
 import { didTellUser, gsiHandlers } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
-import { twitchChat } from '../twitch/chatClient'
 import { chatClient } from '../twitch/chatClient.js'
+import { twitchChat } from '../twitch/index.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
@@ -41,8 +41,11 @@ class SetupSupabase {
   }
 
   toggleHandler = async (userId: string, enable: boolean) => {
+    if (this.IS_DEV && !this.DEV_CHANNELIDS.includes(userId)) return
+    if (!this.IS_DEV && this.DEV_CHANNELIDS.includes(userId)) return
+
     const client = await getDBUser({ token: userId })
-    if (!client || !this.shouldHandleDevChannel(client.name)) return
+    if (!client) return
 
     toggleDotabod(userId, enable, client.name, client.locale)
   }
