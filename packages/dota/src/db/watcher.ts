@@ -125,24 +125,14 @@ class SetupSupabase {
 
           // They come online
           if (client.stream_online && !oldObj.stream_online) {
-            const connectedUser = gsiHandlers.get(client.token)
-            if (!connectedUser) return
-
-            const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
             const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
             const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
 
             const hasNewestScopes = client.Account?.scope?.includes('channel:bot')
-            if (!hasNewestScopes && !didTellUser.has(client.name.toLowerCase())) {
-              chatClient.say(
-                connectedUser.client.name,
-                t('refreshToken', {
-                  lng: connectedUser.client.locale,
-                  channel: connectedUser.client.name,
-                }),
-              )
-              didTellUser.add(client.name.toLowerCase())
-            } else if (connectedUser.client.Account?.requires_refresh && betsEnabled) {
+            const requiresRefresh = client.Account?.requires_refresh
+            if ((!hasNewestScopes || requiresRefresh) && !didTellUser.has(client.name)) {
+              didTellUser.add(client.name)
+
               const { data, error } = await supabase
                 .from('bets')
                 .select('created_at')
@@ -152,15 +142,15 @@ class SetupSupabase {
 
               if (data?.length && !error) {
                 logger.info('[WATCHER USER] Sending refresh token messsage', {
-                  name: connectedUser.client.name,
-                  twitchId: connectedUser.client.Account.providerAccountId,
-                  token: connectedUser.client.token,
+                  name: client.name,
+                  twitchId: client.Account?.providerAccountId,
+                  token: client.token,
                 })
                 chatClient.say(
-                  connectedUser.client.name,
+                  client.name,
                   t('refreshToken', {
-                    lng: connectedUser.client.locale,
-                    channel: connectedUser.client.name,
+                    lng: client.locale,
+                    channel: client.name,
                   }),
                 )
               }
