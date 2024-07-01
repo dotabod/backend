@@ -107,5 +107,9 @@ export const invalidTokens = new Set(['', null, undefined, 0])
 
 export const gsiHandlers = new Map<string, GSIHandler>()
 export const twitchIdToToken = new Map<string, string>()
+export const twitchNameToToken = new Map<string, string>()
 export const pendingCheckAuth = new Map<string, boolean>()
 export const lookingupToken = new Map<string, boolean>()
+
+// Const holding if we told the user to get new scopes
+export const didTellUser = new Set<string>()

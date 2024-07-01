@@ -3,9 +3,10 @@ import { t } from 'i18next'
 import { clearCacheForUser } from '../dota/clearCacheForUser.js'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
-import { gsiHandlers } from '../dota/lib/consts.js'
+import { didTellUser, gsiHandlers } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
+import { twitchChat } from '../twitch/chatClient'
 import { chatClient } from '../twitch/chatClient.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
@@ -121,6 +122,20 @@ class SetupSupabase {
             const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
             const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
 
+            const hasNewestScopes = client.Account?.scope?.includes('channel:bot')
+            if (!hasNewestScopes && !didTellUser.has(client.name.toLowerCase())) {
+              twitchChat.emit(
+                'say',
+                client.name.toLowerCase(),
+                t('refreshToken', {
+                  lng: client.locale,
+                  channel: `@${client.name.toLowerCase().replace('#', '')}`,
+                }),
+              )
+              didTellUser.add(client.name.toLowerCase())
+              return
+            }
+
             if (connectedUser.client.Account?.requires_refresh && betsEnabled) {
               const { data, error } = await supabase
                 .from('bets')
@@ -144,7 +159,6 @@ class SetupSupabase {
                 )
               }
             }
-            connectedUser.enable()
           }
 
           if (typeof newObj.stream_start_date === 'string') {
