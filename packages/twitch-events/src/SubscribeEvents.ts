@@ -67,17 +67,8 @@ export const stopUserSubscriptions = (providerAccountId: string) => {
 
 // Function to start subscriptions for a user
 export const startUserSubscriptions = (providerAccountId: string) => {
-  const subscriptions = userSubscriptions[providerAccountId]
-  if (subscriptions) {
-    // This should never get called start(), it should go to initinstead since we delete it in stop
-    subscriptions.forEach((subscription) => subscription.start())
-    console.log(`[TWITCHEVENTS] Subscribed events for providerAccountId: ${providerAccountId}`)
-  } else {
-    initUserSubscriptions(providerAccountId)
-    console.log(
-      `[TWITCHEVENTS] startUserSubscriptions No subscriptions found for providerAccountId so ran init: ${providerAccountId}`,
-    )
-  }
+  initUserSubscriptions(providerAccountId)
+  console.log(`[TWITCHEVENTS] Subscribed events for providerAccountId: ${providerAccountId}`)
 }
 
 // Function to subscribe to events for multiple users
