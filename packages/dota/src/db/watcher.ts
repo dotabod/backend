@@ -155,6 +155,10 @@ class SetupSupabase {
                 )
               }
             }
+            const connectedUser = gsiHandlers.get(client.token)
+            if (connectedUser) {
+              connectedUser.enable()
+            }
           }
 
           if (typeof newObj.stream_start_date === 'string') {

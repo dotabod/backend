@@ -124,9 +124,13 @@ export class GSIHandler {
       return
     }
 
-    if (!this.client.stream_online) {
+    if (!this.client.stream_online && !this.disabled) {
       this.disable()
       return
+    }
+
+    if (this.client.stream_online && this.disabled) {
+      this.enable()
     }
 
     this.emitBadgeUpdate()
