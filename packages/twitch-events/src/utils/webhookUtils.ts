@@ -127,14 +127,23 @@ export const setupWebhooks = () => {
     console.log('[TWITCHEVENTS] Webhooks Listening on port 5011')
 
     listener.start()
-    try {
-      listener.onUserAuthorizationRevoke(process.env.TWITCH_CLIENT_ID ?? '', revokeEvent)
-    } catch (e) {
-      console.log('[TWITCHEVENTS] error on listener.onUserAuthorizationRevoke', { e })
+
+    async function repeatCheck() {
+      if (listener._isReadyToSubscribe()) {
+        console.log('READY!')
+        try {
+          listener.onUserAuthorizationRevoke(process.env.TWITCH_CLIENT_ID ?? '', revokeEvent)
+        } catch (e) {
+          console.log('[TWITCHEVENTS] error on listener.onUserAuthorizationRevoke', { e })
+        }
+
+        const accountIds = await getAccountIds()
+        SubscribeEvents(accountIds)
+      } else {
+        setTimeout(repeatCheck, 1000)
+      }
     }
 
-    // Load every account id when booting server
-    const accountIds = await getAccountIds()
-    SubscribeEvents(accountIds)
+    repeatCheck()
   })
 }

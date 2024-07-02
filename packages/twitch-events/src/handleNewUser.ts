@@ -1,4 +1,4 @@
-import { SubscribeEvents } from './SubscribeEvents.js'
+import { startUserSubscriptions } from './SubscribeEvents'
 import supabase from './db/supabase.js'
 import { getBotInstance } from './twitch/lib/BotApiSingleton.js'
 
@@ -49,7 +49,7 @@ export async function handleNewUser(providerAccountId: string) {
   }
 
   try {
-    SubscribeEvents([providerAccountId])
+    startUserSubscriptions(providerAccountId)
   } catch (e) {
     console.log('[TWITCHEVENTS] error on handlenewuser', { e })
   }

@@ -1,3 +1,4 @@
+import type { EventSubSubscription } from '@twurple/eventsub-base'
 import { listener } from './listener.js'
 import { transformBetData } from './twitch/events/transformers/transformBetData.js'
 import { transformPollData } from './twitch/events/transformers/transformPollData.js'
@@ -13,61 +14,77 @@ export const handleEvent = (eventName: any, broadcasterId: string, data: any) =>
   socketIo.to(DOTABOD_EVENTS_ROOM).emit('event', eventName, broadcasterId, data)
 }
 
+// Map to store subscriptions for each user
+export const userSubscriptions: Record<string, Array<EventSubSubscription>> = {}
+
+// Function to init subscriptions for a user
+const initUserSubscriptions = (providerAccountId: string) => {
+  const subscriptions = [
+    listener.onStreamOnline(providerAccountId, onlineEvent),
+    listener.onStreamOffline(providerAccountId, offlineEvent),
+    listener.onUserUpdate(providerAccountId, updateUserEvent),
+    listener.onChannelPredictionBegin(providerAccountId, (data) =>
+      handleEvent('onChannelPredictionBegin', providerAccountId, transformBetData(data)),
+    ),
+    listener.onChannelPredictionProgress(providerAccountId, (data) =>
+      handleEvent('onChannelPredictionProgress', providerAccountId, transformBetData(data)),
+    ),
+    listener.onChannelPredictionLock(providerAccountId, (data) =>
+      handleEvent('onChannelPredictionLock', providerAccountId, transformBetData(data)),
+    ),
+    listener.onChannelPredictionEnd(providerAccountId, (data) =>
+      handleEvent('onChannelPredictionEnd', providerAccountId, transformBetData(data)),
+    ),
+    listener.onChannelPollBegin(providerAccountId, (data) =>
+      handleEvent('onChannelPollBegin', providerAccountId, transformPollData(data)),
+    ),
+    listener.onChannelPollProgress(providerAccountId, (data) =>
+      handleEvent('onChannelPollProgress', providerAccountId, transformPollData(data)),
+    ),
+    listener.onChannelPollEnd(providerAccountId, (data) =>
+      handleEvent('onChannelPollEnd', providerAccountId, transformPollData(data)),
+    ),
+  ]
+
+  userSubscriptions[providerAccountId] = subscriptions
+}
+
+// Function to stop subscriptions for a user
+export const stopUserSubscriptions = (providerAccountId: string) => {
+  const subscriptions = userSubscriptions[providerAccountId]
+  if (subscriptions) {
+    subscriptions.forEach((subscription) => subscription.stop())
+    console.log(
+      `[TWITCHEVENTS] Unsubscribed from events for providerAccountId: ${providerAccountId}`,
+    )
+  } else {
+    console.log(
+      `[TWITCHEVENTS] stopUserSubscriptions No subscriptions found for providerAccountId: ${providerAccountId}`,
+    )
+  }
+}
+
+// Function to start subscriptions for a user
+export const startUserSubscriptions = (providerAccountId: string) => {
+  const subscriptions = userSubscriptions[providerAccountId]
+  if (subscriptions) {
+    subscriptions.forEach((subscription) => subscription.start())
+    console.log(`[TWITCHEVENTS] Subscribed events for providerAccountId: ${providerAccountId}`)
+  } else {
+    initUserSubscriptions(providerAccountId)
+    console.log(
+      `[TWITCHEVENTS] startUserSubscriptions No subscriptions found for providerAccountId so ran init: ${providerAccountId}`,
+    )
+  }
+}
+
+// Function to subscribe to events for multiple users
 export const SubscribeEvents = (accountIds: string[]) => {
-  const promises: any[] = []
-  accountIds.forEach((userId) => {
+  accountIds.forEach((providerAccountId) => {
     try {
-      promises.push(listener.onStreamOnline(userId, onlineEvent))
-      promises.push(listener.onStreamOffline(userId, offlineEvent))
-      promises.push(listener.onUserUpdate(userId, updateUserEvent))
-      promises.push(
-        listener.onChannelPredictionBegin(userId, (data) =>
-          handleEvent('onChannelPredictionBegin', userId, transformBetData(data)),
-        ),
-      )
-      promises.push(
-        listener.onChannelPredictionProgress(userId, (data) =>
-          handleEvent('onChannelPredictionProgress', userId, transformBetData(data)),
-        ),
-      )
-      promises.push(
-        listener.onChannelPredictionLock(userId, (data) =>
-          handleEvent('onChannelPredictionLock', userId, transformBetData(data)),
-        ),
-      )
-      promises.push(
-        listener.onChannelPredictionEnd(userId, (data) =>
-          handleEvent('onChannelPredictionEnd', userId, transformBetData(data)),
-        ),
-      )
-      promises.push(
-        listener.onChannelPollBegin(userId, (data) =>
-          handleEvent('onChannelPollBegin', userId, transformPollData(data)),
-        ),
-      )
-      promises.push(
-        listener.onChannelPollProgress(userId, (data) =>
-          handleEvent('onChannelPollProgress', userId, transformPollData(data)),
-        ),
-      )
-      promises.push(
-        listener.onChannelPollEnd(userId, (data) =>
-          handleEvent('onChannelPollEnd', userId, transformPollData(data)),
-        ),
-      )
+      initUserSubscriptions(providerAccountId)
     } catch (e) {
-      console.log('[TWITCHEVENTS] could not sub', { e, userId })
+      console.log('[TWITCHEVENTS] could not sub', { e, providerAccountId })
     }
   })
-
-  console.log('[TWITCHEVENTS] Starting promise waiting for length', { length: accountIds.length })
-  Promise.all(promises)
-    .then(() =>
-      console.log('[TWITCHEVENTS] done subbing to channelLength:', {
-        channelLength: accountIds.length,
-      }),
-    )
-    .catch((e) => {
-      console.log('[TWITCHEVENTS] Could not sub due to error', { error: e })
-    })
 }
