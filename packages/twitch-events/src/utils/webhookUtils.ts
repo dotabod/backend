@@ -76,6 +76,8 @@ export const setupWebhooks = () => {
         const newreq = newUser.requires_refresh
         const oldreq = oldUser.requires_refresh
 
+        console.log(newreq, oldreq, typeof newreq, typeof oldreq)
+
         if (oldreq !== newreq && newreq !== true) {
           console.log('[SUPABASE] Refresh token changed, updating chat client', {
             providerAccountId: newUser.providerAccountId,
