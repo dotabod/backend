@@ -54,6 +54,7 @@ export const stopUserSubscriptions = (providerAccountId: string) => {
   const subscriptions = userSubscriptions[providerAccountId]
   if (subscriptions) {
     subscriptions.forEach((subscription) => subscription.stop())
+    delete userSubscriptions[providerAccountId]
     console.log(
       `[TWITCHEVENTS] Unsubscribed from events for providerAccountId: ${providerAccountId}`,
     )
@@ -68,6 +69,7 @@ export const stopUserSubscriptions = (providerAccountId: string) => {
 export const startUserSubscriptions = (providerAccountId: string) => {
   const subscriptions = userSubscriptions[providerAccountId]
   if (subscriptions) {
+    // This should never get called start(), it should go to initinstead since we delete it in stop
     subscriptions.forEach((subscription) => subscription.start())
     console.log(`[TWITCHEVENTS] Subscribed events for providerAccountId: ${providerAccountId}`)
   } else {
