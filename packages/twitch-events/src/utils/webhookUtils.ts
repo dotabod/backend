@@ -128,22 +128,14 @@ export const setupWebhooks = () => {
 
     listener.start()
 
-    async function repeatCheck() {
-      if (listener._isReadyToSubscribe()) {
-        console.log('READY!')
-        try {
-          listener.onUserAuthorizationRevoke(process.env.TWITCH_CLIENT_ID ?? '', revokeEvent)
-        } catch (e) {
-          console.log('[TWITCHEVENTS] error on listener.onUserAuthorizationRevoke', { e })
-        }
-
-        const accountIds = await getAccountIds()
-        SubscribeEvents(accountIds)
-      } else {
-        setTimeout(repeatCheck, 1000)
-      }
+    console.log('READY!')
+    try {
+      listener.onUserAuthorizationRevoke(process.env.TWITCH_CLIENT_ID ?? '', revokeEvent)
+    } catch (e) {
+      console.log('[TWITCHEVENTS] error on listener.onUserAuthorizationRevoke', { e })
     }
 
-    repeatCheck()
+    const accountIds = await getAccountIds()
+    SubscribeEvents(accountIds)
   })
 }
