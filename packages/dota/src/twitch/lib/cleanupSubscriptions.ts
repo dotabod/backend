@@ -18,11 +18,12 @@ async function fetchSubscriptionsWithStatus(status?: string, cursor?: string): P
   const response = await fetch(url.toString(), { method: 'GET', headers })
   console.log(response.headers.get('ratelimit-remaining'))
   if (response.status !== 200) {
-    throw new Error(
+    console.error(
       `Failed to fetch subscriptions with status ${status}: ${
         response.status
       } // ${await response.text()}`,
     )
+    return
   }
   return response.json()
 }
@@ -73,13 +74,11 @@ async function deleteSubscription(id: string) {
       retryDelay *= 1.2 // Exponential back-off
     } else {
       // If the request failed for reasons other than rate limit, throw an error
-      throw new Error(
-        `Failed to delete subscription: ${response.status} // ${await response.text()}`,
-      )
+      console.error(`Failed to delete subscription: ${response.status} // ${await response.text()}`)
     }
   }
 
-  throw new Error('Exceeded maximum retry attempts for deleteSubscription')
+  console.error('Exceeded maximum retry attempts for deleteSubscription')
 }
 
 const requireRefreshAccounts: Set<string> = new Set()
@@ -106,6 +105,7 @@ const debouncedUpdateAccounts = debounce(async () => {
 
     if (error) {
       console.error('Failed to update accounts', error)
+      return
       // Consider how to handle partial failures - retry logic, logging, etc.
     }
   }
@@ -159,10 +159,41 @@ async function markRevokedAuthorizationsAsRequiresRefresh(singleLoop = false) {
   }
 }
 
+async function deleteStatuses(singleLoop = false) {
+  const statuses = ['user_removed', 'authorization_revoked', 'webhook_callback_verification_failed']
+
+  for (const status of statuses) {
+    let cursor: string | undefined
+    do {
+      try {
+        const data = await fetchSubscriptionsWithStatus(status, cursor)
+        console.log(
+          `Found subscriptions with status ${status} that require deletion:`,
+          data.data.length,
+        )
+
+        for (const sub of data.data) {
+          await deleteSubscription(sub.id)
+        }
+
+        cursor = data.pagination.cursor
+
+        if (singleLoop) break
+      } catch (error) {
+        console.error(error)
+        break
+      }
+    } while (cursor)
+
+    if (singleLoop) break
+  }
+}
+
 async function getCountOfSubscriptionsWithStatus(status?: string): Promise<number> {
   try {
     const data = await fetchSubscriptionsWithStatus(status)
-    console.log(data?.total_cost)
+    console.log('total cost: ', data?.total_cost)
+    console.log('total found: ', data?.data.length)
     return data.data.length
   } catch (error) {
     console.error(error)
@@ -170,7 +201,7 @@ async function getCountOfSubscriptionsWithStatus(status?: string): Promise<numbe
   }
 }
 
-async function fetchSubscriptionsWithCostAboveZero(singleLoop = false): Promise<any[]> {
+async function deleteCostSubsAndSetRequiresRefresh(singleLoop = false): Promise<any[]> {
   const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
   let allBroadcasterUserIds: string[] = []
   let cursor: string | null = null
@@ -188,9 +219,8 @@ async function fetchSubscriptionsWithCostAboveZero(singleLoop = false): Promise<
 
     const response = await fetch(url.toString(), { method: 'GET', headers })
     if (response.status !== 200) {
-      throw new Error(
-        `Failed to fetch subscriptions: ${response.status} // ${await response.text()}`,
-      )
+      console.error(`Failed to fetch subscriptions: ${response.status} // ${await response.text()}`)
+      return []
     }
 
     const data = await response.json()
@@ -240,5 +270,6 @@ async function fetchSubscriptionsWithCostAboveZero(singleLoop = false): Promise<
   return allBroadcasterUserIds
 }
 
-// await fetchSubscriptionsWithCostAboveZero()
+await deleteCostSubsAndSetRequiresRefresh()
+// await deleteStatuses()
 // await getCountOfSubscriptionsWithStatus()

@@ -67,11 +67,12 @@ export async function fetchSubscriptions(providerId: string, cursor?: string): P
 
   const response = await fetch(url.toString(), { method: 'GET', headers })
   if (response.status !== 200) {
-    throw new Error(
+    console.error(
       `Failed to fetch subscriptions with providerId ${providerId}: ${
         response.status
       } // ${await response.text()}`,
     )
+    return
   }
   const text = await response.json()
   if (Array.isArray(text.data)) {
@@ -133,13 +134,11 @@ async function deleteSubscription(id: string) {
       retryDelay *= 1.2 // Exponential back-off
     } else {
       // If the request failed for reasons other than rate limit, throw an error
-      throw new Error(
-        `Failed to delete subscription: ${response.status} // ${await response.text()}`,
-      )
+      console.error(`Failed to delete subscription: ${response.status} // ${await response.text()}`)
     }
   }
 
-  throw new Error('Exceeded maximum retry attempts for deleteSubscription')
+  console.error('Exceeded maximum retry attempts for deleteSubscription')
 }
 
 async function deleteAllSubscriptionsForProvider(providerId: string): Promise<void> {
