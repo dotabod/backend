@@ -73,7 +73,14 @@ export async function fetchSubscriptions(providerId: string, cursor?: string): P
       } // ${await response.text()}`,
     )
   }
-  return response.json()
+  const text = await response.json()
+  if (Array.isArray(text.data)) {
+    text.data = text.data.filter(
+      (sub: any) =>
+        (sub.condition.broadcaster_user_id || sub.condition.user_id) === `${providerId}`,
+    )
+  }
+  return text
 }
 
 function sleep(ms: number) {
@@ -139,20 +146,16 @@ async function deleteAllSubscriptionsForProvider(providerId: string): Promise<vo
   let cursor: string | undefined
   do {
     // Fetch subscriptions for the given provider ID
-    const data = await fetchSubscriptions(providerId, cursor)
-    const subscriptionsForProvider = data.data.filter(
-      (sub: any) => sub.condition.broadcaster_user_id === providerId,
-    )
-
-    console.log('Found subscriptions', subscriptionsForProvider.length)
+    const subs = await fetchSubscriptions(providerId, cursor)
+    console.log('Found subscriptions', subs.data.length)
 
     // Delete each subscription found for the provider
-    for (const sub of subscriptionsForProvider) {
+    for (const sub of subs.data) {
       await deleteSubscription(sub.id)
     }
 
     // Update cursor for next page of subscriptions, if any
-    cursor = data.pagination?.cursor
+    cursor = subs.pagination?.cursor
   } while (cursor) // Continue until there are no more pages
 
   console.log(`All subscriptions deleted for provider ID: ${providerId}`)

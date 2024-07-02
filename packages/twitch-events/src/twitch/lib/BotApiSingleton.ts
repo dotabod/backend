@@ -3,7 +3,7 @@ import { AppTokenAuthProvider } from '@twurple/auth'
 
 let instance: ApiClient | null = null
 
-function getInstance() {
+export function getBotInstance() {
   if (!instance) {
     console.log('[TWITCH] Retrieving twitch dotabod api')
     const authProvider = new AppTokenAuthProvider(
@@ -20,8 +20,4 @@ function getInstance() {
     instance = api
   }
   return instance
-}
-
-export default {
-  getInstance,
 }

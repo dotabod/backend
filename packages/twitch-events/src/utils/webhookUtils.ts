@@ -7,15 +7,14 @@ import type { Tables } from '../db/supabase-types.js'
 import { handleNewUser } from '../handleNewUser.js'
 import { listener } from '../listener.js'
 import { getAccountIds } from '../twitch/lib/getAccountIds.js'
+import { revokeEvent } from '../twitch/lib/revokeEvent.js'
 import type { InsertPayload, UpdatePayload } from '../types.js'
 import { isAuthenticated } from './authUtils.js'
 
 export const setupWebhooks = () => {
   const webhookApp = express()
 
-  const { DOTABOD_ENV } = process.env
-
-  const IS_DEV = DOTABOD_ENV !== 'production'
+  const IS_DEV = process.env.DOTABOD_ENV !== 'production'
   const DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
   const DEV_CHANNELIDS = process.env.DEV_CHANNELIDS?.split(',') ?? []
 
@@ -128,6 +127,11 @@ export const setupWebhooks = () => {
     console.log('[TWITCHEVENTS] Webhooks Listening on port 5011')
 
     listener.start()
+    try {
+      listener.onUserAuthorizationRevoke(process.env.TWITCH_CLIENT_ID ?? '', revokeEvent)
+    } catch (e) {
+      console.log('[TWITCHEVENTS] error on listener.onUserAuthorizationRevoke', { e })
+    }
 
     // Load every account id when booting server
     const accountIds = await getAccountIds()

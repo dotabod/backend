@@ -1,6 +1,6 @@
 import { EventSubHttpListener, ReverseProxyAdapter } from '@twurple/eventsub-http'
+import { getBotInstance } from './twitch/lib/BotApiSingleton.js'
 
-import BotAPI from './twitch/lib/BotApiSingleton.js'
 const { EVENTSUB_HOST, TWITCH_EVENTSUB_SECRET } = process.env
 
 if (!EVENTSUB_HOST || !TWITCH_EVENTSUB_SECRET) {
@@ -8,7 +8,7 @@ if (!EVENTSUB_HOST || !TWITCH_EVENTSUB_SECRET) {
 }
 
 export const listener = new EventSubHttpListener({
-  apiClient: BotAPI.getInstance(),
+  apiClient: getBotInstance(),
   legacySecrets: true,
   adapter: new ReverseProxyAdapter({
     hostName: EVENTSUB_HOST, // The host name the server is available from

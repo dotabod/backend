@@ -1,8 +1,8 @@
 import { SubscribeEvents } from './SubscribeEvents.js'
 import supabase from './db/supabase.js'
-import BotAPI from './twitch/lib/BotApiSingleton.js'
+import { getBotInstance } from './twitch/lib/BotApiSingleton.js'
 
-const botApi = BotAPI.getInstance()
+const botApi = getBotInstance()
 export async function handleNewUser(providerAccountId: string) {
   console.log("[TWITCHEVENTS] New user, let's get their info", { userId: providerAccountId })
 
