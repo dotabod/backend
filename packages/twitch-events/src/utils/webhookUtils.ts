@@ -53,12 +53,12 @@ export const setupWebhooks = () => {
 
         handleNewUser(user.providerAccountId)
           .then(() => {
-            console.log('[TWITCHEVENTS] done handling new user', {
+            console.log('[TWITCHEVENTS] INSERT done handling new user', {
               providerAccountId: user.providerAccountId,
             })
           })
           .catch((e) => {
-            console.log('[TWITCHEVENTS] error on handleNewUser', {
+            console.log('[TWITCHEVENTS] INSERT error on handleNewUser', {
               e,
               providerAccountId: user.providerAccountId,
             })
@@ -76,8 +76,6 @@ export const setupWebhooks = () => {
         const newreq = newUser.requires_refresh
         const oldreq = oldUser.requires_refresh
 
-        console.log(newreq, oldreq, typeof newreq, typeof oldreq)
-
         if (oldreq !== newreq && newreq !== true) {
           console.log('[SUPABASE] Refresh token changed, updating chat client', {
             providerAccountId: newUser.providerAccountId,
@@ -85,12 +83,12 @@ export const setupWebhooks = () => {
 
           handleNewUser(newUser.providerAccountId)
             .then(() => {
-              console.log('[TWITCHEVENTS] done handling new user', {
+              console.log('[TWITCHEVENTS] UPDATE done handling new user', {
                 providerAccountId: newUser.providerAccountId,
               })
             })
             .catch((e) => {
-              console.log('[TWITCHEVENTS] error on handleNewUser', {
+              console.log('[TWITCHEVENTS] UPDATE error on handleNewUser', {
                 e,
                 providerAccountId: newUser.providerAccountId,
               })
