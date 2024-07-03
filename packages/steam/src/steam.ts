@@ -133,7 +133,7 @@ class Dota {
     this.getGames()
 
     // Get latest games every 30 seconds
-    if (!this.interval) {
+    if (!this.interval && process.env.DOTABOD_ENV === 'development') {
       this.interval = setInterval(this.checkAccounts, 30_000)
     }
   }
@@ -147,17 +147,6 @@ class Dota {
     this.fetchGames()
       .then((games) => {
         const uniqueGames = this.getUniqueGames(games, time)
-
-        // TODO: Remove this, its just test data
-        uniqueGames.forEach((game) => {
-          game.players?.forEach((player) => {
-            if (Number(player.account_id) === 56939869) {
-              console.log('Found a game with gorgc in it', game)
-            } else if (Number(player.account_id) === 1623325834) {
-              console.log('Found a game with mason in it', game)
-            }
-          })
-        })
 
         // TODO: Save the games to a database?
         // if (uniqueGames.length) db.collection<GamesQuery>('games').insertMany(uniqueGames)
