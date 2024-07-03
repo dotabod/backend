@@ -53,8 +53,11 @@
   },
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
-  "facet": "{{- heroName}} facet: {{- facetTitle}} · {{- facetDescription}}",
-  "facetNotFound": "{{- heroName}} facet cannot be found · Live matches can only get streamer's facet",
+  "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
+  "facetSelection": "{{- heroName}} selected facet: {{- facetTitle}} · {{- facetDescription}}",
+  "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
+  "innate": "{{- heroName}} innate: {{- title}} · {{- description}}",
+  "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
   "gameNotFound": "Game was not found",
   "heroItems": {
     "empty": "(2m delay) No items found for {{- heroName}}",
@@ -188,6 +191,7 @@
   },
   "xpm": "Live XPM for {{- heroName}}: {{num}}",
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "facetTotalLimit_other": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "seconds_other": "{{count}} seconds",
   "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match."
