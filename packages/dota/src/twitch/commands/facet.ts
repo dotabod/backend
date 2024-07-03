@@ -29,7 +29,10 @@ commandHandler.registerCommand('facet', {
         command,
       )
       if (!isValidHero(hero)) {
-        sendMessage(channelName, t('gameNotFound', { lng: channelClient.locale }))
+        sendMessage(
+          channelName,
+          t('missingMatchData', { emote: 'PauseChamp', lng: channelClient.locale }),
+        )
         return
       }
 
