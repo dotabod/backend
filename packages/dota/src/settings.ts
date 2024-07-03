@@ -79,6 +79,7 @@ export const defaultSettings = {
   commandXPM: true,
   commandWinProbability: true,
   commandFacet: true,
+  commandInnate: true,
   'minimap-blocker': true,
   minimapRight: false,
   mmr: null,
