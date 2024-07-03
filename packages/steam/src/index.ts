@@ -1,14 +1,14 @@
-import { Server } from 'socket.io'
-
+import { initSpectatorProtobuff } from './initSpectatorProtobuff.js'
+import { socketIoServer } from './socketServer.js'
 import Dota from './steam.js'
 import { logger } from './utils/logger.js'
 
 let hasDotabodSocket = false
 let isConnectedToSteam = false
 
-const io = new Server(5035)
-const dota = Dota.getInstance()
+initSpectatorProtobuff()
 
+const dota = Dota.getInstance()
 dota.dota2.on('ready', () => {
   logger.info('[SERVER] Connected to dota game server')
   isConnectedToSteam = true
@@ -16,7 +16,7 @@ dota.dota2.on('ready', () => {
 
 type callback = (err: any, response: any) => void
 
-io.on('connection', (socket) => {
+socketIoServer.on('connection', (socket) => {
   // dota node app just connected
   // make it join our room
   console.log('Found a connection!')
@@ -72,4 +72,4 @@ io.on('connection', (socket) => {
   })
 })
 
-export default io
+export default socketIoServer
