@@ -11,6 +11,7 @@ export function onlineEvent(data: EventSubStreamOnlineEvent) {
     const { data: user } = await supabase
       .from('accounts')
       .select('userId')
+      .eq('provider', 'twitch')
       .eq('providerAccountId', data.broadcasterId)
       .single()
 

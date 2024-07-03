@@ -25,6 +25,7 @@ export function updateUserEvent(e: EventSubUserUpdateEvent) {
         .from('accounts')
         .select('userId')
         .eq('providerAccountId', e.userId)
+        .eq('provider', 'twitch')
         .single()
 
       if (!user || !user.userId) {

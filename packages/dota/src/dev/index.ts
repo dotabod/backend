@@ -152,6 +152,7 @@ async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
       const { data } = await supabase
         .from('accounts')
         .select('userId')
+        .eq('provider', 'twitch')
         .eq('providerAccountId', providerAccountId)
         .single()
       userId = data?.userId ?? null

@@ -6,6 +6,7 @@ async function disableChannel(broadcasterId: string) {
   const { data: user } = await supabase
     .from('accounts')
     .select('userId')
+    .eq('provider', 'twitch')
     .eq('providerAccountId', broadcasterId)
     .single()
 
@@ -56,6 +57,7 @@ export async function revokeEvent(data: EventSubUserAuthorizationRevokeEvent) {
     .update({
       requires_refresh: true,
     })
+    .eq('provider', 'twitch')
     .eq('providerAccountId', data.userId)
 
   await disableChannel(data.userId)

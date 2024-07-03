@@ -33,6 +33,7 @@ export async function handleNewUser(providerAccountId: string) {
       .from('accounts')
       .select('userId')
       .eq('providerAccountId', providerAccountId)
+      .eq('provider', 'twitch')
       .single()
 
     if (!user || !user.userId) {

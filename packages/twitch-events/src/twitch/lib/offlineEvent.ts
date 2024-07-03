@@ -26,6 +26,7 @@ export function offlineEvent(e: EventSubStreamOfflineEvent) {
       const { data: user } = await supabase
         .from('accounts')
         .select('userId')
+        .eq('provider', 'twitch')
         .eq('providerAccountId', e.broadcasterId)
         .single()
 

@@ -49,6 +49,7 @@ export default async function getDBUser({
     const { data, error } = await supabase
       .from('accounts')
       .select('userId')
+      .eq('provider', 'twitch')
       .eq('providerAccountId', providerAccountId)
       .single()
     userId = data?.userId ?? null

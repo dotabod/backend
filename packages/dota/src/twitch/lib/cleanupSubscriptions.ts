@@ -270,6 +270,6 @@ async function deleteCostSubsAndSetRequiresRefresh(singleLoop = false): Promise<
   return allBroadcasterUserIds
 }
 
-// await deleteCostSubsAndSetRequiresRefresh(true)
+// await deleteCostSubsAndSetRequiresRefresh()
 // await deleteStatuses()
 await getCountOfSubscriptionsWithStatus()

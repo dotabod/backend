@@ -21,6 +21,7 @@ export async function getAccountIds(): Promise<string[]> {
       .from('users')
       .select('id,accounts(providerAccountId)')
       .neq('accounts.requires_refresh', true)
+      .eq('accounts.provider', 'twitch')
       .order('followers', { ascending: false, nullsFirst: false })
 
     const query = isDevMode
