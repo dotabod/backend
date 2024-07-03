@@ -1,5 +1,5 @@
 # Using a more specific version to ensure reproducibility
-FROM node:20-alpine3.17 as base
+FROM node:21-alpine3.17 as base
 
 # Set build context and work directories
 WORKDIR /app/packages/steam
@@ -7,10 +7,8 @@ WORKDIR /app/packages/steam
 RUN apk add --no-cache git
 
 # Copy just the relevant package.json and yarn.lock files
-COPY ./packages/steam/package.json ./packages/steam/yarn.deploy.lock ./
-RUN mv ./yarn.deploy.lock ./yarn.lock
-# COPY .yarn/releases/ ./.yarn/releases/
-# COPY .yarn/cache/ ./.yarn/cache/
+COPY ./packages/steam/package.json ./packages/steam/yarn.lock ./
+RUN mv ./yarn.lock ./yarn.lock
 
 # Install dependencies
 RUN yarn install --immutable
@@ -28,7 +26,9 @@ RUN cd /app/packages/steam && yarn build
 
 #-------------------------
 
-FROM node:20-alpine3.17 as prod
+FROM node:21-alpine3.17 as prod
+
+ARG DOTABOD_ENV
 
 # Meta-data and labels
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
@@ -38,9 +38,11 @@ LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
 # Copy relevant build artifacts
 COPY --from=builder /app/packages/steam/package.json /app/packages/steam/package.json
 COPY --from=builder /app/packages/steam/dist /app/packages/steam/dist/
+COPY --from=builder /app/packages/steam/src /app/packages/steam/src/
 COPY --from=builder /app/packages/steam/node_modules /app/packages/steam/node_modules
 
 WORKDIR /app/packages/steam
 
 # Environment and CMD
-CMD yarn docker:production
+ENV DOTABOD_ENV=$DOTABOD_ENV
+CMD yarn docker:${DOTABOD_ENV:-production}

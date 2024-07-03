@@ -6,8 +6,17 @@ services:
 
   steam:
     image: "ghcr.io/dotabod/steam:v2.2"
-    volumes:
-      - $PWD/packages/steam/src:/app/packages/steam/src
+    develop:
+      watch:
+        - action: sync
+          path: $PWD/packages/steam/src
+          target: /app/packages/steam/src
+        - action: rebuild
+          path: $PWD/packages/steam/package.json
+        - action: rebuild
+          path: $PWD/packages/steam/tsconfig.json
+        - action: rebuild
+          path: $PWD/packages/Dockerfile.steam
 
   twitch-events:
     image: "ghcr.io/dotabod/twitch-events:v2.1"

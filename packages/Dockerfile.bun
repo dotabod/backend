@@ -5,8 +5,8 @@ ARG BUILD_CONTEXT
 ARG HUSKY=0
 WORKDIR /app
 
-# Copy just the relevant package.json and yarn.lock files
-COPY package.json ./
+# Copy just the relevant package.json and bun lock files
+COPY package.json bun.lockb ./
 COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 
 # Install dependencies

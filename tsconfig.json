@@ -1,6 +1,6 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    /* Basic Options */
     "lib": ["ESNext"],
     "target": "ESNext",
     "module": "ESNext",
