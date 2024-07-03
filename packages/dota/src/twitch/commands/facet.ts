@@ -34,7 +34,29 @@ commandHandler.registerCommand('facet', {
       }
 
       const heroData = getHeroById(hero.id)
-      const heroFacet = getHeroFacet(heroData, hero.facet)
+      const requestedFacet = Number(args[args.length - 1]) || hero.facet
+      const heroFacet = getHeroFacet(heroData, requestedFacet || hero.facet)
+      const totalFacets = getFacetCount(heroData)
+
+      if (!totalFacets) {
+        sendMessage(
+          channelName,
+          t('missingMatchData', { emote: 'PauseChamp', lng: channelClient.locale }),
+        )
+        return
+      }
+
+      if (requestedFacet && totalFacets < requestedFacet) {
+        sendMessage(
+          channelName,
+          t('facetTotalLimit', {
+            lng: channelClient.locale,
+            count: totalFacets,
+            heroName: getHeroNameOrColor(hero.id, playerIdx),
+          }),
+        )
+        return
+      }
 
       if (!heroFacet) {
         sendMessage(
@@ -47,6 +69,19 @@ commandHandler.registerCommand('facet', {
         return
       }
 
+      if (hero.facet && (!requestedFacet || hero.facet === requestedFacet)) {
+        sendMessage(
+          channelName,
+          t('facetSelection', {
+            lng: channelClient.locale,
+            heroName: getHeroNameOrColor(hero.id, playerIdx),
+            facetTitle: heroFacet.title,
+            facetDescription: heroFacet.description,
+          }),
+        )
+        return
+      }
+
       sendMessage(
         channelName,
         t('facet', {
@@ -54,6 +89,7 @@ commandHandler.registerCommand('facet', {
           heroName: getHeroNameOrColor(hero.id, playerIdx),
           facetTitle: heroFacet.title,
           facetDescription: heroFacet.description,
+          number: requestedFacet || hero.facet,
         }),
       )
     } catch (error: any) {
@@ -70,8 +106,17 @@ const isValidHero = (hero: any): boolean => {
   return typeof hero?.id === 'number' && !!getHeroById(hero.id)
 }
 
-const getHeroFacet = (heroData: any, facetIndex: number) => {
-  return DOTA_HERO_ABILITIES?.[heroData.key as keyof typeof DOTA_HERO_ABILITIES]?.facets[
+const getFacetCount = (heroData: ReturnType<typeof getHeroById>) => {
+  return (
+    DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.facets?.length || null
+  )
+}
+
+const getHeroFacet = (
+  heroData: ReturnType<typeof getHeroById>,
+  facetIndex: number,
+): { title: string; description: string } | null => {
+  return DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.facets[
     facetIndex - 1
   ]
 }
