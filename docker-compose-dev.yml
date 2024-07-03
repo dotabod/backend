@@ -26,6 +26,9 @@ services:
         - action: sync
           path: $PWD/packages/dota/src
           target: /app/packages/dota/src
+        - action: sync
+          path: $PWD/packages/dota/locales
+          target: /app/packages/dota/locales
         - action: rebuild
           path: $PWD/packages/dota/package.json
     ports:
