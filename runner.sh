@@ -52,7 +52,7 @@ gentypes() {
     echo "Generating types for project $PROJECT_ID on $DOTABOD_ENV"
     for OUTPUT_DIR in "${OUTPUT_DIRS[@]}"; do
         OUTPUT_FILE="$OUTPUT_DIR/supabase-types.ts"
-        npx supabase gen types typescript --project-id "$PROJECT_ID" --schema public >"$OUTPUT_FILE"
+        npx supabase gen types typescript --db-url "$DATABASE_URL" --schema public >"$OUTPUT_FILE"
         echo '' | cat - "$OUTPUT_FILE" >temp && mv temp "$OUTPUT_FILE"
         npx prettier --write "$OUTPUT_FILE"
     done
@@ -60,7 +60,6 @@ gentypes() {
 
 backup() {
     echo "Backing up database"
-    DATABASE_URL=""
     echo "URL is: ${DATABASE_URL}"
     supabase db dump --db-url "${DATABASE_URL%\?*}" -f ./roles.sql --role-only
     supabase db dump --db-url "${DATABASE_URL%\?*}" -f ./schema.sql
