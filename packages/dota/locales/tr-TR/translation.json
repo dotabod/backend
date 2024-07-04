@@ -169,6 +169,11 @@
   "setStreamDelay": "Yayın gecikme ayarı: $t(seconds, {\"count\": {{seconds}} }) ayarlanıyor",
   "setStreamDelayNoArgs": "Geçersiz yayın gecikmesi, !setdelay <seconds> komutunu kullanın",
   "setStreamDelayRemoved": "Yayın gecikmesi kaldırılıyor",
+  "spectators": {
+    "count_one": "1 spectator watching this match live",
+    "count_other": "{{count}} spectators watching this match live",
+    "count_none": "No spectators currently watching this match live"
+  },
   "stream": "$t(stream_on)",
   "stream_none": "Herhangi bir değişiklik yapılmadı, kullanıcı zaten {{state}}. Geçiş yapmak için !{{command}} komutunu deneyin.",
   "stream_off": "Dotabod {{channel}} kanalını çevrimdışı olarak görüyor. Geri almak için !online yazın",
