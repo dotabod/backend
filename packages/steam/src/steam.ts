@@ -208,7 +208,6 @@ class Dota {
       const startGame = 90
 
       // get a count of the match ids that are unique
-      const uniqueSet = new Set()
 
       const callbackNotSpecificGames = (data: {
         specific_games: boolean
@@ -218,7 +217,6 @@ class Dota {
       }) => {
         games = games.concat(data.game_list.filter((game) => game.players?.length > 0))
         // add match ids to unique set
-        uniqueSet.add(data.game_list.map((game) => game.match_id).length)
         if (data.league_id === 0 && startGame === data.start_game) {
           this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
           resolve(this.filterUniqueGames(games))
