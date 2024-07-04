@@ -65,9 +65,19 @@ const saveMatch = async ({
   const db = await mongo.connect()
 
   try {
-    await db
-      .collection<DelayedGames>('delayedGames')
-      .updateOne({ 'match.match_id': match_id }, { $set: game }, { upsert: true })
+    await db.collection<DelayedGames>('delayedGames').updateOne(
+      { 'match.match_id': match_id },
+      {
+        $set: {
+          teams: game.teams,
+        },
+        $setOnInsert: {
+          match: game.match,
+          createdAt: new Date(),
+        },
+      },
+      { upsert: true },
+    )
 
     if (refetchCards) {
       const { accountIds } = await getAccountsFromMatch({
@@ -133,27 +143,58 @@ class Dota {
     this.getGames()
 
     // Get latest games every 30 seconds
-    if (!this.interval && process.env.DOTABOD_ENV === 'development') {
-      this.interval = setInterval(this.checkAccounts, 30_000)
-    }
+    this.interval = setInterval(this.checkAccounts, 30_000)
   }
 
-  private getGames() {
+  private async getGames() {
     // Check if the Dota2 game coordinator and Steam client are ready
     if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) return
 
     const time = new Date()
 
-    this.fetchGames()
-      .then((games) => {
-        const uniqueGames = this.getUniqueGames(games, time)
+    try {
+      const games = await this.fetchGames()
+      const uniqueGames = this.getUniqueGames(games, time)
 
-        // TODO: Save the games to a database?
-        // if (uniqueGames.length) db.collection<GamesQuery>('games').insertMany(uniqueGames)
-      })
-      .catch((error) => {
-        console.error('Error fetching games:', error)
-      })
+      if (uniqueGames.length) {
+        const mongo = MongoDBSingleton
+        const db = await mongo.connect()
+
+        try {
+          // Prepare bulk operations
+          const bulkOps = uniqueGames.map((game) => ({
+            updateOne: {
+              filter: { 'match.match_id': game.match_id },
+              update: {
+                $set: {
+                  players: game.players,
+                  spectators: game.spectators,
+                },
+                $setOnInsert: {
+                  average_mmr: game.average_mmr,
+                  'match.game_mode': game.game_mode,
+                  'match.lobby_type': game.lobby_type,
+                  'match.server_steam_id': game.server_steam_id,
+                  createdAt: time,
+                  'match.match_id': game.match_id,
+                },
+              },
+              upsert: true,
+            },
+          }))
+
+          // Perform bulk write
+          const bulkWrote = await db.collection<DelayedGames>('delayedGames').bulkWrite(bulkOps)
+          console.log(bulkWrote.deletedCount, bulkWrote.insertedCount, bulkWrote.modifiedCount)
+        } catch (e) {
+          logger.error('Error saving games:', e)
+        } finally {
+          await mongo.close()
+        }
+      }
+    } catch (error) {
+      logger.error('Error fetching games:', error)
+    }
   }
 
   // Fetch games from the Dota2 game coordinator

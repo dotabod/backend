@@ -516,6 +516,8 @@ export interface DelayedGames {
       accountid: string
       team_slot: number
     }[]
+    average_mmr?: number
+    spectators?: number
   }[]
 }
 export interface Cards {
