@@ -113,6 +113,7 @@ class Dota {
     // @ts-expect-error no types exist
     this.steamUser = new Steam.SteamUser(this.steamClient)
     this.dota2 = new Dota2.Dota2Client(this.steamClient, false, false)
+    this.dota2.setMaxListeners(12)
 
     const details = this.getUserDetails()
 
