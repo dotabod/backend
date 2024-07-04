@@ -54,10 +54,9 @@
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
-  "facetSelection": "{{- heroName}} selected facet: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
-  "innate": "{{- heroName}} innate: {{- title}} · {{- description}}",
   "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
+  "facetSelection": "{{- heroName}} selected facet: {{- facetTitle}} · {{- facetDescription}}",
   "gameNotFound": "Game was not found",
   "heroItems": {
     "empty": "(2m delay) No items found for {{- heroName}}",
@@ -73,6 +72,7 @@
     "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
+  "innate": "{{- heroName}} innate: {{- title}} · {{- description}}",
   "invalidColor": "Invalid hero color, slot, or name. Try 1-10, a partial hero name, or a color from {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
   "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
