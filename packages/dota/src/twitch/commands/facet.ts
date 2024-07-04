@@ -8,6 +8,7 @@ import commandHandler from '../lib/CommandHandler.js'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
 
 commandHandler.registerCommand('facet', {
+  onlyOnline: true,
   dbkey: DBSettings.commandFacet,
   handler: async (message, args, command) => {
     const {

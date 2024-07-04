@@ -9,6 +9,7 @@ import commandHandler from '../lib/CommandHandler.js'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
 
 commandHandler.registerCommand('innate', {
+  onlyOnline: true,
   dbkey: DBSettings.commandInnate,
   handler: async (message, args, command) => {
     const {
