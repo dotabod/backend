@@ -7,8 +7,29 @@ interface Avg {
   players?: { heroid: number | undefined; accountid: number; playerid: number }[]
 }
 
+function calculateAverage(numbers: number[]): number {
+  const validNumbers = numbers.filter(Boolean)
+  const sum = validNumbers.reduce((a, b) => a + b, 0)
+  return Math.round(sum / validNumbers.length)
+}
+
+async function getRankTitle(
+  avg: number,
+  avgLeader: number,
+  averageMmrPostfix: string,
+): Promise<string> {
+  const rank = await getRankDetail(avg)
+  if (!rank && !avgLeader) return `Immortal${averageMmrPostfix}`
+  if (!rank) return `${avg || `#${avgLeader}${averageMmrPostfix}`}`
+  if (avgLeader) return `#${avgLeader}${averageMmrPostfix}`
+  if ('standing' in rank) {
+    return `Immortal${averageMmrPostfix}`
+  }
+  return `${avg} · ${rank.myRank.title}${averageMmrPostfix}`
+}
+
 export async function calculateAvg({ locale, currentMatchId, players }: Avg): Promise<string> {
-  const { cards } = await getPlayers({ locale, currentMatchId, players })
+  const { cards, average_mmr } = await getPlayers({ locale, currentMatchId, players })
 
   const mmrs: number[] = []
   const leaderranks: number[] = []
@@ -17,22 +38,9 @@ export async function calculateAvg({ locale, currentMatchId, players }: Avg): Pr
     leaderranks.push(card.leaderboard_rank)
   })
 
-  // Get average of all numbers in mmrs array
-  const avg = Math.round(
-    mmrs.filter(Boolean).reduce((a, b) => a + b, 0) / mmrs.filter(Boolean).length,
-  )
-  const avgLeader = Math.round(
-    leaderranks.filter(Boolean).reduce((a, b) => a + b, 0) / leaderranks.filter(Boolean).length,
-  )
-  const rank = await getRankDetail(avg)
+  const avg = calculateAverage(mmrs)
+  const avgLeader = calculateAverage(leaderranks)
+  const averageMmrPostfix = average_mmr ? ` · ${average_mmr} MMR` : ''
 
-  if (!rank && !avgLeader) return 'Immortal'
-  if (!rank) return `${avg || `#${avgLeader}`}`
-  if (avgLeader) return `#${avgLeader}`
-
-  if ('standing' in rank) {
-    return 'Immortal'
-  }
-
-  return `${avg} · ${rank.myRank.title}`
+  return getRankTitle(avg, avgLeader, averageMmrPostfix)
 }

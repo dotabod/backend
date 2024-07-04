@@ -55,6 +55,7 @@ export async function getPlayers({
     return {
       gameMode: response ? Number(response.match.game_mode) : undefined,
       matchPlayers,
+      average_mmr: response?.average_mmr,
       accountIds,
       cards,
     }
