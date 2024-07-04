@@ -172,7 +172,6 @@ class Dota {
                   spectators: game.spectators,
                 },
                 $setOnInsert: {
-                  average_mmr: game.average_mmr,
                   'match.game_mode': game.game_mode,
                   'match.lobby_type': game.lobby_type,
                   'match.server_steam_id': game.server_steam_id,
