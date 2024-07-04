@@ -185,8 +185,7 @@ class Dota {
           }))
 
           // Perform bulk write
-          const bulkWrote = await db.collection<DelayedGames>('delayedGames').bulkWrite(bulkOps)
-          console.log(bulkWrote.deletedCount, bulkWrote.insertedCount, bulkWrote.modifiedCount)
+          await db.collection<DelayedGames>('delayedGames').bulkWrite(bulkOps)
         } catch (e) {
           logger.error('Error saving games:', e)
         } finally {
