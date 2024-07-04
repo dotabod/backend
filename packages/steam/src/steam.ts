@@ -223,7 +223,11 @@ class Dota {
 
       for (let start = 0; start < 100; start += 10) {
         setTimeout(() => {
-          this.dota2.requestSourceTVGames({ start_game: start })
+          try {
+            this.dota2.requestSourceTVGames({ start_game: start })
+          } catch (error) {
+            logger.error('Error in Dota2Client.requestSourceTVGames:', error)
+          }
         }, 50 * start)
       }
     })
