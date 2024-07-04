@@ -49,8 +49,10 @@
     "yellow": "Жовтий"
   },
   "commandDisabled": "Streamer вимкнув {{cmdName}} команду {{emote}} Введіть !commands, щоб дізнатись, які команди зараз доступні",
+  "commands": "",
   "commands_everyone": "Кожен може використовувати: {{commandList}}",
   "commands_mods": "Команди лише для модераторів: {{commandList}}",
+  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
   "connections": {
     "gsi_one": "{{count}} стрімер підключений до Dotabod GSI",
     "gsi_few": "{{count}} стрімери підключені до Dotabod GSI",

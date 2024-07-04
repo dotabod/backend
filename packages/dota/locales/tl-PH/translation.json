@@ -44,6 +44,7 @@
     "teal": "Teal",
     "yellow": "Yellow"
   },
+  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
   "commandDisabled": "Hindi pinagana ng streamer ang command na {{cmdName}} {{emote}} Tignan ang !commands para sa mga gumagana",
   "commands_everyone": "Lahat kayang gumamit: {{commandList}}",
   "commands_mods": "Mod lang na commands: {{commandList}}",

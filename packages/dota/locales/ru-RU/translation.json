@@ -49,8 +49,10 @@
     "yellow": "Желтый"
   },
   "commandDisabled": "Стример отключил команду {{cmdName}} {{emote}} . Напишите !commands, чтобы увидеть доступные команды",
+  "commands": "",
   "commands_everyone": "Каждый может использовать: {{commandList}}",
   "commands_mods": "Команды только для модераторов: {{commandList}}",
+  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
   "connections": {
     "gsi_one": "{{count}} стример подключён к Dotabod GSI",
     "gsi_few": "{{count}} стримера подключёны к Dotabod GSI",
