@@ -504,7 +504,8 @@ export interface Medals {
 }
 
 export interface DelayedGames {
-  _id: string
+  average_mmr?: number
+  spectators?: number
   match: {
     server_steam_id: string
     match_id: string
@@ -519,8 +520,6 @@ export interface DelayedGames {
       playerid: number
       team_slot: number
     }[]
-    average_mmr?: number
-    spectators?: number
   }[]
 }
 export interface Cards {
