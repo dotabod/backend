@@ -47,8 +47,10 @@
     "yellow": "Gul"
   },
   "commandDisabled": "Streamern inaktiverade {{cmdName}}-kommandot {{emote}} Kolla !commands för de aktiverade",
+  "commands": "",
   "commands_everyone": "Alla kan använda: {{commandList}}",
   "commands_mods": "Mod-kommandon: {{commandList}}",
+  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
   "connections": {
     "gsi_one": "{{count}} streamer connected to Dotabod GSI",
     "gsi_other": "{{count}} streamers connected to Dotabod GSI",

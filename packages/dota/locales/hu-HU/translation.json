@@ -47,8 +47,10 @@
     "yellow": "Yellow"
   },
   "commandDisabled": "A streamer kikapcsolta a {{cmdName}} parancsot {{emote}} Elérhető parancsok megtekinthetőek a !commands paranccsal.",
+  "commands": "",
   "commands_everyone": "Mindenki számára elérhető parancsok: {{commandList}}",
   "commands_mods": "Moderátor parancsok: {{commandList}}",
+  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
   "connections": {
     "gsi_one": "{{count}} streamer connected to Dotabod GSI",
     "gsi_other": "{{count}} streamers connected to Dotabod GSI",

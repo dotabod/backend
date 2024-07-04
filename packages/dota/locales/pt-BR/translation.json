@@ -48,8 +48,10 @@
     "yellow": "Amarelo"
   },
   "commandDisabled": "O streamer desativou o comando {{cmdName}} {{emote}} Digite !commands para verificar os comandos habilitados",
+  "commands": "",
   "commands_everyone": "Todos podem usar: {{commandList}}",
   "commands_mods": "Comandos exclusivos para mods: {{commandList}}",
+  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
   "connections": {
     "gsi_one": "{{count}} streamer conectado ao Dotabod GSI",
     "gsi_many": "",
