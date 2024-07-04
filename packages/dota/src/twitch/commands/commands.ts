@@ -11,7 +11,7 @@ commandHandler.registerCommand('commands', {
       channel,
       t('commands', {
         channel,
-        url: `dotabod.com/commands/${channel}`,
+        url: `dotabod.com/${channel}`,
         lng: message.channel.client.locale,
       }),
     )
