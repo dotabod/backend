@@ -143,8 +143,10 @@ class Dota {
     if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) return
     this.getGames()
 
-    // Get latest games every 30 seconds
-    this.interval = setInterval(this.checkAccounts, 30_000)
+    if (!this.interval) {
+      // Get latest games every 30 seconds
+      this.interval = setInterval(this.checkAccounts, 30_000)
+    }
   }
 
   private async getGames() {
@@ -205,21 +207,25 @@ class Dota {
       let games: SteamMatchDetails[] = []
       const startGame = 90
 
+      // get a count of the match ids that are unique
+      const uniqueSet = new Set()
+
       const callbackNotSpecificGames = (data: {
         specific_games: boolean
         game_list: any[]
         league_id: number
         start_game: number
       }) => {
-        if (!data.specific_games) {
-          games = games.concat(data.game_list.filter((game) => game.players?.length > 0))
-          if (data.league_id === 0 && startGame === data.start_game) {
-            this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
-            resolve(this.filterUniqueGames(games))
-          }
+        games = games.concat(data.game_list.filter((game) => game.players?.length > 0))
+        // add match ids to unique set
+        uniqueSet.add(data.game_list.map((game) => game.match_id).length)
+        if (data.league_id === 0 && startGame === data.start_game) {
+          this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
+          resolve(this.filterUniqueGames(games))
         }
       }
 
+      this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
       this.dota2.on('sourceTVGamesData', callbackNotSpecificGames)
 
       for (let start = 0; start < 100; start += 10) {
