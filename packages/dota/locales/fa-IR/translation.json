@@ -169,6 +169,11 @@
   "setStreamDelay": "در حال تنظیم تاخیر استریم به $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "مقدار غیر قابل قبول برای تاخیر در استریم. از دستور !setdelay استفاده کنید",
   "setStreamDelayRemoved": "در حال حذف تاخیر استریم",
+  "spectators": {
+    "count_one": "1 spectator watching this match live",
+    "count_other": "{{count}} spectators watching this match live",
+    "count_none": "No spectators currently watching this match live"
+  },
   "stream": "$t(stream_on)",
   "stream_none": "تغییری ایجاد نشد. کاربر از پیش در وضعیت {{state}} قرار دارد. از دستور {{command}} برای تغییر استفاده کنید.",
   "stream_off": "Dotabod will treat {{channel}} as offline. Type !online to undo",

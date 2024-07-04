@@ -179,6 +179,12 @@
   "setStreamDelay": "Configurando delay de transmissão para: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <seconds> .",
   "setStreamDelayRemoved": "Removendo delay de transmissão",
+  "spectators": {
+    "count_one": "1 spectator watching this match live",
+    "count_many": "",
+    "count_other": "{{count}} spectators watching this match live",
+    "count_none": "No spectators currently watching this match live"
+  },
   "stream": "$t(stream_on)",
   "stream_none": "Nenhuma alteração foi feita, usuário já {{state}}. Tente !{{command}} para alternar.",
   "stream_off": "Dotabod tratará {{channel}} como offline. Digite !online para desfazer",

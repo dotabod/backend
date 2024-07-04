@@ -169,6 +169,11 @@
   "setStreamDelay": "Ställer in streamens fördröjning till: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Ogiltig stream fördröjning, använd !setdelay <sekunder>",
   "setStreamDelayRemoved": "Tar bort stream fördröjningen",
+  "spectators": {
+    "count_one": "1 spectator watching this match live",
+    "count_other": "{{count}} spectators watching this match live",
+    "count_none": "No spectators currently watching this match live"
+  },
   "stream": "$t(stream_on)",
   "stream_none": "No changes made, user already {{state}}. Try !{{command}} to toggle.",
   "stream_off": "Dotabod behandlar {{channel}} som offline. Skriv !online för att ångra",

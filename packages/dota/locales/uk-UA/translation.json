@@ -197,6 +197,13 @@
   "setStreamDelay": "Затримка потоку змінена до $t(seconds, {\"count\": {{seconds}} }) с",
   "setStreamDelayNoArgs": "Затримка на стрімі не встановлена, використайте !setdelay <seconds>",
   "setStreamDelayRemoved": "Затримку на стрімі прибрано",
+  "spectators": {
+    "count_one": "1 spectator watching this match live",
+    "count_few": "{{count}} spectators watching this match live",
+    "count_many": "{{count}} spectators watching this match live",
+    "count_other": "{{count}} spectators watching this match live",
+    "count_none": "No spectators currently watching this match live"
+  },
   "stream": "$t(stream_on)",
   "stream_none": "Не внесено змін, користувач вже {{state}}. Спробуй {{command}}, щоб перемкнути режим.",
   "stream_off": "Dotabod вважатиме {{channel}} офлайн. Введіть !online, щоб скасувати це",
