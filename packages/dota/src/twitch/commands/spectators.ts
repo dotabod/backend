@@ -9,7 +9,7 @@ import commandHandler from '../lib/CommandHandler.js'
 commandHandler.registerCommand('spectators', {
   aliases: ['specs'],
   onlyOnline: true,
-  dbkey: DBSettings.commandRanked,
+  dbkey: DBSettings.commandSpectators,
   handler: async (message, args) => {
     const {
       channel: { name: channel, client },

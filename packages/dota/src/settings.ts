@@ -80,6 +80,7 @@ export const defaultSettings = {
   commandWinProbability: true,
   commandFacet: true,
   commandInnate: true,
+  commandSpectators: true,
   'minimap-blocker': true,
   minimapRight: false,
   mmr: null,
