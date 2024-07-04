@@ -198,11 +198,11 @@
   "setStreamDelayNoArgs": "Nieprawidłowe opóźnienie transmisji, użyj !setdelay <seconds>",
   "setStreamDelayRemoved": "Usuwam opóźnienie transmisji",
   "spectators": {
-    "count_one": "1 spectator watching this match live",
-    "count_few": "{{count}} spectators watching this match live",
-    "count_many": "{{count}} spectators watching this match live",
-    "count_other": "{{count}} spectators watching this match live",
-    "count_none": "No spectators currently watching this match live"
+    "count_one": "1 obserwujący ogląda ten mecz na żywo w kliencie gry",
+    "count_few": "{{count}} obserwujących ogląda ten mecz na żywo w kliencie gry",
+    "count_many": "{{count}} obserwujących ogląda ten mecz na żywo w kliencie gry",
+    "count_other": "{{count}} obserwujących ogląda ten mecz na żywo w kliencie gry",
+    "count_none": "Nikt nie ogląda tego meczu na żywo w kliencie gry"
   },
   "stream": "$t(stream_on)",
   "stream_none": "Nie wprowadzono żadnych zmian, użytkownik już {{state}}. Spróbuj !{{command}} by przełączyć.",
