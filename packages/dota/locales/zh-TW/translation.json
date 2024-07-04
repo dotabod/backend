@@ -46,8 +46,10 @@
     "yellow": "Yellow"
   },
   "commandDisabled": "Streamer disabled {{cmdName}} command {{emote}} Check !commands for the enabled ones",
+  "commands": "",
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
+  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
   "connections": {
     "gsi_other": "{{count}} streamers connected to Dotabod GSI",
     "overlay_other": "{{count}} streamers using the overlay"

@@ -47,8 +47,10 @@
     "yellow": "Gelb"
   },
   "commandDisabled": "Streamer disabled {{cmdName}} command BibleThump Check !commands for the enabled ones",
+  "commands": "",
   "commands_everyone": "Jeder kann benutzen: {{commandList}}",
   "commands_mods": "Nur Mod Befehle: {{commandList}}",
+  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
   "connections": {
     "gsi_one": "{{count}} streamer connected to Dotabod GSI",
     "gsi_other": "{{count}} streamers connected to Dotabod GSI",

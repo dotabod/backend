@@ -47,8 +47,10 @@
     "yellow": "Sari"
   },
   "commandDisabled": "Yayıncı devre dışı {{cmdName}} komutu {{emote}} !commands komutu ile aktif olanları kontrol edebilirsin",
+  "commands": "",
   "commands_everyone": "Herkes kullanabilir: {{commandList}}",
   "commands_mods": "Sadece mod komutları: {{commandList}}",
+  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
   "connections": {
     "gsi_one": "{{count}} yayıncı Dotabod GSI'ya bağlı",
     "gsi_other": "{{count}} yayıncı Dotabod GSI'ya bağlı",
