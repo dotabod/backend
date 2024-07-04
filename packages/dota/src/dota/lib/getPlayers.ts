@@ -13,7 +13,7 @@ export async function getPlayers({
 }: {
   locale: string
   currentMatchId?: string
-  players?: { heroid: number; accountid: number; playerid: number }[]
+  players?: { heroid: number | undefined; accountid: number; playerid: number }[]
 }) {
   if (!currentMatchId) {
     throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))

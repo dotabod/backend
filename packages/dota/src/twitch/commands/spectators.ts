@@ -1,6 +1,4 @@
 import { t } from 'i18next'
-
-import { isArcade } from '../../dota/lib/isArcade.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
 import { DBSettings } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'

@@ -10,7 +10,7 @@ import MongoDBSingleton from './MongoDBSingleton.js'
 export async function gameMedals(
   locale: string,
   currentMatchId?: string,
-  players?: { heroid: number; accountid: number; playerid: number }[],
+  players?: { heroid: number | undefined; accountid: number; playerid: number }[],
 ): Promise<string> {
   const { matchPlayers, cards } = await getPlayers({ locale, currentMatchId, players })
 
@@ -34,8 +34,8 @@ export async function gameMedals(
 
     const result: { heroNames: string; medal: string }[] = []
     const medalsToPlayers: Record<string, string[]> = {}
-    matchPlayers.forEach((player: { heroid: number; accountid: number }, i: number) => {
-      const heroName = getHeroNameOrColor(player.heroid, i)
+    matchPlayers.forEach((player, i: number) => {
+      const heroName = getHeroNameOrColor(player.heroid || 0, i)
       const medal = medals[i]
       if (!medalsToPlayers[medal]) {
         medalsToPlayers[medal] = [heroName]

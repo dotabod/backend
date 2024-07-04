@@ -11,7 +11,7 @@ export async function getAccountsFromMatch({
   searchMatchId?: string
   searchPlayers?: {
     playerid: number
-    heroid: number
+    heroid: number | undefined
     accountid: number
   }[]
 } = {}) {
@@ -35,23 +35,32 @@ export async function getAccountsFromMatch({
       .collection<DelayedGames>('delayedGames')
       .findOne({ 'match.match_id': matchId })
 
-    const matchPlayers =
-      Array.isArray(response?.teams) && response?.teams.length === 2
-        ? [
-            ...response.teams[0].players.map((a) => ({
-              heroid: a.heroid,
-              accountid: Number(a.accountid),
-              playerid: a.playerid,
-            })),
-            ...response.teams[1].players.map((a) => ({
-              heroid: a.heroid,
-              accountid: Number(a.accountid),
-              playerid: a.playerid,
-            })),
-          ]
-        : ([] as { heroid: number; accountid: number; playerid: number }[])
+    const hasTwoTeams = Array.isArray(response?.teams) && response?.teams.length === 2
 
-    if (matchPlayers.length) {
+    if (!hasTwoTeams && response?.players?.length) {
+      return {
+        matchPlayers: response.players.map((a) => ({
+          heroid: a.heroid,
+          accountid: Number(a.accountid),
+          playerid: 0, // Unknown until we have two teams
+        })),
+        accountIds: response.players.map((a) => Number(a.accountid)),
+      }
+    }
+
+    if (hasTwoTeams) {
+      const matchPlayers = [
+        ...response.teams[0].players.map((a) => ({
+          heroid: a.heroid,
+          accountid: Number(a.accountid),
+          playerid: a.playerid,
+        })),
+        ...response.teams[1].players.map((a) => ({
+          heroid: a.heroid,
+          accountid: Number(a.accountid),
+          playerid: a.playerid,
+        })),
+      ]
       return {
         matchPlayers,
         accountIds: matchPlayers.map((player) => player.accountid),

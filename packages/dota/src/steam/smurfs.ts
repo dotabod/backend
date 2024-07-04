@@ -6,14 +6,14 @@ import { getHeroNameOrColor } from '../dota/lib/heroes.js'
 export async function smurfs(
   locale: string,
   currentMatchId?: string,
-  players?: { heroid: number; accountid: number; playerid: number }[],
+  players?: { heroid: number | undefined; accountid: number; playerid: number }[],
 ): Promise<string> {
   const { matchPlayers, cards } = await getPlayers({ locale, currentMatchId, players })
 
   const result: { heroName: string; lifetime_games?: number }[] = []
-  matchPlayers.forEach((player: { heroid: number; accountid: number }, i: number) => {
+  matchPlayers.forEach((player, i: number) => {
     result.push({
-      heroName: getHeroNameOrColor(player.heroid, i),
+      heroName: getHeroNameOrColor(player.heroid || 0, i),
       lifetime_games: cards[i]?.lifetime_games,
     })
   })

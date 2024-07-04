@@ -4,7 +4,7 @@ import { getRankDetail, rankTierToMmr } from './ranks.js'
 interface Avg {
   locale: string
   currentMatchId?: string
-  players?: { heroid: number; accountid: number; playerid: number }[]
+  players?: { heroid: number | undefined; accountid: number; playerid: number }[]
 }
 
 export async function calculateAvg({ locale, currentMatchId, players }: Avg): Promise<string> {

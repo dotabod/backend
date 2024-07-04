@@ -512,6 +512,10 @@ export interface DelayedGames {
     game_mode: number
     lobby_type: number
   }
+  players: {
+    accountid: string
+    heroid: number
+  }[]
   teams: {
     players: {
       items: number[]

@@ -39,7 +39,7 @@ interface LastgameParams {
   locale: string
   steam32Id: number
   currentMatchId?: string
-  currentPlayers?: { heroid: number; accountid: number; playerid: number }[]
+  currentPlayers?: { heroid: number | undefined; accountid: number; playerid: number }[]
 }
 
 export default async function lastgame({
@@ -56,7 +56,10 @@ export default async function lastgame({
       .collection<DelayedGames>('delayedGames')
       .find(
         {
-          'teams.players.accountid': Number(steam32Id),
+          $or: [
+            { 'players.accountid': Number(steam32Id) },
+            { 'teams.players.accountid': Number(steam32Id) },
+          ],
         },
         { sort: { createdAt: -1 }, limit: 2 },
       )

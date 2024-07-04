@@ -167,6 +167,7 @@ class Dota {
               filter: { 'match.match_id': game.match_id },
               update: {
                 $set: {
+                  average_mmr: game.average_mmr,
                   players: game.players,
                   spectators: game.spectators,
                 },
@@ -242,7 +243,12 @@ class Dota {
     return games
       .map((match) => ({
         match_id: new Long(match.match_id.low, match.match_id.high).toString(),
-        players: match.players || [],
+        players:
+          // Removing underscores to save to db, so its in the same format as steam web api delayed games
+          match.players?.map((player) => ({
+            accountid: player.account_id,
+            heroid: player.hero_id,
+          })) || [],
         server_steam_id: new Long(match.server_steam_id.low, match.server_steam_id.high).toString(),
         game_mode: match.game_mode,
         spectators: match.spectators,
