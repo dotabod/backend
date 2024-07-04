@@ -37,7 +37,7 @@ export async function getAccountsFromMatch({
 
     const hasTwoTeams = Array.isArray(response?.teams) && response?.teams.length === 2
 
-    if (!hasTwoTeams && response?.players?.length) {
+    if (response?.players?.length && !hasTwoTeams) {
       return {
         matchPlayers: response.players.map((a) => ({
           heroid: a.heroid,
@@ -51,12 +51,16 @@ export async function getAccountsFromMatch({
     if (hasTwoTeams) {
       const matchPlayers = [
         ...response.teams[0].players.map((a) => ({
-          heroid: a.heroid,
+          heroid:
+            a.heroid ||
+            response?.players?.find((p) => Number(p.accountid) === Number(a.accountid))?.heroid,
           accountid: Number(a.accountid),
           playerid: a.playerid,
         })),
         ...response.teams[1].players.map((a) => ({
-          heroid: a.heroid,
+          heroid:
+            a.heroid ||
+            response?.players?.find((p) => Number(p.accountid) === Number(a.accountid))?.heroid,
           accountid: Number(a.accountid),
           playerid: a.playerid,
         })),
