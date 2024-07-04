@@ -9,7 +9,7 @@ commandHandler.registerCommand('commands', {
     const channel = message.channel.client.name
     chatClient.say(
       channel,
-      t('commands', {
+      t('commandsPage', {
         channel,
         url: `dotabod.com/${channel}`,
         lng: message.channel.client.locale,
