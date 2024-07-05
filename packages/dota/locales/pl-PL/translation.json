@@ -52,7 +52,7 @@
   "commands": "",
   "commands_everyone": "Wszyscy mogą używać: {{commandList}}",
   "commands_mods": "Komendy tylko dla moderatorów: {{commandList}}",
-  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
+  "commandsPage": "Aby wyświetlić dostępne komendy {{- channel}}, odwiedź {{- url}}",
   "connections": {
     "gsi_one": "Aktualnie {{count}} streamer jest podłączony do Dotabod GSI",
     "gsi_few": "Aktualnie {{count}} streamerów jest podłączonych do Dotabod GSI",

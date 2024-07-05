@@ -44,10 +44,11 @@
     "teal": "Teal",
     "yellow": "Yellow"
   },
-  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
   "commandDisabled": "Hindi pinagana ng streamer ang command na {{cmdName}} {{emote}} Tignan ang !commands para sa mga gumagana",
+  "commands": "",
   "commands_everyone": "Lahat kayang gumamit: {{commandList}}",
   "commands_mods": "Mod lang na commands: {{commandList}}",
+  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
   "connections": {
     "gsi_one": "{{count}} streamer connected to Dotabod GSI",
     "gsi_other": "{{count}} streamers konektado sa Dotabod GSI",
