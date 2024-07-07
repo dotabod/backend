@@ -3,12 +3,15 @@ import './commandLoader.js'
 import type { ChatUser } from '@twurple/chat'
 import { t } from 'i18next'
 
+import { io } from 'socket.io-client'
 import getDBUser from '../db/getDBUser.js'
 import { plebMode } from '../dota/lib/consts.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
 import { logger } from '../utils/logger.js'
-import { chatClient, twitchChat } from './chatClient.js'
+import { chatClient } from './chatClient.js'
 import commandHandler from './lib/CommandHandler.js'
+
+export const twitchChat = io(`ws://${process.env.HOST_TWITCH_CHAT}:5005`)
 
 logger.info("Starting 'twitch' package")
 

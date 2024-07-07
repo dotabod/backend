@@ -3,6 +3,7 @@ import { transformBetData } from './twitch/events/transformers/transformBetData.
 import { transformPollData } from './twitch/events/transformers/transformPollData.js'
 import { offlineEvent } from './twitch/lib/offlineEvent.js'
 import { onlineEvent } from './twitch/lib/onlineEvent.js'
+import { revokeEvent } from './twitch/lib/revokeEvent.js'
 import { updateUserEvent } from './twitch/lib/updateUserEvent.js'
 import { DOTABOD_EVENTS_ROOM, eventsIOConnected, socketIo } from './utils/socketUtils.js'
 
@@ -17,6 +18,7 @@ export const SubscribeEvents = (accountIds: string[]) => {
   const promises: any[] = []
   accountIds.forEach((userId) => {
     try {
+      promises.push(listener.onUserAuthorizationRevoke(userId, revokeEvent))
       promises.push(listener.onStreamOnline(userId, onlineEvent))
       promises.push(listener.onStreamOffline(userId, offlineEvent))
       promises.push(listener.onUserUpdate(userId, updateUserEvent))
