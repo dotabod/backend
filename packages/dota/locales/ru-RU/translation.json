@@ -72,7 +72,7 @@
   "facetTotalLimit_one": "Only {{count}} facet is available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_few": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_many": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_other": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
+  "facetTotalLimit_other": "Аспекты {{count}} доступны только для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Игра не найдена",
   "gpm_zero": "",
   "gpm_one": "Текущий GPM у {{- heroName}}: {{num}} золотой. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
