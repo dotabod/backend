@@ -1,9 +1,10 @@
 import { startUserSubscriptions } from './SubscribeEvents'
+import { chatClient } from './chatClient.js'
 import supabase from './db/supabase.js'
 import { getBotInstance } from './twitch/lib/BotApiSingleton.js'
 
 const botApi = getBotInstance()
-export async function handleNewUser(providerAccountId: string) {
+export async function handleNewUser(providerAccountId: string, resubscribeEvents = true) {
   console.log("[TWITCHEVENTS] New user, let's get their info", { userId: providerAccountId })
 
   if (!providerAccountId) {
@@ -45,13 +46,21 @@ export async function handleNewUser(providerAccountId: string) {
       .from('users')
       .update(filteredData as typeof data)
       .eq('id', user.userId)
+
+    if (streamer?.name) {
+      chatClient.join(streamer.name)
+    } else {
+      console.log('[TWITCHEVENTS] streamer.name is falsy', { streamer })
+    }
   } catch (e) {
     console.log('[TWITCHEVENTS] error on getStreamByUserId', { e })
   }
 
-  try {
-    startUserSubscriptions(providerAccountId)
-  } catch (e) {
-    console.log('[TWITCHEVENTS] error on handlenewuser', { e })
+  if (resubscribeEvents) {
+    try {
+      startUserSubscriptions(providerAccountId)
+    } catch (e) {
+      console.log('[TWITCHEVENTS] error on handlenewuser', { e })
+    }
   }
 }
