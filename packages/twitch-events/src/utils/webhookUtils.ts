@@ -4,6 +4,7 @@ import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import { SubscribeEvents } from '../SubscribeEvents.js'
 import { chatClient } from '../chatClient.js'
 import type { Tables } from '../db/supabase-types.js'
+import supabase from '../db/supabase.js'
 import { handleNewUser } from '../handleNewUser.js'
 import { listener } from '../listener.js'
 import { getAccountIds } from '../twitch/lib/getAccountIds.js'
@@ -31,7 +32,7 @@ export const setupWebhooks = () => {
     '/webhook',
     express.json(),
     express.urlencoded({ extended: true }),
-    (req, res) => {
+    async (req, res) => {
       // check authorization beaerer token
       if (!isAuthenticated(req)) {
         console.log('[TWITCHEVENTS] Unauthorized request', {
@@ -59,7 +60,7 @@ export const setupWebhooks = () => {
             })
           })
           .catch((e) => {
-            console.log('[TWITCHEVENTS] error on handleNewUser', {
+            console.log('[TWITCHEVENTS] error on handleNewUser 1', {
               e,
               providerAccountId: user.providerAccountId,
             })
@@ -89,7 +90,7 @@ export const setupWebhooks = () => {
               })
             })
             .catch((e) => {
-              console.log('[TWITCHEVENTS] error on handleNewUser', {
+              console.log('[TWITCHEVENTS] error on handleNewUser 2', {
                 e,
                 providerAccountId: newUser.providerAccountId,
               })
@@ -103,16 +104,34 @@ export const setupWebhooks = () => {
         if (IS_DEV && !DEV_CHANNELS.includes(newUser.name)) return
         if (!IS_DEV && DEV_CHANNELS.includes(newUser.name)) return
 
-        if (!oldUser.displayName && newUser.displayName) {
-          console.log('[SUPABASE] New user to send bot to: ', newUser.name)
-          chatClient.join(newUser.name)
-        } else if (oldUser.name !== newUser.name) {
+        if (oldUser.name !== newUser.name || oldUser.displayName !== newUser.displayName) {
           console.log('[SUPABASE] User changed name: ', {
             oldName: oldUser.name,
             newName: newUser.name,
+            oldDisplayName: oldUser.displayName,
+            newDisplayName: newUser.displayName,
           })
-          chatClient.part(oldUser.name)
-          chatClient.join(newUser.name)
+
+          const { data: account } = await supabase
+            .from('accounts')
+            .select('providerAccountId')
+            .eq('userId', newUser.id)
+            .single()
+
+          if (account?.providerAccountId) {
+            chatClient.part(oldUser.name)
+
+            try {
+              // This updates their actual twitch username via twitch api
+              // Only resubscribing if it's a new user
+              await handleNewUser(account.providerAccountId, !oldUser.displayName)
+            } catch (e) {
+              console.log('[TWITCHEVENTS] error on handleNewUser 3', {
+                e,
+                providerAccountId: account.providerAccountId,
+              })
+            }
+          }
         }
       }
 
