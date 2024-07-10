@@ -15,6 +15,9 @@ eventHandler.registerEvent('hero:name', {
   handler: async (dotaClient: GSIHandler, name: HeroNames) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
+    const betsEnabled = getValueOrDefault(DBSettings.bets, dotaClient.client.settings)
+    if (!betsEnabled) return
+
     const playingHero = (await redisClient.client.get(
       `${dotaClient.getToken()}:playingHero`,
     )) as HeroNames | null

@@ -538,7 +538,7 @@ export class GSIHandler {
     const hero = getHero(client.gsi?.hero?.name)
 
     const matchId = client?.gsi?.map?.matchid || ''
-    let betId: null | string = null
+    let betId: undefined | string
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
 
@@ -572,17 +572,19 @@ export class GSIHandler {
       })
     }
 
-    say(client, t('bets.open', { emote: 'peepoGamble', lng: client.locale }), {
-      delay: false,
-      key: DBSettings.tellChatBets,
-    })
+    if (betsEnabled) {
+      say(client, t('bets.open', { emote: 'peepoGamble', lng: client.locale }), {
+        delay: false,
+        key: DBSettings.tellChatBets,
+      })
 
-    logger.info('[BETS] open bets', {
-      event: 'open_bets',
-      matchId,
-      user: client.token,
-      player_team: client.gsi?.player?.team_name,
-    })
+      logger.info('[BETS] open bets', {
+        event: 'open_bets',
+        matchId,
+        user: client.token,
+        player_team: client.gsi?.player?.team_name,
+      })
+    }
   }
 
   async closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
@@ -814,7 +816,8 @@ export class GSIHandler {
                 }),
               )
             }
-            await refundTwitchBet(this.getChannelId())
+            const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
+            if (betsEnabled) await refundTwitchBet(this.getChannelId())
           }
           await this.resetClientState()
           return
