@@ -68,9 +68,14 @@ export const openTwitchBet = async ({
             twitchId,
           })
         }
+        return
+      } catch (e) {
+        // just means couldn't json parse the message for the case above
+      }
 
+      try {
         // "message\": \"Invalid refresh token\"\n}" means they have to logout and login
-        else if (JSON.parse(e?.body)?.message?.includes('refresh token')) {
+        if (JSON.parse(e?.body)?.message?.includes('refresh token')) {
           say(
             client,
             t('bets.error', {
@@ -82,10 +87,6 @@ export const openTwitchBet = async ({
             },
           )
 
-          logger.error('[TWITCHSETUP] Failed to refresh twitch tokens in gsi handler', {
-            twitchId,
-          })
-
           await supabase
             .from('accounts')
             .update({
@@ -93,10 +94,13 @@ export const openTwitchBet = async ({
             })
             .eq('providerAccountId', twitchId)
             .eq('provider', 'twitch')
+          return
         }
       } catch (e) {
         // just means couldn't json parse the message for the two cases above
       }
+
+      logger.error('[PREDICT] [BETS] Failed to open twitch bet', { twitchId, heroName, e })
 
       throw e
     })
