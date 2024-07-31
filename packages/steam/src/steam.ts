@@ -215,9 +215,9 @@ class Dota {
         league_id: number
         start_game: number
       }) => {
-        games = games.concat(data.game_list.filter((game) => game.players?.length > 0))
+        games = games.concat(data?.game_list?.filter((game) => game.players?.length > 0))
         // add match ids to unique set
-        if (data.league_id === 0 && startGame === data.start_game) {
+        if (data?.league_id === 0 && startGame === data?.start_game) {
           this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
           resolve(this.filterUniqueGames(games))
         }
