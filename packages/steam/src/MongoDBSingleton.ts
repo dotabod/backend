@@ -30,12 +30,15 @@ class MongoDBSingleton {
           // Connect to MongoDB
           const mongoURL = process.env.MONGO_URL
           if (!mongoURL) throw new Error('MONGO_URL not set')
-          const client = await MongoClient.connect(mongoURL)
+          const client = await MongoClient.connect(mongoURL, {
+            ssl: process.env.DOTABOD_ENV === 'production',
+          }) // Disable SSL
           this.mongoClient = client // Store the MongoClient object
 
           // Resolve the promise with the client
           resolve(client.db())
         } catch (error: any) {
+          console.log({ error })
           logger.info('Retrying mongo connection', { currentAttempt })
           // If the retry operation has been exhausted, reject the promise with the error
           if (operation.retry(error)) {
