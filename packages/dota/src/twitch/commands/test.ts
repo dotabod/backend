@@ -38,10 +38,12 @@ name:${user.name} or
 ${user.SteamAccount.map((a) => `steam32Id:${a.steam32Id} or`).join(' ')}
 token:${user.id} or
 userId:${user.id} or
+message:*${user.id}* or
 user:${user.id} or
 token:${user.Account?.providerAccountId ?? ''} or
 message:Starting! or
-twitchId:${user.Account?.providerAccountId ?? ''}
+twitchId:${user.Account?.providerAccountId ?? ''} or
+lookupToken:${user.Account?.providerAccountId ?? ''}
 `
 }
 
