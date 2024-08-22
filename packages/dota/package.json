@@ -21,7 +21,7 @@
     "@twurple/eventsub-ws": "^7.1.0",
     "@types/long": "^5.0.0",
     "@types/lru-cache": "^7.10.10",
-    "axios": "1.2.0-alpha.1",
+    "axios": "1.7.4",
     "axios-retry": "^3.9.1",
     "body-parser": "^1.20.2",
     "chokidar": "^3.6.0",
