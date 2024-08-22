@@ -5,170 +5,139 @@ import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { steamSocket } from '../../steam/ws.js'
 import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import commandHandler from '../lib/CommandHandler.js'
 
-const fetchUserByName = async (name: string) => {
+const getLogQuery = async (name: string) => {
   const { data: user, error } = await supabase
     .from('users')
     .select(
       `
-      name,
-      id,
-      accounts (
-        providerAccountId
-      ),
-      steam_accounts (
-        steam32Id
-      )
-    `,
+    name,
+    id,
+    Account:accounts (
+      providerAccountId
+    ),
+    SteamAccount:steam_accounts (
+      steam32Id
+    )
+  `,
     )
     .eq('name', name)
     .single()
 
   if (error) {
-    console.error('Error fetching user:', error)
-    return null
-  }
-
-  return user
-}
-
-const generateLogQuery = (user: Awaited<ReturnType<typeof fetchUserByName>>) => {
-  if (!user) return
-
-  const steamAccountQueries = user.steam_accounts
-    .map((account: any) => `steam32Id:${account.steam32Id} or`)
-    .join(' ')
-
-  return `
-    channel:${user.name} or
-    name:${user.name} or
-    ${steamAccountQueries}
-    token:${user.id} or
-    userId:${user.id} or
-    message:*${user.id}* or
-    user:${user.id} or
-    token:${user.accounts?.providerAccountId ?? ''} or
-    message:Starting! or
-    twitchId:${user.accounts?.providerAccountId ?? ''} or
-    lookupToken:${user.accounts?.providerAccountId ?? ''}
-  `
-}
-
-const handleUserCommand = (message: MessageType, args: string[]) => {
-  const {
-    user: { userId },
-    channel: { name: channel, client },
-  } = message
-
-  const accountId = client.accounts?.providerAccountId ?? ''
-
-  chatClient.whisper(
-    userId,
-    `
-      Channel: ${channel}
-      Account ID: ${accountId}
-      Steam32 ID: ${client.steam32Id}
-      Token: ${client.token}
-    `,
-  )
-}
-
-const handleGameCommand = (message: MessageType) => {
-  const { user, channel } = message
-  chatClient.whisper(user.userId, JSON.stringify(channel.client.gsi))
-}
-
-const handleResetCommand = async (message: MessageType) => {
-  const { user, channel } = message
-  const handler = gsiHandlers.get(channel.client.token)
-  await handler?.resetClientState()
-
-  chatClient.whisper(user.userId, 'Reset')
-}
-
-const handleCardsCommand = async (message: MessageType) => {
-  const { user, channel } = message
-  const { accountIds } = await getAccountsFromMatch({
-    gsi: channel.client.gsi,
-  })
-  steamSocket.emit('getCards', accountIds, false, (err: any, response: any) => {
-    console.log(response, err) // one response per client
-  })
-
-  chatClient.say(channel.name, `cards! ${channel.client.gsi?.map?.matchid}`)
-}
-
-const handleCardCommand = (message: MessageType, args: string[]) => {
-  const [, accountId] = args
-
-  steamSocket.emit('getCard', Number(accountId), (err: any, response: any) => {
-    console.log({ response, err }) // one response per client
-  })
-
-  chatClient.say(message.channel.name, 'card!')
-}
-
-const handleLogsCommand = async (message: MessageType) => {
-  const { user, channel } = message
-  const userRecord = await fetchUserByName(channel.name.replace('#', ''))
-  const query = generateLogQuery(userRecord)
-  chatClient.whisper(user.userId, query || "Couldn't find user")
-}
-
-const handleServerCommand = (message: MessageType, args: string[]) => {
-  const { user, channel } = message
-  const [, steam32Id] = args
-
-  if (!process.env.STEAM_WEB_API) {
+    console.error(error)
     return
   }
 
-  steamSocket.emit(
-    'getUserSteamServer',
-    steam32Id || channel.client.steam32Id,
-    (err: any, steamServerId: string) => {
-      if (!steamServerId) {
-        chatClient.say(channel.name, t('gameNotFound', { lng: channel.client.locale }))
-        return
-      }
+  if (!user) return ''
 
-      chatClient.whisper(
-        user.userId,
-        `${channel.name} https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamServerId} ${channel.client.steam32Id} ${channel.client.token}`,
-      )
-    },
-  )
+  return `
+channel:${user.name} or
+name:${user.name} or
+${user.SteamAccount.map((a) => `steam32Id:${a.steam32Id} or`).join(' ')}
+token:${user.id} or
+userId:${user.id} or
+message:*${user.id}* or
+user:${user.id} or
+token:${user.Account?.providerAccountId ?? ''} or
+message:Starting! or
+twitchId:${user.Account?.providerAccountId ?? ''} or
+lookupToken:${user.Account?.providerAccountId ?? ''}
+`
 }
 
 commandHandler.registerCommand('test', {
-  permission: 4,
+  permission: 4, // Only admin is 4, not even streamer
 
   handler: async (message, args) => {
-    switch (args[0]) {
-      case 'user':
-        handleUserCommand(message, args)
-        break
-      case 'game':
-        handleGameCommand(message)
-        break
-      case 'reset':
-        await handleResetCommand(message)
-        break
-      case 'cards':
-        await handleCardsCommand(message)
-        break
-      case 'card':
-        handleCardCommand(message, args)
-        break
-      case 'logs':
-        await handleLogsCommand(message)
-        break
-      case 'server':
-        handleServerCommand(message, args)
-        break
-      default:
-        chatClient.whisper(message.user.userId, 'Invalid command')
+    const {
+      user: { userId },
+      channel: { name: channel, client },
+    } = message
+
+    if (args[0] === 'user') {
+      const accountId = client.Account?.providerAccountId ?? ''
+
+      chatClient.whisper(
+        userId,
+        `
+        Channel: ${channel}
+        Account ID: ${accountId}
+        Steam32 ID: ${client.steam32Id}
+        Token: ${client.token}
+      `,
+      )
+      return
+    }
+
+    if (args[0] === 'game') {
+      chatClient.whisper(userId, JSON.stringify(client.gsi))
+      return
+    }
+
+    if (args[0] === 'reset') {
+      const handler = gsiHandlers.get(client.token)
+      await handler?.resetClientState()
+
+      chatClient.whisper(userId, 'Reset')
+      return
+    }
+
+    if (args[0] === 'cards') {
+      const { accountIds } = await getAccountsFromMatch({
+        gsi: client.gsi,
+      })
+      steamSocket.emit('getCards', accountIds, false, (err: any, response: any) => {
+        console.log(response, err) // one response per client
+      })
+
+      chatClient.say(channel, `cards! ${client.gsi?.map?.matchid}`)
+      return
+    }
+
+    if (args[0] === 'card') {
+      const [, accountId] = args
+
+      steamSocket.emit('getCard', Number(accountId), (err: any, response: any) => {
+        console.log({ response, err }) // one response per client
+      })
+
+      chatClient.say(channel, 'card!')
+      return
+    }
+
+    if (args[0] === 'logs') {
+      const query = await getLogQuery(channel.replace('#', ''))
+      chatClient.whisper(userId, query || "Couldn't find user")
+      return
+    }
+
+    if (args[0] === 'server') {
+      const [, steam32Id] = args
+
+      if (!process.env.STEAM_WEB_API) {
+        return
+      }
+
+      steamSocket.emit(
+        'getUserSteamServer',
+        steam32Id || client.steam32Id,
+        (err: any, steamServerId: string) => {
+          chatClient.whisper(userId, steamServerId)
+          if (!steamServerId) {
+            chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
+            return
+          }
+
+          chatClient.whisper(
+            userId,
+            `${channel} https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamServerId} ${client.steam32Id} ${client.token}`,
+          )
+        },
+      )
+
+      return
     }
   },
 })
