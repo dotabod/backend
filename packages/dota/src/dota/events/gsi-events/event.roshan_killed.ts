@@ -17,6 +17,8 @@ export interface RoshRes {
   minDate: Date
   maxDate: Date
   count: number
+  radiantPercentage: number
+  direPercentage: number
 }
 
 // Doing it this way so i18n can pick up the t('') strings
@@ -49,6 +51,20 @@ export function getNewRoshTime(res: RoshRes) {
   return res
 }
 
+export function calculateRadiantDirePercentages(minS: number, maxS: number) {
+  const totalDuration = maxS - minS
+  const radiantDuration = 300 - minS
+  const direDuration = maxS - 300
+
+  const radiantPercentage = (radiantDuration / totalDuration) * 100
+  const direPercentage = (direDuration / totalDuration) * 100
+
+  return {
+    radiantPercentage: radiantPercentage > 0 ? radiantPercentage : 0,
+    direPercentage: direPercentage > 0 ? direPercentage : 0,
+  }
+}
+
 export function generateRoshanMessage(res: RoshRes, lng: string) {
   res = getNewRoshTime(res)
 
@@ -62,6 +78,18 @@ export function generateRoshanMessage(res: RoshRes, lng: string) {
       }),
     )
   }
+
+  const percentages = calculateRadiantDirePercentages(res.minS, res.maxS)
+  res.radiantPercentage = percentages.radiantPercentage
+  res.direPercentage = percentages.direPercentage
+
+  msgs.push(
+    t('roshanPercentages', {
+      radiant: res.radiantPercentage.toFixed(0),
+      dire: res.direPercentage.toFixed(0),
+      lng,
+    }),
+  )
 
   msgs.push(getRoshCountMessage({ lng, count: res.count }))
 
@@ -113,6 +141,8 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       minDate,
       maxDate,
       count: count + 1,
+      radiantPercentage: 0,
+      direPercentage: 0,
     }
 
     await redisClient.client.json.set(`${dotaClient.getToken()}:roshan`, '$', res)
