@@ -89,12 +89,18 @@ async function updateConduitShard(session_id: string, conduitId: string) {
 
 // TODO: Move this to twitch-events package
 const subscribeToUserUpdate = async (conduit_id: string, broadcaster_user_id: string) => {
+  const botUserId = process.env.TWITCH_BOT_PROVIDERID
+  if (!botUserId) {
+    logger.error('Bot user id not found')
+    return
+  }
+
   const body = {
     type: 'channel.chat.message',
     version: '1',
     condition: {
-      user_id: '843245458', // bot dotabod
-      broadcaster_user_id: '32474777', // TL
+      user_id: botUserId,
+      broadcaster_user_id: broadcaster_user_id, // the user we want to listen to
     },
     transport: {
       method: 'conduit',
@@ -111,14 +117,14 @@ const subscribeToUserUpdate = async (conduit_id: string, broadcaster_user_id: st
   })
 
   if (subscribeReq.status !== 202) {
-    console.error(
+    logger.error(
       `Failed to subscribe to channel.chat.message ${
         subscribeReq.status
       } ${await subscribeReq.text()}`,
     )
     return
   }
-  console.log('Subscribed to channel.chat.message')
+  logger.info('Subscribed to channel.chat.message')
 }
 
 // TODO: Move this to twitch-chat package
