@@ -16,7 +16,7 @@ async function fetchSubscriptionsWithStatus(status?: string, cursor?: string): P
   }
 
   const response = await fetch(url.toString(), { method: 'GET', headers })
-  console.log(response.headers.get('ratelimit-remaining'))
+  console.log('rate-limit remaining: ', response.headers.get('ratelimit-remaining'))
   if (response.status !== 200) {
     console.error(
       `Failed to fetch subscriptions with status ${status}: ${
@@ -192,6 +192,7 @@ async function deleteStatuses(singleLoop = false) {
 async function getCountOfSubscriptionsWithStatus(status?: string): Promise<number> {
   try {
     const data = await fetchSubscriptionsWithStatus(status)
+    console.log('max total cost: ', data?.max_total_cost)
     console.log('total cost: ', data?.total_cost)
     console.log('total found: ', data?.data.length)
     return data.data.length

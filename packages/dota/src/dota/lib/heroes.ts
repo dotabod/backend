@@ -601,6 +601,11 @@ const heroes = {
     localized_name: 'Mars',
     alias: [],
   },
+  npc_dota_hero_ringmaster: {
+    id: 131,
+    localized_name: 'Ringmaster',
+    alias: [],
+  },
   npc_dota_hero_dawnbreaker: {
     id: 135,
     localized_name: 'Dawnbreaker',
