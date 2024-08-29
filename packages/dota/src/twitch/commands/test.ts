@@ -119,13 +119,13 @@ const handleLogsCommand = async (message: MessageType) => {
   chatClient.whisper(user.userId, query || "Couldn't find user")
 }
 
-const handleWpCommand = (message: MessageType, args: string[]) => {
+const handleWpCommand = async (message: MessageType, args: string[]) => {
   if (!message?.channel?.client?.gsi?.map?.matchid) {
     chatClient.whisper(message.user.userId, 'No match id found')
     return
   }
 
-  const details = getWinProbability2MinAgo(
+  const details = await getWinProbability2MinAgo(
     Number.parseInt(message.channel.client.gsi.map.matchid, 10),
   )
   chatClient.whisper(message.user.userId, JSON.stringify(details))
