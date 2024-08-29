@@ -4,6 +4,7 @@ import supabase from '../../db/supabase.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { steamSocket } from '../../steam/ws.js'
+import { getWinProbability2MinAgo } from '../../stratz/livematch'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 
@@ -116,6 +117,18 @@ const handleLogsCommand = async (message: MessageType) => {
   chatClient.whisper(user.userId, query || "Couldn't find user")
 }
 
+const handleWpCommand = (message: MessageType, args: string[]) => {
+  if (!message?.channel?.client?.gsi?.map?.matchid) {
+    chatClient.whisper(message.user.userId, 'No match id found')
+    return
+  }
+
+  const details = getWinProbability2MinAgo(
+    Number.parseInt(message.channel.client.gsi.map.matchid, 10),
+  )
+  chatClient.whisper(message.user.userId, JSON.stringify(details))
+}
+
 const handleServerCommand = (message: MessageType, args: string[]) => {
   const { user, channel } = message
   const [, steam32Id] = args
@@ -166,6 +179,9 @@ commandHandler.registerCommand('test', {
         break
       case 'server':
         handleServerCommand(message, args)
+        break
+      case 'wp':
+        handleWpCommand(message, args)
         break
       default:
         chatClient.whisper(message.user.userId, 'Invalid command')
