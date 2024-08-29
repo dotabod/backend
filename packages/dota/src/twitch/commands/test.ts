@@ -1,5 +1,7 @@
 import { t } from 'i18next'
 
+import axios from 'axios'
+import type { DelayedGames } from '../../../../steam/src/types/index.js'
 import supabase from '../../db/supabase.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
@@ -140,15 +142,21 @@ const handleServerCommand = (message: MessageType, args: string[]) => {
   steamSocket.emit(
     'getUserSteamServer',
     steam32Id || channel.client.steam32Id,
-    (err: any, steamServerId: string) => {
+    async (err: any, steamServerId: string) => {
       if (!steamServerId) {
-        chatClient.say(channel.name, t('gameNotFound', { lng: channel.client.locale }))
+        chatClient.whisper(user.userId, t('gameNotFound', { lng: channel.client.locale }))
         return
       }
 
+      const game = (
+        await axios<DelayedGames>(
+          `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamServerId}`,
+        )
+      )?.data
+      chatClient.whisper(user.userId, JSON.stringify(game))
       chatClient.whisper(
         user.userId,
-        `${channel.name} https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamServerId} ${channel.client.steam32Id} ${channel.client.token}`,
+        `name: ${channel.name} steam32id: ${channel.client.steam32Id} token: ${channel.client.token}`,
       )
     },
   )
