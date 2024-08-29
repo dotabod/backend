@@ -21,10 +21,12 @@ axios.interceptors.response.use((response) => {
   throw err
 })
 
+// dev retries for 12 seconds, 2 times
+// prod retries for 112 seconds, 7 times
 axiosRetry(axios, {
-  retries: process.env.DOTABOD_ENV === 'development' ? 2 : 7, // number of retries
+  retries: process.env.DOTABOD_ENV === 'development' ? 2 : 7,
   retryDelay: (retryCount: number) => {
-    return retryCount * 4000 // time interval between retries
+    return retryCount * 4000
   },
   retryCondition: (error: any) => {
     return true

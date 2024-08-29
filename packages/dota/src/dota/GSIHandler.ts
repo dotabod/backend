@@ -612,7 +612,7 @@ export class GSIHandler {
     )) as HeroNames | null
 
     // An early without waiting for ancient to blow up
-    // We have to check every few seconds with an pi to see if the match is over
+    // We have to check every few seconds with an api to see if the match is over
     if (!winningTeam) {
       this.checkEarlyDCWinner(matchId)
       return
