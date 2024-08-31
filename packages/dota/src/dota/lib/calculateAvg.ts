@@ -1,10 +1,11 @@
 import { getPlayers } from '../../dota/lib/getPlayers.js'
+import type { Players } from '../../types'
 import { getRankDetail, rankTierToMmr } from './ranks.js'
 
 interface Avg {
   locale: string
   currentMatchId?: string
-  players?: { heroid: number | undefined; accountid: number; playerid: number }[]
+  players?: Players
 }
 
 function calculateAverage(numbers: number[]): number {

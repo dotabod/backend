@@ -2,6 +2,7 @@ import { t } from 'i18next'
 
 import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
 import { getHeroNameOrColor } from '../dota/lib/heroes.js'
+import type { Players } from '../types'
 import type { DelayedGames } from '../types.js'
 import CustomError from '../utils/customError.js'
 import MongoDBSingleton from './MongoDBSingleton.js'
@@ -39,7 +40,7 @@ interface LastgameParams {
   locale: string
   steam32Id: number
   currentMatchId?: string
-  currentPlayers?: { heroid: number | undefined; accountid: number; playerid: number }[]
+  currentPlayers?: Players
 }
 
 export default async function lastgame({

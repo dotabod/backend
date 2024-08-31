@@ -2,6 +2,7 @@ import { t } from 'i18next'
 
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import { steamSocket } from '../../steam/ws.js'
+import type { Players } from '../../types'
 import type { Cards, DelayedGames } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { getAccountsFromMatch } from './getAccountsFromMatch.js'
@@ -13,7 +14,7 @@ export async function getPlayers({
 }: {
   locale: string
   currentMatchId?: string
-  players?: { heroid: number | undefined; accountid: number; playerid: number }[]
+  players?: Players
 }) {
   if (!currentMatchId) {
     throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))

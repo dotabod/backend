@@ -533,3 +533,9 @@ export interface Cards {
   rank_tier: number
   createdAt: Date
 }
+
+export type Players = {
+  heroid: number | undefined
+  accountid: number
+  playerid: number | null // usually null when the player has not picked a hero yet
+}[]

@@ -2,11 +2,12 @@ import { t } from 'i18next'
 
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameOrColor } from '../dota/lib/heroes.js'
+import type { Players } from '../types'
 
 export async function smurfs(
   locale: string,
   currentMatchId?: string,
-  players?: { heroid: number | undefined; accountid: number; playerid: number }[],
+  players?: Players,
 ): Promise<string> {
   const { matchPlayers, cards } = await getPlayers({ locale, currentMatchId, players })
 

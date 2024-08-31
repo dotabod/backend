@@ -1,8 +1,7 @@
-import type { Packet } from '../../types.js'
+import type { Packet, Players } from '../../types.js'
 
 export function getSpectatorPlayers(gsi?: Packet) {
-  let matchPlayers: { heroid: number; accountid: number; selected: boolean; playerid: number }[] =
-    []
+  let matchPlayers: Players & { selected: boolean }[] = []
   if (gsi?.hero?.team2 && gsi.hero.team3) {
     matchPlayers = [
       ...Object.keys(gsi.hero.team2).map((playerIdx: any) => ({

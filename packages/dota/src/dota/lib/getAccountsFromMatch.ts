@@ -1,5 +1,5 @@
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
-import type { DelayedGames, Packet } from '../../types'
+import type { DelayedGames, Packet, Players } from '../../types'
 import { getSpectatorPlayers } from './getSpectatorPlayers.js'
 
 export async function getAccountsFromMatch({
@@ -9,12 +9,11 @@ export async function getAccountsFromMatch({
 }: {
   gsi?: Packet
   searchMatchId?: string
-  searchPlayers?: {
-    playerid: number
-    heroid: number | undefined
-    accountid: number
-  }[]
-} = {}) {
+  searchPlayers?: Players
+} = {}): Promise<{
+  matchPlayers: Players
+  accountIds: number[]
+}> {
   const players = searchPlayers?.length ? searchPlayers : getSpectatorPlayers(gsi)
 
   // spectator account ids
@@ -42,7 +41,7 @@ export async function getAccountsFromMatch({
         matchPlayers: response.players.map((a) => ({
           heroid: a.heroid,
           accountid: Number(a.accountid),
-          playerid: 0, // Unknown until we have two teams
+          playerid: null, // Unknown until we have two teams
         })),
         accountIds: response.players.map((a) => Number(a.accountid)),
       }
@@ -82,6 +81,6 @@ export async function getAccountsFromMatch({
         playerid: 0,
       },
     ],
-    accountIds: [gsi?.player?.accountid],
+    accountIds: [Number(gsi?.player?.accountid)],
   }
 }

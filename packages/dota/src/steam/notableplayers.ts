@@ -4,6 +4,7 @@ import { t } from 'i18next'
 import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameOrColor } from '../dota/lib/heroes.js'
+import type { Players } from '../types'
 import type { NotablePlayer } from '../types.js'
 import MongoDBSingleton from './MongoDBSingleton.js'
 
@@ -29,7 +30,7 @@ export async function notablePlayers({
   locale: string
   twitchChannelId: string
   currentMatchId?: string
-  players?: { heroid: number | undefined; accountid: number; playerid: number }[]
+  players?: Players
   enableFlags?: boolean
   steam32Id: number | null
 }) {
@@ -85,8 +86,7 @@ export async function notablePlayers({
         account_id: player.accountid,
         heroId: player.heroid ?? 0,
         position: i,
-        heroName:
-          player.playerid >= 0 ? getHeroNameOrColor(player.heroid ?? 0, player.playerid) : '?',
+        heroName: player.playerid === null ? '?' : getHeroNameOrColor(player.heroid ?? 0, i),
         name: np?.name ?? `Player ${i + 1}`,
         country_code: np?.country_code ?? '',
         isMe: steam32Id === player.accountid,
