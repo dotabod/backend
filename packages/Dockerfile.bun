@@ -2,7 +2,6 @@ FROM oven/bun:1.1.24 as base
 
 # Set build context and work directories
 ARG BUILD_CONTEXT
-ARG HUSKY=0
 WORKDIR /app
 
 # Copy just the relevant package.json and bun lock files
