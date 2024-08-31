@@ -79,14 +79,13 @@ export async function notablePlayers({
     })
 
     const proPlayers: NotablePlayer[] = []
-    matchPlayers.forEach((player, i: number) => {
+    matchPlayers.forEach((player: Player, i: number) => {
       const np = nps.find((np) => np.account_id === player.accountid)
       const props = {
         account_id: player.accountid,
-        heroId: player.heroid ?? 0,
+        heroId: player.heroid,
         position: i,
-        heroName:
-          player.playerid >= 0 ? getHeroNameOrColor(player.heroid ?? 0, player.playerid) : '?',
+        heroName: getHeroNameOrColor(player.heroid, i),
         name: np?.name ?? `Player ${i + 1}`,
         country_code: np?.country_code ?? '',
         isMe: steam32Id === player.accountid,
