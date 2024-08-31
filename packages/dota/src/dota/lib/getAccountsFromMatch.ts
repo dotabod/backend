@@ -2,6 +2,21 @@ import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import type { DelayedGames, Packet, Players } from '../../types'
 import { getSpectatorPlayers } from './getSpectatorPlayers.js'
 
+function getAllPlayers(data: DelayedGames) {
+  const players: Players = []
+  data.teams.forEach((team) => {
+    team.players.forEach((player) => {
+      players.push({
+        heroid: player.heroid,
+        accountid: Number(player.accountid),
+        playerid: null,
+        // TODO: could get team_slot from here
+      })
+    })
+  })
+  return players
+}
+
 export async function getAccountsFromMatch({
   gsi,
   searchMatchId,
@@ -36,6 +51,16 @@ export async function getAccountsFromMatch({
 
     const hasTwoTeams = Array.isArray(response?.teams) && response?.teams.length === 2
 
+    // i think this is faster than using response.players (game source tv)
+    if (!hasTwoTeams && Array.isArray(response?.teams)) {
+      const players = getAllPlayers(response)
+      return {
+        matchPlayers: players,
+        accountIds: players.map((a) => Number(a.accountid)),
+      }
+    }
+
+    // this probably never gets called now
     if (response?.players?.length && !hasTwoTeams) {
       return {
         matchPlayers: response.players.map((a) => ({
