@@ -21,7 +21,7 @@ export interface RoshRes {
 
 // Doing it this way so i18n can pick up the t('') strings
 export function getRoshCountMessage(props: { lng: string; count: number }) {
-  let roshCountMsg
+  let roshCountMsg: string
   switch (props.count) {
     case 1:
       roshCountMsg = t('roshanCount.1', props)
