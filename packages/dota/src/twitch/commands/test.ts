@@ -65,7 +65,7 @@ const handleUserCommand = (message: MessageType, args: string[]) => {
     channel: { name: channel, client },
   } = message
 
-  const accountId = client.accounts?.providerAccountId ?? ''
+  const accountId = client.Account?.providerAccountId ?? ''
 
   chatClient.whisper(
     userId,
