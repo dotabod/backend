@@ -659,7 +659,7 @@ export const translatedColor = (color: string, lng: string) => {
 }
 
 export const heroColors = 'Blue,Teal,Purple,Yellow,Orange,Pink,Olive,Cyan,Green,Brown'.split(',')
-export function getHeroNameOrColor(id: number, index?: number) {
+export function getHeroNameOrColor(id?: number, index?: number) {
   if (!id && typeof index === 'number') return heroColors[index]
 
   const hero = getHeroById(id)
