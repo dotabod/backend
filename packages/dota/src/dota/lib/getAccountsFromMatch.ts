@@ -78,7 +78,7 @@ export async function getAccountsFromMatch({
       {
         heroid: gsi?.hero?.id,
         accountid: Number(gsi?.player?.accountid),
-        playerid: 0,
+        playerid: null,
       },
     ],
     accountIds: [Number(gsi?.player?.accountid)],
