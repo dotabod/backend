@@ -5,6 +5,7 @@ import type { DelayedGames } from '../../../../steam/src/types/index.js'
 import supabase from '../../db/supabase.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
+import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import { steamSocket } from '../../steam/ws.js'
 import { getWinProbability2MinAgo } from '../../stratz/livematch'
 import { chatClient } from '../chatClient.js'
@@ -96,7 +97,7 @@ const handleCardsCommand = async (message: MessageType) => {
     gsi: channel.client.gsi,
   })
   steamSocket.emit('getCards', accountIds, false, (err: any, response: any) => {
-    console.log(response, err) // one response per client
+    chatClient.whisper(user.userId, JSON.stringify(response))
   })
 
   chatClient.say(channel.name, `cards! ${channel.client.gsi?.map?.matchid}`)
@@ -106,7 +107,7 @@ const handleCardCommand = (message: MessageType, args: string[]) => {
   const [, accountId] = args
 
   steamSocket.emit('getCard', Number(accountId), (err: any, response: any) => {
-    console.log({ response, err }) // one response per client
+    chatClient.whisper(message.user.userId, JSON.stringify(response))
   })
 
   chatClient.say(message.channel.name, 'card!')
@@ -162,6 +163,24 @@ const handleServerCommand = (message: MessageType, args: string[]) => {
   )
 }
 
+const handle2mDataCommand = async (message: MessageType) => {
+  const { user, channel } = message
+  const matchId = channel.client.gsi?.map?.matchid
+
+  const mongo = MongoDBSingleton
+  const db = await mongo.connect()
+
+  try {
+    const response = await db
+      .collection<DelayedGames>('delayedGames')
+      .findOne({ 'match.match_id': matchId })
+    chatClient.whisper(user.userId, JSON.stringify(response))
+  } catch (error) {
+    console.error(error)
+    chatClient.whisper(user.userId, 'Error fetching data')
+  }
+}
+
 commandHandler.registerCommand('test', {
   permission: 4,
 
@@ -172,6 +191,9 @@ commandHandler.registerCommand('test', {
         break
       case 'game':
         handleGameCommand(message)
+        break
+      case '2m':
+        handle2mDataCommand(message)
         break
       case 'reset':
         await handleResetCommand(message)
