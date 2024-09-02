@@ -13,7 +13,7 @@
   "betaTester_off": "{{channel}} دیگه قابلیت بتا نیست برای فعال سازی دوباره !beta  رو بزن",
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
   "bets": {
-    "error": "Unable to open bets. $t(refreshToken)",
+    "error": "نشد قمار را به راه کنیم. $t(refreshToken)",
     "lost": "این رو که باختیم. عب نداره بعدی هم لوزه",
     "notScored": "همه بازی رو دبه کردن {{emote}} بازی {{matchId}} هیچ تاثیری نداشت",
     "open": "قمار کنید {{emote}}",
@@ -21,7 +21,7 @@
     "won": "بلاخره بردیم. یک تنه بازی رو حمل کردم"
   },
   "bounties": {
-    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) {{emote}} Thanks {{heroNames}} {{emote2}}",
+    "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} })گلد از بانتی ({{totalBounties}}/4){{emote}} مرسی از {{heroNames}}{{emote2}}",
     "totalGold": "{{count}} گلد"
   },
   "chatters": {
@@ -50,16 +50,16 @@
   "commands": "",
   "commands_everyone": "کامندهای همگانی: {{commandList}}",
   "commands_mods": "کامندهای مادها {{commandList}}",
-  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
+  "commandsPage": "برای دیدن کامندهای {{- channel}} برین تو لینک {{- url}}",
   "connections": {
-    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_one": "{{count}} استریمر از Dotabod GSI استفاده میکنن",
     "gsi_other": "{{count}} streamers connected to Dotabod GSI",
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_other": "{{count}} streamers using the overlay"
   },
   "dota2pt": "میخوای چیز جدید واسه قهرمان {{- heroName}} یاد بگیری؟ این اینک رو چک کن {{- url}}",
   "dotabod": "من یک ربات سورس باز هستم. سازنده من {{author}}. اطلاعات بیشتر: {{- url}}",
-  "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
+  "facet": "{{- heroName}} با فست {{number}}{{- facetTitle}}{{- facetDescription}}",
   "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
   "facetSelection": "{{- heroName}} selected facet: {{- facetTitle}} · {{- facetDescription}}",
