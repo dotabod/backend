@@ -3,11 +3,13 @@ import { t } from 'i18next'
 import axios from 'axios'
 import type { DelayedGames } from '../../../../steam/src/types/index.js'
 import supabase from '../../db/supabase.js'
+import { server } from '../../dota/index.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import { steamSocket } from '../../steam/ws.js'
 import { getWinProbability2MinAgo } from '../../stratz/livematch'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 
@@ -181,6 +183,52 @@ const handle2mDataCommand = async (message: MessageType) => {
   }
 }
 
+async function fixWins(token: string) {
+  const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
+  const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
+
+  const { data: bets } = await supabase
+    .from('bets')
+    .select('id, matchId, myTeam, userId, hero_slot')
+    .is('won', null)
+    .eq('userId', token)
+    .gte('created_at', dayAgo)
+    .order('created_at', { ascending: false })
+    .range(0, 10)
+
+  if (!bets) return
+
+  for (const bet of bets) {
+    server.io
+      .in(bet.userId)
+      .fetchSockets()
+      .then((sockets: any) => {
+        if (!Array.isArray(sockets) || !sockets.length) return
+
+        sockets[0]
+          .timeout(25000)
+          .emit(
+            'requestMatchData',
+            { matchId: bet.matchId, heroSlot: bet.hero_slot },
+            async (err: any, response: any) => {
+              if (typeof response?.radiantWin !== 'boolean') return
+
+              await supabase
+                .from('bets')
+                .update({
+                  won: response.radiantWin && bet.myTeam === 'radiant',
+                  lobby_type: response.lobbyType,
+                })
+                .eq('id', bet.id)
+            },
+          )
+      })
+      .catch((e) => {
+        logger.error('Error fetching sockets', { e })
+      })
+  }
+}
+
 commandHandler.registerCommand('test', {
   permission: 4,
 
@@ -212,6 +260,9 @@ commandHandler.registerCommand('test', {
         break
       case 'wp':
         handleWpCommand(message, args)
+        break
+      case 'fixwins':
+        await fixWins(message.channel.client.token)
         break
       default:
         chatClient.whisper(message.user.userId, 'Invalid command')
