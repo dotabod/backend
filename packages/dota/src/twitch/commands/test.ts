@@ -183,7 +183,7 @@ const handle2mDataCommand = async (message: MessageType) => {
   }
 }
 
-async function fixWins(token: string) {
+async function fixWins(token: string, twitchChatId: string) {
   const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
   const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
 
@@ -196,6 +196,8 @@ async function fixWins(token: string) {
     .order('created_at', { ascending: false })
     .range(0, 10)
 
+  chatClient.whisper(twitchChatId, JSON.stringify(bets))
+
   if (!bets) return
 
   for (const bet of bets) {
@@ -203,7 +205,10 @@ async function fixWins(token: string) {
       .in(bet.userId)
       .fetchSockets()
       .then((sockets: any) => {
+        chatClient.whisper(twitchChatId, 'Found some sockets')
         if (!Array.isArray(sockets) || !sockets.length) return
+
+        chatClient.whisper(twitchChatId, 'Emitting requestMatchData')
 
         sockets[0]
           .timeout(25000)
@@ -211,6 +216,7 @@ async function fixWins(token: string) {
             'requestMatchData',
             { matchId: bet.matchId, heroSlot: bet.hero_slot },
             async (err: any, response: any) => {
+              chatClient.whisper(twitchChatId, JSON.stringify(response))
               if (typeof response?.radiantWin !== 'boolean') return
 
               await supabase
@@ -262,7 +268,7 @@ commandHandler.registerCommand('test', {
         handleWpCommand(message, args)
         break
       case 'fixwins':
-        await fixWins(message.channel.client.token)
+        await fixWins(message.channel.client.token, message.user.userId)
         break
       default:
         chatClient.whisper(message.user.userId, 'Invalid command')
