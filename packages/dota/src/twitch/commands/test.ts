@@ -200,40 +200,40 @@ async function fixWins(token: string, twitchChatId: string) {
 
   if (!bets) return
 
-  for (const bet of bets) {
-    server.io
-      .in(bet.userId)
-      .fetchSockets()
-      .then((sockets: any) => {
-        chatClient.whisper(twitchChatId, 'Found some sockets')
-        if (!Array.isArray(sockets) || !sockets.length) return
+  await Promise.all(
+    bets.map(async (bet) => {
+      const sockets = await server.io.in(bet.userId).fetchSockets()
+      if (!Array.isArray(sockets) || !sockets.length) return
 
-        chatClient.whisper(twitchChatId, 'Emitting requestMatchData')
+      const lastSocket = sockets[sockets.length - 1]
+      try {
+        const response = await new Promise((resolve, reject) => {
+          lastSocket
+            .timeout(25000)
+            .emit(
+              'requestMatchData',
+              { matchId: bet.matchId, heroSlot: bet.hero_slot || 0 },
+              (err: any, response: any) => {
+                if (err) reject(err)
+                else resolve(response)
+              },
+            )
+        })
 
-        const lastSocket = sockets[sockets.length - 1]
-        lastSocket
-          .timeout(25000)
-          .emit(
-            'requestMatchData',
-            { matchId: bet.matchId, heroSlot: bet.hero_slot || 0 },
-            async (err: any, response: any) => {
-              chatClient.whisper(twitchChatId, JSON.stringify(response))
-              if (typeof response?.radiantWin !== 'boolean') return
-
-              await supabase
-                .from('bets')
-                .update({
-                  won: response.radiantWin && bet.myTeam === 'radiant',
-                  lobby_type: response.lobbyType,
-                })
-                .eq('id', bet.id)
-            },
-          )
-      })
-      .catch((e) => {
+        if (typeof response?.radiantWin === 'boolean') {
+          await supabase
+            .from('bets')
+            .update({
+              won: response.radiantWin && bet.myTeam === 'radiant',
+              lobby_type: response.lobbyType,
+            })
+            .eq('id', bet.id)
+        }
+      } catch (e) {
         logger.error('Error fetching sockets', { e })
-      })
-  }
+      }
+    }),
+  )
 }
 
 commandHandler.registerCommand('test', {
