@@ -45,8 +45,27 @@ io.on('connection', (socket) => {
 
   hasDotabodSocket = true
 
-  socket.on('disconnect', () => {
-    console.log('We lost the server! Respond to all messages with "server offline"')
+  socket.on('reconnect', () => {
+    console.log('Reconnecting to the server')
+    hasDotabodSocket = true
+  })
+
+  socket.on('reconnect_failed', () => {
+    console.log('Reconnect failed')
+    hasDotabodSocket = false
+  })
+
+  socket.on('reconnect_error', (error) => {
+    console.log('Reconnect error', error)
+    hasDotabodSocket = false
+  })
+
+  socket.on('disconnect', (reason, details) => {
+    console.log(
+      'We lost the server! Respond to all messages with "server offline"',
+      reason,
+      details,
+    )
     hasDotabodSocket = false
   })
 
