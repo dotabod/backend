@@ -215,7 +215,7 @@ async function fixWins(token: string, twitchChatId: string) {
           .timeout(25000)
           .emit(
             'requestMatchData',
-            { matchId: bet.matchId, heroSlot: bet.hero_slot },
+            { matchId: bet.matchId, heroSlot: bet.hero_slot || 0 },
             async (err: any, response: any) => {
               chatClient.whisper(twitchChatId, JSON.stringify(response))
               if (typeof response?.radiantWin !== 'boolean') return
