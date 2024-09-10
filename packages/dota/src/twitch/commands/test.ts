@@ -210,7 +210,8 @@ async function fixWins(token: string, twitchChatId: string) {
 
         chatClient.whisper(twitchChatId, 'Emitting requestMatchData')
 
-        sockets[0]
+        const lastSocket = sockets[sockets.length - 1]
+        lastSocket
           .timeout(25000)
           .emit(
             'requestMatchData',
