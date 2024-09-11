@@ -204,7 +204,7 @@ async function fixWins(token: string, twitchChatId: string) {
     bets.map(async (bet) => {
       const sockets = await server.io.in(bet.userId).fetchSockets()
       if (!Array.isArray(sockets) || !sockets.length) return
-
+      chatClient.whisper(twitchChatId, 'Emitting requestMatchData')
       const lastSocket = sockets[sockets.length - 1]
       try {
         const response = await new Promise((resolve, reject) => {
@@ -214,6 +214,7 @@ async function fixWins(token: string, twitchChatId: string) {
               'requestMatchData',
               { matchId: bet.matchId, heroSlot: bet.hero_slot || 0 },
               (err: any, response: any) => {
+                chatClient.whisper(twitchChatId, JSON.stringify(response))
                 if (err) reject(err)
                 else resolve(response)
               },
