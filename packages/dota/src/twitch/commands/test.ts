@@ -6,6 +6,7 @@ import supabase from '../../db/supabase.js'
 import { server } from '../../dota/index.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
+import { heroes } from '../../dota/lib/heroes'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import { steamSocket } from '../../steam/ws.js'
 import { getWinProbability2MinAgo } from '../../stratz/livematch'
@@ -183,28 +184,36 @@ const handle2mDataCommand = async (message: MessageType) => {
   }
 }
 
-async function fixWins(token: string, twitchChatId: string) {
+async function fixWins(token: string, twitchChatId: string, currentMatchId?: string) {
   const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
   const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
 
   const { data: bets } = await supabase
     .from('bets')
-    .select('id, matchId, myTeam, userId, hero_slot')
+    .select('id, matchId, myTeam, userId, hero_name')
     .is('won', null)
     .eq('userId', token)
+    .neq('matchId', currentMatchId)
     .gte('created_at', dayAgo)
     .order('created_at', { ascending: false })
     .range(0, 10)
 
-  chatClient.whisper(twitchChatId, JSON.stringify(bets))
+  chatClient.whisper(
+    twitchChatId,
+    bets?.map((b) => b.matchId).join(', ') || 'No broken games found',
+  )
 
   if (!bets) return
 
   await Promise.all(
     bets.map(async (bet) => {
+      const heroId = bet?.hero_name ? heroes[bet.hero_name as keyof typeof heroes]?.id || 0 : 0
       const sockets = await server.io.in(bet.userId).fetchSockets()
       if (!Array.isArray(sockets) || !sockets.length) return
-      chatClient.whisper(twitchChatId, 'Emitting requestMatchData')
+      chatClient.whisper(
+        twitchChatId,
+        `Requesting opendota match data from overlay for match "${bet.matchId}" with hero id "${heroId}"...`,
+      )
       const lastSocket = sockets[sockets.length - 1]
       try {
         const response = await new Promise((resolve, reject) => {
@@ -212,7 +221,7 @@ async function fixWins(token: string, twitchChatId: string) {
             .timeout(25000)
             .emit(
               'requestMatchData',
-              { matchId: bet.matchId, heroSlot: bet.hero_slot || 0 },
+              { matchId: bet.matchId, heroId },
               (err: any, response: any) => {
                 chatClient.whisper(twitchChatId, JSON.stringify(response))
                 if (err) reject(err)
@@ -225,6 +234,9 @@ async function fixWins(token: string, twitchChatId: string) {
           await supabase
             .from('bets')
             .update({
+              radiant_score: response?.radiantScore,
+              dire_score: response?.direScore,
+              kda: { kills: response?.kills, deaths: response?.deaths, assists: response?.assists },
               won: response.radiantWin && bet.myTeam === 'radiant',
               lobby_type: response.lobbyType,
             })
@@ -235,6 +247,9 @@ async function fixWins(token: string, twitchChatId: string) {
       }
     }),
   )
+
+  const handler = gsiHandlers.get(token)
+  handler?.emitWLUpdate()
 }
 
 commandHandler.registerCommand('test', {
@@ -270,7 +285,11 @@ commandHandler.registerCommand('test', {
         handleWpCommand(message, args)
         break
       case 'fixwins':
-        await fixWins(message.channel.client.token, message.user.userId)
+        await fixWins(
+          message.channel.client.token,
+          message.user.userId,
+          message.channel.client.gsi?.map?.matchid,
+        )
         break
       default:
         chatClient.whisper(message.user.userId, 'Invalid command')
