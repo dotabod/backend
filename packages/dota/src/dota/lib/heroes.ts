@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-const heroes = {
+export const heroes = {
   npc_dota_hero_antimage: {
     id: 1,
     localized_name: 'Anti-Mage',
