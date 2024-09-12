@@ -5,9 +5,8 @@ import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
 import { didTellUser, gsiHandlers } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
-import { DBSettings, getValueOrDefault } from '../settings.js'
+import { DBSettings } from '../settings.js'
 import { chatClient } from '../twitch/chatClient.js'
-import { twitchChat } from '../twitch/index.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
@@ -128,9 +127,9 @@ class SetupSupabase {
             const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
             const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
 
-            const hasNewestScopes = client.Account?.scope?.includes('channel:bot')
+            // const hasNewestScopes = client.Account?.scope?.includes('channel:bot')
             const requiresRefresh = client.Account?.requires_refresh
-            if ((!hasNewestScopes || requiresRefresh) && !didTellUser.has(client.name)) {
+            if (requiresRefresh && !didTellUser.has(client.name)) {
               didTellUser.add(client.name)
 
               const { data, error } = await supabase
