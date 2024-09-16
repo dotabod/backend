@@ -86,6 +86,11 @@ class SetupSupabase {
             const client = findUser(newObj.userId)
             if (client?.Account) {
               client.Account.scope = newObj.scope
+              client.Account.access_token = newObj.access_token
+              client.Account.refresh_token = newObj.refresh_token
+              client.Account.expires_at = newObj.expires_at
+              client.Account.expires_in = newObj.expires_in
+              client.Account.obtainment_timestamp = new Date(newObj.obtainment_timestamp ?? '')
               updateTwurpleTokenForTwitchId(newObj.providerAccountId)
             }
           }
