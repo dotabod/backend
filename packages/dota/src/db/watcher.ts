@@ -7,6 +7,7 @@ import { didTellUser, gsiHandlers } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { DBSettings } from '../settings.js'
 import { chatClient } from '../twitch/chatClient.js'
+import { updateTwurpleTokenForTwitchId } from '../twitch/lib/getTwitchAPI'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
@@ -85,6 +86,7 @@ class SetupSupabase {
             const client = findUser(newObj.userId)
             if (client?.Account) {
               client.Account.scope = newObj.scope
+              updateTwurpleTokenForTwitchId(newObj.providerAccountId)
             }
           }
 
