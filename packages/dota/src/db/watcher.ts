@@ -5,9 +5,9 @@ import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
 import { didTellUser, gsiHandlers } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
-import { DBSettings, getValueOrDefault } from '../settings.js'
+import { DBSettings } from '../settings.js'
 import { chatClient } from '../twitch/chatClient.js'
-import { twitchChat } from '../twitch/index.js'
+import { updateTwurpleTokenForTwitchId } from '../twitch/lib/getTwitchAPI'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import getDBUser from './getDBUser.js'
@@ -86,6 +86,12 @@ class SetupSupabase {
             const client = findUser(newObj.userId)
             if (client?.Account) {
               client.Account.scope = newObj.scope
+              client.Account.access_token = newObj.access_token
+              client.Account.refresh_token = newObj.refresh_token
+              client.Account.expires_at = newObj.expires_at
+              client.Account.expires_in = newObj.expires_in
+              client.Account.obtainment_timestamp = new Date(newObj.obtainment_timestamp ?? '')
+              updateTwurpleTokenForTwitchId(newObj.providerAccountId)
             }
           }
 
@@ -128,9 +134,9 @@ class SetupSupabase {
             const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
             const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
 
-            const hasNewestScopes = client.Account?.scope?.includes('channel:bot')
+            // const hasNewestScopes = client.Account?.scope?.includes('channel:bot')
             const requiresRefresh = client.Account?.requires_refresh
-            if ((!hasNewestScopes || requiresRefresh) && !didTellUser.has(client.name)) {
+            if (requiresRefresh && !didTellUser.has(client.name)) {
               didTellUser.add(client.name)
 
               const { data, error } = await supabase

@@ -19,6 +19,10 @@ twitchChat.on('connect', () => {
   logger.info('We alive on dotabod chat server!')
 })
 
+twitchChat.on('disconnect', (reason, details) => {
+  logger.warn('Disconnected from dotabod chat server', { reason, details })
+})
+
 const lastMissingUserMessageTimestamps: Record<string, number> = {}
 
 twitchChat.on(

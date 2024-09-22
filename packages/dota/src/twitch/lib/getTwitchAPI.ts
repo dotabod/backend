@@ -39,3 +39,11 @@ export const getTwitchAPI = (twitchId: string): ApiClient => {
 
   return api
 }
+
+// Remove and re-add the user to get the new tokens in Twurple cache
+export function updateTwurpleTokenForTwitchId(twitchId: string) {
+  const authProvider = getAuthProvider()
+
+  authProvider.removeUser(twitchId)
+  getTwitchAPI(twitchId)
+}
