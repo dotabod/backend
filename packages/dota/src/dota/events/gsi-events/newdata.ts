@@ -126,6 +126,7 @@ async function saveMatchData(client: SocketClient) {
 
     if (!delayedData?.match.lobby_type) return
     await redisClient.client.set(`${matchId}:lobbyType`, delayedData.match.lobby_type)
+    await redisClient.client.set(`${matchId}:gameMode`, delayedData.match.game_mode)
     chatterMatchFound(client)
   }
 }

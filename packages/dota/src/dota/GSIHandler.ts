@@ -38,6 +38,7 @@ interface MMR {
     dire_score: number | null
     kda: any
   }
+  gameMode: number
   increase: boolean
   lobbyType: number
   matchId: string
@@ -69,6 +70,7 @@ export async function deleteRedisData(client: SocketClient) {
     await redisClient.client
       .multi()
       .del(`${matchId}:lobbyType`)
+      .del(`${matchId}:gameMode`)
       .del(`${matchId}:steamServerId`)
       .del(`${steam32Id}:medal`)
       .del(`${token}:aegis`)
@@ -346,7 +348,16 @@ export class GSIHandler {
     this.emitBadgeUpdate()
   }
 
-  async updateMMR({ scores, increase, heroName, lobbyType, matchId, isParty, heroSlot }: MMR) {
+  async updateMMR({
+    scores,
+    increase,
+    gameMode,
+    heroName,
+    lobbyType,
+    matchId,
+    isParty,
+    heroSlot,
+  }: MMR) {
     const ranked = lobbyType === LOBBY_TYPE_RANKED
 
     const extraInfo = {
@@ -367,6 +378,7 @@ export class GSIHandler {
       .update({
         won: increase,
         lobby_type: lobbyType,
+        game_mode: gameMode,
         hero_slot: heroSlot,
         is_party: isParty,
         hero_name: heroName,
@@ -684,9 +696,12 @@ export class GSIHandler {
       return
     }
 
+    // 0 is a correct lobby type meaning unranked
+    // https://github.com/dotabod/backend/issues/373#issuecomment-2366822786
     // Default to ranked
     const playingLobbyType = Number(await redisClient.client.get(`${matchId}:lobbyType`))
-    const localLobbyType = playingLobbyType > 0 ? playingLobbyType : LOBBY_TYPE_RANKED
+    const playingGameMode = Number(await redisClient.client.get(`${matchId}:gameMode`))
+    const localLobbyType = playingLobbyType >= 0 ? playingLobbyType : LOBBY_TYPE_RANKED
 
     const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
 
@@ -694,6 +709,7 @@ export class GSIHandler {
       scores: scores,
       increase: won,
       lobbyType: localLobbyType,
+      gameMode: playingGameMode,
       matchId: matchId,
       isParty: isParty,
       heroSlot,
