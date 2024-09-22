@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import { LOBBY_TYPE_RANKED } from '../../db/getWL'
 import { isArcade } from '../../dota/lib/isArcade.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
 import { DBSettings } from '../../settings.js'
@@ -61,7 +62,7 @@ commandHandler.registerCommand('ranked', {
         return
       }
 
-      if (response.match.lobby_type === 7) {
+      if (response.match.lobby_type === LOBBY_TYPE_RANKED) {
         chatClient.say(channel, t('ranked', { context: 'yes', lng: message.channel.client.locale }))
         return
       }

@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
 import RedisClient from '../db/RedisClient.js'
+import { LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../db/getWL'
 import { getWL } from '../db/getWL.js'
 import supabase from '../db/supabase.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
@@ -346,7 +347,7 @@ export class GSIHandler {
   }
 
   async updateMMR({ scores, increase, heroName, lobbyType, matchId, isParty, heroSlot }: MMR) {
-    const ranked = lobbyType === 7
+    const ranked = lobbyType === LOBBY_TYPE_RANKED
 
     const extraInfo = {
       name: this.client.name,
@@ -384,7 +385,7 @@ export class GSIHandler {
       return
     }
 
-    const mmrSize = isParty ? 20 : 25
+    const mmrSize = isParty ? MULTIPLIER_PARTY : MULTIPLIER_SOLO
     const newMMR = this.getMmr() + (increase ? mmrSize : -mmrSize)
     if (this.client.steam32Id) {
       const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], this.client.settings)
@@ -685,7 +686,7 @@ export class GSIHandler {
 
     // Default to ranked
     const playingLobbyType = Number(await redisClient.client.get(`${matchId}:lobbyType`))
-    const localLobbyType = playingLobbyType > 0 ? playingLobbyType : 7
+    const localLobbyType = playingLobbyType > 0 ? playingLobbyType : LOBBY_TYPE_RANKED
 
     const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
 

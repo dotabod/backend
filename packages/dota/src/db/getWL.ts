@@ -10,9 +10,9 @@ interface WL {
   startDate?: Date | null
 }
 
-const LOBBY_TYPE_RANKED = 7
-const MULTIPLIER_PARTY = 20
-const MULTIPLIER_SOLO = 25
+export const LOBBY_TYPE_RANKED = 7
+export const MULTIPLIER_PARTY = 20
+export const MULTIPLIER_SOLO = 25
 
 const updateStats = (
   stats: {

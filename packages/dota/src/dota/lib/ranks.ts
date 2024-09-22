@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
 import RedisClient from '../../db/RedisClient.js'
+import { MULTIPLIER_SOLO } from '../../db/getWL'
 import { steamSocket } from '../../steam/ws.js'
 import type { Cards } from '../../types.js'
 import { logger } from '../../utils/logger.js'
@@ -115,7 +116,7 @@ export async function getRankDetail(mmr: string | number, steam32Id?: number | n
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const nextMMR = nextRank?.range[0] || myRank?.range[1]
   const mmrToNextRank = nextMMR - mmrNum
-  const winsToNextRank = Math.ceil(mmrToNextRank / 25)
+  const winsToNextRank = Math.ceil(mmrToNextRank / MULTIPLIER_SOLO)
 
   return {
     mmr: mmrNum,
@@ -163,7 +164,7 @@ export async function getRankDescription({
     return myRank.title
   }
 
-  const count = mmrToNextRank <= 25 ? 1 : winsToNextRank
+  const count = mmrToNextRank <= MULTIPLIER_SOLO ? 1 : winsToNextRank
   const nextAt = t('rank.nextRankAt', { lng: locale })
   const nextIn = t('rank.nextRankIn', {
     emote: 'peepoClap',

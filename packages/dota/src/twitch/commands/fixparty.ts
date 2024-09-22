@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import { MULTIPLIER_PARTY } from '../../db/getWL.js'
 import supabase from '../../db/supabase.js'
 import { updateMmr } from '../../dota/lib/updateMmr.js'
 import { chatClient } from '../chatClient.js'
@@ -14,7 +15,7 @@ interface PartyMmr {
 
 function togglePartyMmr({ currentMmr, wasParty, didWin, isDoubledown }: PartyMmr) {
   const newmmr = currentMmr
-  const baseDelta = isDoubledown ? 20 : 10
+  const baseDelta = isDoubledown ? MULTIPLIER_PARTY : MULTIPLIER_PARTY / 2
   const delta = wasParty ? -baseDelta : baseDelta
   return didWin ? newmmr - delta : newmmr + delta
 }

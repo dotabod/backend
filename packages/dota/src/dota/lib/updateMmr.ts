@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import { MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/getWL.js'
 import supabase from '../../db/supabase.js'
 import { DBSettings, getValueOrDefault } from '../../settings.js'
 import { chatClient } from '../../twitch/chatClient.js'
@@ -32,7 +33,7 @@ export function tellChatNewMMR({
   const newMmr = mmr - oldMmr
   if (mmrEnabled && chattersEnabled && tellChatNewMMR && mmr !== 0) {
     if (newMmr !== 0) {
-      const isAuto = [20, 25].includes(Math.abs(newMmr))
+      const isAuto = [MULTIPLIER_PARTY, MULTIPLIER_SOLO].includes(Math.abs(newMmr))
       setTimeout(
         () => {
           chatClient.say(

@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import { LOBBY_TYPE_RANKED } from '../../db/getWL'
 import supabase from '../../db/supabase.js'
 import getHero, { type HeroNames } from '../../dota/lib/getHero.js'
 import { DBSettings } from '../../settings.js'
@@ -92,7 +93,7 @@ commandHandler.registerCommand('lgs', {
       returnMsg.push(t('lastgamescore.party', { lng: message.channel.client.locale }))
     if (lg.is_doubledown)
       returnMsg.push(t('lastgamescore.double', { lng: message.channel.client.locale }))
-    if (lg.lobby_type !== 7)
+    if (lg.lobby_type !== LOBBY_TYPE_RANKED)
       returnMsg.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))
     returnMsg.push(`dotabuff.com/matches/${lg.matchId}`)
 
