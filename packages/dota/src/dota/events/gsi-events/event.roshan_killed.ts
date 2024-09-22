@@ -3,6 +3,7 @@ import { t } from 'i18next'
 import RedisClient from '../../../db/RedisClient.js'
 import { type DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
+import { redisClient } from '../../GSIHandler'
 import type { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -80,26 +81,33 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 
+    const redisClient = RedisClient.getInstance()
+    const matchId = await redisClient.client.get(`${dotaClient.getToken()}:matchId`)
+    const playingGameMode = Number(await redisClient.client.get(`${matchId}:gameMode`))
+
     // doing map gametime - event gametime in case the user reconnects to a match,
     // and the gametime is over the event gametime
     const gameTimeDiff =
       (dotaClient.client.gsi?.map?.game_time ?? event.game_time) - event.game_time
 
-    // TODO: Turbo is 3 minutes min 8 minutes max
-
     // min spawn for rosh in 5 + 3 minutes
-    const minS = 5 * 60 + 3 * 60 - gameTimeDiff
-    const minTime = (dotaClient.client.gsi?.map?.clock_time ?? 0) + minS
-
+    let minS = 5 * 60 + 3 * 60 - gameTimeDiff
     // max spawn for rosh in 5 + 3 + 3 minutes
-    const maxS = 5 * 60 + 3 * 60 + 3 * 60 - gameTimeDiff
+    let maxS = 5 * 60 + 3 * 60 + 3 * 60 - gameTimeDiff
+
+    // Check if the game mode is Turbo (23)
+    if (playingGameMode === 23) {
+      minS /= 2
+      maxS /= 2
+    }
+
+    const minTime = (dotaClient.client.gsi?.map?.clock_time ?? 0) + minS
     const maxTime = (dotaClient.client.gsi?.map?.clock_time ?? 0) + maxS
 
     // server time
     const minDate = dotaClient.addSecondsToNow(minS)
     const maxDate = dotaClient.addSecondsToNow(maxS)
 
-    const redisClient = RedisClient.getInstance()
     // TODO: move this to a redis handler
     const redisJson = (await redisClient.client.json.get(
       `${dotaClient.getToken()}:roshan`,
