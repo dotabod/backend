@@ -75,6 +75,7 @@ export type Database = {
         Row: {
           created_at: string
           dire_score: number | null
+          game_mode: number | null
           hero_name: string | null
           hero_slot: number | null
           id: string
@@ -94,6 +95,7 @@ export type Database = {
         Insert: {
           created_at?: string
           dire_score?: number | null
+          game_mode?: number | null
           hero_name?: string | null
           hero_slot?: number | null
           id?: string
@@ -113,6 +115,7 @@ export type Database = {
         Update: {
           created_at?: string
           dire_score?: number | null
+          game_mode?: number | null
           hero_name?: string | null
           hero_slot?: number | null
           id?: string
@@ -138,6 +141,39 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      discord_accounts: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_in: number
+          id: number
+          providerAccountId: number
+          refresh_token: string
+          scope: string
+          token_type: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_in: number
+          id?: number
+          providerAccountId: number
+          refresh_token: string
+          scope: string
+          token_type: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_in?: number
+          id?: number
+          providerAccountId?: number
+          refresh_token?: string
+          scope?: string
+          token_type?: string
+        }
+        Relationships: []
       }
       mods: {
         Row: {

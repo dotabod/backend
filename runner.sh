@@ -54,7 +54,7 @@ gentypes() {
         OUTPUT_FILE="$OUTPUT_DIR/supabase-types.ts"
         npx supabase gen types typescript --db-url "$DATABASE_URL" --schema public >"$OUTPUT_FILE"
         echo '' | cat - "$OUTPUT_FILE" >temp && mv temp "$OUTPUT_FILE"
-        npx prettier --write "$OUTPUT_FILE"
+        bun biome format --write "$OUTPUT_FILE"
     done
 }
 
