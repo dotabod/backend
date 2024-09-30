@@ -223,7 +223,16 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
               'requestMatchData',
               { matchId: bet.matchId, heroId },
               (err: any, response: any) => {
-                chatClient.whisper(twitchChatId, JSON.stringify(response))
+                chatClient.whisper(
+                  twitchChatId,
+                  `Match ${bet.matchId}: ${JSON.stringify(response)}`,
+                )
+                if (err) {
+                  chatClient.whisper(
+                    twitchChatId,
+                    `Error for match ${bet.matchId}: ${JSON.stringify(err)}`,
+                  )
+                }
                 if (err) reject(err)
                 else resolve(response)
               },
