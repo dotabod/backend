@@ -38,8 +38,11 @@ export const chatClient = {
 
     twitchChat.emit('say', channel, `${prefix}${text}`)
   },
-  whisper: (channel: string, text: string) => {
+  whisper: (channel: string, text: string | undefined) => {
     const MAX_WHISPER_LENGTH = 10000
+    if (!text) {
+      return twitchChat.emit('whisper', channel, 'Empty whisper message, monka')
+    }
     const chunks = text.match(new RegExp(`.{1,${MAX_WHISPER_LENGTH}}`, 'g')) || []
     chunks.forEach((chunk) => {
       twitchChat.emit('whisper', channel, `${prefix}${chunk}`)
