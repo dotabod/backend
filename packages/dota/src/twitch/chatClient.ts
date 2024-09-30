@@ -7,6 +7,43 @@ import { getTwitchHeaders } from './lib/getTwitchHeaders'
 const prefix = isDev ? '[DEV] ' : ''
 const headers = await getTwitchHeaders()
 
+// Rate limiting constants
+const MAX_WHISPERS_PER_SECOND = 3
+const MAX_WHISPERS_PER_MINUTE = 100
+
+// Rate limiting counters and queue
+let whispersInLastSecond = 0
+let whispersInLastMinute = 0
+const whisperQueue: { channel: string; text: string }[] = []
+
+const processQueue = () => {
+  if (whisperQueue.length === 0) return
+
+  if (
+    whispersInLastSecond < MAX_WHISPERS_PER_SECOND &&
+    whispersInLastMinute < MAX_WHISPERS_PER_MINUTE
+  ) {
+    const { channel, text } = whisperQueue.shift()!
+    sendWhisper(channel, text)
+  }
+
+  setTimeout(processQueue, 1000 / MAX_WHISPERS_PER_SECOND)
+}
+
+const sendWhisper = (channel: string, text: string) => {
+  const MAX_WHISPER_LENGTH = 10000
+  const chunks = text.match(new RegExp(`.{1,${MAX_WHISPER_LENGTH}}`, 'g')) || []
+  chunks.forEach((chunk) => {
+    twitchChat.emit('whisper', channel, `${prefix}${chunk}`)
+  })
+
+  whispersInLastSecond++
+  whispersInLastMinute++
+
+  setTimeout(() => whispersInLastSecond--, 1000)
+  setTimeout(() => whispersInLastMinute--, 60000)
+}
+
 // Chat client object
 export const chatClient = {
   join: (channel: string) => {
@@ -39,13 +76,7 @@ export const chatClient = {
     twitchChat.emit('say', channel, `${prefix}${text}`)
   },
   whisper: (channel: string, text: string | undefined) => {
-    const MAX_WHISPER_LENGTH = 10000
-    if (!text) {
-      return twitchChat.emit('whisper', channel, 'Empty whisper message, monka')
-    }
-    const chunks = text.match(new RegExp(`.{1,${MAX_WHISPER_LENGTH}}`, 'g')) || []
-    chunks.forEach((chunk) => {
-      twitchChat.emit('whisper', channel, `${prefix}${chunk}`)
-    })
+    whisperQueue.push({ channel, text: text || 'Empty whisper message, monka' })
+    processQueue()
   },
 }
