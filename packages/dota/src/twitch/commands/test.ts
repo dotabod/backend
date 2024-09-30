@@ -252,6 +252,7 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
             .eq('id', bet.id)
         }
       } catch (e) {
+        chatClient.whisper(twitchChatId, `Error fetching match data: ${JSON.stringify(e)}`)
         logger.error('Error fetching sockets', { e })
       }
     }),
