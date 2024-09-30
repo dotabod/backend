@@ -233,7 +233,7 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
                     `Error for match ${bet.matchId}: ${JSON.stringify(err)}`,
                   )
                 }
-                if (err) reject(err)
+                if (err) resolve(null)
                 else resolve(response)
               },
             )
