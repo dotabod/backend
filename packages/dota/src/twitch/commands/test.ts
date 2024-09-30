@@ -240,13 +240,16 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
         })
 
         if (typeof response?.radiantWin === 'boolean') {
+          const radiantWin = response.radiantWin && bet.myTeam === 'radiant'
+          const direWin = !response.radiantWin && bet.myTeam === 'dire'
+
           await supabase
             .from('bets')
             .update({
               radiant_score: response?.radiantScore,
               dire_score: response?.direScore,
               kda: { kills: response?.kills, deaths: response?.deaths, assists: response?.assists },
-              won: response.radiantWin && bet.myTeam === 'radiant',
+              won: radiantWin || direWin,
               lobby_type: response.lobbyType,
             })
             .eq('id', bet.id)
