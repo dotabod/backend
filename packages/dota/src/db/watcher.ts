@@ -134,9 +134,9 @@ class SetupSupabase {
             const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
             const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
 
-            // const hasNewestScopes = client.Account?.scope?.includes('channel:bot')
+            const hasNewestScopes = client.Account?.scope?.includes('channel:bot')
             const requiresRefresh = client.Account?.requires_refresh
-            if (requiresRefresh && !didTellUser.has(client.name)) {
+            if ((!hasNewestScopes || requiresRefresh) && !didTellUser.has(client.name)) {
               didTellUser.add(client.name)
 
               const { data, error } = await supabase
