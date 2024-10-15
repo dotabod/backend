@@ -54,6 +54,7 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
         return
       }
 
+      invalidTokens.add(token)
       pendingCheckAuth.delete(token)
       logger.info('[GSI] io.use Error checking auth 42', { token, client })
       res.status(200).json({ error: 'Invalid token, skipping auth check' })

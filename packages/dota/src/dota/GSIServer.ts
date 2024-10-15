@@ -27,7 +27,6 @@ function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
         // Successful authentication
         next()
       } else {
-        logger.info('[GSI] Invalid token, disconnecting socket')
         socket.emit('auth_error', 'Invalid token') // Send an auth error message if needed
         socket.disconnect(true) // Disconnect the socket and prevent reconnection attempts
       }
