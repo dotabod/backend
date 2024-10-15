@@ -51,6 +51,7 @@ export const getWinProbability2MinAgo = async (
       {
         headers: {
           Authorization: `Bearer ${process.env.STRATZ_TOKEN}`,
+          'User-Agent': 'STRATZ_API',
         },
       },
     )
