@@ -24,16 +24,18 @@ function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
   getDBUser({ token })
     .then((client) => {
       if (client?.token) {
+        // Successful authentication
         next()
       } else {
-        socket.disconnect()
-        next(new Error(`authentication error ${client ? '58' : '62'}`))
+        logger.info('[GSI] Invalid token, disconnecting socket')
+        socket.emit('auth_error', 'Invalid token') // Send an auth error message if needed
+        socket.disconnect(true) // Disconnect the socket and prevent reconnection attempts
       }
     })
     .catch((e) => {
-      logger.info('[GSI] io.use Error checking auth', { token, e })
-      socket.disconnect()
-      next(new Error('authentication error 62'))
+      logger.info('[GSI] Error checking auth', { token, e })
+      socket.emit('auth_error', 'Authentication error') // Send an error message if needed
+      socket.disconnect(true) // Disconnect the socket and prevent reconnection attempts
     })
 }
 

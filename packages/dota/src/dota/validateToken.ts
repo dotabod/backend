@@ -11,15 +11,16 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
   const token = req.body?.auth?.token as string | undefined
 
   if (invalidTokens.has(token)) {
-    res.status(200).send('Invalid token, skipping auth check')
+    res.status(200).json({
+      error: 'Invalid token, skipping auth check',
+    })
     return
   }
 
   if (!token) {
-    invalidTokens.add(token)
-    logger.info('[GSI], Dropping message, no valid auth token', { token, forwardedIp })
+    logger.info('[GSI], Dropping message, no valid auth token', { forwardedIp })
     res.status(200).json({
-      error: new Error('Invalid request!'),
+      error: 'Invalid request! No token provided.',
     })
     return
   }
@@ -28,7 +29,9 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
   // so getDBUser was returning null, which means this was sending a new auth error and then
   // no longer doing authentications. i think adding the `lookingupToken` check here fixes that
   if (pendingCheckAuth.has(token) || lookingupToken.has(token)) {
-    res.status(200).send('Still validating token, skipping requests until auth')
+    res.status(200).json({
+      error: 'Still validating token, skipping requests until auth',
+    })
     return
   }
 
@@ -38,7 +41,9 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
       if (client?.token) {
         if (!client.stream_online) {
           pendingCheckAuth.delete(token)
-          res.status(200).send('Stream offline')
+          res.status(200).json({
+            error: 'Stream offline',
+          })
           return
         }
 
@@ -51,13 +56,15 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
 
       pendingCheckAuth.delete(token)
       logger.info('[GSI] io.use Error checking auth 42', { token, client })
-      res.status(200).send('Invalid token, skipping auth check')
+      res.status(200).json({ error: 'Invalid token, skipping auth check' })
     })
     .catch((e) => {
       logger.info('[GSI] io.use Error checking auth 48', { token, e })
       invalidTokens.add(token)
       pendingCheckAuth.delete(token)
-      res.status(200).send('Invalid token, skipping auth check')
+      res.status(200).json({
+        error: 'Invalid token, skipping auth check',
+      })
     })
     // TODO: idk if finally runs when next() is called in a .then() earlier
     // So adding the .deletes to .then and .catch until i figure that out lol
