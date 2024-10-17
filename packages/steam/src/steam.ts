@@ -358,10 +358,7 @@ class Dota {
     this.dota2.on('unready', () => logger.info('[STEAM] disconnected from dota game coordinator'))
     // Right when we start, check for accounts
     // This will run every 30 seconds otherwise
-
-    // I'm thinking we already get the live data from the steam server web api
-    // The code was fixed to display web data earlier, which this was trying to do
-    // this.dota2.on('ready', this.checkAccounts.bind(this))
+    this.dota2.on('ready', this.checkAccounts.bind(this))
   }
 
   handleHelloTimeout() {
