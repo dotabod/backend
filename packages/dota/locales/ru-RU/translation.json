@@ -66,7 +66,7 @@
   "dota2pt": "Нужны сборки от про-игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "facet": "{{number}} аспект {{- heroName}} - это {{- facetTitle}} · {{- facetDescription}}",
-  "facetInvalid": "Аспект не найден · $t(facetNotFound, {{- heroName }})",
+  "facetInvalid": "Указан неверный аспект · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Напиши !facet {{- heroName}} 1 или !facet {{- heroName}} 2 · Dotabod знает только выбранный аспект для текущего героя стримера",
   "facetSelection": "{{- heroName}} выбрал аспект: {{- facetTitle}} · {{- facetDescription}}",
   "facetTotalLimit_one": "Только {{count}} аспект доступен у {{- heroName}} · $t(facetNotFound, {{- heroName }})",
