@@ -626,6 +626,11 @@ export const heroes = {
     localized_name: 'Muerta',
     alias: [],
   },
+  npc_dota_hero_kez: {
+    id: 145,
+    localized_name: 'Kez',
+    alias: [],
+  },
 }
 
 export const translatedColor = (color: string, lng: string) => {
