@@ -65,6 +65,7 @@ export const setupWebhooks = () => {
             })
           })
       } else if (req.body.type === 'UPDATE' && req.body.table === 'accounts') {
+        console.log('[SUPABASE] UPDATE accounts', { body: req.body })
         const { body } = req
         const oldUser = body.old_record as UpdatePayload<Tables<'accounts'>>['old_record']
         const newUser = body.record as UpdatePayload<Tables<'accounts'>>['record']
@@ -77,8 +78,10 @@ export const setupWebhooks = () => {
         const newreq = newUser.requires_refresh
         const oldreq = oldUser.requires_refresh
 
-        if (oldreq !== newreq && newreq !== true) {
-          console.log('[SUPABASE] Refresh token changed, updating chat client', {
+        // when the old refresh_token value is true, and the new one is false
+        // we need to re-subscribe to events
+        if (oldreq === true && newreq === false) {
+          console.log('[SUPABASE] Refresh token changed, updating events client', {
             providerAccountId: newUser.providerAccountId,
           })
 
