@@ -2,13 +2,14 @@ import { startUserSubscriptions } from './SubscribeEvents'
 import { chatClient } from './chatClient.js'
 import supabase from './db/supabase.js'
 import { getBotInstance } from './twitch/lib/BotApiSingleton.js'
+import { logger } from './twitch/lib/logger.js'
 
 const botApi = getBotInstance()
 export async function handleNewUser(providerAccountId: string, resubscribeEvents = true) {
-  console.log("[TWITCHEVENTS] New user, let's get their info", { userId: providerAccountId })
+  logger.info("[TWITCHEVENTS] New user, let's get their info", { userId: providerAccountId })
 
   if (!providerAccountId) {
-    console.log("[TWITCHEVENTS] This should never happen, user doesn't have a providerAccountId", {
+    logger.info("[TWITCHEVENTS] This should never happen, user doesn't have a providerAccountId", {
       providerAccountId,
     })
     return
@@ -38,7 +39,7 @@ export async function handleNewUser(providerAccountId: string, resubscribeEvents
       .single()
 
     if (!user || !user.userId) {
-      console.log('[TWITCHEVENTS] user not found', { providerAccountId })
+      logger.info('[TWITCHEVENTS] user not found', { providerAccountId })
       return
     }
 
@@ -50,17 +51,17 @@ export async function handleNewUser(providerAccountId: string, resubscribeEvents
     if (streamer?.name) {
       chatClient.join(streamer.name)
     } else {
-      console.log('[TWITCHEVENTS] streamer.name is falsy', { streamer })
+      logger.info('[TWITCHEVENTS] streamer.name is falsy', { streamer })
     }
   } catch (e) {
-    console.log('[TWITCHEVENTS] error on getStreamByUserId', { e })
+    logger.info('[TWITCHEVENTS] error on getStreamByUserId', { e })
   }
 
   if (resubscribeEvents) {
     try {
       startUserSubscriptions(providerAccountId)
     } catch (e) {
-      console.log('[TWITCHEVENTS] error on handlenewuser', { e })
+      logger.info('[TWITCHEVENTS] error on handlenewuser', { e })
     }
   }
 }

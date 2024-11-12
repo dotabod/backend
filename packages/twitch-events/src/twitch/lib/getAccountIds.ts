@@ -1,7 +1,8 @@
 import supabase from '../../db/supabase.js'
+import { logger } from './logger.js'
 
 export async function getAccountIds(): Promise<string[]> {
-  console.log('[TWITCHSETUP] Running getAccountIds')
+  logger.info('[TWITCHSETUP] Running getAccountIds')
 
   const devIds = process.env.DEV_CHANNELIDS?.split(',') ?? []
   const devChannels = process.env.DEV_CHANNELS?.split(',') ?? []
@@ -48,9 +49,11 @@ export async function getAccountIds(): Promise<string[]> {
   const filteredProviderIds = providerIds.filter(Boolean)
 
   if (filteredProviderIds.length < 10) {
-    console.log({ filteredProviderIds })
+    logger.info(`[TWITCHEVENTS] joining ${filteredProviderIds.length} channels`, {
+      providerIds: filteredProviderIds,
+    })
   }
 
-  console.log('[TWITCHEVENTS] joining', filteredProviderIds.length, 'channels')
+  logger.info(`[TWITCHEVENTS] joining ${filteredProviderIds.length} channels`)
   return filteredProviderIds
 }

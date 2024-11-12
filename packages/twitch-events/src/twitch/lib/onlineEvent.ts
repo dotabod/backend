@@ -2,9 +2,10 @@ import type { EventSubStreamOnlineEvent } from '@twurple/eventsub-base'
 
 import supabase from '../../db/supabase.js'
 import { onlineEvents } from '../events/events.js'
+import { logger } from './logger.js'
 
 export function onlineEvent(data: EventSubStreamOnlineEvent) {
-  console.log(`${data.broadcasterId} just went online`)
+  logger.info(`${data.broadcasterId} just went online`)
   onlineEvents.set(data.broadcasterId, new Date())
 
   async function handler() {
@@ -24,7 +25,7 @@ export function onlineEvent(data: EventSubStreamOnlineEvent) {
         })
         .eq('id', user.userId)
 
-      console.log('updated online event', data.broadcasterId)
+      logger.info('updated online event', { twitchId: data.broadcasterId })
     }
   }
 

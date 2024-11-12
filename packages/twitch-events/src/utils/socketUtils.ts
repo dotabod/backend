@@ -1,4 +1,5 @@
 import { Server } from 'socket.io'
+import { logger } from '../twitch/lib/logger.js'
 
 export const socketIo = new Server(5015)
 
@@ -8,14 +9,14 @@ export let eventsIOConnected = false
 
 export const setupSocketIO = () => {
   socketIo.on('connection', async (socket) => {
-    console.log('[TWITCHEVENTS] Joining socket to room')
+    logger.info('[TWITCHEVENTS] Joining socket to room')
     await socket.join(DOTABOD_EVENTS_ROOM)
 
-    console.log('[TWITCHEVENTS] eventsIOConnected = true')
+    logger.info('[TWITCHEVENTS] eventsIOConnected = true')
     eventsIOConnected = true
 
     socket.on('connect_error', (err) => {
-      console.log(`[TWITCHEVENTS] socket connect_error due to ${err.message}`)
+      logger.info(`[TWITCHEVENTS] socket connect_error due to ${err.message}`)
     })
 
     socket.on('disconnect', () => {

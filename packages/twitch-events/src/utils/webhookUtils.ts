@@ -8,6 +8,7 @@ import supabase from '../db/supabase.js'
 import { handleNewUser } from '../handleNewUser.js'
 import { listener } from '../listener.js'
 import { getAccountIds } from '../twitch/lib/getAccountIds.js'
+import { logger } from '../twitch/lib/logger.js'
 import { revokeEvent } from '../twitch/lib/revokeEvent.js'
 import type { InsertPayload, UpdatePayload } from '../types.js'
 import { isAuthenticated } from './authUtils.js'
@@ -34,7 +35,7 @@ export const setupWebhooks = () => {
     async (req, res) => {
       // check authorization beaerer token
       if (!isAuthenticated(req)) {
-        console.log('[TWITCHEVENTS] Unauthorized request', {
+        logger.info('[TWITCHEVENTS] Unauthorized request', {
           headers: req.headers,
           body: req.body,
           ip: req.ip,
@@ -54,18 +55,18 @@ export const setupWebhooks = () => {
 
         handleNewUser(user.providerAccountId)
           .then(() => {
-            console.log('[TWITCHEVENTS] INSERT done handling new user', {
+            logger.info('[TWITCHEVENTS] INSERT done handling new user', {
               providerAccountId: user.providerAccountId,
             })
           })
           .catch((e) => {
-            console.log('[TWITCHEVENTS] INSERT error on handleNewUser', {
+            logger.info('[TWITCHEVENTS] INSERT error on handleNewUser', {
               e,
               providerAccountId: user.providerAccountId,
             })
           })
       } else if (req.body.type === 'UPDATE' && req.body.table === 'accounts') {
-        console.log('[SUPABASE] UPDATE accounts', { body: req.body })
+        logger.info('[TWITCHEVENTS] UPDATE accounts', { body: req.body })
         const { body } = req
         const oldUser = body.old_record as UpdatePayload<Tables<'accounts'>>['old_record']
         const newUser = body.record as UpdatePayload<Tables<'accounts'>>['record']
@@ -81,18 +82,18 @@ export const setupWebhooks = () => {
         // when the old refresh_token value is true, and the new one is false
         // we need to re-subscribe to events
         if (oldreq === true && newreq === false) {
-          console.log('[SUPABASE] Refresh token changed, updating events client', {
+          logger.info('[SUPABASE] Refresh token changed, updating events client', {
             providerAccountId: newUser.providerAccountId,
           })
 
           handleNewUser(newUser.providerAccountId)
             .then(() => {
-              console.log('[TWITCHEVENTS] UPDATE done handling new user', {
+              logger.info('[TWITCHEVENTS] UPDATE done handling new user', {
                 providerAccountId: newUser.providerAccountId,
               })
             })
             .catch((e) => {
-              console.log('[TWITCHEVENTS] UPDATE error on handleNewUser', {
+              logger.info('[TWITCHEVENTS] UPDATE error on handleNewUser', {
                 e,
                 providerAccountId: newUser.providerAccountId,
               })
@@ -107,7 +108,7 @@ export const setupWebhooks = () => {
         if (!IS_DEV && DEV_CHANNELS.includes(newUser.name)) return
 
         if (oldUser.name !== newUser.name || oldUser.displayName !== newUser.displayName) {
-          console.log('[SUPABASE] User changed name: ', {
+          logger.info('[SUPABASE] User changed name: ', {
             oldName: oldUser.name,
             newName: newUser.name,
             oldDisplayName: oldUser.displayName,
@@ -128,7 +129,7 @@ export const setupWebhooks = () => {
               // Only resubscribing if it's a new user
               await handleNewUser(account.providerAccountId, !oldUser.displayName)
             } catch (e) {
-              console.log('[TWITCHEVENTS] error on handleNewUser 3', {
+              logger.info('[TWITCHEVENTS] error on handleNewUser 3', {
                 e,
                 providerAccountId: account.providerAccountId,
               })
@@ -146,15 +147,15 @@ export const setupWebhooks = () => {
   // Why can't i use async on express listen?
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   webhookApp.listen(5011, async () => {
-    console.log('[TWITCHEVENTS] Webhooks Listening on port 5011')
+    logger.info('[TWITCHEVENTS] Webhooks Listening on port 5011')
 
     listener.start()
 
-    console.log('READY!')
+    logger.info('READY!')
     try {
       listener.onUserAuthorizationRevoke(process.env.TWITCH_CLIENT_ID ?? '', revokeEvent)
     } catch (e) {
-      console.log('[TWITCHEVENTS] error on listener.onUserAuthorizationRevoke', { e })
+      logger.info('[TWITCHEVENTS] error on listener.onUserAuthorizationRevoke', { e })
     }
 
     const accountIds = await getAccountIds()

@@ -2,9 +2,10 @@ import type { EventSubStreamOfflineEvent } from '@twurple/eventsub-base'
 
 import supabase from '../../db/supabase.js'
 import { onlineEvents } from '../events/events.js'
+import { logger } from './logger.js'
 
 export function offlineEvent(e: EventSubStreamOfflineEvent) {
-  console.log(`${e.broadcasterId} just went offline`)
+  logger.info(`${e.broadcasterId} just went offline`)
 
   // check onlineEvents to see if we have an online event for this user within the last 5 seconds
   // if we do, then we can safely assume that the offline event is a false positive
@@ -15,7 +16,7 @@ export function offlineEvent(e: EventSubStreamOfflineEvent) {
       const now = new Date()
       const diff = now.getTime() - (onlineEventDate?.getTime() ?? now.getTime())
       if (diff < 10000) {
-        console.log('ignoring offline event for', e.broadcasterId)
+        logger.info('ignoring offline event for', { twitchId: e.broadcasterId })
         return
       }
 
@@ -31,7 +32,7 @@ export function offlineEvent(e: EventSubStreamOfflineEvent) {
         .single()
 
       if (!user || !user.userId) {
-        console.log('[TWITCHEVENTS] user not found', {
+        logger.info('[TWITCHEVENTS] user not found', {
           twitchId: e.broadcasterId,
         })
         return
@@ -44,7 +45,7 @@ export function offlineEvent(e: EventSubStreamOfflineEvent) {
         })
         .eq('id', user.userId)
         .then(() => {
-          console.log('updated online event', e.broadcasterId)
+          logger.info('updated online event', { twitchId: e.broadcasterId })
         })
     }
 

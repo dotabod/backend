@@ -1,6 +1,7 @@
 import type { EventSubUserAuthorizationRevokeEvent } from '@twurple/eventsub-base'
 import { stopUserSubscriptions } from '../../SubscribeEvents'
 import supabase from '../../db/supabase'
+import { logger } from './logger.js'
 
 async function disableChannel(broadcasterId: string) {
   const { data: user } = await supabase
@@ -11,7 +12,7 @@ async function disableChannel(broadcasterId: string) {
     .single()
 
   if (!user) {
-    console.log('twitch-events Failed to find user', broadcasterId)
+    logger.info('twitch-events Failed to find user', { twitchId: broadcasterId })
     return
   }
 
@@ -21,16 +22,16 @@ async function disableChannel(broadcasterId: string) {
     .eq('userId', user?.userId)
 
   if (!settings) {
-    console.log('twitch-events Failed to find settings', broadcasterId)
+    logger.info('twitch-events Failed to find settings', { twitchId: broadcasterId })
     return
   }
 
   if (settings.find((s) => s.key === 'commandDisable' && s.value === true)) {
-    console.log('twitch-events User already disabled', broadcasterId)
+    logger.info('twitch-events User already disabled', { twitchId: broadcasterId })
     return
   }
 
-  console.log('twitch-events Disabling user', broadcasterId)
+  logger.info('twitch-events Disabling user', { twitchId: broadcasterId })
   await supabase.from('settings').upsert(
     {
       userId: user.userId,
@@ -44,12 +45,12 @@ async function disableChannel(broadcasterId: string) {
 }
 
 export async function revokeEvent(data: EventSubUserAuthorizationRevokeEvent) {
-  console.log(`${data.userId} just revoked`)
+  logger.info(`${data.userId} just revoked`)
 
   try {
     stopUserSubscriptions(data.userId)
   } catch (e) {
-    console.log('Failed to delete subscriptions', e, data.userId)
+    logger.info('Failed to delete subscriptions', { error: e, twitchId: data.userId })
   }
 
   await supabase

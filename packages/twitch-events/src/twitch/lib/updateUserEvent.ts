@@ -1,9 +1,10 @@
 import type { EventSubUserUpdateEvent } from '@twurple/eventsub-base'
 
 import supabase from '../../db/supabase.js'
+import { logger } from './logger.js'
 
 export function updateUserEvent(e: EventSubUserUpdateEvent) {
-  console.log(`${e.userId} updateUserEvent`)
+  logger.info(`${e.userId} updateUserEvent`)
 
   async function handler() {
     try {
@@ -29,7 +30,7 @@ export function updateUserEvent(e: EventSubUserUpdateEvent) {
         .single()
 
       if (!user || !user.userId) {
-        console.log('[TWITCHEVENTS] user not found', { twitchId: e.userId })
+        logger.info('[TWITCHEVENTS] user not found', { twitchId: e.userId })
         return
       }
 

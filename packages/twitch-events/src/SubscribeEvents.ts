@@ -2,6 +2,7 @@ import type { EventSubSubscription } from '@twurple/eventsub-base'
 import { listener } from './listener.js'
 import { transformBetData } from './twitch/events/transformers/transformBetData.js'
 import { transformPollData } from './twitch/events/transformers/transformPollData.js'
+import { logger } from './twitch/lib/logger.js'
 import { offlineEvent } from './twitch/lib/offlineEvent.js'
 import { onlineEvent } from './twitch/lib/onlineEvent.js'
 import { updateUserEvent } from './twitch/lib/updateUserEvent.js'
@@ -55,11 +56,11 @@ export const stopUserSubscriptions = (providerAccountId: string) => {
   if (subscriptions) {
     subscriptions.forEach((subscription) => subscription.stop())
     delete userSubscriptions[providerAccountId]
-    console.log(
+    logger.info(
       `[TWITCHEVENTS] Unsubscribed from events for providerAccountId: ${providerAccountId}`,
     )
   } else {
-    console.log(
+    logger.info(
       `[TWITCHEVENTS] stopUserSubscriptions No subscriptions found for providerAccountId: ${providerAccountId}`,
     )
   }
@@ -68,7 +69,7 @@ export const stopUserSubscriptions = (providerAccountId: string) => {
 // Function to start subscriptions for a user
 export const startUserSubscriptions = (providerAccountId: string) => {
   initUserSubscriptions(providerAccountId)
-  console.log(`[TWITCHEVENTS] Subscribed events for providerAccountId: ${providerAccountId}`)
+  logger.info(`[TWITCHEVENTS] Subscribed events for providerAccountId: ${providerAccountId}`)
 }
 
 // Function to subscribe to events for multiple users
@@ -77,7 +78,7 @@ export const SubscribeEvents = (accountIds: string[]) => {
     try {
       initUserSubscriptions(providerAccountId)
     } catch (e) {
-      console.log('[TWITCHEVENTS] could not sub', { e, providerAccountId })
+      logger.info('[TWITCHEVENTS] could not sub', { e, providerAccountId })
     }
   })
 }

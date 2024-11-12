@@ -1,11 +1,12 @@
 import { ApiClient } from '@twurple/api'
 import { AppTokenAuthProvider } from '@twurple/auth'
+import { logger } from './logger.js'
 
 let instance: ApiClient | null = null
 
 export function getBotInstance() {
   if (!instance) {
-    console.log('[TWITCH] Retrieving twitch dotabod api')
+    logger.info('[TWITCH] Retrieving twitch dotabod api')
     const authProvider = new AppTokenAuthProvider(
       process.env.TWITCH_CLIENT_ID ?? '',
       process.env.TWITCH_CLIENT_SECRET ?? '',
@@ -16,7 +17,7 @@ export function getBotInstance() {
       //   minLevel: 'trace',
       // },
     })
-    console.log('[TWITCH] Retrieved twitch dotabod api')
+    logger.info('[TWITCH] Retrieved twitch dotabod api')
     instance = api
   }
   return instance
