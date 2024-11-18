@@ -1,8 +1,11 @@
 import { getAppToken } from '@twurple/auth'
 import type { EventSubChannelChatMessageEventData } from '@twurple/eventsub-base/lib/events/EventSubChannelChatMessageEvent.external'
+import type { EventSubChatBadge } from '@twurple/eventsub-base/lib/events/common/EventSubChatMessage.external'
 import type { EventSubWsPacket } from '@twurple/eventsub-ws/lib/EventSubWsPacket.external'
-import { logger } from '../utils/logger'
+import { t } from 'i18next'
+import { logger } from '../logger'
 import { EventsubSocket } from './eventSubSocket'
+import { chatClient, hasDotabodSocket, io } from './index'
 
 // Constants
 const headers = await getTwitchHeaders()
@@ -87,46 +90,6 @@ async function updateConduitShard(session_id: string, conduitId: string) {
   }
 }
 
-// TODO: Move this to twitch-events package
-const subscribeToUserUpdate = async (conduit_id: string, broadcaster_user_id: string) => {
-  const botUserId = process.env.TWITCH_BOT_PROVIDERID
-  if (!botUserId) {
-    logger.error('Bot user id not found')
-    return
-  }
-
-  const body = {
-    type: 'channel.chat.message',
-    version: '1',
-    condition: {
-      user_id: botUserId,
-      broadcaster_user_id: broadcaster_user_id, // the user we want to listen to
-    },
-    transport: {
-      method: 'conduit',
-      conduit_id,
-    },
-  }
-  const subscribeReq = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
-    method: 'POST',
-    headers: {
-      ...headers,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (subscribeReq.status !== 202) {
-    logger.error(
-      `Failed to subscribe to channel.chat.message ${
-        subscribeReq.status
-      } ${await subscribeReq.text()}`,
-    )
-    return
-  }
-  logger.info('Subscribed to channel.chat.message')
-}
-
 // TODO: Move this to twitch-chat package
 // Initialize WebSocket and handle events
 async function initializeSocket() {
@@ -134,6 +97,7 @@ async function initializeSocket() {
   logger.info('Conduit ID', { conduitId })
 
   const mySocket = new EventsubSocket()
+
   mySocket.on('connected', async (session_id: string) => {
     logger.info(`Socket has connected ${session_id} for ${conduitId}`)
     await updateConduitShard(session_id, conduitId)
@@ -143,20 +107,66 @@ async function initializeSocket() {
     logger.error('Socket Error', { error })
   })
 
-  mySocket.on('notification', (message: EventSubWsPacket) => {
-    if (
-      'subscription' in message.payload &&
-      'event' in message.payload &&
-      message.payload.subscription.type === 'channel.chat.message'
-    ) {
-      const {
-        chatter_user_login,
-        message: { text },
-      } = message.payload.event as unknown as EventSubChannelChatMessageEventData
-      logger.info('Socket Message', { chatter_user_login, text })
-    }
-    logger.info('Socket Message', { message: message.payload })
-  })
+  mySocket.on('notification', handleNotification)
 }
 
-initializeSocket()
+async function handleNotification(message: EventSubWsPacket) {
+  if (
+    'subscription' in message.payload &&
+    'event' in message.payload &&
+    message.payload.subscription.type === 'channel.chat.message'
+  ) {
+    const {
+      chatter_user_login,
+      chatter_user_id,
+      message: { text },
+      message_id,
+      broadcaster_user_id: channelId,
+      badges,
+      broadcaster_user_login,
+    } = message.payload.event as unknown as EventSubChannelChatMessageEventData
+
+    const userInfo = extractUserInfo(badges, channelId, chatter_user_id)
+
+    if (!hasDotabodSocket) {
+      // TODO: only commands that we register should be checked here
+      if (text === '!ping') {
+        try {
+          void fetch('https://api.twitch.tv/helix/chat/messages', {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              broadcaster_id: channelId,
+              sender_id: process.env.TWITCH_BOT_PROVIDERID,
+              message: t('rebooting', { emote: 'PauseChamp', lng: 'en' }),
+            }),
+          })
+        } catch (e) {
+          logger.error('Could not send rebooting message', { e })
+        }
+      }
+      return
+    }
+
+    io.to('twitch-chat-messages').emit('msg', broadcaster_user_login, chatter_user_login, text, {
+      channelId,
+      userInfo,
+      messageId: message_id,
+    })
+  }
+}
+
+function extractUserInfo(
+  badges: EventSubChatBadge[],
+  broadcasterUserId: string,
+  chatterUserId: string,
+) {
+  return {
+    isMod: badges.some((badge) => badge.set_id === 'moderator'),
+    isBroadcaster: broadcasterUserId === chatterUserId,
+    isSubscriber: badges.some((badge) => badge.set_id === 'subscriber'),
+    userId: chatterUserId,
+  }
+}
+
+export { initializeSocket }

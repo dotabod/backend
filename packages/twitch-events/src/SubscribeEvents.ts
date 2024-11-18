@@ -1,3 +1,4 @@
+import { getAppToken } from '@twurple/auth'
 import type { EventSubSubscription } from '@twurple/eventsub-base'
 import { listener } from './listener.js'
 import { transformBetData } from './twitch/events/transformers/transformBetData.js'
@@ -7,6 +8,62 @@ import { offlineEvent } from './twitch/lib/offlineEvent.js'
 import { onlineEvent } from './twitch/lib/onlineEvent.js'
 import { updateUserEvent } from './twitch/lib/updateUserEvent.js'
 import { DOTABOD_EVENTS_ROOM, eventsIOConnected, socketIo } from './utils/socketUtils.js'
+
+// Constants
+const headers = await getTwitchHeaders()
+
+const botUserId = process.env.TWITCH_BOT_PROVIDERID
+if (!botUserId) {
+  throw new Error('Bot user id not found')
+}
+
+// Function to get Twitch headers
+export async function getTwitchHeaders(): Promise<Record<string, string>> {
+  const appToken = await getAppToken(
+    process.env.TWITCH_CLIENT_ID || '',
+    process.env.TWITCH_CLIENT_SECRET || '',
+  )
+
+  return {
+    'Client-Id': process.env.TWITCH_CLIENT_ID || '',
+    Authorization: `Bearer ${appToken?.accessToken}`,
+    Accept: 'application/json',
+    'Accept-Encoding': 'gzip',
+  }
+}
+
+const subscribeToUserUpdate = async (conduit_id: string, broadcaster_user_id: string) => {
+  const body = {
+    type: 'channel.chat.message',
+    version: '1',
+    condition: {
+      user_id: botUserId,
+      broadcaster_user_id: broadcaster_user_id, // the user we want to listen to
+    },
+    transport: {
+      method: 'conduit',
+      conduit_id,
+    },
+  }
+  const subscribeReq = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
+    method: 'POST',
+    headers: {
+      ...headers,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (subscribeReq.status !== 202) {
+    logger.error(
+      `Failed to subscribe to channel.chat.message ${
+        subscribeReq.status
+      } ${await subscribeReq.text()}`,
+    )
+    return false
+  }
+  return true
+}
 
 export const handleEvent = (eventName: any, broadcasterId: string, data: any) => {
   if (!eventsIOConnected) {

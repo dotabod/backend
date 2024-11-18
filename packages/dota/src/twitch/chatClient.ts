@@ -53,24 +53,21 @@ export const chatClient = {
     twitchChat.emit('part', channel)
   },
   say: async (channel: string, text: string) => {
-    // New API is in beta, so only dev enabled for now
-    if (isDev) {
-      const user = findUserByName(channel.toLowerCase().replace('#', ''))
-      const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
+    const user = findUserByName(channel.toLowerCase().replace('#', ''))
+    const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
 
-      if (hasNewestScopes) {
-        const newPrefix = prefix ? `${prefix}[NEW-API] ` : prefix
-        void fetch('https://api.twitch.tv/helix/chat/messages', {
-          method: 'POST',
-          headers: { ...headers, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            broadcaster_id: user?.Account?.providerAccountId,
-            sender_id: process.env.TWITCH_BOT_PROVIDERID,
-            message: `${newPrefix}${text}`,
-          }),
-        })
-        return
-      }
+    if (hasNewestScopes) {
+      const newPrefix = prefix ? `${prefix}[NEW-API] ` : prefix
+      void fetch('https://api.twitch.tv/helix/chat/messages', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          broadcaster_id: user?.Account?.providerAccountId,
+          sender_id: process.env.TWITCH_BOT_PROVIDERID,
+          message: `${newPrefix}${text}`,
+        }),
+      })
+      return
     }
 
     twitchChat.emit('say', channel, `${prefix}${text}`)

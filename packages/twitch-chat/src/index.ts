@@ -154,29 +154,4 @@ chatClient.onJoinFailure((channel, reason) => {
   console.log('Failed to join channel', channel, reason)
 })
 
-chatClient.onMessage((channel, user, text, msg) => {
-  if (!hasDotabodSocket) {
-    // TODO: only commands that we register should be checked here
-    if (text === '!ping') {
-      try {
-        void chatClient.say(channel, t('rebooting', { emote: 'PauseChamp', lng: 'en' }))
-      } catch (e) {
-        console.log('could not type rebooting msg', e)
-      }
-    }
-
-    return
-  }
-
-  const { channelId, userInfo, id: messageId } = msg
-  const { isMod, isBroadcaster, isSubscriber, userId } = userInfo
-
-  // forward the msg to dota node app
-  io.to('twitch-chat-messages').emit('msg', channel, user, text, {
-    channelId,
-    userInfo: { isMod, isBroadcaster, isSubscriber, userId },
-    messageId,
-  })
-})
-
-export default io
+export { hasDotabodSocket, io }

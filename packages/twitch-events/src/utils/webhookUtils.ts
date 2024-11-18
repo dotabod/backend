@@ -13,6 +13,10 @@ import { revokeEvent } from '../twitch/lib/revokeEvent.js'
 import type { InsertPayload, UpdatePayload } from '../types.js'
 import { isAuthenticated } from './authUtils.js'
 
+if (!process.env.TWITCH_CLIENT_ID) {
+  throw new Error('TWITCH_CLIENT_ID is not defined')
+}
+
 export const setupWebhooks = () => {
   const webhookApp = express()
 
@@ -153,7 +157,11 @@ export const setupWebhooks = () => {
 
     logger.info('READY!')
     try {
-      listener.onUserAuthorizationRevoke(process.env.TWITCH_CLIENT_ID ?? '', revokeEvent)
+      if (process.env.TWITCH_CLIENT_ID) {
+        listener.onUserAuthorizationRevoke(process.env.TWITCH_CLIENT_ID, revokeEvent)
+      } else {
+        logger.error('TWITCH_CLIENT_ID is not defined')
+      }
     } catch (e) {
       logger.info('[TWITCHEVENTS] error on listener.onUserAuthorizationRevoke', { e })
     }
