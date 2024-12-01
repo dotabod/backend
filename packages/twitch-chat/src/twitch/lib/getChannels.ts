@@ -3,8 +3,6 @@ import supabase from '../../db/supabase.js'
 export async function getChannels(): Promise<string[]> {
   console.log('[TWITCHSETUP] Running getChannels in chat listener')
 
-  const isDevMode = process.env.DOTABOD_ENV === 'development'
-  const devChannels = process.env.DEV_CHANNELS?.split(',') ?? []
   const users: string[] = []
 
   const pageSize = 1000
@@ -17,11 +15,7 @@ export async function getChannels(): Promise<string[]> {
       .select('name')
       .order('followers', { ascending: false, nullsFirst: false })
 
-    const query = isDevMode
-      ? baseQuery.in('name', devChannels)
-      : baseQuery.not('name', 'in', `(${process.env.DEV_CHANNELS})`)
-
-    const { data } = await query.range(offset, offset + pageSize - 1)
+    const { data } = await baseQuery.range(offset, offset + pageSize - 1)
 
     if (data?.length) {
       users.push(...data.map((user) => user.name))
