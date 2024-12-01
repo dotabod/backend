@@ -3,9 +3,9 @@ import type { EventSubChannelChatMessageEventData } from '@twurple/eventsub-base
 import type { EventSubChatBadge } from '@twurple/eventsub-base/lib/events/common/EventSubChatMessage.external'
 import type { EventSubWsPacket } from '@twurple/eventsub-ws/lib/EventSubWsPacket.external'
 import { t } from 'i18next'
-import { logger } from '../logger'
-import { EventsubSocket } from './eventSubSocket'
-import { chatClient, hasDotabodSocket, io } from './index'
+import { logger } from '../logger.js'
+import { EventsubSocket } from './eventSubSocket.js'
+import { chatClient, hasDotabodSocket, io } from './index.js'
 
 // Constants
 const headers = await getTwitchHeaders()
