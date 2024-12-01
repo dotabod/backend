@@ -20,8 +20,6 @@ if (!process.env.TWITCH_CLIENT_ID) {
 export const setupWebhooks = () => {
   const webhookApp = express()
 
-  const IS_DEV = process.env.DOTABOD_ENV !== 'production'
-
   webhookApp.use(bodyParserErrorHandler())
 
   webhookApp.get('/webhook', (req, res) => {

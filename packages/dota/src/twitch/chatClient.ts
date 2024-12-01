@@ -1,7 +1,8 @@
 import { twitchChat } from '.'
-import { findUserByName } from '../dota/lib/connectedStreamers'
+import { findUserByName } from '../dota/lib/connectedStreamers.js'
 import { isDev } from '../dota/lib/consts.js'
-import { getTwitchHeaders } from './lib/getTwitchHeaders'
+import { logger } from '../utils/logger.js'
+import { getTwitchHeaders } from './lib/getTwitchHeaders.js'
 
 // Constants
 const prefix = isDev ? '[DEV] ' : ''
@@ -53,6 +54,7 @@ export const chatClient = {
     twitchChat.emit('part', channel)
   },
   say: async (channel: string, text: string) => {
+    logger.info('Sending message to twitch chat', { channel, text })
     const user = findUserByName(channel.toLowerCase().replace('#', ''))
     const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
 
