@@ -33,6 +33,7 @@ async function fetchConduitId(): Promise<string> {
   })
 
   const { data } = await conduitsReq.json()
+  logger.info('Conduit ID', { data })
   return data[0]?.id || createConduit()
 }
 
@@ -90,7 +91,6 @@ async function updateConduitShard(session_id: string, conduitId: string) {
   }
 }
 
-// TODO: Move this to twitch-chat package
 // Initialize WebSocket and handle events
 async function initializeSocket() {
   const conduitId = await fetchConduitId()
