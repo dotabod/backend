@@ -31,8 +31,6 @@ services:
       - DATABASE_URL
       - DB_SECRET
       - DB_URL
-      - DEV_CHANNELS
-      - DEV_CHANNELIDS
       - MONGO_URL
       - DOTABOD_ENV
       - TWITCH_BOT_PROVIDERID
@@ -99,8 +97,6 @@ services:
       - DATABASE_URL
       - DB_SECRET
       - DB_URL
-      - DEV_CHANNELS
-      - DEV_CHANNELIDS
       - EVENTSUB_HOST
       - HOOKS_HOST
       - MONGO_URL
@@ -136,8 +132,6 @@ services:
       - DATABASE_URL
       - DB_SECRET
       - DB_URL
-      - DEV_CHANNELS
-      - DEV_CHANNELIDS
       - MONGO_URL
       - NEW_RELIC_NO_CONFIG_FILE
       - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED

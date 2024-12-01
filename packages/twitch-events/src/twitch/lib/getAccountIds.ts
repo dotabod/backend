@@ -4,14 +4,7 @@ import { logger } from './logger.js'
 export async function getAccountIds(): Promise<string[]> {
   logger.info('[TWITCHSETUP] Running getAccountIds')
 
-  const devIds = process.env.DEV_CHANNELIDS?.split(',') ?? []
-  const devChannels = process.env.DEV_CHANNELS?.split(',') ?? []
-  const isDevMode = process.env.DOTABOD_ENV === 'development'
   const providerIds: string[] = []
-
-  if (isDevMode && !devIds.length) {
-    throw new Error('Missing DEV_CHANNELIDS')
-  }
 
   const pageSize = 1000
   let offset = 0
@@ -25,11 +18,7 @@ export async function getAccountIds(): Promise<string[]> {
       .eq('accounts.provider', 'twitch')
       .order('followers', { ascending: false, nullsFirst: false })
 
-    const query = isDevMode
-      ? baseQuery.in('name', devChannels)
-      : baseQuery.not('name', 'in', `(${process.env.DEV_CHANNELS})`)
-
-    const { data } = await query.range(offset, offset + pageSize - 1)
+    const { data } = await baseQuery.range(offset, offset + pageSize - 1)
 
     if (data?.length) {
       const newProviderIds = data.map((user) => {

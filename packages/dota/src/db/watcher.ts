@@ -17,33 +17,17 @@ import supabase from './supabase.js'
 class SetupSupabase {
   channel: any // ReturnType<typeof supabase.channel>
   IS_DEV: boolean
-  DEV_CHANNELS: string[]
-  DEV_CHANNELIDS: string[]
 
   constructor() {
     this.IS_DEV = process.env.DOTABOD_ENV !== 'production'
-    this.DEV_CHANNELS = process.env.DEV_CHANNELS?.split(',') ?? []
-    this.DEV_CHANNELIDS = process.env.DEV_CHANNELIDS?.split(',') ?? []
     this.channel = supabase.channel(`${this.IS_DEV ? 'dev-' : ''}dota`)
 
     logger.info('Starting watcher for', {
       dev: this.IS_DEV,
-      channels: this.DEV_CHANNELS,
     })
   }
 
-  shouldHandleDevChannel(name: string) {
-    return this.IS_DEV ? this.DEV_CHANNELS.includes(name) : !this.DEV_CHANNELS.includes(name)
-  }
-
-  shouldHandleDevChannelId(id: string) {
-    return this.IS_DEV ? this.DEV_CHANNELIDS.includes(id) : !this.DEV_CHANNELIDS.includes(id)
-  }
-
   toggleHandler = async (userId: string, enable: boolean) => {
-    if (this.IS_DEV && !this.DEV_CHANNELIDS.includes(userId)) return
-    if (!this.IS_DEV && this.DEV_CHANNELIDS.includes(userId)) return
-
     const client = await getDBUser({ token: userId })
     if (!client) return
 
@@ -56,9 +40,6 @@ class SetupSupabase {
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'users' },
         async (payload: { old: Tables<'users'> }) => {
-          if (this.IS_DEV && !this.DEV_CHANNELS.includes(payload.old.name)) return
-          if (!this.IS_DEV && this.DEV_CHANNELS.includes(payload.old.name)) return
-
           logger.info('Removing user', payload)
 
           const oldObj = payload.old
@@ -76,9 +57,6 @@ class SetupSupabase {
         async (payload: { new: Tables<'accounts'>; old: Tables<'accounts'> }) => {
           // watch the accounts table for requires_refresh to change from true to false
           // if it does, add the user to twurple authprovider again via addUser()
-          if (this.IS_DEV && !this.DEV_CHANNELIDS.includes(payload.new?.providerAccountId)) return
-          if (!this.IS_DEV && this.DEV_CHANNELIDS.includes(payload.new?.providerAccountId)) return
-
           const newObj = payload.new
           const oldObj = payload.old
 
@@ -111,9 +89,6 @@ class SetupSupabase {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'users' },
         async (payload: any) => {
-          if (this.IS_DEV && !this.DEV_CHANNELS.includes(payload.new.name)) return
-          if (!this.IS_DEV && this.DEV_CHANNELS.includes(payload.new.name)) return
-
           const newObj: Tables<'users'> = payload.new
           const oldObj: Tables<'users'> = payload.old
           const client = findUser(newObj.id)
@@ -208,16 +183,11 @@ class SetupSupabase {
                 logger.error('Error in toggleHandler', { e })
               }
             } else {
-              if (this.IS_DEV && !this.DEV_CHANNELS.includes(client.name)) return
-              if (!this.IS_DEV && this.DEV_CHANNELS.includes(client.name)) return
               toggleDotabod(newObj.userId, !!newObj.value, client.name, client.locale)
             }
           }
 
           if (!client) return
-
-          if (this.IS_DEV && !this.DEV_CHANNELS.includes(client.name)) return
-          if (!this.IS_DEV && this.DEV_CHANNELS.includes(client.name)) return
 
           // replace the new setting with the one we have saved in cache
           logger.info('[WATCHER SETTING] Updating setting for', {
@@ -251,9 +221,6 @@ class SetupSupabase {
 
           // Just here to update local memory
           if (!client) return
-
-          if (this.IS_DEV && !this.DEV_CHANNELS.includes(client.name)) return
-          if (!this.IS_DEV && this.DEV_CHANNELS.includes(client.name)) return
 
           if (payload.eventType === 'DELETE') {
             logger.info('[WATCHER STEAM] Deleting steam account for', {
