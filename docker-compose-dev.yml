@@ -1,11 +1,11 @@
 services:
   twitch-chat:
-    image: "ghcr.io/dotabod/twitch-chat:v2.1"
+    image: "ghcr.io/dotabod/twitch-chat:${BRANCH_NAME}"
     volumes:
       - $PWD/packages/twitch-chat/src/:/app/packages/twitch-chat/src/
 
   steam:
-    image: "ghcr.io/dotabod/steam:v2.2"
+    image: "ghcr.io/dotabod/steam:${BRANCH_NAME}"
     develop:
       watch:
         - action: sync
@@ -19,7 +19,7 @@ services:
           path: $PWD/packages/Dockerfile.steam
 
   twitch-events:
-    image: "ghcr.io/dotabod/twitch-events:v2.1"
+    image: "ghcr.io/dotabod/twitch-events:${BRANCH_NAME}"
     develop:
       watch:
         - action: sync
@@ -29,7 +29,7 @@ services:
           path: $PWD/packages/twitch-events/package.json
 
   dota:
-    image: "ghcr.io/dotabod/dota:v2.16"
+    image: "ghcr.io/dotabod/dota:${BRANCH_NAME}"
     develop:
       watch:
         - action: sync
