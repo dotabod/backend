@@ -5,7 +5,7 @@ import type { EventSubWsPacket } from '@twurple/eventsub-ws/lib/EventSubWsPacket
 import { t } from 'i18next'
 import { logger } from '../logger.js'
 import { EventsubSocket } from './eventSubSocket.js'
-import { chatClient, hasDotabodSocket, io } from './index.js'
+import { hasDotabodSocket, io } from './index.js'
 
 // Constants
 const headers = await getTwitchHeaders()
