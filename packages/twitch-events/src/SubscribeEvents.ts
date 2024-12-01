@@ -75,8 +75,26 @@ export const handleEvent = (eventName: any, broadcasterId: string, data: any) =>
 // Map to store subscriptions for each user
 export const userSubscriptions: Record<string, Array<EventSubSubscription>> = {}
 
+// Function to fetch conduit ID
+async function fetchConduitId(): Promise<string> {
+  const conduitsReq = await fetch('https://api.twitch.tv/helix/eventsub/conduits', {
+    method: 'GET',
+    headers,
+  })
+
+  const { data } = await conduitsReq.json()
+  return data[0]?.id
+}
+
+const conduitId = await fetchConduitId()
+
 // Function to init subscriptions for a user
 const initUserSubscriptions = (providerAccountId: string) => {
+  try {
+    subscribeToUserUpdate(conduitId, providerAccountId)
+  } catch (e) {
+    logger.info('[TWITCHEVENTS] could not sub', { e, providerAccountId })
+  }
   const subscriptions = [
     listener.onStreamOnline(providerAccountId, onlineEvent),
     listener.onStreamOffline(providerAccountId, offlineEvent),
