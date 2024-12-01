@@ -6,7 +6,7 @@ services:
 
   twitch-chat:
     container_name: twitch-chat
-    image: "ghcr.io/dotabod/twitch-chat:${BRANCH_NAME}"
+    image: "ghcr.io/dotabod/twitch-chat:master"
     restart: on-failure:5
     build:
       context: .
@@ -16,9 +16,9 @@ services:
         - BUILD_CONTEXT=packages/twitch-chat
       x-bake:
         cache-from:
-          - "ghcr.io/dotabod/cache-twitch-chat:${BRANCH_NAME}"
+          - "ghcr.io/dotabod/cache-twitch-chat:master"
         cache-to:
-          - "ghcr.io/dotabod/cache-twitch-chat:${BRANCH_NAME}"
+          - "ghcr.io/dotabod/cache-twitch-chat:master"
     hostname: twitch-chat
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -39,7 +39,7 @@ services:
 
   steam:
     container_name: steam
-    image: "ghcr.io/dotabod/steam:${BRANCH_NAME}"
+    image: "ghcr.io/dotabod/steam:master"
     restart: on-failure:5
     build:
       context: .
@@ -49,9 +49,9 @@ services:
         - BUILD_CONTEXT=packages/steam
       x-bake:
         cache-from:
-          - "ghcr.io/dotabod/cache-steam:${BRANCH_NAME}"
+          - "ghcr.io/dotabod/cache-steam:master"
         cache-to:
-          - "ghcr.io/dotabod/cache-steam:${BRANCH_NAME}"
+          - "ghcr.io/dotabod/cache-steam:master"
     hostname: steam
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -72,7 +72,7 @@ services:
       - "5010:5010"
       - "5011:5011"
     container_name: twitch-events
-    image: "ghcr.io/dotabod/twitch-events:${BRANCH_NAME}"
+    image: "ghcr.io/dotabod/twitch-events:master"
     restart: on-failure:5
     build:
       context: .
@@ -82,9 +82,9 @@ services:
         - BUILD_CONTEXT=packages/twitch-events
       x-bake:
         cache-from:
-          - "ghcr.io/dotabod/cache-twitch-events:${BRANCH_NAME}"
+          - "ghcr.io/dotabod/cache-twitch-events:master"
         cache-to:
-          - "ghcr.io/dotabod/cache-twitch-events:${BRANCH_NAME}"
+          - "ghcr.io/dotabod/cache-twitch-events:master"
     hostname: twitch-events
     environment:
       - NEW_RELIC_NO_CONFIG_FILE
@@ -110,7 +110,7 @@ services:
     ports:
       - "5120:5120"
     container_name: dota
-    image: "ghcr.io/dotabod/dota:${BRANCH_NAME}"
+    image: "ghcr.io/dotabod/dota:master"
     restart: on-failure:5
     # random
     build:
@@ -121,9 +121,9 @@ services:
         - BUILD_CONTEXT=packages/dota
       x-bake:
         cache-from:
-          - "ghcr.io/dotabod/cache-dota:${BRANCH_NAME}"
+          - "ghcr.io/dotabod/cache-dota:master"
         cache-to:
-          - "ghcr.io/dotabod/cache-dota:${BRANCH_NAME}"
+          - "ghcr.io/dotabod/cache-dota:master"
     hostname: dota
     environment:
       - D2PT_TOKEN
