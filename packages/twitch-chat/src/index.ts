@@ -36,33 +36,33 @@ await initializeSocket()
 
 const io = new Server(5005)
 
-let hasDotabodSocket = false
+// Replace the let declaration with a Map to track connections
+const connectedSockets = new Map<string, boolean>()
+
 io.on('connection', (socket) => {
-  // dota node app just connected
-  // make it join our room
   console.log('Found a connection!')
   try {
     void socket.join('twitch-chat-messages')
+    // Track this specific socket
+    connectedSockets.set(socket.id, true)
   } catch (e) {
     console.log('Could not join twitch-chat-messages socket')
     return
   }
 
-  hasDotabodSocket = true
-
   socket.on('reconnect', () => {
     console.log('Reconnecting to the server')
-    hasDotabodSocket = true
+    connectedSockets.set(socket.id, true)
   })
 
   socket.on('reconnect_failed', () => {
     console.log('Reconnect failed')
-    hasDotabodSocket = false
+    connectedSockets.delete(socket.id)
   })
 
   socket.on('reconnect_error', (error) => {
     console.log('Reconnect error', error)
-    hasDotabodSocket = false
+    connectedSockets.delete(socket.id)
   })
 
   socket.on('disconnect', (reason, details) => {
@@ -71,7 +71,7 @@ io.on('connection', (socket) => {
       reason,
       details,
     )
-    hasDotabodSocket = false
+    connectedSockets.delete(socket.id)
   })
 
   socket.on('say', async (channel: string, text: string) => {
@@ -159,4 +159,9 @@ chatClient.onJoinFailure((channel, reason) => {
   console.log('Failed to join channel', channel, reason)
 })
 
-export { hasDotabodSocket, io }
+// Export a function to check if any sockets are connected
+export function hasDotabodSocket(): boolean {
+  return connectedSockets.size > 0
+}
+
+export { io }

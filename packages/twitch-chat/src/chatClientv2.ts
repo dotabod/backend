@@ -129,7 +129,7 @@ async function handleNotification(message: EventSubWsPacket) {
 
     const userInfo = extractUserInfo(badges, channelId, chatter_user_id)
 
-    if (!hasDotabodSocket) {
+    if (!hasDotabodSocket()) {
       logger.info('No dotabod socket, sending ping')
       // TODO: only commands that we register should be checked here
       if (text === '!ping') {
