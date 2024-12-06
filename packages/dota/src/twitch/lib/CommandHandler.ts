@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { ADMIN_CHANNELS } from '../../dota/lib/consts.js'
+import supabase from '../../db/supabase.js'
 import { type SettingKeys, getValueOrDefault } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import type { SocketClient } from '../../types.js'
@@ -283,6 +283,8 @@ class CommandHandler {
 const commandHandler = new CommandHandler()
 
 // Add a user to the list of users that are allowed to bypass the cooldown
-commandHandler.addUserToBypassList(ADMIN_CHANNELS)
+const { data } = await supabase.from('admin').select('users(name)').eq('role', 'admin')
+const names = data?.map((user) => user.users?.name ?? '') ?? []
+commandHandler.addUserToBypassList(names.filter(Boolean))
 
 export default commandHandler
