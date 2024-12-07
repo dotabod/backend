@@ -141,11 +141,6 @@ export class GSIHandler {
   }
 
   public enable() {
-    if (process.env.DOTABOD_ENV !== 'production') {
-      logger.info('[GSI] Enabling client', {
-        name: this.client.name,
-      })
-    }
     this.disabled = false
     chatClient.join(this.client.name)
   }
