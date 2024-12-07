@@ -111,9 +111,6 @@ async function initializeSocket() {
 }
 
 async function handleNotification(message: EventSubWsPacket) {
-  if (process.env.DOTABOD_ENV !== 'production') {
-    logger.info('[TWITCHCHAT] notification', { message })
-  }
   if (
     'subscription' in message.payload &&
     'event' in message.payload &&
