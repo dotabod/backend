@@ -1,6 +1,4 @@
-import { toUserName } from '@twurple/chat'
 import { t } from 'i18next'
-
 import { getRankDescription } from '../../dota/lib/ranks.js'
 import { DBSettings, getValueOrDefault } from '../../settings.js'
 import { logger } from '../../utils/logger.js'
@@ -17,9 +15,10 @@ commandHandler.registerCommand('mmr', {
 
     // If connected, we can just respond with the cached MMR
     const showRankMmr = getValueOrDefault(DBSettings.showRankMmr, client.settings)
+    const name = channel.replace(/^#/, '').toLowerCase()
 
     const unknownMsg = t('uknownMmr', {
-      channel: toUserName(channel),
+      channel: name,
       url: 'dotabod.com/dashboard/features',
       lng: message.channel.client.locale,
     })
@@ -70,7 +69,7 @@ commandHandler.registerCommand('mmr', {
     })
       .then((description) => {
         if (description === null || description.length) {
-          const msg = act.name ? description ?? unknownMsg : ''
+          const msg = act.name ? (description ?? unknownMsg) : ''
           chatClient.say(channel, msg || unknownMsg)
         }
       })

@@ -1,9 +1,7 @@
 {
   "name": "dotabod",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
+  "workspaces": ["packages/*"],
   "scripts": {
     "cache:clean": "rm -rf $(echo bun pm cache) && rm -rf node_modules && rm bun.lockb || true",
     "up": "bun upgrade-interactive --latest",
@@ -12,15 +10,11 @@
     "just": "doppler run -- bash runner.sh",
     "just-prod": "DOPPLER_CONFIG=prd doppler run -- bash runner.sh"
   },
-  "trustedDependencies": [
-    "steam-resources-fork",
-    "steam-fork"
-  ],
+  "trustedDependencies": ["steam-resources-fork", "steam-fork"],
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
     "@twurple/api": "6.0.9",
     "@twurple/auth": "6.0.9",
-    "@twurple/chat": "6.0.9",
     "@twurple/eventsub-base": "^7.1.0",
     "i18next": "^23.15.1",
     "i18next-fs-backend": "^2.3.2",
@@ -37,8 +31,6 @@
     "typescript": "^5.6.2"
   },
   "lint-staged": {
-    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-      "biome check --files-ignore-unknown=true"
-    ]
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --files-ignore-unknown=true"]
   }
 }

@@ -9,7 +9,6 @@ import { Server } from 'socket.io'
 import { initializeSocket } from './chatClientv2.js'
 import supabase from './db/supabase.js'
 import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider.js'
-import { getChatClient } from './twitch/lib/getChatClient.js'
 
 await use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
@@ -26,10 +25,6 @@ await use(FsBackend).init<FsBackendOptions>({
 })
 
 console.log('Loaded i18n for chat')
-
-// Setup twitch chatbot client FIRST
-// chat v1
-export const chatClient = await getChatClient()
 
 // chat v2
 await initializeSocket()

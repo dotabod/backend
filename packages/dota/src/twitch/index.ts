@@ -1,8 +1,6 @@
 import './commandLoader.js'
 
-import type { ChatUser } from '@twurple/chat'
 import { t } from 'i18next'
-
 import { io } from 'socket.io-client'
 import getDBUser from '../db/getDBUser.js'
 import { plebMode } from '../dota/lib/consts.js'
@@ -37,7 +35,12 @@ twitchChat.on(
       messageId,
     }: {
       channelId: string
-      userInfo: ChatUser
+      userInfo: {
+        isMod: boolean
+        isBroadcaster: boolean
+        isSubscriber: boolean
+        userId: string
+      }
       messageId: string
     },
   ) => {

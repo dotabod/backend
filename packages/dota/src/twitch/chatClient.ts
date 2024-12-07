@@ -1,7 +1,6 @@
 import { twitchChat } from '.'
 import { findUserByName } from '../dota/lib/connectedStreamers.js'
 import { isDev } from '../dota/lib/consts.js'
-import { logger } from '../utils/logger.js'
 import { getTwitchHeaders } from './lib/getTwitchHeaders.js'
 
 // Constants
