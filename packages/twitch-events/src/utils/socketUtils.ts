@@ -1,5 +1,6 @@
 import { Server } from 'socket.io'
 import { logger } from '../twitch/lib/logger.js'
+import { revokeEvent } from '../twitch/lib/revokeEvent.js'
 
 export const socketIo = new Server(5015)
 
@@ -37,6 +38,11 @@ export const setupSocketIO = () => {
     socket.on('reconnect_failed', () => {
       logger.info('[TWITCHEVENTS] Socket failed to reconnect')
       eventsIOConnected = false
+    })
+
+    socket.on('revoke', (providerAccountId: string) => {
+      logger.info('[TWITCHEVENTS] Revoking events for user', { providerAccountId })
+      revokeEvent({ providerAccountId })
     })
   })
 }

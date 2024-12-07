@@ -2,13 +2,16 @@ import { lstatSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { ApiClient } from '@twurple/api'
-import { t, use } from 'i18next'
+import { use } from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 import { Server } from 'socket.io'
-
-import { initializeSocket } from './chatClientv2.js'
-import supabase from './db/supabase.js'
+import { io as socketIo } from 'socket.io-client'
+import { logger } from '../../dota/src/utils/logger.js'
+import { getTwitchHeaders, initializeSocket } from './chatClientv2.js'
 import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider.js'
+
+// Constants
+const headers = await getTwitchHeaders()
 
 await use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
@@ -30,6 +33,11 @@ console.log('Loaded i18n for chat')
 await initializeSocket()
 
 const io = new Server(5005)
+
+const twitchEvent = socketIo(`ws://${process.env.HOST_TWITCH_EVENTS}:5015`)
+twitchEvent.on('connect', () => {
+  logger.info('We alive on dotabod twitch events server!')
+})
 
 // Replace the let declaration with a Map to track connections
 const connectedSockets = new Map<string, boolean>()
@@ -69,9 +77,56 @@ io.on('connection', (socket) => {
     connectedSockets.delete(socket.id)
   })
 
-  socket.on('say', async (channel: string, text: string) => {
-    if (process.env.DOTABOD_ENV === 'development') console.log(channel, text)
-    await chatClient.say(channel, text || "I'm sorry, I can't do that")
+  /**
+   * Response structure from Twitch chat message API
+   * @property data Array of message results
+   */
+  interface TwitchChatResponse {
+    data: Array<{
+      /** Unique identifier for the sent message */
+      message_id: string
+      /** Whether the message was successfully sent */
+      is_sent: boolean
+      /** Details about why a message was dropped, if applicable */
+      drop_reason?: {
+        /** Error code for the dropped message */
+        code: string
+        /** Human readable explanation for why the message was dropped */
+        message: string
+      }
+    }>
+  }
+
+  socket.on('say', async (providerAccountId: string, text: string) => {
+    if (!providerAccountId) return
+    const response = await fetch('https://api.twitch.tv/helix/chat/messages', {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        broadcaster_id: providerAccountId,
+        sender_id: process.env.TWITCH_BOT_PROVIDERID,
+        message: text || "I'm sorry, I can't do that",
+      }),
+    })
+
+    const data = (await response.json()) as TwitchChatResponse
+    if (!response.ok) {
+      console.error('Failed to send chat message:', data)
+      return
+    }
+
+    const result = data.data?.[0]
+    if (!result?.is_sent && result?.drop_reason) {
+      if (
+        ['msg_banned', 'msg_banned_phone_number_alias', 'msg_channel_suspended'].includes(
+          result?.drop_reason?.code,
+        )
+      ) {
+        console.error('Message was dropped:', result.drop_reason.message)
+        // Unsubscribe all events from this user
+        twitchEvent.emit('revoke', providerAccountId)
+      }
+    }
   })
 
   socket.on('whisper', async (channel: string, text: string) => {
@@ -86,59 +141,6 @@ io.on('connection', (socket) => {
     }
   })
 })
-
-async function disableChannel(channel: string) {
-  const name = channel.replace('#', '')
-  const { data: user } = await supabase
-    .from('users')
-    .select(
-      `
-    id,
-    settings (
-      key,
-      value
-    )
-    `,
-    )
-    .eq('name', name)
-    .single()
-
-  if (!user) {
-    console.log('Failed to find user', name)
-    return
-  }
-
-  if (user.settings.find((s) => s.key === 'commandDisable' && s.value === true)) {
-    console.log('User already disabled', name)
-    return
-  }
-
-  console.log('Disabling user', name)
-  await supabase.from('settings').upsert(
-    {
-      userId: user.id,
-      key: 'commandDisable',
-      value: true,
-    },
-    {
-      onConflict: 'userId, key',
-    },
-  )
-}
-
-// chatClient.onJoinFailure((channel, reason) => {
-//   if (['msg_banned', 'msg_banned_phone_number_alias', 'msg_channel_suspended'].includes(reason)) {
-//     // disable the channel in the database
-//     try {
-//       void disableChannel(channel)
-//     } catch (e) {
-//       console.log('could not disable channel onJoinFailure', channel)
-//     }
-//     return
-//   }
-
-//   console.log('Failed to join channel', channel, reason)
-// })
 
 // Export a function to check if any sockets are connected
 export function hasDotabodSocket(): boolean {

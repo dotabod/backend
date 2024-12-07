@@ -44,13 +44,13 @@ async function disableChannel(broadcasterId: string) {
   )
 }
 
-export async function revokeEvent(data: EventSubUserAuthorizationRevokeEvent) {
-  logger.info(`${data.userId} just revoked`)
+export async function revokeEvent({ providerAccountId }: { providerAccountId: string }) {
+  logger.info(`${providerAccountId} just revoked`)
 
   try {
-    stopUserSubscriptions(data.userId)
+    stopUserSubscriptions(providerAccountId)
   } catch (e) {
-    logger.info('Failed to delete subscriptions', { error: e, twitchId: data.userId })
+    logger.info('Failed to delete subscriptions', { error: e, twitchId: providerAccountId })
   }
 
   await supabase
@@ -59,7 +59,7 @@ export async function revokeEvent(data: EventSubUserAuthorizationRevokeEvent) {
       requires_refresh: true,
     })
     .eq('provider', 'twitch')
-    .eq('providerAccountId', data.userId)
+    .eq('providerAccountId', providerAccountId)
 
-  await disableChannel(data.userId)
+  await disableChannel(providerAccountId)
 }

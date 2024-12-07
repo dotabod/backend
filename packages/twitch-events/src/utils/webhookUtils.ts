@@ -2,7 +2,6 @@ import express from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
 
 import { SubscribeEvents } from '../SubscribeEvents.js'
-import { chatClient } from '../chatClient.js'
 import type { Tables } from '../db/supabase-types.js'
 import supabase from '../db/supabase.js'
 import { handleNewUser } from '../handleNewUser.js'

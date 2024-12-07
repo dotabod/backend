@@ -1,9 +1,5 @@
 import { twitchChat } from '.'
 import { findUserByName } from '../dota/lib/connectedStreamers.js'
-import { getTwitchHeaders } from './lib/getTwitchHeaders.js'
-
-// Constants
-const headers = await getTwitchHeaders()
 
 // Rate limiting constants
 const MAX_WHISPERS_PER_SECOND = 3
@@ -59,17 +55,8 @@ export const chatClient = {
     const user = findUserByName(channel.toLowerCase().replace('#', ''))
     const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
 
-    if (hasNewestScopes) {
-      void fetch('https://api.twitch.tv/helix/chat/messages', {
-        method: 'POST',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          broadcaster_id: user?.Account?.providerAccountId,
-          sender_id: process.env.TWITCH_BOT_PROVIDERID,
-          message: text,
-        }),
-      })
-      return
+    if (hasNewestScopes && user?.Account?.providerAccountId) {
+      twitchChat.emit('say', user?.Account?.providerAccountId, text)
     }
   },
   whisper: (channel: string, text: string | undefined) => {
