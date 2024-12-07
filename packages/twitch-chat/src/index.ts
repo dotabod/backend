@@ -6,8 +6,8 @@ import { use } from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 import { Server } from 'socket.io'
 import { io as socketIo } from 'socket.io-client'
-import { logger } from '../../dota/src/utils/logger.js'
 import { getTwitchHeaders, initializeSocket } from './chatClientv2.js'
+import { logger } from './logger.js'
 import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider.js'
 
 // Constants
