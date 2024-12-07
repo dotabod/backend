@@ -1,14 +1,32 @@
 import { lstatSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
-
 import { ApiClient } from '@twurple/api'
 import { use } from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 import { Server } from 'socket.io'
-import { io as socketIo } from 'socket.io-client'
 import { getTwitchHeaders, initializeSocket } from './chatClientv2.js'
-import { logger } from './logger.js'
+import { twitchEvent } from './events.ts.js'
 import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider.js'
+
+/**
+ * Response structure from Twitch chat message API
+ * @property data Array of message results
+ */
+interface TwitchChatResponse {
+  data: Array<{
+    /** Unique identifier for the sent message */
+    message_id: string
+    /** Whether the message was successfully sent */
+    is_sent: boolean
+    /** Details about why a message was dropped, if applicable */
+    drop_reason?: {
+      /** Error code for the dropped message */
+      code: string
+      /** Human readable explanation for why the message was dropped */
+      message: string
+    }
+  }>
+}
 
 // Constants
 const headers = await getTwitchHeaders()
@@ -33,11 +51,6 @@ console.log('Loaded i18n for chat')
 await initializeSocket()
 
 const io = new Server(5005)
-
-const twitchEvent = socketIo(`ws://${process.env.HOST_TWITCH_EVENTS}:5015`)
-twitchEvent.on('connect', () => {
-  logger.info('We alive on dotabod twitch events server!')
-})
 
 // Replace the let declaration with a Map to track connections
 const connectedSockets = new Map<string, boolean>()
@@ -77,26 +90,6 @@ io.on('connection', (socket) => {
     connectedSockets.delete(socket.id)
   })
 
-  /**
-   * Response structure from Twitch chat message API
-   * @property data Array of message results
-   */
-  interface TwitchChatResponse {
-    data: Array<{
-      /** Unique identifier for the sent message */
-      message_id: string
-      /** Whether the message was successfully sent */
-      is_sent: boolean
-      /** Details about why a message was dropped, if applicable */
-      drop_reason?: {
-        /** Error code for the dropped message */
-        code: string
-        /** Human readable explanation for why the message was dropped */
-        message: string
-      }
-    }>
-  }
-
   socket.on('say', async (providerAccountId: string, text: string) => {
     if (!providerAccountId) return
     const response = await fetch('https://api.twitch.tv/helix/chat/messages', {
@@ -118,9 +111,13 @@ io.on('connection', (socket) => {
     const result = data.data?.[0]
     if (!result?.is_sent && result?.drop_reason) {
       if (
-        ['msg_banned', 'msg_banned_phone_number_alias', 'msg_channel_suspended'].includes(
-          result?.drop_reason?.code,
-        )
+        [
+          'chat_user_banned',
+          'msg_banned',
+          'msg_banned_phone_number_alias',
+          'msg_channel_suspended',
+        ].includes(result?.drop_reason?.code) ||
+        result?.drop_reason?.code.includes('banned')
       ) {
         console.error('Message was dropped:', result.drop_reason.message)
         // Unsubscribe all events from this user
