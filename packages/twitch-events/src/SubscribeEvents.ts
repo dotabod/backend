@@ -89,7 +89,7 @@ async function fetchConduitId(): Promise<string> {
 // Get existing conduit ID and subscriptions
 const conduitId = await fetchConduitId()
 // Get all existing subscriptions by looping through pages
-const existingSubIds: Record<string, string> = {}
+const chatSubIds: Record<string, string> = {}
 let cursor: string | undefined
 
 do {
@@ -107,7 +107,7 @@ do {
   data
     .filter((sub: any) => sub.type === 'channel.chat.message')
     .forEach((sub: any) => {
-      existingSubIds[sub.condition.broadcaster_user_id] = sub.id
+      chatSubIds[sub.condition.broadcaster_user_id] = sub.id
     })
 
   cursor = pagination?.cursor
@@ -116,7 +116,7 @@ do {
 // Function to init subscriptions for a user
 const initUserSubscriptions = (providerAccountId: string) => {
   try {
-    if (!existingSubIds[providerAccountId]) {
+    if (!chatSubIds[providerAccountId]) {
       subscribeToUserUpdate(conduitId, providerAccountId)
     }
   } catch (e) {
@@ -161,17 +161,20 @@ export const stopUserSubscriptions = (providerAccountId: string) => {
     logger.info(
       `[TWITCHEVENTS] Unsubscribed from events for providerAccountId: ${providerAccountId}`,
     )
-    // get the sub id from the subscription
-    const subId = existingSubIds[providerAccountId]
+  } else {
+    logger.info(
+      `[TWITCHEVENTS] stopUserSubscriptions No subscriptions found for providerAccountId: ${providerAccountId}`,
+    )
+  }
+
+  // get the sub id from the subscription
+  const subId = chatSubIds[providerAccountId]
+  if (subId) {
     // do a DELETE request to the chat subscription
     fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${subId}`, {
       method: 'DELETE',
       headers,
     })
-  } else {
-    logger.info(
-      `[TWITCHEVENTS] stopUserSubscriptions No subscriptions found for providerAccountId: ${providerAccountId}`,
-    )
   }
 }
 
