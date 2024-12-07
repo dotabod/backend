@@ -108,7 +108,6 @@ async function initializeSocket() {
   })
 
   mySocket.on('notification', handleNotification)
-  mySocket.on('revocation', handleRevocation)
 }
 
 async function handleNotification(message: EventSubWsPacket) {
