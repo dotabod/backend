@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 import supabase from '../../db/supabase.js'
 import { server } from '../../dota/index.js'
+import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 
@@ -18,9 +19,26 @@ commandHandler.registerCommand('online', {
     const state = isOnlineCommand
       ? t('online', { lng: client.locale })
       : t('offline', { lng: client.locale })
-
     const streamOnline = client.stream_online
+
+    if (process.env.DOTABOD_ENV !== 'production') {
+      logger.info('[COMMAND] online', {
+        oppositeCommand,
+        client,
+        isOnlineCommand,
+        streamOnline,
+      })
+    }
+
     if ((!streamOnline && isOnlineCommand) || (streamOnline && !isOnlineCommand)) {
+      if (process.env.DOTABOD_ENV !== 'production') {
+        logger.info('[COMMAND] notifyStreamStatus', {
+          oppositeCommand,
+          client,
+          isOnlineCommand,
+          streamOnline,
+        })
+      }
       notifyStreamStatus(
         message.channel.name,
         client.locale,
@@ -28,7 +46,6 @@ commandHandler.registerCommand('online', {
         oppositeCommand,
         isOnlineCommand ? 'on' : 'off',
       )
-      // client.stream_online = isOnlineCommand
       refreshSettings(client.token)
       await updateStreamStatus(client.token, isOnlineCommand)
       return
@@ -69,4 +86,8 @@ const updateStreamStatus = async (token: string, isOnline: boolean) => {
       stream_start_date: null,
     })
     .eq('id', token)
+
+  if (process.env.DOTABOD_ENV !== 'production') {
+    logger.info('[COMMAND] updateStreamStatus', { token, isOnline })
+  }
 }

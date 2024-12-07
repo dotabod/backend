@@ -92,7 +92,24 @@ class SetupSupabase {
           const newObj: Tables<'users'> = payload.new
           const oldObj: Tables<'users'> = payload.old
           const client = findUser(newObj.id)
-          if (!client) return
+          if (!client) {
+            if (process.env.DOTABOD_ENV !== 'production') {
+              logger.info('[WATCHER USER] Could not find client', {
+                newObj,
+                oldObj,
+              })
+            }
+            return
+          }
+
+          if (process.env.DOTABOD_ENV !== 'production') {
+            logger.info('[WATCHER USER] Updating user', {
+              name: client.name,
+              isOnline: client.stream_online,
+              oldObj,
+              newObj,
+            })
+          }
 
           client.name = newObj.name
           client.locale = newObj.locale
@@ -101,11 +118,22 @@ class SetupSupabase {
 
           // They go offline
           if (!newObj.stream_online && oldObj.stream_online) {
+            if (process.env.DOTABOD_ENV !== 'production') {
+              logger.info('[WATCHER USER] User went offline', {
+                name: client.name,
+              })
+            }
             return
           }
 
           // They come online
           if (client.stream_online && !oldObj.stream_online) {
+            if (process.env.DOTABOD_ENV !== 'production') {
+              logger.info('[WATCHER USER] User went online', {
+                name: client.name,
+              })
+            }
+
             const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
             const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
 
@@ -142,6 +170,12 @@ class SetupSupabase {
             }
           }
 
+          if (process.env.DOTABOD_ENV !== 'production') {
+            logger.info('[WATCHER USER] User went online', {
+              name: client.name,
+            })
+          }
+
           if (typeof newObj.stream_start_date === 'string') {
             client.stream_start_date = new Date(newObj.stream_start_date)
           } else {
@@ -173,15 +207,22 @@ class SetupSupabase {
           const newObj: Tables<'settings'> = payload.new
           const client = findUser(newObj.userId)
 
+          if (process.env.DOTABOD_ENV !== 'production') {
+            logger.info('[WATCHER SETTING] New setting', {
+              name: client?.name,
+              newObj,
+              payload,
+              client,
+            })
+          }
+
           if (newObj.key === DBSettings.commandDisable) {
             if (!client) {
               // in case they ban dotabod and we reboot server,
               // we'll never have the client cached, so we have to lookup the user again
-              try {
-                void this.toggleHandler(newObj.userId, !!newObj.value)
-              } catch (e) {
+              this.toggleHandler(newObj.userId, !!newObj.value).catch((e) => {
                 logger.error('Error in toggleHandler', { e })
-              }
+              })
             } else {
               toggleDotabod(newObj.userId, !!newObj.value, client.name, client.locale)
             }
