@@ -126,19 +126,19 @@ async function disableChannel(channel: string) {
   )
 }
 
-chatClient.onJoinFailure((channel, reason) => {
-  if (['msg_banned', 'msg_banned_phone_number_alias', 'msg_channel_suspended'].includes(reason)) {
-    // disable the channel in the database
-    try {
-      void disableChannel(channel)
-    } catch (e) {
-      console.log('could not disable channel onJoinFailure', channel)
-    }
-    return
-  }
+// chatClient.onJoinFailure((channel, reason) => {
+//   if (['msg_banned', 'msg_banned_phone_number_alias', 'msg_channel_suspended'].includes(reason)) {
+//     // disable the channel in the database
+//     try {
+//       void disableChannel(channel)
+//     } catch (e) {
+//       console.log('could not disable channel onJoinFailure', channel)
+//     }
+//     return
+//   }
 
-  console.log('Failed to join channel', channel, reason)
-})
+//   console.log('Failed to join channel', channel, reason)
+// })
 
 // Export a function to check if any sockets are connected
 export function hasDotabodSocket(): boolean {
