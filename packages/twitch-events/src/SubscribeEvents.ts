@@ -75,7 +75,7 @@ export async function getTwitchHeaders(): Promise<Record<string, string>> {
   }
 }
 
-const subscribeToUserUpdate = async (conduit_id: string, broadcaster_user_id: string) => {
+const subscribeChatMessagesForUser = async (conduit_id: string, broadcaster_user_id: string) => {
   const body = {
     type: 'channel.chat.message',
     version: '1',
@@ -159,13 +159,19 @@ do {
   cursor = pagination?.cursor
 } while (cursor)
 
-logger.info('[TWITCHEVENTS] chatSubIds size', { chatSubIds: Object.keys(chatSubIds).length })
+logger.info('[TWITCHEVENTS] chatSubIds size', {
+  chatSubIds: Object.keys(chatSubIds).length,
+})
 
 // Function to init subscriptions for a user
 const initUserSubscriptions = async (providerAccountId: string) => {
   try {
     if (chatSubIds[providerAccountId]?.status !== 'enabled') {
+      logger.info('[TWITCHEVENTS] chatSubIds[providerAccountId]?.status !== enabled')
       if (chatSubIds[providerAccountId]) {
+        logger.info('[TWITCHEVENTS] deleting subscription', {
+          id: chatSubIds[providerAccountId].id,
+        })
         await fetch(
           `https://api.twitch.tv/helix/eventsub/subscriptions?id=${chatSubIds[providerAccountId].id}`,
           {
@@ -173,8 +179,20 @@ const initUserSubscriptions = async (providerAccountId: string) => {
             headers,
           },
         )
+          .then(() => {
+            logger.info('[TWITCHEVENTS] deleted subscription', {
+              id: chatSubIds[providerAccountId].id,
+            })
+          })
+          .catch((e) => {
+            logger.info('[TWITCHEVENTS] could not delete subscription', {
+              e,
+              id: chatSubIds[providerAccountId].id,
+            })
+          })
+        delete chatSubIds[providerAccountId]
       }
-      subscribeToUserUpdate(conduitId, providerAccountId)
+      await subscribeChatMessagesForUser(conduitId, providerAccountId)
     }
   } catch (e) {
     logger.info('[TWITCHEVENTS] could not sub', { e, providerAccountId })
@@ -225,13 +243,19 @@ export const stopUserSubscriptions = (providerAccountId: string) => {
   }
 
   // get the sub id from the subscription
-  const subId = chatSubIds[providerAccountId]
+  const subId = chatSubIds[providerAccountId].id
   if (subId) {
     // do a DELETE request to the chat subscription
     fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${subId}`, {
       method: 'DELETE',
       headers,
     })
+      .then(() => {
+        delete chatSubIds[providerAccountId]
+      })
+      .catch((e) => {
+        logger.info('[TWITCHEVENTS] could not delete subscription', { e, id: subId })
+      })
   }
 }
 
