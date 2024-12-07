@@ -1,4 +1,5 @@
 import { type Db, MongoClient } from 'mongodb'
+import { URL } from 'url'
 import retry from 'retry'
 
 import { logger } from './utils/logger.js'
@@ -30,9 +31,11 @@ class MongoDBSingleton {
           // Connect to MongoDB
           const mongoURL = process.env.MONGO_URL
           if (!mongoURL) throw new Error('MONGO_URL not set')
+          const parsedUrl = new URL(mongoURL)
+          const host = parsedUrl.host
           const client = await MongoClient.connect(mongoURL, {
             // Only use SSL for MongoDB Atlas
-            ssl: mongoURL.includes('mongodb.net'),
+            ssl: host === 'mongodb.net' || host.endsWith('.mongodb.net'),
           })
           this.mongoClient = client // Store the MongoClient object
 
