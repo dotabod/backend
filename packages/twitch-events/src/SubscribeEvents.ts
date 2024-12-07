@@ -9,6 +9,49 @@ import { onlineEvent } from './twitch/lib/onlineEvent.js'
 import { updateUserEvent } from './twitch/lib/updateUserEvent.js'
 import { DOTABOD_EVENTS_ROOM, eventsIOConnected, socketIo } from './utils/socketUtils.js'
 
+interface TwitchEventSubResponse {
+  // A list that contains the single subscription that you created
+  data: Array<{
+    // An ID that identifies the subscription
+    id: string
+    // The subscription's status. Only enabled subscriptions receive events
+    // Values: 'enabled' | 'webhook_callback_verification_pending'
+    status: string
+    // The subscription's type
+    type: string
+    // Version number identifying this subscription definition
+    version: string
+    // Subscription parameter values as JSON object
+    condition: Record<string, unknown>
+    // Creation date/time in RFC3339 format
+    created_at: string
+    // Transport details for notifications
+    transport: {
+      // Transport method: 'webhook' | 'websocket' | 'conduit'
+      method: string
+      // Webhook callback URL (webhook only)
+      callback?: string
+      // WebSocket session ID (websocket only)
+      session_id?: string
+      // WebSocket connection time UTC (websocket only)
+      connected_at?: string
+      // Conduit ID for notifications (conduit only)
+      conduit_id?: string
+    }
+    // Subscription cost against limit
+    cost: number
+  }>
+  // Total subscriptions created
+  total: number
+  // Sum of all subscription costs
+  total_cost: number
+  // Maximum allowed total cost
+  max_total_cost: number
+}
+
+// Get all existing subscriptions by looping through pages
+const chatSubIds: Record<string, string> = {}
+
 // Constants
 const headers = await getTwitchHeaders()
 
@@ -62,6 +105,11 @@ const subscribeToUserUpdate = async (conduit_id: string, broadcaster_user_id: st
     )
     return false
   }
+
+  const { data }: TwitchEventSubResponse = await subscribeReq.json()
+
+  chatSubIds[broadcaster_user_id] = data[0].id
+  logger.info('[TWITCHEVENTS] added chatSubId', { broadcaster_user_id, chatSubId: data[0].id })
   return true
 }
 
@@ -88,8 +136,6 @@ async function fetchConduitId(): Promise<string> {
 
 // Get existing conduit ID and subscriptions
 const conduitId = await fetchConduitId()
-// Get all existing subscriptions by looping through pages
-const chatSubIds: Record<string, string> = {}
 let cursor: string | undefined
 
 do {
@@ -112,6 +158,8 @@ do {
 
   cursor = pagination?.cursor
 } while (cursor)
+
+logger.info('[TWITCHEVENTS] chatSubIds size', { chatSubIds: Object.keys(chatSubIds).length })
 
 // Function to init subscriptions for a user
 const initUserSubscriptions = (providerAccountId: string) => {
