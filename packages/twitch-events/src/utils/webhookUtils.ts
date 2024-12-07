@@ -141,7 +141,9 @@ export const setupWebhooks = () => {
     logger.info('READY!')
     try {
       if (process.env.TWITCH_CLIENT_ID) {
-        listener.onUserAuthorizationRevoke(process.env.TWITCH_CLIENT_ID, revokeEvent)
+        listener.onUserAuthorizationRevoke(process.env.TWITCH_CLIENT_ID, (data) =>
+          revokeEvent({ providerAccountId: data.userId }),
+        )
       } else {
         logger.error('TWITCH_CLIENT_ID is not defined')
       }
