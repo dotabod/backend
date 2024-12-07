@@ -31,8 +31,9 @@ class MongoDBSingleton {
           const mongoURL = process.env.MONGO_URL
           if (!mongoURL) throw new Error('MONGO_URL not set')
           const client = await MongoClient.connect(mongoURL, {
-            ssl: process.env.DOTABOD_ENV === 'production',
-          }) // Disable SSL
+            // Only use SSL for MongoDB Atlas
+            ssl: mongoURL.includes('mongodb.net'),
+          })
           this.mongoClient = client // Store the MongoClient object
 
           // Resolve the promise with the client
