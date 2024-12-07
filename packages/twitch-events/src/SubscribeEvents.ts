@@ -136,6 +136,7 @@ async function fetchConduitId(): Promise<string> {
 
 // Get existing conduit ID and subscriptions
 const conduitId = await fetchConduitId()
+logger.info('Conduit ID', { conduitId })
 let cursor: string | undefined
 
 do {
