@@ -63,7 +63,6 @@ export const setupWebhooks = () => {
             })
           })
       } else if (req.body.type === 'UPDATE' && req.body.table === 'accounts') {
-        logger.info('[TWITCHEVENTS] UPDATE accounts', { body: req.body })
         const { body } = req
         const oldUser = body.old_record as UpdatePayload<Tables<'accounts'>>['old_record']
         const newUser = body.record as UpdatePayload<Tables<'accounts'>>['record']
@@ -113,8 +112,6 @@ export const setupWebhooks = () => {
             .single()
 
           if (account?.providerAccountId) {
-            chatClient.part(oldUser.name)
-
             try {
               // This updates their actual twitch username via twitch api
               // Only resubscribing if it's a new user

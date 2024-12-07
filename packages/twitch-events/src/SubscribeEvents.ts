@@ -113,8 +113,6 @@ do {
   cursor = pagination?.cursor
 } while (cursor)
 
-logger.info('Existing chat message subscriptions', { existingSubIds })
-
 // Function to init subscriptions for a user
 const initUserSubscriptions = (providerAccountId: string) => {
   try {

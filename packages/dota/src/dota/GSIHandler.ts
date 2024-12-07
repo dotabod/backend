@@ -142,7 +142,6 @@ export class GSIHandler {
 
   public enable() {
     this.disabled = false
-    chatClient.join(this.client.name)
   }
 
   public disable() {

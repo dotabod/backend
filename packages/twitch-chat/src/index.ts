@@ -79,16 +79,6 @@ io.on('connection', (socket) => {
     await chatClient.say(channel, text || "I'm sorry, I can't do that")
   })
 
-  socket.on('join', (channel: string) => {
-    try {
-      chatClient.join(channel).catch((e) => {
-        console.log('[ENABLE GSI] Failed to enable client inside promise', { channel, error: e })
-      })
-    } catch (e) {
-      console.log('[ENABLE GSI] Failed to enable client', { channel, error: e })
-    }
-  })
-
   socket.on('whisper', async (channel: string, text: string) => {
     try {
       if (!process.env.TWITCH_BOT_PROVIDERID) throw new Error('TWITCH_BOT_PROVIDERID not set')
@@ -99,10 +89,6 @@ io.on('connection', (socket) => {
     } catch (e) {
       console.error('could not whisper', e)
     }
-  })
-
-  socket.on('part', (channel: string) => {
-    chatClient.part(channel)
   })
 })
 

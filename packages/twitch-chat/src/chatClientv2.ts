@@ -111,7 +111,6 @@ async function initializeSocket() {
 }
 
 async function handleNotification(message: EventSubWsPacket) {
-  logger.info('Notification received', { message })
   if (
     'subscription' in message.payload &&
     'event' in message.payload &&
@@ -130,7 +129,6 @@ async function handleNotification(message: EventSubWsPacket) {
     const userInfo = extractUserInfo(badges, channelId, chatter_user_id)
 
     if (!hasDotabodSocket()) {
-      logger.info('No dotabod socket, sending ping')
       // TODO: only commands that we register should be checked here
       if (text === '!ping') {
         try {
@@ -149,15 +147,6 @@ async function handleNotification(message: EventSubWsPacket) {
       }
       return
     }
-
-    logger.info('Emitting message to twitch-chat-messages', {
-      broadcaster_user_login,
-      chatter_user_login,
-      text,
-      channelId,
-      userInfo,
-      messageId: message_id,
-    })
 
     io.to('twitch-chat-messages').emit('msg', broadcaster_user_login, chatter_user_login, text, {
       channelId,

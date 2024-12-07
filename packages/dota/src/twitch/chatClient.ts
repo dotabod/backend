@@ -47,14 +47,7 @@ const sendWhisper = (channel: string, text: string) => {
 
 // Chat client object
 export const chatClient = {
-  join: (channel: string) => {
-    twitchChat.emit('join', channel)
-  },
-  part: (channel: string) => {
-    twitchChat.emit('part', channel)
-  },
   say: async (channel: string, text: string) => {
-    logger.info('Sending message to twitch chat', { channel, text })
     const user = findUserByName(channel.toLowerCase().replace('#', ''))
     const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
 
@@ -71,8 +64,6 @@ export const chatClient = {
       })
       return
     }
-
-    twitchChat.emit('say', channel, `${prefix}${text}`)
   },
   whisper: (channel: string, text: string | undefined) => {
     whisperQueue.push({ channel, text: text || 'Empty whisper message, monka' })
