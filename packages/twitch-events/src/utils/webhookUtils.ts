@@ -33,7 +33,7 @@ export const setupWebhooks = () => {
     express.json(),
     express.urlencoded({ extended: true }),
     async (req, res) => {
-      // check authorization beaerer token
+      // check authorization bearer token
       if (!isAuthenticated(req)) {
         logger.info('[TWITCHEVENTS] Unauthorized request', {
           headers: req.headers,
