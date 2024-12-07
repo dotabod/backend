@@ -1,10 +1,8 @@
 import { twitchChat } from '.'
 import { findUserByName } from '../dota/lib/connectedStreamers.js'
-import { isDev } from '../dota/lib/consts.js'
 import { getTwitchHeaders } from './lib/getTwitchHeaders.js'
 
 // Constants
-const prefix = isDev ? '[DEV] ' : ''
 const headers = await getTwitchHeaders()
 
 // Rate limiting constants
@@ -34,7 +32,7 @@ const sendWhisper = (channel: string, text: string) => {
   const MAX_WHISPER_LENGTH = 10000
   const chunks = text.match(new RegExp(`.{1,${MAX_WHISPER_LENGTH}}`, 'g')) || []
   chunks.forEach((chunk) => {
-    twitchChat.emit('whisper', channel, `${prefix}${chunk}`)
+    twitchChat.emit('whisper', channel, chunk)
   })
 
   whispersInLastSecond++
@@ -51,14 +49,13 @@ export const chatClient = {
     const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
 
     if (hasNewestScopes) {
-      const newPrefix = prefix ? `${prefix}[NEW-API] ` : prefix
       void fetch('https://api.twitch.tv/helix/chat/messages', {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           broadcaster_id: user?.Account?.providerAccountId,
           sender_id: process.env.TWITCH_BOT_PROVIDERID,
-          message: `${newPrefix}${text}`,
+          message: text,
         }),
       })
       return
