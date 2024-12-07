@@ -65,7 +65,71 @@ export type Database = {
           {
             foreignKeyName: 'accounts_userId_fkey'
             columns: ['userId']
-            isOneToOne: true
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      admin: {
+        Row: {
+          createdAt: string
+          id: string
+          role: string
+          updatedAt: string
+          userId: string
+        }
+        Insert: {
+          createdAt?: string
+          id?: string
+          role?: string
+          updatedAt?: string
+          userId: string
+        }
+        Update: {
+          createdAt?: string
+          id?: string
+          role?: string
+          updatedAt?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'admin_userId_fkey'
+            columns: ['userId']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      approved_moderators: {
+        Row: {
+          created_at: string
+          id: string
+          moderatorChannelId: number
+          updated_at: string
+          userId: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          moderatorChannelId: number
+          updated_at?: string
+          userId: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          moderatorChannelId?: number
+          updated_at?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'approved_moderators_userId_fkey'
+            columns: ['userId']
+            isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
