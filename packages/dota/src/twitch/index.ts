@@ -44,6 +44,16 @@ twitchChat.on(
       messageId: string
     },
   ) => {
+    if (process.env.DOTABOD_ENV !== 'production') {
+      logger.info('[TWITCHCHAT] msg', {
+        channel,
+        user,
+        text,
+        channelId,
+        userInfo,
+        messageId,
+      })
+    }
     if (!channelId) return
 
     // Letting one pleb in
