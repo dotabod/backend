@@ -1,4 +1,3 @@
-import type { EventSubUserAuthorizationRevokeEvent } from '@twurple/eventsub-base'
 import { stopUserSubscriptions } from '../../SubscribeEvents'
 import supabase from '../../db/supabase'
 import { logger } from './logger.js'

@@ -16,7 +16,7 @@ import { logger } from '../utils/logger.js'
 logger.info("Starting 'twitch' package events")
 
 // Our docker events forwarder instance
-const twitchEvent = io(`ws://${process.env.HOST_TWITCH_EVENTS}:5015`)
+export const twitchEvent = io(`ws://${process.env.HOST_TWITCH_EVENTS}:5015`)
 
 twitchEvent.on('connect', () => {
   logger.info('We alive on dotabod twitch events server!')

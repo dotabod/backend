@@ -7,6 +7,7 @@ import supabase from '../db/supabase.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
 import { notablePlayers } from '../steam/notableplayers.js'
 import { chatClient } from '../twitch/chatClient.js'
+import { twitchEvent } from '../twitch/events'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
@@ -142,6 +143,7 @@ export class GSIHandler {
 
   public enable() {
     this.disabled = false
+    twitchEvent.emit('enable', this.client.Account?.providerAccountId)
   }
 
   public disable() {
