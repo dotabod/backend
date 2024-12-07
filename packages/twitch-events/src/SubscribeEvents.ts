@@ -50,7 +50,7 @@ interface TwitchEventSubResponse {
 }
 
 // Get all existing subscriptions by looping through pages
-const chatSubIds: Record<string, string> = {}
+const chatSubIds: Record<string, TwitchEventSubResponse['data'][0]> = {}
 
 // Constants
 const headers = await getTwitchHeaders()
@@ -108,7 +108,7 @@ const subscribeToUserUpdate = async (conduit_id: string, broadcaster_user_id: st
 
   const { data }: TwitchEventSubResponse = await subscribeReq.json()
 
-  chatSubIds[broadcaster_user_id] = data[0].id
+  chatSubIds[broadcaster_user_id] = data[0]
   logger.info('[TWITCHEVENTS] added chatSubId', { broadcaster_user_id, chatSubId: data[0].id })
   return true
 }
@@ -150,11 +150,10 @@ do {
   })
 
   const { data, pagination } = await subsReq.json()
-
   data
     .filter((sub: any) => sub.type === 'channel.chat.message')
     .forEach((sub: any) => {
-      chatSubIds[sub.condition.broadcaster_user_id] = sub.id
+      chatSubIds[sub.condition.broadcaster_user_id] = sub
     })
 
   cursor = pagination?.cursor
@@ -163,9 +162,18 @@ do {
 logger.info('[TWITCHEVENTS] chatSubIds size', { chatSubIds: Object.keys(chatSubIds).length })
 
 // Function to init subscriptions for a user
-const initUserSubscriptions = (providerAccountId: string) => {
+const initUserSubscriptions = async (providerAccountId: string) => {
   try {
-    if (!chatSubIds[providerAccountId]) {
+    if (chatSubIds[providerAccountId]?.status !== 'enabled') {
+      if (chatSubIds[providerAccountId]) {
+        await fetch(
+          `https://api.twitch.tv/helix/eventsub/subscriptions?id=${chatSubIds[providerAccountId].id}`,
+          {
+            method: 'DELETE',
+            headers,
+          },
+        )
+      }
       subscribeToUserUpdate(conduitId, providerAccountId)
     }
   } catch (e) {
