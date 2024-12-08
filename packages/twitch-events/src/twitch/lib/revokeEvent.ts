@@ -7,7 +7,7 @@ import { logger } from './logger.js'
 const headers = await getTwitchHeaders()
 
 // Function to stop subscriptions for a user
-const stopUserSubscriptions = async (providerAccountId: string) => {
+export const stopUserSubscriptions = async (providerAccountId: string) => {
   const subscriptions = eventSubMap[providerAccountId]
   if (!subscriptions) return
 
