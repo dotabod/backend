@@ -11,6 +11,8 @@ import { logger } from './twitch/lib/logger.js'
 const headers = await getTwitchHeaders()
 const conduitId = await fetchConduitId()
 
+export const subsToCleanup: string[] = []
+
 export async function fetchExistingSubscriptions() {
   let cursor: string | undefined
   do {
@@ -26,8 +28,13 @@ export async function fetchExistingSubscriptions() {
 
     // Store subscriptions in eventSubMap, organizing by broadcaster ID
     data.forEach((sub) => {
-      const broadcasterId = sub.condition.broadcaster_user_id as string | undefined
-      if (!broadcasterId) return
+      const broadcasterId = (sub.condition.broadcaster_user_id || sub.condition.user_id) as
+        | string
+        | undefined
+      if (!broadcasterId || sub.transport.method === 'webhook') {
+        subsToCleanup.push(sub.id)
+        return
+      }
 
       // Initialize broadcaster entry if it doesn't exist
       eventSubMap[broadcasterId] ??= {} as (typeof eventSubMap)[number]

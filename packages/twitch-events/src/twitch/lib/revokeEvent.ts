@@ -6,6 +6,13 @@ import { logger } from './logger.js'
 // Constants
 const headers = await getTwitchHeaders()
 
+export const deleteSubscription = async (id: string) => {
+  await fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${id}`, {
+    method: 'DELETE',
+    headers,
+  })
+}
+
 // Function to stop subscriptions for a user
 export const stopUserSubscriptions = async (providerAccountId: string) => {
   const subscriptions = eventSubMap[providerAccountId]
@@ -15,10 +22,7 @@ export const stopUserSubscriptions = async (providerAccountId: string) => {
   await Promise.all(
     Object.values(subscriptions).map(async (subscription) => {
       try {
-        await fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${subscription.id}`, {
-          method: 'DELETE',
-          headers,
-        })
+        await deleteSubscription(subscription.id)
       } catch (error) {
         logger.info('[TWITCHEVENTS] could not delete subscription', {
           error,
