@@ -169,6 +169,11 @@ export async function genericSubscribe(
 
   const { data }: TwitchEventSubResponse = await subscribeReq.json()
 
+  if (broadcaster_user_id === '__proto__' || broadcaster_user_id === 'constructor' || broadcaster_user_id === 'prototype') {
+    logger.error(`Invalid broadcaster_user_id: ${broadcaster_user_id}`, { type })
+    return false
+  }
+
   eventSubMap[broadcaster_user_id][type] = { status: data[0].status, id: data[0].id }
   return true
 }
