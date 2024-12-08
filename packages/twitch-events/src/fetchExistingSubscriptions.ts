@@ -2,8 +2,9 @@ import { eventSubMap } from './chatSubIds.js'
 import { fetchConduitId } from './fetchConduitId.js'
 import { getTwitchHeaders } from './getTwitchHeaders.js'
 import { initUserSubscriptions } from './initUserSubscriptions.js'
+import type { EventSubStatus } from './interfaces'
 import type { TwitchEventSubSubscriptionsResponse } from './interfaces.js'
-import { subscribeToAuthRevoke } from './subscribeChatMessagesForUser'
+import { type TwitchEventTypes, subscribeToAuthRevoke } from './subscribeChatMessagesForUser'
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
 import { logger } from './twitch/lib/logger.js'
 
@@ -26,7 +27,11 @@ export async function fetchExistingSubscriptions() {
 
     // Store subscriptions
     data.forEach((sub) => {
-      eventSubMap[sub.condition.broadcaster_user_id as string][sub.type] = {
+      const broadcasterId = sub.condition.broadcaster_user_id as string
+      if (!eventSubMap[broadcasterId]) {
+        eventSubMap[broadcasterId] = {} as (typeof eventSubMap)[number]
+      }
+      eventSubMap[broadcasterId][sub.type] = {
         id: sub.id,
         status: sub.status,
       }
