@@ -27,7 +27,8 @@ export async function fetchExistingSubscriptions() {
 
     // Store subscriptions in eventSubMap, organizing by broadcaster ID
     data.forEach((sub) => {
-      const broadcasterId = sub.condition.broadcaster_user_id as string
+      const broadcasterId = sub.condition.broadcaster_user_id as string | undefined
+      if (!broadcasterId) return
 
       // Initialize broadcaster entry if it doesn't exist
       eventSubMap[broadcasterId] ??= {} as (typeof eventSubMap)[number]

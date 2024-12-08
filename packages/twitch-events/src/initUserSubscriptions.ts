@@ -18,6 +18,11 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
       return
     }
 
+    if (eventSubMap[providerAccountId]) {
+      // logger.info('[TWITCHEVENTS] Subscriptions already exist', { providerAccountId })
+      return
+    }
+
     // Define subscription types to initialize
     const subscriptionTypes: (keyof TwitchEventTypes)[] = [
       'channel.chat.message',
