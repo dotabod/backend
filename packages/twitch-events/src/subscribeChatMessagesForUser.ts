@@ -139,17 +139,24 @@ export async function genericSubscribe(
   broadcaster_user_id: string,
   type: keyof TwitchEventTypes,
 ) {
-  const body = {
-    type,
+  const baseBody = {
     version: '1',
-    condition: {
-      user_id: botUserId,
-      broadcaster_user_id: broadcaster_user_id, // the user we want to listen to
-    },
     transport: {
       method: 'conduit',
       conduit_id,
     },
+  }
+
+  const body = {
+    ...baseBody,
+    type,
+    condition:
+      type === 'user.update'
+        ? { user_id: broadcaster_user_id }
+        : {
+            user_id: botUserId,
+            broadcaster_user_id, // the user we want to listen to
+          },
   }
   const subscribeReq = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
     method: 'POST',
