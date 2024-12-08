@@ -1,10 +1,19 @@
 import './commandLoader.js'
 
-import type { ChatUser } from '@twurple/chat'
+import {
+  EventSubChannelPollBeginEvent,
+  EventSubChannelPollEndEvent,
+  EventSubChannelPollProgressEvent,
+  EventSubChannelPredictionBeginEvent,
+  EventSubChannelPredictionEndEvent,
+  EventSubChannelPredictionLockEvent,
+  EventSubChannelPredictionProgressEvent,
+} from '@twurple/eventsub-base'
 import { t } from 'i18next'
-
-import { io } from 'socket.io-client'
+import { io, io as socketIo } from 'socket.io-client'
 import getDBUser from '../db/getDBUser.js'
+import { server } from '../dota/index.js'
+import { getTokenFromTwitchId } from '../dota/lib/connectedStreamers.js'
 import { plebMode } from '../dota/lib/consts.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
 import { logger } from '../utils/logger.js'
@@ -37,7 +46,12 @@ twitchChat.on(
       messageId,
     }: {
       channelId: string
-      userInfo: ChatUser
+      userInfo: {
+        isMod: boolean
+        isBroadcaster: boolean
+        isSubscriber: boolean
+        userId: string
+      }
       messageId: string
     },
   ) => {
@@ -97,3 +111,27 @@ twitchChat.on(
     })
   },
 )
+
+const events = {
+  subscribeToChannelPredictionBeginEvents: EventSubChannelPredictionBeginEvent,
+  subscribeToChannelPredictionProgressEvents: EventSubChannelPredictionProgressEvent,
+  subscribeToChannelPredictionLockEvents: EventSubChannelPredictionLockEvent,
+  subscribeToChannelPredictionEndEvents: EventSubChannelPredictionEndEvent,
+  subscribeToChannelPollBeginEvents: EventSubChannelPollBeginEvent,
+  subscribeToChannelPollProgressEvents: EventSubChannelPollProgressEvent,
+  subscribeToChannelPollEndEvents: EventSubChannelPollEndEvent,
+}
+
+twitchChat.on('event', (eventName: keyof typeof events, broadcasterId: string, data: any) => {
+  // Can start doing something with the events
+
+  const token = getTokenFromTwitchId(broadcasterId)
+  if (!token) return
+
+  server.io.to(token).emit('channelPollOrBet', data, eventName)
+})
+
+export const twitchEvent = socketIo(`ws://${process.env.HOST_TWITCH_EVENTS}:5015`)
+twitchEvent.on('connect', () => {
+  logger.info('We alive on dotabod twitch events server!')
+})

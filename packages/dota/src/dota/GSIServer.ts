@@ -58,6 +58,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://dotabod.com',
+  'https://dev.dotabod.com',
   'https://tooltips.dotabod.com',
 ]
 class GSIServer {

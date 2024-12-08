@@ -14,7 +14,6 @@
     "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
   },
   "dependencies": {
-    "@twurple/eventsub-http": "6.0.9",
     "express": "^4.19.2",
     "express-body-parser-error-handler": "^1.0.7",
     "i18next": "^23.11.5",
