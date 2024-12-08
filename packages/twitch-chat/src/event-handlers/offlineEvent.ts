@@ -1,25 +1,30 @@
-import type { EventSubStreamOfflineEvent } from '@twurple/eventsub-base'
 import supabase from '../db/supabase.js'
 import { logger } from '../logger.js'
 import { onlineEvents } from './events.js'
 
-export function offlineEvent(e: EventSubStreamOfflineEvent) {
-  logger.info(`${e.broadcasterId} just went offline`)
+interface TwitchOfflineEvent {
+  broadcaster_user_id: string
+  broadcaster_user_login: string
+  broadcaster_user_name: string
+}
+
+export function offlineEvent({ payload: { event } }: { payload: { event: TwitchOfflineEvent } }) {
+  logger.info(`${event.broadcaster_user_id} just went offline`)
 
   // check onlineEvents to see if we have an online event for this user within the last 5 seconds
   // if we do, then we can safely assume that the offline event is a false positive
   setTimeout(() => {
-    if (onlineEvents.has(e.broadcasterId)) {
+    if (onlineEvents.has(event.broadcaster_user_id)) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const onlineEventDate = onlineEvents.get(e.broadcasterId)
+      const onlineEventDate = onlineEvents.get(event.broadcaster_user_id)
       const now = new Date()
       const diff = now.getTime() - (onlineEventDate?.getTime() ?? now.getTime())
       if (diff < 10000) {
-        logger.info('ignoring offline event for', { twitchId: e.broadcasterId })
+        logger.info('ignoring offline event for', { twitchId: event.broadcaster_user_id })
         return
       }
 
-      onlineEvents.delete(e.broadcasterId)
+      onlineEvents.delete(event.broadcaster_user_id)
     }
 
     async function handler() {
@@ -27,12 +32,12 @@ export function offlineEvent(e: EventSubStreamOfflineEvent) {
         .from('accounts')
         .select('userId')
         .eq('provider', 'twitch')
-        .eq('providerAccountId', e.broadcasterId)
+        .eq('providerAccountId', event.broadcaster_user_id)
         .single()
 
       if (!user || !user.userId) {
         logger.info('[TWITCHEVENTS] user not found', {
-          twitchId: e.broadcasterId,
+          twitchId: event.broadcaster_user_id,
         })
         return
       }
@@ -44,7 +49,7 @@ export function offlineEvent(e: EventSubStreamOfflineEvent) {
         })
         .eq('id', user.userId)
         .then(() => {
-          logger.info('updated online event', { twitchId: e.broadcasterId })
+          logger.info('updated online event', { twitchId: event.broadcaster_user_id })
         })
     }
 

@@ -106,7 +106,6 @@ async function updateConduitShard(session_id: string, conduitId: string): Promis
     logger.info('Shard Updated')
   }
 }
-
 const legacyEventHandlerNames: Partial<Record<keyof TwitchEventTypes, string>> = {
   'channel.prediction.begin': 'subscribeToChannelPredictionBeginEvents',
   'channel.prediction.progress': 'subscribeToChannelPredictionProgressEvents',
@@ -124,39 +123,36 @@ const handleObsEvents = (type: keyof TwitchEventTypes, broadcasterId: string, da
   }
 }
 
+// Helper function to extract broadcaster ID and transform event data
+const createEventHandler = (type: keyof TwitchEventTypes, transform: (event: any) => any) => {
+  return ({
+    payload: {
+      subscription: {
+        condition: { broadcaster_user_id },
+      },
+      event,
+    },
+  }) => {
+    const transformed = transform(event)
+    handleObsEvents(type, broadcaster_user_id, transformed)
+  }
+}
+
 const eventHandlers: Partial<Record<keyof TwitchEventTypes, (data: any) => void>> = {
   'stream.online': onlineEvent,
   'stream.offline': offlineEvent,
   'user.update': updateUserEvent,
   'channel.chat.message': handleChatMessage,
-  'channel.prediction.begin': (data) => {
-    const transformed = transformBetData(data)
-    handleObsEvents('channel.prediction.begin', data.event.broadcaster_user_id, transformed)
-  },
-  'channel.prediction.progress': (data) => {
-    const transformed = transformBetData(data)
-    handleObsEvents('channel.prediction.progress', data.event.broadcaster_user_id, transformed)
-  },
-  'channel.prediction.lock': (data) => {
-    const transformed = transformBetData(data)
-    handleObsEvents('channel.prediction.lock', data.event.broadcaster_user_id, transformed)
-  },
-  'channel.prediction.end': (data) => {
-    const transformed = transformBetData(data)
-    handleObsEvents('channel.prediction.end', data.event.broadcaster_user_id, transformed)
-  },
-  'channel.poll.begin': (data) => {
-    const transformed = transformPollData(data)
-    handleObsEvents('channel.poll.begin', data.event.broadcaster_user_id, transformed)
-  },
-  'channel.poll.progress': (data) => {
-    const transformed = transformPollData(data)
-    handleObsEvents('channel.poll.progress', data.event.broadcaster_user_id, transformed)
-  },
-  'channel.poll.end': (data) => {
-    const transformed = transformPollData(data)
-    handleObsEvents('channel.poll.end', data.event.broadcaster_user_id, transformed)
-  },
+  'channel.prediction.begin': createEventHandler('channel.prediction.begin', transformBetData),
+  'channel.prediction.progress': createEventHandler(
+    'channel.prediction.progress',
+    transformBetData,
+  ),
+  'channel.prediction.lock': createEventHandler('channel.prediction.lock', transformBetData),
+  'channel.prediction.end': createEventHandler('channel.prediction.end', transformBetData),
+  'channel.poll.begin': createEventHandler('channel.poll.begin', transformPollData),
+  'channel.poll.progress': createEventHandler('channel.poll.progress', transformPollData),
+  'channel.poll.end': createEventHandler('channel.poll.end', transformPollData),
 }
 
 // Initialize WebSocket and handle events

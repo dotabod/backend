@@ -1,19 +1,31 @@
-import type { EventSubUserUpdateEvent } from '@twurple/eventsub-base'
 import supabase from '../db/supabase.js'
 import { logger } from '../logger.js'
 
-export function updateUserEvent(e: EventSubUserUpdateEvent) {
-  logger.info(`${e.userId} updateUserEvent`)
+// const botApi = getBotInstance()
+interface TwitchUserUpdateEvent {
+  user_id: string
+  user_login: string
+  user_name: string
+  email?: string
+  email_verified?: boolean
+  description: string
+}
+
+export function updateUserEvent({
+  payload: { event },
+}: { payload: { event: TwitchUserUpdateEvent } }) {
+  logger.info(`${event.user_id} updateUserEvent`)
 
   async function handler() {
     try {
-      const streamer = await e.getUser()
+      // TODO: Add profile image back
+      // const streamer = await botApi.users.getUserById(event.user_id)
 
       const data = {
-        name: e.userName,
-        displayName: e.userDisplayName,
-        email: e.userEmail,
-        image: streamer.profilePictureUrl,
+        name: event.user_login,
+        displayName: event.user_name,
+        email: event.email,
+        // image: streamer.profilePictureUrl,
       }
 
       // remove falsy values from data (like displayName: undefined)
@@ -24,12 +36,12 @@ export function updateUserEvent(e: EventSubUserUpdateEvent) {
       const { data: user } = await supabase
         .from('accounts')
         .select('userId')
-        .eq('providerAccountId', e.userId)
+        .eq('providerAccountId', event.user_id)
         .eq('provider', 'twitch')
         .single()
 
       if (!user || !user.userId) {
-        logger.info('[TWITCHEVENTS] user not found', { twitchId: e.userId })
+        logger.info('[TWITCHEVENTS] user not found', { twitchId: event.user_id })
         return
       }
 
@@ -38,7 +50,7 @@ export function updateUserEvent(e: EventSubUserUpdateEvent) {
         .update(filteredData as typeof data)
         .eq('id', user.userId)
     } catch (err) {
-      console.error(err, 'updateUserEvent error', e.userId)
+      console.error(err, 'updateUserEvent error', event.user_id)
     }
   }
 

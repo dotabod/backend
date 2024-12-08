@@ -1,22 +1,11 @@
-import type {
-  EventSubChannelPollBeginEvent,
-  EventSubChannelPollEndEvent,
-  EventSubChannelPollProgressEvent,
-} from '@twurple/eventsub-base'
-
-export const transformPollData = (
-  data:
-    | EventSubChannelPollBeginEvent
-    | EventSubChannelPollProgressEvent
-    | EventSubChannelPollEndEvent,
-) => ({
-  choices: data.choices.map((choice) => {
-    const hasVotes = 'totalVotes' in choice
+export const transformPollData = (data: any) => ({
+  choices: data.choices.map((choice: any) => {
+    const hasVotes = 'total_votes' in choice
     return {
-      totalVotes: hasVotes ? choice.totalVotes : 0,
+      totalVotes: hasVotes ? choice.total_votes : 0,
       title: choice.title,
     }
   }),
   title: data.title,
-  endDate: data.endDate,
+  endDate: 'end_date' in data ? new Date(data.end_date) : '',
 })
