@@ -140,4 +140,8 @@ export const setupWebhooks = () => {
       })
     },
   )
+
+  webhookApp.listen(5011, () => {
+    logger.info('[TWITCHEVENTS] Webhook server listening on port 5011')
+  })
 }
