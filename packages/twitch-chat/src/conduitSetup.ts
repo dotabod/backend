@@ -140,13 +140,16 @@ const createEventHandler = (type: keyof TwitchEventTypes, transform: (event: any
 
 function revokeEvent(data: {
   payload: {
-    subscription: {
-      condition: { broadcaster_user_id: string }
+    event: {
+      client_id: string
+      user_id: string
+      user_login: string
+      user_name: string
     }
   }
 }) {
   logger.info('[TWITCHCHAT] Revoking event', { data })
-  twitchEvent.emit('revoke', data.payload.subscription.condition.broadcaster_user_id)
+  twitchEvent.emit('revoke', data.payload.event.user_id)
 }
 
 const eventHandlers: Partial<Record<keyof TwitchEventTypes, (data: any) => void>> = {
@@ -184,8 +187,8 @@ async function initializeSocket() {
   })
 
   mySocket.on('revocation', (payload: any) => {
-    const revokePayload: RevocationPayload = payload
-    const providerAccountId = revokePayload.subscription.condition.broadcaster_user_id
+    logger.info('[TWITCHCHAT] Revoking event', { payload })
+    const providerAccountId = payload.event.user_id
     twitchEvent.emit('revoke', providerAccountId)
   })
 
