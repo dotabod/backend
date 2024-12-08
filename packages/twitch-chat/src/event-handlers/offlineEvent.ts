@@ -1,8 +1,7 @@
 import type { EventSubStreamOfflineEvent } from '@twurple/eventsub-base'
-
-import supabase from '../../db/supabase.js'
-import { onlineEvents } from '../events/events.js'
-import { logger } from './logger.js'
+import supabase from '../db/supabase.js'
+import { logger } from '../logger.js'
+import { onlineEvents } from './events.js'
 
 export function offlineEvent(e: EventSubStreamOfflineEvent) {
   logger.info(`${e.broadcasterId} just went offline`)

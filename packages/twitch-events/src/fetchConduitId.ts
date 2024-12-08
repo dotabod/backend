@@ -1,4 +1,7 @@
-import type { TwitchConduitResponse } from './interfaces'
+import { getTwitchHeaders } from './getTwitchHeaders.js'
+import type { TwitchConduitResponse } from './interfaces.js'
+
+const headers = await getTwitchHeaders()
 
 /**
  * Fetches the ID of the first available EventSub conduit from Twitch API.

@@ -1,15 +1,6 @@
-import { eventSubMap } from './chatSubIds.js'
-import { getTwitchHeaders } from './getTwitchHeaders.js'
-import type { TwitchEventSubResponse } from './interfaces.js'
-import { logger } from './twitch/lib/logger.js'
-
-// Constants
-const headers = await getTwitchHeaders()
-
-const botUserId = process.env.TWITCH_BOT_PROVIDERID
-if (!botUserId) {
-  throw new Error('Bot user id not found')
-}
+// Self clearing set to try to solve this race condition from twitch:
+// https://github.com/dotabod/backend/issues/250
+export const onlineEvents = new Map<string, Date>()
 
 export interface TwitchEventTypes {
   // Automod events
@@ -132,43 +123,4 @@ export interface TwitchEventTypes {
   'user.authorization.revoke': { version: '1' } // Authorization revoked
   'user.update': { version: '1' } // User account updated
   'user.whisper.message': { version: '1' } // Whisper received
-}
-
-export async function genericSubscribe(
-  conduit_id: string,
-  broadcaster_user_id: string,
-  type: keyof TwitchEventTypes,
-) {
-  const body = {
-    type,
-    version: '1',
-    condition: {
-      user_id: botUserId,
-      broadcaster_user_id: broadcaster_user_id, // the user we want to listen to
-    },
-    transport: {
-      method: 'conduit',
-      conduit_id,
-    },
-  }
-  const subscribeReq = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
-    method: 'POST',
-    headers: {
-      ...headers,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (subscribeReq.status !== 202) {
-    logger.error(`Failed to subscribe ${subscribeReq.status} ${await subscribeReq.text()}`, {
-      type,
-    })
-    return false
-  }
-
-  const { data }: TwitchEventSubResponse = await subscribeReq.json()
-
-  eventSubMap[broadcaster_user_id][type] = { status: data[0].status, id: data[0].id }
-  return true
 }

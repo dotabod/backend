@@ -1,6 +1,5 @@
 import { EventEmitter } from 'node:events'
 import WebSocket from 'ws'
-import { twitchEvent } from './events.ts'
 
 type EventsubSocketOptions = {
   url?: string
@@ -12,24 +11,7 @@ type EventsubSocketOptions = {
 type CloseCodeDescription = {
   [code: number]: string
 }
-interface RevocationPayload {
-  subscription: {
-    id: string
-    status: string
-    type: string
-    version: string
-    condition: {
-      broadcaster_user_id: string
-      user_id: string
-    }
-    transport: {
-      method: string
-      conduit_id: string
-    }
-    created_at: string
-    cost: number
-  }
-}
+
 export class EventsubSocket extends EventEmitter {
   private counter = 0
   private readonly closeCodes: CloseCodeDescription = {
@@ -137,9 +119,6 @@ export class EventsubSocket extends EventEmitter {
         console.debug('Received Disconnect', payload)
         break
       case 'revocation': {
-        const revokePayload: RevocationPayload = payload
-        const providerAccountId = revokePayload.subscription.condition.broadcaster_user_id
-        twitchEvent.emit('revoke', providerAccountId)
         this.emit('revocation', { metadata, payload })
         break
       }
@@ -168,11 +147,6 @@ export class EventsubSocket extends EventEmitter {
 
   private handleNotification(metadata: any, payload: any): void {
     const { type } = payload.subscription
-
-    if (type !== 'channel.chat.message') {
-      console.debug(`Received notification ${type}`)
-    }
-
     this.emit(type, { metadata, payload })
     this.silence()
   }

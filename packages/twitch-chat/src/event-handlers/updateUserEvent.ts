@@ -1,7 +1,6 @@
 import type { EventSubUserUpdateEvent } from '@twurple/eventsub-base'
-
-import supabase from '../../db/supabase.js'
-import { logger } from './logger.js'
+import supabase from '../db/supabase.js'
+import { logger } from '../logger.js'
 
 export function updateUserEvent(e: EventSubUserUpdateEvent) {
   logger.info(`${e.userId} updateUserEvent`)

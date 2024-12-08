@@ -1,4 +1,4 @@
-import { chatSubIds } from './chatSubIds.js'
+import { eventSubMap } from './chatSubIds.js'
 import { getTwitchHeaders } from './getTwitchHeaders.js'
 import type { TwitchEventSubSubscriptionsResponse } from './interfaces.js'
 import { logger } from './twitch/lib/logger.js'
@@ -10,7 +10,6 @@ export async function fetchExistingSubscriptions() {
   let cursor: string | undefined
   do {
     const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
-    url.searchParams.append('type', 'channel.chat.message')
     if (cursor) url.searchParams.append('after', cursor)
 
     const subsReq = await fetch(url.toString(), {
@@ -20,17 +19,18 @@ export async function fetchExistingSubscriptions() {
 
     const { data, pagination } = (await subsReq.json()) as TwitchEventSubSubscriptionsResponse
 
-    // Store chat message subscriptions
-    data
-      .filter((sub) => sub.type === 'channel.chat.message')
-      .forEach((sub) => {
-        chatSubIds[sub.condition.broadcaster_user_id as string] = sub
-      })
+    // Store subscriptions
+    data.forEach((sub) => {
+      eventSubMap[sub.condition.broadcaster_user_id as string][sub.type] = {
+        id: sub.id,
+        status: sub.status,
+      }
+    })
 
     cursor = pagination?.cursor
   } while (cursor)
 
-  logger.info('[TWITCHEVENTS] Loaded existing chat subscriptions', {
-    count: Object.keys(chatSubIds).length,
+  logger.info('[TWITCHEVENTS] Loaded existing subscriptions', {
+    count: Object.keys(eventSubMap).length,
   })
 }

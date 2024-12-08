@@ -7,20 +7,10 @@ import {
   EventSubChannelPredictionLockEvent,
   EventSubChannelPredictionProgressEvent,
 } from '@twurple/eventsub-base'
-import { io } from 'socket.io-client'
 
 import { server } from '../dota/index.js'
 import { getTokenFromTwitchId } from '../dota/lib/connectedStreamers.js'
-import { logger } from '../utils/logger.js'
-
-logger.info("Starting 'twitch' package events")
-
-// Our docker events forwarder instance
-export const twitchEvent = io(`ws://${process.env.HOST_TWITCH_EVENTS}:5015`)
-
-twitchEvent.on('connect', () => {
-  logger.info('We alive on dotabod twitch events server!')
-})
+import { twitchChat } from './index.js'
 
 const events = {
   subscribeToChannelPredictionBeginEvents: EventSubChannelPredictionBeginEvent,
@@ -34,7 +24,7 @@ const events = {
 
 export type Events = keyof typeof events
 
-twitchEvent.on('event', (eventName: Events, broadcasterId: string, data: any) => {
+twitchChat.on('event', (eventName: Events, broadcasterId: string, data: any) => {
   // Can start doing something with the events
 
   const token = getTokenFromTwitchId(broadcasterId)

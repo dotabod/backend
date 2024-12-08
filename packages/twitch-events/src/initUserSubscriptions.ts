@@ -1,88 +1,42 @@
-import type { EventSubSubscription } from '@twurple/eventsub-base'
-import { chatSubIds } from './chatSubIds.js'
+import { eventSubMap } from './chatSubIds.js'
 import { fetchConduitId } from './fetchConduitId.js'
-import { getTwitchHeaders } from './getTwitchHeaders.js'
-import { listener } from './listener.js'
-import { subscribeChatMessagesForUser } from './subscribeChatMessagesForUser.js'
-import { transformBetData } from './twitch/events/transformers/transformBetData.js'
-import { transformPollData } from './twitch/events/transformers/transformPollData.js'
+import { type TwitchEventTypes, genericSubscribe } from './subscribeChatMessagesForUser.js'
 import { logger } from './twitch/lib/logger.js'
-import { offlineEvent } from './twitch/lib/offlineEvent.js'
-import { onlineEvent } from './twitch/lib/onlineEvent.js'
-import { updateUserEvent } from './twitch/lib/updateUserEvent.js'
-import { DOTABOD_EVENTS_ROOM, eventsIOConnected, socketIo } from './utils/socketUtils.js'
-
-// Constants
-const headers = await getTwitchHeaders()
+import { revokeEvent } from './twitch/lib/revokeEvent'
 
 // Get existing conduit ID and subscriptions
 const conduitId = await fetchConduitId()
 logger.info('Conduit ID', { conduitId })
 
-// Map to store subscriptions for each user
-export const userSubscriptions: Record<string, Array<EventSubSubscription>> = {}
-
-const handleEvent = (eventName: any, broadcasterId: string, data: any) => {
-  if (!eventsIOConnected) return
-  socketIo.to(DOTABOD_EVENTS_ROOM).emit('event', eventName, broadcasterId, data)
-}
-
-// Helper function to delete a subscription
-async function deleteSubscription(subscriptionId: string) {
-  try {
-    await fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${subscriptionId}`, {
-      method: 'DELETE',
-      headers,
-    })
-    logger.info('[TWITCHEVENTS] Deleted subscription', { id: subscriptionId })
-  } catch (e) {
-    logger.error('[TWITCHEVENTS] Failed to delete subscription', {
-      error: e,
-      id: subscriptionId,
-    })
-  }
-}
-
 // Updated initUserSubscriptions function
 export const initUserSubscriptions = async (providerAccountId: string) => {
   try {
-    // Handle chat message subscription
-    if (chatSubIds[providerAccountId]?.status !== 'enabled') {
-      if (chatSubIds[providerAccountId]) {
-        await deleteSubscription(chatSubIds[providerAccountId].id)
-        delete chatSubIds[providerAccountId]
-      }
-      await subscribeChatMessagesForUser(conduitId, providerAccountId)
+    // Check if chat message subscription exists but is not enabled
+    const chatMessageSub = eventSubMap[providerAccountId]?.['channel.chat.message']
+    if (chatMessageSub && chatMessageSub.status !== 'enabled') {
+      await revokeEvent({ providerAccountId })
+      return
     }
 
-    const subscriptions = [
-      listener.onStreamOnline(providerAccountId, onlineEvent),
-      listener.onStreamOffline(providerAccountId, offlineEvent),
-      listener.onUserUpdate(providerAccountId, updateUserEvent),
-      listener.onChannelPredictionBegin(providerAccountId, (data) =>
-        handleEvent('onChannelPredictionBegin', providerAccountId, transformBetData(data)),
-      ),
-      listener.onChannelPredictionProgress(providerAccountId, (data) =>
-        handleEvent('onChannelPredictionProgress', providerAccountId, transformBetData(data)),
-      ),
-      listener.onChannelPredictionLock(providerAccountId, (data) =>
-        handleEvent('onChannelPredictionLock', providerAccountId, transformBetData(data)),
-      ),
-      listener.onChannelPredictionEnd(providerAccountId, (data) =>
-        handleEvent('onChannelPredictionEnd', providerAccountId, transformBetData(data)),
-      ),
-      listener.onChannelPollBegin(providerAccountId, (data) =>
-        handleEvent('onChannelPollBegin', providerAccountId, transformPollData(data)),
-      ),
-      listener.onChannelPollProgress(providerAccountId, (data) =>
-        handleEvent('onChannelPollProgress', providerAccountId, transformPollData(data)),
-      ),
-      listener.onChannelPollEnd(providerAccountId, (data) =>
-        handleEvent('onChannelPollEnd', providerAccountId, transformPollData(data)),
-      ),
-    ]
+    // Define subscription types to initialize
+    const subscriptionTypes: (keyof TwitchEventTypes)[] = [
+      'channel.chat.message',
+      'stream.offline',
+      'stream.online',
+      'user.update',
+      'channel.prediction.begin',
+      'channel.prediction.progress',
+      'channel.prediction.lock',
+      'channel.prediction.end',
+      'channel.poll.begin',
+      'channel.poll.progress',
+      'channel.poll.end',
+    ] as const
 
-    userSubscriptions[providerAccountId] = subscriptions
+    // Subscribe to all event types
+    await Promise.all(
+      subscriptionTypes.map((type) => genericSubscribe(conduitId, providerAccountId, type)),
+    )
   } catch (e) {
     logger.error('[TWITCHEVENTS] Failed to initialize subscriptions', {
       error: e,

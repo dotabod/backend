@@ -1,3 +1,4 @@
+import type { TwitchEventTypes } from './subscribeChatMessagesForUser.js'
 export interface TwitchConduitResponse {
   data: Array<{
     /** Unique identifier for the conduit */
@@ -13,10 +14,27 @@ export interface TwitchEventSubResponse {
     // An ID that identifies the subscription
     id: string
     // The subscription's status. Only enabled subscriptions receive events
-    // Values: 'enabled' | 'webhook_callback_verification_pending'
-    status: string
+    status:
+      | 'enabled'
+      | 'webhook_callback_verification_pending'
+      | 'webhook_callback_verification_failed'
+      | 'notification_failures_exceeded'
+      | 'authorization_revoked'
+      | 'moderator_removed'
+      | 'user_removed'
+      | 'chat_user_banned'
+      | 'version_removed'
+      | 'beta_maintenance'
+      | 'websocket_disconnected'
+      | 'websocket_failed_ping_pong'
+      | 'websocket_received_inbound_traffic'
+      | 'websocket_connection_unused'
+      | 'websocket_internal_error'
+      | 'websocket_network_timeout'
+      | 'websocket_network_error'
+      | 'websocket_failed_to_reconnect'
     // The subscription's type
-    type: string
+    type: keyof TwitchEventTypes
     // Version number identifying this subscription definition
     version: string
     // Subscription parameter values as JSON object
@@ -89,7 +107,7 @@ export interface TwitchEventSubSubscription {
   /** Current status of the subscription */
   status: EventSubStatus
   /** Type of subscription (e.g. channel.follow) */
-  type: string
+  type: keyof TwitchEventTypes
   /** Version of the subscription type */
   version: string
   /** Subscription-specific parameters */

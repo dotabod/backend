@@ -1,8 +1,7 @@
 import type { EventSubStreamOnlineEvent } from '@twurple/eventsub-base'
-
-import supabase from '../../db/supabase.js'
-import { onlineEvents } from '../events/events.js'
-import { logger } from './logger.js'
+import supabase from '../db/supabase.js'
+import { logger } from '../logger.js'
+import { onlineEvents } from './events.js'
 
 export function onlineEvent(data: EventSubStreamOnlineEvent) {
   logger.info(`${data.broadcasterId} just went online`)

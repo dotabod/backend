@@ -1,42 +1,34 @@
-import { chatSubIds } from '../../chatSubIds.js'
+import { eventSubMap } from '../../chatSubIds.js'
 import supabase from '../../db/supabase'
 import { getTwitchHeaders } from '../../getTwitchHeaders'
-import { userSubscriptions } from '../../initUserSubscriptions'
 import { logger } from './logger.js'
 
 // Constants
 const headers = await getTwitchHeaders()
 
 // Function to stop subscriptions for a user
-const stopUserSubscriptions = (providerAccountId: string) => {
-  const subscriptions = userSubscriptions[providerAccountId]
-  if (subscriptions) {
-    subscriptions.forEach((subscription) => subscription.stop())
-    delete userSubscriptions[providerAccountId]
-    logger.info(
-      `[TWITCHEVENTS] Unsubscribed from events for providerAccountId: ${providerAccountId}`,
-    )
-  } else {
-    logger.info(
-      `[TWITCHEVENTS] stopUserSubscriptions No subscriptions found for providerAccountId: ${providerAccountId}`,
-    )
-  }
+const stopUserSubscriptions = async (providerAccountId: string) => {
+  const subscriptions = eventSubMap[providerAccountId]
+  if (!subscriptions) return
 
-  // get the sub id from the subscription
-  const subId = chatSubIds[providerAccountId].id
-  if (subId) {
-    // do a DELETE request to the chat subscription
-    fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${subId}`, {
-      method: 'DELETE',
-      headers,
-    })
-      .then(() => {
-        delete chatSubIds[providerAccountId]
-      })
-      .catch((e) => {
-        logger.info('[TWITCHEVENTS] could not delete subscription', { e, id: subId })
-      })
-  }
+  // Delete each subscription and remove from map
+  await Promise.all(
+    Object.values(subscriptions).map(async (subscription) => {
+      try {
+        await fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${subscription.id}`, {
+          method: 'DELETE',
+          headers,
+        })
+      } catch (error) {
+        logger.info('[TWITCHEVENTS] could not delete subscription', {
+          error,
+          id: subscription.id,
+        })
+      }
+    }),
+  )
+
+  delete eventSubMap[providerAccountId]
 }
 
 async function disableChannel(broadcasterId: string) {
