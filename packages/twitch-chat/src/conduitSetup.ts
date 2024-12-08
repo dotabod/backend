@@ -148,7 +148,6 @@ function revokeEvent(data: {
     }
   }
 }) {
-  logger.info('[TWITCHCHAT] Revoking event', { data })
   twitchEvent.emit('revoke', data.payload.event.user_id)
 }
 
@@ -187,7 +186,6 @@ async function initializeSocket() {
   })
 
   mySocket.on('revocation', (payload: any) => {
-    logger.info('[TWITCHCHAT] Revoking event', { payload })
     const providerAccountId = payload.event.user_id
     twitchEvent.emit('revoke', providerAccountId)
   })
