@@ -1,5 +1,5 @@
 import { Server } from 'socket.io'
-import { startUserSubscriptions } from '../SubscribeEvents'
+import { initUserSubscriptions } from '../initUserSubscriptions.js'
 import { logger } from '../twitch/lib/logger.js'
 import { revokeEvent } from '../twitch/lib/revokeEvent.js'
 
@@ -48,7 +48,7 @@ export const setupSocketIO = () => {
 
     socket.on('enable', (providerAccountId: string) => {
       logger.info('[TWITCHEVENTS] Enabling events for user', { providerAccountId })
-      startUserSubscriptions(providerAccountId)
+      initUserSubscriptions(providerAccountId)
     })
   })
 }

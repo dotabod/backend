@@ -1,19 +1,33 @@
 import express from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
-
-import { SubscribeEvents } from '../SubscribeEvents.js'
 import type { Tables } from '../db/supabase-types.js'
 import supabase from '../db/supabase.js'
 import { handleNewUser } from '../handleNewUser.js'
+import { initUserSubscriptions } from '../initUserSubscriptions.js'
 import { listener } from '../listener.js'
 import { getAccountIds } from '../twitch/lib/getAccountIds.js'
 import { logger } from '../twitch/lib/logger.js'
 import { revokeEvent } from '../twitch/lib/revokeEvent.js'
-import type { InsertPayload, UpdatePayload } from '../types.js'
 import { isAuthenticated } from './authUtils.js'
 
 if (!process.env.TWITCH_CLIENT_ID) {
   throw new Error('TWITCH_CLIENT_ID is not defined')
+}
+
+type InsertPayload<T> = {
+  type: 'INSERT'
+  table: string
+  schema: string
+  record: T
+  old_record: null
+}
+
+type UpdatePayload<T> = {
+  type: 'UPDATE'
+  table: string
+  schema: string
+  record: T
+  old_record: T
 }
 
 export const setupWebhooks = () => {
@@ -152,6 +166,12 @@ export const setupWebhooks = () => {
     }
 
     const accountIds = await getAccountIds()
-    SubscribeEvents(accountIds)
+    accountIds.forEach((providerAccountId) => {
+      try {
+        initUserSubscriptions(providerAccountId)
+      } catch (e) {
+        logger.info('[TWITCHEVENTS] could not sub', { e, providerAccountId })
+      }
+    })
   })
 }

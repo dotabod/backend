@@ -173,7 +173,6 @@ export class EventsubSocket extends EventEmitter {
       console.debug(`Received notification ${type}`)
     }
 
-    this.emit('notification', { metadata, payload })
     this.emit(type, { metadata, payload })
     this.silence()
   }
