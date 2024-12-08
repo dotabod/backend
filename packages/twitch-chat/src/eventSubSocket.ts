@@ -120,7 +120,6 @@ export class EventsubSocket extends EventEmitter {
         console.debug('Received Disconnect', payload)
         break
       case 'revocation': {
-        logger.info('[TWITCHCHAT] Revocation', { payload })
         this.emit('revocation', { metadata, payload })
         break
       }

@@ -148,7 +148,7 @@ function revokeEvent(data: {
     }
   }
 }) {
-  twitchEvent.emit('revoke', data.payload.event.user_id)
+  twitchEvent.emit('revoke', data.payload?.event?.user_id)
 }
 
 const eventHandlers: Partial<Record<keyof TwitchEventTypes, (data: any) => void>> = {
@@ -185,9 +185,11 @@ async function initializeSocket() {
     logger.error('Socket Error', { error })
   })
 
-  mySocket.on('revocation', (payload: any) => {
-    const providerAccountId = payload.event.user_id
-    twitchEvent.emit('revoke', providerAccountId)
+  mySocket.on('revocation', ({ payload }) => {
+    const userId = payload.subscription?.condition?.broadcaster_user_id || payload?.event?.user_id
+    if (userId) {
+      twitchEvent.emit('revoke', userId)
+    }
   })
 
   Object.entries(eventHandlers).forEach(([event, handler]) => {
