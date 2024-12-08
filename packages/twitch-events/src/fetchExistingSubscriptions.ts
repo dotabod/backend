@@ -25,12 +25,14 @@ export async function fetchExistingSubscriptions() {
 
     const { data, pagination } = (await subsReq.json()) as TwitchEventSubSubscriptionsResponse
 
-    // Store subscriptions
+    // Store subscriptions in eventSubMap, organizing by broadcaster ID
     data.forEach((sub) => {
       const broadcasterId = sub.condition.broadcaster_user_id as string
-      if (!eventSubMap[broadcasterId]) {
-        eventSubMap[broadcasterId] = {} as (typeof eventSubMap)[number]
-      }
+
+      // Initialize broadcaster entry if it doesn't exist
+      eventSubMap[broadcasterId] ??= {} as (typeof eventSubMap)[number]
+
+      // Store subscription details
       eventSubMap[broadcasterId][sub.type] = {
         id: sub.id,
         status: sub.status,
