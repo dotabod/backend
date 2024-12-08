@@ -53,6 +53,7 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
       subscriptionTypes.map((type) => genericSubscribe(conduitId, providerAccountId, type)),
     )
   } catch (e) {
+    console.error(e)
     logger.error('[TWITCHEVENTS] Failed to initialize subscriptions', {
       error: e,
       providerAccountId,
