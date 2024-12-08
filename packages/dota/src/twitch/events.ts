@@ -7,11 +7,10 @@ import {
   EventSubChannelPredictionLockEvent,
   EventSubChannelPredictionProgressEvent,
 } from '@twurple/eventsub-base'
-
 import { io as socketIo } from 'socket.io-client'
-import { logger } from '../../../twitch-chat/src/logger.js'
 import { server } from '../dota/index.js'
 import { getTokenFromTwitchId } from '../dota/lib/connectedStreamers.js'
+import { logger } from '../utils/logger.js'
 import { twitchChat } from './index.js'
 
 const events = {
