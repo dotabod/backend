@@ -190,7 +190,14 @@ export async function genericSubscribe(
     return false
   }
 
-  eventSubMap[broadcaster_user_id][type] = { status: data[0].status, id: data[0].id }
+  // Initialize broadcaster entry if it doesn't exist
+  eventSubMap[broadcaster_user_id] ??= {} as (typeof eventSubMap)[number]
+
+  // Store subscription details
+  eventSubMap[broadcaster_user_id][type] = {
+    id: data[0].id,
+    status: data[0].status,
+  }
   return true
 }
 

@@ -14,8 +14,6 @@ logger.info('Conduit ID', { conduitId })
 
 // Updated initUserSubscriptions function
 export const initUserSubscriptions = async (providerAccountId: string) => {
-  logger.info('[TWITCHEVENTS] initUserSubscriptions', { providerAccountId })
-
   try {
     // Check if chat message subscription exists but is not enabled
     // This means the user banned the bot, so we delete their subs and disable them
