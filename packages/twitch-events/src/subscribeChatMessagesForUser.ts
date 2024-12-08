@@ -160,6 +160,11 @@ export async function genericSubscribe(
     body: JSON.stringify(body),
   })
 
+  if (subscribeReq.status === 409) {
+    logger.info(`Subscription already exists for ${type}`, { type })
+    return true
+  }
+
   if (subscribeReq.status !== 202) {
     logger.error(`Failed to subscribe ${subscribeReq.status} ${await subscribeReq.text()}`, {
       type,
@@ -169,11 +174,52 @@ export async function genericSubscribe(
 
   const { data }: TwitchEventSubResponse = await subscribeReq.json()
 
-  if (broadcaster_user_id === '__proto__' || broadcaster_user_id === 'constructor' || broadcaster_user_id === 'prototype') {
+  if (
+    broadcaster_user_id === '__proto__' ||
+    broadcaster_user_id === 'constructor' ||
+    broadcaster_user_id === 'prototype'
+  ) {
     logger.error(`Invalid broadcaster_user_id: ${broadcaster_user_id}`, { type })
     return false
   }
 
   eventSubMap[broadcaster_user_id][type] = { status: data[0].status, id: data[0].id }
+  return true
+}
+
+export async function subscribeToAuthRevoke(conduit_id: string, client_id: string) {
+  const body = {
+    type: 'user.authorization.revoke' as const,
+    version: '1',
+    condition: {
+      client_id,
+    },
+    transport: {
+      method: 'conduit',
+      conduit_id,
+    },
+  }
+
+  const subscribeReq = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
+    method: 'POST',
+    headers: {
+      ...headers,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (subscribeReq.status === 409) {
+    logger.info('Subscription already exists for user.authorization.revoke')
+    return true
+  }
+
+  if (subscribeReq.status !== 202) {
+    logger.error(`Failed to subscribe ${subscribeReq.status} ${await subscribeReq.text()}`, {
+      type: 'user.authorization.revoke',
+    })
+    return false
+  }
+
   return true
 }

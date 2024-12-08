@@ -1,10 +1,15 @@
 import { eventSubMap } from './chatSubIds.js'
+import { fetchConduitId } from './fetchConduitId.js'
 import { getTwitchHeaders } from './getTwitchHeaders.js'
+import { initUserSubscriptions } from './initUserSubscriptions.js'
 import type { TwitchEventSubSubscriptionsResponse } from './interfaces.js'
+import { subscribeToAuthRevoke } from './subscribeChatMessagesForUser'
+import { getAccountIds } from './twitch/lib/getAccountIds.js'
 import { logger } from './twitch/lib/logger.js'
 
 // Constants
 const headers = await getTwitchHeaders()
+const conduitId = await fetchConduitId()
 
 export async function fetchExistingSubscriptions() {
   let cursor: string | undefined
@@ -32,5 +37,20 @@ export async function fetchExistingSubscriptions() {
 
   logger.info('[TWITCHEVENTS] Loaded existing subscriptions', {
     count: Object.keys(eventSubMap).length,
+  })
+}
+
+export async function subscribeToEvents() {
+  logger.info('[TWITCHEVENTS] Subscribing to events')
+
+  subscribeToAuthRevoke(conduitId, process.env.TWITCH_CLIENT_ID!)
+
+  const accountIds = await getAccountIds()
+  accountIds.forEach((providerAccountId) => {
+    try {
+      initUserSubscriptions(providerAccountId)
+    } catch (e) {
+      logger.info('[TWITCHEVENTS] could not sub', { e, providerAccountId })
+    }
   })
 }

@@ -138,6 +138,17 @@ const createEventHandler = (type: keyof TwitchEventTypes, transform: (event: any
   }
 }
 
+function revokeEvent(data: {
+  payload: {
+    subscription: {
+      condition: { broadcaster_user_id: string }
+    }
+  }
+}) {
+  logger.info('[TWITCHCHAT] Revoking event', { data })
+  twitchEvent.emit('revoke', data.payload.subscription.condition.broadcaster_user_id)
+}
+
 const eventHandlers: Partial<Record<keyof TwitchEventTypes, (data: any) => void>> = {
   'stream.online': onlineEvent,
   'stream.offline': offlineEvent,
@@ -153,6 +164,7 @@ const eventHandlers: Partial<Record<keyof TwitchEventTypes, (data: any) => void>
   'channel.poll.begin': createEventHandler('channel.poll.begin', transformPollData),
   'channel.poll.progress': createEventHandler('channel.poll.progress', transformPollData),
   'channel.poll.end': createEventHandler('channel.poll.end', transformPollData),
+  'user.authorization.revoke': revokeEvent,
 }
 
 // Initialize WebSocket and handle events

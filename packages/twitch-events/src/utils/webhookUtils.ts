@@ -3,11 +3,7 @@ import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import type { Tables } from '../db/supabase-types.js'
 import supabase from '../db/supabase.js'
 import { handleNewUser } from '../handleNewUser.js'
-import { initUserSubscriptions } from '../initUserSubscriptions.js'
-import { listener } from '../listener.js'
-import { getAccountIds } from '../twitch/lib/getAccountIds.js'
 import { logger } from '../twitch/lib/logger.js'
-import { revokeEvent } from '../twitch/lib/revokeEvent.js'
 import { isAuthenticated } from './authUtils.js'
 
 if (!process.env.TWITCH_CLIENT_ID) {
@@ -144,34 +140,4 @@ export const setupWebhooks = () => {
       })
     },
   )
-
-  // Why can't i use async on express listen?
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  webhookApp.listen(5011, async () => {
-    logger.info('[TWITCHEVENTS] Webhooks Listening on port 5011')
-
-    listener.start()
-
-    logger.info('READY!')
-    try {
-      if (process.env.TWITCH_CLIENT_ID) {
-        listener.onUserAuthorizationRevoke(process.env.TWITCH_CLIENT_ID, (data) =>
-          revokeEvent({ providerAccountId: data.userId }),
-        )
-      } else {
-        logger.error('TWITCH_CLIENT_ID is not defined')
-      }
-    } catch (e) {
-      logger.info('[TWITCHEVENTS] error on listener.onUserAuthorizationRevoke', { e })
-    }
-
-    const accountIds = await getAccountIds()
-    accountIds.forEach((providerAccountId) => {
-      try {
-        initUserSubscriptions(providerAccountId)
-      } catch (e) {
-        logger.info('[TWITCHEVENTS] could not sub', { e, providerAccountId })
-      }
-    })
-  })
 }
