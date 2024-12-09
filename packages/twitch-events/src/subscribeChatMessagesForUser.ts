@@ -187,6 +187,7 @@ export async function genericSubscribe(
       logger.error(`Failed to subscribe ${subscribeReq.status} ${await subscribeReq.text()}`, {
         type,
       })
+      // TODO: Mark this user as requires_refresh
       return false
     }
 

@@ -39,6 +39,10 @@ class RateLimiter {
     logger.debug('[RateLimiter] Status', this.rateLimitStatus)
   }
 
+  private decrementRemaining() {
+    this.rateLimitInfo.remaining = Math.max(0, this.rateLimitInfo.remaining - 1)
+  }
+
   private async processQueue() {
     if (this.processing) return
     this.processing = true
@@ -54,6 +58,10 @@ class RateLimiter {
           })
           await new Promise((resolve) => setTimeout(resolve, delay))
           this.rateLimitInfo.remaining = this.rateLimitInfo.limit
+        } else {
+          // Reset has passed, reset the remaining count
+          this.rateLimitInfo.remaining = this.rateLimitInfo.limit
+          this.rateLimitInfo.reset = now + 60000 // Default to 1 minute if we don't have a new reset time
         }
       }
 
@@ -61,6 +69,7 @@ class RateLimiter {
       if (task) {
         try {
           await task()
+          this.decrementRemaining()
         } catch (error) {
           console.error('Rate limited task failed:', error)
         }
