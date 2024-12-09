@@ -12,6 +12,7 @@ import { rateLimiter } from './utils/rateLimiter.js'
 const headers = await getTwitchHeaders()
 
 export const subsToCleanup: string[] = []
+let fetchedCount = 0
 
 export async function fetchExistingSubscriptions() {
   logger.info('[TWITCHEVENTS] Fetching existing subscriptions')
@@ -54,6 +55,15 @@ export async function fetchExistingSubscriptions() {
           id: sub.id,
           status: sub.status,
         }
+
+        fetchedCount++
+        if (fetchedCount % 100 === 0) {
+          logger.info('[TWITCHEVENTS] Fetch progress', {
+            processed: fetchedCount,
+            cleanupNeeded: subsToCleanup.length,
+            queueStatus: rateLimiter.rateLimitStatus,
+          })
+        }
       })
 
       cursor = pagination?.cursor
@@ -62,6 +72,8 @@ export async function fetchExistingSubscriptions() {
 
   logger.info('[TWITCHEVENTS] Loaded existing subscriptions', {
     count: Object.keys(eventSubMap).length,
+    cleanupNeeded: subsToCleanup.length,
+    queueStatus: rateLimiter.rateLimitStatus,
   })
 }
 
