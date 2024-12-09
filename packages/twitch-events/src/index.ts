@@ -15,9 +15,25 @@ try {
   logger.info('[TWITCHEVENTS] Deleting old subscriptions', { count: subsToCleanup.length })
   // Process deletions in chunks to avoid overwhelming the rate limiter
   const CHUNK_SIZE = 10
+  let completed = 0
+
   for (let i = 0; i < subsToCleanup.length; i += CHUNK_SIZE) {
     const chunk = subsToCleanup.slice(i, i + CHUNK_SIZE)
-    await Promise.all(chunk.map((subId) => rateLimiter.schedule(() => deleteSubscription(subId))))
+    await Promise.all(
+      chunk.map(async (subId) => {
+        await rateLimiter.schedule(async () => {
+          await deleteSubscription(subId)
+          completed++
+          if (completed % 100 === 0 || completed === subsToCleanup.length) {
+            logger.info('[TWITCHEVENTS] Deletion progress', {
+              completed,
+              total: subsToCleanup.length,
+              queueStatus: rateLimiter.rateLimitStatus,
+            })
+          }
+        })
+      }),
+    )
   }
 } catch (error) {
   logger.error('[TWITCHEVENTS] Failed to cleanup subscriptions', { error })
