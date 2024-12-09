@@ -9,11 +9,11 @@ import { logger } from './twitch/lib/logger.js'
 
 // Constants
 const headers = await getTwitchHeaders()
-const conduitId = await fetchConduitId()
 
 export const subsToCleanup: string[] = []
 
 export async function fetchExistingSubscriptions() {
+  logger.info('[TWITCHEVENTS] Fetching existing subscriptions')
   let cursor: string | undefined
   do {
     const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
@@ -55,7 +55,8 @@ export async function fetchExistingSubscriptions() {
 }
 
 export async function subscribeToEvents() {
-  logger.info('[TWITCHEVENTS] Subscribing to events')
+  const conduitId = await fetchConduitId()
+  logger.info('[TWITCHEVENTS] Subscribing to events', { conduitId })
 
   subscribeToAuthRevoke(conduitId, process.env.TWITCH_CLIENT_ID!)
 
