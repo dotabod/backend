@@ -142,7 +142,6 @@ export class GSIHandler {
 
   public enable() {
     this.disabled = false
-    twitchEvent.emit('enable', this.client.Account?.providerAccountId)
   }
 
   public disable() {

@@ -86,6 +86,11 @@ export async function subscribeToEvents() {
   const accountIds = await getAccountIds()
   // Process accounts in chunks to avoid overwhelming the rate limiter
   const CHUNK_SIZE = 10
+  logger.info('[TWITCHEVENTS] Processing accounts', {
+    total: accountIds.length,
+    rateLimit: rateLimiter.rateLimitStatus,
+  })
+
   for (let i = 0; i < accountIds.length; i += CHUNK_SIZE) {
     const chunk = accountIds.slice(i, i + CHUNK_SIZE)
     await Promise.all(
@@ -97,5 +102,13 @@ export async function subscribeToEvents() {
         }
       }),
     )
+
+    if ((i + CHUNK_SIZE) % 100 === 0 || i + CHUNK_SIZE >= accountIds.length) {
+      logger.info('[TWITCHEVENTS] Subscription progress', {
+        processed: Math.min(i + CHUNK_SIZE, accountIds.length),
+        total: accountIds.length,
+        rateLimit: rateLimiter.rateLimitStatus,
+      })
+    }
   }
 }
