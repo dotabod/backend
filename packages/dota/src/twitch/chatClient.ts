@@ -1,11 +1,5 @@
 import { twitchChat } from '.'
-import { findUserByName } from '../dota/lib/connectedStreamers'
-import { isDev } from '../dota/lib/consts.js'
-import { getTwitchHeaders } from './lib/getTwitchHeaders'
-
-// Constants
-const prefix = isDev ? '[DEV] ' : ''
-const headers = await getTwitchHeaders()
+import { findUserByName } from '../dota/lib/connectedStreamers.js'
 
 // Rate limiting constants
 const MAX_WHISPERS_PER_SECOND = 3
@@ -15,26 +9,37 @@ const MAX_WHISPERS_PER_MINUTE = 100
 let whispersInLastSecond = 0
 let whispersInLastMinute = 0
 const whisperQueue: { channel: string; text: string }[] = []
+let processingQueue = false
 
-const processQueue = () => {
-  if (whisperQueue.length === 0) return
+const processQueue = async () => {
+  if (processingQueue || whisperQueue.length === 0) return
+  processingQueue = true
 
-  if (
-    whispersInLastSecond < MAX_WHISPERS_PER_SECOND &&
-    whispersInLastMinute < MAX_WHISPERS_PER_MINUTE
-  ) {
-    const { channel, text } = whisperQueue.shift()!
-    sendWhisper(channel, text)
+  while (whisperQueue.length > 0) {
+    if (
+      whispersInLastSecond < MAX_WHISPERS_PER_SECOND &&
+      whispersInLastMinute < MAX_WHISPERS_PER_MINUTE
+    ) {
+      const { channel, text } = whisperQueue.shift()!
+      sendWhisper(channel, text)
+
+      // Wait for rate limit period before processing next message
+      await new Promise((resolve) => setTimeout(resolve, 1000 / MAX_WHISPERS_PER_SECOND))
+    } else {
+      // Wait until we're under the rate limit again
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+    }
   }
 
-  setTimeout(processQueue, 1000 / MAX_WHISPERS_PER_SECOND)
+  processingQueue = false
 }
 
 const sendWhisper = (channel: string, text: string) => {
   const MAX_WHISPER_LENGTH = 10000
   const chunks = text.match(new RegExp(`.{1,${MAX_WHISPER_LENGTH}}`, 'g')) || []
+
   chunks.forEach((chunk) => {
-    twitchChat.emit('whisper', channel, `${prefix}${chunk}`)
+    twitchChat.emit('whisper', channel, chunk)
   })
 
   whispersInLastSecond++
@@ -46,34 +51,13 @@ const sendWhisper = (channel: string, text: string) => {
 
 // Chat client object
 export const chatClient = {
-  join: (channel: string) => {
-    twitchChat.emit('join', channel)
-  },
-  part: (channel: string) => {
-    twitchChat.emit('part', channel)
-  },
   say: async (channel: string, text: string) => {
-    // New API is in beta, so only dev enabled for now
-    if (isDev) {
-      const user = findUserByName(channel.toLowerCase().replace('#', ''))
-      const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
+    const user = findUserByName(channel.toLowerCase().replace('#', ''))
+    const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
 
-      if (hasNewestScopes) {
-        const newPrefix = prefix ? `${prefix}[NEW-API] ` : prefix
-        void fetch('https://api.twitch.tv/helix/chat/messages', {
-          method: 'POST',
-          headers: { ...headers, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            broadcaster_id: user?.Account?.providerAccountId,
-            sender_id: process.env.TWITCH_BOT_PROVIDERID,
-            message: `${newPrefix}${text}`,
-          }),
-        })
-        return
-      }
+    if (hasNewestScopes && user?.Account?.providerAccountId) {
+      twitchChat.emit('say', user?.Account?.providerAccountId, text)
     }
-
-    twitchChat.emit('say', channel, `${prefix}${text}`)
   },
   whisper: (channel: string, text: string | undefined) => {
     whisperQueue.push({ channel, text: text || 'Empty whisper message, monka' })

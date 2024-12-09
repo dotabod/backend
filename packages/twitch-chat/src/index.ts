@@ -1,14 +1,17 @@
 import { lstatSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
-
 import { ApiClient } from '@twurple/api'
-import { t, use } from 'i18next'
+import { use } from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 import { Server } from 'socket.io'
-
-import supabase from './db/supabase.js'
+import { initializeSocket } from './conduitSetup.js'
+import { sendTwitchChatMessage } from './handleChat.js'
+import { logger } from './logger.js'
 import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider.js'
-import { getChatClient } from './twitch/lib/getChatClient.js'
+
+if (!process.env.TWITCH_BOT_PROVIDERID) {
+  throw new Error('TWITCH_BOT_PROVIDERID not set')
+}
 
 await use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
@@ -24,159 +27,83 @@ await use(FsBackend).init<FsBackendOptions>({
   },
 })
 
-console.log('Loaded i18n for chat')
+logger.info('Loaded i18n for chat')
 
-// Setup twitch chatbot client FIRST
-export const chatClient = await getChatClient()
+// chat v2
+await initializeSocket()
 
 const io = new Server(5005)
 
-let hasDotabodSocket = false
+// Replace the let declaration with a Map to track connections
+const connectedSockets = new Map<string, boolean>()
+
 io.on('connection', (socket) => {
-  // dota node app just connected
-  // make it join our room
-  console.log('Found a connection!')
+  logger.info('Found a connection!')
   try {
     void socket.join('twitch-chat-messages')
+    // Track this specific socket
+    connectedSockets.set(socket.id, true)
   } catch (e) {
-    console.log('Could not join twitch-chat-messages socket')
+    logger.info('Could not join twitch-chat-messages socket')
     return
   }
 
-  hasDotabodSocket = true
-
   socket.on('reconnect', () => {
-    console.log('Reconnecting to the server')
-    hasDotabodSocket = true
+    logger.info('Reconnecting to the server')
+    connectedSockets.set(socket.id, true)
   })
 
   socket.on('reconnect_failed', () => {
-    console.log('Reconnect failed')
-    hasDotabodSocket = false
+    logger.info('Reconnect failed')
+    connectedSockets.delete(socket.id)
   })
 
   socket.on('reconnect_error', (error) => {
-    console.log('Reconnect error', error)
-    hasDotabodSocket = false
+    logger.info('Reconnect error', error)
+    connectedSockets.delete(socket.id)
   })
 
   socket.on('disconnect', (reason, details) => {
-    console.log(
+    logger.info(
       'We lost the server! Respond to all messages with "server offline"',
       reason,
       details,
     )
-    hasDotabodSocket = false
+    connectedSockets.delete(socket.id)
   })
 
-  socket.on('say', async (channel: string, text: string) => {
-    if (process.env.DOTABOD_ENV === 'development') console.log(channel, text)
-    await chatClient.say(channel, text || "I'm sorry, I can't do that")
-  })
-
-  socket.on('join', (channel: string) => {
+  socket.on('say', async (providerAccountId: string, text: string) => {
     try {
-      chatClient.join(channel).catch((e) => {
-        console.log('[ENABLE GSI] Failed to enable client inside promise', { channel, error: e })
+      const response = await sendTwitchChatMessage({
+        broadcaster_id: providerAccountId,
+        sender_id: process.env.TWITCH_BOT_PROVIDERID!,
+        message: text || "I'm sorry, I can't do that",
       })
+
+      if (!response.data?.[0]?.is_sent) {
+        logger.error('Failed to send chat message:', response)
+        return
+      }
     } catch (e) {
-      console.log('[ENABLE GSI] Failed to enable client', { channel, error: e })
+      logger.error('Failed to send chat message:', e)
+      return
     }
   })
 
   socket.on('whisper', async (channel: string, text: string) => {
     try {
-      if (!process.env.TWITCH_BOT_PROVIDERID) throw new Error('TWITCH_BOT_PROVIDERID not set')
-
       const authProvider = await getBotAuthProvider()
       const api = new ApiClient({ authProvider })
-      await api.whispers.sendWhisper(process.env.TWITCH_BOT_PROVIDERID, channel, text)
+      await api.whispers.sendWhisper(process.env.TWITCH_BOT_PROVIDERID!, channel, text)
     } catch (e) {
-      console.error('could not whisper', e)
+      logger.error('could not whisper', e)
     }
-  })
-
-  socket.on('part', (channel: string) => {
-    chatClient.part(channel)
   })
 })
 
-async function disableChannel(channel: string) {
-  const name = channel.replace('#', '')
-  const { data: user } = await supabase
-    .from('users')
-    .select(
-      `
-    id,
-    settings (
-      key,
-      value
-    )
-    `,
-    )
-    .eq('name', name)
-    .single()
-
-  if (!user) {
-    console.log('Failed to find user', name)
-    return
-  }
-
-  if (user.settings.find((s) => s.key === 'commandDisable' && s.value === true)) {
-    console.log('User already disabled', name)
-    return
-  }
-
-  console.log('Disabling user', name)
-  await supabase.from('settings').upsert(
-    {
-      userId: user.id,
-      key: 'commandDisable',
-      value: true,
-    },
-    {
-      onConflict: 'userId, key',
-    },
-  )
+// Export a function to check if any sockets are connected
+export function hasDotabodSocket(): boolean {
+  return connectedSockets.size > 0
 }
 
-chatClient.onJoinFailure((channel, reason) => {
-  if (['msg_banned', 'msg_banned_phone_number_alias', 'msg_channel_suspended'].includes(reason)) {
-    // disable the channel in the database
-    try {
-      void disableChannel(channel)
-    } catch (e) {
-      console.log('could not disable channel onJoinFailure', channel)
-    }
-    return
-  }
-
-  console.log('Failed to join channel', channel, reason)
-})
-
-chatClient.onMessage((channel, user, text, msg) => {
-  if (!hasDotabodSocket) {
-    // TODO: only commands that we register should be checked here
-    if (text === '!ping') {
-      try {
-        void chatClient.say(channel, t('rebooting', { emote: 'PauseChamp', lng: 'en' }))
-      } catch (e) {
-        console.log('could not type rebooting msg', e)
-      }
-    }
-
-    return
-  }
-
-  const { channelId, userInfo, id: messageId } = msg
-  const { isMod, isBroadcaster, isSubscriber, userId } = userInfo
-
-  // forward the msg to dota node app
-  io.to('twitch-chat-messages').emit('msg', channel, user, text, {
-    channelId,
-    userInfo: { isMod, isBroadcaster, isSubscriber, userId },
-    messageId,
-  })
-})
-
-export default io
+export { io }

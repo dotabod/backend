@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events'
 import WebSocket from 'ws'
+import { logger } from './logger'
 
 type EventsubSocketOptions = {
   url?: string
@@ -118,10 +119,10 @@ export class EventsubSocket extends EventEmitter {
       case 'websocket_disconnect':
         console.debug('Received Disconnect', payload)
         break
-      case 'revocation':
-        console.debug('Received Topic Revocation', payload)
+      case 'revocation': {
         this.emit('revocation', { metadata, payload })
         break
+      }
       default:
         console.debug('Unexpected message type', metadata, payload)
         break
@@ -147,12 +148,6 @@ export class EventsubSocket extends EventEmitter {
 
   private handleNotification(metadata: any, payload: any): void {
     const { type } = payload.subscription
-
-    if (type !== 'channel.chat.message') {
-      console.debug(`Received notification ${type}`)
-    }
-
-    this.emit('notification', { metadata, payload })
     this.emit(type, { metadata, payload })
     this.silence()
   }

@@ -3,26 +3,25 @@ import { t } from 'i18next'
 import { gsiHandlers } from '../dota/lib/consts.js'
 import { logger } from '../utils/logger.js'
 import { chatClient } from './chatClient.js'
+import { twitchEvent } from './index.js'
 
 export function toggleDotabod(token: string, isBotDisabled: boolean, channel: string, lng = 'en') {
-  if (!isBotDisabled) {
-    logger.info('[GSI] toggleDotabod Enabling client again', { token, channel })
-    if (!gsiHandlers.has(token)) {
-      logger.info('[ENABLE GSI] Could not find client', { token, channel })
-    } else {
-      gsiHandlers.get(token)?.enable()
-    }
+  const gsiHandler = gsiHandlers.get(token)
+  const hasHandler = gsiHandlers.has(token)
+
+  if (!hasHandler) {
+    logger.info('[GSI] Could not find client', { token, channel })
+    return
+  }
+
+  if (isBotDisabled) {
+    logger.info('[GSI] Disabling client', { token, channel })
+    gsiHandler?.disable()
+  } else {
+    logger.info('[GSI] Enabling client', { token, channel })
+    twitchEvent.emit('enable', gsiHandler?.getChannelId())
+    gsiHandler?.enable()
   }
 
   chatClient.say(channel, t('toggle', { context: isBotDisabled ? 'disabled' : 'enabled', lng }))
-
-  if (isBotDisabled) {
-    if (!gsiHandlers.has(token)) {
-      logger.info('[REMOVE GSI] Could not find client', { token, channel })
-      return
-    }
-
-    logger.info('[REMOVE GSI] Disabling GSI client from responding', { token, channel })
-    gsiHandlers.get(token)?.disable()
-  }
 }
