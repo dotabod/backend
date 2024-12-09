@@ -11,6 +11,8 @@ setupWebhooks()
 
 await fetchExistingSubscriptions()
 
+await subscribeToEvents()
+
 try {
   logger.info('[TWITCHEVENTS] Deleting old subscriptions', { count: subsToCleanup.length })
   // Process deletions in chunks to avoid overwhelming the rate limiter
@@ -38,5 +40,3 @@ try {
 } catch (error) {
   logger.error('[TWITCHEVENTS] Failed to cleanup subscriptions', { error })
 }
-
-await subscribeToEvents()
