@@ -16,7 +16,7 @@ export async function getAccountIds(): Promise<string[]> {
       .select('id,accounts(providerAccountId)')
       .neq('accounts.requires_refresh', true)
       .eq('accounts.provider', 'twitch')
-      .contains('accounts.scope', ['channel:bot'])
+      .ilike('accounts.scope', '%channel:bot%')
       .order('followers', { ascending: false, nullsFirst: false })
 
     const { data } = await baseQuery.range(offset, offset + pageSize - 1)
