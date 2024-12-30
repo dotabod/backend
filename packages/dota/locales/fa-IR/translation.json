@@ -1,6 +1,6 @@
 {
   "aegis": {
-    "denied": "{{- heroName}} پولدار رو ببین! آخ رو اتک داد {{emote}}",
+    "denied": "{{- heroName}} پولدار رو ببین! آنخ رو اتک داد {{emote}}",
     "expired": " داداش تایم اخ تمام شد بمیری مردی {{- heroName}}' {{emote}}",
     "pickup": " میتونه یه غذای رایگان بده {{- heroName}}",
     "snatched": "{{- heroName}} آنخ رو دزدید {{emote}}"
@@ -22,7 +22,7 @@
   },
   "bounties": {
     "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} })گلد از بانتی ({{totalBounties}}/4){{emote}} مرسی از {{heroNames}}{{emote2}}",
-    "totalGold": "{{count}} گلد"
+    "totalGold": "{{count}} سکه"
   },
   "chatters": {
     "died": "درخشیدی {{- heroName}} . {{itemNames}}  را نگه دار واسه بازی بعد {{emote}}",
@@ -31,13 +31,13 @@
     "noTp": "استاد TP نداری {{emote}}",
     "pause": "{{emote}} کی وسط شکار ریدنش گرفت؟",
     "smoked": "{{emote}} {{- heroName}} سبحان الله غیب شد",
-    "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
-    "tpFromDeath": "Thanks to this death you finally got a tp. And it only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
+    "tpFound": "{{channel}} کمرت نشکنه یکوقت بالاخره تلپورت خریدی بعد از $t(seconds, {\"count\": {{seconds}} }){{emote}}",
+    "tpFromDeath": "مگر اینکه بری غذا بدی که یه تلپورت بهت برسه خسیس. برو تلپورت دار شدی بعد از $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
   "colors": {
     "blue": "آبی",
     "brown": "قهوه\u200cای",
-    "cyan": "آبی",
+    "cyan": "فیروزه\u200cای",
     "green": "سبز",
     "olive": "زیتونی",
     "orange": "نارنجی",
@@ -117,7 +117,7 @@
   "matchFound": "بازی شروع شد. تمام این کامندها فعال است {{commandList}}",
   "matchId": "ایدی مچ: {{matchId}}",
   "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",
-  "missingMatchData": "Waiting for current match data {{emote}}",
+  "missingMatchData": "دندون سر تخمات بزار تا داده های بازی بیاد {{emote}}",
   "missingUser": "User not found. Try logging out and in of dotabod.com",
   "modsOnly_off": "فقط مادها خاموش شد! همه میتونن چت کنن",
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
@@ -163,18 +163,18 @@
     "2": "دفعات زدن روشن: 2. دراپ بعدی: Cheese به همراه Aghanim یا refresher.",
     "3": "دفعات زدن روشن: 3. دراپ بعدی: Cheese به همراه Aghanim یا refresher.",
     "more_one": "دفعات زدن روشن: {{count}}. دراپ بعدی: Cheese به همراه Aghanim یا refresher.",
-    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
+    "more_other": "دفعات زدن روشن: {{count}}. دراپ بعدی: Cheese به همراه Aghanim یا refresher."
   },
   "roshanKilled": "روشان رو کوشتن. روشان بعدی بین {{min}} تا {{max}} دقیقه",
   "seconds_one": "{{count}} ثانیه",
-  "seconds_other": "{{count}} seconds",
+  "seconds_other": "{{count}} ثانیه",
   "setStreamDelay": "در حال تنظیم تاخیر استریم به $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "مقدار غیر قابل قبول برای تاخیر در استریم. از دستور !setdelay استفاده کنید",
   "setStreamDelayRemoved": "در حال حذف تاخیر استریم",
   "spectators": {
-    "count_one": "1 spectator watching this match live",
-    "count_other": "{{count}} spectators watching this match live",
-    "count_none": "No spectators currently watching this match live"
+    "count_one": "1 اسکل داره این بازی رو میبینه.",
+    "count_other": "{{count}} اسکل دارن بازی رو میبینن",
+    "count_none": "خداروشکر هیچ بیکاری این بازی رو نمیبینه!"
   },
   "stream": "$t(stream_on)",
   "stream_none": "تغییری ایجاد نشد. کاربر از پیش در وضعیت {{state}} قرار دارد. از دستور {{command}} برای تغییر استفاده کنید.",
