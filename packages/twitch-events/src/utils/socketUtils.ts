@@ -1,5 +1,7 @@
 import { Server } from 'socket.io'
+import { initUserSubscriptions } from '../initUserSubscriptions.js'
 import { logger } from '../twitch/lib/logger.js'
+import { revokeEvent } from '../twitch/lib/revokeEvent.js'
 
 export const socketIo = new Server(5015)
 
@@ -17,10 +19,36 @@ export const setupSocketIO = () => {
 
     socket.on('connect_error', (err) => {
       logger.info(`[TWITCHEVENTS] socket connect_error due to ${err.message}`)
+      eventsIOConnected = false
     })
 
     socket.on('disconnect', () => {
+      logger.info('[TWITCHEVENTS] Socket disconnected')
       eventsIOConnected = false
+    })
+
+    socket.on('reconnect', (attemptNumber) => {
+      logger.info(`[TWITCHEVENTS] Socket reconnected on attempt ${attemptNumber}`)
+      eventsIOConnected = true
+    })
+
+    socket.on('reconnect_attempt', (attemptNumber) => {
+      logger.info(`[TWITCHEVENTS] Socket reconnect attempt ${attemptNumber}`)
+    })
+
+    socket.on('reconnect_failed', () => {
+      logger.info('[TWITCHEVENTS] Socket failed to reconnect')
+      eventsIOConnected = false
+    })
+
+    socket.on('revoke', (providerAccountId: string) => {
+      logger.info('[TWITCHEVENTS] Revoking events for user', { providerAccountId })
+      revokeEvent({ providerAccountId })
+    })
+
+    socket.on('enable', (providerAccountId: string) => {
+      logger.info('[TWITCHEVENTS] Enabling events for user', { providerAccountId })
+      initUserSubscriptions(providerAccountId)
     })
   })
 }

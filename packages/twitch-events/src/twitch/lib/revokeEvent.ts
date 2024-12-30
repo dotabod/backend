@@ -1,7 +1,39 @@
-import type { EventSubUserAuthorizationRevokeEvent } from '@twurple/eventsub-base'
-import { stopUserSubscriptions } from '../../SubscribeEvents'
+import { eventSubMap } from '../../chatSubIds.js'
 import supabase from '../../db/supabase'
+import { getTwitchHeaders } from '../../getTwitchHeaders'
 import { logger } from './logger.js'
+
+// Constants
+const headers = await getTwitchHeaders()
+
+export const deleteSubscription = async (id: string) => {
+  await fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${id}`, {
+    method: 'DELETE',
+    headers,
+  })
+}
+
+// Function to stop subscriptions for a user
+export const stopUserSubscriptions = async (providerAccountId: string) => {
+  const subscriptions = eventSubMap[providerAccountId]
+  if (!subscriptions) return
+
+  // Delete each subscription and remove from map
+  await Promise.all(
+    Object.values(subscriptions).map(async (subscription) => {
+      try {
+        await deleteSubscription(subscription.id)
+      } catch (error) {
+        logger.info('[TWITCHEVENTS] could not delete subscription', {
+          error,
+          id: subscription.id,
+        })
+      }
+    }),
+  )
+
+  delete eventSubMap[providerAccountId]
+}
 
 async function disableChannel(broadcasterId: string) {
   const { data: user } = await supabase
@@ -44,13 +76,13 @@ async function disableChannel(broadcasterId: string) {
   )
 }
 
-export async function revokeEvent(data: EventSubUserAuthorizationRevokeEvent) {
-  logger.info(`${data.userId} just revoked`)
+export async function revokeEvent({ providerAccountId }: { providerAccountId: string }) {
+  logger.info(`${providerAccountId} just revoked`)
 
   try {
-    stopUserSubscriptions(data.userId)
+    stopUserSubscriptions(providerAccountId)
   } catch (e) {
-    logger.info('Failed to delete subscriptions', { error: e, twitchId: data.userId })
+    logger.info('Failed to delete subscriptions', { error: e, twitchId: providerAccountId })
   }
 
   await supabase
@@ -59,7 +91,7 @@ export async function revokeEvent(data: EventSubUserAuthorizationRevokeEvent) {
       requires_refresh: true,
     })
     .eq('provider', 'twitch')
-    .eq('providerAccountId', data.userId)
+    .eq('providerAccountId', providerAccountId)
 
-  await disableChannel(data.userId)
+  await disableChannel(providerAccountId)
 }

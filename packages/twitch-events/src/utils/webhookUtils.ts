@@ -1,22 +1,33 @@
 import express from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
-
-import { SubscribeEvents } from '../SubscribeEvents.js'
-import { chatClient } from '../chatClient.js'
 import type { Tables } from '../db/supabase-types.js'
 import supabase from '../db/supabase.js'
 import { handleNewUser } from '../handleNewUser.js'
-import { listener } from '../listener.js'
-import { getAccountIds } from '../twitch/lib/getAccountIds.js'
 import { logger } from '../twitch/lib/logger.js'
-import { revokeEvent } from '../twitch/lib/revokeEvent.js'
-import type { InsertPayload, UpdatePayload } from '../types.js'
 import { isAuthenticated } from './authUtils.js'
+
+if (!process.env.TWITCH_CLIENT_ID) {
+  throw new Error('TWITCH_CLIENT_ID is not defined')
+}
+
+type InsertPayload<T> = {
+  type: 'INSERT'
+  table: string
+  schema: string
+  record: T
+  old_record: null
+}
+
+type UpdatePayload<T> = {
+  type: 'UPDATE'
+  table: string
+  schema: string
+  record: T
+  old_record: T
+}
 
 export const setupWebhooks = () => {
   const webhookApp = express()
-
-  const IS_DEV = process.env.DOTABOD_ENV !== 'production'
 
   webhookApp.use(bodyParserErrorHandler())
 
@@ -31,7 +42,7 @@ export const setupWebhooks = () => {
     express.json(),
     express.urlencoded({ extended: true }),
     async (req, res) => {
-      // check authorization beaerer token
+      // check authorization bearer token
       if (!isAuthenticated(req)) {
         logger.info('[TWITCHEVENTS] Unauthorized request', {
           headers: req.headers,
@@ -61,7 +72,6 @@ export const setupWebhooks = () => {
             })
           })
       } else if (req.body.type === 'UPDATE' && req.body.table === 'accounts') {
-        logger.info('[TWITCHEVENTS] UPDATE accounts', { body: req.body })
         const { body } = req
         const oldUser = body.old_record as UpdatePayload<Tables<'accounts'>>['old_record']
         const newUser = body.record as UpdatePayload<Tables<'accounts'>>['record']
@@ -111,8 +121,6 @@ export const setupWebhooks = () => {
             .single()
 
           if (account?.providerAccountId) {
-            chatClient.part(oldUser.name)
-
             try {
               // This updates their actual twitch username via twitch api
               // Only resubscribing if it's a new user
@@ -133,21 +141,7 @@ export const setupWebhooks = () => {
     },
   )
 
-  // Why can't i use async on express listen?
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  webhookApp.listen(5011, async () => {
-    logger.info('[TWITCHEVENTS] Webhooks Listening on port 5011')
-
-    listener.start()
-
-    logger.info('READY!')
-    try {
-      listener.onUserAuthorizationRevoke(process.env.TWITCH_CLIENT_ID ?? '', revokeEvent)
-    } catch (e) {
-      logger.info('[TWITCHEVENTS] error on listener.onUserAuthorizationRevoke', { e })
-    }
-
-    const accountIds = await getAccountIds()
-    SubscribeEvents(accountIds)
+  webhookApp.listen(5011, () => {
+    logger.info('[TWITCHEVENTS] Webhook server listening on port 5011')
   })
 }

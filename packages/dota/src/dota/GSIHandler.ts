@@ -6,7 +6,7 @@ import { getWL } from '../db/getWL.js'
 import supabase from '../db/supabase.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
 import { notablePlayers } from '../steam/notableplayers.js'
-import { chatClient } from '../twitch/chatClient.js'
+import { twitchEvent } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
@@ -142,7 +142,6 @@ export class GSIHandler {
 
   public enable() {
     this.disabled = false
-    chatClient.join(this.client.name)
   }
 
   public disable() {

@@ -69,7 +69,6 @@ services:
 
   twitch-events:
     ports:
-      - "5010:5010"
       - "5011:5011"
     container_name: twitch-events
     image: "ghcr.io/dotabod/twitch-events:master"
@@ -98,10 +97,10 @@ services:
       - DB_SECRET
       - DB_URL
       - EVENTSUB_HOST
-      - HOOKS_HOST
       - MONGO_URL
       - DOTABOD_ENV
       - TWITCH_CLIENT_ID
+      - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_SECRET
       - TWITCH_EVENTSUB_SECRET
       - HOST_TWITCH_CHAT

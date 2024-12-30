@@ -1,5 +1,5 @@
 # Using a more specific version to ensure reproducibility
-FROM node:21-alpine3.17 as base
+FROM node:21-alpine3.17 AS base
 
 # Set build context and work directories
 WORKDIR /app/packages/steam
@@ -15,7 +15,7 @@ RUN yarn install --immutable
 
 #-------------------------
 
-FROM base as builder
+FROM base AS builder
 
 # Copy source code and build configurations
 COPY tsconfig.json /app/
@@ -26,7 +26,7 @@ RUN cd /app/packages/steam && yarn build
 
 #-------------------------
 
-FROM node:21-alpine3.17 as prod
+FROM node:21-alpine3.17 AS prod
 
 ARG DOTABOD_ENV
 
