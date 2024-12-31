@@ -93,7 +93,7 @@ export async function sendTwitchChatMessage(
   const response = await fetch(url, options)
   if (!response.ok) throw new Error(`Failed to send chat message: ${response.status}`)
 
-  return response.json()
+  return response.json() as Promise<TwitchChatMessageResponse>
 }
 
 /**

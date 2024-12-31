@@ -12,9 +12,10 @@ export const getAuthProvider = () => {
   authProvider = new RefreshingAuthProvider({
     clientId: process.env.TWITCH_CLIENT_ID ?? '',
     clientSecret: process.env.TWITCH_CLIENT_SECRET ?? '',
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    onRefresh: async (twitchId, newTokenData) => {
-      console.log('[TWITCHSETUP] Refreshing twitch tokens', { twitchId })
+  })
+
+  authProvider.onRefresh(async (twitchId, newTokenData) => {
+    console.log('[TWITCHSETUP] Refreshing twitch tokens', { twitchId })
 
       if (!newTokenData.refreshToken) throw new Error('Missing refresh token')
 
@@ -23,7 +24,6 @@ export const getAuthProvider = () => {
         .update({
           scope: newTokenData.scope.join(' '),
           access_token: newTokenData.accessToken,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           refresh_token: newTokenData.refreshToken,
           expires_at: Math.floor(
             new Date(newTokenData.obtainmentTimestamp).getTime() / 1000 +
@@ -33,8 +33,7 @@ export const getAuthProvider = () => {
           obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp).toISOString(),
         })
         .eq('provider', 'twitch')
-        .eq('providerAccountId', twitchId)
-    },
+      .eq('providerAccountId', twitchId)
   })
 
   return authProvider

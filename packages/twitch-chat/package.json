@@ -14,17 +14,17 @@
     "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
   },
   "dependencies": {
-    "socket.io-client": "^4.7.5",
-    "i18next": "^23.11.5",
-    "i18next-fs-backend": "^2.3.1",
-    "socket.io": "^4.7.5",
-    "winston": "^3.13.0"
+    "socket.io-client": "^4.8.1",
+    "i18next": "^24.2.0",
+    "i18next-fs-backend": "^2.6.0",
+    "socket.io": "^4.8.1",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
-    "@types/node": "^20.14.1",
-    "lint-staged": "^15.2.5",
+    "@types/node": "^22.10.2",
+    "lint-staged": "^15.3.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.7.2"
   }
 }

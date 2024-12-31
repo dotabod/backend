@@ -12,10 +12,11 @@ export const getAuthProvider = () => {
 
   authProvider = new RefreshingAuthProvider({
     clientId: process.env.TWITCH_CLIENT_ID ?? '',
-    clientSecret: process.env.TWITCH_CLIENT_SECRET ?? '',
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    onRefreshFailure: async (twitchId) => {
-      logger.error('[TWITCHSETUP] Failed to refresh twitch tokens', { twitchId })
+    clientSecret: process.env.TWITCH_CLIENT_SECRET ?? ''
+  })
+
+  authProvider.onRefreshFailure(async (twitchId) => {
+    logger.error('[TWITCHSETUP] Failed to refresh twitch tokens', { twitchId })
 
       await supabase
         .from('accounts')
@@ -23,11 +24,11 @@ export const getAuthProvider = () => {
           requires_refresh: true,
         })
         .eq('providerAccountId', twitchId)
-        .eq('provider', 'twitch')
-    },
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    onRefresh: async (twitchId, newTokenData) => {
-      logger.info('[TWITCHSETUP] Refreshing twitch tokens', { twitchId })
+      .eq('provider', 'twitch')
+  })
+
+  authProvider.onRefresh(async (twitchId, newTokenData) => {
+    logger.info('[TWITCHSETUP] Refreshing twitch tokens', { twitchId })
 
       await supabase
         .from('accounts')
@@ -41,10 +42,9 @@ export const getAuthProvider = () => {
           ),
           expires_in: newTokenData.expiresIn ?? 0,
           obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp).toISOString(),
-        })
-        .eq('providerAccountId', twitchId)
-        .eq('provider', 'twitch')
-    },
+      })
+      .eq('providerAccountId', twitchId)
+      .eq('provider', 'twitch')
   })
 
   return authProvider

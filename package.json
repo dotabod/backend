@@ -12,20 +12,20 @@
   },
   "trustedDependencies": ["steam-resources-fork", "steam-fork"],
   "dependencies": {
-    "@supabase/supabase-js": "^2.47.2",
-    "@twurple/api": "6.0.9",
-    "@twurple/auth": "6.0.9",
-    "@twurple/eventsub-base": "^7.2.0",
-    "i18next": "^23.16.8",
+    "@supabase/supabase-js": "^2.47.10",
+    "@twurple/api": "7.2.1",
+    "@twurple/auth": "7.2.1",
+    "@twurple/eventsub-base": "^7.2.1",
+    "i18next": "^24.2.0",
     "i18next-fs-backend": "^2.6.0",
     "socket.io": "^4.8.1",
     "winston": "^3.17.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@types/node": "^20.17.9",
-    "lint-staged": "^15.2.10",
-    "nodemon": "^3.1.7",
+    "@types/node": "^22.10.2",
+    "lint-staged": "^15.3.0",
+    "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.2"
