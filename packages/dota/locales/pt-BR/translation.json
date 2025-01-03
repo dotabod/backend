@@ -66,9 +66,9 @@
   "facetInvalid": "Faceta inválida especificada · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Use !facet {{- heroName}} 1 ou !facet {{- heroName}} 2 · Dotabod só sabe a faceta realmente escolhida para o herói atual do streamer",
   "facetSelection": "{{- heroName}} faceta selecionada: {{- facetTitle}} · {{- facetDescription}}",
-  "facetTotalLimit_one": "Only {{count}} facet is available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
+  "facetTotalLimit_one": "Somente {{count}} faceta está disponível para {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_many": "",
-  "facetTotalLimit_other": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
+  "facetTotalLimit_other": "Somente {{count}} facetas estão disponíveis para {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Jogo não encontrado",
   "gpm_zero": "",
   "gpm_one": "GPM ao vivo de {{- heroName}}: {{num}}. {{heroKills}} de abates de heróis, {{creepKills}} de abates de creep.",
@@ -91,7 +91,7 @@
     "winrateStreamer_one": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partida.",
     "winrateStreamer_other": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partidas."
   },
-  "innate": "{{- heroName}} innate: {{- title}} · {{- description}}",
+  "innate": "Inata de {{- heroName}}: {{- title}} · {{- description}}",
   "invalidColor": "Espaço, nome ou cor de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
   "invalidColorNew": "Comando inválido. Tente `!{{command}} crystal maiden` ou `!{{command}} 9` ou `!{{command}} teal` de {{colorList}}",
   "invalidHero": "Herói inválido. Tente `!{{command}} x` de {{heroList}}",
@@ -182,10 +182,10 @@
   "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <seconds> .",
   "setStreamDelayRemoved": "Removendo delay de transmissão",
   "spectators": {
-    "count_one": "1 spectator watching this match live",
+    "count_one": "1 espectador assistindo a esta partida ao vivo",
     "count_many": "",
-    "count_other": "{{count}} spectators watching this match live",
-    "count_none": "No spectators currently watching this match live"
+    "count_other": "{{count}} espectadores assistindo a esta partida ao vivo",
+    "count_none": "Atualmente não há espectadores assistindo esta partida ao vivo"
   },
   "stream": "$t(stream_on)",
   "stream_none": "Nenhuma alteração foi feita, usuário já {{state}}. Tente !{{command}} para alternar.",
@@ -228,7 +228,7 @@
     "unknown": "Não foi possível encontrar o último git commit, aqui está o repositório {{- url}}"
   },
   "winprobability": {
-    "winProbability": "{{winRate}}% win probability at {{gameTime}}:00 · Next update in {{remainingCooldown}}s",
+    "winProbability": "{{winRate}}% de chance de vitória em {{gameTime}}:00 · Próxima atualização em {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Chance de vitória não está disponível ainda · Tente novamente em {{remainingCooldown}}s"
   },
   "xpm": "XPM ao vivo de {{- heroName}}: {{num}}"
