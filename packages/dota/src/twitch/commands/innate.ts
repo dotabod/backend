@@ -19,7 +19,11 @@ commandHandler.registerCommand('innate', {
     const gsiHandler = gsiHandlers.get(channelClient.token)
 
     if (!isValidGSIHandler(gsiHandler, channelClient.gsi?.map?.matchid)) {
-      sendMessage(channelName, t('notPlaying', { emote: 'PauseChamp', lng: channelClient.locale }))
+      chatClient.say(
+        channelName,
+        t('notPlaying', { emote: 'PauseChamp', lng: channelClient.locale }),
+        message.user.messageId,
+      )
       return
     }
 
@@ -31,7 +35,11 @@ commandHandler.registerCommand('innate', {
         command,
       )
       if (!isValidHero(hero)) {
-        sendMessage(channelName, t('gameNotFound', { lng: channelClient.locale }))
+        chatClient.say(
+          channelName,
+          t('gameNotFound', { lng: channelClient.locale }),
+          message.user.messageId,
+        )
         return
       }
 
@@ -39,14 +47,15 @@ commandHandler.registerCommand('innate', {
       const heroInnate = getHeroInnate(heroData)
 
       if (!heroInnate) {
-        sendMessage(
+        chatClient.say(
           channelName,
           t('missingMatchData', { emote: 'PauseChamp', lng: channelClient.locale }),
+          message.user.messageId,
         )
         return
       }
 
-      sendMessage(
+      chatClient.say(
         channelName,
         t('innate', {
           lng: channelClient.locale,
@@ -54,9 +63,14 @@ commandHandler.registerCommand('innate', {
           title: heroInnate.title,
           description: heroInnate.description,
         }),
+        message.user.messageId,
       )
     } catch (error: any) {
-      sendMessage(channelName, error.message ?? t('gameNotFound', { lng: channelClient.locale }))
+      chatClient.say(
+        channelName,
+        error.message ?? t('gameNotFound', { lng: channelClient.locale }),
+        message.user.messageId,
+      )
     }
   },
 })
@@ -89,8 +103,4 @@ const getHeroInnate = (
       }
     }
   }
-}
-
-const sendMessage = (channelName: string, message: string) => {
-  chatClient.say(channelName, message)
 }

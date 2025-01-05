@@ -23,6 +23,7 @@ commandHandler.registerCommand('wl', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -37,7 +38,7 @@ commandHandler.registerCommand('wl', {
     })
       .then((res: any) => {
         if (res?.msg) {
-          chatClient.say(channel, res.msg)
+          chatClient.say(channel, res.msg, message.user.messageId)
         }
       })
       .catch((e) => {

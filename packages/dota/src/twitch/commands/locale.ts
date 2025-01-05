@@ -34,6 +34,7 @@ commandHandler.registerCommand('locale', {
           count: 0,
           url: 'crowdin.com/project/dotabod',
         }),
+        message.user.messageId,
       )
       return
     }
@@ -46,6 +47,7 @@ commandHandler.registerCommand('locale', {
         translators: translators.contributors.join(' · '),
         url: 'crowdin.com/project/dotabod',
       }),
+      message.user.messageId,
     )
   },
 })

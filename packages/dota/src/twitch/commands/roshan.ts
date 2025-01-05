@@ -24,12 +24,16 @@ commandHandler.registerCommand('roshan', {
     } = message
 
     if (!isPlayingMatch(client.gsi)) {
-      chatClient.say(channel, t('notPlaying', { emote: 'PauseChamp', lng: client.locale }))
+      chatClient.say(
+        channel,
+        t('notPlaying', { emote: 'PauseChamp', lng: client.locale }),
+        message.user.messageId,
+      )
       return
     }
 
     if (!client.gsi?.hero?.name) {
-      chatClient.say(channel, t('noHero', { lng: client.locale }))
+      chatClient.say(channel, t('noHero', { lng: client.locale }), message.user.messageId)
       return
     }
 
@@ -40,7 +44,11 @@ commandHandler.registerCommand('roshan', {
     )) as unknown as AegisRes | null
 
     if (!roshJson?.minS && !roshJson?.maxS) {
-      chatClient.say(channel, t('roshanAlive', { emote: 'Happi', lng: client.locale }))
+      chatClient.say(
+        channel,
+        t('roshanAlive', { emote: 'Happi', lng: client.locale }),
+        message.user.messageId,
+      )
       return
     }
 
@@ -50,6 +58,6 @@ commandHandler.registerCommand('roshan', {
       msgs.push(generateAegisMessage(aegisRes, client.locale))
     }
 
-    chatClient.say(channel, msgs.join(' · '))
+    chatClient.say(channel, msgs.join(' · '), message.user.messageId)
   },
 })

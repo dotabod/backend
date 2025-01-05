@@ -36,6 +36,7 @@ commandHandler.registerCommand('fixdbl', {
       chatClient.say(
         message.channel.name,
         t('noLastMatch', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -47,6 +48,7 @@ commandHandler.registerCommand('fixdbl', {
         url: `dotabuff.com/matches/${bet.matchId}`,
         lng: message.channel.client.locale,
       }),
+      message.user.messageId,
     )
 
     await updateMmr({

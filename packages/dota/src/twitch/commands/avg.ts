@@ -22,6 +22,7 @@ commandHandler.registerCommand('avg', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -36,12 +37,13 @@ commandHandler.registerCommand('avg', {
       players: matchPlayers,
     })
       .then((avg) => {
-        chatClient.say(message.channel.name, `${avg}${avgDescriptor}`)
+        chatClient.say(message.channel.name, `${avg}${avgDescriptor}`, message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(
           message.channel.name,
           e?.message ?? t('gameNotFound', { lng: client.locale }),
+          message.user.messageId,
         )
       })
   },

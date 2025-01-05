@@ -26,11 +26,13 @@ commandHandler.registerCommand('d2pt', {
           url: `dota2protracker.com/hero/${encodeURI(heroName).replace(/'/g, '%27')}`,
           lng: message.channel.client.locale,
         }),
+        message.user.messageId,
       )
     } catch (e: any) {
       chatClient.say(
         message.channel.name,
         e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        message.user.messageId,
       )
     }
   },

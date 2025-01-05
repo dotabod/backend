@@ -16,19 +16,24 @@ commandHandler.registerCommand('modsonly', {
     } = message
     if (modMode.has(channelId)) {
       modMode.delete(channelId)
-      chatClient.say(channel, t('modsOnly', { context: 'off', lng: client.locale }))
-      chatClient.say(channel, '/emoteonlyoff')
-      chatClient.say(channel, '/subscribersoff')
+      chatClient.say(
+        channel,
+        t('modsOnly', { context: 'off', lng: client.locale }),
+        message.user.messageId,
+      )
+      chatClient.say(channel, '/emoteonlyoff', message.user.messageId)
+      chatClient.say(channel, '/subscribersoff', message.user.messageId)
       return
     }
 
     // Delete all messages that are not from a mod
     modMode.add(channelId)
-    chatClient.say(channel, '/subscribers')
-    chatClient.say(channel, '/emoteonly')
+    chatClient.say(channel, '/subscribers', message.user.messageId)
+    chatClient.say(channel, '/emoteonly', message.user.messageId)
     chatClient.say(
       channel,
       t('modsOnly', { emote: 'BASED Clap', context: 'on', lng: client.locale }),
+      message.user.messageId,
     )
   },
 })

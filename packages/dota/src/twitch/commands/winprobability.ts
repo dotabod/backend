@@ -29,7 +29,11 @@ commandHandler.registerCommand('winprobability', {
 
     const matchId = client.gsi?.map?.matchid
     if (!matchId) {
-      chatClient.say(channel, t('gameNotFound', { lng: message.channel.client.locale }))
+      chatClient.say(
+        channel,
+        t('gameNotFound', { lng: message.channel.client.locale }),
+        message.user.messageId,
+      )
       return
     }
 
@@ -79,6 +83,6 @@ commandHandler.registerCommand('winprobability', {
           ),
         })
 
-    chatClient.say(channel, response)
+    chatClient.say(channel, response, message.user.messageId)
   },
 })

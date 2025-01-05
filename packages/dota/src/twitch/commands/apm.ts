@@ -38,11 +38,13 @@ commandHandler.registerCommand('apm', {
           lng: message.channel.client.locale,
           count: apm,
         }),
+        message.user.messageId,
       )
     } catch (e: any) {
       chatClient.say(
         message.channel.name,
         e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        message.user.messageId,
       )
     }
   },

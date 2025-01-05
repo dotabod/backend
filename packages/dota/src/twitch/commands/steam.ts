@@ -15,7 +15,7 @@ commandHandler.registerCommand('steam', {
     } = message
 
     if (client.steam32Id && Number(client.steam32Id)) {
-      chatClient.say(channel, `steamid.xyz/${client.steam32Id.toString()}`)
+      chatClient.say(channel, `steamid.xyz/${client.steam32Id.toString()}`, message.user.messageId)
       return
     }
 
@@ -27,6 +27,7 @@ commandHandler.registerCommand('steam', {
             url: 'dotabod.com/dashboard/features',
           })
         : t('unknownSteam', { lng: message.channel.client.locale }),
+      message.user.messageId,
     )
   },
 })

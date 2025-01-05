@@ -36,6 +36,7 @@ commandHandler.registerCommand('mute', {
         : t('unmuted', {
             lng: message.channel.client.locale,
           }),
+      message.user.messageId,
     )
   },
 })

@@ -20,6 +20,7 @@ commandHandler.registerCommand('lgs', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -50,6 +51,7 @@ commandHandler.registerCommand('lgs', {
       chatClient.say(
         message.channel.name,
         t('noLastMatch', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -97,6 +99,6 @@ commandHandler.registerCommand('lgs', {
       returnMsg.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))
     returnMsg.push(`dotabuff.com/matches/${lg.matchId}`)
 
-    chatClient.say(message.channel.name, returnMsg.join(' · '))
+    chatClient.say(message.channel.name, returnMsg.join(' · '), message.user.messageId)
   },
 })

@@ -20,6 +20,7 @@ commandHandler.registerCommand('delay', {
       delay / 1000 <= 0
         ? t('streamDelayNone', { lng: message.channel.client.locale })
         : t('streamDelay', { lng: message.channel.client.locale, seconds: delay / 1000 }),
+      message.user.messageId,
     )
     return
   },

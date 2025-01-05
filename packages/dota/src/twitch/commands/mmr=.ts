@@ -6,8 +6,14 @@ import commandHandler from '../lib/CommandHandler.js'
 
 const isNumberValid = (num: string) => num && Number(num) >= 0 && Number(num) <= 20_000
 
-const sendMessage = (channel: string, locale: string, key: string, options = {}) => {
-  chatClient.say(channel, t(key, { lng: locale, ...options }))
+const sendMessage = (
+  channel: string,
+  locale: string,
+  key: string,
+  messageId: string,
+  options = {},
+) => {
+  chatClient.say(channel, t(key, { lng: locale, ...options }), messageId)
 }
 
 const performMmrUpdate = async (params: UpdateMmrParams) => {
@@ -28,7 +34,7 @@ commandHandler.registerCommand('setmmr', {
     const accounts = client.SteamAccount
 
     if (!isNumberValid(mmrFromArg)) {
-      sendMessage(channel, locale, 'invalidMmr')
+      sendMessage(channel, locale, 'invalidMmr', message.user.messageId)
       return
     }
 
@@ -50,7 +56,7 @@ commandHandler.registerCommand('setmmr', {
           ? 'multiAccount'
           : 'unknownSteam'
         : 'updateMmrMulti'
-      sendMessage(channel, locale, key, {
+      sendMessage(channel, locale, key, message.user.messageId, {
         url: 'dotabod.com/dashboard/features',
         steamId: Number(client.steam32Id),
       })
@@ -70,7 +76,9 @@ commandHandler.registerCommand('setmmr', {
     const accountFromArg = accounts.find((a) => a.steam32Id === Number(steam32FromArg))
     if (!Number(steam32FromArg) || !accountFromArg) {
       const key = client.multiAccount ? 'multiAccount' : 'unknownSteam'
-      sendMessage(channel, locale, key, { url: 'dotabod.com/dashboard/features' })
+      sendMessage(channel, locale, key, message.user.messageId, {
+        url: 'dotabod.com/dashboard/features',
+      })
       return
     }
 

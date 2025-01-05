@@ -19,6 +19,7 @@ commandHandler.registerCommand('opendota', {
           lng: message.channel.client.locale,
           url: `opendota.com/players/${client.steam32Id.toString()}`,
         }),
+        message.user.messageId,
       )
       return
     }
@@ -31,6 +32,7 @@ commandHandler.registerCommand('opendota', {
             url: 'dotabod.com/dashboard/features',
           })
         : t('unknownSteam', { lng: message.channel.client.locale }),
+      message.user.messageId,
     )
   },
 })

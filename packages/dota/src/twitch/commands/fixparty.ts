@@ -38,6 +38,7 @@ commandHandler.registerCommand('fixparty', {
       chatClient.say(
         message.channel.name,
         t('noLastMatch', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -49,6 +50,7 @@ commandHandler.registerCommand('fixparty', {
         url: `dotabuff.com/matches/${bet.matchId}`,
         lng: message.channel.client.locale,
       }),
+      message.user.messageId,
     )
 
     await updateMmr({

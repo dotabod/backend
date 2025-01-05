@@ -27,6 +27,7 @@ commandHandler.registerCommand('ranked', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -34,7 +35,11 @@ commandHandler.registerCommand('ranked', {
     const currentMatchId = client.gsi?.map?.matchid
 
     if (isArcade(client.gsi) || currentMatchId === '0') {
-      chatClient.say(channel, t('ranked_no', { lng: message.channel.client.locale }))
+      chatClient.say(
+        channel,
+        t('ranked_no', { lng: message.channel.client.locale }),
+        message.user.messageId,
+      )
       return
     }
 
@@ -42,6 +47,7 @@ commandHandler.registerCommand('ranked', {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -58,17 +64,26 @@ commandHandler.registerCommand('ranked', {
         chatClient.say(
           channel,
           t('missingMatchData', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+          message.user.messageId,
         )
         return
       }
 
       if (response.match.lobby_type === LOBBY_TYPE_RANKED) {
-        chatClient.say(channel, t('ranked', { context: 'yes', lng: message.channel.client.locale }))
+        chatClient.say(
+          channel,
+          t('ranked', { context: 'yes', lng: message.channel.client.locale }),
+          message.user.messageId,
+        )
         return
       }
     } finally {
       await mongo.close()
     }
-    chatClient.say(channel, t('ranked', { context: 'no', lng: message.channel.client.locale }))
+    chatClient.say(
+      channel,
+      t('ranked', { context: 'no', lng: message.channel.client.locale }),
+      message.user.messageId,
+    )
   },
 })

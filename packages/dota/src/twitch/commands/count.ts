@@ -20,6 +20,6 @@ commandHandler.registerCommand('count', {
       count: sockets,
     })}`
 
-    chatClient.say(message.channel.name, bothParts)
+    chatClient.say(message.channel.name, bothParts, message.user.messageId)
   },
 })

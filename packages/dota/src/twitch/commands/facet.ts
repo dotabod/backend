@@ -18,7 +18,11 @@ commandHandler.registerCommand('facet', {
     const gsiHandler = gsiHandlers.get(channelClient.token)
 
     if (!isValidGSIHandler(gsiHandler, channelClient.gsi?.map?.matchid)) {
-      sendMessage(channelName, t('notPlaying', { emote: 'PauseChamp', lng: channelClient.locale }))
+      chatClient.say(
+        channelName,
+        t('notPlaying', { emote: 'PauseChamp', lng: channelClient.locale }),
+        message.user.messageId,
+      )
       return
     }
 
@@ -30,9 +34,10 @@ commandHandler.registerCommand('facet', {
         command,
       )
       if (!isValidHero(hero)) {
-        sendMessage(
+        chatClient.say(
           channelName,
           t('missingMatchData', { emote: 'PauseChamp', lng: channelClient.locale }),
+          message.user.messageId,
         )
         return
       }
@@ -43,38 +48,41 @@ commandHandler.registerCommand('facet', {
       const totalFacets = getFacetCount(heroData)
 
       if (!totalFacets) {
-        sendMessage(
+        chatClient.say(
           channelName,
           t('missingMatchData', { emote: 'PauseChamp', lng: channelClient.locale }),
+          message.user.messageId,
         )
         return
       }
 
       if (requestedFacet && totalFacets < requestedFacet) {
-        sendMessage(
+        chatClient.say(
           channelName,
           t('facetTotalLimit', {
             lng: channelClient.locale,
             count: totalFacets,
             heroName: getHeroNameOrColor(hero.id, playerIdx),
           }),
+          message.user.messageId,
         )
         return
       }
 
       if (!heroFacet) {
-        sendMessage(
+        chatClient.say(
           channelName,
           t('facetNotFound', {
             lng: channelClient.locale,
             heroName: getHeroNameOrColor(hero.id, playerIdx),
           }),
+          message.user.messageId,
         )
         return
       }
 
       if (hero.facet && (!requestedFacet || hero.facet === requestedFacet)) {
-        sendMessage(
+        chatClient.say(
           channelName,
           t('facetSelection', {
             lng: channelClient.locale,
@@ -82,11 +90,12 @@ commandHandler.registerCommand('facet', {
             facetTitle: heroFacet.title,
             facetDescription: heroFacet.description,
           }),
+          message.user.messageId,
         )
         return
       }
 
-      sendMessage(
+      chatClient.say(
         channelName,
         t('facet', {
           lng: channelClient.locale,
@@ -95,9 +104,14 @@ commandHandler.registerCommand('facet', {
           facetDescription: heroFacet.description,
           number: requestedFacet || hero.facet,
         }),
+        message.user.messageId,
       )
     } catch (error: any) {
-      sendMessage(channelName, error.message ?? t('gameNotFound', { lng: channelClient.locale }))
+      chatClient.say(
+        channelName,
+        error.message ?? t('gameNotFound', { lng: channelClient.locale }),
+        message.user.messageId,
+      )
     }
   },
 })
@@ -123,8 +137,4 @@ const getHeroFacet = (
   return DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.facets[
     facetIndex - 1
   ]
-}
-
-const sendMessage = (channelName: string, message: string) => {
-  chatClient.say(channelName, message)
 }

@@ -14,17 +14,26 @@ commandHandler.registerCommand('friends', {
     const matchId = client.gsi?.map?.matchid
 
     if (!client.gsi?.hero?.name) {
-      chatClient.say(channel, t('noHero', { lng: message.channel.client.locale }))
+      chatClient.say(
+        channel,
+        t('noHero', { lng: message.channel.client.locale }),
+        message.user.messageId,
+      )
       return
     }
     if (!isPlayingMatch(client.gsi) || !matchId) {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
 
-    chatClient.say(channel, t('matchId', { lng: message.channel.client.locale, matchId }))
+    chatClient.say(
+      channel,
+      t('matchId', { lng: message.channel.client.locale, matchId }),
+      message.user.messageId,
+    )
   },
 })

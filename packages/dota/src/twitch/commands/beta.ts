@@ -25,6 +25,7 @@ commandHandler.registerCommand('beta', {
           channel: message.channel.name,
           context: message.channel.client.beta_tester ? 'off' : 'on',
         }),
+        message.user.messageId,
       )
     }
 

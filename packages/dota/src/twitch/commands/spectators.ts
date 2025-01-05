@@ -21,6 +21,7 @@ commandHandler.registerCommand('spectators', {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -37,6 +38,7 @@ commandHandler.registerCommand('spectators', {
         chatClient.say(
           channel,
           t('missingMatchData', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+          message.user.messageId,
         )
         return
       }
@@ -47,6 +49,7 @@ commandHandler.registerCommand('spectators', {
           count: response.spectators || 0,
           lng: message.channel.client.locale,
         }),
+        message.user.messageId,
       )
     } finally {
       await mongo.close()

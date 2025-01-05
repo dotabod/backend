@@ -30,6 +30,7 @@ commandHandler.registerCommand('gpm', {
         chatClient.say(
           channel,
           t('gpm_zero', { heroName, num: 0, lng: message.channel.client.locale }),
+          message.user.messageId,
         )
         return
       }
@@ -46,11 +47,13 @@ commandHandler.registerCommand('gpm', {
           heroKills: gold_from_hero_kills ?? 0,
           creepKills: gold_from_creep_kills ?? 0,
         }),
+        message.user.messageId,
       )
     } catch (e: any) {
       chatClient.say(
         message.channel.name,
         e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        message.user.messageId,
       )
     }
   },

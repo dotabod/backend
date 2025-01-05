@@ -36,12 +36,14 @@ commandHandler.registerCommand('hero', {
         steam32Id: player.accountid,
         token: client.token,
         lng: locale,
+        message,
       })
       return
     } catch (e: any) {
       chatClient.say(
         message.channel.name,
         e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        message.user.messageId,
       )
     }
   },
@@ -58,6 +60,7 @@ function handleNotPlaying(message: MessageType) {
   chatClient.say(
     message.channel.name,
     t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+    message.user.messageId,
   )
 }
 
@@ -68,6 +71,7 @@ function speakHeroStats({
   lose,
   channel,
   lng,
+  message,
 }: {
   hasHero: boolean
   heroNameOrColor?: string
@@ -75,6 +79,7 @@ function speakHeroStats({
   lose: number
   channel: string
   win: number
+  message: MessageType
 }) {
   const total = (win || 0) + (lose || 0)
   const timeperiod = t('herostats.timeperiod.days', { count: 30, lng })
@@ -88,6 +93,7 @@ function speakHeroStats({
         timeperiod,
         color: heroNameOrColor,
       }),
+      message.user.messageId,
     )
     return
   }
@@ -102,6 +108,7 @@ function speakHeroStats({
       count: total,
       color: heroNameOrColor,
     }),
+    message.user.messageId,
   )
 }
 
@@ -113,6 +120,7 @@ async function getHeroMsg({
   hasHero,
   lng,
   heroId,
+  message,
 }: {
   heroNameOrColor: string
   hasHero: boolean
@@ -121,10 +129,11 @@ async function getHeroMsg({
   steam32Id: number
   token: string
   lng: string
+  message: MessageType
 }) {
   const sockets = await server.io.in(token).fetchSockets()
   if (sockets.length === 0) {
-    chatClient.say(channel, t('overlayMissing', { command: '!hero', lng }))
+    chatClient.say(channel, t('overlayMissing', { command: '!hero', lng }), message.user.messageId)
     return
   }
 
@@ -137,7 +146,7 @@ async function getHeroMsg({
         if (!response) return
 
         const { win, lose } = response
-        speakHeroStats({ win, lose, hasHero, heroNameOrColor, channel, lng })
+        speakHeroStats({ win, lose, hasHero, heroNameOrColor, channel, lng, message })
       },
     )
 }

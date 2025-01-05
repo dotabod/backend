@@ -26,7 +26,7 @@ commandHandler.registerCommand('mmr', {
     // Didn't have a new account made yet on the new steamaccount table
     if (!client.SteamAccount.length) {
       if (client.mmr === 0) {
-        chatClient.say(channel, unknownMsg)
+        chatClient.say(channel, unknownMsg, message.user.messageId)
         return
       }
 
@@ -38,7 +38,7 @@ commandHandler.registerCommand('mmr', {
       })
         .then((description) => {
           if (description === null || description.length) {
-            chatClient.say(channel, description ?? unknownMsg)
+            chatClient.say(channel, description ?? unknownMsg, message.user.messageId)
           }
         })
         .catch((e) => {
@@ -57,6 +57,7 @@ commandHandler.registerCommand('mmr', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -70,7 +71,7 @@ commandHandler.registerCommand('mmr', {
       .then((description) => {
         if (description === null || description.length) {
           const msg = act.name ? (description ?? unknownMsg) : ''
-          chatClient.say(channel, msg || unknownMsg)
+          chatClient.say(channel, msg || unknownMsg, message.user.messageId)
         }
       })
       .catch((e) => {

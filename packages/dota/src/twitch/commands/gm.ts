@@ -23,6 +23,7 @@ commandHandler.registerCommand('gm', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -31,12 +32,13 @@ commandHandler.registerCommand('gm', {
 
     gameMedals(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {
-        chatClient.say(message.channel.name, desc)
+        chatClient.say(message.channel.name, desc, message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(
           message.channel.name,
           e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+          message.user.messageId,
         )
       })
   },

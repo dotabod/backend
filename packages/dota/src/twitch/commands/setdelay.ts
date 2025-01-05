@@ -16,6 +16,7 @@ commandHandler.registerCommand('setdelay', {
         t('setStreamDelayNoArgs', {
           lng: message.channel.client.locale,
         }),
+        message.user.messageId,
       )
 
       return
@@ -42,6 +43,7 @@ commandHandler.registerCommand('setdelay', {
             lng: message.channel.client.locale,
             seconds: Number(args[0]) || 0,
           }),
+      message.user.messageId,
     )
   },
 })

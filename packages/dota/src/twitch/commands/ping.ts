@@ -8,6 +8,7 @@ commandHandler.registerCommand('ping', {
     chatClient.say(
       message.channel.name,
       t('ping', { emote: 'EZ Clap', lng: message.channel.client.locale }),
+      message.user.messageId,
     )
   },
 })
