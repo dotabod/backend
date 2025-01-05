@@ -131,13 +131,21 @@ export default async function getDBUser({
     return null
   }
 
+  // If they require a refresh, don't cache them
+  const Account = Array.isArray(user?.Account) ? user.Account[0] : user.Account
+  if (Account.requires_refresh) {
+    logger.info('User requires refresh', { token: lookupToken })
+    invalidTokens.add(lookupToken)
+    deleteLookupToken(lookupToken)
+    return null
+  }
+
   client = findUser(user.id)
   if (client) {
     deleteLookupToken(lookupToken)
     return client
   }
 
-  const Account = Array.isArray(user?.Account) ? user.Account[0] : user.Account
   if (!Account) {
     logger.info('Invalid token missing Account??', { token: lookupToken })
     invalidTokens.add(lookupToken)
@@ -153,6 +161,7 @@ export default async function getDBUser({
     stream_start_date: user.stream_start_date ? new Date(user.stream_start_date) : null,
     Account: {
       ...Account,
+      requires_refresh: Account.requires_refresh ?? false,
       obtainment_timestamp: Account.obtainment_timestamp
         ? new Date(Account.obtainment_timestamp)
         : null,

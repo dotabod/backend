@@ -3,7 +3,7 @@ import { t } from 'i18next'
 import { clearCacheForUser } from '../dota/clearCacheForUser.js'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
-import { didTellUser, gsiHandlers } from '../dota/lib/consts.js'
+import { didTellUser, gsiHandlers, invalidTokens } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { DBSettings } from '../settings.js'
 import { chatClient } from '../twitch/chatClient.js'
@@ -76,6 +76,7 @@ class SetupSupabase {
           // The frontend will set it to false when they relogin
           // Which allows us to update the authProvider object
           if (newObj.requires_refresh === false && oldObj.requires_refresh === true) {
+            invalidTokens.delete(newObj.userId)
             logger.info('[WATCHER ACCOUNT] Refreshing account', {
               twitchId: newObj.providerAccountId,
             })
