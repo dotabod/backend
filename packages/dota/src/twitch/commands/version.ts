@@ -23,8 +23,8 @@ commandHandler.registerCommand('version', {
         lng: message.channel.client.locale,
         version: process.env.COMMIT_HASH,
         url: `github.com/dotabod/backend/compare/${process.env.COMMIT_HASH || ''}...master`,
-        message.user.messageId,
       }),
+      message.user.messageId,
     )
   },
 })
