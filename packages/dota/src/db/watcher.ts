@@ -60,7 +60,17 @@ class SetupSupabase {
           const newObj = payload.new
           const oldObj = payload.old
 
-          if (newObj.scope !== oldObj.scope) {
+          if (newObj.requires_refresh === true && oldObj.requires_refresh === false) {
+            invalidTokens.add(newObj.userId)
+            const client = findUser(newObj.userId)
+            await clearCacheForUser(client)
+            return
+          }
+
+          if (
+            newObj.scope !== oldObj.scope ||
+            (newObj.requires_refresh === false && oldObj.requires_refresh === true)
+          ) {
             const client = findUser(newObj.userId)
             if (client?.Account) {
               client.Account.scope = newObj.scope
