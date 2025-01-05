@@ -103,6 +103,7 @@ twitchChat.on(
     await commandHandler.handleMessage({
       channel: { name: channelName, id: channelId, client, settings: client.settings },
       user: {
+        messageId: messageId,
         name: user,
         userId: userInfo.userId,
         permission: userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0,

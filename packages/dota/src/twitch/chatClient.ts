@@ -51,12 +51,12 @@ const sendWhisper = (channel: string, text: string) => {
 
 // Chat client object
 export const chatClient = {
-  say: async (channel: string, text: string) => {
+  say: async (channel: string, text: string, reply_parent_message_id?: string) => {
     const user = findUserByName(channel.toLowerCase().replace('#', ''))
     const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
 
     if (hasNewestScopes && user?.Account?.providerAccountId) {
-      twitchChat.emit('say', user?.Account?.providerAccountId, text)
+      twitchChat.emit('say', user?.Account?.providerAccountId, text, reply_parent_message_id)
     }
   },
   whisper: (channel: string, text: string | undefined) => {

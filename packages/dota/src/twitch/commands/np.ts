@@ -26,6 +26,7 @@ commandHandler.registerCommand('np', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -34,7 +35,11 @@ commandHandler.registerCommand('np', {
       if (addOrRemove === 'add') {
         const forName = name.join(' ')
         if (!Number(forSteam32Id) || !forName) {
-          chatClient.say(channel, t('npAdd', { lng: message.channel.client.locale }))
+          chatClient.say(
+            channel,
+            t('npAdd', { lng: message.channel.client.locale }),
+            message.user.messageId,
+          )
           return
         }
 
@@ -58,6 +63,7 @@ commandHandler.registerCommand('np', {
           chatClient.say(
             channel,
             t('npAdded', { name: forName, lng: message.channel.client.locale }),
+            message.user.messageId,
           )
           return
         } finally {
@@ -67,7 +73,11 @@ commandHandler.registerCommand('np', {
 
       if (addOrRemove === 'remove') {
         if (!Number(forSteam32Id)) {
-          chatClient.say(channel, t('npRemove', { lng: message.channel.client.locale }))
+          chatClient.say(
+            channel,
+            t('npRemove', { lng: message.channel.client.locale }),
+            message.user.messageId,
+          )
           return
         }
 
@@ -82,11 +92,13 @@ commandHandler.registerCommand('np', {
             chatClient.say(
               channel,
               t('npRemoved', { steamid: forSteam32Id, lng: message.channel.client.locale }),
+              message.user.messageId,
             )
           } else {
             chatClient.say(
               channel,
               t('npUnknown', { steamid: forSteam32Id, lng: message.channel.client.locale }),
+              message.user.messageId,
             )
           }
           return
@@ -112,6 +124,7 @@ commandHandler.registerCommand('np', {
       chatClient.say(
         message.channel.name,
         t('notLive', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }
@@ -130,12 +143,13 @@ commandHandler.registerCommand('np', {
       steam32Id: client.steam32Id,
     })
       .then((desc) => {
-        chatClient.say(channel, desc.description)
+        chatClient.say(channel, desc.description, message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(
           channel,
           e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+          message.user.messageId,
         )
       })
   },

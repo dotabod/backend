@@ -72,23 +72,27 @@ io.on('connection', (socket) => {
     connectedSockets.delete(socket.id)
   })
 
-  socket.on('say', async (providerAccountId: string, text: string) => {
-    try {
-      const response = await sendTwitchChatMessage({
-        broadcaster_id: providerAccountId,
-        sender_id: process.env.TWITCH_BOT_PROVIDERID!,
-        message: text || "I'm sorry, I can't do that",
-      })
+  socket.on(
+    'say',
+    async (providerAccountId: string, text: string, reply_parent_message_id?: string) => {
+      try {
+        const response = await sendTwitchChatMessage({
+          broadcaster_id: providerAccountId,
+          sender_id: process.env.TWITCH_BOT_PROVIDERID!,
+          reply_parent_message_id,
+          message: text || "I'm sorry, I can't do that",
+        })
 
-      if (!response.data?.[0]?.is_sent) {
-        logger.error('Failed to send chat message:', response)
+        if (!response.data?.[0]?.is_sent) {
+          logger.error('Failed to send chat message:', response)
+          return
+        }
+      } catch (e) {
+        logger.error('Failed to send chat message:', e)
         return
       }
-    } catch (e) {
-      logger.error('Failed to send chat message:', e)
-      return
-    }
-  })
+    },
+  )
 
   socket.on('whisper', async (channel: string, text: string) => {
     try {

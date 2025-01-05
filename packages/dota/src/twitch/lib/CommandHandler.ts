@@ -9,6 +9,7 @@ import { chatClient } from '../chatClient.js'
 
 export interface UserType {
   name: string
+  messageId: string
   permission: number
   userId: string
 }
@@ -152,12 +153,13 @@ class CommandHandler {
     if (!options) return
 
     // Log statistics for this command
-    await this.logCommand(command, message)
+    // await this.logCommand(command, message)
 
     if (options.onlyOnline && !message.channel.client.stream_online) {
       chatClient.say(
         message.channel.name,
         t('notLive', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+        message.user.messageId,
       )
       return
     }

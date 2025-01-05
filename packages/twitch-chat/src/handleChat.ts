@@ -127,16 +127,21 @@ export async function handleChatMessage(message: EventSubWsPacket): Promise<void
     return
   }
 
-  await dotabodOfflineHandler(text, channelId)
+  await dotabodOfflineHandler(text, channelId, message_id)
 }
 
 /**
  * Handles chat commands when dotabod socket is not available
  */
-async function dotabodOfflineHandler(text: string, channelId: string): Promise<void> {
+async function dotabodOfflineHandler(
+  text: string,
+  channelId: string,
+  reply_parent_message_id?: string,
+): Promise<void> {
   if (text === '!ping') {
     try {
       await sendTwitchChatMessage({
+        reply_parent_message_id,
         broadcaster_id: channelId,
         sender_id: process.env.TWITCH_BOT_PROVIDERID || '',
         message: t('rebooting', { emote: 'PauseChamp', lng: 'en' }),
