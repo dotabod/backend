@@ -62,6 +62,24 @@ export const openTwitchBet = async ({
     })
     .catch(async (e) => {
       try {
+        if (e.stack?.includes('The user context for the user')) {
+          await supabase
+            .from('accounts')
+            .update({
+              requires_refresh: true,
+            })
+            .eq('providerAccountId', twitchId)
+            .eq('provider', 'twitch')
+          logger.info('[PREDICT] [BETS] User context disabled for', {
+            twitchId,
+          })
+          return
+        }
+      } catch (e) {
+        // just means couldn't find the error in the stack
+      }
+
+      try {
         if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {
           await disableBetsForTwitchId(twitchId)
           logger.info('[PREDICT] [BETS] Channel points not enabled for', {
