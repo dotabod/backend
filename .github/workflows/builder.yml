@@ -28,7 +28,7 @@ jobs:
           password: ${{ secrets.GHA_PAT }}
 
       - name: Build and push
-        uses: docker/bake-action@v5
+        uses: docker/bake-action@v6
         with:
           push: true
           provenance: false
