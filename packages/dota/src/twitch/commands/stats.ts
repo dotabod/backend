@@ -100,7 +100,7 @@ async function getStats({
 }
 
 commandHandler.registerCommand('stats', {
-  aliases: ['stat'],
+  aliases: ['stat', 'kda', 'lh', 'gold', 'networth', 'level'],
   onlyOnline: true,
   dbkey: DBSettings.commandItems,
   handler: async (message, args, command) => {
