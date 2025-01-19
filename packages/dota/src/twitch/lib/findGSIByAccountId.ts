@@ -2,6 +2,7 @@ import { t } from 'i18next'
 
 import { getSpectatorPlayers } from '../../dota/lib/getSpectatorPlayers.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
+import type { Hero, Items } from '../../types'
 import type { Packet, Player } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { getPlayerFromArgs } from './getPlayerFromArgs.js'
@@ -77,11 +78,11 @@ export async function findAccountFromCmd(
     const { playerIdx, playerN, teamN } = findSpectatorIdx(packet, accountIdFromArgs) ?? {}
 
     // @ts-expect-error we can iterate by team2 and team3
-    const player = packet?.player?.[teamN]?.[playerN]
+    const player = packet?.player?.[teamN]?.[playerN] as Player
     // @ts-expect-error we can iterate by team2 and team3
-    const items = packet?.items?.[teamN]?.[playerN]
+    const items = packet?.items?.[teamN]?.[playerN] as Items
     // @ts-expect-error we can iterate by team2 and team3
-    const hero = packet?.hero?.[teamN]?.[playerN]
+    const hero = packet?.hero?.[teamN]?.[playerN] as Hero
 
     return { ourHero: false, playerIdx, accountIdFromArgs, player, items, hero }
   }

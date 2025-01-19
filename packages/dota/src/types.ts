@@ -518,10 +518,23 @@ export interface DelayedGames {
   }[]
   teams: {
     players: {
-      items: number[]
-      heroid: number
       accountid: number
       playerid: number
+      name: string
+      team: number
+      heroid: number
+      level: number
+      kill_count: number
+      death_count: number
+      assists_count: number
+      denies_count: number
+      lh_count: number
+      gold: number
+      x: number
+      y: number
+      net_worth: number
+      abilities: number[]
+      items: number[]
       team_slot: number
     }[]
   }[]
