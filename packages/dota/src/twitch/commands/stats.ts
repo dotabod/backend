@@ -131,7 +131,7 @@ commandHandler.registerCommand('stats', {
         ...stats,
         lng: client.locale,
       })
-      if (isSpec) {
+      if (!isSpec) {
         msg = `${t('2mdelay', { lng: client.locale })} ${msg}`
       }
 

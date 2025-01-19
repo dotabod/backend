@@ -92,7 +92,7 @@
   },
   "innate": "{{- heroName}} innate: {{- title}} · {{- description}}",
   "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
-  "heroStats": "{{- heroName}}: KDA {{kda}}, LH {{lasthits}}, DN {{denies}}, G {{gold}}, NW {{net_worth}}, LVL {{level}}",
+  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
   "noShard": "{{- heroName}} has no shard upgrade.",
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "noAghs": "{{- heroName}} has no aghs upgrade.",
