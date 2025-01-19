@@ -113,6 +113,8 @@ export const defaultSettings = {
   tellChatNewMMR: true,
   tellChatBets: true,
   queueBlocker: false,
+  commandShard: true,
+  commandAghs: true,
 }
 
 export type SettingKeys = keyof typeof defaultSettings
