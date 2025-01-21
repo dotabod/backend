@@ -1,10 +1,12 @@
 {
+  "2mdelay": "(2m delay)",
   "aegis": {
     "denied": "{{- heroName}} a détruit l'Aegis of the Immortal !! {{emote}}",
     "expired": "L'Aegis de {{- heroName}} a expiré {{emote}}",
     "pickup": "{{- heroName}} a ramassé l'Aegis of the Immortal !",
     "snatched": "{{- heroName}} a dérobé l'Aegis of the Immortal ! {{emote}}"
   },
+  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
@@ -91,6 +93,7 @@
     "winrateStreamer_one": "Le winrate est de {{winrate}}% avec {{- heroName}} {{timeperiod}} en {{count}} match.",
     "winrateStreamer_other": "Le winrate est de {{winrate}}% avec {{- heroName}} {{timeperiod}} en {{count}} matchs."
   },
+  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
   "innate": "{{- heroName}} innate: {{- title}} · {{- description}}",
   "invalidColor": "Couleur de Héros, emplacement ou nom non valide. Essayez 1-10, un nom de Héros partiel, ou une couleur de {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
@@ -131,9 +134,11 @@
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Ce compte steam est déja connecté a un autre utilisateur Dotabod. Vérifier le dashboard pour plus d'informations {{- url}}",
   "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
+  "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "No hero found",
   "noLastMatch": "Did not find a last match {{emote}}",
   "noNotable": "Pas de joueurs pro",
+  "noShard": "{{- heroName}} has no shard upgrade.",
   "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Not playing {{emote}}",
   "npAdd": "Try !np add <steam32id> <playername>",
@@ -181,6 +186,7 @@
   "setStreamDelay": "Réglage du délai de diffusion à : $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Délai de diffusion invalide, utilisez !setdelay <seconds>",
   "setStreamDelayRemoved": "Suppression du délai de diffusion",
+  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
   "spectators": {
     "count_one": "1 spectator watching this match live",
     "count_many": "",

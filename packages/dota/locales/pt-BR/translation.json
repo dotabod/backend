@@ -1,10 +1,12 @@
 {
+  "2mdelay": "(2m delay)",
   "aegis": {
     "denied": "{{- heroName}} denou o aegis {{emote}}",
     "expired": "O aegis de {{- heroName}} expirou {{emote}}",
     "pickup": "{{- heroName}} pegou o aegis!",
     "snatched": "{{- heroName}} roubou o aegis! {{emote}}"
   },
+  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "apm_one": "APM ao vivo de {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
   "apm_other": "APM ao vivo de {{- heroName}}: {{count}} {{emote}}",
@@ -91,6 +93,7 @@
     "winrateStreamer_one": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partida.",
     "winrateStreamer_other": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partidas."
   },
+  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
   "innate": "Inata de {{- heroName}}: {{- title}} · {{- description}}",
   "invalidColor": "Espaço, nome ou cor de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
   "invalidColorNew": "Comando inválido. Tente `!{{command}} crystal maiden` ou `!{{command}} 9` ou `!{{command}} teal` de {{colorList}}",
@@ -131,9 +134,11 @@
   "modsOnly_on": "Modo somente mods ativado {{emote}} . Só moderadores podem digitar.",
   "multiAccount": "Esta conta steam já está conectada a outro usuário do Dotabod. Confira o painel de controle para mais informações: {{- url}}",
   "muted": "Não vou mais conversar automaticamente nos eventos do jogo, mas continuarei respondendo aos comandos. Digite !unmute para desfazer",
+  "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Nenhum herói encontrado",
   "noLastMatch": "Última partida não foi encontrada {{emote}}",
   "noNotable": "Nenhum jogador notável",
+  "noShard": "{{- heroName}} has no shard upgrade.",
   "notLive": "A transmissão não está ao vivo {{emote}}. Está ao vivo? Mods, digite \"!online\"",
   "notPlaying": "Não está jogando {{emote}}",
   "npAdd": "Tente  !np add <steam32id> <playername>",
@@ -181,6 +186,7 @@
   "setStreamDelay": "Configurando delay de transmissão para: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <seconds> .",
   "setStreamDelayRemoved": "Removendo delay de transmissão",
+  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
   "spectators": {
     "count_one": "1 espectador assistindo a esta partida ao vivo",
     "count_many": "",

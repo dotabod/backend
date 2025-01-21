@@ -1,10 +1,12 @@
 {
+  "2mdelay": "(2m delay)",
   "aegis": {
     "denied": "{{- heroName}} уничтожает аегис {{emote}}",
     "expired": "Аегис у {{- heroName}} закончился {{emote}}",
     "pickup": "{{- heroName}} подбирает аегис!",
     "snatched": "{{- heroName}} крадёт аегис {{emote}}"
   },
+  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "apm_one": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
@@ -102,6 +104,7 @@
     "winrateStreamer_many": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игр.",
     "winrateStreamer_other": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игра."
   },
+  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
   "innate": "Врожденная способность {{- heroName}} - это {{- title}} · {{- description}}",
   "invalidColor": "Неверный цвет героя, номер или имя. Попробуй 1-10, имя героя на английском или цвет из списка: {{colorList}}",
   "invalidColorNew": "Неправильная команда. Попробуйте `!{{command}} crystal maiden` или `!{{command}} 9` или `!{{command}} teal` из {{colorList}}",
@@ -145,9 +148,11 @@
   "modsOnly_on": "Режим «Только для модераторов» теперь включен {{emote}} . Только модераторы могут использовать чат.",
   "multiAccount": "Эта учетная запись Steam уже подключена к другому пользователю Dotabod. Проверьте панель инструментов для получения дополнительной информации {{- url}}",
   "muted": "Больше не будет автоматически писать об игровых событиях, но все равно будет отвечать на команды. Введите !unmute для отмены",
+  "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Герой не найден",
   "noLastMatch": "Не найдена последняя игра {{emote}}",
   "noNotable": "Нет отмеченных игроков",
+  "noShard": "{{- heroName}} has no shard upgrade.",
   "notLive": "Стрим офлайн {{emote}} . На самом деле онлайн? Модераторы, напишите !online",
   "notPlaying": "Не играет {{emote}}",
   "npAdd": "Попробуйте !np add <стим ID> <имя игрока>",
@@ -199,6 +204,7 @@
   "setStreamDelay": "Теперь задержка стрима - $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Неверная задержка стрима, используйте !setdelay <seconds>",
   "setStreamDelayRemoved": "Отключаю задержку стрима",
+  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
   "spectators": {
     "count_one": "1 зритель смотрит этот матч в прямом эфире",
     "count_few": "{{count}} зрителя смотрят этот матч в прямом эфире",
