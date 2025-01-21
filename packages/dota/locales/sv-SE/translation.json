@@ -1,10 +1,12 @@
 {
+  "2mdelay": "(2m delay)",
   "aegis": {
     "denied": "{{- heroName}} nekade aegisen {{emote}}",
     "expired": "{{- heroName}}s aegis har löpt ut {{emote}}",
     "pickup": "{{- heroName}} plockade upp aegisen!",
     "snatched": "{{- heroName}} snodde åt sig aegisen {{emote}}"
   },
+  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Genomsnittlig rank i denna match",
@@ -86,6 +88,7 @@
     "winrateStreamer_one": "Winrate är {{winrate}}% med {{- heroName}} {{timeperiod}} från {{count}} match.",
     "winrateStreamer_other": "Winrate är {{winrate}}% med {{- heroName}} {{timeperiod}} från {{count}} matcher."
   },
+  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
   "innate": "{{- heroName}} innate: {{- title}} · {{- description}}",
   "invalidColor": "Ogiltig hjältefärg, plats, eller namn. Prova 1-10, ett partiellt hjältenamn eller en färg från {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
@@ -123,9 +126,11 @@
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Detta Steam-konto är redan anslutet till en annan Dotabod användare. Kontrollera instrumentpanelen för mer information {{- url}}",
   "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
+  "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Ingen hjälte hittades",
   "noLastMatch": "Hittade inte förra matchen {{emote}}",
   "noNotable": "Inga anmärkningsvärda spelare",
+  "noShard": "{{- heroName}} has no shard upgrade.",
   "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Spelar inte {{emote}}",
   "npAdd": "Prova !np add <steam32id> <spelarnamn>",
@@ -171,6 +176,7 @@
   "setStreamDelay": "Ställer in streamens fördröjning till: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Ogiltig stream fördröjning, använd !setdelay <sekunder>",
   "setStreamDelayRemoved": "Tar bort stream fördröjningen",
+  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
   "spectators": {
     "count_one": "1 spectator watching this match live",
     "count_other": "{{count}} spectators watching this match live",

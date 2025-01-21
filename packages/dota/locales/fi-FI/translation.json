@@ -1,10 +1,12 @@
 {
+  "2mdelay": "(2m delay)",
   "aegis": {
     "denied": "{{- heroName}} kielsi aegiksen {{emote}}",
     "expired": "{{- heroName}}-sankarin aegis vanhentui {{emote}}",
     "pickup": "{{- heroName}} poimi aegiksen!",
     "snatched": "{{- heroName}} nappasi aegiksen {{emote}}"
   },
+  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Keskimääräinen rankki pelissä",
@@ -86,6 +88,7 @@
     "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
+  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
   "innate": "{{- heroName}} innate: {{- title}} · {{- description}}",
   "invalidColor": "Virheellinen sankarin väri, paikka tai nimi. Kokeile 1-10, osittaista sankarin nimeä tai väriä näistä {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
@@ -123,9 +126,11 @@
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Tämä Steam-tili on jo yhdistetty toiseen Dotabod-käyttäjään. Tarkista hallintapaneeli saadaksesi lisätietoja {{- url}}",
   "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
+  "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Sankaria ei löytynyt",
   "noLastMatch": "Edellistä ottelua ei löytynyt {{emote}}",
   "noNotable": "Ei merkittäviä pelaajia",
+  "noShard": "{{- heroName}} has no shard upgrade.",
   "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Ei pelaa {{emote}}",
   "npAdd": "Kokeile !np add <steam32id> <pelaajanimi>",
@@ -171,6 +176,7 @@
   "setStreamDelay": "Asetetaan striimin viive: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Virheellinen striimin viive, käytä !setdelay <sekuntia>",
   "setStreamDelayRemoved": "Poistetaan striimin viive",
+  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
   "spectators": {
     "count_one": "1 spectator watching this match live",
     "count_other": "{{count}} spectators watching this match live",

@@ -1,10 +1,12 @@
 {
+  "2mdelay": "(2m delay)",
   "aegis": {
     "denied": "{{- heroName}} hat die Aegis zerstört {{emote}}",
     "expired": "{{- heroName}}'s aegis expired :)",
     "pickup": "{{- heroName}} hat die Aegis aufgehoben!",
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
+  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Durchschnittlicher Rang in diesem Spiel",
@@ -86,6 +88,7 @@
     "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
     "winrateStreamer_other": "Siegquote ist {{winrate}}% mit {{- heroName}} {{timeperiod}} von {{count}} spielen."
   },
+  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
   "innate": "{{- heroName}} innate: {{- title}} · {{- description}}",
   "invalidColor": "Ungültige Heldenfarbe, Slot oder Name. Versuchen Sie 1-10 einen Teil-Heldennamen oder eine Farbe von {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
@@ -123,9 +126,11 @@
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Dieser Stream Account ist bereits verbunden mit einem anderen Dotabod-Nutzer. Überprüfen Sie Ihr Dashboard für mehr Informationen: {{- url}}",
   "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
+  "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Kein Held gefunden",
   "noLastMatch": "Did not find a last match PauseChamp",
   "noNotable": "Keine nennenswerten Spieler",
+  "noShard": "{{- heroName}} has no shard upgrade.",
   "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Not playing PauseChamp",
   "npAdd": "Versuche !np add <steam32id> <playername>",
@@ -171,6 +176,7 @@
   "setStreamDelay": "Setze Streamverzögerung auf: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Ungültige Streamverzögerung, !setdelay <seconds> verwenden",
   "setStreamDelayRemoved": "Streamverzögerung wird entfernt",
+  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
   "spectators": {
     "count_one": "1 spectator watching this match live",
     "count_other": "{{count}} spectators watching this match live",

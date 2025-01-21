@@ -1,10 +1,12 @@
 {
+  "2mdelay": "(2m delay)",
   "aegis": {
     "denied": "{{- heroName}} знищив Аєгіс {{emote}}",
     "expired": "Аєгіс у {{- heroName}} зник {{emote}}. Ніхто його не бачив?",
     "pickup": "{{- heroName}} підібрав Аєгіс!",
     "snatched": "{{- heroName}} викрав Аєгіс {{emote}}"
   },
+  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "apm_one": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
@@ -102,6 +104,7 @@
     "winrateStreamer_many": "Відсоток перемог: {{winrate}}% {{count}} матчів на {{- heroName}} {{timeperiod}} .",
     "winrateStreamer_other": "Відсоток перемог: {{winrate}}% {{count}} матчів на {{- heroName}} {{timeperiod}} ."
   },
+  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
   "innate": "Вроджена грань у {{- heroName}} : {{- title}} · {{- description}}",
   "invalidColor": "Неправильний номер, ім'я або колір героя. Спробуйте ввести 1-10, часткове ім'я героя або один з кольорів: {{colorList}}",
   "invalidColorNew": "Неправильна команда. Спробуйте `!{{command}} crystal maiden` або `!{{command}} 9` або `!{{command}} teal` з {{colorList}}",
@@ -145,9 +148,11 @@
   "modsOnly_on": "Режим \"Тільки для модераторів\" тепер ввімкнений {{emote}}. Тільки модератори можуть використовувати чат.",
   "multiAccount": "Цей аккаунт steam вже підключений до іншого користувача Dotabod. Перевірте головну панель для більш детальної інформації: {{- url}}",
   "muted": "Dotabod не буде автоматично сповіщати про ігрові події, але все ще буде відповідати на команди. Введіть !unmute для скасування дій",
+  "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Герой не знайдений",
   "noLastMatch": "Не знайдено останню гру {{emote}}",
   "noNotable": "Немає відомих гравців",
+  "noShard": "{{- heroName}} has no shard upgrade.",
   "notLive": "Стрім офлайн {{emote}} . Насправді онлайн? Модератори, напишіть !online",
   "notPlaying": "Не грає {{emote}}",
   "npAdd": "Спробуйте !np add <steam32id> <playername>",
@@ -199,6 +204,7 @@
   "setStreamDelay": "Затримка потоку змінена до $t(seconds, {\"count\": {{seconds}} }) с",
   "setStreamDelayNoArgs": "Затримка на стрімі не встановлена, використайте !setdelay <seconds>",
   "setStreamDelayRemoved": "Затримку на стрімі прибрано",
+  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
   "spectators": {
     "count_one": "1 глядач, який дивиться цей матч наживо",
     "count_few": "{{count}} глядачів за цим матчем жити",
