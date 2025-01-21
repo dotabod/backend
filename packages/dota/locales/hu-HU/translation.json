@@ -1,10 +1,12 @@
 {
+  "2mdelay": "(2m delay)",
   "aegis": {
     "denied": "{{- heroName}} denieolta az aegist {{emote}}",
     "expired": "{{- heroName}} aegise lejárt {{emote}}",
     "pickup": "{{- heroName}} felvette az aegist!",
     "snatched": "{{- heroName}} ellopta az aegis-t {{emote}}"
   },
+  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "Átlagos rank ezen a meccsen",
@@ -86,6 +88,7 @@
     "winrateStreamer_one": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} match.",
     "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
   },
+  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
   "innate": "{{- heroName}} innate: {{- title}} · {{- description}}",
   "invalidColor": "Helytelen hero szín, slot vagy név. Próbáld 1-10ig, a hős nevét vagy a színt innen: {{colorList}}",
   "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
@@ -123,9 +126,11 @@
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Ehhez a steam accounthoz már van hozzárendelve Dotabod felhasználó. Nézd meg a kezelőfelületet további inromációkért: {{- url}}",
   "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
+  "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Hős nem található",
   "noLastMatch": "Előző meccs nem található {{emote}}",
   "noNotable": "Ismert/híres játékos nem található",
+  "noShard": "{{- heroName}} has no shard upgrade.",
   "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Nem vagyunk mérkőzésben {{emote}}",
   "npAdd": "Próbáld az !np add <steam32id> <playername> parancsot ismert játékos hozzáadásához.",
@@ -171,6 +176,7 @@
   "setStreamDelay": "Stream delay beállítva: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Helytelen stream delay, próbáld így: !setdelay <seconds>",
   "setStreamDelayRemoved": "Stream delay eltávoltva",
+  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
   "spectators": {
     "count_one": "1 spectator watching this match live",
     "count_other": "{{count}} spectators watching this match live",

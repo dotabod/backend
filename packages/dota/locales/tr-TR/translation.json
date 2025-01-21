@@ -1,10 +1,12 @@
 {
+  "2mdelay": "(2m delay)",
   "aegis": {
     "denied": "{{- heroName}} aegis'i denyladı {{emote}}",
     "expired": "{{- heroName}} Aegis'in süresi bitti {{emote}}",
     "pickup": "{{- heroName}} Aegis'i aldı!",
     "snatched": "{{- heroName}} Aegis'i çaldı {{emote}}"
   },
+  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "apm_one": "{{- heroName}} için anlık APM: {{count}} {{emote}}",
   "apm_other": "{{- heroName}} için anlık APM: {{count}} {{emote}}",
   "averageRank": "Oyunun ortalama sıralaması",
@@ -86,6 +88,7 @@
     "winrateStreamer_one": "{{- heroName}} {{timeperiod}} ile {{count}} maçta kazanma oranı %{{winrate}}.",
     "winrateStreamer_other": "{{- heroName}} {{timeperiod}} ile {{count}} maçta kazanma oranı %{{winrate}}."
   },
+  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
   "innate": "{{- heroName}} innate: {{- title}} · {{- description}}",
   "invalidColor": "Geçersiz kahraman rengi, yuvası veya adı. 1-10, kısmi bir kahraman adı veya {{colorList}}'ten bir renk deneyin",
   "invalidColorNew": "Geçersiz komut. `!{{command}} crystal maiden` veya `!{{command}} 9` veya {{colorList}}'tan `!{{command}} teal` deneyiniz",
@@ -123,9 +126,11 @@
   "modsOnly_on": "Yalnızca moderatörler modu {{emote}} olarak ayarlandı. Sadece moderatörler yazabilir.",
   "multiAccount": "Bu Steam kullanıcısı zaten başka bir Dotabod kullanıcısıyla bağlantılı. Daha fazla bilgi için {{- url}} ziyaret edin",
   "muted": "Oyun etkinliklerinde artık otomatik sohbet yapmayacak ancak komutlara yanıt vermeye devam edecek. İptal etmek için !unmute yazın",
+  "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Kahraman bulunamadı",
   "noLastMatch": "Son bir eşleşme bulunamadı {{emote}}",
   "noNotable": "Kayda değer oyuncu yok",
+  "noShard": "{{- heroName}} has no shard upgrade.",
   "notLive": "Yayın canlı değil {{emote}} . Gerçekten yayında mı? Moderatörler !online yazın",
   "notPlaying": "Oynamıyoruz {{emote}}",
   "npAdd": "!np komutunu deneyerek <steam32id> <playername> ekleyiniz",
@@ -171,6 +176,7 @@
   "setStreamDelay": "Yayın gecikme ayarı: $t(seconds, {\"count\": {{seconds}} }) ayarlanıyor",
   "setStreamDelayNoArgs": "Geçersiz yayın gecikmesi, !setdelay <seconds> komutunu kullanın",
   "setStreamDelayRemoved": "Yayın gecikmesi kaldırılıyor",
+  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
   "spectators": {
     "count_one": "1 spectator watching this match live",
     "count_other": "{{count}} spectators watching this match live",
