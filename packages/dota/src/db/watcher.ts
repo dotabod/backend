@@ -69,7 +69,8 @@ class SetupSupabase {
 
           if (
             newObj.scope !== oldObj.scope ||
-            (newObj.requires_refresh === false && oldObj.requires_refresh === true)
+            (newObj.requires_refresh === false && oldObj.requires_refresh === true) ||
+            newObj.access_token !== oldObj.access_token
           ) {
             const client = findUser(newObj.userId)
             if (client?.Account) {

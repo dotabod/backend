@@ -11,10 +11,6 @@ import type { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
 import supabase from './supabase.js'
 
-function deleteLookupToken(lookupToken: string) {
-  lookingupToken.delete(lookupToken)
-}
-
 export default async function getDBUser({
   token,
   twitchId: providerAccountId,
@@ -28,7 +24,7 @@ export default async function getDBUser({
 
   let client = findUser(token) ?? findUserByTwitchId(providerAccountId)
   if (client) {
-    deleteLookupToken(lookupToken)
+    lookingupToken.delete(lookupToken)
     return client
   }
 
@@ -40,7 +36,7 @@ export default async function getDBUser({
   if (!lookupToken) {
     logger.error('[USER] 1 Error checking auth', { token: lookupToken, error: 'No token' })
     invalidTokens.add(lookupToken)
-    deleteLookupToken(lookupToken)
+    lookingupToken.delete(lookupToken)
     return null
   }
 
@@ -61,7 +57,7 @@ export default async function getDBUser({
         error,
       })
       invalidTokens.add(lookupToken)
-      deleteLookupToken(lookupToken)
+      lookingupToken.delete(lookupToken)
       return null
     }
   }
@@ -73,7 +69,7 @@ export default async function getDBUser({
       error: 'No token',
     })
     invalidTokens.add(lookupToken)
-    deleteLookupToken(lookupToken)
+    lookingupToken.delete(lookupToken)
     return null
   }
 
@@ -120,14 +116,14 @@ export default async function getDBUser({
   if (userError) {
     logger.error('[USER] 3 Error checking auth', { token: lookupToken, error: userError })
     invalidTokens.add(lookupToken)
-    deleteLookupToken(lookupToken)
+    lookingupToken.delete(lookupToken)
     return null
   }
 
   if (!user || !user.id) {
     logger.info('Invalid token', { token: lookupToken })
     invalidTokens.add(lookupToken)
-    deleteLookupToken(lookupToken)
+    lookingupToken.delete(lookupToken)
     return null
   }
 
@@ -136,20 +132,20 @@ export default async function getDBUser({
   if (Account.requires_refresh) {
     logger.info('User requires refresh', { token: lookupToken })
     invalidTokens.add(lookupToken)
-    deleteLookupToken(lookupToken)
+    lookingupToken.delete(lookupToken)
     return null
   }
 
   client = findUser(user.id)
   if (client) {
-    deleteLookupToken(lookupToken)
+    lookingupToken.delete(lookupToken)
     return client
   }
 
   if (!Account) {
     logger.info('Invalid token missing Account??', { token: lookupToken })
     invalidTokens.add(lookupToken)
-    deleteLookupToken(lookupToken)
+    lookingupToken.delete(lookupToken)
     return
   }
 
@@ -174,13 +170,13 @@ export default async function getDBUser({
     if (userInfo.stream_online) {
       logger.info('[GSI] Connecting new client', { token: userInfo.id, name: userInfo.name })
     }
-
     gsiHandlers.set(userInfo.id, gsiHandler)
-    twitchIdToToken.set(Account.providerAccountId, userInfo.id)
-    twitchNameToToken.set(userInfo.name.toLowerCase(), userInfo.id)
   }
 
-  deleteLookupToken(lookupToken)
+  twitchIdToToken.set(Account.providerAccountId, userInfo.id)
+  twitchNameToToken.set(userInfo.name.toLowerCase(), userInfo.id)
+  lookingupToken.delete(lookupToken)
+  invalidTokens.delete(userInfo.id)
 
   return userInfo as SocketClient
 }

@@ -75,15 +75,22 @@ twitchChat.on(
 
     // So we can get the users settings cuz some commands are disabled
     // This runs every command, but its cached so no hit on db
-    const client = await getDBUser({ token: undefined, twitchId: channelId })
-    if (!client || !channelId) {
+    const client = await getDBUser({ twitchId: channelId })
+    if (!client) {
       const now = Date.now()
       const lastMessageTime = lastMissingUserMessageTimestamps[channel] || 0
-      if (now - lastMessageTime > 10000) {
+      const RATE_LIMIT_MS = 10000
+      const shouldSendMessage = now - lastMessageTime > RATE_LIMIT_MS
+
+      if (shouldSendMessage) {
         chatClient.say(channel, t('missingUser', { lng: 'en' }))
         lastMissingUserMessageTimestamps[channel] = now
       }
       return
+    }
+
+    if (lastMissingUserMessageTimestamps[channel]) {
+      delete lastMissingUserMessageTimestamps[channel]
     }
 
     const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, client.settings)
