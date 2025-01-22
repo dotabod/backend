@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { logger } from '../utils/logger'
 
 // Credits to Stratz for the GraphQL query for live match details
 // They do awesome work and you should check them out at https://stratz.com/
@@ -36,9 +37,10 @@ type StratzLiveMatchResponse = {
 
 export const getWinProbability2MinAgo = async (
   matchId: number,
-): Promise<StratzLiveMatchResponse | undefined> => {
+): Promise<StratzLiveMatchResponse | { error: string }> => {
   if (!process.env.STRATZ_TOKEN) {
-    return
+    logger.error('STRATZ_TOKEN is not set')
+    return { error: 'STRATZ_TOKEN is not set' }
   }
 
   try {
@@ -58,7 +60,7 @@ export const getWinProbability2MinAgo = async (
 
     return response.data
   } catch (error) {
-    // console.error(error?.response?.data?.errors ?? error?.data ?? error)
-    return undefined
+    logger.error('Error fetching live match details', { error })
+    return { error: 'Error fetching live match details' }
   }
 }
