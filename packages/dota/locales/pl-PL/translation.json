@@ -1,10 +1,12 @@
 {
+  "2mdelay": "(2 min opóźnienia)",
   "aegis": {
     "denied": "{{- heroName}} dobił aegis {{emote}}",
     "expired": "Aegis bohatera {{- heroName}} skończył się {{emote}}",
     "pickup": "{{- heroName}} podniósł aegisa!",
     "snatched": "{{- heroName}} podwędził aegisa {{emote}}"
   },
+  "aghs": "Aghanim dla {{- heroName}}: {{- title}} · {{- description}}",
   "apm_one": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
@@ -102,6 +104,7 @@
     "winrateStreamer_many": "Wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów.",
     "winrateStreamer_other": "Wskaźnik zwycięstw: {{winrate}}% jako {{- heroName}} w ciągu {{timeperiod}} spośród {{count}} meczów."
   },
+  "heroStats": "{{- heroName}}: ZŚA {{- kda}} · OT {{lasthits}} · DO {{denies}} · ZŁ {{gold}} · WN {{net_worth}} · POZ {{level}}",
   "innate": "Asepkt {{- heroName}}: {{- title}} · {{- description}}",
   "invalidColor": "Zly kolor bohatera, slot, lub nazwa. Spróbuj od 1-10,  częściową nazwę bohatera lub podaj kolor z podanych: {{colorList}}",
   "invalidColorNew": "Nieprawidłowa komenda. Spróbuj `!{{command}} crystal maiden` lub `!{{command}} 9` lub `!{{command}} teal` spośród {{colorList}}",
@@ -145,9 +148,11 @@
   "modsOnly_on": "Czat w trybie tylko dla Moderatorów jest włączony {{emote}} . Tylko moderatorzy mogą pisać.",
   "multiAccount": "To konto Steam jest już połączone z innym użytkownikiem Dotaboda. Sprawdź panel nawigacyjny, aby uzyskać więcej informacji {{- url}}",
   "muted": "Nie będę już dłużej automatycznie czatować na wydarzenia w grze, ale nadal będę reagować na komendy. Wpisz !unmute, aby cofnąć",
+  "noAghs": "{{- heroName}} nie ma ulepszeń aghanima.",
   "noHero": "Nie znaleziono bohatera",
   "noLastMatch": "Nie znaleziono ostatniej gry {{emote}}",
   "noNotable": "Brak godnych uwagi graczy",
+  "noShard": "{{- heroName}} nie ma ulepszeń odłamka aghanima.",
   "notLive": "Transmisja nie jest aktywna {{emote}}. W rzeczywistości nadajesz Na Żywo? Moderatorze wpisz !online",
   "notPlaying": "Aktualnie nie gramy {{emote}}",
   "npAdd": "Spróbuj !np add <steam32id> <playername>, aby dodać godnego uwagi zawodnika",
@@ -199,6 +204,7 @@
   "setStreamDelay": "Ustawiam opóźnienie transmisji na: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Nieprawidłowe opóźnienie transmisji, użyj !setdelay <seconds>",
   "setStreamDelayRemoved": "Usuwam opóźnienie transmisji",
+  "shard": "Odłamek aghanima dla {{- heroName}}: {{- title}} · {{- description}}",
   "spectators": {
     "count_one": "1 obserwujący ogląda ten mecz na żywo w kliencie gry",
     "count_few": "{{count}} obserwujących ogląda ten mecz na żywo w kliencie gry",
