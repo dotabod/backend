@@ -1,5 +1,5 @@
 {
-  "2mdelay": "(2m delay)",
+  "2mdelay": "(2 minutos de atraso)",
   "aegis": {
     "denied": "{{- heroName}} denou o aegis {{emote}}",
     "expired": "O aegis de {{- heroName}} expirou {{emote}}",
@@ -93,7 +93,7 @@
     "winrateStreamer_one": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partida.",
     "winrateStreamer_other": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partidas."
   },
-  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
+  "heroStats": "{{- heroName}}: A/M/A {{- kda}} · ACERTOS {{lasthits}} · NEGAÇÕES {{denies}} · OURO {{gold}} · PATRIMÔNIO LÍQUIDO {{net_worth}} · NÍVEL {{level}}",
   "innate": "Inata de {{- heroName}}: {{- title}} · {{- description}}",
   "invalidColor": "Espaço, nome ou cor de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
   "invalidColorNew": "Comando inválido. Tente `!{{command}} crystal maiden` ou `!{{command}} 9` ou `!{{command}} teal` de {{colorList}}",
