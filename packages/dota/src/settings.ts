@@ -115,6 +115,7 @@ export const defaultSettings = {
   queueBlocker: false,
   commandShard: true,
   commandAghs: true,
+  neutralItems: false, // Default to off for neutral item notifications
 }
 
 export type SettingKeys = keyof typeof defaultSettings

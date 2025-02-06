@@ -266,6 +266,7 @@ eventHandler.registerEvent('newdata', {
     const openBetsPromise = dotaClient.openBets(dotaClient.client)
     const checkPassiveMidasPromise = checkPassiveMidas(dotaClient.client)
     const checkPassiveTpPromise = checkPassiveTp(dotaClient.client)
+    const checkNeutralItemsPromise = dotaClient.neutralItemTimer.checkNeutralItems()
 
     await Promise.all([
       updateSteam32IdPromise,
@@ -277,6 +278,7 @@ eventHandler.registerEvent('newdata', {
       calculateManaSavedPromise,
       checkPassiveMidasPromise,
       checkPassiveTpPromise,
+      checkNeutralItemsPromise,
     ])
   },
 })

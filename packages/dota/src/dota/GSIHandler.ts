@@ -28,6 +28,7 @@ import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
 import { say } from './say.js'
+import { NeutralItemTimer } from './NeutralItemTimer.js'
 
 export const redisClient = RedisClient.getInstance()
 
@@ -113,10 +114,12 @@ export class GSIHandler {
   disabled = false
 
   mapBlocker: DataBroadcaster
+  neutralItemTimer: NeutralItemTimer
 
   constructor(dotaClient: SocketClient) {
     this.client = dotaClient
     this.mapBlocker = new DataBroadcaster(this.client.token)
+    this.neutralItemTimer = new NeutralItemTimer(this)
 
     const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, this.client.settings)
     if (isBotDisabled) {
@@ -192,6 +195,7 @@ export class GSIHandler {
     this.resetPlayerData()
     this.resetBetData()
     this.emitClientResetEvents()
+    this.neutralItemTimer.reset()
   }
 
   emitWLUpdate() {
