@@ -1,12 +1,12 @@
 {
-  "2mdelay": "(2m delay)",
+  "2mdelay": "(2 minutos de atraso)",
   "aegis": {
-    "denied": "{{- heroName}} denou o aegis {{emote}}",
-    "expired": "O aegis de {{- heroName}} expirou {{emote}}",
-    "pickup": "{{- heroName}} pegou o aegis!",
-    "snatched": "{{- heroName}} roubou o aegis! {{emote}}"
+    "denied": "{{- heroName}} negou a égide {{emote}}",
+    "expired": "A égide de {{- heroName}} expirou {{emote}}",
+    "pickup": "{{- heroName}} pegou a égide!",
+    "snatched": "{{- heroName}} roubou a égide! {{emote}}"
   },
-  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "aghs": "Cetro de Aghanim de {{- heroName}}: {{- title}} · {{- description}}",
   "apm_one": "APM ao vivo de {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
   "apm_other": "APM ao vivo de {{- heroName}}: {{count}} {{emote}}",
@@ -29,11 +29,11 @@
   },
   "chatters": {
     "died": "{{- heroName}} morreu com o {{itemNames}} passivo {{emote}}",
-    "firstBloodDeath": "{{- heroName}} dando FB para o outro time {{emote}}",
+    "firstBloodDeath": "{{- heroName}} dando primeiro sangue para o outro time {{emote}}",
     "midas": "{{emote}} Use a sua midas",
     "noTp": "{{channel}} cadê seu tp? {{emote}}",
     "pause": "{{emote}} Quem pausou o jogo?",
-    "smoked": "{{emote}} {{- heroName}} acabou de usar smoke!",
+    "smoked": "{{emote}} {{- heroName}} acabou de usar fumaça!",
     "tpFound": "{{channel}} bom trabalho comprando um tp FINALMENTE depois de $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Graças a essa morte você finalmente conseguiu um tp. Levou apenas $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
@@ -73,7 +73,7 @@
   "facetTotalLimit_other": "Somente {{count}} facetas estão disponíveis para {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Jogo não encontrado",
   "gpm_zero": "",
-  "gpm_one": "GPM ao vivo de {{- heroName}}: {{num}}. {{heroKills}} de abates de heróis, {{creepKills}} de abates de creep.",
+  "gpm_one": "OPM ao vivo de {{- heroName}}: {{num}}. {{heroKills}} de abates de heróis, {{creepKills}} de abates de criaturas.",
   "gpm_other": "GPM ao vivo de {{- heroName}}: {{num}}. {{heroKills}} de abates de heróis, {{creepKills}} de abates de creep.",
   "heroItems": {
     "empty": "(2 min de atraso) Nenhum item encontrado para {{- heroName}}",
@@ -93,27 +93,27 @@
     "winrateStreamer_one": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partida.",
     "winrateStreamer_other": "Taxa de vitória é de {{winrate}}% com {{- heroName}} {{timeperiod}} em {{count}} partidas."
   },
-  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
+  "heroStats": "{{- heroName}}: V/M/A {{- kda}} · GOLPES FINAIS {{lasthits}} · NEGAÇÕES {{denies}} · OURO {{gold}} · VALOR LÍQUIDO {{net_worth}} · NÍVEL {{level}}",
   "innate": "Inata de {{- heroName}}: {{- title}} · {{- description}}",
   "invalidColor": "Espaço, nome ou cor de herói inválido. Tente de 1-10, nome parcial ou uma destas cores: {{colorList}}",
   "invalidColorNew": "Comando inválido. Tente `!{{command}} crystal maiden` ou `!{{command}} 9` ou `!{{command}} teal` de {{colorList}}",
   "invalidHero": "Herói inválido. Tente `!{{command}} x` de {{heroList}}",
   "invalidMmr": "Comando inválido. Tente !setmmr 1234",
   "killstreak": {
-    "lost_one": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
+    "lost_one": "{{- heroName}} perdeu a sequência de abates de {{count}} {{emote}}",
     "lost_many": "",
-    "lost_other": "{{- heroName}} perdeu a killstreak de {{count}} {{emote}}",
-    "won_one": "{{- heroName}} tem uma killstreak de {{count}} {{emote}}",
+    "lost_other": "{{- heroName}} perdeu a sequência de abates de {{count}} {{emote}}",
+    "won_one": "{{- heroName}} tem uma sequência de abates de {{count}} {{emote}}",
     "won_many": "",
-    "won_other": "{{- heroName}} tem uma killstreak de {{count}} {{emote}}"
+    "won_other": "{{- heroName}} tem uma sequência de abates de {{count}} {{emote}}"
   },
   "lastgame": {
     "link": "Aqui está a última partida: {{- url}}",
     "none": "Não está jogando com nenhum jogador da partida anterior.",
     "player": "{{- currentMatchHero}} era {{- lastMatchHero}}",
-    "total_one": "",
+    "total_one": "Jogando com 1 jogador da partida passada.",
     "total_many": "",
-    "total_other": "Playing with {{count}} players from last game."
+    "total_other": "Jogando com {{count}} jogadores da partida passada."
   },
   "lastgamescore": {
     "double": "Dobro de MMR",
@@ -134,11 +134,14 @@
   "modsOnly_on": "Modo somente mods ativado {{emote}} . Só moderadores podem digitar.",
   "multiAccount": "Esta conta steam já está conectada a outro usuário do Dotabod. Confira o painel de controle para mais informações: {{- url}}",
   "muted": "Não vou mais conversar automaticamente nos eventos do jogo, mas continuarei respondendo aos comandos. Digite !unmute para desfazer",
-  "noAghs": "{{- heroName}} has no aghs upgrade.",
+  "neutralItems": {
+    "tierAvailable": "Fichas neutras de classe {{tier}} estão disponíveis agora! Hora de checar a floresta PogChamp"
+  },
+  "noAghs": "Não há aprimoramento de cetro de Aghanim para {{- heroName}}.",
   "noHero": "Nenhum herói encontrado",
   "noLastMatch": "Última partida não foi encontrada {{emote}}",
   "noNotable": "Nenhum jogador notável",
-  "noShard": "{{- heroName}} has no shard upgrade.",
+  "noShard": "Não há aprimoramento de fragmento de Aghanim para {{- heroName}}.",
   "notLive": "A transmissão não está ao vivo {{emote}}. Está ao vivo? Mods, digite \"!online\"",
   "notPlaying": "Não está jogando {{emote}}",
   "npAdd": "Tente  !np add <steam32id> <playername>",
@@ -148,7 +151,7 @@
   "npUnknown": "{{steamid}} não encontrado para este canal",
   "offline": "offline",
   "online": "online",
-  "overlayMissing": "Overlay não encontrada. O comando {{command}} requere que a overlay esteja adicionada.",
+  "overlayMissing": "Overlay não encontrada. O comando {{command}} requer que a overlay esteja adicionada.",
   "ping": "Pong {{emote}}",
   "pleb": "Pobre aqui {{emote}}",
   "pleb_off": "{{name}} {{emote}} bom trabalho, pobre",
@@ -184,9 +187,9 @@
   "seconds_one": "{{count}} segundo",
   "seconds_other": "{{count}} segundos",
   "setStreamDelay": "Configurando delay de transmissão para: $t(seconds, {\"count\": {{seconds}} })",
-  "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <seconds> .",
+  "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <segundos> .",
   "setStreamDelayRemoved": "Removendo delay de transmissão",
-  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
+  "shard": "Fragmento de Aghanim de {{- heroName}}: {{- title}} · {{- description}}",
   "spectators": {
     "count_one": "1 espectador assistindo a esta partida ao vivo",
     "count_many": "",
@@ -221,7 +224,7 @@
   "treadToggle_other": "Usamos a Power Treads {{count}} vezes para economizar um total de {{manaCount}} mana nesta partida.",
   "uknownMmr": "Ainda não sei o MMR de {{channel}}. Mods precisam digitar !setmmr 1234 ou configurar em {{- url}}",
   "unknown": "Desconhecido",
-  "unknownSteam": "Conta da steam não encontrada. Siga os passos 2 do setup , tente jogar uma partida contra bots para salvar sua conta em Dotabod!",
+  "unknownSteam": "Conta da steam não encontrada. Siga o passo 2 do setup, tente jogar uma partida contra bots e tente novamente.",
   "unmuted": "Irei conversar automaticamente nos eventos do jogo. Digite !mute para desfazer",
   "unranked": "Não ranqueada",
   "updateMmr": "$t(updateMmr_manual)",

@@ -148,6 +148,9 @@
   "modsOnly_on": "Czat w trybie tylko dla Moderatorów jest włączony {{emote}} . Tylko moderatorzy mogą pisać.",
   "multiAccount": "To konto Steam jest już połączone z innym użytkownikiem Dotaboda. Sprawdź panel nawigacyjny, aby uzyskać więcej informacji {{- url}}",
   "muted": "Nie będę już dłużej automatycznie czatować na wydarzenia w grze, ale nadal będę reagować na komendy. Wpisz !unmute, aby cofnąć",
+  "neutralItems": {
+    "tierAvailable": "Dostępne są neutralne przedmioty poziomu {{tier}}! Czas odwiedzić dżunglę PogChamp"
+  },
   "noAghs": "{{- heroName}} nie ma ulepszeń aghanima.",
   "noHero": "Nie znaleziono bohatera",
   "noLastMatch": "Nie znaleziono ostatniej gry {{emote}}",

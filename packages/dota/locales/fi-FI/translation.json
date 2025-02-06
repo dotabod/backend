@@ -126,6 +126,9 @@
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "Tämä Steam-tili on jo yhdistetty toiseen Dotabod-käyttäjään. Tarkista hallintapaneeli saadaksesi lisätietoja {{- url}}",
   "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
+  "neutralItems": {
+    "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+  },
   "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Sankaria ei löytynyt",
   "noLastMatch": "Edellistä ottelua ei löytynyt {{emote}}",
