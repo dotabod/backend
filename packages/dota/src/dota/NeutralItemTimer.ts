@@ -1,7 +1,6 @@
 import { t } from 'i18next'
 import { say } from './say.js'
 import type { GSIHandler } from './GSIHandler.js'
-import { DBSettings, getValueOrDefault } from '../settings.js'
 import { redisClient } from './GSIHandler.js'
 
 interface TierTime {
@@ -63,15 +62,15 @@ export class NeutralItemTimer {
   }
 
   private notifyNeutralItem(tier: number) {
-    const enabled = getValueOrDefault(DBSettings.neutralItems, this.dotaClient.client.settings)
-    if (!enabled) return
-
     say(
       this.dotaClient.client,
       t('neutralItems.tierAvailable', {
         tier,
         lng: this.dotaClient.client.locale,
       }),
+      {
+        chattersKey: 'neutralItems',
+      },
     )
   }
 
