@@ -2,6 +2,7 @@ import { t } from 'i18next'
 import { say } from './say.js'
 import type { GSIHandler } from './GSIHandler.js'
 import { redisClient } from './GSIHandler.js'
+import { logger } from '../utils/logger.js'
 
 interface TierTime {
   tier: number
@@ -39,13 +40,13 @@ export class NeutralItemTimer {
     const matchId = await redisClient.client.get(`${this.dotaClient.client.token}:matchId`)
     const playingGameMode = Number(await redisClient.client.get(`${matchId}:gameMode`))
 
-    // logger.info('[NEUTRAL ITEMS] Checking neutral items timing', {
-    //   name: this.dotaClient.client.name,
-    //   currentMinute,
-    //   gameTimeDiff,
-    //   playingGameMode,
-    //   matchId,
-    // })
+    logger.info('[NEUTRAL ITEMS] Checking neutral items timing', {
+      name: this.dotaClient.client.name,
+      currentMinute,
+      gameTimeDiff,
+      playingGameMode,
+      matchId,
+    })
 
     // Check if the game mode is Turbo (23)
     const isTurbo = playingGameMode === 23
