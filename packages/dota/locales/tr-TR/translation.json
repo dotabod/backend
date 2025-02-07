@@ -126,6 +126,9 @@
   "modsOnly_on": "Yalnızca moderatörler modu {{emote}} olarak ayarlandı. Sadece moderatörler yazabilir.",
   "multiAccount": "Bu Steam kullanıcısı zaten başka bir Dotabod kullanıcısıyla bağlantılı. Daha fazla bilgi için {{- url}} ziyaret edin",
   "muted": "Oyun etkinliklerinde artık otomatik sohbet yapmayacak ancak komutlara yanıt vermeye devam edecek. İptal etmek için !unmute yazın",
+  "neutralItems": {
+    "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+  },
   "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Kahraman bulunamadı",
   "noLastMatch": "Son bir eşleşme bulunamadı {{emote}}",

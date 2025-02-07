@@ -214,6 +214,9 @@
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
   "xpm": "Live XPM for {{- heroName}}: {{num}}",
+  "neutralItems": {
+    "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+  },
   "apm_one": "Kasalukuyang APM ni {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Kasalukuyang APM ni {{- heroName}}: {{count}} {{emote}}",
   "facetTotalLimit_one": "Only {{count}} facet is available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",

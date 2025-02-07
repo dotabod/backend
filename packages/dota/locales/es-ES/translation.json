@@ -1,15 +1,15 @@
 {
-  "2mdelay": "(2m delay)",
+  "2mdelay": "(2m demora)",
   "aegis": {
     "denied": "{{- heroName}} denegó el aegis {{emote}}",
     "expired": "El aegis de {{- heroName}} expiró {{emote}}",
     "pickup": "¡{{- heroName}} recogió el aegis!",
     "snatched": "{{- heroName}} robó el aegis {{emote}}"
   },
-  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
-  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "aghs": "{{- heroName}} Aghanim: {{- title}} · {{- description}}",
+  "apm_one": "Actual APM para {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
-  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Actual APM para {{- heroName}}: {{count}} {{emote}}",
   "averageRank": "La media de este juego es",
   "betaFeature": "[función beta]",
   "betaTester": "$t(betaTester_on)",
@@ -53,27 +53,27 @@
   "commands": "",
   "commands_everyone": "Todos pueden usar: {{commandList}}",
   "commands_mods": "Mod sólo comandos: {{commandList}}",
-  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
+  "commandsPage": "Para ver la lista de comandos de {{- channel}}'s, visita  {{- url}}",
   "connections": {
-    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
+    "gsi_one": "{{count}} Streamer conectado a Dotabod GSI",
     "gsi_many": "",
-    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
-    "overlay_one": "{{count}} streamer using the overlay",
+    "gsi_other": "{{count}} Streamers conectados a Dotabod GSI",
+    "overlay_one": "{{count}} Streamer usando este overlay.",
     "overlay_many": "",
-    "overlay_other": "{{count}} streamers using the overlay"
+    "overlay_other": "{{count}} Streamers usando este overlay."
   },
   "dota2pt": "Necesitas builds para {{- heroName}}? Encuéntralas aquí {{- url}}",
   "dotabod": "Soy un bot hecho por {{author}}. Mas información {{- url}}",
-  "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
-  "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
-  "facetSelection": "{{- heroName}} selected facet: {{- facetTitle}} · {{- facetDescription}}",
-  "facetTotalLimit_one": "Only {{count}} facet is available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
+  "facet": "{{- heroName}} faceta {{number}}: {{- facetTitle}} · {{- facetDescription}}",
+  "facetInvalid": "La faceta especificada es inválida · $t(facetNotFound, {{- heroName }})",
+  "facetNotFound": "Usa !facet {{- heroName}} 1 o !facet {{- heroName}} 2 · Dotabod solo conoce la faceta elegida por el streamer del heroe actual.",
+  "facetSelection": "{{- heroName}} Faceta seleccionada: {{- facetTitle}} · {{- facetDescription}}",
+  "facetTotalLimit_one": "Solo {{count}} faceta está disponible para  {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_many": "",
-  "facetTotalLimit_other": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
+  "facetTotalLimit_other": "Solo {{count}} facetas están disponibles para  {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Juego no encontrado",
   "gpm_zero": "",
-  "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_one": "Actual GPM para {{- heroName}}: {{num}}. {{heroKills}} De asesinatos, {{creepKills}} de muerte de creeps.",
   "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
     "empty": "(2m de retraso) No se encontraron items para {{- heroName}}",
@@ -89,15 +89,15 @@
       "lifetime": "de todos los tiempos"
     },
     "winrateColor_one": "El porcentaje de victorias de {{color}} es {{winrate}}% con {{- heroName}} en {{timeperiod}} con {{count}} partidas jugadas.",
-    "winrateColor_other": "{{color}}'s winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches.",
+    "winrateColor_other": "El porcentaje de victorias de {{color}} es {{winrate}}% con {{- heroName}} en {{timeperiod}} con {{count}} partidas jugadas.",
     "winrateStreamer_one": "Su porcentaje de victorias es: {{winrate}}% como {{- heroName}} en {{timeperiod}} de {{count}} partidas jugadas.",
-    "winrateStreamer_other": "Winrate is {{winrate}}% on {{- heroName}} {{timeperiod}} from {{count}} matches."
+    "winrateStreamer_other": "Su porcentaje de victorias es: {{winrate}}% como {{- heroName}} en {{timeperiod}} de {{count}} partidas jugadas."
   },
   "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
-  "innate": "{{- heroName}} innate: {{- title}} · {{- description}}",
+  "innate": "{{- heroName}} Innata: {{- title}} · {{- description}}",
   "invalidColor": "Slot, nombre o color de héroe inválido. Intenta del 1-10, parte del nombre del héroe o un color de {{colorList}}",
-  "invalidColorNew": "Invalid command. Try `!{{command}} crystal maiden` or `!{{command}} 9` or `!{{command}} teal` from {{colorList}}",
-  "invalidHero": "Invalid hero specified. Try `!{{command}} x` from {{heroList}}",
+  "invalidColorNew": "Comando no válido. Intenta `!{{command}} crystal maiden` o `!{{command}} 9` o `!{{command}} teal` de {{colorList}}",
+  "invalidHero": "Héroe especificado no válido. Intenta `!{{command}} x` de {{heroList}}",
   "invalidMmr": "Comando inválido. Usa !setmmr 1234",
   "killstreak": {
     "lost_one": "{{- heroName}} perdió la racha de {{count}} kills {{emote}}",
@@ -105,7 +105,7 @@
     "lost_other": "{{- heroName}} perdió la racha de {{count}} asesinatos {{emote}}",
     "won_one": "{{- heroName}} tiene una racha de {{count}} asesinatos {{emote}}",
     "won_many": "",
-    "won_other": "{{- heroName}} has a {{count}} kill streak {{emote}}"
+    "won_other": "{{- heroName}} Tiene una racha de {{count}} asesinatos {{emote}}"
   },
   "lastgame": {
     "link": "Aqui esta el ultimo juego: {{- url}}",
@@ -131,15 +131,18 @@
   "missingMatchData": "Esperando datos de la partida reciente {{emote}}",
   "missingUser": "No se encuentra el usuario. Trata de salir y acceso el login de nuevo en dotabod.com",
   "modsOnly_off": "Solomente Mods ahora esta apagado. Todos pueden usar chat.",
-  "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
+  "modsOnly_on": "Modo solo moderadores activado {{emote}}. Solo los moderadores podrán escribir.",
   "multiAccount": "Esta cuenta de Steam ya está conectada a otro usuario de Dotabod. Comprueba el panel de control para más información {{- url}}",
-  "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
-  "noAghs": "{{- heroName}} has no aghs upgrade.",
+  "muted": "Se deshabilitó el auto chat para eventos de juego, pero los comandos seguirán funcionando. Escribe !unmute para deshacer.",
+  "neutralItems": {
+    "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+  },
+  "noAghs": "{{- heroName}} No tiene una mejora de Aghanim.",
   "noHero": "No se ha encontrado el héroe",
   "noLastMatch": "No se ha encontrado la ultimo partido {{emote}}",
   "noNotable": "No hay jugadores destacados",
-  "noShard": "{{- heroName}} has no shard upgrade.",
-  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
+  "noShard": "{{- heroName}} No tiene una mejora de fragmento.",
+  "notLive": "Stream fuera de línea {{emote} . ¿Actualmente en vivo? Moderadores escriban !online",
   "notPlaying": "No esta jugando {{emote}}",
   "npAdd": "Usa !np add<steam32id> <playername>",
   "npAdded": "Añadido {{name}} a !np para este canal",
@@ -178,20 +181,20 @@
     "3": "Muertes De Roshan: 3 · Siguiente drop: Queso, Bendición de Aghanim o Esquirla Revigorizante.",
     "more_one": "Muertes De Roshan: {{count}} · Siguiente drop: Queso, Bendición de Aghanim y Esquirla Revigorizante.",
     "more_many": "",
-    "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
+    "more_other": "Muertes de Roshan: {{count}} · Siguiente drop: Queso, Bendición de Aghanim o Esquirla Revigorizante."
   },
   "roshanKilled": "¡Roshan asesinado! Siguiente roshan entre {{min}} y {{max}}",
   "seconds_one": "{{count}} segundos",
-  "seconds_other": "{{count}} seconds",
+  "seconds_other": "{{count}} Segundos",
   "setStreamDelay": "Establecer el delay de la transmisión en: $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Stream Delay no valido, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Eliminando el Delay del stream",
-  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
+  "shard": "{{- heroName}} Fragmento: {{- title}} · {{- description}}",
   "spectators": {
-    "count_one": "1 spectator watching this match live",
+    "count_one": "1 espectador está mirando este juego en vivo",
     "count_many": "",
-    "count_other": "{{count}} spectators watching this match live",
-    "count_none": "No spectators currently watching this match live"
+    "count_other": "{{count}} Espectadores están mirando este juego en vivo",
+    "count_none": "No hay espectadores mirando el juego en vivo"
   },
   "stream": "$t(stream_on)",
   "stream_none": "No se han hecho cambios, el usuario ya {{state}}. ¡Inténtalo!{{command}} para alternar.",
@@ -222,20 +225,20 @@
   "uknownMmr": "Aún no conozco el MMR de {{channel}}. Mods tienen que !setmmr 1234 o establecerlo en {{- url}}",
   "unknown": "Desconocido",
   "unknownSteam": "No se ha podido encontrar la cuenta de steam. Intenta jugar primero una partida de práctica para guardar tu cuenta en Dotabod",
-  "unmuted": "Will now auto chat on game events. Type !mute to undo",
+  "unmuted": "Ahora el auto chat está activado para los eventos de juego. Escribe !mute para deshacer",
   "unranked": "Sin clasificar",
   "updateMmr": "$t(updateMmr_manual)",
   "updateMmr_auto": "MMR actualizado a {{mmr}}",
   "updateMmr_manual": "Actualizado MMR a {{mmr}}",
   "updateMmrMulti": "Múltiples cuentas de steam, actualización de la que está conectado ahora con ({{steamId}})",
-  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
+  "updateMmrNoChange": "MMR es actualmente {{mmr}}, no se realizaron cambios",
   "version": {
     "commit": "El servidor esta ejecutando la versión {{version}}, esto es lo que falta en comparación con la última versión: {{- url}}",
     "unknown": "No se pudo encontrar el último git commit, aquí está el repositorio {{- url}}"
   },
   "winprobability": {
-    "winProbability": "{{winRate}}% win probability at {{gameTime}}:00 · Next update in {{remainingCooldown}}s",
-    "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
+    "winProbability": "{{winRate}}% probabilidad de victoria para {{gameTime}}:00 · Siguiente actualización en {{remainingCooldown}}s",
+    "winProbabilityDataNotAvailable": "La probabilidad de victoria no está disponible aún · Intenta nuevamente en {{remainingCooldown}}s"
   },
-  "xpm": "Live XPM for {{- heroName}}: {{num}}"
+  "xpm": "Actual XPM para {{- heroName}}: {{num}}"
 }

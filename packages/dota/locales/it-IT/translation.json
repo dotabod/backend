@@ -134,6 +134,9 @@
   "modsOnly_on": "Modalità solo mods attiva {{emote}} . Solo i moderatori possono scrivere.",
   "multiAccount": "Questo account Steam è già connesso a un altro utente Dotabod. Controlla la dashboard per maggiori informazioni {{- url}}",
   "muted": "Non chatterà per gli eventi in game, ma risponderà ai comandi. Scrivi !unmute per annullare",
+  "neutralItems": {
+    "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+  },
   "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Nessun eroe trovato",
   "noLastMatch": "Non è stato trovato un match precedente {{emote}}",

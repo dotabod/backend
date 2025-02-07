@@ -148,6 +148,9 @@
   "modsOnly_on": "Mods only mode is now on {{emote}} . Only mods can type.",
   "multiAccount": "This steam account is already connected to another Dotabod user. Check dashboard for more info {{- url}}",
   "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
+  "neutralItems": {
+    "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+  },
   "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Nenalezen žádný hrdina",
   "noLastMatch": "Nenalezena data posledního zápasu {{emote}}",

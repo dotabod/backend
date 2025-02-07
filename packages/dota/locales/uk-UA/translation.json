@@ -148,6 +148,9 @@
   "modsOnly_on": "Режим \"Тільки для модераторів\" тепер ввімкнений {{emote}}. Тільки модератори можуть використовувати чат.",
   "multiAccount": "Цей аккаунт steam вже підключений до іншого користувача Dotabod. Перевірте головну панель для більш детальної інформації: {{- url}}",
   "muted": "Dotabod не буде автоматично сповіщати про ігрові події, але все ще буде відповідати на команди. Введіть !unmute для скасування дій",
+  "neutralItems": {
+    "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+  },
   "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Герой не знайдений",
   "noLastMatch": "Не знайдено останню гру {{emote}}",
