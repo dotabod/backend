@@ -9,9 +9,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "docker:production": "bun --inspect=0.0.0.0:6499 src/index.ts",
-    "docker:development": "bun --watch --inspect=0.0.0.0:6499 src/index.ts",
-    "docker:debug": "bun --inspect=0.0.0.0:6499 src/index.ts",
+    "docker:production": "bun --inspect src/index.ts",
+    "docker:development": "bun --watch --inspect src/index.ts",
+    "docker:debug": "bun --inspect src/index.ts",
     "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js",
     "fix-users": "doppler run -- bun ./src/dev/index.ts",
     "test": "doppler run -- bun jest"
