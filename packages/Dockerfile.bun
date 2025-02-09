@@ -1,4 +1,4 @@
-FROM oven/bun:1.1.24 AS base
+FROM oven/bun:latest AS base
 
 # Set build context and work directories
 ARG BUILD_CONTEXT
@@ -24,7 +24,7 @@ RUN bun run build
 
 #-------------------------
 
-FROM oven/bun:1.1.24 AS prod
+FROM oven/bun:latest AS prod
 
 ARG BUILD_CONTEXT
 ARG DOTABOD_ENV
@@ -45,4 +45,9 @@ COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 # Environment and CMD
 WORKDIR /app/$BUILD_CONTEXT/
 ENV DOTABOD_ENV=$DOTABOD_ENV
+
+# Expose ports for the application and debugger
+EXPOSE 5120
+EXPOSE 6499
+
 CMD bun run docker:$DOTABOD_ENV
