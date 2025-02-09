@@ -149,7 +149,7 @@
   "multiAccount": "Эта учетная запись Steam уже подключена к другому пользователю Dotabod. Проверьте панель инструментов для получения дополнительной информации {{- url}}",
   "muted": "Больше не будет автоматически писать об игровых событиях, но все равно будет отвечать на команды. Введите !unmute для отмены",
   "neutralItems": {
-    "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+    "tierAvailable": "Доступны нейтральные предметы {{tier}}-го разряда! Время посетить лес PogChamp"
   },
   "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "Герой не найден",
