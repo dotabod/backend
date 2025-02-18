@@ -104,7 +104,7 @@
     "winrateStreamer_many": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграно {{count}} игр.",
     "winrateStreamer_other": "Винрейт: {{winrate}}% на {{- heroName}} {{timeperiod}}, сыграна {{count}} игра."
   },
-  "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
+  "heroStats": "{{- heroName}}: УСП {{- kda}} · ДК {{lasthits}} · НО {{denies}} · З/М {{gold}} · ЦЕН {{net_worth}} · ЛВЛ {{level}}",
   "innate": "Врожденная способность {{- heroName}} - это {{- title}} · {{- description}}",
   "invalidColor": "Неверный цвет героя, номер или имя. Попробуй 1-10, имя героя на английском или цвет из списка: {{colorList}}",
   "invalidColorNew": "Неправильная команда. Попробуйте `!{{command}} crystal maiden` или `!{{command}} 9` или `!{{command}} teal` из {{colorList}}",
