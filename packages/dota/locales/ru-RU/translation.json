@@ -1,5 +1,5 @@
 {
-  "2mdelay": "(2m delay)",
+  "2mdelay": "(2 мин. задержка)",
   "aegis": {
     "denied": "{{- heroName}} уничтожает аегис {{emote}}",
     "expired": "Аегис у {{- heroName}} закончился {{emote}}",
