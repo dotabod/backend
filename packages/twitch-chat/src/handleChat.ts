@@ -116,6 +116,12 @@ export async function handleChatMessage(message: EventSubWsPacket): Promise<void
     broadcaster_user_login,
   } = event
 
+  // @ts-expect-error Not in types yet
+  if (event.source_message_id !== null) {
+    // Ignore
+    return;
+  }
+
   const userInfo = extractUserInfo(badges, channelId, chatter_user_id)
 
   if (hasDotabodSocket()) {
