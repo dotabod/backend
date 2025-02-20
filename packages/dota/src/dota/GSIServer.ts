@@ -142,7 +142,7 @@ class GSIServer {
     this.io.on('disconnect', (reason) => {
       logger.info('[GSI] io disconnect', { reason })
     })
-    this.io.on('pong', (socket: Socket) => {
+    this.io.on('ping', (socket: Socket) => {
       socket.emit('pong')
     })
 
