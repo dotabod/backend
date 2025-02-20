@@ -71,6 +71,7 @@ class GSIServer {
     const httpServer = http.createServer(app)
     this.io = new Server(httpServer, {
       pingTimeout: 60_000,
+      pingInterval: 15000,
       cors: {
         origin: allowedOrigins,
       },
@@ -141,9 +142,6 @@ class GSIServer {
     })
     this.io.on('disconnect', (reason) => {
       logger.info('[GSI] io disconnect', { reason })
-    })
-    this.io.on('ping', (socket: Socket) => {
-      socket.emit('pong')
     })
 
     // Set up the repeating timer
