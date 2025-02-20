@@ -142,8 +142,8 @@ class GSIServer {
     this.io.on('disconnect', (reason) => {
       logger.info('[GSI] io disconnect', { reason })
     })
-    this.io.on('pong', () => {
-      this.io.emit('pong')
+    this.io.on('pong', (socket: Socket) => {
+      socket.emit('pong')
     })
 
     // Set up the repeating timer
