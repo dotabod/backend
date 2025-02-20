@@ -142,6 +142,9 @@ class GSIServer {
     this.io.on('disconnect', (reason) => {
       logger.info('[GSI] io disconnect', { reason })
     })
+    this.io.on('pong', () => {
+      this.io.emit('pong')
+    })
 
     // Set up the repeating timer
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
