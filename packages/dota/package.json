@@ -27,7 +27,7 @@
     "chokidar": "^4.0.3",
     "cors": "^2.8.5",
     "country-code-emoji": "^2.3.0",
-    "dotaconstants": "^9.3.0",
+    "dotaconstants": "^9.4.0",
     "express": "^4.21.2",
     "express-body-parser-error-handler": "^1.0.7",
     "i18next": "^24.2.0",
