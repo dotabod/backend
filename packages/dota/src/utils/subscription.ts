@@ -158,11 +158,22 @@ export function getRequiredTier(feature?: FeatureTier | GenericFeature): Subscri
   )
 }
 
+// Add helper to check if a key is a chatter key
+export function isChatterKey(key: string): boolean {
+  return key.startsWith('chatters.')
+}
+
+// Update canAccessFeature to handle chatter keys
 export function canAccessFeature(
   feature: FeatureTier | GenericFeature,
-  subscription: SubscriptionStatus | null,
+  subscription?: SubscriptionStatus | null,
 ): { hasAccess: boolean; requiredTier: SubscriptionTier } {
-  const requiredTier = getRequiredTier(feature)
+  // Handle chatter keys by removing the 'chatters.' prefix
+  const actualFeature = isChatterKey(feature)
+    ? (feature as `chatters.${ChatterKeys}`)
+    : (feature as FeatureTier | GenericFeature)
+
+  const requiredTier = getRequiredTier(actualFeature)
 
   if (!subscription || subscription.status !== 'active') {
     return {

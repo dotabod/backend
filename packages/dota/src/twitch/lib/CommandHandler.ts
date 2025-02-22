@@ -5,12 +5,7 @@ import { type SettingKeys, getValueOrDefault } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import type { SocketClient } from '../../types.js'
 import { logger } from '../../utils/logger.js'
-import {
-  SUBSCRIPTION_TIERS,
-  type SubscriptionTier,
-  TIER_LEVELS,
-  getRequiredTier,
-} from '../../utils/subscription'
+import type { SubscriptionStatus } from '../../utils/subscription'
 import { chatClient } from '../chatClient.js'
 
 export interface UserType {
@@ -158,28 +153,6 @@ class CommandHandler {
     const options = this.commands.get(commandName)
     if (!options) return
 
-    // Check subscription tier if required
-    const requiredTier = getRequiredTier(options.dbkey)
-    if (requiredTier && requiredTier !== SUBSCRIPTION_TIERS.FREE) {
-      const hasRequiredTier = this.hasRequiredTier(
-        message.channel.client.subscription?.tier,
-        requiredTier,
-      )
-
-      if (!hasRequiredTier) {
-        // TODO: Probably don't say anything yet, might cause a lot of spam
-        // chatClient.say(
-        //   message.channel.name,
-        //   t('proRequired', {
-        //     command: commandName,
-        //     lng: message.channel.client.locale,
-        //   }),
-        //   message.user.messageId,
-        // )
-        return
-      }
-    }
-
     // Log statistics for this command
     // await this.logCommand(command, message)
 
@@ -193,7 +166,9 @@ class CommandHandler {
     }
 
     // Check if the command is enabled
-    if (!this.isEnabled(message.channel.settings, options.dbkey)) {
+    if (
+      !this.isEnabled(message.channel.settings, options.dbkey, message.channel.client.subscription)
+    ) {
       return
     }
 
@@ -276,11 +251,15 @@ class CommandHandler {
     return true // The command is on cooldown if none of the above conditions are met
   }
 
-  isEnabled(settings: SocketClient['settings'], dbkey?: SettingKeys) {
+  isEnabled(
+    settings: SocketClient['settings'],
+    dbkey?: SettingKeys,
+    subscription?: SubscriptionStatus,
+  ) {
     // Default enabled if no dbkey is provided
     if (!dbkey) return true
 
-    return !!getValueOrDefault(dbkey, settings)
+    return !!getValueOrDefault(dbkey, settings, subscription)
   }
 
   // Function for updating the cooldown time for a command
@@ -307,14 +286,6 @@ class CommandHandler {
     }
 
     return false // The user lacks the required permission
-  }
-
-  // Add new method to check subscription tier
-  hasRequiredTier(userTier: SubscriptionTier | undefined, requiredTier: SubscriptionTier): boolean {
-    const userLevel = TIER_LEVELS[userTier || SUBSCRIPTION_TIERS.FREE]
-    const requiredLevel = TIER_LEVELS[requiredTier]
-
-    return userLevel >= requiredLevel
   }
 }
 

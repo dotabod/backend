@@ -250,7 +250,12 @@ eventHandler.registerEvent('newdata', {
 
     const {
       powerTreads: { enabled: treadsChatterEnabled },
-    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
+    } = getValueOrDefault(
+      DBSettings.chatters,
+      dotaClient.client.settings,
+      dotaClient.client.subscription,
+      'powerTreads',
+    )
     let calculateManaSavedPromise: Promise<void> | undefined
     if (treadsChatterEnabled) {
       try {

@@ -1,3 +1,5 @@
+import { type SubscriptionStatus, canAccessFeature } from './utils/subscription.js'
+
 export const commands = {
   commandAPM: true,
   commandAvg: true,
@@ -146,7 +148,39 @@ for (const key of Object.keys(defaultSettings)) {
   DBSettings[key as SettingKeys] = key as SettingKeys
 }
 
-export const getValueOrDefault = (key: SettingKeys, data?: { key: string; value: any }[]) => {
+export const getValueOrDefault = (
+  key: SettingKeys,
+  data?: { key: string; value: any }[],
+  subscription?: SubscriptionStatus,
+  chatterKey?: keyof (typeof defaultSettings)['chatters'],
+) => {
+  // Check subscription access
+  const featureKey = chatterKey ? (`chatters.${chatterKey}` as const) : key
+  const { hasAccess } = canAccessFeature(featureKey, subscription)
+  if (!hasAccess) {
+    // For boolean settings, return false if no access
+    if (typeof defaultSettings[key] === 'boolean') {
+      return false
+    }
+    // For chatters object, return with disabled state
+    if (key === 'chatters' && chatterKey) {
+      return {
+        ...defaultSettings.chatters,
+        [chatterKey]: { enabled: false },
+      }
+    }
+    // For objects (like betsInfo), return default with disabled state
+    if (typeof defaultSettings[key] === 'object') {
+      return {
+        ...(defaultSettings[key] as any),
+        enabled: false,
+      }
+    }
+    // For other types, return default value
+    return defaultSettings[key]
+  }
+
+  // Rest of existing logic for handling settings
   if (!Array.isArray(data) || !data.length || !data.filter(Boolean).length) {
     return defaultSettings[key]
   }
