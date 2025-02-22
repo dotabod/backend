@@ -243,6 +243,13 @@ export class GSIHandler {
       this.client.settings,
       this.client.subscription,
     )
+    const notablePlayersEnabled = getValueOrDefault(
+      DBSettings.notablePlayersOverlay,
+      this.client.settings,
+      this.client.subscription,
+    )
+    if (!notablePlayersEnabled) return
+
     notablePlayers({
       locale: this.client.locale,
       twitchChannelId: this.getChannelId(),
@@ -966,7 +973,7 @@ export class GSIHandler {
             this.emitBadgeUpdate()
             this.emitWLUpdate()
             try {
-              void maybeSendRoshAegisEvent(this.client.token)
+              void maybeSendRoshAegisEvent(this.client.token, this.client)
             } catch (e) {
               logger.error('err maybeSendRoshAegisEvent', { e })
             }
@@ -1000,7 +1007,7 @@ export class GSIHandler {
   }
 }
 
-async function maybeSendRoshAegisEvent(token: string) {
+async function maybeSendRoshAegisEvent(token: string, client: SocketClient) {
   const aegisRes = (await redisClient.client.json.get(
     `${token}:aegis`,
   )) as unknown as AegisRes | null
@@ -1009,10 +1016,10 @@ async function maybeSendRoshAegisEvent(token: string) {
   )) as unknown as RoshRes | null
 
   if (aegisRes) {
-    emitAegisEvent(aegisRes, token)
+    emitAegisEvent(aegisRes, token, client)
   }
 
   if (roshRes) {
-    emitRoshEvent(roshRes, token)
+    emitRoshEvent(roshRes, token, client)
   }
 }

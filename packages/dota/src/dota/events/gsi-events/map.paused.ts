@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import type { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -11,6 +12,14 @@ eventHandler.registerEvent('map:paused', {
     if (!dotaClient.client.stream_online) return
 
     if (!isPlayingMatch(dotaClient.client.gsi)) return
+
+    const tellChatPause = getValueOrDefault(
+      DBSettings.chatters,
+      dotaClient.client.settings,
+      dotaClient.client.subscription,
+      'pause',
+    )
+    if (!tellChatPause) return
 
     // Necessary to let the frontend know, so we can pause any rosh / aegis / etc timers
     server.io.to(dotaClient.getToken()).emit('paused', isPaused)

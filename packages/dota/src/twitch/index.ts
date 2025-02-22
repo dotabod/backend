@@ -13,6 +13,7 @@ import { t } from 'i18next'
 import { io, io as socketIo } from 'socket.io-client'
 import getDBUser from '../db/getDBUser.js'
 import { server } from '../dota/index.js'
+import { findUser } from '../dota/lib/connectedStreamers'
 import { getTokenFromTwitchId } from '../dota/lib/connectedStreamers.js'
 import { plebMode } from '../dota/lib/consts.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
@@ -139,6 +140,12 @@ twitchChat.on('event', (eventName: keyof typeof events, broadcasterId: string, d
 
   const token = getTokenFromTwitchId(broadcasterId)
   if (!token) return
+
+  const client = findUser(token)
+  if (!client) return
+
+  const isEnabled = getValueOrDefault(DBSettings.livePolls, client.settings, client.subscription)
+  if (!isEnabled) return
 
   server.io.to(token).emit('channelPollOrBet', data, eventName)
 })

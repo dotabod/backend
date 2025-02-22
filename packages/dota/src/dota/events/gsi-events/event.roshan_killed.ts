@@ -1,9 +1,9 @@
 import { t } from 'i18next'
 
 import RedisClient from '../../../db/RedisClient.js'
-import { type DotaEvent, DotaEventTypes } from '../../../types.js'
+import { DBSettings, getValueOrDefault } from '../../../settings.js'
+import { type DotaEvent, DotaEventTypes, type SocketClient } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
-import { redisClient } from '../../GSIHandler'
 import type { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -69,9 +69,12 @@ export function generateRoshanMessage(res: RoshRes, lng: string) {
   return msgs.join(' · ')
 }
 
-export function emitRoshEvent(res: RoshRes, token: string) {
+export function emitRoshEvent(res: RoshRes, token: string, client: SocketClient) {
   if (!res || !res.minDate) return
   res = getNewRoshTime(res)
+
+  const tellChatRosh = getValueOrDefault(DBSettings.rosh, client.settings, client.subscription)
+  if (!tellChatRosh) return
 
   server.io.to(token).emit('roshan-killed', res)
 }
