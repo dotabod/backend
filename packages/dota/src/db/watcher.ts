@@ -10,6 +10,7 @@ import { chatClient } from '../twitch/chatClient.js'
 import { updateTwurpleTokenForTwitchId } from '../twitch/lib/getTwitchAPI'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
+import type { SubscriptionTier, SubscriptionTierStatus } from '../utils/subscription.js'
 import getDBUser from './getDBUser.js'
 import type { Tables } from './supabase-types.js'
 import supabase from './supabase.js'
@@ -48,6 +49,30 @@ class SetupSupabase {
             logger.info('[WATCHER USER] Deleting user', { name: client.name })
             await clearCacheForUser(client)
             return
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'subscriptions' },
+        async (payload: { new: Tables<'subscriptions'>; old: Tables<'subscriptions'> }) => {
+          const newObj = payload.new
+          const oldObj = payload.old
+
+          // If subscription status changed
+          if (newObj.status !== oldObj.status) {
+            const client = findUser(newObj.userId)
+            if (client) {
+              client.subscription = {
+                tier: newObj.tier as SubscriptionTier,
+                status: newObj.status as SubscriptionTierStatus,
+                currentPeriodEnd: newObj.currentPeriodEnd
+                  ? new Date(newObj.currentPeriodEnd)
+                  : undefined,
+                cancelAtPeriodEnd: newObj.cancelAtPeriodEnd,
+                stripePriceId: newObj.stripePriceId ?? '',
+              }
+            }
           }
         },
       )
