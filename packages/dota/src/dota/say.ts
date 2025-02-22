@@ -55,7 +55,10 @@ export function say(
     return
   }
 
-  setTimeout(() => {
-    client.name && chatClient.say(client.name, msg)
-  }, getStreamDelay(client.settings))
+  setTimeout(
+    () => {
+      client.name && chatClient.say(client.name, msg)
+    },
+    getStreamDelay(client.settings, client.subscription),
+  )
 }

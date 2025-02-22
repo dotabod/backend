@@ -6,7 +6,6 @@ import { getWL } from '../db/getWL.js'
 import supabase from '../db/supabase.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
 import { notablePlayers } from '../steam/notableplayers.js'
-import { twitchEvent } from '../twitch/index.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
@@ -14,6 +13,8 @@ import type { DotaEvent, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
+import type { SubscriptionStatus } from '../utils/subscription.js'
+import { NeutralItemTimer } from './NeutralItemTimer.js'
 import { type AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
 import { type RoshRes, emitRoshEvent } from './events/gsi-events/event.roshan_killed.js'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/newdata.js'
@@ -28,7 +29,6 @@ import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
 import { say } from './say.js'
-import { NeutralItemTimer } from './NeutralItemTimer.js'
 
 export const redisClient = RedisClient.getInstance()
 
@@ -48,14 +48,21 @@ interface MMR {
   heroName?: string | null
 }
 
-export function getStreamDelay(settings: SocketClient['settings']) {
-  return Number(getValueOrDefault(DBSettings.streamDelay, settings)) + GLOBAL_DELAY
+export function getStreamDelay(
+  settings: SocketClient['settings'],
+  subscription?: SubscriptionStatus,
+) {
+  return Number(getValueOrDefault(DBSettings.streamDelay, settings, subscription)) + GLOBAL_DELAY
 }
 
 export function emitMinimapBlockerStatus(client: SocketClient) {
   if (!client.stream_online || !client.beta_tester || !client.gsi) return
 
-  const enabled = getValueOrDefault(DBSettings['minimap-blocker'], client.settings)
+  const enabled = getValueOrDefault(
+    DBSettings['minimap-blocker'],
+    client.settings,
+    client.subscription,
+  )
   if (!enabled) return
 
   const parsedData = minimapParser.parse(client.gsi)
@@ -527,7 +534,7 @@ export class GSIHandler {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    setTimeout(this.openTheBet, getStreamDelay(client.settings))
+    setTimeout(this.openTheBet, getStreamDelay(client.settings, client.subscription))
 
     // .catch((e: any) => {
     //   logger.error(`[BETS] Could not add bet to channel`, {
@@ -752,47 +759,50 @@ export class GSIHandler {
       logger.error('err toggleHandler', { e })
     }
 
-    setTimeout(() => {
-      const message = won
-        ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
-        : t('bets.lost', { lng: this.client.locale, emote: 'Happi' })
+    setTimeout(
+      () => {
+        const message = won
+          ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
+          : t('bets.lost', { lng: this.client.locale, emote: 'Happi' })
 
-      say(this.client, message, { delay: false, chattersKey: 'matchOutcome' })
+        say(this.client, message, { delay: false, chattersKey: 'matchOutcome' })
 
-      if (!betsEnabled) {
-        logger.info('Bets are not enabled, stopping here', {
-          name: this.client.name,
-        })
-        this.resetClientState().catch(() => {
-          //
-        })
-        return
-      }
-
-      closeTwitchBet(won, this.getChannelId())
-        .then(() => {
-          logger.info('[BETS] end bets', {
-            event: 'end_bets',
-            matchId,
+        if (!betsEnabled) {
+          logger.info('Bets are not enabled, stopping here', {
             name: this.client.name,
-            winning_team: localWinner,
-            player_team: myTeam,
-            didWin: won,
           })
-        })
-        .catch((e: any) => {
-          logger.error('[BETS] Error closing twitch bet', {
-            channel,
-            e: e?.message || e,
-            matchId,
+          this.resetClientState().catch(() => {
+            //
           })
-        })
-        .finally(() => {
-          this.resetClientState().catch((e) => {
-            logger.error('Error resetting client state', { e })
+          return
+        }
+
+        closeTwitchBet(won, this.getChannelId())
+          .then(() => {
+            logger.info('[BETS] end bets', {
+              event: 'end_bets',
+              matchId,
+              name: this.client.name,
+              winning_team: localWinner,
+              player_team: myTeam,
+              didWin: won,
+            })
           })
-        })
-    }, getStreamDelay(this.client.settings))
+          .catch((e: any) => {
+            logger.error('[BETS] Error closing twitch bet', {
+              channel,
+              e: e?.message || e,
+              matchId,
+            })
+          })
+          .finally(() => {
+            this.resetClientState().catch((e) => {
+              logger.error('Error resetting client state', { e })
+            })
+          })
+      },
+      getStreamDelay(this.client.settings, this.client.subscription),
+    )
   }
 
   private checkEarlyDCWinner(matchId: string) {
