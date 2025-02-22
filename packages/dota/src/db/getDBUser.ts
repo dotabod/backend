@@ -86,6 +86,13 @@ export default async function getDBUser({
     stream_start_date,
     beta_tester,
     locale,
+    subscriptions (
+      tier,
+      status,
+      currentPeriodEnd,
+      cancelAtPeriodEnd,
+      stripePriceId
+    ),
     Account:accounts (
       refresh_token,
       scope,
@@ -155,6 +162,14 @@ export default async function getDBUser({
     steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
     token: user.id,
     stream_start_date: user.stream_start_date ? new Date(user.stream_start_date) : null,
+    subscription: user.subscriptions
+      ? {
+          ...user.subscriptions[0],
+          currentPeriodEnd: user.subscriptions[0].currentPeriodEnd
+            ? new Date(user.subscriptions[0].currentPeriodEnd)
+            : undefined,
+        }
+      : undefined,
     Account: {
       ...Account,
       requires_refresh: Account.requires_refresh ?? false,

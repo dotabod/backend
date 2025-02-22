@@ -1,4 +1,5 @@
 import type { HeroNames } from './dota/lib/getHero.js'
+import type { SubscriptionStatus } from './utils/subscription.js'
 
 export interface SocketClient {
   name: string
@@ -31,6 +32,7 @@ export interface SocketClient {
     key: string
     value: any
   }[]
+  subscription?: SubscriptionStatus
 }
 interface Provider {
   name: string // "Dota 2"
