@@ -156,20 +156,25 @@ export default async function getDBUser({
     return
   }
 
+  let subscription = undefined
+  if (Array.isArray(user.subscriptions) && user.subscriptions.length > 0) {
+    const activeSubscription =
+      user.subscriptions.find((sub) => sub.status === 'active') || user.subscriptions[0]
+    subscription = {
+      ...activeSubscription,
+      currentPeriodEnd: activeSubscription?.currentPeriodEnd
+        ? new Date(activeSubscription.currentPeriodEnd)
+        : undefined,
+    }
+  }
+
   const userInfo = {
     ...user,
     mmr: user.mmr || user.SteamAccount[0]?.mmr || 0,
     steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
     token: user.id,
     stream_start_date: user.stream_start_date ? new Date(user.stream_start_date) : null,
-    subscription: user.subscriptions
-      ? {
-          ...user.subscriptions[0],
-          currentPeriodEnd: user.subscriptions[0].currentPeriodEnd
-            ? new Date(user.subscriptions[0].currentPeriodEnd)
-            : undefined,
-        }
-      : undefined,
+    subscription,
     Account: {
       ...Account,
       requires_refresh: Account.requires_refresh ?? false,
