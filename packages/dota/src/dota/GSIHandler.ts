@@ -13,7 +13,7 @@ import type { BlockType, DotaEvent, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
-import { type SubscriptionStatus, canAccessFeature } from '../utils/subscription.js'
+import type { SubscriptionStatus } from '../utils/subscription.js'
 import { NeutralItemTimer } from './NeutralItemTimer.js'
 import { type AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
 import { type RoshRes, emitRoshEvent } from './events/gsi-events/event.roshan_killed.js'
@@ -912,11 +912,6 @@ export class GSIHandler {
     if (this.blockCache === blockType) return
 
     this.blockCache = blockType
-
-    // Strategy block types are subscribers only
-    if (blockType === 'strategy' || blockType === 'strategy-2' || blockType === 'picks') {
-      if (!canAccessFeature('picks-blocker', this.client.subscription)) return
-    }
 
     server.io.to(this.client.token).emit('block', {
       type: blockType,
