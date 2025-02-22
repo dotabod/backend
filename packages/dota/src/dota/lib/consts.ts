@@ -46,7 +46,7 @@ export const blockTypes = [
   { type: 'picks', states: pickSates },
   { type: 'playing', states: playingStates },
   { type: 'empty', states: dontBlockStates },
-]
+] as const
 
 export const isDev = process.env.DOTABOD_ENV === 'development'
 
