@@ -26,9 +26,21 @@ export function tellChatNewMMR({
   const client = findUser(token)
   if (!client) return
 
-  const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], client.settings)
-  const tellChatNewMMR = getValueOrDefault(DBSettings.tellChatNewMMR, client.settings)
-  const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
+  const mmrEnabled = getValueOrDefault(
+    DBSettings['mmr-tracker'],
+    client.settings,
+    client.subscription,
+  )
+  const tellChatNewMMR = getValueOrDefault(
+    DBSettings.tellChatNewMMR,
+    client.settings,
+    client.subscription,
+  )
+  const chattersEnabled = getValueOrDefault(
+    DBSettings.chatter,
+    client.settings,
+    client.subscription,
+  )
 
   const newMmr = mmr - oldMmr
   if (mmrEnabled && chattersEnabled && tellChatNewMMR && mmr !== 0) {
@@ -107,7 +119,11 @@ export async function updateMmr({
       client.mmr = mmr
       if (tellChat) {
         tellChatNewMMR({
-          streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
+          streamDelay: getValueOrDefault(
+            DBSettings.streamDelay,
+            client.settings,
+            client.subscription,
+          ),
           locale: client.locale,
           token: client.token,
           mmr,
@@ -142,7 +158,7 @@ export async function updateMmr({
 
   if (client && tellChat) {
     tellChatNewMMR({
-      streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings),
+      streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings, client.subscription),
       locale: client.locale,
       token: client.token,
       mmr,

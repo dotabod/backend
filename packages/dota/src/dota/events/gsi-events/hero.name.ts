@@ -15,7 +15,11 @@ eventHandler.registerEvent('hero:name', {
   handler: async (dotaClient: GSIHandler, name: HeroNames) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
-    const betsEnabled = getValueOrDefault(DBSettings.bets, dotaClient.client.settings)
+    const betsEnabled = getValueOrDefault(
+      DBSettings.bets,
+      dotaClient.client.settings,
+      dotaClient.client.subscription,
+    )
     if (!betsEnabled) return
 
     const playingHero = (await redisClient.client.get(
@@ -38,7 +42,11 @@ eventHandler.registerEvent('hero:name', {
         return
       }
 
-      const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, dotaClient.client.settings)
+      const tellChatBets = getValueOrDefault(
+        DBSettings.tellChatBets,
+        dotaClient.client.settings,
+        dotaClient.client.subscription,
+      )
       if (tellChatBets)
         say(
           dotaClient.client,
@@ -47,7 +55,7 @@ eventHandler.registerEvent('hero:name', {
             emote: 'Okayeg 👍',
             emote2: 'peepoGamble',
             oldHeroName: playingHero
-              ? getHero(playingHero)?.localized_name ?? playingHero
+              ? (getHero(playingHero)?.localized_name ?? playingHero)
               : playingHero,
             newHeroName: hero?.localized_name ?? name,
           }),

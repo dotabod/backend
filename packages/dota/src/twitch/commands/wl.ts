@@ -28,7 +28,11 @@ commandHandler.registerCommand('wl', {
       return
     }
 
-    const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], client.settings)
+    const mmrEnabled = getValueOrDefault(
+      DBSettings['mmr-tracker'],
+      client.settings,
+      client.subscription,
+    )
 
     getWL({
       lng: client.locale,

@@ -93,7 +93,11 @@ twitchChat.on(
       delete lastMissingUserMessageTimestamps[channel]
     }
 
-    const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, client.settings)
+    const isBotDisabled = getValueOrDefault(
+      DBSettings.commandDisable,
+      client.settings,
+      client.subscription,
+    )
     const toggleCommand = commandHandler.commands.get('toggle')
     if (
       isBotDisabled &&

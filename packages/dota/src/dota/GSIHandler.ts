@@ -128,7 +128,11 @@ export class GSIHandler {
     this.mapBlocker = new DataBroadcaster(this.client.token)
     this.neutralItemTimer = new NeutralItemTimer(this)
 
-    const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, this.client.settings)
+    const isBotDisabled = getValueOrDefault(
+      DBSettings.commandDisable,
+      this.client.settings,
+      this.client.subscription,
+    )
     if (isBotDisabled) {
       logger.info('[GSI] Bot is disabled for this user', {
         name: this.client.name,
@@ -208,7 +212,11 @@ export class GSIHandler {
   emitWLUpdate() {
     if (!this.client.stream_online) return
 
-    const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], this.client.settings)
+    const mmrEnabled = getValueOrDefault(
+      DBSettings['mmr-tracker'],
+      this.client.settings,
+      this.client.subscription,
+    )
     getWL({
       lng: this.client.locale,
       channelId: this.getChannelId(),
@@ -233,6 +241,7 @@ export class GSIHandler {
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
       this.client.settings,
+      this.client.subscription,
     )
     notablePlayers({
       locale: this.client.locale,
@@ -410,7 +419,11 @@ export class GSIHandler {
     const mmrSize = isParty ? MULTIPLIER_PARTY : MULTIPLIER_SOLO
     const newMMR = this.getMmr() + (increase ? mmrSize : -mmrSize)
     if (this.client.steam32Id) {
-      const mmrEnabled = getValueOrDefault(DBSettings['mmr-tracker'], this.client.settings)
+      const mmrEnabled = getValueOrDefault(
+        DBSettings['mmr-tracker'],
+        this.client.settings,
+        this.client.subscription,
+      )
       if (mmrEnabled) {
         logger.info('[MMR] Found steam32Id, updating mmr', extraInfo)
         await updateMmr({
@@ -563,7 +576,7 @@ export class GSIHandler {
     const matchId = client?.gsi?.map?.matchid || ''
     let betId: undefined | string
 
-    const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings)
+    const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings, client.subscription)
 
     try {
       if (betsEnabled) {
@@ -628,7 +641,11 @@ export class GSIHandler {
       return
     }
 
-    const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
+    const betsEnabled = getValueOrDefault(
+      DBSettings.bets,
+      this.client.settings,
+      this.client.subscription,
+    )
     const heroSlot = Number(await redisClient.client.get(`${this.client.token}:playingHeroSlot`))
     const heroName = (await redisClient.client.get(
       `${this.client.token}:playingHero`,
@@ -835,7 +852,11 @@ export class GSIHandler {
           })
 
           if (this.client.stream_online) {
-            const tellChatBets = getValueOrDefault(DBSettings.tellChatBets, this.client.settings)
+            const tellChatBets = getValueOrDefault(
+              DBSettings.tellChatBets,
+              this.client.settings,
+              this.client.subscription,
+            )
             if (tellChatBets) {
               say(
                 this.client,
@@ -846,7 +867,11 @@ export class GSIHandler {
                 }),
               )
             }
-            const betsEnabled = getValueOrDefault(DBSettings.bets, this.client.settings)
+            const betsEnabled = getValueOrDefault(
+              DBSettings.bets,
+              this.client.settings,
+              this.client.subscription,
+            )
             if (betsEnabled) await refundTwitchBet(this.getChannelId())
           }
           await this.resetClientState()

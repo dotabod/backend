@@ -133,6 +133,7 @@ commandHandler.registerCommand('np', {
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
       client.settings,
+      client.subscription,
     )
     notablePlayers({
       locale: client.locale,
