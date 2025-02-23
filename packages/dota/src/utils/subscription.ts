@@ -175,7 +175,7 @@ export function canAccessFeature(
 
   const requiredTier = getRequiredTier(actualFeature)
 
-  if (!subscription || !isSubscriptionActive(subscription)) {
+  if (!subscription || !isSubscriptionActive({ status: subscription.status })) {
     return {
       hasAccess: requiredTier === SUBSCRIPTION_TIERS.FREE,
       requiredTier,
@@ -188,6 +188,9 @@ export function canAccessFeature(
   }
 }
 
-export function isSubscriptionActive(subscription: SubscriptionStatus | null): boolean {
-  return subscription?.status === 'active' || subscription?.status === 'trialing'
+export function isSubscriptionActive(
+  subscription: { status: SubscriptionTierStatus } | null,
+): boolean {
+  if (!subscription?.status) return false
+  return ['active', 'trialing'].includes(subscription.status)
 }
