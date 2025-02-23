@@ -10,7 +10,7 @@ export const SUBSCRIPTION_TIERS = {
 } as const
 
 export type SubscriptionTier = (typeof SUBSCRIPTION_TIERS)[keyof typeof SUBSCRIPTION_TIERS]
-export type SubscriptionTierStatus = 'active' | 'inactive' | 'past_due' | 'canceled'
+export type SubscriptionTierStatus = 'active' | 'inactive' | 'past_due' | 'canceled' | 'trialing'
 
 export type SubscriptionStatus = {
   tier: SubscriptionTier
@@ -175,7 +175,7 @@ export function canAccessFeature(
 
   const requiredTier = getRequiredTier(actualFeature)
 
-  if (!subscription || subscription.status !== 'active') {
+  if (!subscription || !isSubscriptionActive(subscription)) {
     return {
       hasAccess: requiredTier === SUBSCRIPTION_TIERS.FREE,
       requiredTier,
@@ -189,5 +189,5 @@ export function canAccessFeature(
 }
 
 export function isSubscriptionActive(subscription: SubscriptionStatus | null): boolean {
-  return subscription?.status === 'active'
+  return subscription?.status === 'active' || subscription?.status === 'trialing'
 }

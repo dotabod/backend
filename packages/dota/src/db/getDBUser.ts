@@ -9,6 +9,7 @@ import {
 } from '../dota/lib/consts.js'
 import type { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
+import { type SubscriptionStatus, isSubscriptionActive } from '../utils/subscription'
 import supabase from './supabase.js'
 
 export default async function getDBUser({
@@ -155,11 +156,12 @@ export default async function getDBUser({
     lookingupToken.delete(lookupToken)
     return
   }
-
   let subscription = undefined
   if (Array.isArray(user.subscriptions) && user.subscriptions.length > 0) {
     const activeSubscription =
-      user.subscriptions.find((sub) => sub.status === 'active') || user.subscriptions[0]
+      user.subscriptions.find((sub) =>
+        isSubscriptionActive(sub as unknown as SubscriptionStatus),
+      ) || user.subscriptions[0]
     subscription = {
       ...activeSubscription,
       currentPeriodEnd: activeSubscription?.currentPeriodEnd
