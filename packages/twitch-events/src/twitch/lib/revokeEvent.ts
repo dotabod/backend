@@ -94,6 +94,7 @@ export async function revokeEvent({ providerAccountId }: { providerAccountId: st
     .from('accounts')
     .update({
       requires_refresh: true,
+      updated_at: new Date().toISOString(),
     })
     .eq('provider', 'twitch')
     .eq('providerAccountId', providerAccountId)

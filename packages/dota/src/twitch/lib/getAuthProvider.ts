@@ -22,6 +22,7 @@ export const getAuthProvider = () => {
       .from('accounts')
       .update({
         requires_refresh: true,
+        updated_at: new Date().toISOString(),
       })
       .eq('providerAccountId', twitchId)
       .eq('provider', 'twitch')
