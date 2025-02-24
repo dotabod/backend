@@ -36,7 +36,7 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
             *.platform=linux/arm64,linux/amd64/v3
-            dota.tags=ghcr.io/${{ github.repository_owner }}/dota:${{ env.BRANCH_NAME }},ghcr.io/${{ github.repository_owner }}/dota:${{ github.sha }}
+            dota.tags=ghcr.io/${{ github.repository_owner }}/dota:${{ env.BRANCH_NAME }}
   twitch-chat:
     runs-on: ubuntu-latest
     environment: prod
@@ -68,7 +68,7 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
             *.platform=linux/arm64,linux/amd64/v3
-            twitch-chat.tags=ghcr.io/${{ github.repository_owner }}/twitch-chat:${{ env.BRANCH_NAME }},ghcr.io/${{ github.repository_owner }}/twitch-chat:${{ github.sha }}
+            twitch-chat.tags=ghcr.io/${{ github.repository_owner }}/twitch-chat:${{ env.BRANCH_NAME }}
 
   steam:
     runs-on: ubuntu-latest
@@ -101,7 +101,7 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
             *.platform=linux/arm64,linux/amd64/v3
-            steam.tags=ghcr.io/${{ github.repository_owner }}/steam:${{ env.BRANCH_NAME }},ghcr.io/${{ github.repository_owner }}/steam:${{ github.sha }}
+            steam.tags=ghcr.io/${{ github.repository_owner }}/steam:${{ env.BRANCH_NAME }}
 
   twitch-events:
     runs-on: ubuntu-latest
@@ -134,4 +134,4 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
             *.platform=linux/arm64,linux/amd64/v3
-            twitch-events.tags=ghcr.io/${{ github.repository_owner }}/twitch-events:${{ env.BRANCH_NAME }},ghcr.io/${{ github.repository_owner }}/twitch-events:${{ github.sha }}
+            twitch-events.tags=ghcr.io/${{ github.repository_owner }}/twitch-events:${{ env.BRANCH_NAME }}
