@@ -265,11 +265,18 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
   handler?.emitWLUpdate()
 }
 
+const handleSubscriptionCommand = async (message: MessageType) => {
+  chatClient.whisper(message.user.userId, JSON.stringify(message.channel.client.subscription))
+}
+
 commandHandler.registerCommand('test', {
   permission: 4,
 
   handler: async (message, args) => {
     switch (args[0]) {
+      case 'subscription':
+        await handleSubscriptionCommand(message)
+        break
       case 'user':
         handleUserCommand(message, args)
         break

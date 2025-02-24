@@ -176,7 +176,7 @@ export function isChatterKey(key: string): boolean {
 // Update canAccessFeature to handle chatter keys
 export function canAccessFeature(
   feature: FeatureTier | GenericFeature,
-  subscription: Partial<SubscriptionRow> | null,
+  subscription: Partial<SubscriptionRow> | null | undefined,
 ): { hasAccess: boolean; requiredTier: SubscriptionTier } {
   const requiredTier = getRequiredTier(feature)
   const isFreeFeature = requiredTier === SUBSCRIPTION_TIERS.FREE
