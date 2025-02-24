@@ -80,7 +80,6 @@ class SetupSupabase {
           if (!client) return
 
           const isNewActive = isSubscriptionActive({ status: newObj.status })
-
           if (isNewActive) {
             // Update with new details
             client.subscription = {
@@ -91,6 +90,12 @@ class SetupSupabase {
             return
           }
 
+          // If current active but new is inactive
+          const isCurrentActive = isSubscriptionActive({ status: client.subscription?.status })
+          if (isCurrentActive && !isNewActive && client.subscription?.id !== newObj.id) {
+            return
+          }
+
           // If this subscription became inactive and it was the active one
           if (!isNewActive && client.subscription?.id === newObj.id) {
             // Check if user has any other active subscriptions
@@ -98,7 +103,6 @@ class SetupSupabase {
               .from('subscriptions')
               .select('*')
               .eq('userId', newObj.userId)
-              .neq('id', newObj.id)
               .in('status', ['ACTIVE', 'TRIALING'])
               .order('createdAt', { ascending: false })
               .limit(1)
@@ -131,7 +135,6 @@ class SetupSupabase {
               .from('subscriptions')
               .select('*')
               .eq('userId', oldObj.userId)
-              .neq('id', oldObj.id)
               .in('status', ['ACTIVE', 'TRIALING'])
               .order('createdAt', { ascending: false })
               .limit(1)
