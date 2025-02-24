@@ -1,5 +1,5 @@
+import type { Database } from './db/supabase-types.js'
 import type { HeroNames } from './dota/lib/getHero.js'
-import type { SubscriptionRow } from './utils/subscription'
 
 export interface SocketClient {
   name: string
@@ -32,7 +32,11 @@ export interface SocketClient {
     key: string
     value: any
   }[]
-  subscription?: SubscriptionRow
+  subscription?: {
+    id: string
+    tier: Database['public']['Tables']['subscriptions']['Row']['tier']
+    status: Database['public']['Tables']['subscriptions']['Row']['status']
+  }
 }
 interface Provider {
   name: string // "Dota 2"

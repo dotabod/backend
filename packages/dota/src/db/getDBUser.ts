@@ -90,10 +90,7 @@ export default async function getDBUser({
     subscriptions (
       id,
       tier,
-      status,
-      currentPeriodEnd,
-      cancelAtPeriodEnd,
-      stripePriceId
+      status
     ),
     Account:accounts (
       refresh_token,
@@ -164,9 +161,6 @@ export default async function getDBUser({
       user.subscriptions[0]
     subscription = {
       ...activeSubscription,
-      currentPeriodEnd: activeSubscription?.currentPeriodEnd
-        ? new Date(activeSubscription.currentPeriodEnd)
-        : undefined,
     }
   }
 

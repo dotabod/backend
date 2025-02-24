@@ -57,22 +57,15 @@ class SetupSupabase {
         { event: 'INSERT', schema: 'public', table: 'subscriptions' },
         async (payload: { new: Tables<'subscriptions'> }) => {
           const newObj = payload.new
-          if (!isSubscriptionActive({ status: newObj.status })) {
-            return
-          }
-
           const client = findUser(newObj.userId)
 
-          if (client) {
+          if (!client) return
+
+          if (isSubscriptionActive({ status: newObj.status })) {
             client.subscription = {
               id: newObj.id,
               tier: newObj.tier,
               status: newObj.status,
-              currentPeriodEnd: newObj.currentPeriodEnd
-                ? new Date(newObj.currentPeriodEnd)
-                : undefined,
-              cancelAtPeriodEnd: newObj.cancelAtPeriodEnd,
-              stripePriceId: newObj.stripePriceId ?? '',
             }
           }
         },
@@ -82,31 +75,25 @@ class SetupSupabase {
         { event: 'UPDATE', schema: 'public', table: 'subscriptions' },
         async (payload: { new: Tables<'subscriptions'>; old: Tables<'subscriptions'> }) => {
           const newObj = payload.new
-          const oldObj = payload.old
+          const client = findUser(newObj.userId)
 
-          // If subscription status changed
-          if (newObj.status !== oldObj.status) {
-            const client = findUser(newObj.userId)
-            if (client) {
-              if (
-                !isSubscriptionActive({ status: newObj.status }) &&
-                client.subscription?.id === newObj.id
-              ) {
-                client.subscription = undefined
-                return
-              }
+          if (!client) return
 
-              client.subscription = {
-                id: newObj.id,
-                tier: newObj.tier,
-                status: newObj.status,
-                currentPeriodEnd: newObj.currentPeriodEnd
-                  ? new Date(newObj.currentPeriodEnd)
-                  : undefined,
-                cancelAtPeriodEnd: newObj.cancelAtPeriodEnd,
-                stripePriceId: newObj.stripePriceId ?? '',
-              }
+          const isNewActive = isSubscriptionActive({ status: newObj.status })
+
+          if (isNewActive) {
+            // Update with new details
+            client.subscription = {
+              id: newObj.id,
+              tier: newObj.tier,
+              status: newObj.status,
             }
+            return
+          }
+
+          if (!isNewActive && client.subscription?.id === newObj.id) {
+            client.subscription = undefined
+            return
           }
         },
       )
