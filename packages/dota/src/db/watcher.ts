@@ -123,6 +123,7 @@ class SetupSupabase {
           }
         },
       )
+      // Needs `ALTER TABLE subscriptions REPLICA IDENTITY FULL;` to receive full object on DELETE
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'subscriptions' },
@@ -130,12 +131,9 @@ class SetupSupabase {
           const oldObj = payload.old
           const client = findUser(oldObj.userId)
 
-          logger.info('[WATCHER SUBSCRIPTION] Deleting subscription', {
-            oldObj,
-            subscription: client?.subscription,
-          })
+          if (!client) return
 
-          if (client && client.subscription?.id === oldObj.id) {
+          if (client.subscription?.id === oldObj.id) {
             // Check if user has any other active subscriptions
             const activeSubscription = await supabase
               .from('subscriptions')
@@ -147,9 +145,6 @@ class SetupSupabase {
               .limit(1)
               .single()
 
-            logger.info('[WATCHER SUBSCRIPTION] Active subscription', {
-              activeSubscription,
-            })
             if (activeSubscription.data) {
               // Set the other active subscription
               client.subscription = {
