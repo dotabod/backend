@@ -91,8 +91,29 @@ class SetupSupabase {
             return
           }
 
+          // If this subscription became inactive and it was the active one
           if (!isNewActive && client.subscription?.id === newObj.id) {
-            client.subscription = undefined
+            // Check if user has any other active subscriptions
+            const activeSubscription = await supabase
+              .from('subscriptions')
+              .select('*')
+              .eq('userId', newObj.userId)
+              .in('status', ['ACTIVE', 'TRIALING'])
+              .order('createdAt', { ascending: false })
+              .limit(1)
+              .single()
+
+            if (activeSubscription.data) {
+              // Set the other active subscription
+              client.subscription = {
+                id: activeSubscription.data.id,
+                tier: activeSubscription.data.tier,
+                status: activeSubscription.data.status,
+              }
+            } else {
+              // No other active subscriptions found
+              client.subscription = undefined
+            }
             return
           }
         },
@@ -104,7 +125,27 @@ class SetupSupabase {
           const oldObj = payload.old
           const client = findUser(oldObj.userId)
           if (client && client.subscription?.id === oldObj.id) {
-            client.subscription = undefined
+            // Check if user has any other active subscriptions
+            const activeSubscription = await supabase
+              .from('subscriptions')
+              .select('*')
+              .eq('userId', oldObj.userId)
+              .in('status', ['ACTIVE', 'TRIALING'])
+              .order('createdAt', { ascending: false })
+              .limit(1)
+              .single()
+
+            if (activeSubscription.data) {
+              // Set the other active subscription
+              client.subscription = {
+                id: activeSubscription.data.id,
+                tier: activeSubscription.data.tier,
+                status: activeSubscription.data.status,
+              }
+            } else {
+              // No other active subscriptions found
+              client.subscription = undefined
+            }
           }
         },
       )
