@@ -78,6 +78,17 @@ class SetupSupabase {
       )
       .on(
         'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'subscriptions' },
+        async (payload: { old: Tables<'subscriptions'> }) => {
+          const oldObj = payload.old
+          const client = findUser(oldObj.userId)
+          if (client) {
+            client.subscription = undefined
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'accounts' },
         async (payload: { new: Tables<'accounts'>; old: Tables<'accounts'> }) => {
           // watch the accounts table for requires_refresh to change from true to false
