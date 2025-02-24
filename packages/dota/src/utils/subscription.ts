@@ -10,7 +10,10 @@ export const SUBSCRIPTION_TIERS = {
   PRO: 'PRO',
 } as const
 
-export type SubscriptionRow = Database['public']['Tables']['subscriptions']['Row']
+export type SubscriptionRow = Pick<
+  Database['public']['Tables']['subscriptions']['Row'],
+  'id' | 'tier' | 'status'
+>
 
 export const TIER_LEVELS: Record<Database['public']['Enums']['SubscriptionTier'], number> = {
   [SUBSCRIPTION_TIERS.FREE]: 0,

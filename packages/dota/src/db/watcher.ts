@@ -104,7 +104,7 @@ class SetupSupabase {
               .select('*')
               .eq('userId', newObj.userId)
               .in('status', ['ACTIVE', 'TRIALING'])
-              .order('createdAt', { ascending: false })
+              .order('transactionType', { ascending: false })
               .limit(1)
               .single()
 
@@ -129,6 +129,12 @@ class SetupSupabase {
         async (payload: { old: Tables<'subscriptions'> }) => {
           const oldObj = payload.old
           const client = findUser(oldObj.userId)
+
+          logger.info('[WATCHER SUBSCRIPTION] Deleting subscription', {
+            oldObj,
+            subscription: client?.subscription,
+          })
+
           if (client && client.subscription?.id === oldObj.id) {
             // Check if user has any other active subscriptions
             const activeSubscription = await supabase
@@ -137,10 +143,13 @@ class SetupSupabase {
               .eq('userId', oldObj.userId)
               .neq('id', oldObj.id)
               .in('status', ['ACTIVE', 'TRIALING'])
-              .order('createdAt', { ascending: false })
+              .order('transactionType', { ascending: false })
               .limit(1)
               .single()
 
+            logger.info('[WATCHER SUBSCRIPTION] Active subscription', {
+              activeSubscription,
+            })
             if (activeSubscription.data) {
               // Set the other active subscription
               client.subscription = {
