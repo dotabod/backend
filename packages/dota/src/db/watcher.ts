@@ -135,6 +135,7 @@ class SetupSupabase {
               .from('subscriptions')
               .select('*')
               .eq('userId', oldObj.userId)
+              .neq('id', oldObj.id)
               .in('status', ['ACTIVE', 'TRIALING'])
               .order('createdAt', { ascending: false })
               .limit(1)
