@@ -1,5 +1,5 @@
 import type { HeroNames } from './dota/lib/getHero.js'
-import type { SubscriptionRow } from './utils/subscription.js'
+import type { SubscriptionRow } from './utils/subscription'
 
 export interface SocketClient {
   name: string

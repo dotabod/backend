@@ -10,11 +10,7 @@ import { chatClient } from '../twitch/chatClient.js'
 import { updateTwurpleTokenForTwitchId } from '../twitch/lib/getTwitchAPI'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
-import {
-  type SubscriptionTier,
-  type SubscriptionTierStatus,
-  isSubscriptionActive,
-} from '../utils/subscription.js'
+import { isSubscriptionActive } from '../utils/subscription.js'
 import getDBUser from './getDBUser.js'
 import type { Tables } from './supabase-types.js'
 import supabase from './supabase.js'
@@ -61,7 +57,7 @@ class SetupSupabase {
         { event: 'INSERT', schema: 'public', table: 'subscriptions' },
         async (payload: { new: Tables<'subscriptions'> }) => {
           const newObj = payload.new
-          if (!isSubscriptionActive({ status: newObj.status as SubscriptionTierStatus })) {
+          if (!isSubscriptionActive({ status: newObj.status })) {
             return
           }
 
@@ -70,8 +66,8 @@ class SetupSupabase {
           if (client) {
             client.subscription = {
               id: newObj.id,
-              tier: newObj.tier as SubscriptionTier,
-              status: newObj.status as SubscriptionTierStatus,
+              tier: newObj.tier,
+              status: newObj.status,
               currentPeriodEnd: newObj.currentPeriodEnd
                 ? new Date(newObj.currentPeriodEnd)
                 : undefined,
@@ -93,7 +89,7 @@ class SetupSupabase {
             const client = findUser(newObj.userId)
             if (client) {
               if (
-                !isSubscriptionActive({ status: newObj.status as SubscriptionTierStatus }) &&
+                !isSubscriptionActive({ status: newObj.status }) &&
                 client.subscription?.id === newObj.id
               ) {
                 client.subscription = undefined
@@ -102,8 +98,8 @@ class SetupSupabase {
 
               client.subscription = {
                 id: newObj.id,
-                tier: newObj.tier as SubscriptionTier,
-                status: newObj.status as SubscriptionTierStatus,
+                tier: newObj.tier,
+                status: newObj.status,
                 currentPeriodEnd: newObj.currentPeriodEnd
                   ? new Date(newObj.currentPeriodEnd)
                   : undefined,

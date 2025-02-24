@@ -1,3 +1,4 @@
+import type { Database } from '../db/supabase-types'
 import type { SettingKeys, defaultSettings } from '../settings'
 
 // Add type safety for chatters
@@ -9,28 +10,9 @@ export const SUBSCRIPTION_TIERS = {
   PRO: 'PRO',
 } as const
 
-export type SubscriptionTier = (typeof SUBSCRIPTION_TIERS)[keyof typeof SUBSCRIPTION_TIERS]
-export type SubscriptionTierStatus =
-  | 'ACTIVE'
-  | 'CANCELED'
-  | 'INCOMPLETE'
-  | 'INCOMPLETE_EXPIRED'
-  | 'PAST_DUE'
-  | 'PAUSED'
-  | 'TRIALING'
-  | 'UNPAID'
-  | null
+export type SubscriptionRow = Database['public']['Tables']['subscriptions']['Row']
 
-export type SubscriptionRow = {
-  id: string
-  tier: SubscriptionTier
-  status: SubscriptionTierStatus
-  currentPeriodEnd?: Date
-  cancelAtPeriodEnd?: boolean
-  stripePriceId: string
-}
-
-export const TIER_LEVELS: Record<SubscriptionTier, number> = {
+export const TIER_LEVELS: Record<Database['public']['Enums']['SubscriptionTier'], number> = {
   [SUBSCRIPTION_TIERS.FREE]: 0,
   [SUBSCRIPTION_TIERS.PRO]: 1,
 }
@@ -43,7 +25,10 @@ export const PRICE_PERIODS = {
 
 export type PricePeriod = (typeof PRICE_PERIODS)[keyof typeof PRICE_PERIODS]
 
-export const FEATURE_TIERS: Record<SettingKeys | ChatterSettingKeys, SubscriptionTier> = {
+export const FEATURE_TIERS: Record<
+  SettingKeys | ChatterSettingKeys,
+  Database['public']['Enums']['SubscriptionTier']
+> = {
   // Free Tier Features
   'minimap-blocker': SUBSCRIPTION_TIERS.FREE,
   chatter: SUBSCRIPTION_TIERS.FREE,
@@ -158,7 +143,9 @@ export const GENERIC_FEATURE_TIERS = {
 
 export type GenericFeature = keyof typeof GENERIC_FEATURE_TIERS
 
-export function getRequiredTier(feature?: FeatureTier | GenericFeature): SubscriptionTier {
+export function getRequiredTier(
+  feature?: FeatureTier | GenericFeature,
+): Database['public']['Enums']['SubscriptionTier'] {
   if (!feature) return SUBSCRIPTION_TIERS.PRO
 
   return (
@@ -177,7 +164,7 @@ export function isChatterKey(key: string): boolean {
 export function canAccessFeature(
   feature: FeatureTier | GenericFeature,
   subscription: Partial<SubscriptionRow> | null | undefined,
-): { hasAccess: boolean; requiredTier: SubscriptionTier } {
+): { hasAccess: boolean; requiredTier: Database['public']['Enums']['SubscriptionTier'] } {
   const requiredTier = getRequiredTier(feature)
   const isFreeFeature = requiredTier === SUBSCRIPTION_TIERS.FREE
 
@@ -202,7 +189,9 @@ export function canAccessFeature(
 }
 
 export function isSubscriptionActive(
-  subscription: { status: SubscriptionTierStatus | null | undefined } | null,
+  subscription: {
+    status: Database['public']['Enums']['SubscriptionStatus'] | null | undefined
+  } | null,
 ): boolean {
   if (!subscription?.status) return false
   if (subscription.status === 'TRIALING') return true

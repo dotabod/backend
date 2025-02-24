@@ -416,11 +416,12 @@ export type Database = {
           created_at: string
           currentPeriodEnd: string | null
           id: string
-          status: string
+          status: Database['public']['Enums']['SubscriptionStatus'] | null
           stripeCustomerId: string | null
           stripePriceId: string | null
           stripeSubscriptionId: string | null
-          tier: string
+          tier: Database['public']['Enums']['SubscriptionTier']
+          transactionType: Database['public']['Enums']['TransactionType']
           updated_at: string
           userId: string
         }
@@ -429,11 +430,12 @@ export type Database = {
           created_at?: string
           currentPeriodEnd?: string | null
           id?: string
-          status?: string
+          status?: Database['public']['Enums']['SubscriptionStatus'] | null
           stripeCustomerId?: string | null
           stripePriceId?: string | null
           stripeSubscriptionId?: string | null
-          tier?: string
+          tier?: Database['public']['Enums']['SubscriptionTier']
+          transactionType: Database['public']['Enums']['TransactionType']
           updated_at?: string
           userId: string
         }
@@ -442,11 +444,12 @@ export type Database = {
           created_at?: string
           currentPeriodEnd?: string | null
           id?: string
-          status?: string
+          status?: Database['public']['Enums']['SubscriptionStatus'] | null
           stripeCustomerId?: string | null
           stripePriceId?: string | null
           stripeSubscriptionId?: string | null
-          tier?: string
+          tier?: Database['public']['Enums']['SubscriptionTier']
+          transactionType?: Database['public']['Enums']['TransactionType']
           updated_at?: string
           userId?: string
         }
@@ -523,6 +526,27 @@ export type Database = {
         }
         Relationships: []
       }
+      WebhookEvent: {
+        Row: {
+          eventType: string
+          id: string
+          processedAt: string
+          stripeEventId: string
+        }
+        Insert: {
+          eventType: string
+          id: string
+          processedAt: string
+          stripeEventId: string
+        }
+        Update: {
+          eventType?: string
+          id?: string
+          processedAt?: string
+          stripeEventId?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -545,7 +569,17 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      SubscriptionStatus:
+        | 'ACTIVE'
+        | 'CANCELED'
+        | 'INCOMPLETE'
+        | 'INCOMPLETE_EXPIRED'
+        | 'PAST_DUE'
+        | 'PAUSED'
+        | 'TRIALING'
+        | 'UNPAID'
+      SubscriptionTier: 'FREE' | 'PRO'
+      TransactionType: 'RECURRING' | 'LIFETIME'
     }
     CompositeTypes: {
       [_ in never]: never
