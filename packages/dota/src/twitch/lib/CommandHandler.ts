@@ -5,7 +5,7 @@ import { type SettingKeys, getValueOrDefault } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import type { SocketClient } from '../../types.js'
 import { logger } from '../../utils/logger.js'
-import type { SubscriptionStatus } from '../../utils/subscription'
+import type { SubscriptionRow } from '../../utils/subscription'
 import { chatClient } from '../chatClient.js'
 
 export interface UserType {
@@ -254,7 +254,7 @@ class CommandHandler {
   isEnabled(
     settings: SocketClient['settings'],
     dbkey?: SettingKeys,
-    subscription?: SubscriptionStatus,
+    subscription?: SubscriptionRow,
   ) {
     // Default enabled if no dbkey is provided
     if (!dbkey) return true

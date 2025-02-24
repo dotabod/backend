@@ -10,7 +10,11 @@ import { chatClient } from '../twitch/chatClient.js'
 import { updateTwurpleTokenForTwitchId } from '../twitch/lib/getTwitchAPI'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
-import type { SubscriptionTier, SubscriptionTierStatus } from '../utils/subscription.js'
+import {
+  type SubscriptionTier,
+  type SubscriptionTierStatus,
+  isSubscriptionActive,
+} from '../utils/subscription.js'
 import getDBUser from './getDBUser.js'
 import type { Tables } from './supabase-types.js'
 import supabase from './supabase.js'
@@ -54,6 +58,31 @@ class SetupSupabase {
       )
       .on(
         'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'subscriptions' },
+        async (payload: { new: Tables<'subscriptions'> }) => {
+          const newObj = payload.new
+          if (!isSubscriptionActive({ status: newObj.status as SubscriptionTierStatus })) {
+            return
+          }
+
+          const client = findUser(newObj.userId)
+
+          if (client) {
+            client.subscription = {
+              id: newObj.id,
+              tier: newObj.tier as SubscriptionTier,
+              status: newObj.status as SubscriptionTierStatus,
+              currentPeriodEnd: newObj.currentPeriodEnd
+                ? new Date(newObj.currentPeriodEnd)
+                : undefined,
+              cancelAtPeriodEnd: newObj.cancelAtPeriodEnd,
+              stripePriceId: newObj.stripePriceId ?? '',
+            }
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'subscriptions' },
         async (payload: { new: Tables<'subscriptions'>; old: Tables<'subscriptions'> }) => {
           const newObj = payload.new
@@ -63,7 +92,16 @@ class SetupSupabase {
           if (newObj.status !== oldObj.status) {
             const client = findUser(newObj.userId)
             if (client) {
+              if (
+                !isSubscriptionActive({ status: newObj.status as SubscriptionTierStatus }) &&
+                client.subscription?.id === newObj.id
+              ) {
+                client.subscription = undefined
+                return
+              }
+
               client.subscription = {
+                id: newObj.id,
                 tier: newObj.tier as SubscriptionTier,
                 status: newObj.status as SubscriptionTierStatus,
                 currentPeriodEnd: newObj.currentPeriodEnd
@@ -82,7 +120,7 @@ class SetupSupabase {
         async (payload: { old: Tables<'subscriptions'> }) => {
           const oldObj = payload.old
           const client = findUser(oldObj.userId)
-          if (client) {
+          if (client && client.subscription?.id === oldObj.id) {
             client.subscription = undefined
           }
         },

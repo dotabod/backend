@@ -5,14 +5,24 @@ export type ChatterKeys = keyof typeof defaultSettings.chatters
 export type ChatterSettingKeys = `chatters.${ChatterKeys}`
 
 export const SUBSCRIPTION_TIERS = {
-  FREE: 'free',
-  PRO: 'pro',
+  FREE: 'FREE',
+  PRO: 'PRO',
 } as const
 
 export type SubscriptionTier = (typeof SUBSCRIPTION_TIERS)[keyof typeof SUBSCRIPTION_TIERS]
-export type SubscriptionTierStatus = 'active' | 'inactive' | 'past_due' | 'canceled' | 'trialing'
+export type SubscriptionTierStatus =
+  | 'ACTIVE'
+  | 'CANCELED'
+  | 'INCOMPLETE'
+  | 'INCOMPLETE_EXPIRED'
+  | 'PAST_DUE'
+  | 'PAUSED'
+  | 'TRIALING'
+  | 'UNPAID'
+  | null
 
-export type SubscriptionStatus = {
+export type SubscriptionRow = {
+  id: string
   tier: SubscriptionTier
   status: SubscriptionTierStatus
   currentPeriodEnd?: Date
@@ -166,22 +176,25 @@ export function isChatterKey(key: string): boolean {
 // Update canAccessFeature to handle chatter keys
 export function canAccessFeature(
   feature: FeatureTier | GenericFeature,
-  subscription?: SubscriptionStatus | null,
+  subscription: Partial<SubscriptionRow> | null,
 ): { hasAccess: boolean; requiredTier: SubscriptionTier } {
-  // Handle chatter keys by removing the 'chatters.' prefix
-  const actualFeature = isChatterKey(feature)
-    ? (feature as `chatters.${ChatterKeys}`)
-    : (feature as FeatureTier | GenericFeature)
+  const requiredTier = getRequiredTier(feature)
+  const isFreeFeature = requiredTier === SUBSCRIPTION_TIERS.FREE
 
-  const requiredTier = getRequiredTier(actualFeature)
-
-  if (!subscription || !isSubscriptionActive({ status: subscription.status })) {
+  // Return early if feature is free or subscription is invalid
+  if (
+    isFreeFeature ||
+    !subscription?.status ||
+    !subscription?.tier ||
+    !isSubscriptionActive({ status: subscription.status })
+  ) {
     return {
-      hasAccess: requiredTier === SUBSCRIPTION_TIERS.FREE,
+      hasAccess: isFreeFeature,
       requiredTier,
     }
   }
 
+  // Check if subscription tier level meets required tier level
   return {
     hasAccess: TIER_LEVELS[subscription.tier] >= TIER_LEVELS[requiredTier],
     requiredTier,
@@ -189,8 +202,10 @@ export function canAccessFeature(
 }
 
 export function isSubscriptionActive(
-  subscription: { status: SubscriptionTierStatus } | null,
+  subscription: { status: SubscriptionTierStatus | null | undefined } | null,
 ): boolean {
   if (!subscription?.status) return false
-  return ['active', 'trialing'].includes(subscription.status)
+  if (subscription.status === 'TRIALING') return true
+  if (subscription.status === 'ACTIVE') return true
+  return false
 }

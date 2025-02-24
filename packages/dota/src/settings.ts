@@ -1,4 +1,4 @@
-import { type SubscriptionStatus, canAccessFeature } from './utils/subscription.js'
+import { type SubscriptionRow, canAccessFeature } from './utils/subscription.js'
 
 export const commands = {
   commandAPM: true,
@@ -151,7 +151,7 @@ for (const key of Object.keys(defaultSettings)) {
 export const getValueOrDefault = (
   key: SettingKeys,
   data?: { key: string; value: any }[],
-  subscription?: SubscriptionStatus,
+  subscription?: SubscriptionRow,
   chatterKey?: keyof (typeof defaultSettings)['chatters'],
 ) => {
   // Check subscription access

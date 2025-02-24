@@ -88,6 +88,7 @@ export default async function getDBUser({
     beta_tester,
     locale,
     subscriptions (
+      id,
       tier,
       status,
       currentPeriodEnd,

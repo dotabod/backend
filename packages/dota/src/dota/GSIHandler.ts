@@ -13,7 +13,7 @@ import type { BlockType, DotaEvent, SocketClient } from '../types.js'
 import axios from '../utils/axios.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
-import type { SubscriptionStatus } from '../utils/subscription.js'
+import type { SubscriptionRow } from '../utils/subscription.js'
 import { NeutralItemTimer } from './NeutralItemTimer.js'
 import { type AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
 import { type RoshRes, emitRoshEvent } from './events/gsi-events/event.roshan_killed.js'
@@ -48,10 +48,7 @@ interface MMR {
   heroName?: string | null
 }
 
-export function getStreamDelay(
-  settings: SocketClient['settings'],
-  subscription?: SubscriptionStatus,
-) {
+export function getStreamDelay(settings: SocketClient['settings'], subscription?: SubscriptionRow) {
   return Number(getValueOrDefault(DBSettings.streamDelay, settings, subscription)) + GLOBAL_DELAY
 }
 
