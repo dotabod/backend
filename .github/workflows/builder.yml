@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "**"
+
 jobs:
   dota:
     runs-on: ubuntu-latest
@@ -32,11 +33,13 @@ jobs:
         with:
           push: true
           provenance: false
+          targets: dota  # Explicitly specify the 'dota' target
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
             *.platform=linux/arm64,linux/amd64/v3
             dota.tags=ghcr.io/${{ github.repository_owner }}/dota:${{ env.BRANCH_NAME }}
+
   twitch-chat:
     runs-on: ubuntu-latest
     environment: prod
@@ -64,6 +67,7 @@ jobs:
         with:
           push: true
           provenance: false
+          targets: twitch-chat  # Explicitly specify the 'twitch-chat' target
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
@@ -97,6 +101,7 @@ jobs:
         with:
           push: true
           provenance: false
+          targets: steam  # Explicitly specify the 'steam' target
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
@@ -130,6 +135,7 @@ jobs:
         with:
           push: true
           provenance: false
+          targets: twitch-events  # Explicitly specify the 'twitch-events' target
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
