@@ -48,6 +48,11 @@ async function disableChannel(broadcasterId: string) {
     return
   }
 
+  // Delete all their current steam accounts
+  // In the event that they are banned, they can now connect their old steam accounts
+  // to a new Twitch account
+  await supabase.from('steam_accounts').delete().eq('userId', user.userId)
+
   const { data: settings } = await supabase
     .from('settings')
     .select('key, value')
@@ -89,6 +94,7 @@ export async function revokeEvent({ providerAccountId }: { providerAccountId: st
     .from('accounts')
     .update({
       requires_refresh: true,
+      updated_at: new Date().toISOString(),
     })
     .eq('provider', 'twitch')
     .eq('providerAccountId', providerAccountId)

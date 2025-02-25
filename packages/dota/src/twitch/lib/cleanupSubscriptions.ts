@@ -99,7 +99,7 @@ const debouncedUpdateAccounts = debounce(async () => {
   for (const chunk of chunks) {
     const { error } = await supabase
       .from('accounts')
-      .update({ requires_refresh: true })
+      .update({ requires_refresh: true, updated_at: new Date().toISOString() })
       .in('providerAccountId', chunk)
       .eq('provider', 'twitch')
 
