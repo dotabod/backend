@@ -163,6 +163,13 @@ export function isChatterKey(key: string): boolean {
   return key.startsWith('chatters.')
 }
 
+export const GRACE_PERIOD_END = new Date('2025-04-30T23:59:59.999Z')
+
+// Add a function to check if we're in the grace period
+export function isInGracePeriod(): boolean {
+  return new Date() < GRACE_PERIOD_END
+}
+
 // Update canAccessFeature to handle chatter keys
 export function canAccessFeature(
   feature: FeatureTier | GenericFeature,
@@ -170,6 +177,15 @@ export function canAccessFeature(
 ): { hasAccess: boolean; requiredTier: Database['public']['Enums']['SubscriptionTier'] } {
   const requiredTier = getRequiredTier(feature)
   const isFreeFeature = requiredTier === SUBSCRIPTION_TIERS.FREE
+
+  // Check if we're in the grace period (before April 30, 2025)
+  // Grant Pro access to all users during this period
+  if (isInGracePeriod()) {
+    return {
+      hasAccess: true, // All features are accessible during grace period
+      requiredTier,
+    }
+  }
 
   // Return early if feature is free or subscription is invalid
   if (
