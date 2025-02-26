@@ -28,5 +28,12 @@ export async function checkCallAndMemory(regexPattern: RegExp, userCount: number
 
       prevCallCount = callLength
     }, 1000)
+
+    // Clear memory after tests
+    return () => {
+      clearInterval(interval)
+      twitchChatSpy.mockClear()
+      global.gc() // Trigger garbage collection if available
+    }
   })
 }
