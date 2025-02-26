@@ -204,6 +204,11 @@ export class GSIHandler {
     this.resetBetData()
     this.emitClientResetEvents()
     this.neutralItemTimer.reset()
+
+    // Reset multiAccount property to ensure it's cleared when state is reset
+    if (this.client) {
+      this.client.multiAccount = undefined
+    }
   }
 
   emitWLUpdate() {

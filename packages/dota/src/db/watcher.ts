@@ -347,13 +347,25 @@ class SetupSupabase {
               name: client.name,
             })
 
+            // Store the steam32Id before clearing cache
+            const deletedSteam32Id = oldObj.steam32Id
+
             // A delete will reset their status in memory so they can reconnect anything
             await clearCacheForUser(client)
 
             // We try deleting those users so they can attempt a new connection
             if (Array.isArray(oldObj.connectedUserIds)) {
               for (const connectedToken of oldObj.connectedUserIds) {
-                await clearCacheForUser(gsiHandlers.get(connectedToken)?.client)
+                const connectedClient = gsiHandlers.get(connectedToken)?.client
+
+                // If client exists, clear its cache
+                if (connectedClient) {
+                  // Explicitly clear multiAccount if it matches the deleted account
+                  if (connectedClient.multiAccount === deletedSteam32Id) {
+                    connectedClient.multiAccount = undefined
+                  }
+                  await clearCacheForUser(connectedClient)
+                }
               }
             }
 

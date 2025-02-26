@@ -20,8 +20,11 @@ export async function checkForInactiveTokens() {
 }
 
 // three types of in-memory cache exists
-export async function clearCacheForUser(client?: SocketClient | null) {
-  if (!client) return false
+export async function clearCacheForUser(client?: SocketClient) {
+  if (!client) return
+
+  // Reset multiAccount explicitly
+  client.multiAccount = undefined
 
   // mark the client as disabled while we cleanup everything
   // just so new items won't get added while we do this
