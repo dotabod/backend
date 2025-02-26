@@ -1,5 +1,4 @@
 import { t } from 'i18next'
-import { logger } from '../utils/logger.js'
 import type { GSIHandler } from './GSIHandler.js'
 import { redisClient } from './GSIHandler.js'
 import { say } from './say.js'
@@ -54,16 +53,6 @@ export class NeutralItemTimer {
       if (timeDiff >= 0 && timeDiff <= this.BUFFER_TIME) {
         this.notifyNeutralItem(tierTime.tier)
         this.notifiedTiers.add(tierTime.tier)
-
-        logger.info('[NEUTRAL ITEMS] Notifying tier available', {
-          name: this.dotaClient.client.name,
-          tier: tierTime.tier,
-          targetSeconds,
-          clockTime,
-          timeDiff,
-          isTurbo,
-          matchId,
-        })
       }
     })
   }
