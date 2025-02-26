@@ -10,7 +10,6 @@ import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
 import type { BlockType, DotaEvent, SocketClient } from '../types.js'
-import axios from '../utils/axios.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import type { SubscriptionRow } from '../utils/subscription.js'
@@ -46,6 +45,16 @@ interface MMR {
   isParty?: boolean
   heroSlot?: number | null
   heroName?: string | null
+}
+
+interface MatchDataResponse {
+  radiantWin?: boolean
+  radiantScore?: number
+  direScore?: number
+  kills?: number
+  deaths?: number
+  assists?: number
+  lobbyType?: number
 }
 
 export function getStreamDelay(settings: SocketClient['settings'], subscription?: SubscriptionRow) {
@@ -870,7 +879,7 @@ export class GSIHandler {
     }
   }
 
-  private checkEarlyDCWinner(matchId: string) {
+  private async checkEarlyDCWinner(matchId: string) {
     logger.info('[BETS] Streamer exited the match before it ended with a winner', {
       name: this.client.name,
       matchId,
@@ -878,69 +887,110 @@ export class GSIHandler {
       endingBets: this.endingBets,
     })
 
-    // Check with steam to see if the match is over
-    axios
-      .get('https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/', {
-        params: { key: process.env.STEAM_WEB_API, match_id: matchId },
-      })
-      .then(async (response: { data: any }) => {
-        logger.info('Found an early dc match data', {
+    // Set up retry parameters
+    const MAX_RETRIES = 6 // Try up to 6 times
+    const RETRY_DELAY = 30000 // 30 seconds between retries (total ~3 minutes)
+    let retryCount = 0
+
+    const attemptFetchMatchData = async (): Promise<void> => {
+      if (retryCount >= MAX_RETRIES) {
+        logger.info('Exceeded maximum retries for early DC match check', {
+          name: this.client.name,
           matchId,
-          channel: this.client.name,
         })
 
-        let winningTeam: 'radiant' | 'dire' | null = null
-        if (typeof response.data?.result?.radiant_win === 'boolean') {
-          winningTeam = response.data.result.radiant_win ? 'radiant' : 'dire'
+        // Handle refunding bets after exhausting all retries
+        if (this.client.stream_online) {
+          const tellChatBets = getValueOrDefault(
+            DBSettings.tellChatBets,
+            this.client.settings,
+            this.client.subscription,
+          )
+          if (tellChatBets) {
+            say(
+              this.client,
+              t('bets.notScored', {
+                emote: 'D:',
+                lng: this.client.locale,
+                matchId,
+              }),
+            )
+          }
+          const betsEnabled = getValueOrDefault(
+            DBSettings.bets,
+            this.client.settings,
+            this.client.subscription,
+          )
+          if (betsEnabled) await refundTwitchBet(this.getChannelId())
         }
 
-        if (winningTeam === null) {
-          logger.info('Early dc match wont be scored bc winner is null', {
+        await this.resetClientState()
+        return
+      }
+
+      try {
+        // Request match data directly from any connected client
+        const response = await new Promise<MatchDataResponse>((resolve, reject) => {
+          server.io
+            .timeout(25000)
+            .to(this.client.token)
+            .emit(
+              'requestMatchData',
+              { matchId, heroId: 0 },
+              (err: Error | null, response: MatchDataResponse) => {
+                if (err) {
+                  logger.error('Error requesting match data for early DC', {
+                    matchId,
+                    name: this.client.name,
+                    error: err,
+                  })
+                  reject(err)
+                } else {
+                  resolve(response)
+                }
+              },
+            )
+        })
+
+        // Check if we got a valid response with radiantWin property
+        if (response && typeof response.radiantWin === 'boolean') {
+          logger.info('Successfully retrieved match result for early DC', {
+            matchId,
             name: this.client.name,
+            response,
           })
 
-          if (this.client.stream_online) {
-            const tellChatBets = getValueOrDefault(
-              DBSettings.tellChatBets,
-              this.client.settings,
-              this.client.subscription,
-            )
-            if (tellChatBets) {
-              say(
-                this.client,
-                t('bets.notScored', {
-                  emote: 'D:',
-                  lng: this.client.locale,
-                  matchId,
-                }),
-              )
-            }
-            const betsEnabled = getValueOrDefault(
-              DBSettings.bets,
-              this.client.settings,
-              this.client.subscription,
-            )
-            if (betsEnabled) await refundTwitchBet(this.getChannelId())
-          }
-          await this.resetClientState()
-          return
+          const winningTeam = response.radiantWin ? 'radiant' : 'dire'
+          await this.closeBets(winningTeam)
+        } else {
+          // Invalid response, retry after delay
+          retryCount++
+          logger.info('Invalid match data response, scheduling retry', {
+            name: this.client.name,
+            matchId,
+            retryCount,
+            maxRetries: MAX_RETRIES,
+          })
+
+          setTimeout(attemptFetchMatchData, RETRY_DELAY)
         }
-
-        await this.closeBets(winningTeam)
-      })
-      .catch((err) => {
-        // this could mean match is not over yet. just give up checking after this long (like 3m)
-        // resetting vars will mean it will just grab it again on match load
-        logger.error('Early dc match didnt have data in it, match still going on?', {
-          channel: this.client.name,
+      } catch (error) {
+        // Error occurred, retry after delay
+        retryCount++
+        logger.error('Error in early DC match check, scheduling retry', {
+          name: this.client.name,
           matchId,
-          e: err?.message || err?.result || err?.data || err,
+          error,
+          retryCount,
+          maxRetries: MAX_RETRIES,
         })
 
-        this.resetClientState().catch((e) => {
-          logger.error('Error resetting client state', { e })
-        })
-      })
+        setTimeout(attemptFetchMatchData, RETRY_DELAY)
+      }
+    }
+
+    // Start the first attempt
+    await attemptFetchMatchData()
   }
 
   private emitBlockEvent({
