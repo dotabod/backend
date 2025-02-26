@@ -65,7 +65,7 @@ export type Database = {
           {
             foreignKeyName: 'accounts_userId_fkey'
             columns: ['userId']
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
@@ -410,6 +410,59 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          cancelAtPeriodEnd: boolean
+          created_at: string
+          currentPeriodEnd: string | null
+          id: string
+          status: Database['public']['Enums']['SubscriptionStatus'] | null
+          stripeCustomerId: string | null
+          stripePriceId: string | null
+          stripeSubscriptionId: string | null
+          tier: Database['public']['Enums']['SubscriptionTier']
+          transactionType: Database['public']['Enums']['TransactionType']
+          updated_at: string
+          userId: string
+        }
+        Insert: {
+          cancelAtPeriodEnd?: boolean
+          created_at?: string
+          currentPeriodEnd?: string | null
+          id?: string
+          status?: Database['public']['Enums']['SubscriptionStatus'] | null
+          stripeCustomerId?: string | null
+          stripePriceId?: string | null
+          stripeSubscriptionId?: string | null
+          tier?: Database['public']['Enums']['SubscriptionTier']
+          transactionType: Database['public']['Enums']['TransactionType']
+          updated_at?: string
+          userId: string
+        }
+        Update: {
+          cancelAtPeriodEnd?: boolean
+          created_at?: string
+          currentPeriodEnd?: string | null
+          id?: string
+          status?: Database['public']['Enums']['SubscriptionStatus'] | null
+          stripeCustomerId?: string | null
+          stripePriceId?: string | null
+          stripeSubscriptionId?: string | null
+          tier?: Database['public']['Enums']['SubscriptionTier']
+          transactionType?: Database['public']['Enums']['TransactionType']
+          updated_at?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'subscriptions_userId_fkey'
+            columns: ['userId']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       users: {
         Row: {
           beta_tester: boolean
@@ -473,6 +526,27 @@ export type Database = {
         }
         Relationships: []
       }
+      WebhookEvent: {
+        Row: {
+          eventType: string
+          id: string
+          processedAt: string
+          stripeEventId: string
+        }
+        Insert: {
+          eventType: string
+          id: string
+          processedAt: string
+          stripeEventId: string
+        }
+        Update: {
+          eventType?: string
+          id?: string
+          processedAt?: string
+          stripeEventId?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -495,7 +569,17 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      SubscriptionStatus:
+        | 'ACTIVE'
+        | 'CANCELED'
+        | 'INCOMPLETE'
+        | 'INCOMPLETE_EXPIRED'
+        | 'PAST_DUE'
+        | 'PAUSED'
+        | 'TRIALING'
+        | 'UNPAID'
+      SubscriptionTier: 'FREE' | 'PRO'
+      TransactionType: 'RECURRING' | 'LIFETIME'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -575,4 +659,19 @@ export type Enums<
   ? Database[PublicEnumNameOrOptions['schema']]['Enums'][EnumName]
   : PublicEnumNameOrOptions extends keyof PublicSchema['Enums']
     ? PublicSchema['Enums'][PublicEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema['CompositeTypes']
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema['CompositeTypes']
+    ? PublicSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
     : never

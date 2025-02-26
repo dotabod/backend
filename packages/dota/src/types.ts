@@ -1,3 +1,4 @@
+import type { Database } from './db/supabase-types.js'
 import type { HeroNames } from './dota/lib/getHero.js'
 
 export interface SocketClient {
@@ -31,6 +32,11 @@ export interface SocketClient {
     key: string
     value: any
   }[]
+  subscription?: {
+    id: string
+    tier: Database['public']['Tables']['subscriptions']['Row']['tier']
+    status: Database['public']['Tables']['subscriptions']['Row']['status']
+  }
 }
 interface Provider {
   name: string // "Dota 2"
@@ -552,3 +558,13 @@ export type Players = {
   accountid: number
   playerid: number | null // usually null when the player has not picked a hero yet
 }[]
+
+export type BlockType =
+  | 'spectator'
+  | 'empty'
+  | 'picks'
+  | 'arcade'
+  | 'playing'
+  | 'strategy'
+  | 'strategy-2'
+  | null

@@ -13,7 +13,7 @@ import { t } from 'i18next'
 import { io, io as socketIo } from 'socket.io-client'
 import getDBUser from '../db/getDBUser.js'
 import { server } from '../dota/index.js'
-import { getTokenFromTwitchId } from '../dota/lib/connectedStreamers.js'
+import findUser, { getTokenFromTwitchId } from '../dota/lib/connectedStreamers.js'
 import { plebMode } from '../dota/lib/consts.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
 import { logger } from '../utils/logger.js'
@@ -93,7 +93,11 @@ twitchChat.on(
       delete lastMissingUserMessageTimestamps[channel]
     }
 
-    const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, client.settings)
+    const isBotDisabled = getValueOrDefault(
+      DBSettings.commandDisable,
+      client.settings,
+      client.subscription,
+    )
     const toggleCommand = commandHandler.commands.get('toggle')
     if (
       isBotDisabled &&
@@ -135,6 +139,12 @@ twitchChat.on('event', (eventName: keyof typeof events, broadcasterId: string, d
 
   const token = getTokenFromTwitchId(broadcasterId)
   if (!token) return
+
+  const client = findUser(token)
+  if (!client) return
+
+  const isEnabled = getValueOrDefault(DBSettings.livePolls, client.settings, client.subscription)
+  if (!isEnabled) return
 
   server.io.to(token).emit('channelPollOrBet', data, eventName)
 })

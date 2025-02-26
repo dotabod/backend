@@ -14,7 +14,7 @@ commandHandler.registerCommand('mute', {
       channel: { client },
     } = message
 
-    const hasChatters = getValueOrDefault(DBSettings.chatter, client.settings)
+    const hasChatters = getValueOrDefault(DBSettings.chatter, client.settings, client.subscription)
 
     await supabase.from('settings').upsert(
       {

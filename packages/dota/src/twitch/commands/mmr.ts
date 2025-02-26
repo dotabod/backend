@@ -14,7 +14,11 @@ commandHandler.registerCommand('mmr', {
     } = message
 
     // If connected, we can just respond with the cached MMR
-    const showRankMmr = getValueOrDefault(DBSettings.showRankMmr, client.settings)
+    const showRankMmr = getValueOrDefault(
+      DBSettings.showRankMmr,
+      client.settings,
+      client.subscription,
+    )
     const name = channel.replace(/^#/, '').toLowerCase()
 
     const unknownMsg = t('uknownMmr', {

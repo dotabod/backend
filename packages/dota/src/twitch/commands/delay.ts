@@ -13,7 +13,8 @@ commandHandler.registerCommand('delay', {
       channel: { name: channel, client },
     } = message
 
-    const delay = Number(getValueOrDefault(DBSettings.streamDelay, client.settings)) || 0
+    const delay =
+      Number(getValueOrDefault(DBSettings.streamDelay, client.settings, client.subscription)) || 0
 
     chatClient.say(
       channel,

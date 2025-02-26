@@ -11,7 +11,11 @@ commandHandler.registerCommand('toggle', {
       channel: { client },
     } = message
 
-    const isBotDisabled = getValueOrDefault(DBSettings.commandDisable, client.settings)
+    const isBotDisabled = getValueOrDefault(
+      DBSettings.commandDisable,
+      client.settings,
+      client.subscription,
+    )
 
     await supabase.from('settings').upsert(
       {

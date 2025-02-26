@@ -9,6 +9,7 @@ import {
 } from '../dota/lib/consts.js'
 import type { SocketClient } from '../types.js'
 import { logger } from '../utils/logger.js'
+import { isSubscriptionActive } from '../utils/subscription'
 import supabase from './supabase.js'
 
 export default async function getDBUser({
@@ -86,6 +87,11 @@ export default async function getDBUser({
     stream_start_date,
     beta_tester,
     locale,
+    subscriptions (
+      id,
+      tier,
+      status
+    ),
     Account:accounts (
       refresh_token,
       scope,
@@ -148,6 +154,15 @@ export default async function getDBUser({
     lookingupToken.delete(lookupToken)
     return
   }
+  let subscription = undefined
+  if (Array.isArray(user.subscriptions) && user.subscriptions.length > 0) {
+    const activeSubscription =
+      user.subscriptions.find((sub) => isSubscriptionActive({ status: sub.status })) ||
+      user.subscriptions[0]
+    subscription = {
+      ...activeSubscription,
+    }
+  }
 
   const userInfo = {
     ...user,
@@ -155,6 +170,7 @@ export default async function getDBUser({
     steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
     token: user.id,
     stream_start_date: user.stream_start_date ? new Date(user.stream_start_date) : null,
+    subscription,
     Account: {
       ...Account,
       requires_refresh: Account.requires_refresh ?? false,

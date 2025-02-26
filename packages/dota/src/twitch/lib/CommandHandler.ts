@@ -5,6 +5,7 @@ import { type SettingKeys, getValueOrDefault } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import type { SocketClient } from '../../types.js'
 import { logger } from '../../utils/logger.js'
+import type { SubscriptionRow } from '../../utils/subscription'
 import { chatClient } from '../chatClient.js'
 
 export interface UserType {
@@ -146,7 +147,7 @@ class CommandHandler {
     // Get the command options from the commands map
     let commandName = command
     if (this.aliases.has(command)) {
-      commandName = this.aliases.get(command)!
+      commandName = this.aliases.get(command) ?? command
     }
 
     const options = this.commands.get(commandName)
@@ -165,7 +166,9 @@ class CommandHandler {
     }
 
     // Check if the command is enabled
-    if (!this.isEnabled(message.channel.settings, options.dbkey)) {
+    if (
+      !this.isEnabled(message.channel.settings, options.dbkey, message.channel.client.subscription)
+    ) {
       return
     }
 
@@ -248,11 +251,15 @@ class CommandHandler {
     return true // The command is on cooldown if none of the above conditions are met
   }
 
-  isEnabled(settings: SocketClient['settings'], dbkey?: SettingKeys) {
+  isEnabled(
+    settings: SocketClient['settings'],
+    dbkey?: SettingKeys,
+    subscription?: SubscriptionRow,
+  ) {
     // Default enabled if no dbkey is provided
     if (!dbkey) return true
 
-    return !!getValueOrDefault(dbkey, settings)
+    return !!getValueOrDefault(dbkey, settings, subscription)
   }
 
   // Function for updating the cooldown time for a command

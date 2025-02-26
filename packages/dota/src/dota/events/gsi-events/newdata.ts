@@ -35,7 +35,9 @@ import { minimapParser } from '../minimap/parser.js'
 function chatterMatchFound(client: SocketClient) {
   if (!client.stream_online) return
 
-  const commands = DelayedCommands.filter((cmd) => getValueOrDefault(cmd.key, client.settings))
+  const commands = DelayedCommands.filter((cmd) =>
+    getValueOrDefault(cmd.key, client.settings, client.subscription),
+  )
 
   if (commands.length) {
     say(
@@ -227,7 +229,11 @@ eventHandler.registerEvent('newdata', {
 
     // only if they're in a match ^ and they're a beta tester
     if (dotaClient.client.beta_tester && dotaClient.client.stream_online) {
-      const enabled = getValueOrDefault(DBSettings['minimap-blocker'], dotaClient.client.settings)
+      const enabled = getValueOrDefault(
+        DBSettings['minimap-blocker'],
+        dotaClient.client.settings,
+        dotaClient.client.subscription,
+      )
       if (enabled) minimapParser.init(data, dotaClient.mapBlocker)
     }
 
@@ -250,7 +256,12 @@ eventHandler.registerEvent('newdata', {
 
     const {
       powerTreads: { enabled: treadsChatterEnabled },
-    } = getValueOrDefault(DBSettings.chatters, dotaClient.client.settings)
+    } = getValueOrDefault(
+      DBSettings.chatters,
+      dotaClient.client.settings,
+      dotaClient.client.subscription,
+      'powerTreads',
+    )
     let calculateManaSavedPromise: Promise<void> | undefined
     if (treadsChatterEnabled) {
       try {
@@ -287,12 +298,14 @@ async function showProbability(dotaClient: GSIHandler) {
   const winChanceEnabled = getValueOrDefault(
     DBSettings.winProbabilityOverlay,
     dotaClient.client.settings,
+    dotaClient.client.subscription,
   )
 
   if (winChanceEnabled) {
     const updateInterval = getValueOrDefault(
       DBSettings.winProbabilityOverlayIntervalMinutes,
       dotaClient.client.settings,
+      dotaClient.client.subscription,
     )
 
     if (

@@ -27,20 +27,27 @@ export function say(
 ) {
   if (beta && !client.beta_tester) return
 
-  // global
-  const chattersEnabled = getValueOrDefault(DBSettings.chatter, client.settings)
+  // Check global chatter access
+  const chattersEnabled = getValueOrDefault(
+    DBSettings.chatter,
+    client.settings,
+    client.subscription,
+  )
   if (!chattersEnabled) return
 
-  // specific 1
-  const chatter = key && getValueOrDefault(key, client.settings)
-  if (key && !chatter) return
+  // Check specific feature access
+  if (key && !getValueOrDefault(key, client.settings, client.subscription)) return
 
-  // specific 2
-  const chatterSpecific = getValueOrDefault(
-    DBSettings.chatters,
-    client.settings,
-  ) as (typeof defaultSettings)['chatters']
-  if (chattersKey && !chatterSpecific[chattersKey].enabled) return
+  // Check specific chatter access
+  if (chattersKey) {
+    const chatterSpecific = getValueOrDefault(
+      DBSettings.chatters,
+      client.settings,
+      client.subscription,
+      chattersKey,
+    ) as (typeof defaultSettings)['chatters']
+    if (!chatterSpecific[chattersKey].enabled) return
+  }
 
   const msg = beta ? `${message} ${t('betaFeature', { lng: client.locale })}` : message
   if (!delay) {
@@ -48,7 +55,10 @@ export function say(
     return
   }
 
-  setTimeout(() => {
-    client.name && chatClient.say(client.name, msg)
-  }, getStreamDelay(client.settings))
+  setTimeout(
+    () => {
+      client.name && chatClient.say(client.name, msg)
+    },
+    getStreamDelay(client.settings, client.subscription),
+  )
 }

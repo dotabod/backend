@@ -1,7 +1,8 @@
 import { t } from 'i18next'
 
 import RedisClient from '../../../db/RedisClient.js'
-import { type DotaEvent, DotaEventTypes } from '../../../types.js'
+import { DBSettings, getValueOrDefault } from '../../../settings.js'
+import { type DotaEvent, DotaEventTypes, type SocketClient } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
 import type { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
@@ -41,11 +42,14 @@ export function generateAegisMessage(res: AegisRes, lng: string) {
   return t('aegis.pickup', { lng, heroName: res.heroName })
 }
 
-export function emitAegisEvent(res: AegisRes, token: string) {
+export function emitAegisEvent(res: AegisRes, token: string, client: SocketClient) {
   if (!res || !res.expireDate) return
 
   res = getNewAegisTime(res)
   if (res.expireS <= 0) return
+
+  const tellChatAegis = getValueOrDefault(DBSettings.aegis, client.settings, client.subscription)
+  if (!tellChatAegis) return
 
   server.io.to(token).emit('aegis-picked-up', res)
 }
@@ -89,6 +93,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
       chattersKey: 'roshPickup',
     })
 
-    emitAegisEvent(res, dotaClient.getToken())
+    emitAegisEvent(res, dotaClient.getToken(), dotaClient.client)
   },
 })

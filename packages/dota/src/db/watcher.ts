@@ -10,6 +10,7 @@ import { chatClient } from '../twitch/chatClient.js'
 import { updateTwurpleTokenForTwitchId } from '../twitch/lib/getTwitchAPI'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
+import { isSubscriptionActive } from '../utils/subscription.js'
 import getDBUser from './getDBUser.js'
 import type { Tables } from './supabase-types.js'
 import supabase from './supabase.js'
@@ -48,6 +49,113 @@ class SetupSupabase {
             logger.info('[WATCHER USER] Deleting user', { name: client.name })
             await clearCacheForUser(client)
             return
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'subscriptions' },
+        async (payload: { new: Tables<'subscriptions'> }) => {
+          const newObj = payload.new
+          const client = findUser(newObj.userId)
+
+          if (!client) return
+
+          if (isSubscriptionActive({ status: newObj.status })) {
+            client.subscription = {
+              id: newObj.id,
+              tier: newObj.tier,
+              status: newObj.status,
+            }
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'subscriptions' },
+        async (payload: { new: Tables<'subscriptions'>; old: Tables<'subscriptions'> }) => {
+          const newObj = payload.new
+          const client = findUser(newObj.userId)
+
+          if (!client) return
+
+          const isNewActive = isSubscriptionActive({ status: newObj.status })
+          if (isNewActive) {
+            // Update with new details
+            client.subscription = {
+              id: newObj.id,
+              tier: newObj.tier,
+              status: newObj.status,
+            }
+            return
+          }
+
+          // If current active but new is inactive
+          const isCurrentActive = isSubscriptionActive({ status: client.subscription?.status })
+          if (isCurrentActive && !isNewActive && client.subscription?.id !== newObj.id) {
+            return
+          }
+
+          // If this subscription became inactive and it was the active one
+          if (!isNewActive && client.subscription?.id === newObj.id) {
+            // Check if user has any other active subscriptions
+            const activeSubscription = await supabase
+              .from('subscriptions')
+              .select('*')
+              .eq('userId', newObj.userId)
+              .in('status', ['ACTIVE', 'TRIALING'])
+              .order('transactionType', { ascending: false })
+              .limit(1)
+              .single()
+
+            if (activeSubscription.data) {
+              // Set the other active subscription
+              client.subscription = {
+                id: activeSubscription.data.id,
+                tier: activeSubscription.data.tier,
+                status: activeSubscription.data.status,
+              }
+            } else {
+              // No other active subscriptions found
+              client.subscription = undefined
+            }
+            return
+          }
+        },
+      )
+      // Needs `ALTER TABLE subscriptions REPLICA IDENTITY FULL;` to receive full object on DELETE
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'subscriptions' },
+        async (payload: { old: Tables<'subscriptions'> }) => {
+          const oldObj = payload.old
+          const client = findUser(oldObj.userId)
+
+          if (!client) return
+
+          if (client.subscription?.id === oldObj.id) {
+            // Check if user has any other active subscriptions
+            const activeSubscription = await supabase
+              .from('subscriptions')
+              .select('*')
+              .eq('userId', oldObj.userId)
+              .neq('id', oldObj.id)
+              .in('status', ['ACTIVE', 'TRIALING'])
+              .order('transactionType', { ascending: false })
+              .limit(1)
+              .single()
+
+            if (activeSubscription.data) {
+              // Set the other active subscription
+              client.subscription = {
+                id: activeSubscription.data.id,
+                tier: activeSubscription.data.tier,
+                status: activeSubscription.data.status,
+              }
+            } else {
+              // No other active subscriptions found
+              client.subscription = undefined
+            }
           }
         },
       )
@@ -239,13 +347,25 @@ class SetupSupabase {
               name: client.name,
             })
 
+            // Store the steam32Id before clearing cache
+            const deletedSteam32Id = oldObj.steam32Id
+
             // A delete will reset their status in memory so they can reconnect anything
             await clearCacheForUser(client)
 
             // We try deleting those users so they can attempt a new connection
             if (Array.isArray(oldObj.connectedUserIds)) {
               for (const connectedToken of oldObj.connectedUserIds) {
-                await clearCacheForUser(gsiHandlers.get(connectedToken)?.client)
+                const connectedClient = gsiHandlers.get(connectedToken)?.client
+
+                // If client exists, clear its cache
+                if (connectedClient) {
+                  // Explicitly clear multiAccount if it matches the deleted account
+                  if (connectedClient.multiAccount === deletedSteam32Id) {
+                    connectedClient.multiAccount = undefined
+                  }
+                  await clearCacheForUser(connectedClient)
+                }
               }
             }
 
