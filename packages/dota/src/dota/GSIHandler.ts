@@ -197,6 +197,23 @@ export class GSIHandler {
     server.io.to(this.client.token).emit('roshan-killed', {})
   }
 
+  private clearAllTimeouts() {
+    if (this.bountyTimeout) {
+      clearTimeout(this.bountyTimeout)
+      this.bountyTimeout = undefined
+    }
+
+    if (this.killstreakTimeout) {
+      clearTimeout(this.killstreakTimeout)
+      this.killstreakTimeout = undefined
+    }
+
+    if (this.noTpChatter.timeout) {
+      clearTimeout(this.noTpChatter.timeout)
+      this.noTpChatter.timeout = undefined
+    }
+  }
+
   public async resetClientState() {
     await deleteRedisData(this.client)
     this.mapBlocker.resetData()
@@ -204,6 +221,7 @@ export class GSIHandler {
     this.resetBetData()
     this.emitClientResetEvents()
     this.neutralItemTimer.reset()
+    this.clearAllTimeouts()
 
     // Reset multiAccount property to ensure it's cleared when state is reset
     if (this.client) {
@@ -293,48 +311,61 @@ export class GSIHandler {
   async updateSteam32Id() {
     if (this.creatingSteamAccount || !this.client.gsi?.player?.steamid) return
 
-    const steam32Id = steamID64toSteamID32(this.client.gsi.player.steamid)
-    if (!steam32Id) return
-
-    // TODO: Not sure if .accountid actually exists for a solo gsi in non spectate mode
-    const isSameAccountId = this.getSteam32() === Number(this.client.gsi.player.accountid)
-    const isSameSteam32Id = this.getSteam32() === steam32Id
-    const isMultiAccount = this.client.multiAccount === steam32Id
-
-    if (isSameSteam32Id || isMultiAccount || isSameAccountId) return
-
-    // User already has a steam32Id and its saved to the `steam_accounts` table
-    const foundAct = this.client.SteamAccount.find((act) => act.steam32Id === steam32Id)
-    if (foundAct) {
-      // Logged into a new steam account on the same twitch channel
-      Object.assign(this.client, {
-        mmr: foundAct.mmr,
-        steam32Id,
-        multiAccount: undefined,
-      })
-      this.emitBadgeUpdate()
-      return
-    }
-
-    // Continue to create this act in db
-    // Default to the mmr from `users` table for this brand new steam account
-    // this.getMmr() should return mmr from `user` table on new accounts without steam acts
-    const mmr = this.client.SteamAccount.length ? 0 : this.getMmr()
-
+    // Set a flag to prevent concurrent calls
     this.creatingSteamAccount = true
-    const { data: res } = await supabase
-      .from('steam_accounts')
-      .select('id, userId, mmr, connectedUserIds')
-      .eq('steam32Id', steam32Id)
-      .single()
 
-    if (res?.id) {
-      await this.handleExistingAccount(res, steam32Id)
-    } else {
-      await this.createNewSteamAccount(mmr, steam32Id)
+    try {
+      const steam32Id = steamID64toSteamID32(this.client.gsi.player.steamid)
+      if (!steam32Id) {
+        this.creatingSteamAccount = false
+        return
+      }
+
+      // TODO: Not sure if .accountid actually exists for a solo gsi in non spectate mode
+      const isSameAccountId = this.getSteam32() === Number(this.client.gsi.player.accountid)
+      const isSameSteam32Id = this.getSteam32() === steam32Id
+      const isMultiAccount = this.client.multiAccount === steam32Id
+
+      if (isSameSteam32Id || isMultiAccount || isSameAccountId) return
+
+      // User already has a steam32Id and its saved to the `steam_accounts` table
+      const foundAct = this.client.SteamAccount.find((act) => act.steam32Id === steam32Id)
+      if (foundAct) {
+        // Logged into a new steam account on the same twitch channel
+        Object.assign(this.client, {
+          mmr: foundAct.mmr,
+          steam32Id,
+          multiAccount: undefined,
+        })
+        this.emitBadgeUpdate()
+        return
+      }
+
+      // Continue to create this act in db
+      // Default to the mmr from `users` table for this brand new steam account
+      // this.getMmr() should return mmr from `user` table on new accounts without steam acts
+      const mmr = this.client.SteamAccount.length ? 0 : this.getMmr()
+
+      this.creatingSteamAccount = true
+      const { data: res } = await supabase
+        .from('steam_accounts')
+        .select('id, userId, mmr, connectedUserIds')
+        .eq('steam32Id', steam32Id)
+        .single()
+
+      if (res?.id) {
+        await this.handleExistingAccount(res, steam32Id)
+      } else {
+        await this.createNewSteamAccount(mmr, steam32Id)
+      }
+
+      this.creatingSteamAccount = false
+    } catch (error) {
+      logger.error('Error in updateSteam32Id', { error, name: this.client.name })
+    } finally {
+      // Ensure flag is reset even if an error occurs
+      this.creatingSteamAccount = false
     }
-
-    this.creatingSteamAccount = false
   }
 
   async handleExistingAccount(
@@ -633,202 +664,210 @@ export class GSIHandler {
   }
 
   async closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
-    const matchId = await redisClient.client.get(`${this.client.token}:matchId`)
-    const myTeam =
-      (await redisClient.client.get(`${this.client.token}:playingTeam`)) ??
-      this.client.gsi?.player?.team_name
-
-    if (this.openingBets || !matchId || this.endingBets) {
-      logger.info('[BETS] Not closing bets', {
-        name: this.client.name,
-        openingBets: this.openingBets,
-        playingMatchId: matchId,
-        endingBets: this.endingBets,
-      })
-
-      if (!matchId) await this.resetClientState()
-      return
-    }
-
-    const betsEnabled = getValueOrDefault(
-      DBSettings.bets,
-      this.client.settings,
-      this.client.subscription,
-    )
-    const heroSlot = Number(await redisClient.client.get(`${this.client.token}:playingHeroSlot`))
-    const heroName = (await redisClient.client.get(
-      `${this.client.token}:playingHero`,
-    )) as HeroNames | null
-
-    // An early without waiting for ancient to blow up
-    // We have to check every few seconds with an api to see if the match is over
-    if (!winningTeam) {
-      this.checkEarlyDCWinner(matchId)
-      return
-    }
-
-    const localWinner = winningTeam
-    const scores = {
-      kda: {
-        kills: this.client.gsi?.player?.kills ?? null,
-        deaths: this.client.gsi?.player?.deaths ?? null,
-        assists: this.client.gsi?.player?.assists ?? null,
-      },
-      radiant_score: this.client.gsi?.map?.radiant_score ?? null,
-      dire_score: this.client.gsi?.map?.dire_score ?? null,
-    }
-    const won = myTeam === localWinner
-    logger.info('[BETS] end bets won data', {
-      playingMatchId: matchId,
-      localWinner,
-      myTeam,
-      won,
-      channel: this.client.name,
-    })
-
-    // Both or one undefined
-    if (!myTeam) {
-      logger.error('[BETS] trying to end bets but did not find localWinner or myTeam', {
-        channel: this.client.name,
-        matchId,
-      })
-      return
-    }
-
-    logger.info('[BETS] Running end bets to award mmr and close predictions', {
-      name: this.client.name,
-      matchId,
-    })
-
-    const channel = this.client.name
+    if (this.endingBets) return
     this.endingBets = true
 
-    if (
-      !this.client.gsi?.map?.dire_score &&
-      !this.client.gsi?.map?.radiant_score &&
-      this.client.gsi?.map?.matchid
-    ) {
-      logger.info('This is likely a no stats recorded match', {
+    try {
+      const matchId = await redisClient.client.get(`${this.client.token}:matchId`)
+      const myTeam =
+        (await redisClient.client.get(`${this.client.token}:playingTeam`)) ??
+        this.client.gsi?.player?.team_name
+
+      if (this.openingBets || !matchId) {
+        logger.info('[BETS] Not closing bets', {
+          name: this.client.name,
+          openingBets: this.openingBets,
+          playingMatchId: matchId,
+          endingBets: this.endingBets,
+        })
+
+        if (!matchId) await this.resetClientState()
+        return
+      }
+
+      const betsEnabled = getValueOrDefault(
+        DBSettings.bets,
+        this.client.settings,
+        this.client.subscription,
+      )
+      const heroSlot = Number(await redisClient.client.get(`${this.client.token}:playingHeroSlot`))
+      const heroName = (await redisClient.client.get(
+        `${this.client.token}:playingHero`,
+      )) as HeroNames | null
+
+      // An early without waiting for ancient to blow up
+      // We have to check every few seconds with an api to see if the match is over
+      if (!winningTeam) {
+        this.checkEarlyDCWinner(matchId)
+        return
+      }
+
+      const localWinner = winningTeam
+      const scores = {
+        kda: {
+          kills: this.client.gsi?.player?.kills ?? null,
+          deaths: this.client.gsi?.player?.deaths ?? null,
+          assists: this.client.gsi?.player?.assists ?? null,
+        },
+        radiant_score: this.client.gsi?.map?.radiant_score ?? null,
+        dire_score: this.client.gsi?.map?.dire_score ?? null,
+      }
+      const won = myTeam === localWinner
+      logger.info('[BETS] end bets won data', {
+        playingMatchId: matchId,
+        localWinner,
+        myTeam,
+        won,
+        channel: this.client.name,
+      })
+
+      // Both or one undefined
+      if (!myTeam) {
+        logger.error('[BETS] trying to end bets but did not find localWinner or myTeam', {
+          channel: this.client.name,
+          matchId,
+        })
+        return
+      }
+
+      logger.info('[BETS] Running end bets to award mmr and close predictions', {
         name: this.client.name,
         matchId,
       })
 
-      if (this.client.stream_online) {
-        say(
-          this.client,
-          t('bets.notScored', {
-            emote: 'D:',
-            lng: this.client.locale,
-            matchId,
-            key: DBSettings.tellChatBets,
-          }),
-        )
-        const oldBetId = await refundTwitchBet(this.getChannelId())
-        if (oldBetId) {
-          await supabase.from('bets').update({ predictionId: null }).eq('predictionId', oldBetId)
-        }
-      }
-      await this.resetClientState()
-      return
-    }
+      const channel = this.client.name
 
-    // 0 is a correct lobby type meaning unranked
-    // https://github.com/dotabod/backend/issues/373#issuecomment-2366822786
-    // Default to ranked
-    const playingLobbyType = Number(await redisClient.client.get(`${matchId}:lobbyType`))
-    const playingGameMode = Number(await redisClient.client.get(`${matchId}:gameMode`))
-    const localLobbyType = playingLobbyType >= 0 ? playingLobbyType : LOBBY_TYPE_RANKED
+      if (
+        !this.client.gsi?.map?.dire_score &&
+        !this.client.gsi?.map?.radiant_score &&
+        this.client.gsi?.map?.matchid
+      ) {
+        logger.info('This is likely a no stats recorded match', {
+          name: this.client.name,
+          matchId,
+        })
 
-    const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
-
-    await this.updateMMR({
-      scores: scores,
-      increase: won,
-      lobbyType: localLobbyType,
-      gameMode: playingGameMode,
-      matchId: matchId,
-      isParty: isParty,
-      heroSlot,
-      heroName,
-    })
-
-    const response = await getRankDetail(this.getMmr(), this.getSteam32())
-    if (this.client.steam32Id && response && 'standing' in response) {
-      await supabase
-        .from('steam_accounts')
-        .update({ leaderboard_rank: response.standing })
-        .eq('steam32Id', this.client.steam32Id)
-    }
-
-    const TreadToggleData = this.treadsData
-    const toggleHandler = async () => {
-      const treadToggleData = (await redisClient.client.json.get(
-        `${this.client.token}:treadtoggle`,
-      )) as unknown as typeof TreadToggleData | null
-
-      if (treadToggleData?.treadToggles && this.client.stream_online) {
-        say(
-          this.client,
-          t('treadToggle', {
-            lng: this.client.locale,
-            manaCount: treadToggleData.manaSaved,
-            count: treadToggleData.treadToggles,
-            matchId,
-          }),
-        )
-      }
-    }
-
-    try {
-      void toggleHandler()
-    } catch (e) {
-      logger.error('err toggleHandler', { e })
-    }
-
-    setTimeout(
-      () => {
-        const message = won
-          ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
-          : t('bets.lost', { lng: this.client.locale, emote: 'Happi' })
-
-        say(this.client, message, { delay: false, chattersKey: 'matchOutcome' })
-
-        if (!betsEnabled) {
-          logger.info('Bets are not enabled, stopping here', {
-            name: this.client.name,
-          })
-          this.resetClientState().catch(() => {
-            //
-          })
-          return
-        }
-
-        closeTwitchBet(won, this.getChannelId())
-          .then(() => {
-            logger.info('[BETS] end bets', {
-              event: 'end_bets',
+        if (this.client.stream_online) {
+          say(
+            this.client,
+            t('bets.notScored', {
+              emote: 'D:',
+              lng: this.client.locale,
               matchId,
+              key: DBSettings.tellChatBets,
+            }),
+          )
+          const oldBetId = await refundTwitchBet(this.getChannelId())
+          if (oldBetId) {
+            await supabase.from('bets').update({ predictionId: null }).eq('predictionId', oldBetId)
+          }
+        }
+        await this.resetClientState()
+        return
+      }
+
+      // 0 is a correct lobby type meaning unranked
+      // https://github.com/dotabod/backend/issues/373#issuecomment-2366822786
+      // Default to ranked
+      const playingLobbyType = Number(await redisClient.client.get(`${matchId}:lobbyType`))
+      const playingGameMode = Number(await redisClient.client.get(`${matchId}:gameMode`))
+      const localLobbyType = playingLobbyType >= 0 ? playingLobbyType : LOBBY_TYPE_RANKED
+
+      const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
+
+      await this.updateMMR({
+        scores: scores,
+        increase: won,
+        lobbyType: localLobbyType,
+        gameMode: playingGameMode,
+        matchId: matchId,
+        isParty: isParty,
+        heroSlot,
+        heroName,
+      })
+
+      const response = await getRankDetail(this.getMmr(), this.getSteam32())
+      if (this.client.steam32Id && response && 'standing' in response) {
+        await supabase
+          .from('steam_accounts')
+          .update({ leaderboard_rank: response.standing })
+          .eq('steam32Id', this.client.steam32Id)
+      }
+
+      const TreadToggleData = this.treadsData
+      const toggleHandler = async () => {
+        const treadToggleData = (await redisClient.client.json.get(
+          `${this.client.token}:treadtoggle`,
+        )) as unknown as typeof TreadToggleData | null
+
+        if (treadToggleData?.treadToggles && this.client.stream_online) {
+          say(
+            this.client,
+            t('treadToggle', {
+              lng: this.client.locale,
+              manaCount: treadToggleData.manaSaved,
+              count: treadToggleData.treadToggles,
+              matchId,
+            }),
+          )
+        }
+      }
+
+      try {
+        void toggleHandler()
+      } catch (e) {
+        logger.error('err toggleHandler', { e })
+      }
+
+      setTimeout(
+        () => {
+          const message = won
+            ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
+            : t('bets.lost', { lng: this.client.locale, emote: 'Happi' })
+
+          say(this.client, message, { delay: false, chattersKey: 'matchOutcome' })
+
+          if (!betsEnabled) {
+            logger.info('Bets are not enabled, stopping here', {
               name: this.client.name,
-              winning_team: localWinner,
-              player_team: myTeam,
-              didWin: won,
             })
-          })
-          .catch((e: any) => {
-            logger.error('[BETS] Error closing twitch bet', {
-              channel,
-              e: e?.message || e,
-              matchId,
+            this.resetClientState().catch(() => {
+              //
             })
-          })
-          .finally(() => {
-            this.resetClientState().catch((e) => {
-              logger.error('Error resetting client state', { e })
+            return
+          }
+
+          closeTwitchBet(won, this.getChannelId())
+            .then(() => {
+              logger.info('[BETS] end bets', {
+                event: 'end_bets',
+                matchId,
+                name: this.client.name,
+                winning_team: localWinner,
+                player_team: myTeam,
+                didWin: won,
+              })
             })
-          })
-      },
-      getStreamDelay(this.client.settings, this.client.subscription),
-    )
+            .catch((e: any) => {
+              logger.error('[BETS] Error closing twitch bet', {
+                channel,
+                e: e?.message || e,
+                matchId,
+              })
+            })
+            .finally(() => {
+              this.resetClientState().catch((e) => {
+                logger.error('Error resetting client state', { e })
+              })
+            })
+        },
+        getStreamDelay(this.client.settings, this.client.subscription),
+      )
+    } catch (error) {
+      logger.error('Error closing bets', { error, name: this.client.name })
+    } finally {
+      this.endingBets = false
+    }
   }
 
   private checkEarlyDCWinner(matchId: string) {
@@ -915,6 +954,15 @@ export class GSIHandler {
 
     this.blockCache = blockType
 
+    // Check if client token exists before emitting
+    if (!this.client?.token) {
+      logger.warn('Cannot emit block event - client token is missing', {
+        blockType,
+        state,
+      })
+      return
+    }
+
     server.io.to(this.client.token).emit('block', {
       type: blockType,
       state,
@@ -934,83 +982,91 @@ export class GSIHandler {
       if hero.id > 0 && hero.name && hero.name.length
   */
   async setupOBSBlockers(state?: string) {
-    if (isSpectator(this.client.gsi) || isArcade(this.client.gsi)) {
-      const blockType = isSpectator(this.client.gsi) ? 'spectator' : 'arcade'
-      if (this.blockCache === blockType) return
+    try {
+      if (isSpectator(this.client.gsi) || isArcade(this.client.gsi)) {
+        const blockType = isSpectator(this.client.gsi) ? 'spectator' : 'arcade'
+        if (this.blockCache === blockType) return
 
-      this.emitBadgeUpdate()
-      this.emitWLUpdate()
-      this.emitBlockEvent({ state, blockType })
+        this.emitBadgeUpdate()
+        this.emitWLUpdate()
+        this.emitBlockEvent({ state, blockType })
 
-      if (blockType === 'spectator') {
-        await this.emitNotablePlayers()
+        if (blockType === 'spectator') {
+          await this.emitNotablePlayers()
+        }
+        return
       }
-      return
-    }
 
-    // TODO: if the game is matchid 0 also dont show these? ie bot match. hero demo are type 'arcade'
+      // TODO: if the game is matchid 0 also dont show these? ie bot match. hero demo are type 'arcade'
 
-    const heroName = this.client.gsi?.hero?.name
-    const heroPicked = this.client.gsi?.hero?.id && this.client.gsi.hero.id > 0
-    const heroLockedIn = heroName?.startsWith('npc_')
-    const heroNotLockedIn = (heroName as string) === ''
-    const pickingPhase = pickSates.includes(state ?? '')
+      const heroName = this.client.gsi?.hero?.name
+      const heroPicked = this.client.gsi?.hero?.id && this.client.gsi.hero.id > 0
+      const heroLockedIn = heroName?.startsWith('npc_')
+      const heroNotLockedIn = (heroName as string) === ''
+      const pickingPhase = pickSates.includes(state ?? '')
 
-    // Picked hero, but enemy can't see yet
-    if (pickingPhase && heroPicked && heroNotLockedIn) {
-      // invasive hero blocking overlay that hides all picked hero info
-      this.emitBlockEvent({ state, blockType: 'strategy' })
-      return
-    }
+      // Picked hero, but enemy can't see yet
+      if (pickingPhase && heroPicked && heroNotLockedIn) {
+        // invasive hero blocking overlay that hides all picked hero info
+        this.emitBlockEvent({ state, blockType: 'strategy' })
+        return
+      }
 
-    // Picked hero, enemy can see it now
-    if (pickingPhase && heroPicked && heroLockedIn) {
-      // less invasive strategy that shows our hero but hides teammates
-      this.emitBlockEvent({ state, blockType: 'strategy-2' })
-      return
-    }
+      // Picked hero, enemy can see it now
+      if (pickingPhase && heroPicked && heroLockedIn) {
+        // less invasive strategy that shows our hero but hides teammates
+        this.emitBlockEvent({ state, blockType: 'strategy-2' })
+        return
+      }
 
-    // Check what needs to be blocked
-    const hasValidBlocker = blockTypes.some((blocker) => {
-      if (blocker.states.includes(state ?? '')) {
-        if (this.blockCache !== blocker.type) {
-          this.emitBlockEvent({ state, blockType: blocker.type })
+      // Check what needs to be blocked
+      const hasValidBlocker = blockTypes.some((blocker) => {
+        if (blocker.states.includes(state ?? '')) {
+          if (this.blockCache !== blocker.type) {
+            this.emitBlockEvent({ state, blockType: blocker.type })
 
-          if (blocker.type === 'playing') {
-            emitMinimapBlockerStatus(this.client)
-            this.emitBadgeUpdate()
-            this.emitWLUpdate()
-            try {
-              void maybeSendRoshAegisEvent(this.client.token, this.client)
-            } catch (e) {
-              logger.error('err maybeSendRoshAegisEvent', { e })
+            if (blocker.type === 'playing') {
+              emitMinimapBlockerStatus(this.client)
+              this.emitBadgeUpdate()
+              this.emitWLUpdate()
+              try {
+                void maybeSendRoshAegisEvent(this.client.token, this.client)
+              } catch (e) {
+                logger.error('err maybeSendRoshAegisEvent', { e })
+              }
             }
           }
+
+          return true
         }
-
-        return true
-      }
-      return false
-    })
-
-    // No blocker changes, don't emit any socket message
-    if (!hasValidBlocker && !this.blockCache) {
-      return
-    }
-
-    // Unblock all, we are disconnected from the match
-    if (!hasValidBlocker && this.blockCache) {
-      logger.info('[BETS] Close bets because unblocked all', {
-        hasValidBlocker,
-        state,
-        blockCache: this.blockCache,
-        name: this.client.name,
+        return false
       })
 
-      await sendExtensionPubSubBroadcastMessageIfChanged(this, null)
-      this.emitBlockEvent({ state, blockType: null })
-      await this.closeBets()
-      return
+      // No blocker changes, don't emit any socket message
+      if (!hasValidBlocker && !this.blockCache) {
+        return
+      }
+
+      // Unblock all, we are disconnected from the match
+      if (!hasValidBlocker && this.blockCache) {
+        logger.info('[BETS] Close bets because unblocked all', {
+          hasValidBlocker,
+          state,
+          blockCache: this.blockCache,
+          name: this.client.name,
+        })
+
+        await sendExtensionPubSubBroadcastMessageIfChanged(this, null)
+        this.emitBlockEvent({ state, blockType: null })
+        await this.closeBets()
+        return
+      }
+    } catch (error) {
+      logger.error('Error in setupOBSBlockers', {
+        error,
+        name: this.client?.name,
+        state,
+      })
     }
   }
 }

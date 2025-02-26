@@ -1,8 +1,8 @@
 import { t } from 'i18next'
-import { say } from './say.js'
+import { logger } from '../utils/logger.js'
 import type { GSIHandler } from './GSIHandler.js'
 import { redisClient } from './GSIHandler.js'
-import { logger } from '../utils/logger.js'
+import { say } from './say.js'
 
 interface TierTime {
   tier: number
@@ -13,22 +13,13 @@ interface TierTime {
 export class NeutralItemTimer {
   private notifiedTiers = new Set<number>()
   //5, 15, 25, 35 and 60 - 7.38 patch
-    private readonly tierTimes: TierTime[] = [
+  private readonly tierTimes: TierTime[] = [
     { tier: 1, normalTime: 5, turboTime: 2.5 },
     { tier: 2, normalTime: 15, turboTime: 7.5 },
     { tier: 3, normalTime: 25, turboTime: 12.5 },
     { tier: 4, normalTime: 35, turboTime: 17.5 },
     { tier: 5, normalTime: 60, turboTime: 30 },
   ]
-  // leaving old times if valve change again
-/**  private readonly tierTimes: TierTime[] = [
-    { tier: 1, normalTime: 7, turboTime: 3.5 },
-    { tier: 2, normalTime: 17, turboTime: 8.5 },
-    { tier: 3, normalTime: 27, turboTime: 13.5 },
-    { tier: 4, normalTime: 37, turboTime: 18.5 },
-    { tier: 5, normalTime: 60, turboTime: 30 },
-  ]
-**/
 
   // Track the last game time checked to avoid spam
   private lastCheckedTime = 0
