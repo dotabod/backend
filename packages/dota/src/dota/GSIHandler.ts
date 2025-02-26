@@ -1071,7 +1071,9 @@ export class GSIHandler {
   }
 }
 
-async function maybeSendRoshAegisEvent(token: string, client: SocketClient) {
+async function maybeSendRoshAegisEvent(token: string, client?: SocketClient) {
+  if (!client) return
+
   const aegisRes = (await redisClient.client.json.get(
     `${token}:aegis`,
   )) as unknown as AegisRes | null

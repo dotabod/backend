@@ -73,6 +73,9 @@ export function emitRoshEvent(res: RoshRes, token: string, client: SocketClient)
   if (!res || !res.minDate) return
   res = getNewRoshTime(res)
 
+  // Only check settings if client is provided
+  if (!client) return
+
   const tellChatRosh = getValueOrDefault(DBSettings.rosh, client.settings, client.subscription)
   if (!tellChatRosh) return
 
@@ -132,6 +135,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       chattersKey: 'roshanKilled',
     })
 
-    emitRoshEvent(res, dotaClient.getToken())
+    emitRoshEvent(res, dotaClient.getToken(), dotaClient.client)
   },
 })
