@@ -1,10 +1,21 @@
 import { logger } from '../../utils/logger.js'
 import { getTwitchAPI } from './getTwitchAPI.js'
 
-export const refundTwitchBet = async (twitchId: string) => {
+export const refundTwitchBet = async (twitchId: string, specificPredictionId?: string) => {
   const api = getTwitchAPI(twitchId)
 
   try {
+    // If a specific prediction ID is provided, use it directly
+    if (specificPredictionId) {
+      logger.info('[PREDICT] Refunding specific prediction', {
+        twitchId,
+        predictionId: specificPredictionId,
+      })
+      await api.predictions.cancelPrediction(twitchId, specificPredictionId)
+      return specificPredictionId
+    }
+
+    // Otherwise, get the most recent prediction
     const predictions = await api.predictions.getPredictions(twitchId, {
       limit: 1,
     })

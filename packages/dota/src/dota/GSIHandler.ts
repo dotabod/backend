@@ -766,9 +766,24 @@ export class GSIHandler {
               key: DBSettings.tellChatBets,
             }),
           )
-          const oldBetId = await refundTwitchBet(this.getChannelId())
-          if (oldBetId) {
-            await supabase.from('bets').update({ predictionId: null }).eq('predictionId', oldBetId)
+          const predictionResponse = await supabase
+            .from('bets')
+            .select('predictionId')
+            .eq('matchId', matchId)
+            .eq('userId', this.client.token)
+            .is('won', null)
+            .single()
+          if (predictionResponse.data?.predictionId) {
+            const oldBetId = await refundTwitchBet(
+              this.getChannelId(),
+              predictionResponse.data.predictionId,
+            )
+            if (oldBetId) {
+              await supabase
+                .from('bets')
+                .update({ predictionId: null })
+                .eq('predictionId', oldBetId)
+            }
           }
         }
         await this.resetClientState()
@@ -921,7 +936,18 @@ export class GSIHandler {
             this.client.settings,
             this.client.subscription,
           )
-          if (betsEnabled) await refundTwitchBet(this.getChannelId())
+          if (betsEnabled) {
+            const predictionResponse = await supabase
+              .from('bets')
+              .select('predictionId')
+              .eq('matchId', matchId)
+              .eq('userId', this.client.token)
+              .is('won', null)
+              .single()
+            if (predictionResponse.data?.predictionId) {
+              await refundTwitchBet(this.getChannelId(), predictionResponse.data.predictionId)
+            }
+          }
         }
 
         await this.resetClientState()
@@ -1022,15 +1048,15 @@ export class GSIHandler {
   }
 
   /*
-      // hero banned
-      if hero.id === -1 && previously.hero.id > 0 && previously.hero.name === ''
+        // hero banned
+        if hero.id === -1 && previously.hero.id > 0 && previously.hero.name === ''
 
-      // picked, enemy cant see yet
-      if hero.id > 0 && hero.name === ''
+        // picked, enemy cant see yet
+        if hero.id > 0 && hero.name === ''
 
-      // picked, enemy can see now
-      if hero.id > 0 && hero.name && hero.name.length
-  */
+        // picked, enemy can see now
+        if hero.id > 0 && hero.name && hero.name.length
+    */
   async setupOBSBlockers(state?: string) {
     try {
       if (isSpectator(this.client.gsi) || isArcade(this.client.gsi)) {
