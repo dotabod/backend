@@ -108,7 +108,3 @@ export const twitchIdToToken = new Map<string, string>()
 export const twitchNameToToken = new Map<string, string>()
 export const pendingCheckAuth = new Map<string, boolean>()
 export const lookingupToken = new Map<string, boolean>()
-
-// Const holding if we told the user to get new scopes
-// We'll lose this every reboot (6 hours) so no need to cleanup
-export const didTellUser = new Set<string>()

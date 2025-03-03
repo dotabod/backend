@@ -1,9 +1,7 @@
-import { t } from 'i18next'
-
 import { clearCacheForUser } from '../dota/clearCacheForUser.js'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
-import { didTellUser, gsiHandlers, invalidTokens } from '../dota/lib/consts.js'
+import { gsiHandlers, invalidTokens } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { DBSettings } from '../settings.js'
 import { chatClient } from '../twitch/chatClient.js'
@@ -171,7 +169,9 @@ class SetupSupabase {
           if (newObj.requires_refresh === true && oldObj.requires_refresh === false) {
             invalidTokens.add(newObj.userId)
             const client = findUser(newObj.userId)
-            await clearCacheForUser(client)
+            if (client) {
+              await clearCacheForUser(client)
+            }
             return
           }
 
@@ -201,7 +201,9 @@ class SetupSupabase {
             })
 
             const client = findUser(newObj.userId)
-            await clearCacheForUser(client)
+            if (client) {
+              await clearCacheForUser(client)
+            }
           }
         },
       )
@@ -226,36 +228,9 @@ class SetupSupabase {
 
           // They come online
           if (client.stream_online && !oldObj.stream_online) {
-            const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
-            const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
+            // Handle any pending scheduled messages for this user
+            await handleScheduledMessages(client.token, client.name)
 
-            const hasNewestScopes = client.Account?.scope?.includes('channel:bot')
-            const requiresRefresh = client.Account?.requires_refresh
-            if ((!hasNewestScopes || requiresRefresh) && !didTellUser.has(client.name)) {
-              didTellUser.add(client.name)
-
-              const { data, error } = await supabase
-                .from('bets')
-                .select('created_at')
-                .eq('userId', client.token)
-                .gte('created_at', dayAgo)
-                .range(0, 0)
-
-              if (data?.length && !error) {
-                logger.info('[WATCHER USER] Sending refresh token messsage', {
-                  name: client.name,
-                  twitchId: client.Account?.providerAccountId,
-                  token: client.token,
-                })
-                chatClient.say(
-                  client.name,
-                  t('refreshToken', {
-                    lng: client.locale,
-                    channel: client.name,
-                  }),
-                )
-              }
-            }
             const connectedUser = gsiHandlers.get(client.token)
             if (connectedUser) {
               connectedUser.enable()
@@ -411,6 +386,92 @@ class SetupSupabase {
       .subscribe((status: string, err: any) => {
         logger.info('[SUPABASE] Subscription status on dota:', { status, err })
       })
+  }
+}
+
+/**
+ * Replaces placeholders in a message with their actual values
+ * Currently supported placeholders:
+ * - {username}: The Twitch username of the channel
+ */
+function processMessagePlaceholders(message: string, data: { username: string }): string {
+  return message.replace(/\{username\}/g, data.username)
+}
+
+async function handleScheduledMessages(userId: string, username: string) {
+  try {
+    // Find all pending scheduled messages for this user using Supabase instead of Prisma
+    const { data: pendingMessages, error } = await supabase
+      .from('scheduled_messages')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'PENDING')
+      .lte('scheduled_at', new Date().toISOString())
+
+    if (error) {
+      logger.error('[WATCHER SCHEDULED MESSAGES] Error fetching messages', {
+        userId,
+        error,
+      })
+      return
+    }
+
+    if (!pendingMessages || pendingMessages.length === 0) {
+      return
+    }
+
+    logger.info('[WATCHER SCHEDULED MESSAGES] Found pending messages for user', {
+      name: username,
+      count: pendingMessages.length,
+    })
+
+    // Process each pending message
+    for (const message of pendingMessages) {
+      try {
+        // Process any placeholders in the message
+        const processedMessage = processMessagePlaceholders(message.message, { username })
+
+        // Send the message to the user's chat
+        chatClient.say(username, processedMessage)
+
+        // Update the message status to delivered
+        const { error: updateError } = await supabase
+          .from('scheduled_messages')
+          .update({
+            status: 'DELIVERED',
+            sent_at: new Date().toISOString(),
+          })
+          .eq('id', message.id)
+
+        if (updateError) {
+          throw updateError
+        }
+
+        logger.info('[WATCHER SCHEDULED MESSAGES] Delivered message', {
+          name: username,
+          messageId: message.id,
+        })
+      } catch (error) {
+        logger.error('[WATCHER SCHEDULED MESSAGES] Failed to deliver message', {
+          name: username,
+          messageId: message.id,
+          error,
+        })
+
+        // Update the message status to failed
+        await supabase
+          .from('scheduled_messages')
+          .update({
+            status: 'FAILED',
+          })
+          .eq('id', message.id)
+      }
+    }
+  } catch (error) {
+    logger.error('[WATCHER SCHEDULED MESSAGES] Error handling scheduled messages', {
+      userId,
+      error,
+    })
   }
 }
 

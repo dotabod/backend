@@ -281,6 +281,47 @@ export type Database = {
           },
         ]
       }
+      scheduled_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          scheduled_at: string | null
+          sent_at: string | null
+          status: Database['public']['Enums']['MessageStatus']
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: Database['public']['Enums']['MessageStatus']
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: Database['public']['Enums']['MessageStatus']
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'scheduled_messages_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       settings: {
         Row: {
           created_at: string
@@ -569,6 +610,7 @@ export type Database = {
       }
     }
     Enums: {
+      MessageStatus: 'PENDING' | 'DELIVERED' | 'FAILED'
       SubscriptionStatus:
         | 'ACTIVE'
         | 'CANCELED'
