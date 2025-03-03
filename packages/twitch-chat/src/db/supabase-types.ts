@@ -252,7 +252,7 @@ export type Database = {
         Insert: {
           createdAt?: string
           deliveredAt?: string | null
-          id: string
+          id?: string
           scheduledMessageId: string
           status?: Database['public']['Enums']['MessageStatus']
           updatedAt: string
@@ -339,7 +339,7 @@ export type Database = {
         }
         Insert: {
           createdAt?: string
-          id: string
+          id?: string
           isForAllUsers?: boolean
           message: string
           sendAt: string

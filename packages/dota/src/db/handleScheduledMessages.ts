@@ -129,7 +129,6 @@ export async function handleUserOnlineMessages(userId: string, username: string)
 
       // Create a delivery record
       const { error: createDeliveryError } = await supabase.from('MessageDelivery').insert({
-        id: crypto.randomUUID(),
         scheduledMessageId: message.id,
         userId,
         status: 'DELIVERED',
