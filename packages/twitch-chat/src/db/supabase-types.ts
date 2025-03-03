@@ -239,6 +239,51 @@ export type Database = {
         }
         Relationships: []
       }
+      MessageDelivery: {
+        Row: {
+          createdAt: string
+          deliveredAt: string | null
+          id: string
+          scheduledMessageId: string
+          status: Database['public']['Enums']['MessageStatus']
+          updatedAt: string
+          userId: string
+        }
+        Insert: {
+          createdAt?: string
+          deliveredAt?: string | null
+          id: string
+          scheduledMessageId: string
+          status?: Database['public']['Enums']['MessageStatus']
+          updatedAt: string
+          userId: string
+        }
+        Update: {
+          createdAt?: string
+          deliveredAt?: string | null
+          id?: string
+          scheduledMessageId?: string
+          status?: Database['public']['Enums']['MessageStatus']
+          updatedAt?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'MessageDelivery_scheduledMessageId_fkey'
+            columns: ['scheduledMessageId']
+            isOneToOne: false
+            referencedRelation: 'ScheduledMessage'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'MessageDelivery_userId_fkey'
+            columns: ['userId']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       mods: {
         Row: {
           created_at: string
@@ -281,41 +326,41 @@ export type Database = {
           },
         ]
       }
-      scheduled_messages: {
+      ScheduledMessage: {
         Row: {
-          created_at: string
+          createdAt: string
           id: string
+          isForAllUsers: boolean
           message: string
-          scheduled_at: string | null
-          sent_at: string | null
+          sendAt: string
           status: Database['public']['Enums']['MessageStatus']
-          updated_at: string
-          user_id: string
+          updatedAt: string
+          userId: string | null
         }
         Insert: {
-          created_at?: string
-          id?: string
+          createdAt?: string
+          id: string
+          isForAllUsers?: boolean
           message: string
-          scheduled_at?: string | null
-          sent_at?: string | null
+          sendAt: string
           status?: Database['public']['Enums']['MessageStatus']
-          updated_at?: string
-          user_id: string
+          updatedAt: string
+          userId?: string | null
         }
         Update: {
-          created_at?: string
+          createdAt?: string
           id?: string
+          isForAllUsers?: boolean
           message?: string
-          scheduled_at?: string | null
-          sent_at?: string | null
+          sendAt?: string
           status?: Database['public']['Enums']['MessageStatus']
-          updated_at?: string
-          user_id?: string
+          updatedAt?: string
+          userId?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: 'scheduled_messages_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: 'ScheduledMessage_userId_fkey'
+            columns: ['userId']
             isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
@@ -610,7 +655,7 @@ export type Database = {
       }
     }
     Enums: {
-      MessageStatus: 'PENDING' | 'DELIVERED' | 'FAILED'
+      MessageStatus: 'PENDING' | 'DELIVERED' | 'FAILED' | 'CANCELLED'
       SubscriptionStatus:
         | 'ACTIVE'
         | 'CANCELED'

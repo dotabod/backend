@@ -4,12 +4,12 @@ import findUser from '../dota/lib/connectedStreamers.js'
 import { gsiHandlers, invalidTokens } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { DBSettings } from '../settings.js'
-import { chatClient } from '../twitch/chatClient.js'
 import { updateTwurpleTokenForTwitchId } from '../twitch/lib/getTwitchAPI'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { logger } from '../utils/logger.js'
 import { isSubscriptionActive } from '../utils/subscription.js'
 import getDBUser from './getDBUser.js'
+import { handleUserOnlineMessages } from './handleScheduledMessages'
 import type { Tables } from './supabase-types.js'
 import supabase from './supabase.js'
 
@@ -229,7 +229,7 @@ class SetupSupabase {
           // They come online
           if (client.stream_online && !oldObj.stream_online) {
             // Handle any pending scheduled messages for this user
-            await handleScheduledMessages(client.token, client.name)
+            await handleUserOnlineMessages(client.token, client.name)
 
             const connectedUser = gsiHandlers.get(client.token)
             if (connectedUser) {
@@ -386,92 +386,6 @@ class SetupSupabase {
       .subscribe((status: string, err: any) => {
         logger.info('[SUPABASE] Subscription status on dota:', { status, err })
       })
-  }
-}
-
-/**
- * Replaces placeholders in a message with their actual values
- * Currently supported placeholders:
- * - {username}: The Twitch username of the channel
- */
-function processMessagePlaceholders(message: string, data: { username: string }): string {
-  return message.replace(/\{username\}/g, data.username)
-}
-
-async function handleScheduledMessages(userId: string, username: string) {
-  try {
-    // Find all pending scheduled messages for this user using Supabase instead of Prisma
-    const { data: pendingMessages, error } = await supabase
-      .from('scheduled_messages')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'PENDING')
-      .lte('scheduled_at', new Date().toISOString())
-
-    if (error) {
-      logger.error('[WATCHER SCHEDULED MESSAGES] Error fetching messages', {
-        userId,
-        error,
-      })
-      return
-    }
-
-    if (!pendingMessages || pendingMessages.length === 0) {
-      return
-    }
-
-    logger.info('[WATCHER SCHEDULED MESSAGES] Found pending messages for user', {
-      name: username,
-      count: pendingMessages.length,
-    })
-
-    // Process each pending message
-    for (const message of pendingMessages) {
-      try {
-        // Process any placeholders in the message
-        const processedMessage = processMessagePlaceholders(message.message, { username })
-
-        // Send the message to the user's chat
-        chatClient.say(username, processedMessage)
-
-        // Update the message status to delivered
-        const { error: updateError } = await supabase
-          .from('scheduled_messages')
-          .update({
-            status: 'DELIVERED',
-            sent_at: new Date().toISOString(),
-          })
-          .eq('id', message.id)
-
-        if (updateError) {
-          throw updateError
-        }
-
-        logger.info('[WATCHER SCHEDULED MESSAGES] Delivered message', {
-          name: username,
-          messageId: message.id,
-        })
-      } catch (error) {
-        logger.error('[WATCHER SCHEDULED MESSAGES] Failed to deliver message', {
-          name: username,
-          messageId: message.id,
-          error,
-        })
-
-        // Update the message status to failed
-        await supabase
-          .from('scheduled_messages')
-          .update({
-            status: 'FAILED',
-          })
-          .eq('id', message.id)
-      }
-    }
-  } catch (error) {
-    logger.error('[WATCHER SCHEDULED MESSAGES] Error handling scheduled messages', {
-      userId,
-      error,
-    })
   }
 }
 
