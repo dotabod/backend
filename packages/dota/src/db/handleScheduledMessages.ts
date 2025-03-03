@@ -18,20 +18,6 @@ function processMessagePlaceholders(message: string, data: { username: string })
  */
 async function sendMessageToUser(userId: string, username: string, messageContent: string) {
   try {
-    // Get the user's Twitch username from their user ID
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('name')
-      .eq('id', userId)
-      .single()
-
-    if (userError || !userData) {
-      logger.error(`Error fetching user data for ID ${userId}:`, userError)
-      return false
-    }
-
-    const username = userData.name
-
     // Process any placeholders in the message
     const processedMessage = processMessagePlaceholders(messageContent, { username })
 
