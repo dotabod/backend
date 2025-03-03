@@ -1,12 +1,12 @@
 {
-  "2mdelay": "(2m delay)",
+  "2mdelay": "(2-хв. затримка)",
   "aegis": {
     "denied": "{{- heroName}} знищив Аєгіс {{emote}}",
     "expired": "Аєгіс у {{- heroName}} зник {{emote}}. Ніхто його не бачив?",
     "pickup": "{{- heroName}} підібрав Аєгіс!",
     "snatched": "{{- heroName}} викрав Аєгіс {{emote}}"
   },
-  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "aghs": "Аганім {{- heroName}} : {{- title}} · {{- description}}",
   "apm_one": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
@@ -149,13 +149,13 @@
   "multiAccount": "Цей аккаунт steam вже підключений до іншого користувача Dotabod. Перевірте головну панель для більш детальної інформації: {{- url}}",
   "muted": "Dotabod не буде автоматично сповіщати про ігрові події, але все ще буде відповідати на команди. Введіть !unmute для скасування дій",
   "neutralItems": {
-    "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+    "tierAvailable": "Tier {{tier}} нейтральні елементи зараз доступні! Я в ліс до кінця гри PogChamp"
   },
-  "noAghs": "{{- heroName}} has no aghs upgrade.",
+  "noAghs": "{{- heroName}} бродиться без аганіму",
   "noHero": "Герой не знайдений",
   "noLastMatch": "Не знайдено останню гру {{emote}}",
   "noNotable": "Немає відомих гравців",
-  "noShard": "{{- heroName}} has no shard upgrade.",
+  "noShard": "{{- heroName}} бродиться без шарду",
   "notLive": "Стрім офлайн {{emote}} . Насправді онлайн? Модератори, напишіть !online",
   "notPlaying": "Не грає {{emote}}",
   "npAdd": "Спробуйте !np add <steam32id> <playername>",
@@ -207,7 +207,7 @@
   "setStreamDelay": "Затримка потоку змінена до $t(seconds, {\"count\": {{seconds}} }) с",
   "setStreamDelayNoArgs": "Затримка на стрімі не встановлена, використайте !setdelay <seconds>",
   "setStreamDelayRemoved": "Затримку на стрімі прибрано",
-  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
+  "shard": "Аганім Шард {{- heroName}} : {{- title}} · {{- description}}",
   "spectators": {
     "count_one": "1 глядач, який дивиться цей матч наживо",
     "count_few": "{{count}} глядачів за цим матчем жити",
