@@ -113,27 +113,36 @@ export async function handleChatMessage(message: EventSubWsPacket): Promise<void
     message_id,
     broadcaster_user_id: channelId,
     badges,
+    reply,
     broadcaster_user_login,
   } = event
 
   // @ts-expect-error Not in types yet
   if (event.source_message_id !== null) {
     // Ignore
-    return;
+    return
+  }
+
+  let messageText = text
+
+  // If its a reply, remove the reply text from the message
+  if (reply?.parent_message_id && messageText.startsWith('@')) {
+    // Remove the first word from the message (usually starting with @)
+    messageText = messageText.replace(/^[^ ]+/, '').trim()
   }
 
   const userInfo = extractUserInfo(badges, channelId, chatter_user_id)
 
   if (hasDotabodSocket()) {
-    emitChatMessage(broadcaster_user_login, chatter_user_login, text, {
+    emitChatMessage(broadcaster_user_login, chatter_user_login, messageText, {
       channelId,
       userInfo,
-      messageId: message_id,
+      messageId: reply?.parent_message_id || message_id,
     })
     return
   }
 
-  await dotabodOfflineHandler(text, channelId, message_id)
+  await dotabodOfflineHandler(messageText, channelId, reply?.parent_message_id || message_id)
 }
 
 /**
