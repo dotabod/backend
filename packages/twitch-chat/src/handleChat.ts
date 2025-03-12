@@ -125,8 +125,8 @@ export async function handleChatMessage(message: EventSubWsPacket): Promise<void
 
   let messageText = text
 
-  // If its a reply, remove the reply text from the message
-  if (reply?.parent_message_id && messageText.startsWith('@')) {
+  // If its a reply and has a command, remove the reply text from the message
+  if (messageText.startsWith('@') && messageText.includes('!')) {
     // Remove the first word from the message (usually starting with @)
     messageText = messageText.replace(/^[^ ]+/, '').trim()
   }
