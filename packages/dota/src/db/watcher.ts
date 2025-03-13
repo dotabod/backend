@@ -284,7 +284,7 @@ class SetupSupabase {
             chatClient.say(
               client.name,
               t('giftSub', {
-                senderName: newObj.senderName,
+                senderName: newObj.senderName || 'anonymous',
                 giftMessage: newObj.giftMessage,
                 lng: client.locale,
               }) + (newObj.giftMessage ? ` "${newObj.giftMessage}"` : ''),
