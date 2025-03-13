@@ -1,4 +1,5 @@
 {
+  "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "2mdelay": "(2m delay)",
   "aegis": {
     "denied": "{{- heroName}} denied the aegis {{emote}}",

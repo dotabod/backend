@@ -1,5 +1,4 @@
 {
-  "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "2mdelay": "(2m delay)",
   "aegis": {
     "denied": "{{- heroName}} denied the aegis {{emote}}",
@@ -72,6 +71,7 @@
   "facetTotalLimit_one": "Only {{count}} facet is available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_other": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Game was not found",
+  "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "gpm_zero": "Live GPM for {{- heroName}}: {{num}}",
   "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {

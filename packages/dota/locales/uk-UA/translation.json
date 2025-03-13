@@ -76,6 +76,7 @@
   "facetTotalLimit_many": "{{count}} грані доступна для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_other": "Лише {{count}} грані доступна для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Матч не знайдено",
+  "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "gpm_zero": "",
   "gpm_one": "Поточний GPM: {{num}}. Отримано {{heroKills}} золота від вбивства героїв та {{creepKills}} золота від вбивства кріпочків.",
   "gpm_few": "Поточний GPM: {{num}}. Отримано {{heroKills}} золота від вбивства героїв та {{creepKills}} золота від вбивства кріпочків.",
