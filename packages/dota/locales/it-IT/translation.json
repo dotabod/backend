@@ -72,6 +72,7 @@
   "facetTotalLimit_many": "",
   "facetTotalLimit_other": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "La partita non è stata trovata",
+  "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "gpm_zero": "",
   "gpm_one": "GPM live per {{- heroName}}: {{num}}. {{heroKills}} da eroi, {{creepKills}} da creep.",
   "gpm_other": "GPM live per {{- heroName}}: {{num}}. {{heroKills}} da eroi, {{creepKills}} da creep.",
