@@ -63,6 +63,7 @@ const allowedOrigins = [
 ]
 class GSIServer {
   io: Server
+  private inactiveTokenInterval: NodeJS.Timeout | null = null
 
   constructor() {
     logger.info('Starting GSI Server!')
@@ -146,11 +147,18 @@ class GSIServer {
 
     // Set up the repeating timer
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    setInterval(checkForInactiveTokens, TOKEN_TIMEOUT)
+    this.inactiveTokenInterval = setInterval(checkForInactiveTokens, TOKEN_TIMEOUT)
   }
 
   init() {
     return this
+  }
+
+  close() {
+    if (this.inactiveTokenInterval) {
+      clearInterval(this.inactiveTokenInterval)
+      this.inactiveTokenInterval = null
+    }
   }
 }
 
