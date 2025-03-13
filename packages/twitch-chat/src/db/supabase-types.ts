@@ -239,6 +239,47 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_subscriptions: {
+        Row: {
+          created_at: string
+          giftMessage: string | null
+          giftQuantity: number
+          giftType: string
+          id: string
+          senderName: string
+          subscriptionId: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          giftMessage?: string | null
+          giftQuantity?: number
+          giftType?: string
+          id?: string
+          senderName?: string
+          subscriptionId: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          giftMessage?: string | null
+          giftQuantity?: number
+          giftType?: string
+          id?: string
+          senderName?: string
+          subscriptionId?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'gift_subscriptions_subscriptionId_fkey'
+            columns: ['subscriptionId']
+            isOneToOne: false
+            referencedRelation: 'subscriptions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       MessageDelivery: {
         Row: {
           createdAt: string
@@ -320,6 +361,51 @@ export type Database = {
           {
             foreignKeyName: 'mods_streamer_user_id_fkey'
             columns: ['streamer_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          giftSubscriptionId: string | null
+          id: string
+          isRead: boolean
+          type: string
+          updated_at: string
+          userId: string
+        }
+        Insert: {
+          created_at?: string
+          giftSubscriptionId?: string | null
+          id?: string
+          isRead?: boolean
+          type?: string
+          updated_at?: string
+          userId: string
+        }
+        Update: {
+          created_at?: string
+          giftSubscriptionId?: string | null
+          id?: string
+          isRead?: boolean
+          type?: string
+          updated_at?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_giftSubscriptionId_fkey'
+            columns: ['giftSubscriptionId']
+            isOneToOne: false
+            referencedRelation: 'gift_subscriptions'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'notifications_userId_fkey'
+            columns: ['userId']
             isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
@@ -502,6 +588,7 @@ export type Database = {
           created_at: string
           currentPeriodEnd: string | null
           id: string
+          isGift: boolean
           status: Database['public']['Enums']['SubscriptionStatus'] | null
           stripeCustomerId: string | null
           stripePriceId: string | null
@@ -516,6 +603,7 @@ export type Database = {
           created_at?: string
           currentPeriodEnd?: string | null
           id?: string
+          isGift?: boolean
           status?: Database['public']['Enums']['SubscriptionStatus'] | null
           stripeCustomerId?: string | null
           stripePriceId?: string | null
@@ -530,6 +618,7 @@ export type Database = {
           created_at?: string
           currentPeriodEnd?: string | null
           id?: string
+          isGift?: boolean
           status?: Database['public']['Enums']['SubscriptionStatus'] | null
           stripeCustomerId?: string | null
           stripePriceId?: string | null

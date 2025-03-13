@@ -50,12 +50,103 @@ gentypes() {
     )
 
     echo "Generating types for project $PROJECT_ID on $DOTABOD_ENV"
-    for OUTPUT_DIR in "${OUTPUT_DIRS[@]}"; do
-        OUTPUT_FILE="$OUTPUT_DIR/supabase-types.ts"
-        bunx supabase gen types typescript --db-url "$DATABASE_URL" --schema public >"$OUTPUT_FILE"
-        echo '' | cat - "$OUTPUT_FILE" >temp && mv temp "$OUTPUT_FILE"
-        bun biome format --write "$OUTPUT_FILE"
-    done
+
+    # Generate types once
+    TEMP_FILE="supabase-types.ts"
+
+    # Check if Colima is installed
+    if command -v colima >/dev/null 2>&1; then
+        # Check if Colima is running
+        if ! colima status >/dev/null 2>&1; then
+            echo "Colima is not running. Starting Colima..."
+            colima start
+            if [ $? -eq 0 ]; then
+                echo "Colima started successfully."
+            else
+                echo "Failed to start Colima. Please start it manually."
+                exit 1
+            fi
+        else
+            echo "Colima is already running."
+        fi
+    else
+        echo "Colima is not installed. Skipping Colima check."
+    fi
+
+    # Check if Docker is running, if not and we're using Colima, try to fix it
+    if ! docker info >/dev/null 2>&1; then
+        if command -v colima >/dev/null 2>&1; then
+            echo "Docker daemon not accessible. Checking Colima status..."
+
+            # Check if Colima is running but Docker socket isn't properly linked
+            if colima status >/dev/null 2>&1; then
+                echo "Colima is running but Docker socket may not be properly linked."
+
+                # Get Colima socket path
+                COLIMA_SOCKET=$(colima ssh -- echo -n '$HOME/.colima/default/docker.sock')
+
+                if [ -n "$COLIMA_SOCKET" ] && [ -S "$COLIMA_SOCKET" ]; then
+                    echo "Setting DOCKER_HOST to use Colima socket"
+                    export DOCKER_HOST="unix://$COLIMA_SOCKET"
+
+                    # Test if Docker works now
+                    if docker info >/dev/null 2>&1; then
+                        echo "Successfully connected to Docker daemon via Colima socket"
+                    else
+                        echo "Still unable to connect to Docker daemon. Trying to restart Colima..."
+                        colima stop && colima start
+                    fi
+                else
+                    echo "Colima socket not found or not accessible. Restarting Colima..."
+                    colima stop && colima start
+                fi
+            fi
+        fi
+    fi
+
+    # Check if Docker is running
+    if ! docker info >/dev/null 2>&1; then
+        echo "Error: Docker daemon is not running."
+        echo "Please start Docker Desktop or Colima."
+        echo "Docker is a prerequisite for local development."
+        echo "Docker Desktop: https://docs.docker.com/desktop"
+        echo "Colima: https://github.com/abiosoft/colima"
+        exit 1
+    fi
+
+    bunx supabase gen types typescript --db-url "$DATABASE_URL" --schema public >"$TEMP_FILE"
+    # Check if the generated types file is empty
+    if [ ! -s "$TEMP_FILE" ]; then
+        echo "Error: Generated types file is empty. There might be an issue with the database connection or schema."
+        echo "Please check your database connection and try again."
+        exit 1
+    fi
+
+    # Check if the temp file has content before proceeding
+    if [ -s "$TEMP_FILE" ]; then
+        echo "Successfully generated types from database schema."
+        bun biome format --write "$TEMP_FILE"
+
+        # If empty after formatting, exit
+        if [ ! -s "$TEMP_FILE" ]; then
+            echo "Error: The generated types file is empty after formatting."
+            exit 1
+        fi
+
+        # Copy to all output directories
+        for OUTPUT_DIR in "${OUTPUT_DIRS[@]}"; do
+            OUTPUT_FILE="$OUTPUT_DIR/supabase-types.ts"
+            mkdir -p "$OUTPUT_DIR"
+            cp "$TEMP_FILE" "$OUTPUT_FILE"
+            echo "Copied types to $OUTPUT_FILE"
+        done
+    else
+        echo "Error: The generated types file is empty after processing."
+        exit 1
+    fi
+
+    # Clean up temp file
+    rm "$TEMP_FILE"
 }
 
 backup() {

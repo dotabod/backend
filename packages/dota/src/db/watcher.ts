@@ -12,6 +12,8 @@ import getDBUser from './getDBUser.js'
 import { handleUserOnlineMessages } from './handleScheduledMessages'
 import type { Tables } from './supabase-types.js'
 import supabase from './supabase.js'
+import { chatClient } from '../twitch/chatClient'
+import { t } from 'i18next'
 
 class SetupSupabase {
   channel: any // ReturnType<typeof supabase.channel>
@@ -258,6 +260,40 @@ class SetupSupabase {
             } catch (e) {
               logger.error('Error in watcher postgres update', { e })
             }
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'gift_subscriptions' },
+        async (payload: { new: Tables<'gift_subscriptions'> }) => {
+          const newObj = payload.new
+          const userId = await supabase
+            .from('subscriptions')
+            .select('userId')
+            .eq('id', newObj.subscriptionId)
+            .single()
+
+          if (!userId) return
+          const client = findUser(userId.data?.userId)
+
+          if (!client || !client.stream_online) return
+
+          try {
+            // Send notification message to chat
+            chatClient.say(
+              client.name,
+              t('giftSub', {
+                senderName: newObj.senderName,
+                giftMessage: newObj.giftMessage,
+                lng: client.locale,
+              }) + (newObj.giftMessage ? `" ${newObj.giftMessage}"` : ''),
+            )
+          } catch (e) {
+            logger.error('Error sending notification to chat', {
+              error: e,
+              userId: client.token,
+            })
           }
         },
       )
