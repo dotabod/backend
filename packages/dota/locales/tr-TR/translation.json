@@ -69,6 +69,7 @@
   "facetTotalLimit_other": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Oyun bulunamadı",
   "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
+  "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
   "gpm_zero": "",
   "gpm_one": "{{- heroName}} için anlık GPM: {{num}}. Kahramanlardan {{heroKills}}, yaratıklardan {{creepKills}}.",
   "gpm_other": "{{- heroName}} için anlık GPM: {{num}}. Kahramanlardan {{heroKills}}, yaratıklardan {{creepKills}}.",
