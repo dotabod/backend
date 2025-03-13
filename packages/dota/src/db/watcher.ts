@@ -283,11 +283,14 @@ class SetupSupabase {
             // Send notification message to chat
             chatClient.say(
               client.name,
-              t('giftSub', {
-                senderName: newObj.senderName || 'anonymous',
-                giftMessage: newObj.giftMessage,
-                lng: client.locale,
-              }) + (newObj.giftMessage ? ` "${newObj.giftMessage}"` : ''),
+              newObj.senderName
+                ? t('giftSub', {
+                    senderName: newObj.senderName,
+                    lng: client.locale,
+                  }) + (newObj.giftMessage ? ` "${newObj.giftMessage}"` : '')
+                : t('giftSubAnonymous', {
+                    lng: client.locale,
+                  }) + (newObj.giftMessage ? ` "${newObj.giftMessage}"` : ''),
             )
           } catch (e) {
             logger.error('Error sending notification to chat', {
