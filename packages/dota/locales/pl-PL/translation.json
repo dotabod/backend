@@ -77,6 +77,7 @@
   "facetTotalLimit_other": "Tylko {{count}} aspekty są dostępne dla {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Gra nie została znaleziona",
   "giftSub": "Prezentowa subskrypcja Dotabod Pro została właśnie podarowana przez {{- senderName}}!",
+  "giftSubAnonymous": "Prezentowa subskrypcja Dotabod Pro została właśnie podarowana przez Anonimowego darczyńce👻!",
   "gpm_zero": "",
   "gpm_one": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstwa bohatera, z {{creepKills}} zabójstw creepów.",
   "gpm_few": "Aktualne złoto na minutę (GPM) dla {{- heroName}}: {{num}}. Z {{heroKills}} zabójstw bohaterów, z {{creepKills}} zabójstw creepów.",
