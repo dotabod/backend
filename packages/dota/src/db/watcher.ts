@@ -287,7 +287,7 @@ class SetupSupabase {
                 senderName: newObj.senderName,
                 giftMessage: newObj.giftMessage,
                 lng: client.locale,
-              }) + (newObj.giftMessage ? `" ${newObj.giftMessage}"` : ''),
+              }) + (newObj.giftMessage ? ` "${newObj.giftMessage}"` : ''),
             )
           } catch (e) {
             logger.error('Error sending notification to chat', {
