@@ -48,7 +48,7 @@ export async function findAccountFromCmd(
 
   if (args.length && !isSpectator(packet)) {
     const data = await getPlayerFromArgs({ args, packet, locale, command })
-    accountIdFromArgs = data?.player?.accountid
+    accountIdFromArgs = Number(data?.player?.accountid)
     playerIdx = data?.playerIdx
 
     if (!accountIdFromArgs) {
@@ -68,7 +68,7 @@ export async function findAccountFromCmd(
   if (isSpectator(packet)) {
     if (args.length) {
       const data = await getPlayerFromArgs({ args, packet, locale, command })
-      accountIdFromArgs = data?.player?.accountid
+      accountIdFromArgs = Number(data?.player?.accountid)
     }
 
     const spectatorPlayers = getSpectatorPlayers(packet)

@@ -90,7 +90,8 @@ export default async function getDBUser({
     subscriptions (
       id,
       tier,
-      status
+      status,
+      isGift
     ),
     Account:accounts (
       refresh_token,
@@ -157,8 +158,7 @@ export default async function getDBUser({
   let subscription = undefined
   if (Array.isArray(user.subscriptions) && user.subscriptions.length > 0) {
     const activeSubscription =
-      user.subscriptions.find((sub) => isSubscriptionActive({ status: sub.status })) ||
-      user.subscriptions[0]
+      user.subscriptions.find((sub) => isSubscriptionActive(sub)) || user.subscriptions[0]
     subscription = {
       ...activeSubscription,
     }

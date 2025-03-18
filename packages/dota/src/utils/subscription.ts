@@ -12,7 +12,7 @@ export const SUBSCRIPTION_TIERS = {
 
 export type SubscriptionRow = Pick<
   Database['public']['Tables']['subscriptions']['Row'],
-  'id' | 'tier' | 'status'
+  'id' | 'tier' | 'status' | 'isGift'
 >
 
 export const TIER_LEVELS: Record<Database['public']['Enums']['SubscriptionTier'], number> = {
@@ -173,7 +173,7 @@ export function isInGracePeriod(): boolean {
 // Update canAccessFeature to handle chatter keys
 export function canAccessFeature(
   feature: FeatureTier | GenericFeature,
-  subscription: Partial<SubscriptionRow> | null | undefined,
+  subscription: SubscriptionRow | null | undefined,
 ): { hasAccess: boolean; requiredTier: Database['public']['Enums']['SubscriptionTier'] } {
   const requiredTier = getRequiredTier(feature)
   const isFreeFeature = requiredTier === SUBSCRIPTION_TIERS.FREE
@@ -186,14 +186,14 @@ export function canAccessFeature(
       requiredTier,
     }
   }
+  if (!subscription?.tier)
+    return {
+      hasAccess: false,
+      requiredTier: requiredTier,
+    }
 
   // Return early if feature is free or subscription is invalid
-  if (
-    isFreeFeature ||
-    !subscription?.status ||
-    !subscription?.tier ||
-    !isSubscriptionActive({ status: subscription.status })
-  ) {
+  if (isFreeFeature || !subscription || !isSubscriptionActive(subscription)) {
     return {
       hasAccess: isFreeFeature,
       requiredTier,
@@ -207,11 +207,8 @@ export function canAccessFeature(
   }
 }
 
-export function isSubscriptionActive(
-  subscription: {
-    status: Database['public']['Enums']['SubscriptionStatus'] | null | undefined
-  } | null,
-): boolean {
+export function isSubscriptionActive(subscription?: SubscriptionRow): boolean {
+  if (subscription?.isGift) return false
   if (!subscription?.status) return false
   if (subscription.status === 'TRIALING') return true
   if (subscription.status === 'ACTIVE') return true

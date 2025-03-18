@@ -61,11 +61,12 @@ class SetupSupabase {
 
           if (!client) return
 
-          if (isSubscriptionActive({ status: newObj.status })) {
+          if (isSubscriptionActive(newObj)) {
             client.subscription = {
               id: newObj.id,
               tier: newObj.tier,
               status: newObj.status,
+              isGift: newObj.isGift,
             }
           }
         },
@@ -79,19 +80,20 @@ class SetupSupabase {
 
           if (!client) return
 
-          const isNewActive = isSubscriptionActive({ status: newObj.status })
+          const isNewActive = isSubscriptionActive(newObj)
           if (isNewActive) {
             // Update with new details
             client.subscription = {
               id: newObj.id,
               tier: newObj.tier,
               status: newObj.status,
+              isGift: newObj.isGift,
             }
             return
           }
 
           // If current active but new is inactive
-          const isCurrentActive = isSubscriptionActive({ status: client.subscription?.status })
+          const isCurrentActive = isSubscriptionActive(client.subscription)
           if (isCurrentActive && !isNewActive && client.subscription?.id !== newObj.id) {
             return
           }
@@ -115,6 +117,7 @@ class SetupSupabase {
                 id: activeSubscription.data.id,
                 tier: activeSubscription.data.tier,
                 status: activeSubscription.data.status,
+                isGift: activeSubscription.data.isGift,
               }
             } else {
               // No other active subscriptions found
@@ -153,6 +156,7 @@ class SetupSupabase {
                 id: activeSubscription.data.id,
                 tier: activeSubscription.data.tier,
                 status: activeSubscription.data.status,
+                isGift: activeSubscription.data.isGift,
               }
             } else {
               // No other active subscriptions found

@@ -36,6 +36,7 @@ export interface SocketClient {
     id: string
     tier: Database['public']['Tables']['subscriptions']['Row']['tier']
     status: Database['public']['Tables']['subscriptions']['Row']['status']
+    isGift: Database['public']['Tables']['subscriptions']['Row']['isGift']
   }
 }
 interface Provider {
