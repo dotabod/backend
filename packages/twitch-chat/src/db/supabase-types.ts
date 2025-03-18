@@ -242,6 +242,7 @@ export type Database = {
       gift_subscriptions: {
         Row: {
           created_at: string
+          gifterId: string | null
           giftMessage: string | null
           giftQuantity: number
           giftType: string
@@ -252,6 +253,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          gifterId?: string | null
           giftMessage?: string | null
           giftQuantity?: number
           giftType?: string
@@ -262,6 +264,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          gifterId?: string | null
           giftMessage?: string | null
           giftQuantity?: number
           giftType?: string
@@ -276,6 +279,59 @@ export type Database = {
             columns: ['subscriptionId']
             isOneToOne: false
             referencedRelation: 'subscriptions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      gift_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          gifterId: string | null
+          giftQuantity: number
+          giftSubscriptionId: string
+          giftType: string
+          id: string
+          metadata: Json | null
+          recipientId: string
+          stripeSessionId: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          gifterId?: string | null
+          giftQuantity: number
+          giftSubscriptionId: string
+          giftType: string
+          id?: string
+          metadata?: Json | null
+          recipientId: string
+          stripeSessionId?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          gifterId?: string | null
+          giftQuantity?: number
+          giftSubscriptionId?: string
+          giftType?: string
+          id?: string
+          metadata?: Json | null
+          recipientId?: string
+          stripeSessionId?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'gift_transactions_giftSubscriptionId_fkey'
+            columns: ['giftSubscriptionId']
+            isOneToOne: false
+            referencedRelation: 'gift_subscriptions'
             referencedColumns: ['id']
           },
         ]
@@ -589,6 +645,7 @@ export type Database = {
           currentPeriodEnd: string | null
           id: string
           isGift: boolean
+          metadata: Json | null
           status: Database['public']['Enums']['SubscriptionStatus'] | null
           stripeCustomerId: string | null
           stripePriceId: string | null
@@ -604,6 +661,7 @@ export type Database = {
           currentPeriodEnd?: string | null
           id?: string
           isGift?: boolean
+          metadata?: Json | null
           status?: Database['public']['Enums']['SubscriptionStatus'] | null
           stripeCustomerId?: string | null
           stripePriceId?: string | null
@@ -619,6 +677,7 @@ export type Database = {
           currentPeriodEnd?: string | null
           id?: string
           isGift?: boolean
+          metadata?: Json | null
           status?: Database['public']['Enums']['SubscriptionStatus'] | null
           stripeCustomerId?: string | null
           stripePriceId?: string | null
@@ -652,6 +711,7 @@ export type Database = {
           locale: string
           mmr: number
           name: string
+          pro_expiration: string | null
           steam32Id: number | null
           stream_delay: number | null
           stream_online: boolean
@@ -672,6 +732,7 @@ export type Database = {
           locale?: string
           mmr?: number
           name?: string
+          pro_expiration?: string | null
           steam32Id?: number | null
           stream_delay?: number | null
           stream_online?: boolean
@@ -692,6 +753,7 @@ export type Database = {
           locale?: string
           mmr?: number
           name?: string
+          pro_expiration?: string | null
           steam32Id?: number | null
           stream_delay?: number | null
           stream_online?: boolean
