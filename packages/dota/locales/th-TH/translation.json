@@ -1,5 +1,4 @@
 {
-  "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "2mdelay": "(2m delay)",
   "aegis": {
     "denied": "{{- heroName}} denied the aegis {{emote}}",
@@ -63,6 +62,8 @@
   "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
   "facetSelection": "{{- heroName}} selected facet: {{- facetTitle}} · {{- facetDescription}}",
   "gameNotFound": "Game was not found",
+  "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
+  "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
   "heroItems": {
     "empty": "(2m delay) No items found for {{- heroName}}",
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"
