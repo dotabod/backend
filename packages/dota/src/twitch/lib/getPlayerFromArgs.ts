@@ -68,5 +68,5 @@ export async function getPlayerFromArgs({
 
   const hasMoreDataForCurrentHero = packet?.hero?.id === hero?.id
   const moreData = hasMoreDataForCurrentHero ? { ...packet?.player, ...packet?.hero } : {}
-  return { playerIdx, player: { ...players[playerIdx], ...moreData } }
+  return { playerIdx, player: { ...moreData, ...players[playerIdx] } }
 }
