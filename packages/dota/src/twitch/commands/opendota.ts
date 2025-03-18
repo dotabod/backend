@@ -3,36 +3,41 @@ import { t } from 'i18next'
 import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import { profileLink } from './profileLink.js'
 
 commandHandler.registerCommand('opendota', {
   dbkey: DBSettings.commandOpendota,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[], command) => {
     const {
-      channel: { name: channel, client },
+      channel: { name: channelName, client: channelClient },
     } = message
 
-    if (client.steam32Id && Number(client.steam32Id)) {
+    try {
+      const { player } = await profileLink({
+        command,
+        packet: channelClient.gsi,
+        locale: channelClient.locale,
+        args,
+      })
+
+      if (player?.accountid) {
+        chatClient.say(
+          channelName,
+          t('profileUrl', {
+            channel: channelClient.name,
+            lng: channelClient.locale,
+            url: `opendota.com/players/${player.accountid.toString()}`,
+          }),
+          message.user.messageId,
+        )
+        return
+      }
+    } catch (e: any) {
       chatClient.say(
-        channel,
-        t('profileUrl', {
-          channel: client.name,
-          lng: message.channel.client.locale,
-          url: `opendota.com/players/${client.steam32Id.toString()}`,
-        }),
+        message.channel.name,
+        e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
         message.user.messageId,
       )
-      return
     }
-
-    chatClient.say(
-      channel,
-      message.channel.client.multiAccount
-        ? t('multiAccount', {
-            lng: message.channel.client.locale,
-            url: 'dotabod.com/dashboard/features',
-          })
-        : t('unknownSteam', { lng: message.channel.client.locale }),
-      message.user.messageId,
-    )
   },
 })

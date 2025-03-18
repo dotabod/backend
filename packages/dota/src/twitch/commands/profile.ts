@@ -4,7 +4,7 @@ import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
-import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
+import { profileLink } from './profileLink.js'
 
 commandHandler.registerCommand('profile', {
   onlyOnline: true,
@@ -16,12 +16,12 @@ commandHandler.registerCommand('profile', {
     } = message
 
     try {
-      const { player, playerIdx, hero } = await findAccountFromCmd(
-        client.gsi,
-        args,
-        client.locale,
+      const { hero, playerIdx, player } = await profileLink({
         command,
-      )
+        packet: client.gsi,
+        locale: client.locale,
+        args: args,
+      })
 
       const desc = t('profileUrl', {
         lng: client.locale,
