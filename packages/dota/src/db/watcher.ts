@@ -103,6 +103,7 @@ class SetupSupabase {
               .from('subscriptions')
               .select('*')
               .eq('userId', newObj.userId)
+              .neq('isGift', true)
               .in('status', ['ACTIVE', 'TRIALING'])
               .order('transactionType', { ascending: false })
               .limit(1)
@@ -140,6 +141,7 @@ class SetupSupabase {
               .select('*')
               .eq('userId', oldObj.userId)
               .neq('id', oldObj.id)
+              .neq('isGift', true)
               .in('status', ['ACTIVE', 'TRIALING'])
               .order('transactionType', { ascending: false })
               .limit(1)
@@ -272,6 +274,7 @@ class SetupSupabase {
             .from('subscriptions')
             .select('userId')
             .eq('id', newObj.subscriptionId)
+            .eq('isGift', true)
             .single()
 
           if (!userId) return
