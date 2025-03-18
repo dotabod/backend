@@ -77,6 +77,7 @@
   "facetTotalLimit_other": "Только {{count}} аспекта доступна у {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Игра не найдена",
   "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
+  "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
   "gpm_zero": "",
   "gpm_one": "Текущий GPM у {{- heroName}}: {{num}} золотой. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
   "gpm_few": "Текущий GPM у {{- heroName}}: {{num}} золота. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
