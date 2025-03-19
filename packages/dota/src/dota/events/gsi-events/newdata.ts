@@ -178,7 +178,9 @@ async function saveMatchData(client: SocketClient) {
         chatterMatchFound(client)
       }
     } catch (error) {
-      logger.error('Error getting delayed match data', { error, matchId })
+      if (!(error instanceof Error) || error.message !== 'Timeout getting real-time stats') {
+        logger.error('Error getting delayed match data', { error, matchId })
+      }
     } finally {
       // Always remove from the map, even if there was an error
       steamDelayDataLookupMap.delete(matchId)
