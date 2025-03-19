@@ -14,6 +14,7 @@ import type { Tables } from './supabase-types.js'
 import supabase from './supabase.js'
 import { chatClient } from '../twitch/chatClient'
 import { t } from 'i18next'
+import { refreshSettings } from '../twitch/commands/online'
 
 class SetupSupabase {
   channel: any // ReturnType<typeof supabase.channel>
@@ -241,6 +242,7 @@ class SetupSupabase {
 
             const connectedUser = gsiHandlers.get(client.token)
             if (connectedUser) {
+              refreshSettings(client.token)
               connectedUser.enable()
             }
           }

@@ -57,7 +57,7 @@ const notifyStreamStatus = (
   )
 }
 
-const refreshSettings = (token: string) => {
+export const refreshSettings = (token: string) => {
   server.io.to(token).emit('refresh-settings')
 }
 
