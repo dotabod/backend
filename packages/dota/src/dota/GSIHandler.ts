@@ -917,6 +917,25 @@ export class GSIHandler {
 
     this.checkingEarlyDCWinner = true
 
+    // Check if the bet for this match is already closed in the database
+    const { data: matchData, error } = await supabase
+      .from('bets')
+      .select('won')
+      .is('won', null)
+      .eq('matchId', matchId)
+      .eq('userId', this.client.token)
+      .single()
+
+    if (error || !matchData) {
+      logger.info('[BETS] Match already closed or not found, skipping early DC winner check', {
+        name: this.client.name,
+        matchId,
+        error: error?.message,
+      })
+      this.checkingEarlyDCWinner = false
+      return
+    }
+
     // Set up retry parameters
     const MAX_RETRIES = 5 // Try up to 5 times
     const RETRY_DELAY = 30000 // 30 seconds between retries (total 2.5 minutes)
