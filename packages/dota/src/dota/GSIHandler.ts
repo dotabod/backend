@@ -115,6 +115,7 @@ export class GSIHandler {
   endingBets = false
   openingBets = false
   creatingSteamAccount = false
+  checkingEarlyDCWinner = false
   treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
   disabled = false
 
@@ -184,6 +185,7 @@ export class GSIHandler {
     this.events = []
     this.treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
     this.creatingSteamAccount = false
+    this.checkingEarlyDCWinner = false
   }
 
   private resetBetData() {
@@ -904,17 +906,28 @@ export class GSIHandler {
   }
 
   private async checkEarlyDCWinner(matchId: string | number) {
+    // Prevent multiple concurrent early DC winner checks
+    if (this.checkingEarlyDCWinner) {
+      logger.info('[BETS] Already checking early DC winner, skipping duplicate call', {
+        name: this.client.name,
+        matchId,
+      })
+      return
+    }
+
+    this.checkingEarlyDCWinner = true
+
+    // Set up retry parameters
+    const MAX_RETRIES = 5 // Try up to 5 times
+    const RETRY_DELAY = 30000 // 30 seconds between retries (total 2.5 minutes)
+    let retryCount = 0
+
     logger.info('[BETS] Streamer exited the match before it ended with a winner', {
       name: this.client.name,
       matchId,
       openingBets: this.openingBets,
       endingBets: this.endingBets,
     })
-
-    // Set up retry parameters
-    const MAX_RETRIES = 5 // Try up to 5 times
-    const RETRY_DELAY = 30000 // 30 seconds between retries (total 2.5 minutes)
-    let retryCount = 0
 
     const attemptFetchMatchData = async (): Promise<void> => {
       if (retryCount >= MAX_RETRIES) {
@@ -960,6 +973,8 @@ export class GSIHandler {
         }
 
         await this.resetClientState()
+        // Reset the flag since we've exhausted retries
+        this.checkingEarlyDCWinner = false
         return
       }
 
@@ -978,6 +993,8 @@ export class GSIHandler {
           })
 
           const winningTeam = matchData.didRadiantWin ? 'radiant' : 'dire'
+          // Reset flag before calling closeBets to prevent duplicate calls from closeBets
+          this.checkingEarlyDCWinner = false
           await this.closeBets(winningTeam, matchData)
         } else {
           // Invalid response, retry after delay
@@ -985,6 +1002,7 @@ export class GSIHandler {
           logger.info('Invalid match data response, scheduling retry', {
             name: this.client.name,
             matchId,
+            response,
             retryCount,
             maxRetries: MAX_RETRIES,
           })
@@ -1006,8 +1024,18 @@ export class GSIHandler {
       }
     }
 
-    // Start the first attempt
-    await attemptFetchMatchData()
+    try {
+      // Start the first attempt
+      await attemptFetchMatchData()
+    } catch (error) {
+      // If any uncaught error occurs, reset the flag
+      logger.error('Uncaught error in checkEarlyDCWinner', {
+        error,
+        name: this.client.name,
+        matchId,
+      })
+      this.checkingEarlyDCWinner = false
+    }
   }
 
   private emitBlockEvent({
