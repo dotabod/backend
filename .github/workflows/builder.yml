@@ -40,6 +40,11 @@ jobs:
       - name: Set up Docker Buildx
         if: steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true'
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
+            image=moby/buildkit:latest
+          buildkitd-flags: --debug
 
       - name: Login to ghcr
         if: steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true'
@@ -57,8 +62,8 @@ jobs:
           provenance: false
           targets: dota
           set: |
-            *.cache-from=type=gha
-            *.cache-to=type=gha,mode=max
+            *.cache-from=type=gha,scope=${{ github.workflow }}
+            *.cache-to=type=gha,mode=max,scope=${{ github.workflow }},compression=zstd
             *.platform=linux/arm64,linux/amd64/v3
             dota.tags=ghcr.io/${{ github.repository_owner }}/dota:${{ env.BRANCH_NAME }}
 
@@ -87,6 +92,11 @@ jobs:
       - name: Set up Docker Buildx
         if: steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true'
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
+            image=moby/buildkit:latest
+          buildkitd-flags: --debug
 
       - name: Login to ghcr
         if: steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true'
@@ -104,8 +114,8 @@ jobs:
           provenance: false
           targets: twitch-chat
           set: |
-            *.cache-from=type=gha
-            *.cache-to=type=gha,mode=max
+            *.cache-from=type=gha,scope=${{ github.workflow }}
+            *.cache-to=type=gha,mode=max,scope=${{ github.workflow }},compression=zstd
             *.platform=linux/arm64,linux/amd64/v3
             twitch-chat.tags=ghcr.io/${{ github.repository_owner }}/twitch-chat:${{ env.BRANCH_NAME }}
 
@@ -134,6 +144,11 @@ jobs:
       - name: Set up Docker Buildx
         if: steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true'
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
+            image=moby/buildkit:latest
+          buildkitd-flags: --debug
 
       - name: Login to ghcr
         if: steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true'
@@ -151,8 +166,8 @@ jobs:
           provenance: false
           targets: steam
           set: |
-            *.cache-from=type=gha
-            *.cache-to=type=gha,mode=max
+            *.cache-from=type=gha,scope=${{ github.workflow }}
+            *.cache-to=type=gha,mode=max,scope=${{ github.workflow }},compression=zstd
             *.platform=linux/arm64,linux/amd64/v3
             steam.tags=ghcr.io/${{ github.repository_owner }}/steam:${{ env.BRANCH_NAME }}
 
@@ -181,6 +196,11 @@ jobs:
       - name: Set up Docker Buildx
         if: steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true'
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
+            image=moby/buildkit:latest
+          buildkitd-flags: --debug
 
       - name: Login to ghcr
         if: steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true'
@@ -198,7 +218,7 @@ jobs:
           provenance: false
           targets: twitch-events
           set: |
-            *.cache-from=type=gha
-            *.cache-to=type=gha,mode=max
+            *.cache-from=type=gha,scope=${{ github.workflow }}
+            *.cache-to=type=gha,mode=max,scope=${{ github.workflow }},compression=zstd
             *.platform=linux/arm64,linux/amd64/v3
             twitch-events.tags=ghcr.io/${{ github.repository_owner }}/twitch-events:${{ env.BRANCH_NAME }}
