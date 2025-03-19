@@ -35,9 +35,7 @@ type StratzLiveMatchResponse = {
   }
 }
 
-export const getWinProbability2MinAgo = async (
-  matchId: number,
-): Promise<StratzLiveMatchResponse | { error: string }> => {
+export const getWinProbability2MinAgo = async (matchId: number) => {
   if (!process.env.STRATZ_TOKEN) {
     logger.error('STRATZ_TOKEN is not set')
     return { error: 'STRATZ_TOKEN is not set' }

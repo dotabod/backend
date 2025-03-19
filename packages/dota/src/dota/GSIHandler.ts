@@ -28,6 +28,8 @@ import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
 import { say } from './say.js'
+import { getMatchResponse } from '../stratz/matchresponse.js'
+import type { StratzMatchResponse } from '../stratz/matchresponse'
 
 export const redisClient = RedisClient.getInstance()
 
@@ -41,20 +43,10 @@ interface MMR {
   gameMode: number
   increase: boolean
   lobbyType: number
-  matchId: string
+  matchId: string | number
   isParty?: boolean
   heroSlot?: number | null
   heroName?: string | null
-}
-
-interface MatchDataResponse {
-  radiantWin?: boolean
-  radiantScore?: number
-  direScore?: number
-  kills?: number
-  deaths?: number
-  assists?: number
-  lobbyType?: number
 }
 
 export function getStreamDelay(settings: SocketClient['settings'], subscription?: SubscriptionRow) {
@@ -672,13 +664,19 @@ export class GSIHandler {
     }
   }
 
-  async closeBets(winningTeam: 'radiant' | 'dire' | null = null) {
+  async closeBets(
+    winningTeam: 'radiant' | 'dire' | null = null,
+    stratzData?: StratzMatchResponse['data']['match'],
+  ) {
     if (this.endingBets) return
     this.endingBets = true
 
     try {
-      const matchId = await redisClient.client.get(`${this.client.token}:matchId`)
+      const matchId =
+        stratzData?.id ?? (await redisClient.client.get(`${this.client.token}:matchId`))
+      const stratzTeam = stratzData?.players?.[0]?.isRadiant ? 'radiant' : 'dire'
       const myTeam =
+        stratzTeam ??
         (await redisClient.client.get(`${this.client.token}:playingTeam`)) ??
         this.client.gsi?.player?.team_name
 
@@ -699,10 +697,12 @@ export class GSIHandler {
         this.client.settings,
         this.client.subscription,
       )
-      const heroSlot = Number(await redisClient.client.get(`${this.client.token}:playingHeroSlot`))
-      const heroName = (await redisClient.client.get(
-        `${this.client.token}:playingHero`,
-      )) as HeroNames | null
+      const heroSlot =
+        stratzData?.players?.[0]?.playerSlot ??
+        Number(await redisClient.client.get(`${this.client.token}:playingHeroSlot`))
+      const heroName =
+        stratzData?.players?.[0]?.hero.name ??
+        ((await redisClient.client.get(`${this.client.token}:playingHero`)) as HeroNames | null)
 
       // An early without waiting for ancient to blow up
       // We have to check every few seconds with an api to see if the match is over
@@ -714,12 +714,18 @@ export class GSIHandler {
       const localWinner = winningTeam
       const scores = {
         kda: {
-          kills: this.client.gsi?.player?.kills ?? null,
-          deaths: this.client.gsi?.player?.deaths ?? null,
-          assists: this.client.gsi?.player?.assists ?? null,
+          kills: stratzData?.players?.[0]?.kills ?? this.client.gsi?.player?.kills ?? null,
+          deaths: stratzData?.players?.[0]?.deaths ?? this.client.gsi?.player?.deaths ?? null,
+          assists: stratzData?.players?.[0]?.assists ?? this.client.gsi?.player?.assists ?? null,
         },
-        radiant_score: this.client.gsi?.map?.radiant_score ?? null,
-        dire_score: this.client.gsi?.map?.dire_score ?? null,
+        radiant_score:
+          stratzData?.radiantKills?.reduce((sum, kills) => sum + kills, 0) ??
+          this.client.gsi?.map?.radiant_score ??
+          null,
+        dire_score:
+          stratzData?.direKills?.reduce((sum, kills) => sum + kills, 0) ??
+          this.client.gsi?.map?.dire_score ??
+          null,
       }
       const won = myTeam === localWinner
       logger.info('[BETS] end bets won data', {
@@ -732,6 +738,7 @@ export class GSIHandler {
 
       // Both or one undefined
       if (!myTeam) {
+        // Very rare case, but it can happen. Once every 7 days
         logger.error('[BETS] trying to end bets but did not find localWinner or myTeam', {
           channel: this.client.name,
           matchId,
@@ -746,6 +753,8 @@ export class GSIHandler {
 
       const channel = this.client.name
 
+      // Pretty rare case, 26 times in 7 days. Usually when they test Dotabod in a custom lobby
+      // Custom lobbies create a match ID but don't report any stats
       if (
         !this.client.gsi?.map?.dire_score &&
         !this.client.gsi?.map?.radiant_score &&
@@ -894,7 +903,7 @@ export class GSIHandler {
     }
   }
 
-  private async checkEarlyDCWinner(matchId: string) {
+  private async checkEarlyDCWinner(matchId: string | number) {
     logger.info('[BETS] Streamer exited the match before it ended with a winner', {
       name: this.client.name,
       matchId,
@@ -903,34 +912,19 @@ export class GSIHandler {
     })
 
     // Set up retry parameters
-    const MAX_RETRIES = 6 // Try up to 6 times
-    const RETRY_DELAY = 30000 // 30 seconds between retries (total ~3 minutes)
+    const MAX_RETRIES = 5 // Try up to 5 times
+    const RETRY_DELAY = 30000 // 30 seconds between retries (total 2.5 minutes)
     let retryCount = 0
 
     const attemptFetchMatchData = async (): Promise<void> => {
       if (retryCount >= MAX_RETRIES) {
-        logger.info('Exceeded maximum retries for early DC match check', {
-          name: this.client.name,
-          matchId,
-        })
-
         // Handle refunding bets after exhausting all retries
         if (this.client.stream_online) {
-          const tellChatBets = getValueOrDefault(
-            DBSettings.tellChatBets,
-            this.client.settings,
-            this.client.subscription,
-          )
-          if (tellChatBets) {
-            say(
-              this.client,
-              t('bets.notScored', {
-                emote: 'D:',
-                lng: this.client.locale,
-                matchId,
-              }),
-            )
-          }
+          logger.info('Exceeded maximum retries for early DC match check', {
+            name: this.client.name,
+            matchId,
+          })
+
           const betsEnabled = getValueOrDefault(
             DBSettings.bets,
             this.client.settings,
@@ -946,6 +940,21 @@ export class GSIHandler {
               .single()
             if (predictionResponse.data?.predictionId) {
               await refundTwitchBet(this.getChannelId(), predictionResponse.data.predictionId)
+              const tellChatBets = getValueOrDefault(
+                DBSettings.tellChatBets,
+                this.client.settings,
+                this.client.subscription,
+              )
+              if (tellChatBets) {
+                say(
+                  this.client,
+                  t('bets.notScored', {
+                    emote: 'D:',
+                    lng: this.client.locale,
+                    matchId,
+                  }),
+                )
+              }
             }
           }
         }
@@ -956,38 +965,20 @@ export class GSIHandler {
 
       try {
         // Request match data directly from any connected client
-        const response = await new Promise<MatchDataResponse>((resolve, reject) => {
-          server.io
-            .timeout(25000)
-            .to(this.client.token)
-            .emit(
-              'requestMatchData',
-              { matchId, heroId: 0 },
-              (err: Error | null, response: MatchDataResponse) => {
-                if (err) {
-                  logger.error('Error requesting match data for early DC', {
-                    matchId,
-                    name: this.client.name,
-                    error: err,
-                  })
-                  reject(err)
-                } else {
-                  resolve(response)
-                }
-              },
-            )
-        })
+        const response = await getMatchResponse(Number(matchId), Number(this.client.steam32Id))
+
+        const matchData = response && 'id' in response ? response : null
 
         // Check if we got a valid response with radiantWin property
-        if (response && typeof response.radiantWin === 'boolean') {
+        if (matchData && typeof matchData?.didRadiantWin === 'boolean') {
           logger.info('Successfully retrieved match result for early DC', {
             matchId,
             name: this.client.name,
             response,
           })
 
-          const winningTeam = response.radiantWin ? 'radiant' : 'dire'
-          await this.closeBets(winningTeam)
+          const winningTeam = matchData.didRadiantWin ? 'radiant' : 'dire'
+          await this.closeBets(winningTeam, matchData)
         } else {
           // Invalid response, retry after delay
           retryCount++
