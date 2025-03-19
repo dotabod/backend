@@ -13,6 +13,19 @@ commandHandler.registerCommand('dotabuff', {
     } = message
 
     try {
+      if (!args.length && channelClient.steam32Id) {
+        chatClient.say(
+          channelName,
+          t('profileUrl', {
+            channel: channelClient.name,
+            lng: channelClient.locale,
+            url: `dotabuff.com/players/${channelClient.steam32Id}`,
+          }),
+          message.user.messageId,
+        )
+        return
+      }
+
       const { player } = await profileLink({
         command,
         packet: channelClient.gsi,

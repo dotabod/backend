@@ -13,7 +13,6 @@ interface ProfileLinkParams {
 
 export async function profileLink({ command, args, packet, locale }: ProfileLinkParams) {
   const currentMatchId = packet?.map?.matchid
-
   if (!currentMatchId) {
     throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
   }
