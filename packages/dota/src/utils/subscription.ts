@@ -48,9 +48,9 @@ export const FEATURE_TIERS: Record<
   commandMute: SUBSCRIPTION_TIERS.FREE,
   commandPing: SUBSCRIPTION_TIERS.FREE,
   commandDotabod: SUBSCRIPTION_TIERS.FREE,
+  'mmr-tracker': SUBSCRIPTION_TIERS.FREE,
 
   // Pro Tier Features
-  'mmr-tracker': SUBSCRIPTION_TIERS.PRO,
   bets: SUBSCRIPTION_TIERS.PRO,
   'picks-blocker': SUBSCRIPTION_TIERS.PRO,
   rosh: SUBSCRIPTION_TIERS.PRO,
