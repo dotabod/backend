@@ -949,6 +949,23 @@ export class GSIHandler {
     })
 
     const attemptFetchMatchData = async (): Promise<void> => {
+      // Check if the bet for this match is already closed in the database
+      const { data: matchData, error } = await supabase
+        .from('bets')
+        .select('won')
+        .is('won', null)
+        .eq('matchId', matchId)
+        .eq('userId', this.client.token)
+        .single()
+
+      if (!matchData || error) {
+        logger.info('[BETS] Match already closed, skipping early DC winner check', {
+          name: this.client.name,
+          matchId,
+        })
+        return
+      }
+
       if (retryCount >= MAX_RETRIES) {
         // Handle refunding bets after exhausting all retries
         if (this.client.stream_online) {
