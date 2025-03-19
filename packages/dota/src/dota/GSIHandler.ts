@@ -1023,7 +1023,7 @@ export class GSIHandler {
         // Request match data directly from any connected client
         const response = await getMatchResponse(Number(matchId), Number(this.client.steam32Id))
 
-        const matchData = response && 'matchId' in response ? response : null
+        const matchData = response && 'id' in response ? response : null
 
         // Check if we got a valid response with radiantWin property
         if (matchData && typeof matchData?.didRadiantWin === 'boolean') {

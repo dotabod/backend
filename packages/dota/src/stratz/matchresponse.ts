@@ -72,7 +72,7 @@ const LiveMatchDetailsQuery = `
     match(id: $matchId) {
       didRadiantWin
       gameMode
-      matchId
+      id
       lobbyType
       players(steamAccountId: $steamAccountId) {
         playerSlot
@@ -94,7 +94,7 @@ const LiveMatchDetailsQuery = `
 export type StratzMatchResponse = {
   data: {
     match: {
-      matchId: number
+      id: number
       didRadiantWin: boolean
       gameMode:
         | 'NONE'
