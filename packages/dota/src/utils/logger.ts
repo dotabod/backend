@@ -17,7 +17,7 @@ const handleErrors = format((info) => {
 })
 
 const customFormat = printf(({ message, level, timestamp, ...rest }) => {
-  return `[${timestamp}] ${level}: ${message || ''} ${Object.keys(rest).length ? JSON.stringify(rest, null, 2) : ''}`
+  return `[${timestamp}] ${level}: ${message}${Object.keys(rest).length ? ` ${JSON.stringify(rest)}` : ''}`
 })
 
 const prodFormats = combine(
