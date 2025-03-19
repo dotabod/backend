@@ -62,10 +62,11 @@ jobs:
           provenance: false
           targets: dota
           set: |
-            *.cache-from=type=gha,scope=${{ github.workflow }}
-            *.cache-to=type=gha,mode=max,scope=${{ github.workflow }},compression=zstd
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository_owner }}/dota:cache
+            *.cache-to=type=registry,ref=ghcr.io/${{ github.repository_owner }}/dota:cache,mode=max
             *.platform=linux/arm64,linux/amd64/v3
             dota.tags=ghcr.io/${{ github.repository_owner }}/dota:${{ env.BRANCH_NAME }}
+          timeout-minutes: 10
 
   twitch-chat:
     runs-on: ubuntu-latest
@@ -114,10 +115,11 @@ jobs:
           provenance: false
           targets: twitch-chat
           set: |
-            *.cache-from=type=gha,scope=${{ github.workflow }}
-            *.cache-to=type=gha,mode=max,scope=${{ github.workflow }},compression=zstd
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository_owner }}/twitch-chat:cache
+            *.cache-to=type=registry,ref=ghcr.io/${{ github.repository_owner }}/twitch-chat:cache,mode=max
             *.platform=linux/arm64,linux/amd64/v3
             twitch-chat.tags=ghcr.io/${{ github.repository_owner }}/twitch-chat:${{ env.BRANCH_NAME }}
+          timeout-minutes: 10
 
   steam:
     runs-on: ubuntu-latest
@@ -166,10 +168,11 @@ jobs:
           provenance: false
           targets: steam
           set: |
-            *.cache-from=type=gha,scope=${{ github.workflow }}
-            *.cache-to=type=gha,mode=max,scope=${{ github.workflow }},compression=zstd
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository_owner }}/steam:cache
+            *.cache-to=type=registry,ref=ghcr.io/${{ github.repository_owner }}/steam:cache,mode=max
             *.platform=linux/arm64,linux/amd64/v3
             steam.tags=ghcr.io/${{ github.repository_owner }}/steam:${{ env.BRANCH_NAME }}
+          timeout-minutes: 10
 
   twitch-events:
     runs-on: ubuntu-latest
@@ -218,7 +221,8 @@ jobs:
           provenance: false
           targets: twitch-events
           set: |
-            *.cache-from=type=gha,scope=${{ github.workflow }}
-            *.cache-to=type=gha,mode=max,scope=${{ github.workflow }},compression=zstd
+            *.cache-from=type=registry,ref=ghcr.io/${{ github.repository_owner }}/twitch-events:cache
+            *.cache-to=type=registry,ref=ghcr.io/${{ github.repository_owner }}/twitch-events:cache,mode=max
             *.platform=linux/arm64,linux/amd64/v3
             twitch-events.tags=ghcr.io/${{ github.repository_owner }}/twitch-events:${{ env.BRANCH_NAME }}
+          timeout-minutes: 10
