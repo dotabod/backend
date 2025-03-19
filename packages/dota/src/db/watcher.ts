@@ -231,17 +231,16 @@ class SetupSupabase {
 
           // They go offline
           if (!newObj.stream_online && oldObj.stream_online) {
+            server.io.to(client.token).emit('refresh-settings', 'mutate')
             return
           }
 
           // They come online
           if (client.stream_online && !oldObj.stream_online) {
-            console.log('[WATCHER] User came online', { token: client.token })
             const connectedUser = gsiHandlers.get(client.token)
             if (connectedUser) {
               connectedUser.enable()
 
-              console.log('[WATCHER] Refreshing settings', { token: client.token })
               server.io.to(client.token).emit('refresh-settings', 'mutate')
             }
 
