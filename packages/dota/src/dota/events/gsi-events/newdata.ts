@@ -294,7 +294,7 @@ eventHandler.registerEvent('newdata', {
       return
     }
 
-    const showProbabilityPromise = showProbability(dotaClient)
+    const showProbabilityPromise = null // showProbability(dotaClient)
 
     const {
       powerTreads: { enabled: treadsChatterEnabled },
