@@ -676,11 +676,12 @@ export class GSIHandler {
     try {
       const matchId =
         stratzData?.id ?? (await redisClient.client.get(`${this.client.token}:matchId`))
-      const stratzTeam = stratzData?.players?.[0]?.isRadiant ? 'radiant' : 'dire'
+      const stratzTeam = stratzData?.players?.[0]?.isRadiant === true ? 'radiant' : 'dire'
       const myTeam =
-        stratzTeam ??
-        (await redisClient.client.get(`${this.client.token}:playingTeam`)) ??
-        this.client.gsi?.player?.team_name
+        typeof stratzData?.players?.[0]?.isRadiant === 'boolean'
+          ? stratzTeam
+          : ((await redisClient.client.get(`${this.client.token}:playingTeam`)) ??
+            this.client.gsi?.player?.team_name)
 
       if (this.openingBets || !matchId) {
         logger.info('[BETS] Not closing bets', {
