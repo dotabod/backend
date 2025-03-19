@@ -79,8 +79,8 @@ async function saveMatchData(client: SocketClient) {
   // did we already come here before?
   const res = await redisClient.client
     .multi()
-    .get(`${matchId}:steamServerId`)
-    .get(`${matchId}:lobbyType`)
+    .get(`${matchId}:${client.token}:steamServerId`)
+    .get(`${matchId}:${client.token}:lobbyType`)
     .exec()
 
   const [steamServerId] = res
@@ -114,7 +114,10 @@ async function saveMatchData(client: SocketClient) {
       const steamServerId = await getDelayedDataPromise
 
       if (steamServerId) {
-        await redisClient.client.set(`${matchId}:steamServerId`, steamServerId.toString())
+        await redisClient.client.set(
+          `${matchId}:${client.token}:steamServerId`,
+          steamServerId.toString(),
+        )
       }
     } catch (error) {
       logger.error('Error getting steam server data', { error, matchId })
@@ -125,7 +128,9 @@ async function saveMatchData(client: SocketClient) {
   }
 
   // Re-check steamServerId as it might have been set in the previous block
-  const currentSteamServerId = await redisClient.client.get(`${matchId}:steamServerId`)
+  const currentSteamServerId = await redisClient.client.get(
+    `${matchId}:${client.token}:steamServerId`,
+  )
   if (currentSteamServerId && !lobbyType) {
     // Fix: Check if we're already looking up this match to prevent race conditions
     if (steamDelayDataLookupMap.has(matchId)) return
@@ -161,8 +166,14 @@ async function saveMatchData(client: SocketClient) {
 
       if (delayedData?.match.lobby_type) {
         await Promise.all([
-          redisClient.client.set(`${matchId}:lobbyType`, delayedData.match.lobby_type),
-          redisClient.client.set(`${matchId}:gameMode`, delayedData.match.game_mode),
+          redisClient.client.set(
+            `${matchId}:${client.token}:lobbyType`,
+            delayedData.match.lobby_type,
+          ),
+          redisClient.client.set(
+            `${matchId}:${client.token}:gameMode`,
+            delayedData.match.game_mode,
+          ),
         ])
         chatterMatchFound(client)
       }

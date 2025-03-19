@@ -75,9 +75,9 @@ export async function deleteRedisData(client: SocketClient) {
   try {
     await redisClient.client
       .multi()
-      .del(`${matchId}:lobbyType`)
-      .del(`${matchId}:gameMode`)
-      .del(`${matchId}:steamServerId`)
+      .del(`${matchId}:${token}:lobbyType`)
+      .del(`${matchId}:${token}:gameMode`)
+      .del(`${matchId}:${token}:steamServerId`)
       .del(`${steam32Id}:medal`)
       .del(`${token}:aegis`)
       .del(`${token}:matchId`)
@@ -804,8 +804,12 @@ export class GSIHandler {
       // 0 is a correct lobby type meaning unranked
       // https://github.com/dotabod/backend/issues/373#issuecomment-2366822786
       // Default to ranked
-      const playingLobbyType = Number(await redisClient.client.get(`${matchId}:lobbyType`))
-      const playingGameMode = Number(await redisClient.client.get(`${matchId}:gameMode`))
+      const playingLobbyType = Number(
+        await redisClient.client.get(`${matchId}:${this.client.token}:lobbyType`),
+      )
+      const playingGameMode = Number(
+        await redisClient.client.get(`${matchId}:${this.client.token}:gameMode`),
+      )
       const localLobbyType = playingLobbyType >= 0 ? playingLobbyType : LOBBY_TYPE_RANKED
 
       const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)

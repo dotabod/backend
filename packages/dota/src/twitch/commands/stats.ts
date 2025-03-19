@@ -5,7 +5,7 @@ import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
 import { DBSettings } from '../../settings.js'
 import { steamSocket } from '../../steam/ws.js'
-import type { DelayedGames, Item, Packet } from '../../types.js'
+import type { DelayedGames, Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
@@ -35,7 +35,7 @@ async function getStats({
     const redisClient = RedisClient.getInstance()
     const steamServerId =
       packet?.map?.matchid &&
-      (await redisClient.client.get(`${packet?.map?.matchid}:steamServerId`))
+      (await redisClient.client.get(`${packet?.map?.matchid}:${token}:steamServerId`))
 
     if (!steamServerId) {
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))

@@ -40,7 +40,9 @@ export class NeutralItemTimer {
     this.lastCheckedTime = clockTime
 
     const matchId = await redisClient.client.get(`${this.dotaClient.client.token}:matchId`)
-    const playingGameMode = Number(await redisClient.client.get(`${matchId}:gameMode`))
+    const playingGameMode = Number(
+      await redisClient.client.get(`${matchId}:${this.dotaClient.client.token}:gameMode`),
+    )
     const isTurbo = playingGameMode === 23
 
     this.tierTimes.forEach((tierTime) => {

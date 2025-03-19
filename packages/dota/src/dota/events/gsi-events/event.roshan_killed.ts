@@ -89,7 +89,9 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
 
     const redisClient = RedisClient.getInstance()
     const matchId = await redisClient.client.get(`${dotaClient.getToken()}:matchId`)
-    const playingGameMode = Number(await redisClient.client.get(`${matchId}:gameMode`))
+    const playingGameMode = Number(
+      await redisClient.client.get(`${matchId}:${dotaClient.getToken()}:gameMode`),
+    )
 
     // doing map gametime - event gametime in case the user reconnects to a match,
     // and the gametime is over the event gametime

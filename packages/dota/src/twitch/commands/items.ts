@@ -75,7 +75,7 @@ async function getItems({
     const redisClient = RedisClient.getInstance()
     const steamServerId =
       packet?.map?.matchid &&
-      (await redisClient.client.get(`${packet?.map?.matchid}:steamServerId`))
+      (await redisClient.client.get(`${packet?.map?.matchid}:${token}:steamServerId`))
 
     if (!steamServerId) {
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
