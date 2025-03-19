@@ -58,7 +58,8 @@ const notifyStreamStatus = (
 }
 
 export const refreshSettings = (token: string) => {
-  server.io.to(token).emit('refresh-settings')
+  console.log('[TWITCH] Refreshing settings deeply', { token })
+  server.io.to(token).emit('refresh-settings', 'mutate')
 }
 
 const updateStreamStatus = async (token: string, isOnline: boolean) => {

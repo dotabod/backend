@@ -237,14 +237,17 @@ class SetupSupabase {
 
           // They come online
           if (client.stream_online && !oldObj.stream_online) {
-            // Handle any pending scheduled messages for this user
-            await handleUserOnlineMessages(client.token, client.name)
-
+            console.log('[WATCHER] User came online', { token: client.token })
             const connectedUser = gsiHandlers.get(client.token)
             if (connectedUser) {
-              refreshSettings(client.token)
               connectedUser.enable()
+
+              console.log('[WATCHER] Refreshing settings', { token: client.token })
+              refreshSettings(client.token)
             }
+
+            // Handle any pending scheduled messages for this user
+            await handleUserOnlineMessages(client.token, client.name)
           }
 
           if (typeof newObj.stream_start_date === 'string') {
