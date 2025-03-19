@@ -58,7 +58,6 @@ const notifyStreamStatus = (
 }
 
 export const refreshSettings = (token: string) => {
-  console.log('[TWITCH] Refreshing settings deeply', { token })
   server.io.to(token).emit('refresh-settings', 'mutate')
 }
 

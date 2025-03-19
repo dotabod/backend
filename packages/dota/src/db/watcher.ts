@@ -14,7 +14,6 @@ import type { Tables } from './supabase-types.js'
 import supabase from './supabase.js'
 import { chatClient } from '../twitch/chatClient'
 import { t } from 'i18next'
-import { refreshSettings } from '../twitch/commands/online'
 
 class SetupSupabase {
   channel: any // ReturnType<typeof supabase.channel>
@@ -243,7 +242,7 @@ class SetupSupabase {
               connectedUser.enable()
 
               console.log('[WATCHER] Refreshing settings', { token: client.token })
-              refreshSettings(client.token)
+              server.io.to(client.token).emit('refresh-settings', 'mutate')
             }
 
             // Handle any pending scheduled messages for this user

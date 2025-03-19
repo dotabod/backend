@@ -27,7 +27,9 @@ commandHandler.registerCommand('resetwl', {
         t('refresh', { lng: message.channel.client.locale }),
         message.user.messageId,
       )
-      server.io.to(client.token).emit('refresh')
+      if (server?.io) {
+        server.io.to(client.token).emit('refresh')
+      }
 
       chatClient.say(
         message.channel.name,
