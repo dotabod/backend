@@ -72,10 +72,13 @@ socketIoServer.on('connection', (socket) => {
     }
   })
 
-  socket.on('getMatchMinimalDetails', async (matchIds: number[], callback: callback) => {
+  socket.on('getMatchMinimalDetails', async (data: { match_id: number }, callback: callback) => {
     if (!isConnectedToSteam) return
     try {
-      const response: MatchMinimalDetailsResponse = await dota.requestMatchMinimalDetails(matchIds)
+      // Usually only one match id is provided
+      const response: MatchMinimalDetailsResponse = await dota.requestMatchMinimalDetails([
+        data.match_id,
+      ])
       callback(null, response)
     } catch (e: any) {
       callback(e.message, null)
