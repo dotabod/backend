@@ -317,7 +317,7 @@ eventHandler.registerEvent('newdata', {
       dotaClient.client.subscription,
       'powerTreads',
     )
-    let calculateManaSavedPromise: Promise<void> | undefined
+    let calculateManaSavedPromise: Promise<void> | null = null
     if (treadsChatterEnabled) {
       try {
         calculateManaSavedPromise = calculateManaSaved(dotaClient)
@@ -334,8 +334,8 @@ eventHandler.registerEvent('newdata', {
     const checkPassiveTpPromise = checkPassiveTp(dotaClient.client)
     const checkNeutralItemsPromise = dotaClient.neutralItemTimer.checkNeutralItems()
 
-    // Fix: Use Promise.allSettled instead of Promise.all to prevent one failure from stopping all operations
-    await Promise.allSettled([
+    // Create an array of promises, filtering out any that are undefined or null
+    const promisesToExecute = [
       updateSteam32IdPromise,
       setupOBSBlockersPromise,
       showProbabilityPromise,
@@ -346,7 +346,10 @@ eventHandler.registerEvent('newdata', {
       checkPassiveMidasPromise,
       checkPassiveTpPromise,
       checkNeutralItemsPromise,
-    ]).then((results) => {
+    ].filter((promise) => promise !== undefined && promise !== null)
+
+    // Fix: Use Promise.allSettled instead of Promise.all to prevent one failure from stopping all operations
+    await Promise.allSettled(promisesToExecute).then((results) => {
       // Log any rejected promises
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
