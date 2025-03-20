@@ -53,14 +53,14 @@
   "commands": "",
   "commands_everyone": "Todos pueden usar: {{commandList}}",
   "commands_mods": "Mod sólo comandos: {{commandList}}",
-  "commandsPage": "Para ver la lista de comandos de {{- channel}}'s, visita  {{- url}}",
+  "commandsPage": "Para ver la lista de comandos de {{- channel}}'s, visita {{- url}}",
   "connections": {
     "gsi_one": "{{count}} Streamer conectado a Dotabod GSI",
     "gsi_many": "",
     "gsi_other": "{{count}} Streamers conectados a Dotabod GSI",
-    "overlay_one": "{{count}} Streamer usando este overlay.",
+    "overlay_one": "{{count}} Streamer usando este overlay",
     "overlay_many": "",
-    "overlay_other": "{{count}} Streamers usando este overlay."
+    "overlay_other": "{{count}} Streamers usando este overlay"
   },
   "dota2pt": "Necesitas builds para {{- heroName}}? Encuéntralas aquí {{- url}}",
   "dotabod": "Soy un bot hecho por {{author}}. Mas información {{- url}}",
@@ -68,15 +68,15 @@
   "facetInvalid": "La faceta especificada es inválida · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Usa !facet {{- heroName}} 1 o !facet {{- heroName}} 2 · Dotabod solo conoce la faceta elegida por el streamer del heroe actual.",
   "facetSelection": "{{- heroName}} Faceta seleccionada: {{- facetTitle}} · {{- facetDescription}}",
-  "facetTotalLimit_one": "Solo {{count}} faceta está disponible para  {{- heroName}} · $t(facetNotFound, {{- heroName }})",
+  "facetTotalLimit_one": "Solo {{count}} faceta está disponible para {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_many": "",
   "facetTotalLimit_other": "Solo {{count}} facetas están disponibles para  {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Juego no encontrado",
-  "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
-  "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
+  "giftSub": "¡Un sub para Dotabod Pro ha sido regalado por {{- senderName}}!",
+  "giftSubAnonymous": "¡Un sub para Dotabod Pro ha sido regalado anónimamente!",
   "gpm_zero": "",
-  "gpm_one": "Actual GPM para {{- heroName}}: {{num}}. {{heroKills}} De asesinatos, {{creepKills}} de muerte de creeps.",
-  "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "gpm_one": "Actual GPM para {{- heroName}}: {{num}}. {{heroKills}} asesinatos de heroes, {{creepKills}} de asesinatos de creeps.",
+  "gpm_other": ".",
   "heroItems": {
     "empty": "(2m de retraso) No se encontraron items para {{- heroName}}",
     "list": "(2m de retraso) {{- heroName}} tiene: {{- itemNames}}"
@@ -135,16 +135,16 @@
   "modsOnly_off": "Solomente Mods ahora esta apagado. Todos pueden usar chat.",
   "modsOnly_on": "Modo solo moderadores activado {{emote}}. Solo los moderadores podrán escribir.",
   "multiAccount": "Esta cuenta de Steam ya está conectada a otro usuario de Dotabod. Comprueba el panel de control para más información {{- url}}",
-  "muted": "Se deshabilitó el auto chat para eventos de juego, pero los comandos seguirán funcionando. Escribe !unmute para deshacer.",
+  "muted": "Se deshabilitó el auto chat para eventos de juego, pero los comandos seguirán funcionando. Escribe !unmute para deshacer",
   "neutralItems": {
-    "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+    "tierAvailable": "¡Los ítems neutrales de Tier {{tier}} están ahora disponibles! Hora de chequear la jungla PogChamp"
   },
   "noAghs": "{{- heroName}} No tiene una mejora de Aghanim.",
   "noHero": "No se ha encontrado el héroe",
   "noLastMatch": "No se ha encontrado la ultimo partido {{emote}}",
   "noNotable": "No hay jugadores destacados",
   "noShard": "{{- heroName}} No tiene una mejora de fragmento.",
-  "notLive": "Stream fuera de línea {{emote} . ¿Actualmente en vivo? Moderadores escriban !online",
+  "notLive": "Stream fuera de línea {{emote}}. ¿Actualmente en vivo? Moderadores escriban! Online",
   "notPlaying": "No esta jugando {{emote}}",
   "npAdd": "Usa !np add<steam32id> <playername>",
   "npAdded": "Añadido {{name}} a !np para este canal",
