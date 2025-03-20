@@ -49,6 +49,7 @@ interface MMR {
   isParty?: boolean
   heroSlot?: number | null
   heroName?: string | null
+  myTeam?: 'radiant' | 'dire' | null
 }
 
 export function getStreamDelay(settings: SocketClient['settings'], subscription?: SubscriptionRow) {
@@ -414,6 +415,7 @@ export class GSIHandler {
 
   async updateMMR({
     scores,
+    myTeam,
     increase,
     gameMode,
     heroName,
@@ -439,7 +441,9 @@ export class GSIHandler {
     // This also updates WL for the unranked matches
     await supabase
       .from('bets')
-      .update({
+      .upsert({
+        matchId: `${matchId}`,
+        userId: this.client.token,
         won: increase,
         lobby_type: lobbyType,
         game_mode: gameMode,
@@ -450,6 +454,7 @@ export class GSIHandler {
         radiant_score: scores.radiant_score,
         dire_score: scores.dire_score,
         updated_at: new Date().toISOString(),
+        myTeam: myTeam ?? '',
       })
       .match({ matchId: matchId, userId: this.client.token })
 
@@ -693,12 +698,18 @@ export class GSIHandler {
           ? 'radiant'
           : player?.team_number === DotaGcTeam.DOTA_GC_TEAM_BAD_GUYS
             ? 'dire'
-            : undefined
-      const myTeam =
+            : null
+      const myTeam: 'radiant' | 'dire' | null =
         typeof player?.team_number === 'number'
-          ? stratzTeam
-          : ((await redisClient.client.get(`${this.client.token}:playingTeam`)) ??
-            this.client.gsi?.player?.team_name)
+          ? (stratzTeam ?? null)
+          : (((await redisClient.client.get(`${this.client.token}:playingTeam`)) as
+              | 'radiant'
+              | 'dire'
+              | null) ??
+            (this.client.gsi?.player?.team_name === 'radiant' ||
+            this.client.gsi?.player?.team_name === 'dire'
+              ? this.client.gsi?.player?.team_name
+              : null))
 
       if (this.openingBets || !matchId) {
         logger.info('[BETS] Not closing bets', {
@@ -827,6 +838,7 @@ export class GSIHandler {
       const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
 
       await this.updateMMR({
+        myTeam,
         scores: scores,
         increase: won,
         lobbyType: localLobbyType,
