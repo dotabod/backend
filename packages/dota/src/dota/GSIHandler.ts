@@ -441,9 +441,7 @@ export class GSIHandler {
     // This also updates WL for the unranked matches
     await supabase
       .from('bets')
-      .upsert({
-        matchId: `${matchId}`,
-        userId: this.client.token,
+      .update({
         won: increase,
         lobby_type: lobbyType,
         game_mode: gameMode,
@@ -456,7 +454,7 @@ export class GSIHandler {
         updated_at: new Date().toISOString(),
         myTeam: myTeam ?? '',
       })
-      .match({ matchId: matchId, userId: this.client.token })
+      .match({ matchId: `${matchId}`, userId: this.client.token })
 
     logger.info('[DATABASE] Updated bet with winnings', extraInfo)
     this.emitWLUpdate()
