@@ -240,9 +240,10 @@ class Dota {
 
   // Filter unique games based on lobby_id
   private filterUniqueGames(games: SteamMatchDetails[]): SteamMatchDetails[] {
-    return games.filter(
-      (game, index, self) => index === self.findIndex((g) => g.lobby_id.equals(game.lobby_id)),
-    )
+    return games.filter((game, index, self) => {
+      if (!game.lobby_id) return false
+      return index === self.findIndex((g) => g.lobby_id?.equals(game.lobby_id))
+    })
   }
 
   // Get unique games and map them to the required structure
