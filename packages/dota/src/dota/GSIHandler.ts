@@ -28,7 +28,6 @@ import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
 import { say } from './say.js'
-import { getTwitchAPI } from '../twitch/lib/getTwitchAPI.js'
 import { steamSocket } from '../steam/ws.js'
 import type { MatchMinimalDetailsResponse } from '../types'
 import { Long } from 'mongodb'
@@ -591,13 +590,6 @@ export class GSIHandler {
       this.openingBets = false
       return
     }
-
-    // Set a stream marker for this new match using Twitch API
-    const api = getTwitchAPI(client.token)
-    await api.streams.createStreamMarker(
-      client.Account?.providerAccountId ?? '',
-      `New match started: ${client.gsi.map.matchid}`,
-    )
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setTimeout(this.openTheBet, getStreamDelay(client.settings, client.subscription))
