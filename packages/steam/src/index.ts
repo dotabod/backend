@@ -2,6 +2,7 @@ import { initSpectatorProtobuff } from './initSpectatorProtobuff.js'
 import { socketIoServer } from './socketServer.js'
 import Dota from './steam.js'
 import { logger } from './utils/logger.js'
+import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails.js'
 
 let hasDotabodSocket = false
 let isConnectedToSteam = false
@@ -66,6 +67,16 @@ socketIoServer.on('connection', (socket) => {
     if (!isConnectedToSteam) return
     try {
       callback(null, await dota.GetRealTimeStats(data))
+    } catch (e: any) {
+      callback(e.message, null)
+    }
+  })
+
+  socket.on('getMatchMinimalDetails', async (matchIds: number[], callback: callback) => {
+    if (!isConnectedToSteam) return
+    try {
+      const response: MatchMinimalDetailsResponse = await dota.requestMatchMinimalDetails(matchIds)
+      callback(null, response)
     } catch (e: any) {
       callback(e.message, null)
     }

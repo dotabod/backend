@@ -9,7 +9,7 @@ import { notablePlayers } from '../steam/notableplayers.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
-import type { BlockType, DotaEvent, SocketClient } from '../types.js'
+import { DotaGcTeam, type BlockType, type DotaEvent, type SocketClient } from '../types.js'
 import { steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import type { SubscriptionRow } from '../utils/subscription.js'
@@ -28,8 +28,11 @@ import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
 import { say } from './say.js'
-import { getMatchResponse } from '../stratz/matchresponse.js'
-import type { StratzMatchResponse } from '../stratz/matchresponse'
+import { getTwitchAPI } from '../twitch/lib/getTwitchAPI.js'
+import { steamSocket } from '../steam/ws.js'
+import type { MatchMinimalDetailsResponse } from '../types'
+import { Long } from 'mongodb'
+import { getHeroById } from './lib/heroes.js'
 
 export const redisClient = RedisClient.getInstance()
 
@@ -589,6 +592,13 @@ export class GSIHandler {
       return
     }
 
+    // Set a stream marker for this new match using Twitch API
+    const api = getTwitchAPI(client.token)
+    await api.streams.createStreamMarker(
+      client.Account?.providerAccountId ?? '',
+      `New match started: ${client.gsi.map.matchid}`,
+    )
+
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setTimeout(this.openTheBet, getStreamDelay(client.settings, client.subscription))
 
@@ -668,17 +678,28 @@ export class GSIHandler {
 
   async closeBets(
     winningTeam: 'radiant' | 'dire' | null = null,
-    stratzData?: StratzMatchResponse['data']['match'],
+    gcData?: MatchMinimalDetailsResponse,
   ) {
     if (this.endingBets) return
     this.endingBets = true
 
     try {
-      const matchId =
-        stratzData?.id ?? (await redisClient.client.get(`${this.client.token}:matchId`))
-      const stratzTeam = stratzData?.players?.[0]?.isRadiant === true ? 'radiant' : 'dire'
+      const match = gcData?.matches?.[0]
+      const longMatchId = match?.match_id
+        ? new Long(match.match_id.low, match.match_id.high).toString()
+        : undefined
+      const matchId = longMatchId ?? (await redisClient.client.get(`${this.client.token}:matchId`))
+      const player = match?.players?.find(
+        (player) => player.account_id === Number(this.client.gsi?.player?.accountid),
+      )
+      const stratzTeam =
+        player?.team_number === DotaGcTeam.DOTA_GC_TEAM_GOOD_GUYS
+          ? 'radiant'
+          : player?.team_number === DotaGcTeam.DOTA_GC_TEAM_BAD_GUYS
+            ? 'dire'
+            : undefined
       const myTeam =
-        typeof stratzData?.players?.[0]?.isRadiant === 'boolean'
+        typeof player?.team_number === 'number'
           ? stratzTeam
           : ((await redisClient.client.get(`${this.client.token}:playingTeam`)) ??
             this.client.gsi?.player?.team_name)
@@ -701,10 +722,10 @@ export class GSIHandler {
         this.client.subscription,
       )
       const heroSlot =
-        stratzData?.players?.[0]?.playerSlot ??
+        player?.player_slot ??
         Number(await redisClient.client.get(`${this.client.token}:playingHeroSlot`))
       const heroName =
-        stratzData?.players?.[0]?.hero.name ??
+        getHeroById(player?.hero_id)?.key ??
         ((await redisClient.client.get(`${this.client.token}:playingHero`)) as HeroNames | null)
 
       // An early without waiting for ancient to blow up
@@ -717,18 +738,12 @@ export class GSIHandler {
       const localWinner = winningTeam
       const scores = {
         kda: {
-          kills: stratzData?.players?.[0]?.kills ?? this.client.gsi?.player?.kills ?? null,
-          deaths: stratzData?.players?.[0]?.deaths ?? this.client.gsi?.player?.deaths ?? null,
-          assists: stratzData?.players?.[0]?.assists ?? this.client.gsi?.player?.assists ?? null,
+          kills: player?.kills ?? this.client.gsi?.player?.kills ?? null,
+          deaths: player?.deaths ?? this.client.gsi?.player?.deaths ?? null,
+          assists: player?.assists ?? this.client.gsi?.player?.assists ?? null,
         },
-        radiant_score:
-          stratzData?.radiantKills?.reduce((sum, kills) => sum + kills, 0) ??
-          this.client.gsi?.map?.radiant_score ??
-          null,
-        dire_score:
-          stratzData?.direKills?.reduce((sum, kills) => sum + kills, 0) ??
-          this.client.gsi?.map?.dire_score ??
-          null,
+        radiant_score: match?.radiant_score ?? this.client.gsi?.map?.radiant_score ?? null,
+        dire_score: match?.dire_score ?? this.client.gsi?.map?.dire_score ?? null,
       }
       const won = myTeam === localWinner
       logger.info('[BETS] end bets won data', {
@@ -1020,23 +1035,45 @@ export class GSIHandler {
       }
 
       try {
-        // Request match data directly from any connected client
-        const response = await getMatchResponse(Number(matchId), Number(this.client.steam32Id))
+        // Request match data from Steam socket
+        const getMatchDetailsPromise = new Promise<MatchMinimalDetailsResponse>(
+          (resolve, reject) => {
+            steamSocket.emit(
+              'getMatchMinimalDetails',
+              { match_id: Number(matchId) },
+              (err: any, response: any) => {
+                if (err) {
+                  reject(err)
+                } else {
+                  resolve(response)
+                }
+              },
+            )
+          },
+        )
 
-        const matchData = response && 'id' in response ? response : null
+        const response = await getMatchDetailsPromise
+        const matchData = response?.matches?.[0]
 
-        // Check if we got a valid response with radiantWin property
-        if (matchData && typeof matchData?.didRadiantWin === 'boolean') {
+        // Check if we got a valid response with match outcome
+        if (
+          matchData &&
+          typeof matchData.match_outcome === 'number' &&
+          [2, 3].includes(matchData.match_outcome)
+        ) {
           logger.info('Successfully retrieved match result for early DC', {
             matchId,
             name: this.client.name,
-            response,
+            matchOutcome: matchData.match_outcome,
           })
 
-          const winningTeam = matchData.didRadiantWin ? 'radiant' : 'dire'
+          // Determine winner based on match outcome
+          // k_EMatchOutcome_RadVictory = 2, k_EMatchOutcome_DireVictory = 3
+          const winningTeam = matchData.match_outcome === 2 ? 'radiant' : 'dire'
+
           // Reset flag before calling closeBets to prevent duplicate calls from closeBets
           this.checkingEarlyDCWinner = false
-          await this.closeBets(winningTeam, matchData)
+          await this.closeBets(winningTeam, response)
         } else {
           // Invalid response, retry after delay
           retryCount++

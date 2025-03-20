@@ -13,6 +13,7 @@ import { hasSteamData } from './hasSteamData.js'
 import { socketIoServer } from './socketServer.js'
 import type { SteamMatchDetails } from './types/SteamMatchDetails.js'
 import type { Cards, DelayedGames } from './types/index.js'
+import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails.js'
 import CustomError from './utils/customError.js'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch.js'
 import { logger } from './utils/logger.js'
@@ -43,7 +44,6 @@ const fetchDataFromMongo = async (match_id: string) => {
     await mongo.close()
   }
 }
-
 // Constructs the API URL
 const getApiUrl = (steam_server_id: string) => {
   if (!process.env.STEAM_WEB_API) throw new CustomError('STEAM_WEB_API not set')
@@ -358,7 +358,22 @@ class Dota {
     this.dota2.on('unready', () => logger.info('[STEAM] disconnected from dota game coordinator'))
     // Right when we start, check for accounts
     // This will run every 30 seconds otherwise
-    this.dota2.on('ready', this.checkAccounts.bind(this))
+    if (this.isProduction()) {
+      this.dota2.on('ready', this.checkAccounts.bind(this))
+    }
+  }
+
+  public requestMatchDetails = (matchIds: number): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
+        reject(new CustomError('Not connected to Dota 2 GC'))
+      else {
+        this.dota2.requestMatchDetails(matchIds, (err: any, data: any) => {
+          if (err) reject(err)
+          resolve(data)
+        })
+      }
+    })
   }
 
   handleHelloTimeout() {
@@ -559,6 +574,24 @@ class Dota {
     } finally {
       await mongo.close()
     }
+  }
+
+  public requestMatchMinimalDetails = (
+    matchIds: number[],
+  ): Promise<MatchMinimalDetailsResponse> => {
+    return new Promise((resolve, reject) => {
+      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
+        reject(new CustomError('Not connected to Dota 2 GC'))
+      else {
+        this.dota2.requestMatchMinimalDetails(
+          matchIds,
+          (err: any, data: MatchMinimalDetailsResponse) => {
+            if (err) reject(err)
+            resolve(data)
+          },
+        )
+      }
+    })
   }
 
   public GetRealTimeStats = async ({

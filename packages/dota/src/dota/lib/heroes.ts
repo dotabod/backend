@@ -1,4 +1,5 @@
 import { t } from 'i18next'
+import type { HeroNames } from './getHero'
 
 export const heroes = {
   npc_dota_hero_antimage: {
@@ -681,7 +682,7 @@ export function getHeroById(id?: number) {
 
   for (const [key, hero] of Object.entries(heroes)) {
     if (hero.id === id) {
-      return { ...hero, key }
+      return { ...hero, key: key as HeroNames }
     }
   }
 
