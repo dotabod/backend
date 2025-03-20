@@ -686,9 +686,13 @@ export class GSIHandler {
     try {
       const match = gcData?.matches?.[0]
       const longMatchId = match?.match_id
-        ? new Long(match.match_id.low, match.match_id.high).toString()
+        ? (() => {
+            const id = new Long(match.match_id.low, match.match_id.high).toString()
+            const numId = Number(id)
+            return !Number.isNaN(numId) && numId > 1 ? id : undefined
+          })()
         : undefined
-      const matchId = longMatchId ?? (await redisClient.client.get(`${this.client.token}:matchId`))
+      const matchId = (await redisClient.client.get(`${this.client.token}:matchId`)) ?? longMatchId
       const player = match?.players?.find(
         (player) => player.account_id === Number(this.client.gsi?.player?.accountid),
       )
