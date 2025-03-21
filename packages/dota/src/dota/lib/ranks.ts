@@ -64,7 +64,12 @@ export async function lookupLeaderRank(
   } else {
     try {
       const getCardPromise = new Promise<Cards>((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Timeout getting medal data'))
+        }, 5000) // 5 second timeout
+
         steamSocket.emit('getCard', steam32Id, (err: any, card: Cards) => {
+          clearTimeout(timeoutId)
           if (err) {
             reject(err)
           } else {

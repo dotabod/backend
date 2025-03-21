@@ -482,26 +482,20 @@ class Dota {
       }
     })
   }
-
   promiseTimeout = <T>(promise: Promise<T>, ms: number, reason: string): Promise<T> =>
     new Promise<T>((resolve, reject) => {
-      let timeoutCleared = false
       const timeoutId = setTimeout(() => {
-        timeoutCleared = true
         reject(new CustomError(reason))
       }, ms)
+
       promise
         .then((result) => {
-          if (!timeoutCleared) {
-            clearTimeout(timeoutId)
-            resolve(result)
-          }
+          clearTimeout(timeoutId)
+          resolve(result)
         })
         .catch((err) => {
-          if (!timeoutCleared) {
-            clearTimeout(timeoutId)
-            reject(err)
-          }
+          clearTimeout(timeoutId)
+          reject(err)
         })
     })
 
@@ -513,22 +507,29 @@ class Dota {
       return cacheEntry.card
     }
 
-    // If not cached or cache is stale, fetch the profile card
-    const card = await this.promiseTimeout(
-      this.fetchProfileCard(account),
-      1000,
-      'Error getting medal',
-    )
+    try {
+      // If not cached or cache is stale, fetch the profile card with a timeout
+      const card = await this.promiseTimeout(
+        this.fetchProfileCard(account),
+        1000,
+        'Timeout getting medal data',
+      )
 
-    this.evictOldCacheEntries() // Evict entries based on time
-    this.cache.set(account, {
-      timestamp: now,
-      card: card,
-    })
+      this.evictOldCacheEntries() // Evict entries based on time
+      this.cache.set(account, {
+        timestamp: now,
+        card: card,
+      })
 
-    this.evictExtraCacheEntries() // Evict extra entries if cache size exceeds MAX_CACHE_SIZE
+      this.evictExtraCacheEntries() // Evict extra entries if cache size exceeds MAX_CACHE_SIZE
 
-    return card
+      return card
+    } catch (error: unknown) {
+      // Log the error but don't crash the application
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      logger.error(`Failed to get card for account ${account}: ${errorMessage}`)
+      throw error // Re-throw to allow caller to handle the error
+    }
   }
 
   private evictOldCacheEntries() {

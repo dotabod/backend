@@ -40,9 +40,13 @@ export async function getPlayers({
       searchMatchId: currentMatchId,
       searchPlayers: players,
     })
-
     const getCardsPromise = new Promise<Cards[]>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error('Timeout getting cards data'))
+      }, 5000) // 5 second timeout
+
       steamSocket.emit('getCards', accountIds, false, (err: any, cards: any) => {
+        clearTimeout(timeoutId)
         if (err) {
           reject(err)
         } else {

@@ -93,27 +93,62 @@ const handleResetCommand = async (message: MessageType) => {
 
   chatClient.whisper(user.userId, 'Reset')
 }
-
 const handleCardsCommand = async (message: MessageType) => {
   const { user, channel } = message
   const { accountIds } = await getAccountsFromMatch({
     gsi: channel.client.gsi,
   })
-  steamSocket.emit('getCards', accountIds, false, (err: any, response: any) => {
-    chatClient.whisper(user.userId, JSON.stringify(response))
+
+  const getCardsPromise = new Promise<any>((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error('Timeout getting cards data'))
+    }, 5000) // 5 second timeout
+
+    steamSocket.emit('getCards', accountIds, false, (err: any, response: any) => {
+      clearTimeout(timeoutId)
+      if (err) {
+        reject(err)
+      } else {
+        resolve(response)
+      }
+    })
   })
+
+  try {
+    const response = await getCardsPromise
+    chatClient.whisper(user.userId, JSON.stringify(response))
+  } catch (error) {
+    chatClient.whisper(user.userId, `Error getting cards: ${error.message}`)
+  }
 
   chatClient.say(channel.name, `cards! ${channel.client.gsi?.map?.matchid}`)
 }
-
 const handleCardCommand = (message: MessageType, args: string[]) => {
   const [, accountId] = args
 
-  steamSocket.emit('getCard', Number(accountId), (err: any, response: any) => {
-    chatClient.whisper(message.user.userId, JSON.stringify(response))
+  const getCardPromise = new Promise<any>((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error('Timeout getting medal data'))
+    }, 5000) // 5 second timeout
+
+    steamSocket.emit('getCard', Number(accountId), (err: any, response: any) => {
+      clearTimeout(timeoutId)
+      if (err) {
+        reject(err)
+      } else {
+        resolve(response)
+      }
+    })
   })
 
-  chatClient.say(message.channel.name, 'card!')
+  getCardPromise
+    .then((response) => {
+      chatClient.whisper(message.user.userId, JSON.stringify(response))
+      chatClient.say(message.channel.name, 'card!')
+    })
+    .catch((error) => {
+      chatClient.whisper(message.user.userId, `Error getting card: ${error.message}`)
+    })
 }
 
 const handleLogsCommand = async (message: MessageType) => {
