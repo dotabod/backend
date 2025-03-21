@@ -1,4 +1,5 @@
 import { eventSubMap } from './chatSubIds.js'
+import supabase from './db/supabase.js'
 import { getTwitchHeaders } from './getTwitchHeaders.js'
 import type { TwitchEventSubResponse } from './interfaces.js'
 import { logger } from './twitch/lib/logger.js'
@@ -135,6 +136,13 @@ export interface TwitchEventTypes {
   'user.whisper.message': { version: '1' } // Whisper received
 }
 
+export async function updateAccountRequiresRefresh(broadcaster_user_id: string) {
+  await supabase
+    .from('accounts')
+    .update({ requires_refresh: true })
+    .eq('providerAccountId', broadcaster_user_id)
+}
+
 export async function genericSubscribe(
   conduit_id: string,
   broadcaster_user_id: string,
@@ -187,7 +195,7 @@ export async function genericSubscribe(
       logger.error(`Failed to subscribe ${subscribeReq.status} ${await subscribeReq.text()}`, {
         type,
       })
-      // TODO: Mark this user as requires_refresh
+      await updateAccountRequiresRefresh(broadcaster_user_id)
       return false
     }
 
