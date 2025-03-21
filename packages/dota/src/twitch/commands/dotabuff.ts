@@ -4,6 +4,7 @@ import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 import { profileLink } from './profileLink.js'
+import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 
 commandHandler.registerCommand('dotabuff', {
   dbkey: DBSettings.commandDotabuff,
@@ -26,7 +27,7 @@ commandHandler.registerCommand('dotabuff', {
         return
       }
 
-      const { player } = await profileLink({
+      const { hero, playerIdx, player } = await profileLink({
         command,
         packet: channelClient.gsi,
         locale: channelClient.locale,
@@ -37,7 +38,10 @@ commandHandler.registerCommand('dotabuff', {
         chatClient.say(
           channelName,
           t('profileUrl', {
-            channel: channelClient.name,
+            channel:
+              player?.accountid === channelClient.steam32Id
+                ? channelClient.name
+                : getHeroNameOrColor(hero?.id ?? 0, playerIdx),
             lng: channelClient.locale,
             url: `dotabuff.com/players/${player.accountid.toString()}`,
           }),

@@ -38,7 +38,10 @@ commandHandler.registerCommand('profile', {
 
       const desc = t('profileUrl', {
         lng: client.locale,
-        channel: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
+        channel:
+          player?.accountid === client.steam32Id
+            ? client.name
+            : getHeroNameOrColor(hero?.id ?? 0, playerIdx),
         url: `dotabuff.com/players/${player?.accountid ?? ''}`,
       })
 
