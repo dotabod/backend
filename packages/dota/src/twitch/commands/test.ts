@@ -135,7 +135,7 @@ const handleWpCommand = async (message: MessageType, args: string[]) => {
   chatClient.whisper(message.user.userId, JSON.stringify(details))
 }
 
-const handleServerCommand = (message: MessageType, args: string[]) => {
+const handleServerCommand = async (message: MessageType, args: string[]) => {
   const { user, channel } = message
   const [, steam32Id] = args
 
@@ -143,27 +143,50 @@ const handleServerCommand = (message: MessageType, args: string[]) => {
     return
   }
 
-  steamSocket.emit(
-    'getUserSteamServer',
-    steam32Id || channel.client.steam32Id,
-    async (err: any, steamServerId: string) => {
-      if (!steamServerId) {
-        chatClient.whisper(user.userId, t('gameNotFound', { lng: channel.client.locale }))
-        return
-      }
+  const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error('Timeout getting steam server data'))
+    }, 10000) // 10 second timeout
 
-      const game = (
-        await axios<DelayedGames>(
-          `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamServerId}`,
-        )
-      )?.data
-      chatClient.whisper(user.userId, JSON.stringify(game))
-      chatClient.whisper(
-        user.userId,
-        `name: ${channel.name} steam32id: ${channel.client.steam32Id} token: ${channel.client.token}`,
+    steamSocket.emit(
+      'getUserSteamServer',
+      steam32Id || channel.client.steam32Id,
+      (err: any, steamServerId: string) => {
+        clearTimeout(timeoutId)
+        if (err) {
+          reject(err)
+        } else {
+          resolve(steamServerId)
+        }
+      },
+    )
+  })
+
+  try {
+    const steamServerId = await getDelayedDataPromise
+
+    if (!steamServerId) {
+      chatClient.whisper(user.userId, t('gameNotFound', { lng: channel.client.locale }))
+      return
+    }
+
+    const game = (
+      await axios<DelayedGames>(
+        `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamServerId}`,
       )
-    },
-  )
+    )?.data
+    chatClient.whisper(user.userId, JSON.stringify(game))
+    chatClient.whisper(
+      user.userId,
+      `name: ${channel.name} steam32id: ${channel.client.steam32Id} token: ${channel.client.token}`,
+    )
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      chatClient.whisper(user.userId, `Error: ${error.message}`)
+    } else {
+      chatClient.whisper(user.userId, `Error: ${String(error)}`)
+    }
+  }
 }
 
 const handle2mDataCommand = async (message: MessageType) => {
