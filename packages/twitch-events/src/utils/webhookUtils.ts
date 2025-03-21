@@ -50,10 +50,11 @@ export const setupWebhooks = () => {
           ip: req.ip,
         })
 
-        return res.status(401).json({
+        res.status(401).json({
           status: 'error',
           message: 'Unauthorized',
         })
+        return
       }
 
       if (req.body.type === 'INSERT' && req.body.table === 'accounts') {

@@ -1,7 +1,7 @@
 import { Server } from 'socket.io'
-import { initUserSubscriptions } from '../initUserSubscriptions.js'
 import { logger } from '../twitch/lib/logger.js'
 import { revokeEvent } from '../twitch/lib/revokeEvent.js'
+import { handleNewUser } from '../handleNewUser'
 
 export const socketIo = new Server(5015)
 
@@ -48,7 +48,12 @@ export const setupSocketIO = () => {
 
     socket.on('enable', (providerAccountId: string) => {
       logger.info('[TWITCHEVENTS] Enabling events for user', { providerAccountId })
-      initUserSubscriptions(providerAccountId)
+      handleNewUser(providerAccountId, true)
+    })
+
+    socket.on('resubscribe', (providerAccountId: string) => {
+      logger.info('[TWITCHEVENTS] Resubscribing to events for user', { providerAccountId })
+      handleNewUser(providerAccountId, true)
     })
   })
 }

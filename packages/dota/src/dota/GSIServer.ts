@@ -1,6 +1,12 @@
 import http from 'node:http'
 import cors from 'cors'
-import express, { json, type Request, type Response, urlencoded } from 'express'
+import express, {
+  json,
+  type Request,
+  type Response,
+  urlencoded,
+  type ErrorRequestHandler,
+} from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import { Server, type Socket } from 'socket.io'
 
@@ -17,6 +23,7 @@ import { newData, processChanges } from './globalEventEmitter.js'
 import { gsiHandlers } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import { validateToken } from './validateToken.js'
+import { twitchEvent } from '../twitch/index.js'
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
   const { token } = socket.handshake.auth
@@ -80,7 +87,7 @@ class GSIServer {
     app.use(cors({ origin: allowedOrigins }))
     app.use(json({ limit: '1mb' }))
     app.use(urlencoded({ extended: true, limit: '1mb' }))
-    app.use(bodyParserErrorHandler())
+    app.use(bodyParserErrorHandler() as ErrorRequestHandler)
 
     app.post(
       '/',
@@ -100,14 +107,62 @@ class GSIServer {
       newData,
     )
 
+    // Track resubscribe request timestamps separately from regular GSI posts
+    const resubscribeRequestTimestamps = new Map<string, number>()
+    const RESUBSCRIBE_CLEANUP_TIMEOUT = 24 * 60 * 60 * 1000 // 24 hours
+
+    // Function to clean up old resubscribe request timestamps
+    function cleanupResubscribeTimestamps() {
+      const now = Date.now()
+      for (const [token, timestamp] of resubscribeRequestTimestamps.entries()) {
+        if (now - timestamp > RESUBSCRIBE_CLEANUP_TIMEOUT) {
+          resubscribeRequestTimestamps.delete(token)
+        }
+      }
+    }
+
+    app.post('/resubscribe', (req: Request, res: Response) => {
+      const { token } = req.body
+      if (!token) {
+        res.status(404).json({ status: 'not found' })
+        return
+      }
+
+      // Rate limiting - prevent abuse by limiting frequency of resubscribe requests
+      const lastResubscribeRequestTime = resubscribeRequestTimestamps.get(token)
+      const now = Date.now()
+      const cooldownPeriod = 300000 // 5 minute cooldown between resubscribe requests
+
+      if (lastResubscribeRequestTime && now - lastResubscribeRequestTime < cooldownPeriod) {
+        logger.info('[GSI] Resubscribe request rate limited', { token })
+        res.status(429).json({
+          status: 'too many requests',
+          retryAfter: Math.ceil((lastResubscribeRequestTime + cooldownPeriod - now) / 1000),
+        })
+        return
+      }
+
+      // Update timestamp for rate limiting
+      resubscribeRequestTimestamps.set(token, now)
+
+      twitchEvent.emit('resubscribe', token)
+      res.status(200).json({ status: 'ok' })
+    })
+
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     app.get('/tooltips/:channelId', async (req: Request, res: Response) => {
       // make sure channel id is a number
-      if (!req.params.channelId.match(/^\d+$/)) return res.status(200).json({ status: 'ok' })
+      if (!req.params.channelId.match(/^\d+$/)) {
+        res.status(200).json({ status: 'ok' })
+        return
+      }
 
       const { channelId } = req.params
       const user = await getDBUser({ twitchId: channelId })
-      if (!user?.gsi) return res.status(200).json({ status: 'ok' })
+      if (!user?.gsi) {
+        res.status(200).json({ status: 'ok' })
+        return
+      }
 
       const dotaClient = user.gsi
       const inv = Object.values(dotaClient?.items ?? {})
@@ -147,6 +202,9 @@ class GSIServer {
     // Set up the repeating timer
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setInterval(checkForInactiveTokens, TOKEN_TIMEOUT)
+
+    // Set up the repeating timer for cleaning up resubscribe timestamps
+    setInterval(cleanupResubscribeTimestamps, RESUBSCRIBE_CLEANUP_TIMEOUT)
   }
 
   init() {
