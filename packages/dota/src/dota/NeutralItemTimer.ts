@@ -2,7 +2,7 @@ import { t } from 'i18next'
 import type { GSIHandler } from './GSIHandler.js'
 import { redisClient } from './GSIHandler.js'
 import { say } from './say.js'
-
+import { getRedisNumberValue } from '../utils/index.js'
 interface TierTime {
   tier: number
   normalTime: number
@@ -40,8 +40,8 @@ export class NeutralItemTimer {
     this.lastCheckedTime = clockTime
 
     const matchId = await redisClient.client.get(`${this.dotaClient.client.token}:matchId`)
-    const playingGameMode = Number(
-      await redisClient.client.get(`${matchId}:${this.dotaClient.client.token}:gameMode`),
+    const playingGameMode = await getRedisNumberValue(
+      `${matchId}:${this.dotaClient.client.token}:gameMode`,
     )
     const isTurbo = playingGameMode === 23
 

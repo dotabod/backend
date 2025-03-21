@@ -1,3 +1,5 @@
+import RedisClient from '../db/RedisClient.js'
+
 export function steamID64toSteamID32(steamID64: string) {
   if (!steamID64) return null
   return Number(steamID64.substr(-16, 16)) - 6561197960265728
@@ -16,4 +18,10 @@ export function fmtMSS(totalSeconds: number) {
 
   // ✅ format as MM:SS
   return `${padTo2Digits(minutes)}:${padTo2Digits(seconds)}`
+}
+
+const redisClient = RedisClient.getInstance()
+export const getRedisNumberValue = async (key: string) => {
+  const value = await redisClient.client.get(key)
+  return value !== null ? Number(value) : null
 }

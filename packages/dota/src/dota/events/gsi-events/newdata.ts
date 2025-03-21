@@ -31,6 +31,7 @@ import { isSpectator } from '../../lib/isSpectator.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 import { minimapParser } from '../minimap/parser.js'
+import { getRedisNumberValue } from '../../../utils/index.js'
 
 // Define a type for the global timeouts
 declare global {
@@ -86,9 +87,9 @@ async function saveMatchData(client: SocketClient) {
   const [steamServerId] = res
   const [, lobbyType] = res
 
-  if (steamServerId && lobbyType) return
+  if (steamServerId && lobbyType !== null) return
 
-  if (!steamServerId && !lobbyType) {
+  if (!steamServerId && lobbyType === null) {
     // Fix: Check if we're already looking up this match to prevent race conditions
     if (steamServerLookupMap.has(matchId)) return
 
@@ -131,7 +132,7 @@ async function saveMatchData(client: SocketClient) {
   const currentSteamServerId = await redisClient.client.get(
     `${matchId}:${client.token}:steamServerId`,
   )
-  if (currentSteamServerId && !lobbyType) {
+  if (currentSteamServerId && lobbyType === null) {
     // Fix: Check if we're already looking up this match to prevent race conditions
     if (steamDelayDataLookupMap.has(matchId)) return
 
@@ -293,13 +294,7 @@ eventHandler.registerEvent('newdata', {
     }
     // Can't just !dotaClient.heroSlot because it can be 0
     const purchaser = dotaClient.client.gsi?.items?.teleport0?.purchaser
-    const playingHeroSlotFromRedis = await redisClient.client.get(
-      `${dotaClient.client.token}:playingHeroSlot`,
-    )
-    // Convert to number only if we have a value, otherwise it will be null
-    const playingHeroSlot =
-      playingHeroSlotFromRedis !== null ? Number(playingHeroSlotFromRedis) : null
-
+    const playingHeroSlot = await getRedisNumberValue(`${dotaClient.client.token}:playingHeroSlot`)
     if (playingHeroSlot === null && typeof purchaser === 'number') {
       await Promise.all([
         redisClient.client.set(`${dotaClient.client.token}:playingHeroSlot`, purchaser),

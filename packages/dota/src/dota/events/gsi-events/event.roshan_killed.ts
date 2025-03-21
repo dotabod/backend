@@ -3,7 +3,7 @@ import { t } from 'i18next'
 import RedisClient from '../../../db/RedisClient.js'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { type DotaEvent, DotaEventTypes, type SocketClient } from '../../../types.js'
-import { fmtMSS } from '../../../utils/index.js'
+import { fmtMSS, getRedisNumberValue } from '../../../utils/index.js'
 import type { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -89,8 +89,9 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
 
     const redisClient = RedisClient.getInstance()
     const matchId = await redisClient.client.get(`${dotaClient.getToken()}:matchId`)
-    const playingGameMode = Number(
-      await redisClient.client.get(`${matchId}:${dotaClient.getToken()}:gameMode`),
+
+    const playingGameMode = await getRedisNumberValue(
+      `${matchId}:${dotaClient.getToken()}:gameMode`,
     )
 
     // doing map gametime - event gametime in case the user reconnects to a match,

@@ -1,12 +1,13 @@
 import { t } from 'i18next'
 
 import { type DotaEvent, DotaEventTypes } from '../../../types.js'
-import { type GSIHandler, redisClient } from '../../GSIHandler.js'
+import { type GSIHandler } from '../../GSIHandler.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
+import { getRedisNumberValue } from '../../../utils/index.js'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
   handler: async (dotaClient: GSIHandler, event: DotaEvent) => {
@@ -31,9 +32,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
       senderPlayerIdIndex,
     )
 
-    const playingHeroSlot = Number(
-      await redisClient.client.get(`${dotaClient.getToken()}:playingHeroSlot`),
-    )
+    const playingHeroSlot = await getRedisNumberValue(`${dotaClient.getToken()}:playingHeroSlot`)
 
     if (receiverPlayerIdIndex === playingHeroSlot) {
       say(

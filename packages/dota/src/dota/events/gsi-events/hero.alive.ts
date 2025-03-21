@@ -1,4 +1,5 @@
 import RedisClient from '../../../db/RedisClient.js'
+import { getRedisNumberValue } from '../../../utils/index.js'
 import type { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -13,9 +14,7 @@ eventHandler.registerEvent('hero:alive', {
     const redisJson = (await redisClient.client.json.get(`${dotaClient.getToken()}:aegis`)) as any
 
     // Case one, we had aegis, and we die with it. Triggers on an aegis death
-    const playingHeroSlot = Number(
-      await redisClient.client.get(`${dotaClient.getToken()}:playingHeroSlot`),
-    )
+    const playingHeroSlot = await getRedisNumberValue(`${dotaClient.getToken()}:playingHeroSlot`)
 
     if (!(!alive && redisJson?.playerId === playingHeroSlot)) {
       return

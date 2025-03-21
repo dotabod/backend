@@ -10,7 +10,7 @@ import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
 import { DotaGcTeam, type BlockType, type DotaEvent, type SocketClient } from '../types.js'
-import { steamID64toSteamID32 } from '../utils/index.js'
+import { getRedisNumberValue, steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import type { SubscriptionRow } from '../utils/subscription.js'
 import { NeutralItemTimer } from './NeutralItemTimer.js'
@@ -727,8 +727,7 @@ export class GSIHandler {
         this.client.subscription,
       )
       const heroSlot =
-        player?.player_slot ??
-        Number(await redisClient.client.get(`${this.client.token}:playingHeroSlot`))
+        player?.player_slot ?? (await getRedisNumberValue(`${this.client.token}:playingHeroSlot`))
       const heroName =
         getHeroById(player?.hero_id)?.key ??
         ((await redisClient.client.get(`${this.client.token}:playingHero`)) as HeroNames | null)
@@ -825,17 +824,10 @@ export class GSIHandler {
       // 0 is a correct lobby type meaning unranked
       // https://github.com/dotabod/backend/issues/373#issuecomment-2366822786
       // Default to ranked if we don't have valid data
-      const lobbyTypeFromRedis = await redisClient.client.get(
+      const playingLobbyType = await getRedisNumberValue(
         `${matchId}:${this.client.token}:lobbyType`,
       )
-      // Convert to number only if we have a value (including "0")
-      const playingLobbyType = lobbyTypeFromRedis !== null ? Number(lobbyTypeFromRedis) : null
-
-      const gameModeFromRedis = await redisClient.client.get(
-        `${matchId}:${this.client.token}:gameMode`,
-      )
-      // Convert to number only if we have a value (including "0")
-      const playingGameMode = gameModeFromRedis !== null ? Number(gameModeFromRedis) : null
+      const playingGameMode = await getRedisNumberValue(`${matchId}:${this.client.token}:gameMode`)
 
       // Use the lobby type from Redis if it exists (including 0)
       // Otherwise default to ranked
@@ -848,7 +840,7 @@ export class GSIHandler {
         scores: scores,
         increase: won,
         lobbyType: localLobbyType,
-        gameMode: playingGameMode,
+        gameMode: playingGameMode === null ? 22 : playingGameMode, // 22 is game mode for normal game non turbo
         matchId: matchId,
         isParty: isParty,
         heroSlot,
