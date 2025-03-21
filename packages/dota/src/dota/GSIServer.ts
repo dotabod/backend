@@ -24,6 +24,7 @@ import { gsiHandlers } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import { validateToken } from './validateToken.js'
 import { twitchEvent } from '../twitch/index.js'
+import supabase from '../db/supabase.js'
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
   const { token } = socket.handshake.auth
@@ -121,9 +122,21 @@ class GSIServer {
       }
     }
 
-    app.post('/resubscribe', (req: Request, res: Response) => {
+    app.post('/resubscribe', async (req: Request, res: Response) => {
       const { token } = req.body
       if (!token) {
+        res.status(404).json({ status: 'not found' })
+        return
+      }
+
+      // get providerid from token
+      const { data: user } = await supabase
+        .from('accounts')
+        .select('providerAccountId')
+        .eq('userId', token)
+        .single()
+
+      if (!user?.providerAccountId) {
         res.status(404).json({ status: 'not found' })
         return
       }
@@ -145,7 +158,7 @@ class GSIServer {
       // Update timestamp for rate limiting
       resubscribeRequestTimestamps.set(token, now)
 
-      twitchEvent.emit('resubscribe', token)
+      twitchEvent.emit('resubscribe', user.providerAccountId)
       res.status(200).json({ status: 'ok' })
     })
 
