@@ -70,7 +70,7 @@
   "facetSelection": "{{- heroName}} Faceta seleccionada: {{- facetTitle}} · {{- facetDescription}}",
   "facetTotalLimit_one": "Solo {{count}} faceta está disponible para {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_many": "",
-  "facetTotalLimit_other": "Solo {{count}} facetas están disponibles para  {{- heroName}} · $t(facetNotFound, {{- heroName }})",
+  "facetTotalLimit_other": "Solo {{count}} facetas están disponibles para {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Juego no encontrado",
   "giftSub": "¡Un sub para Dotabod Pro ha sido regalado por {{- senderName}}!",
   "giftSubAnonymous": "¡Un sub para Dotabod Pro ha sido regalado anónimamente!",
