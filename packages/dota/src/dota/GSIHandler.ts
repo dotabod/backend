@@ -824,23 +824,22 @@ export class GSIHandler {
 
       // 0 is a correct lobby type meaning unranked
       // https://github.com/dotabod/backend/issues/373#issuecomment-2366822786
-      // Default to ranked
+      // Default to ranked if we don't have valid data
       const lobbyTypeFromRedis = await redisClient.client.get(
         `${matchId}:${this.client.token}:lobbyType`,
       )
-      const playingLobbyType = lobbyTypeFromRedis ? Number(lobbyTypeFromRedis) : Number.NaN
+      // Convert to number only if we have a value (including "0")
+      const playingLobbyType = lobbyTypeFromRedis !== null ? Number(lobbyTypeFromRedis) : null
 
       const gameModeFromRedis = await redisClient.client.get(
         `${matchId}:${this.client.token}:gameMode`,
       )
-      const playingGameMode = gameModeFromRedis ? Number(gameModeFromRedis) : Number.NaN
+      // Convert to number only if we have a value (including "0")
+      const playingGameMode = gameModeFromRedis !== null ? Number(gameModeFromRedis) : null
 
-      // When Redis returns null, Number(null) becomes 0, which is >= 0
-      // Check if we actually have a value before comparing
-      const localLobbyType =
-        lobbyTypeFromRedis !== null && !Number.isNaN(playingLobbyType)
-          ? playingLobbyType
-          : LOBBY_TYPE_RANKED
+      // Use the lobby type from Redis if it exists (including 0)
+      // Otherwise default to ranked
+      const localLobbyType = playingLobbyType !== null ? playingLobbyType : LOBBY_TYPE_RANKED
 
       const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
 

@@ -291,19 +291,22 @@ eventHandler.registerEvent('newdata', {
       )
       if (enabled) minimapParser.init(data, dotaClient.mapBlocker)
     }
-
     // Can't just !dotaClient.heroSlot because it can be 0
     const purchaser = dotaClient.client.gsi?.items?.teleport0?.purchaser
-    const playingHeroSlot = Number(
-      await redisClient.client.get(`${dotaClient.client.token}:playingHeroSlot`),
+    const playingHeroSlotFromRedis = await redisClient.client.get(
+      `${dotaClient.client.token}:playingHeroSlot`,
     )
-    if (!(playingHeroSlot >= 0) && typeof purchaser === 'number') {
+    // Convert to number only if we have a value, otherwise it will be null
+    const playingHeroSlot =
+      playingHeroSlotFromRedis !== null ? Number(playingHeroSlotFromRedis) : null
+
+    if (playingHeroSlot === null && typeof purchaser === 'number') {
       await Promise.all([
         redisClient.client.set(`${dotaClient.client.token}:playingHeroSlot`, purchaser),
         saveMatchData(dotaClient.client),
       ])
 
-      // This is the first time we've seen the hero slot, so we can't check anthing else yet
+      // This is the first time we've seen the hero slot, so we can't check anything else yet
       return
     }
 
