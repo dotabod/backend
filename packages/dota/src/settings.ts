@@ -43,7 +43,7 @@ export const commands = {
   commandPing: true,
   commandDotabod: true,
   commandMute: true,
-  commandLastFm: true,
+  commandLastFm: false,
 }
 export type CommandKeys = keyof typeof commands
 
