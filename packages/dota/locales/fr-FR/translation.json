@@ -137,7 +137,7 @@
   "multiAccount": "Ce compte steam est déja connecté a un autre utilisateur Dotabod. Vérifier le dashboard pour plus d'informations {{- url}}",
   "muted": "Ne discutera plus automatiquement sur les événements du match, les commandes restent opérationnelles. Tapez !unmute pour annuler",
   "neutralItems": {
-    "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+    "tierAvailable": "Les items neutres de niveau {{tier}} sont maintenant disponibles ! Il est temps d'aller voir la jungle"
   },
   "noAghs": "{{- heroName}} n'a pas d'aghanim scepter",
   "noHero": "Aucun héros trouvé",
