@@ -48,7 +48,7 @@ interface LastFmResponse {
 
 commandHandler.registerCommand('song', {
   aliases: ['lastfm', 'music', 'nowplaying'],
-  permission: 0,
+  onlyOnline: true,
   dbkey: DBSettings.commandLastFm,
   handler: async (message: MessageType, args: string[]) => {
     const {
