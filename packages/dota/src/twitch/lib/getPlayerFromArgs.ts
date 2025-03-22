@@ -56,15 +56,15 @@ export async function getPlayerFromArgs({
     }
   }
 
-  if (playerIdx < 0 || playerIdx > 9) {
-    if (heroIdsInMatch.filter(Boolean).length > 1) {
-      throw new CustomError(t('invalidHero', { command, heroList, lng: locale }))
-    }
+  // if (playerIdx < 0 || playerIdx > 9) {
+  //   if (heroIdsInMatch.filter(Boolean).length > 1) {
+  //     throw new CustomError(t('invalidHero', { command, heroList, lng: locale }))
+  //   }
 
-    throw new CustomError(
-      t('invalidColorNew', { command, colorList: heroColors.join(' · '), lng: locale }),
-    )
-  }
+  //   throw new CustomError(
+  //     t('invalidColorNew', { command, colorList: heroColors.join(' · '), lng: locale }),
+  //   )
+  // }
 
   const hasMoreDataForCurrentHero = packet?.hero?.id === hero?.id
   const moreData = hasMoreDataForCurrentHero ? { ...packet?.player, ...packet?.hero } : {}
