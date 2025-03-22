@@ -731,7 +731,9 @@ export const GetRealTimeStats = async ({
         // sort players by team_slot
         sortPlayersBySlot(game)
 
-        await saveMatch({ match_id, game: gamePlusMore })
+        if (process.env.DOTABOD_ENV === 'production') {
+          await saveMatch({ match_id, game: gamePlusMore })
+        }
 
         if (!forceRefetchAll) {
           // forward the msg to dota node app
