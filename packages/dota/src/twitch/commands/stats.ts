@@ -73,6 +73,13 @@ async function getStats({
             })
             reject(err)
           } else {
+            logger.info('Stats received', {
+              cards,
+              match_id: packet?.map?.matchid ?? '',
+              forceRefetchAll: true,
+              steam_server_id: steamServerId,
+              token,
+            })
             resolve(cards)
           }
         },
