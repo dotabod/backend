@@ -8,6 +8,7 @@ import { initializeSocket } from './conduitSetup.js'
 import { sendTwitchChatMessage } from './handleChat.js'
 import { logger } from './logger.js'
 import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider.js'
+import supabase from './db/supabase.js'
 
 if (!process.env.TWITCH_BOT_PROVIDERID) {
   throw new Error('TWITCH_BOT_PROVIDERID not set')
@@ -83,16 +84,42 @@ io.on('connection', (socket) => {
           message: text || "I'm sorry, I can't do that",
         })
 
+        // Only disable if message failed to send
         if (!response.data?.[0]?.is_sent) {
-          logger.error('Failed to send chat message:', response)
-          return
+          await disableUser(providerAccountId)
         }
       } catch (e) {
         logger.error('Failed to send chat message:', e)
-        return
       }
     },
   )
+
+  async function disableUser(providerAccountId: string) {
+    const { data: user } = await supabase
+      .from('accounts')
+      .select('userId')
+      .eq('providerAccountId', providerAccountId)
+      .single()
+
+    if (!user?.userId) {
+      logger.error('Failed to send chat message: no user found', providerAccountId)
+      return
+    }
+
+    // Disable the user
+    await supabase.from('settings').upsert(
+      {
+        userId: user.userId,
+        key: 'commandDisable',
+        value: true,
+      },
+      {
+        onConflict: 'userId, key',
+      },
+    )
+
+    logger.error('Failed to send chat message. Disabled user', providerAccountId)
+  }
 
   socket.on('whisper', async (channel: string, text: string) => {
     try {
