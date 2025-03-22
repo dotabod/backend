@@ -4,6 +4,13 @@ Dota 2 Hero Detection
 
 This module processes frames from a Twitch clip to identify Dota 2 heroes
 in the top bar of the game interface using template matching.
+
+Hero portrait layout in Dota 2:
+- Total selection height: 131px
+- Actual hero portrait height: 72px
+- Top color indicator height: 6px
+- True hero portrait area: 66px (after removing color bar)
+- Bottom area (59px): Contains player name and selected role
 """
 
 import os
@@ -41,7 +48,12 @@ HEROES_DIR.mkdir(exist_ok=True)
 
 # Exact dimensions for hero portraits in the top bar
 HERO_WIDTH = 122  # pixels
-HERO_HEIGHT = 131  # pixels
+HERO_HEIGHT = 72  # pixels  # The actual hero portrait height
+HERO_TOTAL_HEIGHT = 131  # Total height including player name and role
+HERO_TOP_PADDING = 6  # pixels to crop from top (color indicator bar)
+HERO_ACTUAL_HEIGHT = HERO_HEIGHT - HERO_TOP_PADDING  # 66px - actual visible hero portrait
+# Bottom part (131 - 72 = 59px) contains player name and selected role
+
 CLOCK_WIDTH = 265  # pixels
 CLOCK_HEIGHT = 131  # pixels
 
@@ -113,7 +125,7 @@ def extract_hero_bar(frame, debug=False):
         top_offset = 0
 
         # Height of the hero bar
-        bar_height = HERO_HEIGHT
+        bar_height = HERO_TOTAL_HEIGHT
 
         # Check if frame is large enough
         if width < HERO_WIDTH*10 + CLOCK_WIDTH or height < bar_height:
@@ -150,6 +162,24 @@ def extract_hero_bar(frame, debug=False):
                          (center_x + CLOCK_WIDTH//2, bar_height),
                          (255, 255, 0), 2)
 
+            # Draw hero portrait cropping boundaries
+            for i in range(5):
+                # Radiant heroes
+                x = center_x - CLOCK_WIDTH//2 - (5-i) * HERO_WIDTH
+                # Draw top padding line
+                cv2.line(visualization, (x, HERO_TOP_PADDING), (x + HERO_WIDTH, HERO_TOP_PADDING), (255, 0, 255), 1)
+                # Draw bottom of hero portrait
+                cv2.line(visualization, (x, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT),
+                        (x + HERO_WIDTH, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT), (255, 0, 255), 1)
+
+                # Dire heroes
+                x = center_x + CLOCK_WIDTH//2 + i * HERO_WIDTH
+                # Draw top padding line
+                cv2.line(visualization, (x, HERO_TOP_PADDING), (x + HERO_WIDTH, HERO_TOP_PADDING), (255, 0, 255), 1)
+                # Draw bottom of hero portrait
+                cv2.line(visualization, (x, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT),
+                        (x + HERO_WIDTH, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT), (255, 0, 255), 1)
+
             save_debug_image(visualization, "top_bar_annotated")
 
         # Success
@@ -161,6 +191,13 @@ def extract_hero_bar(frame, debug=False):
 def extract_hero_icons(top_bar, center_x, debug=False):
     """
     Extract individual hero icons from the top bar.
+
+    The extraction process:
+    1. Identifies the position of each hero slot in the top bar
+    2. For each slot, crops out just the hero portrait area:
+       - Skips the first 6px (color indicator bar at top)
+       - Takes only the next 66px of height (actual hero portrait)
+       - Does not include the bottom 59px (player name and role)
 
     Args:
         top_bar: Cropped top bar image
@@ -179,8 +216,9 @@ def extract_hero_icons(top_bar, center_x, debug=False):
             x_start = center_x - CLOCK_WIDTH//2 - (5-i) * HERO_WIDTH
             x_end = x_start + HERO_WIDTH
 
-            # Crop the hero icon
-            hero_icon = top_bar[0:HERO_HEIGHT, x_start:x_end]
+            # Crop the hero icon - only take the actual hero portrait, not player name/role
+            # Skip the first HERO_TOP_PADDING pixels (color indicator)
+            hero_icon = top_bar[HERO_TOP_PADDING:HERO_TOP_PADDING+HERO_ACTUAL_HEIGHT, x_start:x_end]
 
             # Check if we have a valid crop
             if hero_icon.size == 0:
@@ -189,7 +227,10 @@ def extract_hero_icons(top_bar, center_x, debug=False):
 
             # Save for debugging
             if debug:
-                save_debug_image(hero_icon, f"radiant_hero_{i+1}")
+                # Save both the full selection and the cropped portrait
+                full_selection = top_bar[0:HERO_TOTAL_HEIGHT, x_start:x_end]
+                save_debug_image(full_selection, f"radiant_hero_{i+1}_full")
+                save_debug_image(hero_icon, f"radiant_hero_{i+1}_portrait")
 
             # Add to list: (team, position, icon)
             hero_icons.append(("Radiant", i, hero_icon))
@@ -200,8 +241,9 @@ def extract_hero_icons(top_bar, center_x, debug=False):
             x_start = center_x + CLOCK_WIDTH//2 + i * HERO_WIDTH
             x_end = x_start + HERO_WIDTH
 
-            # Crop the hero icon
-            hero_icon = top_bar[0:HERO_HEIGHT, x_start:x_end]
+            # Crop the hero icon - only take the actual hero portrait, not player name/role
+            # Skip the first HERO_TOP_PADDING pixels (color indicator)
+            hero_icon = top_bar[HERO_TOP_PADDING:HERO_TOP_PADDING+HERO_ACTUAL_HEIGHT, x_start:x_end]
 
             # Check if we have a valid crop
             if hero_icon.size == 0:
@@ -210,7 +252,10 @@ def extract_hero_icons(top_bar, center_x, debug=False):
 
             # Save for debugging
             if debug:
-                save_debug_image(hero_icon, f"dire_hero_{i+1}")
+                # Save both the full selection and the cropped portrait
+                full_selection = top_bar[0:HERO_TOTAL_HEIGHT, x_start:x_end]
+                save_debug_image(full_selection, f"dire_hero_{i+1}_full")
+                save_debug_image(hero_icon, f"dire_hero_{i+1}_portrait")
 
             # Add to list: (team, position, icon)
             hero_icons.append(("Dire", i, hero_icon))
@@ -226,7 +271,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.5, debug=False):
     Identify a hero using template matching.
 
     Args:
-        hero_icon: Image of the hero icon
+        hero_icon: Image of the hero icon (cropped to just the hero portrait without color bar)
         heroes_data: Dictionary of hero data
         min_score: Minimum match score to consider a match
         debug: Whether to save debug images
@@ -238,6 +283,17 @@ def identify_hero(hero_icon, heroes_data, min_score=0.5, debug=False):
         if not heroes_data:
             logger.error("No heroes data available")
             return None
+
+        # Ensure the hero icon is the correct size (HERO_ACTUAL_HEIGHT x HERO_WIDTH)
+        # This helps handle any misalignment in cropping
+        expected_height = HERO_ACTUAL_HEIGHT
+        expected_width = HERO_WIDTH
+
+        # Check if the icon is the expected size
+        actual_height, actual_width = hero_icon.shape[:2]
+        if actual_height != expected_height or actual_width != expected_width:
+            logger.debug(f"Resizing hero icon from {actual_width}x{actual_height} to {expected_width}x{expected_height}")
+            hero_icon = cv2.resize(hero_icon, (expected_width, expected_height))
 
         # Resize the hero icon to a standard size for comparison
         hero_icon_resized = cv2.resize(hero_icon, (64, 64))
@@ -473,6 +529,11 @@ def main():
             # Extract frames
             frame_paths = extract_frames(clip_path, frame_interval=0.5)
             logger.info(f"Extracted {len(frame_paths)} frames")
+
+            # Use only the last 5 frames
+            if len(frame_paths) > 5:
+                frame_paths = frame_paths[-5:]
+                logger.info(f"Using only the last 5 frames: {len(frame_paths)} frames")
 
             # Process frames for heroes
             heroes = process_frames_for_heroes(frame_paths, debug=args.debug)
