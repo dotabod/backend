@@ -62,6 +62,11 @@
   "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
   "facetSelection": "{{- heroName}} selected facet: {{- facetTitle}} · {{- facetDescription}}",
   "gameNotFound": "Game was not found",
+  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
+  "songError": "Error fetching song information from Last.fm.",
+  "songNotPlaying": "No song is currently playing.",
+  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
   "heroItems": {

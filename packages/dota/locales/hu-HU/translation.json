@@ -59,6 +59,7 @@
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_other": "{{count}} streamers using the overlay"
   },
+  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Profi {{- heroName}} buildeket keresel? Itt találsz párat: {{- url}}",
   "dotabod": "Nyílt forráskódú bot vagyok, {{author}} tervezett. Több információért {{- url}}",
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
@@ -102,6 +103,7 @@
     "won_one": "{{- heroName}} {{count}} killstreaken van. {{emote}}",
     "won_other": "{{- heroName}} {{count}} killstreaken van. {{emote}}"
   },
+  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
   "lastgame": {
     "link": "Legutóbbi meccs: {{- url}}",
     "none": "Senkivel sem játszunk az előző meccsből.",
@@ -119,6 +121,7 @@
     "won": "Előző játék: győzelem"
   },
   "lifetime": "Összes lejátszott játék",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "matchFound": "Meccs információ megtalálható {{commandList}} a parancsok aktívak.",
   "matchId": "Meccs ID: {{matchId}}",
   "midasUsed": "Midas végre használva volt, $t(seconds, {\"count\": {{seconds}} }) késéssel. {{emote}}",
@@ -182,6 +185,8 @@
   "setStreamDelayNoArgs": "Helytelen stream delay, próbáld így: !setdelay <seconds>",
   "setStreamDelayRemoved": "Stream delay eltávoltva",
   "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
+  "songError": "Error fetching song information from Last.fm.",
+  "songNotPlaying": "No song is currently playing.",
   "spectators": {
     "count_one": "1 spectator watching this match live",
     "count_other": "{{count}} spectators watching this match live",

@@ -59,6 +59,7 @@
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_other": "{{count}} streamers using the overlay"
   },
+  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "میخوای چیز جدید واسه قهرمان {{- heroName}} یاد بگیری؟ این اینک رو چک کن {{- url}}",
   "dotabod": "من یک ربات سورس باز هستم. سازنده من {{author}}. اطلاعات بیشتر: {{- url}}",
   "facet": "{{- heroName}} با فست {{number}}{{- facetTitle}}{{- facetDescription}}",
@@ -102,6 +103,7 @@
     "won_one": "{{- heroName}} has a {{count}} kill streak {{emote}}",
     "won_other": "{{- heroName}} has a {{count}} kill streak {{emote}}"
   },
+  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
   "lastgame": {
     "link": "بازی قبل: {{- url}}",
     "none": "با هیچ اکانت بایری از بازی قبل بازی نمیکنه! همه جدیدن",
@@ -119,6 +121,7 @@
     "won": "بازی قبلی: بردیم"
   },
   "lifetime": "تمام بازی ها",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "matchFound": "بازی شروع شد. تمام این کامندها فعال است {{commandList}}",
   "matchId": "ایدی مچ: {{matchId}}",
   "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",
@@ -182,6 +185,8 @@
   "setStreamDelayNoArgs": "مقدار غیر قابل قبول برای تاخیر در استریم. از دستور !setdelay استفاده کنید",
   "setStreamDelayRemoved": "در حال حذف تاخیر استریم",
   "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
+  "songError": "Error fetching song information from Last.fm.",
+  "songNotPlaying": "No song is currently playing.",
   "spectators": {
     "count_one": "1 اسکل داره این بازی رو میبینه.",
     "count_other": "{{count}} اسکل دارن بازی رو میبینن",

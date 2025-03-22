@@ -65,6 +65,7 @@
     "overlay_many": "{{count}} стримеров использует оверлей",
     "overlay_other": "{{count}} стримеров использует оверлей"
   },
+  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Нужны сборки от про-игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "facet": "{{number}} аспект {{- heroName}} - это {{- facetTitle}} · {{- facetDescription}}",
@@ -122,6 +123,7 @@
     "won_many": "У {{- heroName}} серия из {{count}} убийств! {{emote}}",
     "won_other": "у {{- heroName}} серия из {{count}} убийств! {{emote}}"
   },
+  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
   "lastgame": {
     "link": "ID последнего матча: {{- url}}",
     "none": "Не найдено игроков из прошлой игры",
@@ -141,6 +143,7 @@
     "won": "Последняя игра: победа"
   },
   "lifetime": "Количество игр",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "matchFound": "Данные матча получены {{commandList}} команды бота активны.",
   "matchId": "ID матча: {{matchId}}",
   "midasUsed": "Midas наконец-то был использован $t(seconds, {\"count\": {{seconds}} }) спустя {{emote}}",
@@ -210,6 +213,8 @@
   "setStreamDelayNoArgs": "Неверная задержка стрима, используйте !setdelay <seconds>",
   "setStreamDelayRemoved": "Отключаю задержку стрима",
   "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
+  "songError": "Error fetching song information from Last.fm.",
+  "songNotPlaying": "No song is currently playing.",
   "spectators": {
     "count_one": "1 зритель смотрит этот матч в прямом эфире",
     "count_few": "{{count}} зрителя смотрят этот матч в прямом эфире",
