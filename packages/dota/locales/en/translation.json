@@ -75,6 +75,7 @@
   "songError": "Error fetching song information from Last.fm.",
   "songNotPlaying": "No song is currently playing.",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
   "gpm_zero": "Live GPM for {{- heroName}}: {{num}}",

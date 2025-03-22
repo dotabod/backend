@@ -32,6 +32,7 @@ import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 import { minimapParser } from '../minimap/parser.js'
 import { getRedisNumberValue } from '../../../utils/index.js'
+import CustomError from '../../../utils/customError.js'
 
 // Define a type for the global timeouts
 declare global {
@@ -99,8 +100,8 @@ async function saveMatchData(client: SocketClient) {
     try {
       const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
-          reject(new Error('Timeout getting steam server data'))
-        }, 10000) // 10 second timeout
+          reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: client.locale })))
+        }, 5000) // 10 second timeout
 
         steamSocket.emit('getUserSteamServer', client.steam32Id, (err: any, cards: any) => {
           clearTimeout(timeoutId)
@@ -141,8 +142,8 @@ async function saveMatchData(client: SocketClient) {
     try {
       const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
-          reject(new Error('Timeout getting real-time stats'))
-        }, 10000) // 10 second timeout
+          reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: client.locale })))
+        }, 5000) // 10 second timeout
 
         steamSocket.emit(
           'getRealTimeStats',
@@ -179,7 +180,7 @@ async function saveMatchData(client: SocketClient) {
         chatterMatchFound(client)
       }
     } catch (error) {
-      if (!(error instanceof Error) || error.message !== 'Timeout getting real-time stats') {
+      if (!(error instanceof CustomError)) {
         logger.error('Error getting delayed match data', { error, matchId })
       }
     } finally {

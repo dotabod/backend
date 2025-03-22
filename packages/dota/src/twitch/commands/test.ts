@@ -13,6 +13,7 @@ import { getWinProbability2MinAgo } from '../../stratz/livematch'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import CustomError from '../../utils/customError.js'
 
 const fetchUserByName = async (name: string) => {
   const { data: user, error } = await supabase
@@ -101,7 +102,7 @@ const handleCardsCommand = async (message: MessageType) => {
 
   const getCardsPromise = new Promise<any>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
-      reject(new Error('Timeout getting cards data'))
+      reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: channel.client.locale })))
     }, 5000) // 5 second timeout
 
     steamSocket.emit('getCards', accountIds, false, (err: any, response: any) => {
@@ -128,7 +129,11 @@ const handleCardCommand = (message: MessageType, args: string[]) => {
 
   const getCardPromise = new Promise<any>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
-      reject(new Error('Timeout getting medal data'))
+      reject(
+        new CustomError(
+          t('matchData8500', { emote: 'PoroSad', lng: message.channel.client.locale }),
+        ),
+      )
     }, 5000) // 5 second timeout
 
     steamSocket.emit('getCard', Number(accountId), (err: any, response: any) => {
@@ -180,8 +185,8 @@ const handleServerCommand = async (message: MessageType, args: string[]) => {
 
   const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
-      reject(new Error('Timeout getting steam server data'))
-    }, 10000) // 10 second timeout
+      reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: channel.client.locale })))
+    }, 5000) // 10 second timeout
 
     steamSocket.emit(
       'getUserSteamServer',

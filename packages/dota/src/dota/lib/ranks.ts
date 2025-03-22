@@ -6,6 +6,7 @@ import { steamSocket } from '../../steam/ws.js'
 import type { Cards } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { leaderRanks, ranks } from './consts.js'
+import CustomError from '../../utils/customError.js'
 
 export function rankTierToMmr(rankTier: string | number) {
   if (!Number(rankTier)) {
@@ -65,7 +66,7 @@ export async function lookupLeaderRank(
     try {
       const getCardPromise = new Promise<Cards>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
-          reject(new Error('Timeout getting medal data'))
+          reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: 'en' })))
         }, 5000) // 5 second timeout
 
         steamSocket.emit('getCard', steam32Id, (err: any, card: Cards) => {
