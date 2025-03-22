@@ -82,7 +82,7 @@ async function getItems({
     }
     const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
+        reject(new CustomError(t('matchData8500', { emote: 'PoroSad ..', lng: locale })))
       }, 10000) // 10 second timeout
 
       steamSocket.emit(
@@ -105,11 +105,11 @@ async function getItems({
     })
 
     const delayedData = await getDelayedDataPromise.catch((error) => {
-      throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
+      throw new CustomError(t('matchData8500', { emote: 'PoroSad !', lng: locale }))
     })
 
     if (!delayedData) {
-      throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
+      throw new CustomError(t('matchData8500', { emote: 'PoroSad .', lng: locale }))
     }
 
     const teamIndex = (playerIdx ?? 0) > 4 ? 1 : 0
