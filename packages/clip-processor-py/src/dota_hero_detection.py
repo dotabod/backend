@@ -11,6 +11,11 @@ Hero portrait layout in Dota 2:
 - Top color indicator height: 6px
 - True hero portrait area: 66px (after removing color bar)
 - Bottom area (59px): Contains player name and selected role
+
+Hero portrait skew:
+- Radiant heroes are skewed at +9 degrees (right tilt)
+- Dire heroes are skewed at -9 degrees (left tilt)
+- Skew correction is applied to improve template matching accuracy
 """
 
 import os
@@ -53,6 +58,10 @@ HERO_TOTAL_HEIGHT = 131  # Total height including player name and role
 HERO_TOP_PADDING = 6  # pixels to crop from top (color indicator bar)
 HERO_ACTUAL_HEIGHT = HERO_HEIGHT - HERO_TOP_PADDING  # 66px - actual visible hero portrait
 # Bottom part (131 - 72 = 59px) contains player name and selected role
+
+# Skew angles for hero portraits
+RADIANT_SKEW_ANGLE = 9  # degrees
+DIRE_SKEW_ANGLE = -9  # degrees
 
 CLOCK_WIDTH = 265  # pixels
 CLOCK_HEIGHT = 131  # pixels
@@ -97,6 +106,46 @@ def load_heroes_data():
     except Exception as e:
         logger.error(f"Error loading heroes data: {e}")
         return None
+
+def apply_skew_correction(image, is_radiant):
+    """
+    Apply skew correction to hero portraits.
+
+    Args:
+        image: The hero portrait image
+        is_radiant: Boolean indicating if the hero is on Radiant (True) or Dire (False)
+
+    Returns:
+        The de-skewed image
+    """
+    try:
+        # Determine skew angle based on team
+        skew_angle = RADIANT_SKEW_ANGLE if is_radiant else DIRE_SKEW_ANGLE
+
+        # Get image dimensions
+        height, width = image.shape[:2]
+
+        # Calculate amount of skew in pixels (tangent of angle * height)
+        skew_pixels = int(height * np.tan(np.radians(abs(skew_angle))))
+
+        # Create source and destination points for the transformation
+        src_points = np.float32([[0, 0], [width, 0], [0, height], [width, height]])
+
+        if is_radiant:  # Skewed right
+            dst_points = np.float32([[skew_pixels, 0], [width, 0], [0, height], [width-skew_pixels, height]])
+        else:  # Skewed left
+            dst_points = np.float32([[0, 0], [width-skew_pixels, 0], [skew_pixels, height], [width, height]])
+
+        # Calculate perspective transformation matrix
+        transform_matrix = cv2.getPerspectiveTransform(src_points, dst_points)
+
+        # Apply transformation
+        corrected_image = cv2.warpPerspective(image, transform_matrix, (width, height))
+
+        return corrected_image
+    except Exception as e:
+        logger.error(f"Error applying skew correction: {e}")
+        return image  # Return original image if correction fails
 
 def extract_hero_bar(frame, debug=False):
     """
@@ -149,12 +198,26 @@ def extract_hero_bar(frame, debug=False):
                 cv2.putText(visualization, f"R{i+1}", (x + 5, 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
+                # Visualize skew angle for Radiant heroes (skewed right)
+                # Draw a line showing the skew angle
+                skew_pixels = int(bar_height * np.tan(np.radians(abs(RADIANT_SKEW_ANGLE))))
+                cv2.line(visualization, (x + skew_pixels, 0), (x, bar_height), (0, 165, 255), 1)
+                cv2.putText(visualization, f"{RADIANT_SKEW_ANGLE}°", (x + 5, 45),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 165, 255), 1)
+
             # Draw dire hero boundaries
             for i in range(5):
                 x = center_x + CLOCK_WIDTH//2 + i * HERO_WIDTH
                 cv2.line(visualization, (x, 0), (x, bar_height), (0, 0, 255), 2)
                 cv2.putText(visualization, f"D{i+1}", (x + 5, 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+
+                # Visualize skew angle for Dire heroes (skewed left)
+                # Draw a line showing the skew angle
+                skew_pixels = int(bar_height * np.tan(np.radians(abs(DIRE_SKEW_ANGLE))))
+                cv2.line(visualization, (x, 0), (x + skew_pixels, bar_height), (255, 0, 255), 1)
+                cv2.putText(visualization, f"{DIRE_SKEW_ANGLE}°", (x + 5, 45),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 255), 1)
 
             # Draw clock boundaries
             cv2.rectangle(visualization,
@@ -198,6 +261,9 @@ def extract_hero_icons(top_bar, center_x, debug=False):
        - Skips the first 6px (color indicator bar at top)
        - Takes only the next 66px of height (actual hero portrait)
        - Does not include the bottom 59px (player name and role)
+    3. Applies skew correction:
+       - Radiant portraits are skewed at +9 degrees
+       - Dire portraits are skewed at -9 degrees
 
     Args:
         top_bar: Cropped top bar image
@@ -225,15 +291,19 @@ def extract_hero_icons(top_bar, center_x, debug=False):
                 logger.warning(f"Invalid crop for Radiant hero {i+1}")
                 continue
 
+            # Apply skew correction for Radiant heroes
+            corrected_icon = apply_skew_correction(hero_icon, is_radiant=True)
+
             # Save for debugging
             if debug:
-                # Save both the full selection and the cropped portrait
+                # Save the full selection, cropped portrait, and corrected portrait
                 full_selection = top_bar[0:HERO_TOTAL_HEIGHT, x_start:x_end]
                 save_debug_image(full_selection, f"radiant_hero_{i+1}_full")
                 save_debug_image(hero_icon, f"radiant_hero_{i+1}_portrait")
+                save_debug_image(corrected_icon, f"radiant_hero_{i+1}_corrected")
 
             # Add to list: (team, position, icon)
-            hero_icons.append(("Radiant", i, hero_icon))
+            hero_icons.append(("Radiant", i, corrected_icon))
 
         # Extract Dire heroes (right side, 5 heroes)
         for i in range(5):
@@ -250,15 +320,19 @@ def extract_hero_icons(top_bar, center_x, debug=False):
                 logger.warning(f"Invalid crop for Dire hero {i+1}")
                 continue
 
+            # Apply skew correction for Dire heroes
+            corrected_icon = apply_skew_correction(hero_icon, is_radiant=False)
+
             # Save for debugging
             if debug:
-                # Save both the full selection and the cropped portrait
+                # Save the full selection, cropped portrait, and corrected portrait
                 full_selection = top_bar[0:HERO_TOTAL_HEIGHT, x_start:x_end]
                 save_debug_image(full_selection, f"dire_hero_{i+1}_full")
                 save_debug_image(hero_icon, f"dire_hero_{i+1}_portrait")
+                save_debug_image(corrected_icon, f"dire_hero_{i+1}_corrected")
 
             # Add to list: (team, position, icon)
-            hero_icons.append(("Dire", i, hero_icon))
+            hero_icons.append(("Dire", i, corrected_icon))
 
         logger.debug(f"Extracted {len(hero_icons)} hero icons")
         return hero_icons
@@ -271,7 +345,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.5, debug=False):
     Identify a hero using template matching.
 
     Args:
-        hero_icon: Image of the hero icon (cropped to just the hero portrait without color bar)
+        hero_icon: Image of the hero icon (cropped to just the hero portrait without color bar and with skew correction)
         heroes_data: Dictionary of hero data
         min_score: Minimum match score to consider a match
         debug: Whether to save debug images
@@ -284,19 +358,15 @@ def identify_hero(hero_icon, heroes_data, min_score=0.5, debug=False):
             logger.error("No heroes data available")
             return None
 
-        # Ensure the hero icon is the correct size (HERO_ACTUAL_HEIGHT x HERO_WIDTH)
-        # This helps handle any misalignment in cropping
-        expected_height = HERO_ACTUAL_HEIGHT
-        expected_width = HERO_WIDTH
-
-        # Check if the icon is the expected size
-        actual_height, actual_width = hero_icon.shape[:2]
-        if actual_height != expected_height or actual_width != expected_width:
-            logger.debug(f"Resizing hero icon from {actual_width}x{actual_height} to {expected_width}x{expected_height}")
-            hero_icon = cv2.resize(hero_icon, (expected_width, expected_height))
-
-        # Resize the hero icon to a standard size for comparison
+        # After skew correction, the dimensions may have changed
+        # We need to resize to a standard size for comparison
+        # Note: We are not checking for HERO_ACTUAL_HEIGHT since skew correction may change dimensions
+        # Instead, we directly resize to our standard size for matching
         hero_icon_resized = cv2.resize(hero_icon, (64, 64))
+
+        # Save for debugging if needed
+        if debug:
+            save_debug_image(hero_icon_resized, "hero_icon_standardized")
 
         best_match = None
         best_score = 0
