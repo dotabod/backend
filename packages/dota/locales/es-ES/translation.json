@@ -62,6 +62,7 @@
     "overlay_many": "",
     "overlay_other": "{{count}} Streamers usando este overlay"
   },
+  "currentSong": "Ahora reproduciendo: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Necesitas builds para {{- heroName}}? Encuéntralas aquí {{- url}}",
   "dotabod": "Soy un bot hecho por {{author}}. Mas información {{- url}}",
   "facet": "{{- heroName}} faceta {{number}}: {{- facetTitle}} · {{- facetDescription}}",
@@ -109,6 +110,7 @@
     "won_many": "",
     "won_other": "{{- heroName}} Tiene una racha de {{count}} asesinatos {{emote}}"
   },
+  "lastFmNotConfigured": "El usuario de Last.fm no está configurado. El streamer debe configurarlo en el panel de Dotabod.",
   "lastgame": {
     "link": "Aqui esta el ultimo juego: {{- url}}",
     "none": "No estamos jugando con alguien del ultimo juego.",
@@ -127,6 +129,7 @@
     "won": "Ultimo juego: Ganado"
   },
   "lifetime": "Juegos de toda la vida",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "matchFound": "Datos de la mecha {{commandList}} comandos activado.",
   "matchId": "ID de Mecha: {{matchId}}",
   "midasUsed": "Midas fue utilizado, $t(seconds, {\"count\": {{seconds}} }) tarde {{emote}}",
@@ -144,7 +147,7 @@
   "noLastMatch": "No se ha encontrado la ultimo partido {{emote}}",
   "noNotable": "No hay jugadores destacados",
   "noShard": "{{- heroName}} No tiene una mejora de fragmento.",
-  "notLive": "Stream fuera de línea {{emote}}. ¿Actualmente en vivo? Moderadores escriban! Online",
+  "notLive": "Stream fuera de línea {{emote}}. ¿Actualmente en vivo? Moderadores escriban !online",
   "notPlaying": "No esta jugando {{emote}}",
   "npAdd": "Usa !np add<steam32id> <playername>",
   "npAdded": "Añadido {{name}} a !np para este canal",
@@ -192,6 +195,8 @@
   "setStreamDelayNoArgs": "Stream Delay no valido, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Eliminando el Delay del stream",
   "shard": "{{- heroName}} Fragmento: {{- title}} · {{- description}}",
+  "songError": "Error al intentar la información de la canción desde Last.fm.",
+  "songNotPlaying": "No hay ninguna canción reproduciéndose en este momento.",
   "spectators": {
     "count_one": "1 espectador está mirando este juego en vivo",
     "count_many": "",

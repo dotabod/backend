@@ -65,6 +65,7 @@
     "overlay_many": "{{count}} streamers using the overlay",
     "overlay_other": "{{count}} streameři využívají overlay"
   },
+  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Potřebuješ poradit co kupovat na {{- heroName}}? Nápady najdeš zde {{- url}}",
   "dotabod": "Jsem open-source bot vytvořený {{author}}. Více info na {{- url}}",
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
@@ -122,6 +123,7 @@
     "won_many": "{{- heroName}} has a {{count}} kill streak {{emote}}",
     "won_other": "{{- heroName}} has a {{count}} kill streak {{emote}}"
   },
+  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
   "lastgame": {
     "link": "Zde je poslední hra: {{- url}}",
     "none": "Nehrajeme s nikým z poslední hry",
@@ -141,6 +143,7 @@
     "won": "Poslední hra byla výhra"
   },
   "lifetime": "Celkem her",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "matchFound": "Data zápasu nalezena, příkazy {{commandList}} aktivovány.",
   "matchId": "ID zápasu: {{matchId}}",
   "midasUsed": "Midas byl úspěšně použit o $t(seconds, {\"count\": {{seconds}} }) sekund později {{emote}}",
@@ -210,6 +213,8 @@
   "setStreamDelayNoArgs": "Neplatné zpoždění streamu, použijte !setdelay <seconds>",
   "setStreamDelayRemoved": "Odstraňeno zpoždění vysílání",
   "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
+  "songError": "Error fetching song information from Last.fm.",
+  "songNotPlaying": "No song is currently playing.",
   "spectators": {
     "count_one": "1 spectator watching this match live",
     "count_few": "{{count}} spectators watching this match live",

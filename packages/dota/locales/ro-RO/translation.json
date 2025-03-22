@@ -62,6 +62,7 @@
     "overlay_few": "{{count}} streamers using the overlay",
     "overlay_other": "{{count}} streamers using the overlay"
   },
+  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
@@ -112,6 +113,7 @@
     "won_few": "{{- heroName}} has a {{count}} kill streak {{emote}}",
     "won_other": "{{- heroName}} has a {{count}} kill streak {{emote}}"
   },
+  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
   "lastgame": {
     "link": "Here's last game: {{- url}}",
     "none": "Not playing with anyone from last game",
@@ -130,6 +132,7 @@
     "won": "Won last game"
   },
   "lifetime": "Lifetime games",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",
@@ -196,6 +199,8 @@
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Removing stream delay",
   "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
+  "songError": "Error fetching song information from Last.fm.",
+  "songNotPlaying": "No song is currently playing.",
   "spectators": {
     "count_one": "1 spectator watching this match live",
     "count_few": "{{count}} spectators watching this match live",
