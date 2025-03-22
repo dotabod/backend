@@ -400,6 +400,7 @@ class Dota {
   isProduction() {
     return process.env.DOTABOD_ENV === 'production'
   }
+
   public getUserSteamServer = (steam32Id: number | string): Promise<string> => {
     const steam_id = this.dota2.ToSteamID(Number(steam32Id))
 
@@ -407,25 +408,17 @@ class Dota {
     const operation = retry.operation({
       retries: 35,
       factor: 1.1,
-      minTimeout: 5000, // 5 seconds minimum timeout
-      maxTimeout: 10_000, // 10 seconds maximum timeout
+      minTimeout: 5000, // Minimum retry timeout (1 second)
+      maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
     })
 
     return new Promise((resolve, reject) => {
-      // Set an overall timeout for the entire operation
-      const overallTimeout = setTimeout(() => {
-        reject(new Error('Operation timed out after 3 minutes'))
-      }, 180000) // 3 minutes overall timeout
-
       operation.attempt(() => {
         this.dota2.spectateFriendGame({ steam_id }, (response: any, err: any) => {
           const theID = response?.server_steamid?.toString()
 
           const shouldRetry = !theID ? new Error('No ID yet, will keep trying.') : undefined
           if (operation.retry(shouldRetry)) return
-
-          // Clear the overall timeout if we get a successful response or finish retrying
-          clearTimeout(overallTimeout)
 
           if (theID) resolve(theID)
           else reject('No spectator match found')
@@ -482,20 +475,26 @@ class Dota {
       }
     })
   }
+
   promiseTimeout = <T>(promise: Promise<T>, ms: number, reason: string): Promise<T> =>
     new Promise<T>((resolve, reject) => {
+      let timeoutCleared = false
       const timeoutId = setTimeout(() => {
+        timeoutCleared = true
         reject(new CustomError(reason))
       }, ms)
-
       promise
         .then((result) => {
-          clearTimeout(timeoutId)
-          resolve(result)
+          if (!timeoutCleared) {
+            clearTimeout(timeoutId)
+            resolve(result)
+          }
         })
         .catch((err) => {
-          clearTimeout(timeoutId)
-          reject(err)
+          if (!timeoutCleared) {
+            clearTimeout(timeoutId)
+            reject(err)
+          }
         })
     })
 
@@ -507,29 +506,22 @@ class Dota {
       return cacheEntry.card
     }
 
-    try {
-      // If not cached or cache is stale, fetch the profile card with a timeout
-      const card = await this.promiseTimeout(
-        this.fetchProfileCard(account),
-        1000,
-        'Timeout getting medal data',
-      )
+    // If not cached or cache is stale, fetch the profile card
+    const card = await this.promiseTimeout(
+      this.fetchProfileCard(account),
+      1000,
+      'Error getting medal',
+    )
 
-      this.evictOldCacheEntries() // Evict entries based on time
-      this.cache.set(account, {
-        timestamp: now,
-        card: card,
-      })
+    this.evictOldCacheEntries() // Evict entries based on time
+    this.cache.set(account, {
+      timestamp: now,
+      card: card,
+    })
 
-      this.evictExtraCacheEntries() // Evict extra entries if cache size exceeds MAX_CACHE_SIZE
+    this.evictExtraCacheEntries() // Evict extra entries if cache size exceeds MAX_CACHE_SIZE
 
-      return card
-    } catch (error: unknown) {
-      // Log the error but don't crash the application
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      logger.error(`Failed to get card for account ${account}: ${errorMessage}`)
-      throw error // Re-throw to allow caller to handle the error
-    }
+    return card
   }
 
   private evictOldCacheEntries() {
@@ -602,6 +594,7 @@ class Dota {
       }
     })
   }
+
   public GetRealTimeStats = async ({
     match_id,
     refetchCards = false,
@@ -632,39 +625,27 @@ class Dota {
     const operation = retry.operation({
       retries: 35,
       factor: 1.1,
-      minTimeout: 5000, // 5 seconds minimum timeout
-      maxTimeout: 10_000, // 10 seconds maximum timeout
+      minTimeout: 5000, // Minimum retry timeout (1 second)
+      maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
     })
 
     return new Promise((resolve, reject) => {
-      // Set an overall timeout for the entire operation
-      const overallTimeout = setTimeout(() => {
-        reject(new Error('Operation timed out after 3 minutes'))
-      }, 180000) // 3 minutes overall timeout
-
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       operation.attempt(async (currentAttempt) => {
         let game: DelayedGames
         try {
-          // Add timeout to the axios request itself
-          game = (
-            await axios<DelayedGames>(getApiUrl(steam_server_id), {
-              timeout: 10000, // 10 second timeout for each request
-            })
-          )?.data
+          game = (await axios<DelayedGames>(getApiUrl(steam_server_id)))?.data
         } catch (e) {
-          logger.warn(`[STEAM] Failed to fetch match data (attempt ${currentAttempt})`, e)
           return operation.retry(new Error('Match not found'))
         }
         const { hasAccountIds, hasHeroes } = hasSteamData(game)
 
         // needs account ids
-        const retryAttempt = !hasAccountIds || !game ? new Error('Missing account IDs') : undefined
+        const retryAttempt = !hasAccountIds || !game ? new Error() : undefined
         if (operation.retry(retryAttempt)) return
 
         // needs hero data
-        const retryAttempt2 =
-          waitForHeros && !hasHeroes ? new Error('Missing hero data') : undefined
+        const retryAttempt2 = waitForHeros && !hasHeroes ? new Error() : undefined
         if (operation.retry(retryAttempt2)) return
 
         // 2-minute delay gives "0" match id, so we use the gsi match id instead
@@ -681,7 +662,6 @@ class Dota {
             // forward the msg to dota node app
             socketIoServer.to('steam').emit('saveHeroesForMatchId', { matchId: match_id, token })
           }
-          clearTimeout(overallTimeout)
           return resolve(gamePlusMore)
         }
 
@@ -691,10 +671,9 @@ class Dota {
 
           await saveMatch({ match_id, game: gamePlusMore, refetchCards })
           waitForHeros = true
-          operation.retry(new Error('Waiting for heroes data'))
+          operation.retry(new Error())
         }
 
-        clearTimeout(overallTimeout)
         return resolve(gamePlusMore)
       })
     })
