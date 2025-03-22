@@ -91,7 +91,10 @@ export async function sendTwitchChatMessage(
   }
 
   const response = await fetch(url, options)
-  if (!response.ok) throw new Error(`Failed to send chat message: ${response.status}`)
+  if (!response.ok)
+    throw new Error(
+      `Failed to send chat message: ${response.status} ${response.statusText} ${response.body} ${params.broadcaster_id}`,
+    )
 
   return response.json() as Promise<TwitchChatMessageResponse>
 }
