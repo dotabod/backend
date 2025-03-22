@@ -103,7 +103,7 @@ const handleCardsCommand = async (message: MessageType) => {
   const getCardsPromise = new Promise<any>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: channel.client.locale })))
-    }, 5000) // 5 second timeout
+    }, 10000) // 5 second timeout
 
     steamSocket.emit('getCards', accountIds, false, (err: any, response: any) => {
       clearTimeout(timeoutId)
@@ -186,7 +186,7 @@ const handleServerCommand = async (message: MessageType, args: string[]) => {
   const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: channel.client.locale })))
-    }, 5000) // 10 second timeout
+    }, 10000) // 10 second timeout
 
     steamSocket.emit(
       'getUserSteamServer',

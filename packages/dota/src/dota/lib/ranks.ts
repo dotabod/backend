@@ -67,7 +67,7 @@ export async function lookupLeaderRank(
       const getCardPromise = new Promise<Cards>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: 'en' })))
-        }, 5000) // 5 second timeout
+        }, 10000) // 5 second timeout
 
         steamSocket.emit('getCard', steam32Id, (err: any, card: Cards) => {
           clearTimeout(timeoutId)

@@ -86,7 +86,7 @@ export async function gameMedals(
 
     // Build the result array, preserving the original order of the medals
     sortedMedals.forEach((medal) => {
-      result.push({ heroNames: medalsToPlayers[medal].join(', '), medal })
+      result.push({ heroNames: medalsToPlayers[medal].join(', '), medal: medal || '?' })
     })
 
     const gms = result.map((m) => `${m.heroNames}: ${m.medal}`).join(' · ')

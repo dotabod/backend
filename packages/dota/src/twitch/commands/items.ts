@@ -83,7 +83,7 @@ async function getItems({
     const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
-      }, 5000) // 10 second timeout
+      }, 10000) // 10 second timeout
 
       steamSocket.emit(
         'getRealTimeStats',

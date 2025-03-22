@@ -101,7 +101,7 @@ async function saveMatchData(client: SocketClient) {
       const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: client.locale })))
-        }, 5000) // 10 second timeout
+        }, 10000) // 10 second timeout
 
         steamSocket.emit('getUserSteamServer', client.steam32Id, (err: any, cards: any) => {
           clearTimeout(timeoutId)
@@ -143,7 +143,7 @@ async function saveMatchData(client: SocketClient) {
       const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: client.locale })))
-        }, 5000) // 10 second timeout
+        }, 10000) // 10 second timeout
 
         steamSocket.emit(
           'getRealTimeStats',

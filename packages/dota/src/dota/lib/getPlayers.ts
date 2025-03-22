@@ -43,7 +43,7 @@ export async function getPlayers({
     const getCardsPromise = new Promise<Cards[]>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
-      }, 5000) // 5 second timeout
+      }, 10000) // 5 second timeout
 
       steamSocket.emit('getCards', accountIds, false, (err: any, cards: any) => {
         clearTimeout(timeoutId)
