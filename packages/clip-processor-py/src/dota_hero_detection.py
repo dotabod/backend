@@ -7,15 +7,21 @@ in the top bar of the game interface using template matching.
 
 Hero portrait layout in Dota 2:
 - Total selection height: 131px
-- Actual hero portrait height: 72px
+- Actual hero portrait height: 73px
 - Top color indicator height: 6px
-- True hero portrait area: 66px (after removing color bar)
-- Bottom area (59px): Contains player name and selected role
+- True hero portrait area: 67px (after removing color bar)
+- Bottom area (58px): Contains player name and selected role
+- Hero width: 115px
+- Gap between heroes: 7px
+- Clock width: 276px
 
 Hero portrait skew:
 - Radiant heroes are skewed at +9 degrees (right tilt)
 - Dire heroes are skewed at -9 degrees (left tilt)
 - Skew correction is applied to improve template matching accuracy
+- Empty spaces created by skew transformation are cropped out
+
+The dimensions are derived from HubSpot's frontend code to ensure accurate detection.
 """
 
 import os
@@ -52,18 +58,23 @@ HEROES_DIR = ASSETS_DIR / "dota_heroes"
 HEROES_DIR.mkdir(exist_ok=True)
 
 # Exact dimensions for hero portraits in the top bar
-HERO_WIDTH = 122  # pixels
-HERO_HEIGHT = 72  # pixels  # The actual hero portrait height
+# Updated values based on frontend code
+HERO_WIDTH = 115  # pixels (was 122)
+HERO_HEIGHT = 73  # pixels (was 72)
 HERO_TOTAL_HEIGHT = 131  # Total height including player name and role
 HERO_TOP_PADDING = 6  # pixels to crop from top (color indicator bar)
-HERO_ACTUAL_HEIGHT = HERO_HEIGHT - HERO_TOP_PADDING  # 66px - actual visible hero portrait
-# Bottom part (131 - 72 = 59px) contains player name and selected role
+HERO_ACTUAL_HEIGHT = HERO_HEIGHT - HERO_TOP_PADDING  # 67px - actual visible hero portrait
+# Bottom part (131 - 73 = 58px) contains player name and selected role
+
+# Gap between heroes (from frontend code)
+HERO_GAP = 7  # pixels
 
 # Skew angles for hero portraits
 RADIANT_SKEW_ANGLE = 9  # degrees
 DIRE_SKEW_ANGLE = -9  # degrees
 
-CLOCK_WIDTH = 265  # pixels
+# Clock dimensions (from frontend code)
+CLOCK_WIDTH = 276  # pixels (was 265)
 CLOCK_HEIGHT = 131  # pixels
 
 # Mapping of known heroes
@@ -109,14 +120,157 @@ def load_heroes_data():
 
 def apply_skew_correction(image, is_radiant):
     """
-    Apply skew correction to hero portraits.
+    Apply skew correction to hero portraits and crop the empty spaces.
+
+    The skew transformation adds empty space on the sides of the image.
+    This function applies the skew correction and then crops the empty space.
 
     Args:
         image: The hero portrait image
         is_radiant: Boolean indicating if the hero is on Radiant (True) or Dire (False)
 
     Returns:
-        The de-skewed image
+        The de-skewed and cropped image
+    """
+    try:
+        # Determine skew angle based on team
+        skew_angle = RADIANT_SKEW_ANGLE if is_radiant else DIRE_SKEW_ANGLE
+
+        # Get image dimensions
+        height, width = image.shape[:2]
+
+        # Calculate amount of skew in pixels (tangent of angle * height)
+        skew_pixels = int(height * np.tan(np.radians(abs(skew_angle))))
+
+        # Add padding to the image to accommodate the skew
+        # This prevents cropping of content during transformation
+        padding = skew_pixels + 5  # Add a bit extra to be safe
+        padded_image = cv2.copyMakeBorder(
+            image,
+            0, 0,  # top, bottom
+            padding, padding,  # left, right
+            cv2.BORDER_CONSTANT,
+            value=(0, 0, 0)  # black padding
+        )
+
+        # Get padded image dimensions
+        padded_height, padded_width = padded_image.shape[:2]
+
+        # Create source points for the transformation (the padded image)
+        src_points = np.float32([
+            [padding, 0],
+            [padding + width, 0],
+            [padding, height],
+            [padding + width, height]
+        ])
+
+        # Create destination points for the transformation (applying skew)
+        if is_radiant:  # Skewed right
+            dst_points = np.float32([
+                [padding + skew_pixels, 0],
+                [padding + width, 0],
+                [padding, height],
+                [padding + width - skew_pixels, height]
+            ])
+        else:  # Skewed left
+            dst_points = np.float32([
+                [padding, 0],
+                [padding + width - skew_pixels, 0],
+                [padding + skew_pixels, height],
+                [padding + width, height]
+            ])
+
+        # Calculate perspective transformation matrix
+        transform_matrix = cv2.getPerspectiveTransform(src_points, dst_points)
+
+        # Apply transformation to the padded image
+        corrected_padded = cv2.warpPerspective(
+            padded_image,
+            transform_matrix,
+            (padded_width, padded_height)
+        )
+
+        # Now crop out the extra padding and the empty space created by skew
+        # The amount to crop depends on the skew direction
+        if is_radiant:
+            # For radiant (skewed right), we need to crop from left at top and right at bottom
+            # Calculate crop coordinates
+            x1 = padding + skew_pixels  # Left edge at top
+            x2 = padding + width  # Right edge at top
+            y1 = 0
+            y2 = height
+
+            # Create masks for empty spaces
+            mask = np.zeros_like(corrected_padded[:,:,0])
+            pts = np.array([
+                [x1, y1],  # Top-left
+                [x2, y1],  # Top-right
+                [x2 - skew_pixels, y2],  # Bottom-right
+                [x1 - skew_pixels, y2]   # Bottom-left
+            ], np.int32).reshape((-1, 1, 2))
+            cv2.fillPoly(mask, [pts], 255)
+
+            # Apply mask to get the region of interest
+            cropped = cv2.bitwise_and(corrected_padded, corrected_padded, mask=mask)
+
+            # Get bounding box of the mask
+            y_indices, x_indices = np.where(mask > 0)
+            x_min, x_max = np.min(x_indices), np.max(x_indices)
+            y_min, y_max = np.min(y_indices), np.max(y_indices)
+
+            # Crop to the bounding box
+            cropped = cropped[y_min:y_max, x_min:x_max]
+        else:
+            # For dire (skewed left), we need to crop from right at top and left at bottom
+            # Calculate crop coordinates
+            x1 = padding  # Left edge at top
+            x2 = padding + width - skew_pixels  # Right edge at top
+            y1 = 0
+            y2 = height
+
+            # Create masks for empty spaces
+            mask = np.zeros_like(corrected_padded[:,:,0])
+            pts = np.array([
+                [x1, y1],  # Top-left
+                [x2, y1],  # Top-right
+                [x2 + skew_pixels, y2],  # Bottom-right
+                [x1 + skew_pixels, y2]   # Bottom-left
+            ], np.int32).reshape((-1, 1, 2))
+            cv2.fillPoly(mask, [pts], 255)
+
+            # Apply mask to get the region of interest
+            cropped = cv2.bitwise_and(corrected_padded, corrected_padded, mask=mask)
+
+            # Get bounding box of the mask
+            y_indices, x_indices = np.where(mask > 0)
+            x_min, x_max = np.min(x_indices), np.max(x_indices)
+            y_min, y_max = np.min(y_indices), np.max(y_indices)
+
+            # Crop to the bounding box
+            cropped = cropped[y_min:y_max, x_min:x_max]
+
+        # If the cropping failed for some reason, return the original image
+        if cropped is None or cropped.size == 0:
+            logger.warning("Cropping failed, returning original skewed image")
+            return apply_simple_skew(image, is_radiant)
+
+        return cropped
+    except Exception as e:
+        logger.error(f"Error applying skew correction: {e}")
+        # Fall back to simpler skew method
+        return apply_simple_skew(image, is_radiant)
+
+def apply_simple_skew(image, is_radiant):
+    """
+    Apply a simpler skew correction without cropping.
+    This is used as a fallback if the more complex method fails.
+
+    Args:
+        image: The hero portrait image
+        is_radiant: Boolean indicating if the hero is on Radiant (True) or Dire (False)
+
+    Returns:
+        The de-skewed image (with empty areas)
     """
     try:
         # Determine skew angle based on team
@@ -144,8 +298,8 @@ def apply_skew_correction(image, is_radiant):
 
         return corrected_image
     except Exception as e:
-        logger.error(f"Error applying skew correction: {e}")
-        return image  # Return original image if correction fails
+        logger.error(f"Error applying simple skew correction: {e}")
+        return image  # Return original image if all correction fails
 
 def extract_hero_bar(frame, debug=False):
     """
@@ -177,8 +331,8 @@ def extract_hero_bar(frame, debug=False):
         bar_height = HERO_TOTAL_HEIGHT
 
         # Check if frame is large enough
-        if width < HERO_WIDTH*10 + CLOCK_WIDTH or height < bar_height:
-            logger.warning(f"Frame too small: {width}x{height}, need at least {HERO_WIDTH*10 + CLOCK_WIDTH}x{bar_height}")
+        if width < 5*(HERO_WIDTH+HERO_GAP) + CLOCK_WIDTH + 5*(HERO_WIDTH+HERO_GAP) or height < bar_height:
+            logger.warning(f"Frame too small: {width}x{height}, need at least {5*(HERO_WIDTH+HERO_GAP) + CLOCK_WIDTH + 5*(HERO_WIDTH+HERO_GAP)}x{bar_height}")
             return False, None, center_x
 
         # Extract full top bar for visualization
@@ -191,10 +345,13 @@ def extract_hero_bar(frame, debug=False):
             # Draw center line
             cv2.line(visualization, (center_x, 0), (center_x, bar_height), (0, 255, 255), 2)
 
-            # Draw radiant hero boundaries
+            # Draw radiant hero boundaries with gaps
             for i in range(5):
-                x = center_x - CLOCK_WIDTH//2 - (5-i) * HERO_WIDTH
-                cv2.line(visualization, (x, 0), (x, bar_height), (0, 255, 0), 2)
+                x = center_x - CLOCK_WIDTH//2 - (5-i) * (HERO_WIDTH + HERO_GAP)
+                cv2.rectangle(visualization,
+                             (x, 0),
+                             (x + HERO_WIDTH, bar_height),
+                             (0, 255, 0), 2)
                 cv2.putText(visualization, f"R{i+1}", (x + 5, 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
@@ -205,10 +362,13 @@ def extract_hero_bar(frame, debug=False):
                 cv2.putText(visualization, f"{RADIANT_SKEW_ANGLE}°", (x + 5, 45),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 165, 255), 1)
 
-            # Draw dire hero boundaries
+            # Draw dire hero boundaries with gaps
             for i in range(5):
-                x = center_x + CLOCK_WIDTH//2 + i * HERO_WIDTH
-                cv2.line(visualization, (x, 0), (x, bar_height), (0, 0, 255), 2)
+                x = center_x + CLOCK_WIDTH//2 + i * (HERO_WIDTH + HERO_GAP)
+                cv2.rectangle(visualization,
+                             (x, 0),
+                             (x + HERO_WIDTH, bar_height),
+                             (0, 0, 255), 2)
                 cv2.putText(visualization, f"D{i+1}", (x + 5, 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
@@ -228,7 +388,7 @@ def extract_hero_bar(frame, debug=False):
             # Draw hero portrait cropping boundaries
             for i in range(5):
                 # Radiant heroes
-                x = center_x - CLOCK_WIDTH//2 - (5-i) * HERO_WIDTH
+                x = center_x - CLOCK_WIDTH//2 - (5-i) * (HERO_WIDTH + HERO_GAP)
                 # Draw top padding line
                 cv2.line(visualization, (x, HERO_TOP_PADDING), (x + HERO_WIDTH, HERO_TOP_PADDING), (255, 0, 255), 1)
                 # Draw bottom of hero portrait
@@ -236,12 +396,23 @@ def extract_hero_bar(frame, debug=False):
                         (x + HERO_WIDTH, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT), (255, 0, 255), 1)
 
                 # Dire heroes
-                x = center_x + CLOCK_WIDTH//2 + i * HERO_WIDTH
+                x = center_x + CLOCK_WIDTH//2 + i * (HERO_WIDTH + HERO_GAP)
                 # Draw top padding line
                 cv2.line(visualization, (x, HERO_TOP_PADDING), (x + HERO_WIDTH, HERO_TOP_PADDING), (255, 0, 255), 1)
                 # Draw bottom of hero portrait
                 cv2.line(visualization, (x, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT),
                         (x + HERO_WIDTH, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT), (255, 0, 255), 1)
+
+            # Add text to indicate the gap between heroes
+            x_radiant = center_x - CLOCK_WIDTH//2 - 3 * (HERO_WIDTH + HERO_GAP)
+            cv2.putText(visualization, f"Gap: {HERO_GAP}px", (x_radiant + HERO_WIDTH, bar_height - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+
+            # Add text to show dimensions
+            cv2.putText(visualization, f"Hero: {HERO_WIDTH}x{HERO_HEIGHT}px", (10, bar_height - 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+            cv2.putText(visualization, f"Clock: {CLOCK_WIDTH}px", (center_x - 50, bar_height - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
 
             save_debug_image(visualization, "top_bar_annotated")
 
@@ -259,11 +430,12 @@ def extract_hero_icons(top_bar, center_x, debug=False):
     1. Identifies the position of each hero slot in the top bar
     2. For each slot, crops out just the hero portrait area:
        - Skips the first 6px (color indicator bar at top)
-       - Takes only the next 66px of height (actual hero portrait)
-       - Does not include the bottom 59px (player name and role)
+       - Takes only the next 67px of height (actual hero portrait)
+       - Does not include the bottom 58px (player name and role)
     3. Applies skew correction:
        - Radiant portraits are skewed at +9 degrees
        - Dire portraits are skewed at -9 degrees
+    4. Crops out empty space created by the skew transformation
 
     Args:
         top_bar: Cropped top bar image
@@ -279,7 +451,7 @@ def extract_hero_icons(top_bar, center_x, debug=False):
         # Extract Radiant heroes (left side, 5 heroes)
         for i in range(5):
             # Calculate position based on center and hero width
-            x_start = center_x - CLOCK_WIDTH//2 - (5-i) * HERO_WIDTH
+            x_start = center_x - CLOCK_WIDTH//2 - (5-i) * (HERO_WIDTH + HERO_GAP)
             x_end = x_start + HERO_WIDTH
 
             # Crop the hero icon - only take the actual hero portrait, not player name/role
@@ -308,7 +480,7 @@ def extract_hero_icons(top_bar, center_x, debug=False):
         # Extract Dire heroes (right side, 5 heroes)
         for i in range(5):
             # Calculate position based on center and hero width
-            x_start = center_x + CLOCK_WIDTH//2 + i * HERO_WIDTH
+            x_start = center_x + CLOCK_WIDTH//2 + i * (HERO_WIDTH + HERO_GAP)
             x_end = x_start + HERO_WIDTH
 
             # Crop the hero icon - only take the actual hero portrait, not player name/role
