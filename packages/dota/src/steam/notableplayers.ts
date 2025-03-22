@@ -4,7 +4,7 @@ import { t } from 'i18next'
 import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameOrColor } from '../dota/lib/heroes.js'
-import type { Players } from '../types'
+import type { Players, SocketClient } from '../types'
 import type { NotablePlayer } from '../types.js'
 import MongoDBSingleton from './MongoDBSingleton.js'
 
@@ -20,6 +20,7 @@ export interface NotablePlayers {
 }
 
 export async function notablePlayers({
+  client,
   locale,
   twitchChannelId,
   currentMatchId,
@@ -27,6 +28,7 @@ export async function notablePlayers({
   enableFlags,
   steam32Id,
 }: {
+  client?: SocketClient
   locale: string
   twitchChannelId: string
   currentMatchId?: string
@@ -80,19 +82,36 @@ export async function notablePlayers({
     })
 
     const proPlayers: NotablePlayer[] = []
+
     matchPlayers.forEach((player, i: number) => {
       const np = nps.find((np) => np.account_id === player.accountid)
-      const props = {
+      const isCurrentPlayer = player.accountid === steam32Id
+
+      // Determine hero name based on available data
+      let heroName = '?'
+      if (
+        isCurrentPlayer &&
+        client &&
+        client.gsi?.hero?.id !== undefined &&
+        client.gsi?.hero?.id > -1
+      ) {
+        heroName = getHeroNameOrColor(client.gsi.hero.id, i)
+      } else if (player.playerid !== null) {
+        heroName = getHeroNameOrColor(player.heroid ?? 0, i)
+      }
+
+      const playerData = {
         account_id: player.accountid,
         heroId: player.heroid ?? 0,
         position: i,
-        heroName: player.playerid === null ? '?' : getHeroNameOrColor(player.heroid ?? 0, i),
+        heroName,
         name: np?.name ?? `Player ${i + 1}`,
         country_code: np?.country_code ?? '',
-        isMe: steam32Id === player.accountid,
+        isMe: isCurrentPlayer,
       }
 
-      if (np) proPlayers.push(props)
+      // Only add to proPlayers if this is a notable player
+      if (np) proPlayers.push(playerData)
     })
 
     const modeText =

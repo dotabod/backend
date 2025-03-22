@@ -136,6 +136,7 @@ commandHandler.registerCommand('np', {
       client.subscription,
     )
     notablePlayers({
+      client: client,
       locale: client.locale,
       twitchChannelId,
       currentMatchId: client.gsi?.map?.matchid,
