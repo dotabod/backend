@@ -12,7 +12,8 @@
     "build": "tsc --build --verbose",
     "docker:production": "node --trace-warnings ./dist/index.js",
     "docker:development": "nodemon -L --ext ts --exec node --no-warnings --loader ts-node/esm src/index.ts",
-    "dev": "doppler run -- nodemon -L --ext ts --exec node --no-warnings --loader ts-node/esm src/index.ts"
+    "dev": "doppler run -- nodemon -L --ext ts --exec node --no-warnings --loader ts-node/esm src/index.ts",
+    "dev2": "doppler run -- nodemon -L --ext ts --exec node --no-warnings --loader ts-node/esm src/steam.ts"
   },
   "devDependencies": {
     "@tsconfig/node21": "^21.0.3",

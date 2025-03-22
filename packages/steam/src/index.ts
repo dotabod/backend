@@ -1,6 +1,6 @@
 import { initSpectatorProtobuff } from './initSpectatorProtobuff.js'
 import { socketIoServer } from './socketServer.js'
-import Dota from './steam.js'
+import Dota, { GetRealTimeStats } from './steam.js'
 import { logger } from './utils/logger.js'
 import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails.js'
 import type { Socket } from 'socket.io'
@@ -109,7 +109,7 @@ socketIoServer.on('connection', (socket) => {
       return
     }
     try {
-      const result = await withTimeout(dota.GetRealTimeStats(data))
+      const result = await withTimeout(GetRealTimeStats(data))
       callback(null, result)
     } catch (e: any) {
       callback(e.message, null)
