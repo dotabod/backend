@@ -80,8 +80,11 @@ async function getItems({
     if (!steamServerId) {
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
-
     const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
+      }, 10000) // 10 second timeout
+
       steamSocket.emit(
         'getRealTimeStats',
         {
@@ -91,6 +94,7 @@ async function getItems({
           token,
         },
         (err: any, cards: any) => {
+          clearTimeout(timeoutId)
           if (err) {
             reject(err)
           } else {
@@ -100,10 +104,12 @@ async function getItems({
       )
     })
 
-    const delayedData = await getDelayedDataPromise
+    const delayedData = await getDelayedDataPromise.catch((error) => {
+      throw new CustomError(t('gameNotFound', { lng: locale }))
+    })
 
     if (!delayedData) {
-      throw new CustomError(t('matchData8500', { emote: 'PoroSad .', lng: locale }))
+      throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
     }
 
     const teamIndex = (playerIdx ?? 0) > 4 ? 1 : 0
