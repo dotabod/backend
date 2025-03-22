@@ -210,6 +210,8 @@ const handleServerCommand = async (message: MessageType, args: string[]) => {
       return
     }
 
+    chatClient.whisper(user.userId, `Getting game data for ${steamServerId}`)
+
     const game = (
       await axios<DelayedGames>(
         `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamServerId}`,
