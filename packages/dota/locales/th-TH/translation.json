@@ -55,6 +55,7 @@
     "gsi_other": "{{count}} streamers connected to Dotabod GSI",
     "overlay_other": "{{count}} streamers using the overlay"
   },
+  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
@@ -62,11 +63,6 @@
   "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
   "facetSelection": "{{- heroName}} selected facet: {{- facetTitle}} · {{- facetDescription}}",
   "gameNotFound": "Game was not found",
-  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
-  "songError": "Error fetching song information from Last.fm.",
-  "songNotPlaying": "No song is currently playing.",
-  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
-  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
   "heroItems": {
@@ -93,6 +89,7 @@
     "lost_other": "{{- heroName}} lost the {{count}} kill streak {{emote}}",
     "won_other": "{{- heroName}} has a {{count}} kill streak {{emote}}"
   },
+  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
   "lastgame": {
     "link": "Here's last game: {{- url}}",
     "none": "Not playing with anyone from last game",
@@ -109,6 +106,7 @@
     "won": "Won last game"
   },
   "lifetime": "Lifetime games",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",
@@ -168,6 +166,8 @@
   "setStreamDelayNoArgs": "Invalid stream delay, use !setdelay <seconds>",
   "setStreamDelayRemoved": "Removing stream delay",
   "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
+  "songError": "Error fetching song information from Last.fm.",
+  "songNotPlaying": "No song is currently playing.",
   "spectators": {
     "count_none": "No spectators currently watching this match live",
     "count_other": "{{count}} spectators watching this match live"
