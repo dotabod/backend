@@ -96,11 +96,32 @@ def save_debug_image(image, name_prefix, additional_info=""):
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             image = image_copy
 
-        # Save the image
-        cv2.imwrite(str(filepath), image)
+        # Save the image with high quality JPEG to avoid PNG profile warnings
+        cv2.imwrite(str(filepath), image, [cv2.IMWRITE_JPEG_QUALITY, 100])
         logger.debug(f"Saved debug image: {filepath}")
         return str(filepath)
     return None
+
+def load_image(image_path):
+    """
+    Load an image while handling any color profile issues.
+
+    Args:
+        image_path: Path to the image file
+
+    Returns:
+        The loaded image or None if loading failed
+    """
+    try:
+        # Read the image with IMREAD_IGNORE_ORIENTATION | IMREAD_COLOR
+        # This helps avoid issues with color profiles
+        image = cv2.imread(str(image_path), cv2.IMREAD_IGNORE_ORIENTATION | cv2.IMREAD_COLOR)
+        if image is None:
+            logger.warning(f"Could not load image: {image_path}")
+        return image
+    except Exception as e:
+        logger.error(f"Error loading image {image_path}: {e}")
+        return None
 
 def load_heroes_data():
     """Load hero data from heroes.json file."""
@@ -517,7 +538,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.5, debug=False):
     Identify a hero using template matching.
 
     Args:
-        hero_icon: Image of the hero icon (cropped to just the hero portrait without color bar and with skew correction)
+        hero_icon: Image of the hero icon (cropped to just the hero portrait without color bar)
         heroes_data: Dictionary of hero data
         min_score: Minimum match score to consider a match
         debug: Whether to save debug images
@@ -530,10 +551,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.5, debug=False):
             logger.error("No heroes data available")
             return None
 
-        # After skew correction, the dimensions may have changed
-        # We need to resize to a standard size for comparison
-        # Note: We are not checking for HERO_ACTUAL_HEIGHT since skew correction may change dimensions
-        # Instead, we directly resize to our standard size for matching
+        # Resize to a standard size for comparison
         hero_icon_resized = cv2.resize(hero_icon, (64, 64))
 
         # Save for debugging if needed
@@ -554,8 +572,8 @@ def identify_hero(hero_icon, heroes_data, min_score=0.5, debug=False):
                 logger.debug(f"Template not found for hero {hero_id}: {template_path}")
                 continue
 
-            # Load and resize the template
-            template = cv2.imread(str(template_path))
+            # Load and resize the template using our custom function to avoid iCCP warnings
+            template = load_image(template_path)
             if template is None:
                 logger.warning(f"Could not load template: {template_path}")
                 continue
@@ -620,8 +638,8 @@ def process_frame_for_heroes(frame_path, debug=False):
         list: List of identified heroes
     """
     try:
-        # Load the frame
-        frame = cv2.imread(frame_path)
+        # Load the frame using our custom function to avoid iCCP warnings
+        frame = load_image(frame_path)
         if frame is None:
             logger.error(f"Could not load frame: {frame_path}")
             return []
