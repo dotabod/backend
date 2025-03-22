@@ -638,6 +638,9 @@ process
   })
   .on('uncaughtException', (e) => logger.error('uncaughtException', e))
 
+// Add a debounce map to track in-flight requests by match_id
+const activeRequests = new Map<string, Promise<DelayedGames>>()
+
 export const GetRealTimeStats = async ({
   match_id,
   refetchCards = false,
@@ -651,6 +654,12 @@ export const GetRealTimeStats = async ({
   steam_server_id: string
   token: string
 }): Promise<DelayedGames> => {
+  // Debounce: If there's already an active request for this match_id, return that promise
+  if (activeRequests.has(match_id)) {
+    logger.info(`[STEAM] Reusing in-flight request for match_id: ${match_id}`)
+    return activeRequests.get(match_id)!
+  }
+
   let waitForHeros = forceRefetchAll || false
 
   if (!steam_server_id) {
@@ -674,7 +683,7 @@ export const GetRealTimeStats = async ({
     maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
   })
 
-  return new Promise((resolve, reject) => {
+  const requestPromise = new Promise<DelayedGames>((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     operation.attempt(async (currentAttempt) => {
       let game: DelayedGames
@@ -682,6 +691,16 @@ export const GetRealTimeStats = async ({
         const apiUrl = getApiUrl(steam_server_id)
         logger.info('[STEAM] Fetching game data from:', { apiUrl })
         const response = await fetch(apiUrl)
+
+        // Handle rate limiting (403)
+        if (response.status === 403) {
+          logger.warn('[STEAM] Rate limited with 403 response. Backing off...')
+          // Exponential backoff with longer delay for rate limiting
+          const backoffDelay = Math.min(30000, 5000 * 2 ** (currentAttempt - 1))
+          await new Promise((r) => setTimeout(r, backoffDelay))
+          return operation.retry(new Error('Rate limited with 403'))
+        }
+
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`)
         }
@@ -718,6 +737,9 @@ export const GetRealTimeStats = async ({
           // forward the msg to dota node app
           socketIoServer.to('steam').emit('saveHeroesForMatchId', { matchId: match_id, token })
         }
+
+        // Remove from active requests before resolving
+        activeRequests.delete(match_id)
         return resolve(gamePlusMore)
       }
 
@@ -730,9 +752,21 @@ export const GetRealTimeStats = async ({
         operation.retry(new Error())
       }
 
+      // Remove from active requests before resolving
+      activeRequests.delete(match_id)
       return resolve(gamePlusMore)
     })
   })
+
+  // Store the request promise in the map to enable debouncing
+  activeRequests.set(match_id, requestPromise)
+
+  // Add a cleanup in case of errors to prevent memory leaks
+  requestPromise.catch(() => {
+    activeRequests.delete(match_id)
+  })
+
+  return requestPromise
 }
 
 export default Dota
