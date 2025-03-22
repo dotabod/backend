@@ -224,90 +224,120 @@ def download_clip(clip_details):
         logger.error(f"Error downloading clip: {e}")
         raise
 
-def extract_frames(video_path, output_dir, fps=1.0, max_frames=None, debug=False):
+def extract_frames(video_path, start_time=0, end_time=None, frame_interval=1):
     """
-    Extract frames from a video file.
+    Extract frames from the video starting from the end and working backwards.
+    Uses OpenCV directly instead of MoviePy for better compatibility with Twitch clips.
+    Will reuse existing frames if they've already been extracted.
 
     Args:
         video_path: Path to the video file
-        output_dir: Directory to save the extracted frames
-        fps: Frames per second to extract
-        max_frames: Maximum number of frames to extract
-        debug: Whether to print debug messages
+        start_time: Start time in seconds
+        end_time: End time in seconds (if None, uses video duration)
+        frame_interval: Interval between frames in seconds
 
     Returns:
-        list: List of extracted frame paths
+        List of paths to extracted frames
     """
     try:
-        # Create output directory if it doesn't exist
-        output_dir = Path(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        # Create frames directory
+        frames_dir = TEMP_DIR / "frames"
+        frames_dir.mkdir(exist_ok=True)
 
-        # Get the video file name without extension
-        video_name = Path(video_path).stem
+        # Get clip ID from video path to create a unique prefix for this clip's frames
+        video_file = Path(video_path).name
+        clip_id = video_file.split('.')[0]  # Remove extension
+        frame_prefix = f"{clip_id}_frame_"
+
+        # Check if frames for this clip already exist
+        existing_frames = sorted(list(frames_dir.glob(f"{clip_id}_frame_*.jpg")))
+
+        if existing_frames:
+            logger.info(f"Found {len(existing_frames)} existing frames for this clip, reusing them")
+            return [str(frame) for frame in existing_frames]
 
         # Open the video file
-        cap = cv2.VideoCapture(str(video_path))
+        logger.info(f"Opening video file with OpenCV: {video_path}")
+        cap = cv2.VideoCapture(video_path)
+
         if not cap.isOpened():
-            logger.error(f"Could not open video file: {video_path}")
-            return []
+            raise ValueError(f"Could not open video file: {video_path}")
 
         # Get video properties
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        video_fps = cap.get(cv2.CAP_PROP_FPS)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        duration = frame_count / fps if fps > 0 else 0
 
-        # Log video details
-        logger.info(f"Video: {video_path}")
-        logger.info(f"Total frames: {total_frames}")
-        logger.info(f"Video FPS: {video_fps}")
-        logger.info(f"Target extract FPS: {fps}")
+        logger.info(f"Video properties: FPS={fps}, Frames={frame_count}, Duration={duration:.2f}s")
 
-        # Calculate the frame step based on the requested FPS
-        frame_step = int(video_fps / fps)
+        # If end_time is not specified, use the video duration
+        if end_time is None:
+            end_time = duration
 
-        # Limit the number of frames if requested
-        if max_frames:
-            frame_limit = min(total_frames, max_frames * frame_step)
-        else:
-            frame_limit = total_frames
+        # Generate frame timestamps (working backwards)
+        timestamps = []
+        current_time = min(end_time, duration)
+        while current_time >= start_time:
+            timestamps.append(current_time)
+            current_time -= frame_interval
+
+        # Sort timestamps in ascending order for sequential reading
+        timestamps.sort()
 
         # Extract frames
-        extracted_frames = []
-        frame_count = 0
-        with tqdm(total=frame_limit//frame_step, desc="Extracting frames", disable=not debug) as pbar:
-            while frame_count < frame_limit:
-                # Set the position in the video
-                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+        frame_paths = []
+        logger.info(f"Extracting {len(timestamps)} frames")
+
+        with tqdm(total=len(timestamps), desc="Extracting frames") as progress_bar:
+            for i, timestamp in enumerate(timestamps):
+                # Convert timestamp to frame index
+                frame_idx = int(timestamp * fps)
+
+                # Set the video capture to the desired frame
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
 
                 # Read the frame
                 ret, frame = cap.read()
+
                 if not ret:
-                    logger.warning(f"Failed to read frame at position {frame_count}")
-                    break
+                    logger.warning(f"Could not read frame at timestamp {timestamp}s (frame {frame_idx})")
+                    continue
 
-                # Generate filename for the frame
-                timestamp = frame_count / video_fps
-                formatted_timestamp = format_timestamp(timestamp)
-                frame_filename = f"{video_name}_{formatted_timestamp}.jpg"  # Use jpg extension
-                frame_path = output_dir / frame_filename
+                # Save the frame as an image with clip ID prefix
+                frame_path = frames_dir / f"{frame_prefix}{i:05d}.jpg"
+                cv2.imwrite(str(frame_path), frame)
 
-                # Save the frame with high quality JPEG to avoid PNG profile warnings
-                cv2.imwrite(str(frame_path), frame, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                # Verify that the frame was actually saved
+                if not frame_path.exists():
+                    logger.warning(f"Failed to save frame at {frame_path}")
+                    continue
 
-                # Add to the list of extracted frames
-                extracted_frames.append(frame_path)
+                # Verify the saved file is a valid image file with non-zero size
+                if frame_path.stat().st_size == 0:
+                    logger.warning(f"Frame file at {frame_path} has zero size")
+                    continue
 
-                # Move to the next frame based on the frame step
-                frame_count += frame_step
-
-                # Update progress bar
-                pbar.update(1)
+                frame_paths.append(str(frame_path))
+                progress_bar.update(1)
 
         # Release the video capture
         cap.release()
 
-        logger.info(f"Extracted {len(extracted_frames)} frames from {video_path}")
-        return extracted_frames
+        # Final verification - make sure we actually extracted some frames
+        if not frame_paths:
+            logger.error("No frames were successfully extracted")
+            # Check if frames directory exists and is accessible
+            if not frames_dir.exists():
+                logger.error(f"Frames directory {frames_dir} does not exist")
+            elif not os.access(str(frames_dir), os.W_OK):
+                logger.error(f"No write permission for frames directory {frames_dir}")
+            # List contents of temp directory to help diagnose issues
+            logger.info(f"Contents of temp directory: {os.listdir(TEMP_DIR)}")
+
+        else:
+            logger.info(f"Successfully extracted {len(frame_paths)} frames to {frames_dir}")
+
+        return frame_paths
     except Exception as e:
         logger.error(f"Error extracting frames: {e}")
-        return []
+        raise

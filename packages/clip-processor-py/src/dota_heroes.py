@@ -2,8 +2,6 @@ import os
 import json
 import requests
 import logging
-import cv2
-import numpy as np
 from pathlib import Path
 from tqdm import tqdm
 
@@ -17,36 +15,6 @@ ASSETS_DIR.mkdir(exist_ok=True, parents=True)
 
 HERO_LIST_URL = "https://www.dota2.com/datafeed/herolist?language=english"
 HERO_IMAGE_BASE_URL = "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/heroes/"
-
-def convert_to_jpg(image_path):
-    """
-    Convert a PNG image to JPG to avoid libpng warnings.
-    Returns the path to the new JPG file.
-    """
-    try:
-        # Load the image with safe flags
-        image = cv2.imread(str(image_path), cv2.IMREAD_IGNORE_ORIENTATION | cv2.IMREAD_COLOR)
-        if image is None:
-            logger.error(f"Failed to load image: {image_path}")
-            return image_path
-
-        # Create a new filename with jpg extension
-        jpg_path = image_path.with_suffix('.jpg')
-
-        # Save as JPG with high quality
-        cv2.imwrite(str(jpg_path), image, [cv2.IMWRITE_JPEG_QUALITY, 100])
-
-        # Delete the original PNG if the JPG was created successfully
-        if jpg_path.exists() and jpg_path.stat().st_size > 0:
-            image_path.unlink(missing_ok=True)
-            logger.debug(f"Converted {image_path} to {jpg_path}")
-            return jpg_path
-        else:
-            logger.warning(f"Failed to convert {image_path} to JPG")
-            return image_path
-    except Exception as e:
-        logger.error(f"Error converting {image_path} to JPG: {e}")
-        return image_path
 
 def get_hero_list():
     """Fetch the list of Dota 2 heroes from the official API."""
@@ -92,10 +60,9 @@ def download_hero_images(heroes):
         image_name = extract_hero_name_for_image(full_name)
         image_url = f"{HERO_IMAGE_BASE_URL}{image_name}.png"
 
-        # Create a filename that includes the hero ID - use jpg extension
-        filename = f"{hero_id}.jpg"
+        # Create a filename that includes the hero ID for sorting
+        filename = f"{hero_id}.png"
         image_path = ASSETS_DIR / filename
-        temp_png_path = ASSETS_DIR / f"{hero_id}_temp.png"
 
         # Skip if the image already exists
         if image_path.exists():
@@ -114,25 +81,11 @@ def download_hero_images(heroes):
             response = requests.get(image_url, stream=True)
             response.raise_for_status()
 
-            # First save as temporary PNG
-            with open(temp_png_path, 'wb') as f:
+            with open(image_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
 
-            # Convert to JPG and remove the PNG
-            if temp_png_path.exists():
-                # Load the PNG with safe flags
-                image = cv2.imread(str(temp_png_path), cv2.IMREAD_IGNORE_ORIENTATION | cv2.IMREAD_COLOR)
-                if image is not None:
-                    # Save as JPG with high quality
-                    cv2.imwrite(str(image_path), image, [cv2.IMWRITE_JPEG_QUALITY, 100])
-                    # Delete the temporary PNG
-                    temp_png_path.unlink(missing_ok=True)
-                else:
-                    logger.warning(f"Failed to load downloaded image for {localized_name}")
-                    continue
-
-            logger.debug(f"Downloaded and converted image for {localized_name} to {image_path}")
+            logger.debug(f"Downloaded image for {localized_name} to {image_path}")
 
             downloaded_images.append({
                 "id": hero_id,
@@ -168,16 +121,6 @@ def get_hero_data():
 
             logger.info(f"Loaded cached hero data with {len(hero_data)} heroes")
 
-            # Check for PNG images that need conversion to JPG
-            for hero in hero_data:
-                image_path = Path(hero["image_path"])
-                if image_path.suffix.lower() == '.png':
-                    logger.info(f"Converting PNG to JPG: {image_path}")
-                    # Convert to JPG to avoid libpng warnings
-                    new_path = convert_to_jpg(image_path)
-                    # Update the path in the hero data
-                    hero["image_path"] = str(new_path)
-
             # Verify that all image files exist
             all_exist = True
             for hero in hero_data:
@@ -187,11 +130,6 @@ def get_hero_data():
                     break
 
             if all_exist:
-                # If we converted any PNG images, save the updated paths
-                if any(Path(hero["image_path"]).suffix.lower() == '.jpg' for hero in hero_data):
-                    with open(hero_data_path, 'w') as f:
-                        json.dump(hero_data, f, indent=2)
-                    logger.info("Updated hero data with JPG paths")
                 return hero_data
             else:
                 logger.info("Some hero images are missing, will re-download")

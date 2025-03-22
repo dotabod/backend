@@ -96,8 +96,8 @@ def save_debug_image(image, name_prefix, additional_info=""):
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             image = image_copy
 
-        # Save the image with high quality JPEG to avoid PNG profile warnings
-        cv2.imwrite(str(filepath), image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+        # Save the image - use IMWRITE_JPEG_QUALITY to avoid PNG profile warnings
+        cv2.imwrite(str(filepath), image, [cv2.IMWRITE_JPEG_QUALITY, 95])
         logger.debug(f"Saved debug image: {filepath}")
         return str(filepath)
     return None
