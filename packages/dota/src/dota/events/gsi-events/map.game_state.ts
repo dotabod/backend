@@ -21,14 +21,6 @@ eventHandler.registerEvent('map:game_state', {
             dotaClient.client.Account?.providerAccountId,
             'Draft phase in obs blockers',
           )
-          .then((marker) => {
-            logger.info('Draft phase in obs blockers', {
-              state: gameState,
-              name: dotaClient.client.name,
-              matchId: dotaClient.client.gsi?.map?.matchid,
-              marker,
-            })
-          })
           .catch((e) => {
             logger.error('err createMarker', {
               e,
@@ -42,12 +34,22 @@ eventHandler.registerEvent('map:game_state', {
             channel: dotaClient.client.Account?.providerAccountId,
             createAfterDelay: true,
           })
-          .then((clip) => {
+          .then((clipId) => {
             logger.info('Draft phase in obs blockers', {
               state: gameState,
               name: dotaClient.client.name,
               matchId: dotaClient.client.gsi?.map?.matchid,
-              clipId: clip,
+              clipId,
+            })
+
+            api.clips.getClipById(clipId).then((clip) => {
+              logger.info('Created clip', {
+                state: gameState,
+                name: dotaClient.client.name,
+                matchId: dotaClient.client.gsi?.map?.matchid,
+                clipId,
+                url: clip?.url,
+              })
             })
           })
           .catch((e) => {
@@ -64,13 +66,6 @@ eventHandler.registerEvent('map:game_state', {
           matchId: dotaClient.client.gsi?.map?.matchid,
         })
       }
-
-      // TODO: Clip the draft phase with Twitch API
-      logger.info('Draft phase in map event', {
-        state: gameState,
-        name: dotaClient.client.name,
-        matchId: dotaClient.client.gsi?.map?.matchid,
-      })
     }
   },
 })
