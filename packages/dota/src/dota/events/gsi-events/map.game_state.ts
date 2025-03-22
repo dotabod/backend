@@ -8,7 +8,7 @@ import { draftStates } from '../../lib/consts.js'
 eventHandler.registerEvent('map:game_state', {
   handler: (dotaClient: GSIHandler, gameState: (typeof allStates)[number]) => {
     if (!dotaClient.client.stream_online) return
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
+    if (!isPlayingMatch(dotaClient.client.gsi, false)) return
 
     if (draftStates.includes(gameState)) {
       // TODO: Clip the draft phase with Twitch API

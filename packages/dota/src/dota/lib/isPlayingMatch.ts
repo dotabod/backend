@@ -6,9 +6,9 @@ import { isSpectator } from './isSpectator.js'
 // team2 = watching replay or live match
 // customgamename = playing arcade or hero demo
 
-export function isPlayingMatch(gsi?: Packet) {
+export function isPlayingMatch(gsi?: Packet, requiresPlaying = true) {
   if (!gsi) return false
-  if (gsi?.player?.activity !== 'playing') return false
+  if (requiresPlaying && gsi?.player?.activity !== 'playing') return false
 
   if (isDev && isArcade(gsi)) return true
 
