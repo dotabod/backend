@@ -17,12 +17,6 @@ eventHandler.registerEvent('map:game_state', {
         name: dotaClient.client.name,
         matchId: dotaClient.client.gsi?.map?.matchid,
       })
-    } else {
-      logger.info('Not draft phase in map event', {
-        state: gameState,
-        name: dotaClient.client.name,
-        matchId: dotaClient.client.gsi?.map?.matchid,
-      })
     }
   },
 })
