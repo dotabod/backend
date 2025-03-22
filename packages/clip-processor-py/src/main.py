@@ -18,7 +18,14 @@ from tqdm import tqdm
 # Import our modules
 from clip_utils import extract_clip_id, get_clip_details, download_clip, extract_frames
 from image_processing import process_frame
-from dota_hero_detection import process_frames_for_heroes
+
+# Import hero detection if available
+try:
+    from dota_hero_detection import process_frames_for_heroes as detect_heroes
+    HERO_DETECTION_AVAILABLE = True
+except ImportError:
+    logger.warning("Hero detection module not available")
+    HERO_DETECTION_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -119,10 +126,10 @@ def parse_args():
                        help="Detect Dota 2 heroes in the clip")
     parser.add_argument("--heroes-only", action="store_true",
                        help="Only detect heroes, skip player card detection")
-    parser.add_argument("--left-crop", type=int, default=205,
-                       help="Left crop value in pixels for hero detection (default: 205)")
-    parser.add_argument("--right-crop", type=int, default=205,
-                       help="Right crop value in pixels for hero detection (default: 205)")
+
+    # Add a flag to download hero data/images before processing
+    parser.add_argument("--download-heroes", action="store_true",
+                       help="Download hero data and images before processing")
 
     return parser.parse_args()
 
@@ -137,6 +144,20 @@ def main():
         os.environ["DEBUG_IMAGES"] = "1"
 
     try:
+        # Download hero data if requested
+        if args.download_heroes or args.detect_heroes or args.heroes_only:
+            if HERO_DETECTION_AVAILABLE:
+                logger.info("Downloading hero data and images...")
+                try:
+                    from dota_heroes import get_hero_data, download_hero_images
+                    heroes = get_hero_data()
+                    if heroes:
+                        download_hero_images(heroes)
+                except Exception as e:
+                    logger.error(f"Error downloading hero data: {e}")
+            else:
+                logger.warning("Hero detection module not available, cannot download hero data")
+
         # Get the clip URL
         clip_url = args.clip_url
         logger.info(f"Processing clip: {clip_url}")
@@ -166,30 +187,30 @@ def main():
 
         # Process frames to find heroes if requested
         if args.detect_heroes or args.heroes_only:
-            logger.info("Processing frames to find Dota 2 heroes...")
-            logger.info(f"Using crop values: left={args.left_crop}px, right={args.right_crop}px")
+            if HERO_DETECTION_AVAILABLE:
+                logger.info("Processing frames to find Dota 2 heroes...")
 
-            # Set crop values as environment variables for the hero detection module
-            os.environ["DOTA_LEFT_CROP"] = str(args.left_crop)
-            os.environ["DOTA_RIGHT_CROP"] = str(args.right_crop)
+                # Use the hero detection module
+                heroes_result = detect_heroes(frame_paths, debug=args.debug)
 
-            heroes_result = process_frames_for_heroes(frame_paths)
+                if heroes_result:
+                    results["heroes"] = heroes_result
 
-            if heroes_result:
-                results["heroes"] = heroes_result
+                    print("\nIdentified Heroes:")
+                    print("-----------------")
 
-                print("\nIdentified Heroes:")
-                print("-----------------")
-
-                for hero in heroes_result:
-                    team = hero["team"]
-                    pos = hero["position"] + 1
-                    name = hero["hero_localized_name"]
-                    score = hero["match_score"]
-                    print(f"{team} #{pos}: {name} (confidence: {score:.2f})")
+                    for hero in heroes_result:
+                        team = hero["team"]
+                        pos = hero["position"] + 1
+                        name = hero["hero_localized_name"]
+                        score = hero["match_score"]
+                        print(f"{team} #{pos}: {name} (confidence: {score:.2f})")
+                else:
+                    logger.warning("No heroes identified in the clip")
+                    print("No heroes identified in the clip.")
             else:
-                logger.warning("No heroes identified in the clip")
-                print("No heroes identified in the clip.")
+                logger.error("Hero detection module not available")
+                print("Hero detection module not available.")
 
         # Skip player card detection if heroes_only is specified
         if not args.heroes_only:

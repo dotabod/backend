@@ -61,7 +61,7 @@ def download_hero_images(heroes):
         image_url = f"{HERO_IMAGE_BASE_URL}{image_name}.png"
 
         # Create a filename that includes the hero ID for sorting
-        filename = f"{hero_id:03d}_{image_name}.png"
+        filename = f"{hero_id}.png"
         image_path = ASSETS_DIR / filename
 
         # Skip if the image already exists

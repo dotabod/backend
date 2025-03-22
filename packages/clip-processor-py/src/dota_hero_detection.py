@@ -1,690 +1,509 @@
+#!/usr/bin/env python3
+"""
+Dota 2 Hero Detection
+
+This module processes frames from a Twitch clip to identify Dota 2 heroes
+in the top bar of the game interface using template matching.
+"""
+
+import os
+import sys
+import json
+import logging
+import argparse
+from pathlib import Path
 import cv2
 import numpy as np
-import logging
-import os
-from pathlib import Path
 from tqdm import tqdm
-import json
+import requests
+import uuid
 
-# Import our modules
-from dota_heroes import get_hero_data
+# Import our modules if available
+try:
+    from clip_utils import get_clip_details, download_clip, extract_frames
+except ImportError:
+    # For standalone usage
+    print("Warning: clip_utils module not found, standalone mode only")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Constants
+# Constants and directories
+TEMP_DIR = Path("temp")
+TEMP_DIR.mkdir(exist_ok=True)
 DEBUG_DIR = Path("temp/debug")
 DEBUG_DIR.mkdir(exist_ok=True, parents=True)
+ASSETS_DIR = Path("assets")
+ASSETS_DIR.mkdir(exist_ok=True)
+HEROES_DIR = ASSETS_DIR / "dota_heroes"
+HEROES_DIR.mkdir(exist_ok=True)
 
-def save_debug_image(image, name, additional_info=""):
-    """Save a debug image for inspection during development."""
+# Exact dimensions for hero portraits in the top bar
+HERO_WIDTH = 122  # pixels
+HERO_HEIGHT = 131  # pixels
+CLOCK_WIDTH = 265  # pixels
+CLOCK_HEIGHT = 131  # pixels
+
+# Mapping of known heroes
+HEROES_FILE = HEROES_DIR / "hero_data.json"
+
+def save_debug_image(image, name_prefix, additional_info=""):
+    """Save an image for debugging purposes."""
     if os.environ.get("DEBUG_IMAGES", "").lower() in ("1", "true", "yes"):
-        # Create a copy to avoid modifying the original
-        image_copy = image.copy()
+        # Generate a unique filename
+        unique_id = str(uuid.uuid4())[:8]
+        filename = f"{name_prefix}_{unique_id}.jpg"
+        filepath = DEBUG_DIR / filename
 
-        # Add text annotation if provided
+        # Add text annotation with additional info if provided
         if additional_info:
+            # Make a copy to avoid modifying original
+            image_copy = image.copy()
             cv2.putText(image_copy, additional_info, (10, 30),
-                       cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            image = image_copy
 
         # Save the image
-        debug_path = DEBUG_DIR / f"{name}.jpg"
-        cv2.imwrite(str(debug_path), image_copy)
-        logger.debug(f"Saved debug image: {debug_path}")
-        return str(debug_path)
+        cv2.imwrite(str(filepath), image)
+        logger.debug(f"Saved debug image: {filepath}")
+        return str(filepath)
     return None
 
-def detect_topbar_region(frame):
-    """
-    Detect the region in the frame that contains the hero portraits in the top bar.
-    Uses a fixed height approach since the top bar is always at the top of the screen.
-    Also crops from left and right sides to focus on the hero portraits area.
-    Crop values can be configured via environment variables.
-    Returns the region as (x, y, w, h) or None if not found.
-    """
-    # Get frame dimensions
-    frame_height, frame_width = frame.shape[:2]
+def load_heroes_data():
+    """Load hero data from heroes.json file."""
+    if not HEROES_FILE.exists():
+        logger.error(f"Heroes data file not found: {HEROES_FILE}")
+        logger.info("Please run dota_heroes.py to download hero data first")
+        return None
 
-    # Use a fixed topbar height of approximately 130px, but scale it based on frame height
-    topbar_height = min(130, int(frame_height * 0.12))  # Use 12% of screen height but max 130px
-
-    # Get crop values from environment variables or use defaults
     try:
-        default_left_crop = 205
-        default_right_crop = 205
+        with open(HEROES_FILE, 'r') as f:
+            heroes_data = json.load(f)
+        logger.debug(f"Loaded {len(heroes_data)} heroes from {HEROES_FILE}")
+        return heroes_data
+    except Exception as e:
+        logger.error(f"Error loading heroes data: {e}")
+        return None
 
-        left_crop_env = os.environ.get("DOTA_LEFT_CROP")
-        right_crop_env = os.environ.get("DOTA_RIGHT_CROP")
-
-        # Parse environment variables if they exist
-        left_crop = int(left_crop_env) if left_crop_env is not None else default_left_crop
-        right_crop = int(right_crop_env) if right_crop_env is not None else default_right_crop
-
-        # Log the source of the crop values
-        if left_crop_env is not None or right_crop_env is not None:
-            logger.info(f"Using crop values from environment: left={left_crop}px, right={right_crop}px")
-        else:
-            logger.info(f"Using default crop values: left={left_crop}px, right={right_crop}px")
-    except (ValueError, TypeError) as e:
-        # If there's an error parsing, use defaults
-        logger.warning(f"Error parsing crop values from environment: {e}, using defaults")
-        left_crop = default_left_crop
-        right_crop = default_right_crop
-
-    # Calculate the left and right crop values, ensuring we don't crop too much
-    # for smaller frames
-    left_crop = min(left_crop, int(frame_width * 0.15))   # Use min of configured value or 15% of width
-    right_crop = min(right_crop, int(frame_width * 0.15)) # Use min of configured value or 15% of width
-
-    # Make sure we don't crop too much
-    if left_crop + right_crop >= frame_width - 400:  # Ensure at least 400px width remains
-        # Scale down the crop values proportionally
-        scale_factor = (frame_width - 400) / (left_crop + right_crop)
-        left_crop = int(left_crop * scale_factor)
-        right_crop = int(right_crop * scale_factor)
-        logger.info(f"Reduced crop values to {left_crop}px left, {right_crop}px right to maintain minimum width")
-
-    # Extract just the top-center region of the frame
-    x = left_crop
-    y = 0
-    w = frame_width - left_crop - right_crop
-    h = topbar_height
-
-    topbar_region = (x, y, w, h)
-
-    # Create debug images to show what we're detecting
-    topbar_img = frame[y:y+h, x:x+w].copy()
-    save_debug_image(topbar_img, "topbar_fixed", f"Cropped topbar region: {left_crop}px left, {right_crop}px right, {topbar_height}px tall")
-
-    # Draw rectangle on full frame to show the detected region
-    frame_with_rect = frame.copy()
-    cv2.rectangle(frame_with_rect, (x, y), (x+w, y+h), (0, 255, 0), 2)
-    save_debug_image(frame_with_rect, "topbar_fixed_region", f"Topbar region: {topbar_region}")
-
-    logger.info(f"Using fixed topbar region: {topbar_region}")
-    return topbar_region
-
-def extract_hero_portraits(frame, topbar_region):
+def extract_hero_bar(frame, debug=False):
     """
-    Extract individual hero portraits from the topbar region.
-    Returns a list of (team, portrait_image, position) tuples.
-    Team is 0 for Radiant (left) and 1 for Dire (right).
-    Position is the order of the hero in the team (0-4).
+    Extract the hero bar from the top of the screen.
 
-    The cropped topbar specifically contains just the hero portraits,
-    so we can use more precise fixed-grid positions.
+    This function crops out the section containing hero portraits in the top bar,
+    using the exact measurements provided.
+
+    Args:
+        frame: The full frame image
+        debug: Whether to save debug images
+
+    Returns:
+        tuple: (success, cropped_image, center_x)
     """
-    x, y, w, h = topbar_region
-    topbar = frame[y:y+h, x:x+w]
+    try:
+        # Get frame dimensions
+        height, width = frame.shape[:2]
+        logger.debug(f"Frame dimensions: {width}x{height}")
 
-    # Save the extracted topbar
-    save_debug_image(topbar, "topbar_extracted", "Extracted topbar")
+        # Find the center of the frame
+        center_x = width // 2
+        logger.debug(f"Center point: {center_x}")
 
-    # Check if the topbar has enough content (not just black)
-    gray_topbar = cv2.cvtColor(topbar, cv2.COLOR_BGR2GRAY)
-    mean_brightness = cv2.mean(gray_topbar)[0]
+        # The top bar usually starts at the top of the screen
+        top_offset = 0
 
-    if mean_brightness < 20:  # Very dark, probably no UI visible
-        logger.warning(f"Topbar too dark (brightness: {mean_brightness:.1f}), likely no UI visible")
-        save_debug_image(gray_topbar, "topbar_too_dark", f"Brightness: {mean_brightness:.1f}")
+        # Height of the hero bar
+        bar_height = HERO_HEIGHT
+
+        # Check if frame is large enough
+        if width < HERO_WIDTH*10 + CLOCK_WIDTH or height < bar_height:
+            logger.warning(f"Frame too small: {width}x{height}, need at least {HERO_WIDTH*10 + CLOCK_WIDTH}x{bar_height}")
+            return False, None, center_x
+
+        # Extract full top bar for visualization
+        if debug:
+            top_bar = frame[top_offset:top_offset+bar_height, 0:width]
+            save_debug_image(top_bar, "top_bar_full")
+
+            # Draw lines to visualize hero positions
+            visualization = top_bar.copy()
+            # Draw center line
+            cv2.line(visualization, (center_x, 0), (center_x, bar_height), (0, 255, 255), 2)
+
+            # Draw radiant hero boundaries
+            for i in range(5):
+                x = center_x - CLOCK_WIDTH//2 - (5-i) * HERO_WIDTH
+                cv2.line(visualization, (x, 0), (x, bar_height), (0, 255, 0), 2)
+                cv2.putText(visualization, f"R{i+1}", (x + 5, 25),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+
+            # Draw dire hero boundaries
+            for i in range(5):
+                x = center_x + CLOCK_WIDTH//2 + i * HERO_WIDTH
+                cv2.line(visualization, (x, 0), (x, bar_height), (0, 0, 255), 2)
+                cv2.putText(visualization, f"D{i+1}", (x + 5, 25),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+
+            # Draw clock boundaries
+            cv2.rectangle(visualization,
+                         (center_x - CLOCK_WIDTH//2, 0),
+                         (center_x + CLOCK_WIDTH//2, bar_height),
+                         (255, 255, 0), 2)
+
+            save_debug_image(visualization, "top_bar_annotated")
+
+        # Success
+        return True, frame[top_offset:top_offset+bar_height, 0:width], center_x
+    except Exception as e:
+        logger.error(f"Error extracting hero bar: {e}")
+        return False, None, 0
+
+def extract_hero_icons(top_bar, center_x, debug=False):
+    """
+    Extract individual hero icons from the top bar.
+
+    Args:
+        top_bar: Cropped top bar image
+        center_x: X-coordinate of the center of the frame
+        debug: Whether to save debug images
+
+    Returns:
+        list: List of (team, position, icon_image) tuples
+    """
+    try:
+        hero_icons = []
+
+        # Extract Radiant heroes (left side, 5 heroes)
+        for i in range(5):
+            # Calculate position based on center and hero width
+            x_start = center_x - CLOCK_WIDTH//2 - (5-i) * HERO_WIDTH
+            x_end = x_start + HERO_WIDTH
+
+            # Crop the hero icon
+            hero_icon = top_bar[0:HERO_HEIGHT, x_start:x_end]
+
+            # Check if we have a valid crop
+            if hero_icon.size == 0:
+                logger.warning(f"Invalid crop for Radiant hero {i+1}")
+                continue
+
+            # Save for debugging
+            if debug:
+                save_debug_image(hero_icon, f"radiant_hero_{i+1}")
+
+            # Add to list: (team, position, icon)
+            hero_icons.append(("Radiant", i, hero_icon))
+
+        # Extract Dire heroes (right side, 5 heroes)
+        for i in range(5):
+            # Calculate position based on center and hero width
+            x_start = center_x + CLOCK_WIDTH//2 + i * HERO_WIDTH
+            x_end = x_start + HERO_WIDTH
+
+            # Crop the hero icon
+            hero_icon = top_bar[0:HERO_HEIGHT, x_start:x_end]
+
+            # Check if we have a valid crop
+            if hero_icon.size == 0:
+                logger.warning(f"Invalid crop for Dire hero {i+1}")
+                continue
+
+            # Save for debugging
+            if debug:
+                save_debug_image(hero_icon, f"dire_hero_{i+1}")
+
+            # Add to list: (team, position, icon)
+            hero_icons.append(("Dire", i, hero_icon))
+
+        logger.debug(f"Extracted {len(hero_icons)} hero icons")
+        return hero_icons
+    except Exception as e:
+        logger.error(f"Error extracting hero icons: {e}")
         return []
 
-    # With the cropped topbar, the hero positions should be more predictable
-    # The topbar should now contain exactly the 10 hero portraits
-
-    # Try both contour-based detection and fixed grid extraction
-    # First, attempt contour-based approach for more accurate results
-    portraits_contour = extract_portraits_using_contours(topbar)
-
-    # If we got at least 8 portraits with contours, use those
-    if len(portraits_contour) >= 8:
-        return portraits_contour
-
-    # Otherwise, fall back to the fixed grid approach which is more reliable
-    # but less accurate for different UI variations
-    return extract_portraits_using_fixed_grid(topbar)
-
-def extract_portraits_using_contours(topbar):
-    """Extract hero portraits using contour detection."""
-    h, w = topbar.shape[:2]
-    portraits = []
-
-    # Apply adaptive threshold to help identify hero portraits
-    gray_topbar = cv2.cvtColor(topbar, cv2.COLOR_BGR2GRAY)
-    binary = cv2.adaptiveThreshold(gray_topbar, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                  cv2.THRESH_BINARY, 11, 2)
-    save_debug_image(binary, "topbar_adaptive_threshold", "Adaptive threshold applied")
-
-    # Try to dynamically detect the portrait areas by looking for bright regions
-    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Filter contours to find potential portraits
-    portrait_contours = []
-    min_area = h * h * 0.04  # Minimum area as a percentage of height squared
-    max_area = h * h * 0.9   # Maximum area as a percentage of height squared
-
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if min_area < area < max_area:
-            x_c, y_c, w_c, h_c = cv2.boundingRect(contour)
-            # Check if it's reasonably square (hero portraits are roughly square)
-            aspect_ratio = w_c / h_c if h_c > 0 else 0
-            if 0.5 < aspect_ratio < 2.0:
-                portrait_contours.append((x_c, y_c, w_c, h_c))
-
-    # Draw the contours that meet our criteria
-    contour_img = topbar.copy()
-    for x_c, y_c, w_c, h_c in portrait_contours:
-        cv2.rectangle(contour_img, (x_c, y_c), (x_c+w_c, y_c+h_c), (0, 255, 0), 2)
-    save_debug_image(contour_img, "portrait_candidates", f"Found {len(portrait_contours)} candidates")
-
-    # If we found some potential portrait regions with contours, use them
-    if len(portrait_contours) >= 5:
-        logger.info(f"Using {len(portrait_contours)} detected portrait regions")
-
-        # Sort contours by x-position
-        portrait_contours.sort(key=lambda rect: rect[0])
-
-        # Assign team and position based on x-position
-        # With the cropped topbar, we expect the first 5 to be Radiant and the last 5 to be Dire
-        # We'll divide the contours into two groups based on their x-position
-        if len(portrait_contours) <= 10:
-            # If we have 10 or fewer contours, assume they are all portraits
-            # and divide them evenly between Radiant and Dire
-            radiant_contours = portrait_contours[:len(portrait_contours)//2]
-            dire_contours = portrait_contours[len(portrait_contours)//2:]
-        else:
-            # Otherwise, cluster them by x-position to identify the two teams
-            # For now, just use the midpoint of the topbar
-            middle_x = w // 2
-            radiant_contours = [c for c in portrait_contours if c[0] + c[2]//2 < middle_x]
-            dire_contours = [c for c in portrait_contours if c[0] + c[2]//2 >= middle_x]
-
-            # Sort each team's contours by x-position
-            radiant_contours.sort(key=lambda rect: rect[0])
-            dire_contours.sort(key=lambda rect: rect[0])
-
-            # Take at most 5 portraits per team
-            radiant_contours = radiant_contours[:5]
-            dire_contours = dire_contours[:5]
-
-        # Process Radiant (left team) portraits
-        for i, (x_c, y_c, w_c, h_c) in enumerate(radiant_contours):
-            # Ensure we don't exceed the maximum position
-            position = min(i, 4)
-
-            # Extract the portrait
-            portrait = topbar[y_c:y_c+h_c, x_c:x_c+w_c]
-
-            # Validate the portrait
-            if portrait.size == 0 or portrait.shape[0] == 0 or portrait.shape[1] == 0:
-                logger.warning(f"Invalid portrait dimensions at ({x_c}, {y_c}): {portrait.shape if portrait.size > 0 else 'Empty'}")
-                continue
-
-            portraits.append((0, portrait, position))  # 0 for Radiant
-
-            # Save debug image
-            save_debug_image(portrait, f"portrait_radiant_{position}", f"Radiant hero {position}")
-
-        # Process Dire (right team) portraits
-        for i, (x_c, y_c, w_c, h_c) in enumerate(dire_contours):
-            # Ensure we don't exceed the maximum position
-            position = min(i, 4)
-
-            # Extract the portrait
-            portrait = topbar[y_c:y_c+h_c, x_c:x_c+w_c]
-
-            # Validate the portrait
-            if portrait.size == 0 or portrait.shape[0] == 0 or portrait.shape[1] == 0:
-                logger.warning(f"Invalid portrait dimensions at ({x_c}, {y_c}): {portrait.shape if portrait.size > 0 else 'Empty'}")
-                continue
-
-            portraits.append((1, portrait, position))  # 1 for Dire
-
-            # Save debug image
-            save_debug_image(portrait, f"portrait_dire_{position}", f"Dire hero {position}")
-
-        logger.info(f"Extracted {len(portraits)} portraits using contour detection")
-
-    return portraits
-
-def extract_portraits_using_fixed_grid(topbar):
-    """Extract hero portraits using a fixed grid approach."""
-    h, w = topbar.shape[:2]
-    portraits = []
-
-    # Since the topbar is now cropped to contain just the hero portraits area,
-    # the spacing between heroes should be more consistent
-    # Dota 2 has 5 heroes per team, so 10 total portraits in the cropped topbar
-
-    # Calculate the portrait width and spacing
-    # With the margins cropped, the portraits should be evenly spaced
-    portrait_width = w // 10
-
-    # Add some buffer to make sure we capture the full portrait
-    portrait_buffer = int(portrait_width * 0.1)
-    adjusted_portrait_width = portrait_width - portrait_buffer * 2
-
-    # Keep portrait height similar to width for better aspect ratio
-    adjusted_portrait_height = min(h - portrait_buffer * 2, adjusted_portrait_width)
-
-    # Extract portraits for both teams
-    for team in range(2):  # 0 for Radiant, 1 for Dire
-        for position in range(5):
-            # Calculate the x-position based on team and position
-            # Radiant team (0) is positions 0-4, Dire team (1) is positions 5-9
-            grid_position = position + (team * 5)
-            portrait_x = grid_position * portrait_width + portrait_buffer
-
-            # Extract the portrait from the topbar
-            portrait = topbar[portrait_buffer:portrait_buffer+adjusted_portrait_height,
-                              portrait_x:portrait_x+adjusted_portrait_width]
-
-            # Validate the portrait dimensions
-            if portrait.size == 0 or portrait.shape[0] == 0 or portrait.shape[1] == 0:
-                team_name = "Radiant" if team == 0 else "Dire"
-                logger.warning(f"Invalid portrait dimensions for {team_name} hero {position}: {portrait.shape if portrait.size > 0 else 'Empty'}")
-                continue
-
-            # Add the portrait to our list
-            portraits.append((team, portrait, position))
-
-            # Save debug image
-            team_name = "radiant" if team == 0 else "dire"
-            save_debug_image(portrait, f"portrait_{team_name}_{position}", f"{team_name.capitalize()} hero {position}")
-
-    logger.info(f"Extracted {len(portraits)} hero portraits using fixed grid")
-    return portraits
-
-def identify_heroes(portraits, hero_data):
+def identify_hero(hero_icon, heroes_data, min_score=0.5, debug=False):
     """
-    Identify heroes in the portraits using template matching.
-    Uses multiple preprocessing techniques for better matches.
-    Returns a list of dictionaries with hero information and match score.
+    Identify a hero using template matching.
+
+    Args:
+        hero_icon: Image of the hero icon
+        heroes_data: Dictionary of hero data
+        min_score: Minimum match score to consider a match
+        debug: Whether to save debug images
+
+    Returns:
+        dict: Hero data and match score, or None if no match
     """
-    results = []
+    try:
+        if not heroes_data:
+            logger.error("No heroes data available")
+            return None
 
-    # Load all hero template images
-    hero_templates = []
-    for hero in hero_data:
-        try:
-            template = cv2.imread(hero["image_path"])
-
-            if template is None:
-                logger.warning(f"Failed to load hero image: {hero['image_path']}")
-                continue
-
-            hero_templates.append({
-                "id": hero["id"],
-                "name": hero["name"],
-                "localized_name": hero["localized_name"],
-                "template": template
-            })
-        except Exception as e:
-            logger.error(f"Error loading hero template for {hero['localized_name']}: {e}")
-
-    logger.info(f"Loaded {len(hero_templates)} hero templates for matching")
-
-    # Define preprocessing techniques to try
-    preprocessing_techniques = [
-        # (name, function)
-        ("original", lambda img: img),
-        ("gray", lambda img: cv2.cvtColor(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR)),
-        ("edges", lambda img: cv2.Canny(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), 100, 200))
-    ]
-
-    # Process each portrait
-    for team, portrait, position in tqdm(portraits, desc="Identifying heroes"):
-        # Skip if portrait is too small
-        if portrait.shape[0] < 10 or portrait.shape[1] < 10:
-            logger.warning(f"Portrait too small for matching: {portrait.shape}")
-            continue
-
-        # Get portrait dimensions
-        h, w = portrait.shape[:2]
+        # Resize the hero icon to a standard size for comparison
+        hero_icon_resized = cv2.resize(hero_icon, (64, 64))
 
         best_match = None
         best_score = 0
-        best_technique = ""
 
-        # Save the original portrait for debugging
-        team_name = "radiant" if team == 0 else "dire"
-        save_debug_image(portrait, f"matching_{team_name}_{position}_original", f"Original portrait")
+        # Compare with each hero template
+        for hero in heroes_data:
+            hero_id = hero.get('id')
+            hero_name = hero.get('name')
 
-        # Try different preprocessing techniques
-        for tech_name, preprocess_func in preprocessing_techniques:
-            try:
-                # Preprocess the portrait
-                portrait_processed = preprocess_func(portrait)
+            # Load the hero template
+            template_path = HEROES_DIR / f"{hero_id}.png"
+            if not template_path.exists():
+                logger.debug(f"Template not found for hero {hero_id}: {template_path}")
+                continue
 
-                # Skip if preprocessing failed
-                if portrait_processed is None or portrait_processed.size == 0:
-                    continue
+            # Load and resize the template
+            template = cv2.imread(str(template_path))
+            if template is None:
+                logger.warning(f"Could not load template: {template_path}")
+                continue
 
-                # Save processed portrait for debugging
-                save_debug_image(portrait_processed, f"matching_{team_name}_{position}_{tech_name}",
-                                f"Processed with {tech_name}")
+            # Resize to match our hero icon
+            template_resized = cv2.resize(template, (64, 64))
 
-                # Try to match with each hero template
-                for hero in hero_templates:
-                    template = hero["template"]
+            # Perform template matching
+            # Convert to grayscale for better matching
+            gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
+            gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
 
-                    # Resize template to match portrait size
-                    template_resized = cv2.resize(template, (w, h))
+            # Use multiple methods and combine scores
+            methods = [cv2.TM_CCOEFF_NORMED, cv2.TM_CCORR_NORMED]
+            scores = []
 
-                    # Preprocess the template the same way
-                    template_processed = preprocess_func(template_resized)
+            for method in methods:
+                result = cv2.matchTemplate(gray_icon, gray_template, method)
+                _, score, _, _ = cv2.minMaxLoc(result)
+                scores.append(score)
 
-                    # Skip if preprocessing failed
-                    if template_processed is None or template_processed.size == 0:
-                        continue
+            # Average score
+            avg_score = sum(scores) / len(scores)
 
-                    # Convert both to grayscale for template matching
-                    # If we're using edges, they're already grayscale
-                    if tech_name == "edges":
-                        # For edge detection, we match binary edge images
-                        match_result = cv2.matchTemplate(portrait_processed, template_processed, cv2.TM_CCOEFF_NORMED)
-                    else:
-                        # For other techniques, convert to grayscale for matching
-                        portrait_gray = cv2.cvtColor(portrait_processed, cv2.COLOR_BGR2GRAY)
-                        template_gray = cv2.cvtColor(template_processed, cv2.COLOR_BGR2GRAY)
+            # Keep the best match
+            if avg_score > best_score:
+                best_score = avg_score
+                best_match = {
+                    'hero_id': hero_id,
+                    'hero_name': hero_name,
+                    'hero_localized_name': hero.get('localized_name', hero_name),
+                    'match_score': avg_score
+                }
 
-                        # Perform template matching
-                        match_result = cv2.matchTemplate(portrait_gray, template_gray, cv2.TM_CCOEFF_NORMED)
+            # Save comparison for debugging
+            if debug and avg_score > 0.4:
+                comparison = np.hstack((hero_icon_resized, template_resized))
+                save_debug_image(comparison, f"hero_match_{hero_id}",
+                                f"{hero.get('localized_name', '')}: {avg_score:.3f}")
 
-                    _, max_score, _, _ = cv2.minMaxLoc(match_result)
-
-                    # Adjust score based on technique - edge detection is less reliable
-                    adjusted_score = max_score
-                    if tech_name == "edges":
-                        adjusted_score = max_score * 0.9  # Edge detection gets a penalty
-
-                    if adjusted_score > best_score:
-                        best_score = adjusted_score
-                        best_match = hero
-                        best_technique = tech_name
-
-            except Exception as e:
-                logger.debug(f"Error with technique {tech_name}: {e}")
-
-        # Record the match if one was found
-        if best_match and best_score > 0.2:  # Lower threshold to catch more potential matches
-            team_name = "Radiant" if team == 0 else "Dire"
-            logger.debug(f"{team_name} hero {position+1} matched as {best_match['localized_name']} "
-                        f"with score {best_score:.4f} using {best_technique}")
-
-            # Create debug image showing the match
-            match_debug = portrait.copy()
-            cv2.putText(match_debug, f"{best_match['localized_name']}", (10, 20),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-            cv2.putText(match_debug, f"Score: {best_score:.2f}", (10, 40),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-            cv2.putText(match_debug, f"Tech: {best_technique}", (10, 60),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-            save_debug_image(match_debug, f"match_{team_name.lower()}_{position}", f"{best_match['localized_name']}")
-
-            # Also save the template for comparison
-            template_resized = cv2.resize(best_match["template"], (w, h))
-            save_debug_image(template_resized, f"match_{team_name.lower()}_{position}_template",
-                           f"Template: {best_match['localized_name']}")
-
-            # Add to results
-            results.append({
-                "team": team_name,
-                "position": position,
-                "hero_id": best_match["id"],
-                "hero_name": best_match["name"],
-                "hero_localized_name": best_match["localized_name"],
-                "match_score": float(best_score),
-                "match_technique": best_technique
-            })
-
-    # Sort results by team and position
-    results.sort(key=lambda x: (0 if x["team"] == "Radiant" else 1, x["position"]))
-
-    return results
-
-def process_frame_for_heroes(frame_path):
-    """
-    Process a frame to identify heroes in the topbar.
-    Returns a list of identified heroes or None if processing fails.
-    """
-    logger.info(f"Processing frame: {frame_path}")
-
-    try:
-        # Load the frame
-        frame = cv2.imread(str(frame_path))
-
-        if frame is None:
-            logger.error(f"Failed to load frame: {frame_path}")
+        # Return the best match if it's above the threshold
+        if best_match and best_match['match_score'] >= min_score:
+            logger.debug(f"Best match: {best_match['hero_localized_name']} with score {best_match['match_score']:.3f}")
+            return best_match
+        else:
+            if best_match:
+                logger.debug(f"Best match below threshold: {best_match['hero_localized_name']} with score {best_match['match_score']:.3f}")
             return None
-
-        # Get frame dimensions for validation
-        frame_height, frame_width = frame.shape[:2]
-
-        # Skip very small frames or invalid frames
-        if frame_width < 640 or frame_height < 360:
-            logger.warning(f"Frame too small: {frame_width}x{frame_height}, skipping")
-            return None
-
-        # Save debug copy of the original frame
-        save_debug_image(frame, "original_frame", f"Original {frame_width}x{frame_height}")
-
-        # Detect the topbar region with the standard crop values
-        topbar_region = detect_topbar_region(frame)
-        x, y, w, h = topbar_region
-
-        # Extract hero portraits from the topbar
-        portraits = extract_hero_portraits(frame, topbar_region)
-
-        # If we didn't find enough portraits, try different crop configurations
-        if not portraits or len(portraits) < 8:  # If less than 8 heroes found
-            # First, try different topbar heights
-            alternate_heights = [80, 100, 150]
-            for alt_height in alternate_heights:
-                logger.info(f"Trying alternate topbar height: {alt_height}px")
-                # Keep the same x, w values but change the height
-                alt_topbar = (x, y, w, alt_height)
-                alt_portraits = extract_hero_portraits(frame, alt_topbar)
-
-                # If we found more portraits with this height, use it instead
-                if alt_portraits and (not portraits or len(alt_portraits) > len(portraits)):
-                    logger.info(f"Found better topbar height: {alt_height}px with {len(alt_portraits)} portraits")
-                    portraits = alt_portraits
-                    topbar_region = alt_topbar
-
-            # If still not enough portraits, try different crop values
-            if len(portraits) < 8:
-                # Try a few different crop values
-                crop_variations = [
-                    (150, 150),  # Less aggressive crop
-                    (100, 100),  # Even less aggressive
-                    (50, 50),    # Minimal crop
-                    (0, 0)       # No crop at all
-                ]
-
-                for left_crop, right_crop in crop_variations:
-                    logger.info(f"Trying alternate crop values: left={left_crop}px, right={right_crop}px")
-                    # Calculate new width with different crop
-                    new_x = left_crop
-                    new_w = frame_width - left_crop - right_crop
-                    # Keep the same height as our best topbar so far
-                    _, _, _, best_h = topbar_region
-                    alt_topbar = (new_x, y, new_w, best_h)
-
-                    alt_portraits = extract_hero_portraits(frame, alt_topbar)
-
-                    # If we found more portraits with this crop, use it instead
-                    if alt_portraits and (not portraits or len(alt_portraits) > len(portraits)):
-                        logger.info(f"Found better crop values with {len(alt_portraits)} portraits")
-                        portraits = alt_portraits
-                        topbar_region = alt_topbar
-
-        if not portraits:
-            logger.warning("No hero portraits extracted from topbar")
-            return None
-
-        logger.info(f"Processing {len(portraits)} hero portraits")
-
-        # Get hero data for matching
-        hero_data = get_hero_data()
-
-        if not hero_data:
-            logger.error("No hero data available for matching")
-            return None
-
-        # Identify heroes in the portraits
-        identified_heroes = identify_heroes(portraits, hero_data)
-
-        # Filter out low-confidence matches
-        confident_matches = [hero for hero in identified_heroes if hero["match_score"] > 0.3]
-
-        logger.info(f"Identified {len(confident_matches)} heroes with confidence > 0.3")
-
-        return confident_matches
-
     except Exception as e:
-        logger.error(f"Error processing frame for heroes: {e}")
+        logger.error(f"Error identifying hero: {e}")
         return None
 
-def process_frames_for_heroes(frame_paths):
+def process_frame_for_heroes(frame_path, debug=False):
     """
-    Process multiple frames to find heroes.
-    Returns the result from the frame with the most confident hero matches.
-    Prioritizes frames from the middle of the game which are more likely to show the UI.
+    Process a single frame to identify heroes.
+
+    Args:
+        frame_path: Path to the frame image
+        debug: Whether to save debug images
+
+    Returns:
+        list: List of identified heroes
     """
-    best_result = None
-    best_count = 0
+    try:
+        # Load the frame
+        frame = cv2.imread(frame_path)
+        if frame is None:
+            logger.error(f"Could not load frame: {frame_path}")
+            return []
 
-    # If we have a lot of frames, prioritize frames from the middle
-    # The beginning of the game might not have the UI loaded,
-    # and the end might have victory screens
-    if len(frame_paths) > 5:
-        logger.info("Reordering frames to prioritize middle frames")
-        # Calculate the middle index
-        middle_index = len(frame_paths) // 2
+        # Load heroes data
+        heroes_data = load_heroes_data()
+        if not heroes_data:
+            logger.error("Could not load heroes data")
+            return []
 
-        # Reorder frames to start from the middle and then alternate outward
-        reordered_paths = []
-        for i in range(len(frame_paths)):
-            # Calculate the offset from middle: 0, 1, -1, 2, -2, 3, -3, etc.
-            if i % 2 == 0:
-                offset = i // 2
-            else:
-                offset = -((i // 2) + 1)
+        # Extract the hero bar
+        success, top_bar, center_x = extract_hero_bar(frame, debug=debug)
+        if not success or top_bar is None:
+            logger.warning(f"Could not extract hero bar from frame: {frame_path}")
+            return []
 
-            # Ensure index is within bounds
-            index = middle_index + offset
-            if 0 <= index < len(frame_paths):
-                reordered_paths.append(frame_paths[index])
+        # Extract hero icons
+        hero_icons = extract_hero_icons(top_bar, center_x, debug=debug)
+        if not hero_icons:
+            logger.warning(f"No hero icons extracted from frame: {frame_path}")
+            return []
 
-        # If for some reason we missed any frames, add them at the end
-        missed_frames = set(frame_paths) - set(reordered_paths)
-        reordered_paths.extend(missed_frames)
+        # Identify each hero
+        identified_heroes = []
 
-        frame_paths = reordered_paths
+        for team, position, hero_icon in hero_icons:
+            hero_data = identify_hero(hero_icon, heroes_data, debug=debug)
+            if hero_data:
+                # Add team and position information
+                hero_data['team'] = team
+                hero_data['position'] = position
+                identified_heroes.append(hero_data)
+                logger.debug(f"Identified {team} hero at position {position+1}: {hero_data['hero_localized_name']}")
 
-    # List of potential hero count thresholds for early stopping
-    # If we find a frame with this many heroes, we'll stop
-    early_stop_thresholds = [10, 9, 8, 7, 6]
+        logger.debug(f"Identified {len(identified_heroes)} heroes in frame")
+        return identified_heroes
+    except Exception as e:
+        logger.error(f"Error processing frame for heroes: {e}")
+        return []
 
-    # Process frames
-    for frame_path in tqdm(frame_paths, desc="Processing frames for heroes"):
-        result = process_frame_for_heroes(frame_path)
+def process_frames_for_heroes(frame_paths, debug=False):
+    """
+    Process multiple frames to identify heroes.
 
-        if result:
-            # Count heroes with different confidence levels
-            confident_count = len([h for h in result if h["match_score"] > 0.4])
+    Args:
+        frame_paths: List of paths to frame images
+        debug: Whether to save debug images
 
-            logger.info(f"Frame {frame_path}: found {len(result)} heroes, {confident_count} with confidence > 0.4")
+    Returns:
+        list: List of identified heroes
+    """
+    all_results = []
+    best_frame_count = 0
+    best_frame_heroes = []
 
-            # Check for early stopping - if we've found enough heroes
-            # or if this frame is better than our previous best
-            if confident_count > best_count:
-                best_count = confident_count
-                best_result = result
+    logger.info(f"Processing {len(frame_paths)} frames for heroes")
 
-                logger.info(f"New best frame with {confident_count} confident hero matches")
+    for i, frame_path in enumerate(tqdm(frame_paths, desc="Processing frames for heroes")):
+        logger.debug(f"Processing frame {i+1}/{len(frame_paths)}: {frame_path}")
 
-                # Check if we should stop early based on the current threshold
-                for threshold in early_stop_thresholds:
-                    if confident_count >= threshold:
-                        logger.info(f"Found {confident_count} heroes with good confidence (threshold {threshold}), stopping early")
-                        return best_result
+        # Process the frame
+        heroes = process_frame_for_heroes(frame_path, debug=debug)
 
-    # If we processed all frames and didn't hit an early stopping condition,
-    # return the best result we found
-    if best_result:
-        logger.info(f"Best frame found {len(best_result)} heroes total, {best_count} with good confidence")
-    else:
-        logger.warning("No heroes found in any frame")
+        # Keep track of the frame with the most heroes
+        if len(heroes) > best_frame_count:
+            best_frame_count = len(heroes)
+            best_frame_heroes = heroes
+            logger.debug(f"New best frame: {i+1} with {best_frame_count} heroes")
 
-    return best_result
+            # If we found all 10 heroes, we can stop
+            if best_frame_count == 10:
+                logger.info(f"Found all 10 heroes in frame {i+1}")
+                break
 
-if __name__ == "__main__":
-    import argparse
-    from clip_utils import get_clip_details, download_clip, extract_frames
+        # Keep track of all results
+        all_results.append({
+            'frame_index': i,
+            'frame_path': frame_path,
+            'heroes': heroes
+        })
 
+    # Return the best frame's heroes
+    logger.info(f"Best frame has {best_frame_count} heroes")
+    return best_frame_heroes
+
+def main():
+    """Main function."""
     parser = argparse.ArgumentParser(description="Detect Dota 2 heroes in a Twitch clip")
-    parser.add_argument("clip_url", help="URL of the Twitch clip")
-    parser.add_argument("--frame-interval", type=float, default=1.0,
-                        help="Interval between frames in seconds (default: 1.0)")
-    parser.add_argument("--output", "-o", default="hero_results.json",
-                        help="Output file path (default: hero_results.json)")
-    parser.add_argument("--debug", action="store_true",
-                        help="Enable debug mode with image saving")
+    parser.add_argument("clip_url", nargs="?",
+                      help="URL of the Twitch clip (required for downloading)")
+    parser.add_argument("--frame-path", help="Path to a single frame to process")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+    parser.add_argument("--output", "-o", default="heroes.json",
+                      help="Output file path (default: heroes.json)")
 
     args = parser.parse_args()
 
+    # Set debug level
     if args.debug:
-        os.environ["DEBUG_IMAGES"] = "1"
         logging.getLogger().setLevel(logging.DEBUG)
+        os.environ["DEBUG_IMAGES"] = "1"
 
     try:
-        # Get clip details
-        clip_details = get_clip_details(args.clip_url)
+        # Process a single frame if provided
+        if args.frame_path:
+            logger.info(f"Processing single frame: {args.frame_path}")
+            heroes = process_frame_for_heroes(args.frame_path, debug=args.debug)
 
-        # Download the clip
-        clip_path = download_clip(clip_details)
+            if heroes:
+                with open(args.output, 'w') as f:
+                    json.dump(heroes, f, indent=2)
+                logger.info(f"Saved {len(heroes)} heroes to {args.output}")
 
-        # Extract frames
-        frame_paths = extract_frames(
-            clip_path,
-            start_time=0,
-            end_time=None,
-            frame_interval=args.frame_interval
-        )
+                # Print results
+                print(f"\nIdentified {len(heroes)} heroes:")
+                for hero in heroes:
+                    team = hero['team']
+                    pos = hero['position'] + 1
+                    name = hero['hero_localized_name']
+                    score = hero['match_score']
+                    print(f"{team} #{pos}: {name} (confidence: {score:.2f})")
 
-        # Process frames to identify heroes
-        heroes = process_frames_for_heroes(frame_paths)
+                return 0
+            else:
+                logger.warning("No heroes identified in the frame")
+                print("No heroes identified in the frame.")
+                return 1
 
-        if heroes:
-            # Display results
-            print("\nIdentified Heroes:")
-            print("-----------------")
+        # Process a clip if URL is provided
+        elif args.clip_url:
+            logger.info(f"Processing clip: {args.clip_url}")
 
-            for hero in heroes:
-                team = hero["team"]
-                pos = hero["position"] + 1
-                name = hero["hero_localized_name"]
-                score = hero["match_score"]
-                print(f"{team} #{pos}: {name} (confidence: {score:.2f})")
+            # Check if clip_utils is available
+            if 'get_clip_details' not in globals():
+                logger.error("clip_utils module not available")
+                print("Error: clip_utils module not available")
+                return 1
 
-            # Save results to JSON
-            results = {
-                "clip_url": args.clip_url,
-                "heroes": heroes
-            }
+            # Get clip details
+            clip_details = get_clip_details(args.clip_url)
+            logger.info("Clip details retrieved")
 
-            with open(args.output, "w") as f:
-                json.dump(results, f, indent=2)
+            # Download the clip
+            clip_path = download_clip(clip_details)
+            logger.info(f"Clip downloaded to: {clip_path}")
 
-            print(f"\nResults saved to {args.output}")
+            # Extract frames
+            frame_paths = extract_frames(clip_path, frame_interval=0.5)
+            logger.info(f"Extracted {len(frame_paths)} frames")
 
+            # Process frames for heroes
+            heroes = process_frames_for_heroes(frame_paths, debug=args.debug)
+
+            if heroes:
+                with open(args.output, 'w') as f:
+                    json.dump(heroes, f, indent=2)
+                logger.info(f"Saved {len(heroes)} heroes to {args.output}")
+
+                # Print results
+                print(f"\nIdentified {len(heroes)} heroes:")
+                for hero in heroes:
+                    team = hero['team']
+                    pos = hero['position'] + 1
+                    name = hero['hero_localized_name']
+                    score = hero['match_score']
+                    print(f"{team} #{pos}: {name} (confidence: {score:.2f})")
+
+                return 0
+            else:
+                logger.warning("No heroes identified in the clip")
+                print("No heroes identified in the clip.")
+                return 1
         else:
-            print("No heroes identified in the clip")
-
+            logger.error("Either --frame-path or clip_url must be provided")
+            parser.print_help()
+            return 1
     except Exception as e:
-        logger.error(f"Error: {e}")
+        logger.error(f"Error in main function: {e}", exc_info=True)
         print(f"Error: {e}")
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())
