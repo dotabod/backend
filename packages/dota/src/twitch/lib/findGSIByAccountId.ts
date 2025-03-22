@@ -51,7 +51,7 @@ export async function findAccountFromCmd(
     accountIdFromArgs = Number(data?.player?.accountid)
     playerIdx = data?.playerIdx
 
-    if (!accountIdFromArgs) {
+    if (!accountIdFromArgs && !data?.player?.heroid) {
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
 
