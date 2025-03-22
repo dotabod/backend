@@ -10,6 +10,7 @@ import CustomError from '../../utils/customError.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 import { profileLink } from './profileLink.js'
+import { logger } from '../../utils/logger.js'
 
 async function getStats({
   token,
@@ -45,6 +46,13 @@ async function getStats({
         reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
       }, 10000) // 10 second timeout
 
+      logger.info('Getting stats', {
+        match_id: packet?.map?.matchid ?? '',
+        forceRefetchAll: true,
+        steam_server_id: steamServerId,
+        token,
+      })
+
       steamSocket.emit(
         'getRealTimeStats',
         {
@@ -56,6 +64,13 @@ async function getStats({
         (err: any, cards: any) => {
           clearTimeout(timeoutId)
           if (err) {
+            logger.error('Error getting stats', {
+              err,
+              match_id: packet?.map?.matchid ?? '',
+              forceRefetchAll: true,
+              steam_server_id: steamServerId,
+              token,
+            })
             reject(err)
           } else {
             resolve(cards)
