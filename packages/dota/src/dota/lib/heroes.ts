@@ -689,7 +689,7 @@ export function getHeroById(id?: number) {
   return null
 }
 
-export function getHeroByName(name: string, heroIdsInMatch: (number | undefined)[]) {
+export function getHeroByName(name: string, heroIdsInMatch?: (number | undefined)[]) {
   if (!name) return null
 
   // only keep a-z in name
@@ -698,7 +698,14 @@ export function getHeroByName(name: string, heroIdsInMatch: (number | undefined)
     .toLowerCase()
     .trim()
 
-  const lookInHeroes = Object.values(heroes).filter((hero) => heroIdsInMatch.includes(hero.id))
+  let lookInHeroes = Object.values(heroes)
+  if (
+    heroIdsInMatch?.length &&
+    heroIdsInMatch.filter(Boolean).length > 1 &&
+    heroIdsInMatch.length !== 1
+  ) {
+    lookInHeroes = Object.values(heroes).filter((hero) => heroIdsInMatch.includes(hero.id))
+  }
 
   // alias lookup first
   let hero = lookInHeroes.find((h) => {

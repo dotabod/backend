@@ -33,7 +33,7 @@ commandHandler.registerCommand('facet', {
         channelClient.locale,
         command,
       )
-      if (!isValidHero(hero)) {
+      if (!isValidHero(hero) || !hero) {
         chatClient.say(
           channelName,
           t('missingMatchData', { emote: 'PauseChamp', lng: channelClient.locale }),
