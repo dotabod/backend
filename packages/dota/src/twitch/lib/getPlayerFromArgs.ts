@@ -4,6 +4,7 @@ import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { getHeroById, getHeroByName, heroColors } from '../../dota/lib/heroes.js'
 import type { Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'
+import type { Players } from '../../types'
 
 export async function getPlayerFromArgs({
   args,
@@ -66,7 +67,19 @@ export async function getPlayerFromArgs({
   //   )
   // }
 
+  const defaultPlayer: Players[0] = {
+    heroid: hero?.id,
+    accountid: Number(packet?.player?.accountid),
+    playerid: null,
+  }
   const hasMoreDataForCurrentHero = packet?.hero?.id === hero?.id
   const moreData = hasMoreDataForCurrentHero ? { ...packet?.player, ...packet?.hero } : {}
-  return { playerIdx, player: { ...moreData, ...players[playerIdx] } }
+  return {
+    playerIdx,
+    player: {
+      ...moreData,
+      ...defaultPlayer,
+      ...players[playerIdx],
+    },
+  }
 }
