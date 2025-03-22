@@ -15,12 +15,6 @@ Hero portrait layout in Dota 2:
 - Gap between heroes: 7px
 - Clock width: 276px
 
-Hero portrait skew:
-- Radiant heroes are skewed at +9 degrees (right tilt)
-- Dire heroes are skewed at -9 degrees (left tilt)
-- Skew correction is applied to improve template matching accuracy
-- Empty spaces created by skew transformation are cropped out
-
 The dimensions are derived from HubSpot's frontend code to ensure accurate detection.
 """
 
@@ -68,10 +62,6 @@ HERO_ACTUAL_HEIGHT = HERO_HEIGHT - HERO_TOP_PADDING  # 67px - actual visible her
 
 # Gap between heroes (from frontend code)
 HERO_GAP = 7  # pixels
-
-# Skew angles for hero portraits
-RADIANT_SKEW_ANGLE = 9  # degrees
-DIRE_SKEW_ANGLE = -9  # degrees
 
 # Clock dimensions (from frontend code)
 CLOCK_WIDTH = 276  # pixels (was 265)
@@ -139,189 +129,6 @@ def load_heroes_data():
         logger.error(f"Error loading heroes data: {e}")
         return None
 
-def apply_skew_correction(image, is_radiant):
-    """
-    Apply skew correction to hero portraits and crop the empty spaces.
-
-    The skew transformation adds empty space on the sides of the image.
-    This function applies the skew correction and then crops the empty space.
-
-    Args:
-        image: The hero portrait image
-        is_radiant: Boolean indicating if the hero is on Radiant (True) or Dire (False)
-
-    Returns:
-        The de-skewed and cropped image
-    """
-    try:
-        # Determine skew angle based on team
-        skew_angle = RADIANT_SKEW_ANGLE if is_radiant else DIRE_SKEW_ANGLE
-
-        # Get image dimensions
-        height, width = image.shape[:2]
-
-        # Calculate amount of skew in pixels (tangent of angle * height)
-        skew_pixels = int(height * np.tan(np.radians(abs(skew_angle))))
-
-        # Add padding to the image to accommodate the skew
-        # This prevents cropping of content during transformation
-        padding = skew_pixels + 5  # Add a bit extra to be safe
-        padded_image = cv2.copyMakeBorder(
-            image,
-            0, 0,  # top, bottom
-            padding, padding,  # left, right
-            cv2.BORDER_CONSTANT,
-            value=(0, 0, 0)  # black padding
-        )
-
-        # Get padded image dimensions
-        padded_height, padded_width = padded_image.shape[:2]
-
-        # Create source points for the transformation (the padded image)
-        src_points = np.float32([
-            [padding, 0],
-            [padding + width, 0],
-            [padding, height],
-            [padding + width, height]
-        ])
-
-        # Create destination points for the transformation (applying skew)
-        if is_radiant:  # Skewed right
-            dst_points = np.float32([
-                [padding + skew_pixels, 0],
-                [padding + width, 0],
-                [padding, height],
-                [padding + width - skew_pixels, height]
-            ])
-        else:  # Skewed left
-            dst_points = np.float32([
-                [padding, 0],
-                [padding + width - skew_pixels, 0],
-                [padding + skew_pixels, height],
-                [padding + width, height]
-            ])
-
-        # Calculate perspective transformation matrix
-        transform_matrix = cv2.getPerspectiveTransform(src_points, dst_points)
-
-        # Apply transformation to the padded image
-        corrected_padded = cv2.warpPerspective(
-            padded_image,
-            transform_matrix,
-            (padded_width, padded_height)
-        )
-
-        # Now crop out the extra padding and the empty space created by skew
-        # The amount to crop depends on the skew direction
-        if is_radiant:
-            # For radiant (skewed right), we need to crop from left at top and right at bottom
-            # Calculate crop coordinates
-            x1 = padding + skew_pixels  # Left edge at top
-            x2 = padding + width  # Right edge at top
-            y1 = 0
-            y2 = height
-
-            # Create masks for empty spaces
-            mask = np.zeros_like(corrected_padded[:,:,0])
-            pts = np.array([
-                [x1, y1],  # Top-left
-                [x2, y1],  # Top-right
-                [x2 - skew_pixels, y2],  # Bottom-right
-                [x1 - skew_pixels, y2]   # Bottom-left
-            ], np.int32).reshape((-1, 1, 2))
-            cv2.fillPoly(mask, [pts], 255)
-
-            # Apply mask to get the region of interest
-            cropped = cv2.bitwise_and(corrected_padded, corrected_padded, mask=mask)
-
-            # Get bounding box of the mask
-            y_indices, x_indices = np.where(mask > 0)
-            x_min, x_max = np.min(x_indices), np.max(x_indices)
-            y_min, y_max = np.min(y_indices), np.max(y_indices)
-
-            # Crop to the bounding box
-            cropped = cropped[y_min:y_max, x_min:x_max]
-        else:
-            # For dire (skewed left), we need to crop from right at top and left at bottom
-            # Calculate crop coordinates
-            x1 = padding  # Left edge at top
-            x2 = padding + width - skew_pixels  # Right edge at top
-            y1 = 0
-            y2 = height
-
-            # Create masks for empty spaces
-            mask = np.zeros_like(corrected_padded[:,:,0])
-            pts = np.array([
-                [x1, y1],  # Top-left
-                [x2, y1],  # Top-right
-                [x2 + skew_pixels, y2],  # Bottom-right
-                [x1 + skew_pixels, y2]   # Bottom-left
-            ], np.int32).reshape((-1, 1, 2))
-            cv2.fillPoly(mask, [pts], 255)
-
-            # Apply mask to get the region of interest
-            cropped = cv2.bitwise_and(corrected_padded, corrected_padded, mask=mask)
-
-            # Get bounding box of the mask
-            y_indices, x_indices = np.where(mask > 0)
-            x_min, x_max = np.min(x_indices), np.max(x_indices)
-            y_min, y_max = np.min(y_indices), np.max(y_indices)
-
-            # Crop to the bounding box
-            cropped = cropped[y_min:y_max, x_min:x_max]
-
-        # If the cropping failed for some reason, return the original image
-        if cropped is None or cropped.size == 0:
-            logger.warning("Cropping failed, returning original skewed image")
-            return apply_simple_skew(image, is_radiant)
-
-        return cropped
-    except Exception as e:
-        logger.error(f"Error applying skew correction: {e}")
-        # Fall back to simpler skew method
-        return apply_simple_skew(image, is_radiant)
-
-def apply_simple_skew(image, is_radiant):
-    """
-    Apply a simpler skew correction without cropping.
-    This is used as a fallback if the more complex method fails.
-
-    Args:
-        image: The hero portrait image
-        is_radiant: Boolean indicating if the hero is on Radiant (True) or Dire (False)
-
-    Returns:
-        The de-skewed image (with empty areas)
-    """
-    try:
-        # Determine skew angle based on team
-        skew_angle = RADIANT_SKEW_ANGLE if is_radiant else DIRE_SKEW_ANGLE
-
-        # Get image dimensions
-        height, width = image.shape[:2]
-
-        # Calculate amount of skew in pixels (tangent of angle * height)
-        skew_pixels = int(height * np.tan(np.radians(abs(skew_angle))))
-
-        # Create source and destination points for the transformation
-        src_points = np.float32([[0, 0], [width, 0], [0, height], [width, height]])
-
-        if is_radiant:  # Skewed right
-            dst_points = np.float32([[skew_pixels, 0], [width, 0], [0, height], [width-skew_pixels, height]])
-        else:  # Skewed left
-            dst_points = np.float32([[0, 0], [width-skew_pixels, 0], [skew_pixels, height], [width, height]])
-
-        # Calculate perspective transformation matrix
-        transform_matrix = cv2.getPerspectiveTransform(src_points, dst_points)
-
-        # Apply transformation
-        corrected_image = cv2.warpPerspective(image, transform_matrix, (width, height))
-
-        return corrected_image
-    except Exception as e:
-        logger.error(f"Error applying simple skew correction: {e}")
-        return image  # Return original image if all correction fails
-
 def extract_hero_bar(frame, debug=False):
     """
     Extract the hero bar from the top of the screen.
@@ -376,13 +183,6 @@ def extract_hero_bar(frame, debug=False):
                 cv2.putText(visualization, f"R{i+1}", (x + 5, 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
-                # Visualize skew angle for Radiant heroes (skewed right)
-                # Draw a line showing the skew angle
-                skew_pixels = int(bar_height * np.tan(np.radians(abs(RADIANT_SKEW_ANGLE))))
-                cv2.line(visualization, (x + skew_pixels, 0), (x, bar_height), (0, 165, 255), 1)
-                cv2.putText(visualization, f"{RADIANT_SKEW_ANGLE}°", (x + 5, 45),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 165, 255), 1)
-
             # Draw dire hero boundaries with gaps
             for i in range(5):
                 x = center_x + CLOCK_WIDTH//2 + i * (HERO_WIDTH + HERO_GAP)
@@ -392,13 +192,6 @@ def extract_hero_bar(frame, debug=False):
                              (0, 0, 255), 2)
                 cv2.putText(visualization, f"D{i+1}", (x + 5, 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-
-                # Visualize skew angle for Dire heroes (skewed left)
-                # Draw a line showing the skew angle
-                skew_pixels = int(bar_height * np.tan(np.radians(abs(DIRE_SKEW_ANGLE))))
-                cv2.line(visualization, (x, 0), (x + skew_pixels, bar_height), (255, 0, 255), 1)
-                cv2.putText(visualization, f"{DIRE_SKEW_ANGLE}°", (x + 5, 45),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 255), 1)
 
             # Draw clock boundaries
             cv2.rectangle(visualization,
@@ -453,10 +246,6 @@ def extract_hero_icons(top_bar, center_x, debug=False):
        - Skips the first 6px (color indicator bar at top)
        - Takes only the next 67px of height (actual hero portrait)
        - Does not include the bottom 58px (player name and role)
-    3. Applies skew correction:
-       - Radiant portraits are skewed at +9 degrees
-       - Dire portraits are skewed at -9 degrees
-    4. Crops out empty space created by the skew transformation
 
     Args:
         top_bar: Cropped top bar image
@@ -484,19 +273,15 @@ def extract_hero_icons(top_bar, center_x, debug=False):
                 logger.warning(f"Invalid crop for Radiant hero {i+1}")
                 continue
 
-            # Apply skew correction for Radiant heroes
-            corrected_icon = apply_skew_correction(hero_icon, is_radiant=True)
-
             # Save for debugging
             if debug:
-                # Save the full selection, cropped portrait, and corrected portrait
+                # Save the full selection and cropped portrait
                 full_selection = top_bar[0:HERO_TOTAL_HEIGHT, x_start:x_end]
                 save_debug_image(full_selection, f"radiant_hero_{i+1}_full")
                 save_debug_image(hero_icon, f"radiant_hero_{i+1}_portrait")
-                save_debug_image(corrected_icon, f"radiant_hero_{i+1}_corrected")
 
             # Add to list: (team, position, icon)
-            hero_icons.append(("Radiant", i, corrected_icon))
+            hero_icons.append(("Radiant", i, hero_icon))
 
         # Extract Dire heroes (right side, 5 heroes)
         for i in range(5):
@@ -513,19 +298,15 @@ def extract_hero_icons(top_bar, center_x, debug=False):
                 logger.warning(f"Invalid crop for Dire hero {i+1}")
                 continue
 
-            # Apply skew correction for Dire heroes
-            corrected_icon = apply_skew_correction(hero_icon, is_radiant=False)
-
             # Save for debugging
             if debug:
-                # Save the full selection, cropped portrait, and corrected portrait
+                # Save the full selection and cropped portrait
                 full_selection = top_bar[0:HERO_TOTAL_HEIGHT, x_start:x_end]
                 save_debug_image(full_selection, f"dire_hero_{i+1}_full")
                 save_debug_image(hero_icon, f"dire_hero_{i+1}_portrait")
-                save_debug_image(corrected_icon, f"dire_hero_{i+1}_corrected")
 
             # Add to list: (team, position, icon)
-            hero_icons.append(("Dire", i, corrected_icon))
+            hero_icons.append(("Dire", i, hero_icon))
 
         logger.debug(f"Extracted {len(hero_icons)} hero icons")
         return hero_icons
@@ -533,9 +314,12 @@ def extract_hero_icons(top_bar, center_x, debug=False):
         logger.error(f"Error extracting hero icons: {e}")
         return []
 
-def identify_hero(hero_icon, heroes_data, min_score=0.5, debug=False):
+def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
     """
     Identify a hero using template matching.
+
+    Compares the hero icon against all hero templates and returns the best match.
+    Always checks all heroes to find the most confident match.
 
     Args:
         hero_icon: Image of the hero icon (cropped to just the hero portrait without color bar)
@@ -544,7 +328,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.5, debug=False):
         debug: Whether to save debug images
 
     Returns:
-        dict: Hero data and match score, or None if no match
+        dict: Hero data and match score, or None if no match above min_score
     """
     try:
         if not heroes_data:
@@ -560,6 +344,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.5, debug=False):
 
         best_match = None
         best_score = 0
+        all_matches = []
 
         # Compare with each hero template
         for hero in heroes_data:
@@ -598,21 +383,34 @@ def identify_hero(hero_icon, heroes_data, min_score=0.5, debug=False):
             # Average score
             avg_score = sum(scores) / len(scores)
 
+            # Add to list of all matches
+            match_info = {
+                'hero_id': hero_id,
+                'hero_name': hero_name,
+                'hero_localized_name': hero.get('localized_name', hero_name),
+                'match_score': avg_score
+            }
+            all_matches.append(match_info)
+
             # Keep the best match
             if avg_score > best_score:
                 best_score = avg_score
-                best_match = {
-                    'hero_id': hero_id,
-                    'hero_name': hero_name,
-                    'hero_localized_name': hero.get('localized_name', hero_name),
-                    'match_score': avg_score
-                }
+                best_match = match_info
 
             # Save comparison for debugging
             if debug and avg_score > 0.4:
                 comparison = np.hstack((hero_icon_resized, template_resized))
                 save_debug_image(comparison, f"hero_match_{hero_id}",
                                 f"{hero.get('localized_name', '')}: {avg_score:.3f}")
+
+        # Sort all matches by score for debugging
+        all_matches.sort(key=lambda x: x['match_score'], reverse=True)
+
+        # Log top 3 matches for debugging
+        if all_matches and len(all_matches) >= 3:
+            top_matches = all_matches[:3]
+            logger.debug(f"Top 3 matches: " +
+                       ", ".join([f"{m['hero_localized_name']} ({m['match_score']:.3f})" for m in top_matches]))
 
         # Return the best match if it's above the threshold
         if best_match and best_match['match_score'] >= min_score:
@@ -635,7 +433,7 @@ def process_frame_for_heroes(frame_path, debug=False):
         debug: Whether to save debug images
 
     Returns:
-        list: List of identified heroes
+        list: List of identified heroes with confidence scores
     """
     try:
         # Load the frame using our custom function to avoid iCCP warnings
@@ -672,9 +470,16 @@ def process_frame_for_heroes(frame_path, debug=False):
                 hero_data['team'] = team
                 hero_data['position'] = position
                 identified_heroes.append(hero_data)
-                logger.debug(f"Identified {team} hero at position {position+1}: {hero_data['hero_localized_name']}")
+                logger.debug(f"Identified {team} hero at position {position+1}: "
+                           f"{hero_data['hero_localized_name']} (confidence: {hero_data['match_score']:.3f})")
+            else:
+                logger.debug(f"Could not identify {team} hero at position {position+1}")
 
-        logger.debug(f"Identified {len(identified_heroes)} heroes in frame")
+        logger.info(f"Identified {len(identified_heroes)} heroes in frame")
+
+        # Sort by team and position
+        identified_heroes.sort(key=lambda h: (h['team'], h['position']))
+
         return identified_heroes
     except Exception as e:
         logger.error(f"Error processing frame for heroes: {e}")
@@ -684,16 +489,20 @@ def process_frames_for_heroes(frame_paths, debug=False):
     """
     Process multiple frames to identify heroes.
 
+    Processes all provided frames and returns heroes from the frame with the most identified heroes.
+
     Args:
         frame_paths: List of paths to frame images
         debug: Whether to save debug images
 
     Returns:
-        list: List of identified heroes
+        list: List of identified heroes from the best frame
     """
     all_results = []
     best_frame_count = 0
     best_frame_heroes = []
+    best_frame_index = -1
+    best_frame_path = None
 
     logger.info(f"Processing {len(frame_paths)} frames for heroes")
 
@@ -707,6 +516,8 @@ def process_frames_for_heroes(frame_paths, debug=False):
         if len(heroes) > best_frame_count:
             best_frame_count = len(heroes)
             best_frame_heroes = heroes
+            best_frame_index = i
+            best_frame_path = frame_path
             logger.debug(f"New best frame: {i+1} with {best_frame_count} heroes")
 
             # If we found all 10 heroes, we can stop
@@ -722,7 +533,18 @@ def process_frames_for_heroes(frame_paths, debug=False):
         })
 
     # Return the best frame's heroes
-    logger.info(f"Best frame has {best_frame_count} heroes")
+    logger.info(f"Best frame (#{best_frame_index+1}: {best_frame_path}) has {best_frame_count} heroes")
+
+    # Print a summary of identified heroes with confidence scores
+    if best_frame_heroes:
+        logger.info("Hero detection summary:")
+        for hero in best_frame_heroes:
+            team = hero['team']
+            pos = hero['position'] + 1
+            name = hero['hero_localized_name']
+            score = hero['match_score']
+            logger.info(f"  {team} #{pos}: {name} (confidence: {score:.3f})")
+
     return best_frame_heroes
 
 def main():
@@ -734,6 +556,8 @@ def main():
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     parser.add_argument("--output", "-o", default="heroes.json",
                       help="Output file path (default: heroes.json)")
+    parser.add_argument("--min-score", type=float, default=0.4,
+                      help="Minimum match score (0.0-1.0) to consider a hero identified (default: 0.4)")
 
     args = parser.parse_args()
 
@@ -749,18 +573,22 @@ def main():
             heroes = process_frame_for_heroes(args.frame_path, debug=args.debug)
 
             if heroes:
+                # Sort by team and position
+                heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
+
                 with open(args.output, 'w') as f:
                     json.dump(heroes, f, indent=2)
                 logger.info(f"Saved {len(heroes)} heroes to {args.output}")
 
-                # Print results
+                # Print results with confidence scores
                 print(f"\nIdentified {len(heroes)} heroes:")
                 for hero in heroes:
                     team = hero['team']
                     pos = hero['position'] + 1
                     name = hero['hero_localized_name']
                     score = hero['match_score']
-                    print(f"{team} #{pos}: {name} (confidence: {score:.2f})")
+                    confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
+                    print(f"{team} #{pos}: {name} (confidence: {score:.2f}) {confidence_indicator}")
 
                 return 0
             else:
@@ -799,18 +627,22 @@ def main():
             heroes = process_frames_for_heroes(frame_paths, debug=args.debug)
 
             if heroes:
+                # Sort by team and position
+                heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
+
                 with open(args.output, 'w') as f:
                     json.dump(heroes, f, indent=2)
                 logger.info(f"Saved {len(heroes)} heroes to {args.output}")
 
-                # Print results
+                # Print results with confidence scores
                 print(f"\nIdentified {len(heroes)} heroes:")
                 for hero in heroes:
                     team = hero['team']
                     pos = hero['position'] + 1
                     name = hero['hero_localized_name']
                     score = hero['match_score']
-                    print(f"{team} #{pos}: {name} (confidence: {score:.2f})")
+                    confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
+                    print(f"{team} #{pos}: {name} (confidence: {score:.2f}) {confidence_indicator}")
 
                 return 0
             else:
