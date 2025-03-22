@@ -59,6 +59,7 @@
     "overlay_one": "Arayüzü {{count}} yayıncı kullanıyor",
     "overlay_other": "Arayüzü {{count}} yayıncı kullanıyor"
   },
+  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Daha iyi item tavsiyelerine mi ihtiyacın var {{- heroName}}? Buraya tıkla {{- url}}",
   "dotabod": "Ben {{author}} tarafından yaratılan açık kaynaklı bir botum. Daha detaylı bilgi için {{- url}}",
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
@@ -102,6 +103,7 @@
     "won_one": "{{- heroName}} {{count}} kill streak'e sahip {{emote}}",
     "won_other": "{{- heroName}} {{count}} kill streak'e sahip {{emote}}"
   },
+  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
   "lastgame": {
     "link": "Son maç {{- url}}",
     "none": "Bir önceki oyundan kimseyle oynamıyorsun",
@@ -119,6 +121,7 @@
     "won": "Son oyunu kazandı"
   },
   "lifetime": "Toplam oyunlar",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "matchFound": "Maç bilgileri bulundu ve {{commandList}} komutları aktifleştirildi.",
   "matchId": "Maç ID: {{matchId}}",
   "midasUsed": "Midası en sonunda $t(seconds, {\"count\": {{seconds}} }) sonra kullandın {{emote}}",
@@ -182,6 +185,8 @@
   "setStreamDelayNoArgs": "Geçersiz yayın gecikmesi, !setdelay <seconds> komutunu kullanın",
   "setStreamDelayRemoved": "Yayın gecikmesi kaldırılıyor",
   "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
+  "songError": "Error fetching song information from Last.fm.",
+  "songNotPlaying": "No song is currently playing.",
   "spectators": {
     "count_one": "1 spectator watching this match live",
     "count_other": "{{count}} spectators watching this match live",

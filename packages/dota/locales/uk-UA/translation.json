@@ -65,6 +65,7 @@
     "overlay_many": "{{count}} стрімери використовують оверлей",
     "overlay_other": "{{count}} стрімери використовують оверлей"
   },
+  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Ти не знаєш що купити на {{- heroName}}?  Подивись тут {{- url}}",
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",
   "facet": "{{- heroName}} вибрав грань {{number}}: {{- facetTitle}} · {{- facetDescription}}",
@@ -122,6 +123,7 @@
     "won_many": "{{- heroName}} має серію з {{count}} вбивств! {{emote}}",
     "won_other": "{{- heroName}} має серію з {{count}} вбивств! {{emote}}"
   },
+  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
   "lastgame": {
     "link": "ID останньої гри: {{- url}}",
     "none": "Не знайдено гравців з минулої гри",
@@ -141,6 +143,7 @@
     "won": "Остання гра: Перемога"
   },
   "lifetime": "Кількість ігор",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "matchFound": "Отримано дані матчу: {{commandList}} - команди активовані.",
   "matchId": "ID матчу: {{matchId}}",
   "midasUsed": "Midas нарешті був використаний через {{seconds}} с {{emote}}",
@@ -210,6 +213,8 @@
   "setStreamDelayNoArgs": "Затримка на стрімі не встановлена, використайте !setdelay <seconds>",
   "setStreamDelayRemoved": "Затримку на стрімі прибрано",
   "shard": "Аганім Шард {{- heroName}} : {{- title}} · {{- description}}",
+  "songError": "Error fetching song information from Last.fm.",
+  "songNotPlaying": "No song is currently playing.",
   "spectators": {
     "count_one": "1 глядач, який дивиться цей матч наживо",
     "count_few": "{{count}} глядачів за цим матчем жити",

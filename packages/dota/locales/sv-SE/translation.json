@@ -59,6 +59,7 @@
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_other": "{{count}} streamers using the overlay"
   },
+  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Behöver du build-idéer av proffs för {{- heroName}}? Kolla här {{- url}}",
   "dotabod": "Jag är en bot med öppen källkod skapad av {{author}}. Mer info: {{- url}}",
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
@@ -102,6 +103,7 @@
     "won_one": "{{- heroName}} har en {{count}} kill streak {{emote}}",
     "won_other": "{{- heroName}} har en {{count}} kill streak {{emote}}"
   },
+  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
   "lastgame": {
     "link": "Här är förra matchen: {{- url}}",
     "none": "Spelar inte med någon från förra matchen",
@@ -119,6 +121,7 @@
     "won": "Vann förra matchen"
   },
   "lifetime": "Totala matcher",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "matchFound": "Matchdata hittades {{commandList}} -kommandon aktiverade.",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas användes äntligen, $t(seconds, {\"count\": {{seconds}} }) sent {{emote}}",
@@ -182,6 +185,8 @@
   "setStreamDelayNoArgs": "Ogiltig stream fördröjning, använd !setdelay <sekunder>",
   "setStreamDelayRemoved": "Tar bort stream fördröjningen",
   "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
+  "songError": "Error fetching song information from Last.fm.",
+  "songNotPlaying": "No song is currently playing.",
   "spectators": {
     "count_one": "1 spectator watching this match live",
     "count_other": "{{count}} spectators watching this match live",

@@ -62,6 +62,7 @@
     "overlay_many": "",
     "overlay_other": "{{count}} streamers usando o overlay"
   },
+  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Precisa de builds profissionais para {{- heroName}} ? Dê uma olhada aqui {{- url}}",
   "dotabod": "Eu sou um bot open source feito pelo {{author}}. Mais informações: {{- url}}",
   "facet": "{{- heroName}} faceta {{number}}: {{- facetTitle}} · {{- facetDescription}}",
@@ -109,6 +110,7 @@
     "won_many": "",
     "won_other": "{{- heroName}} tem uma sequência de abates de {{count}} {{emote}}"
   },
+  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
   "lastgame": {
     "link": "Aqui está a última partida: {{- url}}",
     "none": "Não está jogando com nenhum jogador da partida anterior.",
@@ -127,6 +129,7 @@
     "won": "Partida anterior: Vitória"
   },
   "lifetime": "Partidas totais jogadas",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "matchFound": "Dados da partida encontrados comandos ativados: {{commandList}}",
   "matchId": "ID da partida: {{matchId}}",
   "midasUsed": "A midas foi finalmente usada, $t(seconds, {\"count\": {{seconds}} }) atrasados {{emote}}",
@@ -192,6 +195,8 @@
   "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <segundos> .",
   "setStreamDelayRemoved": "Removendo delay de transmissão",
   "shard": "Fragmento de Aghanim de {{- heroName}}: {{- title}} · {{- description}}",
+  "songError": "Error fetching song information from Last.fm.",
+  "songNotPlaying": "No song is currently playing.",
   "spectators": {
     "count_one": "1 espectador assistindo a esta partida ao vivo",
     "count_many": "",

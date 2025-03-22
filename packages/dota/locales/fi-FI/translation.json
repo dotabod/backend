@@ -59,6 +59,7 @@
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_other": "{{count}} streamers using the overlay"
   },
+  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Tarvitsetko ammattilaisen build-ideoita sankarille {{- heroName}}? Tarkista osoitteessa {{- url}}",
   "dotabod": "Olen avoimen lähdekoodin botti jonka on tehnyt {{author}}. Lisätietoja: {{- url}}",
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
@@ -102,6 +103,7 @@
     "won_one": "{{- heroName}}-sankarilla on {{count}} tappoputki {{emote}}",
     "won_other": "{{- heroName}}-sankarilla on {{count}} tappoputki {{emote}}"
   },
+  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
   "lastgame": {
     "link": "Tässä edellinen peli: {{- url}}",
     "none": "Ei pelaa kenenkään kanssa edellisestä pelistä",
@@ -119,6 +121,7 @@
     "won": "Voitti edellisen pelin"
   },
   "lifetime": "Pelejä yhteensä",
+  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
   "matchFound": "Ottelutiedot löydetty {{commandList}} komennot aktivoitu.",
   "matchId": "Ottelutunnus: {{matchId}}",
   "midasUsed": "Midas vihdoinkin käytetty, $t(seconds, {\"count\": {{seconds}} }) myöhään {{emote}}",
@@ -182,6 +185,8 @@
   "setStreamDelayNoArgs": "Virheellinen striimin viive, käytä !setdelay <sekuntia>",
   "setStreamDelayRemoved": "Poistetaan striimin viive",
   "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
+  "songError": "Error fetching song information from Last.fm.",
+  "songNotPlaying": "No song is currently playing.",
   "spectators": {
     "count_one": "1 spectator watching this match live",
     "count_other": "{{count}} spectators watching this match live",
