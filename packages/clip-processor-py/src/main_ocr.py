@@ -22,6 +22,7 @@ import numpy as np
 
 # Import our modules
 from clip_utils import extract_clip_id, get_clip_details, download_clip, extract_frames
+from player_extractor import process_frame_for_players  # Import our player extractor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -103,8 +104,13 @@ def extract_text_from_frame(image_path):
     # Preprocess the image
     gray, enhanced, binary, cleaned = preprocess_frame(image)
 
-    # Detect if this frame likely contains a player list
-    # Check for text blocks in expected positions
+    # Use our player extractor to try to extract players from the top bar
+    players = process_frame_for_players(image)
+
+    # Calculate a score based on the number of players found
+    player_score = len(players) * 10
+
+    # Detect if this frame likely contains a player list using traditional method
     has_player_list = check_for_player_list(enhanced)
 
     # Convert to PIL Image for OCR
@@ -133,15 +139,22 @@ def extract_text_from_frame(image_path):
     # Combine text results
     all_text = "\n".join([text for _, text in text_results])
 
-    # Score the frame based on likely player names
-    score = score_frame_for_players(all_text)
+    # Score the frame based on likely player names using traditional method
+    traditional_score = score_frame_for_players(all_text)
+
+    # Combine scores, preferring the player extractor score if it found players
+    score = max(player_score, traditional_score)
 
     # Save a debug image with the combined text
-    debug_text = f"Score: {score}, Has player list: {has_player_list}"
+    debug_text = f"Score: {score}, Players found: {len(players)}, Has player list: {has_player_list}"
     save_debug_image(image, "text_results", debug_text)
 
-    # Extract players from the text
-    players = extract_players_from_text(all_text, score)
+    # If we didn't get any players from the top bar extractor, try the traditional method
+    if not players:
+        traditional_players = extract_players_from_text(all_text, traditional_score)
+        if traditional_players:
+            logger.info(f"Using traditional player extraction: found {len(traditional_players)} players")
+            players = traditional_players
 
     return {
         "success": True,
@@ -240,209 +253,183 @@ def extract_players_from_text(text, score):
 
     # Extract name-rank pairs
     # Look for patterns like "PlayerName 1,234" or "PlayerName - 1,234"
-    pattern = r'([A-Za-z][A-Za-z0-9_]{2,})\s*(?:-\s*)?(\d{1,3}(?:,\d{3})+)'
+    pattern = r'([A-Za-z][A-Za-z0-9_]{2,})\s*(?:-\s*)?(\d{1,3}(?:,\d{3})*)'
     matches = re.findall(pattern, text)
 
     # Convert matches to player objects
     for i, (name, rank) in enumerate(matches):
         players.append({
+            "position": i + 1,
             "name": name.strip(),
-            "rank": rank.strip(),
-            "position": i + 1
+            "rank": rank.strip().replace(',', '')
         })
 
-    # If no matches with the strict pattern, try a more lenient approach
-    if not players:
-        # Extract lines that might contain player info
-        lines = [line.strip() for line in text.split('\n') if line.strip()]
-
-        for i, line in enumerate(lines):
-            # Look for a name (capitalized word of 3+ chars)
-            name_match = re.search(r'\b[A-Z][a-zA-Z]{2,}\b', line)
-
-            if name_match:
-                name = name_match.group(0)
-
-                # Look for a rank in the same line
-                rank_match = re.search(r'\b\d{1,3}(?:,\d{3})+\b', line)
-                rank = rank_match.group(0) if rank_match else None
-
-                players.append({
-                    "name": name,
-                    "rank": rank,
-                    "position": i + 1
-                })
-
-    logger.debug(f"Extracted {len(players)} players from text")
     return players
 
 def process_frames_for_players(frame_paths):
     """
-    Process frames to find player data using direct OCR.
+    Process multiple frames to extract player information.
 
     Args:
         frame_paths: List of paths to frame images
 
     Returns:
-        list: Processed frame data
+        List of dictionaries with frame analysis results
     """
-    processed_frames = []
-    logger.info(f"Processing {len(frame_paths)} frames for player data using OCR")
+    logger.info(f"Processing {len(frame_paths)} frames for player information")
 
-    # Process frames in order
-    for i, frame_path in enumerate(tqdm(frame_paths, desc="Processing frames")):
-        logger.debug(f"Processing frame {i+1}/{len(frame_paths)}...")
+    results = []
 
-        # Extract text from the frame
-        result = extract_text_from_frame(frame_path)
-        result["frame_index"] = i
-        result["path"] = frame_path
-        processed_frames.append(result)
+    # Process each frame
+    for frame_path in tqdm(frame_paths, desc="Analyzing frames"):
+        frame_result = extract_text_from_frame(frame_path)
 
-        # Log the result
-        player_count = len(result.get("players", []))
-        logger.debug(f"Frame {i+1}: Score={result.get('score', 0)}, Players={player_count}")
+        if frame_result["success"]:
+            frame_result["frame_path"] = frame_path
+            results.append(frame_result)
 
-        # If we found a good match with several players, we can stop
-        if result.get("score", 0) > 30 and player_count >= 5:
-            logger.info(f"Found high-quality player list at frame {i+1}")
-            break
-
-    # Log summary statistics
-    good_frames = [f for f in processed_frames if f.get("score", 0) > 20]
-    frames_with_players = [f for f in processed_frames if len(f.get("players", [])) > 0]
-    logger.info(f"Frames processed: {len(processed_frames)}, good frames: {len(good_frames)}, frames with players: {len(frames_with_players)}")
-
-    return processed_frames
+    logger.info(f"Completed processing {len(results)} frames")
+    return results
 
 def get_best_player_frame(processed_frames):
     """
-    Get the best frame with player data.
+    Find the frame with the best player information.
 
     Args:
-        processed_frames: List of processed frame data
+        processed_frames: List of frame processing results
 
     Returns:
-        dict: Best frame data or None if no good match
+        The frame with the highest score for player information
     """
-    # Score frames by number of players and text quality
-    for frame in processed_frames:
-        # Calculate a combined score
-        player_count = len(frame.get("players", []))
-        text_score = frame.get("score", 0)
+    if not processed_frames:
+        logger.warning("No processed frames to select from")
+        return None
 
-        # Combined score favors more players and higher text quality
-        frame["combined_score"] = player_count * 10 + text_score
+    # Sort frames by score (descending)
+    sorted_frames = sorted(processed_frames, key=lambda x: x["score"], reverse=True)
 
-    # Sort by combined score (descending)
-    sorted_frames = sorted(processed_frames, key=lambda x: x.get("combined_score", 0), reverse=True)
+    # Get the highest scoring frame
+    best_frame = sorted_frames[0]
+    logger.info(f"Best player frame has score {best_frame['score']} with {len(best_frame['players'])} players")
 
-    # Return the best frame if it has players
-    for frame in sorted_frames:
-        if frame.get("players") and len(frame.get("players", [])) > 0:
-            score = frame.get("combined_score", 0)
-            player_count = len(frame.get("players", []))
-            logger.info(f"Selected best frame with score {score} containing {player_count} players")
-            return frame
+    # Log the top 3 frames for debugging
+    for i, frame in enumerate(sorted_frames[:3]):
+        logger.debug(f"Frame {i+1}: Score {frame['score']}, Players: {len(frame['players'])}")
 
-    logger.warning("No frames with player data found")
-    return None
+    return best_frame
 
 def parse_args():
-    """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description="Process a Twitch clip to extract player info using OCR")
-    parser.add_argument("clip_url", nargs="?", default=DEFAULT_CLIP_URL,
-                       help=f"URL of the Twitch clip (default: {DEFAULT_CLIP_URL})")
-    parser.add_argument("--frame-interval", type=float, default=0.5,
-                       help="Interval between frames in seconds (default: 0.5)")
-    parser.add_argument("--debug", action="store_true",
-                       help="Enable debug logging")
-    parser.add_argument("--debug-images", action="store_true",
-                       help="Save debug images during processing")
-    parser.add_argument("--output", "-o", default="results.json",
-                       help="Output file path (default: results.json)")
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description="Process a Twitch clip for player information using OCR")
+    parser.add_argument("--clip-url", default=DEFAULT_CLIP_URL, help="URL of the Twitch clip to process")
+    parser.add_argument("--frames-dir", help="Directory containing pre-extracted frames (skips clip download)")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument("--debug-images", action="store_true", help="Save debug images")
 
     return parser.parse_args()
 
 def main():
     """Main function."""
-    # Parse command-line arguments
     args = parse_args()
 
-    # Set log level
+    # Configure logging level
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
 
     # Enable debug image saving if requested
     if args.debug_images:
-        os.environ["DEBUG_IMAGES"] = "true"
+        os.environ["DEBUG_IMAGES"] = "1"
 
-    try:
-        # Get the clip URL
-        clip_url = args.clip_url
-        logger.info(f"Processing clip: {clip_url}")
-
-        # Get clip details
-        clip_details = get_clip_details(clip_url)
-        logger.info("Clip details retrieved")
-
-        # Download the clip
-        clip_path = download_clip(clip_details)
-        logger.info(f"Clip downloaded to: {clip_path}")
-
-        # Extract frames (we'll extract frames at regular intervals)
-        logger.info("Extracting frames from clip...")
-        frame_paths = extract_frames(
-            clip_path,
-            start_time=0,
-            end_time=None,  # Use full duration
-            frame_interval=args.frame_interval
-        )
-        logger.info(f"Extracted {len(frame_paths)} frames")
-
-        # Process frames to find player data using OCR
-        logger.info("Processing frames for player data using OCR...")
-        processed_frames = process_frames_for_players(frame_paths)
-
-        # Get the best frame with player data
-        best_frame = get_best_player_frame(processed_frames)
-
-        # Display and save results
-        if best_frame and best_frame.get("players"):
-            players = best_frame["players"]
-
-            print("\nPlayer Information:")
-            print("------------------")
-
-            for i, player in enumerate(players):
-                rank_text = f" - Rank: {player['rank']}" if player.get("rank") else ""
-                print(f"Player {i+1}: {player['name']}{rank_text}")
-
-            # Save the results to a JSON file
-            results = {
-                "timestamp": datetime.now().isoformat(),
-                "clip_url": clip_url,
-                "players": players,
-                "frame_index": best_frame.get("frame_index"),
-                "frame_path": best_frame.get("path"),
-                "score": best_frame.get("score")
-            }
-
-            with open(args.output, "w") as f:
-                json.dump(results, f, indent=2)
-
-            logger.info(f"Results saved to: {args.output}")
-
-            return 0
-        else:
-            logger.warning("No player data found in the clip")
-            print("No player data found in the clip.")
+    # Process existing frames if provided
+    if args.frames_dir:
+        frames_dir = Path(args.frames_dir)
+        if not frames_dir.exists():
+            logger.error(f"Frames directory not found: {frames_dir}")
             return 1
 
-    except Exception as e:
-        logger.error(f"Error processing clip: {e}", exc_info=True)
-        print(f"Error: {e}")
+        # Get all jpg files in the directory
+        frame_paths = sorted(list(frames_dir.glob("*.jpg")))
+        logger.info(f"Found {len(frame_paths)} pre-extracted frames in {frames_dir}")
+
+        if not frame_paths:
+            logger.error(f"No frame images found in {frames_dir}")
+            return 1
+    else:
+        # Extract clip ID from URL
+        clip_id = extract_clip_id(args.clip_url)
+        if not clip_id:
+            logger.error(f"Could not extract clip ID from URL: {args.clip_url}")
+            return 1
+
+        logger.info(f"Processing clip with ID: {clip_id}")
+
+        # Get clip details
+        clip_details = get_clip_details(clip_id)
+        if not clip_details:
+            logger.error(f"Could not retrieve clip details for ID: {clip_id}")
+            return 1
+
+        logger.info(f"Clip title: {clip_details.get('title', 'Unknown')}")
+
+        # Download the clip
+        clip_path = download_clip(clip_id)
+        if not clip_path:
+            logger.error(f"Failed to download clip with ID: {clip_id}")
+            return 1
+
+        logger.info(f"Clip downloaded to: {clip_path}")
+
+        # Extract frames from the clip
+        frame_paths = extract_frames(clip_path)
+        if not frame_paths:
+            logger.error(f"Failed to extract frames from clip: {clip_path}")
+            return 1
+
+        logger.info(f"Extracted {len(frame_paths)} frames from clip")
+
+    # Process frames for player information
+    processed_frames = process_frames_for_players(frame_paths)
+
+    # Get the best frame with player information
+    best_frame = get_best_player_frame(processed_frames)
+
+    if not best_frame:
+        logger.error("Failed to find a good frame with player information")
         return 1
+
+    # Copy the best frame for reference
+    best_frame_path = Path(best_frame["frame_path"])
+    best_frame_copy = OCR_DEBUG_DIR / "best_player_frame.jpg"
+    import shutil
+    shutil.copy(best_frame_path, best_frame_copy)
+    logger.info(f"Best player frame saved to: {best_frame_copy}")
+
+    # Prepare final results
+    players = best_frame["players"]
+
+    # Save results to JSON
+    results = {
+        "timestamp": datetime.now().isoformat(),
+        "clip_url": args.clip_url,
+        "players": players
+    }
+
+    # Save to file
+    output_file = TEMP_DIR / "results.json"
+    with open(output_file, 'w') as f:
+        json.dump(results, f, indent=2)
+
+    logger.info(f"Results saved to: {output_file}")
+    logger.info(f"Found {len(players)} players")
+
+    # Print player information
+    for player in players:
+        position = player.get("position", "?")
+        name = player.get("name", "Unknown")
+        rank = player.get("rank", "N/A")
+        logger.info(f"Player {position}: {name}, Rank: {rank}")
+
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())
