@@ -975,17 +975,27 @@ export class GSIHandler {
     })
 
     const attemptFetchMatchData = async (): Promise<void> => {
+      // Check if they rejoined the match they disconnected from
+      if (this.client.gsi?.map?.matchid === matchId) {
+        logger.info('[BETS] Streamer rejoined the match, skipping early DC winner check', {
+          name: this.client.name,
+          matchId,
+        })
+        return
+      }
+
       // Check if the bet for this match is already closed in the database
-      const { data: matchData, error } = await supabase
+      const { data: matchNotEnded, error } = await supabase
         .from('bets')
         .select('won')
+        // Null means there is a winner of this match
         .is('won', null)
         .eq('matchId', matchId)
         .eq('userId', this.client.token)
         .single()
 
-      if (!matchData || error) {
-        logger.info('[BETS] Match already closed, skipping early DC winner check', {
+      if (!matchNotEnded || error) {
+        logger.info('[BETS] Match already ended, skipping early DC winner check', {
           name: this.client.name,
           matchId,
         })
