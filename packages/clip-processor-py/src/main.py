@@ -18,6 +18,7 @@ from tqdm import tqdm
 # Import our modules
 from clip_utils import extract_clip_id, get_clip_details, download_clip, extract_frames
 from image_processing import process_frame
+from dota_hero_detection import process_frames_for_heroes
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -114,6 +115,14 @@ def parse_args():
                        help="Keep extracted frames after processing")
     parser.add_argument("--output", "-o", default="results.json",
                        help="Output file path (default: results.json)")
+    parser.add_argument("--detect-heroes", action="store_true",
+                       help="Detect Dota 2 heroes in the clip")
+    parser.add_argument("--heroes-only", action="store_true",
+                       help="Only detect heroes, skip player card detection")
+    parser.add_argument("--left-crop", type=int, default=205,
+                       help="Left crop value in pixels for hero detection (default: 205)")
+    parser.add_argument("--right-crop", type=int, default=205,
+                       help="Right crop value in pixels for hero detection (default: 205)")
 
     return parser.parse_args()
 
@@ -125,6 +134,7 @@ def main():
     # Set log level
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
+        os.environ["DEBUG_IMAGES"] = "1"
 
     try:
         # Get the clip URL
@@ -149,12 +159,61 @@ def main():
         )
         logger.info(f"Extracted {len(frame_paths)} frames")
 
-        # Process frames to find player cards
-        logger.info("Processing frames to find player cards...")
-        processed_frames = process_frames_for_player_cards(frame_paths)
+        results = {
+            "timestamp": datetime.now().isoformat(),
+            "clip_url": clip_url
+        }
 
-        # Get the best matching frame
-        best_frame = get_best_player_cards_frame(processed_frames)
+        # Process frames to find heroes if requested
+        if args.detect_heroes or args.heroes_only:
+            logger.info("Processing frames to find Dota 2 heroes...")
+            logger.info(f"Using crop values: left={args.left_crop}px, right={args.right_crop}px")
+
+            # Set crop values as environment variables for the hero detection module
+            os.environ["DOTA_LEFT_CROP"] = str(args.left_crop)
+            os.environ["DOTA_RIGHT_CROP"] = str(args.right_crop)
+
+            heroes_result = process_frames_for_heroes(frame_paths)
+
+            if heroes_result:
+                results["heroes"] = heroes_result
+
+                print("\nIdentified Heroes:")
+                print("-----------------")
+
+                for hero in heroes_result:
+                    team = hero["team"]
+                    pos = hero["position"] + 1
+                    name = hero["hero_localized_name"]
+                    score = hero["match_score"]
+                    print(f"{team} #{pos}: {name} (confidence: {score:.2f})")
+            else:
+                logger.warning("No heroes identified in the clip")
+                print("No heroes identified in the clip.")
+
+        # Skip player card detection if heroes_only is specified
+        if not args.heroes_only:
+            # Process frames to find player cards
+            logger.info("Processing frames to find player cards...")
+            processed_frames = process_frames_for_player_cards(frame_paths)
+
+            # Get the best matching frame
+            best_frame = get_best_player_cards_frame(processed_frames)
+
+            # Add player info to results if found
+            if best_frame and best_frame.get("players"):
+                players = best_frame["players"]
+                results["players"] = players
+
+                print("\nPlayer Information:")
+                print("------------------")
+
+                for i, player in enumerate(players):
+                    rank_text = f" - Rank: {player['rank']}" if player.get("rank") else ""
+                    print(f"Player {i+1}: {player['name']}{rank_text}")
+            else:
+                logger.warning("No player cards found in the clip")
+                print("No player cards found in the clip.")
 
         # We're keeping frames regardless of the save_frames flag now
         if args.save_frames:
@@ -163,33 +222,16 @@ def main():
             # Even if save_frames is false, we'll still keep them for potential reuse
             logger.info("Keeping extracted frames for potential reuse in future runs")
 
-        # Display and save results
-        if best_frame and best_frame.get("players"):
-            players = best_frame["players"]
+        # Save the results to a JSON file
+        with open(args.output, "w") as f:
+            json.dump(results, f, indent=2)
 
-            print("\nPlayer Information:")
-            print("------------------")
+        logger.info(f"Results saved to: {args.output}")
 
-            for i, player in enumerate(players):
-                rank_text = f" - Rank: {player['rank']}" if player.get("rank") else ""
-                print(f"Player {i+1}: {player['name']}{rank_text}")
-
-            # Save the results to a JSON file
-            results = {
-                "timestamp": datetime.now().isoformat(),
-                "clip_url": clip_url,
-                "players": players
-            }
-
-            with open(args.output, "w") as f:
-                json.dump(results, f, indent=2)
-
-            logger.info(f"Results saved to: {args.output}")
-
+        # Return success if we found either heroes or players
+        if "heroes" in results or "players" in results:
             return 0
         else:
-            logger.warning("No player cards found in the clip")
-            print("No player cards found in the clip.")
             return 1
 
     except Exception as e:

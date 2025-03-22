@@ -1,6 +1,6 @@
 # Twitch Clip Processor (Python)
 
-This Python tool processes a Twitch clip to extract player names and ranks from a game lobby screen. It downloads a Twitch clip, extracts frames, and then processes those frames to find player information.
+This Python tool processes a Twitch clip to extract player names and ranks from a game lobby screen. It can also identify Dota 2 heroes from the top bar of the game interface using template matching.
 
 ## Features
 
@@ -8,7 +8,8 @@ This Python tool processes a Twitch clip to extract player names and ranks from 
 - Extracts frames from the clip at regular intervals
 - Uses computer vision to find frames containing player cards
 - Processes player cards to extract names and ranks
-- Extracts hero information from player portraits
+- Detects Dota 2 heroes in the game interface using template matching
+- Automatically downloads hero images from the Dota 2 API
 - Saves results to a JSON file
 
 ## Requirements
@@ -62,7 +63,25 @@ mkdir -p temp assets
 ### Process a specific clip:
 
 ```bash
-python src/main_ocr.py --clip-url "clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi"
+python src/main.py --clip-url "clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi"
+```
+
+### Detect Dota 2 heroes in a clip:
+
+```bash
+python src/main.py --clip-url "clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi" --detect-heroes
+```
+
+### Only detect heroes (skip player detection):
+
+```bash
+python src/main.py --clip-url "clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi" --heroes-only
+```
+
+### Run hero detection directly:
+
+```bash
+python src/dota_hero_detection.py "clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi" --debug
 ```
 
 ### Debug mode with image saving:
@@ -99,23 +118,29 @@ python src/hero_reference.py extract path/to/image.jpg 1  # Position 1-10
 ### Additional options:
 
 ```bash
-python src/main_ocr.py --help
+python src/main.py --help
 ```
 
 This will show all available options:
 
 ```
-usage: main_ocr.py [-h] [--clip-url CLIP_URL] [--frames-dir FRAMES_DIR] [--debug] [--debug-images]
+usage: main.py [-h] [--frame-interval FRAME_INTERVAL] [--debug] [--save-frames] [--output OUTPUT] [--detect-heroes] [--heroes-only] [clip_url]
 
-Process a Twitch clip for player information using OCR
+Process a Twitch clip to extract player info
+
+positional arguments:
+  clip_url              URL of the Twitch clip (default: clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi)
 
 optional arguments:
   -h, --help            show this help message and exit
-  --clip-url CLIP_URL   URL of the Twitch clip to process
-  --frames-dir FRAMES_DIR
-                        Directory containing pre-extracted frames (skips clip download)
+  --frame-interval FRAME_INTERVAL
+                        Interval between frames in seconds (default: 0.5)
   --debug               Enable debug logging
-  --debug-images        Save debug images
+  --save-frames         Keep extracted frames after processing
+  --output OUTPUT, -o OUTPUT
+                        Output file path (default: results.json)
+  --detect-heroes       Detect Dota 2 heroes in the clip
+  --heroes-only         Only detect heroes, skip player card detection
 ```
 
 ## Improving Accuracy
@@ -135,31 +160,51 @@ For best results:
 
 ### Hero Detection
 
-To improve hero detection:
+The hero detection feature uses template matching to identify Dota 2 heroes in the top bar of the game interface. To improve hero detection:
 
-1. Download hero reference images using the provided script:
+1. The system automatically downloads hero images from the Dota 2 API when first run. You can manually trigger this by running:
    ```bash
-   ./download_heroes.sh
+   python src/dota_heroes.py
    ```
 
-2. Extract hero images from known good examples:
-   ```bash
-   python src/hero_reference.py extract path/to/image.jpg 1  # Position 1-10
-   ```
+2. For best results, use clips with clear visibility of the top bar. The detection works best when:
+   - The top bar is clearly visible
+   - There are no overlays or effects obscuring the hero portraits
+   - The stream quality is good (720p or higher)
 
-3. View the hero reference sheet to check available references:
+3. If you encounter detection issues, try using the debug mode to see what's happening:
    ```bash
-   python src/hero_reference.py sheet
+   python src/dota_hero_detection.py "your-clip-url" --debug
    ```
+   This will save debug images to the `temp/debug` directory, showing the detection process.
 
 ## Output
 
-The script outputs a JSON file (default: `temp/results.json`) with the extracted player information:
+The script outputs a JSON file (default: `results.json`) with the extracted information:
 
 ```json
 {
   "timestamp": "2023-04-12T15:30:45.123Z",
   "clip_url": "clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi",
+  "heroes": [
+    {
+      "team": "Radiant",
+      "position": 0,
+      "hero_id": 1,
+      "hero_name": "npc_dota_hero_antimage",
+      "hero_localized_name": "Anti-Mage",
+      "match_score": 0.834
+    },
+    {
+      "team": "Radiant",
+      "position": 1,
+      "hero_id": 2,
+      "hero_name": "npc_dota_hero_axe",
+      "hero_localized_name": "Axe",
+      "match_score": 0.912
+    },
+    // ... more heroes ...
+  ],
   "players": [
     {
       "position": 1,
@@ -167,13 +212,7 @@ The script outputs a JSON file (default: `temp/results.json`) with the extracted
       "rank": "4127",
       "hero": "spectre"
     },
-    {
-      "position": 2,
-      "name": "Player2",
-      "rank": "853",
-      "hero": "invoker"
-    },
-    ...
+    // ... more players ...
   ]
 }
 ```
@@ -182,9 +221,10 @@ The script outputs a JSON file (default: `temp/results.json`) with the extracted
 
 The project consists of several main components:
 
-- `main_ocr.py`: Primary script for clip processing and OCR
-- `player_extractor.py`: Specialized module for extracting player information from the top bar
-- `hero_reference.py`: Manages hero reference images for hero detection
+- `main.py`: Primary script for clip processing, coordinating both player and hero detection
+- `dota_heroes.py`: Handles downloading and management of Dota 2 hero images
+- `dota_hero_detection.py`: Implements template matching to detect heroes in the top bar
+- `image_processing.py`: Processes frames to find player cards
 - `clip_utils.py`: Handles clip downloading and frame extraction
 - Various shell scripts (`*.sh`) for convenient execution of common tasks
 
