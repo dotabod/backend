@@ -1,6 +1,5 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
-import axios from 'axios'
 // @ts-expect-error no types
 import Dota2 from 'dota2'
 import { Long } from 'mongodb'
@@ -652,28 +651,20 @@ export const GetRealTimeStats = async ({
   steam_server_id: string
   token: string
 }): Promise<DelayedGames> => {
-  const logStats = {
-    match_id,
-    refetchCards,
-    steam_server_id,
-    forceRefetchAll,
-    token,
-  }
-  logger.info('[GetRealTimeStats] Starting with params', logStats)
   let waitForHeros = forceRefetchAll || false
 
   if (!steam_server_id) {
-    logger.error('[GetRealTimeStats] No steam_server_id provided', logStats)
     throw new Error('Match not found')
   }
 
-  const currentData = await fetchDataFromMongo(match_id)
-  const { hasAccountIds, hasHeroes } = hasSteamData(currentData)
+  if (process.env.DOTABOD_ENV === 'production') {
+    const currentData = await fetchDataFromMongo(match_id)
+    const { hasAccountIds, hasHeroes } = hasSteamData(currentData)
 
-  // can early exit if we have all the data we need
-  if (currentData && hasHeroes && hasAccountIds && !forceRefetchAll) {
-    logger.info('[GetRealTimeStats] Early exit with current data', { ...logStats, currentData })
-    return currentData
+    // can early exit if we have all the data we need
+    if (currentData && hasHeroes && hasAccountIds && !forceRefetchAll) {
+      return currentData
+    }
   }
 
   const operation = retry.operation({
@@ -683,44 +674,32 @@ export const GetRealTimeStats = async ({
     maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
   })
 
-  logger.debug('[GetRealTimeStats] Configured retry operation', {
-    retries: 35,
-    minTimeout: 5000,
-    maxTimeout: 10000,
-  })
-
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     operation.attempt(async (currentAttempt) => {
-      logger.debug('[GetRealTimeStats] Attempt', { ...logStats, currentAttempt, waitForHeros })
       let game: DelayedGames
       try {
         const apiUrl = getApiUrl(steam_server_id)
-        logger.debug('[GetRealTimeStats] Fetching from API', { ...logStats, apiUrl })
-        game = (await axios<DelayedGames>(apiUrl))?.data
-        logger.debug('[GetRealTimeStats] API response received', { ...logStats, hasData: !!game })
+        logger.info('[STEAM] Fetching game data from:', { apiUrl })
+        const response = await fetch(apiUrl)
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`)
+        }
+        game = (await response.json()) as DelayedGames
       } catch (e) {
-        logger.error('[GetRealTimeStats] API request failed', { ...logStats, error: e })
+        logger.error('[STEAM] Failed to fetch game data:', { e })
         return operation.retry(new Error('Match not found'))
       }
       const { hasAccountIds, hasHeroes } = hasSteamData(game)
-      logger.debug('[GetRealTimeStats] Game data analysis', {
-        ...logStats,
-        hasAccountIds,
-        hasHeroes,
-      })
-
       // needs account ids
       const retryAttempt = !hasAccountIds || !game ? new Error() : undefined
       if (operation.retry(retryAttempt)) {
-        logger.debug('[GetRealTimeStats] Retrying due to missing account IDs', { ...logStats })
         return
       }
 
       // needs hero data
       const retryAttempt2 = waitForHeros && !hasHeroes ? new Error() : undefined
       if (operation.retry(retryAttempt2)) {
-        logger.debug('[GetRealTimeStats] Retrying due to missing hero data', { ...logStats })
         return
       }
 
@@ -728,42 +707,29 @@ export const GetRealTimeStats = async ({
       game.match.match_id = match_id
       game.match.server_steam_id = steam_server_id
       const gamePlusMore = { ...game, createdAt: new Date() }
-      logger.debug('[GetRealTimeStats] Updated match data', { ...logStats, gamePlusMore })
 
       if (hasHeroes) {
-        logger.info('[GetRealTimeStats] Heroes data found, finalizing', { ...logStats })
         // sort players by team_slot
         sortPlayersBySlot(game)
 
         await saveMatch({ match_id, game: gamePlusMore })
-        logger.debug('[GetRealTimeStats] Match saved to database', { ...logStats })
 
         if (!forceRefetchAll) {
           // forward the msg to dota node app
-          logger.debug('[GetRealTimeStats] Emitting saveHeroesForMatchId event', {
-            ...logStats,
-            matchId: match_id,
-          })
           socketIoServer.to('steam').emit('saveHeroesForMatchId', { matchId: match_id, token })
         }
         return resolve(gamePlusMore)
       }
 
       if (!waitForHeros) {
-        logger.info(
-          '[GetRealTimeStats] No heroes data yet, saving initial data and continuing to wait',
-          { ...logStats },
-        )
         // sort players by team_slot
         sortPlayersBySlot(game)
 
         await saveMatch({ match_id, game: gamePlusMore, refetchCards })
-        logger.debug('[GetRealTimeStats] Initial match data saved', { ...logStats })
         waitForHeros = true
         operation.retry(new Error())
       }
 
-      logger.info('[GetRealTimeStats] Resolving with current data', { ...logStats })
       return resolve(gamePlusMore)
     })
   })
