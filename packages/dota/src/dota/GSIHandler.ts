@@ -1225,61 +1225,6 @@ export class GSIHandler {
                 logger.error('err maybeSendRoshAegisEvent', { e })
               }
             }
-
-            if (blocker.type === 'draft' && this.client.Account?.providerAccountId) {
-              try {
-                const api = getTwitchAPI(this.client.Account?.providerAccountId)
-
-                // Crate a marker
-                api.streams
-                  .createStreamMarker(
-                    this.client.Account?.providerAccountId,
-                    'Draft phase in obs blockers',
-                  )
-                  .then((marker) => {
-                    logger.info('Draft phase in obs blockers', {
-                      state,
-                      name: this.client.name,
-                      matchId: this.client.gsi?.map?.matchid,
-                      marker,
-                    })
-                  })
-                  .catch((e) => {
-                    logger.error('err createMarker', {
-                      e,
-                      name: this.client.name,
-                      matchId: this.client.gsi?.map?.matchid,
-                    })
-                  })
-
-                api.clips
-                  .createClip({
-                    channel: this.client.Account?.providerAccountId,
-                    createAfterDelay: true,
-                  })
-                  .then((clip) => {
-                    logger.info('Draft phase in obs blockers', {
-                      state,
-                      name: this.client.name,
-                      matchId: this.client.gsi?.map?.matchid,
-                      clipId: clip,
-                    })
-                  })
-                  .catch((e) => {
-                    logger.error('err createClip', {
-                      e,
-                      name: this.client.name,
-                      matchId: this.client.gsi?.map?.matchid,
-                    })
-                  })
-              } catch (e) {
-                logger.error('err createClip', {
-                  e,
-                  name: this.client.name,
-                  matchId: this.client.gsi?.map?.matchid,
-                })
-              }
-            }
           }
 
           return true
