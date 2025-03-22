@@ -67,7 +67,7 @@ async function getStats({
     const delayedData = await getDelayedDataPromise
 
     if (!delayedData) {
-      throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
+      throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
     }
 
     const teamIndex = (playerIdx ?? 0) > 4 ? 1 : 0
@@ -89,7 +89,7 @@ async function getStats({
   const heroData = hero && 'level' in hero ? hero : undefined
 
   if (!playerData || !heroData) {
-    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
+    throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
   }
 
   return {
