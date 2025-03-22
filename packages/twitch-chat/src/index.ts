@@ -86,7 +86,16 @@ io.on('connection', (socket) => {
 
         // Only disable if message failed to send
         if (!response.data?.[0]?.is_sent) {
-          await disableUser(providerAccountId)
+          if (response.data?.[0]?.drop_reason?.code === 'followers_only_mode') {
+            await disableUser(providerAccountId)
+          } else {
+            // Log the entire message and response
+            logger.error('Failed to send chat message:', {
+              message: text,
+              broadcaster_id: providerAccountId,
+              response,
+            })
+          }
         }
       } catch (e) {
         logger.error('Failed to send chat message:', e)
