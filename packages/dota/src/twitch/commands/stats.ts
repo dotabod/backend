@@ -41,10 +41,6 @@ async function getStats({
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
     const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
-      }, 10000) // 5 second timeout
-
       steamSocket.emit(
         'getRealTimeStats',
         {
@@ -54,7 +50,6 @@ async function getStats({
           token,
         },
         (err: any, cards: any) => {
-          clearTimeout(timeoutId)
           if (err) {
             reject(err)
           } else {
