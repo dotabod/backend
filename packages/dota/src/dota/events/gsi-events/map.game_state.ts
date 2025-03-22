@@ -11,54 +11,33 @@ eventHandler.registerEvent('map:game_state', {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi, false)) return
 
-    if (draftStates.includes(gameState) && dotaClient.client.Account?.providerAccountId) {
+    const accountId = dotaClient.client.Account?.providerAccountId
+    if (draftStates.includes(gameState) && accountId) {
       try {
-        const api = getTwitchAPI(dotaClient.client.Account?.providerAccountId)
+        const api = getTwitchAPI(accountId)
 
-        // Crate a marker
-        api.streams
-          .createStreamMarker(
-            dotaClient.client.Account?.providerAccountId,
-            'Draft phase in obs blockers',
-          )
-          .catch((e) => {
-            logger.error('err createMarker', {
-              e,
-              name: dotaClient.client.name,
-              matchId: dotaClient.client.gsi?.map?.matchid,
+        // Create clip after 30 seconds delay
+        setTimeout(() => {
+          api.clips
+            .createClip({
+              channel: accountId,
             })
-          })
-
-        api.clips
-          .createClip({
-            channel: dotaClient.client.Account?.providerAccountId,
-            createAfterDelay: true,
-          })
-          .then((clipId) => {
-            logger.info('Draft phase in obs blockers', {
-              state: gameState,
-              name: dotaClient.client.name,
-              matchId: dotaClient.client.gsi?.map?.matchid,
-              clipId,
-            })
-
-            api.clips.getClipById(clipId).then((clip) => {
-              logger.info('Created clip', {
+            .then((clipId) => {
+              logger.info('Clip created', {
                 state: gameState,
                 name: dotaClient.client.name,
                 matchId: dotaClient.client.gsi?.map?.matchid,
-                clipId,
-                url: clip?.url,
+                url: `clips.twitch.tv/${clipId}`,
               })
             })
-          })
-          .catch((e) => {
-            logger.error('err createClip', {
-              e,
-              name: dotaClient.client.name,
-              matchId: dotaClient.client.gsi?.map?.matchid,
+            .catch((e) => {
+              logger.error('err createClip', {
+                e,
+                name: dotaClient.client.name,
+                matchId: dotaClient.client.gsi?.map?.matchid,
+              })
             })
-          })
+        }, 30000)
       } catch (e) {
         logger.error('err createClip', {
           e,
