@@ -568,6 +568,7 @@ export type BlockType =
   | 'playing'
   | 'strategy'
   | 'strategy-2'
+  | 'draft'
   | null
 
 export interface MatchPlayer {

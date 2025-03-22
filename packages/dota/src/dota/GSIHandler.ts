@@ -1224,6 +1224,15 @@ export class GSIHandler {
                 logger.error('err maybeSendRoshAegisEvent', { e })
               }
             }
+
+            if (blocker.type === 'draft') {
+              // TODO: Clip the draft phase with Twitch API
+              logger.info('Draft phase in obs blockers', {
+                state,
+                name: this.client.name,
+                matchId: this.client.gsi?.map?.matchid,
+              })
+            }
           }
 
           return true

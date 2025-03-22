@@ -1,8 +1,7 @@
 import type { GSIHandler } from '../GSIHandler.js'
 
-// just here for reference, not being used
 // full list at https://github.com/SteamDatabase/GameTracking-Dota2/blob/master/Protobufs/dota_shared_enums.proto
-const allSates = [
+export const allStates = [
   'DOTA_GAMERULES_STATE_INIT',
   'DOTA_GAMERULES_STATE_WAIT_FOR_PLAYERS_TO_LOAD',
   'DOTA_GAMERULES_STATE_HERO_SELECTION',
@@ -41,8 +40,10 @@ export const dontBlockStates = [
 ]
 
 export const pickSates = ['DOTA_GAMERULES_STATE_HERO_SELECTION']
+export const draftStates = ['DOTA_GAMERULES_STATE_PLAYER_DRAFT']
 
 export const blockTypes = [
+  { type: 'draft', states: draftStates },
   { type: 'picks', states: pickSates },
   { type: 'playing', states: playingStates },
   { type: 'empty', states: dontBlockStates },
