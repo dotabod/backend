@@ -16,7 +16,6 @@ import type { SubscriptionRow } from '../utils/subscription.js'
 import { NeutralItemTimer } from './NeutralItemTimer.js'
 import { type AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
 import { type RoshRes, emitRoshEvent } from './events/gsi-events/event.roshan_killed.js'
-import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/newdata.js'
 import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster.js'
 import { minimapParser } from './events/minimap/parser.js'
 import { server } from './index.js'
@@ -32,6 +31,7 @@ import { steamSocket } from '../steam/ws.js'
 import type { MatchMinimalDetailsResponse } from '../types'
 import { Long } from 'mongodb'
 import { getHeroById } from './lib/heroes.js'
+import { getTwitchAPI } from '../twitch/lib/getTwitchAPI.js'
 
 export const redisClient = RedisClient.getInstance()
 
@@ -1225,13 +1225,59 @@ export class GSIHandler {
               }
             }
 
-            if (blocker.type === 'draft') {
-              // TODO: Clip the draft phase with Twitch API
-              logger.info('Draft phase in obs blockers', {
-                state,
-                name: this.client.name,
-                matchId: this.client.gsi?.map?.matchid,
-              })
+            if (blocker.type === 'draft' && this.client.Account?.providerAccountId) {
+              try {
+                const api = getTwitchAPI(this.client.Account?.providerAccountId)
+
+                // Crate a marker
+                api.streams
+                  .createStreamMarker(
+                    this.client.Account?.providerAccountId,
+                    'Draft phase in obs blockers',
+                  )
+                  .then((marker) => {
+                    logger.info('Draft phase in obs blockers', {
+                      state,
+                      name: this.client.name,
+                      matchId: this.client.gsi?.map?.matchid,
+                      marker,
+                    })
+                  })
+                  .catch((e) => {
+                    logger.error('err createMarker', {
+                      e,
+                      name: this.client.name,
+                      matchId: this.client.gsi?.map?.matchid,
+                    })
+                  })
+
+                api.clips
+                  .createClip({
+                    channel: this.client.Account?.providerAccountId,
+                    createAfterDelay: true,
+                  })
+                  .then((clip) => {
+                    logger.info('Draft phase in obs blockers', {
+                      state,
+                      name: this.client.name,
+                      matchId: this.client.gsi?.map?.matchid,
+                      clipId: clip,
+                    })
+                  })
+                  .catch((e) => {
+                    logger.error('err createClip', {
+                      e,
+                      name: this.client.name,
+                      matchId: this.client.gsi?.map?.matchid,
+                    })
+                  })
+              } catch (e) {
+                logger.error('err createClip', {
+                  e,
+                  name: this.client.name,
+                  matchId: this.client.gsi?.map?.matchid,
+                })
+              }
             }
           }
 
