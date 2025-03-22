@@ -32,7 +32,12 @@ commandHandler.registerCommand('gm', {
 
     gameMedals(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {
-        chatClient.say(message.channel.name, desc, message.user.messageId)
+        let append = ''
+        if (matchPlayers.length === 1 && matchPlayers[0].accountid === client.steam32Id) {
+          append = ` · ${t('matchData8500', { emote: 'PoroSad', lng: message.channel.client.locale })}`
+        }
+
+        chatClient.say(message.channel.name, desc + append, message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(
