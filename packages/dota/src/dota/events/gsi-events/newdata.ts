@@ -68,6 +68,23 @@ function chatterMatchFound(client: SocketClient) {
 const steamServerLookupMap = new Set<string>()
 const steamDelayDataLookupMap = new Set<string>()
 
+// Debounce map to limit how often we call saveMatchData per client
+const saveMatchDataDebounceMap = new Map<string, { lastExecuted: number; inProgress: boolean }>()
+// Debounce interval in milliseconds
+const DEBOUNCE_INTERVAL = 5000 // 5 seconds
+
+// Cache results in memory for quick lookup
+const matchDataCache = new Map<
+  string,
+  {
+    steamServerId: string | null
+    lobbyType: string | null
+    timestamp: number
+  }
+>()
+// Cache expiration time in milliseconds
+const CACHE_EXPIRATION = 60000 // 1 minute
+
 // Runs every gametick
 async function saveMatchData(client: SocketClient) {
   // This now waits for the bet to complete before checking match data
@@ -78,117 +95,218 @@ async function saveMatchData(client: SocketClient) {
 
   if (!client.steam32Id) return
 
-  // did we already come here before?
-  const res = await redisClient.client
-    .multi()
-    .get(`${matchId}:${client.token}:steamServerId`)
-    .get(`${matchId}:${client.token}:lobbyType`)
-    .exec()
+  const cacheKey = `${matchId}:${client.token}`
 
-  const [steamServerId] = res
-  const [, lobbyType] = res
-
-  if (steamServerId && lobbyType !== null) return
-
-  if (!steamServerId && lobbyType === null) {
-    // Fix: Check if we're already looking up this match to prevent race conditions
-    if (steamServerLookupMap.has(matchId)) return
-
-    // Add to lookup map before starting the async operation
-    steamServerLookupMap.add(matchId)
-
-    try {
-      const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
-        const timeoutId = setTimeout(() => {
-          reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: client.locale })))
-        }, 10000) // 10 second timeout
-
-        steamSocket.emit('getUserSteamServer', client.steam32Id, (err: any, cards: any) => {
-          clearTimeout(timeoutId)
-          if (err) {
-            reject(err)
-          } else {
-            resolve(cards)
-          }
-        })
-      })
-
-      const steamServerId = await getDelayedDataPromise
-
-      if (steamServerId) {
-        await redisClient.client.set(
-          `${matchId}:${client.token}:steamServerId`,
-          steamServerId.toString(),
-        )
-      }
-    } catch (error) {
-      logger.error('Error getting steam server data', { error, matchId })
-    } finally {
-      // Always remove from the map, even if there was an error
-      steamServerLookupMap.delete(matchId)
+  // Check in-memory cache first
+  const cachedData = matchDataCache.get(cacheKey)
+  if (cachedData) {
+    // If cache is still valid, use cached data and return
+    if (Date.now() - cachedData.timestamp < CACHE_EXPIRATION) {
+      if (cachedData.steamServerId && cachedData.lobbyType !== null) return
+    } else {
+      // If cache expired, remove it
+      matchDataCache.delete(cacheKey)
     }
   }
 
-  // Re-check steamServerId as it might have been set in the previous block
-  const currentSteamServerId = await redisClient.client.get(
-    `${matchId}:${client.token}:steamServerId`,
-  )
-  if (currentSteamServerId && lobbyType === null) {
-    // Fix: Check if we're already looking up this match to prevent race conditions
-    if (steamDelayDataLookupMap.has(matchId)) return
+  // Implement debounce logic
+  const debounceKey = `${client.token}`
+  const now = Date.now()
+  const debounceData = saveMatchDataDebounceMap.get(debounceKey)
 
-    steamDelayDataLookupMap.add(matchId)
+  // If this client's function is already in progress or ran recently, skip this execution
+  if (debounceData) {
+    if (debounceData.inProgress || now - debounceData.lastExecuted < DEBOUNCE_INTERVAL) {
+      return
+    }
+  }
 
-    try {
-      const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
-        const timeoutId = setTimeout(() => {
-          reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: client.locale })))
-        }, 10000) // 10 second timeout
+  // Mark this execution as in progress
+  saveMatchDataDebounceMap.set(debounceKey, { lastExecuted: now, inProgress: true })
 
-        steamSocket.emit(
-          'getRealTimeStats',
-          {
-            match_id: matchId,
-            refetchCards: true,
-            steam_server_id: currentSteamServerId.toString(),
-            token: client.token,
-          },
-          (err: any, data: DelayedGames) => {
+  try {
+    // did we already come here before?
+    const res = await redisClient.client
+      .multi()
+      .get(`${matchId}:${client.token}:steamServerId`)
+      .get(`${matchId}:${client.token}:lobbyType`)
+      .exec()
+
+    const [steamServerId] = res
+    const [, lobbyType] = res
+
+    // Update cache with Redis data
+    matchDataCache.set(cacheKey, {
+      steamServerId: steamServerId ? String(steamServerId) : null,
+      lobbyType: lobbyType ? String(lobbyType) : null,
+      timestamp: now,
+    })
+
+    if (steamServerId && lobbyType !== null) return
+
+    if (!steamServerId && lobbyType === null) {
+      // Fix: Check if we're already looking up this match to prevent race conditions
+      if (steamServerLookupMap.has(matchId)) return
+
+      // Add to lookup map before starting the async operation
+      steamServerLookupMap.add(matchId)
+
+      try {
+        const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
+          const timeoutId = setTimeout(() => {
+            reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: client.locale })))
+          }, 10000) // 10 second timeout
+
+          steamSocket.emit('getUserSteamServer', client.steam32Id, (err: any, cards: any) => {
             clearTimeout(timeoutId)
             if (err) {
               reject(err)
             } else {
-              resolve(data)
+              resolve(cards)
             }
-          },
-        )
-      })
+          })
+        })
 
-      const delayedData = await getDelayedDataPromise
+        const steamServerId = await getDelayedDataPromise
 
-      if (delayedData?.match.lobby_type) {
-        await Promise.all([
-          redisClient.client.set(
-            `${matchId}:${client.token}:lobbyType`,
-            delayedData.match.lobby_type,
-          ),
-          redisClient.client.set(
-            `${matchId}:${client.token}:gameMode`,
-            delayedData.match.game_mode,
-          ),
-        ])
-        chatterMatchFound(client)
+        if (steamServerId) {
+          await redisClient.client.set(
+            `${matchId}:${client.token}:steamServerId`,
+            steamServerId.toString(),
+          )
+
+          // Update cache
+          matchDataCache.set(cacheKey, {
+            steamServerId: steamServerId.toString(),
+            lobbyType: null,
+            timestamp: Date.now(),
+          })
+        }
+      } catch (error) {
+        logger.error('Error getting steam server data', { error, matchId })
+      } finally {
+        // Always remove from the map, even if there was an error
+        steamServerLookupMap.delete(matchId)
       }
-    } catch (error) {
-      if (!(error instanceof CustomError)) {
-        logger.error('Error getting delayed match data', { error, matchId })
+    }
+
+    // Re-check steamServerId from cache first, then Redis if needed
+    let currentSteamServerId = matchDataCache.get(cacheKey)?.steamServerId || null
+    if (!currentSteamServerId) {
+      currentSteamServerId = await redisClient.client.get(
+        `${matchId}:${client.token}:steamServerId`,
+      )
+
+      // Update cache if we found it in Redis
+      if (currentSteamServerId) {
+        const currentCache = matchDataCache.get(cacheKey) || {
+          steamServerId: null,
+          lobbyType: null,
+          timestamp: now,
+        }
+        matchDataCache.set(cacheKey, {
+          ...currentCache,
+          steamServerId: currentSteamServerId,
+          timestamp: now,
+        })
       }
-    } finally {
-      // Always remove from the map, even if there was an error
-      steamDelayDataLookupMap.delete(matchId)
+    }
+
+    if (currentSteamServerId && lobbyType === null) {
+      // Fix: Check if we're already looking up this match to prevent race conditions
+      if (steamDelayDataLookupMap.has(matchId)) return
+
+      steamDelayDataLookupMap.add(matchId)
+
+      try {
+        const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
+          const timeoutId = setTimeout(() => {
+            reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: client.locale })))
+          }, 10000) // 10 second timeout
+
+          steamSocket.emit(
+            'getRealTimeStats',
+            {
+              match_id: matchId,
+              refetchCards: true,
+              steam_server_id: currentSteamServerId.toString(),
+              token: client.token,
+            },
+            (err: any, data: DelayedGames) => {
+              clearTimeout(timeoutId)
+              if (err) {
+                reject(err)
+              } else {
+                resolve(data)
+              }
+            },
+          )
+        })
+
+        const delayedData = await getDelayedDataPromise
+
+        if (delayedData?.match.lobby_type) {
+          await Promise.all([
+            redisClient.client.set(
+              `${matchId}:${client.token}:lobbyType`,
+              delayedData.match.lobby_type,
+            ),
+            redisClient.client.set(
+              `${matchId}:${client.token}:gameMode`,
+              delayedData.match.game_mode,
+            ),
+          ])
+
+          // Update cache with complete data
+          matchDataCache.set(cacheKey, {
+            steamServerId: currentSteamServerId.toString(),
+            lobbyType: String(delayedData.match.lobby_type),
+            timestamp: Date.now(),
+          })
+
+          chatterMatchFound(client)
+        }
+      } catch (error) {
+        if (!(error instanceof CustomError)) {
+          logger.error('Error getting delayed match data', { error, matchId })
+        }
+      } finally {
+        // Always remove from the map, even if there was an error
+        steamDelayDataLookupMap.delete(matchId)
+      }
+    }
+  } finally {
+    // Update the debounce map to mark execution as complete
+    const currentDebounce = saveMatchDataDebounceMap.get(debounceKey)
+    if (currentDebounce) {
+      saveMatchDataDebounceMap.set(debounceKey, { ...currentDebounce, inProgress: false })
+
+      // Set up an automatic cleanup for the debounce map entry after 5 minutes of inactivity
+      setTimeout(() => {
+        const entry = saveMatchDataDebounceMap.get(debounceKey)
+        if (entry && Date.now() - entry.lastExecuted > 300000) {
+          // 5 minutes
+          saveMatchDataDebounceMap.delete(debounceKey)
+        }
+      }, 300000) // 5 minutes
     }
   }
 }
+
+// Implement a cleanup function to periodically clear expired cache entries
+function cleanupMatchDataCache() {
+  const now = Date.now()
+  for (const [key, value] of matchDataCache.entries()) {
+    if (now - value.timestamp > CACHE_EXPIRATION) {
+      matchDataCache.delete(key)
+    }
+  }
+  // Run cleanup every minute
+  setTimeout(cleanupMatchDataCache, 60000)
+}
+
+// Start the cleanup process
+cleanupMatchDataCache()
 
 const tooltipsConfig = {
   clientId: process.env.TWITCH_EXT_CLIENT_ID || '',
