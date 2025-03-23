@@ -1323,8 +1323,9 @@ def process_frames_for_heroes(frame_paths, debug=False):
     """
     Process multiple frames to identify heroes.
 
-    First finds the frame with a perfect match for hero color bars (10/10 matches),
-    then processes only that frame for hero identification.
+    Scans frames in reverse order (last to first) to find a frame with
+    a perfect match for hero color bars (10/10 matches), then processes
+    only that frame for hero identification.
 
     Args:
         frame_paths: List of paths to frame images
@@ -1335,7 +1336,7 @@ def process_frames_for_heroes(frame_paths, debug=False):
     """
     performance_timer.start('process_all_frames')
 
-    logger.info(f"Analyzing {len(frame_paths)} frames for hero color bars")
+    logger.info(f"Analyzing {len(frame_paths)} frames for hero color bars (scanning from last to first)")
 
     # Find the frame with the best color bar matches
     best_color_match_score = 0.0
@@ -1343,12 +1344,16 @@ def process_frames_for_heroes(frame_paths, debug=False):
     best_color_frame_path = None
     perfect_match_found = False
 
-    for i, frame_path in enumerate(tqdm(frame_paths, desc="Finding frame with best color bars")):
+    # Reverse the frame paths to start from the end
+    reversed_frames = list(enumerate(frame_paths))
+    reversed_frames.reverse()
+
+    for i, frame_path in tqdm(reversed_frames, desc="Finding frame with best color bars (last to first)"):
         logger.debug(f"Analyzing color bars in frame {i+1}/{len(frame_paths)}: {frame_path}")
 
         # Check color bars in this frame
         performance_timer.start(f'color_bars_{i+1}')
-        match_score, detected_colors = detect_hero_color_bars(frame_path, expected_colors, debug=(debug and i < 3))
+        match_score, detected_colors = detect_hero_color_bars(frame_path, expected_colors, debug=(debug and len(frame_paths)-i < 3))
         performance_timer.stop(f'color_bars_{i+1}')
 
         # Keep track of the frame with the best color match
@@ -1592,8 +1597,12 @@ def main():
                 best_match_score = 0.0
                 detected_colors = {}
 
-                # Find the frame with the best color match score
-                for i, frame_path in enumerate(frame_paths):
+                # Find the frame with the best color match score (scanning from last to first)
+                reversed_frame_indices = list(range(len(frame_paths)))
+                reversed_frame_indices.reverse()
+
+                for i in reversed_frame_indices:
+                    frame_path = frame_paths[i]
                     match_score, colors = detect_hero_color_bars(frame_path, expected_colors, debug=False)
                     if match_score > best_match_score:
                         best_match_score = match_score
@@ -1602,7 +1611,16 @@ def main():
                         detected_colors = colors
                         # If we found a perfect match, stop
                         if match_score == 1.0:
+                            logger.info(f"Found perfect color match (10/10) in frame {i+1}")
                             break
+
+                # Log the best match results
+                if best_match_score == 1.0:
+                    logger.info(f"Using frame {best_frame_index+1} with perfect color match (10/10)")
+                elif best_match_score >= 0.7:
+                    logger.info(f"Using frame {best_frame_index+1} with partial color match ({int(best_match_score*10)}/10)")
+                else:
+                    logger.warning(f"Best frame only has {int(best_match_score*10)}/10 color matches, results may be unreliable")
 
                 # Sort by team and position
                 heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
