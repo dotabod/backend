@@ -69,6 +69,11 @@ SKEW_ANGLE_DEGREES = 9  # degrees
 # Clock dimensions (from frontend code)
 CLOCK_WIDTH = 295  # pixels (was 265)
 CLOCK_HEIGHT = 131  # pixels
+# Asymmetric clock offsets from center
+CLOCK_LEFT_EXTEND = 134  # pixels
+CLOCK_RIGHT_EXTEND = 148  # pixels
+# Total clock width based on asymmetric extensions
+CLOCK_TOTAL_WIDTH = CLOCK_LEFT_EXTEND + CLOCK_RIGHT_EXTEND
 
 # Mapping of known heroes
 HEROES_FILE = HEROES_DIR / "hero_data.json"
@@ -162,8 +167,8 @@ def extract_hero_bar(frame, debug=False):
         bar_height = HERO_TOTAL_HEIGHT
 
         # Check if frame is large enough
-        if width < 5*(HERO_WIDTH+HERO_GAP) + CLOCK_WIDTH + 5*(HERO_WIDTH+HERO_GAP) or height < bar_height:
-            logger.warning(f"Frame too small: {width}x{height}, need at least {5*(HERO_WIDTH+HERO_GAP) + CLOCK_WIDTH + 5*(HERO_WIDTH+HERO_GAP)}x{bar_height}")
+        if width < 5*(HERO_WIDTH+HERO_GAP) + CLOCK_TOTAL_WIDTH + 5*(HERO_WIDTH+HERO_GAP) or height < bar_height:
+            logger.warning(f"Frame too small: {width}x{height}, need at least {5*(HERO_WIDTH+HERO_GAP) + CLOCK_TOTAL_WIDTH + 5*(HERO_WIDTH+HERO_GAP)}x{bar_height}")
             return False, None, center_x
 
         # Extract full top bar for visualization
@@ -181,7 +186,7 @@ def extract_hero_bar(frame, debug=False):
 
             # Draw radiant hero boundaries with skewed gaps
             for i in range(5):
-                x = center_x - CLOCK_WIDTH//2 - (5-i) * (HERO_WIDTH + HERO_GAP)
+                x = center_x - CLOCK_LEFT_EXTEND - (5-i) * (HERO_WIDTH + HERO_GAP)
 
                 # Draw skewed rectangle for Radiant (positive skew)
                 points = np.array([
@@ -196,7 +201,7 @@ def extract_hero_bar(frame, debug=False):
 
             # Draw dire hero boundaries with skewed gaps
             for i in range(5):
-                x = center_x + CLOCK_WIDTH//2 + i * (HERO_WIDTH + HERO_GAP)
+                x = center_x + CLOCK_RIGHT_EXTEND + i * (HERO_WIDTH + HERO_GAP)
 
                 # Draw skewed rectangle for Dire (negative skew)
                 points = np.array([
@@ -209,24 +214,24 @@ def extract_hero_bar(frame, debug=False):
                 cv2.putText(visualization, f"D{i+1}", (x + 5, 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
-            # Draw clock boundaries
+            # Draw clock boundaries with asymmetric extents
             cv2.rectangle(visualization,
-                         (center_x - CLOCK_WIDTH//2, 0),
-                         (center_x + CLOCK_WIDTH//2, bar_height),
+                         (center_x - CLOCK_LEFT_EXTEND, 0),
+                         (center_x + CLOCK_RIGHT_EXTEND, bar_height),
                          (255, 255, 0), 2)
 
             # Add text to indicate the skew angle
-            x_radiant = center_x - CLOCK_WIDTH//2 - 3 * (HERO_WIDTH + HERO_GAP)
+            x_radiant = center_x - CLOCK_LEFT_EXTEND - 3 * (HERO_WIDTH + HERO_GAP)
             cv2.putText(visualization, f"Skew: +{SKEW_ANGLE_DEGREES}°", (x_radiant, bar_height - 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
-            x_dire = center_x + CLOCK_WIDTH//2 + 2 * (HERO_WIDTH + HERO_GAP)
+            x_dire = center_x + CLOCK_RIGHT_EXTEND + 2 * (HERO_WIDTH + HERO_GAP)
             cv2.putText(visualization, f"Skew: -{SKEW_ANGLE_DEGREES}°", (x_dire, bar_height - 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
 
             # Add text to show dimensions
             cv2.putText(visualization, f"Hero: {HERO_WIDTH}x{HERO_HEIGHT}px", (10, bar_height - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
-            cv2.putText(visualization, f"Clock: {CLOCK_WIDTH}px", (center_x - 50, bar_height - 10),
+            cv2.putText(visualization, f"Clock: {CLOCK_TOTAL_WIDTH}px ({CLOCK_LEFT_EXTEND}L/{CLOCK_RIGHT_EXTEND}R)", (center_x - 100, bar_height - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
 
             save_debug_image(visualization, "top_bar_annotated_skewed")
@@ -270,8 +275,8 @@ def extract_hero_icons(top_bar, center_x, debug=False):
 
         # Extract Radiant heroes (left side, 5 heroes) with positive skew
         for i in range(5):
-            # Calculate position based on center and hero width
-            x_start = center_x - CLOCK_WIDTH//2 - (5-i) * (HERO_WIDTH + HERO_GAP)
+            # Calculate position based on center and hero width with asymmetric clock
+            x_start = center_x - CLOCK_LEFT_EXTEND - (5-i) * (HERO_WIDTH + HERO_GAP)
 
             # Create a mask for the skewed rectangle
             mask = np.zeros((height, width), dtype=np.uint8)
@@ -341,8 +346,8 @@ def extract_hero_icons(top_bar, center_x, debug=False):
 
         # Extract Dire heroes (right side, 5 heroes) with negative skew
         for i in range(5):
-            # Calculate position based on center and hero width
-            x_start = center_x + CLOCK_WIDTH//2 + i * (HERO_WIDTH + HERO_GAP)
+            # Calculate position based on center and hero width with asymmetric clock
+            x_start = center_x + CLOCK_RIGHT_EXTEND + i * (HERO_WIDTH + HERO_GAP)
 
             # Create a mask for the skewed rectangle
             mask = np.zeros((height, width), dtype=np.uint8)
@@ -416,6 +421,62 @@ def extract_hero_icons(top_bar, center_x, debug=False):
         logger.error(f"Error extracting hero icons: {e}")
         return []
 
+def crop_hero_portrait(hero_icon, debug=False):
+    """
+    Crop a specific section of the hero portrait for more accurate comparison.
+
+    The cropping is done according to specific dimensions:
+    - Starting point: 26px from the left, 0px from the top
+    - Width: 46px
+    - Height: 40px
+
+    This crops out a distinctive part of the hero face for better identification.
+
+    Args:
+        hero_icon: The hero icon image to crop
+        debug: Whether to save debug images
+
+    Returns:
+        The cropped portrait section
+    """
+    try:
+        # Get dimensions
+        height, width = hero_icon.shape[:2]
+
+        # Define crop coordinates
+        x_start = 26
+        y_start = 0
+        crop_width = 46
+        crop_height = 40
+
+        # Make sure the crop is within bounds
+        if x_start + crop_width > width or y_start + crop_height > height:
+            logger.warning("Crop dimensions exceed hero icon size, adjusting crop")
+            crop_width = min(crop_width, width - x_start)
+            crop_height = min(crop_height, height - y_start)
+
+        if crop_width <= 0 or crop_height <= 0:
+            logger.error("Invalid crop dimensions")
+            return hero_icon  # Return the original if we can't crop
+
+        # Perform the crop
+        cropped_portrait = hero_icon[y_start:y_start+crop_height, x_start:x_start+crop_width]
+
+        # Save debug image if needed
+        if debug:
+            # Create a visualization of the crop area
+            vis_image = hero_icon.copy()
+            cv2.rectangle(vis_image, (x_start, y_start),
+                         (x_start + crop_width, y_start + crop_height),
+                         (0, 255, 0), 2)
+            save_debug_image(vis_image, "hero_crop_area")
+            save_debug_image(cropped_portrait, "hero_cropped_portrait")
+
+        return cropped_portrait
+    except Exception as e:
+        logger.error(f"Error cropping hero portrait: {e}")
+        return hero_icon  # Return the original if there's an error
+
 def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
     """
     Identify a hero using template matching.
@@ -438,8 +499,11 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
             logger.error("No heroes data available")
             return None
 
+        # Crop the hero portrait to focus on the more distinctive part
+        cropped_hero = crop_hero_portrait(hero_icon, debug=debug)
+
         # Resize to a standard size for comparison
-        hero_icon_resized = cv2.resize(hero_icon, (256, 144))
+        hero_icon_resized = cv2.resize(cropped_hero, (256, 144))
 
         # Save for debugging if needed
         if debug:
@@ -470,8 +534,11 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                     logger.warning(f"Could not load template: {template_path}")
                     continue
 
+                # Apply the same crop to the template
+                template_cropped = crop_hero_portrait(template, debug=False)
+
                 # Resize to match our hero icon
-                template_resized = cv2.resize(template, (256, 144))
+                template_resized = cv2.resize(template_cropped, (256, 144))
 
                 # Perform template matching
                 # Convert to grayscale for better matching
@@ -508,8 +575,8 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 # Save comparison for debugging
                 if debug and avg_score > 0.4:
                     comparison = np.hstack((hero_icon_resized, template_resized))
-                    # save_debug_image(comparison, f"hero_match_{hero_id}_{variant_name}",
-                    #                f"{hero_localized_name} ({variant_name}): {avg_score:.3f}")
+                    save_debug_image(comparison, f"hero_match_{hero_id}_{variant_name}",
+                                   f"{hero_localized_name} ({variant_name}): {avg_score:.3f}")
 
         # Sort all matches by score for debugging
         all_matches.sort(key=lambda x: x['match_score'], reverse=True)
