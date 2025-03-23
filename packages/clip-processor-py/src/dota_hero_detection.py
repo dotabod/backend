@@ -318,8 +318,9 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
     """
     Identify a hero using template matching.
 
-    Compares the hero icon against all hero templates and returns the best match.
-    Always checks all heroes to find the most confident match.
+    Compares the hero icon against all hero templates (including variants/personas/arcanas)
+    and returns the best match.
+    Always checks all heroes and their variants to find the most confident match.
 
     Args:
         hero_icon: Image of the hero icon (cropped to just the hero portrait without color bar)
@@ -350,58 +351,63 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
         for hero in heroes_data:
             hero_id = hero.get('id')
             hero_name = hero.get('name')
+            hero_localized_name = hero.get('localized_name')
 
-            # Load the hero template
-            template_path = HEROES_DIR / f"{hero_id}.png"
-            if not template_path.exists():
-                logger.debug(f"Template not found for hero {hero_id}: {template_path}")
-                continue
+            # Check all variants of this hero
+            for variant in hero.get('variants', []):
+                variant_name = variant.get('variant')
+                template_path = Path(variant.get('image_path'))
 
-            # Load and resize the template using our custom function to avoid iCCP warnings
-            template = load_image(template_path)
-            if template is None:
-                logger.warning(f"Could not load template: {template_path}")
-                continue
+                if not template_path.exists():
+                    logger.debug(f"Template not found for hero {hero_id} variant {variant_name}: {template_path}")
+                    continue
 
-            # Resize to match our hero icon
-            template_resized = cv2.resize(template, (256, 144))
+                # Load and resize the template using our custom function to avoid iCCP warnings
+                template = load_image(template_path)
+                if template is None:
+                    logger.warning(f"Could not load template: {template_path}")
+                    continue
 
-            # Perform template matching
-            # Convert to grayscale for better matching
-            gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
-            gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
+                # Resize to match our hero icon
+                template_resized = cv2.resize(template, (256, 144))
 
-            # Use multiple methods and combine scores
-            methods = [cv2.TM_CCOEFF_NORMED, cv2.TM_CCORR_NORMED]
-            scores = []
+                # Perform template matching
+                # Convert to grayscale for better matching
+                gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
+                gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
 
-            for method in methods:
-                result = cv2.matchTemplate(gray_icon, gray_template, method)
-                _, score, _, _ = cv2.minMaxLoc(result)
-                scores.append(score)
+                # Use multiple methods and combine scores
+                methods = [cv2.TM_CCOEFF_NORMED, cv2.TM_CCORR_NORMED]
+                scores = []
 
-            # Average score
-            avg_score = sum(scores) / len(scores)
+                for method in methods:
+                    result = cv2.matchTemplate(gray_icon, gray_template, method)
+                    _, score, _, _ = cv2.minMaxLoc(result)
+                    scores.append(score)
 
-            # Add to list of all matches
-            match_info = {
-                'hero_id': hero_id,
-                'hero_name': hero_name,
-                'hero_localized_name': hero.get('localized_name', hero_name),
-                'match_score': avg_score
-            }
-            all_matches.append(match_info)
+                # Average score
+                avg_score = sum(scores) / len(scores)
 
-            # Keep the best match
-            if avg_score > best_score:
-                best_score = avg_score
-                best_match = match_info
+                # Add to list of all matches
+                match_info = {
+                    'hero_id': hero_id,
+                    'hero_name': hero_name,
+                    'hero_localized_name': hero_localized_name,
+                    'variant': variant_name,
+                    'match_score': avg_score
+                }
+                all_matches.append(match_info)
 
-            # Save comparison for debugging
-            if debug and avg_score > 0.4:
-                comparison = np.hstack((hero_icon_resized, template_resized))
-                save_debug_image(comparison, f"hero_match_{hero_id}",
-                                f"{hero.get('localized_name', '')}: {avg_score:.3f}")
+                # Keep the best match
+                if avg_score > best_score:
+                    best_score = avg_score
+                    best_match = match_info
+
+                # Save comparison for debugging
+                if debug and avg_score > 0.4:
+                    comparison = np.hstack((hero_icon_resized, template_resized))
+                    save_debug_image(comparison, f"hero_match_{hero_id}_{variant_name}",
+                                   f"{hero_localized_name} ({variant_name}): {avg_score:.3f}")
 
         # Sort all matches by score for debugging
         all_matches.sort(key=lambda x: x['match_score'], reverse=True)
@@ -410,15 +416,15 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
         if all_matches and len(all_matches) >= 3:
             top_matches = all_matches[:3]
             logger.debug(f"Top 3 matches: " +
-                       ", ".join([f"{m['hero_localized_name']} ({m['match_score']:.3f})" for m in top_matches]))
+                       ", ".join([f"{m['hero_localized_name']} ({m['variant']}): {m['match_score']:.3f}" for m in top_matches]))
 
         # Return the best match if it's above the threshold
         if best_match and best_match['match_score'] >= min_score:
-            logger.debug(f"Best match: {best_match['hero_localized_name']} with score {best_match['match_score']:.3f}")
+            logger.debug(f"Best match: {best_match['hero_localized_name']} ({best_match['variant']}) with score {best_match['match_score']:.3f}")
             return best_match
         else:
             if best_match:
-                logger.debug(f"Best match below threshold: {best_match['hero_localized_name']} with score {best_match['match_score']:.3f}")
+                logger.debug(f"Best match below threshold: {best_match['hero_localized_name']} ({best_match['variant']}) with score {best_match['match_score']:.3f}")
             return None
     except Exception as e:
         logger.error(f"Error identifying hero: {e}")
@@ -471,7 +477,8 @@ def process_frame_for_heroes(frame_path, debug=False):
                 hero_data['position'] = position
                 identified_heroes.append(hero_data)
                 logger.debug(f"Identified {team} hero at position {position+1}: "
-                           f"{hero_data['hero_localized_name']} (confidence: {hero_data['match_score']:.3f})")
+                           f"{hero_data['hero_localized_name']} ({hero_data['variant']}) "
+                           f"(confidence: {hero_data['match_score']:.3f})")
             else:
                 logger.debug(f"Could not identify {team} hero at position {position+1}")
 
@@ -542,8 +549,10 @@ def process_frames_for_heroes(frame_paths, debug=False):
             team = hero['team']
             pos = hero['position'] + 1
             name = hero['hero_localized_name']
+            variant = hero['variant']
             score = hero['match_score']
-            logger.info(f"  {team} #{pos}: {name} (confidence: {score:.3f})")
+            confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
+            logger.info(f"  {team} #{pos}: {name} ({variant}) (confidence: {score:.2f}) {confidence_indicator}")
 
     return best_frame_heroes
 
@@ -586,9 +595,10 @@ def main():
                     team = hero['team']
                     pos = hero['position'] + 1
                     name = hero['hero_localized_name']
+                    variant = hero['variant']
                     score = hero['match_score']
                     confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
-                    print(f"{team} #{pos}: {name} (confidence: {score:.2f}) {confidence_indicator}")
+                    print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f}) {confidence_indicator}")
 
                 return 0
             else:
@@ -640,9 +650,10 @@ def main():
                     team = hero['team']
                     pos = hero['position'] + 1
                     name = hero['hero_localized_name']
+                    variant = hero['variant']
                     score = hero['match_score']
                     confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
-                    print(f"{team} #{pos}: {name} (confidence: {score:.2f}) {confidence_indicator}")
+                    print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f}) {confidence_indicator}")
 
                 return 0
             else:
