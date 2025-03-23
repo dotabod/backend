@@ -557,7 +557,12 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
     - With fast-color mode, uses optimized color matching with fewer channels
     - With hue-only mode, only uses the H channel from HSV color space
     - With edge-hue mode, combines edge detection with hue channel
+    - With blur-edge-hue mode, applies blurring before edge detection to handle noisy images
     - Otherwise, uses grayscale matching for better performance
+
+    Additional options:
+    - Blur preprocessing can be applied to any mode to help with blurry source images
+    - Normalize-hue can be applied to hue-only mode
 
     Args:
         hero_icon: Image of the hero icon (cropped to just the hero portrait without color bar)
@@ -597,9 +602,23 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
         use_fast_color = os.environ.get("FAST_COLOR", "").lower() in ("1", "true", "yes")
         use_hue_only = os.environ.get("HUE_ONLY", "").lower() in ("1", "true", "yes")
         use_edge_hue = os.environ.get("EDGE_HUE", "").lower() in ("1", "true", "yes")
+        use_blur_edge_hue = os.environ.get("BLUR_EDGE_HUE", "").lower() in ("1", "true", "yes")
         normalize_hue = os.environ.get("NORMALIZE_HUE", "").lower() in ("1", "true", "yes")
 
-        if use_edge_hue:
+        # Check if blur preprocessing should be applied to images
+        use_blur_preprocess = os.environ.get("BLUR_PREPROCESS", "").lower() in ("1", "true", "yes")
+        blur_kernel_size = (3, 3)  # Default blur kernel size
+
+        # Apply blur preprocessing if enabled (except for blur-edge-hue mode which already does blurring)
+        if use_blur_preprocess and not use_blur_edge_hue:
+            logger.debug(f"Applying blur preprocessing with kernel size {blur_kernel_size}")
+            hero_icon_resized = cv2.blur(hero_icon_resized, blur_kernel_size)
+            if debug:
+                save_debug_image(hero_icon_resized, "hero_icon_blurred", f"Blurred with kernel {blur_kernel_size}")
+
+        if use_blur_edge_hue:
+            logger.debug("Using blur-enhanced edge-hue matching")
+        elif use_edge_hue:
             logger.debug("Using edge-enhanced hue matching")
         elif use_hue_only:
             if normalize_hue:
@@ -613,13 +632,42 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
         else:
             logger.debug("Using grayscale-only template matching for best performance")
 
+        if use_blur_preprocess and not use_blur_edge_hue:
+            logger.debug("Blur preprocessing applied")
+
         # Track template matching performance
         performance_timer.start('template_matching_total')
         templates_checked = 0
 
         # Save the converted color spaces for debugging
         if debug:
-            if use_edge_hue:
+            if use_blur_edge_hue:
+                # Define blur kernel size
+                ksize = (3, 3)
+                # Convert to HSV to get Hue channel
+                hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
+                hue_icon = hsv_icon[:,:,0]
+                # Apply blur before edge detection
+                blurred_icon = cv2.blur(hero_icon_resized, ksize)
+                # Compute edges on the blurred image
+                edges = cv2.Canny(blurred_icon, 0, 250)
+                # Mix hue and edges
+                blur_edge_hue_mix = cv2.add(hue_icon, edges//4)
+
+                # Create visual representations for debugging
+                blur_vis = blurred_icon.copy()
+                edge_vis = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+                hue_vis = np.zeros_like(hero_icon_resized)
+                hue_vis[:,:,0] = hue_icon
+                mix_vis = np.zeros_like(hero_icon_resized)
+                mix_vis[:,:,0] = blur_edge_hue_mix
+
+                # Save all debug images
+                save_debug_image(blur_vis, "hero_blurred", f"Blurred with kernel {ksize}")
+                save_debug_image(edge_vis, "hero_blurred_edges", "Canny edge detection after blur")
+                save_debug_image(hue_vis, "hero_hue", "Hue channel only")
+                save_debug_image(mix_vis, "hero_blur_edge_hue_mix", "Blur-edge-enhanced hue channel")
+            elif use_edge_hue:
                 # Convert to HSV to get Hue channel
                 hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
                 hue_icon = hsv_icon[:,:,0]
@@ -727,10 +775,54 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 template_resized = cv2.resize(template_cropped, (256, 144))
                 performance_timer.stop('resize_template')
 
+                # Apply blur preprocessing to template if enabled (except for blur-edge-hue mode)
+                if use_blur_preprocess and not use_blur_edge_hue:
+                    template_resized = cv2.blur(template_resized, blur_kernel_size)
+                    if debug and templates_checked < 3:
+                        save_debug_image(template_resized, f"template_{hero_id}_{variant_name}_blurred",
+                                        f"Template blurred with kernel {blur_kernel_size}")
+
                 # Perform template matching
                 performance_timer.start('color_conversion')
 
-                if use_edge_hue:
+                if use_blur_edge_hue:
+                    # Define blur kernel size
+                    ksize = (3, 3)
+
+                    # Convert to HSV and extract hue channel
+                    hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
+                    hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
+                    hue_icon = hsv_icon[:,:,0]
+                    hue_template = hsv_template[:,:,0]
+
+                    # Apply blur before edge detection
+                    blurred_icon = cv2.blur(hero_icon_resized, ksize)
+                    blurred_template = cv2.blur(template_resized, ksize)
+
+                    # Compute edges on the blurred image
+                    edges_icon = cv2.Canny(blurred_icon, 0, 250)
+                    edges_template = cv2.Canny(blurred_template, 0, 250)
+
+                    # Mix hue and edges
+                    blur_edge_hue_icon = cv2.add(hue_icon, edges_icon//4)
+                    blur_edge_hue_template = cv2.add(hue_template, edges_template//4)
+
+                    # Debug visualization for template if needed
+                    if debug and templates_checked < 3:  # Only show for first few templates
+                        # Create visual representation of the template
+                        blur_template_vis = blurred_template.copy()
+                        edge_template_vis = cv2.cvtColor(edges_template, cv2.COLOR_GRAY2BGR)
+                        hue_template_vis = np.zeros_like(template_resized)
+                        hue_template_vis[:,:,0] = hue_template
+                        mix_template_vis = np.zeros_like(template_resized)
+                        mix_template_vis[:,:,0] = blur_edge_hue_template
+
+                        # Save debug images
+                        save_debug_image(blur_template_vis, f"template_{hero_id}_{variant_name}_blurred", "Template blurred")
+                        save_debug_image(edge_template_vis, f"template_{hero_id}_{variant_name}_edges", "Template blurred edges")
+                        save_debug_image(hue_template_vis, f"template_{hero_id}_{variant_name}_hue", "Template hue")
+                        save_debug_image(mix_template_vis, f"template_{hero_id}_{variant_name}_blur_mix", "Template blur-edge-hue mix")
+                elif use_edge_hue:
                     # Convert to HSV and extract hue channel
                     hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
                     hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
@@ -818,7 +910,21 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
 
                 performance_timer.start('template_matching')
 
-                if use_edge_hue:
+                if use_blur_edge_hue:
+                    # Match using blur-edge-enhanced hue channel
+                    for method in methods:
+                        result = cv2.matchTemplate(blur_edge_hue_icon, blur_edge_hue_template, method)
+                        _, score, _, _ = cv2.minMaxLoc(result)
+                        scores.append(score * 0.6)  # 60% weight for blur-edge-hue mix
+
+                    # Also match on regular grayscale for stability (40% weight)
+                    gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
+                    gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
+                    for method in methods:
+                        result = cv2.matchTemplate(gray_icon, gray_template, method)
+                        _, score, _, _ = cv2.minMaxLoc(result)
+                        scores.append(score * 0.4)
+                elif use_edge_hue:
                     # Match using edge-enhanced hue channel
                     for method in methods:
                         result = cv2.matchTemplate(edge_hue_icon, edge_hue_template, method)
@@ -897,7 +1003,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 performance_timer.stop('template_matching')
 
                 # Calculate final score based on mode
-                if use_edge_hue or (use_color_matching and not use_hue_only) or use_fast_color:
+                if use_blur_edge_hue or use_edge_hue or (use_color_matching and not use_hue_only) or use_fast_color:
                     avg_score = sum(scores)  # weighted sum should total 1.0
                 else:
                     avg_score = sum(scores) / len(scores)  # simple average for grayscale or hue-only
@@ -1123,6 +1229,10 @@ def main():
                       help="Use only Hue channel from HSV for template matching")
     parser.add_argument("--edge-hue", action="store_true",
                       help="Use edge-enhanced hue channel for template matching (combines edge detection with hue)")
+    parser.add_argument("--blur-edge-hue", action="store_true",
+                      help="Use blurred edge-enhanced hue (applies blur before edge detection, good for noisy images)")
+    parser.add_argument("--blur", action="store_true",
+                      help="Apply blur preprocessing to any matching mode (helps with blurry source images)")
     parser.add_argument("--normalize-hue", action="store_true",
                       help="Normalize Hue values to 0-1 range (only applies with --hue-only)")
     parser.add_argument("--show-timings", action="store_true",
@@ -1135,11 +1245,21 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
         os.environ["DEBUG_IMAGES"] = "1"
 
+    # Set additional preprocessing options
+    if args.blur:
+        os.environ["BLUR_PREPROCESS"] = "1"
+        logger.info("Blur preprocessing enabled - applying to both source and template images")
+
     # Set matching mode flags
     matching_mode = "grayscale"
 
-    # Edge-hue mode takes highest precedence if specified
-    if args.edge_hue:
+    # Blur-edge-hue mode takes highest precedence
+    if args.blur_edge_hue:
+        os.environ["BLUR_EDGE_HUE"] = "1"
+        matching_mode = "blur-edge-enhanced-hue"
+        logger.info("Using blur-edge-enhanced hue template matching (blur before edge detection)")
+    # Edge-hue mode takes next precedence
+    elif args.edge_hue:
         os.environ["EDGE_HUE"] = "1"
         matching_mode = "edge-enhanced-hue"
         logger.info("Using edge-enhanced hue template matching")
@@ -1168,6 +1288,10 @@ def main():
         logger.info("Color profile correction enabled - using multi-color space matching")
     else:
         logger.info("Using grayscale-only matching for best performance")
+
+    # Add blur suffix to matching mode description if enabled
+    if args.blur and not args.blur_edge_hue:
+        matching_mode += " with blur preprocessing"
 
     try:
         # Process a single frame if provided
