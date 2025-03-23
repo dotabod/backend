@@ -973,7 +973,7 @@ def process_frames_for_heroes(frame_paths, debug=False):
             variant = hero['variant']
             score = hero['match_score']
             confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
-            logger.info(f"  {team} #{pos}: {name} ({variant}) (confidence: {score:.2f}) {confidence_indicator}")
+            logger.info(f"  {team} #{pos}: {name} ({variant}) (confidence: {score:.2f})")
 
     # Stop the timer and log the total time
     duration = performance_timer.stop('process_all_frames')
@@ -1077,7 +1077,7 @@ def main():
                     variant = hero['variant']
                     score = hero['match_score']
                     confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
-                    print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f}) {confidence_indicator}")
+                    print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f})")
 
                 # Print detailed timing information if requested
                 if args.show_timings:
@@ -1156,7 +1156,7 @@ def main():
                     variant = hero['variant']
                     score = hero['match_score']
                     confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
-                    print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f}) {confidence_indicator}")
+                    print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f})")
 
                 # Print detailed timing information if requested
                 if args.show_timings:
