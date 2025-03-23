@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 expected_colors = {
     "Radiant": {
         0: "#1778F8",  # Radiant position 1
-        1: "#11FDB2",  # Radiant position 2
+        1: "#14FFB6",  # Radiant position 2
         2: "#BE02C9",  # Radiant position 3
         3: "#F6FE0C",  # Radiant position 4
         4: "#EC4000"   # Radiant position 5
@@ -679,6 +679,88 @@ def get_top_hero_matches(hero_icon, heroes_data, top_n=5, min_score=0.4, debug=F
         # Sort matches by score descending and take top N
         top_matches = sorted(valid_matches, key=lambda x: x['match_score'], reverse=True)[:top_n]
 
+        # Debug: Create a visual comparison of the input hero with the top matches
+        if debug or os.environ.get("DEBUG_TEMPLATE_MATCHES", "").lower() in ("1", "true", "yes"):
+            # Get input hero and top templates side by side
+            match_count = min(5, len(top_matches))  # Show at most 5 matches
+
+            # Create a combined image showing the source hero and top matches
+            # Each match gets its own row with 3 images: source, template, diff
+            # Each image is 128x72, so each row is 3*128 wide and 72 tall
+            # Allow for some padding between images
+            pad = 10
+            text_height = 30
+            row_height = 72 + text_height + pad
+            width = 128 * 3 + pad * 4  # 3 images per row with padding
+            height = row_height * match_count + pad
+
+            combined = np.ones((height, width, 3), dtype=np.uint8) * 255  # White background
+
+            for i, match in enumerate(top_matches[:match_count]):
+                # Calculate position for this row
+                y_offset = i * row_height + pad
+
+                # Draw the source hero icon
+                x1, y1 = pad, y_offset
+                combined[y1:y1+72, x1:x1+128] = hero_icon_resized
+
+                # Get the template from the match
+                for hero in heroes_data:
+                    if hero.get('id') == match['hero_id']:
+                        for variant in hero.get('variants', []):
+                            if variant.get('variant') == match['variant']:
+                                template = variant.get('cached_template')
+                                if template is not None:
+                                    # Draw the template
+                                    x2, y2 = x1 + 128 + pad, y_offset
+                                    combined[y2:y2+72, x2:x2+128] = template
+
+                                    # Create a colored diff image
+                                    x3, y3 = x2 + 128 + pad, y_offset
+                                    # Create a colorized diff highlighting differences
+                                    diff = cv2.absdiff(hero_icon_resized, template)
+                                    # Make it more visible by scaling
+                                    diff = cv2.multiply(diff, 2)
+                                    combined[y3:y3+72, x3:x3+128] = diff
+
+                                    break
+
+                # Add text labels
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                font_scale = 0.5
+                font_thickness = 1
+                font_color = (0, 0, 0)  # Black text
+
+                # Label for source
+                cv2.putText(combined, "Source", (x1, y1+72+20),
+                            font, font_scale, font_color, font_thickness)
+
+                # Label for template
+                template_text = f"{match['hero_localized_name']} ({match['variant']})"
+                cv2.putText(combined, template_text, (x2, y2+72+20),
+                            font, font_scale, font_color, font_thickness)
+
+                # Label for template with match score
+                score_text = f"Match score: {match['match_score']:.3f}"
+                cv2.putText(combined, score_text, (x2, y2+72+40),
+                            font, font_scale, font_color, font_thickness)
+
+                # Label for diff
+                cv2.putText(combined, "Difference", (x3, y3+72+20),
+                            font, font_scale, font_color, font_thickness)
+
+            # Save the combined image
+            # Include team and position in filename if available
+            team_pos = ""
+            if len(top_matches) > 0 and 'team' in top_matches[0] and 'position' in top_matches[0]:
+                team = top_matches[0]['team']
+                pos = top_matches[0]['position'] + 1
+                team_pos = f"{team}_pos{pos}_"
+
+            # Create unique name including the top match
+            top_match = top_matches[0] if top_matches else {'hero_localized_name': 'unknown', 'variant': 'unknown'}
+            save_debug_image(combined, f"template_match_{team_pos}{top_match['hero_localized_name']}_{top_match['variant']}".replace(" ", "_"))
+
         # Log top matches for debugging
         if debug:
             logger.debug(f"Top {len(top_matches)} matches: " +
@@ -1177,6 +1259,8 @@ def main():
                       help="Normalize Hue values to 0-1 range (only applies with --hue-only)")
     parser.add_argument("--show-timings", action="store_true",
                       help="Show detailed performance timing information")
+    parser.add_argument("--debug-templates", action="store_true",
+                      help="Save debug images of template matching results")
 
     args = parser.parse_args()
 
@@ -1184,6 +1268,11 @@ def main():
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
         os.environ["DEBUG_IMAGES"] = "1"
+
+    # Enable template matching debug images if requested
+    if args.debug_templates:
+        os.environ["DEBUG_TEMPLATE_MATCHES"] = "1"
+        logger.info("Template matching debug images enabled")
 
     # Set additional preprocessing options
     if args.blur:
@@ -1284,6 +1373,11 @@ def main():
                     score = hero['match_score']
                     confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
                     print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f})")
+
+                # Print information about debug images if enabled
+                if args.debug_templates or args.debug:
+                    print(f"\nDebug images saved to: {DEBUG_DIR}")
+                    print("Template match comparison images are prefixed with 'template_match_'")
 
                 # Print detailed timing information if requested
                 if args.show_timings:
@@ -1397,6 +1491,11 @@ def main():
                     score = hero['match_score']
                     confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
                     print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f})")
+
+                # Print information about debug images if enabled
+                if args.debug_templates or args.debug:
+                    print(f"\nDebug images saved to: {DEBUG_DIR}")
+                    print("Template match comparison images are prefixed with 'template_match_'")
 
                 # Print detailed timing information if requested
                 if args.show_timings:
