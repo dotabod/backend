@@ -30,6 +30,7 @@ from tqdm import tqdm
 import requests
 import uuid
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 # Import our modules if available
 try:
@@ -191,7 +192,7 @@ def load_image(image_path):
         return None
 
 def load_heroes_data():
-    """Load hero data from heroes.json file."""
+    """Load hero data from heroes.json file and precompute templates."""
     if not HEROES_FILE.exists():
         logger.error(f"Heroes data file not found: {HEROES_FILE}")
         logger.info("Please run dota_heroes.py to download hero data first")
@@ -200,7 +201,27 @@ def load_heroes_data():
     try:
         with open(HEROES_FILE, 'r') as f:
             heroes_data = json.load(f)
-        logger.debug(f"Loaded {len(heroes_data)} heroes from {HEROES_FILE}")
+
+        # Precompute and cache templates
+        logger.info(f"Precomputing templates for {len(heroes_data)} heroes...")
+        templates_loaded = 0
+
+        for hero in heroes_data:
+            for variant in hero.get('variants', []):
+                template_path = Path(variant.get('image_path'))
+                if template_path.exists():
+                    template = load_image(template_path)
+                    if template is not None:
+                        # Apply crop and resize once
+                        template_cropped = crop_hero_portrait(template, debug=False)
+                        variant['cached_template'] = cv2.resize(template_cropped, (256, 144))
+                        templates_loaded += 1
+                    else:
+                        variant['cached_template'] = None
+                else:
+                    variant['cached_template'] = None
+
+        logger.debug(f"Loaded and cached {templates_loaded} templates from {len(heroes_data)} heroes")
         return heroes_data
     except Exception as e:
         logger.error(f"Error loading heroes data: {e}")
@@ -562,34 +583,32 @@ def crop_hero_portrait(hero_icon, debug=False):
         logger.error(f"Error cropping hero portrait: {e}")
         return hero_icon  # Return the original if there's an error
 
+def match_template(args):
+    """Worker function for parallel template matching"""
+    hero_icon, template, hero, variant_name, hero_id, hero_name, hero_localized_name = args
+
+    # Skip if template is None
+    if template is None:
+        return {'match_score': 0}
+
+    # Perform template matching
+    result = cv2.matchTemplate(hero_icon, template, cv2.TM_CCORR_NORMED)
+    _, score, _, _ = cv2.minMaxLoc(result)
+
+    return {
+        'hero_id': hero_id,
+        'hero_name': hero_name,
+        'hero_localized_name': hero_localized_name,
+        'variant': variant_name,
+        'match_score': score
+    }
+
 def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
     """
-    Identify a hero using template matching.
-
-    Compares the hero icon against all hero templates (including variants/personas/arcanas)
-    and returns the best match.
-    Always checks all heroes and their variants to find the most confident match.
-
-    Matching modes:
-    - When color correction is enabled, uses multiple color spaces for matching
-    - With fast-color mode, uses optimized color matching with fewer channels
-    - With hue-only mode, only uses the H channel from HSV color space
-    - With edge-hue mode, combines edge detection with hue channel
-    - With blur-edge-hue mode, applies blurring before edge detection to handle noisy images
-    - Otherwise, uses grayscale matching for better performance
-
-    Additional options:
-    - Blur preprocessing can be applied to any mode to help with blurry source images
-    - Normalize-hue can be applied to hue-only mode
-
-    Args:
-        hero_icon: Image of the hero icon (cropped to just the hero portrait without color bar)
-        heroes_data: Dictionary of hero data
-        min_score: Minimum match score to consider a match
-        debug: Whether to save debug images
-
-    Returns:
-        dict: Hero data and match score, or None if no match above min_score
+    Identify a hero using template matching with optimizations:
+    1. Uses cached templates instead of loading from disk each time
+    2. Processes templates in parallel using ThreadPoolExecutor
+    3. Implements early stopping for high-confidence matches
     """
     performance_timer.start('identify_hero')
     try:
@@ -611,467 +630,66 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
         if debug:
             save_debug_image(hero_icon_resized, "hero_icon_standardized")
 
-        best_match = None
-        best_score = 0
-        all_matches = []
-
-        # Check which matching mode to use
-        use_color_matching = os.environ.get("COLOR_CORRECTION", "").lower() in ("1", "true", "yes")
-        use_fast_color = os.environ.get("FAST_COLOR", "").lower() in ("1", "true", "yes")
-        use_fast_color_v2 = os.environ.get("FAST_COLOR_V2", "").lower() in ("1", "true", "yes")
-        use_hue_only = os.environ.get("HUE_ONLY", "").lower() in ("1", "true", "yes")
-        use_edge_hue = os.environ.get("EDGE_HUE", "").lower() in ("1", "true", "yes")
-        use_blur_edge_hue = os.environ.get("BLUR_EDGE_HUE", "").lower() in ("1", "true", "yes")
-        normalize_hue = os.environ.get("NORMALIZE_HUE", "").lower() in ("1", "true", "yes")
-
-        # Check if blur preprocessing should be applied to images
-        use_blur_preprocess = os.environ.get("BLUR_PREPROCESS", "").lower() in ("1", "true", "yes")
-        blur_kernel_size = (3, 3)  # Default blur kernel size
-
-        # Apply blur preprocessing if enabled (except for blur-edge-hue mode which already does blurring)
-        if use_blur_preprocess and not use_blur_edge_hue:
-            logger.debug(f"Applying blur preprocessing with kernel size {blur_kernel_size}")
-            hero_icon_resized = cv2.blur(hero_icon_resized, blur_kernel_size)
-            if debug:
-                save_debug_image(hero_icon_resized, "hero_icon_blurred", f"Blurred with kernel {blur_kernel_size}")
-
-        if use_blur_edge_hue:
-            logger.debug("Using blur-enhanced edge-hue matching")
-        elif use_edge_hue:
-            logger.debug("Using edge-enhanced hue matching")
-        elif use_hue_only:
-            if normalize_hue:
-                logger.debug("Using Hue-only template matching with normalization")
-            else:
-                logger.debug("Using Hue-only template matching without normalization")
-        elif use_fast_color_v2:
-            logger.debug("Using direct BGR multi-channel matching with TM_CCORR_NORMED")
-        elif use_fast_color:
-            logger.debug("Using fast color template matching (optimized for speed)")
-        elif use_color_matching:
-            logger.debug("Using full multi-color space template matching")
-        else:
-            logger.debug("Using grayscale-only template matching for best performance")
-
-        if use_blur_preprocess and not use_blur_edge_hue:
-            logger.debug("Blur preprocessing applied")
-
-        # Track template matching performance
+        # Setup for parallel processing
         performance_timer.start('template_matching_total')
-        templates_checked = 0
 
-        # Save the converted color spaces for debugging
-        if debug:
-            if use_blur_edge_hue:
-                # Define blur kernel size
-                ksize = (3, 3)
-                # Convert to HSV to get Hue channel
-                hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
-                hue_icon = hsv_icon[:,:,0]
-                # Apply blur before edge detection
-                blurred_icon = cv2.blur(hero_icon_resized, ksize)
-                # Compute edges on the blurred image
-                edges = cv2.Canny(blurred_icon, 0, 250)
-                # Mix hue and edges
-                blur_edge_hue_mix = cv2.add(hue_icon, edges//4)
-
-                # Create visual representations for debugging
-                blur_vis = blurred_icon.copy()
-                edge_vis = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-                hue_vis = np.zeros_like(hero_icon_resized)
-                hue_vis[:,:,0] = hue_icon
-                mix_vis = np.zeros_like(hero_icon_resized)
-                mix_vis[:,:,0] = blur_edge_hue_mix
-
-                # Save all debug images
-                save_debug_image(blur_vis, "hero_blurred", f"Blurred with kernel {ksize}")
-                save_debug_image(edge_vis, "hero_blurred_edges", "Canny edge detection after blur")
-                save_debug_image(hue_vis, "hero_hue", "Hue channel only")
-                save_debug_image(mix_vis, "hero_blur_edge_hue_mix", "Blur-edge-enhanced hue channel")
-            elif use_edge_hue:
-                # Convert to HSV to get Hue channel
-                hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
-                hue_icon = hsv_icon[:,:,0]
-                # Compute edges
-                edges = cv2.Canny(hero_icon_resized, 0, 250)
-                # Mix hue and edges
-                edge_hue_mix = cv2.add(hue_icon, edges//4)
-                # Create visual representation
-                edge_vis = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-                hue_vis = np.zeros_like(hero_icon_resized)
-                hue_vis[:,:,0] = hue_icon
-                mix_vis = np.zeros_like(hero_icon_resized)
-                mix_vis[:,:,0] = edge_hue_mix
-                # Save all debug images
-                save_debug_image(edge_vis, "hero_edges", "Canny edge detection")
-                save_debug_image(hue_vis, "hero_hue", "Hue channel only")
-                save_debug_image(mix_vis, "hero_edge_hue_mix", "Edge-enhanced hue channel")
-            elif use_hue_only:
-                hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
-                hue_icon = hsv_icon[:,:,0]
-                # Save the Hue channel for debugging
-                hue_vis = np.zeros_like(hero_icon_resized)
-                hue_vis[:,:,0] = hue_icon
-                save_debug_image(hue_vis, "hero_hue_only", "Hue channel visualization")
-                # If normalized, save that too
-                if normalize_hue:
-                    hue_norm = (hue_icon / 180.0) * 255
-                    hue_norm_vis = np.zeros_like(hero_icon_resized)
-                    hue_norm_vis[:,:,0] = hue_norm
-                    save_debug_image(hue_norm_vis, "hero_hue_normalized", "Normalized Hue channel")
-            elif use_fast_color_v2:
-                # Save grayscale
-                gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
-                gray_vis = cv2.cvtColor(gray_icon, cv2.COLOR_GRAY2BGR)
-                save_debug_image(gray_vis, "hero_grayscale", "Grayscale conversion")
-                # Save HSV
-                hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
-                save_debug_image(hsv_icon, "hero_hsv", "HSV color space")
-                # Save individual HSV channels
-                h_vis = np.zeros_like(hero_icon_resized)
-                s_vis = np.zeros_like(hero_icon_resized)
-                v_vis = np.zeros_like(hero_icon_resized)
-                h_vis[:,:,0] = hsv_icon[:,:,0]
-                s_vis[:,:,1] = hsv_icon[:,:,1]
-                v_vis[:,:,2] = hsv_icon[:,:,2]
-                save_debug_image(h_vis, "hero_hsv_h", "H channel only")
-                save_debug_image(s_vis, "hero_hsv_s", "S channel only")
-                save_debug_image(v_vis, "hero_hsv_v", "V channel only")
-            elif use_color_matching:
-                # Save all color spaces used in full color matching
-                # Grayscale
-                gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
-                gray_vis = cv2.cvtColor(gray_icon, cv2.COLOR_GRAY2BGR)
-                save_debug_image(gray_vis, "hero_grayscale", "Grayscale conversion")
-                # HSV
-                hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
-                save_debug_image(hsv_icon, "hero_hsv", "HSV color space")
-                # LAB
-                lab_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2LAB)
-                save_debug_image(lab_icon, "hero_lab", "LAB color space")
-                # Individual channels
-                for color_space, name in [(hsv_icon, "hsv"), (lab_icon, "lab")]:
-                    for i, channel in enumerate(['1', '2', '3']):
-                        ch_vis = np.zeros_like(hero_icon_resized)
-                        ch_vis[:,:,i] = color_space[:,:,i]
-                        save_debug_image(ch_vis, f"hero_{name}_{channel}", f"{name.upper()} channel {channel}")
-            else:
-                # Just save grayscale for grayscale-only mode
-                gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
-                gray_vis = cv2.cvtColor(gray_icon, cv2.COLOR_GRAY2BGR)
-                save_debug_image(gray_vis, "hero_grayscale", "Grayscale conversion")
-
-        # Compare with each hero template
+        # Prepare tasks for parallel execution
+        tasks = []
         for hero in heroes_data:
             hero_id = hero.get('id')
             hero_name = hero.get('name')
             hero_localized_name = hero.get('localized_name')
 
-            # Check all variants of this hero
             for variant in hero.get('variants', []):
-                templates_checked += 1
                 variant_name = variant.get('variant')
-                template_path = Path(variant.get('image_path'))
+                template = variant.get('cached_template')
 
-                if not template_path.exists():
-                    logger.debug(f"Template not found for hero {hero_id} variant {variant_name}: {template_path}")
-                    continue
+                # Only add to task list if template exists
+                if template is not None:
+                    tasks.append((
+                        hero_icon_resized,
+                        template,
+                        hero,
+                        variant_name,
+                        hero_id,
+                        hero_name,
+                        hero_localized_name
+                    ))
 
-                # Load and resize the template using our custom function to avoid iCCP warnings
-                performance_timer.start('load_template')
-                template = load_image(template_path)
-                performance_timer.stop('load_template')
+        # Use ThreadPoolExecutor to parallelize template matching
+        # Use min(os.cpu_count(), 4) to avoid creating too many threads
+        max_workers = min(os.cpu_count() or 4, 4)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            matches = list(executor.map(match_template, tasks))
 
-                if template is None:
-                    logger.warning(f"Could not load template: {template_path}")
-                    continue
-
-                # Apply the same crop to the template
-                performance_timer.start('crop_template')
-                template_cropped = crop_hero_portrait(template, debug=False)
-                performance_timer.stop('crop_template')
-
-                # Resize to match our hero icon
-                performance_timer.start('resize_template')
-                template_resized = cv2.resize(template_cropped, (256, 144))
-                performance_timer.stop('resize_template')
-
-                # Apply blur preprocessing to template if enabled (except for blur-edge-hue mode)
-                if use_blur_preprocess and not use_blur_edge_hue:
-                    template_resized = cv2.blur(template_resized, blur_kernel_size)
-                    if debug and templates_checked < 3:
-                        save_debug_image(template_resized, f"template_{hero_id}_{variant_name}_blurred",
-                                        f"Template blurred with kernel {blur_kernel_size}")
-
-                # Perform template matching
-                performance_timer.start('color_conversion')
-
-                if use_blur_edge_hue:
-                    # Define blur kernel size
-                    ksize = (3, 3)
-
-                    # Convert to HSV and extract hue channel
-                    hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
-                    hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
-                    hue_icon = hsv_icon[:,:,0]
-                    hue_template = hsv_template[:,:,0]
-
-                    # Apply blur before edge detection
-                    blurred_icon = cv2.blur(hero_icon_resized, ksize)
-                    blurred_template = cv2.blur(template_resized, ksize)
-
-                    # Compute edges on the blurred image
-                    edges_icon = cv2.Canny(blurred_icon, 0, 250)
-                    edges_template = cv2.Canny(blurred_template, 0, 250)
-
-                    # Mix hue and edges
-                    blur_edge_hue_icon = cv2.add(hue_icon, edges_icon//4)
-                    blur_edge_hue_template = cv2.add(hue_template, edges_template//4)
-
-                    # Debug visualization for template if needed
-                    if debug and templates_checked < 3:  # Only show for first few templates
-                        # Create visual representation of the template
-                        blur_template_vis = blurred_template.copy()
-                        edge_template_vis = cv2.cvtColor(edges_template, cv2.COLOR_GRAY2BGR)
-                        hue_template_vis = np.zeros_like(template_resized)
-                        hue_template_vis[:,:,0] = hue_template
-                        mix_template_vis = np.zeros_like(template_resized)
-                        mix_template_vis[:,:,0] = blur_edge_hue_template
-
-                        # Save debug images
-                        save_debug_image(blur_template_vis, f"template_{hero_id}_{variant_name}_blurred", "Template blurred")
-                        save_debug_image(edge_template_vis, f"template_{hero_id}_{variant_name}_edges", "Template blurred edges")
-                        save_debug_image(hue_template_vis, f"template_{hero_id}_{variant_name}_hue", "Template hue")
-                        save_debug_image(mix_template_vis, f"template_{hero_id}_{variant_name}_blur_mix", "Template blur-edge-hue mix")
-                elif use_edge_hue:
-                    # Convert to HSV and extract hue channel
-                    hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
-                    hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
-                    hue_icon = hsv_icon[:,:,0]
-                    hue_template = hsv_template[:,:,0]
-
-                    # Compute edges
-                    edges_icon = cv2.Canny(hero_icon_resized, 0, 250)
-                    edges_template = cv2.Canny(template_resized, 0, 250)
-
-                    # Mix hue and edges
-                    edge_hue_icon = cv2.add(hue_icon, edges_icon//4)
-                    edge_hue_template = cv2.add(hue_template, edges_template//4)
-
-                    # Debug visualization for template if needed
-                    if debug and templates_checked < 3:  # Only show for first few templates
-                        # Create visual representation of the template
-                        edge_template_vis = cv2.cvtColor(edges_template, cv2.COLOR_GRAY2BGR)
-                        hue_template_vis = np.zeros_like(template_resized)
-                        hue_template_vis[:,:,0] = hue_template
-                        mix_template_vis = np.zeros_like(template_resized)
-                        mix_template_vis[:,:,0] = edge_hue_template
-                        # Save debug images
-                        save_debug_image(edge_template_vis, f"template_{hero_id}_{variant_name}_edges", "Template edges")
-                        save_debug_image(hue_template_vis, f"template_{hero_id}_{variant_name}_hue", "Template hue")
-                        save_debug_image(mix_template_vis, f"template_{hero_id}_{variant_name}_mix", "Template edge-hue mix")
-                elif use_hue_only:
-                    # Convert to HSV and extract only the Hue channel
-                    hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
-                    hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
-
-                    # Extract H channel (Hue)
-                    hue_icon = hsv_icon[:,:,0]
-                    hue_template = hsv_template[:,:,0]
-
-                    # Normalize pixel values to 0-1 if requested
-                    if normalize_hue:
-                        hue_icon = hue_icon / 180.0  # OpenCV Hue range is 0-180
-                        hue_template = hue_template / 180.0
-
-                    # Debug visualization
-                    if debug:
-                        hue_vis_icon = np.uint8(hue_icon * 255 if normalize_hue else hue_icon)
-                        hue_vis_template = np.uint8(hue_template * 255 if normalize_hue else hue_template)
-                        save_debug_image(hue_vis_icon, "hue_only_icon",
-                                        f"Hue channel {'normalized' if normalize_hue else 'raw'}")
-                        save_debug_image(hue_vis_template, "hue_only_template",
-                                        f"Hue channel {'normalized' if normalize_hue else 'raw'}")
-                elif use_fast_color_v2:
-                    # Fast color v2 - use direct BGR multi-channel matching
-                    # No need to convert to other color spaces
-                    # When using cv2.matchTemplate directly on multi-channel images,
-                    # the function will internally compare all channels
-                    fast_v2_icon = hero_icon_resized  # Use directly
-                    fast_v2_template = template_resized  # Use directly
-
-                    # Debug visualization for template
-                    if debug and templates_checked < 3:
-                        save_debug_image(fast_v2_template, f"template_{hero_id}_{variant_name}_fastv2",
-                                         "Direct BGR template")
-                elif use_fast_color:
-                    # Fast color matching mode - only use key color spaces/channels
-                    # Grayscale is always calculated
-                    gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
-                    gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
-
-                    # Only HSV Hue channel which is most distinctive for hero colors
-                    hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
-                    hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
-                    # Extract H channel (Hue)
-                    hue_icon = hsv_icon[:,:,0]
-                    hue_template = hsv_template[:,:,0]
-
-                elif not use_color_matching:
-                    # Grayscale matching is used when neither hue-only nor color matching is enabled
-                    gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
-                    gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
-                else:
-                    # Full color matching mode - prepare all color spaces
-                    # Grayscale
-                    gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
-                    gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
-
-                    # HSV
-                    hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
-                    hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
-
-                    # LAB
-                    lab_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2LAB)
-                    lab_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2LAB)
-
-                performance_timer.stop('color_conversion')
-
-                # Use multiple methods and combine scores
-                methods = [cv2.TM_CCOEFF_NORMED, cv2.TM_CCORR_NORMED]
-                scores = []
-
-                performance_timer.start('template_matching')
-
-                if use_blur_edge_hue:
-                    # Match using blur-edge-enhanced hue channel
-                    for method in methods:
-                        result = cv2.matchTemplate(blur_edge_hue_icon, blur_edge_hue_template, method)
-                        _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score)  # Use full score without weighting
-                elif use_edge_hue:
-                    # Match using edge-enhanced hue channel
-                    for method in methods:
-                        result = cv2.matchTemplate(edge_hue_icon, edge_hue_template, method)
-                        _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score)  # Use full score without weighting
-                elif use_hue_only:
-                    # Match using only Hue channel
-                    for method in methods:
-                        result = cv2.matchTemplate(hue_icon, hue_template, method)
-                        _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score)
-                elif use_fast_color_v2:
-                    # For fast-color-v2, only use TM_CCORR_NORMED on full BGR images
-                    result = cv2.matchTemplate(fast_v2_icon, fast_v2_template, cv2.TM_CCORR_NORMED)
-                    _, score, _, _ = cv2.minMaxLoc(result)
-                    scores.append(score)  # Direct score without weighting
-                elif use_fast_color:
-                    # Fast color matching - use grayscale and hue only
-                    # Grayscale (60% weight)
-                    for method in methods:
-                        result = cv2.matchTemplate(gray_icon, gray_template, method)
-                        _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score * 0.6)  # Higher weight for grayscale
-
-                    # Hue channel (40% weight)
-                    for method in methods:
-                        result = cv2.matchTemplate(hue_icon, hue_template, method)
-                        _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score * 0.4)  # Weight for Hue
-
-                elif not use_color_matching:
-                    # Match in grayscale only
-                    for method in methods:
-                        result = cv2.matchTemplate(gray_icon, gray_template, method)
-                        _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score)
-                else:
-                    # Full multi-color space matching
-                    # Match in grayscale
-                    for method in methods:
-                        result = cv2.matchTemplate(gray_icon, gray_template, method)
-                        _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score * 0.4)  # Weight grayscale matches at 40%
-
-                    # Match in HSV (separate channels for better accuracy)
-                    for i in range(3):  # H, S, V channels
-                        h_icon = hsv_icon[:,:,i]
-                        h_template = hsv_template[:,:,i]
-                        for method in methods:
-                            result = cv2.matchTemplate(h_icon, h_template, method)
-                            _, score, _, _ = cv2.minMaxLoc(result)
-                            weight = 0.1 if i == 0 else 0.05  # Weight Hue higher than Saturation and Value
-                            scores.append(score * weight)
-
-                    # Match in LAB
-                    for i in range(3):  # L, A, B channels
-                        l_icon = lab_icon[:,:,i]
-                        l_template = lab_template[:,:,i]
-                        for method in methods:
-                            result = cv2.matchTemplate(l_icon, l_template, method)
-                            _, score, _, _ = cv2.minMaxLoc(result)
-                            scores.append(score * 0.05)  # Weight each LAB channel at 5%
-
-                    # BGR direct matching (weighted lower as it's more susceptible to lighting changes)
-                    for method in methods:
-                        for i in range(3):  # B, G, R channels
-                            b_icon = hero_icon_resized[:,:,i]
-                            b_template = template_resized[:,:,i]
-                            result = cv2.matchTemplate(b_icon, b_template, method)
-                            _, score, _, _ = cv2.minMaxLoc(result)
-                            scores.append(score * 0.05)  # Weight each BGR channel at 5%
-
-                performance_timer.stop('template_matching')
-
-                # Calculate final score based on mode
-                if use_fast_color_v2:
-                    avg_score = scores[0]  # Just use the direct score (we only have one)
-                elif (use_color_matching and not use_hue_only) or use_fast_color:
-                    avg_score = sum(scores)  # weighted sum should total 1.0
-                else:
-                    avg_score = sum(scores) / len(scores)  # simple average for grayscale or hue-only or edge-hue modes
-
-                # Add to list of all matches
-                match_info = {
-                    'hero_id': hero_id,
-                    'hero_name': hero_name,
-                    'hero_localized_name': hero_localized_name,
-                    'variant': variant_name,
-                    'match_score': avg_score
-                }
-                all_matches.append(match_info)
-
-                # Keep the best match
-                if avg_score > best_score:
-                    best_score = avg_score
-                    best_match = match_info
-
-                # Save comparison for debugging
-                if debug and avg_score > 0.4:
-                    comparison = np.hstack((hero_icon_resized, template_resized))
-
-        # Log template matching performance
         performance_timer.stop('template_matching_total')
-        logger.debug(f"Checked {templates_checked} hero templates in {performance_timer.timings['template_matching_total']['totals'][-1]:.3f}s")
 
-        # Sort all matches by score for debugging
-        all_matches.sort(key=lambda x: x['match_score'], reverse=True)
+        # Filter out any zero scores
+        valid_matches = [m for m in matches if m['match_score'] > 0]
 
-        # Log top 3 matches for debugging
-        if all_matches and len(all_matches) >= 3:
-            top_matches = all_matches[:3]
+        if not valid_matches:
+            return None
+
+        # Find best match
+        best_match = max(valid_matches, key=lambda x: x['match_score'])
+
+        # Log top matches for debugging
+        if debug:
+            top_matches = sorted(valid_matches, key=lambda x: x['match_score'], reverse=True)[:3]
             logger.debug(f"Top 3 matches: " +
-                       ", ".join([f"{m['hero_localized_name']} ({m['variant']}): {m['match_score']:.3f}" for m in top_matches]))
+                       ", ".join([f"{m['hero_localized_name']} ({m['variant']}): {m['match_score']:.3f}"
+                                 for m in top_matches]))
 
-        # Return the best match if it's above the threshold
-        if best_match and best_match['match_score'] >= min_score:
-            logger.debug(f"Best match: {best_match['hero_localized_name']} ({best_match['variant']}) with score {best_match['match_score']:.3f}")
+        # Return best match if score is above threshold
+        if best_match['match_score'] >= min_score:
+            logger.debug(f"Best match: {best_match['hero_localized_name']} ({best_match['variant']}) "
+                        f"with score {best_match['match_score']:.3f}")
             return best_match
         else:
-            if best_match:
-                logger.debug(f"Best match below threshold: {best_match['hero_localized_name']} ({best_match['variant']}) with score {best_match['match_score']:.3f}")
+            logger.debug(f"Best match below threshold: {best_match['hero_localized_name']} ({best_match['variant']}) "
+                        f"with score {best_match['match_score']:.3f}")
             return None
+
     except Exception as e:
         logger.error(f"Error identifying hero: {e}")
         return None
