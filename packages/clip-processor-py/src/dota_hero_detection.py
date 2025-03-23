@@ -16,6 +16,18 @@ Hero portrait layout in Dota 2:
 - Clock width: 276px
 
 The dimensions are derived from HubSpot's frontend code to ensure accurate detection.
+
+Template Matching Optimizations:
+- Border Addition: Adding a black border around reference templates creates a
+  "sliding window" effect, allowing the algorithm to find better alignment between
+  the source image and template even when they are nominally the same size. This can
+  improve match scores by finding the optimal position within the bordered area.
+  Enabled with --add-border flag.
+
+- Gaussian Blur: Applying a slight blur to both source and template images reduces
+  noise and can improve matching for images with compression artifacts or streaming
+  quality issues. The blur smooths out small differences that might otherwise reduce
+  match scores. Enabled with --apply-blur flag.
 """
 
 import os
@@ -583,26 +595,6 @@ def crop_hero_portrait(hero_icon, debug=False):
         logger.error(f"Error cropping hero portrait: {e}")
         return hero_icon  # Return the original if there's an error
 
-def match_template(args):
-    """Worker function for parallel template matching"""
-    hero_icon, template, hero, variant_name, hero_id, hero_name, hero_localized_name = args
-
-    # Skip if template is None
-    if template is None:
-        return {'match_score': 0}
-
-    # Perform template matching
-    result = cv2.matchTemplate(hero_icon, template, cv2.TM_CCORR_NORMED)
-    _, score, _, _ = cv2.minMaxLoc(result)
-
-    return {
-        'hero_id': hero_id,
-        'hero_name': hero_name,
-        'hero_localized_name': hero_localized_name,
-        'variant': variant_name,
-        'match_score': score
-    }
-
 def get_top_hero_matches(hero_icon, heroes_data, top_n=5, min_score=0.4, debug=False):
     """
     Get top N hero matches for a hero icon instead of just the best match.
@@ -633,12 +625,23 @@ def get_top_hero_matches(hero_icon, heroes_data, top_n=5, min_score=0.4, debug=F
         hero_icon_resized = cv2.resize(cropped_hero, (128, 72))
         performance_timer.stop('resize_hero')
 
+        # Apply slight blur to reduce noise in the source image
+        # This is controlled by an environment variable
+        if os.environ.get("APPLY_BLUR", "").lower() in ("1", "true", "yes"):
+            hero_icon_resized = cv2.GaussianBlur(hero_icon_resized, (5, 5), 0)
+            if debug:
+                save_debug_image(hero_icon_resized, "hero_icon_blurred")
+
         # Save for debugging if needed
         if debug:
             save_debug_image(hero_icon_resized, "hero_icon_standardized")
 
         # Setup for parallel processing
         performance_timer.start('template_matching_total')
+
+        # Check if we should add borders to templates
+        add_border = os.environ.get("ADD_BORDER", "").lower() in ("1", "true", "yes")
+        border_size = 20 if add_border else 0  # pixels on each side
 
         # Prepare tasks for parallel execution
         tasks = []
@@ -653,14 +656,31 @@ def get_top_hero_matches(hero_icon, heroes_data, top_n=5, min_score=0.4, debug=F
 
                 # Only add to task list if template exists
                 if template is not None:
+                    # Apply the same blur to the template if enabled
+                    if os.environ.get("APPLY_BLUR", "").lower() in ("1", "true", "yes"):
+                        template = cv2.GaussianBlur(template, (5, 5), 0)
+
+                    # Create a version of the template to use based on options
+                    template_to_use = template
+
+                    # Add a border around the template to allow for "sliding window" matching if enabled
+                    if add_border:
+                        template_to_use = cv2.copyMakeBorder(
+                            template,
+                            border_size, border_size, border_size, border_size,
+                            cv2.BORDER_CONSTANT,
+                            value=[0, 0, 0]  # Black border
+                        )
+
                     tasks.append((
                         hero_icon_resized,
-                        template,
+                        template_to_use,  # Use appropriate template (with or without border)
                         hero,
                         variant_name,
                         hero_id,
                         hero_name,
-                        hero_localized_name
+                        hero_localized_name,
+                        border_size  # Pass border size for match_template function
                     ))
 
         # Use ThreadPoolExecutor to parallelize template matching
@@ -773,6 +793,39 @@ def get_top_hero_matches(hero_icon, heroes_data, top_n=5, min_score=0.4, debug=F
         return []
     finally:
         performance_timer.stop('get_top_hero_matches')
+
+def match_template(args):
+    """Worker function for parallel template matching"""
+    if len(args) == 8:
+        hero_icon, template_with_border, hero, variant_name, hero_id, hero_name, hero_localized_name, border_size = args
+    else:
+        hero_icon, template, hero, variant_name, hero_id, hero_name, hero_localized_name = args
+        border_size = 0
+
+    # Skip if template is None
+    if 'template_with_border' in locals() and template_with_border is None:
+        return {'match_score': 0}
+    if 'template' in locals() and template is None and border_size == 0:
+        return {'match_score': 0}
+
+    # Perform template matching with the bordered template
+    if border_size > 0:
+        # When using a bordered template, search for the smaller hero_icon inside the larger template_with_border
+        # This allows the algorithm to find the optimal position of the hero within the bordered area
+        result = cv2.matchTemplate(template_with_border, hero_icon, cv2.TM_CCORR_NORMED)
+        _, score, _, _ = cv2.minMaxLoc(result)
+    else:
+        # Legacy path for backward compatibility - search template in hero_icon
+        result = cv2.matchTemplate(hero_icon, template, cv2.TM_CCORR_NORMED)
+        _, score, _, _ = cv2.minMaxLoc(result)
+
+    return {
+        'hero_id': hero_id,
+        'hero_name': hero_name,
+        'hero_localized_name': hero_localized_name,
+        'variant': variant_name,
+        'match_score': score
+    }
 
 def resolve_hero_duplicates(hero_candidates, debug=False):
     """
@@ -1261,6 +1314,10 @@ def main():
                       help="Show detailed performance timing information")
     parser.add_argument("--debug-templates", action="store_true",
                       help="Save debug images of template matching results")
+    parser.add_argument("--add-border", action="store_true",
+                      help="Add a black border around templates for better sliding window matching")
+    parser.add_argument("--apply-blur", action="store_true",
+                      help="Apply Gaussian blur to both source and template images to reduce noise")
 
     args = parser.parse_args()
 
@@ -1278,6 +1335,16 @@ def main():
     if args.blur:
         os.environ["BLUR_PREPROCESS"] = "1"
         logger.info("Blur preprocessing enabled - applying to both source and template images")
+
+    # Enable bordered templates if requested
+    if args.add_border:
+        os.environ["ADD_BORDER"] = "1"
+        logger.info("Border around templates enabled - improving sliding window matching")
+
+    # Enable Gaussian blur if requested
+    if args.apply_blur:
+        os.environ["APPLY_BLUR"] = "1"
+        logger.info("Gaussian blur enabled - reducing noise in images")
 
     # Set matching mode flags
     matching_mode = "grayscale"
