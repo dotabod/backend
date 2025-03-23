@@ -603,18 +603,25 @@ def match_template(args):
         'match_score': score
     }
 
-def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
+def get_top_hero_matches(hero_icon, heroes_data, top_n=5, min_score=0.4, debug=False):
     """
-    Identify a hero using template matching with optimizations:
-    1. Uses cached templates instead of loading from disk each time
-    2. Processes templates in parallel using ThreadPoolExecutor
-    3. Implements early stopping for high-confidence matches
+    Get top N hero matches for a hero icon instead of just the best match.
+
+    Args:
+        hero_icon: The hero icon image
+        heroes_data: Hero data dictionary
+        top_n: Number of top matches to return
+        min_score: Minimum match score threshold
+        debug: Whether to save debug images
+
+    Returns:
+        list: List of top N hero matches with scores above threshold
     """
-    performance_timer.start('identify_hero')
+    performance_timer.start('get_top_hero_matches')
     try:
         if not heroes_data:
             logger.error("No heroes data available")
-            return None
+            return []
 
         # Crop the hero portrait to focus on the more distinctive part
         performance_timer.start('crop_hero_portrait')
@@ -657,44 +664,120 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                     ))
 
         # Use ThreadPoolExecutor to parallelize template matching
-        # Use min(os.cpu_count(), 4) to avoid creating too many threads
         max_workers = min(os.cpu_count() or 4, 4)
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             matches = list(executor.map(match_template, tasks))
 
         performance_timer.stop('template_matching_total')
 
-        # Filter out any zero scores
-        valid_matches = [m for m in matches if m['match_score'] > 0]
+        # Filter out any zero scores and scores below threshold
+        valid_matches = [m for m in matches if m['match_score'] >= min_score]
 
         if not valid_matches:
-            return None
+            return []
 
-        # Find best match
-        best_match = max(valid_matches, key=lambda x: x['match_score'])
+        # Sort matches by score descending and take top N
+        top_matches = sorted(valid_matches, key=lambda x: x['match_score'], reverse=True)[:top_n]
 
         # Log top matches for debugging
         if debug:
-            top_matches = sorted(valid_matches, key=lambda x: x['match_score'], reverse=True)[:3]
-            logger.debug(f"Top 3 matches: " +
+            logger.debug(f"Top {len(top_matches)} matches: " +
                        ", ".join([f"{m['hero_localized_name']} ({m['variant']}): {m['match_score']:.3f}"
                                  for m in top_matches]))
 
-        # Return best match if score is above threshold
-        if best_match['match_score'] >= min_score:
-            logger.debug(f"Best match: {best_match['hero_localized_name']} ({best_match['variant']}) "
-                        f"with score {best_match['match_score']:.3f}")
-            return best_match
-        else:
-            logger.debug(f"Best match below threshold: {best_match['hero_localized_name']} ({best_match['variant']}) "
-                        f"with score {best_match['match_score']:.3f}")
-            return None
-
+        return top_matches
     except Exception as e:
-        logger.error(f"Error identifying hero: {e}")
-        return None
+        logger.error(f"Error getting top hero matches: {e}")
+        return []
     finally:
-        performance_timer.stop('identify_hero')
+        performance_timer.stop('get_top_hero_matches')
+
+def resolve_hero_duplicates(hero_candidates, debug=False):
+    """
+    Resolve duplicate hero matches across all positions.
+
+    This function ensures each hero appears only once by:
+    1. Starting with the highest confidence matches
+    2. If a duplicate is found, using the next best match for the position with lower confidence
+    3. Repeating until all positions have unique heroes or run out of candidates
+
+    Args:
+        hero_candidates: List of lists, where each inner list contains match candidates for a position
+        debug: Whether to output debug information
+
+    Returns:
+        list: List of identified heroes with no duplicates
+    """
+    # Flatten positions for processing
+    positions = []
+    for i, candidates in enumerate(hero_candidates):
+        if candidates:  # Skip empty positions
+            team = candidates[0]['team']
+            pos = candidates[0]['position']
+            # Store (index, team, position, candidates)
+            positions.append((i, team, pos, candidates))
+
+    # Sort positions by the confidence of their best match (descending)
+    positions.sort(key=lambda x: x[3][0]['match_score'] if x[3] else 0, reverse=True)
+
+    # Keep track of assigned heroes to avoid duplicates
+    assigned_heroes = set()
+    resolved_heroes = []
+
+    # Track which positions had to use alternate matches
+    alternates_used = []
+
+    # Process positions in order of confidence
+    for idx, team, pos, candidates in positions:
+        if not candidates:
+            continue
+
+        # Try to find a non-duplicate hero for this position
+        for candidate_idx, candidate in enumerate(candidates):
+            hero_key = f"{candidate['hero_id']}_{candidate['variant']}"
+
+            if hero_key not in assigned_heroes:
+                # Found a unique hero, use it
+                resolved_heroes.append(candidate)
+                assigned_heroes.add(hero_key)
+
+                # Log if we had to use an alternate match
+                if candidate_idx > 0:
+                    prev_match = candidates[0]
+                    logger.info(f"Used alternate match for {team} position {pos+1}: "
+                               f"{candidate['hero_localized_name']} ({candidate['variant']}) "
+                               f"with score {candidate['match_score']:.3f} instead of "
+                               f"{prev_match['hero_localized_name']} ({prev_match['variant']}) "
+                               f"with score {prev_match['match_score']:.3f}")
+
+                    alternates_used.append({
+                        'team': team,
+                        'position': pos,
+                        'used': {
+                            'hero': candidate['hero_localized_name'],
+                            'variant': candidate['variant'],
+                            'score': candidate['match_score']
+                        },
+                        'instead_of': {
+                            'hero': prev_match['hero_localized_name'],
+                            'variant': prev_match['variant'],
+                            'score': prev_match['match_score']
+                        }
+                    })
+                break
+        else:
+            # If we couldn't find a unique hero, log the issue
+            logger.warning(f"Could not find a unique hero for {team} position {pos+1}")
+
+    # Log summary of alternate matches used
+    if alternates_used and debug:
+        logger.debug(f"Used {len(alternates_used)} alternate matches to resolve duplicates:")
+        for alt in alternates_used:
+            logger.debug(f"  {alt['team']} pos {alt['position']+1}: "
+                       f"{alt['used']['hero']} ({alt['used']['score']:.3f}) "
+                       f"instead of {alt['instead_of']['hero']} ({alt['instead_of']['score']:.3f})")
+
+    return resolved_heroes
 
 def process_frame_for_heroes(frame_path, debug=False):
     """
@@ -745,22 +828,37 @@ def process_frame_for_heroes(frame_path, debug=False):
             logger.warning(f"No hero icons extracted from frame: {frame_path}")
             return []
 
-        # Identify each hero
-        identified_heroes = []
-
+        # Identify each hero with top matches
         performance_timer.start('identify_all_heroes')
+
+        # Store all candidates for each position
+        hero_candidates = []
+
         for team, position, hero_icon in hero_icons:
-            hero_data = identify_hero(hero_icon, heroes_data, debug=debug)
-            if hero_data:
-                # Add team and position information
-                hero_data['team'] = team
-                hero_data['position'] = position
-                identified_heroes.append(hero_data)
-                logger.debug(f"Identified {team} hero at position {position+1}: "
-                           f"{hero_data['hero_localized_name']} ({hero_data['variant']}) "
-                           f"(confidence: {hero_data['match_score']:.3f})")
+            # Get top matches for this hero position, not just the best match
+            performance_timer.start('get_top_matches')
+            hero_matches = get_top_hero_matches(hero_icon, heroes_data, debug=debug)
+            performance_timer.stop('get_top_matches')
+
+            if hero_matches:
+                # Add team and position information to all candidates
+                for match in hero_matches:
+                    match['team'] = team
+                    match['position'] = position
+
+                # Store candidate matches for this position
+                hero_candidates.append(hero_matches)
+                logger.debug(f"Found {len(hero_matches)} potential matches for {team} hero at position {position+1}")
+                logger.debug(f"Top match: {hero_matches[0]['hero_localized_name']} ({hero_matches[0]['variant']}) "
+                           f"(confidence: {hero_matches[0]['match_score']:.3f})")
             else:
                 logger.debug(f"Could not identify {team} hero at position {position+1}")
+                # Add empty list as placeholder
+                hero_candidates.append([])
+
+        # Resolve duplicates to ensure each hero appears only once
+        identified_heroes = resolve_hero_duplicates(hero_candidates, debug=debug)
+
         performance_timer.stop('identify_all_heroes')
 
         logger.info(f"Identified {len(identified_heroes)} heroes in frame")
