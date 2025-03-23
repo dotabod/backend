@@ -214,7 +214,7 @@ def load_heroes_data():
                     if template is not None:
                         # Apply crop and resize once
                         template_cropped = crop_hero_portrait(template, debug=False)
-                        variant['cached_template'] = cv2.resize(template_cropped, (256, 144))
+                        variant['cached_template'] = cv2.resize(template_cropped, (128, 72))
                         templates_loaded += 1
                     else:
                         variant['cached_template'] = None
@@ -623,7 +623,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
 
         # Resize to a standard size for comparison
         performance_timer.start('resize_hero')
-        hero_icon_resized = cv2.resize(cropped_hero, (256, 144))
+        hero_icon_resized = cv2.resize(cropped_hero, (128, 72))
         performance_timer.stop('resize_hero')
 
         # Save for debugging if needed
@@ -1223,7 +1223,7 @@ def main():
 
             # Extract frames
             performance_timer.start('extract_frames')
-            frame_paths = extract_frames(clip_path, frame_interval=0.5)
+            frame_paths = extract_frames(clip_path, frame_interval=10)
             performance_timer.stop('extract_frames')
             logger.info(f"Extracted {len(frame_paths)} frames")
 
