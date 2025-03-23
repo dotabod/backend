@@ -425,10 +425,12 @@ def crop_hero_portrait(hero_icon, debug=False):
     """
     Crop a specific section of the hero portrait for more accurate comparison.
 
-    The cropping is done according to specific dimensions:
-    - Starting point: 26px from the left, 0px from the top
-    - Width: 46px
-    - Height: 40px
+    The cropping is done according to specific dimensions scaled to the input image:
+    - For standard hero icons (108x66), crop is:
+      - Starting point: 26px from the left, 0px from the top
+      - Width: 46px
+      - Height: 40px
+    - For other sizes, the coordinates are scaled proportionally
 
     This crops out a distinctive part of the hero face for better identification.
 
@@ -440,14 +442,27 @@ def crop_hero_portrait(hero_icon, debug=False):
         The cropped portrait section
     """
     try:
-        # Get dimensions
+        # Get dimensions of the input image
         height, width = hero_icon.shape[:2]
 
-        # Define crop coordinates
-        x_start = 26
-        y_start = 0
-        crop_width = 46
-        crop_height = 40
+        # Reference dimensions for the hero icon from the top bar
+        reference_width = HERO_WIDTH  # 108px
+        reference_height = HERO_ACTUAL_HEIGHT  # 66px (72px - 6px top padding)
+
+        # Define crop coordinates for the reference size
+        ref_x_start = 26
+        ref_y_start = 0
+        ref_crop_width = 46
+        ref_crop_height = 40
+
+        # Scale the crop coordinates based on the actual image dimensions
+        scale_x = width / reference_width
+        scale_y = height / reference_height
+
+        x_start = int(ref_x_start * scale_x)
+        y_start = int(ref_y_start * scale_y)
+        crop_width = int(ref_crop_width * scale_x)
+        crop_height = int(ref_crop_height * scale_y)
 
         # Make sure the crop is within bounds
         if x_start + crop_width > width or y_start + crop_height > height:
@@ -469,7 +484,8 @@ def crop_hero_portrait(hero_icon, debug=False):
             cv2.rectangle(vis_image, (x_start, y_start),
                          (x_start + crop_width, y_start + crop_height),
                          (0, 255, 0), 2)
-            save_debug_image(vis_image, "hero_crop_area")
+            save_debug_image(vis_image, "hero_crop_area",
+                           f"Scaled crop: {x_start},{y_start} {crop_width}x{crop_height} (scale: {scale_x:.2f}x{scale_y:.2f})")
             save_debug_image(cropped_portrait, "hero_cropped_portrait")
 
         return cropped_portrait
