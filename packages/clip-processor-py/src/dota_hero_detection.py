@@ -613,6 +613,63 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
         performance_timer.start('template_matching_total')
         templates_checked = 0
 
+        # Save the converted color spaces for debugging
+        if debug:
+            if use_hue_only:
+                hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
+                hue_icon = hsv_icon[:,:,0]
+                # Save the Hue channel for debugging
+                hue_vis = np.zeros_like(hero_icon_resized)
+                hue_vis[:,:,0] = hue_icon
+                save_debug_image(hue_vis, "hero_hue_only", "Hue channel visualization")
+                # If normalized, save that too
+                if normalize_hue:
+                    hue_norm = (hue_icon / 180.0) * 255
+                    hue_norm_vis = np.zeros_like(hero_icon_resized)
+                    hue_norm_vis[:,:,0] = hue_norm
+                    save_debug_image(hue_norm_vis, "hero_hue_normalized", "Normalized Hue channel")
+            elif use_fast_color:
+                # Save grayscale
+                gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
+                gray_vis = cv2.cvtColor(gray_icon, cv2.COLOR_GRAY2BGR)
+                save_debug_image(gray_vis, "hero_grayscale", "Grayscale conversion")
+                # Save HSV
+                hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
+                save_debug_image(hsv_icon, "hero_hsv", "HSV color space")
+                # Save individual HSV channels
+                h_vis = np.zeros_like(hero_icon_resized)
+                s_vis = np.zeros_like(hero_icon_resized)
+                v_vis = np.zeros_like(hero_icon_resized)
+                h_vis[:,:,0] = hsv_icon[:,:,0]
+                s_vis[:,:,1] = hsv_icon[:,:,1]
+                v_vis[:,:,2] = hsv_icon[:,:,2]
+                save_debug_image(h_vis, "hero_hsv_h", "H channel only")
+                save_debug_image(s_vis, "hero_hsv_s", "S channel only")
+                save_debug_image(v_vis, "hero_hsv_v", "V channel only")
+            elif use_color_matching:
+                # Save all color spaces used in full color matching
+                # Grayscale
+                gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
+                gray_vis = cv2.cvtColor(gray_icon, cv2.COLOR_GRAY2BGR)
+                save_debug_image(gray_vis, "hero_grayscale", "Grayscale conversion")
+                # HSV
+                hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
+                save_debug_image(hsv_icon, "hero_hsv", "HSV color space")
+                # LAB
+                lab_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2LAB)
+                save_debug_image(lab_icon, "hero_lab", "LAB color space")
+                # Individual channels
+                for color_space, name in [(hsv_icon, "hsv"), (lab_icon, "lab")]:
+                    for i, channel in enumerate(['1', '2', '3']):
+                        ch_vis = np.zeros_like(hero_icon_resized)
+                        ch_vis[:,:,i] = color_space[:,:,i]
+                        save_debug_image(ch_vis, f"hero_{name}_{channel}", f"{name.upper()} channel {channel}")
+            else:
+                # Just save grayscale for grayscale-only mode
+                gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
+                gray_vis = cv2.cvtColor(gray_icon, cv2.COLOR_GRAY2BGR)
+                save_debug_image(gray_vis, "hero_grayscale", "Grayscale conversion")
+
         # Compare with each hero template
         for hero in heroes_data:
             hero_id = hero.get('id')
