@@ -556,6 +556,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
     - When color correction is enabled, uses multiple color spaces for matching
     - With fast-color mode, uses optimized color matching with fewer channels
     - With hue-only mode, only uses the H channel from HSV color space
+    - With edge-hue mode, combines edge detection with hue channel
     - Otherwise, uses grayscale matching for better performance
 
     Args:
@@ -595,9 +596,12 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
         use_color_matching = os.environ.get("COLOR_CORRECTION", "").lower() in ("1", "true", "yes")
         use_fast_color = os.environ.get("FAST_COLOR", "").lower() in ("1", "true", "yes")
         use_hue_only = os.environ.get("HUE_ONLY", "").lower() in ("1", "true", "yes")
+        use_edge_hue = os.environ.get("EDGE_HUE", "").lower() in ("1", "true", "yes")
         normalize_hue = os.environ.get("NORMALIZE_HUE", "").lower() in ("1", "true", "yes")
 
-        if use_hue_only:
+        if use_edge_hue:
+            logger.debug("Using edge-enhanced hue matching")
+        elif use_hue_only:
             if normalize_hue:
                 logger.debug("Using Hue-only template matching with normalization")
             else:
@@ -615,7 +619,25 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
 
         # Save the converted color spaces for debugging
         if debug:
-            if use_hue_only:
+            if use_edge_hue:
+                # Convert to HSV to get Hue channel
+                hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
+                hue_icon = hsv_icon[:,:,0]
+                # Compute edges
+                edges = cv2.Canny(hero_icon_resized, 0, 250)
+                # Mix hue and edges
+                edge_hue_mix = cv2.add(hue_icon, edges//4)
+                # Create visual representation
+                edge_vis = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+                hue_vis = np.zeros_like(hero_icon_resized)
+                hue_vis[:,:,0] = hue_icon
+                mix_vis = np.zeros_like(hero_icon_resized)
+                mix_vis[:,:,0] = edge_hue_mix
+                # Save all debug images
+                save_debug_image(edge_vis, "hero_edges", "Canny edge detection")
+                save_debug_image(hue_vis, "hero_hue", "Hue channel only")
+                save_debug_image(mix_vis, "hero_edge_hue_mix", "Edge-enhanced hue channel")
+            elif use_hue_only:
                 hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
                 hue_icon = hsv_icon[:,:,0]
                 # Save the Hue channel for debugging
@@ -708,7 +730,34 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 # Perform template matching
                 performance_timer.start('color_conversion')
 
-                if use_hue_only:
+                if use_edge_hue:
+                    # Convert to HSV and extract hue channel
+                    hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
+                    hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
+                    hue_icon = hsv_icon[:,:,0]
+                    hue_template = hsv_template[:,:,0]
+
+                    # Compute edges
+                    edges_icon = cv2.Canny(hero_icon_resized, 0, 250)
+                    edges_template = cv2.Canny(template_resized, 0, 250)
+
+                    # Mix hue and edges
+                    edge_hue_icon = cv2.add(hue_icon, edges_icon//4)
+                    edge_hue_template = cv2.add(hue_template, edges_template//4)
+
+                    # Debug visualization for template if needed
+                    if debug and templates_checked < 3:  # Only show for first few templates
+                        # Create visual representation of the template
+                        edge_template_vis = cv2.cvtColor(edges_template, cv2.COLOR_GRAY2BGR)
+                        hue_template_vis = np.zeros_like(template_resized)
+                        hue_template_vis[:,:,0] = hue_template
+                        mix_template_vis = np.zeros_like(template_resized)
+                        mix_template_vis[:,:,0] = edge_hue_template
+                        # Save debug images
+                        save_debug_image(edge_template_vis, f"template_{hero_id}_{variant_name}_edges", "Template edges")
+                        save_debug_image(hue_template_vis, f"template_{hero_id}_{variant_name}_hue", "Template hue")
+                        save_debug_image(mix_template_vis, f"template_{hero_id}_{variant_name}_mix", "Template edge-hue mix")
+                elif use_hue_only:
                     # Convert to HSV and extract only the Hue channel
                     hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
                     hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
@@ -769,7 +818,21 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
 
                 performance_timer.start('template_matching')
 
-                if use_hue_only:
+                if use_edge_hue:
+                    # Match using edge-enhanced hue channel
+                    for method in methods:
+                        result = cv2.matchTemplate(edge_hue_icon, edge_hue_template, method)
+                        _, score, _, _ = cv2.minMaxLoc(result)
+                        scores.append(score * 0.6)  # 60% weight for edge-hue mix
+
+                    # Also match on regular grayscale for stability (40% weight)
+                    gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
+                    gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
+                    for method in methods:
+                        result = cv2.matchTemplate(gray_icon, gray_template, method)
+                        _, score, _, _ = cv2.minMaxLoc(result)
+                        scores.append(score * 0.4)
+                elif use_hue_only:
                     # Match using only Hue channel
                     for method in methods:
                         result = cv2.matchTemplate(hue_icon, hue_template, method)
@@ -834,7 +897,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 performance_timer.stop('template_matching')
 
                 # Calculate final score based on mode
-                if (use_color_matching and not use_hue_only) or use_fast_color:
+                if use_edge_hue or (use_color_matching and not use_hue_only) or use_fast_color:
                     avg_score = sum(scores)  # weighted sum should total 1.0
                 else:
                     avg_score = sum(scores) / len(scores)  # simple average for grayscale or hue-only
@@ -1058,6 +1121,8 @@ def main():
                       help="Use optimized color matching (faster than full color, more accurate than grayscale)")
     parser.add_argument("--hue-only", action="store_true",
                       help="Use only Hue channel from HSV for template matching")
+    parser.add_argument("--edge-hue", action="store_true",
+                      help="Use edge-enhanced hue channel for template matching (combines edge detection with hue)")
     parser.add_argument("--normalize-hue", action="store_true",
                       help="Normalize Hue values to 0-1 range (only applies with --hue-only)")
     parser.add_argument("--show-timings", action="store_true",
@@ -1073,8 +1138,13 @@ def main():
     # Set matching mode flags
     matching_mode = "grayscale"
 
-    # Hue-only mode takes precedence if specified
-    if args.hue_only:
+    # Edge-hue mode takes highest precedence if specified
+    if args.edge_hue:
+        os.environ["EDGE_HUE"] = "1"
+        matching_mode = "edge-enhanced-hue"
+        logger.info("Using edge-enhanced hue template matching")
+    # Hue-only mode takes precedence over fast-color and color-correction
+    elif args.hue_only:
         os.environ["HUE_ONLY"] = "1"
         matching_mode = "hue-only"
 
