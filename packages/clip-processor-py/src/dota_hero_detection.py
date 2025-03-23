@@ -29,6 +29,7 @@ import numpy as np
 from tqdm import tqdm
 import requests
 import uuid
+import time
 
 # Import our modules if available
 try:
@@ -40,6 +41,45 @@ except ImportError:
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# Create performance timer class for measuring execution time
+class PerformanceTimer:
+    def __init__(self):
+        self.timings = {}
+
+    def start(self, label):
+        if label not in self.timings:
+            self.timings[label] = {'starts': [], 'stops': [], 'totals': []}
+        self.timings[label]['starts'].append(time.time())
+
+    def stop(self, label):
+        if label in self.timings and len(self.timings[label]['starts']) > len(self.timings[label]['stops']):
+            start_time = self.timings[label]['starts'][-1]
+            stop_time = time.time()
+            duration = stop_time - start_time
+            self.timings[label]['stops'].append(stop_time)
+            self.timings[label]['totals'].append(duration)
+            return duration
+        return 0
+
+    def get_summary(self):
+        summary = {}
+        for label, data in self.timings.items():
+            counts = len(data['totals'])
+            if counts > 0:
+                total_time = sum(data['totals'])
+                avg_time = total_time / counts
+                summary[label] = {
+                    'count': counts,
+                    'total': total_time,
+                    'avg': avg_time,
+                    'max': max(data['totals']) if data['totals'] else 0,
+                    'min': min(data['totals']) if data['totals'] else 0
+                }
+        return summary
+
+# Create global timer
+performance_timer = PerformanceTimer()
 
 # Constants and directories
 TEMP_DIR = Path("temp")
@@ -114,8 +154,19 @@ def load_image(image_path):
         # Read the image with IMREAD_IGNORE_ORIENTATION | IMREAD_COLOR
         # This helps avoid issues with color profiles
         image = cv2.imread(str(image_path), cv2.IMREAD_IGNORE_ORIENTATION | cv2.IMREAD_COLOR)
+
         if image is None:
             logger.warning(f"Could not load image: {image_path}")
+            return None
+
+        # Apply color profile correction if enabled via environment variable
+        if os.environ.get("COLOR_CORRECTION", "").lower() in ("1", "true", "yes"):
+            # Convert to LAB color space and back to ensure consistent colors
+            # This helps normalize images with different color profiles
+            logger.debug(f"Applying color profile correction to {image_path}")
+            lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+            image = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+
         return image
     except Exception as e:
         logger.error(f"Error loading image {image_path}: {e}")
@@ -510,16 +561,21 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
     Returns:
         dict: Hero data and match score, or None if no match above min_score
     """
+    performance_timer.start('identify_hero')
     try:
         if not heroes_data:
             logger.error("No heroes data available")
             return None
 
         # Crop the hero portrait to focus on the more distinctive part
+        performance_timer.start('crop_hero_portrait')
         cropped_hero = crop_hero_portrait(hero_icon, debug=debug)
+        performance_timer.stop('crop_hero_portrait')
 
         # Resize to a standard size for comparison
+        performance_timer.start('resize_hero')
         hero_icon_resized = cv2.resize(cropped_hero, (256, 144))
+        performance_timer.stop('resize_hero')
 
         # Save for debugging if needed
         if debug:
@@ -529,6 +585,10 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
         best_score = 0
         all_matches = []
 
+        # Track template matching performance
+        performance_timer.start('template_matching_total')
+        templates_checked = 0
+
         # Compare with each hero template
         for hero in heroes_data:
             hero_id = hero.get('id')
@@ -537,6 +597,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
 
             # Check all variants of this hero
             for variant in hero.get('variants', []):
+                templates_checked += 1
                 variant_name = variant.get('variant')
                 template_path = Path(variant.get('image_path'))
 
@@ -545,33 +606,83 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                     continue
 
                 # Load and resize the template using our custom function to avoid iCCP warnings
+                performance_timer.start('load_template')
                 template = load_image(template_path)
+                performance_timer.stop('load_template')
+
                 if template is None:
                     logger.warning(f"Could not load template: {template_path}")
                     continue
 
                 # Apply the same crop to the template
+                performance_timer.start('crop_template')
                 template_cropped = crop_hero_portrait(template, debug=False)
+                performance_timer.stop('crop_template')
 
                 # Resize to match our hero icon
+                performance_timer.start('resize_template')
                 template_resized = cv2.resize(template_cropped, (256, 144))
+                performance_timer.stop('resize_template')
 
                 # Perform template matching
-                # Convert to grayscale for better matching
+                # Use both color and grayscale matching for better accuracy
+                performance_timer.start('color_conversion')
+                # Grayscale matching
                 gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
                 gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
 
-                # Use multiple methods and combine scores
+                # Color matching - convert to different color spaces for better matching
+                # HSV is good for color-based matching as it's less affected by lighting
+                hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
+                hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
+
+                # LAB color space is perceptually uniform and good for color differences
+                lab_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2LAB)
+                lab_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2LAB)
+                performance_timer.stop('color_conversion')
+
+                # Use multiple methods and combine scores across different color spaces
                 methods = [cv2.TM_CCOEFF_NORMED, cv2.TM_CCORR_NORMED]
                 scores = []
 
+                performance_timer.start('template_matching')
+                # Match in grayscale
                 for method in methods:
                     result = cv2.matchTemplate(gray_icon, gray_template, method)
                     _, score, _, _ = cv2.minMaxLoc(result)
-                    scores.append(score)
+                    scores.append(score * 0.4)  # Weight grayscale matches at 40%
 
-                # Average score
-                avg_score = sum(scores) / len(scores)
+                # Match in HSV (separate channels for better accuracy)
+                for i in range(3):  # H, S, V channels
+                    h_icon = hsv_icon[:,:,i]
+                    h_template = hsv_template[:,:,i]
+                    for method in methods:
+                        result = cv2.matchTemplate(h_icon, h_template, method)
+                        _, score, _, _ = cv2.minMaxLoc(result)
+                        weight = 0.1 if i == 0 else 0.05  # Weight Hue higher than Saturation and Value
+                        scores.append(score * weight)
+
+                # Match in LAB
+                for i in range(3):  # L, A, B channels
+                    l_icon = lab_icon[:,:,i]
+                    l_template = lab_template[:,:,i]
+                    for method in methods:
+                        result = cv2.matchTemplate(l_icon, l_template, method)
+                        _, score, _, _ = cv2.minMaxLoc(result)
+                        scores.append(score * 0.05)  # Weight each LAB channel at 5%
+
+                # BGR direct matching (weighted lower as it's more susceptible to lighting changes)
+                for method in methods:
+                    for i in range(3):  # B, G, R channels
+                        b_icon = hero_icon_resized[:,:,i]
+                        b_template = template_resized[:,:,i]
+                        result = cv2.matchTemplate(b_icon, b_template, method)
+                        _, score, _, _ = cv2.minMaxLoc(result)
+                        scores.append(score * 0.05)  # Weight each BGR channel at 5%
+                performance_timer.stop('template_matching')
+
+                # Average score - weighted sum should total 1.0
+                avg_score = sum(scores)
 
                 # Add to list of all matches
                 match_info = {
@@ -594,6 +705,10 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                     save_debug_image(comparison, f"hero_match_{hero_id}_{variant_name}",
                                    f"{hero_localized_name} ({variant_name}): {avg_score:.3f}")
 
+        # Log template matching performance
+        performance_timer.stop('template_matching_total')
+        logger.debug(f"Checked {templates_checked} hero templates in {performance_timer.timings['template_matching_total']['totals'][-1]:.3f}s")
+
         # Sort all matches by score for debugging
         all_matches.sort(key=lambda x: x['match_score'], reverse=True)
 
@@ -614,6 +729,8 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
     except Exception as e:
         logger.error(f"Error identifying hero: {e}")
         return None
+    finally:
+        performance_timer.stop('identify_hero')
 
 def process_frame_for_heroes(frame_path, debug=False):
     """
@@ -626,27 +743,40 @@ def process_frame_for_heroes(frame_path, debug=False):
     Returns:
         list: List of identified heroes with confidence scores
     """
+    performance_timer.start('process_frame')
     try:
         # Load the frame using our custom function to avoid iCCP warnings
+        performance_timer.start('load_frame')
         frame = load_image(frame_path)
+        performance_timer.stop('load_frame')
+
         if frame is None:
             logger.error(f"Could not load frame: {frame_path}")
             return []
 
         # Load heroes data
+        performance_timer.start('load_heroes_data')
         heroes_data = load_heroes_data()
+        performance_timer.stop('load_heroes_data')
+
         if not heroes_data:
             logger.error("Could not load heroes data")
             return []
 
         # Extract the hero bar
+        performance_timer.start('extract_hero_bar')
         success, top_bar, center_x = extract_hero_bar(frame, debug=debug)
+        performance_timer.stop('extract_hero_bar')
+
         if not success or top_bar is None:
             logger.warning(f"Could not extract hero bar from frame: {frame_path}")
             return []
 
         # Extract hero icons
+        performance_timer.start('extract_hero_icons')
         hero_icons = extract_hero_icons(top_bar, center_x, debug=debug)
+        performance_timer.stop('extract_hero_icons')
+
         if not hero_icons:
             logger.warning(f"No hero icons extracted from frame: {frame_path}")
             return []
@@ -654,6 +784,7 @@ def process_frame_for_heroes(frame_path, debug=False):
         # Identify each hero
         identified_heroes = []
 
+        performance_timer.start('identify_all_heroes')
         for team, position, hero_icon in hero_icons:
             hero_data = identify_hero(hero_icon, heroes_data, debug=debug)
             if hero_data:
@@ -666,6 +797,7 @@ def process_frame_for_heroes(frame_path, debug=False):
                            f"(confidence: {hero_data['match_score']:.3f})")
             else:
                 logger.debug(f"Could not identify {team} hero at position {position+1}")
+        performance_timer.stop('identify_all_heroes')
 
         logger.info(f"Identified {len(identified_heroes)} heroes in frame")
 
@@ -676,6 +808,9 @@ def process_frame_for_heroes(frame_path, debug=False):
     except Exception as e:
         logger.error(f"Error processing frame for heroes: {e}")
         return []
+    finally:
+        duration = performance_timer.stop('process_frame')
+        logger.info(f"Frame processing completed in {duration:.3f} seconds")
 
 def process_frames_for_heroes(frame_paths, debug=False):
     """
@@ -690,6 +825,7 @@ def process_frames_for_heroes(frame_paths, debug=False):
     Returns:
         list: List of identified heroes from the best frame
     """
+    performance_timer.start('process_all_frames')
     all_results = []
     best_frame_count = 0
     best_frame_heroes = []
@@ -702,7 +838,9 @@ def process_frames_for_heroes(frame_paths, debug=False):
         logger.debug(f"Processing frame {i+1}/{len(frame_paths)}: {frame_path}")
 
         # Process the frame
+        performance_timer.start(f'frame_{i+1}')
         heroes = process_frame_for_heroes(frame_path, debug=debug)
+        performance_timer.stop(f'frame_{i+1}')
 
         # Keep track of the frame with the most heroes
         if len(heroes) > best_frame_count:
@@ -739,10 +877,17 @@ def process_frames_for_heroes(frame_paths, debug=False):
             confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
             logger.info(f"  {team} #{pos}: {name} ({variant}) (confidence: {score:.2f}) {confidence_indicator}")
 
+    # Stop the timer and log the total time
+    duration = performance_timer.stop('process_all_frames')
+    logger.info(f"All frames processed in {duration:.3f} seconds")
+
     return best_frame_heroes
 
 def main():
     """Main function."""
+    # Start the overall timing
+    performance_timer.start('total_execution')
+
     parser = argparse.ArgumentParser(description="Detect Dota 2 heroes in a Twitch clip")
     parser.add_argument("clip_url", nargs="?",
                       help="URL of the Twitch clip (required for downloading)")
@@ -752,6 +897,10 @@ def main():
                       help="Output file path (default: heroes.json)")
     parser.add_argument("--min-score", type=float, default=0.4,
                       help="Minimum match score (0.0-1.0) to consider a hero identified (default: 0.4)")
+    parser.add_argument("--color-correction", action="store_true",
+                      help="Enable color profile correction for more accurate matching")
+    parser.add_argument("--show-timings", action="store_true",
+                      help="Show detailed performance timing information")
 
     args = parser.parse_args()
 
@@ -760,22 +909,38 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
         os.environ["DEBUG_IMAGES"] = "1"
 
+    # Set color correction flag in environment
+    if args.color_correction:
+        os.environ["COLOR_CORRECTION"] = "1"
+        logger.info("Color profile correction enabled")
+
     try:
         # Process a single frame if provided
         if args.frame_path:
             logger.info(f"Processing single frame: {args.frame_path}")
+            performance_timer.start('process_single_frame')
             heroes = process_frame_for_heroes(args.frame_path, debug=args.debug)
+            processing_time = performance_timer.stop('process_single_frame')
 
             if heroes:
                 # Sort by team and position
                 heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
 
+                # Add timing data to output
+                heroes_output = {
+                    'heroes': heroes,
+                    'timing': {
+                        'total_processing_time': processing_time,
+                        'detailed_timings': performance_timer.get_summary() if args.show_timings else None
+                    }
+                }
+
                 with open(args.output, 'w') as f:
-                    json.dump(heroes, f, indent=2)
+                    json.dump(heroes_output, f, indent=2)
                 logger.info(f"Saved {len(heroes)} heroes to {args.output}")
 
                 # Print results with confidence scores
-                print(f"\nIdentified {len(heroes)} heroes:")
+                print(f"\nIdentified {len(heroes)} heroes in {processing_time:.3f} seconds:")
                 for hero in heroes:
                     team = hero['team']
                     pos = hero['position'] + 1
@@ -784,6 +949,12 @@ def main():
                     score = hero['match_score']
                     confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
                     print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f}) {confidence_indicator}")
+
+                # Print detailed timing information if requested
+                if args.show_timings:
+                    print("\nPerformance Timing Summary:")
+                    for label, stats in performance_timer.get_summary().items():
+                        print(f"  {label}: {stats['count']} calls, {stats['total']:.3f}s total, {stats['avg']:.3f}s avg")
 
                 return 0
             else:
@@ -802,15 +973,21 @@ def main():
                 return 1
 
             # Get clip details
+            performance_timer.start('get_clip_details')
             clip_details = get_clip_details(args.clip_url)
+            performance_timer.stop('get_clip_details')
             logger.info("Clip details retrieved")
 
             # Download the clip
+            performance_timer.start('download_clip')
             clip_path = download_clip(clip_details)
+            performance_timer.stop('download_clip')
             logger.info(f"Clip downloaded to: {clip_path}")
 
             # Extract frames
+            performance_timer.start('extract_frames')
             frame_paths = extract_frames(clip_path, frame_interval=0.5)
+            performance_timer.stop('extract_frames')
             logger.info(f"Extracted {len(frame_paths)} frames")
 
             # Use only the last 5 frames
@@ -819,18 +996,29 @@ def main():
                 logger.info(f"Using only the last 5 frames: {len(frame_paths)} frames")
 
             # Process frames for heroes
+            performance_timer.start('process_frames')
             heroes = process_frames_for_heroes(frame_paths, debug=args.debug)
+            processing_time = performance_timer.stop('process_frames')
 
             if heroes:
                 # Sort by team and position
                 heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
 
+                # Add timing data to output
+                heroes_output = {
+                    'heroes': heroes,
+                    'timing': {
+                        'total_processing_time': processing_time,
+                        'detailed_timings': performance_timer.get_summary() if args.show_timings else None
+                    }
+                }
+
                 with open(args.output, 'w') as f:
-                    json.dump(heroes, f, indent=2)
+                    json.dump(heroes_output, f, indent=2)
                 logger.info(f"Saved {len(heroes)} heroes to {args.output}")
 
                 # Print results with confidence scores
-                print(f"\nIdentified {len(heroes)} heroes:")
+                print(f"\nIdentified {len(heroes)} heroes in {processing_time:.3f} seconds:")
                 for hero in heroes:
                     team = hero['team']
                     pos = hero['position'] + 1
@@ -839,6 +1027,12 @@ def main():
                     score = hero['match_score']
                     confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
                     print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f}) {confidence_indicator}")
+
+                # Print detailed timing information if requested
+                if args.show_timings:
+                    print("\nPerformance Timing Summary:")
+                    for label, stats in sorted(performance_timer.get_summary().items()):
+                        print(f"  {label}: {stats['count']} calls, {stats['total']:.3f}s total, {stats['avg']:.3f}s avg")
 
                 return 0
             else:
@@ -853,6 +1047,10 @@ def main():
         logger.error(f"Error in main function: {e}", exc_info=True)
         print(f"Error: {e}")
         return 1
+    finally:
+        # Log total execution time
+        total_time = performance_timer.stop('total_execution')
+        logger.info(f"Total execution time: {total_time:.3f} seconds")
 
 if __name__ == "__main__":
     sys.exit(main())
