@@ -1185,6 +1185,7 @@ def detect_hero_color_bars(frame_path, expected_colors, debug=False):
         # Check Radiant heroes (left side, 5 heroes)
         matches = 0
         total_positions = 10  # 5 Radiant + 5 Dire
+        color_similarities = []
 
         for i in range(5):
             # Calculate position based on center and hero width
@@ -1219,9 +1220,10 @@ def detect_hero_color_bars(frame_path, expected_colors, debug=False):
             color_distance = sum((a - b) ** 2 for a, b in zip(avg_color_rgb, expected_color_rgb)) ** 0.5
             max_distance = 442  # Max possible distance in RGB space is sqrt(255^2 * 3)
             color_similarity = 1.0 - (color_distance / max_distance)
+            color_similarities.append(color_similarity)
 
-            # If color is close enough, consider it a match
-            if color_similarity > 0.7:
+            # Use a higher threshold for what counts as a match (0.8 instead of 0.7)
+            if color_similarity > 0.8:
                 matches += 1
 
             # Draw rectangle in debug mode
@@ -1235,6 +1237,11 @@ def detect_hero_color_bars(frame_path, expected_colors, debug=False):
                 # Add similarity score
                 cv2.putText(visualization, f"{color_similarity:.2f}", (x_start, HERO_TOP_PADDING+30),
                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+                # Indicate if it's a match or not
+                cv2.putText(visualization, "✓" if color_similarity > 0.8 else "✗",
+                          (x_start + HERO_WIDTH - 15, HERO_TOP_PADDING+30),
+                          cv2.FONT_HERSHEY_SIMPLEX, 0.4,
+                          (0, 255, 0) if color_similarity > 0.8 else (0, 0, 255), 1)
 
         # Check Dire heroes (right side, 5 heroes)
         for i in range(5):
@@ -1270,9 +1277,10 @@ def detect_hero_color_bars(frame_path, expected_colors, debug=False):
             color_distance = sum((a - b) ** 2 for a, b in zip(avg_color_rgb, expected_color_rgb)) ** 0.5
             max_distance = 442  # Max possible distance in RGB space is sqrt(255^2 * 3)
             color_similarity = 1.0 - (color_distance / max_distance)
+            color_similarities.append(color_similarity)
 
-            # If color is close enough, consider it a match
-            if color_similarity > 0.7:
+            # Use a higher threshold for what counts as a match (0.8 instead of 0.7)
+            if color_similarity > 0.8:
                 matches += 1
 
             # Draw rectangle in debug mode
@@ -1286,10 +1294,19 @@ def detect_hero_color_bars(frame_path, expected_colors, debug=False):
                 # Add similarity score
                 cv2.putText(visualization, f"{color_similarity:.2f}", (x_start, HERO_TOP_PADDING+30),
                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+                # Indicate if it's a match or not
+                cv2.putText(visualization, "✓" if color_similarity > 0.8 else "✗",
+                          (x_start + HERO_WIDTH - 15, HERO_TOP_PADDING+30),
+                          cv2.FONT_HERSHEY_SIMPLEX, 0.4,
+                          (0, 255, 0) if color_similarity > 0.8 else (0, 0, 255), 1)
 
         # Save the visualization
         if debug:
             save_debug_image(visualization, "hero_color_bars", f"Match score: {matches}/{total_positions}")
+
+        # Add color similarities to the detected colors output for debugging
+        detected_colors["color_similarities"] = {i: float(color_similarities[i]) for i in range(len(color_similarities))}
+        detected_colors["average_similarity"] = float(sum(color_similarities) / len(color_similarities)) if color_similarities else 0
 
         # Calculate overall match score
         match_score = matches / total_positions
@@ -1306,7 +1323,7 @@ def process_frames_for_heroes(frame_paths, debug=False):
     """
     Process multiple frames to identify heroes.
 
-    First finds the frame with the best match for hero color bars,
+    First finds the frame with a perfect match for hero color bars (10/10 matches),
     then processes only that frame for hero identification.
 
     Args:
@@ -1324,6 +1341,7 @@ def process_frames_for_heroes(frame_paths, debug=False):
     best_color_match_score = 0.0
     best_color_frame_index = -1
     best_color_frame_path = None
+    perfect_match_found = False
 
     for i, frame_path in enumerate(tqdm(frame_paths, desc="Finding frame with best color bars")):
         logger.debug(f"Analyzing color bars in frame {i+1}/{len(frame_paths)}: {frame_path}")
@@ -1340,21 +1358,25 @@ def process_frames_for_heroes(frame_paths, debug=False):
             best_color_frame_path = frame_path
             logger.debug(f"New best color match: frame {i+1} with score {best_color_match_score:.2f}")
 
-            # If we found a perfect match, we can stop
-            if match_score >= 0.9:
-                logger.info(f"Found excellent color match in frame {i+1} with score {best_color_match_score:.2f}")
+            # If we found a perfect match (10/10), we can stop
+            if match_score == 1.0:
+                logger.info(f"Found perfect color match (10/10) in frame {i+1}")
+                perfect_match_found = True
                 break
 
-    # If we didn't find a good color match, fall back to the original approach
-    if best_color_match_score < 0.5:
-        logger.warning(f"No good color match found, best score was {best_color_match_score:.2f} in frame {best_color_frame_index+1}")
-        # Use the last frame as a fallback
-        best_color_frame_index = len(frame_paths) - 1
-        best_color_frame_path = frame_paths[best_color_frame_index]
-        logger.info(f"Falling back to last frame: {best_color_frame_path}")
+    # If we didn't find a perfect match, check if we have a reasonably good match
+    if not perfect_match_found:
+        if best_color_match_score >= 0.7:  # At least 7/10 matches
+            logger.warning(f"No perfect match found, using best match with score {best_color_match_score:.2f} (frame {best_color_frame_index+1})")
+        else:
+            logger.warning(f"No good color match found, best score was only {best_color_match_score:.2f} in frame {best_color_frame_index+1}")
+            # Use the last frame as a fallback
+            best_color_frame_index = len(frame_paths) - 1
+            best_color_frame_path = frame_paths[best_color_frame_index]
+            logger.info(f"Falling back to last frame: {best_color_frame_path}")
 
     # Process only the best frame for hero identification
-    logger.info(f"Processing best frame (#{best_color_frame_index+1}: {best_color_frame_path}) with color match score {best_color_match_score:.2f}")
+    logger.info(f"Processing frame #{best_color_frame_index+1}: {best_color_frame_path} with color match score {best_color_match_score:.2f}")
 
     # Process the selected frame
     performance_timer.start('process_best_frame')
@@ -1564,12 +1586,34 @@ def main():
             processing_time = performance_timer.stop('process_frames')
 
             if heroes:
+                # Get the best color match information from the best frame
+                best_frame_index = -1
+                best_frame_path = None
+                best_match_score = 0.0
+                detected_colors = {}
+
+                # Find the frame with the best color match score
+                for i, frame_path in enumerate(frame_paths):
+                    match_score, colors = detect_hero_color_bars(frame_path, expected_colors, debug=False)
+                    if match_score > best_match_score:
+                        best_match_score = match_score
+                        best_frame_index = i
+                        best_frame_path = frame_path
+                        detected_colors = colors
+                        # If we found a perfect match, stop
+                        if match_score == 1.0:
+                            break
+
                 # Sort by team and position
                 heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
 
-                # Add timing data to output
+                # Add timing data and color information to output
                 heroes_output = {
                     'heroes': heroes,
+                    'color_match_score': best_match_score,
+                    'detected_colors': detected_colors,
+                    'best_frame_index': best_frame_index,
+                    'best_frame_path': str(best_frame_path),
                     'timing': {
                         'total_processing_time': processing_time,
                         'matching_mode': matching_mode,
@@ -1583,6 +1627,7 @@ def main():
 
                 # Print results with confidence scores
                 print(f"\nIdentified {len(heroes)} heroes in {processing_time:.3f} seconds using {matching_mode} matching:")
+                print(f"Color bar match score: {best_match_score:.2f} (frame {best_frame_index+1})")
                 for hero in heroes:
                     team = hero['team']
                     pos = hero['position'] + 1
