@@ -552,8 +552,10 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
     and returns the best match.
     Always checks all heroes and their variants to find the most confident match.
 
-    When color correction is enabled, uses multiple color spaces for matching.
-    Otherwise, only uses grayscale matching for better performance.
+    Matching modes:
+    - When color correction is enabled, uses multiple color spaces for matching
+    - With hue-only mode, only uses the H channel from HSV color space
+    - Otherwise, uses grayscale matching for better performance
 
     Args:
         hero_icon: Image of the hero icon (cropped to just the hero portrait without color bar)
@@ -588,9 +590,17 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
         best_score = 0
         all_matches = []
 
-        # Check if color correction is enabled
+        # Check which matching mode to use
         use_color_matching = os.environ.get("COLOR_CORRECTION", "").lower() in ("1", "true", "yes")
-        if use_color_matching:
+        use_hue_only = os.environ.get("HUE_ONLY", "").lower() in ("1", "true", "yes")
+        normalize_hue = os.environ.get("NORMALIZE_HUE", "").lower() in ("1", "true", "yes")
+
+        if use_hue_only:
+            if normalize_hue:
+                logger.debug("Using Hue-only template matching with normalization")
+            else:
+                logger.debug("Using Hue-only template matching without normalization")
+        elif use_color_matching:
             logger.debug("Using multi-color space template matching")
         else:
             logger.debug("Using grayscale-only template matching for better performance")
@@ -636,19 +646,47 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
 
                 # Perform template matching
                 performance_timer.start('color_conversion')
-                # Grayscale matching is always done
-                gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
-                gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
 
-                # Color matching only if color correction is enabled
-                if use_color_matching:
-                    # HSV is good for color-based matching as it's less affected by lighting
+                if use_hue_only:
+                    # Convert to HSV and extract only the Hue channel
                     hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
                     hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
 
-                    # LAB color space is perceptually uniform and good for color differences
+                    # Extract H channel (Hue)
+                    hue_icon = hsv_icon[:,:,0]
+                    hue_template = hsv_template[:,:,0]
+
+                    # Normalize pixel values to 0-1 if requested
+                    if normalize_hue:
+                        hue_icon = hue_icon / 180.0  # OpenCV Hue range is 0-180
+                        hue_template = hue_template / 180.0
+
+                    # Debug visualization
+                    if debug:
+                        hue_vis_icon = np.uint8(hue_icon * 255 if normalize_hue else hue_icon)
+                        hue_vis_template = np.uint8(hue_template * 255 if normalize_hue else hue_template)
+                        save_debug_image(hue_vis_icon, "hue_only_icon",
+                                        f"Hue channel {'normalized' if normalize_hue else 'raw'}")
+                        save_debug_image(hue_vis_template, "hue_only_template",
+                                        f"Hue channel {'normalized' if normalize_hue else 'raw'}")
+                elif not use_color_matching:
+                    # Grayscale matching is used when neither hue-only nor color matching is enabled
+                    gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
+                    gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
+                else:
+                    # Full color matching mode - prepare all color spaces
+                    # Grayscale
+                    gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
+                    gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
+
+                    # HSV
+                    hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
+                    hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
+
+                    # LAB
                     lab_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2LAB)
                     lab_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2LAB)
+
                 performance_timer.stop('color_conversion')
 
                 # Use multiple methods and combine scores
@@ -656,16 +694,27 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 scores = []
 
                 performance_timer.start('template_matching')
-                # Match in grayscale
-                for method in methods:
-                    result = cv2.matchTemplate(gray_icon, gray_template, method)
-                    _, score, _, _ = cv2.minMaxLoc(result)
-                    # If only using grayscale, weight is 1.0, otherwise 0.4
-                    weight = 1.0 if not use_color_matching else 0.4
-                    scores.append(score * weight)
 
-                # Additional color space matching only if color correction is enabled
-                if use_color_matching:
+                if use_hue_only:
+                    # Match using only Hue channel
+                    for method in methods:
+                        result = cv2.matchTemplate(hue_icon, hue_template, method)
+                        _, score, _, _ = cv2.minMaxLoc(result)
+                        scores.append(score)
+                elif not use_color_matching:
+                    # Match in grayscale only
+                    for method in methods:
+                        result = cv2.matchTemplate(gray_icon, gray_template, method)
+                        _, score, _, _ = cv2.minMaxLoc(result)
+                        scores.append(score)
+                else:
+                    # Full multi-color space matching
+                    # Match in grayscale
+                    for method in methods:
+                        result = cv2.matchTemplate(gray_icon, gray_template, method)
+                        _, score, _, _ = cv2.minMaxLoc(result)
+                        scores.append(score * 0.4)  # Weight grayscale matches at 40%
+
                     # Match in HSV (separate channels for better accuracy)
                     for i in range(3):  # H, S, V channels
                         h_icon = hsv_icon[:,:,i]
@@ -693,13 +742,14 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                             result = cv2.matchTemplate(b_icon, b_template, method)
                             _, score, _, _ = cv2.minMaxLoc(result)
                             scores.append(score * 0.05)  # Weight each BGR channel at 5%
+
                 performance_timer.stop('template_matching')
 
-                # Calculate final score - either straight grayscale average or weighted sum
-                if use_color_matching:
+                # Calculate final score based on mode
+                if use_color_matching and not use_hue_only:
                     avg_score = sum(scores)  # weighted sum should total 1.0
                 else:
-                    avg_score = sum(scores) / len(scores)  # simple average for grayscale only
+                    avg_score = sum(scores) / len(scores)  # simple average for grayscale or hue-only
 
                 # Add to list of all matches
                 match_info = {
@@ -916,6 +966,10 @@ def main():
                       help="Minimum match score (0.0-1.0) to consider a hero identified (default: 0.4)")
     parser.add_argument("--color-correction", action="store_true",
                       help="Enable color profile correction for more accurate matching")
+    parser.add_argument("--hue-only", action="store_true",
+                      help="Use only Hue channel from HSV for template matching")
+    parser.add_argument("--normalize-hue", action="store_true",
+                      help="Normalize Hue values to 0-1 range (only applies with --hue-only)")
     parser.add_argument("--show-timings", action="store_true",
                       help="Show detailed performance timing information")
 
@@ -926,9 +980,23 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
         os.environ["DEBUG_IMAGES"] = "1"
 
-    # Set color correction flag in environment
+    # Set matching mode flags
     matching_mode = "grayscale"
-    if args.color_correction:
+
+    # Hue-only mode takes precedence if specified
+    if args.hue_only:
+        os.environ["HUE_ONLY"] = "1"
+        matching_mode = "hue-only"
+
+        if args.normalize_hue:
+            os.environ["NORMALIZE_HUE"] = "1"
+            matching_mode += " (normalized)"
+            logger.info("Using Hue-only template matching with normalization")
+        else:
+            logger.info("Using Hue-only template matching without normalization")
+
+    # Otherwise, use color correction if specified
+    elif args.color_correction:
         os.environ["COLOR_CORRECTION"] = "1"
         matching_mode = "multi-color space"
         logger.info("Color profile correction enabled - using multi-color space matching")
