@@ -552,6 +552,9 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
     and returns the best match.
     Always checks all heroes and their variants to find the most confident match.
 
+    When color correction is enabled, uses multiple color spaces for matching.
+    Otherwise, only uses grayscale matching for better performance.
+
     Args:
         hero_icon: Image of the hero icon (cropped to just the hero portrait without color bar)
         heroes_data: Dictionary of hero data
@@ -584,6 +587,13 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
         best_match = None
         best_score = 0
         all_matches = []
+
+        # Check if color correction is enabled
+        use_color_matching = os.environ.get("COLOR_CORRECTION", "").lower() in ("1", "true", "yes")
+        if use_color_matching:
+            logger.debug("Using multi-color space template matching")
+        else:
+            logger.debug("Using grayscale-only template matching for better performance")
 
         # Track template matching performance
         performance_timer.start('template_matching_total')
@@ -625,23 +635,23 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 performance_timer.stop('resize_template')
 
                 # Perform template matching
-                # Use both color and grayscale matching for better accuracy
                 performance_timer.start('color_conversion')
-                # Grayscale matching
+                # Grayscale matching is always done
                 gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
                 gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
 
-                # Color matching - convert to different color spaces for better matching
-                # HSV is good for color-based matching as it's less affected by lighting
-                hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
-                hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
+                # Color matching only if color correction is enabled
+                if use_color_matching:
+                    # HSV is good for color-based matching as it's less affected by lighting
+                    hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
+                    hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
 
-                # LAB color space is perceptually uniform and good for color differences
-                lab_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2LAB)
-                lab_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2LAB)
+                    # LAB color space is perceptually uniform and good for color differences
+                    lab_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2LAB)
+                    lab_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2LAB)
                 performance_timer.stop('color_conversion')
 
-                # Use multiple methods and combine scores across different color spaces
+                # Use multiple methods and combine scores
                 methods = [cv2.TM_CCOEFF_NORMED, cv2.TM_CCORR_NORMED]
                 scores = []
 
@@ -650,39 +660,46 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 for method in methods:
                     result = cv2.matchTemplate(gray_icon, gray_template, method)
                     _, score, _, _ = cv2.minMaxLoc(result)
-                    scores.append(score * 0.4)  # Weight grayscale matches at 40%
+                    # If only using grayscale, weight is 1.0, otherwise 0.4
+                    weight = 1.0 if not use_color_matching else 0.4
+                    scores.append(score * weight)
 
-                # Match in HSV (separate channels for better accuracy)
-                for i in range(3):  # H, S, V channels
-                    h_icon = hsv_icon[:,:,i]
-                    h_template = hsv_template[:,:,i]
+                # Additional color space matching only if color correction is enabled
+                if use_color_matching:
+                    # Match in HSV (separate channels for better accuracy)
+                    for i in range(3):  # H, S, V channels
+                        h_icon = hsv_icon[:,:,i]
+                        h_template = hsv_template[:,:,i]
+                        for method in methods:
+                            result = cv2.matchTemplate(h_icon, h_template, method)
+                            _, score, _, _ = cv2.minMaxLoc(result)
+                            weight = 0.1 if i == 0 else 0.05  # Weight Hue higher than Saturation and Value
+                            scores.append(score * weight)
+
+                    # Match in LAB
+                    for i in range(3):  # L, A, B channels
+                        l_icon = lab_icon[:,:,i]
+                        l_template = lab_template[:,:,i]
+                        for method in methods:
+                            result = cv2.matchTemplate(l_icon, l_template, method)
+                            _, score, _, _ = cv2.minMaxLoc(result)
+                            scores.append(score * 0.05)  # Weight each LAB channel at 5%
+
+                    # BGR direct matching (weighted lower as it's more susceptible to lighting changes)
                     for method in methods:
-                        result = cv2.matchTemplate(h_icon, h_template, method)
-                        _, score, _, _ = cv2.minMaxLoc(result)
-                        weight = 0.1 if i == 0 else 0.05  # Weight Hue higher than Saturation and Value
-                        scores.append(score * weight)
-
-                # Match in LAB
-                for i in range(3):  # L, A, B channels
-                    l_icon = lab_icon[:,:,i]
-                    l_template = lab_template[:,:,i]
-                    for method in methods:
-                        result = cv2.matchTemplate(l_icon, l_template, method)
-                        _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score * 0.05)  # Weight each LAB channel at 5%
-
-                # BGR direct matching (weighted lower as it's more susceptible to lighting changes)
-                for method in methods:
-                    for i in range(3):  # B, G, R channels
-                        b_icon = hero_icon_resized[:,:,i]
-                        b_template = template_resized[:,:,i]
-                        result = cv2.matchTemplate(b_icon, b_template, method)
-                        _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score * 0.05)  # Weight each BGR channel at 5%
+                        for i in range(3):  # B, G, R channels
+                            b_icon = hero_icon_resized[:,:,i]
+                            b_template = template_resized[:,:,i]
+                            result = cv2.matchTemplate(b_icon, b_template, method)
+                            _, score, _, _ = cv2.minMaxLoc(result)
+                            scores.append(score * 0.05)  # Weight each BGR channel at 5%
                 performance_timer.stop('template_matching')
 
-                # Average score - weighted sum should total 1.0
-                avg_score = sum(scores)
+                # Calculate final score - either straight grayscale average or weighted sum
+                if use_color_matching:
+                    avg_score = sum(scores)  # weighted sum should total 1.0
+                else:
+                    avg_score = sum(scores) / len(scores)  # simple average for grayscale only
 
                 # Add to list of all matches
                 match_info = {
@@ -910,9 +927,13 @@ def main():
         os.environ["DEBUG_IMAGES"] = "1"
 
     # Set color correction flag in environment
+    matching_mode = "grayscale"
     if args.color_correction:
         os.environ["COLOR_CORRECTION"] = "1"
-        logger.info("Color profile correction enabled")
+        matching_mode = "multi-color space"
+        logger.info("Color profile correction enabled - using multi-color space matching")
+    else:
+        logger.info("Using grayscale-only matching for better performance")
 
     try:
         # Process a single frame if provided
@@ -931,6 +952,7 @@ def main():
                     'heroes': heroes,
                     'timing': {
                         'total_processing_time': processing_time,
+                        'matching_mode': matching_mode,
                         'detailed_timings': performance_timer.get_summary() if args.show_timings else None
                     }
                 }
@@ -940,7 +962,7 @@ def main():
                 logger.info(f"Saved {len(heroes)} heroes to {args.output}")
 
                 # Print results with confidence scores
-                print(f"\nIdentified {len(heroes)} heroes in {processing_time:.3f} seconds:")
+                print(f"\nIdentified {len(heroes)} heroes in {processing_time:.3f} seconds using {matching_mode} matching:")
                 for hero in heroes:
                     team = hero['team']
                     pos = hero['position'] + 1
@@ -1009,6 +1031,7 @@ def main():
                     'heroes': heroes,
                     'timing': {
                         'total_processing_time': processing_time,
+                        'matching_mode': matching_mode,
                         'detailed_timings': performance_timer.get_summary() if args.show_timings else None
                     }
                 }
@@ -1018,7 +1041,7 @@ def main():
                 logger.info(f"Saved {len(heroes)} heroes to {args.output}")
 
                 # Print results with confidence scores
-                print(f"\nIdentified {len(heroes)} heroes in {processing_time:.3f} seconds:")
+                print(f"\nIdentified {len(heroes)} heroes in {processing_time:.3f} seconds using {matching_mode} matching:")
                 for hero in heroes:
                     team = hero['team']
                     pos = hero['position'] + 1
