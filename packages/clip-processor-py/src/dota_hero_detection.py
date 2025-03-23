@@ -915,29 +915,13 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                     for method in methods:
                         result = cv2.matchTemplate(blur_edge_hue_icon, blur_edge_hue_template, method)
                         _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score * 0.6)  # 60% weight for blur-edge-hue mix
-
-                    # Also match on regular grayscale for stability (40% weight)
-                    gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
-                    gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
-                    for method in methods:
-                        result = cv2.matchTemplate(gray_icon, gray_template, method)
-                        _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score * 0.4)
+                        scores.append(score)  # Use full score without weighting
                 elif use_edge_hue:
                     # Match using edge-enhanced hue channel
                     for method in methods:
                         result = cv2.matchTemplate(edge_hue_icon, edge_hue_template, method)
                         _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score * 0.6)  # 60% weight for edge-hue mix
-
-                    # Also match on regular grayscale for stability (40% weight)
-                    gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
-                    gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
-                    for method in methods:
-                        result = cv2.matchTemplate(gray_icon, gray_template, method)
-                        _, score, _, _ = cv2.minMaxLoc(result)
-                        scores.append(score * 0.4)
+                        scores.append(score)  # Use full score without weighting
                 elif use_hue_only:
                     # Match using only Hue channel
                     for method in methods:
@@ -1003,10 +987,10 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 performance_timer.stop('template_matching')
 
                 # Calculate final score based on mode
-                if use_blur_edge_hue or use_edge_hue or (use_color_matching and not use_hue_only) or use_fast_color:
+                if (use_color_matching and not use_hue_only) or use_fast_color:
                     avg_score = sum(scores)  # weighted sum should total 1.0
                 else:
-                    avg_score = sum(scores) / len(scores)  # simple average for grayscale or hue-only
+                    avg_score = sum(scores) / len(scores)  # simple average for grayscale or hue-only or edge-hue modes
 
                 # Add to list of all matches
                 match_info = {
