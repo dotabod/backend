@@ -63,6 +63,9 @@ HERO_ACTUAL_HEIGHT = HERO_HEIGHT - HERO_TOP_PADDING  # 67px - actual visible her
 # Gap between heroes (from frontend code)
 HERO_GAP = 15  # pixels
 
+# Skew angle for the gaps between heroes
+SKEW_ANGLE_DEGREES = 9  # degrees
+
 # Clock dimensions (from frontend code)
 CLOCK_WIDTH = 273  # pixels (was 265)
 CLOCK_HEIGHT = 131  # pixels
@@ -173,23 +176,36 @@ def extract_hero_bar(frame, debug=False):
             # Draw center line
             cv2.line(visualization, (center_x, 0), (center_x, bar_height), (0, 255, 255), 2)
 
-            # Draw radiant hero boundaries with gaps
+            # Calculate skew offset based on height
+            skew_offset = int(np.tan(np.radians(SKEW_ANGLE_DEGREES)) * HERO_ACTUAL_HEIGHT)
+
+            # Draw radiant hero boundaries with skewed gaps
             for i in range(5):
                 x = center_x - CLOCK_WIDTH//2 - (5-i) * (HERO_WIDTH + HERO_GAP)
-                cv2.rectangle(visualization,
-                             (x, 0),
-                             (x + HERO_WIDTH, bar_height),
-                             (0, 255, 0), 2)
+
+                # Draw skewed rectangle for Radiant (positive skew)
+                points = np.array([
+                    [x, HERO_TOP_PADDING],  # Top-left
+                    [x + HERO_WIDTH, HERO_TOP_PADDING],  # Top-right
+                    [x + HERO_WIDTH + skew_offset, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT],  # Bottom-right
+                    [x + skew_offset, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT]   # Bottom-left
+                ], dtype=np.int32)
+                cv2.polylines(visualization, [points], True, (0, 255, 0), 2)
                 cv2.putText(visualization, f"R{i+1}", (x + 5, 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
-            # Draw dire hero boundaries with gaps
+            # Draw dire hero boundaries with skewed gaps
             for i in range(5):
                 x = center_x + CLOCK_WIDTH//2 + i * (HERO_WIDTH + HERO_GAP)
-                cv2.rectangle(visualization,
-                             (x, 0),
-                             (x + HERO_WIDTH, bar_height),
-                             (0, 0, 255), 2)
+
+                # Draw skewed rectangle for Dire (negative skew)
+                points = np.array([
+                    [x, HERO_TOP_PADDING],  # Top-left
+                    [x + HERO_WIDTH, HERO_TOP_PADDING],  # Top-right
+                    [x + HERO_WIDTH - skew_offset, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT],  # Bottom-right
+                    [x - skew_offset, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT]   # Bottom-left
+                ], dtype=np.int32)
+                cv2.polylines(visualization, [points], True, (0, 0, 255), 2)
                 cv2.putText(visualization, f"D{i+1}", (x + 5, 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
@@ -199,36 +215,21 @@ def extract_hero_bar(frame, debug=False):
                          (center_x + CLOCK_WIDTH//2, bar_height),
                          (255, 255, 0), 2)
 
-            # Draw hero portrait cropping boundaries
-            for i in range(5):
-                # Radiant heroes
-                x = center_x - CLOCK_WIDTH//2 - (5-i) * (HERO_WIDTH + HERO_GAP)
-                # Draw top padding line
-                cv2.line(visualization, (x, HERO_TOP_PADDING), (x + HERO_WIDTH, HERO_TOP_PADDING), (255, 0, 255), 1)
-                # Draw bottom of hero portrait
-                cv2.line(visualization, (x, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT),
-                        (x + HERO_WIDTH, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT), (255, 0, 255), 1)
-
-                # Dire heroes
-                x = center_x + CLOCK_WIDTH//2 + i * (HERO_WIDTH + HERO_GAP)
-                # Draw top padding line
-                cv2.line(visualization, (x, HERO_TOP_PADDING), (x + HERO_WIDTH, HERO_TOP_PADDING), (255, 0, 255), 1)
-                # Draw bottom of hero portrait
-                cv2.line(visualization, (x, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT),
-                        (x + HERO_WIDTH, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT), (255, 0, 255), 1)
-
-            # Add text to indicate the gap between heroes
+            # Add text to indicate the skew angle
             x_radiant = center_x - CLOCK_WIDTH//2 - 3 * (HERO_WIDTH + HERO_GAP)
-            cv2.putText(visualization, f"Gap: {HERO_GAP}px", (x_radiant + HERO_WIDTH, bar_height - 10),
+            cv2.putText(visualization, f"Skew: +{SKEW_ANGLE_DEGREES}°", (x_radiant, bar_height - 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+            x_dire = center_x + CLOCK_WIDTH//2 + 2 * (HERO_WIDTH + HERO_GAP)
+            cv2.putText(visualization, f"Skew: -{SKEW_ANGLE_DEGREES}°", (x_dire, bar_height - 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
 
             # Add text to show dimensions
-            cv2.putText(visualization, f"Hero: {HERO_WIDTH}x{HERO_HEIGHT}px", (10, bar_height - 30),
+            cv2.putText(visualization, f"Hero: {HERO_WIDTH}x{HERO_HEIGHT}px", (10, bar_height - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
             cv2.putText(visualization, f"Clock: {CLOCK_WIDTH}px", (center_x - 50, bar_height - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
 
-            save_debug_image(visualization, "top_bar_annotated")
+            save_debug_image(visualization, "top_bar_annotated_skewed")
 
         # Success
         return True, frame[top_offset:top_offset+bar_height, 0:width], center_x
@@ -246,6 +247,9 @@ def extract_hero_icons(top_bar, center_x, debug=False):
        - Skips the first 6px (color indicator bar at top)
        - Takes only the next 67px of height (actual hero portrait)
        - Does not include the bottom 58px (player name and role)
+    3. Accounts for the 9-degree skew in the gaps between heroes:
+       - Radiant: positive 9-degree skew (left-to-right)
+       - Dire: negative 9-degree skew (right-to-left)
 
     Args:
         top_bar: Cropped top bar image
@@ -257,58 +261,156 @@ def extract_hero_icons(top_bar, center_x, debug=False):
     """
     try:
         hero_icons = []
+        height, width = top_bar.shape[:2]
 
-        # Extract Radiant heroes (left side, 5 heroes)
+        # Calculate skew offset based on height
+        # tan(9°) ≈ 0.158 * height = pixel offset at bottom
+        skew_offset = int(np.tan(np.radians(SKEW_ANGLE_DEGREES)) * HERO_ACTUAL_HEIGHT)
+        logger.debug(f"Skew offset at bottom: {skew_offset} pixels for {SKEW_ANGLE_DEGREES} degrees")
+
+        # Extract Radiant heroes (left side, 5 heroes) with positive skew
         for i in range(5):
             # Calculate position based on center and hero width
             x_start = center_x - CLOCK_WIDTH//2 - (5-i) * (HERO_WIDTH + HERO_GAP)
-            x_end = x_start + HERO_WIDTH
 
-            # Crop the hero icon - only take the actual hero portrait, not player name/role
-            # Skip the first HERO_TOP_PADDING pixels (color indicator)
-            hero_icon = top_bar[HERO_TOP_PADDING:HERO_TOP_PADDING+HERO_ACTUAL_HEIGHT, x_start:x_end]
+            # Create a mask for the skewed rectangle
+            mask = np.zeros((height, width), dtype=np.uint8)
+
+            # Points for a skewed quadrilateral (positive skew for Radiant)
+            # Top-left, top-right, bottom-right, bottom-left
+            points = np.array([
+                [x_start, HERO_TOP_PADDING],  # Top-left (0° at top)
+                [x_start + HERO_WIDTH, HERO_TOP_PADDING],  # Top-right (0° at top)
+                [x_start + HERO_WIDTH + skew_offset, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT],  # Bottom-right (9° at bottom)
+                [x_start + skew_offset, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT]   # Bottom-left (9° at bottom)
+            ], dtype=np.int32)
+
+            # Fill the polygon
+            cv2.fillPoly(mask, [points], 255)
+
+            # Create a temporary full-height image to apply the mask
+            temp_image = top_bar.copy()
+            masked_hero = cv2.bitwise_and(temp_image, temp_image, mask=mask)
+
+            # Find the bounding box of the skewed rectangle
+            x_min, y_min = x_start, HERO_TOP_PADDING
+            x_max, y_max = x_start + HERO_WIDTH + skew_offset, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT
+
+            # Crop to the bounding box
+            cropped_hero = masked_hero[y_min:y_max, x_min:x_max]
 
             # Check if we have a valid crop
-            if hero_icon.size == 0:
+            if cropped_hero.size == 0:
                 logger.warning(f"Invalid crop for Radiant hero {i+1}")
                 continue
 
+            # Create a clean rectangular hero icon by warping the skewed image
+            # Define source points (skewed quadrilateral) and destination points (rectangle)
+            src_points = np.array([
+                [0, 0],  # Top-left
+                [HERO_WIDTH, 0],  # Top-right
+                [HERO_WIDTH + skew_offset, HERO_ACTUAL_HEIGHT],  # Bottom-right
+                [skew_offset, HERO_ACTUAL_HEIGHT]  # Bottom-left
+            ], dtype=np.float32)
+
+            dst_points = np.array([
+                [0, 0],  # Top-left
+                [HERO_WIDTH, 0],  # Top-right
+                [HERO_WIDTH, HERO_ACTUAL_HEIGHT],  # Bottom-right
+                [0, HERO_ACTUAL_HEIGHT]  # Bottom-left
+            ], dtype=np.float32)
+
+            # Calculate perspective transform
+            M = cv2.getPerspectiveTransform(src_points, dst_points)
+            hero_icon = cv2.warpPerspective(cropped_hero, M, (HERO_WIDTH, HERO_ACTUAL_HEIGHT))
+
             # Save for debugging
             if debug:
-                # Save the full selection and cropped portrait
-                full_selection = top_bar[0:HERO_TOTAL_HEIGHT, x_start:x_end]
-                save_debug_image(full_selection, f"radiant_hero_{i+1}_full")
+                # Save the mask, masked crop, and final hero icon
+                save_debug_image(mask[y_min:y_max, x_min:x_max], f"radiant_hero_{i+1}_mask")
+                save_debug_image(cropped_hero, f"radiant_hero_{i+1}_skewed")
                 save_debug_image(hero_icon, f"radiant_hero_{i+1}_portrait")
+
+                # Draw the skewed quadrilateral on the original image for visualization
+                vis_image = top_bar.copy()
+                cv2.polylines(vis_image, [points], True, (0, 255, 0), 2)
+                save_debug_image(vis_image, f"radiant_hero_{i+1}_outline")
 
             # Add to list: (team, position, icon)
             hero_icons.append(("Radiant", i, hero_icon))
 
-        # Extract Dire heroes (right side, 5 heroes)
+        # Extract Dire heroes (right side, 5 heroes) with negative skew
         for i in range(5):
             # Calculate position based on center and hero width
             x_start = center_x + CLOCK_WIDTH//2 + i * (HERO_WIDTH + HERO_GAP)
-            x_end = x_start + HERO_WIDTH
 
-            # Crop the hero icon - only take the actual hero portrait, not player name/role
-            # Skip the first HERO_TOP_PADDING pixels (color indicator)
-            hero_icon = top_bar[HERO_TOP_PADDING:HERO_TOP_PADDING+HERO_ACTUAL_HEIGHT, x_start:x_end]
+            # Create a mask for the skewed rectangle
+            mask = np.zeros((height, width), dtype=np.uint8)
+
+            # Points for a skewed quadrilateral (negative skew for Dire)
+            # Top-left, top-right, bottom-right, bottom-left
+            points = np.array([
+                [x_start, HERO_TOP_PADDING],  # Top-left (0° at top)
+                [x_start + HERO_WIDTH, HERO_TOP_PADDING],  # Top-right (0° at top)
+                [x_start + HERO_WIDTH - skew_offset, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT],  # Bottom-right (-9° at bottom)
+                [x_start - skew_offset, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT]   # Bottom-left (-9° at bottom)
+            ], dtype=np.int32)
+
+            # Fill the polygon
+            cv2.fillPoly(mask, [points], 255)
+
+            # Create a temporary full-height image to apply the mask
+            temp_image = top_bar.copy()
+            masked_hero = cv2.bitwise_and(temp_image, temp_image, mask=mask)
+
+            # Find the bounding box of the skewed rectangle
+            x_min, y_min = x_start - skew_offset, HERO_TOP_PADDING
+            x_max, y_max = x_start + HERO_WIDTH, HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT
+
+            # Crop to the bounding box
+            cropped_hero = masked_hero[y_min:y_max, x_min:x_max]
 
             # Check if we have a valid crop
-            if hero_icon.size == 0:
+            if cropped_hero.size == 0:
                 logger.warning(f"Invalid crop for Dire hero {i+1}")
                 continue
 
+            # Create a clean rectangular hero icon by warping the skewed image
+            # Define source points (skewed quadrilateral) and destination points (rectangle)
+            src_points = np.array([
+                [skew_offset, 0],  # Top-left
+                [skew_offset + HERO_WIDTH, 0],  # Top-right
+                [HERO_WIDTH, HERO_ACTUAL_HEIGHT],  # Bottom-right
+                [0, HERO_ACTUAL_HEIGHT]  # Bottom-left
+            ], dtype=np.float32)
+
+            dst_points = np.array([
+                [0, 0],  # Top-left
+                [HERO_WIDTH, 0],  # Top-right
+                [HERO_WIDTH, HERO_ACTUAL_HEIGHT],  # Bottom-right
+                [0, HERO_ACTUAL_HEIGHT]  # Bottom-left
+            ], dtype=np.float32)
+
+            # Calculate perspective transform
+            M = cv2.getPerspectiveTransform(src_points, dst_points)
+            hero_icon = cv2.warpPerspective(cropped_hero, M, (HERO_WIDTH, HERO_ACTUAL_HEIGHT))
+
             # Save for debugging
             if debug:
-                # Save the full selection and cropped portrait
-                full_selection = top_bar[0:HERO_TOTAL_HEIGHT, x_start:x_end]
-                save_debug_image(full_selection, f"dire_hero_{i+1}_full")
+                # Save the mask, masked crop, and final hero icon
+                save_debug_image(mask[y_min:y_max, x_min:x_max], f"dire_hero_{i+1}_mask")
+                save_debug_image(cropped_hero, f"dire_hero_{i+1}_skewed")
                 save_debug_image(hero_icon, f"dire_hero_{i+1}_portrait")
+
+                # Draw the skewed quadrilateral on the original image for visualization
+                vis_image = top_bar.copy()
+                cv2.polylines(vis_image, [points], True, (0, 0, 255), 2)
+                save_debug_image(vis_image, f"dire_hero_{i+1}_outline")
 
             # Add to list: (team, position, icon)
             hero_icons.append(("Dire", i, hero_icon))
 
-        logger.debug(f"Extracted {len(hero_icons)} hero icons")
+        logger.debug(f"Extracted {len(hero_icons)} hero icons with skewed boundaries")
         return hero_icons
     except Exception as e:
         logger.error(f"Error extracting hero icons: {e}")
@@ -406,8 +508,8 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 # Save comparison for debugging
                 if debug and avg_score > 0.4:
                     comparison = np.hstack((hero_icon_resized, template_resized))
-                    save_debug_image(comparison, f"hero_match_{hero_id}_{variant_name}",
-                                   f"{hero_localized_name} ({variant_name}): {avg_score:.3f}")
+                    # save_debug_image(comparison, f"hero_match_{hero_id}_{variant_name}",
+                    #                f"{hero_localized_name} ({variant_name}): {avg_score:.3f}")
 
         # Sort all matches by score for debugging
         all_matches.sort(key=lambda x: x['match_score'], reverse=True)
