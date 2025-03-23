@@ -618,6 +618,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
         # Check which matching mode to use
         use_color_matching = os.environ.get("COLOR_CORRECTION", "").lower() in ("1", "true", "yes")
         use_fast_color = os.environ.get("FAST_COLOR", "").lower() in ("1", "true", "yes")
+        use_fast_color_v2 = os.environ.get("FAST_COLOR_V2", "").lower() in ("1", "true", "yes")
         use_hue_only = os.environ.get("HUE_ONLY", "").lower() in ("1", "true", "yes")
         use_edge_hue = os.environ.get("EDGE_HUE", "").lower() in ("1", "true", "yes")
         use_blur_edge_hue = os.environ.get("BLUR_EDGE_HUE", "").lower() in ("1", "true", "yes")
@@ -643,6 +644,8 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 logger.debug("Using Hue-only template matching with normalization")
             else:
                 logger.debug("Using Hue-only template matching without normalization")
+        elif use_fast_color_v2:
+            logger.debug("Using direct BGR multi-channel matching with TM_CCORR_NORMED")
         elif use_fast_color:
             logger.debug("Using fast color template matching (optimized for speed)")
         elif use_color_matching:
@@ -716,7 +719,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                     hue_norm_vis = np.zeros_like(hero_icon_resized)
                     hue_norm_vis[:,:,0] = hue_norm
                     save_debug_image(hue_norm_vis, "hero_hue_normalized", "Normalized Hue channel")
-            elif use_fast_color:
+            elif use_fast_color_v2:
                 # Save grayscale
                 gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
                 gray_vis = cv2.cvtColor(gray_icon, cv2.COLOR_GRAY2BGR)
@@ -889,6 +892,18 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                                         f"Hue channel {'normalized' if normalize_hue else 'raw'}")
                         save_debug_image(hue_vis_template, "hue_only_template",
                                         f"Hue channel {'normalized' if normalize_hue else 'raw'}")
+                elif use_fast_color_v2:
+                    # Fast color v2 - use direct BGR multi-channel matching
+                    # No need to convert to other color spaces
+                    # When using cv2.matchTemplate directly on multi-channel images,
+                    # the function will internally compare all channels
+                    fast_v2_icon = hero_icon_resized  # Use directly
+                    fast_v2_template = template_resized  # Use directly
+
+                    # Debug visualization for template
+                    if debug and templates_checked < 3:
+                        save_debug_image(fast_v2_template, f"template_{hero_id}_{variant_name}_fastv2",
+                                         "Direct BGR template")
                 elif use_fast_color:
                     # Fast color matching mode - only use key color spaces/channels
                     # Grayscale is always calculated
@@ -946,6 +961,11 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                         result = cv2.matchTemplate(hue_icon, hue_template, method)
                         _, score, _, _ = cv2.minMaxLoc(result)
                         scores.append(score)
+                elif use_fast_color_v2:
+                    # For fast-color-v2, only use TM_CCORR_NORMED on full BGR images
+                    result = cv2.matchTemplate(fast_v2_icon, fast_v2_template, cv2.TM_CCORR_NORMED)
+                    _, score, _, _ = cv2.minMaxLoc(result)
+                    scores.append(score)  # Direct score without weighting
                 elif use_fast_color:
                     # Fast color matching - use grayscale and hue only
                     # Grayscale (60% weight)
@@ -1005,7 +1025,9 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 performance_timer.stop('template_matching')
 
                 # Calculate final score based on mode
-                if (use_color_matching and not use_hue_only) or use_fast_color:
+                if use_fast_color_v2:
+                    avg_score = scores[0]  # Just use the direct score (we only have one)
+                elif (use_color_matching and not use_hue_only) or use_fast_color:
                     avg_score = sum(scores)  # weighted sum should total 1.0
                 else:
                     avg_score = sum(scores) / len(scores)  # simple average for grayscale or hue-only or edge-hue modes
@@ -1425,6 +1447,8 @@ def main():
                       help="Enable color profile correction for more accurate matching")
     parser.add_argument("--fast-color", action="store_true",
                       help="Use optimized color matching (faster than full color, more accurate than grayscale)")
+    parser.add_argument("--fast-color-v2", action="store_true",
+                      help="Use direct BGR multi-channel matching with TM_CCORR_NORMED (fastest method)")
     parser.add_argument("--hue-only", action="store_true",
                       help="Use only Hue channel from HSV for template matching")
     parser.add_argument("--edge-hue", action="store_true",
@@ -1474,13 +1498,16 @@ def main():
             logger.info("Using Hue-only template matching with normalization")
         else:
             logger.info("Using Hue-only template matching without normalization")
-
+    # Fast-color-v2 takes precedence over fast-color
+    elif args.fast_color_v2:
+        os.environ["FAST_COLOR_V2"] = "1"
+        matching_mode = "fast-color-v2"
+        logger.info("Using direct BGR multi-channel matching with TM_CCORR_NORMED (fastest method)")
     # Fast-color mode takes precedence over full color correction
     elif args.fast_color:
         os.environ["FAST_COLOR"] = "1"
         matching_mode = "fast-color"
         logger.info("Using fast color matching (optimized for speed and accuracy)")
-
     # Otherwise, use color correction if specified
     elif args.color_correction:
         os.environ["COLOR_CORRECTION"] = "1"
