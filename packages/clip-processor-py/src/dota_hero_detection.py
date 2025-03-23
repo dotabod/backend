@@ -67,7 +67,7 @@ HERO_GAP = 15  # pixels
 SKEW_ANGLE_DEGREES = 9  # degrees
 
 # Clock dimensions (from frontend code)
-CLOCK_WIDTH = 273  # pixels (was 265)
+CLOCK_WIDTH = 295  # pixels (was 265)
 CLOCK_HEIGHT = 131  # pixels
 
 # Mapping of known heroes
