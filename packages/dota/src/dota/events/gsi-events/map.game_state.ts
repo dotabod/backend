@@ -3,7 +3,6 @@ import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 import type { allStates } from '../../lib/consts.js'
 import { logger } from '../../../utils/logger.js'
-import { draftStates } from '../../lib/consts.js'
 import { getTwitchAPI } from '../../../twitch/lib/getTwitchAPI.js'
 
 eventHandler.registerEvent('map:game_state', {
@@ -12,7 +11,7 @@ eventHandler.registerEvent('map:game_state', {
     if (!isPlayingMatch(dotaClient.client.gsi, false)) return
 
     const accountId = dotaClient.client.Account?.providerAccountId
-    if (draftStates.includes(gameState) && accountId) {
+    if (['DOTA_GAMERULES_STATE_STRATEGY_TIME'].includes(gameState) && accountId) {
       try {
         const api = getTwitchAPI(accountId)
 
