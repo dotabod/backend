@@ -53,18 +53,18 @@ HEROES_DIR.mkdir(exist_ok=True)
 
 # Exact dimensions for hero portraits in the top bar
 # Updated values based on frontend code
-HERO_WIDTH = 115  # pixels (was 122)
-HERO_HEIGHT = 73  # pixels (was 72)
-HERO_TOTAL_HEIGHT = 131  # Total height including player name and role
+HERO_WIDTH = 108  # pixels (was 122)
+HERO_HEIGHT = 72  # pixels (was 72)
+HERO_TOTAL_HEIGHT = 118  # Total height including player name and role
 HERO_TOP_PADDING = 6  # pixels to crop from top (color indicator bar)
 HERO_ACTUAL_HEIGHT = HERO_HEIGHT - HERO_TOP_PADDING  # 67px - actual visible hero portrait
 # Bottom part (131 - 73 = 58px) contains player name and selected role
 
 # Gap between heroes (from frontend code)
-HERO_GAP = 7  # pixels
+HERO_GAP = 15  # pixels
 
 # Clock dimensions (from frontend code)
-CLOCK_WIDTH = 276  # pixels (was 265)
+CLOCK_WIDTH = 273  # pixels (was 265)
 CLOCK_HEIGHT = 131  # pixels
 
 # Mapping of known heroes
@@ -336,7 +336,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
             return None
 
         # Resize to a standard size for comparison
-        hero_icon_resized = cv2.resize(hero_icon, (64, 64))
+        hero_icon_resized = cv2.resize(hero_icon, (256, 144))
 
         # Save for debugging if needed
         if debug:
@@ -364,7 +364,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 continue
 
             # Resize to match our hero icon
-            template_resized = cv2.resize(template, (64, 64))
+            template_resized = cv2.resize(template, (256, 144))
 
             # Perform template matching
             # Convert to grayscale for better matching
