@@ -554,6 +554,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
 
     Matching modes:
     - When color correction is enabled, uses multiple color spaces for matching
+    - With fast-color mode, uses optimized color matching with fewer channels
     - With hue-only mode, only uses the H channel from HSV color space
     - Otherwise, uses grayscale matching for better performance
 
@@ -592,6 +593,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
 
         # Check which matching mode to use
         use_color_matching = os.environ.get("COLOR_CORRECTION", "").lower() in ("1", "true", "yes")
+        use_fast_color = os.environ.get("FAST_COLOR", "").lower() in ("1", "true", "yes")
         use_hue_only = os.environ.get("HUE_ONLY", "").lower() in ("1", "true", "yes")
         normalize_hue = os.environ.get("NORMALIZE_HUE", "").lower() in ("1", "true", "yes")
 
@@ -600,10 +602,12 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 logger.debug("Using Hue-only template matching with normalization")
             else:
                 logger.debug("Using Hue-only template matching without normalization")
+        elif use_fast_color:
+            logger.debug("Using fast color template matching (optimized for speed)")
         elif use_color_matching:
-            logger.debug("Using multi-color space template matching")
+            logger.debug("Using full multi-color space template matching")
         else:
-            logger.debug("Using grayscale-only template matching for better performance")
+            logger.debug("Using grayscale-only template matching for best performance")
 
         # Track template matching performance
         performance_timer.start('template_matching_total')
@@ -669,6 +673,19 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                                         f"Hue channel {'normalized' if normalize_hue else 'raw'}")
                         save_debug_image(hue_vis_template, "hue_only_template",
                                         f"Hue channel {'normalized' if normalize_hue else 'raw'}")
+                elif use_fast_color:
+                    # Fast color matching mode - only use key color spaces/channels
+                    # Grayscale is always calculated
+                    gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
+                    gray_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2GRAY)
+
+                    # Only HSV Hue channel which is most distinctive for hero colors
+                    hsv_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2HSV)
+                    hsv_template = cv2.cvtColor(template_resized, cv2.COLOR_BGR2HSV)
+                    # Extract H channel (Hue)
+                    hue_icon = hsv_icon[:,:,0]
+                    hue_template = hsv_template[:,:,0]
+
                 elif not use_color_matching:
                     # Grayscale matching is used when neither hue-only nor color matching is enabled
                     gray_icon = cv2.cvtColor(hero_icon_resized, cv2.COLOR_BGR2GRAY)
@@ -701,6 +718,20 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                         result = cv2.matchTemplate(hue_icon, hue_template, method)
                         _, score, _, _ = cv2.minMaxLoc(result)
                         scores.append(score)
+                elif use_fast_color:
+                    # Fast color matching - use grayscale and hue only
+                    # Grayscale (60% weight)
+                    for method in methods:
+                        result = cv2.matchTemplate(gray_icon, gray_template, method)
+                        _, score, _, _ = cv2.minMaxLoc(result)
+                        scores.append(score * 0.6)  # Higher weight for grayscale
+
+                    # Hue channel (40% weight)
+                    for method in methods:
+                        result = cv2.matchTemplate(hue_icon, hue_template, method)
+                        _, score, _, _ = cv2.minMaxLoc(result)
+                        scores.append(score * 0.4)  # Weight for Hue
+
                 elif not use_color_matching:
                     # Match in grayscale only
                     for method in methods:
@@ -746,7 +777,7 @@ def identify_hero(hero_icon, heroes_data, min_score=0.4, debug=False):
                 performance_timer.stop('template_matching')
 
                 # Calculate final score based on mode
-                if use_color_matching and not use_hue_only:
+                if (use_color_matching and not use_hue_only) or use_fast_color:
                     avg_score = sum(scores)  # weighted sum should total 1.0
                 else:
                     avg_score = sum(scores) / len(scores)  # simple average for grayscale or hue-only
@@ -966,6 +997,8 @@ def main():
                       help="Minimum match score (0.0-1.0) to consider a hero identified (default: 0.4)")
     parser.add_argument("--color-correction", action="store_true",
                       help="Enable color profile correction for more accurate matching")
+    parser.add_argument("--fast-color", action="store_true",
+                      help="Use optimized color matching (faster than full color, more accurate than grayscale)")
     parser.add_argument("--hue-only", action="store_true",
                       help="Use only Hue channel from HSV for template matching")
     parser.add_argument("--normalize-hue", action="store_true",
@@ -995,13 +1028,19 @@ def main():
         else:
             logger.info("Using Hue-only template matching without normalization")
 
+    # Fast-color mode takes precedence over full color correction
+    elif args.fast_color:
+        os.environ["FAST_COLOR"] = "1"
+        matching_mode = "fast-color"
+        logger.info("Using fast color matching (optimized for speed and accuracy)")
+
     # Otherwise, use color correction if specified
     elif args.color_correction:
         os.environ["COLOR_CORRECTION"] = "1"
         matching_mode = "multi-color space"
         logger.info("Color profile correction enabled - using multi-color space matching")
     else:
-        logger.info("Using grayscale-only matching for better performance")
+        logger.info("Using grayscale-only matching for best performance")
 
     try:
         # Process a single frame if provided
