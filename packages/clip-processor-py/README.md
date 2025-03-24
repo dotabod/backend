@@ -245,65 +245,11 @@ The service provides a simple REST API to process Twitch clips and return hero d
 
 ### Endpoints
 
-#### GET /detect
-
-Process a Twitch clip URL and return hero detection results.
-
-**Query Parameters:**
-- `url`: The Twitch clip URL to process (required)
-- `debug`: Enable debug mode (optional, default=false)
-
-**Example Request:**
-```
-GET /detect?url=https://clips.twitch.tv/SampleClipURL
-```
-
-**Example Response:**
-```json
-{
-  "heroes": [
-    {
-      "hero_id": 1,
-      "hero_localized_name": "Anti-Mage",
-      "match_score": 0.92,
-      "position": 0,
-      "team": "Radiant",
-      "variant": "default"
-    },
-    ...
-  ],
-  "players": [
-    {
-      "hero": "Anti-Mage",
-      "hero_id": 1,
-      "position": 1,
-      "team": "Radiant"
-    },
-    ...
-  ],
-  "color_match_score": 0.8,
-  "detected_colors": {...},
-  "best_frame_index": 5,
-  "best_frame_path": "temp/frame_5.jpg",
-  "rank_banners_extracted": true,
-  "player_names_extracted": true,
-  "timing": {
-    "total_processing_time": 5.234,
-    "detailed_timings": {...}
-  }
-}
-```
-
 #### GET /health
 
-Simple health check endpoint.
+Health check endpoint to verify the API is running.
 
-**Example Request:**
-```
-GET /health
-```
-
-**Example Response:**
+Response:
 ```json
 {
   "status": "ok",
@@ -311,50 +257,115 @@ GET /health
 }
 ```
 
-## Running the Service
+#### GET /detect
+
+Process a Twitch clip URL and return hero detection results.
+
+Query Parameters:
+- `url`: The Twitch clip URL to process (required if clip_id not provided)
+- `clip_id`: The Twitch clip ID (required if url not provided)
+- `debug`: Enable debug mode (optional, default=false)
+
+Example Request:
+```
+GET /detect?url=https://clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi
+```
+
+Example Response:
+```json
+{
+  "clip_details": {
+    "id": "WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi",
+    "url": "https://clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi",
+    "title": "Amazing Dota 2 Play",
+    "broadcaster": "DotaStreamer",
+    "duration": 30.0
+  },
+  "heroes": [
+    {
+      "team": "Radiant",
+      "position": 0,
+      "hero_id": 1,
+      "hero_name": "npc_dota_hero_antimage",
+      "hero_localized_name": "Anti-Mage",
+      "match_score": 0.834
+    },
+    // ... more heroes ...
+  ],
+  "processing_time": 5.23
+}
+```
+
+## Docker Deployment
+
+The easiest way to deploy the API is using Docker.
 
 ### Using Docker Compose (Recommended)
 
-1. Make sure you have Docker and Docker Compose installed
-2. Clone this repository
-3. Navigate to the project directory
-4. Run the service:
+1. Clone the repository
+2. Navigate to the project directory
+3. Build and run the container:
 
 ```bash
+cd packages/clip-processor-py
 docker-compose up -d
 ```
 
-The API will be available at http://localhost:5000
+This will:
+- Build the Docker image
+- Download hero reference images automatically
+- Start the API server on port 5000
 
-### Without Docker
+### Using Docker Directly
 
-1. Install the required dependencies:
-
-```bash
-pip install -r requirements.txt
-pip install flask gunicorn
-```
-
-2. Start the API server:
+1. Build the Docker image:
 
 ```bash
-cd src
-python api_server.py
+cd packages/clip-processor-py
+docker build -t dota-hero-detection-api .
 ```
 
-### Command Line Usage
-
-You can also use the script directly from the command line:
+2. Run the container:
 
 ```bash
-python dota_hero_detection.py "https://clips.twitch.tv/SampleClipURL" --json-only
+docker run -p 5000:5000 -d dota-hero-detection-api
 ```
 
-## CLI Options
+### Verifying the Deployment
 
-- `--debug`: Enable debug mode with verbose output and debug images
-- `--json-only`: Only output JSON with no additional text (for API use)
-- `--output/-o`: Output file path (default: heroes.json)
-- `--min-score`: Minimum match score (0.0-1.0) to consider a hero identified (default: 0.4)
-- `--debug-templates`: Save debug images of template matching results
-- `--show-timings`: Show detailed performance timing information
+Once the container is running, you can verify it's working by accessing the health check endpoint:
+
+```bash
+curl http://localhost:5000/health
+```
+
+## Development Setup
+
+If you want to run the API server locally without Docker:
+
+1. Install system dependencies (Tesseract OCR and Python 3.8+)
+2. Use the provided run script:
+
+```bash
+cd packages/clip-processor-py
+./run.sh
+```
+
+This will:
+- Create a virtual environment
+- Install dependencies
+- Download hero reference images if needed
+- Start the development server
+
+Alternatively, you can manually set up the environment:
+
+```bash
+cd packages/clip-processor-py
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -e .
+python -m src.dota_heroes  # Download hero images
+python -m src.api_server   # Start the server
+```
+
+The server will run on http://localhost:5000.

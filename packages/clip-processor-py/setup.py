@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Setup script for the Twitch Clip Processor
+Setup script for the Dota 2 Hero Detection API
 """
 
 from setuptools import setup, find_packages
@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 setup(
     name="clip-processor",
     version="0.1.0",
-    description="Process Twitch clips to extract player names and ranks",
+    description="Process Twitch clips to extract player names and ranks and detect Dota 2 heroes",
     author="HubSpot",
     packages=find_packages(),
     python_requires=">=3.8",
@@ -21,11 +21,14 @@ setup(
         "Pillow==11.1.0",
         "beautifulsoup4==4.12.2",
         "tqdm==4.66.1",
+        "flask==3.0.2",
+        "gunicorn==21.2.0",
     ],
     entry_points={
         "console_scripts": [
-            "clip-processor=main:main",
-            "download-reference=download_reference:main",
+            "clip-processor=src.dota_hero_detection:main",
+            "download-heroes=src.dota_heroes:main",
+            "api-server=src.api_server:main",
         ],
     },
 )

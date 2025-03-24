@@ -13,15 +13,17 @@ from flask import Flask, request, jsonify, Response
 from urllib.parse import urlparse
 import traceback
 
-# Import the hero detection module
+# Import the hero detection and hero data modules
 try:
     from dota_hero_detection import process_clip_url
+    from dota_heroes import get_hero_data
 except ImportError:
     # Try with relative import for different directory structures
     try:
         from .dota_hero_detection import process_clip_url
+        from .dota_heroes import get_hero_data
     except ImportError:
-        print("Error: Could not import dota_hero_detection module.")
+        print("Error: Could not import required modules.")
         print("Make sure you're running this from the correct directory.")
         exit(1)
 
@@ -103,10 +105,24 @@ def detect_heroes():
         }
         return jsonify(error_details), 500
 
-if __name__ == '__main__':
+def main():
+    """Main entry point for the API server."""
+    # Check if hero assets exist, and download them if not
+    logger.info("Checking for hero assets...")
+    try:
+        hero_data = get_hero_data()
+        logger.info(f"Found {len(hero_data)} heroes with assets")
+    except Exception as e:
+        logger.error(f"Error loading hero data: {e}")
+        logger.info("You may need to run 'download-heroes' command first")
+        return
+
     # Get port from environment variable or use default
     port = int(os.environ.get('PORT', 5000))
 
     # Start the server
     logger.info(f"Starting Dota 2 Hero Detection API server on port {port}")
     app.run(host='0.0.0.0', port=port)
+
+if __name__ == '__main__':
+    main()
