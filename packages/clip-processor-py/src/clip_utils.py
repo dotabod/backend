@@ -94,12 +94,18 @@ def get_clip_details(url):
         if not clip_data.get("playbackAccessToken") or not clip_data.get("videoQualities"):
             logger.error(f"Missing playback token or qualities: {json.dumps(clip_data, indent=2)}")
             raise ValueError(f"Could not obtain playback token or video qualities for clip: {clip_id}")
+
+        # Store all available qualities for reference
+        available_qualities = [q["quality"] for q in clip_data["videoQualities"]]
+        logger.info(f"Available qualities: {available_qualities}")
+
         # Try to find 1080p quality if available, otherwise use the best available quality
         best_quality = clip_data["videoQualities"][0]  # Default to highest quality
-        for quality in clip_data["videoQualities"]:
-            if quality["quality"] == "1080":
-                best_quality = quality
-                break
+        # Always use the highest quality available (which is the first in the list)
+        # The videoQualities array is already sorted by quality in descending order
+        best_quality = clip_data["videoQualities"][0]
+        logger.info(f"Selected highest available quality: {best_quality['quality']}p")
+
         logger.info(f"Selected quality: {best_quality['quality']}p")
 
         # Construct the download URL with signature and token
@@ -114,7 +120,9 @@ def get_clip_details(url):
             'title': clip_data.get('title'),
             'broadcaster': clip_data.get('broadcaster', {}).get('displayName'),
             'created_at': clip_data.get('createdAt'),
-            'qualities': clip_data['videoQualities']
+            'qualities': clip_data['videoQualities'],
+            'selected_quality': best_quality['quality'],  # Store the selected quality
+            'available_qualities': available_qualities    # Store all available qualities
         }
     except Exception as e:
         logger.error(f"Error getting clip details using API: {e}")
@@ -159,14 +167,16 @@ def download_clip(clip_details):
         logger.error(f"Error downloading clip: {e}")
         raise
 
-def extract_frames(video_path, start_time=0, end_time=None, frame_interval=1):
+def extract_frames(video_path, clip_details=None, start_time=0, end_time=None, frame_interval=1):
     """
     Extract frames from the video starting from the end and working backwards.
     Uses OpenCV directly instead of MoviePy for better compatibility with Twitch clips.
     Will reuse existing frames if they've already been extracted.
+    Resizes frames to 1080p if the video quality is different to ensure hero detection works properly.
 
     Args:
         video_path: Path to the video file
+        clip_details: Dictionary containing clip details, including 'selected_quality'
         start_time: Start time in seconds
         end_time: End time in seconds (if None, uses video duration)
         frame_interval: Interval between frames in seconds
@@ -203,7 +213,24 @@ def extract_frames(video_path, start_time=0, end_time=None, frame_interval=1):
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         duration = frame_count / fps if fps > 0 else 0
 
-        logger.info(f"Video properties: FPS={fps}, Frames={frame_count}, Duration={duration:.2f}s")
+        # Get current video dimensions
+        orig_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        orig_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        # Determine if resizing is needed
+        need_resize = False
+        target_width, target_height = 1920, 1080  # 1080p resolution
+
+        if clip_details and 'selected_quality' in clip_details:
+            selected_quality = clip_details['selected_quality']
+            logger.info(f"Original video quality: {selected_quality}p")
+
+            # Check if we need to resize based on selected quality
+            if selected_quality != "1080":
+                need_resize = True
+                logger.info(f"Frames will be resized from {orig_width}x{orig_height} to {target_width}x{target_height}")
+
+        logger.info(f"Video properties: FPS={fps}, Frames={frame_count}, Resolution={orig_width}x{orig_height}, Duration={duration:.2f}s")
 
         # If end_time is not specified, use the video duration
         if end_time is None:
@@ -237,6 +264,10 @@ def extract_frames(video_path, start_time=0, end_time=None, frame_interval=1):
                 if not ret:
                     logger.warning(f"Could not read frame at timestamp {timestamp}s (frame {frame_idx})")
                     continue
+
+                # Resize frame to 1080p if needed
+                if need_resize and frame is not None:
+                    frame = cv2.resize(frame, (target_width, target_height), interpolation=cv2.INTER_LANCZOS4)
 
                 # Save the frame as an image with clip ID prefix
                 frame_path = frames_dir / f"{frame_prefix}{i:05d}.jpg"

@@ -1088,7 +1088,7 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
             x_start = center_x - CLOCK_LEFT_EXTEND - (5-position) * (HERO_WIDTH + HERO_GAP)
         else:  # Dire
             # Dire heroes are on the right side
-            x_start = center_x + CLOCK_RIGHT_EXTEND + position * (HERO_WIDTH + HERO_GAP)
+            x_start = center_x + CLOCK_RIGHT_EXTEND + position * (HERO_WIDTH + HERO_GAP - 10)
 
         # Define the player name location relative to the hero portrait
         # Player name is in the bottom part of the hero portrait section
@@ -1123,17 +1123,19 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
                 # Convert to grayscale for better OCR
                 gray = cv2.cvtColor(player_area, cv2.COLOR_BGR2GRAY)
 
-                # Apply levels adjustment to enhance text visibility
-                # Map input levels 76-94 to output levels 0-255
-                min_val, max_val = 76, 94
-                adjusted = np.clip(gray, min_val, max_val)
-                adjusted = ((adjusted - min_val) / (max_val - min_val) * 255).astype(np.uint8)
+                # Apply a less aggressive levels adjustment to preserve 'o' characters
+                # Using more conservative values to avoid 'o' looking like 'a'
+                levels_adjusted = adjust_levels(gray, 90, 200, 2.5)
 
-                # Apply threshold to make text more visible
-                _, thresh = cv2.threshold(adjusted, 120, 255, cv2.THRESH_BINARY_INV)
+                # Apply threshold with a higher value to better separate text
+                _, thresh = cv2.threshold(levels_adjusted, 150, 255, cv2.THRESH_BINARY_INV)
+
+                # Apply morphological operations to clean up the text
+                kernel = np.ones((1, 1), np.uint8)
+                thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
 
                 if debug:
-                    save_debug_image(adjusted, f"{team.lower()}_pos{position+1}_player_levels")
+                    save_debug_image(levels_adjusted, f"{team.lower()}_pos{position+1}_player_levels")
                     save_debug_image(thresh, f"{team.lower()}_pos{position+1}_player_thresh")
 
                 # Configure tesseract for player names
@@ -1639,34 +1641,6 @@ def extract_rank_text(rank_banner, debug=False):
         return None, "OCR not available (pytesseract not installed)"
 
     try:
-        # Convert to HSV for better color thresholding
-        hsv = cv2.cvtColor(rank_banner, cv2.COLOR_BGR2HSV)
-
-        # Define color ranges
-        # Dark purple background (#482634)
-        bg_rgb = (72, 38, 52)  # RGB for #482634
-        bg_hsv = cv2.cvtColor(np.uint8([[bg_rgb]]), cv2.COLOR_RGB2HSV)[0][0]
-        # Create range with tolerance
-        bg_lower = np.array([max(0, bg_hsv[0] - 15), 50, 20])
-        bg_upper = np.array([min(180, bg_hsv[0] + 15), 255, 100])
-
-        # Brownish text color (#9B7B77)
-        text_rgb = (155, 123, 119)  # RGB for #9B7B77
-        text_hsv = cv2.cvtColor(np.uint8([[text_rgb]]), cv2.COLOR_RGB2HSV)[0][0]
-        # Create range with tolerance
-        text_lower = np.array([max(0, text_hsv[0] - 15), 20, 100])
-        text_upper = np.array([min(180, text_hsv[0] + 15), 100, 200])
-
-        # Create masks
-        bg_mask = cv2.inRange(hsv, bg_lower, bg_upper)
-        text_mask = cv2.inRange(hsv, text_lower, text_upper)
-
-        # Apply the background mask to the original image to isolate the banner
-        banner_region = cv2.bitwise_and(rank_banner, rank_banner, mask=bg_mask)
-
-        # Apply the text mask to isolate text
-        text_region = cv2.bitwise_and(rank_banner, rank_banner, mask=text_mask)
-
         # Convert to grayscale for OCR
         gray = cv2.cvtColor(rank_banner, cv2.COLOR_BGR2GRAY)
 
@@ -1674,37 +1648,21 @@ def extract_rank_text(rank_banner, debug=False):
         # These values were provided: black_point=81, white_point=189, gamma=4.17
         levels_adjusted = adjust_levels(gray, 81, 189, 4.17)
 
-        # Also create a combined binary image that emphasizes the text
-        # This increases contrast between text and background
-        combined_binary = cv2.bitwise_not(text_mask)
-
         # Save preprocessed images if debug is enabled
         if debug:
             save_debug_image(gray, "rank_banner_gray")
             save_debug_image(levels_adjusted, "rank_banner_levels_adjusted")
-            save_debug_image(bg_mask, "rank_banner_bg_mask")
-            save_debug_image(text_mask, "rank_banner_text_mask")
-            save_debug_image(banner_region, "rank_banner_bg_region")
-            save_debug_image(text_region, "rank_banner_text_region")
-            save_debug_image(combined_binary, "rank_banner_combined_binary")
+
         # Configure pytesseract to focus on digits, regardless of language
         # We're using a permissive whitelist that includes digits and common text formats
-        custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist="Rank0123456789 абвгдеёжзийклмнопрстуфхцчшщъыьэюя"'
+        custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist="Rank0123456789"'
 
-        # Try OCR on the levels-adjusted image first (likely to have best results)
+        # Try OCR on the levels-adjusted image
         text = pytesseract.image_to_string(levels_adjusted, config=custom_config).strip()
 
-        # If no text found, try on the text mask
-        if not text:
-            text = pytesseract.image_to_string(combined_binary, config=custom_config).strip()
-
-        # If still no text, try on the grayscale image
+        # If no text found, try on the original grayscale image
         if not text:
             text = pytesseract.image_to_string(gray, config=custom_config).strip()
-
-        # If still no text, try on the original image
-        if not text:
-            text = pytesseract.image_to_string(rank_banner, config=custom_config).strip()
 
         # Extract all digits from the text using regex
         digits = re.findall(r'\d+', text)
@@ -1915,7 +1873,7 @@ def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False
 
         # Extract frames
         performance_timer.start('extract_frames')
-        frame_paths = extract_frames(clip_path, frame_interval=10)
+        frame_paths = extract_frames(clip_path, clip_details=clip_details, frame_interval=10)
         performance_timer.stop('extract_frames')
         logger.info(f"Extracted {len(frame_paths)} frames")
 
