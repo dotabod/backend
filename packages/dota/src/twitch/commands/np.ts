@@ -7,6 +7,7 @@ import { notablePlayers } from '../../steam/notableplayers.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
+import { is8500Plus } from '../../utils/index.js'
 
 commandHandler.registerCommand('np', {
   dbkey: DBSettings.commandNP,
@@ -146,7 +147,11 @@ commandHandler.registerCommand('np', {
     })
       .then((desc) => {
         let append = ''
-        if (matchPlayers.length === 1 && matchPlayers[0].accountid === client.steam32Id) {
+        if (
+          matchPlayers.length === 1 &&
+          matchPlayers[0].accountid === client.steam32Id &&
+          is8500Plus(client)
+        ) {
           append = ` · ${t('matchData8500', { emote: 'PoroSad', lng: message.channel.client.locale })}`
         }
         chatClient.say(channel, desc.description + append, message.user.messageId)
