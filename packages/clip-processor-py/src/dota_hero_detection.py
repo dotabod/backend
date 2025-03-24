@@ -604,10 +604,12 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
     """
     Extract the rank banner for a specific hero position from the top bar.
 
-    The rank banner contains text like "Rank 17" and is located at:
-    - 46px down from the top of the hero portrait
-    - 11px up from the bottom of the hero portrait
-    - Width spanning the entire hero portrait width to ensure we capture long numbers
+    The rank banner:
+    - Contains rank information like "Rank 17"
+    - Has a dark purple background color #482634 that fades to transparent at edges
+    - Has text in brownish color #9B7B77
+    - Is located in the bottom area of the hero portrait section
+    - Has varying length but is contained within the hero portrait width
 
     Args:
         top_bar: The top bar image containing all heroes
@@ -632,12 +634,11 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
             x_start = center_x + CLOCK_RIGHT_EXTEND + position * (HERO_WIDTH + HERO_GAP) - 10
 
         # Define the rank banner location relative to the hero portrait
-        # The banner is located at the bottom part of the hero portrait slot
-        ref_y_start = 46  # 46px down from top of the total hero area
-        ref_banner_height = 18  # approximate height for the rank banner
-        # Use the entire hero width to ensure we capture all digits
-        ref_banner_width = HERO_WIDTH  # full width of hero portrait
-        ref_x_start = x_start  # start from the left edge of the hero portrait
+        # We'll use a larger area first, then refine using color detection
+        ref_y_start = 40  # Start a bit higher to ensure we catch the banner
+        ref_banner_height = 30  # Taller to ensure we include the entire banner
+        ref_banner_width = HERO_WIDTH  # Full hero width to start with
+        ref_x_start = x_start  # Start from left edge of hero portrait
 
         # Make sure we're within bounds
         if ref_x_start < 0:
@@ -652,21 +653,79 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
             logger.warning("Rank banner extends beyond frame height, adjusting")
             ref_banner_height = height - ref_y_start
 
-        # Perform the crop
-        rank_banner = top_bar[ref_y_start:ref_y_start+ref_banner_height, ref_x_start:ref_x_start+ref_banner_width]
+        # Get initial area that should contain the rank banner
+        initial_area = top_bar[ref_y_start:ref_y_start+ref_banner_height,
+                              ref_x_start:ref_x_start+ref_banner_width]
+
+        if debug:
+            save_debug_image(initial_area, f"{team.lower()}_pos{position+1}_initial_area")
+
+        # Now let's use color detection to refine and find the actual banner area
+        # Convert to HSV for better color detection
+        hsv = cv2.cvtColor(initial_area, cv2.COLOR_BGR2HSV)
+
+        # Define the color range for the dark purple background (#482634)
+        bg_rgb = (72, 38, 52)  # RGB for #482634
+        bg_hsv = cv2.cvtColor(np.uint8([[bg_rgb]]), cv2.COLOR_RGB2HSV)[0][0]
+        # Create range with tolerance (wider tolerance to catch faded areas)
+        bg_lower = np.array([max(0, bg_hsv[0] - 20), 40, 20])
+        bg_upper = np.array([min(180, bg_hsv[0] + 20), 255, 120])
+
+        # Create a mask for the banner background
+        bg_mask = cv2.inRange(hsv, bg_lower, bg_upper)
+
+        # Clean up the mask with morphological operations
+        kernel = np.ones((3, 3), np.uint8)
+        bg_mask = cv2.morphologyEx(bg_mask, cv2.MORPH_CLOSE, kernel)
+
+        if debug:
+            save_debug_image(bg_mask, f"{team.lower()}_pos{position+1}_bg_mask")
+
+        # Find contours in the mask
+        contours, _ = cv2.findContours(bg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # If we found contours, use the largest one to refine our crop
+        refined_crop = initial_area
+        if contours:
+            # Find largest contour (which should be the banner)
+            largest_contour = max(contours, key=cv2.contourArea)
+            x, y, w, h = cv2.boundingRect(largest_contour)
+
+            # Only use the refined crop if it's reasonably sized
+            min_width = 40  # Minimum reasonable width for a rank banner
+            min_height = 10  # Minimum reasonable height
+
+            if w >= min_width and h >= min_height:
+                # Add a small margin around the detected contour
+                margin = 3
+                x_with_margin = max(0, x - margin)
+                y_with_margin = max(0, y - margin)
+                w_with_margin = min(initial_area.shape[1] - x_with_margin, w + 2*margin)
+                h_with_margin = min(initial_area.shape[0] - y_with_margin, h + 2*margin)
+
+                # Create refined crop
+                refined_crop = initial_area[y_with_margin:y_with_margin+h_with_margin,
+                                          x_with_margin:x_with_margin+w_with_margin]
+
+                if debug:
+                    # Draw the contour and bounding box on a copy of the initial area
+                    contour_vis = initial_area.copy()
+                    cv2.drawContours(contour_vis, [largest_contour], 0, (0, 255, 0), 2)
+                    cv2.rectangle(contour_vis, (x, y), (x+w, y+h), (0, 0, 255), 2)
+                    save_debug_image(contour_vis, f"{team.lower()}_pos{position+1}_contour")
+                    save_debug_image(refined_crop, f"{team.lower()}_pos{position+1}_refined_crop")
 
         # Save debug image if needed
         if debug:
-            # Create a visualization of the crop area
+            # Create a visualization of the crop area on the full top bar
             vis_image = top_bar.copy()
             cv2.rectangle(vis_image, (ref_x_start, ref_y_start),
                          (ref_x_start + ref_banner_width, ref_y_start + ref_banner_height),
-                         (0, 0, 255), 2)  # Red for rank banner
+                         (0, 0, 255), 2)  # Red for initial area
             save_debug_image(vis_image, f"{team.lower()}_pos{position+1}_rank_banner_area",
-                           f"Rank banner: {ref_x_start},{ref_y_start} {ref_banner_width}x{ref_banner_height}")
-            save_debug_image(rank_banner, f"{team.lower()}_pos{position+1}_rank_banner_cropped")
+                           f"Initial rank banner area: {ref_x_start},{ref_y_start} {ref_banner_width}x{ref_banner_height}")
 
-        return rank_banner
+        return refined_crop
     except Exception as e:
         logger.error(f"Error cropping rank banner for {team} position {position+1}: {e}")
         return None
@@ -1408,6 +1467,12 @@ def extract_rank_text(rank_banner, debug=False):
     """
     Extract the rank number from a rank banner using OCR.
 
+    Uses color thresholding to isolate:
+    - Banner background (dark purple #482634 with varying shades)
+    - Rank text (brownish #9B7B77 with small variances)
+
+    This makes extraction more accurate by focusing on the specific colors.
+
     Args:
         rank_banner: The cropped rank banner image containing "Rank X" text
         debug: Whether to save debug images
@@ -1421,28 +1486,64 @@ def extract_rank_text(rank_banner, debug=False):
         return None, "OCR not available (pytesseract not installed)"
 
     try:
-        # Preprocess the image for better OCR
-        # Convert to grayscale
+        # Convert to HSV for better color thresholding
+        hsv = cv2.cvtColor(rank_banner, cv2.COLOR_BGR2HSV)
+
+        # Define color ranges
+        # Dark purple background (#482634)
+        bg_rgb = (72, 38, 52)  # RGB for #482634
+        bg_hsv = cv2.cvtColor(np.uint8([[bg_rgb]]), cv2.COLOR_RGB2HSV)[0][0]
+        # Create range with tolerance
+        bg_lower = np.array([max(0, bg_hsv[0] - 15), 50, 20])
+        bg_upper = np.array([min(180, bg_hsv[0] + 15), 255, 100])
+
+        # Brownish text color (#9B7B77)
+        text_rgb = (155, 123, 119)  # RGB for #9B7B77
+        text_hsv = cv2.cvtColor(np.uint8([[text_rgb]]), cv2.COLOR_RGB2HSV)[0][0]
+        # Create range with tolerance
+        text_lower = np.array([max(0, text_hsv[0] - 15), 20, 100])
+        text_upper = np.array([min(180, text_hsv[0] + 15), 100, 200])
+
+        # Create masks
+        bg_mask = cv2.inRange(hsv, bg_lower, bg_upper)
+        text_mask = cv2.inRange(hsv, text_lower, text_upper)
+
+        # Apply the background mask to the original image to isolate the banner
+        banner_region = cv2.bitwise_and(rank_banner, rank_banner, mask=bg_mask)
+
+        # Apply the text mask to isolate text
+        text_region = cv2.bitwise_and(rank_banner, rank_banner, mask=text_mask)
+
+        # Convert to grayscale for OCR
         gray = cv2.cvtColor(rank_banner, cv2.COLOR_BGR2GRAY)
 
-        # Apply threshold to make text more visible
-        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        # Also create a combined binary image that emphasizes the text
+        # This increases contrast between text and background
+        combined_binary = cv2.bitwise_not(text_mask)
 
-        # Save preprocessed image if debug is enabled
+        # Save preprocessed images if debug is enabled
         if debug:
             save_debug_image(gray, "rank_banner_gray")
-            save_debug_image(binary, "rank_banner_binary")
+            save_debug_image(bg_mask, "rank_banner_bg_mask")
+            save_debug_image(text_mask, "rank_banner_text_mask")
+            save_debug_image(banner_region, "rank_banner_bg_region")
+            save_debug_image(text_region, "rank_banner_text_region")
+            save_debug_image(combined_binary, "rank_banner_combined_binary")
 
         # Configure pytesseract to focus on digits, regardless of language
         # We're using a permissive whitelist that includes digits and common text formats
         custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist="Rank0123456789 абвгдеёжзийклмнопрстуфхцчшщъыьэюя"'
 
-        # Perform OCR
-        text = pytesseract.image_to_string(binary, config=custom_config).strip()
+        # Try OCR on the text mask first (most likely to succeed)
+        text = pytesseract.image_to_string(combined_binary, config=custom_config).strip()
 
-        # If text is empty, try with the grayscale image
+        # If no text found, try on the grayscale image
         if not text:
             text = pytesseract.image_to_string(gray, config=custom_config).strip()
+
+        # If still no text, try on the original image
+        if not text:
+            text = pytesseract.image_to_string(rank_banner, config=custom_config).strip()
 
         # Extract just the digits from the text using regex, regardless of the language
         digits = re.findall(r'\d+', text)
