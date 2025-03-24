@@ -631,7 +631,7 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
             x_start = center_x - CLOCK_LEFT_EXTEND - (5-position) * (HERO_WIDTH + HERO_GAP)
         else:  # Dire
             # Dire heroes are on the right side
-            x_start = center_x + CLOCK_RIGHT_EXTEND + position * (HERO_WIDTH + HERO_GAP)
+            x_start = center_x + CLOCK_RIGHT_EXTEND + position * (HERO_WIDTH + HERO_GAP) - 10
 
         # Define the rank banner location relative to the hero portrait
         # The banner is located at the bottom part of the hero portrait slot
