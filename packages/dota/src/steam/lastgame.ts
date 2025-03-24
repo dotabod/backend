@@ -97,7 +97,7 @@ export default async function lastgame({
       // Must mean they're a 8500+ player
       const oldGame = lg.matchId
 
-      return `${t('lastgame.8500', { emote: 'PauseChamp', lng: locale })} · ${t('lastgame.link', {
+      return `${t('matchData8500', { emote: 'PoroSad', lng: locale })} · ${t('lastgame.link', {
         lng: locale,
         url: `dotabuff.com/matches/${oldGame}`,
       })}`
