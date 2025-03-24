@@ -14,10 +14,13 @@ WORKDIR /app
 # Copy requirements and setup files
 COPY setup.py requirements.txt ./
 
-# Install dependencies
+# Copy the src directory first for proper installation
+COPY src/ ./src/
+
+# Install dependencies with the src directory available
 RUN pip install --no-cache-dir -e .
 
-# Copy the entire application code (not just src directory)
+# Copy the rest of the application code
 COPY . ./
 
 # Create necessary directories (if they don't already exist)
@@ -40,7 +43,7 @@ EXPOSE 5000
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app:/app/src
 ENV PORT=5000
 
 # Run the entrypoint script
