@@ -1094,7 +1094,7 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
         # Player name is in the bottom part of the hero portrait section
         player_y_start = HERO_HEIGHT + 5  # Start below the hero portrait
         player_height = 30   # Reasonable height for player name
-        player_width = HERO_WIDTH  # Full width
+        player_width = HERO_WIDTH + 25  # Full width
 
         # Make sure we're within bounds
         if x_start < 0:
@@ -1947,6 +1947,7 @@ def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False
 
             # Add timing data and color information to output
             heroes_output = {
+                'clip_url': clip_url,
                 'heroes': heroes,
                 'players': players,  # Add the more user-friendly players array
                 'color_match_score': best_match_score,

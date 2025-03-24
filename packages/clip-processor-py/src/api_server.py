@@ -47,17 +47,25 @@ def health_check():
 @app.route('/detect', methods=['GET'])
 def detect_heroes():
     """
-    Process a Twitch clip URL and return hero detection results.
+    Process a Twitch clip URL or clip ID and return hero detection results.
 
     Query parameters:
-    - url: The Twitch clip URL to process (required)
+    - url: The Twitch clip URL to process (required if clip_id not provided)
+    - clip_id: The Twitch clip ID (required if url not provided)
     - debug: Enable debug mode (optional, default=False)
     """
     clip_url = request.args.get('url')
+    clip_id = request.args.get('clip_id')
     debug = request.args.get('debug', 'false').lower() == 'true'
 
-    if not clip_url:
-        return jsonify({'error': 'Missing required parameter: url'}), 400
+    # Check if either clip_url or clip_id is provided
+    if not clip_url and not clip_id:
+        return jsonify({'error': 'Missing required parameter: either url or clip_id must be provided'}), 400
+
+    # If clip_id is provided but no url, construct the url
+    if clip_id and not clip_url:
+        clip_url = f"https://clips.twitch.tv/{clip_id}"
+        logger.info(f"Constructed clip URL from ID: {clip_url}")
 
     # Basic URL validation
     try:
