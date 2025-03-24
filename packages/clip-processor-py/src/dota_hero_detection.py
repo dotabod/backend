@@ -589,6 +589,78 @@ def crop_hero_portrait(hero_icon, debug=False):
         logger.error(f"Error cropping hero portrait: {e}")
         return hero_icon  # Return the original if there's an error
 
+def crop_rank_banner(top_bar, center_x, team, position, debug=False):
+    """
+    Extract the rank banner for a specific hero position from the top bar.
+
+    The rank banner contains text like "Rank 17" and is located at:
+    - 46px down from the top of the hero portrait
+    - 11px up from the bottom of the hero portrait
+    - 64px width centered horizontally in the hero portrait
+
+    Args:
+        top_bar: The top bar image containing all heroes
+        center_x: X-coordinate of the center of the frame
+        team: "Radiant" or "Dire"
+        position: Position index (0-4)
+        debug: Whether to save debug images
+
+    Returns:
+        The cropped rank banner section
+
+    TODO: Add OCR to extract the rank number from the banner
+    """
+    try:
+        # Get dimensions of the input image
+        height, width = top_bar.shape[:2]
+
+        # Calculate the position of the hero
+        if team == "Radiant":
+            # Radiant heroes are on the left side
+            x_start = center_x - CLOCK_LEFT_EXTEND - (5-position) * (HERO_WIDTH + HERO_GAP)
+        else:  # Dire
+            # Dire heroes are on the right side
+            x_start = center_x + CLOCK_RIGHT_EXTEND + position * (HERO_WIDTH + HERO_GAP)
+
+        # Define the rank banner location relative to the hero portrait
+        # The banner is located at the bottom part of the hero portrait slot
+        ref_y_start = 46  # 46px down from top of the total hero area
+        ref_banner_height = 20  # approximate height for the rank banner
+        ref_banner_width = 64  # 64px wide
+        ref_x_start = x_start + (HERO_WIDTH - ref_banner_width) // 2  # centered in hero slot
+
+        # Make sure we're within bounds
+        if ref_x_start < 0:
+            logger.warning("Rank banner x position is negative, adjusting")
+            ref_x_start = 0
+
+        if ref_x_start + ref_banner_width > width:
+            logger.warning("Rank banner extends beyond frame width, adjusting")
+            ref_banner_width = width - ref_x_start
+
+        if ref_y_start + ref_banner_height > height:
+            logger.warning("Rank banner extends beyond frame height, adjusting")
+            ref_banner_height = height - ref_y_start
+
+        # Perform the crop
+        rank_banner = top_bar[ref_y_start:ref_y_start+ref_banner_height, ref_x_start:ref_x_start+ref_banner_width]
+
+        # Save debug image if needed
+        if debug:
+            # Create a visualization of the crop area
+            vis_image = top_bar.copy()
+            cv2.rectangle(vis_image, (ref_x_start, ref_y_start),
+                         (ref_x_start + ref_banner_width, ref_y_start + ref_banner_height),
+                         (0, 0, 255), 2)  # Red for rank banner
+            save_debug_image(vis_image, f"{team.lower()}_pos{position+1}_rank_banner_area",
+                           f"Rank banner: {ref_x_start},{ref_y_start} {ref_banner_width}x{ref_banner_height}")
+            save_debug_image(rank_banner, f"{team.lower()}_pos{position+1}_rank_banner_cropped")
+
+        return rank_banner
+    except Exception as e:
+        logger.error(f"Error cropping rank banner for {team} position {position+1}: {e}")
+        return None
+
 def get_top_hero_matches(hero_icon, heroes_data, top_n=5, min_score=0.4, debug=False):
     """
     Get top N hero matches for a hero icon instead of just the best match.
@@ -613,6 +685,8 @@ def get_top_hero_matches(hero_icon, heroes_data, top_n=5, min_score=0.4, debug=F
         performance_timer.start('crop_hero_portrait')
         cropped_hero = crop_hero_portrait(hero_icon, debug=debug)
         performance_timer.stop('crop_hero_portrait')
+
+        # No need to extract rank banner here - we'll do it separately
 
         # Resize to a standard size for comparison
         performance_timer.start('resize_hero')
@@ -963,6 +1037,14 @@ def process_frame_for_heroes(frame_path, debug=False):
         hero_candidates = []
 
         for team, position, hero_icon in hero_icons:
+            # Extract rank banner for this hero position if debug is enabled
+            if debug and os.environ.get("EXTRACT_RANK_BANNERS", "").lower() in ("1", "true", "yes"):
+                performance_timer.start('crop_rank_banner')
+                rank_banner = crop_rank_banner(top_bar, center_x, team, position, debug=True)
+                performance_timer.stop('crop_rank_banner')
+                if rank_banner is not None:
+                    logger.debug(f"Rank banner extracted for {team} position {position+1}, size: {rank_banner.shape[:2]}")
+
             # Get top matches for this hero position, not just the best match
             performance_timer.start('get_top_matches')
             hero_matches = get_top_hero_matches(hero_icon, heroes_data, debug=debug)
@@ -986,6 +1068,25 @@ def process_frame_for_heroes(frame_path, debug=False):
 
         # Resolve duplicates to ensure each hero appears only once
         identified_heroes = resolve_hero_duplicates(hero_candidates, debug=debug)
+
+        # Extract and store rank banners for the final identified heroes
+        if os.environ.get("EXTRACT_RANK_BANNERS", "").lower() in ("1", "true", "yes"):
+            for hero in identified_heroes:
+                team = hero['team']
+                position = hero['position']
+
+                # Extract rank banner for this hero position
+                performance_timer.start('crop_rank_banner')
+                rank_banner = crop_rank_banner(top_bar, center_x, team, position, debug=False)
+                performance_timer.stop('crop_rank_banner')
+
+                if rank_banner is not None:
+                    # Store the shape of the rank banner
+                    hero['rank_banner_shape'] = rank_banner.shape[:2]
+
+                    # Save a debug image with the hero name for easier identification
+                    if debug:
+                        save_debug_image(rank_banner, f"{team.lower()}_pos{position+1}_{hero['hero_localized_name'].replace(' ', '_')}_rank_banner")
 
         performance_timer.stop('identify_all_heroes')
 
@@ -1291,6 +1392,8 @@ def main():
                       help="Save debug images of template matching results")
     parser.add_argument("--show-timings", action="store_true",
                       help="Show detailed performance timing information")
+    parser.add_argument("--extract-rank-banners", action="store_true",
+                      help="Extract rank banners from hero portraits (containing rank numbers)")
 
     args = parser.parse_args()
 
@@ -1306,6 +1409,11 @@ def main():
     if args.debug_templates:
         os.environ["DEBUG_TEMPLATE_MATCHES"] = "1"
         logger.info("Template matching debug images enabled")
+
+    # Enable rank banner extraction if requested
+    if args.extract_rank_banners:
+        os.environ["EXTRACT_RANK_BANNERS"] = "1"
+        logger.info("Rank banner extraction enabled")
 
     try:
         # Process a clip if URL is provided
@@ -1379,6 +1487,13 @@ def main():
                 # Sort by team and position
                 heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
 
+                # Check if rank banners were extracted
+                rank_banners_extracted = any('rank_banner_shape' in hero for hero in heroes)
+                if rank_banners_extracted:
+                    logger.info("Rank banners extracted from hero portraits")
+                    if args.debug:
+                        logger.info("Rank banner debug images saved with prefix 'rank_banner_'")
+
                 # Add timing data and color information to output
                 heroes_output = {
                     'heroes': heroes,
@@ -1386,6 +1501,7 @@ def main():
                     'detected_colors': detected_colors,
                     'best_frame_index': best_frame_index,
                     'best_frame_path': str(best_frame_path),
+                    'rank_banners_extracted': rank_banners_extracted,
                     'timing': {
                         'total_processing_time': processing_time,
                         'detailed_timings': performance_timer.get_summary() if args.show_timings else None
@@ -1405,13 +1521,16 @@ def main():
                     name = hero['hero_localized_name']
                     variant = hero['variant']
                     score = hero['match_score']
+                    rank_info = " (with rank banner)" if 'rank_banner_shape' in hero else ""
                     confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
-                    print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f})")
+                    print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f}){rank_info}")
 
                 # Print information about debug images if enabled
                 if args.debug_templates or args.debug:
                     print(f"\nDebug images saved to: {DEBUG_DIR}")
                     print("Template match comparison images are prefixed with 'template_match_'")
+                    if rank_banners_extracted:
+                        print("Rank banner images are prefixed with 'rank_banner_'")
 
                 # Print detailed timing information if requested
                 if args.show_timings:
