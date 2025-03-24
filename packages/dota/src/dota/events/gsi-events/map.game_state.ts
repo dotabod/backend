@@ -10,6 +10,18 @@ eventHandler.registerEvent('map:game_state', {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi, false)) return
 
+    // Only create a clip if the user is >= 8500 MMR or has an immortal rank
+    const currentSteamAccount = dotaClient.client.SteamAccount?.find(
+      (account) => dotaClient.getSteam32() === account.steam32Id,
+    )
+
+    if (
+      !currentSteamAccount?.leaderboard_rank ||
+      (dotaClient.client.mmr && dotaClient.client.mmr <= 8500)
+    ) {
+      return
+    }
+
     const accountId = dotaClient.client.Account?.providerAccountId
     if (['DOTA_GAMERULES_STATE_STRATEGY_TIME'].includes(gameState) && accountId) {
       try {
