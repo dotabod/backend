@@ -434,7 +434,6 @@ def extract_hero_icons(top_bar, center_x, debug=False):
             # Save for debugging
             if debug:
                 # Save the mask, masked crop, and final hero icon
-                save_debug_image(mask[y_min:y_max, x_min:x_max], f"radiant_hero_{i+1}_mask")
                 save_debug_image(cropped_hero, f"radiant_hero_{i+1}_skewed")
                 save_debug_image(hero_icon, f"radiant_hero_{i+1}_portrait")
 
@@ -444,7 +443,7 @@ def extract_hero_icons(top_bar, center_x, debug=False):
                 save_debug_image(vis_image, f"radiant_hero_{i+1}_outline")
 
             # Add to list: (team, position, icon)
-            hero_icons.append(("Radiant", i, hero_icon))
+            hero_icons.append(("Radiant", i, cropped_hero))
 
         # Extract Dire heroes (right side, 5 heroes) with negative skew
         for i in range(5):
@@ -505,7 +504,6 @@ def extract_hero_icons(top_bar, center_x, debug=False):
             # Save for debugging
             if debug:
                 # Save the mask, masked crop, and final hero icon
-                save_debug_image(mask[y_min:y_max, x_min:x_max], f"dire_hero_{i+1}_mask")
                 save_debug_image(cropped_hero, f"dire_hero_{i+1}_skewed")
                 save_debug_image(hero_icon, f"dire_hero_{i+1}_portrait")
 
@@ -515,7 +513,7 @@ def extract_hero_icons(top_bar, center_x, debug=False):
                 save_debug_image(vis_image, f"dire_hero_{i+1}_outline")
 
             # Add to list: (team, position, icon)
-            hero_icons.append(("Dire", i, hero_icon))
+            hero_icons.append(("Dire", i, cropped_hero))
 
         logger.debug(f"Extracted {len(hero_icons)} hero icons with skewed boundaries")
         return hero_icons
@@ -552,9 +550,9 @@ def crop_hero_portrait(hero_icon, debug=False):
         reference_height = HERO_ACTUAL_HEIGHT  # 66px (72px - 6px top padding)
 
         # Define crop coordinates for the reference size
-        ref_x_start = 26
+        ref_x_start = 9
         ref_y_start = 0
-        ref_crop_width = 46
+        ref_crop_width = 65
         ref_crop_height = 40
 
         # Scale the crop coordinates based on the actual image dimensions
@@ -798,21 +796,20 @@ def match_template(args):
     """Worker function for parallel template matching"""
     if len(args) == 8:
         hero_icon, template_with_border, hero, variant_name, hero_id, hero_name, hero_localized_name, border_size = args
+        template = template_with_border  # Use the bordered template
     else:
         hero_icon, template, hero, variant_name, hero_id, hero_name, hero_localized_name = args
         border_size = 0
 
     # Skip if template is None
-    if 'template_with_border' in locals() and template_with_border is None:
-        return {'match_score': 0}
-    if 'template' in locals() and template is None and border_size == 0:
+    if template is None:
         return {'match_score': 0}
 
     # Perform template matching with the bordered template
     if border_size > 0:
         # When using a bordered template, search for the smaller hero_icon inside the larger template_with_border
         # This allows the algorithm to find the optimal position of the hero within the bordered area
-        result = cv2.matchTemplate(template_with_border, hero_icon, cv2.TM_CCORR_NORMED)
+        result = cv2.matchTemplate(template, hero_icon, cv2.TM_CCORR_NORMED)
         _, score, _, _ = cv2.minMaxLoc(result)
     else:
         # Legacy path for backward compatibility - search template in hero_icon
@@ -1294,30 +1291,16 @@ def main():
                       help="Output file path (default: heroes.json)")
     parser.add_argument("--min-score", type=float, default=0.4,
                       help="Minimum match score (0.0-1.0) to consider a hero identified (default: 0.4)")
-    parser.add_argument("--color-correction", action="store_true",
-                      help="Enable color profile correction for more accurate matching")
-    parser.add_argument("--fast-color", action="store_true",
-                      help="Use optimized color matching (faster than full color, more accurate than grayscale)")
-    parser.add_argument("--fast-color-v2", action="store_true",
-                      help="Use direct BGR multi-channel matching with TM_CCORR_NORMED (fastest method)")
-    parser.add_argument("--hue-only", action="store_true",
-                      help="Use only Hue channel from HSV for template matching")
-    parser.add_argument("--edge-hue", action="store_true",
-                      help="Use edge-enhanced hue channel for template matching (combines edge detection with hue)")
-    parser.add_argument("--blur-edge-hue", action="store_true",
-                      help="Use blurred edge-enhanced hue (applies blur before edge detection, good for noisy images)")
-    parser.add_argument("--blur", action="store_true",
-                      help="Apply blur preprocessing to any matching mode (helps with blurry source images)")
-    parser.add_argument("--normalize-hue", action="store_true",
-                      help="Normalize Hue values to 0-1 range (only applies with --hue-only)")
-    parser.add_argument("--show-timings", action="store_true",
-                      help="Show detailed performance timing information")
     parser.add_argument("--debug-templates", action="store_true",
                       help="Save debug images of template matching results")
     parser.add_argument("--add-border", action="store_true",
                       help="Add a black border around templates for better sliding window matching")
     parser.add_argument("--apply-blur", action="store_true",
                       help="Apply Gaussian blur to both source and template images to reduce noise")
+    parser.add_argument("--blur", action="store_true",
+                      help="Apply blur preprocessing to any matching mode (helps with blurry source images)")
+    parser.add_argument("--show-timings", action="store_true",
+                      help="Show detailed performance timing information")
 
     args = parser.parse_args()
 
@@ -1346,120 +1329,9 @@ def main():
         os.environ["APPLY_BLUR"] = "1"
         logger.info("Gaussian blur enabled - reducing noise in images")
 
-    # Set matching mode flags
-    matching_mode = "grayscale"
-
-    # Blur-edge-hue mode takes highest precedence
-    if args.blur_edge_hue:
-        os.environ["BLUR_EDGE_HUE"] = "1"
-        matching_mode = "blur-edge-enhanced-hue"
-        logger.info("Using blur-edge-enhanced hue template matching (blur before edge detection)")
-    # Edge-hue mode takes next precedence
-    elif args.edge_hue:
-        os.environ["EDGE_HUE"] = "1"
-        matching_mode = "edge-enhanced-hue"
-        logger.info("Using edge-enhanced hue template matching")
-    # Hue-only mode takes precedence over fast-color and color-correction
-    elif args.hue_only:
-        os.environ["HUE_ONLY"] = "1"
-        matching_mode = "hue-only"
-
-        if args.normalize_hue:
-            os.environ["NORMALIZE_HUE"] = "1"
-            matching_mode += " (normalized)"
-            logger.info("Using Hue-only template matching with normalization")
-        else:
-            logger.info("Using Hue-only template matching without normalization")
-    # Fast-color-v2 takes precedence over fast-color
-    elif args.fast_color_v2:
-        os.environ["FAST_COLOR_V2"] = "1"
-        matching_mode = "fast-color-v2"
-        logger.info("Using direct BGR multi-channel matching with TM_CCORR_NORMED (fastest method)")
-    # Fast-color mode takes precedence over full color correction
-    elif args.fast_color:
-        os.environ["FAST_COLOR"] = "1"
-        matching_mode = "fast-color"
-        logger.info("Using fast color matching (optimized for speed and accuracy)")
-    # Otherwise, use color correction if specified
-    elif args.color_correction:
-        os.environ["COLOR_CORRECTION"] = "1"
-        matching_mode = "multi-color space"
-        logger.info("Color profile correction enabled - using multi-color space matching")
-    else:
-        logger.info("Using grayscale-only matching for best performance")
-
-    # Add blur suffix to matching mode description if enabled
-    if args.blur and not args.blur_edge_hue:
-        matching_mode += " with blur preprocessing"
-
     try:
-        # Process a single frame if provided
-        if args.frame_path:
-            logger.info(f"Processing single frame: {args.frame_path}")
-
-            # First check if this frame has the color bars
-            performance_timer.start('check_color_bars')
-            color_match_score, detected_colors = detect_hero_color_bars(args.frame_path, expected_colors, debug=args.debug)
-            performance_timer.stop('check_color_bars')
-
-            logger.info(f"Color bar match score: {color_match_score:.2f}")
-
-            # Process the frame for heroes
-            performance_timer.start('process_single_frame')
-            heroes = process_frame_for_heroes(args.frame_path, debug=args.debug)
-            processing_time = performance_timer.stop('process_single_frame')
-
-            if heroes:
-                # Sort by team and position
-                heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
-
-                # Add timing data and color bar info to output
-                heroes_output = {
-                    'heroes': heroes,
-                    'color_match_score': color_match_score,
-                    'detected_colors': detected_colors,
-                    'timing': {
-                        'total_processing_time': processing_time,
-                        'matching_mode': matching_mode,
-                        'detailed_timings': performance_timer.get_summary() if args.show_timings else None
-                    }
-                }
-
-                with open(args.output, 'w') as f:
-                    json.dump(heroes_output, f, indent=2)
-                logger.info(f"Saved {len(heroes)} heroes to {args.output}")
-
-                # Print results with confidence scores
-                print(f"\nIdentified {len(heroes)} heroes in {processing_time:.3f} seconds using {matching_mode} matching:")
-                print(f"Color bar match score: {color_match_score:.2f}")
-                for hero in heroes:
-                    team = hero['team']
-                    pos = hero['position'] + 1
-                    name = hero['hero_localized_name']
-                    variant = hero['variant']
-                    score = hero['match_score']
-                    confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
-                    print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f})")
-
-                # Print information about debug images if enabled
-                if args.debug_templates or args.debug:
-                    print(f"\nDebug images saved to: {DEBUG_DIR}")
-                    print("Template match comparison images are prefixed with 'template_match_'")
-
-                # Print detailed timing information if requested
-                if args.show_timings:
-                    print("\nPerformance Timing Summary:")
-                    for label, stats in performance_timer.get_summary().items():
-                        print(f"  {label}: {stats['count']} calls, {stats['total']:.3f}s total, {stats['avg']:.3f}s avg")
-
-                return 0
-            else:
-                logger.warning("No heroes identified in the frame")
-                print("No heroes identified in the frame.")
-                return 1
-
         # Process a clip if URL is provided
-        elif args.clip_url:
+        if args.clip_url:
             logger.info(f"Processing clip: {args.clip_url}")
 
             # Check if clip_utils is available
@@ -1538,7 +1410,6 @@ def main():
                     'best_frame_path': str(best_frame_path),
                     'timing': {
                         'total_processing_time': processing_time,
-                        'matching_mode': matching_mode,
                         'detailed_timings': performance_timer.get_summary() if args.show_timings else None
                     }
                 }
@@ -1548,7 +1419,7 @@ def main():
                 logger.info(f"Saved {len(heroes)} heroes to {args.output}")
 
                 # Print results with confidence scores
-                print(f"\nIdentified {len(heroes)} heroes in {processing_time:.3f} seconds using {matching_mode} matching:")
+                print(f"\nIdentified {len(heroes)} heroes in {processing_time:.3f} seconds:")
                 print(f"Color bar match score: {best_match_score:.2f} (frame {best_frame_index+1})")
                 for hero in heroes:
                     team = hero['team']
