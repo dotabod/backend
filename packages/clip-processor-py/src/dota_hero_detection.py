@@ -1065,6 +1065,96 @@ def resolve_hero_duplicates(hero_candidates, debug=False):
 
     return resolved_heroes
 
+def extract_player_name(top_bar, center_x, team, position, debug=False):
+    """
+    Extract the player name from the bottom portion of a hero portrait.
+
+    Args:
+        top_bar: The top bar image containing all heroes
+        center_x: X-coordinate of the center of the frame
+        team: "Radiant" or "Dire"
+        position: Position index (0-4)
+        debug: Whether to save debug images
+
+    Returns:
+        string: The extracted player name or None if not found
+    """
+    try:
+        # Get dimensions of the input image
+        height, width = top_bar.shape[:2]
+
+        # Calculate the position of the hero
+        if team == "Radiant":
+            # Radiant heroes are on the left side
+            x_start = center_x - CLOCK_LEFT_EXTEND - (5-position) * (HERO_WIDTH + HERO_GAP)
+        else:  # Dire
+            # Dire heroes are on the right side
+            x_start = center_x + CLOCK_RIGHT_EXTEND + position * (HERO_WIDTH + HERO_GAP)
+
+        # Define the player name location relative to the hero portrait
+        # Player name is in the bottom part of the hero portrait section
+        player_y_start = HERO_HEIGHT + 5  # Start below the hero portrait
+        player_height = 20   # Reasonable height for player name
+        player_width = HERO_WIDTH  # Full width
+
+        # Make sure we're within bounds
+        if x_start < 0:
+            logger.warning("Player name x position is negative, adjusting")
+            x_start = 0
+
+        if x_start + player_width > width:
+            logger.warning("Player name extends beyond frame width, adjusting")
+            player_width = width - x_start
+
+        if player_y_start + player_height > height:
+            logger.warning("Player name extends beyond frame height, adjusting")
+            player_height = height - player_y_start
+
+        # Get the player name area
+        player_area = top_bar[player_y_start:player_y_start+player_height,
+                             x_start:x_start+player_width]
+
+        if debug:
+            save_debug_image(player_area, f"{team.lower()}_pos{position+1}_player_area")
+
+        # Try to extract text if Tesseract is available
+        player_name = None
+        if TESSERACT_AVAILABLE:
+            try:
+                # Convert to grayscale for better OCR
+                gray = cv2.cvtColor(player_area, cv2.COLOR_BGR2GRAY)
+
+                # Apply threshold to make text more visible
+                _, thresh = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY_INV)
+
+                if debug:
+                    save_debug_image(thresh, f"{team.lower()}_pos{position+1}_player_thresh")
+
+                # Configure tesseract for player names
+                custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-."'
+
+                # Extract text
+                player_name = pytesseract.image_to_string(thresh, config=custom_config).strip()
+
+                # Clean up player name
+                if player_name:
+                    # Remove special characters and normalize
+                    player_name = re.sub(r'[^\w\s\-\.]', '', player_name).strip()
+
+                    # If name is very short or very long, it might be an error
+                    if len(player_name) < 2 or len(player_name) > 20:
+                        logger.warning(f"Suspicious player name length: '{player_name}' ({len(player_name)} chars)")
+                        if len(player_name) < 2:
+                            player_name = None
+            except Exception as e:
+                logger.error(f"Error extracting player name with OCR: {e}")
+                player_name = None
+
+        return player_name
+    except Exception as e:
+        logger.error(f"Error extracting player name for {team} position {position+1}: {e}")
+        return None
+
 def process_frame_for_heroes(frame_path, debug=False):
     """
     Process a single frame to identify heroes.
@@ -1161,23 +1251,33 @@ def process_frame_for_heroes(frame_path, debug=False):
         # Resolve duplicates to ensure each hero appears only once
         identified_heroes = resolve_hero_duplicates(hero_candidates, debug=debug)
 
-        # Extract and store rank banners for the final identified heroes
-        if os.environ.get("EXTRACT_RANK_BANNERS", "").lower() in ("1", "true", "yes"):
+        # Extract and store player names and rank banners for the final identified heroes
+        if TESSERACT_AVAILABLE:
             for hero in identified_heroes:
                 team = hero['team']
                 position = hero['position']
 
+                # Extract player name for this hero position
+                performance_timer.start('extract_player_name')
+                player_name = extract_player_name(top_bar, center_x, team, position, debug=debug)
+                performance_timer.stop('extract_player_name')
+
+                if player_name:
+                    # Store the player name
+                    hero['player_name'] = player_name
+                    logger.debug(f"Player name detected for {team} position {position+1}: {player_name}")
+
                 # Extract rank banner for this hero position
-                performance_timer.start('crop_rank_banner')
-                rank_banner = crop_rank_banner(top_bar, center_x, team, position, debug=False)
-                performance_timer.stop('crop_rank_banner')
+                if os.environ.get("EXTRACT_RANK_BANNERS", "").lower() in ("1", "true", "yes"):
+                    performance_timer.start('crop_rank_banner')
+                    rank_banner = crop_rank_banner(top_bar, center_x, team, position, debug=False)
+                    performance_timer.stop('crop_rank_banner')
 
-                if rank_banner is not None:
-                    # Store the shape of the rank banner
-                    hero['rank_banner_shape'] = rank_banner.shape[:2]
+                    if rank_banner is not None:
+                        # Store the shape of the rank banner
+                        hero['rank_banner_shape'] = rank_banner.shape[:2]
 
-                    # Extract rank number using OCR if available
-                    if TESSERACT_AVAILABLE:
+                        # Extract rank number using OCR if available
                         performance_timer.start('extract_rank_text')
                         rank_number, rank_text = extract_rank_text(rank_banner, debug=debug)
                         performance_timer.stop('extract_rank_text')
@@ -1187,10 +1287,10 @@ def process_frame_for_heroes(frame_path, debug=False):
                             hero['rank'] = rank_number
                             hero['rank_text'] = rank_text
 
-                    # Save a debug image with the hero name for easier identification
-                    if debug:
-                        rank_info = f"_rank{hero.get('rank', 'unknown')}" if 'rank' in hero else ""
-                        save_debug_image(rank_banner, f"{team.lower()}_pos{position+1}_{hero['hero_localized_name'].replace(' ', '_')}{rank_info}_rank_banner")
+                        # Save a debug image with the hero name for easier identification
+                        if debug:
+                            rank_info = f"_rank{hero.get('rank', 'unknown')}" if 'rank' in hero else ""
+                            save_debug_image(rank_banner, f"{team.lower()}_pos{position+1}_{hero['hero_localized_name'].replace(' ', '_')}{rank_info}_rank_banner")
 
         performance_timer.stop('identify_all_heroes')
 
@@ -1760,6 +1860,8 @@ def main():
                       help="Use OCR to extract rank numbers from rank banners")
     parser.add_argument("--keep-debug", action="store_true",
                       help="Don't clear debug directory between runs")
+    parser.add_argument("--extract-players", action="store_true",
+                      help="Extract player names from hero portraits")
 
     args = parser.parse_args()
 
@@ -1797,6 +1899,17 @@ def main():
         else:
             logger.warning("OCR for rank detection requested but pytesseract is not available")
             print("Warning: OCR for rank detection requested but pytesseract is not available")
+            print("Install with: pip install pytesseract")
+            print("You also need to install Tesseract OCR: https://github.com/tesseract-ocr/tesseract")
+
+    # Enable player name extraction if requested
+    if args.extract_players:
+        if TESSERACT_AVAILABLE:
+            os.environ["EXTRACT_PLAYERS"] = "1"
+            logger.info("Player name extraction enabled")
+        else:
+            logger.warning("Player name extraction requested but pytesseract is not available")
+            print("Warning: Player name extraction requested but pytesseract is not available")
             print("Install with: pip install pytesseract")
             print("You also need to install Tesseract OCR: https://github.com/tesseract-ocr/tesseract")
 
@@ -1885,14 +1998,41 @@ def main():
                     if args.debug:
                         logger.info("Rank banner debug images saved with prefix 'rank_banner_'")
 
+                # Check if player names were extracted
+                player_names_extracted = any('player_name' in hero for hero in heroes)
+                if player_names_extracted:
+                    logger.info(f"Player names detected for {sum(1 for h in heroes if 'player_name' in h)}/{len(heroes)} heroes")
+
+                # Create a more accessible players structure
+                players = []
+                for hero in heroes:
+                    player = {
+                        'position': hero['position'] + 1,  # 1-indexed position for users
+                        'team': hero['team'],
+                        'hero': hero['hero_localized_name'],
+                        'hero_id': hero['hero_id']
+                    }
+
+                    # Add player name if available
+                    if 'player_name' in hero:
+                        player['name'] = hero['player_name']
+
+                    # Add rank if available
+                    if 'rank' in hero:
+                        player['rank'] = hero['rank']
+
+                    players.append(player)
+
                 # Add timing data and color information to output
                 heroes_output = {
                     'heroes': heroes,
+                    'players': players,  # Add the more user-friendly players array
                     'color_match_score': best_match_score,
                     'detected_colors': detected_colors,
                     'best_frame_index': best_frame_index,
                     'best_frame_path': str(best_frame_path),
                     'rank_banners_extracted': rank_banners_extracted,
+                    'player_names_extracted': player_names_extracted,
                     'timing': {
                         'total_processing_time': processing_time,
                         'detailed_timings': performance_timer.get_summary() if args.show_timings else None
@@ -1901,7 +2041,7 @@ def main():
 
                 with open(args.output, 'w') as f:
                     json.dump(heroes_output, f, indent=2)
-                logger.info(f"Saved {len(heroes)} heroes to {args.output}")
+                logger.info(f"Saved {len(heroes)} heroes and {len(players)} players to {args.output}")
 
                 # Print results with confidence scores
                 print(f"\nIdentified {len(heroes)} heroes in {processing_time:.3f} seconds:")
@@ -1913,6 +2053,11 @@ def main():
                     variant = hero['variant']
                     score = hero['match_score']
 
+                    # Add player name if available
+                    player_info = ""
+                    if 'player_name' in hero:
+                        player_info = f" (Player: {hero['player_name']})"
+
                     # Add rank information if available
                     rank_info = ""
                     if 'rank' in hero:
@@ -1921,7 +2066,7 @@ def main():
                         rank_info = " (with rank banner)"
 
                     confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
-                    print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f}){rank_info}")
+                    print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f}){player_info}{rank_info}")
 
                 # Print information about debug images if enabled
                 if args.debug_templates or args.debug:
@@ -1929,6 +2074,8 @@ def main():
                     print("Template match comparison images are prefixed with 'template_match_'")
                     if rank_banners_extracted:
                         print("Rank banner images are prefixed with 'rank_banner_'")
+                    if player_names_extracted:
+                        print("Player name images are prefixed with 'player_area_'")
 
                 # Print detailed timing information if requested
                 if args.show_timings:
