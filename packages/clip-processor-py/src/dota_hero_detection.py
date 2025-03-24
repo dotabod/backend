@@ -650,8 +650,8 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
 
         # Define the rank banner location relative to the hero portrait
         # We'll use a larger area first, then refine using color detection
-        ref_y_start = 40  # Start a bit higher to ensure we catch the banner
-        ref_banner_height = 30  # Taller to ensure we include the entire banner
+        ref_y_start = 50  # Start a bit higher to ensure we catch the banner
+        ref_banner_height = 25  # Taller to ensure we include the entire banner
         ref_banner_width = HERO_WIDTH  # Full hero width to start with
         ref_x_start = x_start  # Start from left edge of hero portrait
 
@@ -1478,6 +1478,33 @@ def process_frames_for_heroes(frame_paths, debug=False):
 
     return heroes
 
+def adjust_levels(image, black_point, white_point, gamma):
+    """
+    Apply a levels adjustment to an image similar to Photoshop's Levels filter.
+
+    Args:
+        image: The input image
+        black_point: Input black point (0-255)
+        white_point: Input white point (0-255)
+        gamma: Gamma correction value
+
+    Returns:
+        The adjusted image
+    """
+    # Convert to float for processing
+    img_float = image.astype(np.float32)
+
+    # Scale the image pixel values from the range [black_point, white_point] to [0, 255]
+    adjusted = np.clip((img_float - black_point) * (255.0 / (white_point - black_point)), 0, 255)
+
+    # Apply gamma correction
+    adjusted = (adjusted / 255.0) ** (1.0 / gamma) * 255
+
+    # Ensure the pixel values are properly scaled
+    adjusted = np.clip(adjusted, 0, 255).astype(np.uint8)
+
+    return adjusted
+
 def extract_rank_text(rank_banner, debug=False):
     """
     Extract the rank number from a rank banner using OCR.
@@ -1537,6 +1564,10 @@ def extract_rank_text(rank_banner, debug=False):
         # Convert to grayscale for OCR
         gray = cv2.cvtColor(rank_banner, cv2.COLOR_BGR2GRAY)
 
+        # Apply levels adjustment with Photoshop-like parameters for better contrast
+        # These values were provided: black_point=81, white_point=189, gamma=4.17
+        levels_adjusted = adjust_levels(gray, 81, 189, 4.17)
+
         # Also create a combined binary image that emphasizes the text
         # This increases contrast between text and background
         combined_binary = cv2.bitwise_not(text_mask)
@@ -1544,6 +1575,7 @@ def extract_rank_text(rank_banner, debug=False):
         # Save preprocessed images if debug is enabled
         if debug:
             save_debug_image(gray, "rank_banner_gray")
+            save_debug_image(levels_adjusted, "rank_banner_levels_adjusted")
             save_debug_image(bg_mask, "rank_banner_bg_mask")
             save_debug_image(text_mask, "rank_banner_text_mask")
             save_debug_image(banner_region, "rank_banner_bg_region")
@@ -1554,10 +1586,14 @@ def extract_rank_text(rank_banner, debug=False):
         # We're using a permissive whitelist that includes digits and common text formats
         custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist="Rank0123456789 абвгдеёжзийклмнопрстуфхцчшщъыьэюя"'
 
-        # Try OCR on the text mask first (most likely to succeed)
-        text = pytesseract.image_to_string(combined_binary, config=custom_config).strip()
+        # Try OCR on the levels-adjusted image first (likely to have best results)
+        text = pytesseract.image_to_string(levels_adjusted, config=custom_config).strip()
 
-        # If no text found, try on the grayscale image
+        # If no text found, try on the text mask
+        if not text:
+            text = pytesseract.image_to_string(combined_binary, config=custom_config).strip()
+
+        # If still no text, try on the grayscale image
         if not text:
             text = pytesseract.image_to_string(gray, config=custom_config).strip()
 
@@ -1685,6 +1721,15 @@ def extract_rank_text(rank_banner, debug=False):
                 cv2.putText(annotated, f"Rank: {rank_number}", (5, 30),
                           cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
             save_debug_image(annotated, "rank_banner_ocr_result")
+
+            # Also save an annotated version of the levels-adjusted image
+            annotated_levels = cv2.cvtColor(levels_adjusted, cv2.COLOR_GRAY2BGR)
+            cv2.putText(annotated_levels, f"OCR: {text}", (5, 15),
+                      cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+            if rank_number:
+                cv2.putText(annotated_levels, f"Rank: {rank_number}", (5, 30),
+                          cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+            save_debug_image(annotated_levels, "rank_banner_levels_adjusted_result")
 
         return rank_number, text
     except Exception as e:
