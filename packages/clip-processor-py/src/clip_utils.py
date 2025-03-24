@@ -114,76 +114,7 @@ def get_clip_details(url):
         }
     except Exception as e:
         logger.error(f"Error getting clip details using API: {e}")
-
-        # Fallback to HTML scraping method if API fails
-        logger.info("Trying fallback method using HTML scraping...")
-        try:
-            return get_clip_details_fallback(url, clip_id)
-        except Exception as fallback_error:
-            logger.error(f"Fallback method also failed: {fallback_error}")
-            raise
-
-def get_clip_details_fallback(url, clip_id):
-    """Fallback method to get clip details from HTML page."""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
-
-    logger.info(f"Making HTTP request to: https://clips.twitch.tv/{clip_id}")
-    response = requests.get(f"https://clips.twitch.tv/{clip_id}", headers=headers)
-    response.raise_for_status()
-
-    # Log response size for debugging
-    logger.info(f"Response status: {response.status_code}, size: {len(response.text)} bytes")
-
-    # Parse HTML
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    # Find the video URL meta tag
-    meta_tag = soup.find('meta', property='og:video:secure_url')
-
-    if not meta_tag or not meta_tag.get('content'):
-        logger.info("Trying alternative meta tag")
-        meta_tag = soup.find('meta', property='og:video')
-
-    if not meta_tag or not meta_tag.get('content'):
-        # Log some page details for debugging
-        meta_tags = soup.find_all('meta')
-        logger.debug(f"Available meta tags: {[{tag.get('property', tag.get('name', 'unknown')): tag.get('content', 'no-content')} for tag in meta_tags]}")
-
-        # Try another approach - look for video tags or JSON data
-        scripts = soup.find_all('script', type='application/json')
-        if scripts:
-            logger.info(f"Found {len(scripts)} JSON scripts in page, trying to find video URL")
-            for script in scripts:
-                try:
-                    json_data = json.loads(script.string)
-                    logger.debug(f"Script content: {json.dumps(json_data, indent=2)[:500]}...")
-                    # Look for video URLs in the JSON
-                    # Implementation depends on Twitch's specific JSON structure
-                except Exception as json_error:
-                    logger.debug(f"Error parsing JSON: {json_error}")
-
-        raise ValueError("Could not find clip download URL in the page")
-
-    download_url = meta_tag['content']
-    logger.info(f"Found download URL: {download_url}")
-
-    # Find duration if available
-    duration_tag = soup.find('meta', property='video:duration')
-    duration = float(duration_tag['content']) if duration_tag and duration_tag.get('content') else None
-
-    # Get title if available
-    title_tag = soup.find('meta', property='og:title')
-    title = title_tag['content'] if title_tag and title_tag.get('content') else None
-
-    return {
-        'id': clip_id,
-        'url': url,
-        'download_url': download_url,
-        'duration': duration,
-        'title': title
-    }
+        raise
 
 def download_clip(clip_details):
     """Download the clip using the download URL."""

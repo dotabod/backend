@@ -651,7 +651,7 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
         # Define the rank banner location relative to the hero portrait
         # We'll use a larger area first, then refine using color detection
         ref_y_start = 50  # Start a bit higher to ensure we catch the banner
-        ref_banner_height = 25  # Taller to ensure we include the entire banner
+        ref_banner_height = 15  # Taller to ensure we include the entire banner
         ref_banner_width = HERO_WIDTH  # Full hero width to start with
         ref_x_start = x_start  # Start from left edge of hero portrait
 
@@ -1094,7 +1094,7 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
         # Define the player name location relative to the hero portrait
         # Player name is in the bottom part of the hero portrait section
         player_y_start = HERO_HEIGHT + 5  # Start below the hero portrait
-        player_height = 20   # Reasonable height for player name
+        player_height = 30   # Reasonable height for player name
         player_width = HERO_WIDTH  # Full width
 
         # Make sure we're within bounds
@@ -1681,7 +1681,6 @@ def extract_rank_text(rank_banner, debug=False):
             save_debug_image(banner_region, "rank_banner_bg_region")
             save_debug_image(text_region, "rank_banner_text_region")
             save_debug_image(combined_binary, "rank_banner_combined_binary")
-
         # Configure pytesseract to focus on digits, regardless of language
         # We're using a permissive whitelist that includes digits and common text formats
         custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist="Rank0123456789 абвгдеёжзийклмнопрстуфхцчшщъыьэюя"'
@@ -1704,16 +1703,17 @@ def extract_rank_text(rank_banner, debug=False):
         # Extract all digits from the text using regex
         digits = re.findall(r'\d+', text)
 
-        # Handle two primary cases for rank numbers:
+        # Handle rank number extraction
         rank_number = None
         if digits:
-            if len(digits) == 1:
-                # Case 1: Single sequence of digits (e.g., "Rank 3854")
+            # Check if the text contains "Rank" - if so, we're dealing with English text
+            # In English, digits won't be space-separated, so take the first group
+            if "Rank" in text:
                 raw_number = int(digits[0])
-                # Check if number exceeds max rank (5,000)
+
+                # Apply max rank validation (5,000)
                 if raw_number > 5000:
                     # If more than 4 digits, drop the furthest digit on the right
-                    # This handles OCR errors where noise is added as extra digits
                     digit_str = digits[0]
                     if len(digit_str) > 4:
                         # Truncate to the leftmost 4 digits
@@ -1729,77 +1729,73 @@ def extract_rank_text(rank_banner, debug=False):
                 else:
                     rank_number = raw_number
             else:
-                # Case 2: Space-separated digits (e.g., "Rank 2 499")
-                # First attempt: Try to join all adjacent numbers if they appear to be part of the same number
-                # Check if digits come right after each other in the text with only spaces between
-
-                # Find if there's a pattern like "word + number + spaces + number" that suggests one large number
-                # This regex checks for word boundaries and spaces between numbers
-                matches = re.finditer(r'\b(\d+)(?:\s+(\d+))+\b', text)
-                joined_numbers = []
-
-                for match in matches:
-                    # Join all the numbers in this match
-                    full_match = match.group(0)
-                    # Extract just the digits and join them
-                    joined = ''.join(re.findall(r'\d+', full_match))
-                    joined_numbers.append(joined)
-
-                if joined_numbers:
-                    # Use the first joined number (usually there's only one rank per banner)
-                    raw_number = int(joined_numbers[0])
-
-                    # Apply max rank validation (5,000)
+                # Non-English text - digits might be space-separated
+                if len(digits) == 1:
+                    # Case 1: Single sequence of digits
+                    raw_number = int(digits[0])
+                    # Check if number exceeds max rank (5,000)
                     if raw_number > 5000:
-                        # If more than 4 digits, truncate to leftmost 4
-                        digit_str = joined_numbers[0]
+                        # If more than 4 digits, drop the furthest digit on the right
+                        digit_str = digits[0]
                         if len(digit_str) > 4:
+                            # Truncate to the leftmost 4 digits
                             digit_str = digit_str[:4]
                             raw_number = int(digit_str)
 
                         # If still over 5000, cap at 5000
                         if raw_number > 5000:
                             rank_number = 5000
-                            logger.debug(f"Capped joined rank number from {raw_number} to 5000 (max allowed)")
+                            logger.debug(f"Capped rank number from {raw_number} to 5000 (max allowed)")
                         else:
                             rank_number = raw_number
                     else:
                         rank_number = raw_number
                 else:
-                    # Fallback: If we couldn't find a clear pattern, use the first number as is
-                    # This handles the "Rank 3 3854" case by taking just the 3
-                    raw_number = int(digits[0])
+                    # Case 2: Space-separated digits (e.g., "2 499")
+                    # Find if there's a pattern like "number + spaces + number" that suggests one large number
+                    matches = re.finditer(r'\b(\d+)(?:\s+(\d+))+\b', text)
+                    joined_numbers = []
 
-                    # Apply max rank validation for the first number
-                    if raw_number > 5000:
-                        digit_str = digits[0]
-                        if len(digit_str) > 4:
-                            digit_str = digit_str[:4]
-                            raw_number = int(digit_str)
+                    for match in matches:
+                        # Join all the numbers in this match
+                        full_match = match.group(0)
+                        # Extract just the digits and join them
+                        joined = ''.join(re.findall(r'\d+', full_match))
+                        joined_numbers.append(joined)
 
+                    if joined_numbers:
+                        # Use the first joined number
+                        raw_number = int(joined_numbers[0])
+
+                        # Apply max rank validation (5,000)
                         if raw_number > 5000:
-                            rank_number = 5000
+                            # If more than 4 digits, truncate to leftmost 4
+                            digit_str = joined_numbers[0]
+                            if len(digit_str) > 4:
+                                digit_str = digit_str[:4]
+                                raw_number = int(digit_str)
+
+                            # If still over 5000, cap at 5000
+                            if raw_number > 5000:
+                                rank_number = 5000
+                                logger.debug(f"Capped joined rank number from {raw_number} to 5000 (max allowed)")
+                            else:
+                                rank_number = raw_number
                         else:
                             rank_number = raw_number
                     else:
-                        rank_number = raw_number
+                        # Fallback: If we couldn't find a clear pattern, use the first number
+                        raw_number = int(digits[0])
 
-                    # But if the first number is very small (1-9) and the second is larger,
-                    # the larger one might be the actual rank
-                    if len(digits) > 1 and len(digits[0]) == 1 and len(digits[1]) > 2:
-                        # First digit is single digit, second is 3+ digits, use the second one
-                        raw_number = int(digits[1])
-
-                        # Apply max rank validation for the second number
+                        # Apply max rank validation for the first number
                         if raw_number > 5000:
-                            digit_str = digits[1]
+                            digit_str = digits[0]
                             if len(digit_str) > 4:
                                 digit_str = digit_str[:4]
                                 raw_number = int(digit_str)
 
                             if raw_number > 5000:
                                 rank_number = 5000
-                                logger.debug(f"Capped second digit rank from {raw_number} to 5000 (max allowed)")
                             else:
                                 rank_number = raw_number
                         else:
@@ -1808,7 +1804,9 @@ def extract_rank_text(rank_banner, debug=False):
         if debug:
             # More detailed debug output
             logger.debug(f"OCR extracted text: '{text}', digits found: {digits}")
-            if len(digits) > 1:
+            if "Rank" in text:
+                logger.debug(f"English text detected, using first digit group: {rank_number}")
+            elif len(digits) > 1:
                 logger.debug(f"Multiple digits detected, determined rank: {rank_number}")
             else:
                 logger.debug(f"Single digit sequence detected: {rank_number}")
@@ -2036,7 +2034,7 @@ def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False
                     if 'rank' in hero:
                         rank_info = f" (Rank {hero['rank']})"
                     elif 'rank_banner_shape' in hero:
-                        rank_info = " (with rank banner)"
+                        rank_info = " (no rank detected)"
 
                     confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
                     print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f}){player_info}{rank_info}")
