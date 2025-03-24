@@ -1125,7 +1125,7 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
 
                 # Apply a less aggressive levels adjustment to preserve 'o' characters
                 # Using more conservative values to avoid 'o' looking like 'a'
-                levels_adjusted = adjust_levels(gray, 90, 200, 2.5)
+                levels_adjusted = adjust_levels(gray, 80, 220, 3.0)
 
                 # Apply threshold with a higher value to better separate text
                 _, thresh = cv2.threshold(levels_adjusted, 150, 255, cv2.THRESH_BINARY_INV)
@@ -1644,9 +1644,9 @@ def extract_rank_text(rank_banner, debug=False):
         # Convert to grayscale for OCR
         gray = cv2.cvtColor(rank_banner, cv2.COLOR_BGR2GRAY)
 
-        # Apply levels adjustment with Photoshop-like parameters for better contrast
-        # These values were provided: black_point=81, white_point=189, gamma=4.17
-        levels_adjusted = adjust_levels(gray, 81, 189, 4.17)
+        # Apply more aggressive levels adjustment with Photoshop-like parameters for better contrast
+        # Using more aggressive values to enhance text visibility
+        levels_adjusted = adjust_levels(gray, 80, 220, 3.0)
 
         # Save preprocessed images if debug is enabled
         if debug:
@@ -1656,7 +1656,6 @@ def extract_rank_text(rank_banner, debug=False):
         # Configure pytesseract to focus on digits, regardless of language
         # We're using a permissive whitelist that includes digits and common text formats
         custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist="Rank0123456789"'
-
         # Try OCR on the levels-adjusted image
         text = pytesseract.image_to_string(levels_adjusted, config=custom_config).strip()
 
@@ -1674,46 +1673,37 @@ def extract_rank_text(rank_banner, debug=False):
             # In English, digits won't be space-separated, so take the first group
             if "Rank" in text:
                 raw_number = int(digits[0])
-
                 # Apply max rank validation (5,000)
-                if raw_number > 5000:
-                    # If more than 4 digits, drop the furthest digit on the right
-                    digit_str = digits[0]
-                    if len(digit_str) > 4:
-                        # Truncate to the leftmost 4 digits
-                        digit_str = digit_str[:4]
-                        raw_number = int(digit_str)
+                while raw_number > 5000 and len(str(raw_number)) > 1:
+                    # If over 5000, remove the last digit
+                    digit_str = str(raw_number)[:-1]
+                    raw_number = int(digit_str)
+                    logger.debug(f"Removed last digit from rank number, new value: {raw_number}")
 
-                    # If still over 5000, cap at 5000
-                    if raw_number > 5000:
-                        rank_number = 5000
-                        logger.debug(f"Capped rank number from {raw_number} to 5000 (max allowed)")
-                    else:
-                        rank_number = raw_number
-                else:
-                    rank_number = raw_number
+                # If we still have a number over 5000 (unlikely), cap it
+                if raw_number > 5000:
+                    raw_number = 5000
+                    logger.debug(f"Capping rank number to maximum value: {raw_number}")
+
+                rank_number = raw_number
             else:
                 # Non-English text - digits might be space-separated
                 if len(digits) == 1:
                     # Case 1: Single sequence of digits
                     raw_number = int(digits[0])
                     # Check if number exceeds max rank (5,000)
-                    if raw_number > 5000:
-                        # If more than 4 digits, drop the furthest digit on the right
-                        digit_str = digits[0]
-                        if len(digit_str) > 4:
-                            # Truncate to the leftmost 4 digits
-                            digit_str = digit_str[:4]
-                            raw_number = int(digit_str)
+                    while raw_number > 5000 and len(str(raw_number)) > 1:
+                        # If over 5000, remove the last digit
+                        digit_str = str(raw_number)[:-1]
+                        raw_number = int(digit_str)
+                        logger.debug(f"Removed last digit from rank number, new value: {raw_number}")
 
-                        # If still over 5000, cap at 5000
-                        if raw_number > 5000:
-                            rank_number = 5000
-                            logger.debug(f"Capped rank number from {raw_number} to 5000 (max allowed)")
-                        else:
-                            rank_number = raw_number
-                    else:
-                        rank_number = raw_number
+                    # If we still have a number over 5000 (unlikely), cap it
+                    if raw_number > 5000:
+                        raw_number = 5000
+                        logger.debug(f"Capping rank number to maximum value: {raw_number}")
+
+                    rank_number = raw_number
                 else:
                     # Case 2: Space-separated digits (e.g., "2 499")
                     # Find if there's a pattern like "number + spaces + number" that suggests one large number
@@ -1732,38 +1722,35 @@ def extract_rank_text(rank_banner, debug=False):
                         raw_number = int(joined_numbers[0])
 
                         # Apply max rank validation (5,000)
-                        if raw_number > 5000:
-                            # If more than 4 digits, truncate to leftmost 4
-                            digit_str = joined_numbers[0]
-                            if len(digit_str) > 4:
-                                digit_str = digit_str[:4]
-                                raw_number = int(digit_str)
+                        while raw_number > 5000 and len(str(raw_number)) > 1:
+                            # If over 5000, remove the last digit
+                            digit_str = str(raw_number)[:-1]
+                            raw_number = int(digit_str)
+                            logger.debug(f"Removed last digit from joined rank number, new value: {raw_number}")
 
-                            # If still over 5000, cap at 5000
-                            if raw_number > 5000:
-                                rank_number = 5000
-                                logger.debug(f"Capped joined rank number from {raw_number} to 5000 (max allowed)")
-                            else:
-                                rank_number = raw_number
-                        else:
-                            rank_number = raw_number
+                        # If we still have a number over 5000 (unlikely), cap it
+                        if raw_number > 5000:
+                            raw_number = 5000
+                            logger.debug(f"Capping rank number to maximum value: {raw_number}")
+
+                        rank_number = raw_number
                     else:
                         # Fallback: If we couldn't find a clear pattern, use the first number
                         raw_number = int(digits[0])
 
                         # Apply max rank validation for the first number
-                        if raw_number > 5000:
-                            digit_str = digits[0]
-                            if len(digit_str) > 4:
-                                digit_str = digit_str[:4]
-                                raw_number = int(digit_str)
+                        while raw_number > 5000 and len(str(raw_number)) > 1:
+                            # If over 5000, remove the last digit
+                            digit_str = str(raw_number)[:-1]
+                            raw_number = int(digit_str)
+                            logger.debug(f"Removed last digit from rank number, new value: {raw_number}")
 
-                            if raw_number > 5000:
-                                rank_number = 5000
-                            else:
-                                rank_number = raw_number
-                        else:
-                            rank_number = raw_number
+                        # If we still have a number over 5000 (unlikely), cap it
+                        if raw_number > 5000:
+                            raw_number = 5000
+                            logger.debug(f"Capping rank number to maximum value: {raw_number}")
+
+                        rank_number = raw_number
 
         if debug:
             # More detailed debug output
