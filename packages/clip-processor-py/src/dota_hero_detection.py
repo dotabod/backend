@@ -133,6 +133,21 @@ ASSETS_DIR.mkdir(exist_ok=True)
 HEROES_DIR = ASSETS_DIR / "dota_heroes"
 HEROES_DIR.mkdir(exist_ok=True)
 
+def clear_debug_directory():
+    """Clear the debug directory of all files."""
+    if DEBUG_DIR.exists():
+        logger.info(f"Clearing debug directory: {DEBUG_DIR}")
+        # Remove all files but keep the directory
+        for file_path in DEBUG_DIR.glob("*"):
+            if file_path.is_file():
+                try:
+                    file_path.unlink()
+                except Exception as e:
+                    logger.warning(f"Failed to delete {file_path}: {e}")
+    else:
+        logger.info(f"Creating debug directory: {DEBUG_DIR}")
+        DEBUG_DIR.mkdir(exist_ok=True, parents=True)
+
 # Exact dimensions for hero portraits in the top bar
 # Updated values based on frontend code
 HERO_WIDTH = 108  # pixels (was 122)
@@ -1698,6 +1713,8 @@ def main():
                       help="Extract rank banners from hero portraits (containing rank numbers)")
     parser.add_argument("--ocr-ranks", action="store_true",
                       help="Use OCR to extract rank numbers from rank banners")
+    parser.add_argument("--keep-debug", action="store_true",
+                      help="Don't clear debug directory between runs")
 
     args = parser.parse_args()
 
@@ -1709,10 +1726,18 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
         os.environ["DEBUG_IMAGES"] = "1"
 
+        # Clear debug directory at the start of the run, unless --keep-debug is specified
+        if not args.keep_debug:
+            clear_debug_directory()
+
     # Enable template matching debug images if requested
     if args.debug_templates:
         os.environ["DEBUG_TEMPLATE_MATCHES"] = "1"
         logger.info("Template matching debug images enabled")
+
+        # Also clear debug directory for template debugging, unless --keep-debug is specified
+        if not args.debug and not args.keep_debug:
+            clear_debug_directory()
 
     # Enable rank banner extraction if requested
     if args.extract_rank_banners:
