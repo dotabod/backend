@@ -234,3 +234,127 @@ The project consists of several main components:
 - The script may need adjustments for different game interfaces or resolutions
 - Tesseract OCR performance varies across platforms
 - Hero detection requires good reference images and is sensitive to in-game visual effects
+
+# Dota 2 Hero Detection API
+
+This service processes Twitch clips and identifies Dota 2 heroes in the game interface using computer vision techniques.
+
+## API Usage
+
+The service provides a simple REST API to process Twitch clips and return hero detection results.
+
+### Endpoints
+
+#### GET /detect
+
+Process a Twitch clip URL and return hero detection results.
+
+**Query Parameters:**
+- `url`: The Twitch clip URL to process (required)
+- `debug`: Enable debug mode (optional, default=false)
+
+**Example Request:**
+```
+GET /detect?url=https://clips.twitch.tv/SampleClipURL
+```
+
+**Example Response:**
+```json
+{
+  "heroes": [
+    {
+      "hero_id": 1,
+      "hero_localized_name": "Anti-Mage",
+      "match_score": 0.92,
+      "position": 0,
+      "team": "Radiant",
+      "variant": "default"
+    },
+    ...
+  ],
+  "players": [
+    {
+      "hero": "Anti-Mage",
+      "hero_id": 1,
+      "position": 1,
+      "team": "Radiant"
+    },
+    ...
+  ],
+  "color_match_score": 0.8,
+  "detected_colors": {...},
+  "best_frame_index": 5,
+  "best_frame_path": "temp/frame_5.jpg",
+  "rank_banners_extracted": true,
+  "player_names_extracted": true,
+  "timing": {
+    "total_processing_time": 5.234,
+    "detailed_timings": {...}
+  }
+}
+```
+
+#### GET /health
+
+Simple health check endpoint.
+
+**Example Request:**
+```
+GET /health
+```
+
+**Example Response:**
+```json
+{
+  "status": "ok",
+  "service": "dota-hero-detection-api"
+}
+```
+
+## Running the Service
+
+### Using Docker Compose (Recommended)
+
+1. Make sure you have Docker and Docker Compose installed
+2. Clone this repository
+3. Navigate to the project directory
+4. Run the service:
+
+```bash
+docker-compose up -d
+```
+
+The API will be available at http://localhost:5000
+
+### Without Docker
+
+1. Install the required dependencies:
+
+```bash
+pip install -r requirements.txt
+pip install flask gunicorn
+```
+
+2. Start the API server:
+
+```bash
+cd src
+python api_server.py
+```
+
+### Command Line Usage
+
+You can also use the script directly from the command line:
+
+```bash
+python dota_hero_detection.py "https://clips.twitch.tv/SampleClipURL" --json-only
+```
+
+## CLI Options
+
+- `--debug`: Enable debug mode with verbose output and debug images
+- `--json-only`: Only output JSON with no additional text (for API use)
+- `--output/-o`: Output file path (default: heroes.json)
+- `--min-score`: Minimum match score (0.0-1.0) to consider a hero identified (default: 0.4)
+- `--debug-templates`: Save debug images of template matching results
+- `--show-timings`: Show detailed performance timing information

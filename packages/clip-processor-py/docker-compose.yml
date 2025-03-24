@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  dota-hero-detection-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+    volumes:
+      - ./temp:/app/temp
+      - ./debug:/app/debug
+    restart: unless-stopped
