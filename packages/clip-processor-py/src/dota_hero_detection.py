@@ -1860,8 +1860,6 @@ def main():
                       help="Use OCR to extract rank numbers from rank banners")
     parser.add_argument("--keep-debug", action="store_true",
                       help="Don't clear debug directory between runs")
-    parser.add_argument("--extract-players", action="store_true",
-                      help="Extract player names from hero portraits")
 
     args = parser.parse_args()
 
@@ -1887,31 +1885,18 @@ def main():
             clear_debug_directory()
 
     # Enable rank banner extraction if requested
-    if args.extract_rank_banners:
-        os.environ["EXTRACT_RANK_BANNERS"] = "1"
-        logger.info("Rank banner extraction enabled")
+    os.environ["EXTRACT_RANK_BANNERS"] = "1"
+    os.environ["OCR_RANKS"] = "1"
+    os.environ["EXTRACT_PLAYERS"] = "1"
 
     # Enable OCR for rank detection if requested
-    if args.ocr_ranks:
-        if TESSERACT_AVAILABLE:
-            os.environ["OCR_RANKS"] = "1"
-            logger.info("OCR for rank detection enabled")
-        else:
-            logger.warning("OCR for rank detection requested but pytesseract is not available")
-            print("Warning: OCR for rank detection requested but pytesseract is not available")
-            print("Install with: pip install pytesseract")
-            print("You also need to install Tesseract OCR: https://github.com/tesseract-ocr/tesseract")
-
-    # Enable player name extraction if requested
-    if args.extract_players:
-        if TESSERACT_AVAILABLE:
-            os.environ["EXTRACT_PLAYERS"] = "1"
-            logger.info("Player name extraction enabled")
-        else:
-            logger.warning("Player name extraction requested but pytesseract is not available")
-            print("Warning: Player name extraction requested but pytesseract is not available")
-            print("Install with: pip install pytesseract")
-            print("You also need to install Tesseract OCR: https://github.com/tesseract-ocr/tesseract")
+    if TESSERACT_AVAILABLE:
+        logger.info("OCR for rank detection enabled")
+    else:
+        logger.warning("OCR for rank detection requested but pytesseract is not available")
+        print("Warning: OCR for rank detection requested but pytesseract is not available")
+        print("Install with: pip install pytesseract")
+        print("You also need to install Tesseract OCR: https://github.com/tesseract-ocr/tesseract")
 
     try:
         # Process a clip if URL is provided
