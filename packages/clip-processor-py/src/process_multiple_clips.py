@@ -18,9 +18,15 @@ import time
 try:
     from dota_hero_detection import process_frames_for_heroes, get_clip_details, download_clip, extract_frames
 except ImportError:
-    print("Error: Could not import dota_hero_detection module")
-    print("Make sure you're running this script from the packages/clip-processor-py directory")
-    sys.exit(1)
+    try:
+        # Try with relative path
+        from .dota_hero_detection import process_frames_for_heroes
+        from .clip_utils import get_clip_details, download_clip, extract_frames
+    except ImportError:
+        # Try direct import from current directory
+        sys.path.append(os.path.dirname(__file__))
+        from dota_hero_detection import process_frames_for_heroes
+        from clip_utils import get_clip_details, download_clip, extract_frames
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -87,8 +93,8 @@ def process_clip(clip_url, args):
         result = {
             'clip_url': clip_url,
             'clip_id': clip_id,
-            'clip_title': clip_details.get('title', ''),
-            'broadcaster': clip_details.get('broadcaster', {}).get('name', ''),
+            'clip_title': clip_details.get('title', '') if isinstance(clip_details, dict) else '',
+            'broadcaster': clip_details.get('broadcaster', {}).get('name', '') if isinstance(clip_details, dict) else '',
             'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
             'players': players,
             'heroes': heroes  # Include detailed hero data if needed
