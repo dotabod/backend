@@ -17,10 +17,10 @@ COPY setup.py requirements.txt ./
 # Install dependencies
 RUN pip install --no-cache-dir -e .
 
-# Copy the application code
-COPY src/ ./src/
+# Copy the entire application code (not just src directory)
+COPY . ./
 
-# Create necessary directories
+# Create necessary directories (if they don't already exist)
 RUN mkdir -p temp assets
 
 # Create a simple entrypoint script
