@@ -94,9 +94,13 @@ def get_clip_details(url):
         if not clip_data.get("playbackAccessToken") or not clip_data.get("videoQualities"):
             logger.error(f"Missing playback token or qualities: {json.dumps(clip_data, indent=2)}")
             raise ValueError(f"Could not obtain playback token or video qualities for clip: {clip_id}")
-
-        # Select the best quality (first in the list, as TwitchDownloader sorts by quality)
-        best_quality = clip_data["videoQualities"][0]
+        # Try to find 1080p quality if available, otherwise use the best available quality
+        best_quality = clip_data["videoQualities"][0]  # Default to highest quality
+        for quality in clip_data["videoQualities"]:
+            if quality["quality"] == "1080":
+                best_quality = quality
+                break
+        logger.info(f"Selected quality: {best_quality['quality']}p")
 
         # Construct the download URL with signature and token
         token = clip_data["playbackAccessToken"]

@@ -1064,7 +1064,6 @@ def resolve_hero_duplicates(hero_candidates, debug=False):
                        f"instead of {alt['instead_of']['hero']} ({alt['instead_of']['score']:.3f})")
 
     return resolved_heroes
-
 def extract_player_name(top_bar, center_x, team, position, debug=False):
     """
     Extract the player name from the bottom portion of a hero portrait.
@@ -1124,10 +1123,17 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
                 # Convert to grayscale for better OCR
                 gray = cv2.cvtColor(player_area, cv2.COLOR_BGR2GRAY)
 
+                # Apply levels adjustment to enhance text visibility
+                # Map input levels 76-94 to output levels 0-255
+                min_val, max_val = 76, 94
+                adjusted = np.clip(gray, min_val, max_val)
+                adjusted = ((adjusted - min_val) / (max_val - min_val) * 255).astype(np.uint8)
+
                 # Apply threshold to make text more visible
-                _, thresh = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY_INV)
+                _, thresh = cv2.threshold(adjusted, 120, 255, cv2.THRESH_BINARY_INV)
 
                 if debug:
+                    save_debug_image(adjusted, f"{team.lower()}_pos{position+1}_player_levels")
                     save_debug_image(thresh, f"{team.lower()}_pos{position+1}_player_thresh")
 
                 # Configure tesseract for player names
