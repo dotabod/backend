@@ -1473,6 +1473,11 @@ def extract_rank_text(rank_banner, debug=False):
 
     This makes extraction more accurate by focusing on the specific colors.
 
+    Handles various text formats including:
+    - "Rank 123" - Standard format
+    - "Ранг 123" - Russian format
+    - "Rank 2 499" - Space-separated digits (e.g., 2,499)
+
     Args:
         rank_banner: The cropped rank banner image containing "Rank X" text
         debug: Whether to save debug images
@@ -1545,14 +1550,53 @@ def extract_rank_text(rank_banner, debug=False):
         if not text:
             text = pytesseract.image_to_string(rank_banner, config=custom_config).strip()
 
-        # Extract just the digits from the text using regex, regardless of the language
+        # Extract all digits from the text using regex
         digits = re.findall(r'\d+', text)
 
-        # Get the first set of digits as the rank number
-        rank_number = int(digits[0]) if digits else None
+        # Handle two primary cases for rank numbers:
+        rank_number = None
+        if digits:
+            if len(digits) == 1:
+                # Case 1: Single sequence of digits (e.g., "Rank 3854")
+                rank_number = int(digits[0])
+            else:
+                # Case 2: Space-separated digits (e.g., "Rank 2 499")
+                # First attempt: Try to join all adjacent numbers if they appear to be part of the same number
+                # Check if digits come right after each other in the text with only spaces between
+
+                # Find if there's a pattern like "word + number + spaces + number" that suggests one large number
+                # This regex checks for word boundaries and spaces between numbers
+                matches = re.finditer(r'\b(\d+)(?:\s+(\d+))+\b', text)
+                joined_numbers = []
+
+                for match in matches:
+                    # Join all the numbers in this match
+                    full_match = match.group(0)
+                    # Extract just the digits and join them
+                    joined = ''.join(re.findall(r'\d+', full_match))
+                    joined_numbers.append(joined)
+
+                if joined_numbers:
+                    # Use the first joined number (usually there's only one rank per banner)
+                    rank_number = int(joined_numbers[0])
+                else:
+                    # Fallback: If we couldn't find a clear pattern, use the first number as is
+                    # This handles the "Rank 3 3854" case by taking just the 3
+                    rank_number = int(digits[0])
+
+                    # But if the first number is very small (1-9) and the second is larger,
+                    # the larger one might be the actual rank
+                    if len(digits) > 1 and len(digits[0]) == 1 and len(digits[1]) > 2:
+                        # First digit is single digit, second is 3+ digits, use the second one
+                        rank_number = int(digits[1])
 
         if debug:
-            logger.debug(f"OCR extracted text: '{text}', digits found: {digits}, rank number: {rank_number}")
+            # More detailed debug output
+            logger.debug(f"OCR extracted text: '{text}', digits found: {digits}")
+            if len(digits) > 1:
+                logger.debug(f"Multiple digits detected, determined rank: {rank_number}")
+            else:
+                logger.debug(f"Single digit sequence detected: {rank_number}")
 
             # Annotate the image with the extracted text
             annotated = rank_banner.copy()
