@@ -607,7 +607,7 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
     The rank banner contains text like "Rank 17" and is located at:
     - 46px down from the top of the hero portrait
     - 11px up from the bottom of the hero portrait
-    - 64px width centered horizontally in the hero portrait
+    - Width spanning the entire hero portrait width to ensure we capture long numbers
 
     Args:
         top_bar: The top bar image containing all heroes
@@ -618,8 +618,6 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
 
     Returns:
         The cropped rank banner section
-
-    TODO: Add OCR to extract the rank number from the banner
     """
     try:
         # Get dimensions of the input image
@@ -637,8 +635,9 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
         # The banner is located at the bottom part of the hero portrait slot
         ref_y_start = 46  # 46px down from top of the total hero area
         ref_banner_height = 18  # approximate height for the rank banner
-        ref_banner_width = 64  # 64px wide
-        ref_x_start = x_start + (HERO_WIDTH - ref_banner_width) // 2  # centered in hero slot
+        # Use the entire hero width to ensure we capture all digits
+        ref_banner_width = HERO_WIDTH  # full width of hero portrait
+        ref_x_start = x_start  # start from the left edge of the hero portrait
 
         # Make sure we're within bounds
         if ref_x_start < 0:
@@ -1434,8 +1433,9 @@ def extract_rank_text(rank_banner, debug=False):
             save_debug_image(gray, "rank_banner_gray")
             save_debug_image(binary, "rank_banner_binary")
 
-        # Configure pytesseract for better results
-        custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist="Rank0123456789 "'
+        # Configure pytesseract to focus on digits, regardless of language
+        # We're using a permissive whitelist that includes digits and common text formats
+        custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist="Rank0123456789 абвгдеёжзийклмнопрстуфхцчшщъыьэюя"'
 
         # Perform OCR
         text = pytesseract.image_to_string(binary, config=custom_config).strip()
@@ -1444,12 +1444,14 @@ def extract_rank_text(rank_banner, debug=False):
         if not text:
             text = pytesseract.image_to_string(gray, config=custom_config).strip()
 
-        # Extract the rank number using regex
-        match = re.search(r'Rank\s+(\d+)', text, re.IGNORECASE)
-        rank_number = int(match.group(1)) if match else None
+        # Extract just the digits from the text using regex, regardless of the language
+        digits = re.findall(r'\d+', text)
+
+        # Get the first set of digits as the rank number
+        rank_number = int(digits[0]) if digits else None
 
         if debug:
-            logger.debug(f"OCR extracted text: '{text}', rank number: {rank_number}")
+            logger.debug(f"OCR extracted text: '{text}', digits found: {digits}, rank number: {rank_number}")
 
             # Annotate the image with the extracted text
             annotated = rank_banner.copy()
