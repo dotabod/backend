@@ -42,7 +42,18 @@ from tqdm import tqdm
 import requests
 import uuid
 import time
+import re
 from concurrent.futures import ThreadPoolExecutor
+
+# Import pytesseract for OCR
+try:
+    import pytesseract
+    TESSERACT_AVAILABLE = True
+except ImportError:
+    TESSERACT_AVAILABLE = False
+    print("Warning: pytesseract not installed, OCR for rank detection will be disabled")
+    print("Install with: pip install pytesseract")
+    print("You also need to install Tesseract OCR: https://github.com/tesseract-ocr/tesseract")
 
 # Import our modules if available
 try:
@@ -625,7 +636,7 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
         # Define the rank banner location relative to the hero portrait
         # The banner is located at the bottom part of the hero portrait slot
         ref_y_start = 46  # 46px down from top of the total hero area
-        ref_banner_height = 20  # approximate height for the rank banner
+        ref_banner_height = 18  # approximate height for the rank banner
         ref_banner_width = 64  # 64px wide
         ref_x_start = x_start + (HERO_WIDTH - ref_banner_width) // 2  # centered in hero slot
 
@@ -1045,6 +1056,14 @@ def process_frame_for_heroes(frame_path, debug=False):
                 if rank_banner is not None:
                     logger.debug(f"Rank banner extracted for {team} position {position+1}, size: {rank_banner.shape[:2]}")
 
+                    # Extract rank text using OCR if available
+                    if TESSERACT_AVAILABLE:
+                        performance_timer.start('extract_rank_text')
+                        rank_number, rank_text = extract_rank_text(rank_banner, debug=True)
+                        performance_timer.stop('extract_rank_text')
+                        if rank_number:
+                            logger.debug(f"Rank detected for {team} position {position+1}: {rank_number}")
+
             # Get top matches for this hero position, not just the best match
             performance_timer.start('get_top_matches')
             hero_matches = get_top_hero_matches(hero_icon, heroes_data, debug=debug)
@@ -1084,9 +1103,21 @@ def process_frame_for_heroes(frame_path, debug=False):
                     # Store the shape of the rank banner
                     hero['rank_banner_shape'] = rank_banner.shape[:2]
 
+                    # Extract rank number using OCR if available
+                    if TESSERACT_AVAILABLE:
+                        performance_timer.start('extract_rank_text')
+                        rank_number, rank_text = extract_rank_text(rank_banner, debug=debug)
+                        performance_timer.stop('extract_rank_text')
+
+                        # Store the rank information
+                        if rank_number is not None:
+                            hero['rank'] = rank_number
+                            hero['rank_text'] = rank_text
+
                     # Save a debug image with the hero name for easier identification
                     if debug:
-                        save_debug_image(rank_banner, f"{team.lower()}_pos{position+1}_{hero['hero_localized_name'].replace(' ', '_')}_rank_banner")
+                        rank_info = f"_rank{hero.get('rank', 'unknown')}" if 'rank' in hero else ""
+                        save_debug_image(rank_banner, f"{team.lower()}_pos{position+1}_{hero['hero_localized_name'].replace(' ', '_')}{rank_info}_rank_banner")
 
         performance_timer.stop('identify_all_heroes')
 
@@ -1374,6 +1405,66 @@ def process_frames_for_heroes(frame_paths, debug=False):
 
     return heroes
 
+def extract_rank_text(rank_banner, debug=False):
+    """
+    Extract the rank number from a rank banner using OCR.
+
+    Args:
+        rank_banner: The cropped rank banner image containing "Rank X" text
+        debug: Whether to save debug images
+
+    Returns:
+        tuple: (rank_number, full_rank_text)
+            - rank_number: Extracted numerical rank (int) or None if not found
+            - full_rank_text: Full text extracted from the banner
+    """
+    if not TESSERACT_AVAILABLE:
+        return None, "OCR not available (pytesseract not installed)"
+
+    try:
+        # Preprocess the image for better OCR
+        # Convert to grayscale
+        gray = cv2.cvtColor(rank_banner, cv2.COLOR_BGR2GRAY)
+
+        # Apply threshold to make text more visible
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+        # Save preprocessed image if debug is enabled
+        if debug:
+            save_debug_image(gray, "rank_banner_gray")
+            save_debug_image(binary, "rank_banner_binary")
+
+        # Configure pytesseract for better results
+        custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist="Rank0123456789 "'
+
+        # Perform OCR
+        text = pytesseract.image_to_string(binary, config=custom_config).strip()
+
+        # If text is empty, try with the grayscale image
+        if not text:
+            text = pytesseract.image_to_string(gray, config=custom_config).strip()
+
+        # Extract the rank number using regex
+        match = re.search(r'Rank\s+(\d+)', text, re.IGNORECASE)
+        rank_number = int(match.group(1)) if match else None
+
+        if debug:
+            logger.debug(f"OCR extracted text: '{text}', rank number: {rank_number}")
+
+            # Annotate the image with the extracted text
+            annotated = rank_banner.copy()
+            cv2.putText(annotated, f"OCR: {text}", (5, 15),
+                      cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+            if rank_number:
+                cv2.putText(annotated, f"Rank: {rank_number}", (5, 30),
+                          cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+            save_debug_image(annotated, "rank_banner_ocr_result")
+
+        return rank_number, text
+    except Exception as e:
+        logger.error(f"Error extracting rank text with OCR: {e}")
+        return None, f"OCR error: {str(e)}"
+
 def main():
     """Main function."""
     # Start the overall timing
@@ -1394,6 +1485,8 @@ def main():
                       help="Show detailed performance timing information")
     parser.add_argument("--extract-rank-banners", action="store_true",
                       help="Extract rank banners from hero portraits (containing rank numbers)")
+    parser.add_argument("--ocr-ranks", action="store_true",
+                      help="Use OCR to extract rank numbers from rank banners")
 
     args = parser.parse_args()
 
@@ -1414,6 +1507,17 @@ def main():
     if args.extract_rank_banners:
         os.environ["EXTRACT_RANK_BANNERS"] = "1"
         logger.info("Rank banner extraction enabled")
+
+    # Enable OCR for rank detection if requested
+    if args.ocr_ranks:
+        if TESSERACT_AVAILABLE:
+            os.environ["OCR_RANKS"] = "1"
+            logger.info("OCR for rank detection enabled")
+        else:
+            logger.warning("OCR for rank detection requested but pytesseract is not available")
+            print("Warning: OCR for rank detection requested but pytesseract is not available")
+            print("Install with: pip install pytesseract")
+            print("You also need to install Tesseract OCR: https://github.com/tesseract-ocr/tesseract")
 
     try:
         # Process a clip if URL is provided
@@ -1491,6 +1595,12 @@ def main():
                 rank_banners_extracted = any('rank_banner_shape' in hero for hero in heroes)
                 if rank_banners_extracted:
                     logger.info("Rank banners extracted from hero portraits")
+
+                    # Check if ranks were detected with OCR
+                    ranks_detected = any('rank' in hero for hero in heroes)
+                    if ranks_detected:
+                        logger.info(f"Rank numbers detected for {sum(1 for h in heroes if 'rank' in h)}/{len(heroes)} heroes")
+
                     if args.debug:
                         logger.info("Rank banner debug images saved with prefix 'rank_banner_'")
 
@@ -1521,7 +1631,14 @@ def main():
                     name = hero['hero_localized_name']
                     variant = hero['variant']
                     score = hero['match_score']
-                    rank_info = " (with rank banner)" if 'rank_banner_shape' in hero else ""
+
+                    # Add rank information if available
+                    rank_info = ""
+                    if 'rank' in hero:
+                        rank_info = f" (Rank {hero['rank']})"
+                    elif 'rank_banner_shape' in hero:
+                        rank_info = " (with rank banner)"
+
                     confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
                     print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f}){rank_info}")
 
