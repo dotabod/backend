@@ -429,13 +429,11 @@ def extract_hero_icons(top_bar, center_x, debug=False):
 
             # Calculate perspective transform
             M = cv2.getPerspectiveTransform(src_points, dst_points)
-            hero_icon = cv2.warpPerspective(cropped_hero, M, (HERO_WIDTH, HERO_ACTUAL_HEIGHT))
 
             # Save for debugging
             if debug:
                 # Save the mask, masked crop, and final hero icon
                 save_debug_image(cropped_hero, f"radiant_hero_{i+1}_skewed")
-                save_debug_image(hero_icon, f"radiant_hero_{i+1}_portrait")
 
                 # Draw the skewed quadrilateral on the original image for visualization
                 vis_image = top_bar.copy()
@@ -499,13 +497,11 @@ def extract_hero_icons(top_bar, center_x, debug=False):
 
             # Calculate perspective transform
             M = cv2.getPerspectiveTransform(src_points, dst_points)
-            hero_icon = cv2.warpPerspective(cropped_hero, M, (HERO_WIDTH, HERO_ACTUAL_HEIGHT))
 
             # Save for debugging
             if debug:
                 # Save the mask, masked crop, and final hero icon
                 save_debug_image(cropped_hero, f"dire_hero_{i+1}_skewed")
-                save_debug_image(hero_icon, f"dire_hero_{i+1}_portrait")
 
                 # Draw the skewed quadrilateral on the original image for visualization
                 vis_image = top_bar.copy()
@@ -550,9 +546,9 @@ def crop_hero_portrait(hero_icon, debug=False):
         reference_height = HERO_ACTUAL_HEIGHT  # 66px (72px - 6px top padding)
 
         # Define crop coordinates for the reference size
-        ref_x_start = 9
+        ref_x_start = 26
         ref_y_start = 0
-        ref_crop_width = 65
+        ref_crop_width = 46
         ref_crop_height = 40
 
         # Scale the crop coordinates based on the actual image dimensions
@@ -1293,16 +1289,13 @@ def main():
                       help="Minimum match score (0.0-1.0) to consider a hero identified (default: 0.4)")
     parser.add_argument("--debug-templates", action="store_true",
                       help="Save debug images of template matching results")
-    parser.add_argument("--add-border", action="store_true",
-                      help="Add a black border around templates for better sliding window matching")
-    parser.add_argument("--apply-blur", action="store_true",
-                      help="Apply Gaussian blur to both source and template images to reduce noise")
-    parser.add_argument("--blur", action="store_true",
-                      help="Apply blur preprocessing to any matching mode (helps with blurry source images)")
     parser.add_argument("--show-timings", action="store_true",
                       help="Show detailed performance timing information")
 
     args = parser.parse_args()
+
+    os.environ["ADD_BORDER"] = "1"
+    os.environ["APPLY_BLUR"] = "1"
 
     # Set debug level
     if args.debug:
@@ -1313,21 +1306,6 @@ def main():
     if args.debug_templates:
         os.environ["DEBUG_TEMPLATE_MATCHES"] = "1"
         logger.info("Template matching debug images enabled")
-
-    # Set additional preprocessing options
-    if args.blur:
-        os.environ["BLUR_PREPROCESS"] = "1"
-        logger.info("Blur preprocessing enabled - applying to both source and template images")
-
-    # Enable bordered templates if requested
-    if args.add_border:
-        os.environ["ADD_BORDER"] = "1"
-        logger.info("Border around templates enabled - improving sliding window matching")
-
-    # Enable Gaussian blur if requested
-    if args.apply_blur:
-        os.environ["APPLY_BLUR"] = "1"
-        logger.info("Gaussian blur enabled - reducing noise in images")
 
     try:
         # Process a clip if URL is provided
