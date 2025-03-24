@@ -1854,10 +1854,6 @@ def main():
                       help="Save debug images of template matching results")
     parser.add_argument("--show-timings", action="store_true",
                       help="Show detailed performance timing information")
-    parser.add_argument("--extract-rank-banners", action="store_true",
-                      help="Extract rank banners from hero portraits (containing rank numbers)")
-    parser.add_argument("--ocr-ranks", action="store_true",
-                      help="Use OCR to extract rank numbers from rank banners")
     parser.add_argument("--keep-debug", action="store_true",
                       help="Don't clear debug directory between runs")
 

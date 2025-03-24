@@ -171,10 +171,6 @@ def main():
                        help="Output JSON file for processing results summary (default: results.json)")
     parser.add_argument("--debug", action="store_true",
                        help="Enable debug mode")
-    parser.add_argument("--extract-ranks", action="store_true",
-                       help="Extract rank banners from hero portraits")
-    parser.add_argument("--extract-players", action="store_true",
-                       help="Extract player names from hero portraits")
     parser.add_argument("--parallel", action="store_true",
                        help="Process clips in parallel")
     parser.add_argument("--workers", type=int, default=3,
