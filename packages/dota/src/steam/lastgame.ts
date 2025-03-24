@@ -97,10 +97,10 @@ export default async function lastgame({
       // Must mean they're a 8500+ player
       const oldGame = lg.matchId
 
-      return `${t('matchData8500', { emote: 'PoroSad', lng: locale })} · ${t('lastgame.link', {
+      return `${t('lastgame.link', {
         lng: locale,
         url: `dotabuff.com/matches/${oldGame}`,
-      })}`
+      })} · ${t('matchData8500', { emote: 'PoroSad', lng: locale })}`
     }
 
     const [gameOne, gameTwo] = gameHistory as unknown as DelayedGames[]
