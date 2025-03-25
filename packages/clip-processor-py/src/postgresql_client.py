@@ -710,6 +710,12 @@ class PostgresClient:
             count = cursor.fetchone()[0]
             cursor.close()
 
+            # Log the result more explicitly
+            if count > 0:
+                logger.debug(f"Found {count} request(s) with 'processing' status")
+            else:
+                logger.debug("No requests currently being processed")
+
             return count > 0
 
         except Exception as e:

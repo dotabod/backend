@@ -17,6 +17,8 @@ import time
 import threading
 from threading import Lock
 from pathlib import Path
+import psycopg2
+from datetime import datetime
 
 # Import the hero detection and hero data modules
 try:
@@ -98,6 +100,8 @@ def start_worker_thread():
         worker_thread.start()
         worker_running = True
         logger.info("Started queue worker thread")
+    else:
+        logger.info("Worker thread is already running")
 
 def process_queue_worker():
     """Worker thread function to process queued requests."""
@@ -111,18 +115,31 @@ def process_queue_worker():
                 # Check if there's a request being processed
                 if db_client.is_queue_processing():
                     logger.debug("A request is already being processed, waiting...")
+                    # Sleep briefly to avoid tight loop
+                    time.sleep(1)
                     continue
 
                 # Get the next pending request
                 request = db_client.get_next_pending_request()
 
                 if not request:
-                    # No pending requests, sleep and check again
-                    worker_running = False
-                    break
+                    # No pending requests, sleep and check again instead of exiting
+                    logger.debug("No pending requests in the queue, checking again in 5 seconds")
+                    # Don't set worker_running to False here anymore
+                    # worker_running = False
+                    # break
+                    # Release the lock while sleeping
 
+            # If no requests, sleep outside the lock to prevent holding it
+            if not request:
+                time.sleep(5)  # Check for new requests every 5 seconds
+                continue
+
+            # If we have a request, process it
+            with queue_lock:
                 # Mark the request as processing
                 db_client.update_queue_status(request['request_id'], 'processing')
+                logger.info(f"Processing request {request['request_id']} from queue")
 
             # Process the request outside the lock to allow new requests to be added
             result = None
@@ -164,6 +181,7 @@ def process_queue_worker():
             with queue_lock:
                 if error:
                     db_client.update_queue_status(request['request_id'], 'failed')
+                    logger.error(f"Failed to process request {request['request_id']}: {error}")
                 else:
                     # Update result with processing time
                     if result and isinstance(result, dict):
@@ -183,6 +201,7 @@ def process_queue_worker():
                             )
 
                     db_client.update_queue_status(request['request_id'], 'completed', result_id=request.get('clip_id'))
+                    logger.info(f"Completed processing request {request['request_id']}")
 
             # Small sleep to prevent high CPU usage
             time.sleep(0.1)
@@ -198,6 +217,62 @@ def process_queue_worker():
 def health_check():
     """Simple health check endpoint."""
     return jsonify({'status': 'ok', 'service': 'dota-hero-detection-api'})
+
+@app.route('/queue/debug', methods=['GET'])
+def debug_queue():
+    """
+    Debug endpoint to check the queue status and worker thread.
+
+    This is for administrative use only.
+    """
+    try:
+        # Get all pending requests
+        conn = db_client._get_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Get counts of requests by status
+        cursor.execute(f"SELECT status, COUNT(*) FROM {db_client.queue_table} GROUP BY status")
+        status_counts = cursor.fetchall()
+
+        # Get the 10 most recent requests
+        cursor.execute(f"""
+            SELECT request_id, request_type, status, created_at, started_at, completed_at
+            FROM {db_client.queue_table}
+            ORDER BY created_at DESC
+            LIMIT 10
+        """)
+        recent_requests = cursor.fetchall()
+
+        # Format datetime objects for JSON
+        for req in recent_requests:
+            for key, value in req.items():
+                if isinstance(value, datetime):
+                    req[key] = value.isoformat()
+
+        cursor.close()
+        db_client._return_connection(conn)
+
+        # Check worker thread status
+        worker_status = "running" if worker_running else "not running"
+
+        # Manual restart option
+        restart = request.args.get('restart', 'false').lower() == 'true'
+        if restart and not worker_running:
+            start_worker_thread()
+            worker_status = "restarted"
+
+        return jsonify({
+            'worker_status': worker_status,
+            'queue_status': [dict(row) for row in status_counts],
+            'recent_requests': [dict(row) for row in recent_requests]
+        })
+    except Exception as e:
+        logger.error(f"Error in debug endpoint: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'error': str(e),
+            'trace': traceback.format_exc()
+        }), 500
 
 @app.route('/queue/status/<request_id>', methods=['GET'])
 def check_queue_status(request_id):
@@ -740,8 +815,29 @@ def main():
     else:
         logger.warning("Failed to initialize PostgreSQL client, caching will be disabled")
 
-    # Start the worker thread
+    # Start the worker thread and schedule a periodic check to restart it if needed
+    logger.info("Starting initial worker thread...")
     start_worker_thread()
+
+    # Define a function to check and restart the worker thread if needed
+    def check_worker_thread():
+        logger.info(f"Checking worker thread status. Current status: running={worker_running}")
+        if not worker_running:
+            logger.info("Worker thread not running, restarting it...")
+            start_worker_thread()
+        else:
+            logger.debug("Worker thread is running, no action needed")
+
+    # Start a thread to periodically check and restart the worker thread
+    def periodic_worker_check():
+        while True:
+            time.sleep(30)  # Check every 30 seconds
+            check_worker_thread()
+
+    # Start the periodic worker check thread
+    worker_check_thread = threading.Thread(target=periodic_worker_check, daemon=True)
+    worker_check_thread.start()
+    logger.info("Started periodic worker check thread")
 
     # Get port from environment variable or use default
     port = int(os.environ.get('PORT', 5000))
