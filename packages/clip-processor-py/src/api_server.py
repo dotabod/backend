@@ -19,6 +19,7 @@ from threading import Lock
 from pathlib import Path
 import psycopg2
 from datetime import datetime, timedelta
+from functools import wraps
 
 # Configure logging
 log_dir = os.path.join(os.path.dirname(__file__), 'logs')
@@ -61,6 +62,23 @@ heroes_data = None
 
 # Create Flask app
 app = Flask(__name__)
+# Define the API key for authentication
+API_KEY = os.environ.get('VISION_API_KEY')
+if not API_KEY:
+    logger.error("No API key found. Set VISION_API_KEY environment variable.")
+    raise ValueError("VISION_API_KEY environment variable must be set")
+
+# Authentication decorator
+def require_api_key(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        provided_key = request.headers.get('X-API-Key')
+        if provided_key and provided_key == API_KEY:
+            return f(*args, **kwargs)
+        else:
+            logger.warning(f"Unauthorized access attempt: {request.remote_addr} - {request.path}")
+            return jsonify({'error': 'Unauthorized. Valid API key required.'}), 401
+    return decorated_function
 
 # Define the directory for storing frame images
 TEMP_DIR = Path(os.path.dirname(os.path.abspath(__file__))).parent / "temp"
@@ -321,13 +339,15 @@ def before_first_request():
         logger.info("Initializing app before first request...")
         initialize_app()
 
-# Continue with the rest of your endpoints...
+# Health check endpoint - no authentication required
 @app.route('/health', methods=['GET'])
 def health_check():
     """Simple health check endpoint."""
     return jsonify({'status': 'ok', 'service': 'dota-hero-detection-api'})
 
+# All other endpoints require authentication
 @app.route('/queue/debug', methods=['GET'])
+@require_api_key
 def debug_queue():
     """
     Debug endpoint to check the queue status and worker thread.
@@ -395,6 +415,7 @@ def debug_queue():
         }), 500
 
 @app.route('/queue/status/<request_id>', methods=['GET'])
+@require_api_key
 def check_queue_status(request_id):
     """
     Check the status of a queued request.
@@ -442,6 +463,7 @@ def check_queue_status(request_id):
     return jsonify(response), status_code
 
 @app.route('/images/<filename>', methods=['GET'])
+@require_api_key
 def serve_image(filename):
     """Serve the frame image with security checks."""
     try:
@@ -819,6 +841,7 @@ def process_stream_request(username, num_frames=3, debug=False, include_image=Tr
         return {'error': 'Failed to process stream or no heroes detected'}
 
 @app.route('/detect', methods=['GET'])
+@require_api_key
 def detect_heroes():
     """
     Process a Twitch clip URL or clip ID and return hero detection results.
@@ -908,6 +931,7 @@ def detect_heroes():
         return jsonify(error_details), 500
 
 @app.route('/detect-stream', methods=['GET'])
+@require_api_key
 def detect_heroes_from_stream():
     """
     Process a Twitch stream by username and return hero detection results.
@@ -1018,6 +1042,7 @@ def reset_stuck_processing_requests(timeout_minutes=1):
         return 0
 
 @app.route('/match/<match_id>', methods=['GET'])
+@require_api_key
 def get_match_result(match_id):
     """
     Get hero detection results for a Dota 2 match ID.
