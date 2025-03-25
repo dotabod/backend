@@ -21,10 +21,10 @@ eventHandler.registerEvent('map:game_state', {
       try {
         const api = getTwitchAPI(accountId)
 
-        // Create clip after 30 seconds delay
         setTimeout(() => {
           api.clips
             .createClip({
+              createAfterDelay: true,
               channel: accountId,
             })
             .then((clipId) => {
@@ -42,7 +42,7 @@ eventHandler.registerEvent('map:game_state', {
                 matchId: dotaClient.client.gsi?.map?.matchid,
               })
             })
-        }, 30000)
+        }, 50000)
       } catch (e) {
         logger.error('err createClip', {
           e,
