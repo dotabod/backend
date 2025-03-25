@@ -129,7 +129,7 @@
     "won": "Dernière partie gagnée"
   },
   "lifetime": "Jeux à vie",
-  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
   "matchFound": "Données de match trouvées {{commandList}}, liste de commandes activée.",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas enfin utilisée,  $t(seconds, {\"count\": {{seconds}} }) en retard {{emote}}",

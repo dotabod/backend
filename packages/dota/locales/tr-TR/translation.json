@@ -121,7 +121,7 @@
     "won": "Son oyunu kazandı"
   },
   "lifetime": "Toplam oyunlar",
-  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
   "matchFound": "Maç bilgileri bulundu ve {{commandList}} komutları aktifleştirildi.",
   "matchId": "Maç ID: {{matchId}}",
   "midasUsed": "Midası en sonunda $t(seconds, {\"count\": {{seconds}} }) sonra kullandın {{emote}}",

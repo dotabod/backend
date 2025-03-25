@@ -121,7 +121,7 @@
     "won": "Előző játék: győzelem"
   },
   "lifetime": "Összes lejátszott játék",
-  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
   "matchFound": "Meccs információ megtalálható {{commandList}} a parancsok aktívak.",
   "matchId": "Meccs ID: {{matchId}}",
   "midasUsed": "Midas végre használva volt, $t(seconds, {\"count\": {{seconds}} }) késéssel. {{emote}}",

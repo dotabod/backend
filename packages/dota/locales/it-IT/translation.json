@@ -129,7 +129,7 @@
     "won": "Ultima partita: vinta"
   },
   "lifetime": "Partite totali",
-  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
   "matchFound": "Informazioni del match trovate {{commandList}} attivati",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas è stata finalmente usata, $t(seconds, {\"count\": {{seconds}} }) dopo {{emote}}",
