@@ -222,13 +222,16 @@ def process_queue_worker():
                     )
                     logger.info(f"Processed clip request: {request['request_id']}")
 
-                    # Add image URL to database result for worker thread
+                    # Add image URL to database result for worker thread - using HTTP URL
                     if result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info'] and request['clip_id']:
                         frame_path = result['best_frame_info']['frame_path']
-                        # We just need the path here, not the URL since that will be generated when accessed
+                        # Create an HTTP URL for the image
                         if Path(frame_path).exists():
-                            # Take the original path for future access
-                            result['saved_image_path'] = str(frame_path)
+                            # Generate a URL for the image that can be accessed via HTTP
+                            # Since we can't access request.host_url from the worker thread,
+                            # save the frame_path and handle URL generation when serving the result
+                            # We'll use a placeholder that will be replaced when the result is served
+                            result['saved_image_path'] = f"__HOST_URL__/images/{request['clip_id']}_{int(time.time())}.jpg"
                 elif request['request_type'] == 'stream':
                     logger.info(f"Processing stream request: {request['stream_username']} ({request['request_id']})")
                     result = process_stream_request(
@@ -240,6 +243,12 @@ def process_queue_worker():
                         from_worker=True     # Indicate this is called from worker thread
                     )
                     logger.info(f"Processed stream request: {request['request_id']}")
+
+                    # Same for stream requests - using HTTP URL
+                    if result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
+                        frame_path = result['best_frame_info']['frame_path']
+                        if Path(frame_path).exists():
+                            result['saved_image_path'] = f"__HOST_URL__/images/stream_{request['stream_username']}_{int(time.time())}.jpg"
                 else:
                     error = f"Unknown request type: {request['request_type']}"
             except Exception as e:
@@ -265,6 +274,7 @@ def process_queue_worker():
                             if 'frame_image_url' in result:
                                 del result['frame_image_url']
 
+                            # Replace placeholder with real host URL when the result is retrieved
                             db_client.save_clip_result(
                                 request['clip_id'],
                                 request['clip_url'],
@@ -404,6 +414,11 @@ def check_queue_status(request_id):
             if queue_info['request_type'] == 'clip':
                 cached_result = db_client.get_clip_result(queue_info['result_id'])
                 if cached_result:
+                    # Replace placeholder with real host URL
+                    if 'saved_image_path' in cached_result and cached_result['saved_image_path'] and '__HOST_URL__' in cached_result['saved_image_path']:
+                        host_url = request.host_url.rstrip('/')
+                        cached_result['saved_image_path'] = cached_result['saved_image_path'].replace('__HOST_URL__', host_url)
+
                     response['result'] = cached_result
 
     return jsonify(response), status_code
@@ -502,7 +517,7 @@ def get_image_url(frame_path, clip_id):
         clip_id: The clip ID for uniqueness
 
     Returns:
-        Tuple of (image URL, saved image path)
+        Tuple of (image URL, full HTTP path to saved image)
     """
     import shutil
     from datetime import datetime
@@ -522,7 +537,7 @@ def get_image_url(frame_path, clip_id):
         image_url = f"{host_url}/images/{filename}"
 
         logger.info(f"Saved frame image: {dest_path}, URL: {image_url}")
-        return image_url, str(dest_path)
+        return image_url, image_url  # Return the HTTP URL twice, once for image_url and once for saved_image_path
     except Exception as e:
         logger.error(f"Error copying frame image: {e}")
         return None, None
