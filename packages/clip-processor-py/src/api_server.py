@@ -520,11 +520,9 @@ def get_image_url(frame_path, clip_id):
         Tuple of (image URL, full HTTP path to saved image)
     """
     import shutil
-    from datetime import datetime
 
     # Create a unique filename based on clip ID and timestamp
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    filename = f"{clip_id}_{timestamp}.jpg"
+    filename = f"{clip_id}_single_frame.jpg"
     dest_path = IMAGE_DIR / filename
 
     try:
