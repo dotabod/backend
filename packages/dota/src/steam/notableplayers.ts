@@ -111,7 +111,7 @@ export async function notablePlayers({
       }
 
       // Only add to proPlayers if this is a notable player
-      if (np) proPlayers.push(playerData)
+      if (np || matchPlayers[i].player_name) proPlayers.push(playerData)
     })
 
     const modeText =
