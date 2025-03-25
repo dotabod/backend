@@ -726,10 +726,10 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
 
         # Define the rank banner location relative to the hero portrait
         # We'll use a larger area first, then refine using color detection
-        ref_y_start = 50  # Start a bit higher to ensure we catch the banner
+        ref_y_start = 51  # Start a bit higher to ensure we catch the banner
         ref_banner_height = 15  # Taller to ensure we include the entire banner
         ref_banner_width = HERO_WIDTH - 35 # Full hero width to start with
-        ref_x_start = x_start + 20  # Start from left edge of hero portrait
+        ref_x_start = x_start + 25  # Start from left edge of hero portrait
 
         # Make sure we're within bounds
         if ref_x_start < 0:
@@ -1229,6 +1229,13 @@ def process_frame_for_heroes(frame_path, debug=False):
             logger.warning(f"Could not extract hero bar from frame: {frame_path}")
             return []
 
+        # Create the annotated version with rank areas outlined
+        if debug:
+            performance_timer.start('annotate_rank_areas')
+            annotated_top_bar = annotate_rank_areas(top_bar, center_x, debug=True)
+            performance_timer.stop('annotate_rank_areas')
+            save_debug_image(annotated_top_bar, "top_bar_annotated_with_ranks")
+
         # Extract hero icons
         performance_timer.start('extract_hero_icons')
         hero_icons = extract_hero_icons(top_bar, center_x, debug=debug)
@@ -1715,11 +1722,20 @@ def extract_rank_text(rank_banner, debug=False):
             save_debug_image(gray, "rank_banner_gray")
             save_debug_image(levels_adjusted, "rank_banner_levels_adjusted")
 
-        # Configure pytesseract to focus on digits, regardless of language
-        # We're using a permissive whitelist that includes digits and common text formats
-        custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist="Rank0123456789"'
+        # Configure pytesseract to focus on digits and rank text
+        # Using a more restrictive whitelist and PSM 7 (single line of text)
+        # This helps avoid picking up random artifacts or noise as numbers
+        # OEM 3 is for LSTM mode, which is better for text recognition
+        # PSM 7 is for single line of text
+        # tessedit_char_whitelist is for the characters we want to recognize
+        # tessedit_char_blacklist is for the characters we don't want to recognize
+        custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist="RankАНГ0123456789 " -c tessedit_char_blacklist=":;,./\|"'
+
         # Try OCR on the levels-adjusted image
         text = pytesseract.image_to_string(levels_adjusted, config=custom_config).strip()
+
+        # Clean up the text by removing any unexpected characters that might have slipped through
+        text = re.sub(r'[^RankАНГ0-9 ]', '', text)
 
         # If no text found, try on the original grayscale image
         if not text:
@@ -2111,6 +2127,74 @@ def process_stream_username(username, debug=False, min_score=0.4, debug_template
     """
     return process_media(username, source_type="stream", debug=debug, min_score=min_score,
                         debug_templates=debug_templates, show_timings=show_timings, num_frames=num_frames)
+
+def annotate_rank_areas(top_bar, center_x, debug=False):
+    """
+    Create an annotated version of the top bar with 1px outlines around each rank banner area.
+
+    Args:
+        top_bar: The top bar image containing all heroes
+        center_x: X-coordinate of the center of the frame
+        debug: Whether to save debug images
+
+    Returns:
+        Annotated image with rank areas outlined
+    """
+    try:
+        # Start with the existing hero bar from extract_hero_bar function
+        visualization = top_bar.copy()
+        height, width = visualization.shape[:2]
+
+        # Calculate skew offset based on height
+        skew_offset = int(np.tan(np.radians(SKEW_ANGLE_DEGREES)) * HERO_ACTUAL_HEIGHT)
+
+        # Draw outlines for both teams
+        for team in ["Radiant", "Dire"]:
+            for position in range(5):
+                # Calculate hero position
+                if team == "Radiant":
+                    # Radiant heroes are on the left side
+                    x_start = center_x - CLOCK_LEFT_EXTEND - (5-position) * (HERO_WIDTH + HERO_GAP)
+                else:  # Dire
+                    # Dire heroes are on the right side
+                    x_start = center_x + CLOCK_RIGHT_EXTEND + position * (HERO_WIDTH + HERO_GAP) - 10
+
+                # Define the rank banner location (from crop_rank_banner function)
+                ref_y_start = 50  # Start a bit higher to ensure we catch the banner
+                ref_banner_height = 15  # Taller to ensure we include the entire banner
+                ref_banner_width = HERO_WIDTH - 35  # Full hero width to start with
+                ref_x_start = x_start + 25  # Start from left edge of hero portrait
+
+                # Make sure we're within bounds
+                if ref_x_start < 0:
+                    ref_x_start = 0
+
+                if ref_x_start + ref_banner_width > width:
+                    ref_banner_width = width - ref_x_start
+
+                if ref_y_start + ref_banner_height > height:
+                    ref_banner_height = height - ref_y_start
+
+                # Draw 1px outline around the rank banner area
+                color = (0, 255, 0) if team == "Radiant" else (0, 0, 255)  # Green for Radiant, Red for Dire
+                cv2.rectangle(visualization,
+                             (ref_x_start, ref_y_start),
+                             (ref_x_start + ref_banner_width, ref_y_start + ref_banner_height),
+                             color, 1)  # 1px outline
+
+                # Add text label
+                cv2.putText(visualization, f"{team[0]}{position+1} Rank",
+                           (ref_x_start, ref_y_start - 5),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
+
+        # Save the visualization
+        if debug:
+            save_debug_image(visualization, "top_bar_rank_areas_outlined", "Rank banner areas outlined with 1px border")
+
+        return visualization
+    except Exception as e:
+        logger.error(f"Error creating rank area annotation: {e}")
+        return top_bar
 
 def main():
     """Main function."""
