@@ -15,12 +15,12 @@ import traceback
 
 # Import the hero detection and hero data modules
 try:
-    from dota_hero_detection import process_clip_url
+    from dota_hero_detection import process_clip_url, process_stream_username
     from dota_heroes import get_hero_data
 except ImportError:
     # Try with relative import for different directory structures
     try:
-        from .dota_hero_detection import process_clip_url
+        from .dota_hero_detection import process_clip_url, process_stream_username
         from .dota_heroes import get_hero_data
     except ImportError:
         print("Error: Could not import required modules.")
@@ -100,6 +100,53 @@ def detect_heroes():
         logger.error(f"Error processing clip: {str(e)}", exc_info=True)
         error_details = {
             'error': 'Error processing clip',
+            'message': str(e),
+            'trace': traceback.format_exc() if debug else None
+        }
+        return jsonify(error_details), 500
+
+@app.route('/detect-stream', methods=['GET'])
+def detect_heroes_from_stream():
+    """
+    Process a Twitch stream by username and return hero detection results.
+
+    Query parameters:
+    - username: The Twitch username of the streamer (required)
+    - frames: Number of frames to capture and analyze (optional, default=3)
+    - debug: Enable debug mode (optional, default=False)
+    """
+    username = request.args.get('username')
+    num_frames = int(request.args.get('frames', '3'))
+    debug = request.args.get('debug', 'false').lower() == 'true'
+
+    # Check if username is provided
+    if not username:
+        return jsonify({'error': 'Missing required parameter: username'}), 400
+
+    # Validate number of frames
+    if num_frames < 1 or num_frames > 10:
+        return jsonify({'error': 'Invalid frames parameter: must be between 1 and 10'}), 400
+
+    logger.info(f"Processing stream for username: {username} (frames={num_frames}, debug={debug})")
+
+    try:
+        # Process the stream
+        result = process_stream_username(
+            username=username,
+            debug=debug,
+            num_frames=num_frames
+        )
+
+        if result:
+            # Return the result as JSON
+            return jsonify(result)
+        else:
+            return jsonify({'error': 'Failed to process stream or no heroes detected'}), 404
+
+    except Exception as e:
+        logger.error(f"Error processing stream: {str(e)}", exc_info=True)
+        error_details = {
+            'error': 'Error processing stream',
             'message': str(e),
             'trace': traceback.format_exc() if debug else None
         }

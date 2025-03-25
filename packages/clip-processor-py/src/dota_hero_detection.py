@@ -44,6 +44,7 @@ import uuid
 import time
 import re
 from concurrent.futures import ThreadPoolExecutor
+import traceback
 
 # Import pytesseract for OCR
 try:
@@ -58,9 +59,14 @@ except ImportError:
 # Import our modules if available
 try:
     from clip_utils import get_clip_details, download_clip, extract_frames
+    from stream_utils import capture_multiple_frames
 except ImportError:
     # For standalone usage
-    print("Warning: clip_utils module not found, standalone mode only")
+    try:
+        from .clip_utils import get_clip_details, download_clip, extract_frames
+        from .stream_utils import capture_multiple_frames
+    except ImportError:
+        print("Warning: clip_utils module not found, standalone mode only")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -1784,16 +1790,17 @@ def extract_rank_text(rank_banner, debug=False):
     except Exception as e:
         logger.error(f"Error extracting rank text with OCR: {e}")
         return None, f"OCR error: {str(e)}"
-
-def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False, show_timings=False):
-    """Process a clip URL and return the hero detection results.
+def process_media(media_source, source_type="clip", debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3):
+    """Process a clip URL or stream username and return the hero detection results.
 
     Args:
-        clip_url (str): URL of the Twitch clip
+        media_source (str): URL of the Twitch clip or Twitch username
+        source_type (str): Type of media source ("clip" or "stream")
         debug (bool): Enable debug mode
         min_score (float): Minimum score threshold
         debug_templates (bool): Enable template debugging
         show_timings (bool): Show timing information
+        num_frames (int): Number of frames to capture from the stream (only used for streams)
 
     Returns:
         dict: Detection results or None if processing failed
@@ -1837,32 +1844,76 @@ def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False
             print("You also need to install Tesseract OCR: https://github.com/tesseract-ocr/tesseract")
 
     try:
-        logger.info(f"Processing clip: {clip_url}")
+        frame_paths = []
 
-        # Check if clip_utils is available
-        if 'get_clip_details' not in globals():
-            logger.error("clip_utils module not available")
-            if debug:
-                print("Error: clip_utils module not available")
-            return None
+        if source_type == "clip":
+            clip_url = media_source
+            logger.info(f"Processing clip: {clip_url}")
 
-        # Get clip details
-        performance_timer.start('get_clip_details')
-        clip_details = get_clip_details(clip_url)
-        performance_timer.stop('get_clip_details')
-        logger.info("Clip details retrieved")
+            # Check if clip_utils is available
+            if 'get_clip_details' not in globals():
+                logger.error("clip_utils module not available")
+                if debug:
+                    print("Error: clip_utils module not available")
+                return None
 
-        # Download the clip
-        performance_timer.start('download_clip')
-        clip_path = download_clip(clip_details)
-        performance_timer.stop('download_clip')
-        logger.info(f"Clip downloaded to: {clip_path}")
+            # Get clip details
+            performance_timer.start('get_clip_details')
+            clip_details = get_clip_details(clip_url)
+            performance_timer.stop('get_clip_details')
+            logger.info("Clip details retrieved")
 
-        # Extract frames
-        performance_timer.start('extract_frames')
-        frame_paths = extract_frames(clip_path, clip_details=clip_details, frame_interval=10)
-        performance_timer.stop('extract_frames')
-        logger.info(f"Extracted {len(frame_paths)} frames")
+            # Download the clip
+            performance_timer.start('download_clip')
+            clip_path = download_clip(clip_details)
+            performance_timer.stop('download_clip')
+            logger.info(f"Clip downloaded to: {clip_path}")
+
+            # Extract frames
+            performance_timer.start('extract_frames')
+            frame_paths = extract_frames(clip_path, clip_details=clip_details, frame_interval=10)
+            performance_timer.stop('extract_frames')
+            logger.info(f"Extracted {len(frame_paths)} frames")
+
+        elif source_type == "stream":
+            username = media_source
+            logger.info(f"Processing stream for user: {username}")
+
+            # Check if capture_multiple_frames is available in the global scope
+            capture_frames_func = None
+            if 'capture_multiple_frames' in globals():
+                capture_frames_func = globals()['capture_multiple_frames']
+
+            # If not found in globals, try importing it
+            if not capture_frames_func:
+                try:
+                    # Try direct import first
+                    import sys
+                    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+                    from stream_utils import capture_multiple_frames
+                    capture_frames_func = capture_multiple_frames
+                except ImportError:
+                    try:
+                        # Try relative import
+                        from .stream_utils import capture_multiple_frames
+                        capture_frames_func = capture_multiple_frames
+                    except ImportError:
+                        logger.error("stream_utils module not available")
+                        if debug:
+                            print("Error: stream_utils module not available")
+                            print("Make sure stream_utils.py is in the same directory as dota_hero_detection.py")
+                        return None
+
+            # Capture frames from the stream
+            performance_timer.start('capture_frames')
+            frame_paths = capture_frames_func(username, num_frames=num_frames)
+            performance_timer.stop('capture_frames')
+
+            if not frame_paths:
+                logger.error(f"Failed to capture frames from stream: {username}")
+                return None
+
+            logger.info(f"Captured {len(frame_paths)} frames from stream")
 
         # Use all frames for color bar detection
         logger.info(f"Analyzing all frames for hero color bars")
@@ -1947,7 +1998,6 @@ def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False
 
             # Add timing data and color information to output
             heroes_output = {
-                'clip_url': clip_url,
                 'heroes': heroes,
                 'players': players,  # Add the more user-friendly players array
                 'color_match_score': best_match_score,
@@ -1961,6 +2011,12 @@ def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False
                     'detailed_timings': performance_timer.get_summary() if show_timings else None
                 }
             }
+
+            # Add source-specific information
+            if source_type == "clip":
+                heroes_output['clip_url'] = media_source
+            elif source_type == "stream":
+                heroes_output['stream_username'] = media_source
 
             # Print debug information if debug flag is set
             if debug:
@@ -2008,27 +2064,78 @@ def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False
 
             return heroes_output
         else:
-            logger.warning("No heroes identified in the clip")
+            logger.warning("No heroes identified in the media")
             if debug:
-                print("No heroes identified in the clip.")
+                print("No heroes identified in the media.")
+
+            if source_type == "stream":
+                return {
+                    'stream_username': media_source,
+                    'error': 'No heroes detected in any frame',
+                    'frames_captured': len(frame_paths)
+                }
             return None
     except Exception as e:
-        logger.error(f"Error in processing clip: {e}", exc_info=True)
+        logger.error(f"Error in processing {source_type}: {e}", exc_info=True)
         if debug:
             print(f"Error: {e}")
+
+        if source_type == "stream":
+            return {
+                'stream_username': media_source,
+                'error': str(e),
+                'traceback': traceback.format_exc() if debug else None
+            }
         return None
     finally:
         # Stop overall timer
-        performance_timer.stop('total_execution')
+        total_time = performance_timer.stop('total_execution')
+        logger.info(f"Total execution time: {total_time:.3f} seconds")
+
+def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False, show_timings=False):
+    """Process a clip URL and return the hero detection results.
+
+    Args:
+        clip_url (str): URL of the Twitch clip
+        debug (bool): Enable debug mode
+        min_score (float): Minimum score threshold
+        debug_templates (bool): Enable template debugging
+        show_timings (bool): Show timing information
+
+    Returns:
+        dict: Detection results or None if processing failed
+    """
+    return process_media(clip_url, source_type="clip", debug=debug, min_score=min_score,
+                        debug_templates=debug_templates, show_timings=show_timings)
+
+def process_stream_username(username, debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3):
+    """Process a Twitch stream by username and return the hero detection results.
+
+    Args:
+        username (str): Twitch username
+        debug (bool): Enable debug mode
+        min_score (float): Minimum score threshold
+        debug_templates (bool): Enable template debugging
+        show_timings (bool): Show timing information
+        num_frames (int): Number of frames to capture from the stream
+
+    Returns:
+        dict: Detection results or None if processing failed
+    """
+    return process_media(username, source_type="stream", debug=debug, min_score=min_score,
+                        debug_templates=debug_templates, show_timings=show_timings, num_frames=num_frames)
 
 def main():
     """Main function."""
     # Start the overall timing
     performance_timer.start('total_execution')
 
-    parser = argparse.ArgumentParser(description="Detect Dota 2 heroes in a Twitch clip")
+    parser = argparse.ArgumentParser(description="Detect Dota 2 heroes in a Twitch clip or stream")
     parser.add_argument("clip_url", nargs="?",
-                      help="URL of the Twitch clip (required for downloading)")
+                      help="URL of the Twitch clip (required if --stream not provided)")
+    parser.add_argument("--stream", help="Twitch username for live stream capture")
+    parser.add_argument("--frames", type=int, default=3,
+                      help="Number of frames to capture from the stream (default: 3)")
     parser.add_argument("--frame-path", help="Path to a single frame to process")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     parser.add_argument("--output", "-o", default="heroes.json",
@@ -2046,8 +2153,37 @@ def main():
 
     args = parser.parse_args()
 
+    # Process a live stream if username is provided
+    if args.stream:
+        result = process_stream_username(
+            username=args.stream,
+            debug=args.debug,
+            min_score=args.min_score,
+            debug_templates=args.debug_templates,
+            show_timings=args.show_timings,
+            num_frames=args.frames
+        )
+
+        if result:
+            # If json-only flag is set, just print the JSON output
+            if args.json_only:
+                print(json.dumps(result, indent=2))
+            elif args.debug:
+                # Debug output is already handled in process_stream_username
+                pass
+
+            # Save to file if output is specified
+            if not args.output == "heroes.json" or not args.json_only:
+                with open(args.output, 'w') as f:
+                    json.dump(result, f, indent=2)
+                if args.debug:
+                    logger.info(f"Saved hero data to {args.output}")
+
+            return 0
+        else:
+            return 1
     # Process a clip if URL is provided
-    if args.clip_url:
+    elif args.clip_url:
         result = process_clip_url(
             clip_url=args.clip_url,
             debug=args.debug,
@@ -2075,7 +2211,7 @@ def main():
         else:
             return 1
     else:
-        logger.error("Either --frame-path or clip_url must be provided")
+        logger.error("Either --frame-path, --stream, or clip_url must be provided")
         parser.print_help()
         return 1
 

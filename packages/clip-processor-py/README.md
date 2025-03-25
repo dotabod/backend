@@ -10,6 +10,7 @@ This Python tool processes a Twitch clip to extract player names and ranks from 
 - Processes player cards to extract names and ranks
 - Detects Dota 2 heroes in the game interface using template matching
 - Automatically downloads hero images from the Dota 2 API
+- Captures frames from live Twitch streams for real-time hero detection
 - Saves results to a JSON file
 
 ## Requirements
@@ -72,6 +73,12 @@ python src/main.py --clip-url "clips.twitch.tv/WonderfulEntertainingWasabiCopyTh
 python src/main.py --clip-url "clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi" --detect-heroes
 ```
 
+### Detect Dota 2 heroes from a live Twitch stream:
+
+```bash
+python src/dota_hero_detection.py --stream "twitchusername" --debug
+```
+
 ### Only detect heroes (skip player detection):
 
 ```bash
@@ -82,6 +89,12 @@ python src/main.py --clip-url "clips.twitch.tv/WonderfulEntertainingWasabiCopyTh
 
 ```bash
 python src/dota_hero_detection.py "clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi" --debug
+```
+
+### Run stream hero detection directly:
+
+```bash
+python src/dota_hero_detection.py --stream "twitchusername" --debug
 ```
 
 ### Debug mode with image saving:
@@ -296,6 +309,50 @@ Example Response:
 }
 ```
 
+#### GET /detect-stream
+
+Process a live Twitch stream and return hero detection results.
+
+Query Parameters:
+- `username`: Twitch username of the streamer (required)
+- `frames`: Number of frames to capture (default: 3, max: 10)
+- `debug`: Enable debug mode (optional, default=false)
+
+Example Request:
+```
+GET /detect-stream?username=twitchusername
+```
+
+Example Response:
+```json
+{
+  "stream_username": "twitchusername",
+  "heroes": [
+    {
+      "team": "Radiant",
+      "position": 0,
+      "hero_id": 1,
+      "hero_name": "npc_dota_hero_antimage",
+      "hero_localized_name": "Anti-Mage",
+      "match_score": 0.834
+    },
+    ...
+  ],
+  "players": [
+    {
+      "position": 1,
+      "team": "Radiant",
+      "hero": "Anti-Mage",
+      "hero_id": 1
+    },
+    ...
+  ],
+  "color_match_score": 0.9,
+  "best_frame_index": 2,
+  "best_frame_path": "temp/frames/twitchusername_1234567890_frame_2.jpg"
+}
+```
+
 ## Docker Deployment
 
 The easiest way to deploy the API is using Docker.
@@ -369,3 +426,75 @@ python -m src.api_server   # Start the server
 ```
 
 The server will run on http://localhost:5000.
+
+## API Server
+
+The package includes a Flask-based API server for hero detection.
+
+### Starting the API server:
+
+```bash
+python src/api_server.py
+```
+
+This will start a server on port 5000 (by default). You can change the port using the PORT environment variable:
+
+```bash
+PORT=8080 python src/api_server.py
+```
+
+### API Endpoints:
+
+1. **Health Check:**
+   ```
+   GET /health
+   ```
+   Returns a simple health check response.
+
+2. **Clip Hero Detection:**
+   ```
+   GET /detect?url=https://clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi
+   ```
+   Parameters:
+   - `url`: Twitch clip URL (required)
+   - `clip_id`: Alternatively, you can provide just the clip ID
+   - `debug`: Set to "true" to enable debug mode (default: false)
+
+3. **Stream Hero Detection:**
+   ```
+   GET /detect-stream?username=twitchusername
+   ```
+   Parameters:
+   - `username`: Twitch username of the streamer (required)
+   - `frames`: Number of frames to capture (default: 3, max: 10)
+   - `debug`: Set to "true" to enable debug mode (default: false)
+
+Example API response:
+```json
+{
+  "stream_username": "twitchusername",
+  "heroes": [
+    {
+      "team": "Radiant",
+      "position": 0,
+      "hero_id": 1,
+      "hero_name": "npc_dota_hero_antimage",
+      "hero_localized_name": "Anti-Mage",
+      "match_score": 0.834
+    },
+    ...
+  ],
+  "players": [
+    {
+      "position": 1,
+      "team": "Radiant",
+      "hero": "Anti-Mage",
+      "hero_id": 1
+    },
+    ...
+  ],
+  "color_match_score": 0.9,
+  "best_frame_index": 2,
+  "best_frame_path": "temp/frames/twitchusername_1234567890_frame_2.jpg"
+}
+```

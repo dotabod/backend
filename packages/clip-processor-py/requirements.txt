@@ -8,3 +8,5 @@ beautifulsoup4==4.12.2
 tqdm==4.66.1
 flask==3.0.2
 gunicorn==21.2.0
+streamlink==6.5.0
+# Optional: add pytesseract for enhanced "preparing your stream" detection
