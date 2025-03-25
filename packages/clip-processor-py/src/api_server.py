@@ -1038,6 +1038,15 @@ def get_match_result(match_id):
     if not match_id:
         return jsonify({'error': 'Missing required parameter: match_id'}), 400
 
+    # Check if match id is a number
+    try:
+        match_id = int(match_id)
+    except ValueError:
+        return jsonify({'error': 'Invalid match_id: must be a number'}), 400
+
+    # Convert back to string for consistent handling in the rest of the code
+    match_id = str(match_id)
+
     try:
         # If force is true and clip_url is provided, process the new clip
         if force and clip_url:

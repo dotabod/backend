@@ -4,6 +4,7 @@ import eventHandler from '../EventHandler.js'
 import type { allStates } from '../../lib/consts.js'
 import { logger } from '../../../utils/logger.js'
 import { getTwitchAPI } from '../../../twitch/lib/getTwitchAPI.js'
+import { is8500Plus } from '../../../utils/index.js'
 
 eventHandler.registerEvent('map:game_state', {
   handler: async (dotaClient: GSIHandler, gameState: (typeof allStates)[number]) => {
