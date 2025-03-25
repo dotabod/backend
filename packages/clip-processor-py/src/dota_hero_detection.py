@@ -2052,7 +2052,8 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
                 'frame_count': len(frame_paths),
                 'best_frame_index': best_frame_index,
                 'source_type': source_type,
-                'source': media_source
+                'source': media_source,
+                'best_frame_info': best_frame_info
             }
 
             # Add detected colors for debugging

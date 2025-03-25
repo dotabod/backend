@@ -9,10 +9,11 @@ and return Dota 2 hero detection results as JSON.
 import os
 import json
 import logging
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, send_file
 from urllib.parse import urlparse
 import traceback
 import re
+from pathlib import Path
 
 # Import the hero detection and hero data modules
 try:
@@ -49,6 +50,14 @@ heroes_data = None
 
 # Create Flask app
 app = Flask(__name__)
+# Define the directory for storing frame images
+TEMP_DIR = Path(os.path.dirname(os.path.abspath(__file__))).parent / "temp"
+TEMP_DIR.mkdir(exist_ok=True)
+IMAGE_DIR = TEMP_DIR / "frames"
+IMAGE_DIR.mkdir(exist_ok=True, parents=True)
+
+# Allowed image extensions for security
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
 
 # Preload hero templates at application startup
 @app.before_request
@@ -76,6 +85,58 @@ else:
 def health_check():
     """Simple health check endpoint."""
     return jsonify({'status': 'ok', 'service': 'dota-hero-detection-api'})
+@app.route('/images/<filename>', methods=['GET'])
+def serve_image(filename):
+    """Serve the frame image with security checks."""
+    try:
+        # Reject filenames with path components
+        if '/' in filename or '\\' in filename or '..' in filename:
+            logger.warning(f"Attempted path traversal with invalid characters: {filename}")
+            return jsonify({'error': 'Invalid filename'}), 400
+
+        # Sanitize filename to prevent path traversal attacks
+        filename = os.path.basename(filename)
+
+        # Validate file extension
+        if '.' not in filename or filename.rsplit('.', 1)[1].lower() not in ALLOWED_EXTENSIONS:
+            logger.warning(f"Invalid file extension requested: {filename}")
+            return jsonify({'error': 'Invalid file type'}), 400
+
+        # Construct safe path and check if it exists within IMAGE_DIR
+        image_path = IMAGE_DIR / filename
+
+        # Convert to absolute paths for strict comparison
+        image_abs_path = os.path.abspath(image_path)
+        image_dir_abs_path = os.path.abspath(IMAGE_DIR)
+
+        # Ensure the file path is strictly within IMAGE_DIR
+        if not image_abs_path.startswith(image_dir_abs_path + os.sep):
+            logger.warning(f"Attempted directory traversal: {filename}")
+            return jsonify({'error': 'Access denied'}), 403
+
+        if not image_path.exists() or not image_path.is_file():
+            logger.warning(f"Image not found or is not a file: {filename}")
+            return jsonify({'error': 'Image not found'}), 404
+
+        # Additional check to verify the file is within the IMAGE_DIR (prevent symlink attacks)
+        try:
+            if not image_path.resolve().is_relative_to(IMAGE_DIR.resolve()):
+                logger.warning(f"Attempted symlink attack: {filename}")
+                return jsonify({'error': 'Access denied'}), 403
+        except (ValueError, RuntimeError) as e:
+            logger.warning(f"Path resolution error for {filename}: {e}")
+            return jsonify({'error': 'Access denied'}), 403
+
+        # Set security headers
+        response = send_file(image_path, mimetype=f'image/{image_path.suffix[1:]}')
+        response.headers['Content-Security-Policy'] = "default-src 'self'"
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        return response
+    except Exception as e:
+        logger.error(f"Error serving image {filename}: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 def extract_clip_id(clip_url):
     """
@@ -109,6 +170,40 @@ def extract_clip_id(clip_url):
 
     return None
 
+def get_image_url(frame_path, clip_id):
+    """
+    Copy the frame image to the public image directory and return its URL.
+
+    Args:
+        frame_path: Path to the original frame
+        clip_id: The clip ID for uniqueness
+
+    Returns:
+        The URL to access the image
+    """
+    import shutil
+    from datetime import datetime
+
+    # Create a unique filename based on clip ID and timestamp
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    filename = f"{clip_id}_{timestamp}.jpg"
+    dest_path = IMAGE_DIR / filename
+
+    try:
+        # Copy the image to our public directory
+        shutil.copy2(frame_path, dest_path)
+
+        # Generate URL path
+        # Get the host from the request
+        host_url = request.host_url.rstrip('/')
+        image_url = f"{host_url}/images/{filename}"
+
+        logger.info(f"Saved frame image: {dest_path}, URL: {image_url}")
+        return image_url
+    except Exception as e:
+        logger.error(f"Error copying frame image: {e}")
+        return None
+
 @app.route('/detect', methods=['GET'])
 def detect_heroes():
     """
@@ -119,11 +214,13 @@ def detect_heroes():
     - clip_id: The Twitch clip ID (required if url not provided)
     - debug: Enable debug mode (optional, default=False)
     - force: Force reprocessing even if cached (optional, default=False)
+    - include_image: Include frame image URL in response (optional, default=False)
     """
     clip_url = request.args.get('url')
     clip_id = request.args.get('clip_id')
     debug = request.args.get('debug', 'false').lower() == 'true'
     force = request.args.get('force', 'false').lower() == 'true'
+    include_image = request.args.get('include_image', 'true').lower() == 'true'
 
     # Check if either clip_url or clip_id is provided
     if not clip_url and not clip_id:
@@ -160,9 +257,19 @@ def detect_heroes():
         cached_result = db_client.get_clip_result(clip_id)
         if cached_result:
             logger.info(f"Returning cached result for clip ID: {clip_id}")
+
+            # If we need to include the image but it's not in the cached result
+            if include_image and 'frame_image_url' not in cached_result and 'best_frame_path' in cached_result:
+                frame_path = cached_result.get('best_frame_path')
+                if frame_path and Path(frame_path).exists():
+                    image_url = get_image_url(frame_path, clip_id)
+                    if image_url:
+                        cached_result['frame_image_url'] = image_url
+                        # Update the cache with the image URL
+                        db_client.save_clip_result(clip_id, clip_url, cached_result)
             return jsonify(cached_result)
 
-    logger.info(f"Processing clip URL: {clip_url} (debug={debug}, force={force})")
+    logger.info(f"Processing clip URL: {clip_url} (debug={debug}, force={force}, include_image={include_image})")
 
     try:
         # Process the clip
@@ -170,16 +277,32 @@ def detect_heroes():
             clip_url=clip_url,
             debug=debug
         )
-
-        if result and clip_id:
-            # Cache the result
-            success = db_client.save_clip_result(clip_id, clip_url, result)
-            if success:
-                logger.info(f"Cached result for clip ID: {clip_id}")
-            else:
-                logger.warning(f"Failed to cache result for clip ID: {clip_id}")
-
         if result:
+            # Add frame image URL if requested
+            if include_image and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
+                frame_path = result['best_frame_info']['frame_path']
+                image_url = get_image_url(frame_path, clip_id)
+                if image_url:
+                    result['frame_image_url'] = image_url
+                    # Store the actual frame path for potential future use
+                    result['best_frame_path'] = str(frame_path)
+
+            if clip_id:
+                # Cache the result
+                success = db_client.save_clip_result(clip_id, clip_url, result)
+                if success:
+                    logger.info(f"Cached result for clip ID: {clip_id}")
+                else:
+                    logger.warning(f"Failed to cache result for clip ID: {clip_id}")
+
+                    # Try to include the image even if we couldn't cache the result
+                    if include_image and 'frame_image_url' not in result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
+                        frame_path = result['best_frame_info']['frame_path']
+                        image_url = get_image_url(frame_path, clip_id)
+                        if image_url:
+                            result['frame_image_url'] = image_url
+                            result['best_frame_path'] = str(frame_path)
+
             # Return the result as JSON
             return jsonify(result)
         else:
@@ -203,10 +326,12 @@ def detect_heroes_from_stream():
     - username: The Twitch username of the streamer (required)
     - frames: Number of frames to capture and analyze (optional, default=3)
     - debug: Enable debug mode (optional, default=False)
+    - include_image: Include frame image URL in response (optional, default=False)
     """
     username = request.args.get('username')
     num_frames = int(request.args.get('frames', '3'))
     debug = request.args.get('debug', 'false').lower() == 'true'
+    include_image = request.args.get('include_image', 'false').lower() == 'true'
 
     # Check if username is provided
     if not username:
@@ -216,7 +341,7 @@ def detect_heroes_from_stream():
     if num_frames < 1 or num_frames > 10:
         return jsonify({'error': 'Invalid frames parameter: must be between 1 and 10'}), 400
 
-    logger.info(f"Processing stream for username: {username} (frames={num_frames}, debug={debug})")
+    logger.info(f"Processing stream for username: {username} (frames={num_frames}, debug={debug}, include_image={include_image})")
 
     try:
         # Process the stream
@@ -227,6 +352,15 @@ def detect_heroes_from_stream():
         )
 
         if result:
+            # Add frame image URL if requested
+            if include_image and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
+                frame_path = result['best_frame_info']['frame_path']
+                image_url = get_image_url(frame_path, f"stream_{username}")
+                if image_url:
+                    result['frame_image_url'] = image_url
+                    # Store the actual frame path for potential future use
+                    result['best_frame_path'] = str(frame_path)
+
             # Return the result as JSON
             return jsonify(result)
         else:
