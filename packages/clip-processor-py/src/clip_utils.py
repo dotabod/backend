@@ -329,7 +329,7 @@ def download_single_frame(clip_details, timestamp=None):
     frames_dir.mkdir(exist_ok=True)
 
     # Define output path for the frame
-    frame_path = frames_dir / f"{clip_id}_single_frame.jpg"
+    frame_path = frames_dir / f"{clip_id}.jpg"
 
     # Check if we already have this frame
     if frame_path.exists():

@@ -231,7 +231,7 @@ def process_queue_worker():
                             # Since we can't access request.host_url from the worker thread,
                             # save the frame_path and handle URL generation when serving the result
                             # We'll use a placeholder that will be replaced when the result is served
-                            result['saved_image_path'] = f"__HOST_URL__/images/{request['clip_id']}_{int(time.time())}.jpg"
+                            result['saved_image_path'] = f"__HOST_URL__/images/{request['clip_id']}.jpg"
                 elif request['request_type'] == 'stream':
                     logger.info(f"Processing stream request: {request['stream_username']} ({request['request_id']})")
                     result = process_stream_request(
@@ -248,7 +248,7 @@ def process_queue_worker():
                     if result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
                         frame_path = result['best_frame_info']['frame_path']
                         if Path(frame_path).exists():
-                            result['saved_image_path'] = f"__HOST_URL__/images/stream_{request['stream_username']}_{int(time.time())}.jpg"
+                            result['saved_image_path'] = f"__HOST_URL__/images/stream_{request['stream_username']}.jpg"
                 else:
                     error = f"Unknown request type: {request['request_type']}"
             except Exception as e:
@@ -522,7 +522,7 @@ def get_image_url(frame_path, clip_id):
     import shutil
 
     # Create a unique filename based on clip ID and timestamp
-    filename = f"{clip_id}_single_frame.jpg"
+    filename = f"{clip_id}.jpg"
     dest_path = IMAGE_DIR / filename
 
     try:
