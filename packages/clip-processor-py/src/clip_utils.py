@@ -10,6 +10,7 @@ import json
 from urllib.parse import quote
 import cv2
 import numpy as np
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -33,100 +34,129 @@ def extract_clip_id(url):
         return f"{match.group(1)}-{match.group(2)}"
     return match.group(1)
 
-def get_clip_details(url):
+def get_clip_details(url, max_retries=5, retry_delay=2):
     """Get clip details and download URL using Twitch's API."""
     clip_id = extract_clip_id(url)
 
-    try:
-        # First request: Get clip token and video qualities
-        headers = {
-            "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",  # Public client ID used by web client
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        }
+    # Initialize retry counter
+    retry_count = 0
+    last_error = None
 
-        # GraphQL query for clip info, similar to TwitchDownloader
-        gql_query = {
-            "query": """
-            query($slug: ID!) {
-                clip(slug: $slug) {
-                    playbackAccessToken(params: {platform: "web", playerType: "site", playerBackend: "mediaplayer"}) {
-                        signature
-                        value
+    while retry_count < max_retries:
+        try:
+            # First request: Get clip token and video qualities
+            headers = {
+                "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",  # Public client ID used by web client
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+
+            # GraphQL query for clip info, similar to TwitchDownloader
+            gql_query = {
+                "query": """
+                query($slug: ID!) {
+                    clip(slug: $slug) {
+                        playbackAccessToken(params: {platform: "web", playerType: "site", playerBackend: "mediaplayer"}) {
+                            signature
+                            value
+                        }
+                        videoQualities {
+                            frameRate
+                            quality
+                            sourceURL
+                        }
+                        title
+                        durationSeconds
+                        broadcaster {
+                            displayName
+                        }
+                        createdAt
                     }
-                    videoQualities {
-                        frameRate
-                        quality
-                        sourceURL
-                    }
-                    title
-                    durationSeconds
-                    broadcaster {
-                        displayName
-                    }
-                    createdAt
+                }
+                """,
+                "variables": {
+                    "slug": clip_id
                 }
             }
-            """,
-            "variables": {
-                "slug": clip_id
+
+            logger.info(f"Sending GQL request for clip: {clip_id} (attempt {retry_count + 1}/{max_retries})")
+            response = requests.post(
+                "https://gql.twitch.tv/gql",
+                headers=headers,
+                json=gql_query
+            )
+            response.raise_for_status()
+
+            # Parse response
+            data = response.json()
+            logger.debug(f"API response: {json.dumps(data, indent=2)}")
+
+            clip_data = data.get("data", {}).get("clip")
+
+            if not clip_data:
+                logger.error(f"Clip data not found in response: {json.dumps(data, indent=2)}")
+                raise ValueError(f"Clip not found or inaccessible: {clip_id}")
+
+            # Check if we have playback token and video qualities
+            if not clip_data.get("playbackAccessToken") or not clip_data.get("videoQualities"):
+                clip_created_at = clip_data.get("createdAt")
+                logger.warning(f"Missing playback token or qualities for clip: {clip_id}, created at: {clip_created_at}")
+
+                # If we've tried the maximum number of times, log the clip data and raise an error
+                if retry_count >= max_retries - 1:
+                    logger.error(f"Missing playback token or qualities after {max_retries} attempts: {json.dumps(clip_data, indent=2)}")
+                    raise ValueError(f"Could not obtain playback token or video qualities for clip: {clip_id}")
+
+                # Otherwise, increment retry counter and wait before trying again
+                retry_count += 1
+                logger.info(f"Clip may be newly created, waiting {retry_delay} seconds before retry {retry_count}/{max_retries}")
+                time.sleep(retry_delay)
+                # Increase the delay for subsequent retries
+                retry_delay *= 1.5
+                continue
+
+            # Store all available qualities for reference
+            available_qualities = [q["quality"] for q in clip_data["videoQualities"]]
+            logger.info(f"Available qualities: {available_qualities}")
+
+            # Try to find 1080p quality if available, otherwise use the best available quality
+            best_quality = clip_data["videoQualities"][0]  # Default to highest quality
+            # Always use the highest quality available (which is the first in the list)
+            # The videoQualities array is already sorted by quality in descending order
+            best_quality = clip_data["videoQualities"][0]
+            logger.info(f"Selected highest available quality: {best_quality['quality']}p")
+
+            logger.info(f"Selected quality: {best_quality['quality']}p")
+
+            # Construct the download URL with signature and token
+            token = clip_data["playbackAccessToken"]
+            download_url = f"{best_quality['sourceURL']}?sig={token['signature']}&token={quote(token['value'])}"
+
+            return {
+                'id': clip_id,
+                'url': url,
+                'download_url': download_url,
+                'duration': clip_data.get('durationSeconds'),
+                'title': clip_data.get('title'),
+                'broadcaster': clip_data.get('broadcaster', {}).get('displayName'),
+                'created_at': clip_data.get('createdAt'),
+                'qualities': clip_data['videoQualities'],
+                'selected_quality': best_quality['quality'],  # Store the selected quality
+                'available_qualities': available_qualities    # Store all available qualities
             }
-        }
+        except Exception as e:
+            last_error = e
+            if retry_count >= max_retries - 1:
+                logger.error(f"Error getting clip details using API after {max_retries} attempts: {e}")
+                raise
 
-        logger.info(f"Sending GQL request for clip: {clip_id}")
-        response = requests.post(
-            "https://gql.twitch.tv/gql",
-            headers=headers,
-            json=gql_query
-        )
-        response.raise_for_status()
+            retry_count += 1
+            logger.warning(f"Error on attempt {retry_count}/{max_retries}: {e}. Waiting {retry_delay} seconds before retry.")
+            time.sleep(retry_delay)
+            # Increase the delay for subsequent retries
+            retry_delay *= 1.5
 
-        # Parse response
-        data = response.json()
-        logger.debug(f"API response: {json.dumps(data, indent=2)}")
-
-        clip_data = data.get("data", {}).get("clip")
-
-        if not clip_data:
-            logger.error(f"Clip data not found in response: {json.dumps(data, indent=2)}")
-            raise ValueError(f"Clip not found or inaccessible: {clip_id}")
-
-        # Check if we have playback token and video qualities
-        if not clip_data.get("playbackAccessToken") or not clip_data.get("videoQualities"):
-            logger.error(f"Missing playback token or qualities: {json.dumps(clip_data, indent=2)}")
-            raise ValueError(f"Could not obtain playback token or video qualities for clip: {clip_id}")
-
-        # Store all available qualities for reference
-        available_qualities = [q["quality"] for q in clip_data["videoQualities"]]
-        logger.info(f"Available qualities: {available_qualities}")
-
-        # Try to find 1080p quality if available, otherwise use the best available quality
-        best_quality = clip_data["videoQualities"][0]  # Default to highest quality
-        # Always use the highest quality available (which is the first in the list)
-        # The videoQualities array is already sorted by quality in descending order
-        best_quality = clip_data["videoQualities"][0]
-        logger.info(f"Selected highest available quality: {best_quality['quality']}p")
-
-        logger.info(f"Selected quality: {best_quality['quality']}p")
-
-        # Construct the download URL with signature and token
-        token = clip_data["playbackAccessToken"]
-        download_url = f"{best_quality['sourceURL']}?sig={token['signature']}&token={quote(token['value'])}"
-
-        return {
-            'id': clip_id,
-            'url': url,
-            'download_url': download_url,
-            'duration': clip_data.get('durationSeconds'),
-            'title': clip_data.get('title'),
-            'broadcaster': clip_data.get('broadcaster', {}).get('displayName'),
-            'created_at': clip_data.get('createdAt'),
-            'qualities': clip_data['videoQualities'],
-            'selected_quality': best_quality['quality'],  # Store the selected quality
-            'available_qualities': available_qualities    # Store all available qualities
-        }
-    except Exception as e:
-        logger.error(f"Error getting clip details using API: {e}")
-        raise
+    # This code should not be reached due to the raise in the loop, but just in case
+    raise last_error or ValueError(f"Failed to get clip details after {max_retries} attempts")
 
 def download_clip(clip_details):
     """Download the clip using the download URL."""
@@ -307,6 +337,7 @@ def extract_frames(video_path, clip_details=None, start_time=0, end_time=None, f
     except Exception as e:
         logger.error(f"Error extracting frames: {e}")
         raise
+
 def download_single_frame(clip_details, timestamp=None):
     """
     Download and extract a single frame from a Twitch clip without downloading the entire clip.
