@@ -45,3 +45,6 @@ venv/
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Logs
+logs/*

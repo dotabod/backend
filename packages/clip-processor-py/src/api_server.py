@@ -21,15 +21,21 @@ import psycopg2
 from datetime import datetime
 
 # Configure logging
+log_dir = os.path.join(os.path.dirname(__file__), 'logs')
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, 'api_server.log')
 logging.basicConfig(
+    force=True,
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler('api_server.log')
+        logging.FileHandler(log_file, mode='a')
     ]
 )
 logger = logging.getLogger(__name__)
+
+logger.info("=== API Server logging initialized ===")
 
 # Import the hero detection and hero data modules
 try:

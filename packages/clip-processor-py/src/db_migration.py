@@ -12,9 +12,17 @@ import psycopg2
 from postgresql_client import db_client
 
 # Configure logging
+log_dir = os.path.join(os.path.dirname(__file__), 'logs')
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, 'db_migration.log')
 logging.basicConfig(
+    force=True,
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(log_file, mode='a')
+    ]
 )
 logger = logging.getLogger(__name__)
 

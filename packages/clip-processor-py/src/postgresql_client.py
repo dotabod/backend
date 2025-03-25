@@ -19,12 +19,16 @@ import uuid
 import statistics
 
 # Configure logging
+log_dir = os.path.join(os.path.dirname(__file__), 'logs')
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, 'postgresql_client.log')
 logging.basicConfig(
+    force=True,
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler('postgresql_client.log')
+        logging.FileHandler(log_file, mode='a')
     ]
 )
 logger = logging.getLogger(__name__)
