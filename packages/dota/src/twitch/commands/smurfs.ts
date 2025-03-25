@@ -5,6 +5,7 @@ import { DBSettings } from '../../settings.js'
 import { smurfs } from '../../steam/smurfs.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
+import { is8500Plus } from '../../utils/index.js'
 
 commandHandler.registerCommand('smurfs', {
   aliases: ['lifetimes', 'totals', 'games', 'smurf'],
@@ -31,9 +32,13 @@ commandHandler.registerCommand('smurfs', {
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
 
+    const append = is8500Plus(client)
+      ? ` · ${t('matchData8500', { emote: 'PoroSad', lng: client.locale })}`
+      : ''
+
     smurfs(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {
-        chatClient.say(message.channel.name, desc, message.user.messageId)
+        chatClient.say(message.channel.name, desc + append, message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(

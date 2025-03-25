@@ -5,6 +5,7 @@ import { getWinProbability2MinAgo } from '../../stratz/livematch.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
+import { is8500Plus } from '../../utils/index.js'
 
 const WinRateCache: {
   [id: string]: {
@@ -32,6 +33,15 @@ commandHandler.registerCommand('winprobability', {
       chatClient.say(
         channel,
         t('gameNotFound', { lng: message.channel.client.locale }),
+        message.user.messageId,
+      )
+      return
+    }
+
+    if (is8500Plus(client)) {
+      chatClient.say(
+        channel,
+        t('matchData8500', { emote: 'PoroSad', lng: message.channel.client.locale }),
         message.user.messageId,
       )
       return
