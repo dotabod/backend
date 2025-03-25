@@ -18,7 +18,7 @@ import threading
 from threading import Lock
 from pathlib import Path
 import psycopg2
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Configure logging
 log_dir = os.path.join(os.path.dirname(__file__), 'logs')
@@ -154,6 +154,9 @@ def start_worker_monitor():
             logger.info("Worker thread not running, restarting it...")
             start_worker_thread()
 
+        # Also check for stuck requests
+        reset_stuck_processing_requests()
+
     def periodic_worker_check():
         while True:
             time.sleep(30)  # Check every 30 seconds
@@ -182,6 +185,7 @@ def process_queue_worker():
 
                 # Get the next pending request
                 request = db_client.get_next_pending_request()
+                logger.info(f"Next pending request: {request}")
 
                 if not request:
                     # No pending requests, sleep and check again instead of exiting
@@ -206,6 +210,7 @@ def process_queue_worker():
 
             try:
                 if request['request_type'] == 'clip':
+                    logger.info(f"Processing clip request: {request['clip_url']} ({request['request_id']})")
                     result = process_clip_request(
                         request['clip_url'],
                         request['clip_id'],
@@ -217,6 +222,7 @@ def process_queue_worker():
                     )
                     logger.info(f"Processed clip request: {request['request_id']}")
                 elif request['request_type'] == 'stream':
+                    logger.info(f"Processing stream request: {request['stream_username']} ({request['request_id']})")
                     result = process_stream_request(
                         request['stream_username'],
                         request['num_frames'],
@@ -307,7 +313,7 @@ def debug_queue():
 
         # Get the 10 most recent requests
         cursor.execute(f"""
-            SELECT request_id, request_type, status, created_at, started_at, completed_at
+            SELECT request_id, request_type, status, created_at, started_at, completed_at, clip_id
             FROM {db_client.queue_table}
             ORDER BY created_at DESC
             LIMIT 10
@@ -331,6 +337,12 @@ def debug_queue():
         if restart and not worker_running:
             start_worker_thread()
             worker_status = "restarted"
+
+        # Manual reset stuck processing requests option
+        reset_stuck = request.args.get('reset_stuck', 'false').lower() == 'true'
+        if reset_stuck:
+            num_reset = reset_stuck_processing_requests()
+            worker_status = f"{worker_status}, reset {num_reset} stuck requests"
 
         return jsonify({
             'worker_status': worker_status,
@@ -365,6 +377,7 @@ def check_queue_status(request_id):
     status_code = 200
     response = {
         'request_id': request_id,
+        'clip_id': queue_info.get('clip_id'),
         'status': queue_info['status'],
         'position': queue_info.get('position', 0),
         'created_at': queue_info.get('created_at'),
@@ -556,6 +569,7 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
             response = {
                 'queued': True,
                 'request_id': request_id,
+                'clip_id': queue_info.get('clip_id'),
                 'status': queue_info.get('status', 'pending'),
                 'position': queue_info.get('position', 1),
                 'estimated_wait_seconds': queue_info.get('estimated_wait_seconds', 0),
@@ -576,6 +590,7 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
         return {
             'queued': True,
             'request_id': request_id,
+            'clip_id': queue_info.get('clip_id'),
             'status': queue_info.get('status', 'pending'),
             'position': queue_info.get('position', 1),
             'estimated_wait_seconds': queue_info.get('estimated_wait_seconds', 0),
@@ -665,6 +680,7 @@ def process_stream_request(username, num_frames=3, debug=False, include_image=Tr
             response = {
                 'queued': True,
                 'request_id': request_id,
+                'clip_id': queue_info.get('clip_id'),
                 'status': queue_info.get('status', 'pending'),
                 'position': queue_info.get('position', 1),
                 'estimated_wait_seconds': queue_info.get('estimated_wait_seconds', 0),
@@ -685,6 +701,7 @@ def process_stream_request(username, num_frames=3, debug=False, include_image=Tr
         return {
             'queued': True,
             'request_id': request_id,
+            'clip_id': queue_info.get('clip_id'),
             'status': queue_info.get('status', 'pending'),
             'position': queue_info.get('position', 1),
             'estimated_wait_seconds': queue_info.get('estimated_wait_seconds', 0),
@@ -843,6 +860,68 @@ def detect_heroes_from_stream():
             'trace': traceback.format_exc() if debug else None
         }
         return jsonify(error_details), 500
+
+def reset_stuck_processing_requests(timeout_minutes=1):
+    """
+    Reset any requests that have been stuck in processing state for too long.
+
+    Args:
+        timeout_minutes: Minutes after which to consider a processing request as stuck
+
+    Returns:
+        Number of requests that were reset
+    """
+    try:
+        conn = db_client._get_connection()
+        cursor = conn.cursor()
+
+        # Find requests stuck in processing state for more than timeout_minutes
+        timeout_threshold = datetime.now() - timedelta(minutes=timeout_minutes)
+
+        # For requests with started_at set
+        query = f"""
+        UPDATE {db_client.queue_table}
+        SET status = 'failed',
+            completed_at = NOW()
+        WHERE status = 'processing'
+        AND started_at < %s
+        RETURNING request_id
+        """
+        cursor.execute(query, (timeout_threshold,))
+        reset_with_started_at = cursor.fetchall()
+
+        # For requests without started_at but created a long time ago
+        query = f"""
+        UPDATE {db_client.queue_table}
+        SET status = 'failed',
+            completed_at = NOW()
+        WHERE status = 'processing'
+        AND started_at IS NULL
+        AND created_at < %s
+        RETURNING request_id
+        """
+        cursor.execute(query, (timeout_threshold,))
+        reset_without_started_at = cursor.fetchall()
+
+        conn.commit()
+        cursor.close()
+        db_client._return_connection(conn)
+
+        total_reset = len(reset_with_started_at) + len(reset_without_started_at)
+        if total_reset > 0:
+            request_ids = [r[0] for r in reset_with_started_at] + [r[0] for r in reset_without_started_at]
+            logger.info(f"Reset {total_reset} stuck processing requests: {request_ids}")
+
+            # If worker isn't running, restart it
+            if not worker_running:
+                start_worker_thread()
+                logger.info("Restarted worker thread after resetting stuck requests")
+
+        return total_reset
+    except Exception as e:
+        logger.error(f"Error resetting stuck processing requests: {e}")
+        logger.error(traceback.format_exc())
+        return 0
 
 def main():
     """Main entry point for the API server."""
