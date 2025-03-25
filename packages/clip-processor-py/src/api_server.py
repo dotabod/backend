@@ -19,15 +19,18 @@ try:
     from dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
     from dota_heroes import get_hero_data
     from postgresql_client import db_client
-except ImportError:
+except ImportError as e:
     # Try with relative import for different directory structures
     try:
         from .dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
         from .dota_heroes import get_hero_data
         from .postgresql_client import db_client
-    except ImportError:
-        print("Error: Could not import required modules.")
+    except ImportError as rel_e:
+        print(f"Error: Could not import required modules. First error: {e}, Second error: {rel_e}")
         print("Make sure you're running this from the correct directory.")
+        print(f"Current Python path: {os.environ.get('PYTHONPATH', 'Not set')}")
+        import sys
+        print(f"System path: {sys.path}")
         exit(1)
 
 # Configure logging

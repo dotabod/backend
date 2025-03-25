@@ -6,6 +6,10 @@ RUN apt-get update && \
   tesseract-ocr \
   libgl1-mesa-glx \
   libglib2.0-0 \
+  postgresql-client \
+  libpq-dev \
+  gcc \
+  python3-dev \
   && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -33,6 +37,16 @@ RUN echo '#!/bin/bash\n\
   echo "Downloading hero reference images..."\n\
   python -m src.dota_heroes\n\
   fi\n\
+  \n\
+  # Print diagnostic information to help with debugging\n\
+  echo "Debugging environment information:"\n\
+  echo "Current directory: $(pwd)"\n\
+  echo "Files in current directory: $(ls -la)"\n\
+  echo "Python path: $PYTHONPATH"\n\
+  echo "Python version: $(python --version)"\n\
+  echo "Testing imports..."\n\
+  python -c "import sys; print(sys.path)"\n\
+  python -c "import src.clip_utils; print(\"clip_utils imported successfully\")"\n\
   \n\
   # Preload hero templates\n\
   echo "Preloading hero templates to cache..."\n\

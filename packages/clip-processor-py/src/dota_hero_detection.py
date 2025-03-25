@@ -60,13 +60,16 @@ except ImportError:
 try:
     from clip_utils import get_clip_details, download_clip, download_single_frame, extract_frames
     from stream_utils import capture_multiple_frames
-except ImportError:
+except ImportError as e:
     # For standalone usage
     try:
         from .clip_utils import get_clip_details, download_clip, download_single_frame, extract_frames
         from .stream_utils import capture_multiple_frames
-    except ImportError:
-        print("Warning: clip_utils module not found, standalone mode only")
+    except ImportError as rel_e:
+        print(f"Warning: clip_utils module not found, standalone mode only. Error: {e}, Relative import error: {rel_e}")
+        import sys
+        print(f"System path: {sys.path}")
+        print(f"PYTHONPATH: {os.environ.get('PYTHONPATH', 'Not set')}")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
