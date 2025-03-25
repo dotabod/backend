@@ -104,7 +104,12 @@ export async function notablePlayers({
         account_id: player.accountid,
         heroId: player.heroid ?? 0,
         position: i,
-        heroName,
+        heroName:
+          heroName === '?'
+            ? matchPlayers?.[i]?.heroid && matchPlayers?.[i]?.heroid > 0
+              ? getHeroNameOrColor(matchPlayers[i].heroid, i)
+              : '?'
+            : heroName,
         name: np?.name ?? matchPlayers[i].player_name ?? `Player ${i + 1}`,
         country_code: np?.country_code ?? '',
         isMe: isCurrentPlayer,
