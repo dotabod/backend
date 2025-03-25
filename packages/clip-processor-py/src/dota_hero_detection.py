@@ -180,6 +180,8 @@ CLOCK_TOTAL_WIDTH = CLOCK_LEFT_EXTEND + CLOCK_RIGHT_EXTEND
 
 # Mapping of known heroes
 HEROES_FILE = HEROES_DIR / "hero_data.json"
+# Cache file for precomputed templates
+TEMPLATES_CACHE_FILE = HEROES_DIR / "templates_cache.npz"
 
 def save_debug_image(image, name_prefix, additional_info=""):
     """Save an image for debugging purposes."""
@@ -246,10 +248,37 @@ def load_heroes_data():
         with open(HEROES_FILE, 'r') as f:
             heroes_data = json.load(f)
 
-        # Precompute and cache templates
+        # Check if cache file exists
+        if TEMPLATES_CACHE_FILE.exists():
+            logger.info(f"Loading precomputed templates from cache: {TEMPLATES_CACHE_FILE}")
+            performance_timer.start('load_cached_templates')
+
+            # Load the cached templates
+            cached_data = np.load(str(TEMPLATES_CACHE_FILE), allow_pickle=True)
+            templates_dict = cached_data['templates'].item()
+
+            # Apply cached templates to hero data
+            templates_loaded = 0
+            for hero in heroes_data:
+                for variant in hero.get('variants', []):
+                    template_path = variant.get('image_path')
+                    cache_key = str(template_path)
+
+                    if cache_key in templates_dict:
+                        variant['cached_template'] = templates_dict[cache_key]
+                        templates_loaded += 1
+                    else:
+                        variant['cached_template'] = None
+
+            logger.debug(f"Loaded {templates_loaded} cached templates from disk")
+            performance_timer.stop('load_cached_templates')
+            return heroes_data
+
+        # If no cache exists, precompute and save to cache
         logger.info(f"Precomputing templates for {len(heroes_data)} heroes...")
         performance_timer.start('load_heroes_data')
         templates_loaded = 0
+        templates_dict = {}
 
         for hero in heroes_data:
             for variant in hero.get('variants', []):
@@ -259,18 +288,27 @@ def load_heroes_data():
                     if template is not None:
                         # Apply crop and resize once
                         template_cropped = crop_hero_portrait(template, debug=False)
-                        variant['cached_template'] = cv2.resize(template_cropped, (128, 72))
+                        cached_template = cv2.resize(template_cropped, (128, 72))
+                        variant['cached_template'] = cached_template
+
+                        # Save to templates dict for caching
+                        templates_dict[str(template_path)] = cached_template
                         templates_loaded += 1
                     else:
                         variant['cached_template'] = None
                 else:
                     variant['cached_template'] = None
 
+        # Save templates to cache file
+        logger.info(f"Saving {templates_loaded} precomputed templates to cache file")
+        np.savez(str(TEMPLATES_CACHE_FILE), templates=templates_dict)
+
         logger.debug(f"Loaded and cached {templates_loaded} templates from {len(heroes_data)} heroes")
         performance_timer.stop('load_heroes_data')
         return heroes_data
     except Exception as e:
         logger.error(f"Error loading heroes data: {e}")
+        traceback.print_exc()
         return None
 
 def extract_hero_bar(frame, debug=False):
@@ -767,7 +805,8 @@ def get_top_hero_matches(hero_icon, heroes_data, top_n=5, min_score=0.4, debug=F
     Returns:
         list: List of top N hero matches with scores above threshold
     """
-    performance_timer.start('get_top_hero_matches')
+    # Remove this duplicate timer start since we now time this function from the caller
+    # performance_timer.start('get_top_hero_matches')
     try:
         if not heroes_data:
             logger.error("No heroes data available")
@@ -952,7 +991,9 @@ def get_top_hero_matches(hero_icon, heroes_data, top_n=5, min_score=0.4, debug=F
         logger.error(f"Error getting top hero matches: {e}")
         return []
     finally:
-        performance_timer.stop('get_top_hero_matches')
+        # Remove this since we've removed the corresponding start timer
+        # performance_timer.stop('get_top_hero_matches')
+        pass
 
 def match_template(args):
     """Worker function for parallel template matching"""
@@ -1226,27 +1267,43 @@ def process_frame_for_heroes(frame_path, debug=False):
         # Store all candidates for each position
         hero_candidates = []
 
+        # Store rank banners and text for each position when in debug mode
+        rank_data = {}
+
         for team, position, hero_icon in hero_icons:
-            # Extract rank banner for this hero position if debug is enabled
+            # Only extract rank banner once during debugging, not twice
             if debug and os.environ.get("EXTRACT_RANK_BANNERS", "").lower() in ("1", "true", "yes"):
                 performance_timer.start('crop_rank_banner')
                 rank_banner = crop_rank_banner(top_bar, center_x, team, position, debug=True)
                 performance_timer.stop('crop_rank_banner')
+
                 if rank_banner is not None:
                     logger.debug(f"Rank banner extracted for {team} position {position+1}, size: {rank_banner.shape[:2]}")
+
+                    # Store the data for later use to avoid duplicate calls
+                    position_key = f"{team}_{position}"
+                    rank_data[position_key] = {
+                        'banner': rank_banner,
+                        'shape': rank_banner.shape[:2],
+                        'rank_number': None,
+                        'rank_text': None
+                    }
 
                     # Extract rank text using OCR if available
                     if TESSERACT_AVAILABLE:
                         performance_timer.start('extract_rank_text')
                         rank_number, rank_text = extract_rank_text(rank_banner, debug=True)
                         performance_timer.stop('extract_rank_text')
+
                         if rank_number:
                             logger.debug(f"Rank detected for {team} position {position+1}: {rank_number}")
+                            rank_data[position_key]['rank_number'] = rank_number
+                            rank_data[position_key]['rank_text'] = rank_text
 
             # Get top matches for this hero position, not just the best match
-            performance_timer.start('get_top_matches')
+            performance_timer.start('get_top_hero_matches')
             hero_matches = get_top_hero_matches(hero_icon, heroes_data, debug=debug)
-            performance_timer.stop('get_top_matches')
+            performance_timer.stop('get_top_hero_matches')
 
             if hero_matches:
                 # Add team and position information to all candidates
@@ -1283,8 +1340,22 @@ def process_frame_for_heroes(frame_path, debug=False):
                     hero['player_name'] = player_name
                     logger.debug(f"Player name detected for {team} position {position+1}: {player_name}")
 
-                # Extract rank banner for this hero position
-                if os.environ.get("EXTRACT_RANK_BANNERS", "").lower() in ("1", "true", "yes"):
+                # Check if we already have rank data for this position (from debug mode)
+                position_key = f"{team}_{position}"
+                if debug and os.environ.get("EXTRACT_RANK_BANNERS", "").lower() in ("1", "true", "yes") and position_key in rank_data:
+                    # Use the stored rank data
+                    hero['rank_banner_shape'] = rank_data[position_key]['shape']
+                    if rank_data[position_key]['rank_number'] is not None:
+                        hero['rank'] = rank_data[position_key]['rank_number']
+                        hero['rank_text'] = rank_data[position_key]['rank_text']
+
+                    # Save a debug image with the hero name for easier identification
+                    rank_info = f"_rank{hero.get('rank', 'unknown')}" if 'rank' in hero else ""
+                    save_debug_image(rank_data[position_key]['banner'],
+                                    f"{team.lower()}_pos{position+1}_{hero['hero_localized_name'].replace(' ', '_')}{rank_info}_rank_banner")
+
+                # Extract rank banner for this hero position, only if we haven't already done it in debug mode
+                elif os.environ.get("EXTRACT_RANK_BANNERS", "").lower() in ("1", "true", "yes"):
                     performance_timer.start('crop_rank_banner')
                     rank_banner = crop_rank_banner(top_bar, center_x, team, position, debug=False)
                     performance_timer.stop('crop_rank_banner')
