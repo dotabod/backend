@@ -18,7 +18,14 @@ except ImportError:
     print("Warning: pytesseract not available, using image-based detection only")
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('stream_utils.log')
+    ]
+)
 logger = logging.getLogger(__name__)
 
 # Create temp directory
