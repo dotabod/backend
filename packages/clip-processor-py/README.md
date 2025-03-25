@@ -250,122 +250,143 @@ The project consists of several main components:
 
 # Dota 2 Hero Detection API
 
-A Flask-based API service that processes Twitch clips to detect Dota 2 heroes in gameplay.
+This service provides a REST API for detecting Dota 2 heroes in Twitch clips and streams.
 
 ## Features
 
-- Process Twitch clips to detect Dota 2 heroes
-- Cache processing results using PostgreSQL
-- Process live Twitch streams
-- Debug mode for detailed processing information
-
-## Setup
-
-### Prerequisites
-
-- Docker and Docker Compose
-- Python 3.8+ (for local development)
-
-### Running with Docker Compose
-
-1. Clone the repository
-2. Navigate to the project directory
-3. Start the services:
-
-```bash
-docker-compose up -d
-```
-
-This will start two services:
-- **clip-processor-api**: The main API service on port 5000
-- **db**: PostgreSQL database for caching results on port 5432
-
-### Local Development
-
-1. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-2. Run the API server:
-
-```bash
-python -m src.api_server
-```
+- Detect Dota 2 heroes in Twitch clips or live streams
+- Process requests asynchronously using a queue system
+- Cache results for faster repeated access
+- Track processing time for better estimation of queue wait times
+- Provide frame image URLs for heroes detected
 
 ## API Endpoints
 
-### Health Check
+### `/detect` - Process a Twitch clip
 
-```
-GET /health
-```
+Detect heroes in a Twitch clip specified by URL or clip ID.
 
-Returns the health status of the API.
+#### Parameters:
+- `url`: The Twitch clip URL (required if `clip_id` not provided)
+- `clip_id`: The Twitch clip ID (required if `url` not provided)
+- `debug`: Enable debug mode (optional, default=false)
+- `force`: Force reprocessing even if cached (optional, default=false)
+- `include_image`: Include frame image URL in response (optional, default=true)
+- `queue`: Use queue system (optional, default=true)
 
-### Process Twitch Clip
-
-```
-GET /detect?url=CLIP_URL
-```
-
-or
-
-```
-GET /detect?clip_id=CLIP_ID
-```
-
-Parameters:
-- `url`: The Twitch clip URL to process
-- `clip_id`: The Twitch clip ID (alternative to URL)
-- `debug` (optional): Set to "true" for detailed processing information
-- `force` (optional): Set to "true" to force reprocessing even if cached
-
-### Process Twitch Stream
-
-```
-GET /detect-stream?username=TWITCH_USERNAME
-```
-
-Parameters:
-- `username`: The Twitch username of the streamer
-- `frames` (optional): Number of frames to capture and analyze (default: 3, max: 10)
-- `debug` (optional): Set to "true" for detailed processing information
-
-## PostgreSQL Connection
-
-The API service connects to PostgreSQL to cache clip processing results. The connection details are configured in the `docker-compose.yml` file.
-
-## Response Format
-
-Successful response example:
-
+#### Response (when queued):
 ```json
 {
-  "heroes": [
-    {
-      "hero_id": 1,
-      "hero_name": "Anti-Mage",
-      "confidence": 0.95,
-      "position": "carry"
-    },
-    ...
-  ],
-  "clip_info": {
-    "url": "https://clips.twitch.tv/example",
-    "processed_at": "2023-06-15T12:34:56"
-  },
-  "debug_info": { ... }
+  "queued": true,
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "pending",
+  "position": 3,
+  "estimated_wait_seconds": 45,
+  "estimated_completion_time": "2023-12-01T15:30:45.123456",
+  "message": "Your request has been queued for processing"
 }
 ```
 
-Error response example:
-
+#### Response (when completed):
 ```json
 {
-  "error": "Error message",
-  "message": "Detailed error information",
-  "trace": "Stack trace (only in debug mode)"
+  "detected_heroes": ["axe", "crystal_maiden", "pudge"],
+  "processing_time": "5.23s",
+  "frame_image_url": "http://localhost:5000/images/clip_id_20231201153045.jpg",
+  "best_frame_info": {
+    "frame_number": 120,
+    "timestamp": "0:05"
+  }
 }
+```
+
+### `/detect-stream` - Process a Twitch stream
+
+Detect heroes in a live Twitch stream by username.
+
+#### Parameters:
+- `username`: The Twitch username of the streamer (required)
+- `frames`: Number of frames to capture and analyze (optional, default=3)
+- `debug`: Enable debug mode (optional, default=false)
+- `include_image`: Include frame image URL in response (optional, default=false)
+- `queue`: Use queue system (optional, default=true)
+
+### `/queue/status/{request_id}` - Check queue status
+
+Check the status of a queued request by its ID.
+
+#### Response:
+```json
+{
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "completed",
+  "position": 0,
+  "created_at": "2023-12-01T15:29:45.123456",
+  "started_at": "2023-12-01T15:30:45.123456",
+  "completed_at": "2023-12-01T15:31:05.123456",
+  "result_id": "clip_id",
+  "result": {
+    "detected_heroes": ["axe", "crystal_maiden", "pudge"],
+    "processing_time": "5.23s"
+  }
+}
+```
+
+## Queue System
+
+The service implements a queue system to handle multiple requests in order and prevent overloading the server. Only one request is processed at a time, which is essential for optimal hero detection performance.
+
+### How it works:
+
+1. When a request is received, it's added to the queue database with a unique `request_id`
+2. The system calculates estimated wait time based on:
+   - Current position in queue
+   - Average processing time of previous requests
+3. The client receives immediate feedback with queue position and estimated completion time
+4. A worker thread processes requests one at a time in order of submission
+5. Clients can poll the `/queue/status/{request_id}` endpoint to check progress
+
+### Why we queue requests:
+
+- Hero detection is resource-intensive and benefits from dedicated resources
+- Prevents server overload during high traffic periods
+- Provides more accurate and reliable results
+- Allows for better estimation of processing times
+
+## Configuration
+
+The service can be configured using environment variables:
+
+- `PORT`: The port to run the server on (default: 5000)
+- `DATABASE_URL`: PostgreSQL connection string (default: postgresql://postgres:postgres@localhost:5432/clip_processor)
+- `MAX_CONCURRENT_WORKERS`: Maximum number of concurrent processing workers (default: 1)
+- `QUEUE_POLLING_INTERVAL`: Interval to check for new items in the queue (seconds, default: 1)
+
+## Development
+
+### Prerequisites
+- Python 3.9+
+- PostgreSQL
+- Tesseract OCR
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+   ```
+   pip install -e .
+   ```
+3. Run PostgreSQL (using Docker):
+   ```
+   docker run -d --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=clip_processor postgres:14
+   ```
+4. Start the server:
+   ```
+   python -m src.api_server
+   ```
+
+### Running with Docker Compose
+
+```
+docker-compose up -d
 ```

@@ -15,6 +15,16 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/clip_processor
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/app:/app/src
+      - MAX_CONCURRENT_WORKERS=1  # Limit to one concurrent process
+      - QUEUE_POLLING_INTERVAL=1  # Check queue every 1 second
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
@@ -36,6 +46,19 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=clip_processor
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.2'
+          memory: 256M
 
 volumes:
   postgres-data:

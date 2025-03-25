@@ -52,8 +52,8 @@ RUN echo '#!/bin/bash\n\
   echo "Preloading hero templates to cache..."\n\
   python -c "from src.dota_hero_detection import load_heroes_data; load_heroes_data()"\n\
   \n\
-  # Start the Gunicorn server\n\
-  exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 4 --timeout 120 src.api_server:app\n\
+  # Start the Gunicorn server with a single worker to ensure queue system works properly\n\
+  exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 1 --threads 4 --timeout 300 src.api_server:app\n\
   ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Expose the port the app runs on
@@ -63,6 +63,8 @@ EXPOSE 5000
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app:/app/src
 ENV PORT=5000
+ENV MAX_CONCURRENT_WORKERS=1
+ENV QUEUE_POLLING_INTERVAL=1
 
 # Run the entrypoint script
 CMD ["/app/entrypoint.sh"]
