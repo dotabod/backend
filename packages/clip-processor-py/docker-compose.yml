@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
     volumes:
       - ./temp:/app/temp
       - ./assets:/app/assets
@@ -25,6 +27,8 @@ services:
 
   db:
     image: postgres:14
+    ports:
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
