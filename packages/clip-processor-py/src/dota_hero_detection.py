@@ -721,8 +721,8 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
         # We'll use a larger area first, then refine using color detection
         ref_y_start = 50  # Start a bit higher to ensure we catch the banner
         ref_banner_height = 15  # Taller to ensure we include the entire banner
-        ref_banner_width = HERO_WIDTH  # Full hero width to start with
-        ref_x_start = x_start  # Start from left edge of hero portrait
+        ref_banner_width = HERO_WIDTH - 35 # Full hero width to start with
+        ref_x_start = x_start + 20  # Start from left edge of hero portrait
 
         # Make sure we're within bounds
         if ref_x_start < 0:
@@ -744,60 +744,7 @@ def crop_rank_banner(top_bar, center_x, team, position, debug=False):
         if debug:
             save_debug_image(initial_area, f"{team.lower()}_pos{position+1}_initial_area")
 
-        # Now let's use color detection to refine and find the actual banner area
-        # Convert to HSV for better color detection
-        hsv = cv2.cvtColor(initial_area, cv2.COLOR_BGR2HSV)
-
-        # Define the color range for the dark purple background (#482634)
-        bg_rgb = (72, 38, 52)  # RGB for #482634
-        bg_hsv = cv2.cvtColor(np.uint8([[bg_rgb]]), cv2.COLOR_RGB2HSV)[0][0]
-        # Create range with tolerance (wider tolerance to catch faded areas)
-        bg_lower = np.array([max(0, bg_hsv[0] - 20), 40, 20])
-        bg_upper = np.array([min(180, bg_hsv[0] + 20), 255, 120])
-
-        # Create a mask for the banner background
-        bg_mask = cv2.inRange(hsv, bg_lower, bg_upper)
-
-        # Clean up the mask with morphological operations
-        kernel = np.ones((3, 3), np.uint8)
-        bg_mask = cv2.morphologyEx(bg_mask, cv2.MORPH_CLOSE, kernel)
-
-        if debug:
-            save_debug_image(bg_mask, f"{team.lower()}_pos{position+1}_bg_mask")
-
-        # Find contours in the mask
-        contours, _ = cv2.findContours(bg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        # If we found contours, use the largest one to refine our crop
         refined_crop = initial_area
-        if contours:
-            # Find largest contour (which should be the banner)
-            largest_contour = max(contours, key=cv2.contourArea)
-            x, y, w, h = cv2.boundingRect(largest_contour)
-
-            # Only use the refined crop if it's reasonably sized
-            min_width = 40  # Minimum reasonable width for a rank banner
-            min_height = 10  # Minimum reasonable height
-
-            if w >= min_width and h >= min_height:
-                # Add a small margin around the detected contour
-                margin = 3
-                x_with_margin = max(0, x - margin)
-                y_with_margin = max(0, y - margin)
-                w_with_margin = min(initial_area.shape[1] - x_with_margin, w + 2*margin)
-                h_with_margin = min(initial_area.shape[0] - y_with_margin, h + 2*margin)
-
-                # Create refined crop
-                refined_crop = initial_area[y_with_margin:y_with_margin+h_with_margin,
-                                          x_with_margin:x_with_margin+w_with_margin]
-
-                if debug:
-                    # Draw the contour and bounding box on a copy of the initial area
-                    contour_vis = initial_area.copy()
-                    cv2.drawContours(contour_vis, [largest_contour], 0, (0, 255, 0), 2)
-                    cv2.rectangle(contour_vis, (x, y), (x+w, y+h), (0, 0, 255), 2)
-                    save_debug_image(contour_vis, f"{team.lower()}_pos{position+1}_contour")
-                    save_debug_image(refined_crop, f"{team.lower()}_pos{position+1}_refined_crop")
 
         # Save debug image if needed
         if debug:
