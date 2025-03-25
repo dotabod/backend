@@ -1957,20 +1957,20 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
             logger.info("Clip details retrieved")
 
             # Instead of downloading the entire clip and extracting frames
-            # performance_timer.start('download_clip')
-            # frame_path = download_single_frame(clip_details)
-            # frame_paths.append(frame_path)
-            # performance_timer.stop('download_clip')
+            performance_timer.start('download_clip')
+            frame_path = download_single_frame(clip_details)
+            frame_paths.append(frame_path)
+            performance_timer.stop('download_clip')
             # You can also specify a timestamp (in seconds)
             # frame_path = download_single_frame(clip_details, timestamp=10)  # frame at 10 seconds
 
             # Extract frames
             # Download the clip
-            performance_timer.start('download_clip')
-            clip_path = download_clip(clip_details)
-            logger.info(f"Clip downloaded to: {clip_path}")
-            frame_paths = extract_frames(clip_path, clip_details=clip_details, frame_interval=10)
-            performance_timer.stop('download_clip')
+            # performance_timer.start('download_clip')
+            # clip_path = download_clip(clip_details)
+            # logger.info(f"Clip downloaded to: {clip_path}")
+            # frame_paths = extract_frames(clip_path, clip_details=clip_details, frame_interval=10)
+            # performance_timer.stop('download_clip')
             logger.info(f"Extracted {len(frame_paths)} frames")
 
         elif source_type == "stream":
