@@ -20,7 +20,7 @@ class PocketBaseClient:
 
     def __init__(self):
         """Initialize the PocketBase client."""
-        self.base_url = os.environ.get('POCKETBASE_URL', 'http://pocketbase:8080')
+        self.base_url = os.environ.get('POCKETBASE_URL', 'http://pocketbase:8181')
         self.api_url = f"{self.base_url}/api"
         self.collection = "clip_results"
         self._initialized = False

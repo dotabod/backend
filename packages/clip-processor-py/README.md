@@ -278,7 +278,7 @@ docker-compose up -d
 
 This will start two services:
 - **clip-processor-api**: The main API service on port 5000
-- **pocketbase**: Database for caching results on port 8080
+- **pocketbase**: Database for caching results on port 8181
 
 ### Local Development
 
@@ -335,7 +335,7 @@ Parameters:
 
 ## PocketBase Admin
 
-Access the PocketBase admin interface at http://localhost:8080/_/ using:
+Access the PocketBase admin interface at http://localhost:8181/_/ using:
 
 - Email: admin@dota-hero-detection.local
 - Password: adminpassword123
