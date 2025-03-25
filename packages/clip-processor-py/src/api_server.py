@@ -212,7 +212,7 @@ def process_queue_worker():
                 if request['request_type'] == 'clip':
                     # Check if there's already a completed result for this match_id
                     match_id = request.get('match_id')
-                    if match_id:
+                    if match_id and not request.get('force', False):
                         # Check if a previous request for this match has already completed successfully
                         match_status = db_client.check_for_match_processing(match_id)
                         if match_status and match_status.get('found') and match_status.get('status') == 'completed':
@@ -575,54 +575,56 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
     Returns:
         The processing result or queue information
     """
-    # If we have a match_id, check if we already have a successful result for it
-    if match_id and not force:
-        match_status = db_client.check_for_match_processing(match_id)
-        if match_status and match_status.get('found') and match_status.get('status') == 'completed':
-            # If there's a completed result for this match_id, use it
-            existing_clip_id = match_status.get('clip_id')
-            logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
-            existing_result = db_client.get_clip_result(existing_clip_id)
-            if existing_result:
-                # Replace placeholder with real host URL if needed
-                if 'saved_image_path' in existing_result and existing_result['saved_image_path'] and '__HOST_URL__' in existing_result['saved_image_path'] and not from_worker:
-                    host_url = request.host_url.rstrip('/')
-                    existing_result['saved_image_path'] = existing_result['saved_image_path'].replace('__HOST_URL__', host_url)
-
-                # Add match_id for context
-                existing_result['match_id'] = match_id
-                existing_result['clip_id'] = existing_clip_id
-
-                return existing_result
-
-    # Check for cached result if not forced to reprocess
-    if not force and clip_id:
-        cached_result = db_client.get_clip_result(clip_id)
-        if cached_result:
-            logger.info(f"Returning cached result for clip ID: {clip_id}")
-
-            # If we need to include the image but it's not in the cached result
-            if include_image and 'frame_image_url' not in cached_result and 'best_frame_path' in cached_result and not from_worker:
-                frame_path = cached_result.get('best_frame_path')
-                if frame_path and Path(frame_path).exists():
-                    image_url, saved_image_path = get_image_url(frame_path, clip_id)
-                    if image_url:
+    # If force is True, we skip all cache checks and directly process the clip
+    if not force:
+        # If we have a match_id, check if we already have a successful result for it
+        if match_id:
+            match_status = db_client.check_for_match_processing(match_id)
+            if match_status and match_status.get('found') and match_status.get('status') == 'completed':
+                # If there's a completed result, use that instead of processing this request
+                existing_clip_id = match_status.get('clip_id')
+                logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
+                existing_result = db_client.get_clip_result(existing_clip_id)
+                if existing_result:
+                    # Replace placeholder with real host URL if needed
+                    if 'saved_image_path' in existing_result and existing_result['saved_image_path'] and '__HOST_URL__' in existing_result['saved_image_path'] and not from_worker:
                         host_url = request.host_url.rstrip('/')
-                        cached_result['saved_image_path'] = saved_image_path.replace('__HOST_URL__', host_url)
-                        # Update the cache with the image URL
-                        db_client.save_clip_result(clip_id, clip_url, cached_result, match_id=match_id)
+                        existing_result['saved_image_path'] = existing_result['saved_image_path'].replace('__HOST_URL__', host_url)
 
-            # Replace placeholder with real host URL if needed
-            if 'saved_image_path' in cached_result and cached_result['saved_image_path'] and '__HOST_URL__' in cached_result['saved_image_path']:
-                host_url = request.host_url.rstrip('/')
-                cached_result['saved_image_path'] = cached_result['saved_image_path'].replace('__HOST_URL__', host_url)
+                    # Add match_id for context
+                    existing_result['match_id'] = match_id
+                    existing_result['clip_id'] = existing_clip_id
 
-            # Only return players and saved_image_path keys
-            filtered_result = {
-                'saved_image_path': cached_result.get('saved_image_path'),
-                'players': cached_result.get('players', [])
-            }
-            return filtered_result
+                    return existing_result
+
+        # Check for cached result if not forced to reprocess
+        if clip_id:
+            cached_result = db_client.get_clip_result(clip_id)
+            if cached_result:
+                logger.info(f"Returning cached result for clip ID: {clip_id}")
+
+                # If we need to include the image but it's not in the cached result
+                if include_image and 'frame_image_url' not in cached_result and 'best_frame_path' in cached_result and not from_worker:
+                    frame_path = cached_result.get('best_frame_path')
+                    if frame_path and Path(frame_path).exists():
+                        image_url, saved_image_path = get_image_url(frame_path, clip_id)
+                        if image_url:
+                            host_url = request.host_url.rstrip('/')
+                            cached_result['saved_image_path'] = saved_image_path.replace('__HOST_URL__', host_url)
+                            # Update the cache with the image URL
+                            db_client.save_clip_result(clip_id, clip_url, cached_result, match_id=match_id)
+
+                # Replace placeholder with real host URL if needed
+                if 'saved_image_path' in cached_result and cached_result['saved_image_path'] and '__HOST_URL__' in cached_result['saved_image_path']:
+                    host_url = request.host_url.rstrip('/')
+                    cached_result['saved_image_path'] = cached_result['saved_image_path'].replace('__HOST_URL__', host_url)
+
+                # Only return players and saved_image_path keys
+                filtered_result = {
+                    'saved_image_path': cached_result.get('saved_image_path'),
+                    'players': cached_result.get('players', [])
+                }
+                return filtered_result
 
     # If queuing is enabled, add to queue and return queue info
     if add_to_queue:
