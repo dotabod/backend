@@ -570,11 +570,22 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                 if frame_path and Path(frame_path).exists():
                     image_url, saved_image_path = get_image_url(frame_path, clip_id)
                     if image_url:
-                        cached_result['frame_image_url'] = image_url
-                        cached_result['saved_image_path'] = saved_image_path
+                        host_url = request.host_url.rstrip('/')
+                        cached_result['saved_image_path'] = saved_image_path.replace('__HOST_URL__', host_url)
                         # Update the cache with the image URL
                         db_client.save_clip_result(clip_id, clip_url, cached_result)
-            return cached_result
+
+            # Replace placeholder with real host URL if needed
+            if 'saved_image_path' in cached_result and cached_result['saved_image_path'] and '__HOST_URL__' in cached_result['saved_image_path']:
+                host_url = request.host_url.rstrip('/')
+                cached_result['saved_image_path'] = cached_result['saved_image_path'].replace('__HOST_URL__', host_url)
+
+            # Only return players and saved_image_path keys
+            filtered_result = {
+                'saved_image_path': cached_result.get('saved_image_path'),
+                'players': cached_result.get('players', [])
+            }
+            return filtered_result
 
     # If queuing is enabled, add to queue and return queue info
     if add_to_queue:
