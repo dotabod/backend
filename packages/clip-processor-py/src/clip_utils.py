@@ -307,7 +307,6 @@ def extract_frames(video_path, clip_details=None, start_time=0, end_time=None, f
     except Exception as e:
         logger.error(f"Error extracting frames: {e}")
         raise
-
 def download_single_frame(clip_details, timestamp=None):
     """
     Download and extract a single frame from a Twitch clip without downloading the entire clip.
@@ -315,7 +314,7 @@ def download_single_frame(clip_details, timestamp=None):
 
     Args:
         clip_details: Dictionary containing clip details from get_clip_details()
-        timestamp: Time in seconds to extract the frame from (default: 80% through the clip)
+        timestamp: Time in seconds to extract the frame from (default: first frame of the clip)
 
     Returns:
         Path to the extracted frame image
@@ -337,15 +336,10 @@ def download_single_frame(clip_details, timestamp=None):
         logger.info(f"Frame already exists at {frame_path}, reusing it")
         return str(frame_path)
 
-    # If timestamp not specified, use a frame 80% through the clip duration
-    # This is more likely to capture the game interface fully loaded
+    # If timestamp not specified, use the first frame of the clip
     if timestamp is None:
-        if clip_details.get('duration'):
-            timestamp = clip_details['duration'] * 0.8  # Use 80% through the clip instead of the middle
-            logger.info(f"No timestamp specified, using 80% through clip: {timestamp:.2f}s")
-        else:
-            timestamp = 25  # Higher default if duration unknown (most Twitch clips are ~30s)
-            logger.info(f"No timestamp or duration specified, using default: {timestamp}s")
+        timestamp = 0  # Use the beginning of the clip
+        logger.info(f"No timestamp specified, using first frame: {timestamp}s")
 
     logger.info(f"Fetching single frame at timestamp {timestamp}s from clip {clip_id}")
 
@@ -359,7 +353,7 @@ def download_single_frame(clip_details, timestamp=None):
         # 2. Then download a small chunk around our target timestamp
 
         # Step 1: Download just enough to get the MP4 header (typically within first 1MB)
-        header_size = 1024 * 1024  # 1MB should be enough for most MP4 headers
+        header_size = 512 * 1024  # 512KB should be enough for most MP4 headers
 
         # First, try to get just the MP4 header
         headers = {
@@ -394,21 +388,15 @@ def download_single_frame(clip_details, timestamp=None):
             cap.release()
 
             # If we couldn't open with just the header, download a bit more
-            # Try downloading 25% of estimated file size based on duration
-            if clip_details.get('duration'):
-                # Use a more conservative estimate: 500KB per second of HD video
-                estimated_bytes_per_second = 500 * 1024  # 500KB per second (conservative estimate)
-                estimated_total = int(clip_details['duration'] * estimated_bytes_per_second)
-                download_size = min(estimated_total // 4, 20 * 1024 * 1024)  # 25% of total or max 20MB
-            else:
-                download_size = 10 * 1024 * 1024  # 10MB if duration unknown
+            # Since we want the first frame, we'll download more from the beginning
+            download_size = 10 * 1024 * 1024  # 10MB from the beginning
 
             headers = {
                 'Range': f'bytes=0-{download_size-1}',
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
 
-            logger.info(f"Downloading larger portion of video: {download_size / (1024*1024):.1f}MB")
+            logger.info(f"Downloading larger portion of video from beginning: {download_size / (1024*1024):.1f}MB")
             response = requests.get(clip_details['download_url'], headers=headers, stream=True)
 
             with open(temp_path, 'wb') as f:
@@ -425,28 +413,8 @@ def download_single_frame(clip_details, timestamp=None):
 
                 # Last resort: try a direct seek approach
                 # This works for some streaming formats where the moov atom is at the end
-                # Get a chunk at the beginning and a chunk around our target time
-
-                # First chunk: first 2MB
-                first_chunk_size = 2 * 1024 * 1024
-
-                # Second chunk: 2MB around the target timestamp
-                if clip_details.get('duration'):
-                    # Estimate byte position based on timestamp and duration
-                    estimated_bytes_per_second = 500 * 1024  # Conservative estimate
-                    total_estimated_size = clip_details['duration'] * estimated_bytes_per_second
-
-                    # Calculate position as percentage of total size
-                    position_ratio = timestamp / clip_details['duration']
-                    estimated_byte_pos = int(total_estimated_size * position_ratio)
-
-                    # Get 1MB before and 1MB after the estimated position
-                    chunk_start = max(first_chunk_size, estimated_byte_pos - (1024 * 1024))
-                    chunk_end = chunk_start + (2 * 1024 * 1024)
-                else:
-                    # If duration unknown, just get bytes 5MB-7MB as second chunk
-                    chunk_start = 5 * 1024 * 1024
-                    chunk_end = 7 * 1024 * 1024
+                # For first frame, we just need a larger chunk from the beginning
+                first_chunk_size = 20 * 1024 * 1024  # 20MB from the beginning
 
                 # Download first chunk
                 headers = {
@@ -454,24 +422,10 @@ def download_single_frame(clip_details, timestamp=None):
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
                 }
 
-                logger.info(f"Trying multi-chunk approach: first chunk 0-{first_chunk_size-1} bytes")
+                logger.info(f"Trying larger chunk approach: 0-{first_chunk_size-1} bytes")
                 response = requests.get(clip_details['download_url'], headers=headers, stream=True)
 
                 with open(temp_path, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            f.write(chunk)
-
-                # Download second chunk and append to the same file
-                headers = {
-                    'Range': f'bytes={chunk_start}-{chunk_end-1}',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                }
-
-                logger.info(f"Downloading second chunk {chunk_start}-{chunk_end-1} bytes")
-                response = requests.get(clip_details['download_url'], headers=headers, stream=True)
-
-                with open(temp_path, 'ab') as f:  # Append to the file
                     for chunk in response.iter_content(chunk_size=8192):
                         if chunk:
                             f.write(chunk)
@@ -492,95 +446,26 @@ def download_single_frame(clip_details, timestamp=None):
             ret, _ = cap.read()
             if not ret:
                 # If we can't read a frame, we need more data
-                logger.info("Header downloaded but can't read frames yet, downloading frame data")
+                logger.info("Header downloaded but can't read frames yet, downloading more data from beginning")
                 cap.release()
 
-                # Get FPS from the clip details or guess
-                target_fps = 30  # Default assumption
-                if clip_details.get('qualities'):
-                    # Look for frameRate in the selected quality
-                    for quality in clip_details['qualities']:
-                        if str(quality.get('quality')) == str(clip_details.get('selected_quality')):
-                            if quality.get('frameRate'):
-                                target_fps = quality.get('frameRate')
+                # Since we want the first frame, download more from the beginning
+                download_size = 10 * 1024 * 1024  # 10MB
+                headers = {
+                    'Range': f'bytes=0-{download_size}',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
 
-                # More aggressive: download a small window around our target frame
-                # Calculate byte offsets for the target frame
-                estimated_bytes_per_second = 500 * 1024  # More conservative: 500KB per second
+                logger.info(f"Downloading {download_size / (1024*1024):.1f}MB from beginning")
+                response = requests.get(clip_details['download_url'], headers=headers, stream=True)
 
-                if clip_details.get('duration'):
-                    # Calculate position as percentage of total size
-                    position_ratio = timestamp / clip_details['duration']
-                    total_estimated_size = clip_details['duration'] * estimated_bytes_per_second
-                    target_byte_pos = int(total_estimated_size * position_ratio)
+                with open(temp_path, 'wb') as f:  # Overwrite with a fresh download
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
 
-                    # Get ~3 seconds worth of data around target (1.5s before, 1.5s after)
-                    bytes_per_frame = estimated_bytes_per_second / target_fps
-                    frame_window = int(target_fps * 3)  # 3 seconds worth of frames
-                    byte_window = int(bytes_per_frame * frame_window)
-
-                    # Ensure we don't go below header size when calculating start position
-                    start_pos = max(header_size, target_byte_pos - (byte_window // 2))
-                    end_pos = start_pos + byte_window
-
-                    logger.info(f"Downloading frame data from bytes {start_pos} to {end_pos} (estimated ~3s of video)")
-
-                    headers = {
-                        'Range': f'bytes={start_pos}-{end_pos}',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                    }
-
-                    response = requests.get(clip_details['download_url'], headers=headers, stream=True)
-
-                    with open(temp_path, 'ab') as f:  # Append to the file with the header
-                        for chunk in response.iter_content(chunk_size=8192):
-                            if chunk:
-                                f.write(chunk)
-
-                    # Try opening again
-                    cap = cv2.VideoCapture(temp_path)
-                    if not cap.isOpened() or not cap.read()[0]:
-                        # If still can't read, fall back to downloading larger portion
-                        logger.warning("Still couldn't read frames with targeted chunk download, getting larger portion")
-                        cap.release()
-
-                        # Download 25% of the video
-                        download_size = min(total_estimated_size // 4, 20 * 1024 * 1024)  # 25% of total or max 20MB
-                        headers = {
-                            'Range': f'bytes=0-{download_size}',
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                        }
-
-                        logger.info(f"Downloading 25% of video: {download_size / (1024*1024):.1f}MB")
-                        response = requests.get(clip_details['download_url'], headers=headers, stream=True)
-
-                        with open(temp_path, 'wb') as f:  # Overwrite with a fresh download
-                            for chunk in response.iter_content(chunk_size=8192):
-                                if chunk:
-                                    f.write(chunk)
-
-                        cap = cv2.VideoCapture(temp_path)
-                        full_download = not (cap.isOpened() and cap.read()[0])
-                    else:
-                        full_download = False
-                else:
-                    # If duration unknown, just download a bit more
-                    download_size = 10 * 1024 * 1024  # 10MB
-                    headers = {
-                        'Range': f'bytes=0-{download_size}',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                    }
-
-                    logger.info(f"Duration unknown, downloading {download_size / (1024*1024):.1f}MB")
-                    response = requests.get(clip_details['download_url'], headers=headers, stream=True)
-
-                    with open(temp_path, 'wb') as f:  # Overwrite with a fresh download
-                        for chunk in response.iter_content(chunk_size=8192):
-                            if chunk:
-                                f.write(chunk)
-
-                    cap = cv2.VideoCapture(temp_path)
-                    full_download = not (cap.isOpened() and cap.read()[0])
+                cap = cv2.VideoCapture(temp_path)
+                full_download = not (cap.isOpened() and cap.read()[0])
             else:
                 cap.release()  # Release and reopen after we know it works
                 cap = cv2.VideoCapture(temp_path)
@@ -613,23 +498,18 @@ def download_single_frame(clip_details, timestamp=None):
 
         logger.info(f"Video properties: FPS={fps}, Frames={frame_count}, Duration={actual_duration:.2f}s, Resolution={orig_width}x{orig_height}")
 
-        # Calculate the frame index based on timestamp and actual duration
-        # If timestamp exceeds actual_duration, cap it to available frame count
-        effective_timestamp = min(timestamp, actual_duration * 0.95) if actual_duration > 0 else timestamp
-        frame_idx = int(effective_timestamp * fps) if fps > 0 else 0
-        frame_idx = min(frame_idx, frame_count - 1)
-
-        # Set video position and extract frame
-        logger.info(f"Seeking to frame {frame_idx} (timestamp {effective_timestamp}s)")
+        # For first frame, we'll use frame index 0
+        frame_idx = 0
+        logger.info(f"Seeking to first frame (frame {frame_idx})")
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
         ret, frame = cap.read()
 
         if not ret:
-            # If seeking to exact frame fails, try getting a frame near the beginning
-            logger.warning(f"Could not read frame at position {frame_idx}, trying alternate frames")
+            # If seeking to first frame fails, try getting a frame near the beginning
+            logger.warning(f"Could not read first frame, trying alternate frames")
 
-            # Try a few different frames, starting with earlier frames
-            test_positions = [10, 30, frame_count // 2, frame_count // 4]
+            # Try a few different frames near the beginning
+            test_positions = [1, 5, 10, 30]
             for pos in test_positions:
                 cap.set(cv2.CAP_PROP_POS_FRAMES, pos)
                 ret, frame = cap.read()
@@ -659,7 +539,7 @@ def download_single_frame(clip_details, timestamp=None):
         if not frame_path.exists() or frame_path.stat().st_size == 0:
             raise ValueError(f"Failed to save frame to {frame_path}")
 
-        logger.info(f"Successfully extracted single frame to {frame_path}")
+        logger.info(f"Successfully extracted first frame to {frame_path}")
         return str(frame_path)
 
     except Exception as e:
