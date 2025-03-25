@@ -129,7 +129,11 @@ export async function getAccountsFromMatch({
     if (matchId && visionApiHost) {
       try {
         const apiUrl = `https://${visionApiHost}/match/${matchId}`
-        const apiResponse = await fetch(apiUrl)
+        const apiResponse = await fetch(apiUrl, {
+          headers: {
+            'X-API-Key': process.env.VISION_API_KEY || '',
+          },
+        })
 
         if (apiResponse.ok) {
           const data = (await apiResponse.json()) as VisionApiMatchResponse

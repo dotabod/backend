@@ -52,6 +52,11 @@ eventHandler.registerEvent('map:game_state', {
           // Fire and forget - don't wait for the response
           fetch(
             `https://${visionApiHost}/detect?clip_id=${clipId}&match_id=${dotaClient.client.gsi?.map?.matchid}`,
+            {
+              headers: {
+                'X-API-Key': process.env.VISION_API_KEY || '',
+              },
+            },
           ).catch((error) => {
             logger.error('Error sending clip processing request', {
               ...logContext,
