@@ -250,251 +250,125 @@ The project consists of several main components:
 
 # Dota 2 Hero Detection API
 
-This service processes Twitch clips and identifies Dota 2 heroes in the game interface using computer vision techniques.
+A Flask-based API service that processes Twitch clips to detect Dota 2 heroes in gameplay.
 
-## API Usage
+## Features
 
-The service provides a simple REST API to process Twitch clips and return hero detection results.
+- Process Twitch clips to detect Dota 2 heroes
+- Cache processing results using PocketBase
+- Process live Twitch streams
+- Debug mode for detailed processing information
 
-### Endpoints
+## Setup
 
-#### GET /health
+### Prerequisites
 
-Health check endpoint to verify the API is running.
+- Docker and Docker Compose
+- Python 3.8+ (for local development)
 
-Response:
-```json
-{
-  "status": "ok",
-  "service": "dota-hero-detection-api"
-}
-```
-
-#### GET /detect
-
-Process a Twitch clip URL and return hero detection results.
-
-Query Parameters:
-- `url`: The Twitch clip URL to process (required if clip_id not provided)
-- `clip_id`: The Twitch clip ID (required if url not provided)
-- `debug`: Enable debug mode (optional, default=false)
-
-Example Request:
-```
-GET /detect?url=https://clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi
-```
-
-Example Response:
-```json
-{
-  "clip_details": {
-    "id": "WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi",
-    "url": "https://clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi",
-    "title": "Amazing Dota 2 Play",
-    "broadcaster": "DotaStreamer",
-    "duration": 30.0
-  },
-  "heroes": [
-    {
-      "team": "Radiant",
-      "position": 0,
-      "hero_id": 1,
-      "hero_name": "npc_dota_hero_antimage",
-      "hero_localized_name": "Anti-Mage",
-      "match_score": 0.834
-    },
-    // ... more heroes ...
-  ],
-  "processing_time": 5.23
-}
-```
-
-#### GET /detect-stream
-
-Process a live Twitch stream and return hero detection results.
-
-Query Parameters:
-- `username`: Twitch username of the streamer (required)
-- `frames`: Number of frames to capture (default: 3, max: 10)
-- `debug`: Enable debug mode (optional, default=false)
-
-Example Request:
-```
-GET /detect-stream?username=twitchusername
-```
-
-Example Response:
-```json
-{
-  "stream_username": "twitchusername",
-  "heroes": [
-    {
-      "team": "Radiant",
-      "position": 0,
-      "hero_id": 1,
-      "hero_name": "npc_dota_hero_antimage",
-      "hero_localized_name": "Anti-Mage",
-      "match_score": 0.834
-    },
-    ...
-  ],
-  "players": [
-    {
-      "position": 1,
-      "team": "Radiant",
-      "hero": "Anti-Mage",
-      "hero_id": 1
-    },
-    ...
-  ],
-  "color_match_score": 0.9,
-  "best_frame_index": 2,
-  "best_frame_path": "temp/frames/twitchusername_1234567890_frame_2.jpg"
-}
-```
-
-## Docker Deployment
-
-The easiest way to deploy the API is using Docker.
-
-### Using Docker Compose (Recommended)
+### Running with Docker Compose
 
 1. Clone the repository
 2. Navigate to the project directory
-3. Build and run the container:
+3. Start the services:
 
 ```bash
-cd packages/clip-processor-py
 docker-compose up -d
 ```
 
-This will:
-- Build the Docker image
-- Download hero reference images automatically
-- Start the API server on port 5000
+This will start two services:
+- **clip-processor-api**: The main API service on port 5000
+- **pocketbase**: Database for caching results on port 8080
 
-### Using Docker Directly
+### Local Development
 
-1. Build the Docker image:
-
-```bash
-cd packages/clip-processor-py
-docker build -t dota-hero-detection-api .
-```
-
-2. Run the container:
+1. Install dependencies:
 
 ```bash
-docker run -p 5000:5000 -d dota-hero-detection-api
+pip install -r requirements.txt
 ```
 
-### Verifying the Deployment
-
-Once the container is running, you can verify it's working by accessing the health check endpoint:
+2. Run the API server:
 
 ```bash
-curl http://localhost:5000/health
+python -m src.api_server
 ```
 
-## Development Setup
+## API Endpoints
 
-If you want to run the API server locally without Docker:
+### Health Check
 
-1. Install system dependencies (Tesseract OCR and Python 3.8+)
-2. Use the provided run script:
-
-```bash
-cd packages/clip-processor-py
-./run.sh
+```
+GET /health
 ```
 
-This will:
-- Create a virtual environment
-- Install dependencies
-- Download hero reference images if needed
-- Start the development server
+Returns the health status of the API.
 
-Alternatively, you can manually set up the environment:
+### Process Twitch Clip
 
-```bash
-cd packages/clip-processor-py
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -e .
-python -m src.dota_heroes  # Download hero images
-python -m src.api_server   # Start the server
+```
+GET /detect?url=CLIP_URL
 ```
 
-The server will run on http://localhost:5000.
+or
 
-## API Server
-
-The package includes a Flask-based API server for hero detection.
-
-### Starting the API server:
-
-```bash
-python src/api_server.py
+```
+GET /detect?clip_id=CLIP_ID
 ```
 
-This will start a server on port 5000 (by default). You can change the port using the PORT environment variable:
+Parameters:
+- `url`: The Twitch clip URL to process
+- `clip_id`: The Twitch clip ID (alternative to URL)
+- `debug` (optional): Set to "true" for detailed processing information
+- `force` (optional): Set to "true" to force reprocessing even if cached
 
-```bash
-PORT=8080 python src/api_server.py
+### Process Twitch Stream
+
+```
+GET /detect-stream?username=TWITCH_USERNAME
 ```
 
-### API Endpoints:
+Parameters:
+- `username`: The Twitch username of the streamer
+- `frames` (optional): Number of frames to capture and analyze (default: 3, max: 10)
+- `debug` (optional): Set to "true" for detailed processing information
 
-1. **Health Check:**
-   ```
-   GET /health
-   ```
-   Returns a simple health check response.
+## PocketBase Admin
 
-2. **Clip Hero Detection:**
-   ```
-   GET /detect?url=https://clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi
-   ```
-   Parameters:
-   - `url`: Twitch clip URL (required)
-   - `clip_id`: Alternatively, you can provide just the clip ID
-   - `debug`: Set to "true" to enable debug mode (default: false)
+Access the PocketBase admin interface at http://localhost:8080/_/ using:
 
-3. **Stream Hero Detection:**
-   ```
-   GET /detect-stream?username=twitchusername
-   ```
-   Parameters:
-   - `username`: Twitch username of the streamer (required)
-   - `frames`: Number of frames to capture (default: 3, max: 10)
-   - `debug`: Set to "true" to enable debug mode (default: false)
+- Email: admin@dota-hero-detection.local
+- Password: adminpassword123
 
-Example API response:
+## Response Format
+
+Successful response example:
+
 ```json
 {
-  "stream_username": "twitchusername",
   "heroes": [
     {
-      "team": "Radiant",
-      "position": 0,
       "hero_id": 1,
-      "hero_name": "npc_dota_hero_antimage",
-      "hero_localized_name": "Anti-Mage",
-      "match_score": 0.834
+      "hero_name": "Anti-Mage",
+      "confidence": 0.95,
+      "position": "carry"
     },
     ...
   ],
-  "players": [
-    {
-      "position": 1,
-      "team": "Radiant",
-      "hero": "Anti-Mage",
-      "hero_id": 1
-    },
-    ...
-  ],
-  "color_match_score": 0.9,
-  "best_frame_index": 2,
-  "best_frame_path": "temp/frames/twitchusername_1234567890_frame_2.jpg"
+  "clip_info": {
+    "url": "https://clips.twitch.tv/example",
+    "processed_at": "2023-06-15T12:34:56"
+  },
+  "debug_info": { ... }
+}
+```
+
+Error response example:
+
+```json
+{
+  "error": "Error message",
+  "message": "Detailed error information",
+  "trace": "Stack trace (only in debug mode)"
 }
 ```

@@ -12,16 +12,19 @@ import logging
 from flask import Flask, request, jsonify, Response
 from urllib.parse import urlparse
 import traceback
+import re
 
 # Import the hero detection and hero data modules
 try:
     from dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
     from dota_heroes import get_hero_data
+    from pocketbase_client import pb_client
 except ImportError:
     # Try with relative import for different directory structures
     try:
         from .dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
         from .dota_heroes import get_hero_data
+        from .pocketbase_client import pb_client
     except ImportError:
         print("Error: Could not import required modules.")
         print("Make sure you're running this from the correct directory.")
@@ -71,6 +74,38 @@ def health_check():
     """Simple health check endpoint."""
     return jsonify({'status': 'ok', 'service': 'dota-hero-detection-api'})
 
+def extract_clip_id(clip_url):
+    """
+    Extract the clip ID from a Twitch clip URL.
+
+    Args:
+        clip_url: The Twitch clip URL
+
+    Returns:
+        The clip ID if found, None otherwise
+    """
+    # Try to extract using pattern matching
+    patterns = [
+        r'clips\.twitch\.tv/([a-zA-Z0-9]+)',  # clips.twitch.tv/ClipName
+        r'twitch\.tv/\w+/clip/([a-zA-Z0-9-]+)',  # twitch.tv/channel/clip/ClipName
+        r'clip=([a-zA-Z0-9-]+)'  # URL parameter style
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, clip_url)
+        if match:
+            return match.group(1)
+
+    # If we can't extract, use the URL path
+    parsed = urlparse(clip_url)
+    if parsed.path:
+        # Get last part of path
+        path_parts = parsed.path.strip('/').split('/')
+        if path_parts:
+            return path_parts[-1]
+
+    return None
+
 @app.route('/detect', methods=['GET'])
 def detect_heroes():
     """
@@ -80,10 +115,12 @@ def detect_heroes():
     - url: The Twitch clip URL to process (required if clip_id not provided)
     - clip_id: The Twitch clip ID (required if url not provided)
     - debug: Enable debug mode (optional, default=False)
+    - force: Force reprocessing even if cached (optional, default=False)
     """
     clip_url = request.args.get('url')
     clip_id = request.args.get('clip_id')
     debug = request.args.get('debug', 'false').lower() == 'true'
+    force = request.args.get('force', 'false').lower() == 'true'
 
     # Check if either clip_url or clip_id is provided
     if not clip_url and not clip_id:
@@ -93,6 +130,15 @@ def detect_heroes():
     if clip_id and not clip_url:
         clip_url = f"https://clips.twitch.tv/{clip_id}"
         logger.info(f"Constructed clip URL from ID: {clip_url}")
+    # If only URL is provided, try to extract clip_id
+    elif clip_url and not clip_id:
+        extracted_clip_id = extract_clip_id(clip_url)
+        if extracted_clip_id:
+            clip_id = extracted_clip_id
+            logger.info(f"Extracted clip ID from URL: {clip_id}")
+        else:
+            logger.warning(f"Could not extract clip ID from URL: {clip_url}")
+            clip_id = clip_url  # Use URL as ID fallback
 
     # Basic URL validation
     try:
@@ -106,7 +152,14 @@ def detect_heroes():
     except Exception as e:
         return jsonify({'error': f'URL parsing error: {str(e)}'}), 400
 
-    logger.info(f"Processing clip URL: {clip_url} (debug={debug})")
+    # Check for cached result if not forced to reprocess
+    if not force and clip_id:
+        cached_result = pb_client.get_clip_result(clip_id)
+        if cached_result:
+            logger.info(f"Returning cached result for clip ID: {clip_id}")
+            return jsonify(cached_result)
+
+    logger.info(f"Processing clip URL: {clip_url} (debug={debug}, force={force})")
 
     try:
         # Process the clip
@@ -114,6 +167,14 @@ def detect_heroes():
             clip_url=clip_url,
             debug=debug
         )
+
+        if result and clip_id:
+            # Cache the result
+            success = pb_client.save_clip_result(clip_id, clip_url, result)
+            if success:
+                logger.info(f"Cached result for clip ID: {clip_id}")
+            else:
+                logger.warning(f"Failed to cache result for clip ID: {clip_id}")
 
         if result:
             # Return the result as JSON
@@ -199,6 +260,13 @@ def main():
         logger.error(f"Error loading hero data: {e}")
         logger.info("You may need to run 'download-heroes' command first")
         return
+
+    # Initialize PocketBase client
+    logger.info("Initializing PocketBase client...")
+    if pb_client.initialize():
+        logger.info("PocketBase client initialized successfully")
+    else:
+        logger.warning("Failed to initialize PocketBase client, caching will be disabled")
 
     # Get port from environment variable or use default
     port = int(os.environ.get('PORT', 5000))
