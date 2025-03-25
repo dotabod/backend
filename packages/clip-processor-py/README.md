@@ -345,6 +345,28 @@ The service implements a queue system to handle multiple requests in order and p
 3. The client receives immediate feedback with queue position and estimated completion time
 4. A worker thread processes requests one at a time in order of submission
 5. Clients can poll the `/queue/status/{request_id}` endpoint to check progress
+6. For duplicate requests (same clip ID or stream username), the system returns the existing queue entry instead of creating a new one
+
+### Duplicate Request Handling:
+
+To prevent redundant processing, the system checks if a clip ID or stream username is already in the queue:
+
+- When an already-queued clip or stream is requested again, the system returns the status of the existing request
+- Information provided includes current position, estimated wait time, and a message indicating the request is already queued
+- This applies to requests with status 'pending' (waiting in queue) or 'processing' (currently being analyzed)
+
+Example response for a duplicate request:
+```json
+{
+  "queued": true,
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "pending",
+  "position": 3,
+  "estimated_wait_seconds": 45,
+  "estimated_completion_time": "2023-12-01T15:30:45.123456",
+  "message": "This clip is already in the processing queue"
+}
+```
 
 ### Why we queue requests:
 
@@ -352,6 +374,7 @@ The service implements a queue system to handle multiple requests in order and p
 - Prevents server overload during high traffic periods
 - Provides more accurate and reliable results
 - Allows for better estimation of processing times
+- Avoids redundant processing of the same content
 
 ## Configuration
 
@@ -361,6 +384,44 @@ The service can be configured using environment variables:
 - `DATABASE_URL`: PostgreSQL connection string (default: postgresql://postgres:postgres@localhost:5432/clip_processor)
 - `MAX_CONCURRENT_WORKERS`: Maximum number of concurrent processing workers (default: 1)
 - `QUEUE_POLLING_INTERVAL`: Interval to check for new items in the queue (seconds, default: 1)
+
+## Database Migrations
+
+The system uses automatic database migrations to keep the database schema up to date. Migrations are run at server startup, ensuring that the database structure is compatible with the current codebase.
+
+### Current Migrations:
+
+1. `add_processing_time_column`: Adds the `processing_time_seconds` column to the `clip_results` table
+2. `fix_position_ambiguity`: Ensures proper column qualification in SQL queries to avoid ambiguous references
+
+If a migration fails, the server will log a warning but will continue to operate, though some features might not work correctly.
+
+## Technical Details
+
+### Image URL Generation
+
+When a clip or stream is processed with `include_image=true`, the system will:
+
+1. Save the frame with the best hero detection result to the server
+2. Generate a URL for accessing this image
+3. Include this URL in the response as `frame_image_url`
+
+For web security reasons, images generated in worker threads don't include direct URLs. Instead, the system:
+
+1. Saves the path to the image in the database
+2. Generates the URL only when the client specifically requests the result
+3. This prevents potential security issues with request context availability in background threads
+
+### Worker Thread Processing
+
+The system uses a single worker thread to process requests from the queue. This approach:
+
+1. Ensures efficient resource usage
+2. Prevents race conditions in the queue
+3. Guarantees sequential processing of requests
+4. Provides more accurate wait time estimates
+
+The Docker configuration is optimized for this single-worker approach, using Gunicorn with `--workers 1` to maintain proper queue integrity.
 
 ## Development
 
@@ -384,6 +445,18 @@ The service can be configured using environment variables:
    ```
    python -m src.api_server
    ```
+
+### Running Tests
+
+To run the test suite:
+
+```bash
+# Run all tests
+python -m unittest discover -s tests
+
+# Run a specific test file
+python -m unittest tests/test_api_server.py
+```
 
 ### Running with Docker Compose
 

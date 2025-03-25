@@ -334,6 +334,74 @@ class PostgresClient:
             if conn:
                 self._return_connection(conn)
 
+    def is_request_in_queue(self, request_type: str, clip_id: Optional[str] = None,
+                            stream_username: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """
+        Check if a request with the same clip_id or stream_username is already in the queue.
+
+        Args:
+            request_type: Type of request ('clip' or 'stream')
+            clip_id: The Twitch clip ID (for clip requests)
+            stream_username: Twitch username (for stream requests)
+
+        Returns:
+            The queue entry if found, None otherwise
+        """
+        if not self._initialized and not self.initialize():
+            logger.warning("PostgreSQL not initialized, can't check queue")
+            return None
+
+        if request_type == 'clip' and not clip_id:
+            return None
+        if request_type == 'stream' and not stream_username:
+            return None
+
+        conn = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+            query = None
+            params = None
+
+            if request_type == 'clip':
+                query = f"""
+                SELECT * FROM {self.queue_table}
+                WHERE request_type = 'clip' AND clip_id = %s AND status in ('pending', 'processing')
+                ORDER BY created_at DESC
+                LIMIT 1
+                """
+                params = (clip_id,)
+            elif request_type == 'stream':
+                query = f"""
+                SELECT * FROM {self.queue_table}
+                WHERE request_type = 'stream' AND stream_username = %s AND status in ('pending', 'processing')
+                ORDER BY created_at DESC
+                LIMIT 1
+                """
+                params = (stream_username,)
+
+            if query and params:
+                cursor.execute(query, params)
+                queue_entry = cursor.fetchone()
+                cursor.close()
+
+                if queue_entry:
+                    logger.info(f"Found existing {request_type} request in queue: {queue_entry['request_id']}")
+                    return dict(queue_entry)
+
+                return None
+            else:
+                return None
+
+        except Exception as e:
+            logger.error(f"Error checking if request is in queue: {str(e)}")
+            logger.error(traceback.format_exc())
+            return None
+        finally:
+            if conn:
+                self._return_connection(conn)
+
     def add_to_queue(self,
                     request_type: str,
                     clip_id: Optional[str] = None,
@@ -362,6 +430,24 @@ class PostgresClient:
         if not self._initialized and not self.initialize():
             logger.warning("PostgreSQL not initialized, can't add to queue")
             return None, {}
+
+        # Check if this request is already in the queue
+        existing_request = self.is_request_in_queue(
+            request_type=request_type,
+            clip_id=clip_id,
+            stream_username=stream_username
+        )
+
+        if existing_request:
+            # Return the existing request information
+            logger.info(f"Request already in queue, returning existing status. Type: {request_type}, ID: {existing_request['request_id']}")
+
+            # Format datetime objects for JSON response
+            for key, value in existing_request.items():
+                if isinstance(value, datetime):
+                    existing_request[key] = value.isoformat()
+
+            return existing_request['request_id'], existing_request
 
         # Generate a unique request ID
         request_id = str(uuid.uuid4())
@@ -404,7 +490,14 @@ class PostgresClient:
             cursor.close()
 
             logger.info(f"Added {request_type} request to queue: {request_id} (position {position})")
-            return request_id, dict(queue_info)
+
+            # Convert to regular dict and format datetime objects
+            queue_dict = dict(queue_info)
+            for key, value in queue_dict.items():
+                if isinstance(value, datetime):
+                    queue_dict[key] = value.isoformat()
+
+            return request_id, queue_dict
 
         except Exception as e:
             logger.error(f"Error adding request to queue: {str(e)}")
@@ -465,23 +558,23 @@ class PostgresClient:
             # If a request is completed or failed, update positions for all pending requests
             if status in ('completed', 'failed'):
                 update_positions_query = f"""
-                UPDATE {self.queue_table}
-                SET position = position - 1,
-                    estimated_wait_seconds = estimated_wait_seconds -
+                UPDATE {self.queue_table} AS q
+                SET position = q.position - 1,
+                    estimated_wait_seconds = q.estimated_wait_seconds -
                     (SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (completed_at - started_at))), 15)
                      FROM {self.queue_table}
                      WHERE status = 'completed' AND request_type = t.request_type
                      LIMIT 1),
                     estimated_completion_time = NOW() +
-                    (interval '1 second' * (position - 1) *
+                    (interval '1 second' * (q.position - 1) *
                     (SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (completed_at - started_at))), 15)
                      FROM {self.queue_table}
                      WHERE status = 'completed' AND request_type = t.request_type
                      LIMIT 1))
                 FROM {self.queue_table} AS t
-                WHERE {self.queue_table}.request_id = t.request_id
-                AND {self.queue_table}.status = 'pending'
-                AND {self.queue_table}.position > 1
+                WHERE q.request_id = t.request_id
+                AND q.status = 'pending'
+                AND q.position > 1
                 """
                 cursor.execute(update_positions_query)
 

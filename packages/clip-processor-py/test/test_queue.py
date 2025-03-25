@@ -151,5 +151,59 @@ class TestQueueSystem(unittest.TestCase):
         # In a real implementation, this would be tested against the actual
         # database calculations, but for this unit test we're just verifying logic
 
+    def test_duplicate_request_detection(self):
+        """Test that duplicate requests are detected correctly."""
+        # Mock the cursor and connection
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        self.db_client._get_connection.return_value = mock_conn
+        mock_conn.cursor.return_value = mock_cursor
+
+        # Set up mock response for is_request_in_queue
+        mock_existing_request = {
+            'request_id': 'existing-id',
+            'clip_id': 'test-clip',
+            'status': 'pending',
+            'position': 3,
+            'created_at': datetime.now(),
+            'estimated_wait_seconds': 45,
+            'estimated_completion_time': datetime.now() + timedelta(seconds=45)
+        }
+        mock_cursor.fetchone.return_value = mock_existing_request
+
+        # Test is_request_in_queue function
+        existing = self.db_client.is_request_in_queue('clip', 'test-clip')
+        self.assertIsNotNone(existing)
+        self.assertEqual(existing['request_id'], 'existing-id')
+
+        # Test that add_to_queue returns the existing request
+        request_id, queue_info = self.db_client.add_to_queue(
+            request_type='clip',
+            clip_id='test-clip',
+            clip_url='https://clips.twitch.tv/test-clip'
+        )
+
+        # The is_request_in_queue should be called, and the existing request returned
+        self.assertEqual(request_id, 'existing-id')
+        self.assertEqual(queue_info['status'], 'pending')
+        self.assertEqual(queue_info['position'], 3)
+
+        # For a stream request
+        mock_cursor.fetchone.return_value = {
+            'request_id': 'stream-id',
+            'stream_username': 'test-user',
+            'status': 'processing',
+            'position': 0
+        }
+
+        existing = self.db_client.is_request_in_queue('stream', None, 'test-user')
+        self.assertIsNotNone(existing)
+        self.assertEqual(existing['request_id'], 'stream-id')
+
+        # Test with no match
+        mock_cursor.fetchone.return_value = None
+        existing = self.db_client.is_request_in_queue('clip', 'non-existent-clip')
+        self.assertIsNone(existing)
+
 if __name__ == '__main__':
     unittest.main()

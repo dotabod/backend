@@ -137,7 +137,8 @@ def process_queue_worker():
                         request['debug'],
                         request['force'],
                         request['include_image'],
-                        add_to_queue=False  # Don't re-queue
+                        add_to_queue=False,  # Don't re-queue
+                        from_worker=True     # Indicate this is called from worker thread
                     )
                     logger.info(f"Processed clip request: {request['request_id']}")
                 elif request['request_type'] == 'stream':
@@ -146,7 +147,8 @@ def process_queue_worker():
                         request['num_frames'],
                         request['debug'],
                         request['include_image'],
-                        add_to_queue=False  # Don't re-queue
+                        add_to_queue=False,  # Don't re-queue
+                        from_worker=True     # Indicate this is called from worker thread
                     )
                     logger.info(f"Processed stream request: {request['request_id']}")
                 else:
@@ -169,6 +171,10 @@ def process_queue_worker():
 
                         # For clip requests, also save processing time in results table
                         if request['request_type'] == 'clip' and request['clip_id']:
+                            # Skip saving frame_image_url since that requires an active request context
+                            if 'frame_image_url' in result:
+                                del result['frame_image_url']
+
                             db_client.save_clip_result(
                                 request['clip_id'],
                                 request['clip_url'],
@@ -353,7 +359,7 @@ def get_image_url(frame_path, clip_id):
         logger.error(f"Error copying frame image: {e}")
         return None
 
-def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True):
+def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True, from_worker=False):
     """
     Process a clip URL and return the result or add it to the queue.
 
@@ -364,6 +370,7 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
         force: Force reprocessing even if cached
         include_image: Include image URL in the result
         add_to_queue: Add to queue instead of processing immediately
+        from_worker: Whether this is being called from the worker thread
 
     Returns:
         The processing result or queue information
@@ -375,7 +382,7 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
             logger.info(f"Returning cached result for clip ID: {clip_id}")
 
             # If we need to include the image but it's not in the cached result
-            if include_image and 'frame_image_url' not in cached_result and 'best_frame_path' in cached_result:
+            if include_image and 'frame_image_url' not in cached_result and 'best_frame_path' in cached_result and not from_worker:
                 frame_path = cached_result.get('best_frame_path')
                 if frame_path and Path(frame_path).exists():
                     image_url = get_image_url(frame_path, clip_id)
@@ -395,6 +402,25 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
             force=force,
             include_image=include_image
         )
+
+        # Check if this is an existing request already in the queue
+        if 'status' in queue_info and queue_info.get('status') in ('pending', 'processing'):
+            # Create a response with queue status info
+            response = {
+                'queued': True,
+                'request_id': request_id,
+                'status': queue_info.get('status', 'pending'),
+                'position': queue_info.get('position', 1),
+                'estimated_wait_seconds': queue_info.get('estimated_wait_seconds', 0),
+                'estimated_completion_time': queue_info.get('estimated_completion_time'),
+            }
+
+            if queue_info.get('status') == 'pending':
+                response['message'] = 'This clip is already in the processing queue'
+            elif queue_info.get('status') == 'processing':
+                response['message'] = 'This clip is currently being processed'
+
+            return response
 
         # Start worker thread if not running
         start_worker_thread()
@@ -427,8 +453,8 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
         # Add processing time to result
         result['processing_time'] = f"{processing_time:.2f}s"
 
-        # Add frame image URL if requested
-        if include_image and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
+        # Add frame image URL if requested and not from worker thread
+        if include_image and not from_worker and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
             frame_path = result['best_frame_info']['frame_path']
             image_url = get_image_url(frame_path, clip_id)
             if image_url:
@@ -437,15 +463,20 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                 result['best_frame_path'] = str(frame_path)
 
         if clip_id:
+            # Skip saving frame_image_url when called from worker thread
+            result_to_save = result.copy()
+            if from_worker and 'frame_image_url' in result_to_save:
+                del result_to_save['frame_image_url']
+
             # Cache the result
-            success = db_client.save_clip_result(clip_id, clip_url, result, processing_time)
+            success = db_client.save_clip_result(clip_id, clip_url, result_to_save, processing_time)
             if success:
                 logger.info(f"Cached result for clip ID: {clip_id}")
             else:
                 logger.warning(f"Failed to cache result for clip ID: {clip_id}")
 
                 # Try to include the image even if we couldn't cache the result
-                if include_image and 'frame_image_url' not in result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
+                if include_image and not from_worker and 'frame_image_url' not in result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
                     frame_path = result['best_frame_info']['frame_path']
                     image_url = get_image_url(frame_path, clip_id)
                     if image_url:
@@ -456,7 +487,7 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
     else:
         return {'error': 'Failed to process clip or no heroes detected'}
 
-def process_stream_request(username, num_frames=3, debug=False, include_image=True, add_to_queue=True):
+def process_stream_request(username, num_frames=3, debug=False, include_image=True, add_to_queue=True, from_worker=False):
     """
     Process a stream request and return the result or add it to the queue.
 
@@ -466,6 +497,7 @@ def process_stream_request(username, num_frames=3, debug=False, include_image=Tr
         debug: Enable debug mode
         include_image: Include image URL in the result
         add_to_queue: Add to queue instead of processing immediately
+        from_worker: Whether this is being called from the worker thread
 
     Returns:
         The processing result or queue information
@@ -479,6 +511,25 @@ def process_stream_request(username, num_frames=3, debug=False, include_image=Tr
             debug=debug,
             include_image=include_image
         )
+
+        # Check if this is an existing request already in the queue
+        if 'status' in queue_info and queue_info.get('status') in ('pending', 'processing'):
+            # Create a response with queue status info
+            response = {
+                'queued': True,
+                'request_id': request_id,
+                'status': queue_info.get('status', 'pending'),
+                'position': queue_info.get('position', 1),
+                'estimated_wait_seconds': queue_info.get('estimated_wait_seconds', 0),
+                'estimated_completion_time': queue_info.get('estimated_completion_time'),
+            }
+
+            if queue_info.get('status') == 'pending':
+                response['message'] = 'This stream is already in the processing queue'
+            elif queue_info.get('status') == 'processing':
+                response['message'] = 'This stream is currently being processed'
+
+            return response
 
         # Start worker thread if not running
         start_worker_thread()
@@ -512,8 +563,8 @@ def process_stream_request(username, num_frames=3, debug=False, include_image=Tr
         # Add processing time to result
         result['processing_time'] = f"{processing_time:.2f}s"
 
-        # Add frame image URL if requested
-        if include_image and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
+        # Add frame image URL if requested and not from worker thread
+        if include_image and not from_worker and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
             frame_path = result['best_frame_info']['frame_path']
             image_url = get_image_url(frame_path, f"stream_{username}")
             if image_url:
@@ -668,6 +719,19 @@ def main():
         logger.error(f"Error loading hero data: {e}")
         logger.info("You may need to run 'download-heroes' command first")
         return
+
+    # Run database migrations first
+    try:
+        logger.info("Running database migrations...")
+        # Import here to avoid circular imports
+        from db_migration import run_migrations
+        if run_migrations():
+            logger.info("Database migrations completed successfully")
+        else:
+            logger.warning("Database migrations failed, some features may not work correctly")
+    except Exception as e:
+        logger.error(f"Error running database migrations: {e}")
+        logger.warning("Continuing without migrations, some features may not work correctly")
 
     # Initialize PostgreSQL client
     logger.info("Initializing PostgreSQL client...")
