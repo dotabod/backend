@@ -349,7 +349,7 @@ def debug_queue():
 
         # Get the 10 most recent requests
         cursor.execute(f"""
-            SELECT request_id, request_type, status, created_at, started_at, completed_at, clip_id
+            SELECT request_id, request_type, status, created_at, started_at, completed_at, clip_id, match_id
             FROM {db_client.queue_table}
             ORDER BY created_at DESC
             LIMIT 10
