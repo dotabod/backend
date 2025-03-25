@@ -48,11 +48,8 @@ RUN echo '#!/bin/bash\n\
   python -c "import sys; print(sys.path)"\n\
   python -c "import src.clip_utils; print(\"clip_utils imported successfully\")"\n\
   \n\
-  # Preload hero templates\n\
-  echo "Preloading hero templates to cache..."\n\
-  python -c "from src.dota_hero_detection import load_heroes_data; load_heroes_data()"\n\
-  \n\
   # Start the Gunicorn server with a single worker to ensure queue system works properly\n\
+  # The app will be initialized during startup through @app.before_first_request\n\
   exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 1 --threads 4 --timeout 300 src.api_server:app\n\
   ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 

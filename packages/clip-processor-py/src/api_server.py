@@ -20,6 +20,17 @@ from pathlib import Path
 import psycopg2
 from datetime import datetime
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('api_server.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+
 # Import the hero detection and hero data modules
 try:
     from dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
@@ -32,29 +43,19 @@ except ImportError as e:
         from .dota_heroes import get_hero_data
         from .postgresql_client import db_client
     except ImportError as rel_e:
-        print(f"Error: Could not import required modules. First error: {e}, Second error: {rel_e}")
-        print("Make sure you're running this from the correct directory.")
-        print(f"Current Python path: {os.environ.get('PYTHONPATH', 'Not set')}")
+        logger.error(f"Error: Could not import required modules. First error: {e}, Second error: {rel_e}")
+        logger.error("Make sure you're running this from the correct directory.")
+        logger.error(f"Current Python path: {os.environ.get('PYTHONPATH', 'Not set')}")
         import sys
-        print(f"System path: {sys.path}")
+        logger.error(f"System path: {sys.path}")
         exit(1)
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('api_server.log')
-    ]
-)
-logger = logging.getLogger(__name__)
 
 # Global variable to store preloaded hero data
 heroes_data = None
 
 # Create Flask app
 app = Flask(__name__)
+
 # Define the directory for storing frame images
 TEMP_DIR = Path(os.path.dirname(os.path.abspath(__file__))).parent / "temp"
 TEMP_DIR.mkdir(exist_ok=True)
@@ -68,14 +69,64 @@ ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
 queue_lock = Lock()
 # Flag to indicate if worker thread is running
 worker_running = False
+# Flag to track if app is initialized
+app_initialized = False
 
-# Manually preload templates during module import
-logger.info("Initializing hero templates during server startup...")
-heroes_data = load_heroes_data()
-if heroes_data:
-    logger.info(f"Successfully preloaded templates for {len(heroes_data)} heroes")
-else:
-    logger.error("Failed to preload hero templates")
+def initialize_app():
+    """Initialize the application - load hero data, setup database, start worker thread."""
+    global heroes_data, app_initialized
+
+    # Only initialize once
+    if app_initialized:
+        logger.info("App already initialized, skipping initialization")
+        return True
+
+    try:
+        # Step 1: Load hero data
+        logger.info("Loading hero data...")
+        heroes_data = load_heroes_data()
+        if not heroes_data:
+            logger.error("Failed to load hero templates")
+            return False
+        logger.info(f"Successfully loaded templates for {len(heroes_data)} heroes")
+
+        # Step 2: Run database migrations
+        try:
+            logger.info("Running database migrations...")
+            # Import here to avoid circular imports
+            from db_migration import run_migrations
+            if run_migrations():
+                logger.info("Database migrations completed successfully")
+            else:
+                logger.warning("Database migrations failed, some features may not work correctly")
+        except Exception as e:
+            logger.error(f"Error running database migrations: {e}")
+            logger.warning("Continuing without migrations, some features may not work correctly")
+
+        # Step 3: Initialize PostgreSQL client
+        logger.info("Initializing PostgreSQL client...")
+        if not db_client.initialize():
+            logger.error("Failed to initialize PostgreSQL client, caching will be disabled")
+            # We still continue as this is not fatal
+        else:
+            logger.info("PostgreSQL client initialized successfully")
+
+        # Step 4: Start the worker thread
+        logger.info("Starting worker thread...")
+        start_worker_thread()
+
+        # Step 5: Start the worker monitoring thread
+        start_worker_monitor()
+
+        # Mark as initialized
+        app_initialized = True
+        logger.info("Application initialization complete")
+        return True
+
+    except Exception as e:
+        logger.error(f"Error during app initialization: {e}")
+        logger.error(traceback.format_exc())
+        return False
 
 def start_worker_thread():
     """Start the worker thread to process queued requests if not already running."""
@@ -87,7 +138,25 @@ def start_worker_thread():
         worker_running = True
         logger.info("Started queue worker thread")
     else:
-        logger.info("Worker thread is already running")
+        logger.debug("Worker thread is already running")
+
+def start_worker_monitor():
+    """Start a thread to monitor the worker thread and restart it if needed."""
+    def check_worker_thread():
+        logger.info(f"Checking worker thread status. Current status: running={worker_running}")
+        if not worker_running:
+            logger.info("Worker thread not running, restarting it...")
+            start_worker_thread()
+
+    def periodic_worker_check():
+        while True:
+            time.sleep(30)  # Check every 30 seconds
+            check_worker_thread()
+
+    # Start the monitor thread
+    monitor_thread = threading.Thread(target=periodic_worker_check, daemon=True)
+    monitor_thread.start()
+    logger.info("Started worker monitoring thread")
 
 def process_queue_worker():
     """Worker thread function to process queued requests."""
@@ -112,9 +181,6 @@ def process_queue_worker():
                     # No pending requests, sleep and check again instead of exiting
                     logger.debug("No pending requests in the queue, checking again in 5 seconds")
                     # Don't set worker_running to False here anymore
-                    # worker_running = False
-                    # break
-                    # Release the lock while sleeping
 
             # If no requests, sleep outside the lock to prevent holding it
             if not request:
@@ -199,6 +265,15 @@ def process_queue_worker():
             worker_running = False
         logger.info("Queue worker thread stopped")
 
+# Initialize app before first request
+@app.before_request
+def before_first_request():
+    """Ensure app is initialized before handling the first request."""
+    if not app_initialized:
+        logger.info("Initializing app before first request...")
+        initialize_app()
+
+# Continue with the rest of your endpoints...
 @app.route('/health', methods=['GET'])
 def health_check():
     """Simple health check endpoint."""
@@ -212,6 +287,10 @@ def debug_queue():
     This is for administrative use only.
     """
     try:
+        # Ensure the app is initialized
+        if not app_initialized:
+            initialize_app()
+
         # Get all pending requests
         conn = db_client._get_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -249,6 +328,7 @@ def debug_queue():
 
         return jsonify({
             'worker_status': worker_status,
+            'app_initialized': app_initialized,
             'queue_status': [dict(row) for row in status_counts],
             'recent_requests': [dict(row) for row in recent_requests]
         })
@@ -760,70 +840,8 @@ def detect_heroes_from_stream():
 
 def main():
     """Main entry point for the API server."""
-    global heroes_data
-
-    # Check if hero assets exist, and download them if not
-    logger.info("Checking for hero assets...")
-    try:
-        hero_data = get_hero_data()
-        logger.info(f"Found {len(hero_data)} heroes with assets")
-
-        # Ensure hero templates are preloaded at server startup
-        if heroes_data is None:
-            logger.info("Preloading hero templates before server start...")
-            heroes_data = load_heroes_data()
-            if heroes_data:
-                logger.info(f"Successfully preloaded templates for {len(heroes_data)} heroes")
-            else:
-                logger.error("Failed to preload hero templates")
-    except Exception as e:
-        logger.error(f"Error loading hero data: {e}")
-        logger.info("You may need to run 'download-heroes' command first")
-        return
-
-    # Run database migrations first
-    try:
-        logger.info("Running database migrations...")
-        # Import here to avoid circular imports
-        from db_migration import run_migrations
-        if run_migrations():
-            logger.info("Database migrations completed successfully")
-        else:
-            logger.warning("Database migrations failed, some features may not work correctly")
-    except Exception as e:
-        logger.error(f"Error running database migrations: {e}")
-        logger.warning("Continuing without migrations, some features may not work correctly")
-
-    # Initialize PostgreSQL client
-    logger.info("Initializing PostgreSQL client...")
-    if db_client.initialize():
-        logger.info("PostgreSQL client initialized successfully")
-    else:
-        logger.warning("Failed to initialize PostgreSQL client, caching will be disabled")
-
-    # Start the worker thread and schedule a periodic check to restart it if needed
-    logger.info("Starting initial worker thread...")
-    start_worker_thread()
-
-    # Define a function to check and restart the worker thread if needed
-    def check_worker_thread():
-        logger.info(f"Checking worker thread status. Current status: running={worker_running}")
-        if not worker_running:
-            logger.info("Worker thread not running, restarting it...")
-            start_worker_thread()
-        else:
-            logger.debug("Worker thread is running, no action needed")
-
-    # Start a thread to periodically check and restart the worker thread
-    def periodic_worker_check():
-        while True:
-            time.sleep(30)  # Check every 30 seconds
-            check_worker_thread()
-
-    # Start the periodic worker check thread
-    worker_check_thread = threading.Thread(target=periodic_worker_check, daemon=True)
-    worker_check_thread.start()
-    logger.info("Started periodic worker check thread")
+    # Initialize the application
+    initialize_app()
 
     # Get port from environment variable or use default
     port = int(os.environ.get('PORT', 5000))

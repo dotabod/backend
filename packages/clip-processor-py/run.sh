@@ -35,13 +35,11 @@ if [ ! -d "assets/dota_heroes" ] || [ -z "$(ls -A assets/dota_heroes 2>/dev/null
   python -m src.dota_heroes
 fi
 
-# Preload hero templates to ensure they're cached
-echo "Preloading hero templates to cache..."
-python -c "from src.dota_hero_detection import load_heroes_data; load_heroes_data()"
-
 # Run the server (development mode)
 echo "Starting API server in development mode..."
+# The app will be initialized during startup in the main() function
 python -m src.api_server
 
-# To run with Gunicorn instead (production-like), uncomment:
-# gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 src.api_server:app
+# Alternative: To run with Gunicorn instead (production-like), uncomment:
+# echo "Starting API server with Gunicorn..."
+# gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 4 --timeout 300 src.api_server:app
