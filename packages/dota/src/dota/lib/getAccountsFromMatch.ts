@@ -134,6 +134,13 @@ export async function getAccountsFromMatch({
         if (apiResponse.ok) {
           const data = (await apiResponse.json()) as VisionApiMatchResponse
 
+          if (!Array.isArray(data.heroes) || data.heroes.length === 0) {
+            return {
+              matchPlayers: [],
+              accountIds: [],
+            }
+          }
+
           // Convert Vision API response to our player format
           const matchPlayers: Players = data.heroes.map((hero) => ({
             heroid: hero.hero_id,
