@@ -129,7 +129,7 @@
     "won": "Partida anterior: Vitória"
   },
   "lifetime": "Partidas totais jogadas",
-  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
   "matchFound": "Dados da partida encontrados comandos ativados: {{commandList}}",
   "matchId": "ID da partida: {{matchId}}",
   "midasUsed": "A midas foi finalmente usada, $t(seconds, {\"count\": {{seconds}} }) atrasados {{emote}}",

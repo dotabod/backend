@@ -65,7 +65,7 @@
     "overlay_many": "Aktualnie {{count}} streamerów używa nakładki",
     "overlay_other": "Aktualnie {{count}} streamerów używa nakładki"
   },
-  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
+  "currentSong": "Aktualnie odtwarzane: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Potrzebujesz profesjonalnych porad odnośnie {{- heroName}}? Sprawdź tutaj {{- url}}",
   "dotabod": "Jestem otwartoźródłowym botem stworzonym przez {{author}}. Więcej informacji: {{- url}}",
   "facet": "Aspekt {{- heroName}} {{number}}: {{- facetTitle}} · {{- facetDescription}}",
@@ -123,7 +123,7 @@
     "won_many": "{{- heroName}} ma serię {{count}} zabójstw {{emote}}",
     "won_other": "{{- heroName}} ma serię {{count}} zabójstw {{emote}}"
   },
-  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
+  "lastFmNotConfigured": "Nazwa użytkownika Last.fm nie jest skonfigurowana. Streamer musi skonfigurować to w panelu Dotaboda.",
   "lastgame": {
     "link": "Oto ostatnia gra: {{- url}}",
     "none": "W tej grze nie ma nikogo z poprzedniej gry",
@@ -143,7 +143,7 @@
     "won": "Wygrano ostatnią grę"
   },
   "lifetime": "Gier na koncie",
-  "matchData8500": "Valve disabled match data for 8500+ mmr matches {{emote}}",
+  "matchData8500": "Valve wyłączyło dane dla meczy 8500+ mmr, ale niedługo będę miał rozwiązanie ok",
   "matchFound": "Znaleziono identyfikator gry {{commandList}} aktywne komendy.",
   "matchId": "Identyfikator meczu:  {{matchId}}",
   "midasUsed": "Midas został w końcu użyty, $t(seconds, {\"count\": {{seconds}} }) za późno {{emote}}",
@@ -213,8 +213,8 @@
   "setStreamDelayNoArgs": "Nieprawidłowe opóźnienie transmisji, użyj !setdelay <seconds>",
   "setStreamDelayRemoved": "Usuwam opóźnienie transmisji",
   "shard": "Odłamek aghanima dla {{- heroName}}: {{- title}} · {{- description}}",
-  "songError": "Error fetching song information from Last.fm.",
-  "songNotPlaying": "No song is currently playing.",
+  "songError": "Wystąpił błąd podczas pobierania informacji o utworze z Last.fm.",
+  "songNotPlaying": "Żaden utwór nie jest aktualnie odtwarzany.",
   "spectators": {
     "count_one": "1 obserwujący ogląda ten mecz na żywo w kliencie gry",
     "count_few": "{{count}} obserwujących ogląda ten mecz na żywo w kliencie gry",
