@@ -221,6 +221,14 @@ def process_queue_worker():
                         from_worker=True     # Indicate this is called from worker thread
                     )
                     logger.info(f"Processed clip request: {request['request_id']}")
+
+                    # Add image URL to database result for worker thread
+                    if result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info'] and request['clip_id']:
+                        frame_path = result['best_frame_info']['frame_path']
+                        # We just need the path here, not the URL since that will be generated when accessed
+                        if Path(frame_path).exists():
+                            # Take the original path for future access
+                            result['saved_image_path'] = str(frame_path)
                 elif request['request_type'] == 'stream':
                     logger.info(f"Processing stream request: {request['stream_username']} ({request['request_id']})")
                     result = process_stream_request(
@@ -494,7 +502,7 @@ def get_image_url(frame_path, clip_id):
         clip_id: The clip ID for uniqueness
 
     Returns:
-        The URL to access the image
+        Tuple of (image URL, saved image path)
     """
     import shutil
     from datetime import datetime
@@ -514,10 +522,10 @@ def get_image_url(frame_path, clip_id):
         image_url = f"{host_url}/images/{filename}"
 
         logger.info(f"Saved frame image: {dest_path}, URL: {image_url}")
-        return image_url
+        return image_url, str(dest_path)
     except Exception as e:
         logger.error(f"Error copying frame image: {e}")
-        return None
+        return None, None
 
 def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True, from_worker=False):
     """
@@ -545,9 +553,10 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
             if include_image and 'frame_image_url' not in cached_result and 'best_frame_path' in cached_result and not from_worker:
                 frame_path = cached_result.get('best_frame_path')
                 if frame_path and Path(frame_path).exists():
-                    image_url = get_image_url(frame_path, clip_id)
+                    image_url, saved_image_path = get_image_url(frame_path, clip_id)
                     if image_url:
                         cached_result['frame_image_url'] = image_url
+                        cached_result['saved_image_path'] = saved_image_path
                         # Update the cache with the image URL
                         db_client.save_clip_result(clip_id, clip_url, cached_result)
             return cached_result
@@ -618,9 +627,10 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
         # Add frame image URL if requested and not from worker thread
         if include_image and not from_worker and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
             frame_path = result['best_frame_info']['frame_path']
-            image_url = get_image_url(frame_path, clip_id)
+            image_url, saved_image_path = get_image_url(frame_path, clip_id)
             if image_url:
                 result['frame_image_url'] = image_url
+                result['saved_image_path'] = saved_image_path
                 # Store the actual frame path for potential future use
                 result['best_frame_path'] = str(frame_path)
 
@@ -640,9 +650,10 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                 # Try to include the image even if we couldn't cache the result
                 if include_image and not from_worker and 'frame_image_url' not in result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
                     frame_path = result['best_frame_info']['frame_path']
-                    image_url = get_image_url(frame_path, clip_id)
+                    image_url, saved_image_path = get_image_url(frame_path, clip_id)
                     if image_url:
                         result['frame_image_url'] = image_url
+                        result['saved_image_path'] = saved_image_path
                         result['best_frame_path'] = str(frame_path)
 
         return result
@@ -730,9 +741,10 @@ def process_stream_request(username, num_frames=3, debug=False, include_image=Tr
         # Add frame image URL if requested and not from worker thread
         if include_image and not from_worker and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
             frame_path = result['best_frame_info']['frame_path']
-            image_url = get_image_url(frame_path, f"stream_{username}")
+            image_url, saved_image_path = get_image_url(frame_path, f"stream_{username}")
             if image_url:
                 result['frame_image_url'] = image_url
+                result['saved_image_path'] = saved_image_path
                 # Store the actual frame path for potential future use
                 result['best_frame_path'] = str(frame_path)
 
