@@ -1,18 +1,30 @@
 #!/bin/bash
 # Shell script to setup and run the Dota 2 Hero Detection API locally
 
-# Create virtual environment if it doesn't exist
-if [ ! -d "venv" ]; then
-  echo "Creating virtual environment..."
-  python3 -m venv venv
+# Get the script directory in a cross-platform way
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  # macOS
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+  # Linux and others with readlink -f support
+  SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+fi
+cd "$SCRIPT_DIR" || exit
+
+# Run the dependency installation script
+if [ ! -f "./install-deps.sh" ]; then
+  echo "Error: install-deps.sh not found!"
+  exit 1
 fi
 
-# Activate virtual environment
+echo "Installing dependencies..."
+bash ./install-deps.sh
+
+# Ensure virtual environment is activated
 source venv/bin/activate
 
-# Install requirements
-echo "Installing dependencies..."
-pip install -e .
+# Install the package in development mode
+pip install --index-url https://pypi.org/simple/ -e .
 
 # Create necessary directories
 mkdir -p temp assets

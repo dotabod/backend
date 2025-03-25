@@ -13,7 +13,7 @@ source venv/bin/activate
 # Install requirements if needed
 if ! pip show clip-processor &>/dev/null; then
   echo "Installing dependencies..."
-  pip install -e .
+  pip install --index-url https://pypi.org/simple/ -e .
 fi
 
 # Create necessary directories

@@ -23,6 +23,8 @@ setup(
         "tqdm==4.66.1",
         "flask==3.0.2",
         "gunicorn==21.2.0",
+        "streamlink==6.5.0",
+        "psycopg2cffi==2.9.0",
     ],
     entry_points={
         "console_scripts": [
