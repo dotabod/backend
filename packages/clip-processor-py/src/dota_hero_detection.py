@@ -183,6 +183,9 @@ HEROES_FILE = HEROES_DIR / "hero_data.json"
 # Cache file for precomputed templates
 TEMPLATES_CACHE_FILE = HEROES_DIR / "templates_cache.npz"
 
+# Global variable to store loaded heroes data for singleton pattern
+_LOADED_HEROES_DATA = None
+
 def save_debug_image(image, name_prefix, additional_info=""):
     """Save an image for debugging purposes."""
     if os.environ.get("DEBUG_IMAGES", "").lower() in ("1", "true", "yes"):
@@ -238,7 +241,18 @@ def load_image(image_path):
         return None
 
 def load_heroes_data():
-    """Load hero data from heroes.json file and precompute templates."""
+    """
+    Load hero data from heroes.json file and precompute templates.
+
+    Uses a singleton pattern to ensure data is only loaded once per process.
+    """
+    global _LOADED_HEROES_DATA
+
+    # If data is already loaded, return it (singleton pattern)
+    if _LOADED_HEROES_DATA is not None:
+        logger.debug("Using already loaded heroes data from memory")
+        return _LOADED_HEROES_DATA
+
     if not HEROES_FILE.exists():
         logger.error(f"Heroes data file not found: {HEROES_FILE}")
         logger.info("Please run dota_heroes.py to download hero data first")
@@ -272,6 +286,9 @@ def load_heroes_data():
 
             logger.debug(f"Loaded {templates_loaded} cached templates from disk")
             performance_timer.stop('load_cached_templates')
+
+            # Store in the singleton
+            _LOADED_HEROES_DATA = heroes_data
             return heroes_data
 
         # If no cache exists, precompute and save to cache
@@ -305,6 +322,9 @@ def load_heroes_data():
 
         logger.debug(f"Loaded and cached {templates_loaded} templates from {len(heroes_data)} heroes")
         performance_timer.stop('load_heroes_data')
+
+        # Store in the singleton
+        _LOADED_HEROES_DATA = heroes_data
         return heroes_data
     except Exception as e:
         logger.error(f"Error loading heroes data: {e}")

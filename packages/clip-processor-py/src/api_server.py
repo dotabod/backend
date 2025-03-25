@@ -15,12 +15,12 @@ import traceback
 
 # Import the hero detection and hero data modules
 try:
-    from dota_hero_detection import process_clip_url, process_stream_username
+    from dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
     from dota_heroes import get_hero_data
 except ImportError:
     # Try with relative import for different directory structures
     try:
-        from .dota_hero_detection import process_clip_url, process_stream_username
+        from .dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
         from .dota_heroes import get_hero_data
     except ImportError:
         print("Error: Could not import required modules.")
@@ -38,8 +38,33 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Global variable to store preloaded hero data
+heroes_data = None
+
 # Create Flask app
 app = Flask(__name__)
+
+# Preload hero templates at application startup
+@app.before_request
+def preload_hero_templates():
+    """Preload hero templates before the first request is processed."""
+    global heroes_data
+    # Only load if not already loaded
+    if heroes_data is None:
+        logger.info("Preloading hero templates...")
+        heroes_data = load_heroes_data()
+        if heroes_data:
+            logger.info(f"Successfully preloaded templates for {len(heroes_data)} heroes")
+        else:
+            logger.error("Failed to preload hero templates")
+
+# Manually preload templates during module import
+logger.info("Initializing hero templates during server startup...")
+heroes_data = load_heroes_data()
+if heroes_data:
+    logger.info(f"Successfully preloaded templates for {len(heroes_data)} heroes")
+else:
+    logger.error("Failed to preload hero templates")
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -154,11 +179,22 @@ def detect_heroes_from_stream():
 
 def main():
     """Main entry point for the API server."""
+    global heroes_data
+
     # Check if hero assets exist, and download them if not
     logger.info("Checking for hero assets...")
     try:
         hero_data = get_hero_data()
         logger.info(f"Found {len(hero_data)} heroes with assets")
+
+        # Ensure hero templates are preloaded at server startup
+        if heroes_data is None:
+            logger.info("Preloading hero templates before server start...")
+            heroes_data = load_heroes_data()
+            if heroes_data:
+                logger.info(f"Successfully preloaded templates for {len(heroes_data)} heroes")
+            else:
+                logger.error("Failed to preload hero templates")
     except Exception as e:
         logger.error(f"Error loading hero data: {e}")
         logger.info("You may need to run 'download-heroes' command first")

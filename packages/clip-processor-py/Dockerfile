@@ -34,6 +34,10 @@ RUN echo '#!/bin/bash\n\
   python -m src.dota_heroes\n\
   fi\n\
   \n\
+  # Preload hero templates\n\
+  echo "Preloading hero templates to cache..."\n\
+  python -c "from src.dota_hero_detection import load_heroes_data; load_heroes_data()"\n\
+  \n\
   # Start the Gunicorn server\n\
   exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 4 --timeout 120 src.api_server:app\n\
   ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh

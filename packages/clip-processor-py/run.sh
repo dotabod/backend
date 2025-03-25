@@ -23,6 +23,10 @@ if [ ! -d "assets/dota_heroes" ] || [ -z "$(ls -A assets/dota_heroes 2>/dev/null
   python -m src.dota_heroes
 fi
 
+# Preload hero templates to ensure they're cached
+echo "Preloading hero templates to cache..."
+python -c "from src.dota_hero_detection import load_heroes_data; load_heroes_data()"
+
 # Run the server (development mode)
 echo "Starting API server in development mode..."
 python -m src.api_server
