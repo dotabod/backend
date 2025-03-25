@@ -255,7 +255,7 @@ A Flask-based API service that processes Twitch clips to detect Dota 2 heroes in
 ## Features
 
 - Process Twitch clips to detect Dota 2 heroes
-- Cache processing results using PocketBase
+- Cache processing results using PostgreSQL
 - Process live Twitch streams
 - Debug mode for detailed processing information
 
@@ -278,7 +278,7 @@ docker-compose up -d
 
 This will start two services:
 - **clip-processor-api**: The main API service on port 5000
-- **pocketbase**: Database for caching results on port 8181
+- **db**: PostgreSQL database for caching results on port 5432
 
 ### Local Development
 
@@ -333,12 +333,9 @@ Parameters:
 - `frames` (optional): Number of frames to capture and analyze (default: 3, max: 10)
 - `debug` (optional): Set to "true" for detailed processing information
 
-## PocketBase Admin
+## PostgreSQL Connection
 
-Access the PocketBase admin interface at http://localhost:8090/_/ using:
-
-- Email: admin@dota-hero-detection.local
-- Password: adminpassword123
+The API service connects to PostgreSQL to cache clip processing results. The connection details are configured in the `docker-compose.yml` file.
 
 ## Response Format
 

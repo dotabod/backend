@@ -18,13 +18,13 @@ import re
 try:
     from dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
     from dota_heroes import get_hero_data
-    from pocketbase_client import pb_client
+    from postgresql_client import db_client
 except ImportError:
     # Try with relative import for different directory structures
     try:
         from .dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
         from .dota_heroes import get_hero_data
-        from .pocketbase_client import pb_client
+        from .postgresql_client import db_client
     except ImportError:
         print("Error: Could not import required modules.")
         print("Make sure you're running this from the correct directory.")
@@ -154,7 +154,7 @@ def detect_heroes():
 
     # Check for cached result if not forced to reprocess
     if not force and clip_id:
-        cached_result = pb_client.get_clip_result(clip_id)
+        cached_result = db_client.get_clip_result(clip_id)
         if cached_result:
             logger.info(f"Returning cached result for clip ID: {clip_id}")
             return jsonify(cached_result)
@@ -170,7 +170,7 @@ def detect_heroes():
 
         if result and clip_id:
             # Cache the result
-            success = pb_client.save_clip_result(clip_id, clip_url, result)
+            success = db_client.save_clip_result(clip_id, clip_url, result)
             if success:
                 logger.info(f"Cached result for clip ID: {clip_id}")
             else:
@@ -261,12 +261,12 @@ def main():
         logger.info("You may need to run 'download-heroes' command first")
         return
 
-    # Initialize PocketBase client
-    logger.info("Initializing PocketBase client...")
-    if pb_client.initialize():
-        logger.info("PocketBase client initialized successfully")
+    # Initialize PostgreSQL client
+    logger.info("Initializing PostgreSQL client...")
+    if db_client.initialize():
+        logger.info("PostgreSQL client initialized successfully")
     else:
-        logger.warning("Failed to initialize PocketBase client, caching will be disabled")
+        logger.warning("Failed to initialize PostgreSQL client, caching will be disabled")
 
     # Get port from environment variable or use default
     port = int(os.environ.get('PORT', 5000))
