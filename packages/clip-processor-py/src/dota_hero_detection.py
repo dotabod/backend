@@ -58,12 +58,12 @@ except ImportError:
 
 # Import our modules if available
 try:
-    from clip_utils import get_clip_details, download_clip, extract_frames
+    from clip_utils import get_clip_details, download_clip, download_single_frame, extract_frames
     from stream_utils import capture_multiple_frames
 except ImportError:
     # For standalone usage
     try:
-        from .clip_utils import get_clip_details, download_clip, extract_frames
+        from .clip_utils import get_clip_details, download_clip, download_single_frame, extract_frames
         from .stream_utils import capture_multiple_frames
     except ImportError:
         print("Warning: clip_utils module not found, standalone mode only")
@@ -248,6 +248,7 @@ def load_heroes_data():
 
         # Precompute and cache templates
         logger.info(f"Precomputing templates for {len(heroes_data)} heroes...")
+        performance_timer.start('load_heroes_data')
         templates_loaded = 0
 
         for hero in heroes_data:
@@ -266,6 +267,7 @@ def load_heroes_data():
                     variant['cached_template'] = None
 
         logger.debug(f"Loaded and cached {templates_loaded} templates from {len(heroes_data)} heroes")
+        performance_timer.stop('load_heroes_data')
         return heroes_data
     except Exception as e:
         logger.error(f"Error loading heroes data: {e}")
@@ -1863,16 +1865,21 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
             performance_timer.stop('get_clip_details')
             logger.info("Clip details retrieved")
 
+            # Instead of downloading the entire clip and extracting frames
+            # performance_timer.start('download_clip')
+            # frame_path = download_single_frame(clip_details)
+            # frame_paths.append(frame_path)
+            # performance_timer.stop('download_clip')
+            # You can also specify a timestamp (in seconds)
+            # frame_path = download_single_frame(clip_details, timestamp=10)  # frame at 10 seconds
+
+            # Extract frames
             # Download the clip
             performance_timer.start('download_clip')
             clip_path = download_clip(clip_details)
-            performance_timer.stop('download_clip')
             logger.info(f"Clip downloaded to: {clip_path}")
-
-            # Extract frames
-            performance_timer.start('extract_frames')
             frame_paths = extract_frames(clip_path, clip_details=clip_details, frame_interval=10)
-            performance_timer.stop('extract_frames')
+            performance_timer.stop('download_clip')
             logger.info(f"Extracted {len(frame_paths)} frames")
 
         elif source_type == "stream":
