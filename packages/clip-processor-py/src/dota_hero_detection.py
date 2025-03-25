@@ -1624,14 +1624,11 @@ def process_frames_for_heroes(frame_paths, debug=False):
         if best_color_match_score >= 0.7:  # At least 7/10 matches
             logger.warning(f"No perfect match found, using best match with score {best_color_match_score:.2f} (frame {best_color_frame_index+1})")
         else:
-            logger.warning(f"No good color match found, best score was only {best_color_match_score:.2f} in frame {best_color_frame_index+1}")
-            # Use the last frame as a fallback
-            best_color_frame_index = len(frame_paths) - 1
-            best_color_frame_path = frame_paths[best_color_frame_index]
-            # Get the colors for this fallback frame
-            match_score, best_detected_colors = detect_hero_color_bars(best_color_frame_path, expected_colors, debug=debug)
-            best_color_match_score = match_score
-            logger.info(f"Falling back to last frame: {best_color_frame_path}")
+            logger.error(f"No good color match found, best score was only {best_color_match_score:.2f} in frame {best_color_frame_index+1}")
+            # Stop timing for all frames
+            total_duration = performance_timer.stop('process_all_frames')
+            logger.info(f"Processing failed due to insufficient color match score (required >= 0.7)")
+            return [], {'frame_index': best_color_frame_index, 'frame_path': best_color_frame_path, 'match_score': best_color_match_score, 'detected_colors': best_detected_colors}
 
     # Process only the best frame for hero identification
     logger.info(f"Processing frame #{best_color_frame_index+1}: {best_color_frame_path} with color match score {best_color_match_score:.2f}")
