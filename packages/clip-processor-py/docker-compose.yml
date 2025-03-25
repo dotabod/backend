@@ -12,7 +12,7 @@ services:
       - ./assets:/app/assets
     environment:
       - PORT=5000
-      - POCKETBASE_URL=http://pocketbase:8181
+      - POCKETBASE_URL=http://pocketbase:8090
     restart: unless-stopped
     depends_on:
       - pocketbase
@@ -20,7 +20,7 @@ services:
   pocketbase:
     image: ghcr.io/muchobien/pocketbase:latest
     ports:
-      - "8181:8181"
+      - "8090:8090"
     volumes:
       - pocketbase-data:/pb_data
     restart: unless-stopped

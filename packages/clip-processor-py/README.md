@@ -335,7 +335,7 @@ Parameters:
 
 ## PocketBase Admin
 
-Access the PocketBase admin interface at http://localhost:8181/_/ using:
+Access the PocketBase admin interface at http://localhost:8090/_/ using:
 
 - Email: admin@dota-hero-detection.local
 - Password: adminpassword123
