@@ -5,6 +5,7 @@ import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
+import { is8500Plus } from '../../utils/index.js'
 
 commandHandler.registerCommand('avg', {
   onlyOnline: true,
@@ -37,7 +38,14 @@ commandHandler.registerCommand('avg', {
       players: matchPlayers,
     })
       .then((avg) => {
-        chatClient.say(message.channel.name, `${avg}${avgDescriptor}`, message.user.messageId)
+        const append = is8500Plus(client)
+          ? ` · ${t('matchData8500', { emote: 'PoroSad', lng: client.locale })}`
+          : ''
+        chatClient.say(
+          message.channel.name,
+          `${avg}${avgDescriptor}${append}`,
+          message.user.messageId,
+        )
       })
       .catch((e) => {
         chatClient.say(

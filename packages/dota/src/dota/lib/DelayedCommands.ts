@@ -29,4 +29,8 @@ export const DelayedCommands: { command: string; key: SettingKeys }[] = [
     command: '!wp',
     key: DBSettings.commandWinProbability,
   },
+  {
+    command: '!stats',
+    key: DBSettings.commandItems,
+  },
 ]

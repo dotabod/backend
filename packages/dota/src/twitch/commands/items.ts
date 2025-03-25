@@ -7,11 +7,12 @@ import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
 import { DBSettings } from '../../settings.js'
 import { steamSocket } from '../../steam/ws.js'
-import type { DelayedGames, Item, Packet } from '../../types.js'
+import type { DelayedGames, Item, Packet, SocketClient } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 import { profileLink } from './profileLink.js'
+import { is8500Plus } from '../../utils/index.js'
 
 function formatItemList(itemList: string[]) {
   const itemCounts = {} as Record<string, number>
@@ -37,12 +38,14 @@ function formatItemList(itemList: string[]) {
 }
 
 async function getItems({
+  client,
   token,
   packet,
   args,
   locale,
   command,
 }: {
+  client: SocketClient
   token: string
   packet?: Packet
   args: string[]
@@ -72,6 +75,10 @@ async function getItems({
         .filter(Boolean)
         .filter((item) => item !== 'empty')
   } else {
+    if (is8500Plus(client)) {
+      throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
+    }
+
     const redisClient = RedisClient.getInstance()
     const steamServerId =
       packet?.map?.matchid &&
@@ -168,6 +175,7 @@ commandHandler.registerCommand('items', {
 
     try {
       const res = await getItems({
+        client,
         token: client.token,
         packet: client.gsi,
         args,

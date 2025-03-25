@@ -31,7 +31,7 @@ import { isSpectator } from '../../lib/isSpectator.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 import { minimapParser } from '../minimap/parser.js'
-import { getRedisNumberValue } from '../../../utils/index.js'
+import { getRedisNumberValue, is8500Plus } from '../../../utils/index.js'
 import CustomError from '../../../utils/customError.js'
 
 // Define a type for the global timeouts
@@ -144,7 +144,7 @@ async function saveMatchData(client: SocketClient) {
 
     if (steamServerId && lobbyType !== null) return
 
-    if (!steamServerId && lobbyType === null) {
+    if (!steamServerId && lobbyType === null && !is8500Plus(client)) {
       // Fix: Check if we're already looking up this match to prevent race conditions
       if (steamServerLookupMap.has(matchId)) return
 
@@ -212,7 +212,7 @@ async function saveMatchData(client: SocketClient) {
       }
     }
 
-    if (currentSteamServerId && lobbyType === null) {
+    if (currentSteamServerId && lobbyType === null && !is8500Plus(client)) {
       // Fix: Check if we're already looking up this match to prevent race conditions
       if (steamDelayDataLookupMap.has(matchId)) return
 

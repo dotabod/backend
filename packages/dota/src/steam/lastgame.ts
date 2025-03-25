@@ -6,6 +6,7 @@ import type { Players } from '../types'
 import type { DelayedGames } from '../types.js'
 import CustomError from '../utils/customError.js'
 import MongoDBSingleton from './MongoDBSingleton.js'
+import supabase from '../db/supabase.js'
 
 const generateMessage = (
   locale: string,
@@ -77,11 +78,30 @@ export default async function lastgame({
           })}`
         : msg
     }
+    if (!gameHistory.length || gameHistory.length !== 2) {
+      // Check supabase
+      const { data: lg } = await supabase
+        .from('bets')
+        .select('matchId')
+        .eq('steam32Id', steam32Id)
+        .not('won', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
 
-    if (!gameHistory.length)
-      throw new CustomError(t('noLastMatch', { emote: 'PauseChamp', lng: locale }))
-    if (gameHistory.length !== 2)
-      throw new CustomError(t('noLastMatch', { emote: 'PauseChamp', lng: locale }))
+      if (!lg) {
+        throw new CustomError(t('noLastMatch', { emote: 'PauseChamp', lng: locale }))
+      }
+
+      // The delayed API didn't save their match, but we have it in supabase
+      // Must mean they're a 8500+ player
+      const oldGame = lg.matchId
+
+      return `${t('lastgame.link', {
+        lng: locale,
+        url: `dotabuff.com/matches/${oldGame}`,
+      })} · ${t('matchData8500', { emote: 'PoroSad', lng: locale })}`
+    }
 
     const [gameOne, gameTwo] = gameHistory as unknown as DelayedGames[]
     const oldGame = gameOne.match.match_id === currentMatchId ? gameTwo : gameOne
