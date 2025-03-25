@@ -69,20 +69,6 @@ queue_lock = Lock()
 # Flag to indicate if worker thread is running
 worker_running = False
 
-# Preload hero templates at application startup
-@app.before_request
-def preload_hero_templates():
-    """Preload hero templates before the first request is processed."""
-    global heroes_data
-    # Only load if not already loaded
-    if heroes_data is None:
-        logger.info("Preloading hero templates...")
-        heroes_data = load_heroes_data()
-        if heroes_data:
-            logger.info(f"Successfully preloaded templates for {len(heroes_data)} heroes")
-        else:
-            logger.error("Failed to preload hero templates")
-
 # Manually preload templates during module import
 logger.info("Initializing hero templates during server startup...")
 heroes_data = load_heroes_data()
