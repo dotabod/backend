@@ -100,17 +100,24 @@ class PerformanceTimer:
 
     def start(self, label):
         if label not in self.timings:
-            self.timings[label] = {'starts': [], 'stops': [], 'totals': []}
+            self.timings[label] = {'starts': [], 'stops': [], 'totals': [], 'stopped': False}
+        else:
+            # Reset the stopped flag when starting a new timer
+            self.timings[label]['stopped'] = False
         self.timings[label]['starts'].append(time.time())
 
     def stop(self, label):
-        if label in self.timings and len(self.timings[label]['starts']) > len(self.timings[label]['stops']):
+        if label in self.timings and len(self.timings[label]['starts']) > len(self.timings[label]['stops']) and not self.timings[label]['stopped']:
             start_time = self.timings[label]['starts'][-1]
             stop_time = time.time()
             duration = stop_time - start_time
             self.timings[label]['stops'].append(stop_time)
             self.timings[label]['totals'].append(duration)
+            self.timings[label]['stopped'] = True
             return duration
+        elif label in self.timings and self.timings[label]['stopped'] and len(self.timings[label]['totals']) > 0:
+            # If already stopped, just return the last duration
+            return self.timings[label]['totals'][-1]
         return 0
 
     def get_summary(self):
@@ -1560,7 +1567,13 @@ def process_frames_for_heroes(frame_paths, debug=False):
         debug: Whether to save debug images
 
     Returns:
-        list: List of identified heroes from the best frame
+        tuple: (heroes, best_frame_info)
+            - heroes: List of identified heroes from the best frame
+            - best_frame_info: Dictionary containing the best frame details:
+                - frame_index: Index of the best frame in frame_paths
+                - frame_path: Path to the best frame
+                - match_score: Color bar match score (0.0 to 1.0)
+                - detected_colors: Dictionary of detected colors for each team and position
     """
     performance_timer.start('process_all_frames')
 
@@ -1570,6 +1583,7 @@ def process_frames_for_heroes(frame_paths, debug=False):
     best_color_match_score = 0.0
     best_color_frame_index = -1
     best_color_frame_path = None
+    best_detected_colors = {}
     perfect_match_found = False
 
     # Reverse the frame paths to start from the end
@@ -1589,6 +1603,7 @@ def process_frames_for_heroes(frame_paths, debug=False):
             best_color_match_score = match_score
             best_color_frame_index = i
             best_color_frame_path = frame_path
+            best_detected_colors = detected_colors
             logger.debug(f"New best color match: frame {i+1} with score {best_color_match_score:.2f}")
 
             # If we found a perfect match (10/10), we can stop
@@ -1606,6 +1621,9 @@ def process_frames_for_heroes(frame_paths, debug=False):
             # Use the last frame as a fallback
             best_color_frame_index = len(frame_paths) - 1
             best_color_frame_path = frame_paths[best_color_frame_index]
+            # Get the colors for this fallback frame
+            match_score, best_detected_colors = detect_hero_color_bars(best_color_frame_path, expected_colors, debug=debug)
+            best_color_match_score = match_score
             logger.info(f"Falling back to last frame: {best_color_frame_path}")
 
     # Process only the best frame for hero identification
@@ -1616,24 +1634,19 @@ def process_frames_for_heroes(frame_paths, debug=False):
     heroes = process_frame_for_heroes(best_color_frame_path, debug=debug)
     performance_timer.stop('process_best_frame')
 
-    # Print a summary of identified heroes with confidence scores
-    if heroes:
-        logger.info("Hero detection summary:")
-        for hero in heroes:
-            team = hero['team']
-            pos = hero['position'] + 1
-            name = hero['hero_localized_name']
-            variant = hero['variant']
-            score = hero['match_score']
-            logger.info(f"  {team} #{pos}: {name} ({variant}) (confidence: {score:.2f})")
-    else:
-        logger.warning(f"No heroes identified in best frame")
+    # Create a dictionary with information about the best frame
+    best_frame_info = {
+        'frame_index': best_color_frame_index,
+        'frame_path': best_color_frame_path,
+        'match_score': best_color_match_score,
+        'detected_colors': best_detected_colors
+    }
 
-    # Stop the timer and log the total time
-    duration = performance_timer.stop('process_all_frames')
-    logger.info(f"All frames processed in {duration:.3f} seconds")
+    # Stop timing for all frames
+    total_duration = performance_timer.stop('process_all_frames')
+    logger.info(f"All frames processed in {total_duration:.3f} seconds, {len(heroes)} heroes identified")
 
-    return heroes
+    return heroes, best_frame_info
 
 def adjust_levels(image, black_point, white_point, gamma):
     """
@@ -1963,37 +1976,20 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
 
             logger.info(f"Captured {len(frame_paths)} frames from stream")
 
-        # Use all frames for color bar detection
+        # Use all frames for color bar detection and hero identification
         logger.info(f"Analyzing all frames for hero color bars")
 
-        # Process frames for heroes using our new approach
+        # Process frames for heroes using our approach
         performance_timer.start('process_frames')
-        heroes = process_frames_for_heroes(frame_paths, debug=debug)
+        heroes, best_frame_info = process_frames_for_heroes(frame_paths, debug=debug)
         processing_time = performance_timer.stop('process_frames')
 
         if heroes:
-            # Get the best color match information from the best frame
-            best_frame_index = -1
-            best_frame_path = None
-            best_match_score = 0.0
-            detected_colors = {}
-
-            # Find the frame with the best color match score (scanning from last to first)
-            reversed_frame_indices = list(range(len(frame_paths)))
-            reversed_frame_indices.reverse()
-
-            for i in reversed_frame_indices:
-                frame_path = frame_paths[i]
-                match_score, colors = detect_hero_color_bars(frame_path, expected_colors, debug=False)
-                if match_score > best_match_score:
-                    best_match_score = match_score
-                    best_frame_index = i
-                    best_frame_path = frame_path
-                    detected_colors = colors
-                    # If we found a perfect match, stop
-                    if match_score == 1.0:
-                        logger.info(f"Found perfect color match (10/10) in frame {i+1}")
-                        break
+            # Get the best frame information from process_frames_for_heroes
+            best_frame_index = best_frame_info['frame_index']
+            best_frame_path = best_frame_info['frame_path']
+            best_match_score = best_frame_info['match_score']
+            detected_colors = best_frame_info['detected_colors']
 
             # Log the best match results
             if best_match_score == 1.0:
@@ -2034,111 +2030,53 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
                     'hero_id': hero['hero_id']
                 }
 
-                # Add player name if available
-                if 'player_name' in hero:
-                    player['name'] = hero['player_name']
-
-                # Add rank if available
+                # Add rank information if available
                 if 'rank' in hero:
                     player['rank'] = hero['rank']
+                    if 'rank_text' in hero:
+                        player['rank_text'] = hero['rank_text']
+
+                # Add player name if available
+                if 'player_name' in hero:
+                    player['player_name'] = hero['player_name']
 
                 players.append(player)
 
-            # Add timing data and color information to output
-            heroes_output = {
+            # Format the result as a dictionary
+            result = {
                 'heroes': heroes,
-                'players': players,  # Add the more user-friendly players array
+                'players': players,
                 'color_match_score': best_match_score,
-                'detected_colors': detected_colors,
+                'color_match_percentage': f"{int(best_match_score*100)}%",
+                'processing_time': f"{processing_time:.2f}s",
+                'frame_count': len(frame_paths),
                 'best_frame_index': best_frame_index,
-                'best_frame_path': str(best_frame_path),
-                'rank_banners_extracted': rank_banners_extracted,
-                'player_names_extracted': player_names_extracted,
-                'timing': {
-                    'total_processing_time': processing_time,
-                    'detailed_timings': performance_timer.get_summary() if show_timings else None
-                }
+                'source_type': source_type,
+                'source': media_source
             }
 
-            # Add source-specific information
-            if source_type == "clip":
-                heroes_output['clip_url'] = media_source
-            elif source_type == "stream":
-                heroes_output['stream_username'] = media_source
-
-            # Print debug information if debug flag is set
+            # Add detected colors for debugging
             if debug:
-                print(json.dumps(heroes_output, indent=2))
+                result['detected_colors'] = detected_colors
 
-                # Print results with confidence scores
-                print(f"\nIdentified {len(heroes)} heroes in {processing_time:.3f} seconds:")
-                print(f"Color bar match score: {best_match_score:.2f} (frame {best_frame_index+1})")
-                for hero in heroes:
-                    team = hero['team']
-                    pos = hero['position'] + 1
-                    name = hero['hero_localized_name']
-                    variant = hero['variant']
-                    score = hero['match_score']
+            # Add performance metrics if requested
+            if show_timings:
+                total_time = performance_timer.stop('total_execution')
+                result['total_execution_time'] = f"{total_time:.2f}s"
+                result['performance_metrics'] = performance_timer.get_summary()
 
-                    # Add player name if available
-                    player_info = ""
-                    if 'player_name' in hero:
-                        player_info = f" (Player: {hero['player_name']})"
-
-                    # Add rank information if available
-                    rank_info = ""
-                    if 'rank' in hero:
-                        rank_info = f" (Rank {hero['rank']})"
-                    elif 'rank_banner_shape' in hero:
-                        rank_info = " (no rank detected)"
-
-                    confidence_indicator = "*" * int(score * 10)  # Visual indicator of confidence
-                    print(f"{team} #{pos}: {name} ({variant}) (confidence: {score:.2f}){player_info}{rank_info}")
-
-                # Print information about debug images
-                if debug_templates:
-                    print(f"\nDebug images saved to: {DEBUG_DIR}")
-                    print("Template match comparison images are prefixed with 'template_match_'")
-                    if rank_banners_extracted:
-                        print("Rank banner images are prefixed with 'rank_banner_'")
-                    if player_names_extracted:
-                        print("Player name images are prefixed with 'player_area_'")
-
-                # Print detailed timing information if requested
-                if show_timings:
-                    print("\nPerformance Timing Summary:")
-                    for label, stats in sorted(performance_timer.get_summary().items()):
-                        print(f"  {label}: {stats['count']} calls, {stats['total']:.3f}s total, {stats['avg']:.3f}s avg")
-
-            return heroes_output
+            return result
         else:
-            logger.warning("No heroes identified in the media")
-            if debug:
-                print("No heroes identified in the media.")
-
-            if source_type == "stream":
-                return {
-                    'stream_username': media_source,
-                    'error': 'No heroes detected in any frame',
-                    'frames_captured': len(frame_paths)
-                }
+            logger.error("No heroes identified in any frames")
             return None
     except Exception as e:
-        logger.error(f"Error in processing {source_type}: {e}", exc_info=True)
-        if debug:
-            print(f"Error: {e}")
-
-        if source_type == "stream":
-            return {
-                'stream_username': media_source,
-                'error': str(e),
-                'traceback': traceback.format_exc() if debug else None
-            }
+        logger.error(f"Error processing media: {e}")
+        traceback.print_exc()
         return None
     finally:
-        # Stop overall timer
-        total_time = performance_timer.stop('total_execution')
-        logger.info(f"Total execution time: {total_time:.3f} seconds")
+        # Make sure to stop the timer if not already stopped
+        if 'total_execution' in performance_timer.timings and not performance_timer.timings['total_execution']['stopped']:
+            performance_timer.stop('total_execution')
 
 def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False, show_timings=False):
     """Process a clip URL and return the hero detection results.
@@ -2178,90 +2116,96 @@ def main():
     # Start the overall timing
     performance_timer.start('total_execution')
 
-    parser = argparse.ArgumentParser(description="Detect Dota 2 heroes in a Twitch clip or stream")
-    parser.add_argument("clip_url", nargs="?",
-                      help="URL of the Twitch clip (required if --stream not provided)")
-    parser.add_argument("--stream", help="Twitch username for live stream capture")
-    parser.add_argument("--frames", type=int, default=3,
-                      help="Number of frames to capture from the stream (default: 3)")
-    parser.add_argument("--frame-path", help="Path to a single frame to process")
-    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
-    parser.add_argument("--output", "-o", default="heroes.json",
-                      help="Output file path (default: heroes.json)")
-    parser.add_argument("--min-score", type=float, default=0.4,
-                      help="Minimum match score (0.0-1.0) to consider a hero identified (default: 0.4)")
-    parser.add_argument("--debug-templates", action="store_true",
-                      help="Save debug images of template matching results")
-    parser.add_argument("--show-timings", action="store_true",
-                      help="Show detailed performance timing information")
-    parser.add_argument("--keep-debug", action="store_true",
-                      help="Don't clear debug directory between runs")
-    parser.add_argument("--json-only", action="store_true",
-                      help="Only output JSON with no additional text (for API use)")
+    try:
+        parser = argparse.ArgumentParser(description="Detect Dota 2 heroes in a Twitch clip or stream")
+        parser.add_argument("clip_url", nargs="?",
+                          help="URL of the Twitch clip (required if --stream not provided)")
+        parser.add_argument("--stream", help="Twitch username for live stream capture")
+        parser.add_argument("--frames", type=int, default=3,
+                          help="Number of frames to capture from the stream (default: 3)")
+        parser.add_argument("--frame-path", help="Path to a single frame to process")
+        parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+        parser.add_argument("--output", "-o", default="heroes.json",
+                          help="Output file path (default: heroes.json)")
+        parser.add_argument("--min-score", type=float, default=0.4,
+                          help="Minimum match score (0.0-1.0) to consider a hero identified (default: 0.4)")
+        parser.add_argument("--debug-templates", action="store_true",
+                          help="Save debug images of template matching results")
+        parser.add_argument("--show-timings", action="store_true",
+                          help="Show detailed performance timing information")
+        parser.add_argument("--keep-debug", action="store_true",
+                          help="Don't clear debug directory between runs")
+        parser.add_argument("--json-only", action="store_true",
+                          help="Only output JSON with no additional text (for API use)")
 
-    args = parser.parse_args()
+        args = parser.parse_args()
 
-    # Process a live stream if username is provided
-    if args.stream:
-        result = process_stream_username(
-            username=args.stream,
-            debug=args.debug,
-            min_score=args.min_score,
-            debug_templates=args.debug_templates,
-            show_timings=args.show_timings,
-            num_frames=args.frames
-        )
+        # Process a live stream if username is provided
+        if args.stream:
+            result = process_stream_username(
+                username=args.stream,
+                debug=args.debug,
+                min_score=args.min_score,
+                debug_templates=args.debug_templates,
+                show_timings=args.show_timings,
+                num_frames=args.frames
+            )
 
-        if result:
-            # If json-only flag is set, just print the JSON output
-            if args.json_only:
-                print(json.dumps(result, indent=2))
-            elif args.debug:
-                # Debug output is already handled in process_stream_username
-                pass
+            if result:
+                # If json-only flag is set, just print the JSON output
+                if args.json_only:
+                    print(json.dumps(result, indent=2))
+                elif args.debug:
+                    # Debug output is already handled in process_stream_username
+                    pass
 
-            # Save to file if output is specified
-            if not args.output == "heroes.json" or not args.json_only:
-                with open(args.output, 'w') as f:
-                    json.dump(result, f, indent=2)
-                if args.debug:
-                    logger.info(f"Saved hero data to {args.output}")
+                # Save to file if output is specified
+                if not args.output == "heroes.json" or not args.json_only:
+                    with open(args.output, 'w') as f:
+                        json.dump(result, f, indent=2)
+                    if args.debug:
+                        logger.info(f"Saved hero data to {args.output}")
 
-            return 0
+                return 0
+            else:
+                return 1
+        # Process a clip if URL is provided
+        elif args.clip_url:
+            result = process_clip_url(
+                clip_url=args.clip_url,
+                debug=args.debug,
+                min_score=args.min_score,
+                debug_templates=args.debug_templates,
+                show_timings=args.show_timings
+            )
+
+            if result:
+                # If json-only flag is set, just print the JSON output
+                if args.json_only:
+                    print(json.dumps(result, indent=2))
+                elif args.debug:
+                    # Debug output is already handled in process_clip_url
+                    pass
+
+                # Save to file if output is specified
+                if not args.output == "heroes.json" or not args.json_only:
+                    with open(args.output, 'w') as f:
+                        json.dump(result, f, indent=2)
+                    if args.debug:
+                        logger.info(f"Saved hero data to {args.output}")
+
+                return 0
+            else:
+                return 1
         else:
+            logger.error("Either --frame-path, --stream, or clip_url must be provided")
+            parser.print_help()
             return 1
-    # Process a clip if URL is provided
-    elif args.clip_url:
-        result = process_clip_url(
-            clip_url=args.clip_url,
-            debug=args.debug,
-            min_score=args.min_score,
-            debug_templates=args.debug_templates,
-            show_timings=args.show_timings
-        )
-
-        if result:
-            # If json-only flag is set, just print the JSON output
-            if args.json_only:
-                print(json.dumps(result, indent=2))
-            elif args.debug:
-                # Debug output is already handled in process_clip_url
-                pass
-
-            # Save to file if output is specified
-            if not args.output == "heroes.json" or not args.json_only:
-                with open(args.output, 'w') as f:
-                    json.dump(result, f, indent=2)
-                if args.debug:
-                    logger.info(f"Saved hero data to {args.output}")
-
-            return 0
-        else:
-            return 1
-    else:
-        logger.error("Either --frame-path, --stream, or clip_url must be provided")
-        parser.print_help()
-        return 1
+    finally:
+        # Always stop the timer at the end
+        if 'total_execution' in performance_timer.timings and not performance_timer.timings['total_execution']['stopped']:
+            total_time = performance_timer.stop('total_execution')
+            logger.info(f"Total execution time: {total_time:.3f} seconds")
 
 if __name__ == "__main__":
     sys.exit(main())
