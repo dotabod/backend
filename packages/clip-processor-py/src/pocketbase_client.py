@@ -57,7 +57,7 @@ class PocketBaseClient:
                 "password": "adminpassword123",
                 "passwordConfirm": "adminpassword123"
             }
-            response = requests.post(f"{self.base_url}/api/admins", json=data)
+            response = requests.post(f"{self.base_url}/api/_superusers", json=data)
             return response.status_code in (200, 201)
         except Exception as e:
             logger.error(f"Error setting up admin: {str(e)}")
@@ -71,7 +71,7 @@ class PocketBaseClient:
                 "email": "admin@dota-hero-detection.local",
                 "password": "adminpassword123"
             }
-            auth_response = requests.post(f"{self.base_url}/api/admins/auth-with-password", json=auth_data)
+            auth_response = requests.post(f"{self.base_url}/api/_superusers/auth-with-password", json=auth_data)
 
             if auth_response.status_code != 200:
                 logger.error("Failed to authenticate as admin")
