@@ -49,15 +49,9 @@ eventHandler.registerEvent('map:game_state', {
             throw new Error('VISION_API_HOST environment variable not set')
           }
           // Fire and forget - don't wait for the response
-          fetch(`https://${visionApiHost}/process_clip`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              clip_id: clipId,
-            }),
-          }).catch((error) => {
+          fetch(
+            `https://${visionApiHost}/detect?clip_id=${clipId}&match_id=${dotaClient.client.gsi?.map?.matchid}`,
+          ).catch((error) => {
             logger.error('Error sending clip processing request', {
               ...logContext,
               error: error.message,

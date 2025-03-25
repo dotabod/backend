@@ -224,7 +224,162 @@ class PostgresClient:
             if conn:
                 self._return_connection(conn)
 
-    def save_clip_result(self, clip_id: str, clip_url: str, result: Dict[str, Any], processing_time: Optional[float] = None) -> bool:
+    def get_clip_result_by_match_id(self, match_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get cached result for a match_id if it exists.
+
+        Args:
+            match_id: The Dota 2 match ID
+
+        Returns:
+            The cached results if found, None otherwise
+        """
+        if not self._initialized and not self.initialize():
+            logger.warning("PostgreSQL not initialized, can't fetch clip result by match ID")
+            return None
+
+        conn = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+            # Query for the clip by match ID, ordering by most recent
+            query = f"""
+            SELECT clip_id, clip_url, results FROM {self.results_table}
+            WHERE match_id = %s
+            ORDER BY processed_at DESC
+            LIMIT 1
+            """
+
+            cursor.execute(query, (match_id,))
+            row = cursor.fetchone()
+            cursor.close()
+
+            if row:
+                logger.info(f"Found cached result for match ID: {match_id}")
+                result = row['results']
+                # Add clip details to result
+                if isinstance(result, dict):
+                    result['clip_id'] = row['clip_id']
+                    result['clip_url'] = row['clip_url']
+                return result
+            else:
+                logger.info(f"No cached result found for match ID: {match_id}")
+                return None
+
+        except Exception as e:
+            logger.error(f"Error getting clip result by match ID: {str(e)}")
+            logger.error(traceback.format_exc())
+            return None
+        finally:
+            if conn:
+                self._return_connection(conn)
+
+    def check_for_match_processing(self, match_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Check if a match is already being processed or has a successful result.
+
+        Args:
+            match_id: The Dota 2 match ID
+
+        Returns:
+            A dictionary with information about the status of the match processing:
+            - found: True if match is found in queue or results
+            - status: Status of processing (completed, pending, processing, failed)
+            - clip_id: Clip ID if applicable
+            - request_id: Request ID if the match is in the queue
+            None if there's an error or match isn't being processed
+        """
+        if not self._initialized and not self.initialize():
+            logger.warning("PostgreSQL not initialized, can't check match processing status")
+            return None
+
+        conn = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+            # First check for a completed successful result
+            query = f"""
+            SELECT clip_id FROM {self.results_table}
+            WHERE match_id = %s
+            ORDER BY processed_at DESC
+            LIMIT 1
+            """
+            cursor.execute(query, (match_id,))
+            result_row = cursor.fetchone()
+
+            # If we found a result, return it as completed
+            if result_row:
+                cursor.close()
+                logger.info(f"Found completed result for match ID: {match_id}")
+                return {
+                    'found': True,
+                    'status': 'completed',
+                    'clip_id': result_row['clip_id']
+                }
+
+            # If no completed result, check if there's an active queue entry
+            query = f"""
+            SELECT request_id, clip_id, status FROM {self.queue_table}
+            WHERE match_id = %s AND status IN ('pending', 'processing')
+            ORDER BY
+                CASE
+                    WHEN status = 'processing' THEN 0
+                    WHEN status = 'pending' THEN 1
+                END,
+                created_at ASC
+            LIMIT 1
+            """
+            cursor.execute(query, (match_id,))
+            queue_row = cursor.fetchone()
+
+            # If found in queue, return the status
+            if queue_row:
+                cursor.close()
+                logger.info(f"Found {queue_row['status']} request for match ID: {match_id}")
+                return {
+                    'found': True,
+                    'status': queue_row['status'],
+                    'clip_id': queue_row.get('clip_id'),
+                    'request_id': queue_row['request_id']
+                }
+
+            # Check for failed requests
+            query = f"""
+            SELECT request_id, clip_id FROM {self.queue_table}
+            WHERE match_id = %s AND status = 'failed'
+            ORDER BY completed_at DESC
+            LIMIT 1
+            """
+            cursor.execute(query, (match_id,))
+            failed_row = cursor.fetchone()
+            cursor.close()
+
+            if failed_row:
+                logger.info(f"Found failed request for match ID: {match_id}")
+                return {
+                    'found': True,
+                    'status': 'failed',
+                    'clip_id': failed_row.get('clip_id'),
+                    'request_id': failed_row['request_id']
+                }
+
+            # No match found in results or queue
+            logger.info(f"No processing found for match ID: {match_id}")
+            return {
+                'found': False
+            }
+
+        except Exception as e:
+            logger.error(f"Error checking match processing status: {str(e)}")
+            logger.error(traceback.format_exc())
+            return None
+        finally:
+            if conn:
+                self._return_connection(conn)
+
+    def save_clip_result(self, clip_id: str, clip_url: str, result: Dict[str, Any], processing_time: Optional[float] = None, match_id: Optional[str] = None) -> bool:
         """
         Save clip processing result to the database.
 
@@ -233,6 +388,7 @@ class PostgresClient:
             clip_url: The Twitch clip URL
             result: The hero detection result to cache
             processing_time: Processing time in seconds (optional)
+            match_id: The Dota 2 match ID (optional)
 
         Returns:
             True if successful, False otherwise
@@ -246,18 +402,39 @@ class PostgresClient:
             conn = self._get_connection()
             cursor = conn.cursor()
 
+            # Check if match_id column exists
+            cursor.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'clip_results' AND column_name = 'match_id'
+            """)
+            match_id_column_exists = cursor.fetchone() is not None
+
             # Use UPSERT to insert or update the record
-            query = f"""
-            INSERT INTO {self.results_table}
-            (clip_id, clip_url, results, processed_at, processing_time_seconds)
-            VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT (clip_id)
-            DO UPDATE SET
-                clip_url = EXCLUDED.clip_url,
-                results = EXCLUDED.results,
-                processed_at = EXCLUDED.processed_at,
-                processing_time_seconds = EXCLUDED.processing_time_seconds
-            """
+            if match_id_column_exists and match_id:
+                query = f"""
+                INSERT INTO {self.results_table}
+                (clip_id, clip_url, results, processed_at, processing_time_seconds, match_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (clip_id)
+                DO UPDATE SET
+                    clip_url = EXCLUDED.clip_url,
+                    results = EXCLUDED.results,
+                    processed_at = EXCLUDED.processed_at,
+                    processing_time_seconds = EXCLUDED.processing_time_seconds,
+                    match_id = EXCLUDED.match_id
+                """
+            else:
+                query = f"""
+                INSERT INTO {self.results_table}
+                (clip_id, clip_url, results, processed_at, processing_time_seconds)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (clip_id)
+                DO UPDATE SET
+                    clip_url = EXCLUDED.clip_url,
+                    results = EXCLUDED.results,
+                    processed_at = EXCLUDED.processed_at,
+                    processing_time_seconds = EXCLUDED.processing_time_seconds
+                """
 
             # Convert result to JSON string if it's not already
             if not isinstance(result, str):
@@ -265,18 +442,30 @@ class PostgresClient:
             else:
                 results_json = result
 
-            cursor.execute(query, (
-                clip_id,
-                clip_url,
-                results_json,
-                datetime.now(),
-                processing_time
-            ))
+            # Execute with or without match_id
+            if match_id_column_exists and match_id:
+                cursor.execute(query, (
+                    clip_id,
+                    clip_url,
+                    results_json,
+                    datetime.now(),
+                    processing_time,
+                    match_id
+                ))
+            else:
+                cursor.execute(query, (
+                    clip_id,
+                    clip_url,
+                    results_json,
+                    datetime.now(),
+                    processing_time
+                ))
 
             conn.commit()
             cursor.close()
 
-            logger.info(f"Successfully saved/updated result for clip ID: {clip_id}")
+            logger.info(f"Successfully saved/updated result for clip ID: {clip_id}" +
+                       (f", match ID: {match_id}" if match_id else ""))
             return True
 
         except Exception as e:
@@ -423,7 +612,8 @@ class PostgresClient:
                     num_frames: int = 3,
                     debug: bool = False,
                     force: bool = False,
-                    include_image: bool = True) -> Tuple[str, Dict[str, Any]]:
+                    include_image: bool = True,
+                    match_id: Optional[str] = None) -> Tuple[str, Dict[str, Any]]:
         """
         Add a request to the processing queue.
 
@@ -431,36 +621,48 @@ class PostgresClient:
             request_type: Type of request ('clip' or 'stream')
             clip_id: The Twitch clip ID (for clip requests)
             clip_url: The Twitch clip URL (for clip requests)
-            stream_username: Twitch username (for stream requests)
-            num_frames: Number of frames to analyze (for stream requests)
+            stream_username: The Twitch username (for stream requests)
+            num_frames: Number of frames to capture (for stream requests)
             debug: Enable debug mode
             force: Force reprocessing even if cached
-            include_image: Include frame image URL in response
+            include_image: Include image URL in the result
+            match_id: The Dota 2 match ID (optional, for clip requests)
 
         Returns:
             Tuple of (request_id, queue_info)
         """
         if not self._initialized and not self.initialize():
             logger.warning("PostgreSQL not initialized, can't add to queue")
-            return None, {}
+            return str(uuid.uuid4()), {}
 
-        # Check if this request is already in the queue
-        existing_request = self.is_request_in_queue(
-            request_type=request_type,
-            clip_id=clip_id,
-            stream_username=stream_username
-        )
+        # Check if match_id column exists
+        has_match_id_column = False
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'processing_queue' AND column_name = 'match_id'
+            """)
+            has_match_id_column = cursor.fetchone() is not None
+            cursor.close()
+            self._return_connection(conn)
+        except Exception as e:
+            logger.warning(f"Error checking for match_id column: {e}")
+            # Continue anyway, we'll handle it in the query
 
-        if existing_request:
-            # Return the existing request information
-            logger.info(f"Request already in queue, returning existing status. Type: {request_type}, ID: {existing_request['request_id']}")
+        # Validate request type
+        if request_type not in ('clip', 'stream'):
+            logger.error(f"Invalid request type: {request_type}")
+            return str(uuid.uuid4()), {}
 
-            # Format datetime objects for JSON response
-            for key, value in existing_request.items():
-                if isinstance(value, datetime):
-                    existing_request[key] = value.isoformat()
-
-            return existing_request['request_id'], existing_request
+        # Check parameters based on request type
+        if request_type == 'clip' and not clip_url:
+            logger.error("Missing clip_url for clip request")
+            return str(uuid.uuid4()), {}
+        elif request_type == 'stream' and not stream_username:
+            logger.error("Missing stream_username for stream request")
+            return str(uuid.uuid4()), {}
 
         # Generate a unique request ID
         request_id = str(uuid.uuid4())
@@ -470,54 +672,95 @@ class PostgresClient:
             conn = self._get_connection()
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-            # Get current queue length
-            cursor.execute(f"SELECT COUNT(*) FROM {self.queue_table} WHERE status = 'pending'")
-            queue_length = cursor.fetchone()['count']
-            position = queue_length + 1
+            # Check if there's already a pending or processing request for this clip/stream
+            if request_type == 'clip' and clip_id:
+                query = f"""
+                SELECT * FROM {self.queue_table}
+                WHERE clip_id = %s AND status IN ('pending', 'processing')
+                LIMIT 1
+                """
+                cursor.execute(query, (clip_id,))
+                existing = cursor.fetchone()
+                if existing:
+                    # Return the existing request info
+                    cursor.close()
+                    self._return_connection(conn)
+                    logger.info(f"Returning existing queue entry for clip ID: {clip_id}")
+                    return existing['request_id'], dict(existing)
+            elif request_type == 'stream' and stream_username:
+                query = f"""
+                SELECT * FROM {self.queue_table}
+                WHERE stream_username = %s AND status IN ('pending', 'processing')
+                LIMIT 1
+                """
+                cursor.execute(query, (stream_username,))
+                existing = cursor.fetchone()
+                if existing:
+                    # Return the existing request info
+                    cursor.close()
+                    self._return_connection(conn)
+                    logger.info(f"Returning existing queue entry for stream: {stream_username}")
+                    return existing['request_id'], dict(existing)
 
-            # Estimate completion time
+            # Calculate position and estimated wait time
+            cursor.execute(f"SELECT COUNT(*) FROM {self.queue_table} WHERE status = 'pending'")
+            position = cursor.fetchone()['count'] + 1
+
+            # Get average processing time
             avg_time = self.get_average_processing_time(request_type)
             estimated_wait_seconds = position * avg_time
+
+            # Calculate estimated completion time
             now = datetime.now()
             estimated_completion_time = now + timedelta(seconds=estimated_wait_seconds)
 
-            # Insert the request into the queue
-            query = f"""
-            INSERT INTO {self.queue_table} (
-                request_id, clip_id, clip_url, stream_username, num_frames,
-                debug, force, include_image, request_type, status,
-                created_at, position, estimated_completion_time, estimated_wait_seconds
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            RETURNING *
-            """
+            # Insert the new request
+            if has_match_id_column:
+                query = f"""
+                INSERT INTO {self.queue_table} (
+                    request_id, clip_id, clip_url, stream_username, num_frames,
+                    debug, force, include_image, request_type, status,
+                    created_at, position, estimated_completion_time, estimated_wait_seconds, match_id
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING *
+                """
+                cursor.execute(query, (
+                    request_id, clip_id, clip_url, stream_username, num_frames,
+                    debug, force, include_image, request_type, 'pending',
+                    now, position, estimated_completion_time, estimated_wait_seconds, match_id
+                ))
+            else:
+                # Fallback without match_id if column doesn't exist yet
+                query = f"""
+                INSERT INTO {self.queue_table} (
+                    request_id, clip_id, clip_url, stream_username, num_frames,
+                    debug, force, include_image, request_type, status,
+                    created_at, position, estimated_completion_time, estimated_wait_seconds
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING *
+                """
+                cursor.execute(query, (
+                    request_id, clip_id, clip_url, stream_username, num_frames,
+                    debug, force, include_image, request_type, 'pending',
+                    now, position, estimated_completion_time, estimated_wait_seconds
+                ))
 
-            cursor.execute(query, (
-                request_id, clip_id, clip_url, stream_username, num_frames,
-                debug, force, include_image, request_type, 'pending',
-                now, position, estimated_completion_time, estimated_wait_seconds
-            ))
-
-            queue_info = cursor.fetchone()
+            # Get the inserted row
+            result = cursor.fetchone()
             conn.commit()
             cursor.close()
 
-            logger.info(f"Added {request_type} request to queue: {request_id} (position {position})")
-
-            # Convert to regular dict and format datetime objects
-            queue_dict = dict(queue_info)
-            for key, value in queue_dict.items():
-                if isinstance(value, datetime):
-                    queue_dict[key] = value.isoformat()
-
-            return request_id, queue_dict
+            logger.info(f"Added {request_type} request to queue: {request_id}")
+            return request_id, dict(result)
 
         except Exception as e:
-            logger.error(f"Error adding request to queue: {str(e)}")
+            logger.error(f"Error adding to queue: {str(e)}")
             logger.error(traceback.format_exc())
             if conn:
                 conn.rollback()
-            return None, {}
+            return request_id, {}
         finally:
             if conn:
                 self._return_connection(conn)

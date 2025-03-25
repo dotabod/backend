@@ -41,13 +41,13 @@ logger.info("=== API Server logging initialized ===")
 try:
     from dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
     from dota_heroes import get_hero_data
-    from postgresql_client import db_client
+    from src.postgresql_client import db_client
 except ImportError as e:
     # Try with relative import for different directory structures
     try:
         from .dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
         from .dota_heroes import get_hero_data
-        from .postgresql_client import db_client
+        from src.postgresql_client import db_client
     except ImportError as rel_e:
         logger.error(f"Error: Could not import required modules. First error: {e}, Second error: {rel_e}")
         logger.error("Make sure you're running this from the correct directory.")
@@ -100,7 +100,7 @@ def initialize_app():
         try:
             logger.info("Running database migrations...")
             # Import here to avoid circular imports
-            from db_migration import run_migrations
+            from src.db_migration import run_migrations
             if run_migrations():
                 logger.info("Database migrations completed successfully")
             else:
@@ -210,15 +210,32 @@ def process_queue_worker():
 
             try:
                 if request['request_type'] == 'clip':
+                    # Check if there's already a completed result for this match_id
+                    match_id = request.get('match_id')
+                    if match_id:
+                        # Check if a previous request for this match has already completed successfully
+                        match_status = db_client.check_for_match_processing(match_id)
+                        if match_status and match_status.get('found') and match_status.get('status') == 'completed':
+                            # If there's a completed result, use that instead of processing this request
+                            existing_clip_id = match_status.get('clip_id')
+                            logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
+                            existing_result = db_client.get_clip_result(existing_clip_id)
+                            if existing_result:
+                                # Mark as completed but point to the existing result
+                                db_client.update_queue_status(request['request_id'], 'completed', result_id=existing_clip_id)
+                                logger.info(f"Using existing result for match ID {match_id}, request {request['request_id']}")
+                                continue  # Skip to the next request
+
                     logger.info(f"Processing clip request: {request['clip_url']} ({request['request_id']})")
                     result = process_clip_request(
-                        request['clip_url'],
-                        request['clip_id'],
-                        request['debug'],
-                        request['force'],
-                        request['include_image'],
+                        clip_url=request['clip_url'],
+                        clip_id=request['clip_id'],
+                        debug=request['debug'],
+                        force=request['force'],
+                        include_image=request['include_image'],
                         add_to_queue=False,  # Don't re-queue
-                        from_worker=True     # Indicate this is called from worker thread
+                        from_worker=True,    # Indicate this is called from worker thread
+                        match_id=request.get('match_id')  # Pass match_id if present
                     )
                     logger.info(f"Processed clip request: {request['request_id']}")
 
@@ -279,7 +296,8 @@ def process_queue_worker():
                                 request['clip_id'],
                                 request['clip_url'],
                                 result,
-                                processing_time
+                                processing_time,
+                                request.get('match_id')  # Pass match_id if present
                             )
 
                     db_client.update_queue_status(request['request_id'], 'completed', result_id=request.get('clip_id'))
@@ -540,7 +558,7 @@ def get_image_url(frame_path, clip_id):
         logger.error(f"Error copying frame image: {e}")
         return None, None
 
-def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True, from_worker=False):
+def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True, from_worker=False, match_id=None):
     """
     Process a clip URL and return the result or add it to the queue.
 
@@ -552,10 +570,31 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
         include_image: Include image URL in the result
         add_to_queue: Add to queue instead of processing immediately
         from_worker: Whether this is being called from the worker thread
+        match_id: The Dota 2 match ID (required)
 
     Returns:
         The processing result or queue information
     """
+    # If we have a match_id, check if we already have a successful result for it
+    if match_id and not force:
+        match_status = db_client.check_for_match_processing(match_id)
+        if match_status and match_status.get('found') and match_status.get('status') == 'completed':
+            # If there's a completed result for this match_id, use it
+            existing_clip_id = match_status.get('clip_id')
+            logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
+            existing_result = db_client.get_clip_result(existing_clip_id)
+            if existing_result:
+                # Replace placeholder with real host URL if needed
+                if 'saved_image_path' in existing_result and existing_result['saved_image_path'] and '__HOST_URL__' in existing_result['saved_image_path'] and not from_worker:
+                    host_url = request.host_url.rstrip('/')
+                    existing_result['saved_image_path'] = existing_result['saved_image_path'].replace('__HOST_URL__', host_url)
+
+                # Add match_id for context
+                existing_result['match_id'] = match_id
+                existing_result['clip_id'] = existing_clip_id
+
+                return existing_result
+
     # Check for cached result if not forced to reprocess
     if not force and clip_id:
         cached_result = db_client.get_clip_result(clip_id)
@@ -571,7 +610,7 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                         host_url = request.host_url.rstrip('/')
                         cached_result['saved_image_path'] = saved_image_path.replace('__HOST_URL__', host_url)
                         # Update the cache with the image URL
-                        db_client.save_clip_result(clip_id, clip_url, cached_result)
+                        db_client.save_clip_result(clip_id, clip_url, cached_result, match_id=match_id)
 
             # Replace placeholder with real host URL if needed
             if 'saved_image_path' in cached_result and cached_result['saved_image_path'] and '__HOST_URL__' in cached_result['saved_image_path']:
@@ -593,7 +632,8 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
             clip_url=clip_url,
             debug=debug,
             force=force,
-            include_image=include_image
+            include_image=include_image,
+            match_id=match_id  # Pass match_id
         )
 
         # Check if this is an existing request already in the queue
@@ -665,9 +705,9 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                 del result_to_save['frame_image_url']
 
             # Cache the result
-            success = db_client.save_clip_result(clip_id, clip_url, result_to_save, processing_time)
+            success = db_client.save_clip_result(clip_id, clip_url, result_to_save, processing_time, match_id)
             if success:
-                logger.info(f"Cached result for clip ID: {clip_id}")
+                logger.info(f"Cached result for clip ID: {clip_id}" + (f", match ID: {match_id}" if match_id else ""))
             else:
                 logger.warning(f"Failed to cache result for clip ID: {clip_id}")
 
@@ -784,6 +824,7 @@ def detect_heroes():
     Query parameters:
     - url: The Twitch clip URL to process (required if clip_id not provided)
     - clip_id: The Twitch clip ID (required if url not provided)
+    - match_id: The Dota 2 match ID to associate with this clip (required)
     - debug: Enable debug mode (optional, default=False)
     - force: Force reprocessing even if cached (optional, default=False)
     - include_image: Include frame image URL in response (optional, default=False)
@@ -791,10 +832,24 @@ def detect_heroes():
     """
     clip_url = request.args.get('url')
     clip_id = request.args.get('clip_id')
+    match_id = request.args.get('match_id')
     debug = request.args.get('debug', 'false').lower() == 'true'
     force = request.args.get('force', 'false').lower() == 'true'
     include_image = request.args.get('include_image', 'true').lower() == 'true'
     use_queue = request.args.get('queue', 'true').lower() == 'true'
+
+    # Check if match_id is provided
+    if not match_id:
+        return jsonify({'error': 'Missing required parameter: match_id'}), 400
+
+    # Validate match_id is a number
+    try:
+        match_id = int(match_id)
+    except ValueError:
+        return jsonify({'error': 'Invalid match_id: must be a number'}), 400
+
+    # Convert back to string for consistent handling in the rest of the code
+    match_id = str(match_id)
 
     # Check if either clip_url or clip_id is provided
     if not clip_url and not clip_id:
@@ -834,7 +889,8 @@ def detect_heroes():
             debug=debug,
             force=force,
             include_image=include_image,
-            add_to_queue=use_queue
+            add_to_queue=use_queue,
+            match_id=match_id  # Pass match_id to the function
         )
 
         # Return the result
@@ -958,6 +1014,151 @@ def reset_stuck_processing_requests(timeout_minutes=1):
         logger.error(f"Error resetting stuck processing requests: {e}")
         logger.error(traceback.format_exc())
         return 0
+
+@app.route('/match/<match_id>', methods=['GET'])
+def get_match_result(match_id):
+    """
+    Get hero detection results for a Dota 2 match ID.
+
+    Path parameters:
+    - match_id: The Dota 2 match ID
+
+    Query parameters:
+    - force: Force reprocessing by submitting a new clip (optional, default=False)
+    - clip_url: The Twitch clip URL to process if forcing (optional)
+    - debug: Enable debug mode (optional, default=False)
+    - include_image: Include frame image URL in response (optional, default=True)
+    """
+    force = request.args.get('force', 'false').lower() == 'true'
+    clip_url = request.args.get('clip_url')
+    debug = request.args.get('debug', 'false').lower() == 'true'
+    include_image = request.args.get('include_image', 'true').lower() == 'true'
+
+    # Check if match_id is provided
+    if not match_id:
+        return jsonify({'error': 'Missing required parameter: match_id'}), 400
+
+    try:
+        # If force is true and clip_url is provided, process the new clip
+        if force and clip_url:
+            # Extract clip_id from URL
+            clip_id = extract_clip_id(clip_url)
+            if not clip_id:
+                return jsonify({'error': 'Could not extract clip ID from URL'}), 400
+
+            # Process the clip with the match_id
+            result = process_clip_request(
+                clip_url=clip_url,
+                clip_id=clip_id,
+                debug=debug,
+                force=True,  # Always force when explicitly requested
+                include_image=include_image,
+                add_to_queue=True,  # Always queue for match_id requests
+                match_id=match_id
+            )
+
+            # If the result is queued, return that
+            if isinstance(result, dict) and result.get('queued'):
+                return jsonify(result)
+
+        # Check if this match has any existing results or is in queue
+        match_status = db_client.check_for_match_processing(match_id)
+
+        if not match_status or not match_status.get('found'):
+            # If no existing processing and no new clip URL provided
+            if not clip_url:
+                return jsonify({
+                    'error': 'No results found for this match ID',
+                    'message': 'Please provide a clip_url to process'
+                }), 404
+
+            # If we have a clip_url but didn't force, process it anyway
+            clip_id = extract_clip_id(clip_url)
+            if not clip_id:
+                return jsonify({'error': 'Could not extract clip ID from URL'}), 400
+
+            # Process the clip with the match_id
+            result = process_clip_request(
+                clip_url=clip_url,
+                clip_id=clip_id,
+                debug=debug,
+                force=False,
+                include_image=include_image,
+                add_to_queue=True,
+                match_id=match_id
+            )
+
+            return jsonify(result)
+
+        elif match_status.get('status') == 'completed':
+            # If we have a completed result, fetch and return it
+            result = db_client.get_clip_result_by_match_id(match_id)
+
+            if result:
+                # Replace placeholder with real host URL if needed
+                if 'saved_image_path' in result and result['saved_image_path'] and '__HOST_URL__' in result['saved_image_path']:
+                    host_url = request.host_url.rstrip('/')
+                    result['saved_image_path'] = result['saved_image_path'].replace('__HOST_URL__', host_url)
+
+                # Add match_id for context
+                result['match_id'] = match_id
+
+                return jsonify(result)
+            else:
+                # This shouldn't happen if match_status says completed
+                return jsonify({
+                    'error': 'Inconsistent state',
+                    'message': 'Match is marked as completed but no result found'
+                }), 500
+
+        elif match_status.get('status') in ('pending', 'processing'):
+            # If the match is in queue, return status
+            return jsonify({
+                'status': match_status.get('status'),
+                'clip_id': match_status.get('clip_id'),
+                'request_id': match_status.get('request_id'),
+                'match_id': match_id,
+                'message': f"Match is currently {match_status.get('status')}"
+            })
+
+        else:  # Failed
+            # If failed and no new clip_url, report failure
+            if not clip_url:
+                return jsonify({
+                    'error': 'Previous processing failed',
+                    'status': 'failed',
+                    'clip_id': match_status.get('clip_id'),
+                    'request_id': match_status.get('request_id'),
+                    'match_id': match_id,
+                    'message': 'Previous processing failed. Provide a clip_url to try again.'
+                }), 400
+
+            # If we have a clip_url and previous processing failed, try again
+            clip_id = extract_clip_id(clip_url)
+            if not clip_id:
+                return jsonify({'error': 'Could not extract clip ID from URL'}), 400
+
+            # Process the clip with the match_id
+            result = process_clip_request(
+                clip_url=clip_url,
+                clip_id=clip_id,
+                debug=debug,
+                force=True,  # Force when previous failed
+                include_image=include_image,
+                add_to_queue=True,
+                match_id=match_id
+            )
+
+            return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"Error processing match ID {match_id}: {str(e)}", exc_info=True)
+        error_details = {
+            'error': 'Error processing match',
+            'message': str(e),
+            'trace': traceback.format_exc() if debug else None
+        }
+        return jsonify(error_details), 500
 
 def main():
     """Main entry point for the API server."""

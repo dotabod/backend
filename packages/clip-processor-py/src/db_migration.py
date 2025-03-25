@@ -9,7 +9,7 @@ or when other schema changes are needed.
 import os
 import logging
 import psycopg2
-from postgresql_client import db_client
+from .postgresql_client import db_client
 
 # Configure logging
 log_dir = os.path.join(os.path.dirname(__file__), 'logs')
@@ -53,7 +53,8 @@ def run_migrations():
         # Run each migration in sequence
         migrations = [
             add_processing_time_column,
-            fix_position_ambiguity
+            fix_position_ambiguity,
+            add_match_id_columns
         ]
 
         for migration in migrations:
@@ -146,6 +147,60 @@ def fix_position_ambiguity(conn):
 
     except Exception as e:
         logger.error(f"Error checking position column: {e}")
+        conn.rollback()
+        return False
+
+def add_match_id_columns(conn):
+    """Add match_id column to clip_results and processing_queue tables"""
+    try:
+        cursor = conn.cursor()
+
+        # Check if match_id column exists in clip_results table
+        cursor.execute("""
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name = 'clip_results' AND column_name = 'match_id'
+        """)
+
+        if cursor.fetchone() is None:
+            logger.info("Adding match_id column to clip_results table")
+            cursor.execute("""
+            ALTER TABLE clip_results
+            ADD COLUMN match_id TEXT
+            """)
+            # Create an index on match_id for faster lookups
+            cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_clip_results_match_id
+            ON clip_results (match_id)
+            """)
+            conn.commit()
+        else:
+            logger.info("Column match_id already exists in clip_results table")
+
+        # Check if match_id column exists in processing_queue table
+        cursor.execute("""
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name = 'processing_queue' AND column_name = 'match_id'
+        """)
+
+        if cursor.fetchone() is None:
+            logger.info("Adding match_id column to processing_queue table")
+            cursor.execute("""
+            ALTER TABLE processing_queue
+            ADD COLUMN match_id TEXT
+            """)
+            # Create an index on match_id for faster lookups
+            cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_processing_queue_match_id
+            ON processing_queue (match_id)
+            """)
+            conn.commit()
+        else:
+            logger.info("Column match_id already exists in processing_queue table")
+
+        return True
+
+    except Exception as e:
+        logger.error(f"Error adding match_id columns: {e}")
         conn.rollback()
         return False
 
