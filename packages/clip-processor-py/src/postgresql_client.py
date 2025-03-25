@@ -18,6 +18,7 @@ from psycopg2.extras import RealDictCursor
 import uuid
 import statistics
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
