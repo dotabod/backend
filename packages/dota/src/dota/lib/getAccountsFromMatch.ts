@@ -17,6 +17,35 @@ function getAllPlayers(data: DelayedGames) {
   return players
 }
 
+// Interface for Vision API match response
+interface VisionApiMatchHero {
+  hero_id: number
+  hero_name: string
+  hero_localized_name: string
+  match_score: number
+  position: number
+  player_name?: string
+  rank?: number
+  team: string
+  variant: string
+}
+
+interface VisionApiMatchPlayer {
+  hero: string
+  hero_id: number
+  player_name?: string
+  position: number
+  rank?: number
+  team: string
+}
+
+interface VisionApiMatchResponse {
+  match_id: string
+  heroes: VisionApiMatchHero[]
+  players: VisionApiMatchPlayer[]
+  // other fields not needed for our use case
+}
+
 export async function getAccountsFromMatch({
   gsi,
   searchMatchId,
@@ -29,6 +58,7 @@ export async function getAccountsFromMatch({
   matchPlayers: Players
   accountIds: number[]
 }> {
+  const visionApiHost = process.env.VISION_API_HOST
   const players = searchPlayers?.length ? searchPlayers : getSpectatorPlayers(gsi)
 
   // spectator account ids
@@ -92,6 +122,35 @@ export async function getAccountsFromMatch({
       return {
         matchPlayers,
         accountIds: matchPlayers.map((player) => player.accountid),
+      }
+    }
+
+    // If we don't have data in MongoDB, try to fetch from Vision API
+    if (matchId && visionApiHost) {
+      try {
+        const apiUrl = `https://${visionApiHost}/match/${matchId}`
+        const apiResponse = await fetch(apiUrl)
+
+        if (apiResponse.ok) {
+          const data = (await apiResponse.json()) as VisionApiMatchResponse
+
+          // Convert Vision API response to our player format
+          const matchPlayers: Players = data.heroes.map((hero) => ({
+            heroid: hero.hero_id,
+            rank: hero.rank,
+            player_name: hero.player_name,
+            accountid: 0, // Vision API doesn't provide account IDs
+            playerid: null,
+          }))
+
+          return {
+            matchPlayers,
+            accountIds: matchPlayers.map((player) => player.accountid).filter((id) => id !== 0),
+          }
+        }
+      } catch (error) {
+        // Silent fail - if Vision API fails, we'll fall back to default return
+        console.error('Failed to fetch from Vision API:', error)
       }
     }
   } finally {

@@ -6,6 +6,7 @@ import type { Players } from '../../types'
 import type { Cards, DelayedGames } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { getAccountsFromMatch } from './getAccountsFromMatch.js'
+import { getHeroNameOrColor } from './heroes.js'
 
 export async function getPlayers({
   locale,
@@ -40,24 +41,41 @@ export async function getPlayers({
       searchMatchId: currentMatchId,
       searchPlayers: players,
     })
-    const getCardsPromise = new Promise<Cards[]>((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
-      }, 10000) // 5 second timeout
 
-      steamSocket.emit('getCards', accountIds, false, (err: any, cards: any) => {
-        clearTimeout(timeoutId)
-        if (err) {
-          reject(err)
-        } else {
-          resolve(cards)
-        }
+    let cards: Cards[] = []
+    // if match players has ranks, create that as cards instead of fetching them:
+    cards = matchPlayers.map((player, i) => ({
+      account_id: player.accountid,
+      heroId: player.heroid,
+      position: i,
+      heroName: getHeroNameOrColor(player.heroid ?? 0, i),
+      lifetime_games: 0,
+      leaderboard_rank: player.rank ?? 0,
+      rank_tier: 80,
+      createdAt: new Date(),
+    }))
+
+    if (cards.every((card) => card.leaderboard_rank === 0)) {
+      cards = []
+      const getCardsPromise = new Promise<Cards[]>((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
+        }, 10000) // 5 second timeout
+
+        steamSocket.emit('getCards', accountIds, false, (err: any, cards: any) => {
+          clearTimeout(timeoutId)
+          if (err) {
+            reject(err)
+          } else {
+            resolve(cards)
+          }
+        })
+      }).catch(() => {
+        return []
       })
-    }).catch(() => {
-      return []
-    })
 
-    const cards = await getCardsPromise
+      cards = await getCardsPromise
+    }
 
     return {
       gameMode: response ? Number(response.match.game_mode) : undefined,

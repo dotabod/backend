@@ -558,6 +558,8 @@ export type Players = {
   heroid: number | undefined
   accountid: number
   playerid: number | null // usually null when the player has not picked a hero yet
+  rank?: number
+  player_name?: string
 }[]
 
 export type BlockType =

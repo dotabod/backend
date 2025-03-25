@@ -105,7 +105,7 @@ export async function notablePlayers({
         heroId: player.heroid ?? 0,
         position: i,
         heroName,
-        name: np?.name ?? `Player ${i + 1}`,
+        name: np?.name ?? matchPlayers[i].player_name ?? `Player ${i + 1}`,
         country_code: np?.country_code ?? '',
         isMe: isCurrentPlayer,
       }
