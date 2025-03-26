@@ -22,11 +22,6 @@ eventHandler.registerEvent('map:game_state', {
 
     // Only create a clip if the user is >= 8500 MMR or has an immortal rank
     if (!is8500Plus(dotaClient.client)) {
-      logger.info('User is not 8500+ MMR, skipping clip creation', {
-        ...logContext,
-        SteamAccount: dotaClient.client.SteamAccount,
-        client: dotaClient.client.Account,
-      })
       return
     }
 
