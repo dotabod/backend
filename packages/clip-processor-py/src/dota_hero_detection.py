@@ -30,6 +30,7 @@ Template Matching Optimizations:
   match scores. Enabled with --apply-blur flag.
 """
 
+import math
 import os
 import sys
 import json
@@ -200,8 +201,7 @@ def save_debug_image(image, name_prefix, additional_info=""):
     """Save an image for debugging purposes."""
     if os.environ.get("DEBUG_IMAGES", "").lower() in ("1", "true", "yes"):
         # Generate a unique filename
-        unique_id = str(uuid.uuid4())[:8]
-        filename = f"{name_prefix}_{unique_id}.jpg"
+        filename = f"{name_prefix}.jpg"
         filepath = DEBUG_DIR / filename
 
         # Add text annotation with additional info if provided
@@ -1090,6 +1090,7 @@ def resolve_hero_duplicates(hero_candidates, debug=False):
                        f"instead of {alt['instead_of']['hero']} ({alt['instead_of']['score']:.3f})")
 
     return resolved_heroes
+
 def extract_player_name(top_bar, center_x, team, position, debug=False):
     """
     Extract the player name from the bottom portion of a hero portrait.
@@ -1108,32 +1109,9 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
         # Get dimensions of the input image
         height, width = top_bar.shape[:2]
 
-        # Calculate the position of the hero
-        if team == "Radiant":
-            # Radiant heroes are on the left side
-            x_start = center_x - CLOCK_LEFT_EXTEND - (5-position) * (HERO_WIDTH + HERO_GAP)
-        else:  # Dire
-            # Dire heroes are on the right side
-            x_start = center_x + CLOCK_RIGHT_EXTEND + position * (HERO_WIDTH + HERO_GAP - 10)
-
-        # Define the player name location relative to the hero portrait
-        # Player name is in the bottom part of the hero portrait section
-        player_y_start = HERO_HEIGHT + 5  # Start below the hero portrait
-        player_height = 30   # Reasonable height for player name
-        player_width = HERO_WIDTH + 25  # Full width
-
-        # Make sure we're within bounds
-        if x_start < 0:
-            logger.warning("Player name x position is negative, adjusting")
-            x_start = 0
-
-        if x_start + player_width > width:
-            logger.warning("Player name extends beyond frame width, adjusting")
-            player_width = width - x_start
-
-        if player_y_start + player_height > height:
-            logger.warning("Player name extends beyond frame height, adjusting")
-            player_height = height - player_y_start
+        # Get player name area coordinates
+        x_start, player_y_start, player_width, player_height = get_player_name_area_coordinates(
+            top_bar, center_x, team, position)
 
         # Get the player name area
         player_area = top_bar[player_y_start:player_y_start+player_height,
@@ -1163,12 +1141,15 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
                 if debug:
                     save_debug_image(levels_adjusted, f"{team.lower()}_pos{position+1}_player_levels")
                     save_debug_image(thresh, f"{team.lower()}_pos{position+1}_player_thresh")
+                # Configure tesseract for player names - include Latin, Cyrillic (Russian), Chinese, Korean, Japanese, Thai, Arabic, and Greek characters
+                # We don't use a whitelist for Chinese characters since there are thousands of them
+                # Instead, we rely on the language models (chi_sim for simplified, chi_tra for traditional)
+                custom_config = r'--oem 3 --psm 7 -l eng+rus+chi_sim+chi_tra+kor+jpn+tha+ara+grc'
 
-                # Configure tesseract for player names
-                custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-."'
-
-                # Extract text
+                # Extract text with support for multiple languages including full Chinese character set
                 player_name = pytesseract.image_to_string(thresh, config=custom_config).strip()
+
+                print(f"Player name: {player_name}")
 
                 # Clean up player name
                 if player_name:
@@ -1188,6 +1169,101 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
     except Exception as e:
         logger.error(f"Error extracting player name for {team} position {position+1}: {e}")
         return None
+
+def get_player_name_area_coordinates(top_bar, center_x, team, position):
+    """
+    Helper function to calculate the coordinates for player name area.
+    This is used by both extract_player_name and annotate_player_name_areas.
+
+    Args:
+        top_bar: The top bar image containing all heroes
+        center_x: X-coordinate of the center of the frame
+        team: "Radiant" or "Dire"
+        position: Position index (0-4)
+
+    Returns:
+        tuple: (x_start, y_start, width, height) for player name area
+    """
+    # Get dimensions of the input image
+    height, width = top_bar.shape[:2]
+    # Calculate the position of the hero
+    if team == "Radiant":
+        # Radiant heroes are on the left side
+        x_start = center_x - CLOCK_LEFT_EXTEND - (5-position) * (HERO_WIDTH + HERO_GAP) + SKEW_ANGLE_DEGREES
+        # Account for skew in Radiant side
+        skew_offset = int(HERO_ACTUAL_HEIGHT * math.tan(math.radians(SKEW_ANGLE_DEGREES)))
+        x_start += skew_offset // 2  # Adjust for skew to center the name under the portrait
+    else:  # Dire
+        # Dire heroes are on the right side
+        x_start = center_x + CLOCK_RIGHT_EXTEND + position * (HERO_WIDTH + HERO_GAP) - SKEW_ANGLE_DEGREES
+        # Account for skew in Dire side
+        skew_offset = int(HERO_ACTUAL_HEIGHT * math.tan(math.radians(SKEW_ANGLE_DEGREES)))
+        x_start -= skew_offset // 2  # Adjust for skew to center the name under the portrait
+
+    # Define the player name location relative to the hero portrait
+    # Player name is in the bottom part of the hero portrait section
+    player_y_start = HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT + 5  # Start below the hero portrait
+    player_height = 23   # Reasonable height for player name
+    player_width = HERO_WIDTH  # Slightly narrower than hero width to account for spacing
+
+    # Make sure we're within bounds
+    if x_start < 0:
+        logger.warning("Player name x position is negative, adjusting")
+        x_start = 0
+
+    if x_start + player_width > width:
+        logger.warning("Player name extends beyond frame width, adjusting")
+        player_width = width - x_start
+
+    if player_y_start + player_height > height:
+        logger.warning("Player name extends beyond frame height, adjusting")
+        player_height = height - player_y_start
+
+    return x_start, player_y_start, player_width, player_height
+
+def annotate_player_name_areas(top_bar, center_x, debug=False):
+    """
+    Create an annotated version of the top bar with 1px outlines around each player name area.
+
+    Args:
+        top_bar: The top bar image containing all heroes
+        center_x: X-coordinate of the center of the frame
+        debug: Whether to save debug images
+
+    Returns:
+        Annotated image with player name areas outlined
+    """
+    try:
+        # Start with the existing hero bar
+        visualization = top_bar.copy()
+
+        # Draw outlines for both teams
+        for team in ["Radiant", "Dire"]:
+            for position in range(5):
+                # Get player name area coordinates
+                x_start, player_y_start, player_width, player_height = get_player_name_area_coordinates(
+                    top_bar, center_x, team, position)
+
+                # Draw 1px outline around the player name area
+                color = (0, 255, 0) if team == "Radiant" else (0, 0, 255)  # Green for Radiant, Red for Dire
+                cv2.rectangle(visualization,
+                             (x_start, player_y_start),
+                             (x_start + player_width, player_y_start + player_height),
+                             color, 1)  # 1px outline
+
+                # Add text label
+                cv2.putText(visualization, f"{team[0]}{position+1} Player",
+                           (x_start, player_y_start - 5),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
+
+        # Save the visualization
+        if debug:
+            save_debug_image(visualization, "top_bar_player_name_areas_outlined", "Player name areas outlined with 1px border")
+
+        return visualization
+    except Exception as e:
+        logger.error(f"Error creating player name area annotation: {e}")
+        return top_bar
 
 def process_frame_for_heroes(frame_path, debug=False):
     """
@@ -1235,6 +1311,12 @@ def process_frame_for_heroes(frame_path, debug=False):
             annotated_top_bar = annotate_rank_areas(top_bar, center_x, debug=True)
             performance_timer.stop('annotate_rank_areas')
             save_debug_image(annotated_top_bar, "top_bar_annotated_with_ranks")
+
+            # Create annotated version with player name areas outlined
+            performance_timer.start('annotate_player_name_areas')
+            annotated_player_names = annotate_player_name_areas(top_bar, center_x, debug=True)
+            performance_timer.stop('annotate_player_name_areas')
+            save_debug_image(annotated_player_names, "top_bar_annotated_with_player_names")
 
         # Extract hero icons
         performance_timer.start('extract_hero_icons')
