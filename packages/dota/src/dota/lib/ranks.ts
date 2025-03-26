@@ -186,3 +186,44 @@ export async function getRankDescription({
 
   return msgs.join(' · ')
 }
+
+type Region =
+  | 'EUROPE'
+  | 'US EAST'
+  | 'SINGAPORE'
+  | 'ARGENTINA'
+  | 'STOCKHOLM'
+  | 'AUSTRIA'
+  | 'DUBAI'
+  | 'PERU'
+  | 'BRAZIL'
+export function estimateMMR(rank: number, region: Region): number {
+  if (rank <= 0 || rank > 5000) return 0
+
+  let baseMMR: number
+  const x = rank
+
+  if (region === 'EUROPE') {
+    baseMMR = 15300 - 8.2 * Math.log(x) * x ** 0.6
+  } else if (region === 'US EAST') {
+    baseMMR = 14900 - 7.8 * Math.log(x) * x ** 0.6
+  } else if (region === 'SINGAPORE') {
+    baseMMR = 14750 - 7.6 * Math.log(x) * x ** 0.58
+  } else if (region === 'ARGENTINA') {
+    baseMMR = 14500 - 7.9 * Math.log(x) * x ** 0.6
+  } else if (region === 'STOCKHOLM') {
+    baseMMR = 14650 - 7.5 * Math.log(x) * x ** 0.59
+  } else if (region === 'AUSTRIA') {
+    baseMMR = 14400 - 7.7 * Math.log(x) * x ** 0.61
+  } else if (region === 'DUBAI') {
+    baseMMR = 14200 - 7.3 * Math.log(x) * x ** 0.6
+  } else if (region === 'PERU') {
+    baseMMR = 14300 - 7.6 * Math.log(x) * x ** 0.58
+  } else if (region === 'BRAZIL') {
+    baseMMR = 14150 - 7.4 * Math.log(x) * x ** 0.57
+  } else {
+    baseMMR = 14000 - 7.0 * Math.log(x) * x ** 0.6
+  }
+
+  return Math.round(baseMMR)
+}
