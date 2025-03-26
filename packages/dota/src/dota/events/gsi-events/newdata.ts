@@ -352,9 +352,11 @@ const saveMatchDataDump = async (dotaClient: GSIHandler) => {
 
   const now = Date.now()
   const lastSaveTime = lastSaveTimeByMatch.get(matchId) || 0
+  const winTeam = dotaClient.client.gsi?.map?.win_team
 
   // Only save if it's been at least 1 minute since the last save for this match
-  if (now - lastSaveTime < SAVE_INTERVAL) {
+  // OR if the win_team is not "none" (meaning the game has ended)
+  if (now - lastSaveTime < SAVE_INTERVAL && (!winTeam || winTeam === 'none')) {
     return
   }
 
@@ -387,7 +389,7 @@ const saveMatchDataDump = async (dotaClient: GSIHandler) => {
     await db.collection('dump').insertOne({
       matchId,
       matchPlayers,
-      status: dotaClient.client.gsi?.map?.win_team,
+      status: winTeam,
       data: dumpData,
       timestamp: now,
     })
