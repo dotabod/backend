@@ -4,7 +4,6 @@ import { t } from 'i18next'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { steamSocket } from '../../../steam/ws.js'
 import { getWinProbability2MinAgo } from '../../../stratz/livematch.js'
-import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId.js'
 import {
   type Abilities,
   type Ability,
@@ -25,7 +24,6 @@ import { checkPassiveMidas } from '../../lib/checkMidas.js'
 import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
-import { getSpectatorPlayers } from '../../lib/getSpectatorPlayers.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { isSpectator } from '../../lib/isSpectator.js'
 import { say } from '../../say.js'
@@ -33,6 +31,9 @@ import eventHandler from '../EventHandler.js'
 import { minimapParser } from '../minimap/parser.js'
 import { getRedisNumberValue, is8500Plus } from '../../../utils/index.js'
 import CustomError from '../../../utils/customError.js'
+import MongoDBSingleton from '../../../steam/MongoDBSingleton.js'
+import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId.js'
+import { getSpectatorPlayers } from '../../lib/getSpectatorPlayers.js'
 
 // Define a type for the global timeouts
 declare global {
@@ -337,6 +338,72 @@ export const sendExtensionPubSubBroadcastMessageIfChanged = async (
     await redisClient.client.set(redisKey, currentMessageString)
   }
 }
+// Track the last time we saved data for each match
+const lastSaveTimeByMatch = new Map<string, number>()
+const SAVE_INTERVAL = 60000 // 1 minute in milliseconds
+
+const saveMatchDataDump = async (dotaClient: GSIHandler) => {
+  if (!isPlayingMatch(dotaClient.client.gsi)) {
+    return
+  }
+
+  const matchId = dotaClient.client.gsi?.map?.matchid
+  if (!matchId) return
+
+  const now = Date.now()
+  const lastSaveTime = lastSaveTimeByMatch.get(matchId) || 0
+
+  // Only save if it's been at least 1 minute since the last save for this match
+  if (now - lastSaveTime < SAVE_INTERVAL) {
+    return
+  }
+
+  const hero = dotaClient.client.gsi?.hero
+  const items = dotaClient.client.gsi?.items
+  const abilities = dotaClient.client.gsi?.abilities
+
+  if (!hero || !items || !abilities) return
+
+  const { matchPlayers } = await getAccountsFromMatch({
+    gsi: dotaClient.client.gsi,
+  })
+
+  const keysToSave = [
+    'map',
+    'player',
+    'minimap',
+    'hero',
+    'abilities',
+    'items',
+    'buildings',
+    'draft',
+    'events',
+  ]
+  const dumpData = {}
+  for (const key of keysToSave) {
+    if (dotaClient.client.gsi?.[key]) {
+      dumpData[key] = dotaClient.client.gsi[key]
+    }
+  }
+
+  const mongo = MongoDBSingleton
+  const db = await mongo.connect()
+  try {
+    // save to new mongodb collection, database: match, collection: dump
+    await db.collection('dump').insertOne({
+      matchId,
+      matchPlayers,
+      status: dotaClient.client.gsi?.map?.win_team,
+      data: dumpData,
+      timestamp: now,
+    })
+
+    // Update the last save time for this match
+    lastSaveTimeByMatch.set(matchId, now)
+  } finally {
+    await mongo.close()
+  }
+}
 
 const maybeSendTooltipData = async (dotaClient: GSIHandler) => {
   if (!dotaClient.client.beta_tester || !dotaClient.client.stream_online) {
@@ -445,6 +512,7 @@ eventHandler.registerEvent('newdata', {
 
     // saveMatchData checks and returns early if steam is found
     const saveMatchDataPromise = saveMatchData(dotaClient.client)
+    const saveMatchDataDumpPromise = saveMatchDataDump(dotaClient)
     const handleNewEventsPromise = handleNewEvents(data, dotaClient)
     const openBetsPromise = dotaClient.openBets(dotaClient.client)
     const checkPassiveMidasPromise = checkPassiveMidas(dotaClient.client)
@@ -459,6 +527,7 @@ eventHandler.registerEvent('newdata', {
       saveMatchDataPromise,
       handleNewEventsPromise,
       openBetsPromise,
+      saveMatchDataDumpPromise,
       calculateManaSavedPromise,
       checkPassiveMidasPromise,
       checkPassiveTpPromise,
