@@ -1141,42 +1141,55 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
                 if debug:
                     save_debug_image(levels_adjusted, f"{team.lower()}_pos{position+1}_player_levels")
                     save_debug_image(thresh, f"{team.lower()}_pos{position+1}_player_thresh")
-                # Configure tesseract for player names with multiple language support
+                # Configure tesseract for player names
                 # Use --oem 3 for LSTM neural net mode and --psm 7 for single line of text
-                # Set up individual language configs to compare confidence levels
-                languages = ['eng', 'rus']
+                # First try with English only
+                eng_config = r'--oem 3 --psm 7 -l eng'
 
-                # First try with all languages to get a baseline
-                custom_config = r'--oem 3 --psm 7 -l ' + '+'.join(languages)
-                player_name = pytesseract.image_to_string(thresh, config=custom_config).strip()
+                # Get English OCR results with confidence data
+                eng_data = pytesseract.image_to_data(thresh, config=eng_config, output_type=pytesseract.Output.DICT)
 
-                # Now try each language individually to find the one with highest confidence
-                best_confidence = 0
-                best_text = player_name
+                # Check if any text was detected in English
+                eng_confidences = [conf for conf, text in zip(eng_data['conf'], eng_data['text']) if text.strip()]
 
-                for lang in languages:
-                    lang_config = f'--oem 3 --psm 7 -l {lang}'
-                    data = pytesseract.image_to_data(thresh, config=lang_config, output_type=pytesseract.Output.DICT)
+                # Calculate average confidence for English if we have results
+                eng_avg_confidence = 0
+                if eng_confidences:
+                    eng_avg_confidence = sum(eng_confidences) / len(eng_confidences)
+                    # Join all text parts that have confidence
+                    player_name = ' '.join([text for conf, text in
+                                          zip(eng_data['conf'], eng_data['text'])
+                                          if text.strip() and conf > 0]).strip()
 
-                    # Check if any text was detected
-                    if len(data['text']) > 0 and any(data['text']):
-                        # Get confidence scores for detected text
-                        confidences = [conf for conf, text in zip(data['conf'], data['text']) if text.strip()]
-                        if confidences:
-                            avg_confidence = sum(confidences) / len(confidences)
-                            if avg_confidence > best_confidence:
-                                best_confidence = avg_confidence
-                                # Join all text parts that have confidence
-                                best_text = ' '.join([text for conf, text in
-                                                    zip(data['conf'], data['text'])
-                                                    if text.strip() and conf > 0])
+                    logger.debug(f"English OCR confidence: {eng_avg_confidence:.2f}")
 
-                # Use the text from the language with highest confidence
-                player_name = best_text.strip()
+                # Only try Russian if English confidence is low (below 60%)
+                if not eng_confidences or eng_avg_confidence < 60:
+                    logger.debug("Low English confidence, trying Russian")
+                    rus_config = r'--oem 3 --psm 7 -l rus'
+                    rus_data = pytesseract.image_to_data(thresh, config=rus_config, output_type=pytesseract.Output.DICT)
 
-                # Log which language was selected
-                if best_confidence > 0:
-                    logger.debug(f"Selected text with confidence {best_confidence:.2f}")
+                    # Check if any text was detected in Russian
+                    rus_confidences = [conf for conf, text in zip(rus_data['conf'], rus_data['text']) if text.strip()]
+
+                    if rus_confidences:
+                        rus_avg_confidence = sum(rus_confidences) / len(rus_confidences)
+                        rus_text = ' '.join([text for conf, text in
+                                           zip(rus_data['conf'], rus_data['text'])
+                                           if text.strip() and conf > 0]).strip()
+
+                        logger.debug(f"Russian OCR confidence: {rus_avg_confidence:.2f}")
+
+                        # Use Russian result if it has higher confidence
+                        if not eng_confidences or rus_avg_confidence > eng_avg_confidence:
+                            player_name = rus_text
+                            logger.debug("Selected Russian text due to higher confidence")
+
+                # If we still don't have a player name, try with both languages as fallback
+                if not player_name:
+                    fallback_config = r'--oem 3 --psm 7 -l eng+rus'
+                    player_name = pytesseract.image_to_string(thresh, config=fallback_config).strip()
+                    logger.debug("Using fallback OCR with both languages")
 
                 print(f"Player name: {player_name}")
 
