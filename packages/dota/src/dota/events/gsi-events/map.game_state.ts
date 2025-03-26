@@ -12,19 +12,31 @@ eventHandler.registerEvent('map:game_state', {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi, false)) return
     if (!['DOTA_GAMERULES_STATE_STRATEGY_TIME'].includes(gameState)) return
-    // Only create a clip if the user is >= 8500 MMR or has an immortal rank
-    if (!is8500Plus(dotaClient.client)) {
-      return
-    }
-
-    const accountId = dotaClient.client.Account?.providerAccountId
-    if (!accountId) return
 
     // Extract common log context
     const logContext = {
       name: dotaClient.client.name,
       matchId: dotaClient.client.gsi?.map?.matchid,
       state: gameState,
+    }
+
+    // Only create a clip if the user is >= 8500 MMR or has an immortal rank
+    if (!is8500Plus(dotaClient.client)) {
+      logger.info('User is not 8500+ MMR, skipping clip creation', {
+        ...logContext,
+        SteamAccount: dotaClient.client.SteamAccount,
+        client: dotaClient.client.Account,
+      })
+      return
+    }
+
+    const accountId = dotaClient.client.Account?.providerAccountId
+    if (!accountId) {
+      logger.error('No account ID found', {
+        ...logContext,
+        client: dotaClient.client.Account,
+      })
+      return
     }
 
     // Create clip after delay
