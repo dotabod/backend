@@ -358,12 +358,6 @@ const saveMatchDataDump = async (dotaClient: GSIHandler) => {
     return
   }
 
-  const hero = dotaClient.client.gsi?.hero
-  const items = dotaClient.client.gsi?.items
-  const abilities = dotaClient.client.gsi?.abilities
-
-  if (!hero || !items || !abilities) return
-
   const { matchPlayers } = await getAccountsFromMatch({
     gsi: dotaClient.client.gsi,
   })

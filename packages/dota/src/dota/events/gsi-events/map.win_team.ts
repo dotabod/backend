@@ -10,6 +10,7 @@ eventHandler.registerEvent('map:win_team', {
 
     logger.info('Map win team', {
       channel: dotaClient.client.name,
+      activity: dotaClient.client.gsi?.player?.activity,
       winningTeam,
     })
 
