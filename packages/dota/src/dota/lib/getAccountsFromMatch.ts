@@ -149,9 +149,9 @@ export async function getAccountsFromMatch({
           const matchPlayers: Players = data.heroes.map((hero) => ({
             heroid: hero.hero_id,
             rank: hero.rank,
-            player_name: hero.player_name,
-            accountid: 0, // Vision API doesn't provide account IDs
-            playerid: null,
+            player_name: hero.hero_id === gsi?.hero?.id ? gsi?.player?.name : hero.player_name,
+            accountid: hero.hero_id === gsi?.hero?.id ? Number(gsi?.player?.accountid) : 0, // Vision API doesn't provide account IDs
+            playerid: hero.hero_id === gsi?.hero?.id ? Number(gsi?.player?.id) : null,
           }))
 
           return {
