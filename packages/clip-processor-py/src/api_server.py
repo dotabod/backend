@@ -299,27 +299,32 @@ def process_queue_worker():
                     db_client.update_queue_status(request['request_id'], 'failed')
                     logger.error(f"Failed to process request {request['request_id']}: {error}")
                 else:
-                    # Update result with processing time
-                    if result and isinstance(result, dict):
-                        result['processing_time'] = f"{processing_time:.2f}s"
+                    # Check if result contains an error
+                    if isinstance(result, dict) and ('error' in result or not result.get('players', [])):
+                        db_client.update_queue_status(request['request_id'], 'failed')
+                        logger.error(f"Failed to process request {request['request_id']}: {result.get('error', 'No heroes detected')}")
+                    else:
+                        # Update result with processing time
+                        if result and isinstance(result, dict):
+                            result['processing_time'] = f"{processing_time:.2f}s"
 
-                        # For clip requests, also save processing time in results table
-                        if request['request_type'] == 'clip' and request['clip_id']:
-                            # Skip saving frame_image_url since that requires an active request context
-                            if 'frame_image_url' in result:
-                                del result['frame_image_url']
+                            # For clip requests, also save processing time in results table
+                            if request['request_type'] == 'clip' and request['clip_id']:
+                                # Skip saving frame_image_url since that requires an active request context
+                                if 'frame_image_url' in result:
+                                    del result['frame_image_url']
 
-                            # Replace placeholder with real host URL when the result is retrieved
-                            db_client.save_clip_result(
-                                request['clip_id'],
-                                request['clip_url'],
-                                result,
-                                processing_time,
-                                request.get('match_id')  # Pass match_id if present
-                            )
+                                # Replace placeholder with real host URL when the result is retrieved
+                                db_client.save_clip_result(
+                                    request['clip_id'],
+                                    request['clip_url'],
+                                    result,
+                                    processing_time,
+                                    request.get('match_id')  # Pass match_id if present
+                                )
 
-                    db_client.update_queue_status(request['request_id'], 'completed', result_id=request.get('clip_id'))
-                    logger.info(f"Completed processing request {request['request_id']}")
+                        db_client.update_queue_status(request['request_id'], 'completed', result_id=request.get('clip_id'))
+                        logger.info(f"Completed processing request {request['request_id']}")
 
             # Small sleep to prevent high CPU usage
             time.sleep(0.1)
