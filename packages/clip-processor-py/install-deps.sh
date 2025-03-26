@@ -18,6 +18,42 @@ source venv/bin/activate
 echo "Installing dependencies from requirements.txt..."
 pip install --index-url https://pypi.org/simple/ -r requirements.txt
 
+# Check if Tesseract is installed and install language packs
+echo "Checking Tesseract installation and language packs..."
+if command -v tesseract &>/dev/null; then
+  echo "✓ Tesseract is installed"
+
+  # Check operating system
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    echo "Installing Tesseract language packs on macOS..."
+    brew list tesseract-lang &>/dev/null || brew install tesseract-lang
+  elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux
+    echo "Installing Tesseract language packs on Linux..."
+    if command -v apt-get &>/dev/null; then
+      # Debian/Ubuntu
+      sudo apt-get update
+      sudo apt-get install -y tesseract-ocr-eng tesseract-ocr-rus
+    elif command -v yum &>/dev/null; then
+      # RHEL/CentOS
+      sudo yum install -y tesseract-langpack-rus
+    else
+      echo "⚠️ Unsupported Linux distribution. Please install Tesseract language packs manually."
+    fi
+  else
+    echo "⚠️ Unsupported OS. Please install Tesseract language packs manually."
+  fi
+
+  # Verify available languages
+  echo "Available Tesseract languages:"
+  tesseract --list-langs | cat
+else
+  echo "✗ Tesseract is not installed. Please install it manually."
+  echo "  On macOS: brew install tesseract tesseract-lang"
+  echo "  On Debian/Ubuntu: sudo apt-get install tesseract-ocr tesseract-ocr-eng tesseract-ocr-chi-sim tesseract-ocr-chi-tra"
+fi
+
 # Check if streamlink is installed correctly
 echo "Checking streamlink installation..."
 if python -c "import streamlink" &>/dev/null; then

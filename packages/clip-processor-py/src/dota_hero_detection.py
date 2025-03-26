@@ -1141,13 +1141,42 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
                 if debug:
                     save_debug_image(levels_adjusted, f"{team.lower()}_pos{position+1}_player_levels")
                     save_debug_image(thresh, f"{team.lower()}_pos{position+1}_player_thresh")
-                # Configure tesseract for player names - include Latin, Cyrillic (Russian), Chinese, Korean, Japanese, Thai, Arabic, and Greek characters
-                # We don't use a whitelist for Chinese characters since there are thousands of them
-                # Instead, we rely on the language models (chi_sim for simplified, chi_tra for traditional)
-                custom_config = r'--oem 3 --psm 7 -l eng+rus+chi_sim+chi_tra+kor+jpn+tha+ara+grc'
+                # Configure tesseract for player names with multiple language support
+                # Use --oem 3 for LSTM neural net mode and --psm 7 for single line of text
+                # Set up individual language configs to compare confidence levels
+                languages = ['eng', 'rus']
 
-                # Extract text with support for multiple languages including full Chinese character set
+                # First try with all languages to get a baseline
+                custom_config = r'--oem 3 --psm 7 -l ' + '+'.join(languages)
                 player_name = pytesseract.image_to_string(thresh, config=custom_config).strip()
+
+                # Now try each language individually to find the one with highest confidence
+                best_confidence = 0
+                best_text = player_name
+
+                for lang in languages:
+                    lang_config = f'--oem 3 --psm 7 -l {lang}'
+                    data = pytesseract.image_to_data(thresh, config=lang_config, output_type=pytesseract.Output.DICT)
+
+                    # Check if any text was detected
+                    if len(data['text']) > 0 and any(data['text']):
+                        # Get confidence scores for detected text
+                        confidences = [conf for conf, text in zip(data['conf'], data['text']) if text.strip()]
+                        if confidences:
+                            avg_confidence = sum(confidences) / len(confidences)
+                            if avg_confidence > best_confidence:
+                                best_confidence = avg_confidence
+                                # Join all text parts that have confidence
+                                best_text = ' '.join([text for conf, text in
+                                                    zip(data['conf'], data['text'])
+                                                    if text.strip() and conf > 0])
+
+                # Use the text from the language with highest confidence
+                player_name = best_text.strip()
+
+                # Log which language was selected
+                if best_confidence > 0:
+                    logger.debug(f"Selected text with confidence {best_confidence:.2f}")
 
                 print(f"Player name: {player_name}")
 
@@ -2332,6 +2361,39 @@ def main():
 
                 return 0
             else:
+                return 1
+        # Process a single frame if path is provided
+        elif args.frame_path:
+            result = process_frame_for_heroes(
+                frame_path=args.frame_path,
+                debug=args.debug
+            )
+
+            if result:
+                # Format the result for output
+                output_data = {
+                    "heroes": result,
+                    "processing_time": f"{performance_timer.get_elapsed('total_execution'):.2f}s",
+                    "source_type": "frame",
+                    "source": args.frame_path
+                }
+
+                # If json-only flag is set, just print the JSON output
+                if args.json_only:
+                    print(json.dumps(output_data, indent=2))
+                elif args.debug:
+                    logger.info(f"Processed frame: {args.frame_path}")
+
+                # Save to file if output is specified
+                if not args.output == "heroes.json" or not args.json_only:
+                    with open(args.output, 'w') as f:
+                        json.dump(output_data, f, indent=2)
+                    if args.debug:
+                        logger.info(f"Saved hero data to {args.output}")
+
+                return 0
+            else:
+                logger.error(f"Failed to process frame: {args.frame_path}")
                 return 1
         # Process a clip if URL is provided
         elif args.clip_url:

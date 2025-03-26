@@ -23,6 +23,27 @@ bash ./install-deps.sh
 # Ensure virtual environment is activated
 source venv/bin/activate
 
+# Check if Tesseract and necessary language packs are installed
+if command -v tesseract &>/dev/null; then
+  REQUIRED_LANGS=("rus")
+  MISSING_LANGS=()
+
+  for LANG in "${REQUIRED_LANGS[@]}"; do
+    if ! tesseract --list-langs | grep -q "$LANG"; then
+      MISSING_LANGS+=("$LANG")
+    fi
+  done
+
+  if [ ${#MISSING_LANGS[@]} -gt 0 ]; then
+    echo "Some required Tesseract language packs are missing. Installing them now..."
+    if [ -f "./install-tesseract-langs.sh" ]; then
+      bash ./install-tesseract-langs.sh
+    else
+      echo "Warning: install-tesseract-langs.sh not found! Chinese characters may not be recognized correctly."
+    fi
+  fi
+fi
+
 # Install the package in development mode
 pip install --index-url https://pypi.org/simple/ -e .
 
