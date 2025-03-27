@@ -118,6 +118,14 @@ def initialize_app():
             return False
         logger.info(f"Successfully loaded templates for {len(heroes_data)} heroes")
 
+        # Step 1.5: Load hero abilities
+        logger.info("Loading hero abilities...")
+        hero_abilities = get_hero_data()
+        if not hero_abilities:
+            logger.error("Failed to load hero abilities")
+            return False
+        logger.info(f"Successfully loaded abilities for {len(hero_abilities)} heroes")
+
         # Step 2: Run database migrations
         try:
             logger.info("Running database migrations...")
