@@ -667,12 +667,18 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                     host_url = request.host_url.rstrip('/')
                     cached_result['saved_image_path'] = cached_result['saved_image_path'].replace('__HOST_URL__', host_url)
 
-                # Only return players and saved_image_path keys
+                # Create a filtered result that includes the facet data
                 filtered_result = {
                     'saved_image_path': cached_result.get('saved_image_path'),
-                    'players': cached_result.get('players', [])
+                    'players': cached_result.get('players', []),
+                    'heroes': cached_result.get('heroes', [])  # Include heroes which has facet data
                 }
                 return filtered_result
+
+    # Skip queueing when running locally
+    if os.environ.get('RUN_LOCALLY') == 'true':
+        add_to_queue = False
+        logger.info("Running locally, processing clip immediately without using queue")
 
     # If queuing is enabled, add to queue and return queue info
     if add_to_queue:
@@ -789,6 +795,11 @@ def process_stream_request(username, num_frames=3, debug=False, include_image=Tr
     Returns:
         The processing result or queue information
     """
+    # Skip queueing when running locally
+    if os.environ.get('RUN_LOCALLY') == 'true':
+        add_to_queue = False
+        logger.info("Running locally, processing stream immediately without using queue")
+
     # If queuing is enabled, add to queue and return queue info
     if add_to_queue:
         request_id, queue_info = db_client.add_to_queue(
@@ -889,6 +900,11 @@ def detect_heroes():
     include_image = request.args.get('include_image', 'true').lower() == 'true'
     use_queue = request.args.get('queue', 'true').lower() == 'true'
 
+    # When running locally, override queue parameter to process immediately
+    if os.environ.get('RUN_LOCALLY') == 'true':
+        use_queue = False
+        logger.info("Running locally, overriding queue parameter to process immediately")
+
     # Check if match_id is provided
     if not match_id:
         return jsonify({'error': 'Missing required parameter: match_id'}), 400
@@ -974,6 +990,11 @@ def detect_heroes_from_stream():
     debug = request.args.get('debug', 'false').lower() == 'true'
     include_image = request.args.get('include_image', 'false').lower() == 'true'
     use_queue = request.args.get('queue', 'true').lower() == 'true'
+
+    # When running locally, override queue parameter to process immediately
+    if os.environ.get('RUN_LOCALLY') == 'true':
+        use_queue = False
+        logger.info("Running locally, overriding queue parameter to process immediately")
 
     # Check if username is provided
     if not username:

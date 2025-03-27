@@ -2314,12 +2314,14 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
                 # Add rank information if available
                 if 'rank' in hero:
                     player['rank'] = hero['rank']
-                    if 'rank_text' in hero:
-                        player['rank_text'] = hero['rank_text']
 
                 # Add player name if available
                 if 'player_name' in hero:
                     player['player_name'] = hero['player_name']
+
+                # Add facet information if available
+                if 'facet' in hero and 'name' in hero['facet']:
+                    player['facet'] = hero['facet']['name']
 
                 players.append(player)
 

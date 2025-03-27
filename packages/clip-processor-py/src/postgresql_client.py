@@ -214,6 +214,7 @@ class PostgresClient:
                 result = row['results']
                 facets = row['facets']
                 if facets:
+                    # Add facets to players array
                     if 'players' in result:
                         for player in result['players']:
                             team = player['team'].lower()
@@ -223,6 +224,18 @@ class PostgresClient:
                             for hero_facet in facets[team]:
                                 if hero_facet['position'] == position:
                                     player['facet'] = hero_facet['facet']
+                                    break
+
+                    # Also add facets to heroes array if present
+                    if 'heroes' in result:
+                        for hero in result['heroes']:
+                            team = hero['team'].lower()
+                            position = hero['position'] + 1  # Convert to 1-indexed
+
+                            # Find matching facet info
+                            for hero_facet in facets[team]:
+                                if hero_facet['position'] == position:
+                                    hero['facet'] = hero_facet['facet']
                                     break
                 return result
             else:
@@ -286,6 +299,18 @@ class PostgresClient:
                             for hero_facet in facets[team]:
                                 if hero_facet['position'] == position:
                                     player['facet'] = hero_facet['facet']
+                                    break
+
+                    # Also add facets to heroes array if present
+                    if 'heroes' in result:
+                        for hero in result['heroes']:
+                            team = hero['team'].lower()
+                            position = hero['position'] + 1  # Convert to 1-indexed
+
+                            # Find matching facet info
+                            for hero_facet in facets[team]:
+                                if hero_facet['position'] == position:
+                                    hero['facet'] = hero_facet['facet']
                                     break
                 return result
             else:
