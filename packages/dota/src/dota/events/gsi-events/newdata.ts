@@ -463,7 +463,21 @@ eventHandler.registerEvent('newdata', {
     // Everything below here requires an ongoing match, not a finished match
     const hasWon =
       dotaClient.client.gsi?.map?.win_team && dotaClient.client.gsi.map.win_team !== 'none'
-    if (hasWon) return
+    if (hasWon) {
+      const saveMatchDataDumpPromise = saveMatchDataDump(dotaClient)
+      // Fix: Use Promise.allSettled instead of Promise.all to prevent one failure from stopping all operations
+      await Promise.allSettled([saveMatchDataDumpPromise]).then((results) => {
+        // Log any rejected promises
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            logger.error(`Promise at index ${index} failed in newdata match ended handler`, {
+              reason: result.reason,
+            })
+          }
+        })
+      })
+      return
+    }
 
     // only if they're in a match ^ and they're a beta tester
     if (dotaClient.client.beta_tester && dotaClient.client.stream_online) {
