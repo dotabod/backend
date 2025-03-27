@@ -58,7 +58,6 @@ export async function getAccountsFromMatch({
   matchPlayers: Players
   accountIds: number[]
 }> {
-  const visionApiHost = process.env.VISION_API_HOST
   const players = searchPlayers?.length ? searchPlayers : getSpectatorPlayers(gsi)
 
   // spectator account ids
@@ -125,10 +124,9 @@ export async function getAccountsFromMatch({
       }
     }
 
-    // If we don't have data in MongoDB, try to fetch from Vision API
-    if (matchId && visionApiHost) {
+    if (matchId && process.env.VISION_API_HOST) {
       try {
-        const apiUrl = `https://${visionApiHost}/match/${matchId}`
+        const apiUrl = `https://${process.env.VISION_API_HOST}/match/${matchId}`
         const apiResponse = await fetch(apiUrl, {
           headers: {
             'X-API-Key': process.env.VISION_API_KEY || '',

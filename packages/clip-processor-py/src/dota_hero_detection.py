@@ -1200,8 +1200,6 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
                     player_name = pytesseract.image_to_string(thresh, config=fallback_config).strip()
                     logger.debug("Using fallback OCR with both languages")
 
-                print(f"Player name: {player_name}")
-
                 # Clean up player name
                 if player_name:
                     # Remove special characters and normalize
@@ -1359,13 +1357,13 @@ def process_frame_for_heroes(frame_path, debug=False):
         # Create the annotated version with rank areas outlined
         if debug:
             performance_timer.start('annotate_rank_areas')
-            annotated_top_bar = annotate_rank_areas(top_bar, center_x, debug=True)
+            annotated_top_bar = annotate_rank_areas(top_bar, center_x, debug=debug)
             performance_timer.stop('annotate_rank_areas')
             save_debug_image(annotated_top_bar, "top_bar_annotated_with_ranks")
 
             # Create annotated version with player name areas outlined
             performance_timer.start('annotate_player_name_areas')
-            annotated_player_names = annotate_player_name_areas(top_bar, center_x, debug=True)
+            annotated_player_names = annotate_player_name_areas(top_bar, center_x, debug=debug)
             performance_timer.stop('annotate_player_name_areas')
             save_debug_image(annotated_player_names, "top_bar_annotated_with_player_names")
 
@@ -1391,7 +1389,7 @@ def process_frame_for_heroes(frame_path, debug=False):
             # Only extract rank banner once during debugging, not twice
             if debug and os.environ.get("EXTRACT_RANK_BANNERS", "").lower() in ("1", "true", "yes"):
                 performance_timer.start('crop_rank_banner')
-                rank_banner = crop_rank_banner(top_bar, center_x, team, position, debug=True)
+                rank_banner = crop_rank_banner(top_bar, center_x, team, position, debug=debug)
                 performance_timer.stop('crop_rank_banner')
 
                 if rank_banner is not None:
@@ -1409,7 +1407,7 @@ def process_frame_for_heroes(frame_path, debug=False):
                     # Extract rank text using OCR if available
                     if TESSERACT_AVAILABLE:
                         performance_timer.start('extract_rank_text')
-                        rank_number, rank_text = extract_rank_text(rank_banner, debug=True)
+                        rank_number, rank_text = extract_rank_text(rank_banner, debug=debug)
                         performance_timer.stop('extract_rank_text')
 
                         if rank_number:
