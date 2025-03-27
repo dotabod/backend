@@ -111,8 +111,8 @@ def create_initial_schema(cursor):
     CREATE TABLE IF NOT EXISTS clip_results (
         clip_id VARCHAR(255) PRIMARY KEY,
         clip_url TEXT NOT NULL,
-        result JSONB NOT NULL,
-        processing_time FLOAT,
+        results JSONB NOT NULL,
+        processing_time_seconds FLOAT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     )
     """)

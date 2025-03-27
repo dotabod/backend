@@ -319,8 +319,8 @@ def process_queue_worker():
                                     request['clip_id'],
                                     request['clip_url'],
                                     result,
-                                    processing_time,
-                                    request.get('match_id')  # Pass match_id if present
+                                    processing_time_seconds=processing_time,
+                                    match_id=request.get('match_id')  # Pass match_id if present
                                 )
 
                         db_client.update_queue_status(request['request_id'], 'completed', result_id=request.get('clip_id'))
@@ -734,7 +734,7 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                 del result_to_save['frame_image_url']
 
             # Cache the result
-            success = db_client.save_clip_result(clip_id, clip_url, result_to_save, processing_time, match_id)
+            success = db_client.save_clip_result(clip_id, clip_url, result_to_save, processing_time_seconds=processing_time, match_id=match_id)
             if success:
                 logger.info(f"Cached result for clip ID: {clip_id}" + (f", match ID: {match_id}" if match_id else ""))
             else:

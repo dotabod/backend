@@ -404,7 +404,7 @@ class PostgresClient:
             if conn:
                 self._return_connection(conn)
 
-    def save_clip_result(self, clip_id: str, clip_url: str, result: Dict[str, Any], processing_time: Optional[float] = None, match_id: Optional[str] = None) -> bool:
+    def save_clip_result(self, clip_id: str, clip_url: str, result: Dict[str, Any], processing_time_seconds: Optional[float] = None, match_id: Optional[str] = None) -> bool:
         """
         Save clip processing result to the database.
 
@@ -412,7 +412,7 @@ class PostgresClient:
             clip_id: The Twitch clip ID
             clip_url: The Twitch clip URL
             result: The hero detection result to cache
-            processing_time: Processing time in seconds (optional)
+            processing_time_seconds: Processing time in seconds (optional)
             match_id: The Dota 2 match ID (optional)
 
         Returns:
@@ -444,21 +444,21 @@ class PostgresClient:
             # Save result with facet information
             cursor.execute(f"""
             INSERT INTO {self.results_table} (
-                clip_id, clip_url, result, processing_time, match_id, facets
+                clip_id, clip_url, results, processing_time_seconds, match_id, facets
             ) VALUES (
                 %s, %s, %s, %s, %s, %s
             )
             ON CONFLICT (clip_id) DO UPDATE SET
                     clip_url = EXCLUDED.clip_url,
-                result = EXCLUDED.result,
-                processing_time = EXCLUDED.processing_time,
+                results = EXCLUDED.results,
+                processing_time_seconds = EXCLUDED.processing_time_seconds,
                 match_id = EXCLUDED.match_id,
                 facets = EXCLUDED.facets
             """, (
                     clip_id,
                     clip_url,
                 json.dumps(result),
-                    processing_time,
+                    processing_time_seconds,
                 match_id,
                 json.dumps(facets) if facets['radiant'] or facets['dire'] else None
                 ))
