@@ -356,7 +356,7 @@ const saveMatchDataDump = async (dotaClient: GSIHandler) => {
 
   // Only save if it's been at least 1 minute since the last save for this match
   // OR if the win_team is not "none" (meaning the game has ended)
-  if (now - lastSaveTime < SAVE_INTERVAL && (!winTeam || winTeam === 'none')) {
+  if (now - lastSaveTime < SAVE_INTERVAL && winTeam === 'none') {
     return
   }
 
