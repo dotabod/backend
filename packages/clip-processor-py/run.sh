@@ -23,6 +23,9 @@ bash ./install-deps.sh
 # Ensure virtual environment is activated
 source venv/bin/activate
 
+# Set the RUN_LOCALLY environment variable
+export RUN_LOCALLY=true
+
 # Check if Tesseract and necessary language packs are installed
 if command -v tesseract &>/dev/null; then
   REQUIRED_LANGS=("rus")

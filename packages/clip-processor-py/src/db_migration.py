@@ -113,6 +113,7 @@ def create_initial_schema(cursor):
         clip_url TEXT NOT NULL,
         results JSONB NOT NULL,
         processing_time_seconds FLOAT,
+        processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     )
     """)

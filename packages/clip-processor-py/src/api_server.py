@@ -64,7 +64,7 @@ heroes_data = None
 app = Flask(__name__)
 # Define the API key for authentication
 API_KEY = os.environ.get('VISION_API_KEY')
-if not API_KEY:
+if not API_KEY and os.environ.get('RUN_LOCALLY') != 'true':
     logger.error("No API key found. Set VISION_API_KEY environment variable.")
     raise ValueError("VISION_API_KEY environment variable must be set")
 
@@ -72,6 +72,10 @@ if not API_KEY:
 def require_api_key(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # If running locally, skip authentication
+        if os.environ.get('RUN_LOCALLY') == 'true':
+            return f(*args, **kwargs)
+
         provided_key = request.headers.get('X-API-Key')
         if provided_key and provided_key == API_KEY:
             return f(*args, **kwargs)
@@ -155,6 +159,10 @@ def initialize_app():
 def start_worker_thread():
     """Start the worker thread to process queued requests if not already running."""
     global worker_running
+    # Don't start worker thread if running locally
+    if os.environ.get('RUN_LOCALLY') == 'true':
+        logger.info("Running locally, not starting worker thread")
+        return
 
     if not worker_running:
         worker_thread = threading.Thread(target=process_queue_worker, daemon=True)
@@ -381,11 +389,16 @@ def debug_queue():
         """)
         recent_requests = cursor.fetchall()
 
-        # Format datetime objects for JSON
+        # Format datetime objects for JSON and prepare force processing URL
         for req in recent_requests:
-            for key, value in req.items():
+            # First pass: format datetime objects
+            for key, value in list(req.items()):
                 if isinstance(value, datetime):
                     req[key] = value.isoformat()
+
+            # Second pass: add force processing URL if clip_id and match_id exist
+            if 'clip_id' in req and 'match_id' in req:
+                req['force_process_again'] = f"http://localhost:5000/detect?clip_id={req['clip_id']}&force=true&match_id={req['match_id']}"
 
         cursor.close()
         db_client._return_connection(conn)

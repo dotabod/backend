@@ -116,7 +116,7 @@ class PostgresClient:
                 clip_id TEXT UNIQUE NOT NULL,
                 clip_url TEXT NOT NULL,
                 results JSONB NOT NULL,
-                processed_at TIMESTAMP NOT NULL,
+                processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 processing_time_seconds FLOAT
             );
             """
@@ -444,23 +444,24 @@ class PostgresClient:
             # Save result with facet information
             cursor.execute(f"""
             INSERT INTO {self.results_table} (
-                clip_id, clip_url, results, processing_time_seconds, match_id, facets
+                clip_id, clip_url, results, processing_time_seconds, match_id, facets, processed_at
             ) VALUES (
-                %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, NOW()
             )
             ON CONFLICT (clip_id) DO UPDATE SET
                     clip_url = EXCLUDED.clip_url,
                 results = EXCLUDED.results,
                 processing_time_seconds = EXCLUDED.processing_time_seconds,
                 match_id = EXCLUDED.match_id,
-                facets = EXCLUDED.facets
+                facets = EXCLUDED.facets,
+                processed_at = NOW()
             """, (
                     clip_id,
                     clip_url,
                 json.dumps(result),
                     processing_time_seconds,
-                match_id,
-                json.dumps(facets) if facets['radiant'] or facets['dire'] else None
+                    match_id,
+                    json.dumps(facets) if facets['radiant'] or facets['dire'] else None
                 ))
 
             conn.commit()
