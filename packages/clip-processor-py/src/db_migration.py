@@ -27,182 +27,127 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def run_migrations():
-    """Run all pending database migrations"""
-    logger.info("Starting database migrations...")
-
-    # Get database connection
-    conn = None
+    """Run all database migrations in order."""
     try:
+        # Get a connection from the pool
         conn = db_client._get_connection()
-        if not conn:
-            logger.error("Failed to connect to database")
-            return False
-
         cursor = conn.cursor()
 
-        # Create migration tracking table if it doesn't exist
+        # Create the migrations table if it doesn't exist
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS db_migrations (
+        CREATE TABLE IF NOT EXISTS migrations (
             id SERIAL PRIMARY KEY,
-            migration_name TEXT UNIQUE NOT NULL,
-            applied_at TIMESTAMP NOT NULL DEFAULT NOW()
+            name VARCHAR(255) NOT NULL,
+            applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         )
         """)
-        conn.commit()
 
-        # Run each migration in sequence
+        # List of migrations to run in order
         migrations = [
-            add_processing_time_column,
-            fix_position_ambiguity,
-            add_match_id_columns
+            ('001_initial_schema.sql', create_initial_schema),
+            ('002_add_match_id.sql', add_match_id_column),
+            ('003_add_facets.sql', add_facets_column)
         ]
 
-        for migration in migrations:
-            migration_name = migration.__name__
+        # Check which migrations have been applied
+        cursor.execute("SELECT name FROM migrations")
+        applied_migrations = {row[0] for row in cursor.fetchall()}
 
-            # Check if migration was already applied
-            cursor.execute("SELECT COUNT(*) FROM db_migrations WHERE migration_name = %s", (migration_name,))
-            count = cursor.fetchone()[0]
-
-            if count == 0:
+        # Run any migrations that haven't been applied yet
+        for migration_name, migration_func in migrations:
+            if migration_name not in applied_migrations:
                 logger.info(f"Applying migration: {migration_name}")
-                success = migration(conn)
+                try:
+                    # Run the migration
+                    migration_func(cursor)
 
-                if success:
-                    # Record successful migration
+                    # Record that this migration has been applied
                     cursor.execute(
-                        "INSERT INTO db_migrations (migration_name) VALUES (%s)",
+                        "INSERT INTO migrations (name) VALUES (%s)",
                         (migration_name,)
                     )
+
+                    # Commit after each successful migration
                     conn.commit()
-                    logger.info(f"Migration {migration_name} applied successfully")
-                else:
-                    logger.error(f"Failed to apply migration: {migration_name}")
+                    logger.info(f"Successfully applied migration: {migration_name}")
+                except Exception as e:
+                    # Roll back on error
+                    conn.rollback()
+                    logger.error(f"Error applying migration {migration_name}: {e}")
                     return False
-            else:
-                logger.info(f"Migration {migration_name} already applied, skipping")
 
-        logger.info("All migrations completed successfully")
+        cursor.close()
+        db_client._return_connection(conn)
         return True
 
     except Exception as e:
-        logger.error(f"Error during migrations: {e}")
-        if conn:
-            conn.rollback()
+        logger.error(f"Error running migrations: {e}")
         return False
 
-    finally:
-        if conn:
-            db_client._return_connection(conn)
+def create_initial_schema(cursor):
+    """Create the initial database schema."""
+    # Create the queue table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS request_queue (
+        request_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        request_type VARCHAR(50) NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'pending',
+        clip_url TEXT,
+        clip_id VARCHAR(255),
+        stream_username VARCHAR(255),
+        num_frames INTEGER,
+        debug BOOLEAN DEFAULT FALSE,
+        force BOOLEAN DEFAULT FALSE,
+        include_image BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        started_at TIMESTAMP WITH TIME ZONE,
+        completed_at TIMESTAMP WITH TIME ZONE,
+        result_id VARCHAR(255)
+    )
+    """)
 
-def add_processing_time_column(conn):
-    """Add processing_time_seconds column to clip_results table if it doesn't exist"""
-    try:
-        cursor = conn.cursor()
+    # Create the results table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS clip_results (
+        clip_id VARCHAR(255) PRIMARY KEY,
+        clip_url TEXT NOT NULL,
+        result JSONB NOT NULL,
+        processing_time FLOAT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-        # Check if column exists
-        cursor.execute("""
-        SELECT column_name FROM information_schema.columns
-        WHERE table_name = 'clip_results' AND column_name = 'processing_time_seconds'
-        """)
+def add_match_id_column(cursor):
+    """Add match_id column to relevant tables."""
+    # Add match_id to request_queue table
+    cursor.execute("""
+    ALTER TABLE request_queue
+    ADD COLUMN IF NOT EXISTS match_id VARCHAR(255)
+    """)
 
-        if cursor.fetchone() is None:
-            logger.info("Adding processing_time_seconds column to clip_results table")
-            cursor.execute("""
-            ALTER TABLE clip_results
-            ADD COLUMN processing_time_seconds FLOAT
-            """)
-            conn.commit()
-        else:
-            logger.info("Column processing_time_seconds already exists in clip_results table")
+    # Add match_id to clip_results table
+    cursor.execute("""
+    ALTER TABLE clip_results
+    ADD COLUMN IF NOT EXISTS match_id VARCHAR(255)
+    """)
 
-        return True
+    # Create index on match_id for faster lookups
+    cursor.execute("""
+    CREATE INDEX IF NOT EXISTS idx_clip_results_match_id ON clip_results (match_id)
+    """)
 
-    except Exception as e:
-        logger.error(f"Error adding processing_time_seconds column: {e}")
-        conn.rollback()
-        return False
+def add_facets_column(cursor):
+    """Add facets column to clip_results table."""
+    # Add facets column to store facet information in JSONB format
+    cursor.execute("""
+    ALTER TABLE clip_results
+    ADD COLUMN IF NOT EXISTS facets JSONB
+    """)
 
-def fix_position_ambiguity(conn):
-    """Fix ambiguous column reference in update_queue_status by fully qualifying the column name"""
-    try:
-        # This is a code-level fix, but we'll verify the tables have the correct structure
-        cursor = conn.cursor()
-
-        # Check if position column exists in the processing_queue table
-        cursor.execute("""
-        SELECT column_name FROM information_schema.columns
-        WHERE table_name = 'processing_queue' AND column_name = 'position'
-        """)
-
-        if cursor.fetchone() is None:
-            logger.error("Position column doesn't exist in processing_queue table")
-            return False
-
-        logger.info("Position column exists, no database changes needed")
-        logger.info("The fix for ambiguous position references is in the code update")
-
-        # No database changes needed for this fix as it's a code-level issue
-        return True
-
-    except Exception as e:
-        logger.error(f"Error checking position column: {e}")
-        conn.rollback()
-        return False
-
-def add_match_id_columns(conn):
-    """Add match_id column to clip_results and processing_queue tables"""
-    try:
-        cursor = conn.cursor()
-
-        # Check if match_id column exists in clip_results table
-        cursor.execute("""
-        SELECT column_name FROM information_schema.columns
-        WHERE table_name = 'clip_results' AND column_name = 'match_id'
-        """)
-
-        if cursor.fetchone() is None:
-            logger.info("Adding match_id column to clip_results table")
-            cursor.execute("""
-            ALTER TABLE clip_results
-            ADD COLUMN match_id TEXT
-            """)
-            # Create an index on match_id for faster lookups
-            cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_clip_results_match_id
-            ON clip_results (match_id)
-            """)
-            conn.commit()
-        else:
-            logger.info("Column match_id already exists in clip_results table")
-
-        # Check if match_id column exists in processing_queue table
-        cursor.execute("""
-        SELECT column_name FROM information_schema.columns
-        WHERE table_name = 'processing_queue' AND column_name = 'match_id'
-        """)
-
-        if cursor.fetchone() is None:
-            logger.info("Adding match_id column to processing_queue table")
-            cursor.execute("""
-            ALTER TABLE processing_queue
-            ADD COLUMN match_id TEXT
-            """)
-            # Create an index on match_id for faster lookups
-            cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_processing_queue_match_id
-            ON processing_queue (match_id)
-            """)
-            conn.commit()
-        else:
-            logger.info("Column match_id already exists in processing_queue table")
-
-        return True
-
-    except Exception as e:
-        logger.error(f"Error adding match_id columns: {e}")
-        conn.rollback()
-        return False
+    # Update the result column to include facet information for each hero
+    cursor.execute("""
+    COMMENT ON COLUMN clip_results.facets IS 'Stores facet information for heroes in format: {"team": "radiant/dire", "heroes": [{"position": 1, "facet": {"name": "...", "title": "...", "icon": "...", "confidence": 0.95}}]}'
+    """)
 
 if __name__ == "__main__":
     if run_migrations():

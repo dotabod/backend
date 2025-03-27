@@ -199,7 +199,7 @@ class PostgresClient:
 
             # Query for the clip by ID
             query = f"""
-            SELECT results FROM {self.results_table}
+            SELECT results, facets FROM {self.results_table}
             WHERE clip_id = %s
             ORDER BY processed_at DESC
             LIMIT 1
@@ -211,7 +211,20 @@ class PostgresClient:
 
             if row:
                 logger.info(f"Found cached result for clip ID: {clip_id}")
-                return row['results']
+                result = row['results']
+                facets = row['facets']
+                if facets:
+                    if 'players' in result:
+                        for player in result['players']:
+                            team = player['team'].lower()
+                            position = player['position']
+
+                            # Find matching facet info
+                            for hero_facet in facets[team]:
+                                if hero_facet['position'] == position:
+                                    player['facet'] = hero_facet['facet']
+                                    break
+                return result
             else:
                 logger.info(f"No cached result found for clip ID: {clip_id}")
                 return None
@@ -245,7 +258,7 @@ class PostgresClient:
 
             # Query for the clip by match ID, ordering by most recent
             query = f"""
-            SELECT clip_id, clip_url, results FROM {self.results_table}
+            SELECT clip_id, clip_url, results, facets FROM {self.results_table}
             WHERE match_id = %s
             ORDER BY processed_at DESC
             LIMIT 1
@@ -258,10 +271,22 @@ class PostgresClient:
             if row:
                 logger.info(f"Found cached result for match ID: {match_id}")
                 result = row['results']
+                facets = row['facets']
                 # Add clip details to result
                 if isinstance(result, dict):
                     result['clip_id'] = row['clip_id']
                     result['clip_url'] = row['clip_url']
+                if facets:
+                    if 'players' in result:
+                        for player in result['players']:
+                            team = player['team'].lower()
+                            position = player['position']
+
+                            # Find matching facet info
+                            for hero_facet in facets[team]:
+                                if hero_facet['position'] == position:
+                                    player['facet'] = hero_facet['facet']
+                                    break
                 return result
             else:
                 logger.info(f"No cached result found for match ID: {match_id}")
@@ -402,70 +427,45 @@ class PostgresClient:
             conn = self._get_connection()
             cursor = conn.cursor()
 
-            # Check if match_id column exists
-            cursor.execute("""
-            SELECT column_name FROM information_schema.columns
-            WHERE table_name = 'clip_results' AND column_name = 'match_id'
-            """)
-            match_id_column_exists = cursor.fetchone() is not None
+            # Extract facet information from result
+            facets = {
+                'radiant': [],
+                'dire': []
+            }
 
-            # Use UPSERT to insert or update the record
-            if match_id_column_exists and match_id:
-                query = f"""
-                INSERT INTO {self.results_table}
-                (clip_id, clip_url, results, processed_at, processing_time_seconds, match_id)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                ON CONFLICT (clip_id)
-                DO UPDATE SET
+            if 'players' in result:
+                for player in result['players']:
+                    if 'facet' in player:
+                        facets[player['team'].lower()].append({
+                            'position': player['position'],
+                            'facet': player['facet']
+                        })
+
+            # Save result with facet information
+            cursor.execute(f"""
+            INSERT INTO {self.results_table} (
+                clip_id, clip_url, result, processing_time, match_id, facets
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s
+            )
+            ON CONFLICT (clip_id) DO UPDATE SET
                     clip_url = EXCLUDED.clip_url,
-                    results = EXCLUDED.results,
-                    processed_at = EXCLUDED.processed_at,
-                    processing_time_seconds = EXCLUDED.processing_time_seconds,
-                    match_id = EXCLUDED.match_id
-                """
-            else:
-                query = f"""
-                INSERT INTO {self.results_table}
-                (clip_id, clip_url, results, processed_at, processing_time_seconds)
-                VALUES (%s, %s, %s, %s, %s)
-                ON CONFLICT (clip_id)
-                DO UPDATE SET
-                    clip_url = EXCLUDED.clip_url,
-                    results = EXCLUDED.results,
-                    processed_at = EXCLUDED.processed_at,
-                    processing_time_seconds = EXCLUDED.processing_time_seconds
-                """
-
-            # Convert result to JSON string if it's not already
-            if not isinstance(result, str):
-                results_json = json.dumps(result)
-            else:
-                results_json = result
-
-            # Execute with or without match_id
-            if match_id_column_exists and match_id:
-                cursor.execute(query, (
+                result = EXCLUDED.result,
+                processing_time = EXCLUDED.processing_time,
+                match_id = EXCLUDED.match_id,
+                facets = EXCLUDED.facets
+            """, (
                     clip_id,
                     clip_url,
-                    results_json,
-                    datetime.now(),
+                json.dumps(result),
                     processing_time,
-                    match_id
-                ))
-            else:
-                cursor.execute(query, (
-                    clip_id,
-                    clip_url,
-                    results_json,
-                    datetime.now(),
-                    processing_time
+                match_id,
+                json.dumps(facets) if facets['radiant'] or facets['dire'] else None
                 ))
 
             conn.commit()
             cursor.close()
-
-            logger.info(f"Successfully saved/updated result for clip ID: {clip_id}" +
-                       (f", match ID: {match_id}" if match_id else ""))
+            self._return_connection(conn)
             return True
 
         except Exception as e:
@@ -473,10 +473,8 @@ class PostgresClient:
             logger.error(traceback.format_exc())
             if conn:
                 conn.rollback()
-            return False
-        finally:
-            if conn:
                 self._return_connection(conn)
+            return False
 
     def get_average_processing_time(self, request_type: str = 'clip') -> float:
         """

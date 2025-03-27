@@ -72,6 +72,12 @@ except ImportError as e:
         print(f"System path: {sys.path}")
         print(f"PYTHONPATH: {os.environ.get('PYTHONPATH', 'Not set')}")
 
+# Import facet detection module
+try:
+    from .facet_detection import load_facet_templates, process_team_facets, detect_hero_facet, get_hero_abilities
+except ImportError:
+    from facet_detection import load_facet_templates, process_team_facets, detect_hero_facet, get_hero_abilities
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -196,6 +202,9 @@ TEMPLATES_CACHE_FILE = HEROES_DIR / "templates_cache.npz"
 
 # Global variable to store loaded heroes data for singleton pattern
 _LOADED_HEROES_DATA = None
+
+# Global variable to store loaded facet templates
+_LOADED_FACET_TEMPLATES = None
 
 def save_debug_image(image, name_prefix, additional_info=""):
     """Save an image for debugging purposes."""
@@ -1487,12 +1496,139 @@ def process_frame_for_heroes(frame_path, debug=False):
                             rank_info = f"_rank{hero.get('rank', 'unknown')}" if 'rank' in hero else ""
                             save_debug_image(rank_banner, f"{team.lower()}_pos{position+1}_{hero['hero_localized_name'].replace(' ', '_')}{rank_info}_rank_banner")
 
-        performance_timer.stop('identify_all_heroes')
+        # After identifying heroes and extracting player names, try to detect facets
+        load_facet_templates_singleton()
+        if _LOADED_FACET_TEMPLATES:
+            performance_timer.start('detect_facets')
+            logger.info("Detecting facets on heroes")
 
-        logger.info(f"Identified {len(identified_heroes)} heroes in frame")
+            # Store hero icons for facet detection
+            hero_icons_map = {}
+            for team, position, hero_icon in hero_icons:
+                hero_icons_map[(team, position)] = hero_icon
+
+            # First try Radiant team's first hero
+            radiant_heroes = [h for h in identified_heroes if h['team'] == 'Radiant']
+            if radiant_heroes:
+                first_radiant = radiant_heroes[0]
+                logger.info(f"First Radiant hero: {first_radiant}")
+
+                # Get the hero icon for this hero
+                radiant_portrait = hero_icons_map.get((first_radiant['team'], first_radiant['position']))
+                if radiant_portrait is None:
+                    logger.warning(f"No portrait image found for {first_radiant['team']} position {first_radiant['position']}")
+
+                # Get abilities from hero_abilities.json
+                abilities = get_hero_abilities(first_radiant['hero_localized_name'], debug=debug)
+                logger.info(f"Abilities structure keys: {list(abilities.keys()) if abilities else None}")
+
+                if abilities and radiant_portrait is not None:
+                    # Save debug image of the portrait
+                    if debug:
+                        save_debug_image(radiant_portrait, f"{first_radiant['team'].lower()}_pos{first_radiant['position']}_portrait")
+
+                        # Also save each facet template if available
+                        if 'facets' in abilities:
+                            for i, facet in enumerate(abilities['facets']):
+                                icon_name = facet.get('icon')
+                                if icon_name and icon_name in _LOADED_FACET_TEMPLATES:
+                                    template = _LOADED_FACET_TEMPLATES[icon_name]
+                                    save_debug_image(template, f"template_{first_radiant['hero_localized_name']}_{i}", icon_name)
+
+                    facet = detect_hero_facet(
+                        radiant_portrait,
+                        'Radiant',
+                        abilities,
+                        _LOADED_FACET_TEMPLATES,
+                        debug=debug
+                    )
+
+                    if facet:
+                        logger.info(f"Found facet on Radiant hero: {facet}")
+                        first_radiant['facet'] = facet
+                        logger.info("Found facets on Radiant team, processing all Radiant heroes")
+
+                        # Process all Radiant heroes
+                        for hero in radiant_heroes:
+                            if hero != first_radiant:  # Skip the first hero which already has a facet
+                                portrait = hero_icons_map.get((hero['team'], hero['position']))
+                                if portrait is not None:
+                                    abilities = get_hero_abilities(hero['hero_localized_name'], debug=debug)
+                                    if abilities:
+                                        hero_facet = detect_hero_facet(
+                                            portrait,
+                                            'Radiant',
+                                            abilities,
+                                            _LOADED_FACET_TEMPLATES,
+                                            debug=debug
+                                        )
+                                        if hero_facet:
+                                            hero['facet'] = hero_facet
+                                            logger.info(f"Added facet to {hero['team']} hero {hero['position']}: {hero_facet}")
+                    else:
+                        logger.info("No facets found on Radiant team, trying Dire team")
+                        # Try Dire team if no facets found on Radiant
+                        dire_heroes = [h for h in identified_heroes if h['team'] == 'Dire']
+                        if dire_heroes:
+                            first_dire = dire_heroes[0]
+                            logger.info(f"First Dire hero: {first_dire}")
+
+                            # Get the hero icon for this hero
+                            dire_portrait = hero_icons_map.get((first_dire['team'], first_dire['position']))
+                            if dire_portrait is None:
+                                logger.warning(f"No portrait image found for {first_dire['team']} position {first_dire['position']}")
+
+                            abilities = get_hero_abilities(first_dire['hero_localized_name'], debug=debug)
+                            logger.info(f"Abilities structure keys: {list(abilities.keys()) if abilities else None}")
+
+                            if abilities and dire_portrait is not None:
+                                # Save debug image of the portrait
+                                if debug:
+                                    save_debug_image(dire_portrait, f"{first_dire['team'].lower()}_pos{first_dire['position']}_portrait")
+
+                                    # Also save each facet template if available
+                                    if 'facets' in abilities:
+                                        for i, facet in enumerate(abilities['facets']):
+                                            icon_name = facet.get('icon')
+                                            if icon_name and icon_name in _LOADED_FACET_TEMPLATES:
+                                                template = _LOADED_FACET_TEMPLATES[icon_name]
+                                                save_debug_image(template, f"template_{first_dire['hero_localized_name']}_{i}", icon_name)
+
+                                facet = detect_hero_facet(
+                                    dire_portrait,
+                                    'Dire',
+                                    abilities,
+                                    _LOADED_FACET_TEMPLATES,
+                                    debug=debug
+                                )
+
+                                if facet:
+                                    logger.info(f"Found facet on Dire hero: {facet}")
+                                    first_dire['facet'] = facet
+                                    logger.info("Found facets on Dire team, processing all Dire heroes")
+
+                                    # Process all Dire heroes
+                                    for hero in dire_heroes:
+                                        if hero != first_dire:  # Skip the first hero which already has a facet
+                                            portrait = hero_icons_map.get((hero['team'], hero['position']))
+                                            if portrait is not None:
+                                                abilities = get_hero_abilities(hero['hero_localized_name'], debug=debug)
+                                                if abilities:
+                                                    hero_facet = detect_hero_facet(
+                                                        portrait,
+                                                        'Dire',
+                                                        abilities,
+                                                        _LOADED_FACET_TEMPLATES,
+                                                        debug=debug
+                                                    )
+                                                    if hero_facet:
+                                                        hero['facet'] = hero_facet
+                                                        logger.info(f"Added facet to {hero['team']} hero {hero['position']}: {hero_facet}")
+
+            performance_timer.stop('detect_facets')
 
         # Sort by team and position
-        identified_heroes.sort(key=lambda h: (h['team'], h['position']))
+        identified_heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
 
         return identified_heroes
     except Exception as e:
@@ -1983,6 +2119,14 @@ def extract_rank_text(rank_banner, debug=False):
     except Exception as e:
         logger.error(f"Error extracting rank text with OCR: {e}")
         return None, f"OCR error: {str(e)}"
+
+def load_facet_templates_singleton():
+    """Load facet templates using singleton pattern."""
+    global _LOADED_FACET_TEMPLATES
+    if _LOADED_FACET_TEMPLATES is None:
+        _LOADED_FACET_TEMPLATES = load_facet_templates()
+    return _LOADED_FACET_TEMPLATES
+
 def process_media(media_source, source_type="clip", debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3):
     """Process a clip URL or stream username and return the hero detection results.
 

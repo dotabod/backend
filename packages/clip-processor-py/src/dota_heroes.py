@@ -16,6 +16,8 @@ ASSETS_DIR.mkdir(exist_ok=True, parents=True)
 # Updated API URL from Spectral.gg
 HERO_LIST_URL = "https://stats.spectral.gg/lrg2/api/?mod=metadata&gets=heroes&legacyh"
 HERO_IMAGE_BASE_URL = "https://courier.spectral.gg/images/dota/portraits_lg/"
+HERO_ABILITIES_URL = "https://raw.githubusercontent.com/odota/dotaconstants/refs/heads/master/build/hero_abilities.json"
+FACET_ICON_BASE_URL = "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/icons/facets/"
 
 def get_hero_list():
     """Fetch the list of Dota 2 heroes from the Spectral.gg API."""
@@ -138,10 +140,74 @@ def download_hero_images(heroes):
 
     return hero_data
 
+def download_hero_abilities():
+    """Download and store hero abilities data from OpenDota's dotaconstants repository."""
+    logger.info(f"Downloading hero abilities data from {HERO_ABILITIES_URL}")
+
+    try:
+        response = requests.get(HERO_ABILITIES_URL)
+        response.raise_for_status()
+
+        abilities_data = response.json()
+
+        # Save abilities data to a JSON file
+        abilities_path = ASSETS_DIR / "hero_abilities.json"
+        with open(abilities_path, 'w') as f:
+            json.dump(abilities_data, f, indent=2)
+
+        logger.info(f"Hero abilities data saved to {abilities_path}")
+
+        # Create a directory for facet icons
+        facets_dir = ASSETS_DIR / "facet_icons"
+        facets_dir.mkdir(exist_ok=True)
+
+        # Download facet icons for each hero
+        for hero_id, hero_data in abilities_data.items():
+            if 'facets' in hero_data:
+                for facet in hero_data['facets']:
+                    icon_name = facet.get('icon')
+                    if icon_name:
+                        icon_url = f"{FACET_ICON_BASE_URL}{icon_name}.png"
+                        icon_path = facets_dir / f"{icon_name}.png"
+
+                        if not icon_path.exists():
+                            try:
+                                logger.debug(f"Downloading facet icon {icon_name} from {icon_url}")
+                                response = requests.get(icon_url, stream=True)
+                                response.raise_for_status()
+
+                                with open(icon_path, 'wb') as f:
+                                    for chunk in response.iter_content(chunk_size=8192):
+                                        f.write(chunk)
+
+                                logger.debug(f"Downloaded facet icon {icon_name} to {icon_path}")
+                            except Exception as e:
+                                logger.error(f"Error downloading facet icon {icon_name}: {e}")
+                                continue
+
+        return abilities_data
+    except Exception as e:
+        logger.error(f"Error downloading hero abilities data: {e}")
+        return None
+
 def get_hero_data():
     """Get hero data, downloading images if needed."""
     # Check if we already have the hero data cached
     hero_data_path = ASSETS_DIR / "hero_data.json"
+    abilities_path = ASSETS_DIR / "hero_abilities.json"
+
+    # Load or download abilities data first
+    abilities_data = None
+    if abilities_path.exists():
+        try:
+            with open(abilities_path, 'r') as f:
+                abilities_data = json.load(f)
+            logger.info("Loaded cached hero abilities data")
+        except Exception as e:
+            logger.error(f"Error loading cached hero abilities data: {e}")
+
+    if not abilities_data:
+        abilities_data = download_hero_abilities()
 
     if hero_data_path.exists():
         try:
@@ -160,6 +226,12 @@ def get_hero_data():
                         break
 
             if all_exist:
+                # Add abilities data to hero data
+                if abilities_data:
+                    for hero in hero_data:
+                        hero_id = f"npc_dota_hero_{hero['tag']}"
+                        if hero_id in abilities_data:
+                            hero['abilities'] = abilities_data[hero_id]
                 return hero_data
             else:
                 logger.info("Some hero images are missing, will re-download")
@@ -169,7 +241,16 @@ def get_hero_data():
 
     # If we reach here, we need to download the hero data
     heroes = get_hero_list()
-    return download_hero_images(heroes)
+    hero_data = download_hero_images(heroes)
+
+    # Add abilities data to hero data
+    if abilities_data:
+        for hero in hero_data:
+            hero_id = f"npc_dota_hero_{hero['tag']}"
+            if hero_id in abilities_data:
+                hero['abilities'] = abilities_data[hero_id]
+
+    return hero_data
 
 if __name__ == "__main__":
     # When run directly, download all hero images
