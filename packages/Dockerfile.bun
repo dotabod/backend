@@ -19,6 +19,9 @@ FROM base AS builder
 COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 COPY $BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
 
+# Make sure dotaconstants is properly installed
+RUN cd $BUILD_CONTEXT && bun install dotaconstants@https://github.com/dotabod/dotaconstants
+
 WORKDIR /app/$BUILD_CONTEXT/
 RUN bun run build
 
@@ -45,4 +48,4 @@ COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 # Environment and CMD
 WORKDIR /app/$BUILD_CONTEXT/
 ENV DOTABOD_ENV=$DOTABOD_ENV
-CMD bun run docker:$DOTABOD_ENV
+CMD ["bun", "run", "docker:$DOTABOD_ENV"]
