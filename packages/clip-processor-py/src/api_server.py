@@ -152,7 +152,8 @@ def initialize_app():
         start_worker_thread()
 
         # Step 5: Start the worker monitoring thread
-        start_worker_monitor()
+        if os.environ.get('RUN_LOCALLY') != 'true':
+            start_worker_monitor()
 
         # Mark as initialized
         app_initialized = True

@@ -50,6 +50,9 @@ fi
 # Install the package in development mode
 pip install --index-url https://pypi.org/simple/ -e .
 
+# Install Flask-Debug-Toolbar for hot reloading if not already installed
+pip install --index-url https://pypi.org/simple/ flask-debug-toolbar watchdog
+
 # Create necessary directories
 mkdir -p temp assets
 
@@ -59,10 +62,13 @@ if [ ! -d "assets/dota_heroes" ] || [ -z "$(ls -A assets/dota_heroes 2>/dev/null
   python -m src.dota_heroes
 fi
 
-# Run the server (development mode)
-echo "Starting API server in development mode..."
-# The app will be initialized during startup in the main() function
-python -m src.api_server
+# Run the server with hot reloading enabled
+echo "Starting API server in development mode with hot reloading..."
+# Enable Flask debug mode and hot reloading
+export FLASK_APP=src.api_server
+export FLASK_ENV=development
+export FLASK_DEBUG=1
+flask run --host=0.0.0.0 --port=5000 --reload
 
 # Alternative: To run with Gunicorn instead (production-like), uncomment:
 # echo "Starting API server with Gunicorn..."

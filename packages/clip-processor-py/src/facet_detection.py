@@ -164,6 +164,10 @@ def extract_facet_region(hero_portrait, team, hero_name=None, debug=False):
             # Save the original portrait
             save_debug_image(hero_portrait, "portrait", team, hero_name=hero_name)
 
+        # Update the facet size to be slightly larger to ensure we capture the entire icon
+        # We'll keep the constant FACET_SIZE for template matching, but use a larger extraction size
+        extraction_size = FACET_SIZE + 4  # Add padding to ensure we capture the full icon
+
         # Calculate facet region coordinates
         # For Radiant, facets are typically in the top-left
         # For Dire, facets are typically in the top-right
@@ -173,18 +177,23 @@ def extract_facet_region(hero_portrait, team, hero_name=None, debug=False):
             y = FACET_TOP_MARGIN
         else:  # Dire
             # Top right corner
-            x = width - FACET_SIZE - FACET_SIDE_MARGIN
+            x = width - extraction_size - FACET_SIDE_MARGIN
             y = FACET_TOP_MARGIN
 
+        # Ensure we don't go out of bounds
+        x = max(0, x)
+        y = max(0, y)
+        extraction_size = min(extraction_size, width - x, height - y)
+
         if debug:
-            logger.debug(f"Facet region coordinates: x={x}, y={y}, size={FACET_SIZE}")
+            logger.debug(f"Facet region coordinates: x={x}, y={y}, size={extraction_size}")
             # Draw rectangle on debug image
             debug_image = hero_portrait.copy()
-            cv2.rectangle(debug_image, (x, y), (x + FACET_SIZE, y + FACET_SIZE), (0, 255, 0), 1)
+            cv2.rectangle(debug_image, (x, y), (x + extraction_size, y + extraction_size), (0, 255, 0), 1)
             save_debug_image(debug_image, "facet_region", f"{team}_marked", hero_name=hero_name)
 
         # Extract the region
-        facet_region = hero_portrait[y:y+FACET_SIZE, x:x+FACET_SIZE]
+        facet_region = hero_portrait[y:y+extraction_size, x:x+extraction_size]
 
         # Extract the white icon from any background
         # First convert to grayscale if it's a color image
@@ -211,6 +220,10 @@ def extract_facet_region(hero_portrait, team, hero_name=None, debug=False):
 
         # Apply a more moderate levels adjustment
         facet_region = adjust_levels(facet_region_binary, 100, 255, 1.0)
+
+        # Resize back to standard FACET_SIZE if needed
+        if facet_region.shape[0] != FACET_SIZE or facet_region.shape[1] != FACET_SIZE:
+            facet_region = cv2.resize(facet_region, (FACET_SIZE, FACET_SIZE))
 
         if debug:
             save_debug_image(facet_region, "facet_region", f"{team}_extracted", hero_name=hero_name)
@@ -252,6 +265,7 @@ def match_facet_template(facet_region, template, hero_name=None, facet_name=None
         best_score = -1.0
         best_method = ""
 
+        # First try direct template matching
         for method, method_name in methods:
             # Perform template matching
             result = cv2.matchTemplate(facet_region, template, method)
@@ -260,6 +274,43 @@ def match_facet_template(facet_region, template, hero_name=None, facet_name=None
             if score > best_score:
                 best_score = score
                 best_method = method_name
+
+        # If direct matching score is low, try with different sizes
+        if best_score < 0.2:
+            # Try scaling the template down to account for padding in the facet region
+            for scale in [0.8, 0.7, 0.6, 0.5]:
+                # Calculate new dimensions
+                new_width = int(template.shape[1] * scale)
+                new_height = int(template.shape[0] * scale)
+
+                # Skip if dimensions become too small
+                if new_width < 10 or new_height < 10:
+                    continue
+
+                # Resize the template
+                resized_template = cv2.resize(template, (new_width, new_height))
+
+                # Create a blank canvas matching the facet region size
+                padded_template = np.zeros_like(facet_region)
+
+                # Calculate centering offsets
+                x_offset = (facet_region.shape[1] - new_width) // 2
+                y_offset = (facet_region.shape[0] - new_height) // 2
+
+                # Place the resized template in the center of the canvas
+                padded_template[y_offset:y_offset+new_height, x_offset:x_offset+new_width] = resized_template
+
+                if debug:
+                    save_debug_image(padded_template, f"template_scaled_{scale}", hero_name=hero_name, facet_name=facet_name)
+
+                # Try matching with the padded template
+                for method, method_name in methods:
+                    result = cv2.matchTemplate(facet_region, padded_template, method)
+                    _, score, _, _ = cv2.minMaxLoc(result)
+
+                    if score > best_score:
+                        best_score = score
+                        best_method = f"{method_name}_scale_{scale}"
 
         if debug:
             logger.debug(f"Template matching best score: {best_score:.4f} (method: {best_method}, threshold: {threshold})")
@@ -353,7 +404,8 @@ def detect_hero_facet(hero_portrait, team, hero_abilities, templates, hero_name=
                 best_match = facet
 
         # If no good match found with hero-specific facets, try generic facets
-        if best_score < 0.2:
+        # Lower this threshold for trying generic facets
+        if best_score < 0.15:
             # Try generic facets that might be used by multiple heroes
             generic_facet_keywords = ['damage', 'slow', 'armor', 'vision', 'speed', 'illusion']
 
@@ -377,8 +429,8 @@ def detect_hero_facet(hero_portrait, team, hero_abilities, templates, hero_name=
                                 'icon': template_name
                             }
 
-        # Lower the threshold slightly to improve detection rate
-        threshold = 0.15
+        # Lower the threshold to improve detection rate
+        threshold = 0.12
 
         # Return the best match if it exceeds threshold
         if best_match and best_score >= threshold:
