@@ -48,4 +48,4 @@ COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 # Environment and CMD
 WORKDIR /app/$BUILD_CONTEXT/
 ENV DOTABOD_ENV=$DOTABOD_ENV
-CMD ["bun", "run", "docker:$DOTABOD_ENV"]
+CMD bun run docker:$DOTABOD_ENV
