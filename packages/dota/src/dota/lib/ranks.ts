@@ -7,7 +7,6 @@ import type { Cards } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { leaderRanks, ranks } from './consts.js'
 import CustomError from '../../utils/customError.js'
-
 export function rankTierToMmr(rankTier: string | number) {
   if (!Number(rankTier)) {
     return 0
@@ -27,6 +26,61 @@ export function rankTierToMmr(rankTier: string | number) {
 
   // Middle of range
   return ((rank?.range[0] ?? 0) + (rank?.range[1] ?? 0)) / 2
+}
+
+/**
+ * Converts MMR to rank tier
+ * @param mmr - The MMR value to convert
+ * @returns The rank tier value (e.g. 71 for Legend 1, 80 for Immortal)
+ */
+export function mmrToRankTier(mmr: number): number {
+  if (mmr < 0) return 0 // Uncalibrated
+
+  // Immortal rank (rank tier 80)
+  if (mmr >= 5700) return 80
+
+  // Find the rank based on MMR
+  for (let i = 0; i < ranks.length; i++) {
+    const rank = ranks[i]
+    const [min, max] = rank.range
+
+    // If MMR falls within this rank's range
+    if (mmr >= min && mmr <= max) {
+      // Extract the medal number from the image (first digit)
+      const medal = Number.parseInt(rank.image.charAt(0))
+      // Extract the stars from the image (second digit)
+      const stars = Number.parseInt(rank.image.charAt(1))
+
+      // Calculate rank tier (medal * 10 + stars)
+      return medal * 10 + stars
+    }
+  }
+
+  // Default to uncalibrated if no match found
+  return 0
+}
+
+export function getRankTitle(rankTier: string | number): string {
+  if (!Number(rankTier)) {
+    return 'Uncalibrated'
+  }
+  const intRankTier = Number(rankTier)
+
+  // Immortal rank
+  if (intRankTier > 77) {
+    return 'Immortal'
+  }
+
+  // Floor to 5
+  // Extract the stars value from the rank tier (last digit of the number)
+  // If the stars value is greater than 5, cap it at 5 since ranks only go up to 5 stars
+  // For example: rank tier 53 means Legend 3, where 5 is the medal and 3 is the stars
+  const stars = intRankTier % 10 > 5 ? 5 : intRankTier % 10
+  const rank = ranks.find((rank) =>
+    rank.image.startsWith(`${Math.floor(Number(intRankTier / 10))}${stars}`),
+  )
+
+  return rank?.title ?? 'Unknown'
 }
 
 interface LeaderRankData {
@@ -197,11 +251,13 @@ type Region =
   | 'DUBAI'
   | 'PERU'
   | 'BRAZIL'
-export function estimateMMR(rank: number, region: Region): number {
-  if (rank <= 0 || rank > 5000) return 0
+
+export function estimateMMR(leaderboard_rank: number, region: Region): number {
+  // Max leaderboard rank is 5000
+  if (leaderboard_rank <= 0 || leaderboard_rank > 5000) return 8500
 
   let baseMMR: number
-  const x = rank
+  const x = leaderboard_rank
 
   if (region === 'EUROPE') {
     baseMMR = 15300 - 8.2 * Math.log(x) * x ** 0.6

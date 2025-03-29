@@ -1,17 +1,93 @@
 import { t } from 'i18next'
-import { getRankDescription } from '../../dota/lib/ranks.js'
+import { getRankDescription, getRankTitle, mmrToRankTier } from '../../dota/lib/ranks.js'
 import { DBSettings, getValueOrDefault } from '../../settings.js'
 import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import supabase from '../../db/supabase.js'
+async function getOpenDotaProfile(twitchUsername: string): Promise<{
+  rank_tier: number
+  leaderboard_rank: number
+}> {
+  const defaultResponse = {
+    rank_tier: 0,
+    leaderboard_rank: 0,
+  }
+
+  try {
+    // Get user by Twitch username
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id')
+      .eq('name', twitchUsername)
+      .single()
+
+    if (!userData) return defaultResponse
+
+    // Get provider account ID
+    const { data: providerAccount } = await supabase
+      .from('accounts')
+      .select('providerAccountId')
+      .eq('userId', userData.id)
+      .single()
+
+    if (!providerAccount) return defaultResponse
+
+    // Get Steam account details
+    const { data: steamAccount } = await supabase
+      .from('steam_accounts')
+      .select('leaderboard_rank, mmr')
+      .eq('providerAccountId', providerAccount.providerAccountId)
+      .single()
+
+    if (!steamAccount) return defaultResponse
+
+    // Return rank information
+    return {
+      rank_tier: mmrToRankTier(steamAccount.mmr),
+      leaderboard_rank: steamAccount.leaderboard_rank ?? 0,
+    }
+  } catch (error) {
+    logger.error('Error fetching OpenDota profile:', error)
+    return defaultResponse
+  }
+}
 
 commandHandler.registerCommand('mmr', {
   aliases: ['rank', 'medal'],
   dbkey: DBSettings.commandMmr,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message
+
+    // Check if args include a twitch username
+    if (args.length > 0 && args[0].startsWith('@')) {
+      const username = args[0].toLowerCase().replace('@', '')
+      const openDotaProfile = await getOpenDotaProfile(username)
+      if (openDotaProfile?.rank_tier && openDotaProfile.rank_tier > 0) {
+        chatClient.say(
+          channel,
+          t('chattersRank', {
+            rank:
+              getRankTitle(openDotaProfile.rank_tier) +
+              (openDotaProfile.leaderboard_rank > 0 ? ` #${openDotaProfile.leaderboard_rank}` : ''),
+            username,
+            lng: message.channel.client.locale,
+          }),
+          message.user.messageId,
+        )
+      } else {
+        chatClient.say(
+          channel,
+          t('chattersRankUnknown', {
+            username,
+            url: 'dotabod.com/verify',
+            lng: message.channel.client.locale,
+          }),
+        )
+      }
+    }
 
     // If connected, we can just respond with the cached MMR
     const showRankMmr = getValueOrDefault(
