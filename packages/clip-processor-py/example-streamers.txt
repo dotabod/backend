@@ -1,0 +1,5 @@
+# Example Dota 2 streamers list for stream-processor.sh
+# Usage: ./stream-processor.sh -f example-streamers.txt
+
+# Popular Dota 2 streamers
+gorgc
