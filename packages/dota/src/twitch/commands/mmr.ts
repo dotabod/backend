@@ -19,7 +19,7 @@ async function getOpenDotaProfile(twitchUsername: string): Promise<{
     const { data: userData } = await supabase
       .from('users')
       .select('id')
-      .eq('name', twitchUsername)
+      .ilike('name', twitchUsername)
       .single()
 
     if (!userData) return defaultResponse
