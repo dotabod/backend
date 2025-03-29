@@ -87,6 +87,8 @@ commandHandler.registerCommand('mmr', {
           }),
         )
       }
+
+      return
     }
 
     // If connected, we can just respond with the cached MMR
