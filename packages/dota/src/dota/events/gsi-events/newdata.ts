@@ -464,18 +464,6 @@ eventHandler.registerEvent('newdata', {
     const hasWon =
       dotaClient.client.gsi?.map?.win_team && dotaClient.client.gsi.map.win_team !== 'none'
     if (hasWon) {
-      const saveMatchDataDumpPromise = saveMatchDataDump(dotaClient)
-      // Fix: Use Promise.allSettled instead of Promise.all to prevent one failure from stopping all operations
-      await Promise.allSettled([saveMatchDataDumpPromise]).then((results) => {
-        // Log any rejected promises
-        results.forEach((result, index) => {
-          if (result.status === 'rejected') {
-            logger.error(`Promise at index ${index} failed in newdata match ended handler`, {
-              reason: result.reason,
-            })
-          }
-        })
-      })
       return
     }
 
@@ -522,7 +510,6 @@ eventHandler.registerEvent('newdata', {
 
     // saveMatchData checks and returns early if steam is found
     const saveMatchDataPromise = saveMatchData(dotaClient.client)
-    const saveMatchDataDumpPromise = saveMatchDataDump(dotaClient)
     const handleNewEventsPromise = handleNewEvents(data, dotaClient)
     const openBetsPromise = dotaClient.openBets(dotaClient.client)
     const checkPassiveMidasPromise = checkPassiveMidas(dotaClient.client)
@@ -537,7 +524,6 @@ eventHandler.registerEvent('newdata', {
       saveMatchDataPromise,
       handleNewEventsPromise,
       openBetsPromise,
-      saveMatchDataDumpPromise,
       calculateManaSavedPromise,
       checkPassiveMidasPromise,
       checkPassiveTpPromise,
