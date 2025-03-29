@@ -67,10 +67,9 @@ commandHandler.registerCommand('mmr', {
     const {
       channel: { name: channel, client },
     } = message
-
     // Check if args include a twitch username
-    if (args.length > 0 && args[0].startsWith('@')) {
-      const username = args[0].toLowerCase().replace('@', '')
+    if (args.length > 0) {
+      const username = args[0].toLowerCase().replace(/^@/, '')
       const openDotaProfile = await getOpenDotaProfile(username)
       if (openDotaProfile?.rank_tier && openDotaProfile.rank_tier > 0) {
         chatClient.say(
