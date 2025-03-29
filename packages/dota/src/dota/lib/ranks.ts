@@ -34,7 +34,7 @@ export function rankTierToMmr(rankTier: string | number) {
  * @returns The rank tier value (e.g. 71 for Legend 1, 80 for Immortal)
  */
 export function mmrToRankTier(mmr: number): number {
-  if (mmr < 0) return 0 // Uncalibrated
+  if (mmr <= 0) return 0 // Uncalibrated
 
   // Immortal rank (rank tier 80)
   // Get the highest MMR from the ranks array

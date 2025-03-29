@@ -43,11 +43,7 @@ async function getOpenDotaProfile(twitchUsername: string): Promise<{
       steamAccount = accounts?.[0] || null
     }
 
-    if (!steamAccount)
-      return {
-        rank_tier: 0,
-        leaderboard_rank: 0,
-      }
+    if (!steamAccount) return null
 
     // Return rank information
     return {
