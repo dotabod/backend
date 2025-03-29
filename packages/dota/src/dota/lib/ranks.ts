@@ -63,7 +63,7 @@ export function mmrToRankTier(mmr: number): number {
 }
 
 export function getRankTitle(rankTier: string | number): string {
-  if (!Number(rankTier)) {
+  if (!Number(rankTier) || Number(rankTier) <= 0) {
     return 'Uncalibrated'
   }
   const intRankTier = Number(rankTier)

@@ -8,11 +8,7 @@ import supabase from '../../db/supabase.js'
 async function getOpenDotaProfile(twitchUsername: string): Promise<{
   rank_tier: number
   leaderboard_rank: number
-}> {
-  const defaultResponse = {
-    rank_tier: 0,
-    leaderboard_rank: 0,
-  }
+} | null> {
   try {
     // Get user by Twitch username
     const { data: userData } = await supabase
@@ -21,7 +17,7 @@ async function getOpenDotaProfile(twitchUsername: string): Promise<{
       .ilike('name', twitchUsername)
       .single()
 
-    if (!userData) return defaultResponse
+    if (!userData) return null
 
     let steamAccount = null
 
@@ -47,7 +43,11 @@ async function getOpenDotaProfile(twitchUsername: string): Promise<{
       steamAccount = accounts?.[0] || null
     }
 
-    if (!steamAccount) return defaultResponse
+    if (!steamAccount)
+      return {
+        rank_tier: 0,
+        leaderboard_rank: 0,
+      }
 
     // Return rank information
     return {
@@ -56,7 +56,7 @@ async function getOpenDotaProfile(twitchUsername: string): Promise<{
     }
   } catch (error) {
     logger.error('Error fetching OpenDota profile:', error)
-    return defaultResponse
+    return null
   }
 }
 
@@ -71,7 +71,7 @@ commandHandler.registerCommand('mmr', {
     if (args.length > 0) {
       const username = args[0].toLowerCase().replace(/^@/, '')
       const openDotaProfile = await getOpenDotaProfile(username)
-      if (openDotaProfile?.rank_tier && openDotaProfile.rank_tier > 0) {
+      if (openDotaProfile !== null) {
         chatClient.say(
           channel,
           t('chattersRank', {
