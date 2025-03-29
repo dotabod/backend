@@ -58,7 +58,6 @@ async function getOpenDotaProfile(twitchUsername: string): Promise<{
 
 commandHandler.registerCommand('mmr', {
   aliases: ['rank', 'medal'],
-  dbkey: DBSettings.commandMmr,
   handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
@@ -90,6 +89,16 @@ commandHandler.registerCommand('mmr', {
         )
       }
 
+      return
+    }
+
+    // Now check the db setting to see if its disabled
+    const mmrDisabled = getValueOrDefault(
+      DBSettings.commandMmr,
+      client.settings,
+      client.subscription,
+    )
+    if (mmrDisabled) {
       return
     }
 
