@@ -37,7 +37,9 @@ export function mmrToRankTier(mmr: number): number {
   if (mmr < 0) return 0 // Uncalibrated
 
   // Immortal rank (rank tier 80)
-  if (mmr >= 5700) return 80
+  // Get the highest MMR from the ranks array
+  const highestRankMMR = ranks[ranks.length - 1]?.range[1] || 5619
+  if (mmr >= highestRankMMR) return 80
 
   // Find the rank based on MMR
   for (let i = 0; i < ranks.length; i++) {
