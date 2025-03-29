@@ -20,7 +20,7 @@ setup(
         "numpy==1.26.4",
         "Pillow==11.1.0",
         "beautifulsoup4==4.12.2",
-        "tqdm==4.66.1",
+        "tqdm==4.66.3",
         "flask==3.0.2",
         "gunicorn==21.2.0",
         "streamlink==6.5.0",
