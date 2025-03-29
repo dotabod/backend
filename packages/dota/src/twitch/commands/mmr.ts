@@ -13,23 +13,39 @@ async function getOpenDotaProfile(twitchUsername: string): Promise<{
     rank_tier: 0,
     leaderboard_rank: 0,
   }
-
   try {
     // Get user by Twitch username
     const { data: userData } = await supabase
       .from('users')
-      .select('steam32Id')
+      .select('id, steam32Id')
       .ilike('name', twitchUsername)
       .single()
 
-    if (!userData || !userData.steam32Id) return defaultResponse
+    if (!userData) return defaultResponse
 
-    // Get Steam account details
-    const { data: steamAccount } = await supabase
-      .from('steam_accounts')
-      .select('leaderboard_rank, mmr')
-      .eq('steam32Id', userData.steam32Id)
-      .single()
+    let steamAccount = null
+
+    if (userData.steam32Id) {
+      // If steam32Id exists directly on the user, use it
+      const { data: account } = await supabase
+        .from('steam_accounts')
+        .select('leaderboard_rank, mmr')
+        .eq('steam32Id', userData.steam32Id)
+        .single()
+
+      steamAccount = account
+    } else if (userData.id) {
+      // If no steam32Id on user, find their steam accounts through userId
+      const { data: accounts } = await supabase
+        .from('steam_accounts')
+        .select('leaderboard_rank, mmr')
+        .eq('userId', userData.id)
+        .order('mmr', { ascending: false })
+        .limit(1)
+
+      // Get the account with the highest MMR
+      steamAccount = accounts?.[0] || null
+    }
 
     if (!steamAccount) return defaultResponse
 
