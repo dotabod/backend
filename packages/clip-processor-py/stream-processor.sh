@@ -55,6 +55,25 @@ function cleanup {
   exit 0
 }
 
+# Function to check and install system dependencies
+function check_system_dependencies {
+  # Check if we're on a Debian/Ubuntu system
+  if command -v apt-get &>/dev/null; then
+    # Check for required OpenCV system libraries
+    if ! ldconfig -p | grep -q libGL.so.1; then
+      echo "Installing OpenCV system dependencies..."
+      sudo apt-get update
+      sudo apt-get install -y libgl1-mesa-glx libglib2.0-0 libsm6 libxrender1 libxext6
+    fi
+  # Check if we're on a RHEL/Fedora system
+  elif command -v yum &>/dev/null; then
+    if ! ldconfig -p | grep -q libGL.so.1; then
+      echo "Installing OpenCV system dependencies..."
+      sudo yum install -y mesa-libGL.x86_64 mesa-libGL.i686
+    fi
+  fi
+}
+
 # Set up trap to catch signals
 trap cleanup SIGINT SIGTERM SIGHUP EXIT
 
@@ -106,6 +125,9 @@ if [ -d "$SCRIPT_DIR/venv" ]; then
   echo "Activating virtual environment..."
   source "$SCRIPT_DIR/venv/bin/activate"
 fi
+
+# Check and install system dependencies
+check_system_dependencies
 
 # Make sure required packages are installed
 if ! python3 -c "import flask, waitress, streamlink, cv2" &>/dev/null; then
