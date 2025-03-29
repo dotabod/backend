@@ -37,6 +37,8 @@
     "tpFound": "{{channel}} bien joué tu as enfin récupéré un tp après $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Grâce à cette mort, tu as enfin reçu un tp. Et il ne t'a fallu que $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "chattersRank": "@{{username}}'s rank is {{rank}}",
+  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "colors": {
     "blue": "Bleu",
     "brown": "Marron",
@@ -65,6 +67,9 @@
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Besoin d'idées de pro build pour {{- heroName}}? C'est ici {{- url}}",
   "dotabod": "Je suis un bot open source crée par {{author}}. Plus d'infos: {{- url}}",
+  "dotapatch": {
+    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+  },
   "facet": "{{- heroName}}, facette {{number}} : {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Facette spécifiée invalide · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Utilisez !facet {{- heroName}} 1 ou !facet {{- heroName}} 2 · Dotabod ne connait que la facette choisie pour le héro actuel du streameur",

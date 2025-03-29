@@ -36,6 +36,8 @@
     "tpFound": "{{channel}} کمرت نشکنه یکوقت بالاخره تلپورت خریدی بعد از $t(seconds, {\"count\": {{seconds}} }){{emote}}",
     "tpFromDeath": "مگر اینکه بری غذا بدی که یه تلپورت بهت برسه خسیس. برو تلپورت دار شدی بعد از $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "chattersRank": "@{{username}}'s rank is {{rank}}",
+  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "colors": {
     "blue": "آبی",
     "brown": "قهوه\u200cای",
@@ -62,6 +64,9 @@
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "میخوای چیز جدید واسه قهرمان {{- heroName}} یاد بگیری؟ این اینک رو چک کن {{- url}}",
   "dotabod": "من یک ربات سورس باز هستم. سازنده من {{author}}. اطلاعات بیشتر: {{- url}}",
+  "dotapatch": {
+    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+  },
   "facet": "{{- heroName}} با فست {{number}}{{- facetTitle}}{{- facetDescription}}",
   "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
