@@ -18,26 +18,17 @@ async function getOpenDotaProfile(twitchUsername: string): Promise<{
     // Get user by Twitch username
     const { data: userData } = await supabase
       .from('users')
-      .select('id')
+      .select('steam32Id')
       .ilike('name', twitchUsername)
       .single()
 
-    if (!userData) return defaultResponse
-
-    // Get provider account ID
-    const { data: providerAccount } = await supabase
-      .from('accounts')
-      .select('providerAccountId')
-      .eq('userId', userData.id)
-      .single()
-
-    if (!providerAccount) return defaultResponse
+    if (!userData || !userData.steam32Id) return defaultResponse
 
     // Get Steam account details
     const { data: steamAccount } = await supabase
       .from('steam_accounts')
       .select('leaderboard_rank, mmr')
-      .eq('providerAccountId', providerAccount.providerAccountId)
+      .eq('steam32Id', userData.steam32Id)
       .single()
 
     if (!steamAccount) return defaultResponse
