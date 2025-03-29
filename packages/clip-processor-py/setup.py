@@ -22,7 +22,7 @@ setup(
         "beautifulsoup4==4.12.2",
         "tqdm==4.66.1",
         "flask==3.0.2",
-        "gunicorn==21.2.0",
+        "gunicorn==23.0.0",
         "streamlink==6.5.0",
         "psycopg2-binary==2.9.9",
     ],
