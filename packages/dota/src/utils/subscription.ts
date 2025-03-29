@@ -79,6 +79,7 @@ export const FEATURE_TIERS: Record<
   'chatters.matchOutcome': SUBSCRIPTION_TIERS.FREE,
   'chatters.commandsReady': SUBSCRIPTION_TIERS.FREE,
   'chatters.neutralItems': SUBSCRIPTION_TIERS.PRO,
+  'chatters.dotapatch': SUBSCRIPTION_TIERS.FREE,
   aegis: SUBSCRIPTION_TIERS.PRO,
   betsInfo: SUBSCRIPTION_TIERS.PRO,
   customMmr: SUBSCRIPTION_TIERS.PRO,

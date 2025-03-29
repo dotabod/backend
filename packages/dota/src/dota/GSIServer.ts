@@ -25,6 +25,7 @@ import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import { validateToken } from './validateToken.js'
 import { twitchEvent } from '../twitch/index.js'
 import supabase from '../db/supabase.js'
+import { initDotaPatchChecker } from './DotaPatchChecker.js'
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
   const { token } = socket.handshake.auth
@@ -218,6 +219,9 @@ class GSIServer {
 
     // Set up the repeating timer for cleaning up resubscribe timestamps
     setInterval(cleanupResubscribeTimestamps, RESUBSCRIBE_CLEANUP_TIMEOUT)
+
+    // Initialize the Dota patch checker with a 5-minute check interval
+    initDotaPatchChecker(5)
   }
 
   init() {

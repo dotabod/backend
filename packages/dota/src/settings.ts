@@ -109,6 +109,9 @@ export const defaultSettings = {
     neutralItems: {
       enabled: false,
     },
+    dotapatch: {
+      enabled: true,
+    },
   },
   customMmr: '[currentmmr] | [currentrank] | Next rank at [nextmmr] [wins]',
   'minimap-blocker': true,
