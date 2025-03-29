@@ -36,6 +36,8 @@
     "tpFound": "{{channel}} helal olsun sonunda $t(seconds, {\"count\": {{seconds}} }) saniye sonra tp aldın {{emote}}",
     "tpFromDeath": "İyi ki öldün yoksa tp alamayacaktın. Tp alman sadece $t(seconds, {\"count\": {{seconds}} }) saniye sürdü {{emote}}"
   },
+  "chattersRank": "@{{username}}'s rank is {{rank}}",
+  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "colors": {
     "blue": "Mavi",
     "brown": "Kahverengi",
@@ -62,6 +64,9 @@
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Daha iyi item tavsiyelerine mi ihtiyacın var {{- heroName}}? Buraya tıkla {{- url}}",
   "dotabod": "Ben {{author}} tarafından yaratılan açık kaynaklı bir botum. Daha detaylı bilgi için {{- url}}",
+  "dotapatch": {
+    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+  },
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",

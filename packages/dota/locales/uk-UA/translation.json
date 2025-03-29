@@ -38,6 +38,8 @@
     "tpFound": "{{channel}} нафідив заради ТП після $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Завдяки цій смерті ви нарешті отримали TP всього лиш за $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "chattersRank": "@{{username}}'s rank is {{rank}}",
+  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "colors": {
     "blue": "Синій",
     "brown": "Коричневий",
@@ -68,6 +70,9 @@
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Ти не знаєш що купити на {{- heroName}}?  Подивись тут {{- url}}",
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",
+  "dotapatch": {
+    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+  },
   "facet": "{{- heroName}} вибрав грань {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Вказано недійсну грань · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Використовуйте !facet {{- heroName}} 1 або !facet {{- heroName}} 2 · Dotabod знає тільки фактично обрану грань для даного героя ",
