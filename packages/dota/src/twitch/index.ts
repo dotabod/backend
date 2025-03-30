@@ -20,6 +20,7 @@ import { logger } from '../utils/logger.js'
 import { chatClient } from './chatClient.js'
 import commandHandler from './lib/CommandHandler.js'
 import { getRankTitle, getOpenDotaProfile } from '../dota/lib/ranks.js'
+import { getTwitchAPI } from './lib/getTwitchAPI.js'
 
 export const twitchChat = io(`ws://${process.env.HOST_TWITCH_CHAT}:5005`)
 
@@ -110,7 +111,10 @@ twitchChat.on(
       // If they don't meet the rank requirement, delete the message
       if (userRankTier < rankOnlySettings.minimumRankTier) {
         // Delete the message
-        chatClient.say(channel, `/delete ${messageId}`)
+        getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID!).moderation.deleteChatMessages(
+          channelId,
+          messageId,
+        )
 
         // Send a warning message, but with rate limiting PER CHANNEL
         const now = Date.now()
