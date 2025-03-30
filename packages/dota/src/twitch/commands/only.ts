@@ -26,6 +26,7 @@ commandHandler.registerCommand('only', {
   permission: 2, // Mod or broadcaster only
   dbkey: DBSettings.commandOnly,
   handler: async (message: MessageType, args: string[]) => {
+    const disableCommands = ['off', 'disable', 'stop']
     const {
       channel: { name: channel, client },
     } = message
@@ -66,7 +67,8 @@ commandHandler.registerCommand('only', {
     }
 
     // Handle disabling the mode
-    if (args[0].toLowerCase() === 'off' || args[0].toLowerCase() === 'disable') {
+    const rankArg = args[0].toLowerCase().trim()
+    if (disableCommands.includes(rankArg)) {
       await supabase.from('settings').upsert(
         {
           userId: message.channel.client.token,
@@ -86,37 +88,6 @@ commandHandler.registerCommand('only', {
         t('rankOnlyDisabled', { lng: message.channel.client.locale }),
         message.user.messageId,
       )
-      return
-    }
-
-    // Process the rank argument
-    const rankArg = args[0].toLowerCase().trim()
-
-    // Handle empty commands (just spaces)
-    if (rankArg === '') {
-      if (rankOnlySettings.enabled) {
-        const requiredRank = rankOnlySettings.minimumRank || 'Herald'
-        chatClient.say(
-          channel,
-          t('rankOnlyStatus', {
-            context: 'enabled',
-            rank: requiredRank,
-            url: 'dotabod.com/verify',
-            lng: message.channel.client.locale,
-          }),
-          message.user.messageId,
-        )
-      } else {
-        chatClient.say(
-          channel,
-          t('rankOnlyStatus', {
-            context: 'disabled',
-            rank: '',
-            lng: message.channel.client.locale,
-          }),
-          message.user.messageId,
-        )
-      }
       return
     }
 

@@ -21,7 +21,6 @@ import { chatClient } from './chatClient.js'
 import commandHandler from './lib/CommandHandler.js'
 import { getRankTitle, getOpenDotaProfile } from '../dota/lib/ranks.js'
 import { getTwitchAPI } from './lib/getTwitchAPI.js'
-import { getBotAPI_DEV_ONLY } from './lib/getBotAPI_DEV_ONLY'
 
 export const twitchChat = io(`ws://${process.env.HOST_TWITCH_CHAT}:5005`)
 
@@ -112,11 +111,12 @@ twitchChat.on(
       // If they don't meet the rank requirement, delete the message
       if (userRankTier < rankOnlySettings.minimumRankTier) {
         try {
-          try {
-            // Delete the message
-            const api = getTwitchAPI(channelId)
-            await api.moderation.deleteChatMessages(channelId, messageId)
-            await api.moderation.banUser(channelId, {
+          const api = getTwitchAPI(channelId)
+
+          // Do this as the bot which should be a moderator in the channel
+          await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
+            await ctx.moderation.deleteChatMessages(channelId, messageId)
+            await ctx.moderation.banUser(channelId, {
               user: userInfo.userId,
               duration: 30,
               reason: t('rankOnlyMode', {
@@ -127,56 +127,40 @@ twitchChat.on(
                 lng: client.locale || 'en',
               }),
             })
-          } catch (e) {
-            try {
-              const api = await getBotAPI_DEV_ONLY()
-              if (api) {
-                await api.moderation.deleteChatMessages(channelId, messageId)
-                await api.moderation.banUser(channelId, {
-                  user: userInfo.userId,
-                  duration: 30,
-                  reason: t('rankOnlyMode', {
-                    url: 'dotabod.com/verify',
-                    name: user,
-                    requiredRank: getRankTitle(rankOnlySettings.minimumRankTier),
-                    userRank: getRankTitle(userRankTier),
-                    lng: client.locale || 'en',
-                  }),
-                })
-              }
-            } catch (e) {
-              logger.error('could not ban user', e)
-            }
-            logger.error('could not delete message', e)
-          }
-
-          // Send a warning message, but with rate limiting PER CHANNEL
-          const now = Date.now()
-          const lastWarningTime = lastRankWarningTimestamps[channel] || 0
-
-          if (now - lastWarningTime > RANK_WARNING_COOLDOWN_MS) {
-            const requiredRank =
-              rankOnlySettings.minimumRank || getRankTitle(rankOnlySettings.minimumRankTier)
-            const userRank = getRankTitle(userRankTier)
-
-            chatClient.say(
-              channel,
-              t('rankOnlyMode', {
-                url: 'dotabod.com/verify',
-                name: user,
-                requiredRank,
-                userRank: userRank || 'Uncalibrated',
-                lng: client.locale || 'en',
-              }),
-            )
-
-            lastRankWarningTimestamps[channel] = now
-          }
-
-          return
+          })
         } catch (e) {
-          logger.error('could not delete message', e)
+          logger.error('[TWITCH] Failed to delete message or timeout user', {
+            error: e,
+            channel,
+            user,
+            messageId,
+          })
         }
+
+        // Send a warning message, but with rate limiting PER CHANNEL
+        const now = Date.now()
+        const lastWarningTime = lastRankWarningTimestamps[channel] || 0
+
+        if (now - lastWarningTime > RANK_WARNING_COOLDOWN_MS) {
+          const requiredRank =
+            rankOnlySettings.minimumRank || getRankTitle(rankOnlySettings.minimumRankTier)
+          const userRank = getRankTitle(userRankTier)
+
+          chatClient.say(
+            channel,
+            t('rankOnlyMode', {
+              url: 'dotabod.com/verify',
+              name: user,
+              requiredRank,
+              userRank: userRank || 'Uncalibrated',
+              lng: client.locale || 'en',
+            }),
+          )
+
+          lastRankWarningTimestamps[channel] = now
+        }
+
+        return
       }
     }
 
