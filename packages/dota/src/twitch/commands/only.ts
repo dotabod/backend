@@ -90,7 +90,36 @@ commandHandler.registerCommand('only', {
     }
 
     // Process the rank argument
-    const rankArg = args[0].toLowerCase()
+    const rankArg = args[0].toLowerCase().trim()
+
+    // Handle empty commands (just spaces)
+    if (rankArg === '') {
+      if (rankOnlySettings.enabled) {
+        const requiredRank = rankOnlySettings.minimumRank || 'Herald'
+        chatClient.say(
+          channel,
+          t('rankOnlyStatus', {
+            context: 'enabled',
+            rank: requiredRank,
+            url: 'dotabod.com/verify',
+            lng: message.channel.client.locale,
+          }),
+          message.user.messageId,
+        )
+      } else {
+        chatClient.say(
+          channel,
+          t('rankOnlyStatus', {
+            context: 'disabled',
+            rank: '',
+            lng: message.channel.client.locale,
+          }),
+          message.user.messageId,
+        )
+      }
+      return
+    }
+
     let minimumRankTier = 0
     let minimumRank = ''
 

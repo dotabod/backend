@@ -119,7 +119,8 @@ twitchChat.on(
           const lastWarningTime = lastRankWarningTimestamps[channel] || 0
 
           if (now - lastWarningTime > RANK_WARNING_COOLDOWN_MS) {
-            const requiredRank = getRankTitle(rankOnlySettings.minimumRankTier)
+            const requiredRank =
+              rankOnlySettings.minimumRank || getRankTitle(rankOnlySettings.minimumRankTier)
             const userRank = getRankTitle(userRankTier)
 
             chatClient.say(
