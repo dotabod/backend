@@ -110,34 +110,35 @@ twitchChat.on(
 
       // If they don't meet the rank requirement, delete the message
       if (userRankTier < rankOnlySettings.minimumRankTier) {
-        // Delete the message
-        getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID!).moderation.deleteChatMessages(
-          channelId,
-          messageId,
-        )
+        try {
+          // Delete the message
+          getTwitchAPI(channelId).moderation.deleteChatMessages(channelId, messageId)
 
-        // Send a warning message, but with rate limiting PER CHANNEL
-        const now = Date.now()
-        const lastWarningTime = lastRankWarningTimestamps[channel] || 0
+          // Send a warning message, but with rate limiting PER CHANNEL
+          const now = Date.now()
+          const lastWarningTime = lastRankWarningTimestamps[channel] || 0
 
-        if (now - lastWarningTime > RANK_WARNING_COOLDOWN_MS) {
-          const requiredRank = getRankTitle(rankOnlySettings.minimumRankTier)
-          const userRank = getRankTitle(userRankTier)
+          if (now - lastWarningTime > RANK_WARNING_COOLDOWN_MS) {
+            const requiredRank = getRankTitle(rankOnlySettings.minimumRankTier)
+            const userRank = getRankTitle(userRankTier)
 
-          chatClient.say(
-            channel,
-            t('rankOnlyMode', {
-              name: user,
-              requiredRank,
-              userRank: userRank || 'Uncalibrated',
-              lng: client.locale || 'en',
-            }),
-          )
+            chatClient.say(
+              channel,
+              t('rankOnlyMode', {
+                name: user,
+                requiredRank,
+                userRank: userRank || 'Uncalibrated',
+                lng: client.locale || 'en',
+              }),
+            )
 
-          lastRankWarningTimestamps[channel] = now
+            lastRankWarningTimestamps[channel] = now
+          }
+
+          return
+        } catch (e) {
+          logger.error('could not delete message', e)
         }
-
-        return
       }
     }
 
