@@ -19,11 +19,6 @@ FROM base AS builder
 COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 COPY $BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
 
-# Install and build dotaconstants properly
-WORKDIR /app
-RUN cd $BUILD_CONTEXT && bun install dotaconstants@https://github.com/dotabod/dotaconstants
-RUN cd node_modules/dotaconstants && bun install && bun run build
-
 WORKDIR /app/$BUILD_CONTEXT/
 RUN bun run build
 
