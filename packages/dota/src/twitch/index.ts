@@ -125,6 +125,7 @@ twitchChat.on(
             chatClient.say(
               channel,
               t('rankOnlyMode', {
+                url: 'dotabod.com/verify',
                 name: user,
                 requiredRank,
                 userRank: userRank || 'Uncalibrated',

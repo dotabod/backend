@@ -46,6 +46,7 @@ commandHandler.registerCommand('only', {
           t('rankOnlyStatus', {
             context: 'enabled',
             rank: requiredRank,
+            url: 'dotabod.com/verify',
             lng: message.channel.client.locale,
           }),
           message.user.messageId,
@@ -137,7 +138,11 @@ commandHandler.registerCommand('only', {
 
     chatClient.say(
       channel,
-      t('rankOnlyEnabled', { rank: minimumRank, lng: message.channel.client.locale }),
+      t('rankOnlyEnabled', {
+        rank: minimumRank,
+        url: 'dotabod.com/verify',
+        lng: message.channel.client.locale,
+      }),
       message.user.messageId,
     )
   },
