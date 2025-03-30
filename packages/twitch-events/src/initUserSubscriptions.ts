@@ -2,7 +2,6 @@ import { eventSubMap } from './chatSubIds.js'
 import { fetchConduitId } from './fetchConduitId.js'
 import { type TwitchEventTypes, genericSubscribe } from './subscribeChatMessagesForUser.js'
 import { logger } from './twitch/lib/logger.js'
-import { revokeEvent, stopUserSubscriptions } from './twitch/lib/revokeEvent'
 
 // Get existing conduit ID and subscriptions
 const conduitId = await fetchConduitId()
@@ -19,13 +18,13 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
     // This means the user banned the bot, so we delete their subs and disable them
     const chatMessageSub = eventSubMap[providerAccountId]?.['channel.chat.message']
     if (chatMessageSub && chatMessageSub.status !== 'enabled') {
-      await revokeEvent({ providerAccountId })
-      return
+      // await revokeEvent({ providerAccountId })
+      // return
     }
 
     // Migrate users from old eventsub to new conduit
     if (!chatMessageSub) {
-      await stopUserSubscriptions(providerAccountId)
+      // await stopUserSubscriptions(providerAccountId)
     }
 
     if (eventSubMap[providerAccountId]) {
@@ -48,10 +47,20 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
       'channel.poll.end',
     ] as const
 
-    // Subscribe to all event types
-    await Promise.all(
+    // Subscribe to all event types, continuing even if some fail
+    const results = await Promise.allSettled(
       subscriptionTypes.map((type) => genericSubscribe(conduitId, providerAccountId, type)),
     )
+
+    // Log any failures but don't fail the entire process
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        logger.warn(`Failed to subscribe to ${subscriptionTypes[index]}`, {
+          error: result.reason,
+          providerAccountId,
+        })
+      }
+    })
   } catch (e) {
     console.error(e)
     logger.error('[TWITCHEVENTS] Failed to initialize subscriptions', {

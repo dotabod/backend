@@ -188,7 +188,9 @@ export async function genericSubscribe(
       logger.error(`Failed to subscribe ${subscribeReq.status} ${await subscribeReq.text()}`, {
         type,
       })
-      await revokeEvent({ providerAccountId: broadcaster_user_id })
+      if (type !== 'channel.chat.message') {
+        await revokeEvent({ providerAccountId: broadcaster_user_id })
+      }
       return false
     }
 
