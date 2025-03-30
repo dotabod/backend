@@ -24,6 +24,7 @@ rankTitles.immortal = 80
 
 commandHandler.registerCommand('only', {
   permission: 2, // Mod or broadcaster only
+  cooldown: 0,
   dbkey: DBSettings.commandOnly,
   handler: async (message: MessageType, args: string[]) => {
     const disableCommands = ['off', 'disable', 'stop']

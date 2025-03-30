@@ -115,7 +115,6 @@ twitchChat.on(
 
           // Do this as the bot which should be a moderator in the channel
           await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
-            await ctx.moderation.deleteChatMessages(channelId, messageId)
             await ctx.moderation.banUser(channelId, {
               user: userInfo.userId,
               duration: 30,
