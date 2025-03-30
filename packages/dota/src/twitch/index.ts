@@ -113,17 +113,18 @@ twitchChat.on(
         try {
           // Delete the message
           const api = getTwitchAPI(channelId)
-          await api.moderation.banUser(channelId, {
-            user: userInfo.userId,
-            duration: 30,
-            reason: t('rankOnlyMode', {
-              url: 'dotabod.com/verify',
-              name: user,
-              requiredRank: getRankTitle(rankOnlySettings.minimumRankTier),
-              userRank: getRankTitle(userRankTier),
-              lng: client.locale || 'en',
-            }),
-          })
+          await api.moderation.deleteChatMessages(channelId, messageId)
+          // await api.moderation.banUser(channelId, {
+          //   user: userInfo.userId,
+          //   duration: 30,
+          //   reason: t('rankOnlyMode', {
+          //     url: 'dotabod.com/verify',
+          //     name: user,
+          //     requiredRank: getRankTitle(rankOnlySettings.minimumRankTier),
+          //     userRank: getRankTitle(userRankTier),
+          //     lng: client.locale || 'en',
+          //   }),
+          // })
 
           // Send a warning message, but with rate limiting PER CHANNEL
           const now = Date.now()
