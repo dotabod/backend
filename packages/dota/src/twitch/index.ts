@@ -111,7 +111,7 @@ twitchChat.on(
       // If they don't meet the rank requirement, delete the message
       if (userRankTier < rankOnlySettings.minimumRankTier) {
         try {
-          const api = await getTwitchAPI(channelId)
+          const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID!)
 
           // Do this as the bot which should be a moderator in the channel
           await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
