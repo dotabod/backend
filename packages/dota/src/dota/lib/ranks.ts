@@ -7,6 +7,8 @@ import type { Cards } from '../../types.js'
 import { logger } from '../../utils/logger.js'
 import { leaderRanks, ranks } from './consts.js'
 import CustomError from '../../utils/customError.js'
+import supabase from '../../db/supabase.js'
+
 export function rankTierToMmr(rankTier: string | number) {
   if (!Number(rankTier)) {
     return 0
@@ -152,7 +154,7 @@ export async function lookupLeaderRank(
       result = { myRank, mmr, standing }
 
       // Cache the result
-      await redisClient.client.json.set(cacheKey, '$', result)
+      await redisClient.client.json.set(cacheKey, '$', result as any)
     } catch (e) {
       logger.error('[lookupLeaderRank] Error fetching leaderboard rank', { e, steam32Id })
       return defaultNotFound
@@ -284,4 +286,93 @@ export function estimateMMR(leaderboard_rank: number, region: Region): number {
   }
 
   return Math.round(baseMMR)
+}
+// Cache for profile data with expiration
+const profileCache = new Map<
+  string,
+  { data: { rank_tier: number; leaderboard_rank: number } | null; timestamp: number }
+>()
+
+const RANK_CACHE_TTL = 30 * 60 * 1000 // 30 minutes in milliseconds for users with rank
+const NO_RANK_CACHE_TTL = 30 * 1000 // 30 seconds in milliseconds for users without rank
+
+export async function getOpenDotaProfile(twitchUsername: string): Promise<{
+  rank_tier: number
+  leaderboard_rank: number
+} | null> {
+  // Check if we have a valid cached result
+  const cacheKey = twitchUsername.toLowerCase()
+  const cachedResult = profileCache.get(cacheKey)
+  const now = Date.now()
+
+  if (cachedResult) {
+    const hasRank =
+      cachedResult.data &&
+      (cachedResult.data.rank_tier > 0 || cachedResult.data.leaderboard_rank > 0)
+    const ttl = hasRank ? RANK_CACHE_TTL : NO_RANK_CACHE_TTL
+
+    if (now - cachedResult.timestamp < ttl) {
+      return cachedResult.data
+    }
+  }
+
+  try {
+    // Get user by Twitch username
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id, steam32Id')
+      .ilike('name', twitchUsername)
+      .single()
+
+    if (!userData) {
+      // Cache null results for a short time
+      profileCache.set(cacheKey, { data: null, timestamp: now })
+      return null
+    }
+
+    let steamAccount = null
+
+    if (userData.steam32Id) {
+      // If steam32Id exists directly on the user, use it
+      const { data: account } = await supabase
+        .from('steam_accounts')
+        .select('leaderboard_rank, mmr')
+        .eq('steam32Id', userData.steam32Id)
+        .single()
+
+      steamAccount = account
+    } else if (userData.id) {
+      // If no steam32Id on user, find their steam accounts through userId
+      const { data: accounts } = await supabase
+        .from('steam_accounts')
+        .select('leaderboard_rank, mmr')
+        .eq('userId', userData.id)
+        .order('mmr', { ascending: false })
+        .limit(1)
+
+      // Get the account with the highest MMR
+      steamAccount = accounts?.[0] || null
+    }
+
+    if (!steamAccount) {
+      // Cache null results for a short time
+      profileCache.set(cacheKey, { data: null, timestamp: now })
+      return null
+    }
+
+    // Return rank information
+    const result = {
+      rank_tier: mmrToRankTier(steamAccount.mmr),
+      leaderboard_rank: steamAccount.leaderboard_rank ?? 0,
+    }
+
+    // Cache the result (longer for users with rank, shorter for those without)
+    profileCache.set(cacheKey, { data: result, timestamp: now })
+    return result
+  } catch (error) {
+    logger.error('Error fetching OpenDota profile:', error)
+    // Cache errors for a short time to prevent hammering the API
+    profileCache.set(cacheKey, { data: null, timestamp: now })
+    return null
+  }
 }

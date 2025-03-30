@@ -19,8 +19,13 @@ import { DBSettings, getValueOrDefault } from '../settings.js'
 import { logger } from '../utils/logger.js'
 import { chatClient } from './chatClient.js'
 import commandHandler from './lib/CommandHandler.js'
+import { getRankTitle, getOpenDotaProfile } from '../dota/lib/ranks.js'
 
 export const twitchChat = io(`ws://${process.env.HOST_TWITCH_CHAT}:5005`)
+
+// Map to track the last time a rank warning message was sent to a channel
+const lastRankWarningTimestamps: Record<string, number> = {}
+const RANK_WARNING_COOLDOWN_MS = 30000 // 30 seconds
 
 logger.info("Starting 'twitch' package")
 
@@ -31,6 +36,16 @@ twitchChat.on('connect', () => {
 twitchChat.on('disconnect', (reason, details) => {
   logger.warn('Disconnected from dotabod chat server', { reason, details })
 })
+
+// Function to check if a user meets the rank requirement
+async function getUserRankTier(twitchUsername: string): Promise<number> {
+  try {
+    const profile = await getOpenDotaProfile(twitchUsername)
+    return profile?.rank_tier || 0
+  } catch (error) {
+    return 0
+  }
+}
 
 const lastMissingUserMessageTimestamps: Record<string, number> = {}
 
@@ -57,6 +72,71 @@ twitchChat.on(
   ) => {
     if (!channelId) return
 
+    // Skip rank check for mods and broadcasters
+    const isStaff = userInfo.isMod || userInfo.isBroadcaster
+
+    // So we can get the users settings cuz some commands are disabled
+    // This runs every command, but its cached so no hit on db
+    const client = await getDBUser({ twitchId: channelId })
+    if (!client) {
+      const now = Date.now()
+      const lastMessageTime = lastMissingUserMessageTimestamps[channel] || 0
+      const RATE_LIMIT_MS = 10000
+      const shouldSendMessage = now - lastMessageTime > RATE_LIMIT_MS
+
+      if (shouldSendMessage && text.startsWith('!')) {
+        chatClient.say(channel, t('missingUser', { lng: 'en' }))
+        lastMissingUserMessageTimestamps[channel] = now
+      }
+      return
+    }
+
+    if (lastMissingUserMessageTimestamps[channel]) {
+      delete lastMissingUserMessageTimestamps[channel]
+    }
+
+    // Check if rankOnly mode is enabled
+    const rankOnlySettings = getValueOrDefault(
+      DBSettings.rankOnly,
+      client.settings,
+      client.subscription,
+    )
+
+    // If rankOnly is enabled and the user isn't staff, check their rank
+    if (rankOnlySettings.enabled && !isStaff) {
+      // Check the user's rank
+      const userRankTier = await getUserRankTier(user)
+
+      // If they don't meet the rank requirement, delete the message
+      if (userRankTier < rankOnlySettings.minimumRankTier) {
+        // Delete the message
+        chatClient.say(channel, `/delete ${messageId}`)
+
+        // Send a warning message, but with rate limiting PER CHANNEL
+        const now = Date.now()
+        const lastWarningTime = lastRankWarningTimestamps[channel] || 0
+
+        if (now - lastWarningTime > RANK_WARNING_COOLDOWN_MS) {
+          const requiredRank = getRankTitle(rankOnlySettings.minimumRankTier)
+          const userRank = getRankTitle(userRankTier)
+
+          chatClient.say(
+            channel,
+            t('rankOnlyMode', {
+              name: user,
+              requiredRank,
+              userRank: userRank || 'Uncalibrated',
+              lng: client.locale || 'en',
+            }),
+          )
+
+          lastRankWarningTimestamps[channel] = now
+        }
+
+        return
+      }
+    }
+
     // Letting one pleb in
     if (
       plebMode.has(channelId) &&
@@ -72,26 +152,6 @@ twitchChat.on(
     }
 
     if (!text.startsWith('!')) return
-
-    // So we can get the users settings cuz some commands are disabled
-    // This runs every command, but its cached so no hit on db
-    const client = await getDBUser({ twitchId: channelId })
-    if (!client) {
-      const now = Date.now()
-      const lastMessageTime = lastMissingUserMessageTimestamps[channel] || 0
-      const RATE_LIMIT_MS = 10000
-      const shouldSendMessage = now - lastMessageTime > RATE_LIMIT_MS
-
-      if (shouldSendMessage) {
-        chatClient.say(channel, t('missingUser', { lng: 'en' }))
-        lastMissingUserMessageTimestamps[channel] = now
-      }
-      return
-    }
-
-    if (lastMissingUserMessageTimestamps[channel]) {
-      delete lastMissingUserMessageTimestamps[channel]
-    }
 
     const isBotDisabled = getValueOrDefault(
       DBSettings.commandDisable,
