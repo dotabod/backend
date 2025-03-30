@@ -39,7 +39,7 @@ export const getBotAPI_DEV_ONLY = async () => {
     refreshToken: botTokens.refresh_token,
   }
 
-  authProvider.addUser(twitchId, tokenData, ['chat'])
+  authProvider.addUser(twitchId, tokenData)
 
   // Create and store the singleton instance
   apiClientInstance = new ApiClient({ authProvider })

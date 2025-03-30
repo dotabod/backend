@@ -1,8 +1,8 @@
 import { logger } from '../../utils/logger.js'
 import { getTwitchAPI } from './getTwitchAPI.js'
 
-export function closeTwitchBet(won: boolean, twitchId: string) {
-  const api = getTwitchAPI(twitchId)
+export async function closeTwitchBet(won: boolean, twitchId: string) {
+  const api = await getTwitchAPI(twitchId)
 
   return api.predictions
     .getPredictions(twitchId, {

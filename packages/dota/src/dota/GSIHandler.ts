@@ -31,7 +31,6 @@ import { steamSocket } from '../steam/ws.js'
 import type { MatchMinimalDetailsResponse } from '../types'
 import { Long } from 'mongodb'
 import { getHeroById } from './lib/heroes.js'
-import { getTwitchAPI } from '../twitch/lib/getTwitchAPI.js'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/newdata.js'
 
 export const redisClient = RedisClient.getInstance()

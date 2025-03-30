@@ -3,40 +3,56 @@ import { ApiClient } from '@twurple/api'
 import { findUserByTwitchId } from '../../dota/lib/connectedStreamers.js'
 import { logger } from '../../utils/logger.js'
 import { getAuthProvider } from './getAuthProvider.js'
-
+import { getBotTokens_DEV_ONLY } from './getBotTokens'
+// The API client is a singleton that shares the auth provider
 let api: ApiClient | null = null
-export const getTwitchAPI = (twitchId: string): ApiClient => {
+
+export const getTwitchAPI = async (twitchId: string): Promise<ApiClient> => {
   const authProvider = getAuthProvider()
 
-  // User has not been added to the twurple provider yet
-  // getCurrentScopesForUser will throw if the user does not exist
+  // Check if user is already in the auth provider
   try {
-    authProvider.getCurrentScopesForUser(twitchId)
+    if (!authProvider.hasUser(twitchId)) {
+      const isBotAccount = twitchId === process.env.TWITCH_BOT_PROVIDERID
+
+      // Get tokens based on account type
+      const tokens = isBotAccount
+        ? await getBotTokens_DEV_ONLY()
+        : findUserByTwitchId(twitchId)?.Account
+
+      // Check if tokens exist
+      const accessToken = tokens?.access_token
+      const refreshToken = tokens?.refresh_token
+
+      if (!accessToken || !refreshToken) {
+        logger.info('[TWITCHSETUP] Missing twitch tokens', { twitchId, isBotAccount })
+        throw new Error('Missing twitch tokens')
+      }
+
+      // Create token data object
+      const tokenData = {
+        scope: tokens.scope?.split(' ') ?? [],
+        expiresIn: tokens.expires_in ?? 0,
+        obtainmentTimestamp: new Date(tokens.obtainment_timestamp || '')?.getTime(),
+        accessToken,
+        refreshToken,
+      }
+
+      // Add user to the auth provider
+      authProvider.addUser(twitchId, tokenData)
+    }
   } catch (e) {
-    const twitchTokens = findUserByTwitchId(twitchId)
-    if (!twitchTokens?.Account?.access_token || !twitchTokens.Account.refresh_token) {
-      logger.info('[TWITCHSETUP] Missing twitch tokens', { twitchId })
-      throw new Error('Missing twitch tokens')
-    }
-
-    const tokenData = {
-      scope: twitchTokens.Account.scope?.split(' ') ?? [],
-      expiresIn: twitchTokens.Account.expires_in ?? 0,
-      obtainmentTimestamp: new Date(twitchTokens.Account.obtainment_timestamp || '')?.getTime(),
-      accessToken: twitchTokens.Account.access_token,
-      refreshToken: twitchTokens.Account.refresh_token,
-    }
-
-    authProvider.addUser(twitchId, tokenData)
+    logger.error('[TWITCHAPI] Error adding user to auth provider', { twitchId, e })
   }
 
-  // api singleton to prevent multiple api instances
-  if (api) return api
+  // Create API client if it doesn't exist yet
+  if (!api) {
+    api = new ApiClient({ authProvider })
+    logger.info('[TWITCHAPI] Created new API client', { twitchId })
+  }
 
-  // should only be called once
-  api = new ApiClient({ authProvider })
-  logger.info('[PREDICT] Retrieved twitch api, must have been the first user', { twitchId })
-
+  // The API client uses the auth provider which now has the user,
+  // so it will have access to the user's authentication
   return api
 }
 
@@ -45,5 +61,7 @@ export function updateTwurpleTokenForTwitchId(twitchId: string) {
   const authProvider = getAuthProvider()
 
   authProvider.removeUser(twitchId)
-  getTwitchAPI(twitchId)
+  getTwitchAPI(twitchId).catch((e) => {
+    logger.error('[TWITCHAPI] Error updating twurple token', { twitchId, e })
+  })
 }

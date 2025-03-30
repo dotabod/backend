@@ -2,7 +2,7 @@ import { logger } from '../../utils/logger.js'
 import { getTwitchAPI } from './getTwitchAPI.js'
 
 export const refundTwitchBet = async (twitchId: string, specificPredictionId?: string) => {
-  const api = getTwitchAPI(twitchId)
+  const api = await getTwitchAPI(twitchId)
 
   try {
     // If a specific prediction ID is provided, use it directly

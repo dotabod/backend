@@ -39,7 +39,7 @@ eventHandler.registerEvent('map:game_state', {
 
     setTimeout(async () => {
       try {
-        const api = getTwitchAPI(accountId)
+        const api = await getTwitchAPI(accountId)
         const clipId = await api.clips.createClip({
           createAfterDelay: true,
           channel: accountId,

@@ -35,7 +35,7 @@ export const openTwitchBet = async ({
   const { settings, locale, subscription } = client
   const twitchId = client.Account?.providerAccountId ?? ''
 
-  const api = getTwitchAPI(twitchId)
+  const api = await getTwitchAPI(twitchId)
   const betsInfo = getValueOrDefault(DBSettings.betsInfo, settings, subscription)
 
   logger.info('[PREDICT] [BETS] Opening twitch bet', { twitchId, heroName })
