@@ -1,4 +1,5 @@
 import { t } from 'i18next'
+import { filter } from 'curse-filter'
 
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { DBSettings, getValueOrDefault } from '../../settings.js'
@@ -8,6 +9,7 @@ import { logger } from '../../utils/logger.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 import { is8500Plus } from '../../utils/index.js'
+import type { NotablePlayers } from '../../steam/notableplayers'
 
 commandHandler.registerCommand('np', {
   dbkey: DBSettings.commandNP,
@@ -48,12 +50,12 @@ commandHandler.registerCommand('np', {
         const db = await mongo.connect()
 
         try {
-          await db.collection('notablePlayers').updateOne(
+          await db.collection<NotablePlayers>('notablePlayers').updateOne(
             { account_id: Number(forSteam32Id), channel: twitchChannelId },
             {
               $set: {
                 account_id: Number(forSteam32Id),
-                name: forName,
+                name: filter(forName),
                 channel: twitchChannelId,
                 addedBy: chatterName,
                 createdAt: new Date(),
@@ -63,7 +65,7 @@ commandHandler.registerCommand('np', {
           )
           chatClient.say(
             channel,
-            t('npAdded', { name: forName, lng: message.channel.client.locale }),
+            t('npAdded', { name: filter(forName), lng: message.channel.client.locale }),
             message.user.messageId,
           )
           return
@@ -87,7 +89,7 @@ commandHandler.registerCommand('np', {
 
         try {
           const removed = await db
-            .collection('notablePlayers')
+            .collection<NotablePlayers>('notablePlayers')
             .deleteOne({ channel: twitchChannelId, account_id: Number(forSteam32Id) })
           if (removed.deletedCount) {
             chatClient.say(

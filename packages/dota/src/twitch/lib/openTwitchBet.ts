@@ -1,4 +1,5 @@
 import { t } from 'i18next'
+import { filter } from 'curse-filter'
 
 import supabase from '../../db/supabase.js'
 import { getTokenFromTwitchId } from '../../dota/lib/connectedStreamers.js'
@@ -44,20 +45,23 @@ export const openTwitchBet = async ({
   const title = isTitleDefault
     ? t('predictions.title', { lng: locale, heroName })
     : betsInfo.title.replace('[heroname]', heroName ?? '')
+  const filteredTitle = filter(title)
 
   const isYesDefault = betsInfo.yes === defaultSettings.betsInfo.yes
   const yes = isYesDefault ? t('predictions.yes', { lng: locale }) : betsInfo.yes
+  const filteredYes = filter(yes)
 
   const isNoDefault = betsInfo.no === defaultSettings.betsInfo.no
   const no = isNoDefault ? t('predictions.no', { lng: locale }) : betsInfo.no
+  const filteredNo = filter(no)
 
   const isValidDuration = betsInfo.duration >= 30 && betsInfo.duration <= 1800
   const autoLockAfter = isValidDuration ? betsInfo.duration : 240 // 4 min default
 
   return await api.predictions
     .createPrediction(twitchId || '', {
-      title: title.substring(0, 45),
-      outcomes: [yes.substring(0, 25), no.substring(0, 25)],
+      title: filteredTitle.substring(0, 45),
+      outcomes: [filteredYes.substring(0, 25), filteredNo.substring(0, 25)],
       autoLockAfter,
     })
     .catch(async (e) => {

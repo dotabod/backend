@@ -1,5 +1,6 @@
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
+import { filter } from 'curse-filter'
 
 import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
@@ -110,7 +111,7 @@ export async function notablePlayers({
               ? getHeroNameOrColor(matchPlayers[i].heroid, i)
               : '?'
             : heroName,
-        name: np?.name ?? matchPlayers[i].player_name ?? `Player ${i + 1}`,
+        name: filter(np?.name ?? matchPlayers[i].player_name ?? `Player ${i + 1}`),
         country_code: np?.country_code ?? '',
         isMe: isCurrentPlayer,
       }
