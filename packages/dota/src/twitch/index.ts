@@ -21,6 +21,7 @@ import { chatClient } from './chatClient.js'
 import commandHandler from './lib/CommandHandler.js'
 import { getRankTitle, getOpenDotaProfile } from '../dota/lib/ranks.js'
 import { getTwitchAPI } from './lib/getTwitchAPI.js'
+import { getBotAPI_DEV_ONLY } from './lib/getBotAPI_DEV_ONLY'
 
 export const twitchChat = io(`ws://${process.env.HOST_TWITCH_CHAT}:5005`)
 
@@ -111,20 +112,43 @@ twitchChat.on(
       // If they don't meet the rank requirement, delete the message
       if (userRankTier < rankOnlySettings.minimumRankTier) {
         try {
-          // Delete the message
-          const api = getTwitchAPI(channelId)
-          await api.moderation.deleteChatMessages(channelId, messageId)
-          // await api.moderation.banUser(channelId, {
-          //   user: userInfo.userId,
-          //   duration: 30,
-          //   reason: t('rankOnlyMode', {
-          //     url: 'dotabod.com/verify',
-          //     name: user,
-          //     requiredRank: getRankTitle(rankOnlySettings.minimumRankTier),
-          //     userRank: getRankTitle(userRankTier),
-          //     lng: client.locale || 'en',
-          //   }),
-          // })
+          try {
+            // Delete the message
+            const api = getTwitchAPI(channelId)
+            await api.moderation.deleteChatMessages(channelId, messageId)
+            await api.moderation.banUser(channelId, {
+              user: userInfo.userId,
+              duration: 30,
+              reason: t('rankOnlyMode', {
+                url: 'dotabod.com/verify',
+                name: user,
+                requiredRank: getRankTitle(rankOnlySettings.minimumRankTier),
+                userRank: getRankTitle(userRankTier),
+                lng: client.locale || 'en',
+              }),
+            })
+          } catch (e) {
+            try {
+              const api = await getBotAPI_DEV_ONLY()
+              if (api) {
+                await api.moderation.deleteChatMessages(channelId, messageId)
+                await api.moderation.banUser(channelId, {
+                  user: userInfo.userId,
+                  duration: 30,
+                  reason: t('rankOnlyMode', {
+                    url: 'dotabod.com/verify',
+                    name: user,
+                    requiredRank: getRankTitle(rankOnlySettings.minimumRankTier),
+                    userRank: getRankTitle(userRankTier),
+                    lng: client.locale || 'en',
+                  }),
+                })
+              }
+            } catch (e) {
+              logger.error('could not ban user', e)
+            }
+            logger.error('could not delete message', e)
+          }
 
           // Send a warning message, but with rate limiting PER CHANNEL
           const now = Date.now()
