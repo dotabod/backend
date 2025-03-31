@@ -75,17 +75,13 @@ async function checkBotStatus() {
     const api = new ApiClient({ authProvider })
 
     // A simple API call that will fail if bot is banned/unauthorized
-    await api.users.getUserByName(process.env.TWITCH_BOT_USERNAME || 'dotabod')
+    const result = await api.users.getUserByName(process.env.TWITCH_BOT_USERNAME || 'dotabod')
 
-    // If we get here, bot is authorized
-    botStatus.consecutiveSuccesses++
-    botStatus.consecutiveFailures = 0
-
-    // Only consider the bot unbanned after multiple successful checks
-    if (botStatus.isBanned && botStatus.consecutiveSuccesses >= botStatus.requiredSuccesses) {
-      logger.info('Bot authorization restored')
-      botStatus.isBanned = false
+    if (!result) {
+      return handleFailedCheck(true)
     }
+
+    return handleSuccessfulCheck()
   } catch (error) {
     // Check if this is an auth error (401)
     const isAuthError =
@@ -93,18 +89,39 @@ async function checkBotStatus() {
       (error.message.includes('401') || error.message.includes('Unauthorized'))
 
     if (isAuthError) {
-      botStatus.consecutiveFailures++
-      botStatus.consecutiveSuccesses = 0
-
-      // Only consider the bot banned after multiple consecutive failures
-      if (!botStatus.isBanned && botStatus.consecutiveFailures >= botStatus.requiredFailures) {
-        logger.warn('Bot is currently banned or unauthorized')
-        botStatus.isBanned = true
-      }
-    } else {
-      // If not an auth error, log it but don't update ban status
-      logger.error('Failed to check bot status', error)
+      return handleFailedCheck(false)
     }
+
+    // If not an auth error, log it but don't update ban status
+    logger.error('Failed to check bot status', error)
+  }
+
+  return botStatus.isBanned
+}
+
+// Helper function to handle a successful bot status check
+function handleSuccessfulCheck() {
+  botStatus.consecutiveSuccesses++
+  botStatus.consecutiveFailures = 0
+
+  // Only consider the bot unbanned after multiple successful checks
+  if (botStatus.isBanned && botStatus.consecutiveSuccesses >= botStatus.requiredSuccesses) {
+    logger.info('Bot authorization restored')
+    botStatus.isBanned = false
+  }
+
+  return botStatus.isBanned
+}
+
+// Helper function to handle a failed bot status check
+function handleFailedCheck(isNullResult: boolean) {
+  botStatus.consecutiveFailures++
+  botStatus.consecutiveSuccesses = 0
+
+  // Only consider the bot banned after multiple consecutive failures
+  if (!botStatus.isBanned && botStatus.consecutiveFailures >= botStatus.requiredFailures) {
+    logger.warn('Bot is currently banned or unauthorized')
+    botStatus.isBanned = true
   }
 
   return botStatus.isBanned
