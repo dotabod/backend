@@ -34,6 +34,8 @@
     "tpFound": "{{channel}} nice job sa wakas ng ka tp ka rin pagkatapos ng $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Buti namatay ka nagka-tp ka rin sa wakas. Umabot lang ng $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "chattersRank": "@{{username}}'s rank is {{rank}}",
+  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "colors": {
     "blue": "Blue",
     "brown": "Brown",
@@ -116,8 +118,6 @@
     "unranked": "Not ranked",
     "won": "Won last game"
   },
-  "chattersRank": "@{{username}}'s rank is {{rank}}",
-  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "lifetime": "Lifetime games",
   "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
   "matchFound": "Match data found {{commandList}} commands activated.",
@@ -162,15 +162,15 @@
     "nextRankIn_one": "One more win {{emote}}",
     "nextRankIn_other": "in {{count}} wins"
   },
+  "ranked": "Ranked",
+  "ranked_no": "Nope this game is not ranked",
+  "ranked_yes": "Yes this game is ranked",
   "rankOnlyDisabled": "Verified mode is now disabled. Everyone can chat.",
   "rankOnlyEnabled": "Verified mode is now enabled. Only {{rank}} or higher ranks can chat. Visit {{- url}} to become Dotabod verified.",
   "rankOnlyInvalid": "Invalid rank. Valid ranks are: {{validRanks}}",
   "rankOnlyMode": "@{{name}} - Your message was deleted because this channel is in verified mode ({{requiredRank}}+ only). Visit {{- url}} to become Dotabod verified.",
   "rankOnlyStatus_disabled": "Verified mode is currently disabled.",
   "rankOnlyStatus_enabled": "Verified mode is currently enabled. Only {{rank}}+ ranks can chat. Visit {{- url}} to become Dotabod verified.",
-  "ranked": "Ranked",
-  "ranked_no": "Nope this game is not ranked",
-  "ranked_yes": "Yes this game is ranked",
   "refresh": "Refreshing overlay...",
   "refreshToken": "Your Twitch account needs to be reconnected to Dotabod. {{channel}} logout and login on dotabod.com to fix this.",
   "resetwl": "Resetting win/loss to 0 for {{channel}}",
