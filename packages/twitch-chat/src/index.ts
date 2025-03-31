@@ -90,15 +90,16 @@ io.on('connection', (socket) => {
             await disableUser(providerAccountId)
           } else {
             // Log the entire message and response
-            logger.error('Failed to send chat message:', {
+            logger.error('Failed to send chat message in drop reason:', {
               message: text,
               broadcaster_id: providerAccountId,
+              drop_reason: response.data?.[0]?.drop_reason,
               response,
             })
           }
         }
       } catch (e) {
-        logger.error('Failed to send chat message:', e)
+        logger.error('Failed to send chat message in say', e)
       }
     },
   )
