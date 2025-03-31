@@ -1,5 +1,5 @@
 import type { TwitchEventSubResponse } from './interfaces'
-import type { TwitchEventTypes } from './subscribeChatMessagesForUser'
+import type { TwitchEventTypes } from './TwitchEventTypes'
 
 // Get all existing subscriptions by looping through pages
 export const eventSubMap: Record<

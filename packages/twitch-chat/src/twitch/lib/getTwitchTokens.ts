@@ -1,14 +1,15 @@
 import supabase from '../../db/supabase.js'
 
-export async function getBotTokens() {
-  if (!process.env.TWITCH_BOT_PROVIDERID)
-    throw new Error('Missing bot provider id (TWITCH_BOT_PROVIDERID)')
+export async function getTwitchTokens(providerId?: string) {
+  const lookupProviderId = providerId || process.env.TWITCH_BOT_PROVIDERID
+
+  if (!lookupProviderId) throw new Error('Missing bot provider id (TWITCH_BOT_PROVIDERID)')
 
   const { data, error } = await supabase
     .from('accounts')
     .select('refresh_token, access_token, expires_in, scope, obtainment_timestamp')
     .eq('provider', 'twitch')
-    .eq('providerAccountId', process.env.TWITCH_BOT_PROVIDERID)
+    .eq('providerAccountId', lookupProviderId)
     .single()
 
   if (error) {

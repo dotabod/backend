@@ -1,7 +1,9 @@
 import { eventSubMap } from './chatSubIds.js'
 import { fetchConduitId } from './fetchConduitId.js'
-import { type TwitchEventTypes, genericSubscribe } from './subscribeChatMessagesForUser.js'
+import { genericSubscribe } from './subscribeChatMessagesForUser.js'
+import type { TwitchEventTypes } from './TwitchEventTypes.js'
 import { logger } from './twitch/lib/logger.js'
+import { checkBotStatus } from './botBanStatus'
 
 // Get existing conduit ID and subscriptions
 const conduitId = await fetchConduitId()
@@ -13,24 +15,34 @@ logger.info('Conduit ID', { conduitId })
 
 // Updated initUserSubscriptions function
 export const initUserSubscriptions = async (providerAccountId: string) => {
+  const isBanned = await checkBotStatus()
+
   try {
     // Check if chat message subscription exists but is not enabled
     // This means the user banned the bot, so we delete their subs and disable them
     const chatMessageSub = eventSubMap[providerAccountId]?.['channel.chat.message']
     if (chatMessageSub && chatMessageSub.status !== 'enabled') {
-      logger.info('[TWITCHEVENTS] Chat message subscription not enabled, revoking', {
-        providerAccountId,
-      })
-      // await revokeEvent({ providerAccountId })
+      if (!isBanned) {
+        logger.info(
+          '[TWITCHEVENTS] Chat message subscription not enabled, bot not banned, revoking',
+          {
+            providerAccountId,
+          },
+        )
+        // await revokeEvent({ providerAccountId })
+      }
       return
     }
 
     // Migrate users from old eventsub to new conduit
     if (!chatMessageSub) {
-      logger.info('[TWITCHEVENTS] Chat message subscription not found, stopping old subs', {
-        providerAccountId,
-      })
-      // await stopUserSubscriptions(providerAccountId)
+      if (!isBanned) {
+        logger.info('[TWITCHEVENTS] Chat message subscription not found, stopping old subs', {
+          providerAccountId,
+        })
+        // await stopUserSubscriptions(providerAccountId)
+      }
+      // Continue after this to get the new subs
     }
 
     if (eventSubMap[providerAccountId]) {
@@ -60,7 +72,7 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
 
     // Log any failures but don't fail the entire process
     results.forEach((result, index) => {
-      if (result.status === 'rejected') {
+      if (result?.status === 'rejected') {
         logger.warn(`Failed to subscribe to ${subscriptionTypes[index]}`, {
           error: result.reason,
           providerAccountId,

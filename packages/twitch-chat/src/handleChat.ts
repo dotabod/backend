@@ -3,17 +3,10 @@ import type { EventSubChatBadge } from '@twurple/eventsub-base/lib/events/common
 import type { EventSubWsPacket } from '@twurple/eventsub-ws/lib/EventSubWsPacket.external'
 import { t } from 'i18next'
 import { getTwitchHeaders } from './getTwitchHeaders.js'
-import {
-  hasDotabodSocket,
-  io,
-  isBotBanned,
-  lastAuthErrorTime,
-  ERROR_LOG_COOLDOWN,
-  updateLastAuthErrorTime,
-} from './index'
-import { logger } from './logger'
-
-const headers = await getTwitchHeaders()
+import { lastAuthErrorTime, ERROR_LOG_COOLDOWN, updateLastAuthErrorTime } from './botBanStatus.js'
+import { hasDotabodSocket, io } from './index.js'
+import { logger } from './logger.js'
+import { checkBotStatus } from '../../twitch-events/src/botBanStatus'
 
 function extractUserInfo(
   badges: EventSubChatBadge[],
@@ -91,6 +84,9 @@ export async function sendTwitchChatMessage(
   params: SendChatMessageParams,
 ): Promise<TwitchChatMessageResponse> {
   const url = 'https://api.twitch.tv/helix/chat/messages'
+  // Only the bot can send messages
+  // Or a user with "user:bot" scope
+  const headers = await getTwitchHeaders(params.sender_id)
   const options = {
     method: 'POST',
     headers: { ...headers, 'Content-Type': 'application/json' },
@@ -212,9 +208,8 @@ async function dotabodOfflineHandler(
   channelId: string,
   reply_parent_message_id?: string,
 ): Promise<void> {
-  // Don't try to respond if the bot is banned
-  if (isBotBanned()) {
-    logger.debug('Not responding - bot is currently banned')
+  const isBanned = await checkBotStatus()
+  if (isBanned) {
     return
   }
 
