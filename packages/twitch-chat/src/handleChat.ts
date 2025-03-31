@@ -6,7 +6,7 @@ import { getTwitchHeaders } from './getTwitchHeaders.js'
 import { lastAuthErrorTime, ERROR_LOG_COOLDOWN, updateLastAuthErrorTime } from './botBanStatus.js'
 import { hasDotabodSocket, io } from './index.js'
 import { logger } from './logger.js'
-import { checkBotStatus } from '../../twitch-events/src/botBanStatus'
+import { checkBotStatus } from './botBanStatus.js'
 
 function extractUserInfo(
   badges: EventSubChatBadge[],
