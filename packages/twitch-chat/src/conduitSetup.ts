@@ -139,15 +139,34 @@ const createEventHandler = (type: keyof TwitchEventTypes, transform: (event: any
 
 function revokeEvent(data: {
   payload: {
+    subscription: {
+      id: string
+      type: string
+      version: string
+      status: string
+      cost: number
+      condition: {
+        client_id: string
+      }
+      transport: {
+        method: string
+        callback?: string
+      }
+      created_at: string
+    }
     event: {
       client_id: string
       user_id: string
-      user_login: string
-      user_name: string
+      user_login: string | null
+      user_name: string | null
     }
   }
 }) {
-  twitchEvent.emit('revoke', data.payload?.event?.user_id)
+  const userId = data.payload?.event?.user_id
+  if (userId) {
+    logger.info('Revocation for user.authorization.revoke', { userId, payload: data.payload })
+    twitchEvent.emit('revoke', userId)
+  }
 }
 
 const eventHandlers: Partial<Record<keyof TwitchEventTypes, (data: any) => void>> = {
@@ -184,15 +203,64 @@ async function initializeSocket() {
     logger.error('Socket Error', { error })
   })
 
-  mySocket.on('revocation', ({ payload }) => {
-    // If the event is a revocation with user_id specified, odds are its the bot being banned by Twitch
-    // Otherwise, it's a user revoking their own eventsub or the user being banned on Twitch
-    const userId = payload?.event?.user_id || payload.subscription?.condition?.broadcaster_user_id
-    logger.info('Revocation', { userId, payload })
-    if (userId) {
-      twitchEvent.emit('revoke', userId)
-    }
-  })
+  // Track last revocation time for each user to implement debouncing
+  const lastRevocationTime = new Map<string, number>()
+  const DEBOUNCE_TIME = 3000 // 3 seconds debounce
+
+  mySocket.on(
+    'revocation',
+    ({
+      payload,
+    }: {
+      payload: {
+        subscription: {
+          condition: {
+            broadcaster_user_id?: string
+            user_id?: string
+          }
+          cost: number
+          created_at: string
+          id: string
+          status: string
+          transport: {
+            conduit_id: string
+            method: string
+          }
+          type: string
+          version: number
+        }
+        event?: {
+          user_id: string
+        }
+      }
+    }) => {
+      // If the event is a revocation with user_id specified, odds are its the bot being banned by Twitch
+      // Otherwise, it's a user revoking their own eventsub or the user being banned on Twitch
+
+      // Twitch sent 8k revocations for the bot when the bot got banned
+      // The user_id was the bot
+      // The broadcaster_user_id was the streamer
+      const userId =
+        payload.subscription?.condition?.user_id ||
+        payload?.event?.user_id ||
+        payload.subscription?.condition?.broadcaster_user_id
+
+      if (!userId) {
+        logger.info('No user_id or broadcaster_user_id found in revocation event', { payload })
+        return
+      }
+
+      const now = Date.now()
+      const lastTime = lastRevocationTime.get(userId) || 0
+
+      // Only emit if we haven't emitted for this user in the last 3 seconds
+      if (now - lastTime > DEBOUNCE_TIME) {
+        logger.info('Revocation', { userId, payload })
+        lastRevocationTime.set(userId, now)
+        twitchEvent.emit('revoke', userId)
+      }
+    },
+  )
 
   Object.entries(eventHandlers).forEach(([event, handler]) => {
     mySocket.on(event, handler)

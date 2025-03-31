@@ -20,6 +20,8 @@ export async function genericSubscribe(
   broadcaster_user_id: string,
   type: keyof TwitchEventTypes,
 ) {
+  // Don't subscribe to chat messages if the bot is banned
+  // It will fail to subscribe anyway
   if (type === 'channel.chat.message') {
     const isBanned = await checkBotStatus()
     if (isBanned) {
@@ -97,9 +99,7 @@ export async function genericSubscribe(
       logger.error(`Failed to subscribe ${subscribeReq.status} ${await subscribeReq.text()}`, {
         type,
       })
-      if (type !== 'channel.chat.message') {
-        await revokeEvent({ providerAccountId: broadcaster_user_id })
-      }
+      await revokeEvent({ providerAccountId: broadcaster_user_id })
       return false
     }
 
