@@ -5,13 +5,12 @@ import { transformBetData } from './event-handlers/transformBetData.js'
 import { transformPollData } from './event-handlers/transformPollData.js'
 import { updateUserEvent } from './event-handlers/updateUserEvent.js'
 import { EventsubSocket } from './eventSubSocket.js'
-import { twitchEvent } from './events.ts'
+import { twitchEvent } from './events.js'
 import { getTwitchHeaders } from './getTwitchHeaders.js'
 import { handleChatMessage } from './handleChat'
 import { hasDotabodSocket, io } from './index.js'
 import { logger } from './logger.js'
 import type {
-  RevocationPayload,
   TwitchConduitCreateResponse,
   TwitchConduitResponse,
   TwitchConduitShardRequest,
@@ -186,7 +185,10 @@ async function initializeSocket() {
   })
 
   mySocket.on('revocation', ({ payload }) => {
-    const userId = payload.subscription?.condition?.broadcaster_user_id || payload?.event?.user_id
+    // If the event is a revocation with user_id specified, odds are its the bot being banned by Twitch
+    // Otherwise, it's a user revoking their own eventsub or the user being banned on Twitch
+    const userId = payload?.event?.user_id || payload.subscription?.condition?.broadcaster_user_id
+    logger.info('Revocation', { userId, payload })
     if (userId) {
       twitchEvent.emit('revoke', userId)
     }
