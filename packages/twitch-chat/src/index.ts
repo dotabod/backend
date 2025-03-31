@@ -52,8 +52,14 @@ const botStatus = {
 }
 
 // Remember last error to prevent log spam
-export const lastAuthErrorTime = 0
+// biome-ignore lint/style/useConst: <explanation>
+export let lastAuthErrorTime = 0
 export const ERROR_LOG_COOLDOWN = 60000 // 1 minute
+
+// Function to update lastAuthErrorTime
+export function updateLastAuthErrorTime(time: number): void {
+  lastAuthErrorTime = time
+}
 
 // Function to check if the bot is banned and update status
 async function checkBotStatus() {

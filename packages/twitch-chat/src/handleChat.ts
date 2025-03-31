@@ -3,7 +3,14 @@ import type { EventSubChatBadge } from '@twurple/eventsub-base/lib/events/common
 import type { EventSubWsPacket } from '@twurple/eventsub-ws/lib/EventSubWsPacket.external'
 import { t } from 'i18next'
 import { getTwitchHeaders } from './getTwitchHeaders.js'
-import { hasDotabodSocket, io, isBotBanned, lastAuthErrorTime, ERROR_LOG_COOLDOWN } from './index'
+import {
+  hasDotabodSocket,
+  io,
+  isBotBanned,
+  lastAuthErrorTime,
+  ERROR_LOG_COOLDOWN,
+  updateLastAuthErrorTime,
+} from './index'
 import { logger } from './logger'
 
 const headers = await getTwitchHeaders()
@@ -105,7 +112,7 @@ export async function sendTwitchChatMessage(
             broadcaster_id: params.broadcaster_id,
           })
           // Update last error time
-          lastAuthErrorTime = now
+          updateLastAuthErrorTime(now)
         }
 
         // Return a properly formatted response for auth errors
