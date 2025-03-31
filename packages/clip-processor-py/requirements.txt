@@ -10,5 +10,5 @@ flask==3.0.2
 gunicorn==21.2.0
 streamlink==6.5.0
 psycopg2-binary==2.9.9
-waitress==3.0.0
+waitress==3.0.1
 # Optional: add pytesseract for enhanced "preparing your stream" detection
