@@ -151,6 +151,8 @@ TEMP_DIR = Path("temp")
 TEMP_DIR.mkdir(exist_ok=True)
 DEBUG_DIR = Path("temp/debug")
 DEBUG_DIR.mkdir(exist_ok=True, parents=True)
+FRAMES_DIR = TEMP_DIR / "frames"
+FRAMES_DIR.mkdir(exist_ok=True)
 ASSETS_DIR = Path("assets")
 ASSETS_DIR.mkdir(exist_ok=True)
 HEROES_DIR = ASSETS_DIR / "dota_heroes"
@@ -2198,6 +2200,10 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
             performance_timer.stop('get_clip_details')
             logger.info("Clip details retrieved")
 
+            # Ensure frames directory exists
+            frames_dir = TEMP_DIR / "frames"
+            frames_dir.mkdir(exist_ok=True)
+
             # Instead of downloading the entire clip and extracting frames
             performance_timer.start('download_clip')
             frame_path = download_single_frame(clip_details)
@@ -2243,6 +2249,10 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
                             print("Error: stream_utils module not available")
                             print("Make sure stream_utils.py is in the same directory as dota_hero_detection.py")
                         return None
+
+            # Ensure frames directory exists
+            frames_dir = TEMP_DIR / "frames"
+            frames_dir.mkdir(exist_ok=True)
 
             # Capture frames from the stream
             performance_timer.start('capture_frames')
