@@ -38,6 +38,8 @@
     "tpFound": "{{channel}} молодец, наконец-то купил ТП спустя $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Спасибо смерти за данное тебе ТП. Это заняло всего лишь $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "chattersRank": "@{{username}}'s rank is {{rank}}",
+  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "colors": {
     "blue": "Синий",
     "brown": "Коричневый",
@@ -68,6 +70,9 @@
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Нужны сборки от про-игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
+  "dotapatch": {
+    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+  },
   "facet": "{{number}} аспект {{- heroName}} - это {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Указан неверный аспект · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Напиши !facet {{- heroName}} 1 или !facet {{- heroName}} 2 · Dotabod знает только выбранный аспект для текущего героя стримера",
@@ -191,6 +196,12 @@
   "ranked": "Рейтинговая",
   "ranked_no": "Нет, эта игра не рейтинговая",
   "ranked_yes": "Да, эта игра рейтинговая",
+  "rankOnlyDisabled": "Verified mode is now disabled. Everyone can chat.",
+  "rankOnlyEnabled": "Verified mode is now enabled. Only {{rank}} or higher ranks can chat. Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyInvalid": "Invalid rank. Valid ranks are: {{validRanks}}",
+  "rankOnlyMode": "@{{name}} - Your message was deleted because this channel is in verified mode ({{requiredRank}}+ only). Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyStatus_disabled": "Verified mode is currently disabled.",
+  "rankOnlyStatus_enabled": "Verified mode is currently enabled. Only {{rank}}+ ranks can chat. Visit {{- url}} to become Dotabod verified.",
   "refresh": "Перезапуск оверлея...",
   "refreshToken": "Перезайдите аккаунтом Twitch в Dotabod. Для этого {{channel}} разлогинтесь на dotabod.com и залогинтесь обратно.",
   "resetwl": "Сброс побед/поражений до 0 для {{channel}}",

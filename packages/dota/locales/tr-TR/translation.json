@@ -36,6 +36,8 @@
     "tpFound": "{{channel}} helal olsun sonunda $t(seconds, {\"count\": {{seconds}} }) saniye sonra tp aldın {{emote}}",
     "tpFromDeath": "İyi ki öldün yoksa tp alamayacaktın. Tp alman sadece $t(seconds, {\"count\": {{seconds}} }) saniye sürdü {{emote}}"
   },
+  "chattersRank": "@{{username}}'s rank is {{rank}}",
+  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "colors": {
     "blue": "Mavi",
     "brown": "Kahverengi",
@@ -62,6 +64,9 @@
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Daha iyi item tavsiyelerine mi ihtiyacın var {{- heroName}}? Buraya tıkla {{- url}}",
   "dotabod": "Ben {{author}} tarafından yaratılan açık kaynaklı bir botum. Daha detaylı bilgi için {{- url}}",
+  "dotapatch": {
+    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+  },
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
@@ -167,6 +172,12 @@
   "ranked": "Dereceli",
   "ranked_no": "Hayır, bu oyun dereceli değil",
   "ranked_yes": "Evet, bu oyun dereceli",
+  "rankOnlyDisabled": "Verified mode is now disabled. Everyone can chat.",
+  "rankOnlyEnabled": "Verified mode is now enabled. Only {{rank}} or higher ranks can chat. Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyInvalid": "Invalid rank. Valid ranks are: {{validRanks}}",
+  "rankOnlyMode": "@{{name}} - Your message was deleted because this channel is in verified mode ({{requiredRank}}+ only). Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyStatus_disabled": "Verified mode is currently disabled.",
+  "rankOnlyStatus_enabled": "Verified mode is currently enabled. Only {{rank}}+ ranks can chat. Visit {{- url}} to become Dotabod verified.",
   "refresh": "Overlay yenileniyor...",
   "refreshToken": "Twitch hesabınızın Dotabod'a yeniden bağlanması gerekiyor. dotabod.com'da {{channel}} çıkış yapıp tekrar giriş yapın.",
   "resetwl": "{{channel}} için galibiyet/mağlubiyet sıfırlanıyor",
