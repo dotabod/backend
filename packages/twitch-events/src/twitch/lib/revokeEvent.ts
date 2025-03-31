@@ -82,23 +82,40 @@ async function disableChannel(broadcasterId: string) {
   )
 }
 
-export async function revokeEvent({ providerAccountId }: { providerAccountId: string }) {
-  logger.info(`${providerAccountId} just revoked`)
+// Track pending revoke operations to debounce multiple calls
+const pendingRevokes = new Map<string, NodeJS.Timeout>()
 
-  try {
-    stopUserSubscriptions(providerAccountId)
-  } catch (e) {
-    logger.info('Failed to delete subscriptions', { error: e, twitchId: providerAccountId })
+export async function revokeEvent({ providerAccountId }: { providerAccountId: string }) {
+  logger.info(`${providerAccountId} just revoked, debouncing for 10s`)
+
+  // Clear any existing timeout for this user
+  if (pendingRevokes.has(providerAccountId)) {
+    clearTimeout(pendingRevokes.get(providerAccountId)!)
   }
 
-  await supabase
-    .from('accounts')
-    .update({
-      requires_refresh: true,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('provider', 'twitch')
-    .eq('providerAccountId', providerAccountId)
+  // Set a new timeout
+  pendingRevokes.set(
+    providerAccountId,
+    setTimeout(async () => {
+      logger.info(`${providerAccountId} revoke executing after debounce`)
+      pendingRevokes.delete(providerAccountId)
 
-  await disableChannel(providerAccountId)
+      try {
+        stopUserSubscriptions(providerAccountId)
+      } catch (e) {
+        logger.info('Failed to delete subscriptions', { error: e, twitchId: providerAccountId })
+      }
+
+      await supabase
+        .from('accounts')
+        .update({
+          requires_refresh: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('provider', 'twitch')
+        .eq('providerAccountId', providerAccountId)
+
+      await disableChannel(providerAccountId)
+    }, 10000),
+  )
 }

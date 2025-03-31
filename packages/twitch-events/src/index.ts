@@ -1,5 +1,5 @@
-import { subsToCleanup } from './fetchExistingSubscriptions'
-import { fetchExistingSubscriptions, subscribeToEvents } from './fetchExistingSubscriptions.js'
+import { subscribeToEvents } from './subscribeToEvents.js'
+import { fetchExistingSubscriptions, subsToCleanup } from './fetchExistingSubscriptions'
 import { logger } from './twitch/lib/logger.js'
 import { deleteSubscription } from './twitch/lib/revokeEvent.js'
 import { rateLimiter } from './utils/rateLimiter.js'

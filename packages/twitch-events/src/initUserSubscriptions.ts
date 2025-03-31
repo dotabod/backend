@@ -18,17 +18,23 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
     // This means the user banned the bot, so we delete their subs and disable them
     const chatMessageSub = eventSubMap[providerAccountId]?.['channel.chat.message']
     if (chatMessageSub && chatMessageSub.status !== 'enabled') {
+      logger.info('[TWITCHEVENTS] Chat message subscription not enabled, revoking', {
+        providerAccountId,
+      })
       // await revokeEvent({ providerAccountId })
-      // return
+      return
     }
 
     // Migrate users from old eventsub to new conduit
     if (!chatMessageSub) {
+      logger.info('[TWITCHEVENTS] Chat message subscription not found, stopping old subs', {
+        providerAccountId,
+      })
       // await stopUserSubscriptions(providerAccountId)
     }
 
     if (eventSubMap[providerAccountId]) {
-      // logger.info('[TWITCHEVENTS] Subscriptions already exist', { providerAccountId })
+      logger.info('[TWITCHEVENTS] Subscriptions already exist', { providerAccountId })
       return
     }
 
