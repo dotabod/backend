@@ -19,6 +19,7 @@ commandHandler.registerCommand('resetwl', {
         .from('users')
         .update({
           stream_start_date: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
         .eq('id', message.channel.client.token)
 

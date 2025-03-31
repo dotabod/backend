@@ -19,6 +19,7 @@ export async function disableBetsForTwitchId(twitchId: string) {
       userId: token,
       key: DBSettings.bets,
       value: false,
+      updated_at: new Date().toISOString(),
     },
     {
       onConflict: 'userId, key',

@@ -22,6 +22,7 @@ commandHandler.registerCommand('toggle', {
         userId: message.channel.client.token,
         key: DBSettings.commandDisable,
         value: !isBotDisabled,
+        updated_at: new Date().toISOString(),
       },
       {
         onConflict: 'userId, key',

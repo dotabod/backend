@@ -21,6 +21,7 @@ commandHandler.registerCommand('mute', {
         userId: message.channel.client.token,
         key: DBSettings.chatter,
         value: !hasChatters,
+        updated_at: new Date().toISOString(),
       },
       {
         onConflict: 'userId, key',

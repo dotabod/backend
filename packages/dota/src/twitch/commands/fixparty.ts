@@ -70,6 +70,7 @@ commandHandler.registerCommand('fixparty', {
       .from('bets')
       .update({
         is_party: !bet.is_party,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', bet.id)
   },

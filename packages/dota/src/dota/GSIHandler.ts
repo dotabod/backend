@@ -392,7 +392,10 @@ export class GSIHandler {
       )
       await supabase
         .from('steam_accounts')
-        .update({ connectedUserIds: uniqueUserIds })
+        .update({
+          connectedUserIds: uniqueUserIds,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', res.id)
     }
   }
@@ -407,7 +410,10 @@ export class GSIHandler {
       name: this.client.gsi?.player?.name,
     })
 
-    await supabase.from('users').update({ mmr: 0 }).eq('id', this.client.token)
+    await supabase
+      .from('users')
+      .update({ mmr: 0, updated_at: new Date().toISOString() })
+      .eq('id', this.client.token)
 
     Object.assign(this.client, { mmr, steam32Id, multiAccount: undefined })
     this.emitBadgeUpdate()
@@ -812,7 +818,7 @@ export class GSIHandler {
             if (oldBetId) {
               await supabase
                 .from('bets')
-                .update({ predictionId: null })
+                .update({ predictionId: null, updated_at: new Date().toISOString() })
                 .eq('predictionId', oldBetId)
             }
           }
@@ -851,7 +857,7 @@ export class GSIHandler {
       if (this.client.steam32Id && response && 'standing' in response) {
         await supabase
           .from('steam_accounts')
-          .update({ leaderboard_rank: response.standing })
+          .update({ leaderboard_rank: response.standing, updated_at: new Date().toISOString() })
           .eq('steam32Id', this.client.steam32Id)
       }
 

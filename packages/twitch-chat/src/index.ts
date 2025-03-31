@@ -121,6 +121,7 @@ io.on('connection', (socket) => {
         userId: user.userId,
         key: 'commandDisable',
         value: true,
+        updated_at: new Date().toISOString(),
       },
       {
         onConflict: 'userId, key',

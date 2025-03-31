@@ -17,22 +17,23 @@ export const getAuthProvider = () => {
   authProvider.onRefresh(async (twitchId, newTokenData) => {
     console.log('[TWITCHSETUP] Refreshing twitch tokens', { twitchId })
 
-      if (!newTokenData.refreshToken) throw new Error('Missing refresh token')
+    if (!newTokenData.refreshToken) throw new Error('Missing refresh token')
 
-      await supabase
-        .from('accounts')
-        .update({
-          scope: newTokenData.scope.join(' '),
-          access_token: newTokenData.accessToken,
-          refresh_token: newTokenData.refreshToken,
-          expires_at: Math.floor(
-            new Date(newTokenData.obtainmentTimestamp).getTime() / 1000 +
-              (newTokenData.expiresIn ?? 0),
-          ),
-          expires_in: newTokenData.expiresIn ?? 0,
-          obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp).toISOString(),
-        })
-        .eq('provider', 'twitch')
+    await supabase
+      .from('accounts')
+      .update({
+        scope: newTokenData.scope.join(' '),
+        access_token: newTokenData.accessToken,
+        refresh_token: newTokenData.refreshToken,
+        expires_at: Math.floor(
+          new Date(newTokenData.obtainmentTimestamp).getTime() / 1000 +
+            (newTokenData.expiresIn ?? 0),
+        ),
+        expires_in: newTokenData.expiresIn ?? 0,
+        obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp).toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('provider', 'twitch')
       .eq('providerAccountId', twitchId)
   })
 

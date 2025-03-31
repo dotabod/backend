@@ -60,12 +60,15 @@ eventHandler.registerEvent('hero:name', {
       if (bet?.id && betData?.predictionId) {
         await supabase
           .from('bets')
-          .update({ predictionId: bet.id })
+          .update({
+            predictionId: bet.id,
+            updated_at: new Date().toISOString(),
+          })
           .eq('predictionId', betData.predictionId)
       } else if (betData?.predictionId) {
         await supabase
           .from('bets')
-          .update({ predictionId: null })
+          .update({ predictionId: null, updated_at: new Date().toISOString() })
           .eq('predictionId', betData.predictionId)
       }
 

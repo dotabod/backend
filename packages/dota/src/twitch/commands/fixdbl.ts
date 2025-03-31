@@ -68,6 +68,7 @@ commandHandler.registerCommand('fixdbl', {
       .from('bets')
       .update({
         is_doubledown: !bet.is_doubledown,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', bet.id)
   },

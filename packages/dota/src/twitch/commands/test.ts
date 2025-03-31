@@ -316,6 +316,7 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
               kda: { kills: response?.kills, deaths: response?.deaths, assists: response?.assists },
               won: radiantWin || direWin,
               lobby_type: response.lobbyType,
+              updated_at: new Date().toISOString(),
             })
             .eq('id', bet.id)
         }

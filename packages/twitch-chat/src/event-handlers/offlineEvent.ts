@@ -46,6 +46,7 @@ export function offlineEvent({ payload: { event } }: { payload: { event: TwitchO
         .from('users')
         .update({
           stream_online: false,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', user.userId)
         .then(() => {

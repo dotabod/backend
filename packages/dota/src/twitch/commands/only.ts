@@ -78,6 +78,7 @@ commandHandler.registerCommand('only', {
             ...rankOnlySettings,
             enabled: false,
           }),
+          updated_at: new Date().toISOString(),
         },
         {
           onConflict: 'userId, key',
@@ -131,6 +132,7 @@ commandHandler.registerCommand('only', {
           minimumRank,
           minimumRankTier,
         }),
+        updated_at: new Date().toISOString(),
       },
       {
         onConflict: 'userId, key',

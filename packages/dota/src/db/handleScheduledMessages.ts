@@ -132,7 +132,10 @@ export async function handleUserOnlineMessages(userId: string, username: string)
       if (!message.isForAllUsers) {
         const { error: updateError } = await supabase
           .from('ScheduledMessage')
-          .update({ status: 'DELIVERED' })
+          .update({
+            status: 'DELIVERED',
+            updatedAt: new Date().toISOString(),
+          })
           .eq('id', message.id)
 
         if (updateError) {
@@ -164,7 +167,10 @@ export async function handleUserOnlineMessages(userId: string, username: string)
         if (deliveryCount && userCount && deliveryCount >= userCount) {
           const { error: updateError } = await supabase
             .from('ScheduledMessage')
-            .update({ status: 'DELIVERED' })
+            .update({
+              status: 'DELIVERED',
+              updatedAt: new Date().toISOString(),
+            })
             .eq('id', message.id)
 
           if (updateError) {

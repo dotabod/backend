@@ -27,6 +27,7 @@ commandHandler.registerCommand('setdelay', {
         userId: message.channel.client.token,
         key: DBSettings.streamDelay,
         value: (Number(args[0]) || 0) * 1000,
+        updated_at: new Date().toISOString(),
       },
       {
         onConflict: 'userId, key',

@@ -29,6 +29,7 @@ export function onlineEvent({ payload: { event } }: { payload: { event: TwitchOn
         .update({
           stream_online: true,
           stream_start_date: event.started_at,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', user.userId)
 

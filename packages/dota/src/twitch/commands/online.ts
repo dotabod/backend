@@ -67,6 +67,7 @@ const updateStreamStatus = async (token: string, isOnline: boolean) => {
     .update({
       stream_online: isOnline,
       stream_start_date: null,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', token)
 }

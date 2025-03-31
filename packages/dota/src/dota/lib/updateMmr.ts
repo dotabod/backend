@@ -111,6 +111,7 @@ export async function updateMmr({
       .from('users')
       .update({
         mmr, // New MMR value
+        updated_at: new Date().toISOString(),
       })
       .eq('id', token)
 
@@ -137,7 +138,10 @@ export async function updateMmr({
 
   const data = await supabase
     .from('steam_accounts')
-    .update({ mmr })
+    .update({
+      mmr,
+      updated_at: new Date().toISOString(),
+    })
     .eq('steam32Id', steam32Id)
     .select('userId')
 
@@ -151,6 +155,7 @@ export async function updateMmr({
     .from('users')
     .update({
       mmr: 0, // New MMR value
+      updated_at: new Date().toISOString(),
     })
     .eq('id', foundToken)
 

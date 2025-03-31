@@ -15,6 +15,7 @@ commandHandler.registerCommand('beta', {
         .from('users')
         .update({
           beta_tester: !message.channel.client.beta_tester,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', message.channel.client.token)
 
