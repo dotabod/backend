@@ -38,6 +38,8 @@
     "tpFound": "{{channel}} dobrá práce, úspěšně sis pořídil tp po $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Thanks to this death you finally got a tp. And it only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "chattersRank": "@{{username}}'s rank is {{rank}}",
+  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "colors": {
     "blue": "Modrý",
     "brown": "Hnědý",
@@ -68,6 +70,9 @@
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Potřebuješ poradit co kupovat na {{- heroName}}? Nápady najdeš zde {{- url}}",
   "dotabod": "Jsem open-source bot vytvořený {{author}}. Více info na {{- url}}",
+  "dotapatch": {
+    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+  },
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
@@ -191,6 +196,12 @@
   "ranked": "Hodnocený",
   "ranked_no": "Nope, tenhle zápas není hodnocený",
   "ranked_yes": "Yep, tahle hra je hodnocená",
+  "rankOnlyDisabled": "Verified mode is now disabled. Everyone can chat.",
+  "rankOnlyEnabled": "Verified mode is now enabled. Only {{rank}} or higher ranks can chat. Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyInvalid": "Invalid rank. Valid ranks are: {{validRanks}}",
+  "rankOnlyMode": "@{{name}} - Your message was deleted because this channel is in verified mode ({{requiredRank}}+ only). Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyStatus_disabled": "Verified mode is currently disabled.",
+  "rankOnlyStatus_enabled": "Verified mode is currently enabled. Only {{rank}}+ ranks can chat. Visit {{- url}} to become Dotabod verified.",
   "refresh": "Obnovuji overlay..",
   "refreshToken": "Váš Twitch účet musí být znovu připojen k Dotabodu. {{channel}} se odhlásil a znovu přihlaste se na dotabod.com pro opravu.",
   "resetwl": "Resetuji výhry/prohry na 0 pro {{channel}}",

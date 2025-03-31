@@ -37,6 +37,8 @@
     "tpFound": "{{channel}} ben fatto, hai finalmente comprato un tp dopo $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Grazie a questa morte finalmente hai un tp. Ti ci sono voluti solo $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "chattersRank": "@{{username}}'s rank is {{rank}}",
+  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "colors": {
     "blue": "Blu",
     "brown": "Marrone",
@@ -65,6 +67,9 @@
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Hai bisogno di build pro per {{- heroName}}? Vai qui {{- url}}",
   "dotabod": "Sono un bot open source creato da {{author}}. Più info: {{- url}}",
+  "dotapatch": {
+    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+  },
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
@@ -176,6 +181,12 @@
   "ranked": "Classificata",
   "ranked_no": "No questa partita non è classificata",
   "ranked_yes": "Si questa partita è classificata",
+  "rankOnlyDisabled": "Verified mode is now disabled. Everyone can chat.",
+  "rankOnlyEnabled": "Verified mode is now enabled. Only {{rank}} or higher ranks can chat. Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyInvalid": "Invalid rank. Valid ranks are: {{validRanks}}",
+  "rankOnlyMode": "@{{name}} - Your message was deleted because this channel is in verified mode ({{requiredRank}}+ only). Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyStatus_disabled": "Verified mode is currently disabled.",
+  "rankOnlyStatus_enabled": "Verified mode is currently enabled. Only {{rank}}+ ranks can chat. Visit {{- url}} to become Dotabod verified.",
   "refresh": "Aggiornando l'overlay...",
   "refreshToken": "Il tuo account Twitch deve essere ricollegato a Dotabod. {{channel}} esci e rientra su dotabod.com per risolvere.",
   "resetwl": "Reimpostando win/loss a 0 per {{channel}}",

@@ -38,6 +38,8 @@
     "tpFound": "{{channel}} нафідив заради ТП після $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Завдяки цій смерті ви нарешті отримали TP всього лиш за $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
+  "chattersRank": "@{{username}}'s rank is {{rank}}",
+  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "colors": {
     "blue": "Синій",
     "brown": "Коричневий",
@@ -68,6 +70,9 @@
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Ти не знаєш що купити на {{- heroName}}?  Подивись тут {{- url}}",
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",
+  "dotapatch": {
+    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+  },
   "facet": "{{- heroName}} вибрав грань {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Вказано недійсну грань · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Використовуйте !facet {{- heroName}} 1 або !facet {{- heroName}} 2 · Dotabod знає тільки фактично обрану грань для даного героя ",
@@ -191,6 +196,12 @@
   "ranked": "Рейтинговий матч",
   "ranked_no": "Ні, ця гра не рейтингова гра",
   "ranked_yes": "Так, ця гра рейтингова гра",
+  "rankOnlyDisabled": "Verified mode is now disabled. Everyone can chat.",
+  "rankOnlyEnabled": "Verified mode is now enabled. Only {{rank}} or higher ranks can chat. Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyInvalid": "Invalid rank. Valid ranks are: {{validRanks}}",
+  "rankOnlyMode": "@{{name}} - Your message was deleted because this channel is in verified mode ({{requiredRank}}+ only). Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyStatus_disabled": "Verified mode is currently disabled.",
+  "rankOnlyStatus_enabled": "Verified mode is currently enabled. Only {{rank}}+ ranks can chat. Visit {{- url}} to become Dotabod verified.",
   "refresh": "Перезапуск оверлея...",
   "refreshToken": "Ваш обліковий запис Twitch повинен бути повторно підключений до Dotabod. {{channel}} вийдіть і увійдіть на dotabod.com, щоб виправити це.",
   "resetwl": "Скинуто перемоги/поразки до 0 для {{channel}}",
