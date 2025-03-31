@@ -9,7 +9,12 @@ import { sendTwitchChatMessage } from './handleChat.js'
 import { logger } from './logger.js'
 import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider.js'
 import supabase from './db/supabase.js'
-import { checkBotStatus, handleFailedCheck, handleSuccessfulCheck } from './botBanStatus'
+import {
+  checkBotStatus,
+  handleFailedCheck,
+  handleSuccessfulCheck,
+  setupStatusCheckInterval,
+} from './botBanStatus'
 
 if (!process.env.TWITCH_BOT_PROVIDERID) {
   throw new Error('TWITCH_BOT_PROVIDERID not set')
@@ -19,6 +24,13 @@ if (!process.env.TWITCH_BOT_USERNAME) {
   logger.warn('TWITCH_BOT_USERNAME not set, using "dotabod" as default')
   process.env.TWITCH_BOT_USERNAME = 'dotabod'
 }
+
+const isBanned = await checkBotStatus()
+if (isBanned) {
+  logger.error('Bot is banned!')
+}
+
+setupStatusCheckInterval()
 
 await use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
