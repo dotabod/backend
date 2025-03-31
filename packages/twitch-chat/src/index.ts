@@ -52,7 +52,6 @@ const botStatus = {
 }
 
 // Remember last error to prevent log spam
-// biome-ignore lint/style/useConst: <explanation>
 export let lastAuthErrorTime = 0
 export const ERROR_LOG_COOLDOWN = 60000 // 1 minute
 

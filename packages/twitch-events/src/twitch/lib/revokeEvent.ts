@@ -51,7 +51,8 @@ async function disableChannel(broadcasterId: string) {
   // Delete all their current steam accounts
   // In the event that they are banned, they can now connect their old steam accounts
   // to a new Twitch account
-  await supabase.from('steam_accounts').delete().eq('userId', user.userId)
+  // TODO: This deleted their accounts when Dotabod got banned on Twitch instead of their channel being banned
+  // await supabase.from('steam_accounts').delete().eq('userId', user.userId)
 
   const { data: settings } = await supabase
     .from('settings')
@@ -116,6 +117,6 @@ export async function revokeEvent({ providerAccountId }: { providerAccountId: st
         .eq('providerAccountId', providerAccountId)
 
       await disableChannel(providerAccountId)
-    }, 10000),
+    }, 3000),
   )
 }
