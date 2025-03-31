@@ -1,8 +1,7 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
-
-import supabase from '../../db/supabase.js'
-import { hasTokens } from './hasTokens.js'
-import { logger } from '../../logger.js'
+import { hasTokens } from './twitch/lib/hasTokens'
+import { logger } from './twitch/lib/logger'
+import supabase from './db/supabase'
 
 let authProvider: RefreshingAuthProvider | null = null
 
