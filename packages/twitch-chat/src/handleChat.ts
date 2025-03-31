@@ -3,7 +3,7 @@ import type { EventSubChatBadge } from '@twurple/eventsub-base/lib/events/common
 import type { EventSubWsPacket } from '@twurple/eventsub-ws/lib/EventSubWsPacket.external'
 import { t } from 'i18next'
 import { getTwitchHeaders } from './getTwitchHeaders.js'
-import { hasDotabodSocket, io } from './index'
+import { hasDotabodSocket, io, isBotBanned } from './index'
 import { logger } from './logger'
 
 const headers = await getTwitchHeaders()
@@ -90,13 +90,56 @@ export async function sendTwitchChatMessage(
     body: JSON.stringify(params),
   }
 
-  const response = await fetch(url, options)
-  if (!response.ok)
-    throw new Error(
-      `Failed to send chat message: ${response.status} ${response.statusText} ${response.body} ${params.broadcaster_id}`,
-    )
+  try {
+    const response = await fetch(url, options)
 
-  return response.json() as Promise<TwitchChatMessageResponse>
+    if (!response.ok) {
+      // Create a standardized error response
+      if (response.status === ChatMessageResponseCode.Unauthorized) {
+        logger.warn('Bot authorization failed (possibly banned)', {
+          status: response.status,
+          statusText: response.statusText,
+          broadcaster_id: params.broadcaster_id,
+        })
+
+        // Return a properly formatted response for auth errors
+        return {
+          data: [
+            {
+              message_id: '',
+              is_sent: false,
+              drop_reason: {
+                code: 'bot_unauthorized',
+                message: 'Bot is unauthorized (possibly banned)',
+              },
+            },
+          ],
+        }
+      }
+
+      throw new Error(
+        `Failed to send chat message: ${response.status} ${response.statusText} ${response.body} ${params.broadcaster_id}`,
+      )
+    }
+
+    return response.json() as Promise<TwitchChatMessageResponse>
+  } catch (error) {
+    // If it's not an HTTP error we already handled, log and return a formatted error
+    logger.error('Error sending chat message', { error, broadcaster_id: params.broadcaster_id })
+
+    return {
+      data: [
+        {
+          message_id: '',
+          is_sent: false,
+          drop_reason: {
+            code: 'send_error',
+            message: error instanceof Error ? error.message : 'Unknown error',
+          },
+        },
+      ],
+    }
+  }
 }
 
 /**
@@ -156,6 +199,12 @@ async function dotabodOfflineHandler(
   channelId: string,
   reply_parent_message_id?: string,
 ): Promise<void> {
+  // Don't try to respond if the bot is banned
+  if (isBotBanned()) {
+    logger.debug('Not responding - bot is currently banned')
+    return
+  }
+
   if (text === '!ping') {
     try {
       await sendTwitchChatMessage({

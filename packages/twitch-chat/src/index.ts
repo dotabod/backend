@@ -14,6 +14,11 @@ if (!process.env.TWITCH_BOT_PROVIDERID) {
   throw new Error('TWITCH_BOT_PROVIDERID not set')
 }
 
+if (!process.env.TWITCH_BOT_USERNAME) {
+  logger.warn('TWITCH_BOT_USERNAME not set, using "dotabod" as default')
+  process.env.TWITCH_BOT_USERNAME = 'dotabod'
+}
+
 await use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
   lng: 'en',
@@ -34,6 +39,73 @@ logger.info('Loaded i18n for chat')
 await initializeSocket()
 
 const io = new Server(5005)
+
+// Bot status tracking
+const botStatus = {
+  isBanned: false,
+  lastChecked: 0,
+  banCheckCooldown: 60000, // Only check once per minute
+}
+
+// Function to check if the bot is banned and update status
+async function checkBotStatus() {
+  // Skip check if we've checked recently
+  if (Date.now() - botStatus.lastChecked < botStatus.banCheckCooldown) {
+    return botStatus.isBanned
+  }
+
+  botStatus.lastChecked = Date.now()
+
+  try {
+    // Try to check the bot's validation status
+    const authProvider = await getBotAuthProvider()
+    const api = new ApiClient({ authProvider })
+
+    // A simple API call that will fail if bot is banned/unauthorized
+    await api.users.getUserByName(process.env.TWITCH_BOT_USERNAME || 'dotabod')
+
+    // If we get here, bot is authorized
+    if (botStatus.isBanned) {
+      logger.info('Bot authorization restored')
+    }
+    botStatus.isBanned = false
+  } catch (error) {
+    // Check if this is an auth error (401)
+    const isAuthError =
+      error instanceof Error &&
+      (error.message.includes('401') || error.message.includes('Unauthorized'))
+
+    if (isAuthError) {
+      if (!botStatus.isBanned) {
+        logger.warn('Bot is currently banned or unauthorized')
+      }
+      botStatus.isBanned = true
+    } else {
+      // If not an auth error, log it but don't update ban status
+      logger.error('Failed to check bot status', error)
+    }
+  }
+
+  return botStatus.isBanned
+}
+
+// Simple function to check if the bot is currently banned
+export function isBotBanned(): boolean {
+  return botStatus.isBanned
+}
+
+// Set up periodic bot status check (every 5 minutes)
+const BOT_STATUS_CHECK_INTERVAL = 5 * 60 * 1000 // 5 minutes
+setInterval(async () => {
+  try {
+    await checkBotStatus()
+    if (!botStatus.isBanned) {
+      logger.debug('Periodic check: Bot is operational')
+    }
+  } catch (error) {
+    logger.error('Error in periodic bot status check', error)
+  }
+}, BOT_STATUS_CHECK_INTERVAL)
 
 // Replace the let declaration with a Map to track connections
 const connectedSockets = new Map<string, boolean>()
@@ -77,6 +149,14 @@ io.on('connection', (socket) => {
     'say',
     async (providerAccountId: string, text: string, reply_parent_message_id?: string) => {
       try {
+        // Check if bot is banned before attempting to send message
+        const isBanned = await checkBotStatus()
+        if (isBanned) {
+          // Don't attempt to send if bot is banned
+          logger.debug('Not sending message - bot is currently banned', { providerAccountId })
+          return
+        }
+
         const response = await sendTwitchChatMessage({
           broadcaster_id: providerAccountId,
           sender_id: process.env.TWITCH_BOT_PROVIDERID!,
@@ -86,6 +166,14 @@ io.on('connection', (socket) => {
 
         // Only disable if message failed to send
         if (!response.data?.[0]?.is_sent) {
+          // Update bot status if we get an authorization error
+          if (response.data?.[0]?.drop_reason?.code === 'bot_unauthorized') {
+            botStatus.isBanned = true
+            botStatus.lastChecked = Date.now()
+            logger.warn('Bot detected as banned, disabling messages temporarily')
+            return
+          }
+
           if (response.data?.[0]?.drop_reason?.code === 'followers_only_mode') {
             await disableUser(providerAccountId)
           } else {
