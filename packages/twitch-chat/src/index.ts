@@ -45,7 +45,15 @@ const botStatus = {
   isBanned: false,
   lastChecked: 0,
   banCheckCooldown: 60000, // Only check once per minute
+  consecutiveFailures: 0,
+  consecutiveSuccesses: 0,
+  requiredFailures: 2, // Require multiple consecutive failures before considering banned
+  requiredSuccesses: 3, // Require multiple consecutive successes before considering unbanned
 }
+
+// Remember last error to prevent log spam
+export const lastAuthErrorTime = 0
+export const ERROR_LOG_COOLDOWN = 60000 // 1 minute
 
 // Function to check if the bot is banned and update status
 async function checkBotStatus() {
@@ -65,10 +73,14 @@ async function checkBotStatus() {
     await api.users.getUserByName(process.env.TWITCH_BOT_USERNAME || 'dotabod')
 
     // If we get here, bot is authorized
-    if (botStatus.isBanned) {
+    botStatus.consecutiveSuccesses++
+    botStatus.consecutiveFailures = 0
+
+    // Only consider the bot unbanned after multiple successful checks
+    if (botStatus.isBanned && botStatus.consecutiveSuccesses >= botStatus.requiredSuccesses) {
       logger.info('Bot authorization restored')
+      botStatus.isBanned = false
     }
-    botStatus.isBanned = false
   } catch (error) {
     // Check if this is an auth error (401)
     const isAuthError =
@@ -76,10 +88,14 @@ async function checkBotStatus() {
       (error.message.includes('401') || error.message.includes('Unauthorized'))
 
     if (isAuthError) {
-      if (!botStatus.isBanned) {
+      botStatus.consecutiveFailures++
+      botStatus.consecutiveSuccesses = 0
+
+      // Only consider the bot banned after multiple consecutive failures
+      if (!botStatus.isBanned && botStatus.consecutiveFailures >= botStatus.requiredFailures) {
         logger.warn('Bot is currently banned or unauthorized')
+        botStatus.isBanned = true
       }
-      botStatus.isBanned = true
     } else {
       // If not an auth error, log it but don't update ban status
       logger.error('Failed to check bot status', error)
@@ -94,18 +110,43 @@ export function isBotBanned(): boolean {
   return botStatus.isBanned
 }
 
-// Set up periodic bot status check (every 5 minutes)
-const BOT_STATUS_CHECK_INTERVAL = 5 * 60 * 1000 // 5 minutes
-setInterval(async () => {
-  try {
-    await checkBotStatus()
-    if (!botStatus.isBanned) {
-      logger.debug('Periodic check: Bot is operational')
-    }
-  } catch (error) {
-    logger.error('Error in periodic bot status check', error)
+// Set up periodic bot status check with different intervals based on ban status
+const NORMAL_CHECK_INTERVAL = 10 * 60 * 1000 // 10 minutes when not banned
+const BANNED_CHECK_INTERVAL = 2 * 60 * 1000 // 2 minutes when banned
+let statusCheckInterval: NodeJS.Timeout
+
+function setupStatusCheckInterval() {
+  // Clear any existing interval
+  if (statusCheckInterval) {
+    clearInterval(statusCheckInterval)
   }
-}, BOT_STATUS_CHECK_INTERVAL)
+
+  // Set interval based on current ban status
+  const interval = botStatus.isBanned ? BANNED_CHECK_INTERVAL : NORMAL_CHECK_INTERVAL
+
+  statusCheckInterval = setInterval(async () => {
+    try {
+      const wasBanned = botStatus.isBanned
+      await checkBotStatus()
+
+      // If ban status changed, update the check interval
+      if (wasBanned !== botStatus.isBanned) {
+        setupStatusCheckInterval()
+      }
+
+      if (!botStatus.isBanned) {
+        logger.debug('Periodic check: Bot is operational')
+      }
+    } catch (error) {
+      logger.error('Error in periodic bot status check', error)
+    }
+  }, interval)
+
+  logger.debug(`Bot status check interval set to ${interval / 1000} seconds`)
+}
+
+// Initial setup of the status check interval
+setupStatusCheckInterval()
 
 // Replace the let declaration with a Map to track connections
 const connectedSockets = new Map<string, boolean>()
@@ -152,7 +193,7 @@ io.on('connection', (socket) => {
         // Check if bot is banned before attempting to send message
         const isBanned = await checkBotStatus()
         if (isBanned) {
-          // Don't attempt to send if bot is banned
+          // Don't attempt to send if bot is banned - just silently ignore to prevent log spam
           logger.debug('Not sending message - bot is currently banned', { providerAccountId })
           return
         }
@@ -168,9 +209,15 @@ io.on('connection', (socket) => {
         if (!response.data?.[0]?.is_sent) {
           // Update bot status if we get an authorization error
           if (response.data?.[0]?.drop_reason?.code === 'bot_unauthorized') {
-            botStatus.isBanned = true
-            botStatus.lastChecked = Date.now()
-            logger.warn('Bot detected as banned, disabling messages temporarily')
+            // Increment failure count for more accurate detection
+            botStatus.consecutiveFailures++
+            botStatus.consecutiveSuccesses = 0
+
+            if (botStatus.consecutiveFailures >= botStatus.requiredFailures) {
+              botStatus.isBanned = true
+              botStatus.lastChecked = Date.now()
+              logger.warn('Bot detected as banned, disabling messages temporarily')
+            }
             return
           }
 
@@ -185,6 +232,10 @@ io.on('connection', (socket) => {
               response,
             })
           }
+        } else {
+          // Message sent successfully - reset failure counter and update success counter
+          botStatus.consecutiveFailures = 0
+          botStatus.consecutiveSuccesses++
         }
       } catch (e) {
         logger.error('Failed to send chat message in say', e)
