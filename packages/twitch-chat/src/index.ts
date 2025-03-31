@@ -100,7 +100,7 @@ io.on('connection', (socket) => {
         if (!response.data?.[0]?.is_sent) {
           // Update bot status if we get an authorization error
           if (response.data?.[0]?.drop_reason?.code === 'bot_unauthorized') {
-            handleFailedCheck(true)
+            handleFailedCheck(false)
             return
           }
 

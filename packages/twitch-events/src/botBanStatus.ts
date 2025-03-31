@@ -81,7 +81,10 @@ export function handleFailedCheck(isNullResult: boolean) {
   botStatus.consecutiveSuccesses = 0
 
   // Only consider the bot banned after multiple consecutive failures
-  if (!botStatus.isBanned && botStatus.consecutiveFailures >= botStatus.requiredFailures) {
+  if (
+    isNullResult ||
+    (!botStatus.isBanned && botStatus.consecutiveFailures >= botStatus.requiredFailures)
+  ) {
     logger.warn('Bot is currently banned or unauthorized')
     botStatus.isBanned = true
   }
