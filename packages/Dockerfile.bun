@@ -11,7 +11,7 @@ COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 # Install dependencies
 RUN bun install
 
-#-------------------------
+#------------------------
 
 FROM base AS builder
 
@@ -22,7 +22,7 @@ COPY $BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
 WORKDIR /app/$BUILD_CONTEXT/
 RUN bun run build
 
-#-------------------------
+#------------------------
 
 FROM oven/bun:1.1.24 AS prod
 
