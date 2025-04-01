@@ -37,14 +37,14 @@ export async function getAccountsFromMatch({
     const matchPlayers =
       Array.isArray(response?.teams) && response?.teams.length === 2
         ? [
-            ...(response?.teams[0]?.players?.map((a) => ({
+            ...response.teams[0].players.map((a) => ({
               heroid: a.heroid,
               accountid: Number(a.accountid),
-            })) || []),
-            ...(response?.teams[1]?.players?.map((a) => ({
+            })),
+            ...response.teams[1].players.map((a) => ({
               heroid: a.heroid,
               accountid: Number(a.accountid),
-            })) || []),
+            })),
           ]
         : ([] as { heroid: number; accountid: number }[])
 
