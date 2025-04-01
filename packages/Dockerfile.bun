@@ -1,6 +1,7 @@
 FROM oven/bun:1.1.24 AS base
 
 # Set build context and work directories
+# BUILD_CONTEXT like "packages/twitch-chat" or "packages/twitch-events"
 ARG BUILD_CONTEXT
 WORKDIR /app
 
@@ -11,11 +12,9 @@ COPY package.json bun.lockb ./
 RUN mkdir -p packages/$BUILD_CONTEXT
 RUN mkdir -p packages/profanity-filter
 
-# Copy the target package and profanity-filter package
-COPY $BUILD_CONTEXT/package.json ./packages/$BUILD_CONTEXT/
+# Copy the target package
+COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 COPY packages/profanity-filter/package.json ./packages/profanity-filter/
-COPY packages/profanity-filter/*.ts ./packages/profanity-filter/
-COPY packages/profanity-filter/src ./packages/profanity-filter/src/
 
 # Install dependencies
 RUN bun install
@@ -25,13 +24,16 @@ RUN bun install
 FROM base AS builder
 
 # Copy source code and build configurations
-COPY $BUILD_CONTEXT/src ./packages/$BUILD_CONTEXT/src/
-COPY $BUILD_CONTEXT/locales ./packages/$BUILD_CONTEXT/locales/
+COPY packages/profanity-filter/index.ts ./packages/profanity-filter/
+COPY packages/profanity-filter/src ./packages/profanity-filter/src/
+COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
+COPY $BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
 
 # Build profanity-filter first, then build the main application
-WORKDIR /app
-RUN bun run --cwd packages/profanity-filter build
-WORKDIR /app/packages/$BUILD_CONTEXT/
+WORKDIR /app/packages/profanity-filter/
+RUN bun run build
+
+WORKDIR /app/$BUILD_CONTEXT/
 RUN bun run build
 
 #-----------------------
@@ -48,9 +50,18 @@ LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
 
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
+
+COPY --from=builder /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
+COPY --from=builder /app/$BUILD_CONTEXT/src $BUILD_CONTEXT/src/
+COPY --from=builder /app/$BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
+COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
+
+COPY --from=builder /app/packages/profanity-filter/dist packages/profanity-filter/dist/
+COPY --from=builder /app/packages/profanity-filter/index.ts packages/profanity-filter/
+COPY --from=builder /app/packages/profanity-filter/src packages/profanity-filter/src/
+COPY --from=builder /app/packages/profanity-filter/package.json packages/profanity-filter/
 
 # Environment and CMD
-WORKDIR /app/packages/$BUILD_CONTEXT/
+WORKDIR /app/$BUILD_CONTEXT/
 ENV DOTABOD_ENV=$DOTABOD_ENV
 CMD bun run docker:$DOTABOD_ENV
