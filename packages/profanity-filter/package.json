@@ -1,0 +1,14 @@
+{
+  "name": "profanity-filter",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "elysia": "^1.2.25"
+  }
+}
