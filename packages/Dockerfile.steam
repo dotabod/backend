@@ -13,7 +13,7 @@ RUN mv ./yarn.lock ./yarn.lock
 # Install dependencies
 RUN yarn install
 
-#-------------------------
+#------------------------
 
 FROM base AS builder
 
@@ -24,7 +24,7 @@ COPY ./packages/steam/src /app/packages/steam/src/
 
 RUN cd /app/packages/steam && yarn build
 
-#-------------------------
+#------------------------
 
 FROM node:21-alpine3.17 AS prod
 
