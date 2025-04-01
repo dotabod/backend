@@ -36,12 +36,12 @@ jobs:
           git diff --name-only HEAD^ HEAD | grep -q "^docker-compose.yml" && echo "compose_changed=true" >> $GITHUB_OUTPUT || echo "compose_changed=false" >> $GITHUB_OUTPUT
 
       - name: Extract branch name
-        if: steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' }}
         shell: bash
         run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
-        if: steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' }}
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: |
@@ -50,7 +50,7 @@ jobs:
           buildkitd-flags: --debug
 
       - name: Login to ghcr
-        if: steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -58,7 +58,7 @@ jobs:
           password: ${{ secrets.GHA_PAT }}
 
       - name: Build and push
-        if: steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' }}
         uses: docker/bake-action@v6
         with:
           push: true
@@ -88,12 +88,12 @@ jobs:
           git diff --name-only HEAD^ HEAD | grep -q "^docker-compose.yml" && echo "compose_changed=true" >> $GITHUB_OUTPUT || echo "compose_changed=false" >> $GITHUB_OUTPUT
 
       - name: Extract branch name
-        if: steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true' }}
         shell: bash
         run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
-        if: steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true' }}
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: |
@@ -102,7 +102,7 @@ jobs:
           buildkitd-flags: --debug
 
       - name: Login to ghcr
-        if: steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true' }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -110,7 +110,7 @@ jobs:
           password: ${{ secrets.GHA_PAT }}
 
       - name: Build and push
-        if: steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true' }}
         uses: docker/bake-action@v6
         with:
           push: true
@@ -140,12 +140,12 @@ jobs:
           git diff --name-only HEAD^ HEAD | grep -q "^docker-compose.yml" && echo "compose_changed=true" >> $GITHUB_OUTPUT || echo "compose_changed=false" >> $GITHUB_OUTPUT
 
       - name: Extract branch name
-        if: steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true' }}
         shell: bash
         run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
-        if: steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true' }}
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: |
@@ -154,7 +154,7 @@ jobs:
           buildkitd-flags: --debug
 
       - name: Login to ghcr
-        if: steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true' }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -162,7 +162,7 @@ jobs:
           password: ${{ secrets.GHA_PAT }}
 
       - name: Build and push
-        if: steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true' }}
         uses: docker/bake-action@v6
         with:
           push: true
@@ -192,12 +192,12 @@ jobs:
           git diff --name-only HEAD^ HEAD | grep -q "^docker-compose.yml" && echo "compose_changed=true" >> $GITHUB_OUTPUT || echo "compose_changed=false" >> $GITHUB_OUTPUT
 
       - name: Extract branch name
-        if: steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true' }}
         shell: bash
         run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
-        if: steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true' }}
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: |
@@ -206,7 +206,7 @@ jobs:
           buildkitd-flags: --debug
 
       - name: Login to ghcr
-        if: steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true' }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -214,7 +214,7 @@ jobs:
           password: ${{ secrets.GHA_PAT }}
 
       - name: Build and push
-        if: steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true'
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true' }}
         uses: docker/bake-action@v6
         with:
           push: true
