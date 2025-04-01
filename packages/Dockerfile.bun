@@ -28,6 +28,9 @@ FROM base AS builder
 COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 COPY $BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
 
+# Build profanity-filter first, then build the main application
+WORKDIR /app
+RUN bun run --cwd packages/profanity-filter build
 WORKDIR /app/$BUILD_CONTEXT/
 RUN bun run build
 
@@ -50,6 +53,7 @@ COPY --from=builder /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
 COPY --from=builder /app/$BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 COPY --from=builder /app/$BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
 COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
+COPY --from=builder /app/packages/profanity-filter/dist packages/profanity-filter/dist/
 
 # Environment and CMD
 WORKDIR /app/$BUILD_CONTEXT/
