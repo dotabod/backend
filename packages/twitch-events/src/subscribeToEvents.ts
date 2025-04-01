@@ -1,6 +1,6 @@
 import { fetchConduitId } from './fetchConduitId.js'
 import { initUserSubscriptions } from './initUserSubscriptions.js'
-import { subscribeToAuthRevoke } from './subscribeChatMessagesForUser.js'
+import { subscribeToAuthGrantOrRevoke } from './subscribeChatMessagesForUser.js'
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
 import { logger } from './twitch/lib/logger.js'
 import { rateLimiter } from './utils/rateLimiter.js'
@@ -9,7 +9,7 @@ export async function subscribeToEvents() {
   const conduitId = await fetchConduitId()
   logger.info('[TWITCHEVENTS] Subscribing to events', { conduitId })
 
-  await subscribeToAuthRevoke(conduitId, process.env.TWITCH_CLIENT_ID!)
+  await subscribeToAuthGrantOrRevoke(conduitId, process.env.TWITCH_CLIENT_ID!)
 
   const accountIds = await getAccountIds()
   // Process accounts in chunks to avoid overwhelming the rate limiter

@@ -9,12 +9,7 @@ import { sendTwitchChatMessage } from './handleChat.js'
 import { logger } from './logger.js'
 import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider.js'
 import supabase from './db/supabase.js'
-import {
-  checkBotStatus,
-  handleFailedCheck,
-  handleSuccessfulCheck,
-  setupStatusCheckInterval,
-} from './botBanStatus'
+import { checkBotStatus } from './botBanStatus'
 
 if (!process.env.TWITCH_BOT_PROVIDERID) {
   throw new Error('TWITCH_BOT_PROVIDERID not set')
@@ -29,8 +24,6 @@ const isBanned = await checkBotStatus()
 if (isBanned) {
   logger.error('Bot is banned!')
 }
-
-setupStatusCheckInterval()
 
 await use(FsBackend).init<FsBackendOptions>({
   initImmediate: false,
@@ -110,14 +103,7 @@ io.on('connection', (socket) => {
 
         // Only disable if message failed to send
         if (!response.data?.[0]?.is_sent) {
-          // Update bot status if we get an authorization error
-          if (response.data?.[0]?.drop_reason?.code === 'bot_unauthorized') {
-            handleFailedCheck(false)
-            return
-          }
-
           // Bot must not be a moderator
-          // TODO: Make the bot a moderator if it's not already
           if (response.data?.[0]?.drop_reason?.code === 'followers_only_mode') {
             await disableUser(providerAccountId)
           } else {
@@ -129,8 +115,6 @@ io.on('connection', (socket) => {
               response,
             })
           }
-        } else {
-          handleSuccessfulCheck()
         }
       } catch (e) {
         logger.error('Failed to send chat message in say', e)

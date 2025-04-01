@@ -1,3 +1,4 @@
+import { botStatus } from './botBanStatus'
 import type { TwitchEventTypes } from './event-handlers/events'
 import { offlineEvent } from './event-handlers/offlineEvent.js'
 import { onlineEvent } from './event-handlers/onlineEvent.js'
@@ -137,6 +138,48 @@ const createEventHandler = (type: keyof TwitchEventTypes, transform: (event: any
   }
 }
 
+function grantEvent(data: {
+  payload: {
+    subscription: {
+      id: string
+      type: string
+      version: string
+      status: string
+      cost: number
+      condition: {
+        client_id: string
+      }
+      transport: {
+        method: string
+        callback?: string
+      }
+      created_at: string
+    }
+    event: {
+      client_id: string
+      user_id: string
+      user_login: string | null
+      user_name: string | null
+    }
+  }
+}) {
+  const userId = data.payload?.event?.user_id
+  if (userId === process.env.TWITCH_BOT_PROVIDERID) {
+    logger.info('Bot was granted!')
+    botStatus.isBanned = false
+  }
+
+  if (userId) {
+    logger.info('Authorization granted for user', {
+      userId,
+      username: data.payload?.event?.user_login,
+      twitchId: data.payload?.event?.user_id,
+      payload: data.payload,
+    })
+    twitchEvent.emit('grant', userId)
+  }
+}
+
 function revokeEvent(data: {
   payload: {
     subscription: {
@@ -165,6 +208,10 @@ function revokeEvent(data: {
   const userId = data.payload?.event?.user_id
   if (userId) {
     logger.info('Revocation for user.authorization.revoke', { userId, payload: data.payload })
+    if (userId === process.env.TWITCH_BOT_PROVIDERID) {
+      logger.info('Bot was revoked!')
+      botStatus.isBanned = true
+    }
     twitchEvent.emit('revoke', userId)
   }
 }
@@ -185,6 +232,7 @@ const eventHandlers: Partial<Record<keyof TwitchEventTypes, (data: any) => void>
   'channel.poll.progress': createEventHandler('channel.poll.progress', transformPollData),
   'channel.poll.end': createEventHandler('channel.poll.end', transformPollData),
   'user.authorization.revoke': revokeEvent,
+  'user.authorization.grant': grantEvent,
 }
 
 // Initialize WebSocket and handle events
@@ -248,6 +296,11 @@ async function initializeSocket() {
       if (!userId) {
         logger.info('No user_id or broadcaster_user_id found in revocation event', { payload })
         return
+      }
+
+      if (userId === process.env.TWITCH_BOT_PROVIDERID) {
+        logger.info('Bot was revoked by Twitch!')
+        botStatus.isBanned = true
       }
 
       const now = Date.now()

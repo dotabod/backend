@@ -1,3 +1,4 @@
+import { botStatus } from '../../botBanStatus.js'
 import { eventSubMap } from '../../chatSubIds.js'
 import supabase from '../../db/supabase'
 import { getTwitchHeaders } from '../../getTwitchHeaders'
@@ -87,6 +88,11 @@ async function disableChannel(broadcasterId: string) {
 const pendingRevokes = new Map<string, NodeJS.Timeout>()
 
 export async function revokeEvent({ providerAccountId }: { providerAccountId: string }) {
+  if (providerAccountId === process.env.TWITCH_BOT_PROVIDERID) {
+    logger.info('Bot was revoked by Twitch in events!')
+    botStatus.isBanned = true
+  }
+
   logger.info(`${providerAccountId} just revoked, debouncing for 10s`)
 
   // Clear any existing timeout for this user

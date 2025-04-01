@@ -3,7 +3,6 @@ import type { EventSubChatBadge } from '@twurple/eventsub-base/lib/events/common
 import type { EventSubWsPacket } from '@twurple/eventsub-ws/lib/EventSubWsPacket.external'
 import { t } from 'i18next'
 import { getTwitchHeaders } from './getTwitchHeaders.js'
-import { lastAuthErrorTime, ERROR_LOG_COOLDOWN, updateLastAuthErrorTime } from './botBanStatus.js'
 import { hasDotabodSocket, io } from './index.js'
 import { logger } from './logger.js'
 import { checkBotStatus } from './botBanStatus.js'
@@ -97,35 +96,6 @@ export async function sendTwitchChatMessage(
     const response = await fetch(url, options)
 
     if (!response.ok) {
-      // Create a standardized error response
-      if (response.status === ChatMessageResponseCode.Unauthorized) {
-        // Rate-limit these error logs to prevent spam
-        const now = Date.now()
-        if (now - lastAuthErrorTime > ERROR_LOG_COOLDOWN) {
-          logger.warn('Bot authorization failed (possibly banned)', {
-            status: response.status,
-            statusText: response.statusText,
-            broadcaster_id: params.broadcaster_id,
-          })
-          // Update last error time
-          updateLastAuthErrorTime(now)
-        }
-
-        // Return a properly formatted response for auth errors
-        return {
-          data: [
-            {
-              message_id: '',
-              is_sent: false,
-              drop_reason: {
-                code: 'bot_unauthorized',
-                message: 'Bot is unauthorized (possibly banned)',
-              },
-            },
-          ],
-        }
-      }
-
       throw new Error(
         `Failed to send chat message: ${response.status} ${response.statusText} ${response.body} ${params.broadcaster_id}`,
       )

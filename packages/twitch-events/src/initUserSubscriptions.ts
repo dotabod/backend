@@ -4,7 +4,7 @@ import { genericSubscribe } from './subscribeChatMessagesForUser.js'
 import type { TwitchEventTypes } from './TwitchEventTypes.js'
 import { logger } from './twitch/lib/logger.js'
 import { checkBotStatus } from './botBanStatus'
-import { revokeEvent, stopUserSubscriptions } from './twitch/lib/revokeEvent.js'
+import { revokeEvent } from './twitch/lib/revokeEvent.js'
 import { ensureBotIsModerator } from './ensureBotIsModerator.js'
 
 // Get existing conduit ID and subscriptions
@@ -34,17 +34,6 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
         await revokeEvent({ providerAccountId })
       }
       return
-    }
-
-    // Migrate users from old eventsub to new conduit
-    if (!chatMessageSub) {
-      if (!isBanned) {
-        logger.info('[TWITCHEVENTS] Chat message subscription not found, stopping old subs', {
-          providerAccountId,
-        })
-        await stopUserSubscriptions(providerAccountId)
-      }
-      // Continue after this to get the new subs
     }
 
     if (eventSubMap[providerAccountId]) {

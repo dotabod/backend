@@ -7,7 +7,9 @@ export async function getTwitchTokens(providerId?: string) {
 
   const { data, error } = await supabase
     .from('accounts')
-    .select('refresh_token, access_token, expires_in, scope, obtainment_timestamp')
+    .select(
+      'refresh_token, access_token, expires_in, scope, obtainment_timestamp, requires_refresh',
+    )
     .eq('provider', 'twitch')
     .eq('providerAccountId', lookupProviderId)
     .single()

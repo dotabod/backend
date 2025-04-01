@@ -126,42 +126,51 @@ export async function genericSubscribe(
     return true
   })
 }
+export async function subscribeToAuthGrantOrRevoke(conduit_id: string, client_id: string) {
+  const subscribeToAuthEvent = async (
+    eventType: 'user.authorization.revoke' | 'user.authorization.grant',
+  ) => {
+    return rateLimiter.schedule(async () => {
+      const body = {
+        type: eventType,
+        version: '1',
+        condition: {
+          client_id,
+        },
+        transport: {
+          method: 'conduit',
+          conduit_id,
+        },
+      }
 
-export async function subscribeToAuthRevoke(conduit_id: string, client_id: string) {
-  return rateLimiter.schedule(async () => {
-    const body = {
-      type: 'user.authorization.revoke' as const,
-      version: '1',
-      condition: {
-        client_id,
-      },
-      transport: {
-        method: 'conduit',
-        conduit_id,
-      },
-    }
-
-    const subscribeReq = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
-      method: 'POST',
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    })
-
-    if (subscribeReq.status === 409) {
-      logger.info('Subscription already exists for user.authorization.revoke')
-      return true
-    }
-
-    if (subscribeReq.status !== 202) {
-      logger.error(`Failed to subscribe ${subscribeReq.status} ${await subscribeReq.text()}`, {
-        type: 'user.authorization.revoke',
+      const subscribeReq = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
       })
-      return false
-    }
 
-    return true
-  })
+      if (subscribeReq.status === 409) {
+        logger.info(`Subscription already exists for ${eventType}`)
+        return true
+      }
+
+      if (subscribeReq.status !== 202) {
+        logger.error(`Failed to subscribe ${subscribeReq.status} ${await subscribeReq.text()}`, {
+          type: eventType,
+        })
+        return false
+      }
+
+      return true
+    })
+  }
+
+  // Subscribe to both revoke and grant events
+  const revokeResult = await subscribeToAuthEvent('user.authorization.revoke')
+  const grantResult = await subscribeToAuthEvent('user.authorization.grant')
+
+  return revokeResult && grantResult
 }

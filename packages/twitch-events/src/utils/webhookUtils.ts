@@ -5,6 +5,7 @@ import supabase from '../db/supabase.js'
 import { handleNewUser } from '../handleNewUser.js'
 import { logger } from '../twitch/lib/logger.js'
 import { isAuthenticated } from './authUtils.js'
+import { botStatus } from '../botBanStatus.js'
 
 if (!process.env.TWITCH_CLIENT_ID) {
   throw new Error('TWITCH_CLIENT_ID is not defined')
@@ -85,6 +86,11 @@ export const setupWebhooks = () => {
         // when the old refresh_token value is true, and the new one is false
         // we need to re-subscribe to events
         if (oldreq === true && newreq === false) {
+          if (newUser.providerAccountId === process.env.TWITCH_BOT_PROVIDERID) {
+            logger.info('Bot no longer banned, updating status')
+            botStatus.isBanned = false
+          }
+
           logger.info('[SUPABASE] Refresh token changed, updating events client', {
             providerAccountId: newUser.providerAccountId,
           })

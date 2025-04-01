@@ -2,6 +2,7 @@ import { Server } from 'socket.io'
 import { logger } from '../twitch/lib/logger.js'
 import { revokeEvent } from '../twitch/lib/revokeEvent.js'
 import { handleNewUser } from '../handleNewUser'
+import { botStatus } from '../botBanStatus.js'
 
 export const socketIo = new Server(5015)
 
@@ -39,6 +40,14 @@ export const setupSocketIO = () => {
     socket.on('reconnect_failed', () => {
       logger.info('[TWITCHEVENTS] Socket failed to reconnect')
       eventsIOConnected = false
+    })
+
+    socket.on('grant', (providerAccountId: string) => {
+      logger.info('[TWITCHEVENTS] Granting events for user', { providerAccountId })
+      if (providerAccountId === process.env.TWITCH_BOT_PROVIDERID) {
+        logger.info('Bot was granted in twitch-events!')
+        botStatus.isBanned = false
+      }
     })
 
     socket.on('revoke', (providerAccountId: string) => {
