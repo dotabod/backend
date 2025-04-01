@@ -490,11 +490,6 @@ debug@^4, debug@~4.3.1, debug@~4.3.2, debug@~4.3.4:
   dependencies:
     ms "2.1.2"
 
-decamelize@^1.1.1:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/decamelize/-/decamelize-1.2.0.tgz#f6534d15148269b20352e7bee26f501f9a191290"
-  integrity sha512-z2S+W9X73hAUUki+N+9Za2lBlun89zigOyGrsax+KUQ6wKW4ZoWpEYBkGhQjwAjjDCkWxhY0VKEhk8wzY7F5cA==
-
 deferred@^0.7.10:
   version "0.7.11"
   resolved "https://registry.yarnpkg.com/deferred/-/deferred-0.7.11.tgz#8c3f272fd5e6ce48a969cb428c0d233ba2146322"
@@ -1605,7 +1600,6 @@ yargs@^3.10.0:
   dependencies:
     camelcase "^2.0.1"
     cliui "^3.0.3"
-    decamelize "^1.1.1"
     os-locale "^1.4.0"
     string-width "^1.0.1"
     window-size "^0.1.4"
