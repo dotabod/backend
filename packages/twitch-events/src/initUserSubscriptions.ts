@@ -5,6 +5,7 @@ import type { TwitchEventTypes } from './TwitchEventTypes.js'
 import { logger } from './twitch/lib/logger.js'
 import { checkBotStatus } from './botBanStatus'
 import { revokeEvent, stopUserSubscriptions } from './twitch/lib/revokeEvent.js'
+import { ensureBotIsModerator } from './ensureBotIsModerator.js'
 
 // Get existing conduit ID and subscriptions
 const conduitId = await fetchConduitId()
@@ -80,6 +81,11 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
         })
       }
     })
+
+    // After setting up subscriptions, ensure the bot is a moderator
+    if (!isBanned) {
+      await ensureBotIsModerator(providerAccountId)
+    }
   } catch (e) {
     console.error(e)
     logger.error('[TWITCHEVENTS] Failed to initialize subscriptions', {
