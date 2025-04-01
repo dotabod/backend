@@ -38,8 +38,8 @@
     "tpFound": "{{channel}} нафідив заради ТП після $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Завдяки цій смерті ви нарешті отримали TP всього лиш за $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
-  "chattersRank": "@{{username}}'s rank is {{rank}}",
-  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
+  "chattersRank": "@{{username}} має ранг {{rank}}",
+  "chattersRankUnknown": "@{{username}} має невідомий ранг. Станьте верифікованим користувачем Dotabod, щоб отримати свій ранг! {{- url}}",
   "colors": {
     "blue": "Синій",
     "brown": "Коричневий",
@@ -67,11 +67,11 @@
     "overlay_many": "{{count}} стрімери використовують оверлей",
     "overlay_other": "{{count}} стрімери використовують оверлей"
   },
-  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
+  "currentSong": "Зараз відтворюється: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Ти не знаєш що купити на {{- heroName}}?  Подивись тут {{- url}}",
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",
   "dotapatch": {
-    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+    "newPatch": "{{emote}} В Dota 2 вийшов новий патч: {{version}}. Дізнайся найцікавіші оновлення на https://www.dota2.com/patches"
   },
   "facet": "{{- heroName}} вибрав грань {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Вказано недійсну грань · $t(facetNotFound, {{- heroName }})",
@@ -82,8 +82,8 @@
   "facetTotalLimit_many": "{{count}} грані доступна для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_other": "Лише {{count}} грані доступна для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Матч не знайдено",
-  "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
-  "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
+  "giftSub": "Dotabod Pro був щойно подарований {{- senderName}}!",
+  "giftSubAnonymous": "Підписка на Dotabod Pro була щойно анонімно подарована!",
   "gpm_zero": "",
   "gpm_one": "Поточний GPM: {{num}}. Отримано {{heroKills}} золота від вбивства героїв та {{creepKills}} золота від вбивства кріпочків.",
   "gpm_few": "Поточний GPM: {{num}}. Отримано {{heroKills}} золота від вбивства героїв та {{creepKills}} золота від вбивства кріпочків.",
@@ -128,7 +128,7 @@
     "won_many": "{{- heroName}} має серію з {{count}} вбивств! {{emote}}",
     "won_other": "{{- heroName}} має серію з {{count}} вбивств! {{emote}}"
   },
-  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
+  "lastFmNotConfigured": "Ім'я користувача Last.fm не налаштовано. Його потрібно налаштувати через панель керування Dotabod.",
   "lastgame": {
     "link": "ID останньої гри: {{- url}}",
     "none": "Не знайдено гравців з минулої гри",
@@ -148,7 +148,7 @@
     "won": "Остання гра: Перемога"
   },
   "lifetime": "Кількість ігор",
-  "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
+  "matchData8500": "Valve вимкнула дані для 8500+ ММР матчів, але найближчим часом я вирішу це",
   "matchFound": "Отримано дані матчу: {{commandList}} - команди активовані.",
   "matchId": "ID матчу: {{matchId}}",
   "midasUsed": "Midas нарешті був використаний через {{seconds}} с {{emote}}",
@@ -196,12 +196,12 @@
   "ranked": "Рейтинговий матч",
   "ranked_no": "Ні, ця гра не рейтингова гра",
   "ranked_yes": "Так, ця гра рейтингова гра",
-  "rankOnlyDisabled": "Verified mode is now disabled. Everyone can chat.",
-  "rankOnlyEnabled": "Verified mode is now enabled. Only {{rank}} or higher ranks can chat. Visit {{- url}} to become Dotabod verified.",
-  "rankOnlyInvalid": "Invalid rank. Valid ranks are: {{validRanks}}",
-  "rankOnlyMode": "@{{name}} - Your message was deleted because this channel is in verified mode ({{requiredRank}}+ only). Visit {{- url}} to become Dotabod verified.",
-  "rankOnlyStatus_disabled": "Verified mode is currently disabled.",
-  "rankOnlyStatus_enabled": "Verified mode is currently enabled. Only {{rank}}+ ranks can chat. Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyDisabled": "Верифікований режим відключений. Тепер кожен може спілкуватися.",
+  "rankOnlyEnabled": "Увімкнено верифікований режим. Дозволено тільки {{rank}} та вищі звання можуть писати в чат. Відвідайте {{- url}} , щоб отримати підтвердження від Dotabod.",
+  "rankOnlyInvalid": "Неприпустимий ранг. Допустимі ранги: {{validRanks}}",
+  "rankOnlyMode": "@{{name}} - Ваше повідомлення було видалено, оскільки цей канал знаходиться в перевіреному режимі ({{requiredRank}}+). Відвідайте {{- url}} , щоб стати його перевіреним користувачем.",
+  "rankOnlyStatus_disabled": "Верифікований режим наразі вимкнено.",
+  "rankOnlyStatus_enabled": "Увімкнено верифікований режим. Дозволено тільки {{rank}}+ звання можуть писати в чат. Відвідайте {{- url}} , щоб отримати підтвердження від Dotabod.",
   "refresh": "Перезапуск оверлея...",
   "refreshToken": "Ваш обліковий запис Twitch повинен бути повторно підключений до Dotabod. {{channel}} вийдіть і увійдіть на dotabod.com, щоб виправити це.",
   "resetwl": "Скинуто перемоги/поразки до 0 для {{channel}}",
@@ -224,8 +224,8 @@
   "setStreamDelayNoArgs": "Затримка на стрімі не встановлена, використайте !setdelay <seconds>",
   "setStreamDelayRemoved": "Затримку на стрімі прибрано",
   "shard": "Аганім Шард {{- heroName}} : {{- title}} · {{- description}}",
-  "songError": "Error fetching song information from Last.fm.",
-  "songNotPlaying": "No song is currently playing.",
+  "songError": "Помилка при отриманні інформації про пісню з Last.fm.",
+  "songNotPlaying": "А може музичку ввімкнемо? А то нічого не грає ",
   "spectators": {
     "count_one": "1 глядач, який дивиться цей матч наживо",
     "count_few": "{{count}} глядачів за цим матчем жити",
