@@ -45,7 +45,7 @@ services:
     restart: on-failure:5
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.steam
+      dockerfile: ./packages/Dockerfile.bun
       args:
         - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/steam

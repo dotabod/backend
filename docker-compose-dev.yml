@@ -16,7 +16,7 @@ services:
         - action: rebuild
           path: $PWD/packages/steam/tsconfig.json
         - action: rebuild
-          path: $PWD/packages/Dockerfile.steam
+          path: $PWD/packages/Dockerfile.bun
 
   twitch-events:
     image: "ghcr.io/dotabod/twitch-events:master"
