@@ -117,10 +117,26 @@ function checkWashProfanity(text: string): {
 
 /**
  * Uses multiple profanity filters and OpenAI's moderation API to filter text
- * @param text Text to moderate
+ * @param input Text or array of texts to moderate
  * @returns Filtered text (original text if no issues, redacted if flagged)
  */
-export async function moderateText(text: string): Promise<string> {
+export async function moderateText(input: string | string[]): Promise<string | string[]> {
+  // Handle array of strings
+  if (Array.isArray(input)) {
+    const results = await Promise.all(input.map((text) => moderateTextSingle(text)))
+    return results
+  }
+
+  // Handle single string
+  return moderateTextSingle(input)
+}
+
+/**
+ * Helper function to moderate a single text string
+ * @param text Text to moderate
+ * @returns Filtered text
+ */
+async function moderateTextSingle(text: string): Promise<string> {
   // If text is empty, return as is
   if (!text.trim()) {
     return text
@@ -255,9 +271,41 @@ export async function moderateText(text: string): Promise<string> {
   }
 }
 
-// Optional: Function to get detailed info about why text was flagged
-// This can be useful for debugging or providing more specific feedback
-export function getProfanityDetails(text: string): {
+/**
+ * Get detailed information about profanity detection
+ * @param input Text or array of texts to check
+ * @returns Object with profanity details
+ */
+export function getProfanityDetails(input: string | string[]):
+  | {
+      isFlagged: boolean
+      source: string
+      matches?: string[]
+      language?: string
+    }
+  | Array<{
+      text: string
+      isFlagged: boolean
+      source: string
+      matches?: string[]
+      language?: string
+    }> {
+  // Handle array of strings
+  if (Array.isArray(input)) {
+    return input.map((text) => ({
+      text,
+      ...getProfanityDetailsSingle(text),
+    }))
+  }
+
+  // Handle single string
+  return getProfanityDetailsSingle(input)
+}
+
+/**
+ * Helper function to get profanity details for a single text string
+ */
+function getProfanityDetailsSingle(text: string): {
   isFlagged: boolean
   source: string
   matches?: string[]

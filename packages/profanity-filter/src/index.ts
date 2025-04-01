@@ -13,19 +13,19 @@ const app = new Elysia()
           path: '/moderate',
           method: 'POST',
           description: 'Moderate text for profanity',
-          body: { text: 'string' },
+          body: { text: 'string or string[]' },
         },
         {
           path: '/check',
           method: 'POST',
           description: 'Check text for profanity and get detailed information',
-          body: { text: 'string' },
+          body: { text: 'string or string[]' },
         },
       ],
     }
   })
   .post('/moderate', async ({ body }) => {
-    const { text } = body as { text: string }
+    const { text } = body as { text: string | string[] }
 
     if (!text) {
       return {
@@ -35,6 +35,19 @@ const app = new Elysia()
 
     try {
       const moderatedText = await moderateText(text)
+
+      if (Array.isArray(text)) {
+        // Handle array input
+        return {
+          original: text,
+          moderated: moderatedText,
+          containsProfanity: (moderatedText as string[]).some(
+            (moderated, index) => moderated !== text[index],
+          ),
+        }
+      }
+
+      // Handle single string input
       return {
         original: text,
         moderated: moderatedText,
@@ -48,7 +61,7 @@ const app = new Elysia()
     }
   })
   .post('/check', ({ body }) => {
-    const { text } = body as { text: string }
+    const { text } = body as { text: string | string[] }
 
     if (!text) {
       return {
@@ -58,9 +71,22 @@ const app = new Elysia()
 
     try {
       const details = getProfanityDetails(text)
+
+      if (Array.isArray(text)) {
+        // Handle array input
+        return {
+          original: text,
+          containsProfanity: (details as Array<{ isFlagged: boolean }>).some(
+            (item) => item.isFlagged,
+          ),
+          details,
+        }
+      }
+
+      // Handle single string input
       return {
         original: text,
-        containsProfanity: details.isFlagged,
+        containsProfanity: (details as { isFlagged: boolean }).isFlagged,
         details,
       }
     } catch (error) {
