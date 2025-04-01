@@ -135,7 +135,7 @@ jobs:
         id: steam-changes
         run: |
           git diff --name-only HEAD^ HEAD | grep -q "^packages/steam/" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^packages/Dockerfile.bun" && echo "dockerfile_changed=true" >> $GITHUB_OUTPUT || echo "dockerfile_changed=false" >> $GITHUB_OUTPUT
+          git diff --name-only HEAD^ HEAD | grep -q "^packages/Dockerfile.steam" && echo "dockerfile_changed=true" >> $GITHUB_OUTPUT || echo "dockerfile_changed=false" >> $GITHUB_OUTPUT
           git diff --name-only HEAD^ HEAD | grep -q "^docker-compose.yml" && echo "compose_changed=true" >> $GITHUB_OUTPUT || echo "compose_changed=false" >> $GITHUB_OUTPUT
 
       - name: Extract branch name
