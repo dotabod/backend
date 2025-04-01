@@ -28,7 +28,6 @@
     "chokidar": "^4.0.3",
     "cors": "^2.8.5",
     "country-code-emoji": "^2.3.0",
-    "curse-filter": "^6.0.0",
     "dotaconstants": "github:dotabod/dotaconstants",
     "express": "^4.21.2",
     "express-body-parser-error-handler": "^1.0.7",
