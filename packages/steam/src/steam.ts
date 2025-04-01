@@ -4,15 +4,15 @@ import fs from 'node:fs'
 import Dota2 from 'dota2'
 import { Long } from 'mongodb'
 import retry from 'retry'
-import Steam from 'steam'
 // @ts-expect-error no types
 import steamErrors from 'steam-errors'
 import MongoDBSingleton from './MongoDBSingleton.js'
 import { hasSteamData } from './hasSteamData.js'
 import { socketIoServer } from './socketServer.js'
+import Steam from './steam/steam_client'
+import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails.js'
 import type { SteamMatchDetails } from './types/SteamMatchDetails.js'
 import type { Cards, DelayedGames } from './types/index.js'
-import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails.js'
 import CustomError from './utils/customError.js'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch.js'
 import { logger } from './utils/logger.js'
@@ -92,7 +92,7 @@ const saveMatch = async ({
 
 function sortPlayersBySlot(game: DelayedGames) {
   if (!game.teams || !Array.isArray(game.teams) || game.teams.length !== 2) return
-  if (!Array.isArray(game.teams[0].players) || !Array.isArray(game.teams[1].players)) return
+  if (!Array.isArray(game.teams[0]?.players) || !Array.isArray(game.teams[1]?.players)) return
 
   for (const team of game.teams) {
     team.players.sort((a, b) => a.team_slot - b.team_slot)
@@ -109,21 +109,28 @@ class Dota {
 
   constructor() {
     this.steamClient = new Steam.SteamClient()
-    // @ts-expect-error no types exist
     this.steamUser = new Steam.SteamUser(this.steamClient)
     this.dota2 = new Dota2.Dota2Client(this.steamClient, false, false)
     this.dota2.setMaxListeners(12)
 
     const details = this.getUserDetails()
 
+    if (!details.account_name || !details.password) {
+      throw new Error('STEAM_USER or STEAM_PASS not set')
+    }
     this.loadServerList()
-    this.loadSentry(details)
+    this.loadSentry({
+      account_name: details.account_name as string,
+      password: details.password as string,
+    })
 
-    this.setupClientEventHandlers(details)
+    this.setupClientEventHandlers({
+      account_name: details.account_name as string,
+      password: details.password as string,
+    })
     this.setupUserEventHandlers()
     this.setupDotaEventHandlers()
 
-    // @ts-expect-error no types exist
     this.steamClient.connect()
   }
 
@@ -134,7 +141,6 @@ class Dota {
 
   // Check if the Steam client is logged on
   private isSteamClientLoggedOn(): boolean {
-    // @ts-expect-error no types exist
     return this.steamClient.loggedOn
   }
 
@@ -312,7 +318,6 @@ class Dota {
   }
 
   handleLogOnResponse(logonResp: any) {
-    // @ts-expect-error no types exist
     if (logonResp.eresult === Steam.EResult.OK) {
       logger.info('[STEAM] Logged on.')
       this.dota2.launch()
@@ -322,7 +327,6 @@ class Dota {
   }
 
   handleLoggedOff(eresult: any) {
-    // @ts-expect-error no types exist
     if (this.isProduction()) this.steamClient.connect()
     logger.info('[STEAM] Logged off from Steam.', { eresult })
     this.logSteamError(eresult)
@@ -333,7 +337,6 @@ class Dota {
     if (!this.isProduction()) {
       this.exit().catch((e) => logger.error('err steam error', { e }))
     }
-    // @ts-expect-error no types exist
     if (this.isProduction()) this.steamClient.connect()
   }
 
@@ -604,7 +607,6 @@ class Dota {
       clearInterval(this.interval)
       this.dota2.exit()
       logger.info('[STEAM] Manually closed dota')
-      // @ts-expect-error disconnect is there
       this.steamClient.disconnect()
       logger.info('[STEAM] Manually closed steam')
       this.steamClient.removeAllListeners()
