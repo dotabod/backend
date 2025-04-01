@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "_version": "20.1.0",
+  "extends": "@tsconfig/node21/tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "composite": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "sourceMap": true,
+    "strictNullChecks": true,
+    "types": ["node"],
+    "allowJs": true,
+    "checkJs": false,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "incremental": true
+  },
+  "ts-node": {
+    "experimentalSpecifierResolution": "node",
+    "esm": true,
+    "files": false,
+    "transpileOnly": true,
+    "typeCheck": false,
+    "require": ["tsconfig-paths/register"],
+    "ignore": ["(?:^|/)node_modules/"]
+  },
+  "include": ["src"]
+}

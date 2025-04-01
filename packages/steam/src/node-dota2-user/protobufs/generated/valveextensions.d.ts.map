@@ -1,1 +1,0 @@
-{"version":3,"file":"valveextensions.d.ts","sourceRoot":"","sources":["../../../src/protobufs/generated/valveextensions.ts"],"names":[],"mappings":"AAQA,oBAAY,oBAAoB;IAC9B,8BAA8B,IAAI;IAClC,8BAA8B,KAAK;IACnC,mCAAmC,KAAK;IACxC,0BAA0B,KAAK;IAC/B,6BAA6B,MAAM;CACpC;AAED,wBAAgB,4BAA4B,CAAC,MAAM,EAAE,GAAG,GAAG,oBAAoB,CAoB9E;AAED,wBAAgB,0BAA0B,CAAC,MAAM,EAAE,oBAAoB,GAAG,MAAM,CAe/E"}

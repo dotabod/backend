@@ -1,16 +1,10 @@
-import { Dota2User } from './node-dota2-user'
-import {
-  type CMsgDOTAMatch,
-  type CMsgGCMatchDetailsResponse,
-  type CMsgGCToClientFindTopSourceTVGamesResponse,
-  EDOTAGCMsg,
-} from './node-dota2-user/protobufs/index.js'
+// @ts-expect-error no types
+import SteamUser from 'steam-user'
+import { Dota2User } from 'dota2-user'
 import { Long } from 'mongodb'
 import retry from 'retry'
 // @ts-expect-error no types
 import steamErrors from 'steam-errors'
-// @ts-expect-error no types
-import SteamUser from 'steam-user'
 import MongoDBSingleton from './MongoDBSingleton.js'
 import { hasSteamData } from './hasSteamData.js'
 import { socketIoServer } from './socketServer.js'
@@ -19,6 +13,12 @@ import CustomError from './utils/customError.js'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch.js'
 import { logger } from './utils/logger.js'
 import { retryCustom } from './utils/retry.js'
+import {
+  EDOTAGCMsg,
+  type CMsgGCToClientFindTopSourceTVGamesResponse,
+  type CMsgGCMatchDetailsResponse,
+  type CMsgDOTAMatch,
+} from 'dota2-user/protobufs/index.js'
 
 interface steamUserDetails {
   accountName: string
@@ -109,12 +109,7 @@ class Dota {
   public isLoggedOn = false
 
   constructor() {
-    logger.info('[STEAM] Initializing Steam client')
-    this.steamClient = new SteamUser({
-      renewRefreshTokens: true,
-      // Force TCP protocol instead of WebSocket to avoid connection issues
-      protocol: SteamUser.EConnectionProtocol.TCP,
-    })
+    this.steamClient = new SteamUser()
     this.dota2 = new Dota2User(this.steamClient)
     this.dota2.setMaxListeners(12)
 
@@ -304,7 +299,6 @@ class Dota {
       logger.error('[STEAM] Steam client not initialized')
       return
     }
-    logger.info('[STEAM] Logging on to Steam')
     this.steamClient.logOn(details)
     this.steamClient.on('loggedOn', () => {
       this.isLoggedOn = true
@@ -393,24 +387,22 @@ class Dota {
 
     return new Promise((resolve, reject) => {
       operation.attempt(() => {
-        // Send WatchGame message to the GC using callback pattern
-        this.dota2.sendWithCallback(
-          EDOTAGCMsg.k_EMsgGCSpectateFriendGame,
-          {
-            steamId: steam_id.toString(),
-            live: false,
-          },
-          EDOTAGCMsg.k_EMsgGCSpectateFriendGameResponse,
-          (response) => {
-            const theID = response?.serverSteamid?.toString()
+        // Send WatchGame message to the GC
+        this.dota2.send(EDOTAGCMsg.k_EMsgGCSpectateFriendGame, {
+          steamId: steam_id.toString(),
+          live: false,
+        })
 
-            const shouldRetry = !theID ? new Error('No ID yet, will keep trying.') : undefined
-            if (operation.retry(shouldRetry)) return
+        // Set up a one-time listener for the response
+        this.dota2.router.once(EDOTAGCMsg.k_EMsgGCSpectateFriendGameResponse, (response) => {
+          const theID = response?.serverSteamid?.toString()
 
-            if (theID) resolve(theID)
-            else reject('No spectator match found')
-          },
-        )
+          const shouldRetry = !theID ? new Error('No ID yet, will keep trying.') : undefined
+          if (operation.retry(shouldRetry)) return
+
+          if (theID) resolve(theID)
+          else reject('No spectator match found')
+        })
       })
     })
   }
@@ -458,12 +450,13 @@ class Dota {
       if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
         reject(new CustomError('Not connected to Dota 2 GC'))
       else {
-        // Send the match details request using callback pattern
-        this.dota2.sendWithCallback(
-          EDOTAGCMsg.k_EMsgGCMatchDetailsRequest,
-          {
-            matchId: matchIds[0].toString(), // Assuming we want details for the first match ID
-          },
+        // Send the match details request
+        this.dota2.send(EDOTAGCMsg.k_EMsgGCMatchDetailsRequest, {
+          matchId: matchIds[0].toString(), // Assuming we want details for the first match ID
+        })
+
+        // Listen for the response on the router
+        this.dota2.router.once(
           EDOTAGCMsg.k_EMsgGCMatchDetailsResponse,
           (data: CMsgGCMatchDetailsResponse) => {
             if (!data || !data.match) {
@@ -487,28 +480,21 @@ class Dota {
       if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
         reject(new CustomError('Error getting medal'))
       else {
+        console.log('fetchProfileCard')
         // Send the profile card request
-        this.dota2.sendWithCallback(
-          EDOTAGCMsg.k_EMsgClientToGCGetProfileCard,
-          {
-            accountId: account,
-          },
-          EDOTAGCMsg.k_EMsgClientToGCGetProfileCardResponse,
-          (data) => {
-            if (!data) {
-              reject(new Error('No profile card data received'))
-              return
-            }
-            const returnResponse = {
-              lifetime_games: data.lifetimeGames,
-              account_id: data.accountId,
-              leaderboard_rank: data.leaderboardRank,
-              rank_tier: data.rankTier,
-              createdAt: new Date(),
-            }
-            resolve(returnResponse)
-          },
-        )
+        const ok = this.dota2.send(EDOTAGCMsg.k_EMsgClientToGCGetProfileCard, {
+          accountId: account,
+        })
+        console.log({ ok })
+        // Listen for the response on the router
+        this.dota2.router.on(EDOTAGCMsg.k_EMsgClientToGCGetProfileCardResponse, (data: any) => {
+          console.log({ data })
+          if (!data || !data.cardInfo) {
+            reject(new Error('No profile card data received'))
+            return
+          }
+          resolve(data.cardInfo as unknown as Cards)
+        })
       }
     })
   }
@@ -707,10 +693,11 @@ export const GetRealTimeStats = async ({
       let game: DelayedGames
       try {
         const apiUrl = getApiUrl(steam_server_id)
+        logger.info('[STEAM] Fetching game data from:', { apiUrl })
         const response = await fetch(apiUrl)
 
         // Handle rate limiting (403)
-        if (response.status === 403 || response.status === 429) {
+        if (response.status === 403) {
           logger.warn('[STEAM] Rate limited with 403 response. Backing off...')
           // Exponential backoff with longer delay for rate limiting
           const backoffDelay = Math.min(30000, 5000 * 2 ** (currentAttempt - 1))
@@ -719,7 +706,6 @@ export const GetRealTimeStats = async ({
         }
 
         if (!response.ok) {
-          logger.info('apiUrl:', { apiUrl })
           throw new Error(`HTTP error! Status: ${response.status}`)
         }
         game = (await response.json()) as DelayedGames
