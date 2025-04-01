@@ -40,6 +40,61 @@ export const russianProfanityList = [
   'мудак',
   'мудила',
   'блядь',
+  'чурка',
+  'хач',
+  'кацап',
+  'жид',
+  'хахол',
+  // Additional ethnic and racial slurs
+  'москаль', // Derogatory term for Russians
+  'хохол', // Corrected spelling of slur for Ukrainians
+  'пшек', // Slur for Polish people
+  'бульбаш', // Slur for Belarusians
+  'укроп', // Derogatory for Ukrainians
+  'рагуль', // Rural/uncultured person slur
+  'малорос', // Derogatory for Ukrainians
+  'ватник', // Political slur
+  'колорад', // Political derogatory term
+  'азер', // Derogatory for Azerbaijanis
+  'армяшка', // Derogatory for Armenians
+  'грызун', // Derogatory for Georgians
+  'чурбан', // Variation of чурка
+  'чуркестан', // Derogatory term
+  'чурбанье', // Collective derogatory form
+  'абрек', // Derogatory for Caucasians
+  'зверь', // Derogatory for Caucasians when used in ethnic context
+  'черномазый', // Equivalent to the n-word
+  'хачик', // Variation of хач
+  'урюк', // Derogatory for Central Asians
+  'чернота', // Racial slur
+  'чалма', // Derogatory for Muslims
+  'сарацин', // Derogatory for Muslims
+  'баклажан', // Racial slur based on skin color
+  'жидовка', // Female form of жид
+  'жидяра', // Intensified form of жид
+  'юде', // Derogatory for Jews
+  'пархатый', // Antisemitic slur
+  'шнобель', // Antisemitic reference
+  'пейсатый', // Antisemitic reference
+  'циган', // Gypsy/Roma slur
+  'цыганва', // Derogatory for Roma
+  'гой', // Used in antisemitic context
+  'узкоглазый', // Slant-eye slur
+  'китаеза', // Derogatory for Chinese
+  'япошка', // Derogatory for Japanese
+  'монгол', // When used pejoratively
+  'желтый', // Yellow, racial slur
+  'самурай', // When used pejoratively
+  // Common transliterated slurs
+  'nigger',
+  'kike',
+  'spic',
+  'chink',
+  'wop',
+  'polack',
+  'paki',
+  'gook',
+  'dago',
 ]
 
 // Chinese profanity terms

@@ -5,7 +5,7 @@
  * Run with: bun packages/dota/src/utils/moderation-test.ts
  */
 
-import { moderateText, getProfanityDetails } from './moderation'
+import { moderateText, getProfanityDetails } from '../src/utils/moderation'
 import { detect } from 'curse-filter'
 import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity'
 import { profanity } from '@2toad/profanity'
@@ -20,8 +20,8 @@ import {
   detectRussianProfanity,
   detectChineseProfanity,
   detectEvasionTactics,
-} from './profanity-wordlists'
-import { createTextVariations } from './text-normalization'
+} from '../src/utils/profanity-wordlists'
+import { createTextVariations } from '../src/utils/text-normalization'
 
 // Initialize necessary libraries
 const badWords = new Filter()
@@ -78,6 +78,19 @@ async function runTest() {
     { text: 'wordsbeforefuckandafter', description: 'Embedded profanity' },
     { text: 'пидop', description: 'Russian profanity' },
     { text: 'й-пидор-чмо', description: 'Russian profanity' },
+    { text: 'чурка', description: 'Russian ethnic slur 1' },
+    { text: 'хач, кацап, чурка', description: 'Multiple Russian ethnic slurs' },
+    { text: 'жид', description: 'Russian ethnic slur 2' },
+    { text: 'хахол', description: 'Russian ethnic slur 3' },
+    { text: 'москаль и хохол', description: 'Expanded slurs - Ukrainian/Russian' },
+    { text: 'черномазый человек', description: 'Expanded slurs - Racial' },
+    { text: 'китаеза и япошка', description: 'Expanded slurs - Asian' },
+    { text: 'Он настоящий пшек', description: 'Expanded slurs - Polish' },
+    { text: 'узкоглазый монгол', description: 'Expanded slurs - Asian features' },
+    { text: 'цыганва на улице', description: 'Expanded slurs - Roma' },
+    { text: 'Он жидяра', description: 'Expanded slurs - Antisemitic' },
+    { text: 'Это chink из китая', description: 'Mixed language slur' },
+    { text: 'Типичный n1gg3r', description: 'Obfuscated transliterated slur' },
   ]
 
   for (const testCase of testCases) {
@@ -122,6 +135,19 @@ async function compareLibraries() {
     { text: 'wordsbeforefuckandafter', description: 'Embedded profanity' },
     { text: 'пидop', description: 'Russian profanity' },
     { text: 'й-пидор-чмо', description: 'Russian profanity' },
+    { text: 'чурка', description: 'Russian ethnic slur 1' },
+    { text: 'хач, кацап, чурка', description: 'Multiple Russian ethnic slurs' },
+    { text: 'жид', description: 'Russian ethnic slur 2' },
+    { text: 'хахол', description: 'Russian ethnic slur 3' },
+    { text: 'москаль и хохол', description: 'Expanded slurs - Ukrainian/Russian' },
+    { text: 'черномазый человек', description: 'Expanded slurs - Racial' },
+    { text: 'китаеза и япошка', description: 'Expanded slurs - Asian' },
+    { text: 'Он настоящий пшек', description: 'Expanded slurs - Polish' },
+    { text: 'узкоглазый монгол', description: 'Expanded slurs - Asian features' },
+    { text: 'цыганва на улице', description: 'Expanded slurs - Roma' },
+    { text: 'Он жидяра', description: 'Expanded slurs - Antisemitic' },
+    { text: 'Это chink из китая', description: 'Mixed language slur' },
+    { text: 'Типичный n1gg3r', description: 'Obfuscated transliterated slur' },
   ]
 
   // Library performance scores
@@ -148,18 +174,18 @@ async function compareLibraries() {
 
     // Test washyourmouthoutwithsoap
     const washResult = checkWashProfanity(testCase.text)
-    scores.washyourmouthoutwithsoap.total++
+    scores.washyourmouthoutwithsoap!.total++
     if (washResult.detected) {
-      scores.washyourmouthoutwithsoap.detected++
+      scores.washyourmouthoutwithsoap!.detected++
       console.log(`- washyourmouthoutwithsoap (locale: ${washResult.locale})`)
     }
 
     // Test bad-words
     try {
       const badWordsResult = badWords.isProfane(testCase.text)
-      scores['bad-words'].total++
+      scores['bad-words']!.total++
       if (badWordsResult) {
-        scores['bad-words'].detected++
+        scores['bad-words']!.detected++
         console.log('- bad-words')
       }
     } catch (error) {
@@ -169,9 +195,9 @@ async function compareLibraries() {
     // Test leo-profanity
     try {
       const leoResult = leoProfanity.check(testCase.text)
-      scores['leo-profanity'].total++
+      scores['leo-profanity']!.total++
       if (leoResult) {
-        scores['leo-profanity'].detected++
+        scores['leo-profanity']!.detected++
         console.log('- leo-profanity')
       }
     } catch (error) {
@@ -181,7 +207,7 @@ async function compareLibraries() {
     // Test naughty-words
     try {
       let naughtyWordsDetected = false
-      scores['naughty-words'].total++
+      scores['naughty-words']!.total++
 
       for (const lang of Object.keys(naughtyWords)) {
         // Skip non-array properties
@@ -197,7 +223,7 @@ async function compareLibraries() {
       }
 
       if (naughtyWordsDetected) {
-        scores['naughty-words'].detected++
+        scores['naughty-words']!.detected++
       }
     } catch (error) {
       console.log('- naughty-words (error)')
@@ -206,9 +232,9 @@ async function compareLibraries() {
     // Test profanity-util
     try {
       const profanityUtilResult = profanityUtil.check(testCase.text)
-      scores['profanity-util'].total++
+      scores['profanity-util']!.total++
       if (profanityUtilResult[1] > 0) {
-        scores['profanity-util'].detected++
+        scores['profanity-util']!.detected++
         console.log('- profanity-util')
       }
     } catch (error) {
@@ -218,9 +244,9 @@ async function compareLibraries() {
     // Test @2toad/profanity
     try {
       const toadResult = profanity.exists(testCase.text)
-      scores['@2toad/profanity'].total++
+      scores['@2toad/profanity']!.total++
       if (toadResult) {
-        scores['@2toad/profanity'].detected++
+        scores['@2toad/profanity']!.detected++
         console.log('- @2toad/profanity')
       }
     } catch (error) {
@@ -230,9 +256,9 @@ async function compareLibraries() {
     // Test obscenity
     try {
       const matches = matcher.getAllMatches(testCase.text)
-      scores.obscenity.total++
+      scores.obscenity!.total++
       if (matches.length > 0) {
-        scores.obscenity.detected++
+        scores.obscenity!.detected++
         console.log('- obscenity')
       }
     } catch (error) {
@@ -244,7 +270,7 @@ async function compareLibraries() {
       // Create variations to improve detection
       const textVariations = createTextVariations(testCase.text)
       let curseDetected = false
-      scores['curse-filter'].total++
+      scores['curse-filter']!.total++
 
       for (const variation of textVariations) {
         if (detect(variation)) {
@@ -254,7 +280,7 @@ async function compareLibraries() {
       }
 
       if (curseDetected) {
-        scores['curse-filter'].detected++
+        scores['curse-filter']!.detected++
         console.log('- curse-filter')
       }
     } catch (error) {
@@ -264,9 +290,9 @@ async function compareLibraries() {
     // Test russian-bad-words
     try {
       const russianResult = checkRussianBadWords(testCase.text)
-      scores['russian-bad-words'].total++
+      scores['russian-bad-words']!.total++
       if (russianResult) {
-        scores['russian-bad-words'].detected++
+        scores['russian-bad-words']!.detected++
         console.log('- russian-bad-words')
       }
     } catch (error) {
@@ -275,7 +301,7 @@ async function compareLibraries() {
 
     // Test custom wordlists
     try {
-      scores['custom-wordlists'].total++
+      scores['custom-wordlists']!.total++
       let customDetected = false
 
       if (detectMultilingualProfanity(testCase.text)) {
@@ -299,7 +325,7 @@ async function compareLibraries() {
       }
 
       if (customDetected) {
-        scores['custom-wordlists'].detected++
+        scores['custom-wordlists']!.detected++
       }
     } catch (error) {
       console.log('- custom-wordlists (error)')
@@ -308,7 +334,7 @@ async function compareLibraries() {
 
   // Calculate detection rates
   for (const lib in scores) {
-    scores[lib].rate = (scores[lib].detected / scores[lib].total) * 100
+    scores[lib]!.rate = (scores[lib]!.detected / scores[lib]!.total) * 100
   }
 
   // Rank libraries by detection rate
