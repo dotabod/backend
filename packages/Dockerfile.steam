@@ -11,7 +11,7 @@ COPY ./packages/steam/package.json ./packages/steam/yarn.lock ./
 RUN mv ./yarn.lock ./yarn.lock
 
 # Install dependencies
-RUN npm install --registry=https://registry.npmmirror.com
+RUN yarn install
 
 #------------------------
 
@@ -22,7 +22,7 @@ COPY tsconfig.json /app/
 COPY ./packages/steam/tsconfig.json /app/packages/steam/tsconfig.json
 COPY ./packages/steam/src /app/packages/steam/src/
 
-RUN cd /app/packages/steam && npm run build
+RUN cd /app/packages/steam && yarn run build
 
 #------------------------
 
@@ -45,4 +45,4 @@ WORKDIR /app/packages/steam
 
 # Environment and CMD
 ENV DOTABOD_ENV=$DOTABOD_ENV
-CMD npm run docker:${DOTABOD_ENV:-production}
+CMD yarn run docker:${DOTABOD_ENV:-production}
