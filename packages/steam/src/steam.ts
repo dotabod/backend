@@ -693,7 +693,7 @@ export const GetRealTimeStats = async ({
         const response = await fetch(apiUrl)
 
         // Handle rate limiting (403)
-        if (response.status === 403) {
+        if (response.status === 403 || response.status === 429 || response.status === 400) {
           logger.warn('[STEAM] Rate limited with 403 response. Backing off...')
           // Exponential backoff with longer delay for rate limiting
           const backoffDelay = Math.min(30000, 5000 * 2 ** (currentAttempt - 1))
