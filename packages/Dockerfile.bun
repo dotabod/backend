@@ -27,7 +27,7 @@ FROM base AS builder
 COPY packages/profanity-filter/index.ts ./packages/profanity-filter/
 COPY packages/profanity-filter/src ./packages/profanity-filter/src/
 COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
-COPY $BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
+COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/locales* $BUILD_CONTEXT/
 
 # Build profanity-filter first, then build the main application
 WORKDIR /app/packages/profanity-filter/
@@ -54,7 +54,7 @@ COPY --from=builder /app/node_modules ./node_modules
 
 COPY --from=builder /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
 COPY --from=builder /app/$BUILD_CONTEXT/src $BUILD_CONTEXT/src/
-COPY --from=builder /app/$BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
+COPY --from=builder /app/$BUILD_CONTEXT/locales* $BUILD_CONTEXT/
 COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 
 COPY --from=builder /app/packages/profanity-filter/dist packages/profanity-filter/dist/
