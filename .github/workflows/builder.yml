@@ -12,7 +12,7 @@ on:
       - 'packages/steam/**'          # Trigger for steam service changes
       - 'packages/twitch-events/**'  # Trigger for twitch-events service changes
       - 'package.json'
-      - 'bun.lockb'
+      - 'bun.lock'
       - 'packages/Dockerfile.bun'    # Shared Dockerfile for bun-based services
       - 'docker-compose.yml'         # Compose file changes might affect all services
 

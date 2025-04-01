@@ -3,7 +3,7 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
-    "cache:clean": "rm -rf $(echo bun pm cache) && rm -rf node_modules && rm bun.lockb || true",
+    "cache:clean": "rm -rf $(echo bun pm cache) && rm -rf node_modules && rm bun.lock || true",
     "up": "bun upgrade-interactive --latest",
     "nps": "doppler run -- bash services/mongodb/updatenps.sh",
     "exportnps": "doppler run -- bash services/mongodb/export.sh",

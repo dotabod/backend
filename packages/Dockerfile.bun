@@ -6,7 +6,7 @@ ARG BUILD_CONTEXT
 WORKDIR /app
 
 # Copy just the relevant package.json and bun lock files
-COPY package.json bun.lockb ./
+COPY package.json bun.lock ./
 
 # Create directories for required packages
 RUN mkdir -p packages/$BUILD_CONTEXT
