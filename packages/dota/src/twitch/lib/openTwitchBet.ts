@@ -1,6 +1,5 @@
 import { t } from 'i18next'
-import { filter } from 'curse-filter'
-
+import { moderateText } from '@dotabod/profanity-filter'
 import supabase from '../../db/supabase.js'
 import { getTokenFromTwitchId } from '../../dota/lib/connectedStreamers.js'
 import { say } from '../../dota/say.js'
@@ -46,15 +45,15 @@ export const openTwitchBet = async ({
   const title = isTitleDefault
     ? t('predictions.title', { lng: locale, heroName })
     : betsInfo.title.replace('[heroname]', heroName ?? '')
-  const filteredTitle = filter(title)
+  const filteredTitle = await moderateText(title)
 
   const isYesDefault = betsInfo.yes === defaultSettings.betsInfo.yes
   const yes = isYesDefault ? t('predictions.yes', { lng: locale }) : betsInfo.yes
-  const filteredYes = filter(yes)
+  const filteredYes = await moderateText(yes)
 
   const isNoDefault = betsInfo.no === defaultSettings.betsInfo.no
   const no = isNoDefault ? t('predictions.no', { lng: locale }) : betsInfo.no
-  const filteredNo = filter(no)
+  const filteredNo = await moderateText(no)
 
   const isValidDuration = betsInfo.duration >= 30 && betsInfo.duration <= 1800
   const autoLockAfter = isValidDuration ? betsInfo.duration : 240 // 4 min default

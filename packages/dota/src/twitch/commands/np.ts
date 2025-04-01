@@ -1,6 +1,5 @@
 import { t } from 'i18next'
-import { filter } from 'curse-filter'
-
+import { moderateText } from '@dotabod/profanity-filter'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { DBSettings, getValueOrDefault } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
@@ -55,7 +54,7 @@ commandHandler.registerCommand('np', {
             {
               $set: {
                 account_id: Number(forSteam32Id),
-                name: filter(forName),
+                name: await moderateText(forName),
                 channel: twitchChannelId,
                 addedBy: chatterName,
                 createdAt: new Date(),
@@ -65,7 +64,7 @@ commandHandler.registerCommand('np', {
           )
           chatClient.say(
             channel,
-            t('npAdded', { name: filter(forName), lng: message.channel.client.locale }),
+            t('npAdded', { name: await moderateText(forName), lng: message.channel.client.locale }),
             message.user.messageId,
           )
           return
