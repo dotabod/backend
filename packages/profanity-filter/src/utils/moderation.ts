@@ -102,7 +102,7 @@ function checkWashProfanity(text: string): {
             .split(' '),
         )
 
-      const matchingWords = wordList.filter((word) => tokens.includes(word.toLowerCase()))
+      const matchingWords = wordList.filter((word: string) => tokens.includes(word.toLowerCase()))
 
       return {
         detected: true,
@@ -132,7 +132,9 @@ export async function moderateText(input: string[]): Promise<string[]>
  * @param input Text or array of texts to moderate
  * @returns Filtered text (original text if no issues, redacted if flagged)
  */
-export async function moderateText(input: string | string[]): Promise<string | string[]> {
+export async function moderateText(
+  input?: string | string[],
+): Promise<string | (undefined | string)[] | undefined> {
   // Handle array of strings
   if (Array.isArray(input)) {
     const results = await Promise.all(input.map((text) => moderateTextSingle(text)))
@@ -148,9 +150,9 @@ export async function moderateText(input: string | string[]): Promise<string | s
  * @param text Text to moderate
  * @returns Filtered text
  */
-async function moderateTextSingle(text: string): Promise<string> {
+async function moderateTextSingle(text?: string): Promise<string | undefined> {
   // If text is empty, return as is
-  if (!text.trim()) {
+  if (!text?.trim()) {
     return text
   }
 

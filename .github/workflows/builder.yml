@@ -30,17 +30,21 @@ jobs:
       - name: Check for changes in dota service
         id: dota-changes
         run: |
+          # Check for changes in profanity-filter package
+          git diff --name-only HEAD^ HEAD | grep -q "^packages/profanity-filter/" && echo "profanity_filter_changed=true" >> $GITHUB_OUTPUT || echo "profanity_filter_changed=false" >> $GITHUB_OUTPUT
+          # Check for changes in package.json or bun.lock that might affect all services
+          git diff --name-only HEAD^ HEAD | grep -q "^package.json\|^bun.lock" && echo "deps_changed=true" >> $GITHUB_OUTPUT || echo "deps_changed=false" >> $GITHUB_OUTPUT
           git diff --name-only HEAD^ HEAD | grep -q "^packages/dota/" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
           git diff --name-only HEAD^ HEAD | grep -q "^packages/Dockerfile.bun" && echo "dockerfile_changed=true" >> $GITHUB_OUTPUT || echo "dockerfile_changed=false" >> $GITHUB_OUTPUT
           git diff --name-only HEAD^ HEAD | grep -q "^docker-compose.yml" && echo "compose_changed=true" >> $GITHUB_OUTPUT || echo "compose_changed=false" >> $GITHUB_OUTPUT
 
       - name: Extract branch name
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' }}
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' || steps.dota-changes.outputs.deps_changed == 'true' || steps.dota-changes.outputs.profanity_filter_changed == 'true' }}
         shell: bash
         run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' }}
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' || steps.dota-changes.outputs.deps_changed == 'true' || steps.dota-changes.outputs.profanity_filter_changed == 'true' }}
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: |
