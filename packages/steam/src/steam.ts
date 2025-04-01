@@ -693,6 +693,18 @@ export const GetRealTimeStats = async ({
 
         // Handle rate limiting (403/429/400)
         if (response.status === 403 || response.status === 429 || response.status === 400) {
+          // For 400 responses, log detailed debug information to help with local reproduction
+          if (response.status === 400) {
+            logger.error('[STEAM] Received 400 Bad Request', {
+              match_id,
+              steam_server_id,
+              url: getApiUrl(steam_server_id),
+              headers: Object.fromEntries(response.headers.entries()),
+              responseText: await response.text().catch(() => 'Failed to get response text'),
+              attempt: currentAttempt,
+            })
+          }
+
           logger.warn(`[STEAM] Rate limited with ${response.status} response. Backing off...`)
           // Exponential backoff with longer delay for rate limiting
           const backoffDelay = Math.min(30000, 5000 * 2 ** (currentAttempt - 1))
