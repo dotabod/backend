@@ -1,10 +1,16 @@
-// @ts-expect-error no types
-import SteamUser from 'steam-user'
 import { Dota2User } from 'dota2-user'
+import {
+  type CMsgDOTAMatch,
+  type CMsgGCMatchDetailsResponse,
+  type CMsgGCToClientFindTopSourceTVGamesResponse,
+  EDOTAGCMsg,
+} from 'dota2-user/protobufs/index.js'
 import { Long } from 'mongodb'
 import retry from 'retry'
 // @ts-expect-error no types
 import steamErrors from 'steam-errors'
+// @ts-expect-error no types
+import SteamUser from 'steam-user'
 import MongoDBSingleton from './MongoDBSingleton.js'
 import { hasSteamData } from './hasSteamData.js'
 import { socketIoServer } from './socketServer.js'
@@ -13,12 +19,6 @@ import CustomError from './utils/customError.js'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch.js'
 import { logger } from './utils/logger.js'
 import { retryCustom } from './utils/retry.js'
-import {
-  EDOTAGCMsg,
-  type CMsgGCToClientFindTopSourceTVGamesResponse,
-  type CMsgGCMatchDetailsResponse,
-  type CMsgDOTAMatch,
-} from 'dota2-user/protobufs/index.js'
 
 interface steamUserDetails {
   accountName: string
@@ -693,7 +693,6 @@ export const GetRealTimeStats = async ({
       let game: DelayedGames
       try {
         const apiUrl = getApiUrl(steam_server_id)
-        logger.info('[STEAM] Fetching game data from:', { apiUrl })
         const response = await fetch(apiUrl)
 
         // Handle rate limiting (403)
