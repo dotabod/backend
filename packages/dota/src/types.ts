@@ -1,4 +1,3 @@
-import type { CMsgDOTAMatch } from 'dota2-user/protobufs/index.js'
 import type { Database } from './db/supabase-types.js'
 import type { HeroNames } from './dota/lib/getHero.js'
 
@@ -574,7 +573,55 @@ export type BlockType =
   | 'draft'
   | null
 
+export interface MatchPlayer {
+  account_id: number
+  hero_id: number
+  kills: number
+  deaths: number
+  assists: number
+  items: number[]
+  player_slot: number
+  pro_name: string
+  level: number
+  team_number: DotaGcTeam
+}
+
+export interface MatchMinimal {
+  match_id: {
+    low: number
+    high: number
+    unsigned: boolean
+  }
+  start_time: number
+  duration: number
+  game_mode: number
+  match_outcome: number
+  players: MatchPlayer[]
+  tourney: any
+  radiant_score: number
+  dire_score: number
+  lobby_type: number
+}
+
 export interface MatchMinimalDetailsResponse {
-  matches: CMsgDOTAMatch[]
-  last_match: boolean
+  matches: MatchMinimal[]
+  last_match: any
+}
+
+export enum DotaGcTeam {
+  DOTA_GC_TEAM_GOOD_GUYS = 0,
+  DOTA_GC_TEAM_BAD_GUYS = 1,
+  DOTA_GC_TEAM_BROADCASTER = 2,
+  DOTA_GC_TEAM_SPECTATOR = 3,
+  DOTA_GC_TEAM_PLAYER_POOL = 4,
+  DOTA_GC_TEAM_NOTEAM = 5,
+  DOTA_GC_TEAM_CUSTOM_1 = 6,
+  DOTA_GC_TEAM_CUSTOM_2 = 7,
+  DOTA_GC_TEAM_CUSTOM_3 = 8,
+  DOTA_GC_TEAM_CUSTOM_4 = 9,
+  DOTA_GC_TEAM_CUSTOM_5 = 10,
+  DOTA_GC_TEAM_CUSTOM_6 = 11,
+  DOTA_GC_TEAM_CUSTOM_7 = 12,
+  DOTA_GC_TEAM_CUSTOM_8 = 13,
+  DOTA_GC_TEAM_NEUTRALS = 14,
 }

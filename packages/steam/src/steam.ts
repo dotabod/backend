@@ -1,28 +1,27 @@
+import crypto from 'node:crypto'
+import fs from 'node:fs'
 // @ts-expect-error no types
-import SteamUser from 'steam-user'
-import { Dota2User } from 'dota2-user'
+import Dota2 from 'dota2'
 import { Long } from 'mongodb'
 import retry from 'retry'
+import Steam from 'steam'
 // @ts-expect-error no types
 import steamErrors from 'steam-errors'
 import MongoDBSingleton from './MongoDBSingleton.js'
 import { hasSteamData } from './hasSteamData.js'
 import { socketIoServer } from './socketServer.js'
+import type { SteamMatchDetails } from './types/SteamMatchDetails.js'
 import type { Cards, DelayedGames } from './types/index.js'
+import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails.js'
 import CustomError from './utils/customError.js'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch.js'
 import { logger } from './utils/logger.js'
 import { retryCustom } from './utils/retry.js'
-import {
-  EDOTAGCMsg,
-  type CMsgGCToClientFindTopSourceTVGamesResponse,
-  type CMsgGCMatchDetailsResponse,
-  type CMsgDOTAMatch,
-} from 'dota2-user/protobufs/index.js'
 
 interface steamUserDetails {
-  accountName: string
+  account_name: string
   password: string
+  sha_sentryfile?: Buffer
 }
 
 interface CacheEntry {
@@ -104,27 +103,39 @@ class Dota {
   private interval: NodeJS.Timeout | undefined
   private static instance: Dota
   private cache: Map<number, CacheEntry> = new Map()
-  private steamClient: SteamUser
-  public dota2: Dota2User
-  public isLoggedOn = false
+  private steamClient
+  private steamUser
+  public dota2
 
   constructor() {
-    this.steamClient = new SteamUser()
-    this.dota2 = new Dota2User(this.steamClient)
+    this.steamClient = new Steam.SteamClient()
+    // @ts-expect-error no types exist
+    this.steamUser = new Steam.SteamUser(this.steamClient)
+    this.dota2 = new Dota2.Dota2Client(this.steamClient, false, false)
     this.dota2.setMaxListeners(12)
 
     const details = this.getUserDetails()
+
+    this.loadServerList()
+    this.loadSentry(details)
+
     this.setupClientEventHandlers(details)
+    this.setupUserEventHandlers()
+    this.setupDotaEventHandlers()
+
+    // @ts-expect-error no types exist
+    this.steamClient.connect()
   }
 
   // Check if the Dota2 game coordinator is ready
   private isDota2Ready(): boolean {
-    return this.dota2.haveGCSession
+    return this.dota2._gcReady
   }
 
   // Check if the Steam client is logged on
   private isSteamClientLoggedOn(): boolean {
-    return this.isLoggedOn
+    // @ts-expect-error no types exist
+    return this.steamClient.loggedOn
   }
 
   private checkAccounts = async () => {
@@ -188,56 +199,38 @@ class Dota {
   }
 
   // Fetch games from the Dota2 game coordinator
-  private fetchGames(): Promise<CMsgGCToClientFindTopSourceTVGamesResponse['gameList']> {
+  private fetchGames(): Promise<SteamMatchDetails[]> {
     return new Promise((resolve, reject) => {
       if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) return
 
-      let games: CMsgGCToClientFindTopSourceTVGamesResponse['gameList'] = []
-      let receivedResponses = 0
-      const totalRequests = 10 // We'll make 10 requests (0 to 90 by 10)
+      let games: SteamMatchDetails[] = []
+      const startGame = 90
 
-      // Handler for the response
-      const handleSourceTVGamesResponse = (data: CMsgGCToClientFindTopSourceTVGamesResponse) => {
-        if (data.gameList && Array.isArray(data.gameList)) {
-          const mappedGames = data.gameList
-            .filter((game) => game.players?.length > 0)
-            .map((game) => game)
+      // get a count of the match ids that are unique
 
-          games = games.concat(mappedGames)
-        }
-
-        receivedResponses++
-
-        // When we've received all expected responses, resolve the promise
-        if (receivedResponses >= totalRequests) {
-          this.dota2.router.removeListener(
-            EDOTAGCMsg.k_EMsgGCToClientFindTopSourceTVGamesResponse,
-            handleSourceTVGamesResponse,
-          )
+      const callbackNotSpecificGames = (data: {
+        specific_games: boolean
+        game_list: any[]
+        league_id: number
+        start_game: number
+      }) => {
+        games = games.concat(data?.game_list?.filter((game) => game.players?.length > 0))
+        // add match ids to unique set
+        if (data?.league_id === 0 && startGame === data?.start_game) {
+          this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
           resolve(this.filterUniqueGames(games))
         }
       }
 
-      // Remove any existing listeners to avoid duplicates
-      this.dota2.router.removeListener(
-        EDOTAGCMsg.k_EMsgGCToClientFindTopSourceTVGamesResponse,
-        handleSourceTVGamesResponse,
-      )
+      this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
+      this.dota2.on('sourceTVGamesData', callbackNotSpecificGames)
 
-      // Set up the listener for responses
-      this.dota2.router.on(EDOTAGCMsg.k_EMsgGCToClientFindTopSourceTVGamesResponse, (data) =>
-        handleSourceTVGamesResponse(data),
-      )
-
-      // Send requests with different start_game values
       for (let start = 0; start < 100; start += 10) {
         setTimeout(() => {
           try {
-            this.dota2.sendPartial(EDOTAGCMsg.k_EMsgClientToGCFindTopSourceTVGames, {
-              startGame: start,
-            })
+            this.dota2.requestSourceTVGames({ start_game: start })
           } catch (error) {
-            logger.error('Error sending FindTopSourceTVGames request:', error)
+            logger.error('Error in Dota2Client.requestSourceTVGames:', error)
           }
         }, 50 * start)
       }
@@ -245,34 +238,29 @@ class Dota {
   }
 
   // Filter unique games based on lobby_id
-  private filterUniqueGames(
-    games: CMsgGCToClientFindTopSourceTVGamesResponse['gameList'],
-  ): CMsgGCToClientFindTopSourceTVGamesResponse['gameList'] {
+  private filterUniqueGames(games: SteamMatchDetails[]): SteamMatchDetails[] {
     return games.filter((game, index, self) => {
-      if (!game.lobbyId) return false
-      return index === self.findIndex((g) => g.lobbyId === game.lobbyId)
+      if (!game.lobby_id) return false
+      return index === self.findIndex((g) => g.lobby_id?.equals(game.lobby_id))
     })
   }
 
   // Get unique games and map them to the required structure
-  private getUniqueGames(
-    games: CMsgGCToClientFindTopSourceTVGamesResponse['gameList'],
-    time: Date,
-  ) {
+  private getUniqueGames(games: SteamMatchDetails[], time: Date) {
     return games
       .map((match) => ({
-        match_id: match.matchId,
+        match_id: new Long(match.match_id.low, match.match_id.high).toString(),
         players:
           // Removing underscores to save to db, so its in the same format as steam web api delayed games
           match.players?.map((player) => ({
-            accountid: player.accountId,
-            heroid: player.heroId,
+            accountid: player.account_id,
+            heroid: player.hero_id,
           })) || [],
-        server_steam_id: match.serverSteamId,
-        game_mode: match.gameMode,
+        server_steam_id: new Long(match.server_steam_id.low, match.server_steam_id.high).toString(),
+        game_mode: match.game_mode,
         spectators: match.spectators,
-        lobby_type: match.lobbyType,
-        average_mmr: match.averageMmr,
+        lobby_type: match.lobby_type,
+        average_mmr: match.average_mmr,
         createdAt: time,
       }))
       .filter(
@@ -289,38 +277,52 @@ class Dota {
     }
 
     return {
-      accountName: usernames[0],
+      account_name: usernames[0],
       password: passwords[0],
     }
   }
 
-  setupClientEventHandlers(details: steamUserDetails) {
-    if (!this.steamClient) {
-      logger.error('[STEAM] Steam client not initialized')
-      return
+  loadServerList() {
+    const serverPath = './src/steam/volumes/servers.json'
+    if (fs.existsSync(serverPath)) {
+      try {
+        Steam.servers = JSON.parse(fs.readFileSync(serverPath).toString())
+      } catch (e) {
+        // Ignore
+      }
     }
-    this.steamClient.logOn(details)
-    this.steamClient.on('loggedOn', () => {
-      this.isLoggedOn = true
-      logger.info('[STEAM] Logged on.')
-      this.steamClient.gamesPlayed(Dota2User.STEAM_APPID)
-      this.setupDotaEventHandlers()
+  }
+
+  loadSentry(details: steamUserDetails) {
+    const sentryPath = './src/steam/volumes/sentry'
+    if (fs.existsSync(sentryPath)) {
+      const sentry = fs.readFileSync(sentryPath)
+      if (sentry.length) details.sha_sentryfile = sentry
+    }
+  }
+
+  setupClientEventHandlers(details: steamUserDetails) {
+    this.steamClient.on('connected', () => {
+      this.steamUser.logOn(details)
     })
     this.steamClient.on('logOnResponse', this.handleLogOnResponse.bind(this))
     this.steamClient.on('loggedOff', this.handleLoggedOff.bind(this))
     this.steamClient.on('error', this.handleClientError.bind(this))
+    this.steamClient.on('servers', this.handleServerUpdate.bind(this))
   }
 
   handleLogOnResponse(logonResp: any) {
     // @ts-expect-error no types exist
     if (logonResp.eresult === Steam.EResult.OK) {
       logger.info('[STEAM] Logged on.')
+      this.dota2.launch()
     } else {
       this.logSteamError(logonResp.eresult)
     }
   }
 
   handleLoggedOff(eresult: any) {
+    // @ts-expect-error no types exist
     if (this.isProduction()) this.steamClient.connect()
     logger.info('[STEAM] Logged off from Steam.', { eresult })
     this.logSteamError(eresult)
@@ -331,31 +333,55 @@ class Dota {
     if (!this.isProduction()) {
       this.exit().catch((e) => logger.error('err steam error', { e }))
     }
+    // @ts-expect-error no types exist
     if (this.isProduction()) this.steamClient.connect()
   }
 
-  setupDotaEventHandlers() {
-    this.dota2.on('unready', () => logger.info('[STEAM] disconnected from dota game coordinator'))
+  handleServerUpdate(servers: any) {
+    fs.writeFileSync('./src/steam/volumes/servers.json', JSON.stringify(servers))
+  }
 
+  setupUserEventHandlers() {
+    this.steamUser.on('updateMachineAuth', this.handleMachineAuth.bind(this))
+  }
+
+  // @ts-expect-error no types exist
+  handleMachineAuth(sentry, callback) {
+    const hashedSentry = crypto.createHash('sha1').update(sentry.bytes).digest()
+    fs.writeFileSync('./src/steam/volumes/sentry', hashedSentry)
+    logger.info('[STEAM] sentryfile saved')
+    callback({ sha_file: hashedSentry })
+  }
+
+  setupDotaEventHandlers() {
+    this.dota2.on('hellotimeout', this.handleHelloTimeout.bind(this))
+    this.dota2.on('unready', () => logger.info('[STEAM] disconnected from dota game coordinator'))
     // Right when we start, check for accounts
     // This will run every 30 seconds otherwise
     if (this.isProduction()) {
-      this.dota2.on('connectedToGC', () => {
-        console.log('connectedToGC prod!')
-        this.checkAccounts()
-      })
-    } else {
-      this.dota2.on('connectedToGC', () => {
-        console.log('connectedToGC dev!')
-        this.fetchProfileCard(387140531)
-          .then((res) => {
-            console.log({ res })
-          })
-          .catch((err) => {
-            console.log({ err })
-          })
-      })
+      this.dota2.on('ready', this.checkAccounts.bind(this))
     }
+  }
+
+  public requestMatchDetails = (matchIds: number): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
+        reject(new CustomError('Not connected to Dota 2 GC'))
+      else {
+        this.dota2.requestMatchDetails(matchIds, (err: any, data: any) => {
+          if (err) reject(err)
+          resolve(data)
+        })
+      }
+    })
+  }
+
+  handleHelloTimeout() {
+    this.dota2.exit()
+    setTimeout(() => {
+      if (this.isSteamClientLoggedOn()) this.dota2.launch()
+    }, 30000)
+    logger.info('[STEAM] hello time out!')
   }
 
   // @ts-expect-error no types exist
@@ -375,7 +401,7 @@ class Dota {
   }
 
   public getUserSteamServer = (steam32Id: number | string): Promise<string> => {
-    const steam_id = new Long(Number(steam32Id)).add('76561197960265728')
+    const steam_id = this.dota2.ToSteamID(Number(steam32Id))
 
     // Set up the retry operation
     const operation = retry.operation({
@@ -387,15 +413,8 @@ class Dota {
 
     return new Promise((resolve, reject) => {
       operation.attempt(() => {
-        // Send WatchGame message to the GC
-        this.dota2.send(EDOTAGCMsg.k_EMsgGCSpectateFriendGame, {
-          steamId: steam_id.toString(),
-          live: false,
-        })
-
-        // Set up a one-time listener for the response
-        this.dota2.router.once(EDOTAGCMsg.k_EMsgGCSpectateFriendGameResponse, (response) => {
-          const theID = response?.serverSteamid?.toString()
+        this.dota2.spectateFriendGame({ steam_id }, (response: any, err: any) => {
+          const theID = response?.server_steamid?.toString()
 
           const shouldRetry = !theID ? new Error('No ID yet, will keep trying.') : undefined
           if (operation.retry(shouldRetry)) return
@@ -443,57 +462,14 @@ class Dota {
     return card
   }
 
-  public requestMatchMinimalDetails = (
-    matchIds: number[],
-  ): Promise<{ matches: CMsgDOTAMatch[]; last_match: boolean }> => {
-    return new Promise((resolve, reject) => {
-      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
-        reject(new CustomError('Not connected to Dota 2 GC'))
-      else {
-        // Send the match details request
-        this.dota2.send(EDOTAGCMsg.k_EMsgGCMatchDetailsRequest, {
-          matchId: matchIds[0].toString(), // Assuming we want details for the first match ID
-        })
-
-        // Listen for the response on the router
-        this.dota2.router.once(
-          EDOTAGCMsg.k_EMsgGCMatchDetailsResponse,
-          (data: CMsgGCMatchDetailsResponse) => {
-            if (!data || !data.match) {
-              reject(new Error('No match details received'))
-              return
-            }
-            // Convert CMsgGCMatchDetailsResponse to MatchMinimalDetailsResponse format
-            const response = {
-              matches: [data.match],
-              last_match: true,
-            }
-            resolve(response)
-          },
-        )
-      }
-    })
-  }
-
   private async fetchProfileCard(account: number): Promise<Cards> {
     return new Promise<Cards>((resolve, reject) => {
       if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
         reject(new CustomError('Error getting medal'))
       else {
-        console.log('fetchProfileCard')
-        // Send the profile card request
-        const ok = this.dota2.send(EDOTAGCMsg.k_EMsgClientToGCGetProfileCard, {
-          accountId: account,
-        })
-        console.log({ ok })
-        // Listen for the response on the router
-        this.dota2.router.on(EDOTAGCMsg.k_EMsgClientToGCGetProfileCardResponse, (data: any) => {
-          console.log({ data })
-          if (!data || !data.cardInfo) {
-            reject(new Error('No profile card data received'))
-            return
-          }
-          resolve(data.cardInfo as unknown as Cards)
+        this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
+          if (err) reject(err)
+          resolve(card)
         })
       }
     })
@@ -600,6 +576,24 @@ class Dota {
     }
   }
 
+  public requestMatchMinimalDetails = (
+    matchIds: number[],
+  ): Promise<MatchMinimalDetailsResponse> => {
+    return new Promise((resolve, reject) => {
+      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
+        reject(new CustomError('Not connected to Dota 2 GC'))
+      else {
+        this.dota2.requestMatchMinimalDetails(
+          matchIds,
+          (err: any, data: MatchMinimalDetailsResponse) => {
+            if (err) reject(err)
+            resolve(data)
+          },
+        )
+      }
+    })
+  }
+
   public static getInstance(): Dota {
     if (!Dota.instance) Dota.instance = new Dota()
     return Dota.instance
@@ -608,7 +602,9 @@ class Dota {
   public exit(): Promise<boolean> {
     return new Promise((resolve) => {
       clearInterval(this.interval)
+      this.dota2.exit()
       logger.info('[STEAM] Manually closed dota')
+      // @ts-expect-error disconnect is there
       this.steamClient.disconnect()
       logger.info('[STEAM] Manually closed steam')
       this.steamClient.removeAllListeners()

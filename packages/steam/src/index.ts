@@ -1,13 +1,17 @@
+import { initSpectatorProtobuff } from './initSpectatorProtobuff.js'
 import { socketIoServer } from './socketServer.js'
 import Dota, { GetRealTimeStats } from './steam.js'
 import { logger } from './utils/logger.js'
+import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails.js'
 import type { Socket } from 'socket.io'
 
 let hasDotabodSocket = false
 let isConnectedToSteam = false
 
+initSpectatorProtobuff()
+
 const dota = Dota.getInstance()
-dota.dota2.on('connectedToGC', () => {
+dota.dota2.on('ready', () => {
   logger.info('[SERVER] Connected to dota game server')
   isConnectedToSteam = true
 })
@@ -118,7 +122,9 @@ socketIoServer.on('connection', (socket) => {
       return
     }
     try {
-      const response = await withTimeout(dota.requestMatchMinimalDetails([data.match_id]))
+      const response: MatchMinimalDetailsResponse = await withTimeout(
+        dota.requestMatchMinimalDetails([data.match_id]),
+      )
       callback(null, response)
     } catch (e: any) {
       callback(e.message, null)

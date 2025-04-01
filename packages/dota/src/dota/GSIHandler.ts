@@ -9,7 +9,7 @@ import { notablePlayers } from '../steam/notableplayers.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
-import type { BlockType, DotaEvent, SocketClient } from '../types.js'
+import { DotaGcTeam, type BlockType, type DotaEvent, type SocketClient } from '../types.js'
 import { getRedisNumberValue, steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import type { SubscriptionRow } from '../utils/subscription.js'
@@ -29,9 +29,9 @@ import { updateMmr } from './lib/updateMmr.js'
 import { say } from './say.js'
 import { steamSocket } from '../steam/ws.js'
 import type { MatchMinimalDetailsResponse } from '../types'
+import { Long } from 'mongodb'
 import { getHeroById } from './lib/heroes.js'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/newdata.js'
-import { dotaGcTeam } from 'dota2-user/protobufs/index.js'
 
 export const redisClient = RedisClient.getInstance()
 
@@ -686,25 +686,25 @@ export class GSIHandler {
 
     try {
       const match = gcData?.matches?.[0]
-      const longMatchId = match?.matchId
+      const longMatchId = match?.match_id
         ? (() => {
-            const id = match?.matchId
+            const id = new Long(match.match_id.low, match.match_id.high).toString()
             const numId = Number(id)
             return !Number.isNaN(numId) && numId > 1 ? id : undefined
           })()
         : undefined
       const matchId = (await redisClient.client.get(`${this.client.token}:matchId`)) ?? longMatchId
       const player = match?.players?.find(
-        (player) => player.accountId === Number(this.client.gsi?.player?.accountid),
+        (player) => player.account_id === Number(this.client.gsi?.player?.accountid),
       )
       const stratzTeam =
-        player?.teamNumber === dotaGcTeam.DOTA_GC_TEAM_GOOD_GUYS
+        player?.team_number === DotaGcTeam.DOTA_GC_TEAM_GOOD_GUYS
           ? 'radiant'
-          : player?.teamNumber === dotaGcTeam.DOTA_GC_TEAM_BAD_GUYS
+          : player?.team_number === DotaGcTeam.DOTA_GC_TEAM_BAD_GUYS
             ? 'dire'
             : null
       const myTeam: 'radiant' | 'dire' | null =
-        typeof player?.teamNumber === 'number'
+        typeof player?.team_number === 'number'
           ? (stratzTeam ?? null)
           : (((await redisClient.client.get(`${this.client.token}:playingTeam`)) as
               | 'radiant'
@@ -733,9 +733,9 @@ export class GSIHandler {
         this.client.subscription,
       )
       const heroSlot =
-        player?.playerSlot ?? (await getRedisNumberValue(`${this.client.token}:playingHeroSlot`))
+        player?.player_slot ?? (await getRedisNumberValue(`${this.client.token}:playingHeroSlot`))
       const heroName =
-        getHeroById(player?.heroId)?.key ??
+        getHeroById(player?.hero_id)?.key ??
         ((await redisClient.client.get(`${this.client.token}:playingHero`)) as HeroNames | null)
 
       // An early without waiting for ancient to blow up
@@ -752,8 +752,8 @@ export class GSIHandler {
           deaths: player?.deaths ?? this.client.gsi?.player?.deaths ?? null,
           assists: player?.assists ?? this.client.gsi?.player?.assists ?? null,
         },
-        radiant_score: match?.radiantTeamScore ?? this.client.gsi?.map?.radiant_score ?? null,
-        dire_score: match?.direTeamScore ?? this.client.gsi?.map?.dire_score ?? null,
+        radiant_score: match?.radiant_score ?? this.client.gsi?.map?.radiant_score ?? null,
+        dire_score: match?.dire_score ?? this.client.gsi?.map?.dire_score ?? null,
       }
       const won = myTeam === localWinner
       logger.info('[BETS] end bets won data', {
@@ -954,7 +954,7 @@ export class GSIHandler {
       .from('bets')
       .select('won')
       .is('won', null)
-      .eq('matchId', matchId.toString())
+      .eq('matchId', matchId)
       .eq('userId', this.client.token)
       .single()
 
@@ -996,7 +996,7 @@ export class GSIHandler {
         .select('won')
         // Null means there is a winner of this match
         .is('won', null)
-        .eq('matchId', matchId.toString())
+        .eq('matchId', matchId)
         .eq('userId', this.client.token)
         .single()
 
@@ -1025,7 +1025,7 @@ export class GSIHandler {
             const predictionResponse = await supabase
               .from('bets')
               .select('predictionId')
-              .eq('matchId', matchId.toString())
+              .eq('matchId', matchId)
               .eq('userId', this.client.token)
               .is('won', null)
               .single()
@@ -1080,18 +1080,18 @@ export class GSIHandler {
         // Check if we got a valid response with match outcome
         if (
           matchData &&
-          typeof matchData.matchOutcome === 'number' &&
-          [2, 3].includes(matchData.matchOutcome)
+          typeof matchData.match_outcome === 'number' &&
+          [2, 3].includes(matchData.match_outcome)
         ) {
           logger.info('Successfully retrieved match result for early DC', {
             matchId,
             name: this.client.name,
-            matchOutcome: matchData.matchOutcome,
+            matchOutcome: matchData.match_outcome,
           })
 
           // Determine winner based on match outcome
           // k_EMatchOutcome_RadVictory = 2, k_EMatchOutcome_DireVictory = 3
-          const winningTeam = matchData.matchOutcome === 2 ? 'radiant' : 'dire'
+          const winningTeam = matchData.match_outcome === 2 ? 'radiant' : 'dire'
 
           // Reset flag before calling closeBets to prevent duplicate calls from closeBets
           this.checkingEarlyDCWinner = false
