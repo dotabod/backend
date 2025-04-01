@@ -12,7 +12,7 @@ RUN mkdir -p packages/$BUILD_CONTEXT
 RUN mkdir -p packages/profanity-filter
 
 # Copy the target package and profanity-filter package
-COPY packages/$BUILD_CONTEXT/package.json ./packages/$BUILD_CONTEXT/
+COPY $BUILD_CONTEXT/package.json ./packages/$BUILD_CONTEXT/
 COPY packages/profanity-filter/package.json ./packages/profanity-filter/
 COPY packages/profanity-filter/*.ts ./packages/profanity-filter/
 
