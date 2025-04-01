@@ -1,0 +1,1 @@
+{"version":3,"file":"steammessages_unified_base.steamworkssdk.d.ts","sourceRoot":"","sources":["../../../src/protobufs/generated/steammessages_unified_base.steamworkssdk.ts"],"names":[],"mappings":"AAQA,oBAAY,mBAAmB;IAC7B,4BAA4B,IAAI;IAChC,gCAAgC,IAAI;CACrC;AAED,wBAAgB,2BAA2B,CAAC,MAAM,EAAE,GAAG,GAAG,mBAAmB,CAW5E;AAED,wBAAgB,yBAAyB,CAAC,MAAM,EAAE,mBAAmB,GAAG,MAAM,CAS7E"}
