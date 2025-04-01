@@ -13,10 +13,6 @@ services:
           target: /app/packages/steam/src
         - action: rebuild
           path: $PWD/packages/steam/package.json
-        - action: rebuild
-          path: $PWD/packages/steam/tsconfig.json
-        - action: rebuild
-          path: $PWD/packages/Dockerfile.bun
 
   twitch-events:
     image: "ghcr.io/dotabod/twitch-events:master"

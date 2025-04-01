@@ -9,7 +9,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "tsc --build --verbose",
+    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js",
     "docker:production": "node --trace-warnings ./dist/index.js",
     "docker:development": "nodemon -L --ext ts --exec node --no-warnings --loader ts-node/esm src/index.ts",
     "dev": "doppler run -- nodemon -L --ext ts --exec node --no-warnings --loader ts-node/esm src/index.ts",
