@@ -1,6 +1,7 @@
 name: Docker Image CI
 
 on:
+  workflow_dispatch:     # Allow manual triggering of the workflow
   push:
     branches:
       - "**"
@@ -10,6 +11,8 @@ on:
       - 'packages/twitch-chat/**'    # Trigger for twitch-chat service changes
       - 'packages/steam/**'          # Trigger for steam service changes
       - 'packages/twitch-events/**'  # Trigger for twitch-events service changes
+      - 'package.json'
+      - 'bun.lockb'
       - 'packages/Dockerfile.bun'    # Shared Dockerfile for bun-based services
       - 'packages/Dockerfile.steam'  # Dockerfile for steam
       - 'docker-compose.yml'         # Compose file changes might affect all services
