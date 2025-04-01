@@ -456,13 +456,12 @@ class Dota {
       if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
         reject(new CustomError('Not connected to Dota 2 GC'))
       else {
-        // Send the match details request
-        this.dota2.send(EDOTAGCMsg.k_EMsgGCMatchDetailsRequest, {
-          matchId: matchIds[0].toString(), // Assuming we want details for the first match ID
-        })
-
-        // Listen for the response on the router
-        this.dota2.router.once(
+        // Send the match details request using callback pattern
+        this.dota2.sendWithCallback(
+          EDOTAGCMsg.k_EMsgGCMatchDetailsRequest,
+          {
+            matchId: matchIds[0].toString(), // Assuming we want details for the first match ID
+          },
           EDOTAGCMsg.k_EMsgGCMatchDetailsResponse,
           (data: CMsgGCMatchDetailsResponse) => {
             if (!data || !data.match) {
@@ -492,12 +491,20 @@ class Dota {
           {
             accountId: account,
           },
+          EDOTAGCMsg.k_EMsgClientToGCGetProfileCardResponse,
           (data) => {
-            if (!data || !data.cardInfo) {
+            if (!data) {
               reject(new Error('No profile card data received'))
               return
             }
-            resolve(data.cardInfo as unknown as Cards)
+            const returnResponse = {
+              lifetime_games: data.lifetimeGames,
+              account_id: data.accountId,
+              leaderboard_rank: data.leaderboardRank,
+              rank_tier: data.rankTier,
+              createdAt: new Date(),
+            }
+            resolve(returnResponse)
           },
         )
       }
