@@ -9,13 +9,12 @@ COPY package.json bun.lockb ./
 
 # Create directories for required packages
 RUN mkdir -p packages/$BUILD_CONTEXT
-
-# Copy the target package
-COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
-
-# Copy profanity-filter if needed (done unconditionally for simplicity)
 RUN mkdir -p packages/profanity-filter
-COPY packages/profanity-filter/ packages/profanity-filter/
+
+# Copy the target package and profanity-filter package
+COPY packages/$BUILD_CONTEXT/package.json ./packages/$BUILD_CONTEXT/
+COPY packages/profanity-filter/package.json ./packages/profanity-filter/
+COPY packages/profanity-filter/*.ts ./packages/profanity-filter/
 
 # Install dependencies
 RUN bun install
@@ -25,13 +24,13 @@ RUN bun install
 FROM base AS builder
 
 # Copy source code and build configurations
-COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
-COPY $BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
+COPY packages/$BUILD_CONTEXT/src ./packages/$BUILD_CONTEXT/src/
+COPY packages/$BUILD_CONTEXT/locales ./packages/$BUILD_CONTEXT/locales/
 
 # Build profanity-filter first, then build the main application
 WORKDIR /app
 RUN bun run --cwd packages/profanity-filter build
-WORKDIR /app/$BUILD_CONTEXT/
+WORKDIR /app/packages/$BUILD_CONTEXT/
 RUN bun run build
 
 #-----------------------
@@ -48,14 +47,9 @@ LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
 
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
-
-COPY --from=builder /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
-COPY --from=builder /app/$BUILD_CONTEXT/src $BUILD_CONTEXT/src/
-COPY --from=builder /app/$BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
-COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
-COPY --from=builder /app/packages/profanity-filter/dist packages/profanity-filter/dist/
+COPY --from=builder /app/packages ./packages
 
 # Environment and CMD
-WORKDIR /app/$BUILD_CONTEXT/
+WORKDIR /app/packages/$BUILD_CONTEXT/
 ENV DOTABOD_ENV=$DOTABOD_ENV
 CMD bun run docker:$DOTABOD_ENV
