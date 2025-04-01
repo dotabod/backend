@@ -10,9 +10,7 @@
     "rootDir": "src",
     "sourceMap": true,
     "strictNullChecks": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "allowJs": true,
     "checkJs": false,
     "resolveJsonModule": true,
@@ -26,14 +24,8 @@
     "files": false,
     "transpileOnly": true,
     "typeCheck": false,
-    "require": [
-      "tsconfig-paths/register"
-    ],
-    "ignore": [
-      "(?:^|/)node_modules/"
-    ]
+    "require": ["tsconfig-paths/register"],
+    "ignore": ["(?:^|/)node_modules/"]
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }
