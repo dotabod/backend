@@ -1,10 +1,10 @@
-import { Dota2User } from 'dota2-user'
+import { Dota2User } from './node-dota2-user'
 import {
   type CMsgDOTAMatch,
   type CMsgGCMatchDetailsResponse,
   type CMsgGCToClientFindTopSourceTVGamesResponse,
   EDOTAGCMsg,
-} from 'dota2-user/protobufs/index.js'
+} from './node-dota2-user/protobufs/index.js'
 import { Long } from 'mongodb'
 import retry from 'retry'
 // @ts-expect-error no types
@@ -487,17 +487,19 @@ class Dota {
         reject(new CustomError('Error getting medal'))
       else {
         // Send the profile card request
-        this.dota2.send(EDOTAGCMsg.k_EMsgClientToGCGetProfileCard, {
-          accountId: account,
-        })
-        // Listen for the response on the router
-        this.dota2.router.once(EDOTAGCMsg.k_EMsgClientToGCGetProfileCardResponse, (data: any) => {
-          if (!data || !data.cardInfo) {
-            reject(new Error('No profile card data received'))
-            return
-          }
-          resolve(data.cardInfo as unknown as Cards)
-        })
+        this.dota2.sendWithCallback(
+          EDOTAGCMsg.k_EMsgClientToGCGetProfileCard,
+          {
+            accountId: account,
+          },
+          (data) => {
+            if (!data || !data.cardInfo) {
+              reject(new Error('No profile card data received'))
+              return
+            }
+            resolve(data.cardInfo as unknown as Cards)
+          },
+        )
       }
     })
   }
@@ -699,7 +701,7 @@ export const GetRealTimeStats = async ({
         const response = await fetch(apiUrl)
 
         // Handle rate limiting (403)
-        if (response.status === 403) {
+        if (response.status === 403 || response.status === 429) {
           logger.warn('[STEAM] Rate limited with 403 response. Backing off...')
           // Exponential backoff with longer delay for rate limiting
           const backoffDelay = Math.min(30000, 5000 * 2 ** (currentAttempt - 1))
