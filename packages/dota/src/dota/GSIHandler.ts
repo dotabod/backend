@@ -9,7 +9,13 @@ import { notablePlayers } from '../steam/notableplayers.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
-import { DotaGcTeam, type BlockType, type DotaEvent, type SocketClient } from '../types.js'
+import {
+  DotaGcTeam,
+  EMatchOutcome,
+  type BlockType,
+  type DotaEvent,
+  type SocketClient,
+} from '../types.js'
 import { getRedisNumberValue, steamID64toSteamID32 } from '../utils/index.js'
 import { logger } from '../utils/logger.js'
 import type { SubscriptionRow } from '../utils/subscription.js'
@@ -954,7 +960,7 @@ export class GSIHandler {
       .from('bets')
       .select('won')
       .is('won', null)
-      .eq('matchId', matchId)
+      .eq('matchId', matchId.toString())
       .eq('userId', this.client.token)
       .single()
 
@@ -996,7 +1002,7 @@ export class GSIHandler {
         .select('won')
         // Null means there is a winner of this match
         .is('won', null)
-        .eq('matchId', matchId)
+        .eq('matchId', matchId.toString())
         .eq('userId', this.client.token)
         .single()
 
@@ -1025,7 +1031,7 @@ export class GSIHandler {
             const predictionResponse = await supabase
               .from('bets')
               .select('predictionId')
-              .eq('matchId', matchId)
+              .eq('matchId', matchId.toString())
               .eq('userId', this.client.token)
               .is('won', null)
               .single()
@@ -1081,7 +1087,10 @@ export class GSIHandler {
         if (
           matchData &&
           typeof matchData.match_outcome === 'number' &&
-          [2, 3].includes(matchData.match_outcome)
+          [
+            EMatchOutcome.k_EMatchOutcome_RadVictory,
+            EMatchOutcome.k_EMatchOutcome_DireVictory,
+          ].includes(matchData.match_outcome)
         ) {
           logger.info('Successfully retrieved match result for early DC', {
             matchId,
@@ -1091,11 +1100,65 @@ export class GSIHandler {
 
           // Determine winner based on match outcome
           // k_EMatchOutcome_RadVictory = 2, k_EMatchOutcome_DireVictory = 3
-          const winningTeam = matchData.match_outcome === 2 ? 'radiant' : 'dire'
+          const winningTeam =
+            matchData.match_outcome === EMatchOutcome.k_EMatchOutcome_RadVictory
+              ? 'radiant'
+              : 'dire'
 
           // Reset flag before calling closeBets to prevent duplicate calls from closeBets
           this.checkingEarlyDCWinner = false
           await this.closeBets(winningTeam, response)
+        } else if (
+          matchData &&
+          typeof matchData.match_outcome === 'number' &&
+          matchData.match_outcome > EMatchOutcome.k_EMatchOutcome_DireVictory
+        ) {
+          // Not scored
+          logger.info('Match not scored, skipping early DC winner check', {
+            matchId,
+            name: this.client.name,
+            matchOutcome: matchData.match_outcome,
+          })
+
+          // Reset flag before calling closeBets to prevent duplicate calls from closeBets
+          this.checkingEarlyDCWinner = false
+          logger.info('This is likely a no stats recorded match', {
+            name: this.client.name,
+            matchId,
+          })
+
+          if (this.client.stream_online) {
+            say(
+              this.client,
+              t('bets.notScored', {
+                emote: 'D:',
+                lng: this.client.locale,
+                matchId,
+                key: DBSettings.tellChatBets,
+              }),
+            )
+            const predictionResponse = await supabase
+              .from('bets')
+              .select('predictionId')
+              .eq('matchId', matchId.toString())
+              .eq('userId', this.client.token)
+              .is('won', null)
+              .single()
+            if (predictionResponse.data?.predictionId) {
+              const oldBetId = await refundTwitchBet(
+                this.getChannelId(),
+                predictionResponse.data.predictionId,
+              )
+              if (oldBetId) {
+                await supabase
+                  .from('bets')
+                  .update({ predictionId: null, updated_at: new Date().toISOString() })
+                  .eq('predictionId', oldBetId)
+              }
+            }
+          }
+          await this.resetClientState()
+          return
         } else {
           // Invalid response, retry after delay
           retryCount++

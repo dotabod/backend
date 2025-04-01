@@ -586,6 +586,28 @@ export interface MatchPlayer {
   team_number: DotaGcTeam
 }
 
+export enum EMatchOutcome {
+  k_EMatchOutcome_Unknown = 0,
+  k_EMatchOutcome_RadVictory = 2,
+  k_EMatchOutcome_DireVictory = 3,
+  k_EMatchOutcome_NeutralVictory = 4,
+  k_EMatchOutcome_NoTeamWinner = 5,
+  k_EMatchOutcome_Custom1Victory = 6,
+  k_EMatchOutcome_Custom2Victory = 7,
+  k_EMatchOutcome_Custom3Victory = 8,
+  k_EMatchOutcome_Custom4Victory = 9,
+  k_EMatchOutcome_Custom5Victory = 10,
+  k_EMatchOutcome_Custom6Victory = 11,
+  k_EMatchOutcome_Custom7Victory = 12,
+  k_EMatchOutcome_Custom8Victory = 13,
+  k_EMatchOutcome_NotScored_PoorNetworkConditions = 64,
+  k_EMatchOutcome_NotScored_Leaver = 65,
+  k_EMatchOutcome_NotScored_ServerCrash = 66,
+  k_EMatchOutcome_NotScored_NeverStarted = 67,
+  k_EMatchOutcome_NotScored_Canceled = 68,
+  k_EMatchOutcome_NotScored_Suspicious = 69,
+}
+
 export interface MatchMinimal {
   match_id: {
     low: number
@@ -595,7 +617,9 @@ export interface MatchMinimal {
   start_time: number
   duration: number
   game_mode: number
-  match_outcome: number
+  // 2 = Radiant Victory, 3 = Dire Victory
+
+  match_outcome: EMatchOutcome
   players: MatchPlayer[]
   tourney: any
   radiant_score: number
