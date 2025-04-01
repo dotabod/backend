@@ -486,25 +486,18 @@ class Dota {
       if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
         reject(new CustomError('Error getting medal'))
       else {
-        console.log('fetchProfileCard')
         // Send the profile card request
-        const ok = this.dota2.send(EDOTAGCMsg.k_EMsgClientToGCGetProfileCard, {
+        this.dota2.send(EDOTAGCMsg.k_EMsgClientToGCGetProfileCard, {
           accountId: account,
         })
-        console.log({ ok })
         // Listen for the response on the router
-        this.dota2.router.once(
-          // @ts-ignore - Using TypeScript ignore to bypass type checking for this event
-          EDOTAGCMsg.k_EMsgClientToGCGetProfileCardResponse,
-          (data: any) => {
-            console.log({ data })
-            if (!data || !data.cardInfo) {
-              reject(new Error('No profile card data received'))
-              return
-            }
-            resolve(data.cardInfo as unknown as Cards)
-          },
-        )
+        this.dota2.router.once(EDOTAGCMsg.k_EMsgClientToGCGetProfileCardResponse, (data: any) => {
+          if (!data || !data.cardInfo) {
+            reject(new Error('No profile card data received'))
+            return
+          }
+          resolve(data.cardInfo as unknown as Cards)
+        })
       }
     })
   }
@@ -715,6 +708,7 @@ export const GetRealTimeStats = async ({
         }
 
         if (!response.ok) {
+          logger.info('apiUrl:', { apiUrl })
           throw new Error(`HTTP error! Status: ${response.status}`)
         }
         game = (await response.json()) as DelayedGames
