@@ -1,4 +1,5 @@
 import { getTwitchTokens } from './getTwitchTokens'
+import { logger } from './twitch/lib/logger'
 
 // Bot status tracking
 export const botStatus = {
@@ -21,14 +22,15 @@ export async function checkBotStatus() {
     const tokens = await getTwitchTokens(process.env.TWITCH_BOT_PROVIDERID)
 
     if (!tokens || tokens.requires_refresh) {
+      logger.info('[TWITCHCHAT] Bot is banned, tokens are invalid')
       botStatus.isBanned = true
-      return
+      return botStatus.isBanned
     }
 
     botStatus.isBanned = false
-    return
+    return botStatus.isBanned
   } catch (error) {
     botStatus.isBanned = true
-    return
+    return botStatus.isBanned
   }
 }
