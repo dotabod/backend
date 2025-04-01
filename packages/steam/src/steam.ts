@@ -109,7 +109,8 @@ class Dota {
   public isLoggedOn = false
 
   constructor() {
-    this.steamClient = new SteamUser()
+    logger.info('[STEAM] Initializing Steam client')
+    this.steamClient = new SteamUser({ renewRefreshTokens: true })
     this.dota2 = new Dota2User(this.steamClient)
     this.dota2.setMaxListeners(12)
 
@@ -299,6 +300,7 @@ class Dota {
       logger.error('[STEAM] Steam client not initialized')
       return
     }
+    logger.info('[STEAM] Logging on to Steam')
     this.steamClient.logOn(details)
     this.steamClient.on('loggedOn', () => {
       this.isLoggedOn = true
@@ -309,6 +311,9 @@ class Dota {
     this.steamClient.on('logOnResponse', this.handleLogOnResponse.bind(this))
     this.steamClient.on('loggedOff', this.handleLoggedOff.bind(this))
     this.steamClient.on('error', this.handleClientError.bind(this))
+    this.steamClient.on('debug', (message: string) => {
+      console.log({ message })
+    })
   }
 
   handleLogOnResponse(logonResp: any) {
