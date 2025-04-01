@@ -6,7 +6,16 @@ WORKDIR /app
 
 # Copy just the relevant package.json and bun lock files
 COPY package.json bun.lockb ./
+
+# Create directories for required packages
+RUN mkdir -p packages/$BUILD_CONTEXT
+
+# Copy the target package
 COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
+
+# Copy profanity-filter if needed (done unconditionally for simplicity)
+RUN mkdir -p packages/profanity-filter
+COPY packages/profanity-filter/ packages/profanity-filter/
 
 # Install dependencies
 RUN bun install

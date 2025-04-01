@@ -1,1 +1,39 @@
+# Dependency directories
 node_modules
+**/node_modules
+
+# Build outputs
+**/dist
+**/build
+**/.out
+
+# Version control
+.git
+.gitignore
+.github
+
+# IDE/Editor directories
+.vscode
+.idea
+
+# Test directories
+**/__tests__
+**/test
+**/tests
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env*
+!.env.example
+
+# Misc
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+!README.md

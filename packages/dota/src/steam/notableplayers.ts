@@ -1,13 +1,12 @@
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
-import { filter } from 'curse-filter'
-
 import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameOrColor } from '../dota/lib/heroes.js'
 import type { Players, SocketClient } from '../types'
 import type { NotablePlayer } from '../types.js'
 import MongoDBSingleton from './MongoDBSingleton.js'
+import { moderateText } from '@dotabod/profanity-filter'
 
 export interface Player {
   accountid: number
@@ -84,7 +83,8 @@ export async function notablePlayers({
 
     const proPlayers: NotablePlayer[] = []
 
-    matchPlayers.forEach((player, i: number) => {
+    // Using for..of loop instead of forEach to properly handle await
+    for (const [i, player] of matchPlayers.entries()) {
       const np = nps.find((np) => np.account_id === player.accountid)
       const isCurrentPlayer = player.accountid === steam32Id
 
@@ -111,14 +111,14 @@ export async function notablePlayers({
               ? getHeroNameOrColor(matchPlayers[i].heroid, i)
               : '?'
             : heroName,
-        name: filter(np?.name ?? matchPlayers[i].player_name ?? `Player ${i + 1}`),
+        name: await moderateText(np?.name ?? matchPlayers[i].player_name ?? `Player ${i + 1}`),
         country_code: np?.country_code ?? '',
         isMe: isCurrentPlayer,
       }
 
       // Only add to proPlayers if this is a notable player
       if (np || matchPlayers[i].player_name) proPlayers.push(playerData)
-    })
+    }
 
     const modeText =
       typeof mode?.name === 'string' ? `${mode.name} [${avg} avg]: ` : `[${avg} avg]: `
