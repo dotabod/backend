@@ -393,22 +393,24 @@ class Dota {
 
     return new Promise((resolve, reject) => {
       operation.attempt(() => {
-        // Send WatchGame message to the GC
-        this.dota2.send(EDOTAGCMsg.k_EMsgGCSpectateFriendGame, {
-          steamId: steam_id.toString(),
-          live: false,
-        })
+        // Send WatchGame message to the GC using callback pattern
+        this.dota2.sendWithCallback(
+          EDOTAGCMsg.k_EMsgGCSpectateFriendGame,
+          {
+            steamId: steam_id.toString(),
+            live: false,
+          },
+          EDOTAGCMsg.k_EMsgGCSpectateFriendGameResponse,
+          (response) => {
+            const theID = response?.serverSteamid?.toString()
 
-        // Set up a one-time listener for the response
-        this.dota2.router.once(EDOTAGCMsg.k_EMsgGCSpectateFriendGameResponse, (response) => {
-          const theID = response?.serverSteamid?.toString()
+            const shouldRetry = !theID ? new Error('No ID yet, will keep trying.') : undefined
+            if (operation.retry(shouldRetry)) return
 
-          const shouldRetry = !theID ? new Error('No ID yet, will keep trying.') : undefined
-          if (operation.retry(shouldRetry)) return
-
-          if (theID) resolve(theID)
-          else reject('No spectator match found')
-        })
+            if (theID) resolve(theID)
+            else reject('No spectator match found')
+          },
+        )
       })
     })
   }
