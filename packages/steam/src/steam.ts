@@ -689,16 +689,24 @@ export const GetRealTimeStats = async ({
       let game: DelayedGames
       try {
         const apiUrl = getApiUrl(steam_server_id)
-        logger.info('[STEAM] Fetching game data from:', { apiUrl })
         const response = await fetch(apiUrl)
 
-        // Handle rate limiting (403)
+        // Handle rate limiting (403/429/400)
         if (response.status === 403 || response.status === 429 || response.status === 400) {
-          logger.warn('[STEAM] Rate limited with 403 response. Backing off...')
+          logger.warn(`[STEAM] Rate limited with ${response.status} response. Backing off...`)
           // Exponential backoff with longer delay for rate limiting
           const backoffDelay = Math.min(30000, 5000 * 2 ** (currentAttempt - 1))
-          await new Promise((r) => setTimeout(r, backoffDelay))
-          return operation.retry(new Error('Rate limited with 403'))
+
+          // Keep the request in the activeRequests map during the backoff period
+          // to prevent multiple requests to the same rate-limited endpoint
+          const rateLimitError = new Error(`Rate limited with ${response.status}`)
+
+          // Set a timeout to retry after the backoff period
+          setTimeout(() => {
+            operation.retry(rateLimitError)
+          }, backoffDelay)
+
+          return // Don't immediately retry, wait for the timeout
         }
 
         if (!response.ok) {
@@ -765,7 +773,11 @@ export const GetRealTimeStats = async ({
 
   // Add a cleanup in case of errors to prevent memory leaks
   requestPromise.catch(() => {
-    activeRequests.delete(match_id)
+    // Only remove from activeRequests if it's not a rate limit error
+    // Rate limit errors are handled separately with timeouts
+    if (!(requestPromise as any).__isRateLimited) {
+      activeRequests.delete(match_id)
+    }
   })
 
   return requestPromise
