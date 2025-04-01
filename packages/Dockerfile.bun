@@ -1,5 +1,8 @@
 FROM oven/bun:1.1.24 AS base
 
+# Install git for GitHub dependencies
+RUN apt-get update && apt-get install -y git && apt-get clean
+
 # Set build context and work directories
 # BUILD_CONTEXT like "packages/twitch-chat" or "packages/twitch-events"
 ARG BUILD_CONTEXT
@@ -17,7 +20,7 @@ COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 COPY packages/profanity-filter/package.json ./packages/profanity-filter/
 
 # Install dependencies
-RUN bun install
+RUN bun install --frozen-lockfile
 
 #-----------------------
 
@@ -39,6 +42,9 @@ RUN bun run build
 #-----------------------
 
 FROM oven/bun:1.1.24 AS prod
+
+# Install git for GitHub dependencies
+RUN apt-get update && apt-get install -y git && apt-get clean
 
 ARG BUILD_CONTEXT
 ARG DOTABOD_ENV
