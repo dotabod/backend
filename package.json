@@ -1,7 +1,7 @@
 {
   "name": "dotabod",
   "private": true,
-  "workspaces": ["packages/profanity-filter", "packages/dota", "packages/twitch-chat", "packages/twitch-events"],
+  "workspaces": ["packages/*"],
   "scripts": {
     "cache:clean": "rm -rf $(echo bun pm cache) && rm -rf node_modules && rm bun.lockb || true",
     "up": "bun upgrade-interactive --latest",
