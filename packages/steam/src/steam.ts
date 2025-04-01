@@ -656,7 +656,7 @@ export const GetRealTimeStats = async ({
 }): Promise<DelayedGames> => {
   // Debounce: If there's already an active request for this match_id, return that promise
   if (activeRequests.has(match_id)) {
-    logger.info(`[STEAM] Reusing in-flight request for match_id: ${match_id}`)
+    // logger.info(`[STEAM] Reusing in-flight request for match_id: ${match_id}`)
     return activeRequests.get(match_id)!
   }
 
@@ -691,20 +691,9 @@ export const GetRealTimeStats = async ({
         const apiUrl = getApiUrl(steam_server_id)
         const response = await fetch(apiUrl)
 
-        // Handle rate limiting (403/429/400)
-        if (response.status === 403 || response.status === 429 || response.status === 400) {
-          // For 400 responses, log detailed debug information to help with local reproduction
-          if (response.status === 400) {
-            logger.error('[STEAM] Received 400 Bad Request', {
-              match_id,
-              steam_server_id,
-              url: getApiUrl(steam_server_id),
-              headers: Object.fromEntries(response.headers.entries()),
-              responseText: await response.text().catch(() => 'Failed to get response text'),
-              attempt: currentAttempt,
-            })
-          }
-
+        // 400 is a bad request, but it's not rate limited and it means the next request after it should work
+        // Handle rate limiting (403/429)
+        if (response.status === 403 || response.status === 429) {
           logger.warn(`[STEAM] Rate limited with ${response.status} response. Backing off...`)
           // Exponential backoff with longer delay for rate limiting
           const backoffDelay = Math.min(30000, 5000 * 2 ** (currentAttempt - 1))
@@ -726,6 +715,10 @@ export const GetRealTimeStats = async ({
         }
         game = (await response.json()) as DelayedGames
       } catch (e) {
+        if (e instanceof Error && e.message.includes('400')) {
+          // Don't log 400 errors as they're expected and the next request should work
+          return operation.retry(new Error('Match not found'))
+        }
         logger.error('[STEAM] Failed to fetch game data:', { e })
         return operation.retry(new Error('Match not found'))
       }
