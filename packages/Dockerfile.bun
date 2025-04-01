@@ -24,8 +24,8 @@ RUN bun install
 FROM base AS builder
 
 # Copy source code and build configurations
-COPY packages/$BUILD_CONTEXT/src ./packages/$BUILD_CONTEXT/src/
-COPY packages/$BUILD_CONTEXT/locales ./packages/$BUILD_CONTEXT/locales/
+COPY $BUILD_CONTEXT/src ./packages/$BUILD_CONTEXT/src/
+COPY $BUILD_CONTEXT/locales ./packages/$BUILD_CONTEXT/locales/
 
 # Build profanity-filter first, then build the main application
 WORKDIR /app
