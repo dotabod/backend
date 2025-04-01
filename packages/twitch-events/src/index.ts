@@ -1,18 +1,16 @@
-import { subscribeToEvents } from './subscribeToEvents.js'
+import { checkBotStatus } from './botBanStatus.js'
 import { fetchExistingSubscriptions, subsToCleanup } from './fetchExistingSubscriptions'
+import { subscribeToEvents } from './subscribeToEvents.js'
 import { logger } from './twitch/lib/logger.js'
 import { deleteSubscription } from './twitch/lib/revokeEvent.js'
 import { rateLimiter } from './utils/rateLimiter.js'
 import { setupSocketIO } from './utils/socketUtils.js'
 import { setupWebhooks } from './utils/webhookUtils.js'
-import { checkBotStatus, setupStatusCheckInterval } from './botBanStatus.js'
 
 const isBanned = await checkBotStatus()
 if (isBanned) {
   logger.error('Bot is banned!')
 }
-
-setupStatusCheckInterval()
 
 setupSocketIO()
 setupWebhooks()
