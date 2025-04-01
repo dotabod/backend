@@ -11,7 +11,7 @@ COPY ./packages/steam/package.json ./packages/steam/yarn.lock ./
 RUN mv ./yarn.lock ./yarn.lock
 
 # Install dependencies
-RUN yarn install --immutable
+RUN yarn install
 
 #-------------------------
 
