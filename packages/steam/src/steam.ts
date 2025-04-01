@@ -110,7 +110,11 @@ class Dota {
 
   constructor() {
     logger.info('[STEAM] Initializing Steam client')
-    this.steamClient = new SteamUser({ renewRefreshTokens: true })
+    this.steamClient = new SteamUser({
+      renewRefreshTokens: true,
+      // Force TCP protocol instead of WebSocket to avoid connection issues
+      protocol: SteamUser.EConnectionProtocol.TCP,
+    })
     this.dota2 = new Dota2User(this.steamClient)
     this.dota2.setMaxListeners(12)
 
@@ -311,9 +315,6 @@ class Dota {
     this.steamClient.on('logOnResponse', this.handleLogOnResponse.bind(this))
     this.steamClient.on('loggedOff', this.handleLoggedOff.bind(this))
     this.steamClient.on('error', this.handleClientError.bind(this))
-    this.steamClient.on('debug', (message: string) => {
-      console.log({ message })
-    })
   }
 
   handleLogOnResponse(logonResp: any) {
@@ -492,14 +493,18 @@ class Dota {
         })
         console.log({ ok })
         // Listen for the response on the router
-        this.dota2.router.on(EDOTAGCMsg.k_EMsgClientToGCGetProfileCardResponse, (data: any) => {
-          console.log({ data })
-          if (!data || !data.cardInfo) {
-            reject(new Error('No profile card data received'))
-            return
-          }
-          resolve(data.cardInfo as unknown as Cards)
-        })
+        this.dota2.router.once(
+          // @ts-ignore - Using TypeScript ignore to bypass type checking for this event
+          EDOTAGCMsg.k_EMsgClientToGCGetProfileCardResponse,
+          (data: any) => {
+            console.log({ data })
+            if (!data || !data.cardInfo) {
+              reject(new Error('No profile card data received'))
+              return
+            }
+            resolve(data.cardInfo as unknown as Cards)
+          },
+        )
       }
     })
   }
