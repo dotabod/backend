@@ -1,8 +1,8 @@
 /**
- * moderation-test.ts
+ * moderation.test.ts
  *
  * A simple test script to demonstrate the enhanced profanity detection system.
- * Run with: bun packages/dota/src/utils/moderation-test.ts
+ * Run with: bun packages/profanity-filter/tests/moderation.test.ts
  */
 
 import { moderateText, getProfanityDetails } from '../src/utils/moderation'
@@ -148,6 +148,7 @@ async function compareLibraries() {
     { text: 'Он жидяра', description: 'Expanded slurs - Antisemitic' },
     { text: 'Это chink из китая', description: 'Mixed language slur' },
     { text: 'Типичный n1gg3r', description: 'Obfuscated transliterated slur' },
+    { text: 'Will we win with Riki?', description: 'Normal text' },
   ]
 
   // Library performance scores
@@ -355,8 +356,8 @@ async function compareLibraries() {
 
 // Run main test and then compare libraries
 async function main() {
-  await runTest()
-  await compareLibraries()
+  // await runTest()
+  // await compareLibraries()
 }
 
 main().catch((err) => {

@@ -17,10 +17,10 @@ const CHAR_SUBSTITUTIONS: Record<string, string[]> = {
   f: ['f', 'ƒ', 'φ', 'ф'],
   g: ['g', 'ğ', 'ĝ', 'ġ', 'ģ', 'г', 'γ', '9'],
   h: ['h', 'ĥ', 'ħ', 'η', 'х', 'н'],
-  i: ['i', 'ì', 'í', 'î', 'ï', 'ĩ', 'ī', 'ĭ', 'į', 'ı', 'і', 'и', 'й', '!', '1', '|', 'l'],
+  i: ['i', 'ì', 'í', 'î', 'ï', 'ĩ', 'ī', 'ĭ', 'į', 'ı', 'і', 'и', 'й', '!', '1', '|'],
   j: ['j', 'ĵ', 'ј'],
   k: ['k', 'ķ', 'к', 'κ'],
-  l: ['l', 'ĺ', 'ļ', 'ľ', 'ł', 'л', 'λ', '1', '|', 'i'],
+  l: ['l', 'ĺ', 'ļ', 'ľ', 'ł', 'л', 'λ'],
   m: ['m', 'м', 'μ'],
   n: ['n', 'ñ', 'ń', 'ņ', 'ň', 'ŉ', 'н'],
   o: ['o', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ō', 'ŏ', 'ő', 'œ', 'о', 'ο', '0', '*'],
@@ -37,15 +37,29 @@ const CHAR_SUBSTITUTIONS: Record<string, string[]> = {
   z: ['z', 'ź', 'ż', 'ž', 'з', 'ζ', '2'],
 }
 
+// Removed problematic bidirectional mappings to prevent false positives
+// 'i' and 'l' conflation was causing legitimate words to be flagged
+// When normalizing text for profanity detection, we want to catch obfuscation
+// without causing excessive false positives
+
 /**
  * Normalizes text by replacing common character substitutions
- * to their standard form
+ * to their standard form, but only for known profanity patterns
  *
  * @param text Input text to normalize
  * @returns Normalized text
  */
 export function normalizeText(text: string): string {
   let normalized = text.toLowerCase()
+
+  // Only apply aggressive normalization to suspicious patterns
+  // Check for potential obfuscation markers first
+  const hasPotentialObfuscation =
+    /[^\w\s]|[0-9]|(.)\1{2,}/g.test(normalized) || /\w\s\w\s\w/.test(normalized) // Spaced out letters
+
+  if (!hasPotentialObfuscation) {
+    return normalized // Skip normalization for normal-looking text
+  }
 
   // Replace each character with its standard form
   for (const [char, substitutions] of Object.entries(CHAR_SUBSTITUTIONS)) {
@@ -109,6 +123,13 @@ export function prepareText(text: string): string {
   // First, normalize international characters and leetspeak substitutions
   let prepared = normalizeText(text)
 
+  // Check for potential obfuscation markers first
+  const hasPotentialObfuscation = /[^\w\s]|[0-9]|(.)\1{2,}/g.test(text) || /\w\s\w\s\w/.test(text) // Spaced out letters
+
+  if (!hasPotentialObfuscation) {
+    return prepared // Skip further processing for normal-looking text
+  }
+
   // Remove separators to handle obfuscation like "f*u*c*k" or "f.u.c.k"
   prepared = removeSeparators(prepared)
 
@@ -125,6 +146,15 @@ export function prepareText(text: string): string {
  * @returns Array of text variations to check
  */
 export function createTextVariations(text: string): string[] {
+  // Check for potential obfuscation markers first
+  const hasPotentialObfuscation = /[^\w\s]|[0-9]|(.)\1{2,}/g.test(text) || /\w\s\w\s\w/.test(text) // Spaced out letters
+
+  if (!hasPotentialObfuscation) {
+    // For normal-looking text, just return minimal variations
+    return [text, text.toLowerCase()]
+  }
+
+  // For suspect text, apply all transformations
   const variations: string[] = [
     text, // Original text
     text.toLowerCase(), // Lowercase

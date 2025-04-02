@@ -18,23 +18,6 @@ declare module 'bad-words' {
   }
 }
 
-declare module 'leo-profanity' {
-  interface LeoProfanity {
-    loadDictionary(lang: string): string[]
-    getDictionary(lang?: string): string[]
-    add(words: string | string[]): string[]
-    remove(words: string | string[]): string[]
-    reset(): string[]
-    list(): string[]
-    check(text: string): boolean
-    clean(text: string, replaceKey?: string): string
-    getIsolateRegExp(): RegExp
-  }
-
-  const leoProfanity: LeoProfanity
-  export default leoProfanity
-}
-
 declare module 'profanity-filter' {
   export class ProfanityFilter {
     isProfane(text: string): boolean
@@ -42,13 +25,6 @@ declare module 'profanity-filter' {
     addWords(words: string[]): void
     removeWords(words: string[]): void
   }
-}
-
-declare module 'naughty-words' {
-  const naughtyWords: {
-    [language: string]: string[]
-  }
-  export default naughtyWords
 }
 
 declare module 'profanity-util' {

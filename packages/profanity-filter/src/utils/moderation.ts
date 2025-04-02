@@ -60,6 +60,53 @@ const matcher = new RegExpMatcher({
 const censor = new TextCensor()
 
 /**
+ * Whitelist of words that might be falsely detected as profanity
+ * but should be allowed as legitimate language
+ */
+export const SAFE_WORDS_WHITELIST = [
+  // Common English words falsely flagged
+  'classic',
+  'scunthorpe',
+  'assassin',
+  'cockpit',
+  'shuttlecock',
+  'analysis',
+  'grape',
+  'therapist',
+  'competition',
+  'intense',
+  'skill',
+  'set',
+  'cocktail',
+  'documentation',
+  // Add other safe words as needed
+]
+
+/**
+ * Helper function to check if a text contains only whitelisted words
+ * or is part of common legitimate language
+ */
+function isSafeText(text: string): boolean {
+  // Convert to lowercase for case-insensitive matching
+  const lower = text.toLowerCase()
+
+  // Check if text is in the whitelist (exact match)
+  if (SAFE_WORDS_WHITELIST.some((word) => lower.includes(word.toLowerCase()))) {
+    return true
+  }
+
+  // Check if text only contains whitelisted words
+  const words = lower.split(/\s+/)
+  const allWordsAreSafe = words.every((word) => {
+    // Remove any punctuation before checking
+    const cleanWord = word.replace(/[.,?!;:'"()[\]{}]/g, '')
+    return cleanWord.length === 0 || SAFE_WORDS_WHITELIST.includes(cleanWord)
+  })
+
+  return allWordsAreSafe
+}
+
+/**
  * Helper function to check text against Russian bad words list
  */
 function checkRussianBadWords(text: string): boolean {
@@ -153,6 +200,11 @@ export async function moderateText(
 async function moderateTextSingle(text?: string): Promise<string | undefined> {
   // If text is empty, return as is
   if (!text?.trim()) {
+    return text
+  }
+
+  // Check if this is safe text that should be whitelisted
+  if (isSafeText(text)) {
     return text
   }
 
@@ -325,6 +377,11 @@ function getProfanityDetailsSingle(text: string): {
   matches?: string[]
   language?: string
 } {
+  // Check if this is a safe text that should be whitelisted
+  if (isSafeText(text)) {
+    return { isFlagged: false, source: 'none' }
+  }
+
   // Create text variations for enhanced detection
   const textVariations = createTextVariations(text)
 
