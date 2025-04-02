@@ -111,7 +111,9 @@ export async function notablePlayers({
               ? getHeroNameOrColor(matchPlayers[i].heroid, i)
               : '?'
             : heroName,
-        name: await moderateText(np?.name ?? matchPlayers[i].player_name ?? `Player ${i + 1}`),
+        name:
+          (await moderateText(np?.name ?? matchPlayers[i].player_name ?? `Player ${i + 1}`)) ??
+          `Player ${i + 1}`,
         country_code: np?.country_code ?? '',
         isMe: isCurrentPlayer,
       }

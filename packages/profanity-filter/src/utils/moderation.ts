@@ -120,13 +120,13 @@ function checkWashProfanity(text: string): {
  * @param input Text to moderate
  * @returns Filtered text (original text if no issues, redacted if flagged)
  */
-export async function moderateText(input: string): Promise<string>
+export async function moderateText(input: string | undefined): Promise<string | undefined>
 /**
  * Uses multiple profanity filters and OpenAI's moderation API to filter text
  * @param input Array of texts to moderate
  * @returns Array of filtered texts (original text if no issues, redacted if flagged)
  */
-export async function moderateText(input: string[]): Promise<string[]>
+export async function moderateText(input: string[] | undefined): Promise<string[] | undefined>
 /**
  * Uses multiple profanity filters and OpenAI's moderation API to filter text
  * @param input Text or array of texts to moderate

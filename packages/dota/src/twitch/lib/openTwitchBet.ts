@@ -45,15 +45,16 @@ export const openTwitchBet = async ({
   const title = isTitleDefault
     ? t('predictions.title', { lng: locale, heroName })
     : betsInfo.title.replace('[heroname]', heroName ?? '')
-  const filteredTitle = await moderateText(title)
+  const filteredTitle =
+    (await moderateText(title)) || t('predictions.title', { lng: locale, heroName })
 
   const isYesDefault = betsInfo.yes === defaultSettings.betsInfo.yes
   const yes = isYesDefault ? t('predictions.yes', { lng: locale }) : betsInfo.yes
-  const filteredYes = await moderateText(yes)
+  const filteredYes = (await moderateText(yes)) || t('predictions.yes', { lng: locale })
 
   const isNoDefault = betsInfo.no === defaultSettings.betsInfo.no
   const no = isNoDefault ? t('predictions.no', { lng: locale }) : betsInfo.no
-  const filteredNo = await moderateText(no)
+  const filteredNo = (await moderateText(no)) || t('predictions.no', { lng: locale })
 
   const isValidDuration = betsInfo.duration >= 30 && betsInfo.duration <= 1800
   const autoLockAfter = isValidDuration ? betsInfo.duration : 240 // 4 min default

@@ -80,11 +80,23 @@ const startServer = () => {
 
 const main = async () => {
   logger.info('Starting on', { env: process.env.DOTABOD_ENV })
-
   try {
-    await setupRedisClient()
-    await setupTranslations()
-    setupSupabaseWatcher()
+    // Run all setup functions in parallel
+    const results = await Promise.allSettled([
+      setupRedisClient(),
+      setupTranslations(),
+      Promise.resolve(setupSupabaseWatcher()),
+    ])
+
+    // Check which promises failed
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const setupFunctions = ['Redis', 'Translations', 'Supabase']
+        logger.error(`${setupFunctions[index]} setup failed`, {
+          reason: result.reason,
+        })
+      }
+    })
   } catch (e) {
     logger.error('Error in setup', { e })
   }

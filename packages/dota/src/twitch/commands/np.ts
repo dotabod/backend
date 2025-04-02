@@ -54,7 +54,7 @@ commandHandler.registerCommand('np', {
             {
               $set: {
                 account_id: Number(forSteam32Id),
-                name: await moderateText(forName),
+                name: (await moderateText(forName)) ?? 'Player',
                 channel: twitchChannelId,
                 addedBy: chatterName,
                 createdAt: new Date(),
@@ -64,7 +64,10 @@ commandHandler.registerCommand('np', {
           )
           chatClient.say(
             channel,
-            t('npAdded', { name: await moderateText(forName), lng: message.channel.client.locale }),
+            t('npAdded', {
+              name: (await moderateText(forName)) ?? 'Player',
+              lng: message.channel.client.locale,
+            }),
             message.user.messageId,
           )
           return
