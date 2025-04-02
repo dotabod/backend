@@ -1,7 +1,7 @@
 {
   "name": "@dotabod/dota",
   "description": "By leveraging insights from the Dota 2 official API, Dotabod will know exactly when to hide sensitive streamer information or engage with your Twitch audience.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "GPL-3.0-or-later",
   "author": "Geczy",
   "main": "src/index.ts",
