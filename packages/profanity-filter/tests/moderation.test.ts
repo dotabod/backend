@@ -149,6 +149,7 @@ async function compareLibraries() {
     { text: 'Это chink из китая', description: 'Mixed language slur' },
     { text: 'Типичный n1gg3r', description: 'Obfuscated transliterated slur' },
     { text: 'Will we win with Riki?', description: 'Normal text' },
+    { text: "Will we win with Nature's Prophet?", description: 'Normal text' },
   ]
 
   // Library performance scores

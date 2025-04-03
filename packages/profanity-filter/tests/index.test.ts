@@ -294,6 +294,7 @@ describe('Profanity Filter', () => {
     test('should not flag common English phrases', async () => {
       const phrases = [
         'Will we win with Riki?',
+        "Will we win with Nature's Prophet?",
         'The competition is so intense',
         'He has a good skill set',
         "Let's meet at the cocktail bar",
