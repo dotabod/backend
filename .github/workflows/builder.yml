@@ -1,22 +1,22 @@
 name: Docker Image CI
 
 on:
-  workflow_dispatch:     # Allow manual triggering of the workflow
+  workflow_dispatch:
   push:
     branches:
       - "**"
-    # Define paths to trigger the workflow only for relevant changes
     paths:
-      - 'packages/dota/**'           # Trigger for dota service changes
-      - 'packages/twitch-chat/**'    # Trigger for twitch-chat service changes
-      - 'packages/steam/**'          # Trigger for steam service changes
-      - 'packages/twitch-events/**'  # Trigger for twitch-events service changes
+      - 'packages/dota/**'           # Dota service and related changes
+      - 'packages/twitch-chat/**'    # Twitch Chat service changes
+      - 'packages/steam/**'          # Steam service changes
+      - 'packages/twitch-events/**'  # Twitch Events service changes
       - 'package.json'
       - 'bun.lock'
       - 'packages/Dockerfile.bun'    # Shared Dockerfile for bun-based services
       - 'docker-compose.yml'         # Compose file changes might affect all services
 
 jobs:
+  # Dota job remains separate because it has extra change checks
   dota:
     runs-on: ubuntu-latest
     environment: prod
@@ -25,14 +25,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Fetch the current and previous commit for diff
+          fetch-depth: 2
 
       - name: Check for changes in dota service
         id: dota-changes
         run: |
-          # Check for changes in profanity-filter package
           git diff --name-only HEAD^ HEAD | grep -q "^packages/profanity-filter/" && echo "profanity_filter_changed=true" >> $GITHUB_OUTPUT || echo "profanity_filter_changed=false" >> $GITHUB_OUTPUT
-          # Check for changes in package.json or bun.lock that might affect all services
           git diff --name-only HEAD^ HEAD | grep -q "^package.json\|^bun.lock" && echo "deps_changed=true" >> $GITHUB_OUTPUT || echo "deps_changed=false" >> $GITHUB_OUTPUT
           git diff --name-only HEAD^ HEAD | grep -q "^packages/dota/" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
           git diff --name-only HEAD^ HEAD | grep -q "^packages/Dockerfile.bun" && echo "dockerfile_changed=true" >> $GITHUB_OUTPUT || echo "dockerfile_changed=false" >> $GITHUB_OUTPUT
@@ -73,30 +71,43 @@ jobs:
             *.cache-from=
             *.cache-to=
 
-  twitch-chat:
+  # Combined job for twitch-chat, steam, and twitch-events using a matrix
+  services:
     runs-on: ubuntu-latest
     environment: prod
     permissions:
       packages: write
+    strategy:
+      matrix:
+        include:
+          - service: twitch-chat
+            changed_path: "^packages/twitch-chat/"
+            dockerfile: "packages/Dockerfile.bun"
+          - service: steam
+            changed_path: "^packages/steam/"
+            dockerfile: "packages/Dockerfile.steam"
+          - service: twitch-events
+            changed_path: "^packages/twitch-events/"
+            dockerfile: "packages/Dockerfile.bun"
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
-      - name: Check for changes in twitch-chat service
-        id: twitch-chat-changes
+      - name: Check for changes in ${{ matrix.service }} service
+        id: changes
         run: |
-          git diff --name-only HEAD^ HEAD | grep -q "^packages/twitch-chat/" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^packages/Dockerfile.bun" && echo "dockerfile_changed=true" >> $GITHUB_OUTPUT || echo "dockerfile_changed=false" >> $GITHUB_OUTPUT
+          git diff --name-only HEAD^ HEAD | grep -q "${{ matrix.changed_path }}" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
+          git diff --name-only HEAD^ HEAD | grep -q "^${{ matrix.dockerfile }}" && echo "dockerfile_changed=true" >> $GITHUB_OUTPUT || echo "dockerfile_changed=false" >> $GITHUB_OUTPUT
           git diff --name-only HEAD^ HEAD | grep -q "^docker-compose.yml" && echo "compose_changed=true" >> $GITHUB_OUTPUT || echo "compose_changed=false" >> $GITHUB_OUTPUT
 
       - name: Extract branch name
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true' }}
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' }}
         shell: bash
         run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true' }}
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' }}
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: |
@@ -105,7 +116,7 @@ jobs:
           buildkitd-flags: --debug
 
       - name: Login to ghcr
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true' }}
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -113,118 +124,14 @@ jobs:
           password: ${{ secrets.GHA_PAT }}
 
       - name: Build and push
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-chat-changes.outputs.changed == 'true' || steps.twitch-chat-changes.outputs.dockerfile_changed == 'true' || steps.twitch-chat-changes.outputs.compose_changed == 'true' }}
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' }}
         uses: docker/bake-action@v6
         with:
           push: true
           provenance: false
-          targets: twitch-chat
+          targets: ${{ matrix.service }}
           set: |
             *.platform=linux/arm64,linux/amd64/v3
-            twitch-chat.tags=ghcr.io/${{ github.repository_owner }}/twitch-chat:${{ env.BRANCH_NAME }}
-            *.cache-from=
-            *.cache-to=
-
-  steam:
-    runs-on: ubuntu-latest
-    environment: prod
-    permissions:
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Check for changes in steam service
-        id: steam-changes
-        run: |
-          git diff --name-only HEAD^ HEAD | grep -q "^packages/steam/" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^packages/Dockerfile.steam" && echo "dockerfile_changed=true" >> $GITHUB_OUTPUT || echo "dockerfile_changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^docker-compose.yml" && echo "compose_changed=true" >> $GITHUB_OUTPUT || echo "compose_changed=false" >> $GITHUB_OUTPUT
-
-      - name: Extract branch name
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true' }}
-        shell: bash
-        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-
-      - name: Set up Docker Buildx
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true' }}
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: |
-            network=host
-            image=moby/buildkit:latest
-          buildkitd-flags: --debug
-
-      - name: Login to ghcr
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true' }}
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHA_PAT }}
-
-      - name: Build and push
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.steam-changes.outputs.changed == 'true' || steps.steam-changes.outputs.dockerfile_changed == 'true' || steps.steam-changes.outputs.compose_changed == 'true' }}
-        uses: docker/bake-action@v6
-        with:
-          push: true
-          provenance: false
-          targets: steam
-          set: |
-            *.platform=linux/arm64,linux/amd64/v3
-            steam.tags=ghcr.io/${{ github.repository_owner }}/steam:${{ env.BRANCH_NAME }}
-            *.cache-from=
-            *.cache-to=
-
-  twitch-events:
-    runs-on: ubuntu-latest
-    environment: prod
-    permissions:
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Check for changes in twitch-events service
-        id: twitch-events-changes
-        run: |
-          git diff --name-only HEAD^ HEAD | grep -q "^packages/twitch-events/" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^packages/Dockerfile.bun" && echo "dockerfile_changed=true" >> $GITHUB_OUTPUT || echo "dockerfile_changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^docker-compose.yml" && echo "compose_changed=true" >> $GITHUB_OUTPUT || echo "compose_changed=false" >> $GITHUB_OUTPUT
-
-      - name: Extract branch name
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true' }}
-        shell: bash
-        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-
-      - name: Set up Docker Buildx
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true' }}
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: |
-            network=host
-            image=moby/buildkit:latest
-          buildkitd-flags: --debug
-
-      - name: Login to ghcr
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true' }}
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHA_PAT }}
-
-      - name: Build and push
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.twitch-events-changes.outputs.changed == 'true' || steps.twitch-events-changes.outputs.dockerfile_changed == 'true' || steps.twitch-events-changes.outputs.compose_changed == 'true' }}
-        uses: docker/bake-action@v6
-        with:
-          push: true
-          provenance: false
-          targets: twitch-events
-          set: |
-            *.platform=linux/arm64,linux/amd64/v3
-            twitch-events.tags=ghcr.io/${{ github.repository_owner }}/twitch-events:${{ env.BRANCH_NAME }}
+            ${{ matrix.service }}.tags=ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ env.BRANCH_NAME }}
             *.cache-from=
             *.cache-to=
