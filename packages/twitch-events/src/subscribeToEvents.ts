@@ -21,7 +21,7 @@ export async function subscribeToEvents() {
 
   // Process accounts in chunks to avoid overwhelming the rate limiter
   // For 8000+ users, we need to be careful with rate limits and memory usage
-  const CHUNK_SIZE = 20 // Increased from 10 to 20 for better throughput
+  const CHUNK_SIZE = 30
 
   logger.info('[TWITCHEVENTS] Starting subscription process', {
     total: accountIds.length,
