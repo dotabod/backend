@@ -1,4 +1,8 @@
+import { fetchConduitId } from '../fetchConduitId.js'
+import { getTwitchHeaders } from '../getTwitchHeaders.js'
 import { logger } from '../twitch/lib/logger.js'
+import { genericSubscribe } from '../subscribeChatMessagesForUser.js'
+import type { TwitchEventTypes } from '../TwitchEventTypes.js'
 
 interface RateLimitInfo {
   limit: number
@@ -103,3 +107,218 @@ class RateLimiter {
 }
 
 export const rateLimiter = new RateLimiter()
+interface TwitchSubscriptionCondition {
+  broadcaster_user_id?: string
+  user_id?: string
+  [key: string]: string | undefined
+}
+
+interface TwitchSubscriptionTransport {
+  method: 'webhook' | 'websocket' | 'conduit'
+  callback?: string
+  secret?: string
+  session_id?: string
+  conduit_id?: string
+}
+
+interface TwitchSubscriptionRequest {
+  type: string
+  version: string
+  condition: TwitchSubscriptionCondition
+  transport: TwitchSubscriptionTransport
+}
+
+interface TwitchSubscription {
+  id: string
+  status: 'enabled' | 'webhook_callback_verification_pending' | string
+  type: string
+  version: string
+  condition: TwitchSubscriptionCondition
+  created_at: string
+  transport: TwitchSubscriptionTransport & {
+    connected_at?: string
+  }
+  cost: number
+}
+
+interface TwitchSubscriptionResponse {
+  data: TwitchSubscription[]
+  total: number
+  total_cost: number
+  max_total_cost: number
+}
+
+async function checkSubscriptionHealth(userId: string): Promise<void> {
+  logger.info('Checking subscription health for user', { userId })
+  try {
+    const headers = await getTwitchHeaders()
+    const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
+    url.searchParams.append('user_id', userId)
+
+    const subscribeReq = await rateLimiter.schedule(() =>
+      fetch(url.toString(), {
+        method: 'GET',
+        headers,
+      }),
+    )
+
+    if (!subscribeReq.ok) {
+      throw new Error(
+        `Failed to fetch subscriptions: ${subscribeReq.status} ${await subscribeReq.text()}`,
+      )
+    }
+
+    const response = (await subscribeReq.json()) as TwitchSubscriptionResponse
+
+    console.log(response.data)
+
+    // Check if stream.online subscription exists and is active for this user
+    const sub = response.data.find(
+      (s) =>
+        s.type === 'stream.online' &&
+        s.condition.broadcaster_user_id === userId &&
+        s.status === 'enabled',
+    )
+
+    if (!sub) {
+      // Resubscribe
+      logger.warn('Missing stream.online subscription', { userId })
+      try {
+        const conduitId = await fetchConduitId()
+        // await genericSubscribe(conduitId, userId, 'stream.online');
+      } catch (conduitError) {
+        logger.error('Failed to fetch conduit ID', {
+          userId,
+          error: conduitError instanceof Error ? conduitError.message : String(conduitError),
+        })
+      }
+    } else {
+      logger.info('stream.online subscription found', {
+        userId,
+        subscriptionId: sub.id,
+        cost: sub.cost,
+      })
+    }
+  } catch (error) {
+    logger.error('Failed to check subscription health', {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+// Check and repair subscriptions for a specific user
+export async function checkAndFixUserSubscriptions(userId: string) {
+  try {
+    logger.info('Checking subscription health for user', { userId })
+
+    // Get headers for API calls
+    const headers = await getTwitchHeaders()
+
+    // Fetch current subscriptions from Twitch API
+    const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
+    url.searchParams.append('broadcaster_user_id', userId)
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers,
+    })
+
+    if (response.status !== 200) {
+      logger.error(`Failed to fetch subscriptions: ${response.status}`, { userId })
+      return
+    }
+
+    interface TwitchSubscription {
+      id: string
+      status: string
+      type: string
+      version: string
+      condition: Record<string, unknown>
+      created_at: string
+      transport: {
+        method: string
+        conduit_id?: string
+      }
+      cost: number
+    }
+
+    interface TwitchResponse {
+      data: TwitchSubscription[]
+      total: number
+      pagination?: {
+        cursor?: string
+      }
+    }
+
+    const responseData = (await response.json()) as TwitchResponse
+    console.log(responseData.data)
+
+    // Check for missing subscription types
+    const REQUIRED_TYPES = [
+      'channel.chat.message',
+      'stream.offline',
+      'stream.online',
+      'user.update',
+      'channel.prediction.begin',
+      'channel.prediction.progress',
+      'channel.prediction.lock',
+      'channel.prediction.end',
+      'channel.poll.begin',
+      'channel.poll.progress',
+      'channel.poll.end',
+    ]
+
+    const existingTypes = responseData.data.map((sub) => sub.type)
+
+    // Find missing subscription types
+    const missingTypes = REQUIRED_TYPES.filter((type) => !existingTypes.includes(type))
+
+    if (missingTypes.length > 0) {
+      logger.warn('Missing subscriptions', { userId, missingTypes })
+
+      // Get conduit ID for creating new subscriptions
+      const conduitId = await fetchConduitId()
+
+      // Create missing subscriptions
+      for (const type of missingTypes) {
+        try {
+          logger.info(`Creating missing subscription: ${type}`, { userId })
+          const result = await genericSubscribe(conduitId, userId, type as keyof TwitchEventTypes)
+          logger.info(`Subscription creation result for ${type}`, { userId, result })
+        } catch (error) {
+          logger.error(`Failed to create subscription for ${type}`, {
+            userId,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
+    } else {
+      logger.info('All required subscriptions exist', { userId })
+    }
+  } catch (error) {
+    logger.error('Error checking/fixing subscriptions', {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+// For CLI usage
+if (require.main === module) {
+  // Get user ID from command line arguments
+  const userId = process.argv[2]
+  if (!userId) {
+    console.error('Please provide a user ID')
+    process.exit(1)
+  }
+
+  // Example usage (commented out to prevent execution)
+  await checkSubscriptionHealth(userId)
+  // 40754777
+
+  // checkAndFixUserSubscriptions(userId)
+  //   .then(() => console.log('Subscription check completed'))
+  //   .catch(console.error)
+  //   .finally(() => process.exit(0))
+}
