@@ -4,7 +4,6 @@ import { genericSubscribe } from './subscribeChatMessagesForUser.js'
 import type { TwitchEventTypes } from './TwitchEventTypes.js'
 import { logger } from './twitch/lib/logger.js'
 import { checkBotStatus } from './botBanStatus'
-import { revokeEvent } from './twitch/lib/revokeEvent.js'
 import { ensureBotIsModerator } from './ensureBotIsModerator.js'
 
 // Get existing conduit ID and subscriptions
@@ -20,22 +19,6 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
   const isBanned = await checkBotStatus()
 
   try {
-    // Check if chat message subscription exists but is not enabled
-    // This means the user banned the bot, so we delete their subs and disable them
-    const chatMessageSub = eventSubMap[providerAccountId]?.['channel.chat.message']
-    if (chatMessageSub && chatMessageSub.status !== 'enabled') {
-      if (!isBanned) {
-        logger.info(
-          '[TWITCHEVENTS] Chat message subscription not enabled, bot not banned, revoking',
-          {
-            providerAccountId,
-          },
-        )
-        await revokeEvent({ providerAccountId })
-      }
-      return
-    }
-
     if (eventSubMap[providerAccountId]) {
       logger.info('[TWITCHEVENTS] Subscriptions already exist', { providerAccountId })
       return

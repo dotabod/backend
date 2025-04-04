@@ -209,7 +209,7 @@ function revokeEvent(data: {
   if (userId) {
     logger.info('Revocation for user.authorization.revoke', { userId, payload: data.payload })
     if (userId === process.env.TWITCH_BOT_PROVIDERID) {
-      logger.info('Bot was revoked!')
+      logger.info('Bot was revoked in user.authorization.revoke!')
       botStatus.isBanned = true
     }
     twitchEvent.emit('revoke', userId)
@@ -255,6 +255,9 @@ async function initializeSocket() {
   const lastRevocationTime = new Map<string, number>()
   const DEBOUNCE_TIME = 3000 // 3 seconds debounce
 
+  // Track subscription types received per user during debounce period
+  const userSubscriptionTypes = new Map<string, Set<string>>()
+
   mySocket.on(
     'revocation',
     ({
@@ -282,35 +285,74 @@ async function initializeSocket() {
         }
       }
     }) => {
-      // If the event is a revocation with user_id specified, odds are its the bot being banned by Twitch
-      // Otherwise, it's a user revoking their own eventsub or the user being banned on Twitch
-
       // Twitch sent 8k revocations for the bot when the bot got banned
       // The user_id was the bot
       // The broadcaster_user_id was the streamer
+
       const userId =
-        payload.subscription?.condition?.user_id ||
+        payload.subscription?.condition?.broadcaster_user_id ||
         payload?.event?.user_id ||
-        payload.subscription?.condition?.broadcaster_user_id
+        payload.subscription?.condition?.user_id
 
       if (!userId) {
         logger.info('No user_id or broadcaster_user_id found in revocation event', { payload })
         return
       }
 
-      if (userId === process.env.TWITCH_BOT_PROVIDERID) {
-        logger.info('Bot was revoked by Twitch!')
+      if (
+        payload.subscription.type === 'channel.chat.message' &&
+        payload.subscription?.condition?.user_id === process.env.TWITCH_BOT_PROVIDERID &&
+        payload.subscription.condition.broadcaster_user_id === process.env.TWITCH_BOT_PROVIDERID
+      ) {
+        logger.info('Bot was banned by Twitch! Checked the in-memory bot status')
         botStatus.isBanned = true
+        twitchEvent.emit('revoke', process.env.TWITCH_BOT_PROVIDERID)
+        return
       }
 
       const now = Date.now()
       const lastTime = lastRevocationTime.get(userId) || 0
+      const subscriptionType = payload.subscription.type
 
-      // Only emit if we haven't emitted for this user in the last 3 seconds
-      if (now - lastTime > DEBOUNCE_TIME) {
-        logger.info('Revocation', { userId, payload })
+      // Check if we're still within a debounce period for this user
+      if (now - lastTime <= DEBOUNCE_TIME) {
+        // Add this subscription type to the set for this user
+        if (!userSubscriptionTypes.has(userId)) {
+          userSubscriptionTypes.set(userId, new Set())
+        }
+        userSubscriptionTypes.get(userId)?.add(subscriptionType)
+      } else {
+        // Outside debounce period, reset tracking for this user
+        userSubscriptionTypes.set(userId, new Set([subscriptionType]))
         lastRevocationTime.set(userId, now)
+      }
+
+      // Only emit if either:
+      // 1. We have multiple subscription types within the debounce period, or
+      // 2. The subscription type is not 'channel.chat.message'
+      const subscriptionTypes = userSubscriptionTypes.get(userId) || new Set()
+      const hasMultipleTypes = subscriptionTypes.size > 1
+      const isOnlyChatMessage =
+        subscriptionTypes.size === 1 && subscriptionTypes.has('channel.chat.message')
+
+      if (isOnlyChatMessage) {
+        // Bot banned
+        botStatus.isBanned = true
+        logger.info('Bot was banned by Twitch! isOnlyChatMessage')
+      }
+
+      if (hasMultipleTypes || !isOnlyChatMessage) {
+        logger.info('Revocation with multiple types or non-chat type', {
+          userId,
+          types: Array.from(subscriptionTypes),
+          payload,
+        })
         twitchEvent.emit('revoke', userId)
+      } else {
+        logger.info('Skipping revoke emit for single chat.message revocation', {
+          userId,
+          type: subscriptionType,
+        })
       }
     },
   )

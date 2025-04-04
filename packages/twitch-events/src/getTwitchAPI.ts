@@ -12,8 +12,6 @@ export const getTwitchAPI = async (twitchId?: string): Promise<ApiClient> => {
   // Check if user is already in the auth provider
   try {
     if (!authProvider.hasUser(lookupTwitchId)) {
-      const isBotAccount = lookupTwitchId === process.env.TWITCH_BOT_PROVIDERID
-
       // Get tokens based on account type
       const tokens = await getTwitchTokens(lookupTwitchId)
 
@@ -22,7 +20,7 @@ export const getTwitchAPI = async (twitchId?: string): Promise<ApiClient> => {
       const refreshToken = tokens?.refresh_token
 
       if (!accessToken || !refreshToken) {
-        logger.info('[TWITCHSETUP] Missing twitch tokens', { twitchId, isBotAccount })
+        logger.info('[TWITCHSETUP] Missing twitch tokens', { twitchId, lookupTwitchId })
         throw new Error('Missing twitch tokens')
       }
 
@@ -39,7 +37,7 @@ export const getTwitchAPI = async (twitchId?: string): Promise<ApiClient> => {
       authProvider.addUser(lookupTwitchId, tokenData)
     }
   } catch (e) {
-    logger.error('[TWITCHAPI] Error adding user to auth provider', { twitchId, e })
+    logger.error('[TWITCHAPI] Error adding user to auth provider', { twitchId, lookupTwitchId, e })
   }
 
   // Create API client if it doesn't exist yet
