@@ -10,10 +10,19 @@ interface TwitchOnlineEvent {
   type: string
   started_at: string
 }
-
-export function onlineEvent({ payload: { event } }: { payload: { event: TwitchOnlineEvent } }) {
-  logger.info(`${event.broadcaster_user_id} just went online`)
-  onlineEvents.set(event.broadcaster_user_id, new Date())
+export function onlineEvent(data: { payload: { event: TwitchOnlineEvent } }) {
+  try {
+    const {
+      payload: { event },
+    } = data
+    logger.info(`${event.broadcaster_user_id} just went online`)
+    onlineEvents.set(event.broadcaster_user_id, new Date())
+  } catch (error) {
+    logger.error('Error in onlineEvent initial processing', {
+      error: error instanceof Error ? error.message : String(error),
+      eventData: JSON.stringify(data),
+    })
+  }
 
   async function handler() {
     try {
