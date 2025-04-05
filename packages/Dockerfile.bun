@@ -29,7 +29,6 @@ FROM base AS builder
 COPY packages/profanity-filter/index.ts ./packages/profanity-filter/
 COPY packages/profanity-filter/src ./packages/profanity-filter/src/
 COPY packages/shared-utils/src ./packages/shared-utils/src/
-COPY packages/shared-utils/tsconfig.json ./packages/shared-utils/
 COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 COPY $BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
 
