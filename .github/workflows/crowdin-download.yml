@@ -32,14 +32,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Delete Steam package.json
-        run: rm -f packages/steam/package.json
-
-      - name: Install Dependencies
-        run: |
-          bun install
-          bun add -g i18next-parser
-
       - name: Change branch to the update branch
         id: branches
         run: |
@@ -59,6 +51,14 @@ jobs:
         run: |
           git checkout ${{ env.BASE_BRANCH }}
           echo "Using base branch instead of update branch"
+
+      - name: Delete Steam package.json
+        run: rm -f packages/steam/package.json
+
+      - name: Install Dependencies
+        run: |
+          bun install
+          bun add -g i18next-parser
 
       - name: Download Crowdin Translations
         uses: crowdin/github-action@v2
