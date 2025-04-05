@@ -2,8 +2,8 @@ name: Twitch Subscription Health Check
 
 on:
   schedule:
-    # Run daily at 3:00 AM UTC (low-traffic time)
-    - cron: '0 3 * * *'
+    # Run every hour
+    - cron: '0 * * * *'
 
   # Allow manual trigger for testing
   workflow_dispatch:
@@ -41,10 +41,3 @@ jobs:
           DB_URL: ${{ secrets.DB_URL }}
           # Add any other required environment variables
         run: bun run subscription-health-check
-      - name: Send Notification on Failure
-        if: failure()
-        uses: Ilshidur/action-discord@master
-        with:
-          args: "⚠️ Twitch Subscription Health Check Failed! Check logs for details."
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_STATUS_WEBHOOK }}
