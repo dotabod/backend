@@ -12,6 +12,7 @@ jobs:
   health-check:
     name: Check Twitch Subscription Health
     runs-on: ubuntu-latest
+    environment: prod
 
     steps:
       - name: Checkout repository
