@@ -34,7 +34,8 @@ jobs:
           TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
           TWITCH_BOT_PROVIDERID: ${{ secrets.TWITCH_BOT_PROVIDERID }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DB_SECRET: ${{ secrets.DB_SECRET }}
+          DB_URL: ${{ secrets.DB_URL }}
           # Add any other required environment variables
         run: bun run subscription-health-check
       - name: Send Notification on Failure
