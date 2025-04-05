@@ -3,7 +3,7 @@ import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 import type { allStates } from '../../lib/consts.js'
 import { logger } from '../../../utils/logger.js'
-import { getTwitchAPI } from '../../../twitch/lib/getTwitchAPI.js'
+import { getTwitchAPI } from '@dotabod/shared-utils'
 import { is8500Plus } from '../../../utils/index.js'
 
 eventHandler.registerEvent('map:game_state', {

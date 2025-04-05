@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@dotabod/profanity-filter": "workspace:*",
+    "@dotabod/shared-utils": "workspace:*",
     "@node-steam/id": "^1.2.0",
     "@twurple/ebs-helper": "^7.2.1",
     "@twurple/eventsub-ws": "^7.2.1",

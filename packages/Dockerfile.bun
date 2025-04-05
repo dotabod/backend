@@ -11,10 +11,12 @@ COPY package.json bun.lock ./
 # Create directories for required packages
 RUN mkdir -p packages/$BUILD_CONTEXT
 RUN mkdir -p packages/profanity-filter
+RUN mkdir -p packages/shared-utils
 
 # Copy the target package
 COPY $BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 COPY packages/profanity-filter/package.json ./packages/profanity-filter/
+COPY packages/shared-utils/package.json ./packages/shared-utils/
 
 # Install dependencies
 RUN bun install
@@ -26,11 +28,16 @@ FROM base AS builder
 # Copy source code and build configurations
 COPY packages/profanity-filter/index.ts ./packages/profanity-filter/
 COPY packages/profanity-filter/src ./packages/profanity-filter/src/
+COPY packages/shared-utils/src ./packages/shared-utils/src/
+COPY packages/shared-utils/tsconfig.json ./packages/shared-utils/
 COPY $BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 COPY $BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
 
-# Build profanity-filter first, then build the main application
+# Build shared packages first, then build the main application
 WORKDIR /app/packages/profanity-filter/
+RUN bun run build
+
+WORKDIR /app/packages/shared-utils/
 RUN bun run build
 
 WORKDIR /app/$BUILD_CONTEXT/
@@ -39,7 +46,6 @@ RUN bun run build
 #-----------------------
 
 FROM oven/bun:1.1.24 AS prod
-
 
 ARG BUILD_CONTEXT
 ARG DOTABOD_ENV
@@ -61,6 +67,10 @@ COPY --from=builder /app/packages/profanity-filter/dist packages/profanity-filte
 COPY --from=builder /app/packages/profanity-filter/index.ts packages/profanity-filter/
 COPY --from=builder /app/packages/profanity-filter/src packages/profanity-filter/src/
 COPY --from=builder /app/packages/profanity-filter/package.json packages/profanity-filter/
+
+COPY --from=builder /app/packages/shared-utils/dist packages/shared-utils/dist/
+COPY --from=builder /app/packages/shared-utils/src packages/shared-utils/src/
+COPY --from=builder /app/packages/shared-utils/package.json packages/shared-utils/
 
 # Environment and CMD
 WORKDIR /app/$BUILD_CONTEXT/

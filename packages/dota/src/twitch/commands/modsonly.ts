@@ -1,11 +1,10 @@
 import { t } from 'i18next'
+import { checkBotStatus, getTwitchAPI } from '@dotabod/shared-utils'
 
 import { modMode } from '../../dota/lib/consts.js'
 import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
-import { getTwitchAPI } from '../lib/getTwitchAPI.js'
-import { checkBotStatus } from '../lib/botBanStatus.js'
 
 commandHandler.registerCommand('modsonly', {
   aliases: ['modsonlyoff', 'modsonlyon'],
