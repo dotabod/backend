@@ -23,6 +23,9 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Delete Steam package.json
+        run: rm -f packages/steam/package.json
+
       - name: Install dependencies
         working-directory: ./packages/twitch-events
         run: bun install
