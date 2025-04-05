@@ -29,6 +29,16 @@ export async function genericSubscribe(
     }
   }
 
+  // Validate conduit_id to prevent unnecessary API calls
+  if (!conduit_id) {
+    logger.error('Missing conduit_id in genericSubscribe', {
+      conduit_id,
+      broadcaster_user_id,
+      type,
+    })
+    return false
+  }
+
   return rateLimiter.schedule(async () => {
     const baseBody = {
       version: '1',
@@ -96,10 +106,41 @@ export async function genericSubscribe(
     }
 
     if (subscribeReq.status !== 202) {
-      logger.error(`Failed to subscribe ${subscribeReq.status} ${await subscribeReq.text()}`, {
+      const responseText = await subscribeReq.text()
+      logger.error(`Failed to subscribe ${subscribeReq.status} ${responseText}`, {
         type,
       })
-      await revokeEvent({ providerAccountId: broadcaster_user_id })
+
+      // Only trigger revocation for auth-related errors (401, 403)
+      // NOT for bad requests (400) which are usually configuration issues
+      if (subscribeReq.status === 401 || subscribeReq.status === 403) {
+        // These status codes indicate authentication/authorization issues
+        const responseData = responseText.length ? JSON.parse(responseText) : {}
+
+        // Double check that this is truly an authorization issue
+        if (
+          responseData.message?.includes('authorization') ||
+          responseData.message?.includes('access') ||
+          responseData.message?.includes('permission') ||
+          responseData.message?.includes('scope')
+        ) {
+          logger.info(`Authorization issue detected, revoking user ${broadcaster_user_id}`, {
+            status: subscribeReq.status,
+            message: responseData.message,
+          })
+          await revokeEvent({ providerAccountId: broadcaster_user_id })
+        }
+      } else if (subscribeReq.status === 400) {
+        // Log configuration errors differently to make them more visible
+        logger.error('Subscription configuration error', {
+          status: subscribeReq.status,
+          response: responseText,
+          broadcaster_user_id,
+          type,
+          conduit_id,
+        })
+      }
+
       return false
     }
 

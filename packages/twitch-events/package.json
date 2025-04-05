@@ -11,7 +11,8 @@
   "scripts": {
     "docker:production": "bun ./dist/index.js",
     "docker:development": "bun --watch src/index.ts",
-    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
+    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js",
+    "subscription-health-check": "bun src/utils/subscriptionHealthCheck.ts"
   },
   "dependencies": {
     "express": "^4.21.2",

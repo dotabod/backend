@@ -1,0 +1,45 @@
+name: Twitch Subscription Health Check
+
+on:
+  schedule:
+    # Run daily at 3:00 AM UTC (low-traffic time)
+    - cron: '0 3 * * *'
+
+  # Allow manual trigger for testing
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: Check Twitch Subscription Health
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: ./packages/twitch-events
+        run: bun install
+
+      - name: Run Health Check
+        working-directory: ./packages/twitch-events
+        env:
+          # Add all required environment variables from your Doppler secrets
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+          TWITCH_BOT_PROVIDERID: ${{ secrets.TWITCH_BOT_PROVIDERID }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Add any other required environment variables
+        run: bun run subscription-health-check
+      - name: Send Notification on Failure
+        if: failure()
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "⚠️ Twitch Subscription Health Check Failed! Check logs for details."
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_STATUS_WEBHOOK }}

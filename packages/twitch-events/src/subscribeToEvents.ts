@@ -19,6 +19,11 @@ export async function subscribeToEvents() {
   // Get all account IDs that need subscriptions
   const accountIds = await getAccountIds()
 
+  if (accountIds.length === 0) {
+    logger.info('[TWITCHEVENTS] No accounts to subscribe to')
+    return
+  }
+
   // Process accounts in chunks to avoid overwhelming the rate limiter
   // For 8000+ users, we need to be careful with rate limits and memory usage
   const CHUNK_SIZE = 30
