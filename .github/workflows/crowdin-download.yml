@@ -5,11 +5,19 @@ on:
   schedule:
     - cron: "0 */6 * * *"
 
+# Prevent multiple workflow runs executing at the same time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   download:
     environment: "prod"
     name: Synchronize with Crowdin
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     env:
       UPDATE_BRANCH: ci/update-locale
       BASE_BRANCH: master
@@ -18,6 +26,7 @@ jobs:
         uses: actions/setup-node@v4.3.0
         with:
           node-version: 18
+          cache: 'yarn'
 
       - name: Install Dependencies
         run: |
@@ -25,20 +34,28 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Change branch to the update branch
-        id: commits
+        id: branches
         run: |
           git pull
-          echo "::set-output name=base::$(git rev-parse origin/${{ env.BASE_BRANCH }})"
-          git rev-parse --quiet origin/${{ env.UPDATE_BRANCH }} || git branch ${{ env.UPDATE_BRANCH }}
-          git checkout ${{ env.UPDATE_BRANCH }}
-          echo "::set-output name=update::$(git rev-parse ${{ env.UPDATE_BRANCH }}~)"
+          echo "base=$(git rev-parse origin/${{ env.BASE_BRANCH }})" >> $GITHUB_OUTPUT
+          if git rev-parse --quiet --verify origin/${{ env.UPDATE_BRANCH }}; then
+            git checkout ${{ env.UPDATE_BRANCH }}
+            echo "update=$(git rev-parse ${{ env.UPDATE_BRANCH }}~)" >> $GITHUB_OUTPUT
+            echo "Branch ${{ env.UPDATE_BRANCH }} exists, checking out"
+          else
+            git checkout -b ${{ env.UPDATE_BRANCH }}
+            echo "Created and checked out new branch ${{ env.UPDATE_BRANCH }}"
+          fi
 
       - name: Use the base branch instead
-        if: ${{ steps.commits.outputs.base != steps.commits.outputs.update }}
+        if: ${{ steps.branches.outputs.base != steps.branches.outputs.update }}
         run: |
           git checkout ${{ env.BASE_BRANCH }}
+          echo "Using base branch instead of update branch"
 
       - name: Download Crowdin Translations
         uses: crowdin/github-action@v2
@@ -54,21 +71,32 @@ jobs:
 
       - name: Organize translations
         run: |
-          sudo chown -R $(id -u):$(id -g) packages/**/locales/*
+          sudo chown -R $(id -u):$(id -g) packages/**/locales/* || echo "No locale files to change ownership for"
           i18next -c 'services/crowdin/src/i18next-parser.config.js'
 
-      - name: Count lines
-        id: count
+      - name: Check for changes
+        id: changes
         run: |
-          echo "::set-output name=lines::$(git status --porcelain | wc -l)"
+          git add packages/**/locales/* || echo "No locale files to add"
+          CHANGES=$(git status --porcelain | wc -l)
+          echo "lines=$CHANGES" >> $GITHUB_OUTPUT
+          if [ "$CHANGES" != "0" ]; then
+            echo "Found $CHANGES changed files"
+          else
+            echo "No translation changes detected"
+          fi
 
       - name: Create Pull Request
-        id: cpr
-        if: ${{ steps.count.outputs.lines != '0' }}
+        if: ${{ steps.changes.outputs.lines != '0' }}
         uses: peter-evans/create-pull-request@v7.0.8
         with:
           title: "[CI] New Crowdin Translations"
-          body: The latest approved translations from Crowdin
+          body: |
+            ## Crowdin Translation Update
+
+            This PR contains the latest approved translations from Crowdin.
+
+            *Automatically created by the Crowdin Download workflow.*
           base: ${{ env.BASE_BRANCH }}
           branch: ${{ env.UPDATE_BRANCH }}
           commit-message: 💅 i18n update from crowdin
