@@ -1,5 +1,5 @@
 // Logger
-export { logger } from '@dotabod/shared-utils'
+export { logger } from './logger.js'
 
 // Database utilities
 export { getSupabaseClient } from './db/supabase.js'
