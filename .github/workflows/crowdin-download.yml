@@ -22,20 +22,23 @@ jobs:
       UPDATE_BRANCH: ci/update-locale
       BASE_BRANCH: master
     steps:
-      - name: Setup Node
-        uses: actions/setup-node@v4.3.0
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: 18
-          cache: 'yarn'
-
-      - name: Install Dependencies
-        run: |
-          yarn global add i18next-parser
+          bun-version: latest
 
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Delete Steam package.json
+        run: rm -f packages/steam/package.json
+
+      - name: Install Dependencies
+        run: |
+          bun install
+          bun add -g i18next-parser
 
       - name: Change branch to the update branch
         id: branches
