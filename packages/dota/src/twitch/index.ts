@@ -169,7 +169,13 @@ twitchChat.on(
       !(userInfo.isMod || userInfo.isBroadcaster || userInfo.isSubscriber)
     ) {
       plebMode.delete(channelId)
-      chatClient.say(channel, '/subscribers')
+      const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID!)
+      await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
+        await ctx.chat.updateSettings(channelId, {
+          emoteOnlyModeEnabled: false,
+          subscriberOnlyModeEnabled: true,
+        })
+      })
       chatClient.say(
         channel,
         t('pleb', { emote: 'EZ Clap', context: 'off', name: user, lng: 'en' }),
