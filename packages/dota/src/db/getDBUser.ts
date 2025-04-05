@@ -8,7 +8,7 @@ import {
   twitchNameToToken,
 } from '../dota/lib/consts.js'
 import type { SocketClient } from '../types.js'
-import { logger } from '../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { isSubscriptionActive } from '../utils/subscription'
 import supabase from './supabase.js'
 

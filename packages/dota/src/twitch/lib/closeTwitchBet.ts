@@ -1,5 +1,5 @@
-import { logger } from '../../utils/logger.js'
-import { getTwitchAPI } from './getTwitchAPI.js'
+import { logger } from '@dotabod/shared-utils'
+import { getTwitchAPI } from '@dotabod/shared-utils'
 
 export async function closeTwitchBet(won: boolean, twitchId: string) {
   const api = await getTwitchAPI(twitchId)

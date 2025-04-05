@@ -1,8 +1,8 @@
 import { Server } from 'socket.io'
-import { logger } from '../twitch/lib/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { revokeEvent } from '../twitch/lib/revokeEvent.js'
 import { handleNewUser } from '../handleNewUser'
-import { botStatus } from '../botBanStatus.js'
+import { botStatus } from '@dotabod/shared-utils'
 
 export const socketIo = new Server(5015)
 

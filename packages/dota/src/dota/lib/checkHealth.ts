@@ -1,4 +1,4 @@
-import { logger } from '../../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 
 export default function checkHealth(
   data: {

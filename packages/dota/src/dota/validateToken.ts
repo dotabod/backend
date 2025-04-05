@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 
 import getDBUser from '../db/getDBUser.js'
-import { logger } from '../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts.js'
 
 export function validateToken(req: Request, res: Response, next: NextFunction) {

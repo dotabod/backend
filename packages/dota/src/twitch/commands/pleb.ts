@@ -4,8 +4,7 @@ import { plebMode } from '../../dota/lib/consts.js'
 import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
-import { getTwitchAPI } from '../lib/getTwitchAPI.js'
-import { checkBotStatus } from '../lib/botBanStatus.js'
+import { getTwitchAPI, checkBotStatus } from '@dotabod/shared-utils'
 
 commandHandler.registerCommand('pleb', {
   permission: 2,

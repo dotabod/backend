@@ -1,6 +1,6 @@
 import { ApiClient } from '@twurple/api'
 import { AppTokenAuthProvider } from '@twurple/auth'
-import { logger } from './logger.js'
+import { logger } from '@dotabod/shared-utils'
 
 let instance: ApiClient | null = null
 

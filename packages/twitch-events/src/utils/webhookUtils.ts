@@ -3,9 +3,9 @@ import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import type { Tables } from '../db/supabase-types.js'
 import supabase from '../db/supabase.js'
 import { handleNewUser } from '../handleNewUser.js'
-import { logger } from '../twitch/lib/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { isAuthenticated } from './authUtils.js'
-import { botStatus } from '../botBanStatus.js'
+import { botStatus } from '@dotabod/shared-utils'
 
 if (!process.env.TWITCH_CLIENT_ID) {
   throw new Error('TWITCH_CLIENT_ID is not defined')

@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { gsiHandlers } from '../dota/lib/consts.js'
-import { logger } from '../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { chatClient } from './chatClient.js'
 import { twitchEvent } from './index.js'
 

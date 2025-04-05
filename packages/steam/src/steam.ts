@@ -15,7 +15,7 @@ import type { Cards, DelayedGames } from './types/index.js'
 import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails.js'
 import CustomError from './utils/customError.js'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch.js'
-import { logger } from './utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { retryCustom } from './utils/retry.js'
 
 interface steamUserDetails {

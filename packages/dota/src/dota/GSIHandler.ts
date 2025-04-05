@@ -17,7 +17,7 @@ import {
   type SocketClient,
 } from '../types.js'
 import { getRedisNumberValue, steamID64toSteamID32 } from '../utils/index.js'
-import { logger } from '../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import type { SubscriptionRow } from '../utils/subscription.js'
 import { NeutralItemTimer } from './NeutralItemTimer.js'
 import { type AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'

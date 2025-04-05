@@ -1,15 +1,12 @@
 import { lstatSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { ApiClient } from '@twurple/api'
 import { use } from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 import { Server } from 'socket.io'
 import { initializeSocket } from './conduitSetup.js'
 import { sendTwitchChatMessage } from './handleChat.js'
-import { logger } from './logger.js'
-import { getBotAuthProvider } from './twitch/lib/getBotAuthProvider.js'
 import supabase from './db/supabase.js'
-import { checkBotStatus } from './botBanStatus'
+import { checkBotStatus, logger, getTwitchAPI } from '@dotabod/shared-utils'
 
 if (!process.env.TWITCH_BOT_PROVIDERID) {
   throw new Error('TWITCH_BOT_PROVIDERID not set')
@@ -152,8 +149,7 @@ io.on('connection', (socket) => {
 
   socket.on('whisper', async (channel: string, text: string) => {
     try {
-      const authProvider = await getBotAuthProvider()
-      const api = new ApiClient({ authProvider })
+      const api = await getTwitchAPI()
       await api.whispers.sendWhisper(process.env.TWITCH_BOT_PROVIDERID!, channel, text)
     } catch (e) {
       logger.error('could not whisper', e)

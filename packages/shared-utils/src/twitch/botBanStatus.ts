@@ -1,4 +1,4 @@
-import { logger } from '../logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { getTwitchTokens } from './getTwitchTokens.js'
 
 // Bot status tracking

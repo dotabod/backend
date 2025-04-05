@@ -1,6 +1,6 @@
 import { fetchConduitId } from '../fetchConduitId.js'
-import { getTwitchHeaders } from '../getTwitchHeaders.js'
-import { logger } from '../twitch/lib/logger.js'
+import { getTwitchHeaders } from '@dotabod/shared-utils'
+import { logger } from '@dotabod/shared-utils'
 import { genericSubscribe } from '../subscribeChatMessagesForUser.js'
 import type { TwitchEventTypes } from '../TwitchEventTypes.js'
 

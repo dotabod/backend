@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client'
 
-import { logger } from '../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 
 export const steamSocket = io(`ws://${process.env.HOST_STEAM}:5035`)
 

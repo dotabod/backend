@@ -5,8 +5,8 @@ import { getTokenFromTwitchId } from '../../dota/lib/connectedStreamers.js'
 import { say } from '../../dota/say.js'
 import { DBSettings, defaultSettings, getValueOrDefault } from '../../settings.js'
 import type { SocketClient } from '../../types.js'
-import { logger } from '../../utils/logger.js'
-import { getTwitchAPI } from './getTwitchAPI.js'
+import { logger } from '@dotabod/shared-utils'
+import { getTwitchAPI } from '@dotabod/shared-utils'
 
 // Disable the bet in settings for this user
 export async function disableBetsForTwitchId(twitchId: string) {

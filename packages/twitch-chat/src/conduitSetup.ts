@@ -1,4 +1,4 @@
-import { botStatus } from './botBanStatus'
+import { botStatus, logger } from '@dotabod/shared-utils'
 import type { TwitchEventTypes } from './event-handlers/events'
 import { offlineEvent } from './event-handlers/offlineEvent.js'
 import { onlineEvent } from './event-handlers/onlineEvent.js'
@@ -7,10 +7,9 @@ import { transformPollData } from './event-handlers/transformPollData.js'
 import { updateUserEvent } from './event-handlers/updateUserEvent.js'
 import { EventsubSocket } from './eventSubSocket.js'
 import { twitchEvent } from './events.js'
-import { getTwitchHeaders } from './getTwitchHeaders.js'
+import { getTwitchHeaders } from '@dotabod/shared-utils'
 import { handleChatMessage } from './handleChat'
 import { hasDotabodSocket, io } from './index.js'
-import { logger } from './logger.js'
 import type {
   TwitchConduitCreateResponse,
   TwitchConduitResponse,

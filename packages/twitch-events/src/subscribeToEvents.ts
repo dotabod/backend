@@ -2,7 +2,7 @@ import { fetchConduitId } from './fetchConduitId.js'
 import { initUserSubscriptions } from './initUserSubscriptions.js'
 import { subscribeToAuthGrantOrRevoke } from './subscribeChatMessagesForUser.js'
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
-import { logger } from './twitch/lib/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { rateLimiter } from './utils/rateLimiter.js'
 
 /**

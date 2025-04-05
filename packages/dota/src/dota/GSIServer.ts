@@ -12,7 +12,7 @@ import { Server, type Socket } from 'socket.io'
 
 import getDBUser from '../db/getDBUser.js'
 import type { Ability, Item } from '../types.js'
-import { logger } from '../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { emitMinimapBlockerStatus } from './GSIHandler.js'
 import {
   TOKEN_TIMEOUT,

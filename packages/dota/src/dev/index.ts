@@ -1,14 +1,13 @@
 import { faker } from '@faker-js/faker'
-import { ApiClient } from '@twurple/api'
+import type { ApiClient } from '@twurple/api'
 import axios from 'axios'
 
 import { gameEnd } from '../__tests__/play-by-plays.js'
 import supabase from '../db/supabase.js'
 import { fetchOnlineUsers } from '../dota/events/gsi-events/__tests__/fetchOnlineUsers.js'
-import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
-import { getBotTokens_DEV_ONLY } from '../twitch/lib/getBotTokens.js'
 import { DotaEventTypes } from '../types.js'
-import { logger } from '../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
+import { getTwitchAPI } from '@dotabod/shared-utils'
 
 if (process.env.DOTABOD_ENV !== 'production') {
   console.log('DOTABOD_ENV is development')
@@ -71,37 +70,6 @@ async function testAegis() {
   await postEventsForUsers(users, DotaEventTypes.AegisPickedUp)
 }
 
-async function getBotAPI_DEV_ONLY() {
-  const authProvider = getAuthProvider()
-  const botTokens = await getBotTokens_DEV_ONLY()
-
-  const twitchId = process.env.TWITCH_BOT_PROVIDERID
-
-  if (!botTokens?.access_token || !botTokens.refresh_token) {
-    logger.info('[TWITCHSETUP] Missing bot tokens', {
-      twitchId,
-    })
-    return false
-  }
-
-  const tokenData = {
-    scope: botTokens.scope?.split(' ') ?? [],
-    expiresIn: botTokens.expires_in ?? 0,
-    obtainmentTimestamp: botTokens.obtainment_timestamp
-      ? new Date(botTokens.obtainment_timestamp).getTime()
-      : 0,
-    accessToken: botTokens.access_token,
-    refreshToken: botTokens.refresh_token,
-  }
-
-  if (twitchId) authProvider.addUser(twitchId, tokenData, ['chat'])
-
-  const api = new ApiClient({ authProvider })
-  logger.info('[TWITCH] Retrieved twitch dotabod api')
-
-  return api
-}
-
 async function fixNewUsers() {
   console.log('running fixNewUsers')
   const { data: users, error } = await supabase
@@ -111,7 +79,7 @@ async function fixNewUsers() {
 
   if (!users) return
 
-  const botApi = await getBotAPI_DEV_ONLY()
+  const botApi = await getTwitchAPI()
   for (const user of users) {
     if (!user.Account?.providerAccountId) {
       console.log('no account for user', user.id)

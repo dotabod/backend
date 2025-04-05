@@ -15,7 +15,7 @@ import {
   type SocketClient,
   validEventTypes,
 } from '../../../types.js'
-import { logger } from '../../../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { type GSIHandler, redisClient } from '../../GSIHandler.js'
 import { events } from '../../globalEventEmitter.js'
 import { server } from '../../index.js'

@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '../db/supabase.js'
-import { logger } from '../logger.js'
+import { logger } from '@dotabod/shared-utils'
 
 export interface TwitchTokens {
   access_token: string
@@ -15,7 +15,13 @@ export interface TwitchTokens {
  * @param twitchId The Twitch user ID to get tokens for
  * @returns TwitchTokens or null if not found
  */
-export const getTwitchTokens = async (twitchId: string): Promise<TwitchTokens | null> => {
+export const getTwitchTokens = async (lookupTwitchId?: string): Promise<TwitchTokens | null> => {
+  let twitchId = lookupTwitchId
+  // if no twitchId, use the bot providerId
+  if (!twitchId) {
+    twitchId = process.env.TWITCH_BOT_PROVIDERID!
+  }
+
   try {
     const supabase = getSupabaseClient()
     const { data, error } = await supabase

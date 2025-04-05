@@ -2,7 +2,7 @@ import type { GSIHandler } from '../../GSIHandler.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 import type { allStates } from '../../lib/consts.js'
-import { logger } from '../../../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { getTwitchAPI } from '@dotabod/shared-utils'
 import { is8500Plus } from '../../../utils/index.js'
 

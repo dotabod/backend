@@ -1,19 +1,19 @@
+import { getAuthProvider, getTwitchAPI } from '@dotabod/shared-utils'
+import { t } from 'i18next'
 import { clearCacheForUser } from '../dota/clearCacheForUser.js'
 import { server } from '../dota/index.js'
 import findUser from '../dota/lib/connectedStreamers.js'
 import { gsiHandlers, invalidTokens } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'
 import { DBSettings } from '../settings.js'
-import { updateTwurpleTokenForTwitchId } from '../twitch/lib/getTwitchAPI'
+import { chatClient } from '../twitch/chatClient'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
-import { logger } from '../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { isSubscriptionActive } from '../utils/subscription.js'
 import getDBUser from './getDBUser.js'
 import { handleUserOnlineMessages } from './handleScheduledMessages'
 import type { Tables } from './supabase-types.js'
 import supabase from './supabase.js'
-import { chatClient } from '../twitch/chatClient'
-import { t } from 'i18next'
 
 class SetupSupabase {
   channel: any // ReturnType<typeof supabase.channel>
@@ -196,7 +196,12 @@ class SetupSupabase {
               client.Account.expires_at = newObj.expires_at
               client.Account.expires_in = newObj.expires_in
               client.Account.obtainment_timestamp = new Date(newObj.obtainment_timestamp ?? '')
-              updateTwurpleTokenForTwitchId(newObj.providerAccountId)
+              const twitchId = newObj.providerAccountId
+              const authProvider = getAuthProvider()
+              authProvider.removeUser(twitchId)
+              getTwitchAPI(twitchId).catch((e) => {
+                logger.error('[TWITCHAPI] Error updating twurple token', { twitchId, e })
+              })
             }
           }
 

@@ -1,5 +1,5 @@
 import supabase from '../../db/supabase.js'
-import { logger } from './logger.js'
+import { logger } from '@dotabod/shared-utils'
 
 export async function getAccountIds(): Promise<string[]> {
   logger.info('[TWITCHSETUP] Running getAccountIds')

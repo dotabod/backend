@@ -1,5 +1,7 @@
 import './commandLoader.js'
 
+import { logger } from '@dotabod/shared-utils'
+import { getTwitchAPI } from '@dotabod/shared-utils'
 import {
   EventSubChannelPollBeginEvent,
   EventSubChannelPollEndEvent,
@@ -15,12 +17,10 @@ import getDBUser from '../db/getDBUser.js'
 import { server } from '../dota/index.js'
 import findUser, { getTokenFromTwitchId } from '../dota/lib/connectedStreamers.js'
 import { plebMode } from '../dota/lib/consts.js'
+import { getOpenDotaProfile, getRankTitle } from '../dota/lib/ranks.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
-import { logger } from '../utils/logger.js'
 import { chatClient } from './chatClient.js'
 import commandHandler from './lib/CommandHandler.js'
-import { getRankTitle, getOpenDotaProfile } from '../dota/lib/ranks.js'
-import { getTwitchAPI } from './lib/getTwitchAPI.js'
 
 export const twitchChat = io(`ws://${process.env.HOST_TWITCH_CHAT}:5005`)
 

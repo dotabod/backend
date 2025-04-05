@@ -10,7 +10,7 @@ import CustomError from '../../utils/customError.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 import { profileLink } from './profileLink.js'
-import { logger } from '../../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { is8500Plus } from '../../utils/index.js'
 
 async function getStats({

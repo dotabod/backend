@@ -1,5 +1,5 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
-import { logger } from '../logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { hasTokens } from './hasTokens.js'
 import { getSupabaseClient } from '../db/supabase.js'
 

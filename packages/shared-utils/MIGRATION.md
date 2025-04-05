@@ -38,7 +38,7 @@ import { getTwitchAPI, getAuthProvider, checkBotStatus } from '@dotabod/shared-u
 
 Replace:
 ```typescript
-import { logger } from '../../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 ```
 
 With:

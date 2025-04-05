@@ -1,4 +1,4 @@
-import { logger } from '../../../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import type { GSIHandler } from '../../GSIHandler.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'

@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { t } from 'i18next'
 
-import { logger } from '../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import { say } from './say.js'
 import { gsiHandlers } from './lib/consts.js'
 

@@ -1,5 +1,4 @@
-import { logger } from './twitch/lib/logger.js'
-import { getTwitchAPI } from './getTwitchAPI'
+import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 
 /**
  * Check if the bot is a moderator in a broadcaster's channel and make it one if not

@@ -8,7 +8,7 @@ import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 
 import RedisClient from '../db/RedisClient.js'
 import SetupSupabase from '../db/watcher.js'
-import { logger } from '../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import GSIServer from './GSIServer.js'
 
 logger.info("Starting 'dota' package")

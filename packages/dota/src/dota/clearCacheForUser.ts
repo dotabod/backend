@@ -1,4 +1,4 @@
-import { getAuthProvider } from '../twitch/lib/getAuthProvider.js'
+import { getAuthProvider } from '@dotabod/shared-utils'
 import type { SocketClient } from '../types.js'
 import { deleteRedisData } from './GSIHandler.js'
 import { gsiHandlers, twitchIdToToken, twitchNameToToken } from './lib/consts.js'

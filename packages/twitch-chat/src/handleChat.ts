@@ -2,10 +2,10 @@ import type { EventSubChannelChatMessageEventData } from '@twurple/eventsub-base
 import type { EventSubChatBadge } from '@twurple/eventsub-base/lib/events/common/EventSubChatMessage.external'
 import type { EventSubWsPacket } from '@twurple/eventsub-ws/lib/EventSubWsPacket.external'
 import { t } from 'i18next'
-import { getTwitchHeaders } from './getTwitchHeaders.js'
+import { getTwitchHeaders } from '@dotabod/shared-utils'
 import { hasDotabodSocket, io } from './index.js'
-import { logger } from './logger.js'
-import { checkBotStatus } from './botBanStatus.js'
+import { logger } from '@dotabod/shared-utils'
+import { checkBotStatus } from '@dotabod/shared-utils'
 
 function extractUserInfo(
   badges: EventSubChatBadge[],

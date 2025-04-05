@@ -1,6 +1,6 @@
 import RedisClient from '../../../db/RedisClient.js'
 import type { Player } from '../../../types.js'
-import { logger } from '../../../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import type { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'

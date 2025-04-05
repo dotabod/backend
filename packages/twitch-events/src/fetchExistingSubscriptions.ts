@@ -1,8 +1,8 @@
 import { eventSubMap } from './chatSubIds'
 import type { TwitchEventSubSubscriptionsResponse } from './interfaces'
-import { logger } from './twitch/lib/logger'
+import { logger } from '@dotabod/shared-utils'
 import { rateLimiter } from './utils/rateLimiter'
-import { getTwitchHeaders } from './getTwitchHeaders.js'
+import { getTwitchHeaders } from '@dotabod/shared-utils'
 
 // Constants
 const headers = await getTwitchHeaders()

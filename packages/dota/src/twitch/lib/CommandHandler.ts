@@ -4,7 +4,7 @@ import supabase from '../../db/supabase.js'
 import { type SettingKeys, getValueOrDefault } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import type { SocketClient } from '../../types.js'
-import { logger } from '../../utils/logger.js'
+import { logger } from '@dotabod/shared-utils'
 import type { SubscriptionRow } from '../../utils/subscription'
 import { chatClient } from '../chatClient.js'
 
