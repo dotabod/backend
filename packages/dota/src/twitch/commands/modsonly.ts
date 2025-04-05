@@ -5,7 +5,7 @@ import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 import { getTwitchAPI } from '../lib/getTwitchAPI.js'
-import { checkBotStatus } from '../../../../twitch-events/src/botBanStatus.js'
+import { checkBotStatus } from '../lib/botBanStatus.js'
 
 commandHandler.registerCommand('modsonly', {
   aliases: ['modsonlyoff', 'modsonlyon'],
