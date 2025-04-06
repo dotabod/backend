@@ -15,6 +15,7 @@
     "typescript": "^5"
   },
   "scripts": {
+    "build:yarn": "tsc --build --verbose",
     "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
   },
   "dependencies": {

@@ -31,6 +31,7 @@
     "winston": "^3.13.0"
   },
   "dependencies": {
+    "@dotabod/shared-utils": "workspace:*",
     "@node-steam/id": "^1.2.0",
     "axios": "1.2.0-alpha.1",
     "bytebuffer": "^5.0.1",
