@@ -1,7 +1,7 @@
 // @ts-expect-error no types
 import Dota2 from 'dota2'
 import type { Long } from 'mongodb'
-import { logger } from '@dotabod/shared-utils'
+import { logger } from './utils/logger.js'
 
 function onGCSpectateFriendGameResponse(message: any, callback: any) {
   const response: { server_steamid: Long; watch_live_result: number } =

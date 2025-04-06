@@ -2,20 +2,15 @@
 FROM node:21-alpine3.17 AS base
 
 # Set build context and work directories
-WORKDIR /app
+WORKDIR /app/packages/steam
 
 RUN apk add --no-cache git
 
-# Create directories for required packages
-RUN mkdir -p packages/steam
-RUN mkdir -p packages/shared-utils
-
 # Copy just the relevant package.json and yarn.lock files
-COPY ./packages/steam/package.json ./packages/steam/yarn.lock ./packages/steam/
-COPY ./packages/shared-utils/package.json ./packages/shared-utils/
+COPY ./packages/steam/package.json ./packages/steam/yarn.lock ./
+RUN mv ./yarn.lock ./yarn.lock
 
 # Install dependencies
-WORKDIR /app/packages/steam
 RUN yarn install
 
 #------------------------
@@ -24,19 +19,10 @@ FROM base AS builder
 
 # Copy source code and build configurations
 COPY tsconfig.json /app/
-COPY ./packages/steam/tsconfig.json /app/packages/steam/
-COPY ./packages/shared-utils/src /app/packages/shared-utils/src/
+COPY ./packages/steam/tsconfig.json /app/packages/steam/tsconfig.json
 COPY ./packages/steam/src /app/packages/steam/src/
 
-# Build shared-utils first
-WORKDIR /app/packages/shared-utils/
-# If shared-utils doesn't have a tsconfig.json, copy it from steam
-RUN test -f tsconfig.json || cp /app/packages/steam/tsconfig.json .
-RUN yarn run build:yarn || echo "No build script found"
-
-# Then build steam
-WORKDIR /app/packages/steam
-RUN yarn run build
+RUN cd /app/packages/steam && yarn run build
 
 #------------------------
 
@@ -54,11 +40,6 @@ COPY --from=builder /app/packages/steam/package.json /app/packages/steam/package
 COPY --from=builder /app/packages/steam/dist /app/packages/steam/dist/
 COPY --from=builder /app/packages/steam/src /app/packages/steam/src/
 COPY --from=builder /app/packages/steam/node_modules /app/packages/steam/node_modules
-
-# Copy shared-utils
-COPY --from=builder /app/packages/shared-utils/dist /app/packages/shared-utils/dist/
-COPY --from=builder /app/packages/shared-utils/src /app/packages/shared-utils/src/
-COPY --from=builder /app/packages/shared-utils/package.json /app/packages/shared-utils/
 
 WORKDIR /app/packages/steam
 

@@ -1,8 +1,6 @@
 import { type Db, MongoClient } from 'mongodb'
-import { URL } from 'url'
 import retry from 'retry'
-
-import { logger } from '@dotabod/shared-utils'
+import { logger } from './utils/logger.js'
 
 class MongoDBSingleton {
   clientPromise: Promise<Db> | null = null
