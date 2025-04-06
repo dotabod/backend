@@ -1,5 +1,5 @@
 import { ApiClient } from '@twurple/api'
-import { logger } from '@dotabod/shared-utils'
+import { logger } from '../logger.js'
 import { getAuthProvider } from './getAuthProvider.js'
 import { getTwitchTokens } from './getTwitchTokens.js'
 

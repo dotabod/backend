@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '../db/supabase.js'
-import { logger } from '@dotabod/shared-utils'
+import { logger } from '../logger.js'
 
 export interface TwitchTokens {
   access_token: string
