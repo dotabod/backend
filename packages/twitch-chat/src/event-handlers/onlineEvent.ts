@@ -30,13 +30,13 @@ export function onlineEvent(data: { payload: { event: TwitchOnlineEvent } }) {
         .from('accounts')
         .select('userId')
         .eq('provider', 'twitch')
-        .eq('providerAccountId', event.broadcaster_user_id)
+        .eq('providerAccountId', data?.payload?.event.broadcaster_user_id)
         .single()
 
       if (userError) {
         logger.error('Failed to fetch user account', {
           error: userError.message,
-          twitchId: event.broadcaster_user_id,
+          twitchId: data?.payload?.event.broadcaster_user_id,
         })
         return
       }
@@ -46,7 +46,7 @@ export function onlineEvent(data: { payload: { event: TwitchOnlineEvent } }) {
           .from('users')
           .update({
             stream_online: true,
-            stream_start_date: event.started_at,
+            stream_start_date: data?.payload?.event.started_at,
             updated_at: new Date().toISOString(),
           })
           .eq('id', user.userId)
@@ -55,19 +55,21 @@ export function onlineEvent(data: { payload: { event: TwitchOnlineEvent } }) {
           logger.error('Failed to update user online status', {
             error: updateError.message,
             userId: user.userId,
-            twitchId: event.broadcaster_user_id,
+            twitchId: data?.payload?.event.broadcaster_user_id,
           })
           return
         }
 
-        logger.info('updated online event', { twitchId: event.broadcaster_user_id })
+        logger.info('updated online event', { twitchId: data?.payload?.event.broadcaster_user_id })
       } else {
-        logger.warn('No user found for Twitch account', { twitchId: event.broadcaster_user_id })
+        logger.warn('No user found for Twitch account', {
+          twitchId: data?.payload?.event.broadcaster_user_id,
+        })
       }
     } catch (error) {
       logger.error('Unexpected error in online event handler', {
         error: error instanceof Error ? error.message : String(error),
-        twitchId: event.broadcaster_user_id,
+        twitchId: data,
       })
     }
   }
