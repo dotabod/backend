@@ -165,6 +165,7 @@
   "ping": "Pong {{emote}}",
   "pleb": "Um pleb IN {{emote}}",
   "pleb_off": "{{name}} {{emote}} bom trabalho pleb",
+  "plebSubRequired": "!pleb command can only be used if sub only mode is enabled.",
   "predictions": {
     "no": "Não",
     "title": "Vamos ganhar de {{- heroName}}",
