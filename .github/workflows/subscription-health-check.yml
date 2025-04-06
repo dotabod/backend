@@ -26,6 +26,9 @@ jobs:
       - name: Delete Steam package.json
         run: rm -f packages/steam/package.json
 
+      - name: Build all packages
+        run: bun run build:all
+
       - name: Install dependencies
         # Install at the root level to set up workspace packages properly
         run: bun install

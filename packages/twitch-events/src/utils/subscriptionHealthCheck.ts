@@ -1,10 +1,9 @@
+import { getTwitchHeaders, logger } from '@dotabod/shared-utils'
+import type { TwitchEventTypes } from '../TwitchEventTypes.js'
 import { eventSubMap } from '../chatSubIds.js'
 import { fetchConduitId } from '../fetchConduitId.js'
 import { genericSubscribe } from '../subscribeChatMessagesForUser.js'
-import type { TwitchEventTypes } from '../TwitchEventTypes.js'
-import { logger } from '@dotabod/shared-utils'
 import { getAccountIds } from '../twitch/lib/getAccountIds.js'
-import { getTwitchHeaders } from '@dotabod/shared-utils'
 import { rateLimiter } from './rateLimiter.js'
 
 // Define critical subscription types in order of importance
