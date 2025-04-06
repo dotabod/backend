@@ -26,11 +26,12 @@ FROM base AS builder
 COPY tsconfig.json /app/
 COPY ./packages/steam/tsconfig.json /app/packages/steam/
 COPY ./packages/shared-utils/src /app/packages/shared-utils/src/
-COPY ./packages/shared-utils/tsconfig.json /app/packages/shared-utils/
 COPY ./packages/steam/src /app/packages/steam/src/
 
 # Build shared-utils first
 WORKDIR /app/packages/shared-utils/
+# If shared-utils doesn't have a tsconfig.json, copy it from steam
+RUN test -f tsconfig.json || cp /app/packages/steam/tsconfig.json .
 RUN yarn run build:yarn || echo "No build script found"
 
 # Then build steam
