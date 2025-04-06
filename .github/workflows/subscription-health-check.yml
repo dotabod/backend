@@ -27,7 +27,7 @@ jobs:
         run: rm -f packages/steam/package.json
 
       - name: Install dependencies
-        working-directory: ./packages/twitch-events
+        # Install at the root level to set up workspace packages properly
         run: bun install
 
       - name: Run Health Check
