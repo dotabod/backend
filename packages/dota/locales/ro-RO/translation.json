@@ -168,6 +168,7 @@
   "ping": "{{emote}} Pong",
   "pleb": "Un pleb IN {{emote}}",
   "pleb_off": "{{name}} {{emote}} frumos plub de sarcini",
+  "plebSubRequired": "!pleb command can only be used if sub only mode is enabled.",
   "predictions": {
     "no": "Nu",
     "title": "Vom câștiga cu {{- heroName}}",
