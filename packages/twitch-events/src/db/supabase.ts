@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { logger } from '@dotabod/shared-utils'
 
-import type { Database } from './supabase-types'
+import type { Database } from './supabase-types.js'
 
 // Get environment variables with validation
 const supabaseUrl = process.env.DB_URL

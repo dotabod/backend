@@ -8,7 +8,7 @@ import { logger } from '@dotabod/shared-utils'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 import { is8500Plus } from '../../utils/index.js'
-import type { NotablePlayers } from '../../steam/notableplayers'
+import type { NotablePlayers } from '../../steam/notableplayers.js'
 
 commandHandler.registerCommand('np', {
   dbkey: DBSettings.commandNP,

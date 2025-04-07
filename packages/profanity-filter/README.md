@@ -64,7 +64,7 @@ Checks the input text for profanity across all layers and returns:
 - "***" if profanity is detected
 
 ```typescript
-import { moderateText } from './utils/moderation';
+import { moderateText } from './utils/moderation.js';
 
 // Example usage
 const result = await moderateText("Hello world");
@@ -82,7 +82,7 @@ Returns detailed information about why text was flagged, including:
 - The language detected (when available)
 
 ```typescript
-import { getProfanityDetails } from './utils/moderation';
+import { getProfanityDetails } from './utils/moderation.js';
 
 // Example usage
 const details = getProfanityDetails("F*ck this");

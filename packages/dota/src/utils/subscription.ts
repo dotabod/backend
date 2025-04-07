@@ -1,4 +1,4 @@
-import type { Database } from '../db/supabase-types'
+import type { Database } from '../db/supabase-types.js'
 import type { SettingKeys, ChatterSettingKeys } from '../types/settings.js'
 import {
   type SubscriptionRow,

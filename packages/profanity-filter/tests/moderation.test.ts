@@ -5,7 +5,7 @@
  * Run with: bun packages/profanity-filter/tests/moderation.test.ts
  */
 
-import { moderateText, getProfanityDetails } from '../src/utils/moderation'
+import { moderateText, getProfanityDetails } from '../src/utils/moderation.js'
 import { detect } from 'curse-filter'
 import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity'
 import { profanity } from '@2toad/profanity'
@@ -20,8 +20,8 @@ import {
   detectRussianProfanity,
   detectChineseProfanity,
   detectEvasionTactics,
-} from '../src/utils/profanity-wordlists'
-import { createTextVariations } from '../src/utils/text-normalization'
+} from '../src/utils/profanity-wordlists.js'
+import { createTextVariations } from '../src/utils/text-normalization.js'
 
 // Initialize necessary libraries
 const badWords = new Filter()

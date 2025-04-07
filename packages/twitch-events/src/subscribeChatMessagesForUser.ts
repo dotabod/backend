@@ -3,7 +3,7 @@ import type { TwitchEventTypes } from './TwitchEventTypes.js'
 import { eventSubMap } from './chatSubIds.js'
 import { getTwitchHeaders } from '@dotabod/shared-utils'
 import type { TwitchEventSubResponse } from './interfaces.js'
-import { revokeEvent } from './twitch/lib/revokeEvent'
+import { revokeEvent } from './twitch/lib/revokeEvent.js'
 import { rateLimiter } from './utils/rateLimiterCore.js'
 
 // Constants

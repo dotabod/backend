@@ -6,17 +6,17 @@
  */
 
 // Re-export core functionality
-export { moderateText, getProfanityDetails } from './src/utils/moderation'
-export { createTextVariations, normalizeText, prepareText } from './src/utils/text-normalization'
+export { moderateText, getProfanityDetails } from './src/utils/moderation.js'
+export { createTextVariations, normalizeText, prepareText } from './src/utils/text-normalization.js'
 export {
   detectMultilingualProfanity,
   detectRussianProfanity,
   detectChineseProfanity,
   detectEuropeanProfanity,
   detectEvasionTactics,
-} from './src/utils/profanity-wordlists'
+} from './src/utils/profanity-wordlists.js'
 
 // If this file is run directly, start the API server
 if (import.meta.main) {
-  import('./src/index')
+  import('./src/index.js')
 }

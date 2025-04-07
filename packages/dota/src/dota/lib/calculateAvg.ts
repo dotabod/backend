@@ -1,5 +1,5 @@
 import { getPlayers } from '../../dota/lib/getPlayers.js'
-import type { Players } from '../../types'
+import type { Players } from '../../types.js'
 import { getRankDetail, rankTierToMmr } from './ranks.js'
 
 interface Avg {

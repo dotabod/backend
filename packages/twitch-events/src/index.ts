@@ -1,5 +1,5 @@
 import { checkBotStatus, logger } from '@dotabod/shared-utils'
-import { fetchExistingSubscriptions, subsToCleanup } from './fetchExistingSubscriptions'
+import { fetchExistingSubscriptions, subsToCleanup } from './fetchExistingSubscriptions.js'
 import { subscribeToEvents } from './subscribeToEvents.js'
 import { deleteSubscription } from './twitch/lib/revokeEvent.js'
 import { rateLimiter } from './utils/rateLimiterCore.js'

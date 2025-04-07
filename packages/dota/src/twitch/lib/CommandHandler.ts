@@ -4,7 +4,7 @@ import { type SettingKeys, getValueOrDefault } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import type { SocketClient } from '../../types.js'
 import { logger } from '@dotabod/shared-utils'
-import type { SubscriptionRow } from '../../utils/subscription'
+import type { SubscriptionRow } from '../../types/subscription.js'
 import { chatClient } from '../chatClient.js'
 
 export interface UserType {

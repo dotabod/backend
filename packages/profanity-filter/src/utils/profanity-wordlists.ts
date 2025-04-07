@@ -10,7 +10,7 @@ import {
   normalizeText,
   prepareText,
   removeSeparators,
-} from './text-normalization'
+} from './text-normalization.js'
 
 // Russian profanity terms (common ones)
 export const russianProfanityList = [

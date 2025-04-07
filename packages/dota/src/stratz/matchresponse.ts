@@ -1,6 +1,6 @@
 import axios from 'axios'
-import { logger } from '../utils/logger'
-import type { HeroNames } from '../dota/lib/getHero'
+import type { HeroNames } from '../dota/lib/getHero.js'
+import { logger } from '@dotabod/shared-utils'
 
 // Credits to Stratz for the GraphQL query for live match details
 // They do awesome work and you should check them out at https://stratz.com/

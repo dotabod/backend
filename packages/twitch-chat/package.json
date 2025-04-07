@@ -18,6 +18,8 @@
     "socket.io-client": "^4.8.1",
     "i18next": "^24.2.0",
     "i18next-fs-backend": "^2.6.0",
+    "@twurple/eventsub-base": "^7.2.1",
+    "@twurple/eventsub-ws": "^7.2.1",
     "socket.io": "^4.8.1",
     "winston": "^3.17.0"
   },

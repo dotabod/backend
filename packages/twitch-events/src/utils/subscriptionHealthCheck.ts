@@ -269,7 +269,17 @@ async function fetchSubscriptionsForHealthCheck(): Promise<void> {
         return
       }
 
-      const result = await response.json()
+      const result = (await response.json()) as {
+        data: {
+          id: string
+          status: string
+          type: string
+          version: string
+        }[]
+        pagination: {
+          cursor: string
+        }
+      }
       const { data, pagination } = result
 
       // Process subscriptions

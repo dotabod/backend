@@ -159,6 +159,8 @@
       "name": "@dotabod/twitch-chat",
       "version": "1.0.0",
       "dependencies": {
+        "@twurple/eventsub-base": "^7.2.1",
+        "@twurple/eventsub-ws": "^7.2.1",
         "i18next": "^24.2.0",
         "i18next-fs-backend": "^2.6.0",
         "socket.io": "^4.8.1",

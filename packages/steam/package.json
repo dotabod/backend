@@ -34,7 +34,6 @@
     "@node-steam/id": "^1.2.0",
     "axios": "1.2.0-alpha.1",
     "bytebuffer": "^5.0.1",
-    "steam": "https://github.com/dotabod/node-steam",
     "dota2": "https://github.com/dotabod/node-dota2",
     "i18next": "^23.11.2",
     "i18next-fs-backend": "^2.3.1",

@@ -1,10 +1,10 @@
 import { beforeEach } from 'node:test'
 
-import { calculateAvg } from '../../dota/lib/calculateAvg'
-import { getPlayers } from '../../dota/lib/getPlayers'
-import { getHeroNameById } from '../../dota/lib/heroes'
-import { gameMedals } from '../medals'
-import mongo from '../mongo'
+import { calculateAvg } from '../../dota/lib/calculateAvg.js'
+import { getPlayers } from '../../dota/lib/getPlayers.js'
+import { getHeroNameById } from '../../dota/lib/heroes.js'
+import { gameMedals } from '../medals.js'
+import mongo from '../mongo.js'
 
 jest.mock('../mongo')
 jest.mock('../dota/lib/getPlayers')

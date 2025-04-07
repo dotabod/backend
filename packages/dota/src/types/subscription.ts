@@ -1,4 +1,4 @@
-import type { Database } from '../db/supabase-types'
+import type { Database } from '../db/supabase-types.js'
 
 export type SubscriptionRow = Pick<
   Database['public']['Tables']['subscriptions']['Row'],

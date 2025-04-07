@@ -1,8 +1,7 @@
-import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { Long } from 'mongodb'
 import { redisClient } from '../db/redisInstance.js'
-import { LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../db/getWL'
+import { LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../db/getWL.js'
 import { getWL } from '../db/getWL.js'
 import supabase from '../db/supabase.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
@@ -11,7 +10,7 @@ import { steamSocket } from '../steam/ws.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
-import type { MatchMinimalDetailsResponse } from '../types'
+import type { MatchMinimalDetailsResponse } from '../types.js'
 import {
   type BlockType,
   type DotaEvent,
@@ -20,7 +19,7 @@ import {
   type SocketClient,
 } from '../types.js'
 import { getRedisNumberValue, steamID64toSteamID32 } from '../utils/index.js'
-import type { SubscriptionRow } from '../utils/subscription.js'
+import type { SubscriptionRow } from '../types/subscription.js'
 import { NeutralItemTimer } from './NeutralItemTimer.js'
 import { maybeSendRoshAegisEvent } from './events/gsi-events/AegisRes.js'
 import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster.js'
@@ -38,6 +37,7 @@ import { say } from './say.js'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/sendExtensionPubSubBroadcastMessageIfChanged.js'
 import type { GSIHandlerType } from './GSIHandlerTypes.js'
 import { setGSIHandlerConstructor } from './GSIHandlerFactory.js'
+import { logger } from '@dotabod/shared-utils'
 
 // Finally, we have a user and a GSI client
 interface MMR {

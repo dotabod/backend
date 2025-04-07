@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import RedisClient from '../../db/RedisClient.js'
-import { MULTIPLIER_SOLO } from '../../db/getWL'
+import { MULTIPLIER_SOLO } from '../../db/getWL.js'
 import { steamSocket } from '../../steam/ws.js'
 import type { Cards } from '../../types.js'
 import { logger } from '@dotabod/shared-utils'

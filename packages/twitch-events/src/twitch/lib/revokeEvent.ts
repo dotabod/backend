@@ -1,6 +1,6 @@
 import { botStatus, logger } from '@dotabod/shared-utils'
 import { eventSubMap } from '../../chatSubIds.js'
-import supabase from '../../db/supabase'
+import supabase from '../../db/supabase.js'
 import { getTwitchHeaders } from '@dotabod/shared-utils'
 
 // Constants

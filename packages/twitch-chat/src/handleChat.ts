@@ -1,12 +1,11 @@
 import { getTwitchHeaders, logger, checkBotStatus } from '@dotabod/shared-utils'
-import type { EventSubChannelChatMessageEventData } from '@twurple/eventsub-base/lib/events/EventSubChannelChatMessageEvent.external'
-import type { EventSubChatBadge } from '@twurple/eventsub-base/lib/events/common/EventSubChatMessage.external'
-import type { EventSubWsPacket } from '@twurple/eventsub-ws/lib/EventSubWsPacket.external'
 import { t } from 'i18next'
 import { emitChatMessage, hasDotabodSocket } from './utils/socketManager.js'
 
 function extractUserInfo(
-  badges: EventSubChatBadge[],
+  badges: {
+    [key: string]: string
+  }[],
   broadcasterUserId: string,
   chatterUserId: string,
 ) {
@@ -123,12 +122,12 @@ export async function sendTwitchChatMessage(
  * Handles incoming chat messages from the EventSub WebSocket
  * @param message The WebSocket message payload
  */
-export async function handleChatMessage(message: EventSubWsPacket): Promise<void> {
+export async function handleChatMessage(message: any): Promise<void> {
   if (!('subscription' in message.payload && 'event' in message.payload)) {
     return
   }
 
-  const event = message.payload.event as unknown as EventSubChannelChatMessageEventData
+  const event = message.payload.event
   const {
     chatter_user_login,
     chatter_user_id,
@@ -140,7 +139,6 @@ export async function handleChatMessage(message: EventSubWsPacket): Promise<void
     broadcaster_user_login,
   } = event
 
-  // @ts-expect-error Not in types yet
   if (event.source_message_id !== null) {
     // Ignore
     return

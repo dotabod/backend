@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { LOBBY_TYPE_RANKED } from '../../db/getWL'
+import { LOBBY_TYPE_RANKED } from '../../db/getWL.js'
 import { isArcade } from '../../dota/lib/isArcade.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
 import { DBSettings } from '../../settings.js'

@@ -4,7 +4,7 @@ import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { getHeroById, getHeroByName, heroColors } from '../../dota/lib/heroes.js'
 import type { Packet } from '../../types.js'
 import CustomError from '../../utils/customError.js'
-import type { Players } from '../../types'
+import type { Players } from '../../types.js'
 
 export async function getPlayerFromArgs({
   args,

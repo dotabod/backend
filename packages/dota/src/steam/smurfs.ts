@@ -2,7 +2,7 @@ import { t } from 'i18next'
 
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameOrColor } from '../dota/lib/heroes.js'
-import type { Players } from '../types'
+import type { Players } from '../types.js'
 
 export async function smurfs(
   locale: string,

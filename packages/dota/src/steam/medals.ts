@@ -4,7 +4,7 @@ import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { ranks } from '../dota/lib/consts.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameOrColor } from '../dota/lib/heroes.js'
-import type { Players } from '../types'
+import type { Players } from '../types.js'
 import type { Medals } from '../types.js'
 import MongoDBSingleton from './MongoDBSingleton.js'
 
