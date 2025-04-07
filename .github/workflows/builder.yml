@@ -11,6 +11,7 @@ on:
       - 'packages/steam/**'          # Steam service changes
       - 'packages/twitch-events/**'  # Twitch Events service changes
       - 'packages/shared-utils/**'   # Shared utilities used by multiple services
+      - 'packages/profanity-filter/**'
       - 'package.json'
       - 'bun.lock'
       - 'packages/Dockerfile.bun'    # Shared Dockerfile for bun-based services
