@@ -6,7 +6,7 @@ import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
-import { emitAegisEvent } from './AegisRes.js'
+import { emitAegisEvent } from './emitAegisEvent.js'
 import { generateAegisMessage } from './generateAegisMessage.js'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
