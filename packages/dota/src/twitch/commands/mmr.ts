@@ -11,10 +11,21 @@ commandHandler.registerCommand('mmr', {
     const {
       channel: { name: channel, client },
     } = message
+
+    logger.debug('[MMR] Command triggered', { channel, args })
+
     // Check if args include a twitch username
     if (args.length > 0) {
       const username = args[0].toLowerCase().replace(/^@/, '')
+      logger.debug('[MMR] Looking up username', { username, channel })
+
       const openDotaProfile = await getOpenDotaProfile(username)
+      logger.debug('[MMR] OpenDota profile result', {
+        username,
+        found: openDotaProfile !== null,
+        profile: openDotaProfile,
+      })
+
       if (openDotaProfile !== null) {
         chatClient.say(
           channel,
@@ -47,7 +58,14 @@ commandHandler.registerCommand('mmr', {
       client.settings,
       client.subscription,
     )
+    logger.debug('[MMR] Command enabled check', {
+      channel,
+      mmrDisabled,
+      settings: client.settings,
+    })
+
     if (mmrDisabled) {
+      logger.debug('[MMR] Command is disabled, exiting', { channel })
       return
     }
 
@@ -59,6 +77,14 @@ commandHandler.registerCommand('mmr', {
     )
     const name = channel.replace(/^#/, '').toLowerCase()
 
+    logger.debug('[MMR] Getting streamer rank', {
+      channel,
+      showRankMmr,
+      steam32Id: client.steam32Id,
+      mmr: client.mmr,
+      hasSteamAccounts: client.SteamAccount?.length > 0,
+    })
+
     const unknownMsg = t('uknownMmr', {
       channel: name,
       url: 'dotabod.com/dashboard/features',
@@ -67,10 +93,19 @@ commandHandler.registerCommand('mmr', {
 
     // Didn't have a new account made yet on the new steamaccount table
     if (!client.SteamAccount.length) {
+      logger.debug('[MMR] No Steam accounts found', { channel, mmr: client.mmr })
+
       if (client.mmr === 0) {
+        logger.debug('[MMR] MMR is 0, sending unknown message', { channel })
         chatClient.say(channel, unknownMsg, message.user.messageId)
         return
       }
+
+      logger.debug('[MMR] Using legacy MMR data', {
+        channel,
+        mmr: client.mmr,
+        steam32Id: client.steam32Id,
+      })
 
       getRankDescription({
         locale: client.locale,
@@ -79,17 +114,33 @@ commandHandler.registerCommand('mmr', {
         showRankMmr,
       })
         .then((description) => {
-          if (description === null || description.length) {
+          logger.debug('[MMR] Got rank description (legacy)', {
+            channel,
+            description,
+            hasDescription: description !== null && description.length > 0,
+          })
+
+          if (description === null || description.length > 0) {
             chatClient.say(channel, description ?? unknownMsg, message.user.messageId)
+          } else {
+            logger.debug('[MMR] Empty description, not sending message', { channel })
           }
         })
         .catch((e) => {
-          logger.info('[MMR] Failed to get rank description', { e, channel })
+          logger.error('[MMR] Failed to get rank description', { error: e, channel })
         })
       return
     }
 
     const act = client.SteamAccount.find((a) => a.steam32Id === client.steam32Id)
+    logger.debug('[MMR] Finding active Steam account', {
+      channel,
+      currentSteam32Id: client.steam32Id,
+      foundAccount: !!act,
+      accountDetails: act ? { name: act.name, mmr: act.mmr, steam32Id: act.steam32Id } : null,
+      multiAccount: message.channel.client.multiAccount,
+    })
+
     if (!act) {
       chatClient.say(
         channel,
@@ -104,6 +155,13 @@ commandHandler.registerCommand('mmr', {
       return
     }
 
+    logger.debug('[MMR] Getting rank description for account', {
+      channel,
+      accountName: act.name,
+      mmr: act.mmr,
+      steam32Id: act.steam32Id,
+    })
+
     getRankDescription({
       locale: client.locale,
       mmr: act.mmr,
@@ -111,13 +169,25 @@ commandHandler.registerCommand('mmr', {
       showRankMmr,
     })
       .then((description) => {
-        if (description === null || description.length) {
+        logger.debug('[MMR] Got rank description', {
+          channel,
+          description,
+          hasDescription: description !== null && description.length > 0,
+          accountName: act.name,
+        })
+
+        if (description === null || description.length > 0) {
           const msg = act.name ? (description ?? unknownMsg) : ''
+          logger.debug('[MMR] Sending message', { channel, message: msg || unknownMsg })
           chatClient.say(channel, msg || unknownMsg, message.user.messageId)
+        } else {
+          logger.debug('[MMR] Empty description and conditions not met, not sending message', {
+            channel,
+          })
         }
       })
       .catch((e) => {
-        logger.info('[MMR] Failed to get rank description', { e, channel })
+        logger.error('[MMR] Failed to get rank description', { error: e, channel })
       })
   },
 })
