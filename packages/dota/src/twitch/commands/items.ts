@@ -1,5 +1,5 @@
-import DOTA_ITEM_IDS from 'dotaconstants/build/item_ids.json' assert { type: 'json' }
-import DOTA_ITEMS from 'dotaconstants/build/items.json' assert { type: 'json' }
+import DOTA_ITEM_IDS from 'dotaconstants/build/item_ids.json' with { type: 'json' }
+import DOTA_ITEMS from 'dotaconstants/build/items.json' with { type: 'json' }
 import { t } from 'i18next'
 
 import RedisClient from '../../db/RedisClient.js'

@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 import type { HeroNames } from './getHero.js'
-import type { heroes } from './heroList.js'
+import { heroes } from './heroList.js'
 
 export const translatedColor = (color: string, lng: string) => {
   if (lng === 'en') return color

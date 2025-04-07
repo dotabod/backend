@@ -152,7 +152,7 @@ export default async function getDBUser({
     lookingupToken.delete(lookupToken)
     return
   }
-  let subscription = undefined
+  let subscription: SocketClient['subscription'] | undefined = undefined
   if (Array.isArray(user.subscriptions) && user.subscriptions.length > 0) {
     const activeSubscription =
       user.subscriptions.find((sub) => isSubscriptionActive(sub)) || user.subscriptions[0]

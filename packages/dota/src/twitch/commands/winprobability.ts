@@ -51,6 +51,12 @@ commandHandler.registerCommand('winprobability', {
       try {
         apiCooldown[channel] = Date.now()
         const matchDetails = await getWinProbability2MinAgo(Number.parseInt(matchId, 10))
+        if ('error' in matchDetails) {
+          logger.error('Error fetching win probability:', matchDetails.error)
+          WinRateCache[channel] = null
+          return
+        }
+
         const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
         if (
           lastWinRate &&

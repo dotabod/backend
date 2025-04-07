@@ -22,13 +22,17 @@ commandHandler.registerCommand('apm', {
         args: args,
       })
 
-      const commandsIssued = player?.commands_issued ?? client.gsi?.player?.commands_issued ?? 0
+      const commandsIssued =
+        player && 'commands_issued' in player
+          ? player.commands_issued
+          : (client.gsi?.player?.commands_issued ?? 0)
       const gameTime = client.gsi?.map?.game_time ?? 1
       const apm = commandsIssued ? Math.round(commandsIssued / (gameTime / 60)) : 0
 
-      const heroName = player?.commands_issued
-        ? getHeroNameOrColor(hero?.id ?? 0, playerIdx)
-        : getHeroNameOrColor(client?.gsi?.hero?.id ?? 0)
+      const heroName =
+        player && 'commands_issued' in player
+          ? getHeroNameOrColor(hero?.id ?? 0, playerIdx)
+          : getHeroNameOrColor(client?.gsi?.hero?.id ?? 0)
 
       chatClient.say(
         channel,

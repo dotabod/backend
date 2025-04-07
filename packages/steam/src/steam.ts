@@ -103,7 +103,7 @@ class Dota {
   private interval: NodeJS.Timeout | undefined
   private static instance: Dota
   private cache: Map<number, CacheEntry> = new Map()
-  private steamClient
+  private steamClient: Steam.SteamClient
   private steamUser
   public dota2
 

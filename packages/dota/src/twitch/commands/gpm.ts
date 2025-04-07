@@ -20,11 +20,12 @@ commandHandler.registerCommand('gpm', {
         client.locale,
         command,
       )
-      const heroName = player?.gpm
-        ? getHeroNameOrColor(hero?.id ?? 0, playerIdx)
-        : getHeroNameOrColor(client?.gsi?.hero?.id ?? 0)
+      const heroName =
+        player && 'gpm' in player
+          ? getHeroNameOrColor(hero?.id ?? 0, playerIdx)
+          : getHeroNameOrColor(client?.gsi?.hero?.id ?? 0)
 
-      const gpm = player?.gpm ?? client.gsi?.player?.gpm
+      const gpm = player && 'gpm' in player ? player.gpm : client.gsi?.player?.gpm
 
       if (!gpm) {
         chatClient.say(
@@ -35,8 +36,14 @@ commandHandler.registerCommand('gpm', {
         return
       }
 
-      const gold_from_hero_kills = player?.gold_from_hero_kills
-      const gold_from_creep_kills = player?.gold_from_creep_kills
+      const gold_from_hero_kills =
+        player && 'gold_from_hero_kills' in player
+          ? player.gold_from_hero_kills
+          : client.gsi?.player?.gold_from_hero_kills
+      const gold_from_creep_kills =
+        player && 'gold_from_creep_kills' in player
+          ? player.gold_from_creep_kills
+          : client.gsi?.player?.gold_from_creep_kills
 
       chatClient.say(
         channel,

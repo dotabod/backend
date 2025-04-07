@@ -212,7 +212,7 @@ export async function getRankDescription({
   if ('standing' in rankResponse) {
     const rankTitle = 'Immortal'
     const standing = rankResponse.standing && `#${rankResponse.standing}`
-    const msgs = []
+    const msgs: string[] = []
 
     if (showRankMmr) msgs.push(`${mmr} MMR`)
     msgs.push(rankTitle)
@@ -235,8 +235,8 @@ export async function getRankDescription({
     lng: locale,
   })
 
-  const msgs = []
-  msgs.push(mmr)
+  const msgs: string[] = []
+  msgs.push(String(mmr))
   msgs.push(myRank.title)
   msgs.push(`${nextAt} ${nextMMR}${count !== 1 ? ` ${nextIn}` : ''}`)
   if (count === 1) msgs.push(nextIn)
@@ -329,7 +329,7 @@ export async function getOpenDotaProfile(twitchUsername: string): Promise<{
       return null
     }
 
-    let steamAccount = null
+    let steamAccount: { leaderboard_rank: number | null; mmr: number } | null = null
 
     if (userData.steam32Id) {
       // If steam32Id exists directly on the user, use it

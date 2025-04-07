@@ -1,7 +1,18 @@
-import type { SocketClient } from '../types.js'
+import type { MatchMinimalDetailsResponse, SocketClient } from '../types.js'
+import type { DataBroadcaster } from './events/minimap/DataBroadcaster.js'
 
 // Type definition for GSIHandler that can be used without importing the actual class
 export interface GSIHandlerType {
+  closeBets: (
+    team: 'radiant' | 'dire' | null,
+    gcData?: MatchMinimalDetailsResponse,
+  ) => Promise<void>
+  openBets: (client: SocketClient) => Promise<void>
+  emitNotablePlayers: () => Promise<void>
+  emitBadgeUpdate: () => void
+  updateSteam32Id: () => Promise<void>
+  setupOBSBlockers: (gameState: string) => Promise<void>
+  emitWLUpdate: () => void
   client: SocketClient
   blockCache: string | null
   events: any[]
@@ -20,7 +31,7 @@ export interface GSIHandlerType {
   disabled: boolean
 
   // Use generic Record type instead of concrete implementations
-  mapBlocker: Record<string, any>
+  mapBlocker: DataBroadcaster
   neutralItemTimer: Record<string, any>
 
   enable(): void

@@ -119,7 +119,10 @@ const handleCardsCommand = async (message: MessageType) => {
     const response = await getCardsPromise
     chatClient.whisper(user.userId, JSON.stringify(response))
   } catch (error) {
-    chatClient.whisper(user.userId, `Error getting cards: ${error.message}`)
+    chatClient.whisper(
+      user.userId,
+      `Error getting cards: ${error instanceof Error ? error.message : String(error)}`,
+    )
   }
 
   chatClient.say(channel.name, `cards! ${channel.client.gsi?.map?.matchid}`)
@@ -258,7 +261,7 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
     .select('id, matchId, myTeam, userId, hero_name')
     .is('won', null)
     .eq('userId', token)
-    .neq('matchId', currentMatchId)
+    .neq('matchId', currentMatchId ?? '')
     .gte('created_at', dayAgo)
     .order('created_at', { ascending: false })
     .range(0, 10)
@@ -281,7 +284,15 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
       )
       const lastSocket = sockets[sockets.length - 1]
       try {
-        const response = await new Promise((resolve, reject) => {
+        const response = await new Promise<{
+          radiantWin: boolean
+          radiantScore: number
+          direScore: number
+          kills: number
+          deaths: number
+          assists: number
+          lobbyType: number
+        } | null>((resolve, reject) => {
           lastSocket
             .timeout(25000)
             .emit(

@@ -33,7 +33,7 @@ commandHandler.registerCommand('hero', {
         channel,
         hasHero: !!hero?.id,
         heroNameOrColor: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
-        steam32Id: player.accountid,
+        steam32Id: player?.accountid,
         token: client.token,
         lng: locale,
         message,
@@ -126,11 +126,16 @@ async function getHeroMsg({
   hasHero: boolean
   channel: string
   heroId: number
-  steam32Id: number
+  steam32Id: string | number | undefined
   token: string
   lng: string
   message: MessageType
 }) {
+  if (!steam32Id) {
+    chatClient.say(channel, t('overlayMissing', { command: '!hero', lng }), message.user.messageId)
+    return
+  }
+
   const sockets = await server.io.in(token).fetchSockets()
   if (sockets.length === 0) {
     chatClient.say(channel, t('overlayMissing', { command: '!hero', lng }), message.user.messageId)

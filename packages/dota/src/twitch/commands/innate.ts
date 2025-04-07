@@ -1,5 +1,5 @@
-import DOTA_ABILITIES from 'dotaconstants/build/abilities.json' assert { type: 'json' }
-import DOTA_HERO_ABILITIES from 'dotaconstants/build/hero_abilities.json' assert { type: 'json' }
+import DOTA_ABILITIES from 'dotaconstants/build/abilities.json' with { type: 'json' }
+import DOTA_HERO_ABILITIES from 'dotaconstants/build/hero_abilities.json' with { type: 'json' }
 import { t } from 'i18next'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getHeroById, getHeroNameOrColor } from '../../dota/lib/heroes.js'
@@ -34,7 +34,7 @@ commandHandler.registerCommand('innate', {
         channelClient.locale,
         command,
       )
-      if (!isValidHero(hero)) {
+      if (!isValidHero(hero) || !hero) {
         chatClient.say(
           channelName,
           t('gameNotFound', { lng: channelClient.locale }),

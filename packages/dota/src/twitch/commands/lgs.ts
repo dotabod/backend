@@ -56,7 +56,7 @@ commandHandler.registerCommand('lgs', {
       return
     }
 
-    const returnMsg = []
+    const returnMsg: string[] = []
 
     returnMsg.push(
       lg.won

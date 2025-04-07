@@ -11,7 +11,6 @@ export function findSpectatorIdx(packet: Packet | undefined, heroOrAccountId: nu
   const teams = ['team2', 'team3']
 
   for (const team of teams) {
-    // @ts-expect-error we can iterate by team2 and team3
     const players: Player[] = Object.values(packet?.player?.[team] ?? {})
     if (!players) continue
 
@@ -25,7 +24,6 @@ export function findSpectatorIdx(packet: Packet | undefined, heroOrAccountId: nu
           playerIdx = i + 5
         }
 
-        // @ts-expect-error we can iterate by team2 and team3
         return { playerIdx, playerN: Object.keys(packet?.player?.[team])[i], teamN: team }
       }
     }
@@ -72,7 +70,7 @@ export async function findAccountFromCmd(
     }
 
     const spectatorPlayers = getSpectatorPlayers(packet)
-    const selectedPlayer = spectatorPlayers.find((a) => !!a.selected)
+    const selectedPlayer = spectatorPlayers.find((a) => 'selected' in a && !!a.selected)
     accountIdFromArgs = accountIdFromArgs ?? selectedPlayer?.accountid
 
     const { playerIdx, playerN, teamN } = findSpectatorIdx(packet, accountIdFromArgs) ?? {}

@@ -11,14 +11,14 @@ import supabase from '../db/supabase.js'
 const generateMessage = (
   locale: string,
   playersFromLastGame: {
-    old: {
+    old: Partial<{
       heroid: number
       accountid: number
-    }
-    current: {
+    }>
+    current: Partial<{
       heroid: number
       accountid: number
-    }
+    }>
     currentIdx: number
   }[],
 ) => {

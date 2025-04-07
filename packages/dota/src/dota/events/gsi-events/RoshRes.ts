@@ -25,7 +25,7 @@ export function getNewRoshTime(res: RoshRes) {
 export function generateRoshanMessage(res: RoshRes, lng: string) {
   res = getNewRoshTime(res)
 
-  const msgs = []
+  const msgs: string[] = []
   if (res.maxS > 0) {
     msgs.push(
       t('roshanKilled', {

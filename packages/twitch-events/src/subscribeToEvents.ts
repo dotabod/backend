@@ -13,6 +13,11 @@ export async function subscribeToEvents() {
   const conduitId = await fetchConduitId()
   logger.info('[TWITCHEVENTS] Subscribing to events', { conduitId })
 
+  if (!conduitId) {
+    logger.error('[TWITCHEVENTS] No conduit ID found')
+    return
+  }
+
   // First, subscribe to auth events which are global and not per-user
   await subscribeToAuthGrantOrRevoke(conduitId, process.env.TWITCH_CLIENT_ID!)
 

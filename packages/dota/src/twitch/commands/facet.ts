@@ -1,4 +1,4 @@
-import DOTA_HERO_ABILITIES from 'dotaconstants/build/hero_abilities.json' assert { type: 'json' }
+import DOTA_HERO_ABILITIES from 'dotaconstants/build/hero_abilities.json' with { type: 'json' }
 import { t } from 'i18next'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getHeroById, getHeroNameOrColor } from '../../dota/lib/heroes.js'
@@ -44,7 +44,7 @@ commandHandler.registerCommand('facet', {
 
       const heroData = getHeroById(hero.id)
       const requestedFacet = Number(args[args.length - 1]) || hero.facet
-      const heroFacet = getHeroFacet(heroData, requestedFacet || hero.facet)
+      const heroFacet = getHeroFacet(heroData, requestedFacet || hero.facet || 0)
       const totalFacets = getFacetCount(heroData)
 
       if (!totalFacets) {

@@ -89,7 +89,7 @@ class GSIServer {
     app.use(cors({ origin: allowedOrigins }))
     app.use(json({ limit: '1mb' }))
     app.use(urlencoded({ extended: true, limit: '1mb' }))
-    app.use(bodyParserErrorHandler() as ErrorRequestHandler)
+    app.use(bodyParserErrorHandler() as unknown as ErrorRequestHandler)
 
     app.post(
       '/',

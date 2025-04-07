@@ -42,8 +42,6 @@ const badWords = new Filter()
 leoProfanity.loadDictionary('en') // English
 leoProfanity.loadDictionary('fr') // French
 leoProfanity.loadDictionary('ru') // Russian
-leoProfanity.add(leoProfanity.getDictionary('ru'))
-leoProfanity.add(leoProfanity.getDictionary('fr'))
 
 // Add Russian bad words from the russian-bad-words library to leo-profanity
 leoProfanity.add(russianBadWordsList)

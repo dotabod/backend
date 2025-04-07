@@ -1,4 +1,4 @@
-import DOTA_AGHS from 'dotaconstants/build/aghs_desc.json' assert { type: 'json' }
+import DOTA_AGHS from 'dotaconstants/build/aghs_desc.json' with { type: 'json' }
 import { t } from 'i18next'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getHeroById, getHeroNameOrColor } from '../../dota/lib/heroes.js'
@@ -33,7 +33,7 @@ commandHandler.registerCommand('shard', {
         channelClient.locale,
         command,
       )
-      if (!isValidHero(hero)) {
+      if (!isValidHero(hero) || !hero) {
         chatClient.say(
           channelName,
           t('gameNotFound', { lng: channelClient.locale }),

@@ -47,7 +47,7 @@ async function sendMessageToUser(userId: string, username: string, messageConten
 export async function handleUserOnlineMessages(userId: string, username: string) {
   try {
     const now = new Date().toISOString()
-    const processedMessages = []
+    const processedMessages: typeof userSpecificMessages = []
 
     // Find scheduled messages for this specific user that are pending and due to be sent
     const { data: userSpecificMessages, error: userMessagesError } = await supabase

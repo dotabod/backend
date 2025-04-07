@@ -4,5 +4,6 @@
     "packages/steam/locales",
     "packages/twitch-chat/locales",
     "packages/twitch-events/locales"
-  ]
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

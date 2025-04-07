@@ -12,7 +12,7 @@
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.8"
   },
   "scripts": {
     "build:yarn": "tsc --build --verbose",

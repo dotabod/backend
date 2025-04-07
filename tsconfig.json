@@ -5,8 +5,8 @@
       "ESNext"
     ],
     "target": "ESNext",
-    "module": "Node16",
-    "moduleResolution": "node16",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
     "sourceMap": true,
     "strictNullChecks": true,
     "types": [
@@ -33,5 +33,13 @@
     "ignore": [
       "(?:^|/)node_modules/"
     ]
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }
