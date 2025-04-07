@@ -45,11 +45,6 @@ eventHandler.registerEvent('map:game_state', {
           channel: accountId,
         })
 
-        logger.info('Clip created', {
-          ...logContext,
-          url: `clips.twitch.tv/${clipId}`,
-        })
-
         // Process the clip
         try {
           const visionApiHost = process.env.VISION_API_HOST
