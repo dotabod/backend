@@ -9,7 +9,7 @@ import {
 } from '../dota/lib/consts.js'
 import type { SocketClient } from '../types.js'
 import { logger } from '@dotabod/shared-utils'
-import { isSubscriptionActive } from '../utils/subscription'
+import { isSubscriptionActive } from '../types/subscription.js'
 import supabase from './supabase.js'
 
 export default async function getDBUser({

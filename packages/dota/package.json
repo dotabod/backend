@@ -13,7 +13,7 @@
     "dev": "bun --watch src/index.ts",
     "docker:production": "bun src/index.ts",
     "docker:development": "bun --watch src/index.ts",
-    "build": "bun build --target=bun --outfile=./dist/index.js --outdir=./dist --sourcemap=linked ./src/index.ts",
+    "build": "bun build --target=bun --outfile=./dist/index.js --outdir=./dist ./src/index.ts",
     "fix-users": "doppler run -- bun ./src/dev/index.ts",
     "test": "doppler run -- bun jest"
   },

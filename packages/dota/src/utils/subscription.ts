@@ -1,19 +1,10 @@
 import type { Database } from '../db/supabase-types'
-import type { SettingKeys, defaultSettings } from '../settings'
-
-// Add type safety for chatters
-export type ChatterKeys = keyof typeof defaultSettings.chatters
-export type ChatterSettingKeys = `chatters.${ChatterKeys}`
-
-export const SUBSCRIPTION_TIERS = {
-  FREE: 'FREE',
-  PRO: 'PRO',
-} as const
-
-export type SubscriptionRow = Pick<
-  Database['public']['Tables']['subscriptions']['Row'],
-  'id' | 'tier' | 'status' | 'isGift'
->
+import type { SettingKeys, ChatterSettingKeys } from '../types/settings.js'
+import {
+  type SubscriptionRow,
+  SUBSCRIPTION_TIERS,
+  isSubscriptionActive,
+} from '../types/subscription.js'
 
 export const TIER_LEVELS: Record<Database['public']['Enums']['SubscriptionTier'], number> = {
   [SUBSCRIPTION_TIERS.FREE]: 0,
@@ -213,12 +204,4 @@ export function canAccessFeature(
     hasAccess: TIER_LEVELS[subscription.tier] >= TIER_LEVELS[requiredTier],
     requiredTier,
   }
-}
-
-export function isSubscriptionActive(subscription?: SubscriptionRow): boolean {
-  if (subscription?.isGift) return false
-  if (!subscription?.status) return false
-  if (subscription.status === 'TRIALING') return true
-  if (subscription.status === 'ACTIVE') return true
-  return false
 }

@@ -3,7 +3,7 @@ import { initUserSubscriptions } from './initUserSubscriptions.js'
 import { subscribeToAuthGrantOrRevoke } from './subscribeChatMessagesForUser.js'
 import { getAccountIds } from './twitch/lib/getAccountIds.js'
 import { logger } from '@dotabod/shared-utils'
-import { rateLimiter } from './utils/rateLimiter.js'
+import { rateLimiter } from './utils/rateLimiterCore.js'
 
 /**
  * Subscribe all users to Twitch events with optimized batching for scale

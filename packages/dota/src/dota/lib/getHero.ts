@@ -1,4 +1,4 @@
-import heroes from './heroes.js'
+import { heroes } from './heroList.js'
 
 export type HeroNames = keyof typeof heroes
 

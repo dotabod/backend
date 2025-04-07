@@ -1,11 +1,9 @@
+import { getTwitchHeaders, logger, checkBotStatus } from '@dotabod/shared-utils'
 import type { EventSubChannelChatMessageEventData } from '@twurple/eventsub-base/lib/events/EventSubChannelChatMessageEvent.external'
 import type { EventSubChatBadge } from '@twurple/eventsub-base/lib/events/common/EventSubChatMessage.external'
 import type { EventSubWsPacket } from '@twurple/eventsub-ws/lib/EventSubWsPacket.external'
 import { t } from 'i18next'
-import { getTwitchHeaders } from '@dotabod/shared-utils'
-import { hasDotabodSocket, io } from './index.js'
-import { logger } from '@dotabod/shared-utils'
-import { checkBotStatus } from '@dotabod/shared-utils'
+import { emitChatMessage, hasDotabodSocket } from './utils/socketManager.js'
 
 function extractUserInfo(
   badges: EventSubChatBadge[],
@@ -195,20 +193,4 @@ async function dotabodOfflineHandler(
       logger.error('Could not send rebooting message', { e })
     }
   }
-}
-
-/**
- * Emits chat message to connected sockets
- */
-function emitChatMessage(
-  broadcasterLogin: string,
-  chatterLogin: string,
-  text: string,
-  metadata: {
-    channelId: string
-    userInfo: ReturnType<typeof extractUserInfo>
-    messageId: string
-  },
-): void {
-  io.to('twitch-chat-messages').emit('msg', broadcasterLogin, chatterLogin, text, metadata)
 }

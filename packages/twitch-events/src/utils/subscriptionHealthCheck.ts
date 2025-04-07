@@ -4,7 +4,7 @@ import { eventSubMap } from '../chatSubIds.js'
 import { fetchConduitId } from '../fetchConduitId.js'
 import { genericSubscribe } from '../subscribeChatMessagesForUser.js'
 import { getAccountIds } from '../twitch/lib/getAccountIds.js'
-import { rateLimiter } from './rateLimiter.js'
+import { rateLimiter } from './rateLimiterCore.js'
 
 // Define critical subscription types in order of importance
 const CRITICAL_SUBSCRIPTION_TYPES: (keyof TwitchEventTypes)[] = [

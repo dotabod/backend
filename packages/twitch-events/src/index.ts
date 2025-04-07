@@ -2,7 +2,7 @@ import { checkBotStatus, logger } from '@dotabod/shared-utils'
 import { fetchExistingSubscriptions, subsToCleanup } from './fetchExistingSubscriptions'
 import { subscribeToEvents } from './subscribeToEvents.js'
 import { deleteSubscription } from './twitch/lib/revokeEvent.js'
-import { rateLimiter } from './utils/rateLimiter.js'
+import { rateLimiter } from './utils/rateLimiterCore.js'
 import { setupSocketIO } from './utils/socketUtils.js'
 import { setupWebhooks } from './utils/webhookUtils.js'
 
