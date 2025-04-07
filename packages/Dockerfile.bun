@@ -1,4 +1,4 @@
-FROM oven/bun:1.1.24 AS base
+FROM oven/bun:1.2.8-slim AS base
 
 # Set build context and work directories
 # BUILD_CONTEXT like "packages/twitch-chat" or "packages/twitch-events"
@@ -44,7 +44,7 @@ RUN bun run build
 
 #-----------------------
 
-FROM oven/bun:1.1.24 AS prod
+FROM oven/bun:1.2.8-slim AS prod
 
 ARG BUILD_CONTEXT
 ARG DOTABOD_ENV
@@ -74,4 +74,4 @@ COPY --from=builder /app/packages/shared-utils/package.json packages/shared-util
 # Environment and CMD
 WORKDIR /app/$BUILD_CONTEXT/
 ENV DOTABOD_ENV=$DOTABOD_ENV
-CMD bun run docker:$DOTABOD_ENV
+CMD ["bun", "run", "start"]
