@@ -58,17 +58,14 @@ WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 
 COPY --from=builder /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
-COPY --from=builder /app/$BUILD_CONTEXT/src $BUILD_CONTEXT/src/
 COPY --from=builder /app/$BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/
 COPY --from=builder /app/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/
 
 COPY --from=builder /app/packages/profanity-filter/dist packages/profanity-filter/dist/
 COPY --from=builder /app/packages/profanity-filter/index.ts packages/profanity-filter/
-COPY --from=builder /app/packages/profanity-filter/src packages/profanity-filter/src/
 COPY --from=builder /app/packages/profanity-filter/package.json packages/profanity-filter/
 
 COPY --from=builder /app/packages/shared-utils/dist packages/shared-utils/dist/
-COPY --from=builder /app/packages/shared-utils/src packages/shared-utils/src/
 COPY --from=builder /app/packages/shared-utils/package.json packages/shared-utils/
 
 # Environment and CMD
