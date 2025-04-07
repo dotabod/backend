@@ -6,7 +6,7 @@ This wont get triggered if they click disconnect and dont wait for the ancient t
 
 ```ts
 eventHandler.registerEvent('map:win_team', {
-  handler: async (dotaClient: GSIHandler, winningTeam: 'radiant' | 'dire') => {
+  handler: async (dotaClient, winningTeam: 'radiant' | 'dire') => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     await dotaClient.closeBets(winningTeam)
   },

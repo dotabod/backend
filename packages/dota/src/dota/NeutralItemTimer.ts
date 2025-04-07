@@ -1,8 +1,9 @@
 import { t } from 'i18next'
-import type { GSIHandler } from './GSIHandler.js'
 import { redisClient } from '../db/redisInstance.js'
 import { say } from './say.js'
 import { getRedisNumberValue } from '../utils/index.js'
+import type { GSIHandlerType } from './GSIHandlerTypes.js'
+
 interface TierTime {
   tier: number
   normalTime: number
@@ -27,7 +28,7 @@ export class NeutralItemTimer {
   // Minimum time between checks in seconds
   private readonly CHECK_INTERVAL = 1
 
-  constructor(private dotaClient: GSIHandler) {}
+  constructor(private dotaClient: GSIHandlerType) {}
 
   async checkNeutralItems() {
     if (!this.dotaClient.client.gsi?.map?.game_time) return

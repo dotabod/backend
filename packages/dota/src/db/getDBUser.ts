@@ -1,4 +1,3 @@
-import { GSIHandler } from '../dota/GSIHandler.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
 import {
   gsiHandlers,
@@ -11,6 +10,7 @@ import type { SocketClient } from '../types.js'
 import { logger } from '@dotabod/shared-utils'
 import { isSubscriptionActive } from '../types/subscription.js'
 import supabase from './supabase.js'
+import { createGSIHandler } from '../dota/GSIHandlerFactory.js'
 
 export default async function getDBUser({
   token,
@@ -177,9 +177,10 @@ export default async function getDBUser({
     },
   }
 
-  const gsiHandler = gsiHandlers.get(userInfo.id) || new GSIHandler(userInfo)
+  const gsiHandler = gsiHandlers.get(userInfo.id) || createGSIHandler(userInfo)
 
-  if (gsiHandler instanceof GSIHandler) {
+  // Check if the handler is valid (not undefined/null)
+  if (gsiHandler) {
     gsiHandlers.set(userInfo.id, gsiHandler)
   }
 

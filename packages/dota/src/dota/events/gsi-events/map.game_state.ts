@@ -1,12 +1,11 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { is8500Plus } from '../../../utils/index.js'
-import type { GSIHandler } from '../../GSIHandler.js'
 import type { allStates } from '../../lib/consts.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent('map:game_state', {
-  handler: async (dotaClient: GSIHandler, gameState: (typeof allStates)[number]) => {
+  handler: async (dotaClient, gameState: (typeof allStates)[number]) => {
     // Early returns for invalid conditions
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi, false)) return

@@ -15,7 +15,6 @@ import {
   validEventTypes,
 } from '../../../types.js'
 import { logger } from '@dotabod/shared-utils'
-import type { GSIHandler } from '../../GSIHandler.js'
 import { redisClient } from '../../../db/redisInstance.js'
 import { events } from '../../globalEventEmitter.js'
 import { server } from '../../server.js'
@@ -35,6 +34,7 @@ import MongoDBSingleton from '../../../steam/MongoDBSingleton.js'
 import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId.js'
 import { getSpectatorPlayers } from '../../lib/getSpectatorPlayers.js'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './sendExtensionPubSubBroadcastMessageIfChanged.js'
+import type { GSIHandlerType } from '../../GSIHandlerTypes.js'
 
 // Define a type for the global timeouts
 declare global {
@@ -314,7 +314,7 @@ cleanupMatchDataCache()
 const lastSaveTimeByMatch = new Map<string, number>()
 const SAVE_INTERVAL = 60000 // 1 minute in milliseconds
 
-const saveMatchDataDump = async (dotaClient: GSIHandler) => {
+const saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
   if (!isPlayingMatch(dotaClient.client.gsi)) {
     return
   }
@@ -373,7 +373,7 @@ const saveMatchDataDump = async (dotaClient: GSIHandler) => {
   }
 }
 
-const maybeSendTooltipData = async (dotaClient: GSIHandler) => {
+const maybeSendTooltipData = async (dotaClient: GSIHandlerType) => {
   if (!dotaClient.client.beta_tester || !dotaClient.client.stream_online) {
     return
   }
@@ -419,7 +419,7 @@ const maybeSendTooltipData = async (dotaClient: GSIHandler) => {
 
 // Catch all
 eventHandler.registerEvent('newdata', {
-  handler: async (dotaClient: GSIHandler, data: Packet) => {
+  handler: async (dotaClient, data: Packet) => {
     // New users who don't have a steam account saved yet
     // This needs to run first so we have client.steamid on multiple acts
     const updateSteam32IdPromise = dotaClient.updateSteam32Id()
@@ -516,7 +516,7 @@ eventHandler.registerEvent('newdata', {
   },
 })
 
-async function showProbability(dotaClient: GSIHandler) {
+async function showProbability(dotaClient: GSIHandlerType) {
   const winChanceEnabled = getValueOrDefault(
     DBSettings.winProbabilityOverlay,
     dotaClient.client.settings,
@@ -572,7 +572,7 @@ async function showProbability(dotaClient: GSIHandler) {
   }
 }
 
-function handleNewEvents(data: Packet, dotaClient: GSIHandler) {
+function handleNewEvents(data: Packet, dotaClient: GSIHandlerType) {
   // Create a set for faster lookup of existing events
   const existingEventsSet = new Set(dotaClient.events.map((e) => `${e.game_time}-${e.event_type}`))
 

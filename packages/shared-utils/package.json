@@ -16,7 +16,8 @@
   },
   "scripts": {
     "build:yarn": "tsc --build --verbose",
-    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
+    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.21.0",

@@ -9,7 +9,9 @@
     "exportnps": "doppler run -- bash services/mongodb/export.sh",
     "just": "doppler run -- bash runner.sh",
     "just-prod": "DOPPLER_CONFIG=prd doppler run -- bash runner.sh",
-    "build:all": "bun run --cwd packages/shared-utils build && bun run --cwd packages/profanity-filter build && bun run --cwd packages/dota build && bun run --cwd packages/twitch-chat build && bun run --cwd packages/twitch-events build"
+    "build:all": "bun run --cwd packages/shared-utils build && bun run --cwd packages/profanity-filter build && bun run --cwd packages/dota build && bun run --cwd packages/twitch-chat build && bun run --cwd packages/twitch-events build",
+    "typecheck:all": "bun run --cwd packages/shared-utils typecheck && bun run --cwd packages/profanity-filter typecheck && bun run --cwd packages/dota typecheck && bun run --cwd packages/twitch-chat typecheck && bun run --cwd packages/twitch-events typecheck",
+    "lint:all": "biome check ."
   },
   "trustedDependencies": ["@biomejs/biome", "es5-ext", "esbuild", "lefthook", "protobufjs", "steam-fork", "steam-resources-fork"],
   "dependencies": {

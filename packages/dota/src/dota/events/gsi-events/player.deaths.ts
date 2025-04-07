@@ -1,13 +1,13 @@
 import { t } from 'i18next'
 
 import type { Item } from '../../../types.js'
-import type { GSIHandler } from "../../GSIHandler.js"
-import { redisClient } from "../../../db/redisInstance.js"
+import { redisClient } from '../../../db/redisInstance.js'
 import { findItem } from '../../lib/findItem.js'
 import handleGetHero, { type HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
+import type { GSIHandlerType } from '../../GSIHandlerTypes.js'
 
 const passiveItemNames = [
   { name: 'item_magic_stick', title: 'magic stick', charges: true },
@@ -21,7 +21,7 @@ const passiveItemNames = [
 ]
 
 eventHandler.registerEvent('player:deaths', {
-  handler: async (dotaClient: GSIHandler, deaths: number) => {
+  handler: async (dotaClient, deaths: number) => {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!deaths) return
@@ -38,7 +38,7 @@ eventHandler.registerEvent('player:deaths', {
   },
 })
 
-async function firstBloodChat(dotaClient: GSIHandler, heroName: string) {
+async function firstBloodChat(dotaClient: GSIHandlerType, heroName: string) {
   const playingTeam =
     (await redisClient.client.get(`${dotaClient.client.token}:playingTeam`)) ??
     dotaClient.client.gsi?.player?.team_name
@@ -58,7 +58,7 @@ async function firstBloodChat(dotaClient: GSIHandler, heroName: string) {
   )
 }
 
-function cantCastItem(item: Item, dotaClient: GSIHandler) {
+function cantCastItem(item: Item, dotaClient: GSIHandlerType) {
   return (
     Number(item.cooldown) > 0 ||
     !item.can_cast ||
@@ -68,7 +68,7 @@ function cantCastItem(item: Item, dotaClient: GSIHandler) {
   )
 }
 
-function passiveDeathChat(dotaClient: GSIHandler, heroName: string) {
+function passiveDeathChat(dotaClient: GSIHandlerType, heroName: string) {
   const couldHaveLivedWith = findItem({
     itemName: passiveItemNames.map((i) => i.name),
     searchStashAlso: false,

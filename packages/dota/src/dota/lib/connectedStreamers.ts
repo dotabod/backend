@@ -1,5 +1,5 @@
 import type { SocketClient } from '../../types.js'
-import type { GSIHandler } from '../GSIHandler.js'
+import type { GSIHandlerType } from '../GSIHandlerTypes.js'
 import { gsiHandlers, twitchIdToToken, twitchNameToToken } from './consts.js'
 
 export function getTokenFromTwitchId(twitchId?: string | null) {
@@ -41,7 +41,7 @@ export function findUserByTwitchId(twitchId?: string): SocketClient | null {
   return gsiHandlers.get(token)?.client ?? null
 }
 
-export function findGSIHandlerByTwitchId(twitchId?: string): GSIHandler | null {
+export function findGSIHandlerByTwitchId(twitchId?: string): GSIHandlerType | null {
   const token = getTokenFromTwitchId(twitchId)
   if (!token) return null
 

@@ -36,6 +36,8 @@ import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
 import { say } from './say.js'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/sendExtensionPubSubBroadcastMessageIfChanged.js'
+import type { GSIHandlerType } from './GSIHandlerTypes.js'
+import { setGSIHandlerConstructor } from './GSIHandlerFactory.js'
 
 // Finally, we have a user and a GSI client
 interface MMR {
@@ -101,7 +103,7 @@ export async function deleteRedisData(client: SocketClient) {
 }
 
 // That means the user opened OBS and connected to Dota 2 GSI
-export class GSIHandler {
+export class GSIHandler implements GSIHandlerType {
   client: SocketClient
 
   // Server could reboot and lose these in memory
@@ -1320,3 +1322,6 @@ export class GSIHandler {
     }
   }
 }
+
+// Register the GSIHandler constructor with the factory
+setGSIHandlerConstructor((client: SocketClient) => new GSIHandler(client))

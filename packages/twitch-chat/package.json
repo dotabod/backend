@@ -11,7 +11,8 @@
   "scripts": {
     "docker:production": "bun ./dist/index.js",
     "docker:development": "bun src/index.ts",
-    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js"
+    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "socket.io-client": "^4.8.1",

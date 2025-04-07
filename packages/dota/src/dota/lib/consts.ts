@@ -1,4 +1,4 @@
-import type { GSIHandler } from '../GSIHandler.js'
+import type { GSIHandlerType } from '../GSIHandlerTypes.js'
 
 // full list at https://github.com/SteamDatabase/GameTracking-Dota2/blob/master/Protobufs/dota_shared_enums.proto
 export const allStates = [
@@ -104,7 +104,7 @@ export const modMode = new Set()
 
 export const invalidTokens = new Set(['', null, undefined, 0])
 
-export const gsiHandlers = new Map<string, GSIHandler>()
+export const gsiHandlers = new Map<string, GSIHandlerType>()
 export const twitchIdToToken = new Map<string, string>()
 export const twitchNameToToken = new Map<string, string>()
 export const pendingCheckAuth = new Map<string, boolean>()

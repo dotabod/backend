@@ -1,7 +1,6 @@
 import { t } from 'i18next'
 
 import { type DotaEvent, DotaEventTypes } from '../../../types.js'
-import type { GSIHandler } from '../../GSIHandler.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -10,7 +9,7 @@ import eventHandler from '../EventHandler.js'
 import { getRedisNumberValue } from '../../../utils/index.js'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
-  handler: async (dotaClient: GSIHandler, event: DotaEvent) => {
+  handler: async (dotaClient, event: DotaEvent) => {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 

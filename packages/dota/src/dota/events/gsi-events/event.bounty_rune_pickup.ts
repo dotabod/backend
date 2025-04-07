@@ -1,8 +1,7 @@
 import { t } from 'i18next'
 
 import { type DotaEvent, DotaEventTypes } from '../../../types.js'
-import type { GSIHandler } from "../../GSIHandler.js"
-import { redisClient } from "../../../db/redisInstance.js"
+import { redisClient } from '../../../db/redisInstance.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -10,7 +9,7 @@ import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
-  handler: async (dotaClient: GSIHandler, event: DotaEvent) => {
+  handler: async (dotaClient, event: DotaEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
     if (Number(dotaClient.client.gsi?.map?.clock_time) > 120) return

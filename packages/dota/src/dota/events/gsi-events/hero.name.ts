@@ -6,7 +6,6 @@ import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { openTwitchBet } from '../../../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../../../twitch/lib/refundTwitchBets.js'
 import { logger } from '@dotabod/shared-utils'
-import type { GSIHandler } from '../../GSIHandler.js'
 import getHero, { type HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
@@ -15,7 +14,7 @@ import eventHandler from '../EventHandler.js'
 const redisClient = RedisClient.getInstance()
 
 eventHandler.registerEvent('hero:name', {
-  handler: async (dotaClient: GSIHandler, name: HeroNames) => {
+  handler: async (dotaClient, name: HeroNames) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
     const betsEnabled = getValueOrDefault(

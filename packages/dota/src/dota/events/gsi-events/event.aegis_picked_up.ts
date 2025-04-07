@@ -1,7 +1,6 @@
 import RedisClient from '../../../db/RedisClient.js'
 import { type DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
-import type { GSIHandler } from '../../GSIHandler.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -11,7 +10,7 @@ import { emitAegisEvent } from './AegisRes.js'
 import { generateAegisMessage } from './generateAegisMessage.js'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
-  handler: async (dotaClient: GSIHandler, event: DotaEvent) => {
+  handler: async (dotaClient, event: DotaEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 

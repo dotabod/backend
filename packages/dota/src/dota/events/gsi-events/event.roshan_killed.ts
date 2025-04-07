@@ -1,14 +1,13 @@
 import RedisClient from '../../../db/RedisClient.js'
 import { type DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS, getRedisNumberValue } from '../../../utils/index.js'
-import type { GSIHandler } from '../../GSIHandler.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 import { emitRoshEvent, generateRoshanMessage, type RoshRes } from './RoshRes.js'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
-  handler: async (dotaClient: GSIHandler, event: DotaEvent) => {
+  handler: async (dotaClient, event: DotaEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 

@@ -1,14 +1,13 @@
 import { t } from 'i18next'
 
-import type { GSIHandler } from "../../GSIHandler.js"
-import { redisClient } from "../../../db/redisInstance.js"
+import { redisClient } from '../../../db/redisInstance.js'
 import getHero, { type HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent('hero:smoked', {
-  handler: async (dotaClient: GSIHandler, isSmoked: boolean) => {
+  handler: async (dotaClient, isSmoked: boolean) => {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 

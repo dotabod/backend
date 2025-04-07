@@ -1,12 +1,11 @@
 import RedisClient from '../../../db/RedisClient.js'
 import { getRedisNumberValue } from '../../../utils/index.js'
-import type { GSIHandler } from '../../GSIHandler.js'
 import { server } from '../../server.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent('hero:alive', {
-  handler: async (dotaClient: GSIHandler, alive: boolean) => {
+  handler: async (dotaClient, alive: boolean) => {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
