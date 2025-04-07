@@ -142,9 +142,6 @@ export class GSIHandler {
       this.client.subscription,
     )
     if (isBotDisabled) {
-      logger.info('[GSI] Bot is disabled for this user', {
-        name: this.client.name,
-      })
       this.disable()
       return
     }
