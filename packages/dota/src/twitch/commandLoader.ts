@@ -1,39 +1,52 @@
-// Import fs and path modules to work with the file system
-import fs from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-// Get the directory name of the current module
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const commandsDir = path.join(__dirname, 'commands')
-
-// Read the commands directory and import all .ts files
-// This will automatically import all command files without requiring manual updates
-async function loadCommands() {
-  try {
-    const files = fs.readdirSync(commandsDir).filter((file) => file.endsWith('.ts')) // Only import .ts files
-
-    const results = await Promise.allSettled(
-      files.map(async (file) => {
-        try {
-          await import(`./commands/${file}`)
-          return { file, success: true }
-        } catch (error) {
-          console.error(`Error importing command file ${file}:`, error)
-          return { file, success: false, error }
-        }
-      }),
-    )
-
-    const successful = results.filter((r) => r.status === 'fulfilled' && r.value.success).length
-    const failed = results.filter((r) => r.status === 'fulfilled' && !r.value.success).length
-
-    console.log(`Loaded ${successful} commands successfully, ${failed} failed to load`)
-  } catch (error) {
-    console.error('Error reading commands directory:', error)
-  }
-}
-
-// Load all commands
-loadCommands()
+import './commands/aghs.ts'
+import './commands/apm.ts'
+import './commands/avg.ts'
+import './commands/beta.ts'
+import './commands/commands.ts'
+import './commands/count.ts'
+import './commands/d2pt.ts'
+import './commands/delay.ts'
+import './commands/dotabod.ts'
+import './commands/dotabuff.ts'
+import './commands/facet.ts'
+import './commands/fixdbl.ts'
+import './commands/fixparty.ts'
+import './commands/friends.ts'
+import './commands/gm.ts'
+import './commands/gpm.ts'
+import './commands/hero.ts'
+import './commands/innate.ts'
+import './commands/items.ts'
+import './commands/lg.ts'
+import './commands/lgs.ts'
+import './commands/locale.ts'
+import './commands/match.ts'
+import './commands/mmr.ts'
+import './commands/=.ts'
+import './commands/modsonly.ts'
+import './commands/mute.ts'
+import './commands/np.ts'
+import './commands/online.ts'
+import './commands/only.ts'
+import './commands/opendota.ts'
+import './commands/ping.ts'
+import './commands/pleb.ts'
+import './commands/profile.ts'
+import './commands/profileLink.ts'
+import './commands/ranked.ts'
+import './commands/refresh.ts'
+import './commands/resetwl.ts'
+import './commands/roshan.ts'
+import './commands/setdelay.ts'
+import './commands/shard.ts'
+import './commands/smurfs.ts'
+import './commands/song.ts'
+import './commands/spectators.ts'
+import './commands/stats.ts'
+import './commands/steam.ts'
+import './commands/test.ts'
+import './commands/toggle.ts'
+import './commands/version.ts'
+import './commands/winprobability.ts'
+import './commands/wl.ts'
+import './commands/xpm.ts'
