@@ -14,6 +14,7 @@
     "lineWidth": 100,
     "attributePosition": "auto",
     "ignore": [
+      "**/clip-processor-py/**",
       "**/locales/**/*.json",
       "**/.env*",
       "**/.idea",
@@ -32,6 +33,7 @@
   },
   "linter": {
     "enabled": true,
+    "ignore": ["**/clip-processor-py/**"],
     "rules": {
       "complexity": {
         "noForEach": "off"
