@@ -267,6 +267,10 @@ describe('Profanity Filter', () => {
   describe('False positives prevention', () => {
     test('should not flag innocent words containing profanity substrings', async () => {
       const words = [
+        'Yamato',
+        'Kataraménos',
+        'fax666.',
+        'fakejoker',
         'Classic', // contains "ass"
         'Scunthorpe', // contains "cunt"
         'Assassin', // contains "ass" twice
@@ -279,7 +283,6 @@ describe('Profanity Filter', () => {
 
       for (const word of words) {
         const moderated = await moderateText(word)
-        expect(moderated).toBe(word)
 
         const details = getProfanityDetails(word) as {
           isFlagged: boolean
@@ -287,6 +290,7 @@ describe('Profanity Filter', () => {
           matches?: string[]
           language?: string
         }
+        expect(moderated).toBe(word)
         expect(details.isFlagged).toBe(false)
       }
     })

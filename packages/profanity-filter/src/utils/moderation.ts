@@ -63,6 +63,7 @@ const censor = new TextCensor()
  */
 export const SAFE_WORDS_WHITELIST = [
   // Common English words falsely flagged
+  'am',
   'classic',
   'scunthorpe',
   'assassin',

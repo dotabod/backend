@@ -223,7 +223,7 @@ const europeanLeetSpeakMap: Record<string, string[]> = {
 // Regex patterns for detecting common evasion tactics
 export const evasionPatterns = [
   // Repeated characters (e.g., 'fuuuuck')
-  /([a-zA-Z])\1{2,}/g,
+  /([fuckshitaeo])\1{2,}/gi, // Detect common profanity letters repeated 3+ times
 
   // Leetspeak patterns
   /[f]+[\s_]*[u]+[\s_]*[c]+[\s_]*[k]+/i, // F*u*c*k variations
