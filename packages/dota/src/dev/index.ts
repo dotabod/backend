@@ -2,12 +2,12 @@ import { faker } from '@faker-js/faker'
 import type { ApiClient } from '@twurple/api'
 import axios from 'axios'
 
+import { logger } from '@dotabod/shared-utils'
+import { getTwitchAPI } from '@dotabod/shared-utils'
 import { gameEnd } from '../__tests__/play-by-plays.js'
 import supabase from '../db/supabase.js'
 import { fetchOnlineUsers } from '../dota/events/gsi-events/__tests__/fetchOnlineUsers.js'
 import { DotaEventTypes } from '../types.js'
-import { logger } from '@dotabod/shared-utils'
-import { getTwitchAPI } from '@dotabod/shared-utils'
 
 if (process.env.DOTABOD_ENV !== 'production') {
   console.log('DOTABOD_ENV is development')

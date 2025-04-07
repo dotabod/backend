@@ -1,4 +1,4 @@
-import { logger, getTwitchHeaders } from '@dotabod/shared-utils'
+import { getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import { eventSubMap } from './chatSubIds.js'
 import type { TwitchEventSubSubscriptionsResponse } from './interfaces.js'
 import { rateLimiter } from './utils/rateLimiterCore.js'

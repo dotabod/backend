@@ -3,9 +3,9 @@ import { t } from 'i18next'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { DBSettings } from '../../settings.js'
 import { smurfs } from '../../steam/smurfs.js'
+import { is8500Plus } from '../../utils/index.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
-import { is8500Plus } from '../../utils/index.js'
 
 commandHandler.registerCommand('smurfs', {
   aliases: ['lifetimes', 'totals', 'games', 'smurf'],

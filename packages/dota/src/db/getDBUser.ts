@@ -1,3 +1,5 @@
+import { logger } from '@dotabod/shared-utils'
+import { createGSIHandler } from '../dota/GSIHandlerFactory.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
 import {
   gsiHandlers,
@@ -7,10 +9,8 @@ import {
   twitchNameToToken,
 } from '../dota/lib/consts.js'
 import type { SocketClient } from '../types.js'
-import { logger } from '@dotabod/shared-utils'
 import { isSubscriptionActive } from '../types/subscription.js'
 import supabase from './supabase.js'
-import { createGSIHandler } from '../dota/GSIHandlerFactory.js'
 
 export default async function getDBUser({
   token,

@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
-import { server } from '../../dota/server.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
+import { server } from '../../dota/server.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 

@@ -9,10 +9,10 @@ import { DBSettings } from '../../settings.js'
 import { steamSocket } from '../../steam/ws.js'
 import type { DelayedGames, Item, Packet, SocketClient } from '../../types.js'
 import CustomError from '../../utils/customError.js'
+import { is8500Plus } from '../../utils/index.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 import { profileLink } from './profileLink.js'
-import { is8500Plus } from '../../utils/index.js'
 
 function formatItemList(itemList: string[]) {
   const itemCounts = {} as Record<string, number>

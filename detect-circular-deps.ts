@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
-import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs'
-import { join, relative, resolve, dirname, extname } from 'node:path'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { dirname, extname, join, relative, resolve } from 'node:path'
 
 // Tracks dependencies between files
 const dependencies = new Map<string, Set<string>>()

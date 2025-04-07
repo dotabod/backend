@@ -1,7 +1,7 @@
-import { t } from 'i18next'
-import { getRankDescription, getRankTitle, getOpenDotaProfile } from '../../dota/lib/ranks.js'
-import { DBSettings, getValueOrDefault } from '../../settings.js'
 import { logger } from '@dotabod/shared-utils'
+import { t } from 'i18next'
+import { getOpenDotaProfile, getRankDescription, getRankTitle } from '../../dota/lib/ranks.js'
+import { DBSettings, getValueOrDefault } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 

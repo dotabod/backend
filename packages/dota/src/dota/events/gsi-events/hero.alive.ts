@@ -1,7 +1,7 @@
 import RedisClient from '../../../db/RedisClient.js'
 import { getRedisNumberValue } from '../../../utils/index.js'
-import { server } from '../../server.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import { server } from '../../server.js'
 import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent('hero:alive', {

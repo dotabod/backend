@@ -5,8 +5,8 @@
  */
 
 import {
-  detectMultilingualProfanity,
   detectEvasionTactics,
+  detectMultilingualProfanity,
   evasionPatterns,
 } from '../src/utils/profanity-wordlists.js'
 import {

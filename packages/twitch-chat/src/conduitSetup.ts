@@ -1,4 +1,4 @@
-import { botStatus, logger, getTwitchHeaders } from '@dotabod/shared-utils'
+import { botStatus, getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import type { TwitchEventTypes } from './event-handlers/events.js'
 import { offlineEvent } from './event-handlers/offlineEvent.js'
 import { onlineEvent } from './event-handlers/onlineEvent.js'
@@ -7,6 +7,7 @@ import { transformPollData } from './event-handlers/transformPollData.js'
 import { updateUserEvent } from './event-handlers/updateUserEvent.js'
 import { EventsubSocket } from './eventSubSocket.js'
 import { twitchEvent } from './events.js'
+import { handleChatMessage } from './handleChat.js'
 import type {
   TwitchConduitCreateResponse,
   TwitchConduitResponse,
@@ -14,7 +15,6 @@ import type {
   TwitchConduitShardResponse,
 } from './types.js'
 import { emitEvent, hasDotabodSocket } from './utils/socketManager.js'
-import { handleChatMessage } from './handleChat.js'
 
 const headers = await getTwitchHeaders()
 

@@ -1,9 +1,9 @@
 import { t } from 'i18next'
 
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 import { DBSettings } from '../../settings.js'
 import { getValueOrDefault } from '../../settings.js'
+import { chatClient } from '../chatClient.js'
+import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 
 interface LastFmImage {
   size: 'small' | 'medium' | 'large' | 'extralarge'

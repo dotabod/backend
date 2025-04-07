@@ -1,6 +1,6 @@
-import { fetchConduitId } from '../fetchConduitId.js'
 import { getTwitchHeaders } from '@dotabod/shared-utils'
 import { logger } from '@dotabod/shared-utils'
+import { fetchConduitId } from '../fetchConduitId.js'
 import { rateLimiter } from './rateLimiterCore.js'
 
 interface TwitchSubscriptionCondition {

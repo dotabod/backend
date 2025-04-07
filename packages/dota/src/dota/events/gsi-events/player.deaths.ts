@@ -1,13 +1,13 @@
 import { t } from 'i18next'
 
-import type { Item } from '../../../types.js'
 import { redisClient } from '../../../db/redisInstance.js'
+import type { Item } from '../../../types.js'
+import type { GSIHandlerType } from '../../GSIHandlerTypes.js'
 import { findItem } from '../../lib/findItem.js'
 import handleGetHero, { type HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
-import type { GSIHandlerType } from '../../GSIHandlerTypes.js'
 
 const passiveItemNames = [
   { name: 'item_magic_stick', title: 'magic stick', charges: true },

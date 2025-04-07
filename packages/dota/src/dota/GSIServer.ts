@@ -10,10 +10,14 @@ import express, {
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import { Server, type Socket } from 'socket.io'
 
-import getDBUser from '../db/getDBUser.js'
-import type { Ability, Item } from '../types.js'
 import { logger } from '@dotabod/shared-utils'
+import getDBUser from '../db/getDBUser.js'
+import supabase from '../db/supabase.js'
+import { twitchEvent } from '../twitch/index.js'
+import type { Ability, Item } from '../types.js'
+import { initDotaPatchChecker } from './DotaPatchChecker.js'
 import { emitMinimapBlockerStatus } from './GSIHandler.js'
+import type { GSIServerInterface } from './GSIServerTypes.js'
 import {
   TOKEN_TIMEOUT,
   checkForInactiveTokens,
@@ -23,10 +27,6 @@ import { newData, processChanges } from './globalEventEmitter.js'
 import { gsiHandlers } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import { validateToken } from './validateToken.js'
-import { twitchEvent } from '../twitch/index.js'
-import supabase from '../db/supabase.js'
-import { initDotaPatchChecker } from './DotaPatchChecker.js'
-import type { GSIServerInterface } from './GSIServerTypes.js'
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
   const { token } = socket.handshake.auth

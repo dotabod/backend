@@ -1,10 +1,10 @@
 import { t } from 'i18next'
 
+import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 import { profileLink } from './profileLink.js'
-import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 
 commandHandler.registerCommand('dotabuff', {
   dbkey: DBSettings.commandDotabuff,

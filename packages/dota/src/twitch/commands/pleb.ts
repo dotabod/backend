@@ -1,10 +1,10 @@
 import { t } from 'i18next'
 
+import { checkBotStatus, getTwitchAPI } from '@dotabod/shared-utils'
 import { plebMode } from '../../dota/lib/consts.js'
 import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
-import { getTwitchAPI, checkBotStatus } from '@dotabod/shared-utils'
 
 commandHandler.registerCommand('pleb', {
   permission: 2,

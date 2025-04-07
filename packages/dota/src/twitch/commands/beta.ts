@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
-import supabase from '../../db/supabase.js'
 import { logger } from '@dotabod/shared-utils'
+import supabase from '../../db/supabase.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 

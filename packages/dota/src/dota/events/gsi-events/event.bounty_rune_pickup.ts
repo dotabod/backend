@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
-import { type DotaEvent, DotaEventTypes } from '../../../types.js'
 import { redisClient } from '../../../db/redisInstance.js'
+import { type DotaEvent, DotaEventTypes } from '../../../types.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'

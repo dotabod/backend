@@ -14,14 +14,14 @@ import {
 import { t } from 'i18next'
 import { io as socketIo } from 'socket.io-client'
 import getDBUser from '../db/getDBUser.js'
-import { server } from '../dota/server.js'
 import findUser, { getTokenFromTwitchId } from '../dota/lib/connectedStreamers.js'
 import { plebMode } from '../dota/lib/consts.js'
 import { getOpenDotaProfile, getRankTitle } from '../dota/lib/ranks.js'
+import { server } from '../dota/server.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
+import { twitchChat } from '../steam/ws.js'
 import { chatClient } from './chatClient.js'
 import commandHandler from './lib/CommandHandler.js'
-import { twitchChat } from '../steam/ws.js'
 
 // Map to track the last time a rank warning message was sent to a channel
 const lastRankWarningTimestamps: Record<string, number> = {}

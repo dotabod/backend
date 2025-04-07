@@ -1,11 +1,11 @@
 import { t } from 'i18next'
 
+import { logger } from '@dotabod/shared-utils'
 import RedisClient from '../../../db/RedisClient.js'
 import supabase from '../../../db/supabase.js'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { openTwitchBet } from '../../../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../../../twitch/lib/refundTwitchBets.js'
-import { logger } from '@dotabod/shared-utils'
 import getHero, { type HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'

@@ -3,9 +3,9 @@ import { t } from 'i18next'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { DBSettings } from '../../settings.js'
 import { gameMedals } from '../../steam/medals.js'
+import { is8500Plus } from '../../utils/index.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
-import { is8500Plus } from '../../utils/index.js'
 
 commandHandler.registerCommand('gm', {
   aliases: ['medals', 'ranks'],

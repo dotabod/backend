@@ -1,11 +1,11 @@
 import { t } from 'i18next'
 
+import { logger } from '@dotabod/shared-utils'
 import { DBSettings } from '../../settings.js'
 import { getWinProbability2MinAgo } from '../../stratz/livematch.js'
-import { logger } from '@dotabod/shared-utils'
+import { is8500Plus } from '../../utils/index.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
-import { is8500Plus } from '../../utils/index.js'
 
 const WinRateCache: {
   [id: string]: {

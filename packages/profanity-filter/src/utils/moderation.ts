@@ -1,23 +1,23 @@
+import { profanity } from '@2toad/profanity'
 import axios from 'axios'
+import { Filter } from 'bad-words'
 import { detect } from 'curse-filter'
+import leoProfanity from 'leo-profanity'
+import naughtyWords from 'naughty-words'
 import {
   RegExpMatcher,
   TextCensor,
   englishDataset,
   englishRecommendedTransformers,
 } from 'obscenity'
-import { profanity } from '@2toad/profanity'
-import { Filter } from 'bad-words'
-import leoProfanity from 'leo-profanity'
-import naughtyWords from 'naughty-words'
 import profanityUtil from 'profanity-util'
 import { flatWords as russianBadWordsList } from 'russian-bad-words'
 import wash from 'washyourmouthoutwithsoap'
 import {
-  detectMultilingualProfanity,
-  detectRussianProfanity,
   detectChineseProfanity,
   detectEvasionTactics,
+  detectMultilingualProfanity,
+  detectRussianProfanity,
 } from './profanity-wordlists.js'
 import { createTextVariations } from './text-normalization.js'
 

@@ -2,11 +2,11 @@ import isEqual from 'lodash.isequal'
 
 import { server } from '../../server.js'
 import type {
-  MinimapData,
-  EntityData,
-  ParsedData,
-  MinimapEntityType,
   DataBroadcasterInterface,
+  EntityData,
+  MinimapData,
+  MinimapEntityType,
+  ParsedData,
 } from './DataBroadcasterTypes.js'
 
 const DEFAULT_DATA: MinimapData = {

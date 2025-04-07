@@ -1,8 +1,8 @@
+import { logger } from '@dotabod/shared-utils'
 import RedisClient from '../../../db/RedisClient.js'
 import type { Player } from '../../../types.js'
-import { logger } from '@dotabod/shared-utils'
-import { server } from '../../server.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import { server } from '../../server.js'
 import eventHandler from '../EventHandler.js'
 
 // TODO: check kill list value

@@ -1,5 +1,5 @@
-import { Server } from 'socket.io'
 import { logger } from '@dotabod/shared-utils'
+import { Server } from 'socket.io'
 
 // Socket.io server instance
 export const io = new Server(5005)

@@ -1,7 +1,7 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
+import { getSupabaseClient } from '../db/supabase.js'
 import { logger } from '../logger.js'
 import { hasTokens } from './hasTokens.js'
-import { getSupabaseClient } from '../db/supabase.js'
 
 // Singleton instance of the auth provider
 let authProvider: RefreshingAuthProvider | null = null

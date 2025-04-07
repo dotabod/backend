@@ -1,8 +1,8 @@
 import { t } from 'i18next'
 
+import { logger } from '@dotabod/shared-utils'
 import { getWL } from '../../db/getWL.js'
 import { DBSettings, getValueOrDefault } from '../../settings.js'
-import { logger } from '@dotabod/shared-utils'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 

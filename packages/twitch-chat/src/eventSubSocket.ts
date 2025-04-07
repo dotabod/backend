@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
-import WebSocket from 'ws'
 import { logger } from '@dotabod/shared-utils'
+import WebSocket from 'ws'
 
 type EventsubSocketOptions = {
   url?: string

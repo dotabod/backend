@@ -1,12 +1,12 @@
-import { t } from 'i18next'
 import { moderateText } from '@dotabod/profanity-filter'
+import { logger } from '@dotabod/shared-utils'
+import { getTwitchAPI } from '@dotabod/shared-utils'
+import { t } from 'i18next'
 import supabase from '../../db/supabase.js'
 import { getTokenFromTwitchId } from '../../dota/lib/connectedStreamers.js'
 import { say } from '../../dota/say.js'
 import { DBSettings, defaultSettings, getValueOrDefault } from '../../settings.js'
 import type { SocketClient } from '../../types.js'
-import { logger } from '@dotabod/shared-utils'
-import { getTwitchAPI } from '@dotabod/shared-utils'
 
 // Disable the bet in settings for this user
 export async function disableBetsForTwitchId(twitchId: string) {

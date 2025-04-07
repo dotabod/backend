@@ -1,9 +1,9 @@
 import { t } from 'i18next'
 import supabase from '../../db/supabase.js'
+import { ranks } from '../../dota/lib/consts.js'
 import { DBSettings, getValueOrDefault } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
-import { ranks } from '../../dota/lib/consts.js'
 
 // Extract unique rank titles and map them to their base tier values
 const rankTitles: Record<string, number> = {}

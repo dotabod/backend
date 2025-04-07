@@ -1,4 +1,4 @@
-import { logger, checkBotStatus } from '@dotabod/shared-utils'
+import { checkBotStatus, logger } from '@dotabod/shared-utils'
 import type { TwitchEventTypes } from './TwitchEventTypes.js'
 import { eventSubMap } from './chatSubIds.js'
 import { ensureBotIsModerator } from './ensureBotIsModerator.js'

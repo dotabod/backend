@@ -5,21 +5,21 @@
  * Run with: bun packages/profanity-filter/tests/moderation.test.ts
  */
 
-import { moderateText, getProfanityDetails } from '../src/utils/moderation.js'
-import { detect } from 'curse-filter'
-import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity'
 import { profanity } from '@2toad/profanity'
 import { Filter } from 'bad-words'
+import { detect } from 'curse-filter'
 import leoProfanity from 'leo-profanity'
 import naughtyWords from 'naughty-words'
+import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity'
 import profanityUtil from 'profanity-util'
 import { flatWords as russianBadWordsList } from 'russian-bad-words'
 import wash from 'washyourmouthoutwithsoap'
+import { getProfanityDetails, moderateText } from '../src/utils/moderation.js'
 import {
-  detectMultilingualProfanity,
-  detectRussianProfanity,
   detectChineseProfanity,
   detectEvasionTactics,
+  detectMultilingualProfanity,
+  detectRussianProfanity,
 } from '../src/utils/profanity-wordlists.js'
 import { createTextVariations } from '../src/utils/text-normalization.js'
 

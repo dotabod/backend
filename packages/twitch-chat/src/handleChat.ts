@@ -1,4 +1,4 @@
-import { getTwitchHeaders, logger, checkBotStatus } from '@dotabod/shared-utils'
+import { checkBotStatus, getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { emitChatMessage, hasDotabodSocket } from './utils/socketManager.js'
 

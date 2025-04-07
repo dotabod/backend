@@ -1,11 +1,11 @@
 import { lstatSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { checkBotStatus, getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { use } from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 import { initializeSocket } from './conduitSetup.js'
-import { sendTwitchChatMessage } from './handleChat.js'
 import supabase from './db/supabase.js'
-import { checkBotStatus, logger, getTwitchAPI } from '@dotabod/shared-utils'
+import { sendTwitchChatMessage } from './handleChat.js'
 import { io, setupSocketServer } from './utils/socketManager.js'
 
 if (!process.env.TWITCH_BOT_PROVIDERID) {

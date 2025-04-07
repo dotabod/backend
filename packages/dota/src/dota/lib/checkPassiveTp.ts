@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
+import { redisClient } from '../../db/redisInstance.js'
 import type { SocketClient } from '../../types.js'
-import { redisClient } from "../../db/redisInstance.js"
 import { say } from '../say.js'
 import { isPlayingMatch } from './isPlayingMatch.js'
 

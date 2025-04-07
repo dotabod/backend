@@ -1,17 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "lib": [
-      "ESNext"
-    ],
+    "lib": ["ESNext"],
     "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "sourceMap": true,
     "strictNullChecks": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "allowJs": true,
     "checkJs": false,
     "resolveJsonModule": true,
@@ -27,19 +23,8 @@
     "files": false,
     "transpileOnly": true,
     "typeCheck": false,
-    "require": [
-      "tsconfig-paths/register"
-    ],
-    "ignore": [
-      "(?:^|/)node_modules/"
-    ]
+    "require": ["tsconfig-paths/register"],
+    "ignore": ["(?:^|/)node_modules/"]
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ]
+  "exclude": ["node_modules", "dist", "build", "coverage", "**/*.test.ts", "**/*.spec.ts"]
 }

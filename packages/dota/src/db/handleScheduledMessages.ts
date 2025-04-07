@@ -1,5 +1,5 @@
-import { chatClient } from '../twitch/chatClient.js'
 import { logger } from '@dotabod/shared-utils'
+import { chatClient } from '../twitch/chatClient.js'
 import supabase from './supabase.js'
 
 /**

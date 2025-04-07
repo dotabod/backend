@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import { logger } from '@dotabod/shared-utils'
 import RedisClient from '../../db/RedisClient.js'
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
@@ -7,11 +8,10 @@ import { DBSettings } from '../../settings.js'
 import { steamSocket } from '../../steam/ws.js'
 import type { DelayedGames, Packet, SocketClient } from '../../types.js'
 import CustomError from '../../utils/customError.js'
+import { is8500Plus } from '../../utils/index.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 import { profileLink } from './profileLink.js'
-import { logger } from '@dotabod/shared-utils'
-import { is8500Plus } from '../../utils/index.js'
 
 async function getStats({
   client,

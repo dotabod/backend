@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
 import { logger } from '@dotabod/shared-utils'
+import { createClient } from '@supabase/supabase-js'
 
 import type { Database } from './supabase-types.js'
 

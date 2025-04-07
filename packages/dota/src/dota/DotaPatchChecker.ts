@@ -2,8 +2,8 @@ import axios from 'axios'
 import { t } from 'i18next'
 
 import { logger } from '@dotabod/shared-utils'
-import { say } from './say.js'
 import { gsiHandlers } from './lib/consts.js'
+import { say } from './say.js'
 
 // Store the latest patch info so we can compare with new checks
 let latestPatchInfo: { version: string; timestamp: number } | null = null

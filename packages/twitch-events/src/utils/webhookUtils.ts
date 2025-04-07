@@ -1,9 +1,9 @@
+import { botStatus, logger } from '@dotabod/shared-utils'
 import express from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import type { Tables } from '../db/supabase-types.js'
 import supabase from '../db/supabase.js'
 import { handleNewUser } from '../handleNewUser.js'
-import { logger, botStatus } from '@dotabod/shared-utils'
 import { isAuthenticated } from './authUtils.js'
 
 if (!process.env.TWITCH_CLIENT_ID) {

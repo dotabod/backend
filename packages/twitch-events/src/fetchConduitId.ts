@@ -1,6 +1,6 @@
 import { getTwitchHeaders } from '@dotabod/shared-utils'
-import type { TwitchConduitResponse } from './interfaces.js'
 import { logger } from '@dotabod/shared-utils'
+import type { TwitchConduitResponse } from './interfaces.js'
 
 const headers = await getTwitchHeaders()
 

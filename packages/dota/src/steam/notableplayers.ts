@@ -1,3 +1,4 @@
+import { moderateText } from '@dotabod/profanity-filter'
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
 import { calculateAvg } from '../dota/lib/calculateAvg.js'
@@ -6,7 +7,6 @@ import { getHeroNameOrColor } from '../dota/lib/heroes.js'
 import type { Players, SocketClient } from '../types.js'
 import type { NotablePlayer } from '../types.js'
 import MongoDBSingleton from './MongoDBSingleton.js'
-import { moderateText } from '@dotabod/profanity-filter'
 
 export interface Player {
   accountid: number

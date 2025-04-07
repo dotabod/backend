@@ -1,10 +1,10 @@
 import { t } from 'i18next'
 
 import RedisClient from '../../db/RedisClient.js'
-import { generateAegisMessage } from '../../dota/events/gsi-events/generateAegisMessage.js'
 import type { AegisRes } from '../../dota/events/gsi-events/AegisRes.js'
 import { generateRoshanMessage } from '../../dota/events/gsi-events/RoshRes.js'
 import type { RoshRes } from '../../dota/events/gsi-events/RoshRes.js'
+import { generateAegisMessage } from '../../dota/events/gsi-events/generateAegisMessage.js'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
 import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
