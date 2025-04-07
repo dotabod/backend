@@ -21,7 +21,7 @@ COPY packages/shared-utils/package.json ./packages/shared-utils/
 # Install dependencies
 RUN bun install
 
-#-----------------------
+#------------------------
 
 FROM base AS builder
 
