@@ -32,11 +32,11 @@ const app = new Elysia()
         error: 'Missing text parameter',
       }
     }
-
     try {
-      const moderatedText = await moderateText(text)
+      let moderatedText: string | string[] | undefined
 
       if (Array.isArray(text)) {
+        moderatedText = await moderateText(text)
         // Handle array input
         return {
           original: text,
@@ -46,6 +46,8 @@ const app = new Elysia()
           ),
         }
       }
+
+      moderatedText = await moderateText(text)
 
       // Handle single string input
       return {

@@ -89,7 +89,7 @@ const debouncedUpdateAccounts = debounce(async () => {
 
   // Function to split the twitchIds array into chunks of 50
   const chunkSize = 50
-  const chunks = []
+  const chunks: string[][] = []
   for (let i = 0; i < twitchIds.length; i += chunkSize) {
     chunks.push(twitchIds.slice(i, i + chunkSize))
   }
