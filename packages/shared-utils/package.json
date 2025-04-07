@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build:yarn": "tsc --build --verbose",
-    "build": "bun build ./src/index.ts --target=bun --outfile=./dist/index.js",
+    "build": "bun build --target=bun --outfile=./dist/index.js --outdir=./dist --production ./src/index.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
