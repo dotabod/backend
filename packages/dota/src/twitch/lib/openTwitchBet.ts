@@ -59,8 +59,17 @@ export const openTwitchBet = async ({
   const isValidDuration = betsInfo.duration >= 30 && betsInfo.duration <= 1800
   const autoLockAfter = isValidDuration ? betsInfo.duration : 240 // 4 min default
 
+  try {
+    await api.streams.createStreamMarker(
+      twitchId,
+      `Predictions opened for ${heroName} on match ${client.gsi?.map?.matchid}`,
+    )
+  } catch (e) {
+    logger.error('[PREDICT] [BETS] Failed to create stream marker (open)', { twitchId, e })
+  }
+
   return await api.predictions
-    .createPrediction(twitchId || '', {
+    .createPrediction(twitchId, {
       title: filteredTitle.substring(0, 45),
       outcomes: [filteredYes.substring(0, 25), filteredNo.substring(0, 25)],
       autoLockAfter,

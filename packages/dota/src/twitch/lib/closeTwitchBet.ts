@@ -1,8 +1,17 @@
 import { logger } from '@dotabod/shared-utils'
 import { getTwitchAPI } from '@dotabod/shared-utils'
 
-export async function closeTwitchBet(won: boolean, twitchId: string) {
+export async function closeTwitchBet(won: boolean, twitchId: string, matchId: string) {
   const api = await getTwitchAPI(twitchId)
+
+  try {
+    await api.streams.createStreamMarker(
+      twitchId,
+      `Predictions closed, ${won ? 'won' : 'lost'} on match ${matchId}`,
+    )
+  } catch (e) {
+    logger.error('[PREDICT] [BETS] Failed to create stream marker (close)', { twitchId, e })
+  }
 
   return api.predictions
     .getPredictions(twitchId, {
