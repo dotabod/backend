@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
-import { type GSIHandler, redisClient } from '../../GSIHandler.js'
+import type { GSIHandler } from "../../GSIHandler.js"
+import { redisClient } from "../../../db/redisInstance.js"
 import getHero, { type HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'

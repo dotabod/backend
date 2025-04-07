@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 import supabase from '../../db/supabase.js'
-import { server } from '../../dota/index.js'
+import { server } from '../../dota/server.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
 

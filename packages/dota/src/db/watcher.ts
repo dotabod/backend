@@ -1,7 +1,7 @@
 import { getAuthProvider, getTwitchAPI } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { clearCacheForUser } from '../dota/clearCacheForUser.js'
-import { server } from '../dota/index.js'
+import { server } from '../dota/server.js'
 import findUser from '../dota/lib/connectedStreamers.js'
 import { gsiHandlers, invalidTokens } from '../dota/lib/consts.js'
 import { getRankDetail } from '../dota/lib/ranks.js'

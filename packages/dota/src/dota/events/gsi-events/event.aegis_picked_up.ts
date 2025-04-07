@@ -1,58 +1,14 @@
-import { t } from 'i18next'
-
 import RedisClient from '../../../db/RedisClient.js'
-import { DBSettings, getValueOrDefault } from '../../../settings.js'
-import { type DotaEvent, DotaEventTypes, type SocketClient } from '../../../types.js'
+import { type DotaEvent, DotaEventTypes } from '../../../types.js'
 import { fmtMSS } from '../../../utils/index.js'
 import type { GSIHandler } from '../../GSIHandler.js'
-import { server } from '../../index.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
-
-export interface AegisRes {
-  expireS: number
-  playerId: number
-  expireTime: string
-  expireDate: Date
-  snatched: boolean
-  heroName: string
-}
-
-export function getNewAegisTime(res: AegisRes) {
-  // calculate seconds delta between now and expireDate
-  const newSeconds = Math.floor((new Date(res.expireDate).getTime() - Date.now()) / 1000)
-  res.expireS = newSeconds > 0 ? newSeconds : 0
-
-  return res
-}
-export function generateAegisMessage(res: AegisRes, lng: string) {
-  res = getNewAegisTime(res)
-
-  if (res.expireS <= 0) {
-    return t('aegis.expired', { emote: ':)', lng, heroName: res.heroName })
-  }
-
-  if (res.snatched) {
-    return t('aegis.snatched', { emote: 'PepeLaugh', lng, heroName: res.heroName })
-  }
-
-  return t('aegis.pickup', { lng, heroName: res.heroName })
-}
-
-export function emitAegisEvent(res: AegisRes, token: string, client: SocketClient) {
-  if (!res || !res.expireDate) return
-
-  res = getNewAegisTime(res)
-  if (res.expireS <= 0) return
-
-  const tellChatAegis = getValueOrDefault(DBSettings.aegis, client.settings, client.subscription)
-  if (!tellChatAegis) return
-
-  server.io.to(token).emit('aegis-picked-up', res)
-}
+import { emitAegisEvent } from './AegisRes.js'
+import { generateAegisMessage } from './generateAegisMessage.js'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
   handler: async (dotaClient: GSIHandler, event: DotaEvent) => {

@@ -1,4 +1,3 @@
-import { sendExtensionPubSubBroadcastMessage } from '@twurple/ebs-helper'
 import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
@@ -16,9 +15,10 @@ import {
   validEventTypes,
 } from '../../../types.js'
 import { logger } from '@dotabod/shared-utils'
-import { type GSIHandler, redisClient } from '../../GSIHandler.js'
+import type { GSIHandler } from '../../GSIHandler.js'
+import { redisClient } from '../../../db/redisInstance.js'
 import { events } from '../../globalEventEmitter.js'
-import { server } from '../../index.js'
+import { server } from '../../server.js'
 import { DelayedCommands } from '../../lib/DelayedCommands.js'
 import { checkPassiveMidas } from '../../lib/checkMidas.js'
 import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
@@ -34,6 +34,7 @@ import CustomError from '../../../utils/customError.js'
 import MongoDBSingleton from '../../../steam/MongoDBSingleton.js'
 import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId.js'
 import { getSpectatorPlayers } from '../../lib/getSpectatorPlayers.js'
+import { sendExtensionPubSubBroadcastMessageIfChanged } from './sendExtensionPubSubBroadcastMessageIfChanged.js'
 
 // Define a type for the global timeouts
 declare global {
@@ -309,35 +310,6 @@ function cleanupMatchDataCache() {
 // Start the cleanup process
 cleanupMatchDataCache()
 
-const tooltipsConfig = {
-  clientId: process.env.TWITCH_EXT_CLIENT_ID || '',
-  secret: process.env.TWITCH_EXT_SECRET || '',
-  ownerId: process.env.TWITCH_BOT_PROVIDERID || '',
-}
-
-export const sendExtensionPubSubBroadcastMessageIfChanged = async (
-  dotaClient: GSIHandler,
-  messageToSend: any,
-) => {
-  const { client } = dotaClient
-  const redisKey = `${client.token}:lastMessage`
-
-  // Retrieve the previous message from Redis
-  const prevMessageString = await redisClient.client.get(redisKey)
-
-  // Convert the current message to a string for comparison
-  const currentMessageString = JSON.stringify(messageToSend)
-
-  // Compare the current message with the previous one
-  if (currentMessageString !== prevMessageString) {
-    const accountId = client.Account?.providerAccountId ?? ''
-    if (!accountId) return
-
-    // If different, send the message and update Redis
-    await sendExtensionPubSubBroadcastMessage(tooltipsConfig, accountId, currentMessageString)
-    await redisClient.client.set(redisKey, currentMessageString)
-  }
-}
 // Track the last time we saved data for each match
 const lastSaveTimeByMatch = new Map<string, number>()
 const SAVE_INTERVAL = 60000 // 1 minute in milliseconds

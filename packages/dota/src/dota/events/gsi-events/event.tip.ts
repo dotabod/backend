@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { type DotaEvent, DotaEventTypes } from '../../../types.js'
-import { type GSIHandler } from '../../GSIHandler.js'
+import type { GSIHandler } from '../../GSIHandler.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'

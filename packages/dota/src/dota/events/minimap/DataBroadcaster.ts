@@ -1,6 +1,6 @@
 import isEqual from 'lodash.isequal'
 
-import { server } from '../../index.js'
+import { server } from '../../server.js'
 
 const DEFAULT_DATA = {
   heroes: {

@@ -1,4 +1,5 @@
-import { type GSIHandler, redisClient } from '../../GSIHandler.js'
+import type { GSIHandler } from "../../GSIHandler.js"
+import { redisClient } from "../../../db/redisInstance.js"
 import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent('saveHeroesForMatchId', {

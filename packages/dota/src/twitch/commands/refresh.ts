@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { server } from '../../dota/index.js'
+import { server } from '../../dota/server.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 

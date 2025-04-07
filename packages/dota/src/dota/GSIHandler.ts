@@ -1,45 +1,41 @@
+import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-
-import RedisClient from '../db/RedisClient.js'
+import { Long } from 'mongodb'
+import { redisClient } from '../db/redisInstance.js'
 import { LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../db/getWL'
 import { getWL } from '../db/getWL.js'
 import supabase from '../db/supabase.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
 import { notablePlayers } from '../steam/notableplayers.js'
+import { steamSocket } from '../steam/ws.js'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
 import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
+import type { MatchMinimalDetailsResponse } from '../types'
 import {
-  DotaGcTeam,
-  EMatchOutcome,
   type BlockType,
   type DotaEvent,
+  DotaGcTeam,
+  EMatchOutcome,
   type SocketClient,
 } from '../types.js'
 import { getRedisNumberValue, steamID64toSteamID32 } from '../utils/index.js'
-import { logger } from '@dotabod/shared-utils'
 import type { SubscriptionRow } from '../utils/subscription.js'
 import { NeutralItemTimer } from './NeutralItemTimer.js'
-import { type AegisRes, emitAegisEvent } from './events/gsi-events/event.aegis_picked_up.js'
-import { type RoshRes, emitRoshEvent } from './events/gsi-events/event.roshan_killed.js'
+import { maybeSendRoshAegisEvent } from './events/gsi-events/AegisRes.js'
 import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster.js'
 import { minimapParser } from './events/minimap/parser.js'
-import { server } from './index.js'
+import { server } from './server.js'
 import { GLOBAL_DELAY, blockTypes, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import getHero, { type HeroNames } from './lib/getHero.js'
+import { getHeroById } from './lib/heroes.js'
 import { isArcade } from './lib/isArcade.js'
 import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
 import { say } from './say.js'
-import { steamSocket } from '../steam/ws.js'
-import type { MatchMinimalDetailsResponse } from '../types'
-import { Long } from 'mongodb'
-import { getHeroById } from './lib/heroes.js'
-import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/newdata.js'
-
-export const redisClient = RedisClient.getInstance()
+import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/sendExtensionPubSubBroadcastMessageIfChanged.js'
 
 // Finally, we have a user and a GSI client
 interface MMR {
@@ -1275,27 +1271,24 @@ export class GSIHandler {
       }
 
       // Check what needs to be blocked
-      const hasValidBlocker = blockTypes.some((blocker) => {
-        if (blocker.states.includes(state ?? '')) {
-          if (this.blockCache !== blocker.type) {
-            this.emitBlockEvent({ state, blockType: blocker.type })
+      const matchingBlocker = blockTypes.find((blocker) => blocker.states.includes(state ?? ''))
+      const hasValidBlocker = !!matchingBlocker
 
-            if (blocker.type === 'playing') {
-              emitMinimapBlockerStatus(this.client)
-              this.emitBadgeUpdate()
-              this.emitWLUpdate()
-              try {
-                void maybeSendRoshAegisEvent(this.client.token, this.client)
-              } catch (e) {
-                logger.error('err maybeSendRoshAegisEvent', { e })
-              }
-            }
+      if (matchingBlocker && this.blockCache !== matchingBlocker.type) {
+        this.emitBlockEvent({ state, blockType: matchingBlocker.type })
+
+        if (matchingBlocker.type === 'playing') {
+          emitMinimapBlockerStatus(this.client)
+          this.emitBadgeUpdate()
+          this.emitWLUpdate()
+
+          try {
+            await maybeSendRoshAegisEvent(this.client.token, this.client)
+          } catch (e) {
+            logger.error('err maybeSendRoshAegisEvent', { e })
           }
-
-          return true
         }
-        return false
-      })
+      }
 
       // No blocker changes, don't emit any socket message
       if (!hasValidBlocker && !this.blockCache) {
@@ -1311,7 +1304,9 @@ export class GSIHandler {
           name: this.client.name,
         })
 
-        await sendExtensionPubSubBroadcastMessageIfChanged(this, null)
+        await sendExtensionPubSubBroadcastMessageIfChanged(this, null).catch((e) => {
+          logger.error('err sendExtensionPubSubBroadcastMessageIfChanged', { e })
+        })
         this.emitBlockEvent({ state, blockType: null })
         await this.closeBets()
         return
@@ -1323,24 +1318,5 @@ export class GSIHandler {
         state,
       })
     }
-  }
-}
-
-async function maybeSendRoshAegisEvent(token: string, client?: SocketClient) {
-  if (!client) return
-
-  const aegisRes = (await redisClient.client.json.get(
-    `${token}:aegis`,
-  )) as unknown as AegisRes | null
-  const roshRes = (await redisClient.client.json.get(
-    `${token}:roshan`,
-  )) as unknown as RoshRes | null
-
-  if (aegisRes) {
-    emitAegisEvent(aegisRes, token, client)
-  }
-
-  if (roshRes) {
-    emitRoshEvent(roshRes, token, client)
   }
 }

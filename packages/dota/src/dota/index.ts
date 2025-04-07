@@ -1,15 +1,14 @@
 import './events/gsiEventLoader.js'
-
 import { lstatSync, readdirSync } from 'node:fs'
 import path, { join } from 'node:path'
+import { logger } from '@dotabod/shared-utils'
 import chokidar from 'chokidar'
 import i18next from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
-
 import RedisClient from '../db/RedisClient.js'
 import SetupSupabase from '../db/watcher.js'
-import { logger } from '@dotabod/shared-utils'
 import GSIServer from './GSIServer.js'
+import { server } from './server.js'
 
 logger.info("Starting 'dota' package")
 
@@ -70,12 +69,12 @@ const setupRedisClient = async () => {
   logger.info('Redis subscriber connected')
 }
 
-const startServer = () => {
-  const server = new GSIServer()
-  server.init()
+const initServer = () => {
+  const gsiServer = new GSIServer()
+  gsiServer.init()
   logger.info('GSIServer started')
-
-  return server
+  server.setServer(gsiServer)
+  return gsiServer
 }
 
 const main = async () => {
@@ -101,7 +100,7 @@ const main = async () => {
     logger.error('Error in setup', { e })
   }
 
-  return startServer()
+  return initServer()
 }
 
 const logAndExit = (err: any) => {
@@ -114,4 +113,5 @@ const logAndExit = (err: any) => {
 process.on('uncaughtException', logAndExit)
 process.on('unhandledRejection', logAndExit)
 
-export const server = await main()
+// Start the initialization but don't export the promise
+main().catch(logAndExit)
