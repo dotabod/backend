@@ -94,14 +94,6 @@ class CommandHandler {
 
       this.aliases.set(alias, commandName)
     }
-
-    logger.info(`Registered command: ${commandName}`, {
-      aliases: options.aliases,
-      permission: options.permission,
-      cooldown: options.cooldown,
-      onlyOnline: options.onlyOnline,
-      dbkey: options.dbkey,
-    })
   }
 
   async logCommand(commandName: string, message: MessageType) {
@@ -148,11 +140,6 @@ class CommandHandler {
 
     // Check if the command is registered
     if (!this.commands.has(command) && !this.aliases.has(command)) {
-      logger.info(`Unregistered command: ${command}`, {
-        command,
-        aliases: this.aliases.keys(),
-        commands: this.commands.keys(),
-      })
       return // Skip unregistered commands
     }
 
@@ -164,11 +151,6 @@ class CommandHandler {
 
     const options = this.commands.get(commandName)
     if (!options) {
-      logger.info(`Command not found: ${commandName}`, {
-        command: commandName,
-        aliases: this.aliases.keys(),
-        commands: this.commands.keys(),
-      })
       return // Skip unregistered commands
     }
     // Log statistics for this command
@@ -199,23 +181,11 @@ class CommandHandler {
         message.channel.id,
       )
     ) {
-      logger.info(`Command on cooldown: ${commandName}`, {
-        command: commandName,
-        cooldown: options.cooldown ?? defaultCooldown,
-        user: message.user,
-        channelId: message.channel.id,
-      })
       return // Skip commands that are on cooldown
     }
 
     // Check if the user has the required permissions
     if (!this.hasPermission(message.user, options.permission ?? 0)) {
-      logger.info(`Command lacks permission: ${commandName}`, {
-        command: commandName,
-        permission: options.permission ?? 0,
-        user: message.user,
-        channelId: message.channel.id,
-      })
       return // Skip commands for which the user lacks permission
     }
 
@@ -224,12 +194,6 @@ class CommandHandler {
 
     // Execute the command handler
     await options.handler(message, args, command)
-    logger.info(`Command executed: ${commandName}`, {
-      command: commandName,
-      args,
-      user: message.user,
-      channelId: message.channel.id,
-    })
   }
 
   // Function for parsing a Twitch chat message to extract the command and its arguments
