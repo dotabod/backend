@@ -31,7 +31,6 @@ export default async function getDBUser({
 
   if (lookingupToken.has(lookupToken)) return null
 
-  logger.info('[GSI] Haven’t cached user token yet, checking db', { ip, lookupToken })
   lookingupToken.set(lookupToken, true)
 
   if (!lookupToken) {
@@ -183,9 +182,6 @@ export default async function getDBUser({
   const gsiHandler = gsiHandlers.get(userInfo.id) || new GSIHandler(userInfo)
 
   if (gsiHandler instanceof GSIHandler) {
-    if (userInfo.stream_online) {
-      logger.info('[GSI] Connecting new client', { token: userInfo.id, name: userInfo.name })
-    }
     gsiHandlers.set(userInfo.id, gsiHandler)
   }
 

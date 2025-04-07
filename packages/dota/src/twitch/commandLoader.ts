@@ -8,11 +8,11 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const commandsDir = path.join(__dirname, 'commands')
 
-// Read the commands directory and import all .js files
+// Read the commands directory and import all .ts files
 // This will automatically import all command files without requiring manual updates
 async function loadCommands() {
   try {
-    const files = fs.readdirSync(commandsDir).filter((file) => file.endsWith('.js')) // Only import .js files
+    const files = fs.readdirSync(commandsDir).filter((file) => file.endsWith('.ts')) // Only import .ts files
 
     const results = await Promise.allSettled(
       files.map(async (file) => {
