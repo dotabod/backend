@@ -1,51 +1,39 @@
-import './commands/apm.js'
-import './commands/avg.js'
-import './commands/beta.js'
-import './commands/commands.js'
-import './commands/count.js'
-import './commands/d2pt.js'
-import './commands/delay.js'
-import './commands/dotabod.js'
-import './commands/dotabuff.js'
-import './commands/facet.js'
-import './commands/fixdbl.js'
-import './commands/fixparty.js'
-import './commands/friends.js'
-import './commands/gm.js'
-import './commands/gpm.js'
-import './commands/hero.js'
-import './commands/innate.js'
-import './commands/items.js'
-import './commands/lg.js'
-import './commands/lgs.js'
-import './commands/locale.js'
-import './commands/match.js'
-import './commands/mmr.js'
-import './commands/only.js'
-import './commands/mmr=.js'
-import './commands/modsonly.js'
-import './commands/mute.js'
-import './commands/np.js'
-import './commands/online.js'
-import './commands/opendota.js'
-import './commands/ping.js'
-import './commands/pleb.js'
-import './commands/ranked.js'
-import './commands/refresh.js'
-import './commands/resetwl.js'
-import './commands/roshan.js'
-import './commands/setdelay.js'
-import './commands/smurfs.js'
-import './commands/spectators.js'
-import './commands/profile.js'
-import './commands/steam.js'
-import './commands/test.js'
-import './commands/toggle.js'
-import './commands/version.js'
-import './commands/winprobability.js'
-import './commands/wl.js'
-import './commands/xpm.js'
-import './commands/aghs.js'
-import './commands/shard.js'
-import './commands/stats.js'
-import './commands/song.js'
+// Import fs and path modules to work with the file system
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+// Get the directory name of the current module
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const commandsDir = path.join(__dirname, 'commands')
+
+// Read the commands directory and import all .js files
+// This will automatically import all command files without requiring manual updates
+async function loadCommands() {
+  try {
+    const files = fs.readdirSync(commandsDir).filter((file) => file.endsWith('.js')) // Only import .js files
+
+    const results = await Promise.allSettled(
+      files.map(async (file) => {
+        try {
+          await import(`./commands/${file}`)
+          return { file, success: true }
+        } catch (error) {
+          console.error(`Error importing command file ${file}:`, error)
+          return { file, success: false, error }
+        }
+      }),
+    )
+
+    const successful = results.filter((r) => r.status === 'fulfilled' && r.value.success).length
+    const failed = results.filter((r) => r.status === 'fulfilled' && !r.value.success).length
+
+    console.log(`Loaded ${successful} commands successfully, ${failed} failed to load`)
+  } catch (error) {
+    console.error('Error reading commands directory:', error)
+  }
+}
+
+// Load all commands
+loadCommands()
