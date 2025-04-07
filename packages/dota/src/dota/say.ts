@@ -8,7 +8,7 @@ import {
 } from '../settings.js'
 import { chatClient } from '../twitch/chatClient.js'
 import type { SocketClient } from '../types.js'
-import { getStreamDelay } from './GSIHandler.js'
+import { getStreamDelay } from './getStreamDelay.js'
 
 export function say(
   client: SocketClient,

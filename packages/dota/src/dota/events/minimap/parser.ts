@@ -1,6 +1,6 @@
 import type { Entity, MapData, Packet, Player } from '../../../types.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import type { DataBroadcaster } from './DataBroadcaster.js'
+import type { DataBroadcasterInterface } from './DataBroadcasterTypes.js'
 
 class MinimapParser {
   lastBroadcastTime = 0
@@ -77,7 +77,7 @@ class MinimapParser {
     'npc_dota_creep_badguys_siege_upgraded_mega',
   ]
 
-  init(data: Packet, dataBroadcaster: DataBroadcaster) {
+  init(data: Packet, dataBroadcaster: DataBroadcasterInterface) {
     if (!isPlayingMatch(data)) return
 
     const parsed = this.parse(data)

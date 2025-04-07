@@ -1,5 +1,5 @@
 import type { MatchMinimalDetailsResponse, SocketClient } from '../types.js'
-import type { DataBroadcaster } from './events/minimap/DataBroadcaster.js'
+import type { DataBroadcasterInterface } from './events/minimap/DataBroadcasterTypes.js'
 
 // Type definition for GSIHandler that can be used without importing the actual class
 export interface GSIHandlerType {
@@ -31,7 +31,7 @@ export interface GSIHandlerType {
   disabled: boolean
 
   // Use generic Record type instead of concrete implementations
-  mapBlocker: DataBroadcaster
+  mapBlocker: DataBroadcasterInterface
   neutralItemTimer: Record<string, any>
 
   enable(): void

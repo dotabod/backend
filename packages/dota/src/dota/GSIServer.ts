@@ -26,6 +26,7 @@ import { validateToken } from './validateToken.js'
 import { twitchEvent } from '../twitch/index.js'
 import supabase from '../db/supabase.js'
 import { initDotaPatchChecker } from './DotaPatchChecker.js'
+import type { GSIServerInterface } from './GSIServerTypes.js'
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
   const { token } = socket.handshake.auth
@@ -70,7 +71,8 @@ const allowedOrigins = [
   'https://dev.dotabod.com',
   'https://tooltips.dotabod.com',
 ]
-class GSIServer {
+
+class GSIServer implements GSIServerInterface {
   io: Server
 
   constructor() {
@@ -224,7 +226,7 @@ class GSIServer {
     initDotaPatchChecker(5)
   }
 
-  init() {
+  init(): GSIServerInterface {
     return this
   }
 }

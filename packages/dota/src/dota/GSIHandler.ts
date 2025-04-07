@@ -19,13 +19,12 @@ import {
   type SocketClient,
 } from '../types.js'
 import { getRedisNumberValue, steamID64toSteamID32 } from '../utils/index.js'
-import type { SubscriptionRow } from '../types/subscription.js'
 import { NeutralItemTimer } from './NeutralItemTimer.js'
-import { maybeSendRoshAegisEvent } from './events/gsi-events/AegisRes.js'
+import { maybeSendRoshAegisEvent } from './events/gsi-events/maybeSendRoshAegisEvent.js'
 import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster.js'
 import { minimapParser } from './events/minimap/parser.js'
 import { server } from './server.js'
-import { GLOBAL_DELAY, blockTypes, pickSates } from './lib/consts.js'
+import { blockTypes, pickSates } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import getHero, { type HeroNames } from './lib/getHero.js'
 import { getHeroById } from './lib/heroes.js'
@@ -38,6 +37,8 @@ import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-event
 import type { GSIHandlerType } from './GSIHandlerTypes.js'
 import { setGSIHandlerConstructor } from './GSIHandlerFactory.js'
 import { logger } from '@dotabod/shared-utils'
+import type { DataBroadcasterInterface } from './events/minimap/DataBroadcasterTypes.js'
+import { getStreamDelay } from './getStreamDelay.js'
 
 // Finally, we have a user and a GSI client
 interface MMR {
@@ -54,10 +55,6 @@ interface MMR {
   heroSlot?: number | null
   heroName?: string | null
   myTeam?: 'radiant' | 'dire' | null
-}
-
-export function getStreamDelay(settings: SocketClient['settings'], subscription?: SubscriptionRow) {
-  return Number(getValueOrDefault(DBSettings.streamDelay, settings, subscription)) + GLOBAL_DELAY
 }
 
 export function emitMinimapBlockerStatus(client: SocketClient) {
@@ -126,7 +123,7 @@ export class GSIHandler implements GSIHandlerType {
   treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
   disabled = false
 
-  mapBlocker: DataBroadcaster
+  mapBlocker: DataBroadcasterInterface
   neutralItemTimer: NeutralItemTimer
 
   constructor(dotaClient: SocketClient) {
