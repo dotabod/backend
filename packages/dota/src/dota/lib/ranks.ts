@@ -156,7 +156,6 @@ export async function lookupLeaderRank(
       // Cache the result
       await redisClient.client.json.set(cacheKey, '$', result as any)
     } catch (e) {
-      logger.error('[lookupLeaderRank] Error fetching leaderboard rank', { e, steam32Id })
       return defaultNotFound
     }
   }

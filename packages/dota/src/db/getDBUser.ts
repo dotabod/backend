@@ -120,7 +120,6 @@ export default async function getDBUser({
 
   // Handle errors
   if (userError) {
-    logger.error('[USER] 3 Error checking auth', { token: lookupToken, error: userError })
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
     return null
