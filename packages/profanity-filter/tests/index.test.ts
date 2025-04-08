@@ -387,6 +387,7 @@ describe('Profanity Filter', () => {
   describe('False positives prevention', () => {
     test('should not flag innocent words containing profanity substrings', async () => {
       const words = [
+        'Delight',
         'Yamato',
         'Kataraménos',
         'Cuziloveyou',
@@ -413,6 +414,7 @@ describe('Profanity Filter', () => {
           matches?: string[]
           language?: string
         }
+        console.log({ details, word }, 'geczy')
         expect(moderated).toBe(word)
         expect(details.isFlagged).toBe(false)
       }

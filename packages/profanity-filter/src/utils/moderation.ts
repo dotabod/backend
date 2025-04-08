@@ -63,8 +63,6 @@ const censor = new TextCensor()
  */
 export const SAFE_WORDS_WHITELIST = [
   // Common English words falsely flagged
-  'am',
-  'cu',
   'classic',
   'scunthorpe',
   'assassin',
@@ -267,7 +265,20 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
 
       // For each language's word list
       const wordList = naughtyWords[lang] as string[]
-      if (wordList.some((word) => text.toLowerCase().includes(word.toLowerCase()))) {
+
+      // Only match very short words (less than 4 chars) if they're standalone words
+      // This prevents false positives when a short profane word is part of a regular word
+      const matchedWords = wordList.filter((word) => {
+        if (word.length < 4) {
+          // For short words, require word boundaries or exact match
+          const regex = new RegExp(`\\b${word}\\b`, 'i')
+          return regex.test(text)
+        }
+        // For longer words, keep the existing includes check
+        return text.toLowerCase().includes(word.toLowerCase())
+      })
+
+      if (matchedWords.length > 0) {
         return '***'
       }
     }
@@ -460,15 +471,22 @@ function getProfanityDetailsSingle(text: string): {
   // Check with naughty-words (multilingual lists)
   try {
     for (const lang of Object.keys(naughtyWords)) {
-      if (lang !== 'ru' && lang !== 'en') continue
       // Skip non-array properties
       if (!Array.isArray(naughtyWords[lang])) continue
 
       // For each language's word list
       const wordList = naughtyWords[lang] as string[]
-      const matchedWords = wordList.filter((word) =>
-        text.toLowerCase().includes(word.toLowerCase()),
-      )
+
+      // Use the same modified check as in moderateTextSingle
+      const matchedWords = wordList.filter((word) => {
+        if (word.length < 4) {
+          // For short words, require word boundaries or exact match
+          const regex = new RegExp(`\\b${word}\\b`, 'i')
+          return regex.test(text)
+        }
+        // For longer words, keep the existing includes check
+        return text.toLowerCase().includes(word.toLowerCase())
+      })
 
       if (matchedWords.length > 0) {
         return {
