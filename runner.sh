@@ -181,7 +181,7 @@ restore() {
     "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.steam_accounts CASCADE" "$DB_URL"
     "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.settings CASCADE" "$DB_URL"
     "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.mods CASCADE" "$DB_URL"
-    "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.bets CASCADE" "$DB_URL"
+    "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.matches CASCADE" "$DB_URL"
     "${PSQL_COMMAND[@]}" -c "DROP TABLE IF EXISTS public.accounts CASCADE" "$DB_URL"
     # Removed for now: --file roles.sql \
     "${PSQL_COMMAND[@]}" \

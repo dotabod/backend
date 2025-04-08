@@ -24,7 +24,7 @@ commandHandler.registerCommand('fixdbl', {
   cooldown: 0,
   handler: async (message, args) => {
     const { data } = await supabase
-      .from('bets')
+      .from('matches')
       .select('matchId, won, is_party, id, is_doubledown')
       .eq('userId', message.channel.client.token)
       .not('won', 'is', null)
@@ -65,7 +65,7 @@ commandHandler.registerCommand('fixdbl', {
     })
 
     await supabase
-      .from('bets')
+      .from('matches')
       .update({
         is_doubledown: !bet.is_doubledown,
         updated_at: new Date().toISOString(),

@@ -26,7 +26,7 @@ commandHandler.registerCommand('fixparty', {
   cooldown: 0,
   handler: async (message, args) => {
     const { data } = await supabase
-      .from('bets')
+      .from('matches')
       .select('matchId, won, is_party, id, is_doubledown')
       .eq('userId', message.channel.client.token)
       .not('won', 'is', null)
@@ -67,7 +67,7 @@ commandHandler.registerCommand('fixparty', {
     })
 
     await supabase
-      .from('bets')
+      .from('matches')
       .update({
         is_party: !bet.is_party,
         updated_at: new Date().toISOString(),

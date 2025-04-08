@@ -23,6 +23,7 @@ export const FEATURE_TIERS: Record<
   SettingKeys | ChatterSettingKeys,
   Database['public']['Enums']['SubscriptionTier']
 > = {
+  advancedBets: SUBSCRIPTION_TIERS.PRO,
   // Free Tier Features
   'minimap-blocker': SUBSCRIPTION_TIERS.FREE,
   chatter: SUBSCRIPTION_TIERS.FREE,

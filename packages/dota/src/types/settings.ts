@@ -145,6 +145,7 @@ export const defaultSettingsStructure = {
   notablePlayersOverlayFlags: true,
   notablePlayersOverlayFlagsCmd: true,
   winProbabilityOverlay: false,
+  advancedBets: false,
   winProbabilityOverlayIntervalMinutes: 5,
   tellChatNewMMR: true,
   tellChatBets: true,

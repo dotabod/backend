@@ -39,7 +39,7 @@ eventHandler.registerEvent('hero:name', {
       }
 
       const { data: betData } = await supabase
-        .from('bets')
+        .from('matches')
         .select('predictionId')
         .eq('matchId', matchId)
         .eq('userId', dotaClient.getToken())
@@ -58,7 +58,7 @@ eventHandler.registerEvent('hero:name', {
       })
       if (bet?.id && betData?.predictionId) {
         await supabase
-          .from('bets')
+          .from('matches')
           .update({
             predictionId: bet.id,
             updated_at: new Date().toISOString(),
@@ -66,7 +66,7 @@ eventHandler.registerEvent('hero:name', {
           .eq('predictionId', betData.predictionId)
       } else if (betData?.predictionId) {
         await supabase
-          .from('bets')
+          .from('matches')
           .update({ predictionId: null, updated_at: new Date().toISOString() })
           .eq('predictionId', betData.predictionId)
       }

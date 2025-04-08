@@ -135,7 +135,7 @@ export type Database = {
           },
         ]
       }
-      bets: {
+      matches: {
         Row: {
           created_at: string
           dire_score: number | null

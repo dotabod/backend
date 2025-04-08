@@ -27,7 +27,7 @@ commandHandler.registerCommand('lgs', {
 
     const { steam32Id } = message.channel.client
     const { data: lg } = await supabase
-      .from('bets')
+      .from('matches')
       .select(
         `
           won,

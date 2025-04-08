@@ -81,7 +81,7 @@ export default async function lastgame({
     if (!gameHistory.length || gameHistory.length !== 2) {
       // Check supabase
       const { data: lg } = await supabase
-        .from('bets')
+        .from('matches')
         .select('matchId')
         .eq('steam32Id', steam32Id)
         .not('won', 'is', null)

@@ -444,7 +444,7 @@ export class GSIHandler implements GSIHandlerType {
 
     // This also updates WL for the unranked matches
     await supabase
-      .from('bets')
+      .from('matches')
       .update({
         won: increase,
         lobby_type: lobbyType,
@@ -556,7 +556,7 @@ export class GSIHandler implements GSIHandlerType {
     this.openingBets = true
 
     const { data: bet } = await supabase
-      .from('bets')
+      .from('matches')
       .select('matchId, myTeam, id')
       .eq('matchId', client.gsi.map.matchid)
       .eq('userId', client.token)
@@ -651,7 +651,7 @@ export class GSIHandler implements GSIHandlerType {
       this.openingBets = false
 
       // we fill in hero name later when match ends in case they swap heroes
-      await supabase.from('bets').insert({
+      await supabase.from('matches').insert({
         predictionId: betId,
         matchId,
         userId: client.token,
@@ -802,7 +802,7 @@ export class GSIHandler implements GSIHandlerType {
             }),
           )
           const predictionResponse = await supabase
-            .from('bets')
+            .from('matches')
             .select('predictionId')
             .eq('matchId', matchId)
             .eq('userId', this.client.token)
@@ -815,7 +815,7 @@ export class GSIHandler implements GSIHandlerType {
             )
             if (oldBetId) {
               await supabase
-                .from('bets')
+                .from('matches')
                 .update({ predictionId: null, updated_at: new Date().toISOString() })
                 .eq('predictionId', oldBetId)
             }
@@ -949,7 +949,7 @@ export class GSIHandler implements GSIHandlerType {
 
     // Check if the bet for this match is already closed in the database
     const { data: matchData, error } = await supabase
-      .from('bets')
+      .from('matches')
       .select('won')
       .is('won', null)
       .eq('matchId', matchId.toString())
@@ -990,7 +990,7 @@ export class GSIHandler implements GSIHandlerType {
 
       // Check if the bet for this match is already closed in the database
       const { data: matchNotEnded, error } = await supabase
-        .from('bets')
+        .from('matches')
         .select('won')
         // Null means there is a winner of this match
         .is('won', null)
@@ -1021,7 +1021,7 @@ export class GSIHandler implements GSIHandlerType {
           )
           if (betsEnabled) {
             const predictionResponse = await supabase
-              .from('bets')
+              .from('matches')
               .select('predictionId')
               .eq('matchId', matchId.toString())
               .eq('userId', this.client.token)
@@ -1130,7 +1130,7 @@ export class GSIHandler implements GSIHandlerType {
               }),
             )
             const predictionResponse = await supabase
-              .from('bets')
+              .from('matches')
               .select('predictionId')
               .eq('matchId', matchId.toString())
               .eq('userId', this.client.token)
@@ -1143,7 +1143,7 @@ export class GSIHandler implements GSIHandlerType {
               )
               if (oldBetId) {
                 await supabase
-                  .from('bets')
+                  .from('matches')
                   .update({ predictionId: null, updated_at: new Date().toISOString() })
                   .eq('predictionId', oldBetId)
               }

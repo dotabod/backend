@@ -256,8 +256,8 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
   const ONE_DAY_IN_MS = 86_400_000 // 1 day in ms
   const dayAgo = new Date(Date.now() - ONE_DAY_IN_MS).toISOString()
 
-  const { data: bets } = await supabase
-    .from('bets')
+  const { data: matches } = await supabase
+    .from('matches')
     .select('id, matchId, myTeam, userId, hero_name')
     .is('won', null)
     .eq('userId', token)
@@ -268,13 +268,13 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
 
   chatClient.whisper(
     twitchChatId,
-    bets?.map((b) => b.matchId).join(', ') || 'No broken games found',
+    matches?.map((b) => b.matchId).join(', ') || 'No broken games found',
   )
 
-  if (!bets) return
+  if (!matches) return
 
   await Promise.all(
-    bets.map(async (bet) => {
+    matches.map(async (bet) => {
       const heroId = bet?.hero_name ? heroes[bet.hero_name as keyof typeof heroes]?.id || 0 : 0
       const sockets = await server.io.in(bet.userId).fetchSockets()
       if (!Array.isArray(sockets) || !sockets.length) return
@@ -320,7 +320,7 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
           const direWin = !response.radiantWin && bet.myTeam === 'dire'
 
           await supabase
-            .from('bets')
+            .from('matches')
             .update({
               radiant_score: response?.radiantScore,
               dire_score: response?.direScore,
