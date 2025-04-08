@@ -114,14 +114,14 @@ twitchChat.on(
 
           // Do this as the bot which should be a moderator in the channel
           await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
+            const requiredRank = rankOnlySettings.minimumRank || 'Herald'
             await ctx.moderation.banUser(channelId, {
               user: userInfo.userId,
               duration: 30,
               reason: t('rankOnlyMode', {
                 url: 'dotabod.com/verify',
                 name: user,
-                requiredRank: getRankTitle(rankOnlySettings.minimumRankTier),
-                userRank: getRankTitle(userRankTier),
+                requiredRank,
                 lng: client.locale || 'en',
               }),
             })
