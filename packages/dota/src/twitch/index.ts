@@ -114,7 +114,8 @@ twitchChat.on(
 
           // Do this as the bot which should be a moderator in the channel
           await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
-            const requiredRank = rankOnlySettings.minimumRank || 'Herald'
+            const requiredRank =
+              rankOnlySettings.minimumRank || getRankTitle(rankOnlySettings.minimumRankTier)
             await ctx.moderation.banUser(channelId, {
               user: userInfo.userId,
               duration: 30,
