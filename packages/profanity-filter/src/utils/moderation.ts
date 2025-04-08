@@ -64,6 +64,7 @@ const censor = new TextCensor()
 export const SAFE_WORDS_WHITELIST = [
   // Common English words falsely flagged
   'am',
+  'cu',
   'classic',
   'scunthorpe',
   'assassin',
@@ -459,6 +460,7 @@ function getProfanityDetailsSingle(text: string): {
   // Check with naughty-words (multilingual lists)
   try {
     for (const lang of Object.keys(naughtyWords)) {
+      if (lang !== 'ru' && lang !== 'en') continue
       // Skip non-array properties
       if (!Array.isArray(naughtyWords[lang])) continue
 

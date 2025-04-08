@@ -12,6 +12,14 @@ import {
   removeSeparators,
 } from './text-normalization.js'
 
+/**
+ * Compresses repeated characters to single characters
+ * e.g., "fuuuuck" becomes "fuck"
+ */
+export function compressRepeatedCharacters(text: string): string {
+  return text.replace(/(.)\1+/g, '$1')
+}
+
 // Russian profanity terms (common ones)
 export const russianProfanityList = [
   'сука',
@@ -222,9 +230,6 @@ const europeanLeetSpeakMap: Record<string, string[]> = {
 
 // Regex patterns for detecting common evasion tactics
 export const evasionPatterns = [
-  // Repeated characters (e.g., 'fuuuuck')
-  /([fuckshitaeo])\1{2,}/gi, // Detect common profanity letters repeated 3+ times
-
   // Leetspeak patterns
   /[f]+[\s_]*[u]+[\s_]*[c]+[\s_]*[k]+/i, // F*u*c*k variations
   /[s]+[\s_]*[h]+[\s_]*[i]+[\s_]*[t]+/i, // S*h*i*t variations
@@ -350,7 +355,7 @@ export function detectChineseProfanity(text: string): boolean {
  * Detects profanity using common evasion tactics
  */
 export function detectEvasionTactics(text: string): boolean {
-  // Check original text
+  // Check for non-compressed pattern matches first
   if (evasionPatterns.some((pattern) => pattern.test(text))) {
     return true
   }
@@ -363,7 +368,11 @@ export function detectEvasionTactics(text: string): boolean {
 
   // Check fully prepared text
   const prepared = prepareText(text)
-  return evasionPatterns.some((pattern) => pattern.test(prepared))
+  if (evasionPatterns.some((pattern) => pattern.test(prepared))) {
+    return true
+  }
+
+  return false
 }
 
 /**

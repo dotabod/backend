@@ -1,3 +1,4 @@
+import { compressRepeatedCharacters } from './profanity-wordlists.js'
 /**
  * text-normalization.ts
  *
@@ -149,7 +150,13 @@ export function createTextVariations(text: string): string[] {
   // Check for potential obfuscation markers first
   const hasPotentialObfuscation = /[^\w\s]|[0-9]|(.)\1{2,}/g.test(text) || /\w\s\w\s\w/.test(text) // Spaced out letters
 
-  if (!hasPotentialObfuscation) {
+  // Create compressed version of text (e.g., "fuuuuck" becomes "fuck")
+  const compressedText = compressRepeatedCharacters(text)
+
+  // Only proceed with both checks if the compressed text is different
+  const needsCompressedCheck = compressedText !== text
+
+  if (!hasPotentialObfuscation && !needsCompressedCheck) {
     // For normal-looking text, just return minimal variations
     return [text, text.toLowerCase()]
   }
@@ -162,6 +169,10 @@ export function createTextVariations(text: string): string[] {
     prepareText(text), // Fully processed text
     stripNonAlphanumeric(text), // Alphanumeric-only version
   ]
+
+  if (needsCompressedCheck) {
+    variations.push(compressedText)
+  }
 
   return [...new Set(variations)] // Remove duplicates
 }

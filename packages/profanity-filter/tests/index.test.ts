@@ -43,6 +43,126 @@ describe('Profanity Filter', () => {
       expect(detectEvasionTactics(text)).toBe(false)
     })
 
+    test('should detect compressed profanity', async () => {
+      const compressedWords = ['fuuuuck', 'shiiiit', 'asssss', 'f*u*c*k', 'sh!t', 'b!tch']
+
+      for (const word of compressedWords) {
+        const profane = `This contains a compressed bad word: ${word}`
+        const moderated = await moderateText(profane)
+        expect(moderated).not.toBe(profane)
+        expect(moderated).toContain('***')
+
+        const details = getProfanityDetails(profane) as {
+          isFlagged: boolean
+          source: string
+          matches?: string[]
+          language?: string
+        }
+        expect(details.isFlagged).toBe(true)
+      }
+    })
+
+    test('should detect profanity with character repetition', async () => {
+      // Test words with repeated characters that should be compressed
+      const texts = [
+        'fuuuuuuuck youuuu',
+        'shiiiiiiiit',
+        'what the fuuuuuck',
+        'aaaaaassssss',
+        'biiiiiitch',
+      ]
+
+      for (const text of texts) {
+        const moderated = await moderateText(text)
+        expect(moderated).not.toBe(text)
+        expect(moderated).toContain('***')
+
+        const details = getProfanityDetails(text) as {
+          isFlagged: boolean
+          source: string
+          matches?: string[]
+          language?: string
+        }
+        expect(details.isFlagged).toBe(true)
+      }
+    })
+
+    test('should detect profanity with evasion tactics', async () => {
+      const evasionTexts = [
+        'f u c k',
+        'f.u.c.k',
+        'f*u*c*k',
+        's-h-i-t',
+        'b i t c h',
+        'f_u_c_k',
+        's.h.i.t',
+      ]
+
+      for (const text of evasionTexts) {
+        expect(detectEvasionTactics(text)).toBe(true)
+
+        const moderated = await moderateText(text)
+        expect(moderated).not.toBe(text)
+        expect(moderated).toContain('***')
+
+        const details = getProfanityDetails(text) as {
+          isFlagged: boolean
+          source: string
+          matches?: string[]
+          language?: string
+        }
+        expect(details.isFlagged).toBe(true)
+      }
+    })
+
+    test('should detect more simple profanity', async () => {
+      const badWords = ['fuck', 'shit', 'nigger', 'n1gga', 'nigga', 'nig']
+
+      for (const word of badWords) {
+        const profane = `This contains a bad word: ${word}`
+        const moderated = await moderateText(profane)
+
+        const details = getProfanityDetails(profane) as {
+          isFlagged: boolean
+          source: string
+          matches?: string[]
+          language?: string
+        }
+        console.log({ details, word }, 'geczy')
+        expect(moderated).not.toBe(profane)
+        expect(moderated).toContain('***')
+
+        expect(details.isFlagged).toBe(true)
+        expect(details.matches).toBeDefined()
+        if (details.matches && details.matches.length > 0) {
+          // Check if the word includes the match OR the match includes the word
+          // This handles cases like "nig" matching "ni" from obscenity library
+          expect(word.includes(details.matches[0]) || details.matches[0].includes(word)).toBe(true)
+        }
+      }
+
+      // Test array input for getProfanityDetails
+      const profaneTexts = badWords.map((word) => `This contains a bad word: ${word}`)
+      const detailsArray = getProfanityDetails(profaneTexts) as Array<{
+        text: string
+        isFlagged: boolean
+        source: string
+        matches?: string[]
+        language?: string
+      }>
+
+      expect(Array.isArray(detailsArray)).toBe(true)
+      expect(detailsArray.length).toBe(badWords.length)
+      detailsArray.forEach((detail, index) => {
+        expect(detail.isFlagged).toBe(true)
+        expect(detail.matches).toBeDefined()
+        expect(
+          detail.matches?.includes(badWords[index]) ||
+            badWords[index].includes(detail.matches?.[0] ?? ''),
+        ).toBe(true)
+      })
+    })
+
     test('should detect simple profanity', async () => {
       const profane = 'This contains a bad word: fuck'
       const moderated = await moderateText(profane)
@@ -269,6 +389,8 @@ describe('Profanity Filter', () => {
       const words = [
         'Yamato',
         'Kataraménos',
+        'Cuziloveyou',
+        'coldofff',
         'fax666.',
         'fakejoker',
         'Classic', // contains "ass"
