@@ -391,6 +391,7 @@ describe('Profanity Filter', () => {
         'Kataraménos',
         'Cuziloveyou',
         'coldofff',
+        '555',
         'fax666.',
         'fakejoker',
         'Classic', // contains "ass"
