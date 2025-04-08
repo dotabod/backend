@@ -105,11 +105,11 @@ export type Database = {
       }
       advanced_bets: {
         Row: {
-          bet_id: string
           bet_type: string
           created_at: string
           data: Json | null
           id: number
+          match_id: string
           outcome_1: string
           outcome_2: string
           predictionid: string | null
@@ -118,11 +118,11 @@ export type Database = {
           winning_outcome: number | null
         }
         Insert: {
-          bet_id: string
           bet_type: string
           created_at?: string
           data?: Json | null
           id?: number
+          match_id: string
           outcome_1: string
           outcome_2: string
           predictionid?: string | null
@@ -131,11 +131,11 @@ export type Database = {
           winning_outcome?: number | null
         }
         Update: {
-          bet_id?: string
           bet_type?: string
           created_at?: string
           data?: Json | null
           id?: number
+          match_id?: string
           outcome_1?: string
           outcome_2?: string
           predictionid?: string | null
@@ -145,8 +145,8 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'advanced_bets_bet_id_fkey'
-            columns: ['bet_id']
+            foreignKeyName: 'advanced_bets_match_id_fkey'
+            columns: ['match_id']
             isOneToOne: false
             referencedRelation: 'matches'
             referencedColumns: ['id']
@@ -178,80 +178,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'approved_moderators_userId_fkey'
-            columns: ['userId']
-            isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      matches: {
-        Row: {
-          bet_type: string | null
-          created_at: string
-          dire_score: number | null
-          game_mode: number | null
-          hero_name: string | null
-          hero_slot: number | null
-          id: string
-          is_doubledown: boolean
-          is_party: boolean
-          kda: Json | null
-          lobby_type: number | null
-          matchId: string
-          myTeam: string
-          predictionId: string | null
-          radiant_score: number | null
-          steam32Id: number | null
-          updated_at: string
-          userId: string
-          won: boolean | null
-        }
-        Insert: {
-          bet_type?: string | null
-          created_at?: string
-          dire_score?: number | null
-          game_mode?: number | null
-          hero_name?: string | null
-          hero_slot?: number | null
-          id?: string
-          is_doubledown?: boolean
-          is_party?: boolean
-          kda?: Json | null
-          lobby_type?: number | null
-          matchId: string
-          myTeam: string
-          predictionId?: string | null
-          radiant_score?: number | null
-          steam32Id?: number | null
-          updated_at?: string
-          userId: string
-          won?: boolean | null
-        }
-        Update: {
-          bet_type?: string | null
-          created_at?: string
-          dire_score?: number | null
-          game_mode?: number | null
-          hero_name?: string | null
-          hero_slot?: number | null
-          id?: string
-          is_doubledown?: boolean
-          is_party?: boolean
-          kda?: Json | null
-          lobby_type?: number | null
-          matchId?: string
-          myTeam?: string
-          predictionId?: string | null
-          radiant_score?: number | null
-          steam32Id?: number | null
-          updated_at?: string
-          userId?: string
-          won?: boolean | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'bets_userId_fkey'
             columns: ['userId']
             isOneToOne: false
             referencedRelation: 'users'
@@ -385,6 +311,77 @@ export type Database = {
             columns: ['giftSubscriptionId']
             isOneToOne: false
             referencedRelation: 'gift_subscriptions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      matches: {
+        Row: {
+          created_at: string
+          dire_score: number | null
+          game_mode: number | null
+          hero_name: string | null
+          hero_slot: number | null
+          id: string
+          is_doubledown: boolean
+          is_party: boolean
+          kda: Json | null
+          lobby_type: number | null
+          matchId: string
+          myTeam: string
+          predictionId: string | null
+          radiant_score: number | null
+          steam32Id: number | null
+          updated_at: string
+          userId: string
+          won: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          dire_score?: number | null
+          game_mode?: number | null
+          hero_name?: string | null
+          hero_slot?: number | null
+          id?: string
+          is_doubledown?: boolean
+          is_party?: boolean
+          kda?: Json | null
+          lobby_type?: number | null
+          matchId: string
+          myTeam: string
+          predictionId?: string | null
+          radiant_score?: number | null
+          steam32Id?: number | null
+          updated_at?: string
+          userId: string
+          won?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          dire_score?: number | null
+          game_mode?: number | null
+          hero_name?: string | null
+          hero_slot?: number | null
+          id?: string
+          is_doubledown?: boolean
+          is_party?: boolean
+          kda?: Json | null
+          lobby_type?: number | null
+          matchId?: string
+          myTeam?: string
+          predictionId?: string | null
+          radiant_score?: number | null
+          steam32Id?: number | null
+          updated_at?: string
+          userId?: string
+          won?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'bets_userId_fkey'
+            columns: ['userId']
+            isOneToOne: false
+            referencedRelation: 'users'
             referencedColumns: ['id']
           },
         ]
