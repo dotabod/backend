@@ -5,6 +5,8 @@ import type { Tables } from '../db/supabase-types.js'
 import supabase from '../db/supabase.js'
 import { handleNewUser } from '../handleNewUser.js'
 import { isAuthenticated } from './authUtils.js'
+import { stopUserSubscriptions } from '../twitch/lib/revokeEvent.js'
+import type { ErrorRequestHandler } from 'express'
 
 if (!process.env.TWITCH_CLIENT_ID) {
   throw new Error('TWITCH_CLIENT_ID is not defined')
@@ -26,10 +28,18 @@ type UpdatePayload<T> = {
   old_record: T
 }
 
+type DeletePayload<T> = {
+  type: 'DELETE'
+  table: string
+  schema: string
+  record: null
+  old_record: T
+}
+
 export const setupWebhooks = () => {
   const webhookApp = express()
 
-  webhookApp.use(bodyParserErrorHandler())
+  webhookApp.use(bodyParserErrorHandler() as unknown as ErrorRequestHandler)
 
   webhookApp.get('/webhook', (req, res) => {
     res.status(200).json({
@@ -106,6 +116,31 @@ export const setupWebhooks = () => {
                 providerAccountId: newUser.providerAccountId,
               })
             })
+        }
+      } else if (req.body.type === 'DELETE' && req.body.table === 'accounts') {
+        const { body } = req
+        const deletedUser = body.old_record as DeletePayload<Tables<'accounts'>>['old_record']
+
+        if (deletedUser.provider === 'twitch') {
+          logger.info('[TWITCHEVENTS] Account deleted, cleaning up subscriptions', {
+            providerAccountId: deletedUser.providerAccountId,
+          })
+
+          try {
+            // Stop all subscriptions and clear them from the cache
+            await stopUserSubscriptions(deletedUser.providerAccountId)
+            logger.info(
+              '[TWITCHEVENTS] Successfully cleaned up subscriptions for deleted account',
+              {
+                providerAccountId: deletedUser.providerAccountId,
+              },
+            )
+          } catch (e) {
+            logger.error('[TWITCHEVENTS] Error cleaning up subscriptions for deleted account', {
+              error: e,
+              providerAccountId: deletedUser.providerAccountId,
+            })
+          }
         }
       } else if (req.body.type === 'UPDATE' && req.body.table === 'users') {
         const { body } = req
