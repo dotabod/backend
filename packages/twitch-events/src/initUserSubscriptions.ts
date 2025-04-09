@@ -96,13 +96,29 @@ async function subscribeWithRetry(
       }
     }
   }
-
   // Log only if all retries failed
   if (isCritical) {
     logger.error('[TWITCHEVENTS] Failed to create critical subscription after retries', {
       type,
       providerAccountId,
-      error: lastError instanceof Error ? lastError.message : String(lastError),
+      error: lastError
+        ? typeof lastError === 'object'
+          ? JSON.stringify(lastError, Object.getOwnPropertyNames(lastError))
+          : String(lastError)
+        : 'Unknown error',
+      errorType: lastError ? typeof lastError : 'null',
+      errorStack: lastError && lastError instanceof Error ? lastError.stack : undefined,
+    })
+  } else {
+    // Log non-critical failures too
+    logger.warn('[TWITCHEVENTS] Failed to create non-critical subscription', {
+      type,
+      providerAccountId,
+      error: lastError
+        ? typeof lastError === 'object'
+          ? JSON.stringify(lastError, Object.getOwnPropertyNames(lastError))
+          : String(lastError)
+        : 'Unknown error',
     })
   }
 
