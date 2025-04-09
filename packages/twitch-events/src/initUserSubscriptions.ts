@@ -107,7 +107,8 @@ async function subscribeWithRetry(
           : String(lastError)
         : 'Unknown error',
       errorType: lastError ? typeof lastError : 'null',
-      errorStack: lastError && lastError instanceof Error ? lastError.stack : undefined,
+      errorStack:
+        lastError && typeof lastError === 'object' ? (lastError as Error).stack : undefined,
     })
   } else {
     // Log non-critical failures too
