@@ -71,6 +71,12 @@ async function subscribeWithRetry(
         }
         return true
       }
+
+      logger.warn('[TWITCHEVENTS] genericSubscribe returned false', {
+        type,
+        providerAccountId,
+        attempt,
+      })
     } catch (error) {
       lastError = error as Error
       logger.debug('[TWITCHEVENTS] Subscription attempt failed', {

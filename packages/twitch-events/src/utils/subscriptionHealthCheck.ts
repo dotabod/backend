@@ -1,4 +1,4 @@
-import { getTwitchHeaders, logger } from '@dotabod/shared-utils'
+import { getTwitchHeaders, logger, checkBotStatus } from '@dotabod/shared-utils'
 import type { TwitchEventTypes } from '../TwitchEventTypes.js'
 import { eventSubMap } from '../chatSubIds.js'
 import { fetchConduitId } from '../fetchConduitId.js'
@@ -11,6 +11,7 @@ const CRITICAL_SUBSCRIPTION_TYPES: (keyof TwitchEventTypes)[] = [
   'stream.online', // Most critical - primary subscription we check
   'stream.offline', // Important for state management
   'user.update', // Important for profile changes
+  'channel.chat.message', // Critical for bot to receive chat messages
 ] as const
 
 // Define secondarily important subscription types
@@ -52,6 +53,14 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
     const errorMessage = 'No valid conduit ID available - health check cannot proceed'
     logger.error(`[TWITCHEVENTS] ${errorMessage}`)
     throw new Error(errorMessage)
+  }
+
+  // Check if the bot is banned - we'll skip channel.chat.message subscriptions if so
+  const isBanned = await checkBotStatus()
+  if (isBanned) {
+    logger.warn(
+      '[TWITCHEVENTS] Bot is currently banned, will skip channel.chat.message subscriptions',
+    )
   }
 
   // Get all user account IDs
@@ -102,7 +111,8 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
 
           // Check for missing critical subscriptions
           const missingCritical = CRITICAL_SUBSCRIPTION_TYPES.filter(
-            (type) => !existingTypes.includes(type),
+            (type) =>
+              !existingTypes.includes(type) && !(type === 'channel.chat.message' && isBanned),
           )
 
           // Check for missing secondary subscriptions
@@ -122,13 +132,30 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
             // Fix critical subscriptions first
             for (const type of missingCritical) {
               try {
-                await genericSubscribe(conduitId, userId, type)
-                result.fixedSubscriptions++
-                result.criticalFixCount++
-                logger.warn('[TWITCHEVENTS] Fixed critical missing subscription', {
-                  userId,
-                  type,
-                })
+                // Skip chat subscriptions if bot is banned
+                if (type === 'channel.chat.message' && isBanned) {
+                  logger.info('[TWITCHEVENTS] Skipping chat subscription for banned bot', {
+                    userId,
+                  })
+                  continue
+                }
+
+                const success = await genericSubscribe(conduitId, userId, type)
+
+                if (success) {
+                  result.fixedSubscriptions++
+                  result.criticalFixCount++
+                  logger.warn('[TWITCHEVENTS] Fixed critical missing subscription', {
+                    userId,
+                    type,
+                  })
+                } else {
+                  result.errorCount++
+                  logger.error('[TWITCHEVENTS] Subscription returned false but did not throw', {
+                    userId,
+                    type,
+                  })
+                }
               } catch (error) {
                 result.errorCount++
                 const errorMsg = error instanceof Error ? error.message : String(error)
@@ -145,16 +172,28 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
             // Then fix secondary subscriptions
             for (const type of missingSecondary) {
               try {
-                await genericSubscribe(conduitId, userId, type)
-                result.fixedSubscriptions++
-                result.secondaryFixCount++
+                const success = await genericSubscribe(conduitId, userId, type)
 
-                // Only log details for critical or first few secondary fixes
-                if (result.secondaryFixCount < 50) {
-                  logger.info('[TWITCHEVENTS] Fixed secondary missing subscription', {
-                    userId,
-                    type,
-                  })
+                if (success) {
+                  result.fixedSubscriptions++
+                  result.secondaryFixCount++
+
+                  // Only log details for critical or first few secondary fixes
+                  if (result.secondaryFixCount < 50) {
+                    logger.info('[TWITCHEVENTS] Fixed secondary missing subscription', {
+                      userId,
+                      type,
+                    })
+                  }
+                } else {
+                  result.errorCount++
+                  logger.error(
+                    '[TWITCHEVENTS] Secondary subscription returned false but did not throw',
+                    {
+                      userId,
+                      type,
+                    },
+                  )
                 }
               } catch (error) {
                 result.errorCount++
