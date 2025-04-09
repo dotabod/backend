@@ -37,8 +37,8 @@
     "tpFound": "{{channel}} bom trabalho comprando um tp FINALMENTE depois de $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Graças a essa morte você finalmente conseguiu um tp. Levou apenas $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
-  "chattersRank": "@{{username}}'s rank is {{rank}}",
-  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
+  "chattersRank": "O rank de @{{username}} é {{rank}}",
+  "chattersRankUnknown": "O rank de @{{username}} é desconhecido. Se torne um usuário verificado do Dotabod para obter seu rank! {{- url}}",
   "colors": {
     "blue": "Azul",
     "brown": "Marrom",
@@ -64,11 +64,11 @@
     "overlay_many": "",
     "overlay_other": "{{count}} streamers usando o overlay"
   },
-  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
+  "currentSong": "Tocando agora: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Precisa de builds profissionais para {{- heroName}} ? Dê uma olhada aqui {{- url}}",
   "dotabod": "Eu sou um bot open source feito pelo {{author}}. Mais informações: {{- url}}",
   "dotapatch": {
-    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+    "newPatch": "{{emote}} A nova atualização de Dota 2 foi lançada: {{version}}. Confira as notas de atualização em https://www.dota2.com/patches"
   },
   "facet": "{{- heroName}} faceta {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Faceta inválida especificada · $t(facetNotFound, {{- heroName }})",
@@ -78,8 +78,8 @@
   "facetTotalLimit_many": "",
   "facetTotalLimit_other": "Somente {{count}} facetas estão disponíveis para {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Jogo não encontrado",
-  "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
-  "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
+  "giftSub": "Um sub de presente do Dotabod Pro foi presenteado por {{- senderName}}!",
+  "giftSubAnonymous": "Um sub de presente do Dotabod Pro foi presenteado anonimamente!",
   "gpm_zero": "",
   "gpm_one": "OPM ao vivo de {{- heroName}}: {{num}}. {{heroKills}} de abates de heróis, {{creepKills}} de abates de criaturas.",
   "gpm_other": "GPM ao vivo de {{- heroName}}: {{num}}. {{heroKills}} de abates de heróis, {{creepKills}} de abates de creep.",
@@ -115,7 +115,7 @@
     "won_many": "",
     "won_other": "{{- heroName}} tem uma sequência de abates de {{count}} {{emote}}"
   },
-  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
+  "lastFmNotConfigured": "Nome de usuário do Last.fm não está configurado. O streamer precisa configurá-lo no painel do Dotabod.",
   "lastgame": {
     "link": "Aqui está a última partida: {{- url}}",
     "none": "Não está jogando com nenhum jogador da partida anterior.",
@@ -134,7 +134,7 @@
     "won": "Partida anterior: Vitória"
   },
   "lifetime": "Partidas totais jogadas",
-  "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
+  "matchData8500": "A Valve desativou os dados por partidas de mais de 8500 mmr, mas terei uma solução em breve",
   "matchFound": "Dados da partida encontrados comandos ativados: {{commandList}}",
   "matchId": "ID da partida: {{matchId}}",
   "midasUsed": "A midas foi finalmente usada, $t(seconds, {\"count\": {{seconds}} }) atrasados {{emote}}",
@@ -165,7 +165,7 @@
   "ping": "Pong {{emote}}",
   "pleb": "Pobre aqui {{emote}}",
   "pleb_off": "{{name}} {{emote}} bom trabalho, pobre",
-  "plebSubRequired": "!pleb command can only be used if sub only mode is enabled.",
+  "plebSubRequired": "O comando !pleb só pode ser usado se o modo \"sub\" estiver ativado.",
   "predictions": {
     "no": "Não",
     "title": "Vamos ganhar essa partida com {{- heroName}}",
@@ -182,12 +182,12 @@
   "ranked": "Ranqueada",
   "ranked_no": "Não, este jogo não é ranqueado",
   "ranked_yes": "Sim, este jogo é ranqueado",
-  "rankOnlyDisabled": "Verified mode is now disabled. Everyone can chat.",
-  "rankOnlyEnabled": "Verified mode is now enabled. Only {{rank}} or higher ranks can chat. Visit {{- url}} to become Dotabod verified.",
-  "rankOnlyInvalid": "Invalid rank. Valid ranks are: {{validRanks}}",
-  "rankOnlyMode": "@{{name}} - Your message was deleted because this channel is in verified mode ({{requiredRank}}+ only). Visit {{- url}} to become Dotabod verified.",
-  "rankOnlyStatus_disabled": "Verified mode is currently disabled.",
-  "rankOnlyStatus_enabled": "Verified mode is currently enabled. Only {{rank}}+ ranks can chat. Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyDisabled": "Modo verificado agora está desativado. Todos podem conversar.",
+  "rankOnlyEnabled": "Modo verificado está ativado no momento. Apenas ranks {{rank}} ou acima podem conversar. Visite {{- url}} para tornar-se Dotabod verificado.",
+  "rankOnlyInvalid": "Rank inválido. Ranks válidos são: {{validRanks}}",
+  "rankOnlyMode": "@{{name}} - Sua mensagem foi excluída porque este canal está em modo verificado ({{requiredRank}}+ apenas). Visite {{- url}} para tornar-se um Dotabod verificado.",
+  "rankOnlyStatus_disabled": "Modo verificado está desativado no momento.",
+  "rankOnlyStatus_enabled": "Modo verificado está ativado no momento. Apenas ranks {{rank}} ou acima podem conversar. Visite {{- url}} para tornar-se Dotabod verificado.",
   "refresh": "Reiniciando overlay...",
   "refreshToken": "Sua conta da Twitch precisa ser reconectada ao Dotabod. {{channel}} Deslogue-se e logue novamente em dotabod.com para corrigir isso.",
   "resetwl": "Redefinindo vitórias/derrotas para 0 em {{channel}}",
@@ -207,8 +207,8 @@
   "setStreamDelayNoArgs": "Delay na stream inválido, use !setdelay <segundos> .",
   "setStreamDelayRemoved": "Removendo delay de transmissão",
   "shard": "Fragmento de Aghanim de {{- heroName}}: {{- title}} · {{- description}}",
-  "songError": "Error fetching song information from Last.fm.",
-  "songNotPlaying": "No song is currently playing.",
+  "songError": "Erro ao obter informações de música do Last.fm.",
+  "songNotPlaying": "Não há música tocando atualmente.",
   "spectators": {
     "count_one": "1 espectador assistindo a esta partida ao vivo",
     "count_many": "",
