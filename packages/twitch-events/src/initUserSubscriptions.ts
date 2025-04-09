@@ -47,7 +47,7 @@ async function subscribeWithRetry(
   isCritical: boolean,
 ): Promise<boolean> {
   const maxRetries = isCritical ? 3 : 1
-  let lastError = null
+  let lastError: Error | null = null
 
   // Validate conduit ID to prevent unnecessary API calls
   if (!conduitId) {
@@ -72,7 +72,7 @@ async function subscribeWithRetry(
         return true
       }
     } catch (error) {
-      lastError = error
+      lastError = error as Error
       logger.debug('[TWITCHEVENTS] Subscription attempt failed', {
         type,
         providerAccountId,
