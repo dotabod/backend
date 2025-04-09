@@ -38,8 +38,8 @@
     "tpFound": "{{channel}} dobra robota, w końcu masz TP po $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Dzięki tej śmierci w końcu masz tp. I zajęło to tylko $t(seconds, {\"count\": {{seconds}} }) {{emote}}\n"
   },
-  "chattersRank": "@{{username}}'s rank is {{rank}}",
-  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
+  "chattersRank": "@{{username}} ma rangę {{rank}}",
+  "chattersRankUnknown": "@{{username}} nie ma jeszcze rangi. Zostań zweryfikowany przez Dotabod, aby przypisać rangę! {{- url}}",
   "colors": {
     "blue": "Niebieski",
     "brown": "Brązowy",
@@ -71,7 +71,7 @@
   "dota2pt": "Potrzebujesz profesjonalnych porad odnośnie {{- heroName}}? Sprawdź tutaj {{- url}}",
   "dotabod": "Jestem otwartoźródłowym botem stworzonym przez {{author}}. Więcej informacji: {{- url}}",
   "dotapatch": {
-    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+    "newPatch": "{{emote}} Nowy aktualizacja rozgrywki do Dota 2 została wydana: {{version}}. Sprawdź informacje na https://www.dota2.com/patches"
   },
   "facet": "Aspekt {{- heroName}} {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Nieprawidłowy aspekt · $t(facetNotFound, {{- heroName }})",
@@ -179,7 +179,7 @@
   "ping": "Pong {{emote}}",
   "pleb": "Jeden pleb więcej {{emote}}",
   "pleb_off": "{{name}} {{emote}} dobra robota plebsie",
-  "plebSubRequired": "!pleb command can only be used if sub only mode is enabled.",
+  "plebSubRequired": "Komenda !pleb może być użyta tylko wtedy, gdy włączony jest tryb czatu tylko dla subskrybujących (użyj: /subscribers).",
   "predictions": {
     "no": "Nie",
     "title": "Czy wygramy jako {{- heroName}}",
@@ -197,12 +197,12 @@
   "ranked": "Gra rankingowa",
   "ranked_no": "Ta gra jest nierankingowa ",
   "ranked_yes": "Tak, ta gra jest rankingowa",
-  "rankOnlyDisabled": "Verified mode is now disabled. Everyone can chat.",
-  "rankOnlyEnabled": "Verified mode is now enabled. Only {{rank}} or higher ranks can chat. Visit {{- url}} to become Dotabod verified.",
-  "rankOnlyInvalid": "Invalid rank. Valid ranks are: {{validRanks}}",
-  "rankOnlyMode": "@{{name}} - Your message was deleted because this channel is in verified mode ({{requiredRank}}+ only). Visit {{- url}} to become Dotabod verified.",
-  "rankOnlyStatus_disabled": "Verified mode is currently disabled.",
-  "rankOnlyStatus_enabled": "Verified mode is currently enabled. Only {{rank}}+ ranks can chat. Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyDisabled": "Tryb zweryfikowanych jest teraz wyłączony. Każdy może czatować.",
+  "rankOnlyEnabled": "Tryb zweryfikowanych jest teraz włączony. Tylko {{rank}} lub wyższe rangi mogą czatować. Odwiedź {{- url}} aby zostać zweryfkowanym przez Dotaboda.",
+  "rankOnlyInvalid": "Nieprawidłowa ranga. Prawidłowe rangi to: {{validRanks}}",
+  "rankOnlyMode": "@{{name}} - Twoja wiadomość została usunięta, ponieważ ten kanał jest w trybie zweryfikowanym (tylko {{requiredRank}}+). Odwiedź {{- url}}, aby zostać zweryfikowany.",
+  "rankOnlyStatus_disabled": "Zweryfikowany tryb jest obecnie wyłączony.",
+  "rankOnlyStatus_enabled": "Tryb zweryfikowanych jest teraz włączony. Tylko {{rank}} lub wyższe rangi mogą czatować. Odwiedź {{- url}} aby zostać zweryfkowanym przez Dotaboda.",
   "refresh": "Odświeżanie nakładki...",
   "refreshToken": "Twoje konto Twitcha musi zostać ponownie podłączone do Dotaboda. {{channel}} wyloguj się, a następnie ponownie zaloguj na dotabod.com, aby to naprawić.",
   "resetwl": "Resetowanie wskaźnika wygranych/przegranych do 0 dla {{channel}}",
