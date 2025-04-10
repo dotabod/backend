@@ -387,6 +387,8 @@ describe('Profanity Filter', () => {
   describe('False positives prevention', () => {
     test('should not flag innocent words containing profanity substrings', async () => {
       const words = [
+        'AM',
+        'Hollaw',
         'Delight',
         'Yamato',
         'Kataraménos',

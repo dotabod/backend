@@ -206,6 +206,11 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
     return text
   }
 
+  // If text is only 2 letters, return as is
+  if (text.length <= 2) {
+    return text
+  }
+
   // Create text variations to enhance detection
   const textVariations = createTextVariations(text)
 
@@ -390,6 +395,11 @@ function getProfanityDetailsSingle(text: string): {
 } {
   // Check if this is a safe text that should be whitelisted
   if (isSafeText(text)) {
+    return { isFlagged: false, source: 'none' }
+  }
+
+  // If text is only 2 letters, return as is
+  if (text.length <= 2) {
     return { isFlagged: false, source: 'none' }
   }
 
