@@ -68,7 +68,11 @@ async function createConduit(): Promise<string> {
  * @param session_id - WebSocket session ID to use for transport
  * @param conduitId - ID of conduit to update
  */
-async function updateConduitShard(session_id: string, conduitId: string): Promise<void> {
+async function updateConduitShard(
+  session_id: string,
+  conduitId: string,
+  retryCount = 0,
+): Promise<void> {
   const body: TwitchConduitShardRequest = {
     conduit_id: conduitId,
     shards: [
@@ -91,8 +95,39 @@ async function updateConduitShard(session_id: string, conduitId: string): Promis
     body: JSON.stringify(body),
   })
 
+  if (conduitUpdate.status === 401) {
+    logger.error('Unauthorized when assigning socket to shard, refreshing token')
+
+    // Get fresh headers with new token
+    const freshHeaders = await getTwitchHeaders()
+    Object.assign(headers, freshHeaders)
+
+    // Retry with exponential backoff (max 5 retries)
+    if (retryCount < 5) {
+      const delay = Math.min(1000 * 2 ** retryCount, 30000) // Exponential backoff with 30s max
+      logger.info(`Retrying shard update in ${delay}ms, attempt ${retryCount + 1}`)
+
+      setTimeout(() => {
+        updateConduitShard(session_id, conduitId, retryCount + 1)
+      }, delay)
+    } else {
+      logger.error('Max retries reached for shard update after token refresh')
+    }
+    return
+  }
+
   if (conduitUpdate.status !== 202) {
     logger.error('Failed to assign socket to shard', { reason: await conduitUpdate.text() })
+
+    // Retry with exponential backoff for other errors as well
+    if (retryCount < 5) {
+      const delay = Math.min(1000 * 2 ** retryCount, 30000)
+      logger.info(`Retrying shard update in ${delay}ms, attempt ${retryCount + 1}`)
+
+      setTimeout(() => {
+        updateConduitShard(session_id, conduitId, retryCount + 1)
+      }, delay)
+    }
     return
   }
 
@@ -238,7 +273,9 @@ async function initializeSocket() {
   const conduitId = await fetchConduitId()
   logger.info('Conduit ID', { conduitId })
 
-  const mySocket = new EventsubSocket()
+  const mySocket = new EventsubSocket({
+    disableAutoReconnect: false, // Ensure auto reconnect is enabled
+  })
 
   mySocket.on('connected', async (session_id: string) => {
     logger.info(`Socket has connected ${session_id} for ${conduitId}`)

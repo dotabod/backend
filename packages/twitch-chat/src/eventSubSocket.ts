@@ -77,7 +77,14 @@ export class EventsubSocket extends EventEmitter {
     )
 
     if (close.code === 4003) {
-      console.debug('Client should decide to reconnect when it is ready')
+      console.debug('Connection unused. Reconnecting after delay...')
+
+      // Use exponential backoff for 4003 error (connection unused)
+      this.backoff = Math.min(this.backoff + 1, 5) // Cap backoff factor at 5
+      const reconnectDelay = this.backoff * this.backoffStack
+
+      console.debug(`Reconnecting in ${reconnectDelay}ms (backoff: ${this.backoff})`)
+      setTimeout(() => this.connect(this.mainUrl, true), reconnectDelay)
       return
     }
 
@@ -104,7 +111,7 @@ export class EventsubSocket extends EventEmitter {
 
     switch (message_type) {
       case 'session_welcome':
-        this.handleSessionWelcome(payload, message.isReconnect)
+        this.handleSessionWelcome(payload, this.eventsub.is_reconnecting || false)
         break
       case 'session_keepalive':
         this.emit('session_keepalive')
