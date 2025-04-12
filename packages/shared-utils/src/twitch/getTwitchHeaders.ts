@@ -1,17 +1,23 @@
 import { getAppToken } from '@twurple/auth'
 import { getTwitchTokens } from './getTwitchTokens.js'
-
 // Cache for Twitch headers by twitchId
 const headerCache: Record<string, { headers: Record<string, string>; timestamp: number }> = {}
 const TOKEN_REFRESH_INTERVAL = 3600000 // 1 hour in milliseconds
 
 // Function to get Twitch headers with per-user caching
-export async function getTwitchHeaders(twitchId?: string): Promise<Record<string, string>> {
+export async function getTwitchHeaders(
+  twitchId?: string,
+  forceRefresh = false,
+): Promise<Record<string, string>> {
   const now = Date.now()
   const cacheKey = twitchId || 'app_token'
 
-  // Return cached headers if they exist and aren't expired
-  if (headerCache[cacheKey] && now - headerCache[cacheKey].timestamp < TOKEN_REFRESH_INTERVAL) {
+  // Return cached headers if they exist and aren't expired and not forcing refresh
+  if (
+    !forceRefresh &&
+    headerCache[cacheKey] &&
+    now - headerCache[cacheKey].timestamp < TOKEN_REFRESH_INTERVAL
+  ) {
     return headerCache[cacheKey].headers
   }
 

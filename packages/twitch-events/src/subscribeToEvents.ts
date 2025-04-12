@@ -1,5 +1,4 @@
-import { logger } from '@dotabod/shared-utils'
-import { fetchConduitId } from './fetchConduitId.js'
+import { fetchConduitId, logger } from '@dotabod/shared-utils'
 import { initUserSubscriptions } from './initUserSubscriptions.js'
 import { subscribeToAuthGrantOrRevoke } from './subscribeChatMessagesForUser.js'
 import { getAccountIds } from './twitch/lib/getAccountIds.js'

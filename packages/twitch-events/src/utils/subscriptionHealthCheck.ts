@@ -1,7 +1,6 @@
-import { getTwitchHeaders, logger, checkBotStatus } from '@dotabod/shared-utils'
+import { getTwitchHeaders, logger, checkBotStatus, fetchConduitId } from '@dotabod/shared-utils'
 import type { TwitchEventTypes } from '../TwitchEventTypes.js'
 import { eventSubMap } from '../chatSubIds.js'
-import { fetchConduitId } from '../fetchConduitId.js'
 import { genericSubscribe } from '../subscribeChatMessagesForUser.js'
 import { getAccountIds } from '../twitch/lib/getAccountIds.js'
 import { rateLimiter } from './rateLimiterCore.js'

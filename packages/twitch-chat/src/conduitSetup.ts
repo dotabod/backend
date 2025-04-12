@@ -1,4 +1,10 @@
-import { botStatus, getTwitchHeaders, logger } from '@dotabod/shared-utils'
+import {
+  botStatus,
+  getTwitchHeaders,
+  logger,
+  updateConduitShard as sharedUpdateConduitShard,
+} from '@dotabod/shared-utils'
+import { io as socketClient } from 'socket.io-client'
 import type { TwitchEventTypes } from './event-handlers/events.js'
 import { offlineEvent } from './event-handlers/offlineEvent.js'
 import { onlineEvent } from './event-handlers/onlineEvent.js'
@@ -8,59 +14,65 @@ import { updateUserEvent } from './event-handlers/updateUserEvent.js'
 import { EventsubSocket } from './eventSubSocket.js'
 import { twitchEvent } from './events.js'
 import { handleChatMessage } from './handleChat.js'
-import type {
-  TwitchConduitCreateResponse,
-  TwitchConduitResponse,
-  TwitchConduitShardRequest,
-  TwitchConduitShardResponse,
-} from './types.js'
 import { emitEvent, hasDotabodSocket } from './utils/socketManager.js'
 
 const headers = await getTwitchHeaders()
 
-// Function to fetch conduit ID
-async function fetchConduitId(): Promise<string> {
-  const conduitsReq = await fetch('https://api.twitch.tv/helix/eventsub/conduits', {
-    method: 'GET',
-    headers,
+// Create a socket client to connect to the twitch-events service
+const eventsSocket = socketClient('http://localhost:5015', {
+  reconnection: true,
+  reconnectionAttempts: Number.POSITIVE_INFINITY,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  timeout: 20000,
+})
+
+// Set up event handlers for the socket
+eventsSocket.on('connect', () => {
+  logger.info('[TWITCHCHAT] Connected to twitch-events service')
+})
+
+eventsSocket.on('connect_error', (error) => {
+  logger.error('[TWITCHCHAT] Failed to connect to twitch-events service', {
+    error: error.message,
   })
+})
 
-  if (conduitsReq.status === 401) {
-    throw new Error('Authorization header required with an app access token')
-  }
+eventsSocket.on('disconnect', (reason) => {
+  logger.info('[TWITCHCHAT] Disconnected from twitch-events service', { reason })
+})
 
-  if (!conduitsReq.ok) {
-    throw new Error(`Failed to fetch conduits: ${conduitsReq.status}`)
-  }
+// Function to fetch conduit ID via socket.io
+async function getConduitId(forceRefresh = false): Promise<string> {
+  return new Promise((resolve, reject) => {
+    // Set timeout for the request
+    const timeout = setTimeout(() => {
+      reject(new Error('Timeout waiting for conduit data'))
+    }, 15000)
 
-  const { data } = (await conduitsReq.json()) as TwitchConduitResponse
-  logger.info('Conduit ID', { data })
-  return data[0]?.id || createConduit()
-}
+    // Set up one-time listeners for the response
+    eventsSocket.once('conduitData', (data) => {
+      clearTimeout(timeout)
+      if (data?.conduitId) {
+        logger.info('[TWITCHCHAT] Received conduit ID', {
+          conduitId: `${data.conduitId.substring(0, 8)}...`,
+        })
+        resolve(data.conduitId)
+      } else {
+        reject(new Error('Invalid conduit data received'))
+      }
+    })
 
-/**
- * Creates a new Twitch EventSub conduit
- * @returns Promise resolving to the created conduit ID
- * @throws Error if conduit creation fails
- */
-async function createConduit(): Promise<string> {
-  logger.info('Creating conduit')
-  const createReq = await fetch('https://api.twitch.tv/helix/eventsub/conduits', {
-    method: 'POST',
-    headers: {
-      ...headers,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ shard_count: 1 }),
+    eventsSocket.once('conduitError', (error) => {
+      clearTimeout(timeout)
+      logger.error('[TWITCHCHAT] Error getting conduit ID', { error })
+      reject(new Error(error.error || 'Unknown error getting conduit ID'))
+    })
+
+    // Request the conduit data
+    logger.info('[TWITCHCHAT] Requesting conduit data', { forceRefresh })
+    eventsSocket.emit('getConduitData', { forceRefresh })
   })
-
-  if (!createReq.ok) {
-    throw new Error(`Failed to create conduit: ${createReq.status} ${await createReq.text()}`)
-  }
-
-  const { data } = (await createReq.json()) as TwitchConduitCreateResponse
-
-  return data[0].id
 }
 
 /**
@@ -73,72 +85,30 @@ async function updateConduitShard(
   conduitId: string,
   retryCount = 0,
 ): Promise<void> {
-  const body: TwitchConduitShardRequest = {
-    conduit_id: conduitId,
-    shards: [
-      {
-        id: 0,
-        transport: {
-          method: 'websocket',
-          session_id,
-        },
-      },
-    ],
-  }
-
-  const conduitUpdate = await fetch('https://api.twitch.tv/helix/eventsub/conduits/shards', {
-    method: 'PATCH',
-    headers: {
-      ...headers,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (conduitUpdate.status === 401) {
-    logger.error('Unauthorized when assigning socket to shard, refreshing token')
-
-    // Get fresh headers with new token
-    const freshHeaders = await getTwitchHeaders()
-    Object.assign(headers, freshHeaders)
-
-    // Retry with exponential backoff (max 5 retries)
-    if (retryCount < 5) {
-      const delay = Math.min(1000 * 2 ** retryCount, 30000) // Exponential backoff with 30s max
-      logger.info(`Retrying shard update in ${delay}ms, attempt ${retryCount + 1}`)
-
-      setTimeout(() => {
-        updateConduitShard(session_id, conduitId, retryCount + 1)
-      }, delay)
-    } else {
-      logger.error('Max retries reached for shard update after token refresh')
+  try {
+    const success = await sharedUpdateConduitShard(session_id, conduitId, retryCount)
+    if (!success && retryCount < 5) {
+      // If shared implementation failed but we still have retries left,
+      // try getting a fresh conduit and retrying
+      logger.info('[TWITCHCHAT] Shared conduit update failed, fetching fresh conduit')
+      const freshConduitId = await getConduitId(true)
+      return updateConduitShard(session_id, freshConduitId, retryCount + 1)
     }
-    return
-  }
+  } catch (error) {
+    logger.error('[TWITCHCHAT] Error updating conduit shard', { error })
 
-  if (conduitUpdate.status !== 202) {
-    logger.error('Failed to assign socket to shard', { reason: await conduitUpdate.text() })
-
-    // Retry with exponential backoff for other errors as well
     if (retryCount < 5) {
       const delay = Math.min(1000 * 2 ** retryCount, 30000)
-      logger.info(`Retrying shard update in ${delay}ms, attempt ${retryCount + 1}`)
+      logger.info(
+        `[TWITCHCHAT] Retrying shard update after error in ${delay}ms, attempt ${retryCount + 1}`,
+      )
 
-      setTimeout(() => {
-        updateConduitShard(session_id, conduitId, retryCount + 1)
-      }, delay)
+      await new Promise((resolve) => setTimeout(resolve, delay))
+      return updateConduitShard(session_id, conduitId, retryCount + 1)
     }
-    return
-  }
-
-  logger.info('Socket assigned to shard')
-  const response = (await conduitUpdate.json()) as TwitchConduitShardResponse
-  if (response.errors && response.errors.length > 0) {
-    logger.error('Failed to update the shard', { errors: response.errors })
-  } else {
-    logger.info('Shard Updated')
   }
 }
+
 const legacyEventHandlerNames: Partial<Record<keyof TwitchEventTypes, string>> = {
   'channel.prediction.begin': 'subscribeToChannelPredictionBeginEvents',
   'channel.prediction.progress': 'subscribeToChannelPredictionProgressEvents',
@@ -270,131 +240,147 @@ const eventHandlers: Partial<Record<keyof TwitchEventTypes, (data: any) => void>
 
 // Initialize WebSocket and handle events
 async function initializeSocket() {
-  const conduitId = await fetchConduitId()
-  logger.info('Conduit ID', { conduitId })
+  try {
+    // Get the conduit ID from the twitch-events service
+    const conduitId = await getConduitId()
+    logger.info('[TWITCHCHAT] Using conduit ID from twitch-events service', {
+      conduitId: `${conduitId.substring(0, 8)}...`,
+    })
 
-  const mySocket = new EventsubSocket({
-    disableAutoReconnect: false, // Ensure auto reconnect is enabled
-  })
+    const mySocket = new EventsubSocket({
+      disableAutoReconnect: false, // Ensure auto reconnect is enabled
+    })
 
-  mySocket.on('connected', async (session_id: string) => {
-    logger.info(`Socket has connected ${session_id} for ${conduitId}`)
-    await updateConduitShard(session_id, conduitId)
-  })
+    mySocket.on('connected', async (session_id: string) => {
+      logger.info(`Socket has connected ${session_id} for ${conduitId}`)
+      await updateConduitShard(session_id, conduitId)
+    })
 
-  mySocket.on('error', (error: Error) => {
-    logger.error('Socket Error', { error })
-  })
+    mySocket.on('error', (error: Error) => {
+      logger.error('Socket Error', { error })
+    })
 
-  // Track last revocation time for each user to implement debouncing
-  const lastRevocationTime = new Map<string, number>()
-  const DEBOUNCE_TIME = 3000 // 3 seconds debounce
+    mySocket.on('close', (code: number, reason: string) => {
+      logger.info(`Socket closed with code ${code} and reason: ${reason}`)
 
-  // Track subscription types received per user during debounce period
-  const userSubscriptionTypes = new Map<string, Set<string>>()
+      // Handle specific close codes
+      if (code === 4003) {
+        logger.info('Connection unused, will reconnect when ready')
+      }
+    })
 
-  mySocket.on(
-    'revocation',
-    ({
-      payload,
-    }: {
-      payload: {
-        subscription: {
-          condition: {
-            broadcaster_user_id?: string
-            user_id?: string
+    // Track last revocation time for each user to implement debouncing
+    const lastRevocationTime = new Map<string, number>()
+    const DEBOUNCE_TIME = 3000 // 3 seconds debounce
+
+    // Track subscription types received per user during debounce period
+    const userSubscriptionTypes = new Map<string, Set<string>>()
+
+    mySocket.on(
+      'revocation',
+      ({
+        payload,
+      }: {
+        payload: {
+          subscription: {
+            condition: {
+              broadcaster_user_id?: string
+              user_id?: string
+            }
+            cost: number
+            created_at: string
+            id: string
+            status: string
+            transport: {
+              conduit_id: string
+              method: string
+            }
+            type: string
+            version: number
           }
-          cost: number
-          created_at: string
-          id: string
-          status: string
-          transport: {
-            conduit_id: string
-            method: string
+          event?: {
+            user_id: string
           }
-          type: string
-          version: number
         }
-        event?: {
-          user_id: string
+      }) => {
+        // Twitch sent 8k revocations for the bot when the bot got banned
+        // The user_id was the bot
+        // The broadcaster_user_id was the streamer
+
+        const userId =
+          payload.subscription?.condition?.broadcaster_user_id ||
+          payload?.event?.user_id ||
+          payload.subscription?.condition?.user_id
+
+        if (!userId) {
+          logger.info('No user_id or broadcaster_user_id found in revocation event', { payload })
+          return
         }
-      }
-    }) => {
-      // Twitch sent 8k revocations for the bot when the bot got banned
-      // The user_id was the bot
-      // The broadcaster_user_id was the streamer
 
-      const userId =
-        payload.subscription?.condition?.broadcaster_user_id ||
-        payload?.event?.user_id ||
-        payload.subscription?.condition?.user_id
-
-      if (!userId) {
-        logger.info('No user_id or broadcaster_user_id found in revocation event', { payload })
-        return
-      }
-
-      if (
-        payload.subscription.type === 'channel.chat.message' &&
-        payload.subscription?.condition?.user_id === process.env.TWITCH_BOT_PROVIDERID &&
-        payload.subscription.condition.broadcaster_user_id === process.env.TWITCH_BOT_PROVIDERID
-      ) {
-        logger.info('Bot was banned by Twitch! Checked the in-memory bot status')
-        botStatus.isBanned = true
-        twitchEvent.emit('revoke', process.env.TWITCH_BOT_PROVIDERID)
-        return
-      }
-
-      const now = Date.now()
-      const lastTime = lastRevocationTime.get(userId) || 0
-      const subscriptionType = payload.subscription.type
-
-      // Check if we're still within a debounce period for this user
-      if (now - lastTime <= DEBOUNCE_TIME) {
-        // Add this subscription type to the set for this user
-        if (!userSubscriptionTypes.has(userId)) {
-          userSubscriptionTypes.set(userId, new Set())
+        if (
+          payload.subscription.type === 'channel.chat.message' &&
+          payload.subscription?.condition?.user_id === process.env.TWITCH_BOT_PROVIDERID &&
+          payload.subscription.condition.broadcaster_user_id === process.env.TWITCH_BOT_PROVIDERID
+        ) {
+          logger.info('Bot was banned by Twitch! Checked the in-memory bot status')
+          botStatus.isBanned = true
+          twitchEvent.emit('revoke', process.env.TWITCH_BOT_PROVIDERID)
+          return
         }
-        userSubscriptionTypes.get(userId)?.add(subscriptionType)
-      } else {
-        // Outside debounce period, reset tracking for this user
-        userSubscriptionTypes.set(userId, new Set([subscriptionType]))
-        lastRevocationTime.set(userId, now)
-      }
 
-      // Only emit if either:
-      // 1. We have multiple subscription types within the debounce period, or
-      // 2. The subscription type is not 'channel.chat.message'
-      const subscriptionTypes = userSubscriptionTypes.get(userId) || new Set()
-      const hasMultipleTypes = subscriptionTypes.size > 1
-      const isOnlyChatMessage =
-        subscriptionTypes.size === 1 && subscriptionTypes.has('channel.chat.message')
+        const now = Date.now()
+        const lastTime = lastRevocationTime.get(userId) || 0
+        const subscriptionType = payload.subscription.type
 
-      if (isOnlyChatMessage) {
-        // Bot banned
-        botStatus.isBanned = true
-        logger.info('Bot was banned by Twitch! isOnlyChatMessage')
-      }
+        // Check if we're still within a debounce period for this user
+        if (now - lastTime <= DEBOUNCE_TIME) {
+          // Add this subscription type to the set for this user
+          if (!userSubscriptionTypes.has(userId)) {
+            userSubscriptionTypes.set(userId, new Set())
+          }
+          userSubscriptionTypes.get(userId)?.add(subscriptionType)
+        } else {
+          // Outside debounce period, reset tracking for this user
+          userSubscriptionTypes.set(userId, new Set([subscriptionType]))
+          lastRevocationTime.set(userId, now)
+        }
 
-      if (hasMultipleTypes || !isOnlyChatMessage) {
-        logger.info('Revocation with multiple types or non-chat type', {
-          userId,
-          types: Array.from(subscriptionTypes),
-          payload,
-        })
-        twitchEvent.emit('revoke', userId)
-      } else {
-        logger.info('Skipping revoke emit for single chat.message revocation', {
-          userId,
-          type: subscriptionType,
-        })
-      }
-    },
-  )
+        // Only emit if either:
+        // 1. We have multiple subscription types within the debounce period, or
+        // 2. The subscription type is not 'channel.chat.message'
+        const subscriptionTypes = userSubscriptionTypes.get(userId) || new Set()
+        const hasMultipleTypes = subscriptionTypes.size > 1
+        const isOnlyChatMessage =
+          subscriptionTypes.size === 1 && subscriptionTypes.has('channel.chat.message')
 
-  Object.entries(eventHandlers).forEach(([event, handler]) => {
-    mySocket.on(event, handler)
-  })
+        if (isOnlyChatMessage) {
+          // Bot banned
+          botStatus.isBanned = true
+          logger.info('Bot was banned by Twitch! isOnlyChatMessage')
+        }
+
+        if (hasMultipleTypes || !isOnlyChatMessage) {
+          logger.info('Revocation with multiple types or non-chat type', {
+            userId,
+            types: Array.from(subscriptionTypes),
+            payload,
+          })
+          twitchEvent.emit('revoke', userId)
+        } else {
+          logger.info('Skipping revoke emit for single chat.message revocation', {
+            userId,
+            type: subscriptionType,
+          })
+        }
+      },
+    )
+
+    Object.entries(eventHandlers).forEach(([event, handler]) => {
+      mySocket.on(event, handler)
+    })
+  } catch (error) {
+    logger.error('Exception when initializing socket', { error })
+  }
 }
 
 export { initializeSocket }

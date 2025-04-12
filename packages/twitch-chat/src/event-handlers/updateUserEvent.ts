@@ -1,5 +1,4 @@
-import { logger } from '@dotabod/shared-utils'
-import supabase from '../db/supabase.js'
+import { logger, supabase } from '@dotabod/shared-utils'
 
 // const botApi = getBotInstance()
 interface TwitchUserUpdateEvent {

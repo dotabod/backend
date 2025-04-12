@@ -1,14 +1,50 @@
 import { logger } from '@dotabod/shared-utils'
 import { botStatus } from '@dotabod/shared-utils'
+import { fetchConduitId } from '@dotabod/shared-utils'
 import { Server } from 'socket.io'
 import { handleNewUser } from '../handleNewUser.js'
 import { revokeEvent } from '../twitch/lib/revokeEvent.js'
 
-export const socketIo = new Server(5015)
+export const socketIo = new Server(5015, {
+  cors: {
+    origin: '*', // This allows any origin - adjust for production
+    methods: ['GET', 'POST'],
+  },
+})
 
 // the socketio hooks onto the listener http server that it creates
 export const DOTABOD_EVENTS_ROOM = 'twitch-channel-events'
 export let eventsIOConnected = false
+
+/**
+ * Sends the conduit ID to the requesting client
+ * @param socket - The socket.io socket to emit to
+ * @param forceRefresh - Whether to force refresh the conduit ID
+ */
+async function sendConduitData(socket, forceRefresh = false) {
+  try {
+    logger.info('[TWITCHEVENTS] Getting conduit data', { forceRefresh })
+    const conduitId = await fetchConduitId(forceRefresh)
+
+    if (!conduitId) {
+      logger.error('[TWITCHEVENTS] Failed to fetch conduit ID')
+      socket.emit('conduitError', { error: 'Failed to fetch conduit ID' })
+      return
+    }
+
+    logger.info('[TWITCHEVENTS] Sending conduit data', {
+      conduitId: `${conduitId.substring(0, 8)}...`,
+    })
+    socket.emit('conduitData', { conduitId })
+  } catch (error) {
+    logger.error('[TWITCHEVENTS] Error fetching conduit data', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    socket.emit('conduitError', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
 
 export const setupSocketIO = () => {
   socketIo.on('connection', async (socket) => {
@@ -42,6 +78,11 @@ export const setupSocketIO = () => {
       eventsIOConnected = false
     })
 
+    // Handle conduit data requests from twitch-chat
+    socket.on('getConduitData', (options = { forceRefresh: false }) => {
+      sendConduitData(socket, options.forceRefresh)
+    })
+
     socket.on('grant', (providerAccountId: string) => {
       logger.info('[TWITCHEVENTS] Granting events for user', { providerAccountId })
       if (providerAccountId === process.env.TWITCH_BOT_PROVIDERID) {
@@ -51,7 +92,6 @@ export const setupSocketIO = () => {
     })
 
     socket.on('revoke', (providerAccountId: string) => {
-      logger.info('[TWITCHEVENTS] Revoking events for user', { providerAccountId })
       revokeEvent({ providerAccountId })
     })
 

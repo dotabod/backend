@@ -1,8 +1,7 @@
-import { checkBotStatus, logger } from '@dotabod/shared-utils'
+import { checkBotStatus, fetchConduitId, logger } from '@dotabod/shared-utils'
 import type { TwitchEventTypes } from './TwitchEventTypes.js'
 import { eventSubMap } from './chatSubIds.js'
 import { ensureBotIsModerator } from './ensureBotIsModerator.js'
-import { fetchConduitId } from './fetchConduitId.js'
 import { genericSubscribe } from './subscribeChatMessagesForUser.js'
 
 // Get existing conduit ID and subscriptions
@@ -60,7 +59,12 @@ async function subscribeWithRetry(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const success = await genericSubscribe(conduitId, providerAccountId, type)
+      // Force refresh token if this is a retry attempt
+      const forceRefresh = attempt > 1
+
+      // Try to subscribe
+      const success = await genericSubscribe(conduitId, providerAccountId, type, forceRefresh)
+
       if (success) {
         if (attempt > 1) {
           logger.info('[TWITCHEVENTS] Subscription succeeded after retry', {
@@ -79,11 +83,16 @@ async function subscribeWithRetry(
       })
     } catch (error) {
       lastError = error as Error
+
+      // Log the actual error details for debugging
+      const errorMessage = error instanceof Error ? error.message : String(error)
+
       logger.debug('[TWITCHEVENTS] Subscription attempt failed', {
         type,
         providerAccountId,
         attempt,
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
+        errorObject: JSON.stringify(error, Object.getOwnPropertyNames(error)),
       })
 
       // No need to retry if not a critical subscription
@@ -102,30 +111,22 @@ async function subscribeWithRetry(
       }
     }
   }
-  // Log only if all retries failed
+
+  // Log only if all retries failed, with better error information
   if (isCritical) {
     logger.error('[TWITCHEVENTS] Failed to create critical subscription after retries', {
       type,
       providerAccountId,
-      error: lastError
-        ? typeof lastError === 'object'
-          ? JSON.stringify(lastError, Object.getOwnPropertyNames(lastError))
-          : String(lastError)
-        : 'Unknown error',
-      errorType: lastError ? typeof lastError : 'null',
-      errorStack:
-        lastError && typeof lastError === 'object' ? (lastError as Error).stack : undefined,
+      error: lastError ? lastError.message : 'Unknown error',
+      errorDetails: lastError ? JSON.stringify(lastError) : undefined,
+      errorStack: lastError?.stack,
     })
   } else {
     // Log non-critical failures too
     logger.warn('[TWITCHEVENTS] Failed to create non-critical subscription', {
       type,
       providerAccountId,
-      error: lastError
-        ? typeof lastError === 'object'
-          ? JSON.stringify(lastError, Object.getOwnPropertyNames(lastError))
-          : String(lastError)
-        : 'Unknown error',
+      error: lastError ? lastError.message : 'Unknown error',
     })
   }
 

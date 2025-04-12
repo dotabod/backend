@@ -1,8 +1,17 @@
 import { logger } from '@dotabod/shared-utils'
 import { Server } from 'socket.io'
 
-// Socket.io server instance
-export const io = new Server(5005)
+// Socket.io server instance with improved connection handling
+export const io = new Server(5005, {
+  pingTimeout: 60000, // Increase ping timeout
+  pingInterval: 25000, // Decrease ping interval for faster detection of disconnections
+  connectTimeout: 45000, // Increase connection timeout
+  cors: {
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST'],
+  },
+  transports: ['websocket', 'polling'], // Support both WebSocket and polling
+})
 
 // Map to track connected sockets
 const connectedSockets = new Map<string, boolean>()
@@ -15,11 +24,13 @@ export function hasDotabodSocket(): boolean {
 // Add a socket to the connected sockets map
 export function addSocket(socketId: string): void {
   connectedSockets.set(socketId, true)
+  logger.info(`Socket ${socketId} added, total sockets: ${connectedSockets.size}`)
 }
 
 // Remove a socket from the connected sockets map
 export function removeSocket(socketId: string): void {
   connectedSockets.delete(socketId)
+  logger.info(`Socket ${socketId} removed, remaining sockets: ${connectedSockets.size}`)
 }
 
 // Emit a chat message to connected sockets
@@ -48,38 +59,48 @@ export function emitEvent(type: string, broadcasterId: string, data: any): void 
 
 // Initialize socket connections
 export function setupSocketServer(): void {
+  // Set up error handling for the server
+  io.engine.on('connection_error', (err) => {
+    logger.error('Socket.io server connection error:', err)
+  })
+
   io.on('connection', (socket) => {
-    logger.info('Found a connection!')
+    logger.info(`Found a connection! Socket ID: ${socket.id}`)
+
     try {
       void socket.join('twitch-chat-messages')
       // Track this specific socket
       addSocket(socket.id)
     } catch (e) {
-      logger.info('Could not join twitch-chat-messages socket')
+      logger.error('Could not join twitch-chat-messages socket', e)
       return
     }
 
     socket.on('reconnect', () => {
-      logger.info('Reconnecting to the server')
+      logger.info(`Reconnecting to the server. Socket ID: ${socket.id}`)
       addSocket(socket.id)
     })
 
+    socket.on('reconnect_attempt', (attemptNumber) => {
+      logger.info(`Reconnection attempt #${attemptNumber}. Socket ID: ${socket.id}`)
+    })
+
     socket.on('reconnect_failed', () => {
-      logger.info('Reconnect failed')
+      logger.error(`Reconnect failed. Socket ID: ${socket.id}`)
       removeSocket(socket.id)
     })
 
     socket.on('reconnect_error', (error) => {
-      logger.info('Reconnect error', error)
+      logger.error(`Reconnect error. Socket ID: ${socket.id}`, error)
       removeSocket(socket.id)
     })
 
+    socket.on('error', (error) => {
+      logger.error(`Socket error. Socket ID: ${socket.id}`, error)
+    })
+
     socket.on('disconnect', (reason, details) => {
-      logger.info(
-        'We lost the server! Respond to all messages with "server offline"',
-        reason,
-        details,
-      )
+      logger.info(`Socket disconnected. Socket ID: ${socket.id}. Reason: ${reason}`, details)
       removeSocket(socket.id)
     })
   })

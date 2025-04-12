@@ -1,7 +1,5 @@
-import { botStatus, logger } from '@dotabod/shared-utils'
-import { getTwitchHeaders } from '@dotabod/shared-utils'
+import { botStatus, getTwitchHeaders, logger, supabase } from '@dotabod/shared-utils'
 import { eventSubMap } from '../../chatSubIds.js'
-import supabase from '../../db/supabase.js'
 
 // Constants
 const headers = await getTwitchHeaders()
@@ -91,8 +89,6 @@ export async function revokeEvent({ providerAccountId }: { providerAccountId: st
     logger.info('Bot was revoked by Twitch in events!')
     botStatus.isBanned = true
   }
-
-  logger.info(`${providerAccountId} just revoked, debouncing for 10s`)
 
   // Clear any existing timeout for this user
   if (pendingRevokes.has(providerAccountId)) {

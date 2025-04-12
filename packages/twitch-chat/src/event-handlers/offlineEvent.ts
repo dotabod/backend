@@ -1,5 +1,4 @@
-import { logger } from '@dotabod/shared-utils'
-import supabase from '../db/supabase.js'
+import { logger, supabase } from '@dotabod/shared-utils'
 import { onlineEvents } from './events.js'
 
 interface TwitchOfflineEvent {
@@ -9,7 +8,7 @@ interface TwitchOfflineEvent {
 }
 
 export function offlineEvent({ payload: { event } }: { payload: { event: TwitchOfflineEvent } }) {
-  logger.info(`${event.broadcaster_user_id} just went offline`)
+  logger.info('updated offline event', { twitchId: event.broadcaster_user_id })
 
   // check onlineEvents to see if we have an online event for this user within the last 5 seconds
   // if we do, then we can safely assume that the offline event is a false positive
