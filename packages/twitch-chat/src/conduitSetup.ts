@@ -19,13 +19,7 @@ import { emitEvent, hasDotabodSocket } from './utils/socketManager.js'
 const headers = await getTwitchHeaders()
 
 // Create a socket client to connect to the twitch-events service
-const eventsSocket = socketClient('http://localhost:5015', {
-  reconnection: true,
-  reconnectionAttempts: Number.POSITIVE_INFINITY,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-  timeout: 20000,
-})
+const eventsSocket = twitchEvent
 
 // Set up event handlers for the socket
 eventsSocket.on('connect', () => {
