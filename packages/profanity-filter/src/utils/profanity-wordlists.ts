@@ -234,11 +234,20 @@ export const evasionPatterns = [
   /[f]+[\s_]*[u]+[\s_]*[c]+[\s_]*[k]+/i, // F*u*c*k variations
   /[s]+[\s_]*[h]+[\s_]*[i]+[\s_]*[t]+/i, // S*h*i*t variations
   /[a]+[\s_]*[s]+[\s_]*[s]+/i, // A*s*s variations
+  /[n]+[\s_]*[i1!]+[\s_]*([gq]|9)+[\s_]*([gq]|9)+[\s_]*[e3]+[\s_]*[r]+/i, // n*i*g*g*e*r variations including niqger
+
+  // Variation with "trans" prefix - catches obfuscated variants
+  /[t]+[\s_]*[r]+[\s_]*[a@4]+[\s_]*[n]+[\s_]*[s]+[\s_]*.*?[n]+[\s_]*[i1!]+[\s_]*([gq]|9)+/i,
 
   // Character substitutions
   /[f][\W_]*[u@4][\W_]*[c][\W_]*[k]/i, // f*u*c*k with symbols
   /[s][\W_]*[h][\W_]*[i1!][\W_]*[t]/i, // s*h*i*t with symbols
   /[b][\W_]*[i1!][\W_]*[t][\W_]*[c][\W_]*[h]/i, // b*i*t*c*h with symbols
+  /[n][\W_]*[i1!][\W_]*([gq]|9)[\W_]*([gq]|9)[\W_]*[e3][\W_]*[r]/i, // n*i*g*g*e*r with symbols including "q" for "g"
+
+  // More generalized patterns for detecting common evasion techniques
+  // This handles compound words where offensive terms are combined with prefixes/suffixes
+  /(?:pre|post|trans|anti|pro)?[\W_]*[n][\W_]*[i1!][\W_]*([gq]|9)[\W_]*(?:[gq]|9)[\W_]*[ae3][\W_]*[r]/i,
 ]
 
 /**

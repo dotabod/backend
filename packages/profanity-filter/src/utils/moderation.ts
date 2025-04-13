@@ -13,12 +13,7 @@ import {
 import profanityUtil from 'profanity-util'
 import { flatWords as russianBadWordsList } from 'russian-bad-words'
 import wash from 'washyourmouthoutwithsoap'
-import {
-  detectChineseProfanity,
-  detectEvasionTactics,
-  detectMultilingualProfanity,
-  detectRussianProfanity,
-} from './profanity-wordlists.js'
+import { detectEvasionTactics, detectRussianProfanity } from './profanity-wordlists.js'
 import { createTextVariations } from './text-normalization.js'
 
 interface ModerationResponse {
@@ -38,16 +33,18 @@ interface ModerationResponse {
 // Initialize libraries
 const badWords = new Filter()
 
-// Initialize leo-profanity with all available dictionaries
+// Initialize leo-profanity with only English and Russian dictionaries
 leoProfanity.loadDictionary('en') // English
-leoProfanity.loadDictionary('fr') // French
 leoProfanity.loadDictionary('ru') // Russian
 
 // Add Russian bad words from the russian-bad-words library to leo-profanity
 leoProfanity.add(russianBadWordsList)
 
-// Get supported locales from washyourmouthoutwithsoap
-const supportedLocales = wash.supported()
+// Get only English and Russian locales from washyourmouthoutwithsoap
+const allSupportedLocales = wash.supported()
+const supportedLocales = allSupportedLocales.filter(
+  (locale) => locale.startsWith('en') || locale.startsWith('ru'),
+)
 
 // Initialize obscenity matcher
 const matcher = new RegExpMatcher({
@@ -214,7 +211,7 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
   // Create text variations to enhance detection
   const textVariations = createTextVariations(text)
 
-  // Layer 1: Multi-language check with washyourmouthoutwithsoap (50+ languages)
+  // Layer 1: Check with washyourmouthoutwithsoap (English and Russian only)
   try {
     const washResult = checkWashProfanity(text)
     if (washResult.detected) {
@@ -242,7 +239,7 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
     console.error('Error using bad-words library:', error)
   }
 
-  // Layer 4: Check with leo-profanity (supports EN, FR, RU)
+  // Layer 4: Check with leo-profanity (using EN, RU)
   try {
     if (leoProfanity.check(text)) {
       return '***'
@@ -262,11 +259,12 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
     console.error('Error using profanity-util library:', error)
   }
 
-  // Layer 6: Check with naughty-words (multilingual lists)
+  // Layer 6: Check with naughty-words (English and Russian only)
   try {
+    const allowedLangs = ['en', 'ru']
     for (const lang of Object.keys(naughtyWords)) {
-      // Skip non-array properties
-      if (!Array.isArray(naughtyWords[lang])) continue
+      // Skip non-array properties and non-English/Russian languages
+      if (!Array.isArray(naughtyWords[lang]) || !allowedLangs.includes(lang)) continue
 
       // For each language's word list
       const wordList = naughtyWords[lang] as string[]
@@ -291,14 +289,14 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
     console.error('Error using naughty-words library:', error)
   }
 
-  // Layer 7: Check each variation with curse-filter (supports multiple languages)
+  // Layer 7: Check each variation with curse-filter (English-focused)
   for (const variation of textVariations) {
     if (detect(variation)) {
       return '***'
     }
   }
 
-  // Layer 8: Check each variation with @2toad/profanity (supports multi-language)
+  // Layer 8: Check each variation with @2toad/profanity (configure for English)
   for (const variation of textVariations) {
     if (profanity.exists(variation)) {
       return '***'
@@ -313,8 +311,8 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
     }
   }
 
-  // Layer 10: Custom multilingual profanity detection
-  if (detectMultilingualProfanity(text)) {
+  // Layer 10: Custom Russian profanity detection
+  if (detectRussianProfanity(text) || detectEvasionTactics(text)) {
     return '***'
   }
 
@@ -406,7 +404,7 @@ function getProfanityDetailsSingle(text: string): {
   // Create text variations for enhanced detection
   const textVariations = createTextVariations(text)
 
-  // Check with washyourmouthoutwithsoap (multi-language)
+  // Check with washyourmouthoutwithsoap (English and Russian only)
   try {
     const washResult = checkWashProfanity(text)
     if (washResult.detected) {
@@ -478,11 +476,12 @@ function getProfanityDetailsSingle(text: string): {
     console.error('Error using profanity-util library in details:', error)
   }
 
-  // Check with naughty-words (multilingual lists)
+  // Check with naughty-words (English and Russian only)
   try {
+    const allowedLangs = ['en', 'ru']
     for (const lang of Object.keys(naughtyWords)) {
-      // Skip non-array properties
-      if (!Array.isArray(naughtyWords[lang])) continue
+      // Skip non-array properties and non-English/Russian languages
+      if (!Array.isArray(naughtyWords[lang]) || !allowedLangs.includes(lang)) continue
 
       // For each language's word list
       const wordList = naughtyWords[lang] as string[]
@@ -538,13 +537,9 @@ function getProfanityDetailsSingle(text: string): {
     }
   }
 
-  // Check with custom multilingual detection
+  // Check with custom wordlists
   if (detectRussianProfanity(text)) {
     return { isFlagged: true, source: 'custom-wordlist', language: 'russian' }
-  }
-
-  if (detectChineseProfanity(text)) {
-    return { isFlagged: true, source: 'custom-wordlist', language: 'chinese' }
   }
 
   if (detectEvasionTactics(text)) {
