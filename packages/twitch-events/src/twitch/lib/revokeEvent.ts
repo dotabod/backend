@@ -45,12 +45,10 @@ async function disableChannel(broadcasterId: string) {
     logger.info('twitch-events Failed to find user', { twitchId: broadcasterId })
     return
   }
-
-  // Delete all their current steam accounts
-  // In the event that they are banned, they can now connect their old steam accounts
-  // to a new Twitch account
-  // TODO: This deleted their accounts when Dotabod got banned on Twitch instead of their channel being banned
-  // await supabase.from('steam_accounts').delete().eq('userId', user.userId)
+  // Remove all steam accounts associated with this user
+  // This allows them to link these steam accounts to a different Twitch account
+  // if they need to create a new one after being banned
+  await supabase.from('steam_accounts').delete().eq('userId', user.userId)
 
   const { data: settings } = await supabase
     .from('settings')
