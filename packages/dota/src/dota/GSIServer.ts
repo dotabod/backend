@@ -241,9 +241,8 @@ class GSIServer implements GSIServerInterface {
     initDotaPatchChecker(5)
 
     // Set up repeating timer for batch clip deletion
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    setInterval(this.processClipDeletionQueue, CLIP_DELETE_INTERVAL_MS)
-    logger.info(`[GSI] Clip deletion interval started (${CLIP_DELETE_INTERVAL_MS}ms)`)
+    // setInterval(this.processClipDeletionQueue, CLIP_DELETE_INTERVAL_MS)
+    // logger.info(`[GSI] Clip deletion interval started (${CLIP_DELETE_INTERVAL_MS}ms)`)
   }
 
   init(): GSIServerInterface {
