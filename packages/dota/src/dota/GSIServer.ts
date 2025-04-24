@@ -10,7 +10,7 @@ import express, {
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import { Server, type Socket } from 'socket.io'
 
-import { logger } from '@dotabod/shared-utils'
+import { logger, getTwitchAPI } from '@dotabod/shared-utils'
 import getDBUser from '../db/getDBUser.js'
 import supabase from '../db/supabase.js'
 import { twitchEvent } from '../twitch/index.js'
@@ -27,6 +27,21 @@ import { newData, processChanges } from './globalEventEmitter.js'
 import { gsiHandlers } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import { validateToken } from './validateToken.js'
+import { deleteClipsBatch } from './lib/twitchUtils.js'
+
+// --- Clip Deletion Queue ---
+// Map<accountId: string, Set<clipSlug: string>>
+const clipsToDeleteQueue = new Map<string, Set<string>>()
+let isProcessingDeleteQueue = false // Simple lock
+const CLIP_DELETE_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
+
+export function addClipToDeletionQueue(accountId: string, clipSlug: string): void {
+  if (!clipsToDeleteQueue.has(accountId)) {
+    clipsToDeleteQueue.set(accountId, new Set<string>())
+  }
+  clipsToDeleteQueue.get(accountId)?.add(clipSlug)
+}
+// --- End Clip Deletion Queue ---
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
   const { token } = socket.handshake.auth
@@ -224,10 +239,84 @@ class GSIServer implements GSIServerInterface {
 
     // Initialize the Dota patch checker with a 5-minute check interval
     initDotaPatchChecker(5)
+
+    // Set up repeating timer for batch clip deletion
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    setInterval(this.processClipDeletionQueue, CLIP_DELETE_INTERVAL_MS)
+    logger.info(`[GSI] Clip deletion interval started (${CLIP_DELETE_INTERVAL_MS}ms)`)
   }
 
   init(): GSIServerInterface {
     return this
+  }
+
+  /**
+   * Processes the clip deletion queue, deleting clips in batches per user.
+   */
+  async processClipDeletionQueue(): Promise<void> {
+    if (isProcessingDeleteQueue) {
+      logger.warn('[GSI_ClipDelete] Deletion processing already in progress, skipping interval.')
+      return
+    }
+    if (clipsToDeleteQueue.size === 0) {
+      // logger.debug('[GSI_ClipDelete] Queue is empty, skipping processing.'); // Optional: debug logging
+      return
+    }
+
+    logger.info(
+      `[GSI_ClipDelete] Starting clip deletion queue processing (${clipsToDeleteQueue.size} users)`,
+    )
+    isProcessingDeleteQueue = true
+
+    // Create a copy of the keys to iterate over, as the map might be modified during async operations
+    const accountIds = [...clipsToDeleteQueue.keys()]
+
+    for (const accountId of accountIds) {
+      const slugsToDelete = clipsToDeleteQueue.get(accountId)
+      if (!slugsToDelete || slugsToDelete.size === 0) {
+        clipsToDeleteQueue.delete(accountId) // Clean up empty entry if somehow created
+        continue
+      }
+
+      const slugsArray = [...slugsToDelete]
+      const logContext = { accountId, clipCount: slugsArray.length }
+
+      try {
+        // 1. Get API client and token for the user
+        const apiClient = await getTwitchAPI(accountId)
+        const tokenInfo = await apiClient._authProvider.getAccessTokenForUser(accountId)
+
+        if (!tokenInfo?.accessToken) {
+          logger.error('[GSI_ClipDelete] Could not get auth token for user', logContext)
+          // Decide if we should keep these slugs for the next run or discard?
+          // For now, let's keep them and hope the token is available next time.
+          continue // Skip to the next user
+        }
+
+        // 2. Call the batch delete function
+        await deleteClipsBatch(slugsArray, tokenInfo.accessToken, logContext)
+
+        // 3. Clear the processed slugs for this user from the main queue
+        // Check if the set still exists in case it was cleared/modified elsewhere
+        const currentSet = clipsToDeleteQueue.get(accountId)
+        if (currentSet) {
+          slugsArray.forEach((slug) => currentSet.delete(slug))
+          // If the set becomes empty after deletion, remove the user entry
+          if (currentSet.size === 0) {
+            clipsToDeleteQueue.delete(accountId)
+          }
+        }
+      } catch (error: any) {
+        logger.error('[GSI_ClipDelete] Error processing deletion batch for user', {
+          ...logContext,
+          error: error.message,
+        })
+        // Keep slugs in the queue for retry on next interval
+      }
+    }
+
+    isProcessingDeleteQueue = false
+    logger.info('[GSI_ClipDelete] Finished clip deletion queue processing.')
   }
 }
 

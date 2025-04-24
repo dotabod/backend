@@ -3,6 +3,7 @@ import { is8500Plus } from '../../../utils/index.js'
 import type { allStates } from '../../lib/consts.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
+import { addClipToDeletionQueue } from '../../GSIServer.js'
 
 eventHandler.registerEvent('map:game_state', {
   handler: async (dotaClient, gameState: (typeof allStates)[number]) => {
@@ -64,6 +65,10 @@ eventHandler.registerEvent('map:game_state', {
               clipId,
             })
           })
+
+          // Add clip to the deletion queue instead of using setTimeout
+          addClipToDeletionQueue(accountId, clipId)
+          logger.info('Added clip to deletion queue', { ...logContext, clipId, accountId })
         } catch (processingError: any) {
           logger.error('Error processing clip', {
             ...logContext,
