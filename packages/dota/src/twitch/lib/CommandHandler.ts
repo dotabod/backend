@@ -5,6 +5,7 @@ import { type SettingKeys, getValueOrDefault } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import type { SocketClient } from '../../types.js'
 import type { SubscriptionRow } from '../../types/subscription.js'
+import { canAccessFeature } from '../../utils/subscription.js'
 import { chatClient } from '../chatClient.js'
 
 export interface UserType {
@@ -164,24 +165,47 @@ class CommandHandler {
       )
       return
     }
+    // Check if the command is enabled (via settings and subscription)
+    const isCommandEnabled = this.isEnabled(
+      message.channel.settings,
+      options.dbkey,
+      message.channel.client.subscription,
+    )
 
-    // Check if the command is enabled
-    if (
-      !this.isEnabled(message.channel.settings, options.dbkey, message.channel.client.subscription)
-    ) {
+    // Check if the command is currently on cooldown for this user/channel
+    const commandIsOnCooldown = this.isOnCooldown(
+      commandName,
+      options.cooldown ?? defaultCooldown,
+      message.user,
+      message.channel.id,
+    )
+
+    // If the command is disabled (by settings or subscription)
+    if (!isCommandEnabled) {
+      // Check if the specific reason for being disabled is lack of subscription access.
+      // We only message the user about subscription issues, not general disabled settings.
+      if (options.dbkey) {
+        const { hasAccess } = canAccessFeature(options.dbkey, message.channel.client.subscription)
+        // If disabled due to subscription AND not currently on cooldown (to avoid spamming the message)
+        if (!hasAccess && !commandIsOnCooldown) {
+          chatClient.say(
+            message.channel.name,
+            t('subscriptionRequired', {
+              channel: message.channel.name,
+              command: `!${commandName}`,
+              lng: message.channel.client.locale,
+            }),
+            message.user.messageId,
+          )
+        }
+      }
+      // Return because the command is disabled for whatever reason (settings or subscription)
       return
     }
 
-    // Check if the command is on cooldown
-    if (
-      this.isOnCooldown(
-        commandName,
-        options.cooldown ?? defaultCooldown,
-        message.user,
-        message.channel.id,
-      )
-    ) {
-      return // Skip commands that are on cooldown
+    // If the command is enabled, but currently on cooldown
+    if (commandIsOnCooldown) {
+      return // Silently return, command is on cooldown
     }
 
     // Check if the user has the required permissions
