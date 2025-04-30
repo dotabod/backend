@@ -240,6 +240,7 @@
   "stream_on": "Dotabod będzie traktować {{channel}} jako Na Żywo. Wpisz !offline, aby cofnąć",
   "streamDelay": "Aktualnie opóźnienie transmisji: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Na tym kanale nie ma opóźnienia transmisji",
+  "subscriptionRequired": "Odblokuj tę komendę oraz więcej funkcji z Dotabod Pro. Odwiedź dotabod.com, aby zasubskrybować lub dotabod.com/{{channel}}/gift aby podarować subskrypcję Twojemu streamerowi!",
   "tip": {
     "from": "Napiwek od {{- heroName}} {{emote}}",
     "to": "Tippujemy {{- heroName}} {{emote}}"
