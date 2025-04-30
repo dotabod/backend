@@ -6,7 +6,7 @@
     "pickup": "{{- heroName}} подбирает аегис!",
     "snatched": "{{- heroName}} крадёт аегис {{emote}}"
   },
-  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "aghs": "{{- heroName}} аганим: {{- title}} · {{- description}}",
   "apm_one": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
@@ -38,8 +38,8 @@
     "tpFound": "{{channel}} молодец, наконец-то купил ТП спустя $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Спасибо смерти за данное тебе ТП. Это заняло всего лишь $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
-  "chattersRank": "@{{username}}'s rank is {{rank}}",
-  "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
+  "chattersRank": "ранг @{{username}} {{rank}}",
+  "chattersRankUnknown": "ранг @{{username}} неизвестен. Верифицируйте Dotabod, чтобы получить свой ранг! {{- url}}",
   "colors": {
     "blue": "Синий",
     "brown": "Коричневый",
@@ -67,11 +67,11 @@
     "overlay_many": "{{count}} стримеров использует оверлей",
     "overlay_other": "{{count}} стримеров использует оверлей"
   },
-  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
+  "currentSong": "Сейчас играет: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Нужны сборки от про-игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
   "dotapatch": {
-    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+    "newPatch": "{{emote}} Выпущен новый патч для Dota 2: {{version}}. Посмотрите примечания к нему на https://www.dota2.com/patches"
   },
   "facet": "{{number}} аспект {{- heroName}} - это {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Указан неверный аспект · $t(facetNotFound, {{- heroName }})",
@@ -82,8 +82,8 @@
   "facetTotalLimit_many": "Только {{count}} аспектов доступно у {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_other": "Только {{count}} аспекта доступна у {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Игра не найдена",
-  "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
-  "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
+  "giftSub": "Подарок Dotabod Pro был только что подарен {{- senderName}}!",
+  "giftSubAnonymous": "Подарок Dotabod Pro был только что подарен анонимно!",
   "gpm_zero": "",
   "gpm_one": "Текущий GPM у {{- heroName}}: {{num}} золотой. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
   "gpm_few": "Текущий GPM у {{- heroName}}: {{num}} золота. {{heroKills}} от убийства героев, {{creepKills}} от убийства крипов.",
@@ -128,7 +128,7 @@
     "won_many": "У {{- heroName}} серия из {{count}} убийств! {{emote}}",
     "won_other": "у {{- heroName}} серия из {{count}} убийств! {{emote}}"
   },
-  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
+  "lastFmNotConfigured": "Имя пользователя Last.fm не настроено. Стримеру необходимо настроить его в панели Dotabod.",
   "lastgame": {
     "link": "ID последнего матча: {{- url}}",
     "none": "Не найдено игроков из прошлой игры",
@@ -148,7 +148,7 @@
     "won": "Последняя игра: победа"
   },
   "lifetime": "Количество игр",
-  "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
+  "matchData8500": "Valve отключили данные для матчей 8500+ рейтинга, но в скором времени у меня будет решение",
   "matchFound": "Данные матча получены {{commandList}} команды бота активны.",
   "matchId": "ID матча: {{matchId}}",
   "midasUsed": "Midas наконец-то был использован $t(seconds, {\"count\": {{seconds}} }) спустя {{emote}}",
@@ -161,11 +161,11 @@
   "neutralItems": {
     "tierAvailable": "Доступны нейтральные предметы {{tier}}-го разряда! Время посетить лес PogChamp"
   },
-  "noAghs": "{{- heroName}} has no aghs upgrade.",
+  "noAghs": "У {{- heroName}} нет улучшения аганима.",
   "noHero": "Герой не найден",
   "noLastMatch": "Не найдена последняя игра {{emote}}",
   "noNotable": "Нет отмеченных игроков",
-  "noShard": "{{- heroName}} has no shard upgrade.",
+  "noShard": "У {{- heroName}} нет улучшения шарда.",
   "notLive": "Стрим офлайн {{emote}} . На самом деле онлайн? Модераторы, напишите !online",
   "notPlaying": "Не играет {{emote}}",
   "npAdd": "Попробуйте !np add <стим ID> <имя игрока>",
@@ -179,7 +179,7 @@
   "ping": "Pong {{emote}}",
   "pleb": "Один нищий в {{emote}}",
   "pleb_off": "{{name}} {{emote}} хорошая работа нищий",
-  "plebSubRequired": "!pleb command can only be used if sub only mode is enabled.",
+  "plebSubRequired": "Команда !pleb может быть использована только в том случае, если включён подрежим.",
   "predictions": {
     "no": "Нет",
     "title": "Выиграем ли мы игру на {{- heroName}}",
@@ -197,12 +197,12 @@
   "ranked": "Рейтинговая",
   "ranked_no": "Нет, эта игра не рейтинговая",
   "ranked_yes": "Да, эта игра рейтинговая",
-  "rankOnlyDisabled": "Verified mode is now disabled. Everyone can chat.",
-  "rankOnlyEnabled": "Verified mode is now enabled. Only {{rank}} or higher ranks can chat. Visit {{- url}} to become Dotabod verified.",
-  "rankOnlyInvalid": "Invalid rank. Valid ranks are: {{validRanks}}",
-  "rankOnlyMode": "@{{name}} - Your message was deleted because this channel is in verified mode ({{requiredRank}}+ only). Visit {{- url}} to become Dotabod verified.",
-  "rankOnlyStatus_disabled": "Verified mode is currently disabled.",
-  "rankOnlyStatus_enabled": "Verified mode is currently enabled. Only {{rank}}+ ranks can chat. Visit {{- url}} to become Dotabod verified.",
+  "rankOnlyDisabled": "Проверенный режим теперь отключён. Все могут общаться.",
+  "rankOnlyEnabled": "Режим проверки включён. Только {{rank}} или более ранги могут общаться. Посетите {{- url}}, чтобы стать проверенным Dotabod.",
+  "rankOnlyInvalid": "Недопустимый ранг. Допустимые ранги: {{validRanks}}",
+  "rankOnlyMode": "@{{name}} - Ваше сообщение было удалено, потому что этот канал в проверенном режиме ({{requiredRank}}+ только). Посетите {{- url}}, чтобы стать проверенным Dotabod.",
+  "rankOnlyStatus_disabled": "Режим проверки в настоящее время отключён.",
+  "rankOnlyStatus_enabled": "В данный момент включён режим проверки. Только {{rank}}+ ранги могут общаться. Посетите {{- url}}, чтобы стать проверенным Dotabod.",
   "refresh": "Перезапуск оверлея...",
   "refreshToken": "Перезайдите аккаунтом Twitch в Dotabod. Для этого {{channel}} разлогинтесь на dotabod.com и залогинтесь обратно.",
   "resetwl": "Сброс побед/поражений до 0 для {{channel}}",
@@ -224,9 +224,9 @@
   "setStreamDelay": "Теперь задержка стрима - $t(seconds, {\"count\": {{seconds}} })",
   "setStreamDelayNoArgs": "Неверная задержка стрима, используйте !setdelay <seconds>",
   "setStreamDelayRemoved": "Отключаю задержку стрима",
-  "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
-  "songError": "Error fetching song information from Last.fm.",
-  "songNotPlaying": "No song is currently playing.",
+  "shard": "{{- heroName}} шард: {{- title}} · {{- description}}",
+  "songError": "Ошибка при получении информации о песне из Last.fm.",
+  "songNotPlaying": "Сейчас ничего не воспроизводится.",
   "spectators": {
     "count_one": "1 зритель смотрит этот матч в прямом эфире",
     "count_few": "{{count}} зрителя смотрят этот матч в прямом эфире",
@@ -240,6 +240,7 @@
   "stream_on": "Dotabod будет рассматривать {{channel}} как онлайн. Используйте !offline для отмены",
   "streamDelay": "Задержка стрима: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "На этом канале нет задержки стрима",
+  "subscriptionRequired": "✨ Разблокируйте эту команду и другие функции с Dotabod Pro. Посетите dotabod.com, чтобы подписаться или dotabod.com/{{channel}}/gift чтобы подарить стримеру!",
   "tip": {
     "from": "Благодарность от {{- heroName}} {{emote}}",
     "to": "Мы поблагодарили {{- heroName}} {{emote}}"
