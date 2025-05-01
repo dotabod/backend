@@ -191,7 +191,7 @@ class CommandHandler {
           chatClient.say(
             message.channel.name,
             t('subscriptionRequired', {
-              channel: message.channel.name,
+              channel: message.channel.client.name,
               command: `!${commandName}`,
               lng: message.channel.client.locale,
             }),
