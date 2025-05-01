@@ -186,6 +186,14 @@ export function canAccessFeature(
       requiredTier,
     }
   }
+
+  if (isFreeFeature) {
+    return {
+      hasAccess: true,
+      requiredTier,
+    }
+  }
+
   if (!subscription?.tier)
     return {
       hasAccess: false,
