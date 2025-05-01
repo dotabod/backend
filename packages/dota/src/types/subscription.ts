@@ -11,7 +11,6 @@ export const SUBSCRIPTION_TIERS = {
 } as const
 
 export function isSubscriptionActive(subscription?: SubscriptionRow): boolean {
-  if (subscription?.isGift) return false
   if (!subscription?.status) return false
   if (subscription.status === 'TRIALING') return true
   if (subscription.status === 'ACTIVE') return true
