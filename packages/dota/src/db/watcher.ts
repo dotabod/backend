@@ -282,35 +282,109 @@ class SetupSupabase {
         { event: 'INSERT', schema: 'public', table: 'gift_subscriptions' },
         async (payload: { new: Tables<'gift_subscriptions'> }) => {
           const newObj = payload.new
-          const userId = await supabase
+          // Fetch the subscription details to get the userId
+          const { data: subscriptionData, error: subError } = await supabase
             .from('subscriptions')
             .select('userId')
             .eq('id', newObj.subscriptionId)
             .eq('isGift', true)
-            .single()
+            .maybeSingle() // Use maybeSingle to handle potential null result gracefully
 
-          if (!userId) return
-          const client = findUser(userId.data?.userId)
+          if (subError || !subscriptionData) {
+            logger.error('Error fetching subscription or subscription not found for gift', {
+              giftId: newObj.id,
+              subscriptionId: newObj.subscriptionId,
+              error: subError,
+            })
+            return
+          }
 
-          if (!client || !client.stream_online) return
+          const client = findUser(subscriptionData.userId)
+
+          // Only proceed if the client is found and currently considered online
+          if (!client || !client.stream_online) {
+            logger.info('Gift notification skipped: Client not found or not online', {
+              userId: subscriptionData.userId,
+              found: !!client,
+              online: client?.stream_online,
+            })
+            return
+          }
 
           try {
+            // Calculate duration string
+            let durationString = ''
+            const giftQuantityRaw = newObj.giftQuantity
+
+            // Check if giftQuantityRaw is a valid number representation (string or number) and positive
+            const giftQuantityNum = Number(giftQuantityRaw)
+            const isValidQuantity = !Number.isNaN(giftQuantityNum) && giftQuantityNum > 0
+
+            if (isValidQuantity) {
+              const giftType = newObj.giftType
+
+              if (giftType) {
+                if (giftType === 'monthly') {
+                  durationString =
+                    giftQuantityNum === 1 ? '(1 month)' : `(${giftQuantityNum} months)`
+                } else if (giftType === 'annual') {
+                  durationString = giftQuantityNum === 1 ? '(1 year)' : `(${giftQuantityNum} years)`
+                } else if (giftType === 'lifetime') {
+                  durationString = '(Lifetime)'
+                }
+                // Add more gift types here if necessary
+              } else {
+                logger.warn('Gift type missing, cannot determine duration string', {
+                  giftId: newObj.id,
+                  giftQuantity: giftQuantityNum,
+                })
+              }
+            } else if (giftQuantityRaw != null) {
+              // Log only if it was provided but invalid
+              logger.warn('Gift quantity is invalid or not positive', {
+                giftId: newObj.id,
+                giftQuantity: giftQuantityRaw,
+              })
+            }
+            // If quantity is null/undefined, we just don't add a duration string silently.
+
+            // Construct the base message using translation keys
+            const baseMessage = newObj.senderName
+              ? t('giftSub', {
+                  senderName: newObj.senderName,
+                  lng: client.locale,
+                })
+              : t('giftSubAnonymous', {
+                  lng: client.locale,
+                })
+
+            // Prepare optional details parts
+            const detailsParts: string[] = []
+            if (durationString) {
+              detailsParts.push(durationString)
+            }
+            if (newObj.giftMessage) {
+              // Ensure message is trimmed and quoted
+              const trimmedMessage = String(newObj.giftMessage).trim()
+              if (trimmedMessage) {
+                detailsParts.push(`"${trimmedMessage}"`)
+              }
+            }
+
+            // Combine base message and details with proper spacing
+            let fullMessage = baseMessage
+            if (detailsParts.length > 0) {
+              fullMessage += ` ${detailsParts.join(' ')}`
+            }
+
             // Send notification message to chat
-            chatClient.say(
-              client.name,
-              newObj.senderName
-                ? t('giftSub', {
-                    senderName: newObj.senderName,
-                    lng: client.locale,
-                  }) + (newObj.giftMessage ? ` "${newObj.giftMessage}"` : '')
-                : t('giftSubAnonymous', {
-                    lng: client.locale,
-                  }) + (newObj.giftMessage ? ` "${newObj.giftMessage}"` : ''),
-            )
+            logger.info(`Sending gift notification: ${fullMessage}`) // Add logging
+            chatClient.say(client.name, fullMessage)
           } catch (e) {
-            logger.error('Error sending notification to chat', {
+            logger.error('Error constructing or sending gift notification to chat', {
               error: e,
               userId: client.token,
+              giftId: newObj.id,
             })
           }
         },
