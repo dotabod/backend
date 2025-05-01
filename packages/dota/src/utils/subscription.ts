@@ -163,7 +163,7 @@ export function isChatterKey(key: string): boolean {
   return key.startsWith('chatters.')
 }
 
-export const GRACE_PERIOD_END = new Date('2025-05-30T23:59:59.999Z')
+export const GRACE_PERIOD_END = new Date('2025-04-30T23:59:59.999Z')
 
 // Add a function to check if we're in the grace period
 export function isInGracePeriod(): boolean {
