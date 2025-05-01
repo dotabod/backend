@@ -185,7 +185,8 @@ async function saveMatchData(client: SocketClient) {
           })
         }
       } catch (error) {
-        logger.error('Error getting steam server data', { error, matchId })
+        // Do nothing, we don't want to log this error
+        // logger.error('Error getting steam server data', { error, matchId })
       } finally {
         // Always remove from the map, even if there was an error
         steamServerLookupMap.delete(matchId)
