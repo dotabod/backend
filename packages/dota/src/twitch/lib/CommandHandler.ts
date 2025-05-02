@@ -1,7 +1,7 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import supabase from '../../db/supabase.js'
-import { type SettingKeys, getValueOrDefault } from '../../settings.js'
+import { type SettingKeys, getRawSettingValue, getValueOrDefault } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import type { SocketClient } from '../../types.js'
 import type { SubscriptionRow } from '../../types/subscription.js'
@@ -165,6 +165,9 @@ class CommandHandler {
       )
       return
     }
+
+    const isCommandEnabledRaw = this.isEnabledRaw(message.channel.settings, options.dbkey)
+
     // Check if the command is enabled (via settings and subscription)
     const isCommandEnabled = this.isEnabled(
       message.channel.settings,
@@ -183,10 +186,12 @@ class CommandHandler {
     // If the command is disabled (by settings or subscription)
     if (!isCommandEnabled) {
       // Check if the specific reason for being disabled is lack of subscription access.
-      // We only message the user about subscription issues, not general disabled settings.
-      if (options.dbkey) {
+      // We only message the user about subscription issues if the command is *enabled* in their settings
+      // but they lack the required subscription tier.
+      if (options.dbkey && isCommandEnabledRaw) {
         const { hasAccess } = canAccessFeature(options.dbkey, message.channel.client.subscription)
-        // If disabled due to subscription AND not currently on cooldown (to avoid spamming the message)
+
+        // If disabled due to subscription AND not currently on cooldown AND the user hasn't explicitly disabled it in settings
         if (!hasAccess && !commandIsOnCooldown) {
           chatClient.say(
             message.channel.name,
@@ -284,6 +289,13 @@ class CommandHandler {
     if (!dbkey) return true
 
     return !!getValueOrDefault(dbkey, settings, subscription)
+  }
+
+  isEnabledRaw(settings: SocketClient['settings'], dbkey?: SettingKeys) {
+    // Default enabled if no dbkey is provided
+    if (!dbkey) return true
+
+    return !!getRawSettingValue(dbkey, settings)
   }
 
   // Function for updating the cooldown time for a command

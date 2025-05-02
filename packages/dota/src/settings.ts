@@ -14,38 +14,10 @@ export { DBSettings, type SettingKeys, type CommandKeys, type ChatterKeys }
 export const commands = defaultCommands
 export const defaultSettings = defaultSettingsStructure
 
-export const getValueOrDefault = (
+export const getRawSettingValue = (
   key: SettingKeys,
   data?: { key: string; value: any }[],
-  subscription?: SubscriptionRow,
-  chatterKey?: ChatterKeys,
 ) => {
-  // Check subscription access
-  const featureKey = chatterKey ? (`chatters.${chatterKey}` as const) : key
-  const { hasAccess } = canAccessFeature(featureKey, subscription)
-  if (!hasAccess) {
-    // For boolean settings, return false if no access
-    if (typeof defaultSettings[key] === 'boolean') {
-      return false
-    }
-    // For chatters object, return with disabled state
-    if (key === 'chatters' && chatterKey) {
-      return {
-        ...defaultSettings.chatters,
-        [chatterKey]: { enabled: false },
-      }
-    }
-    // For objects (like betsInfo), return default with disabled state
-    if (typeof defaultSettings[key] === 'object') {
-      return {
-        ...(defaultSettings[key] as any),
-        enabled: false,
-      }
-    }
-    // For other types, return default value
-    return defaultSettings[key]
-  }
-
   // Rest of existing logic for handling settings
   if (!Array.isArray(data) || !data.length || !data.filter(Boolean).length) {
     return defaultSettings[key]
@@ -88,4 +60,39 @@ export const getValueOrDefault = (
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return dbVal
   }
+}
+
+export const getValueOrDefault = (
+  key: SettingKeys,
+  data?: { key: string; value: any }[],
+  subscription?: SubscriptionRow,
+  chatterKey?: ChatterKeys,
+) => {
+  // Check subscription access
+  const featureKey = chatterKey ? (`chatters.${chatterKey}` as const) : key
+  const { hasAccess } = canAccessFeature(featureKey, subscription)
+  if (!hasAccess) {
+    // For boolean settings, return false if no access
+    if (typeof defaultSettings[key] === 'boolean') {
+      return false
+    }
+    // For chatters object, return with disabled state
+    if (key === 'chatters' && chatterKey) {
+      return {
+        ...defaultSettings.chatters,
+        [chatterKey]: { enabled: false },
+      }
+    }
+    // For objects (like betsInfo), return default with disabled state
+    if (typeof defaultSettings[key] === 'object') {
+      return {
+        ...(defaultSettings[key] as any),
+        enabled: false,
+      }
+    }
+    // For other types, return default value
+    return defaultSettings[key]
+  }
+
+  return getRawSettingValue(key, data)
 }
