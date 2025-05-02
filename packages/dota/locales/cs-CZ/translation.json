@@ -240,6 +240,7 @@
   "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "streamDelay": "Zpoždění vysílání: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Na tomto kanálu není žádné zpoždění vysílání",
+  "subscriptionRequired": "✨ Unlock this command and more features with Dotabod Pro. Visit dotabod.com to subscribe or dotabod.com/{{channel}}/gift to gift your streamer a sub!",
   "tip": {
     "from": "Tip od {{- heroName}} {{emote}}",
     "to": "Tip pro {{- heroName}} {{emote}}"

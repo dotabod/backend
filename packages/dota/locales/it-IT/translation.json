@@ -221,6 +221,7 @@
   "stream_on": "Dotabod considererà {{channel}} online. Digita !offline per annullare",
   "streamDelay": "Delay dello stream: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Non c'è nessun delay su questo canale",
+  "subscriptionRequired": "✨ Unlock this command and more features with Dotabod Pro. Visit dotabod.com to subscribe or dotabod.com/{{channel}}/gift to gift your streamer a sub!",
   "tip": {
     "from": "Il tip da {{- heroName}} {{emote}}",
     "to": "Tippiamo {{- heroName}} {{emote}}"

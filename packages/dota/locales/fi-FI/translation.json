@@ -210,6 +210,7 @@
   "stream_on": "Dotabod kohtelee {{channel}}-kanavaa online-tilassa. Kirjoita !offline peruuttaaksesi",
   "streamDelay": "Striimin viive: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Kanavalla ei ole striimin viivettä",
+  "subscriptionRequired": "✨ Unlock this command and more features with Dotabod Pro. Visit dotabod.com to subscribe or dotabod.com/{{channel}}/gift to gift your streamer a sub!",
   "tip": {
     "from": "Tippi sankarilta {{- heroName}} {{emote}}",
     "to": "Tippaamme sankaria {{- heroName}} {{emote}}"
