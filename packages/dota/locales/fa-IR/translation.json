@@ -210,6 +210,7 @@
   "stream_on": "بات چنل {{channel}} را آنلاین فرض میکنم. برای آفلاین شدن از !offline استفاده کنید",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "استریم تاخیر نداره",
+  "subscriptionRequired": "✨ Unlock this command and more features with Dotabod Pro. Visit dotabod.com to subscribe or dotabod.com/{{channel}}/gift to gift your streamer a sub!",
   "tip": {
     "from": "{{- heroName}} تیپش کرد {{emote}}",
     "to": "{{- heroName}} تیپش کردم {{emote}}"
