@@ -240,6 +240,7 @@
   "stream_on": "Dotabod вважатиме {{channel}} онлайн. Введіть !offline, щоб скасувати це",
   "streamDelay": "Затримка потоку: $t(секунди, {\"count\": {{seconds}}}) с",
   "streamDelayNone": "Немає затримки на стрімі",
+  "subscriptionRequired": "✨ Розблокуйте цю команду і більше можливостей Dotabod Pro. Відвідайте dotabod.com аби підписатися на сайт або dotabod.com/{{channel}}/gift, щоб подарувати сабку вашому стрімеру!",
   "tip": {
     "from": "Подяка від {{- heroName}} {{emote}}",
     "to": "Ми подякували {{- heroName}} за чудову гру {{emote}}"
