@@ -103,6 +103,8 @@ export const russianProfanityList = [
   'paki',
   'gook',
   'dago',
+  'jewed', // Antisemitic slur based on Jewish stereotypes
+  'jew',
 ]
 
 // Chinese profanity terms
@@ -490,6 +492,42 @@ export function detectEuropeanProfanity(text: string): boolean {
 }
 
 /**
+ * Detects age-related content that might be inappropriate
+ * For example, users stating they are under 13 years old
+ */
+export function detectAgeRestrictions(text: string): boolean {
+  // Convert to lowercase and normalize spaces
+  const normalized = text.toLowerCase().replace(/\s+/g, ' ').trim()
+
+  // Regex patterns to catch variations of "I'm X", "Im X", "I am X", etc.
+  const patterns = [
+    /\bi'?m\s+(\d+)/, // Matches "i'm 12", "im 12"
+    /\bi\s+am\s+(\d+)/, // Matches "i am 12"
+    /\biam\s*(\d+)/, // Matches "iam12"
+    /\bme\s+(\d+)/, // Matches "me 12"
+    /\bage\s*[:|=]?\s*(\d+)/, // Matches "age: 12", "age=12"
+    /\bi'?m\s+a\s+(\d+)[\s-]*year/, // Matches "i'm a 12-year", "i'm a 12 year"
+    /\bi'?m\s+(\d+)[\s-]*years?\s+old/, // Matches "i'm 12 years old", "i'm 12-year old"
+    /\bi\s+am\s+(\d+)[\s-]*years?\s+old/, // Matches "i am 12 years old"
+    /\bi'?m\s+only\s+(\d+)/, // Matches "i'm only 12"
+  ]
+
+  // Check each pattern
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern)
+    if (match?.[1]) {
+      const age = Number.parseInt(match[1], 10)
+      // Flag if age is under 13 (COPPA compliance age)
+      if (age < 13 && age > 0) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
+/**
  * Combined function to check for profanity across multiple languages and techniques
  */
 export function detectMultilingualProfanity(text: string): boolean {
@@ -497,6 +535,7 @@ export function detectMultilingualProfanity(text: string): boolean {
     detectRussianProfanity(text) ||
     detectChineseProfanity(text) ||
     detectEuropeanProfanity(text) ||
-    detectEvasionTactics(text)
+    detectEvasionTactics(text) ||
+    detectAgeRestrictions(text)
   )
 }

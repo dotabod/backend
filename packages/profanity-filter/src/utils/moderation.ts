@@ -13,7 +13,7 @@ import {
 import profanityUtil from 'profanity-util'
 import { flatWords as russianBadWordsList } from 'russian-bad-words'
 import wash from 'washyourmouthoutwithsoap'
-import { detectEvasionTactics, detectRussianProfanity } from './profanity-wordlists.js'
+import { detectAgeRestrictions, detectEvasionTactics, detectRussianProfanity } from './profanity-wordlists.js'
 import { createTextVariations } from './text-normalization.js'
 
 interface ModerationResponse {
@@ -312,12 +312,12 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
   }
 
   // Layer 10: Custom Russian profanity detection
-  if (detectRussianProfanity(text) || detectEvasionTactics(text)) {
+  if (detectRussianProfanity(text) || detectEvasionTactics(text) || detectAgeRestrictions(text)) {
     return '***'
   }
 
   // Layer 11: If no OPENAI_API_KEY is set, return as is after all local checks
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.OPENAI_API_KEYS) {
     return text
   }
 
@@ -544,6 +544,14 @@ function getProfanityDetailsSingle(text: string): {
 
   if (detectEvasionTactics(text)) {
     return { isFlagged: true, source: 'evasion-tactics' }
+  }
+  
+  // Check for age restrictions (underage users)
+  if (detectAgeRestrictions(text)) {
+    // Extract the actual text for matching purposes rather than using a generic "underage" label
+    const ageMatch = text.match(/\b(i'?m\s+\d+|i\s+am\s+\d+|iam\s*\d+|age\s*[:=]?\s*\d+)/i);
+    const matchText = ageMatch ? ageMatch[1] : text;
+    return { isFlagged: true, source: 'age-restriction', matches: [matchText] }
   }
 
   return { isFlagged: false, source: 'none' }

@@ -116,6 +116,8 @@ describe('Profanity Filter', () => {
 
     test('should detect more simple profanity', async () => {
       const badWords = [
+        'im 12',
+        'jewed',
         'fuck',
         'shit',
         'nigger',
@@ -408,7 +410,6 @@ describe('Profanity Filter', () => {
           matches?: string[]
           language?: string
         }
-        console.log({ details, word }, 'geczy')
         expect(moderated).toBe(word)
         expect(details.isFlagged).toBe(false)
       }
