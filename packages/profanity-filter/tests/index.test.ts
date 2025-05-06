@@ -116,6 +116,10 @@ describe('Profanity Filter', () => {
 
     test('should detect more simple profanity', async () => {
       const badWords = [
+        'trans',
+        'transgender',
+        'transsexual',
+        'transvestite',
         'im 12',
         'jewed',
         'fuck',
@@ -378,6 +382,46 @@ describe('Profanity Filter', () => {
     })
   })
 
+  describe('Transphobic content detection', () => {
+    test('should detect transphobic hate speech phrases', async () => {
+      const transphobicPhrases = [
+        { phrase: 'trans is a mental illness', match: 'trans' },
+        { phrase: 'transgender people are mentally ill', match: 'transgender' },
+        { phrase: 'transgenderism is a delusion', match: 'transgender' },
+        { phrase: 'transsexuals are delusional', match: 'transsexual' },
+        { phrase: 'trans people aren\'t real women', match: 'trans' },
+        { phrase: 'trans ideology is dangerous', match: 'trans' },
+        { phrase: 'trans agenda in schools', match: 'trans' },
+        { phrase: 'only two genders exist', match: null },
+        { phrase: 'gender is determined by biology', match: null },
+        { phrase: 'trans is against nature', match: 'trans' },
+        { phrase: 'trannies are sick', match: 'tranny' },
+        { phrase: 'trans people are groomers', match: 'trans' },
+      ]
+
+      for (const { phrase, match } of transphobicPhrases) {
+        const moderated = await moderateText(phrase)
+        expect(moderated).not.toBe(phrase)
+        expect(moderated).toContain('***')
+
+        const details = getProfanityDetails(phrase) as {
+          isFlagged: boolean
+          source: string
+          matches?: string[]
+          language?: string
+        }
+        
+        console.log({ phrase, details, match }, 'testing')
+        expect(details.isFlagged).toBe(true)
+        expect(details.source).toBe('hate-speech')
+        
+        if (match && details.matches && details.matches.length > 0) {
+          expect(details.matches[0]).toBe(match)
+        }
+      }
+    })
+  })
+
   describe('False positives prevention', () => {
     test('should not flag innocent words containing profanity substrings', async () => {
       const words = [
@@ -410,6 +454,7 @@ describe('Profanity Filter', () => {
           matches?: string[]
           language?: string
         }
+        console.log({ word, moderated, details }, 'Checking word for false positive')
         expect(moderated).toBe(word)
         expect(details.isFlagged).toBe(false)
       }
