@@ -1,5 +1,5 @@
 {
-  "2mdelay": "(2m delay)",
+  "2mdelay": "(2 min fördröjning)",
   "aegis": {
     "denied": "{{- heroName}} nekade aegisen {{emote}}",
     "expired": "{{- heroName}}s aegis har löpt ut {{emote}}",
@@ -61,7 +61,7 @@
     "overlay_one": "{{count}} streamer använder overlayn",
     "overlay_other": "{{count}} streamare använder overlayn"
   },
-  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
+  "currentSong": "Spelar nu: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Behöver du build-idéer av proffs för {{- heroName}}? Kolla här {{- url}}",
   "dotabod": "Jag är en bot med öppen källkod skapad av {{author}}. Mer info: {{- url}}",
   "dotapatch": {
@@ -118,7 +118,7 @@
   },
   "lastgamescore": {
     "double": "Fördubbling",
-    "duration": "{{minutes}}min lång",
+    "duration": "{{minutes}} min lång",
     "kda": "{{- kdavalue}} med {{- heroName}}",
     "lost": "Förlorade förra matchen",
     "party": "Partymatch",
@@ -197,8 +197,8 @@
   "setStreamDelayNoArgs": "Ogiltig stream fördröjning, använd !setdelay <sekunder>",
   "setStreamDelayRemoved": "Tar bort stream fördröjningen",
   "shard": "{{- heroName}} shard: {{- title}} · {{- description}}",
-  "songError": "Error fetching song information from Last.fm.",
-  "songNotPlaying": "No song is currently playing.",
+  "songError": "Kunde inte hämta låtinformation från Last.fm.",
+  "songNotPlaying": "Ingen låt spelas just nu.",
   "spectators": {
     "count_one": "1 åskådare tittar på denna match live",
     "count_other": "{{count}} åskådare tittar på denna match live",
@@ -247,5 +247,5 @@
     "winProbability": "{{winRate}}% win probability at {{gameTime}}:00 · Next update in {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Vinstsannolikheten är inte tillgänglig än · Försök igen om {{remainingCooldown}}s"
   },
-  "xpm": "Live XPM for {{- heroName}}: {{num}}"
+  "xpm": "Live XPM för {{- heroName}}: {{num}}"
 }
