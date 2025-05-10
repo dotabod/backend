@@ -7,20 +7,20 @@
     "snatched": "{{- heroName}} snodde åt sig aegisen {{emote}}"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
-  "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
-  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
-  "averageRank": "Genomsnittlig rank i denna match",
+  "apm_one": "Live APM för {{- heroName}}: {{count}} {{emote}}",
+  "apm_other": "Live APM för {{- heroName}}: {{count}} {{emote}}",
+  "averageRank": "Genomsnittlig rank denna match",
   "betaFeature": "[beta-funktion]",
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} är inte längre en betatestare. Skriv !beta för att gå med igen",
   "betaTester_on": "{{channel}} är nu en betatestare. Besök discord.dotabod.com för att se beta-funktionerna. Skriv !beta för att ångra",
   "bets": {
-    "error": "Unable to open bets. $t(refreshToken)",
+    "error": "Det går inte att öppna satsningar. $t(refreshToken)",
     "lost": "Vi förlorade, gg nt {{emote}} gå nästa",
     "notScored": "Matchen räknas inte {{emote}} Lägger inte till eller tar bort MMR för match {{matchId}}.",
-    "open": "Satsningar öppnade {{emote}}",
+    "open": "Satsningar öppna {{emote}}",
     "remade": "Bytte hjälte {{emote}} insatser för {{- oldHeroName}} återbetalade och nya satsningar för {{- newHeroName}} öppnade {{emote2}}",
-    "won": "Vi vann {{emote}} gå nästa"
+    "won": "Vi vann {{emote}} dags för nästa"
   },
   "bounties": {
     "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) från runor ({{totalBounties}}/4) {{emote}} Tack {{heroNames}} {{emote2}}",
@@ -36,7 +36,7 @@
     "tpFound": "{{channel}} bra jobbat att äntligen skaffa en tp efter $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Tack vare denna död fick du äntligen en tp. Och det tog bara $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
-  "chattersRank": "@{{username}}'s rank is {{rank}}",
+  "chattersRank": "@{{username}}s rank är {{rank}}",
   "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "colors": {
     "blue": "Blå",
@@ -54,12 +54,12 @@
   "commands": "",
   "commands_everyone": "Alla kan använda: {{commandList}}",
   "commands_mods": "Mod-kommandon: {{commandList}}",
-  "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
+  "commandsPage": "För att se {{- channel}}s kommandon, besök {{- url}}",
   "connections": {
-    "gsi_one": "{{count}} streamer connected to Dotabod GSI",
-    "gsi_other": "{{count}} streamers connected to Dotabod GSI",
-    "overlay_one": "{{count}} streamer using the overlay",
-    "overlay_other": "{{count}} streamers using the overlay"
+    "gsi_one": "{{count}} streamer ansluten till Dotabod GSI",
+    "gsi_other": "{{count}} streamare anslutna till Dotabod GSI",
+    "overlay_one": "{{count}} streamer använder overlayn",
+    "overlay_other": "{{count}} streamare använder overlayn"
   },
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Behöver du build-idéer av proffs för {{- heroName}}? Kolla här {{- url}}",
@@ -74,14 +74,14 @@
   "facetTotalLimit_one": "Only {{count}} facet is available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_other": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Matchen hittades inte",
-  "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
-  "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
+  "giftSub": "En gåvoprenumeration för Dotabod Pro blev just donerad av {{- senderName}}!",
+  "giftSubAnonymous": "En gåvoprenumeration för Dotabod Pro har just blivit skickad anonymt!",
   "gpm_zero": "",
   "gpm_one": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "heroItems": {
-    "empty": "(2min fördröjning) Inga föremål hittades för {{- heroName}}",
-    "list": "(2min fördröjning) {{- heroName}} har: {{- itemNames}}"
+    "empty": "(2 min fördröjning) Inga items hittades för {{- heroName}}",
+    "list": "(2 min fördröjning) {{- heroName}} har: {{- itemNames}}"
   },
   "herostats": {
     "noneColor": "{{color}} har inga matcher spelade som {{- heroName}} {{timeperiod}}",
@@ -108,7 +108,7 @@
     "won_one": "{{- heroName}} har en {{count}} kill streak {{emote}}",
     "won_other": "{{- heroName}} har en {{count}} kill streak {{emote}}"
   },
-  "lastFmNotConfigured": "Last.fm username is not configured. The streamer needs to set it up in the Dotabod dashboard.",
+  "lastFmNotConfigured": "Last.fm-användarnamn är inte konfigurerat. Streamaren måste ställa in det i Dotabod-kontrollpanelen.",
   "lastgame": {
     "link": "Här är förra matchen: {{- url}}",
     "none": "Spelar inte med någon från förra matchen",
@@ -126,7 +126,7 @@
     "won": "Vann förra matchen"
   },
   "lifetime": "Totala matcher",
-  "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
+  "matchData8500": "Valve har inaktiverat data för matcher över 8500 mmr, men jag har en lösning snart ok",
   "matchFound": "Matchdata hittades {{commandList}} -kommandon aktiverade.",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas användes äntligen, $t(seconds, {\"count\": {{seconds}} }) sent {{emote}}",
@@ -139,12 +139,12 @@
   "neutralItems": {
     "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
   },
-  "noAghs": "{{- heroName}} has no aghs upgrade.",
+  "noAghs": "{{- heroName}} har ingen aghs uppgradering.",
   "noHero": "Ingen hjälte hittades",
   "noLastMatch": "Hittade inte förra matchen {{emote}}",
   "noNotable": "Inga anmärkningsvärda spelare",
-  "noShard": "{{- heroName}} has no shard upgrade.",
-  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
+  "noShard": "{{- heroName}} har ingen shard uppgradering.",
+  "notLive": "Streamen är inte live {{emote}}. Egentligen live? Mods skriv !online",
   "notPlaying": "Spelar inte {{emote}}",
   "npAdd": "Prova !np add <steam32id> <spelarnamn>",
   "npAdded": "Lade till {{name}} till !np för denna kanal",
@@ -173,11 +173,11 @@
   "ranked": "Rankad",
   "ranked_no": "Nej, denna match är inte rankad",
   "ranked_yes": "Ja, denna match är rankad",
-  "rankOnlyDisabled": "Verified mode is now disabled. Everyone can chat.",
-  "rankOnlyEnabled": "Verified mode is now enabled. Only {{rank}} or higher ranks can chat. Visit {{- url}} to become Dotabod verified.",
-  "rankOnlyInvalid": "Invalid rank. Valid ranks are: {{validRanks}}",
+  "rankOnlyDisabled": "Verifierat läge är nu inaktiverat. Alla kan chatta.",
+  "rankOnlyEnabled": "Verifierat läge är nu aktiverat. Endast {{rank}} eller högre ranker kan chatta. Besök {{- url}} för att bli Dotabod verifierad.",
+  "rankOnlyInvalid": "Ogiltig rank. Giltiga ranker är: {{validRanks}}",
   "rankOnlyMode": "@{{name}} - Your message was deleted because this channel is in verified mode ({{requiredRank}}+ only). Visit {{- url}} to become Dotabod verified.",
-  "rankOnlyStatus_disabled": "Verified mode is currently disabled.",
+  "rankOnlyStatus_disabled": "Verifierat läge är för tillfället inaktiverat.",
   "rankOnlyStatus_enabled": "Verified mode is currently enabled. Only {{rank}}+ ranks can chat. Visit {{- url}} to become Dotabod verified.",
   "refresh": "Uppdaterar överlägg...",
   "refreshToken": "Ditt Twitch-konto måste återanslutas till Dotabod. {{channel}} logga ut och logga in på dotabod.com för att åtgärda detta.",
@@ -190,7 +190,7 @@
     "more_one": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard.",
     "more_other": "Rosh deaths: {{count}} · Next drop: cheese, agh's blessing or refresher shard."
   },
-  "roshanKilled": "Roshan dödades! Nästa roshan mellan {{min}} och {{max}}",
+  "roshanKilled": "Roshan dödad! Nästa roshan mellan {{min}} och {{max}}",
   "seconds_one": "{{count}} sekund",
   "seconds_other": "{{count}} sekunder",
   "setStreamDelay": "Ställer in streamens fördröjning till: $t(seconds, {\"count\": {{seconds}} })",
@@ -200,8 +200,8 @@
   "songError": "Error fetching song information from Last.fm.",
   "songNotPlaying": "No song is currently playing.",
   "spectators": {
-    "count_one": "1 spectator watching this match live",
-    "count_other": "{{count}} spectators watching this match live",
+    "count_one": "1 åskådare tittar på denna match live",
+    "count_other": "{{count}} åskådare tittar på denna match live",
     "count_none": "No spectators currently watching this match live"
   },
   "stream": "$t(stream_on)",
@@ -210,7 +210,7 @@
   "stream_on": "Dotabod behandlar {{channel}} som online. Skriv !offline för att ångra",
   "streamDelay": "Stream fördröjning: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "Det finns ingen stream fördröjning på denna kanal",
-  "subscriptionRequired": "✨ Unlock this command and more features with Dotabod Pro. Visit dotabod.com to subscribe or dotabod.com/{{channel}}/gift to gift your streamer a sub!",
+  "subscriptionRequired": "✨ Lås upp detta kommando och fler funktioner med Dotabod Pro. Besök dotabod.com för att prenumerera eller dotabod.com/{{channel}}/gift för att ge din streamer en sub!",
   "tip": {
     "from": "Tipp från {{- heroName}} {{emote}}",
     "to": "Vi tippar {{- heroName}} {{emote}}"
@@ -224,8 +224,8 @@
   "toggleMatch_single": "Ändrar denna match till normal mmr: {{- url}} Skriv !fixdd för att ångra",
   "toggleMatch_solo": "Ändrar denna match till solo mmr: {{- url}} Skriv !fixparty för att ångra",
   "translated": {
-    "by_one": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}",
-    "by_other": "Dotabod is translated by {{- translators}}. Want to help translate or see a mistake? {{- url}}"
+    "by_one": "Dotabod är översatt av {{- translators}}. Vill du hjälpa till att översätta eller ser ett misstag? {{- url}}",
+    "by_other": "Dotabod är översatt av {{- translators}}. Vill du hjälpa till att översätta eller ser ett misstag? {{- url}}"
   },
   "treadToggle_one": "Vi växlade treads {{count}} gång för att spara totalt {{manaCount}} mana denna match.",
   "treadToggle_other": "Vi växlade treads {{count}} gånger för att spara totalt {{manaCount}} mana denna match.",
@@ -238,14 +238,14 @@
   "updateMmr_auto": "Uppdaterade MMR till {{mmr}}",
   "updateMmr_manual": "Uppdaterade MMR till {{mmr}}",
   "updateMmrMulti": "Flera Steam-konton, uppdaterar den du är inloggad med ({{steamId}})",
-  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
+  "updateMmrNoChange": "MMR redan {{mmr}}, ingen ändring gjordes",
   "version": {
     "commit": "Servern kör version {{version}}, här är vad som saknas jämfört med den senaste versionen: {{- url}}",
     "unknown": "Kunde inte hitta den senaste git-commiten, här är repot {{- url}}"
   },
   "winprobability": {
     "winProbability": "{{winRate}}% win probability at {{gameTime}}:00 · Next update in {{remainingCooldown}}s",
-    "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
+    "winProbabilityDataNotAvailable": "Vinstsannolikheten är inte tillgänglig än · Försök igen om {{remainingCooldown}}s"
   },
   "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }
