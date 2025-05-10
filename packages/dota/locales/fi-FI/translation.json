@@ -1,5 +1,5 @@
 {
-  "2mdelay": "(2m delay)",
+  "2mdelay": "(2 min viive)",
   "aegis": {
     "denied": "{{- heroName}} kielsi aegiksen {{emote}}",
     "expired": "{{- heroName}}-sankarin aegis vanhentui {{emote}}",
@@ -15,7 +15,7 @@
   "betaTester_off": "{{channel}} ei ole enää beta-testaaja. Kirjoita !beta liittyäksesi uudelleen",
   "betaTester_on": "{{channel}} on nyt beta-testaaja. Käy osoitteessa discord.dotabod.com nähdäksesi beta-ominaisuudet. Kumoa kirjoittamalla !beta",
   "bets": {
-    "error": "Unable to open bets. $t(refreshToken)",
+    "error": "Vetoja ei voida avata. $t(refreshToken)",
     "lost": "Hävisimme, gg nt {{emote}} mennään seuraavaan",
     "notScored": "Ottelua ei lasketa {{emote}} Ei lisätä tai poisteta MMR:ää ottelulle {{matchId}}.",
     "open": "Vedot avattu {{emote}}",

@@ -1,12 +1,12 @@
 {
-  "2mdelay": "(2m delay)",
+  "2mdelay": "(2m zpoždění)",
   "aegis": {
     "denied": "{{- heroName}} zničil aegis {{emote}}",
     "expired": "Vypršel {{- heroName}} aegis {{emote}}",
     "pickup": "{{- heroName}} získal aegis!",
     "snatched": "{{- heroName}} ukradl aegis {{emote}}"
   },
-  "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "aghs": "{{- heroName}} aghanimi: {{- title}} · {{- description}}",
   "apm_one": "Aktuální APM za {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Live APM for {{- heroName}}: {{count}} {{emote}}",
@@ -67,14 +67,14 @@
     "overlay_many": "{{count}} streamers using the overlay",
     "overlay_other": "{{count}} streameři využívají overlay"
   },
-  "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
+  "currentSong": "Nyní hraje: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Potřebuješ poradit co kupovat na {{- heroName}}? Nápady najdeš zde {{- url}}",
   "dotabod": "Jsem open-source bot vytvořený {{author}}. Více info na {{- url}}",
   "dotapatch": {
     "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
   },
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
-  "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
+  "facetInvalid": "Neplatný facet specifikace · $t(facetNotFound, {{- heroName }})",
   "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
   "facetSelection": "{{- heroName}} selected facet: {{- facetTitle}} · {{- facetDescription}}",
   "facetTotalLimit_one": "Only {{count}} facet is available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
