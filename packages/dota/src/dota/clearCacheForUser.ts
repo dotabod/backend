@@ -1,7 +1,7 @@
 import { getAuthProvider } from '@dotabod/shared-utils'
 import type { SocketClient } from '../types.js'
 import { deleteRedisData } from './GSIHandler.js'
-import { gsiHandlers, twitchIdToToken, twitchNameToToken } from './lib/consts.js'
+import { gsiHandlers, invalidTokens, twitchIdToToken, twitchNameToToken } from './lib/consts.js'
 
 // This will hold the last POST request timestamp for each token
 export const tokenLastPostTimestamps: Map<string, number> = new Map()
@@ -41,6 +41,10 @@ export async function clearCacheForUser(client?: SocketClient) {
 
   gsiHandlers.delete(client.token)
   tokenLastPostTimestamps.delete(client.token)
+
+  // Also remove from invalidTokens set to allow re-authentication
+  invalidTokens.delete(client.token)
+  if (accountId) invalidTokens.delete(accountId)
 
   return true
 }
