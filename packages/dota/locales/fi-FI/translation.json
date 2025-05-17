@@ -126,7 +126,7 @@
     "won": "Voitti edellisen pelin"
   },
   "lifetime": "Pelejä yhteensä",
-  "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches",
   "matchFound": "Ottelutiedot löydetty {{commandList}} komennot aktivoitu.",
   "matchId": "Ottelutunnus: {{matchId}}",
   "midasUsed": "Midas vihdoinkin käytetty, $t(seconds, {\"count\": {{seconds}} }) myöhään {{emote}}",
