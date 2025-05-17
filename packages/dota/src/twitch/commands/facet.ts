@@ -123,18 +123,16 @@ const isValidGSIHandler = (gsiHandler: any, matchId: any): boolean => {
 const isValidHero = (hero: any): boolean => {
   return typeof hero?.id === 'number' && !!getHeroById(hero.id)
 }
-
 const getFacetCount = (heroData: ReturnType<typeof getHeroById>) => {
-  return (
-    DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.facets?.length || null
-  )
+  const facets = DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.facets || []
+  return facets.filter(facet => (facet as any).deprecated !== "true").length || null
 }
 
 const getHeroFacet = (
   heroData: ReturnType<typeof getHeroById>,
   facetIndex: number,
 ): { title: string; description: string } | null => {
-  return DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.facets[
-    facetIndex - 1
-  ]
+  const facets = DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.facets || []
+  const nonDeprecatedFacets = facets.filter(facet => (facet as any).deprecated !== "true")
+  return nonDeprecatedFacets[facetIndex - 1] || null
 }
