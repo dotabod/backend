@@ -34,7 +34,9 @@ export const getTwitchAPI = async (twitchId?: string): Promise<ApiClient> => {
       const tokenData = {
         scope: tokens.scope?.split(' ') ?? [],
         expiresIn: tokens.expires_in ?? 0,
-        obtainmentTimestamp: new Date(tokens.obtainment_timestamp || '')?.getTime(),
+        obtainmentTimestamp: tokens.obtainment_timestamp
+          ? new Date(tokens.obtainment_timestamp).getTime()
+          : Date.now(),
         accessToken,
         refreshToken,
       }
