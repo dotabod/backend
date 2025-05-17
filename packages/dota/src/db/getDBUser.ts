@@ -16,20 +16,25 @@ export default async function getDBUser({
   token,
   twitchId: providerAccountId,
   ip,
-}: { token?: string; twitchId?: string; ip?: string } = {}): Promise<
-  SocketClient | null | undefined
-> {
+}: { token?: string; twitchId?: string; ip?: string } = {}): Promise<{
+  reason: string
+  result: SocketClient | null | undefined
+}> {
   const lookupToken = token ?? providerAccountId ?? ''
 
-  if (invalidTokens.has(lookupToken)) return null
+  if (invalidTokens.has(lookupToken)) {
+    return { reason: 'Token is in invalidTokens set', result: null }
+  }
 
   let client = findUser(token) ?? findUserByTwitchId(providerAccountId)
   if (client) {
     lookingupToken.delete(lookupToken)
-    return client
+    return { reason: 'Client found by token or twitchId', result: client }
   }
 
-  if (lookingupToken.has(lookupToken)) return null
+  if (lookingupToken.has(lookupToken)) {
+    return { reason: 'Token is currently being looked up', result: null }
+  }
 
   lookingupToken.set(lookupToken, true)
 
@@ -37,7 +42,7 @@ export default async function getDBUser({
     logger.error('[USER] 1 Error checking auth', { token: lookupToken, error: 'No token' })
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
-    return null
+    return { reason: 'No lookup token provided', result: null }
   }
 
   let userId = token || null
@@ -58,7 +63,10 @@ export default async function getDBUser({
       })
       invalidTokens.add(lookupToken)
       lookingupToken.delete(lookupToken)
-      return null
+      return {
+        reason: `Error looking up userId by providerAccountId: ${error.message}`,
+        result: null,
+      }
     }
   }
 
@@ -70,7 +78,7 @@ export default async function getDBUser({
     })
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
-    return null
+    return { reason: 'No userId found', result: null }
   }
 
   // Fetch user by `twitchId` and `token`
@@ -122,14 +130,14 @@ export default async function getDBUser({
   if (userError) {
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
-    return null
+    return { reason: `Error fetching user from supabase: ${userError.message}`, result: null }
   }
 
   if (!user || !user.id) {
     logger.info('Invalid token', { token: lookupToken })
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
-    return null
+    return { reason: 'No user or user.id found', result: null }
   }
 
   // If they require a refresh, don't cache them
@@ -137,20 +145,20 @@ export default async function getDBUser({
   if (Account.requires_refresh) {
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
-    return null
+    return { reason: 'Account requires refresh', result: null }
   }
 
   client = findUser(user.id)
   if (client) {
     lookingupToken.delete(lookupToken)
-    return client
+    return { reason: 'Client found by user.id', result: client }
   }
 
   if (!Account) {
     logger.info('Invalid token missing Account??', { token: lookupToken })
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
-    return
+    return { reason: 'No Account found', result: undefined }
   }
   let subscription: SocketClient['subscription'] | undefined = undefined
   if (Array.isArray(user.subscriptions) && user.subscriptions.length > 0) {
@@ -189,5 +197,5 @@ export default async function getDBUser({
   lookingupToken.delete(lookupToken)
   invalidTokens.delete(userInfo.id)
 
-  return userInfo as SocketClient
+  return { reason: 'User successfully retrieved', result: userInfo as SocketClient }
 }

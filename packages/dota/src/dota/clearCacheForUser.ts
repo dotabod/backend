@@ -3,22 +3,6 @@ import type { SocketClient } from '../types.js'
 import { deleteRedisData } from './GSIHandler.js'
 import { gsiHandlers, invalidTokens, twitchIdToToken, twitchNameToToken } from './lib/consts.js'
 
-// This will hold the last POST request timestamp for each token
-export const tokenLastPostTimestamps: Map<string, number> = new Map()
-export const TOKEN_TIMEOUT = 10 * 60 * 1000 // 10 minutes
-
-// Function to check for inactive tokens and delete the corresponding gsiHandler
-export async function checkForInactiveTokens() {
-  const now = Date.now()
-  const timeoutMillis = TOKEN_TIMEOUT
-
-  for (const [token, timestamp] of tokenLastPostTimestamps.entries()) {
-    if (now - timestamp > timeoutMillis) {
-      await clearCacheForUser(gsiHandlers.get(token)?.client)
-    }
-  }
-}
-
 // three types of in-memory cache exists
 export async function clearCacheForUser(client?: SocketClient) {
   if (!client) return
@@ -40,7 +24,6 @@ export async function clearCacheForUser(client?: SocketClient) {
   await deleteRedisData(client)
 
   gsiHandlers.delete(client.token)
-  tokenLastPostTimestamps.delete(client.token)
 
   // Also remove from invalidTokens set to allow re-authentication
   invalidTokens.delete(client.token)

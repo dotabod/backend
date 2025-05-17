@@ -37,7 +37,7 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
 
   pendingCheckAuth.set(token, true)
   getDBUser({ token, ip: forwardedIp })
-    .then((client) => {
+    .then(({ result: client }) => {
       if (client?.token) {
         if (!client.stream_online) {
           pendingCheckAuth.delete(token)

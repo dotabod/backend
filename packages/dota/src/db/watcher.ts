@@ -29,7 +29,7 @@ class SetupSupabase {
   }
 
   toggleHandler = async (userId: string, enable: boolean) => {
-    const client = await getDBUser({ token: userId })
+    const { result: client } = await getDBUser({ token: userId })
     if (!client) return
 
     toggleDotabod(userId, enable, client.name, client.locale)

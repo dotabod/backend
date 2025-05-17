@@ -77,7 +77,7 @@ twitchChat.on(
 
     // So we can get the users settings cuz some commands are disabled
     // This runs every command, but its cached so no hit on db
-    const client = await getDBUser({ twitchId: channelId })
+    const { result: client, reason } = await getDBUser({ twitchId: channelId })
     if (!client) {
       const now = Date.now()
       const lastMessageTime = lastMissingUserMessageTimestamps[channel] || 0
@@ -85,6 +85,7 @@ twitchChat.on(
       const shouldSendMessage = now - lastMessageTime > RATE_LIMIT_MS
 
       if (shouldSendMessage && text.startsWith('!')) {
+        logger.info('[TWITCH] Missing user', { channelId, channel, user, reason })
         chatClient.say(channel, t('missingUser', { lng: 'en' }))
         lastMissingUserMessageTimestamps[channel] = now
       }

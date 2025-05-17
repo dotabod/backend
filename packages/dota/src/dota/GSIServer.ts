@@ -18,11 +18,6 @@ import type { Ability, Item } from '../types.js'
 import { initDotaPatchChecker } from './DotaPatchChecker.js'
 import { emitMinimapBlockerStatus } from './GSIHandler.js'
 import type { GSIServerInterface } from './GSIServerTypes.js'
-import {
-  TOKEN_TIMEOUT,
-  checkForInactiveTokens,
-  tokenLastPostTimestamps,
-} from './clearCacheForUser.js'
 import { newData, processChanges } from './globalEventEmitter.js'
 import { gsiHandlers } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
@@ -47,7 +42,7 @@ function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
   const { token } = socket.handshake.auth
 
   getDBUser({ token })
-    .then((client) => {
+    .then(({ result: client }) => {
       if (client?.token) {
         // Successful authentication
         next()
@@ -111,13 +106,6 @@ class GSIServer implements GSIServerInterface {
     app.post(
       '/',
       (req: Request, res: Response, next: () => void) => {
-        const token = req.body?.auth?.token as string | undefined
-
-        if (token) {
-          // Update the timestamp for this token
-          tokenLastPostTimestamps.set(token, Date.now())
-        }
-
         next()
       },
       validateToken,
@@ -189,7 +177,7 @@ class GSIServer implements GSIServerInterface {
       }
 
       const { channelId } = req.params
-      const user = await getDBUser({ twitchId: channelId })
+      const { result: user } = await getDBUser({ twitchId: channelId })
       if (!user?.gsi) {
         res.status(200).json({ status: 'ok' })
         return
@@ -229,10 +217,6 @@ class GSIServer implements GSIServerInterface {
     this.io.on('disconnect', (reason) => {
       logger.info('[GSI] io disconnect', { reason })
     })
-
-    // Set up the repeating timer
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    setInterval(checkForInactiveTokens, TOKEN_TIMEOUT)
 
     // Set up the repeating timer for cleaning up resubscribe timestamps
     setInterval(cleanupResubscribeTimestamps, RESUBSCRIBE_CLEANUP_TIMEOUT)
