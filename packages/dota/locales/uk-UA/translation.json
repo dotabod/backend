@@ -148,7 +148,7 @@
     "won": "Остання гра: Перемога"
   },
   "lifetime": "Кількість ігор",
-  "matchData8500": "Valve вимкнула дані для 8500+ ММР матчів, але найближчим часом я вирішу це",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches",
   "matchFound": "Отримано дані матчу: {{commandList}} - команди активовані.",
   "matchId": "ID матчу: {{matchId}}",
   "midasUsed": "Midas нарешті був використаний через {{seconds}} с {{emote}}",

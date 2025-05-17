@@ -126,7 +126,7 @@
     "won": "بازی قبلی: بردیم"
   },
   "lifetime": "تمام بازی ها",
-  "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches",
   "matchFound": "بازی شروع شد. تمام این کامندها فعال است {{commandList}}",
   "matchId": "ایدی مچ: {{matchId}}",
   "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",
