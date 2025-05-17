@@ -120,9 +120,9 @@ def create_initial_schema(cursor):
 
 def add_match_id_column(cursor):
     """Add match_id column to relevant tables."""
-    # Add match_id to request_queue table
+    # Add match_id to processing_queue table
     cursor.execute("""
-    ALTER TABLE request_queue
+    ALTER TABLE processing_queue
     ADD COLUMN IF NOT EXISTS match_id VARCHAR(255)
     """)
 
@@ -135,6 +135,11 @@ def add_match_id_column(cursor):
     # Create index on match_id for faster lookups
     cursor.execute("""
     CREATE INDEX IF NOT EXISTS idx_clip_results_match_id ON clip_results (match_id)
+    """)
+    
+    # Create index on match_id for processing_queue table
+    cursor.execute("""
+    CREATE INDEX IF NOT EXISTS idx_processing_queue_match_id ON processing_queue (match_id)
     """)
 
 def add_facets_column(cursor):
