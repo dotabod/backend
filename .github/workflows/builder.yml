@@ -42,7 +42,10 @@ jobs:
       - name: Extract branch name
         if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' || steps.dota-changes.outputs.deps_changed == 'true' || steps.dota-changes.outputs.profanity_filter_changed == 'true' || steps.dota-changes.outputs.shared_utils_changed == 'true' }}
         shell: bash
-        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+        run: |
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          # Sanitize branch name for Docker tag (replace '/' with '-')
+          echo "DOCKER_TAG=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' || steps.dota-changes.outputs.deps_changed == 'true' || steps.dota-changes.outputs.profanity_filter_changed == 'true' || steps.dota-changes.outputs.shared_utils_changed == 'true' }}
@@ -70,7 +73,7 @@ jobs:
           targets: dota
           set: |
             *.platform=linux/arm64,linux/amd64/v3
-            dota.tags=ghcr.io/${{ github.repository_owner }}/dota:${{ env.BRANCH_NAME }}
+            dota.tags=ghcr.io/${{ github.repository_owner }}/dota:${{ env.DOCKER_TAG }}
             *.cache-from=
             *.cache-to=
 
@@ -108,7 +111,10 @@ jobs:
       - name: Extract branch name
         if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.shared_utils_changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' }}
         shell: bash
-        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+        run: |
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          # Sanitize branch name for Docker tag (replace '/' with '-')
+          echo "DOCKER_TAG=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.shared_utils_changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' }}
@@ -136,6 +142,6 @@ jobs:
           targets: ${{ matrix.service }}
           set: |
             *.platform=linux/arm64,linux/amd64/v3
-            ${{ matrix.service }}.tags=ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ env.BRANCH_NAME }}
+            ${{ matrix.service }}.tags=ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ env.DOCKER_TAG }}
             *.cache-from=
             *.cache-to=
