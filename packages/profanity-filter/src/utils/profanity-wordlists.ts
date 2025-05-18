@@ -14,6 +14,14 @@ import {
   normalizeRepeatedChars,
 } from './text-normalization.js'
 
+// Load profanity wordlists from external JSON files
+import russianWords from '../../wordlists/russian.json' assert { type: 'json' }
+import chineseWords from '../../wordlists/chinese.json' assert { type: 'json' }
+import spanishWords from '../../wordlists/spanish.json' assert { type: 'json' }
+import frenchWords from '../../wordlists/french.json' assert { type: 'json' }
+import germanWords from '../../wordlists/german.json' assert { type: 'json' }
+import spanishLeetWords from '../../wordlists/spanish-leetspeak.json' assert { type: 'json' }
+
 /**
  * Compresses repeated characters to single characters
  * e.g., "fuuuuck" becomes "fuck"
@@ -23,201 +31,20 @@ export function compressRepeatedCharacters(text: string): string {
 }
 
 // Russian profanity terms (common ones)
-export const russianProfanityList = [
-  'сука',
-  'блять',
-  'пидор',
-  'пидар',
-  'хуй',
-  'ебать',
-  'нахуй',
-  'пизда',
-  'залупа',
-  'бля',
-  'ебал',
-  'ебаный',
-  'ебанько',
-  'ебанный',
-  'ебанат',
-  'пидр',
-  'пизд',
-  'хуе',
-  'хуи',
-  'хуя',
-  'хер',
-  'херня',
-  'херь',
-  'мудак',
-  'мудила',
-  'блядь',
-  'чурка',
-  'хач',
-  'кацап',
-  'жид',
-  'хахол',
-  // Additional ethnic and racial slurs
-  'москаль', // Derogatory term for Russians
-  'хохол', // Corrected spelling of slur for Ukrainians
-  'пшек', // Slur for Polish people
-  'бульбаш', // Slur for Belarusians
-  'укроп', // Derogatory for Ukrainians
-  'рагуль', // Rural/uncultured person slur
-  'малорос', // Derogatory for Ukrainians
-  'ватник', // Political slur
-  'колорад', // Political derogatory term
-  'азер', // Derogatory for Azerbaijanis
-  'армяшка', // Derogatory for Armenians
-  'грызун', // Derogatory for Georgians
-  'чурбан', // Variation of чурка
-  'чуркестан', // Derogatory term
-  'чурбанье', // Collective derogatory form
-  'абрек', // Derogatory for Caucasians
-  'зверь', // Derogatory for Caucasians when used in ethnic context
-  'черномазый', // Equivalent to the n-word
-  'хачик', // Variation of хач
-  'урюк', // Derogatory for Central Asians
-  'чернота', // Racial slur
-  'чалма', // Derogatory for Muslims
-  'сарацин', // Derogatory for Muslims
-  'баклажан', // Racial slur based on skin color
-  'жидовка', // Female form of жид
-  'жидяра', // Intensified form of жид
-  'юде', // Derogatory for Jews
-  'пархатый', // Antisemitic slur
-  'шнобель', // Antisemitic reference
-  'пейсатый', // Antisemitic reference
-  'циган', // Gypsy/Roma slur
-  'цыганва', // Derogatory for Roma
-  'гой', // Used in antisemitic context
-  'узкоглазый', // Slant-eye slur
-  'китаеза', // Derogatory for Chinese
-  'япошка', // Derogatory for Japanese
-  'монгол', // When used pejoratively
-  'желтый', // Yellow, racial slur
-  'самурай', // When used pejoratively
-  // Common transliterated slurs
-  'nigger',
-  'kike',
-  'spic',
-  'chink',
-  'wop',
-  'polack',
-  'paki',
-  'gook',
-  'dago',
-  'jewed', // Antisemitic slur based on Jewish stereotypes
-  'jew',
-]
+const russianProfanityList: string[] = russianWords
 
 // Chinese profanity terms
-export const chineseProfanityList = [
-  '操你妈',
-  '肏你妈',
-  '草你妈',
-  '妈的',
-  '他妈的',
-  '傻逼',
-  '滚蛋',
-  '废物',
-  '婊子',
-  '贱人',
-  '靠',
-  '操',
-  '屁眼',
-  '混蛋',
-  '王八蛋',
-  '去死',
-  '白痴',
-  '吃屎',
-  '你妈逼',
-  '日你妈',
-]
+const chineseProfanityList: string[] = chineseWords
 
 // Additional European languages profanity
-export const europeanProfanityList = {
-  // Spanish
-  spanish: [
-    'puta',
-    'mierda',
-    'cojones',
-    'joder',
-    'follar',
-    'cabron',
-    'cabrón',
-    'coño',
-    'gilipollas',
-    'hijo de puta',
-    'hijoputa',
-    'imbécil',
-    'capullo',
-    'idiota',
-  ],
-  // French
-  french: [
-    'putain',
-    'merde',
-    'connard',
-    'baise',
-    'foutre',
-    'con',
-    'salope',
-    'pute',
-    'enculé',
-    'fils de pute',
-    'bordel',
-    'cul',
-    'branler',
-    'crétin',
-    'connasse',
-  ],
-  // German
-  german: [
-    'scheiße',
-    'arschloch',
-    'fotze',
-    'fick',
-    'wichser',
-    'hurensohn',
-    'mistkerl',
-    'schwuchtel',
-    'schwanz',
-    'verfickt',
-    'verdammt',
-    'schlampe',
-    'hure',
-  ],
+const europeanProfanityList = {
+  spanish: spanishWords as string[],
+  french: frenchWords as string[],
+  german: germanWords as string[],
 }
 
 // Spanish profanity in leetspeak form (pre-generated common variants)
-const spanishLeetSpeakList = [
-  'h1j0 d3 put4',
-  'h1j0d3put4',
-  'h1jod3put4',
-  'hij0 d3 put4',
-  'p0r0n',
-  'p0rn0',
-  'p0rnogr4f14',
-  'p0rn0gr4f14',
-  'p0rn0gr4fi4',
-  'c0j0n3s',
-  'c0jon3s',
-  'j0d3r',
-  'c4br0n',
-  'c4bron',
-  'c0ñ0',
-  'c0n0',
-  'pu74',
-  'put4',
-  'mierd4',
-  'm13rd4',
-  'h1j0pu74',
-  'pv74',
-  'pvt4',
-  'c4pull0',
-  'c4pull0',
-  '1mb3c1l',
-  '1d10t4',
-]
+const spanishLeetSpeakList: string[] = spanishLeetWords
 
 // Common character substitutions for leetspeak in European languages
 const europeanLeetSpeakMap: Record<string, string[]> = {
