@@ -1,25 +1,25 @@
-import type { Packet } from '../types/index.js'
+import type { Packet, Team2PlayerId, Team3PlayerId } from '../types/index.js'
 
 export function getSpectatorPlayers(gsi?: Packet) {
   let matchPlayers: { heroid: number; accountid: number; selected: boolean }[] = []
   if (gsi?.hero?.team2 && gsi.hero.team3) {
     matchPlayers = [
-      ...Object.keys(gsi.hero.team2).map((playerIdx: any) => ({
-        // @ts-expect-error asdf
-        heroid: gsi.hero?.team2?.[playerIdx].id,
-        // @ts-expect-error asdf
-        accountid: Number(gsi.player?.team2?.[playerIdx].accountid),
-        // @ts-expect-error asdf
-        selected: !!gsi.hero?.team2?.[playerIdx].selected_unit,
-      })),
-      ...Object.keys(gsi.hero.team3).map((playerIdx: any) => ({
-        // @ts-expect-error asdf
-        heroid: gsi.hero?.team3?.[playerIdx].id,
-        // @ts-expect-error asdf
-        accountid: Number(gsi.player?.team3?.[playerIdx].accountid),
-        // @ts-expect-error asdf
-        selected: !!gsi.hero?.team3?.[playerIdx].selected_unit,
-      })),
+      ...Object.keys(gsi.hero.team2).map((playerIdx) => {
+        const key = playerIdx as Team2PlayerId
+        return {
+          heroid: gsi.hero!.team2![key].id,
+          accountid: Number(gsi.player!.team2![key].accountid),
+          selected: !!gsi.hero!.team2![key].selected_unit,
+        }
+      }),
+      ...Object.keys(gsi.hero.team3).map((playerIdx) => {
+        const key = playerIdx as Team3PlayerId
+        return {
+          heroid: gsi.hero!.team3![key].id,
+          accountid: Number(gsi.player!.team3![key].accountid),
+          selected: !!gsi.hero!.team3![key].selected_unit,
+        }
+      }),
     ]
   }
 
