@@ -62,7 +62,7 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 
 ## Design Tradeoffs
 
-1. Choosing to not translate the homepage or admin dashboard. They are not used by the majority of users. The homepage is only used by new users to sign up for the bot, and the admin dashboard is only used by streamers to configure the bot. The majority of users are viewers who interact with the bot through Twitch chat commands, and the bot is fully translated for them. The website can already be automatically translated thorugh their browser settings.
+1. Choosing to not translate the homepage or admin dashboard. They are not used by the majority of users. The homepage is only used by new users to sign up for the bot, and the admin dashboard is only used by streamers to configure the bot. The majority of users are viewers who interact with the bot through Twitch chat commands, and the bot is fully translated for them. The website can already be automatically translated through their browser settings.
 2. YouTube live integration, although possible, had to be prioritized for a later date, as it would require a lot of development time and would not be used by the majority of users.
 3. Serverless architecture was not chosen due to the high cost of running the app on AWS Lambda. The app is already running on AWS EC2 instances, and the cost of running the app on Lambda would be 10x more expensive.
    - Currently receiving 25m requests/month
