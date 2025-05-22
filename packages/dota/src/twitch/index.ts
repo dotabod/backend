@@ -70,7 +70,10 @@ twitchChat.on(
       messageId: string
     },
   ) => {
-    if (!channelId) return
+    if (!channelId) {
+      logger.error('No channelId', { channel, user, text })
+      return
+    }
 
     // Skip rank check for mods and broadcasters
     const isStaff = userInfo.isMod || userInfo.isBroadcaster
@@ -88,7 +91,9 @@ twitchChat.on(
         logger.info('[TWITCH] Missing user', { channelId, channel, user, reason })
         chatClient.say(channel, t('missingUser', { lng: 'en' }))
         lastMissingUserMessageTimestamps[channel] = now
+        return
       }
+      logger.error('No client', { channel, user, text, reason, channelId })
       return
     }
 
@@ -197,6 +202,7 @@ twitchChat.on(
       !toggleCommand?.aliases?.includes(text.replace('!', '').split(' ')[0]) &&
       text.split(' ')[0] !== '!toggle'
     ) {
+      logger.info('Bot is disabled', { channel, user, text })
       return
     }
 
