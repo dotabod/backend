@@ -148,7 +148,7 @@
     "won": "Последняя игра: победа"
   },
   "lifetime": "Количество игр",
-  "matchData8500": "Valve отключили данные для матчей 8500+ рейтинга, но в скором времени у меня будет решение",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches",
   "matchFound": "Данные матча получены {{commandList}} команды бота активны.",
   "matchId": "ID матча: {{matchId}}",
   "midasUsed": "Midas наконец-то был использован $t(seconds, {\"count\": {{seconds}} }) спустя {{emote}}",

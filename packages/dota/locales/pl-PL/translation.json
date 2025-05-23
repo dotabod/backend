@@ -148,7 +148,7 @@
     "won": "Wygrano ostatnią grę"
   },
   "lifetime": "Gier na koncie",
-  "matchData8500": "Valve wyłączyło dane dla meczy 8500+ mmr, ale niedługo będę miał rozwiązanie ok",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches",
   "matchFound": "Znaleziono identyfikator gry {{commandList}} aktywne komendy.",
   "matchId": "Identyfikator meczu:  {{matchId}}",
   "midasUsed": "Midas został w końcu użyty, $t(seconds, {\"count\": {{seconds}} }) za późno {{emote}}",

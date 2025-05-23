@@ -134,7 +134,7 @@
     "won": "Partida anterior: Vitória"
   },
   "lifetime": "Partidas totais jogadas",
-  "matchData8500": "A Valve desativou os dados por partidas de mais de 8500 mmr, mas terei uma solução em breve",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches",
   "matchFound": "Dados da partida encontrados comandos ativados: {{commandList}}",
   "matchId": "ID da partida: {{matchId}}",
   "midasUsed": "A midas foi finalmente usada, $t(seconds, {\"count\": {{seconds}} }) atrasados {{emote}}",
