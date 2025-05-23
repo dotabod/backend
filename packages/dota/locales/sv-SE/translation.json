@@ -126,7 +126,7 @@
     "won": "Vann förra matchen"
   },
   "lifetime": "Totala matcher",
-  "matchData8500": "Valve har inaktiverat data för matcher över 8500 mmr, men jag har en lösning snart ok",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches",
   "matchFound": "Matchdata hittades {{commandList}} -kommandon aktiverade.",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas användes äntligen, $t(seconds, {\"count\": {{seconds}} }) sent {{emote}}",
