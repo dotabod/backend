@@ -1,5 +1,6 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { is8500Plus } from '../../../utils/index.js'
+import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import type { allStates } from '../../lib/consts.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
@@ -11,6 +12,14 @@ eventHandler.registerEvent('map:game_state', {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi, false)) return
     if (!['DOTA_GAMERULES_STATE_STRATEGY_TIME'].includes(gameState)) return
+
+    // Check if auto clipping is disabled
+    const autoClippingEnabled = !getValueOrDefault(
+      DBSettings.disableAutoClipping,
+      dotaClient.client.settings,
+      dotaClient.client.subscription,
+    )
+    if (!autoClippingEnabled) return
 
     // Extract common log context
     const logContext = {

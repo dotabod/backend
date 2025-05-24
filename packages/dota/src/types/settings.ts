@@ -135,6 +135,7 @@ export const defaultSettingsStructure = {
   rosh: true,
   'minimap-simple': false,
   'minimap-xl': false,
+  'minimap-opacity': 0.7,
   onlyParty: false,
   livePolls: true,
   streamDelay: 0,
@@ -152,8 +153,16 @@ export const defaultSettingsStructure = {
   queueBlocker: false,
   queueBlockerFindMatch: false,
   queueBlockerFindMatchText: 'Ranked match / All pick / Europe East, Russia',
-  lastFmUsername: '',
+  showGiftAlerts: true,
   lastFmOverlay: false,
+  lastFmUsername: '',
+  lastFmRefreshRate: 30, // in seconds
+  disableAutoClipping: false,
+  crypto_payment_interest: {
+    interested: false,
+    tier: 'PRO',
+    transactionType: 'RECURRING',
+  },
   rankOnly: {
     enabled: false,
     minimumRank: 'Herald',
