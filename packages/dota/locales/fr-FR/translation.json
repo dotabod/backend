@@ -72,7 +72,7 @@
   },
   "facet": "{{- heroName}}, facette {{number}} : {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Facette spécifiée invalide · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Utilisez !facet {{- heroName}} 1 ou !facet {{- heroName}} 2 · Dotabod ne connait que la facette choisie pour le héro actuel du streameur",
+  "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the streamer's facet",
   "facetSelection": "{{- heroName}} facette sélectionnée : {{- facetTitle}} · {{- facetDescription}}",
   "facetTotalLimit_one": "Seulement {{count}} facette est disponible pour {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_many": "",
