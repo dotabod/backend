@@ -75,7 +75,7 @@
   },
   "facet": "{{- heroName}} вибрав грань {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Вказано недійсну грань · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Використовуйте !facet {{- heroName}} 1 або !facet {{- heroName}} 2 · Dotabod знає тільки фактично обрану грань для даного героя ",
+  "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the streamer's facet",
   "facetSelection": "{{- heroName}} вибрав грань: {{- facetTitle}} · {{- facetDescription}}",
   "facetTotalLimit_one": "Лише {{count}} грань доступна для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_few": "Лише {{count}} грані доступна для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
