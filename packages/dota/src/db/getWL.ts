@@ -8,6 +8,7 @@ interface WL {
   channelId: string
   mmrEnabled: false
   startDate?: Date | null
+  currentGameIsRanked?: boolean | null
 }
 
 export const LOBBY_TYPE_RANKED = 7
@@ -35,7 +36,7 @@ const updateStats = (
   }
 }
 
-export async function getWL({ lng, channelId, mmrEnabled, startDate }: WL) {
+export async function getWL({ lng, channelId, mmrEnabled, startDate, currentGameIsRanked }: WL) {
   if (!channelId) {
     return Promise.resolve({ record: [{ win: 0, lose: 0, type: 'U' }], msg: null })
   }
@@ -75,13 +76,21 @@ export async function getWL({ lng, channelId, mmrEnabled, startDate }: WL) {
   const rankedMsg = `${t('ranked', { lng })} ${ranked.win} W - ${ranked.lose} L${mmrMsg}`
   const unrankedMsg = `${t('unranked', { lng })} ${unranked.win} W - ${unranked.lose} L`
 
-  const msg = [
-    hasRanked ? rankedMsg : null,
-    hasUnranked ? unrankedMsg : null,
-    !hasRanked && !hasUnranked ? '0 W - 0 L' : null,
-  ]
-    .filter(Boolean)
-    .join(' · ')
+  // Order the messages based on current game type - show current game type first
+  let messages: (string | null)[]
+
+  if (currentGameIsRanked === true) {
+    // Currently in ranked game - show ranked first
+    messages = [hasRanked ? rankedMsg : null, hasUnranked ? unrankedMsg : null]
+  } else if (currentGameIsRanked === false) {
+    // Currently in unranked game - show unranked first
+    messages = [hasUnranked ? unrankedMsg : null, hasRanked ? rankedMsg : null]
+  } else {
+    // Not in a game - show ranked first (default behavior)
+    messages = [hasRanked ? rankedMsg : null, hasUnranked ? unrankedMsg : null]
+  }
+
+  const msg = messages.filter(Boolean).join(' · ') || '0 W - 0 L'
 
   return { record, msg }
 }
