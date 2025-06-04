@@ -2,8 +2,8 @@ import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { is8500Plus } from '../../../utils/index.js'
 import { addClipToDeletionQueue } from '../../GSIServer.js'
-import type { allStates } from '../../lib/consts.js'
 import { delayedQueue } from '../../lib/DelayedQueue.js'
+import type { allStates } from '../../lib/consts.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 
@@ -46,55 +46,52 @@ eventHandler.registerEvent('map:game_state', {
     // Create clip after delay
     const CLIP_DELAY_MS = 50000 // 50 seconds
 
-    delayedQueue.addTask(
-      CLIP_DELAY_MS,
-      async () => {
+    delayedQueue.addTask(CLIP_DELAY_MS, async () => {
+      try {
+        const api = await getTwitchAPI(accountId)
+        const clipId = await api.clips.createClip({
+          createAfterDelay: true,
+          channel: accountId,
+        })
+
+        // Process the clip
         try {
-          const api = await getTwitchAPI(accountId)
-          const clipId = await api.clips.createClip({
-            createAfterDelay: true,
-            channel: accountId,
-          })
-
-          // Process the clip
-          try {
-            const visionApiHost = process.env.VISION_API_HOST
-            if (!visionApiHost) {
-              throw new Error('VISION_API_HOST environment variable not set')
-            }
-            // Fire and forget - don't wait for the response
-            fetch(
-              `https://${visionApiHost}/detect?clip_id=${clipId}&match_id=${dotaClient.client.gsi?.map?.matchid}`,
-              {
-                headers: {
-                  'X-API-Key': process.env.VISION_API_KEY || '',
-                },
+          const visionApiHost = process.env.VISION_API_HOST
+          if (!visionApiHost) {
+            throw new Error('VISION_API_HOST environment variable not set')
+          }
+          // Fire and forget - don't wait for the response
+          fetch(
+            `https://${visionApiHost}/detect?clip_id=${clipId}&match_id=${dotaClient.client.gsi?.map?.matchid}`,
+            {
+              headers: {
+                'X-API-Key': process.env.VISION_API_KEY || '',
               },
-            ).catch((error) => {
-              logger.error('Error sending clip processing request', {
-                ...logContext,
-                error: error.message,
-                clipId,
-              })
-            })
-
-            // Add clip to the deletion queue instead of using setTimeout
-            addClipToDeletionQueue(accountId, clipId)
-            logger.info('Added clip to deletion queue', { ...logContext, clipId, accountId })
-          } catch (processingError: any) {
-            logger.error('Error processing clip', {
+            },
+          ).catch((error) => {
+            logger.error('Error sending clip processing request', {
               ...logContext,
-              error: processingError.message,
+              error: error.message,
               clipId,
             })
-          }
-        } catch (clipError: any) {
-          logger.error('Error creating clip', {
+          })
+
+          // Add clip to the deletion queue instead of using setTimeout
+          addClipToDeletionQueue(accountId, clipId)
+          logger.info('Added clip to deletion queue', { ...logContext, clipId, accountId })
+        } catch (processingError: any) {
+          logger.error('Error processing clip', {
             ...logContext,
-            error: clipError.message,
+            error: processingError.message,
+            clipId,
           })
         }
+      } catch (clipError: any) {
+        logger.error('Error creating clip', {
+          ...logContext,
+          error: clipError.message,
+        })
       }
-    )
+    })
   },
 })
