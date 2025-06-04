@@ -75,7 +75,7 @@
   },
   "facet": "{{number}} аспект {{- heroName}} - это {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Указан неверный аспект · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Напиши !facet {{- heroName}} 1 или !facet {{- heroName}} 2 · Dotabod знает только выбранный аспект для текущего героя стримера",
+  "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the streamer's facet",
   "facetSelection": "{{- heroName}} выбрал аспект: {{- facetTitle}} · {{- facetDescription}}",
   "facetTotalLimit_one": "Только {{count}} аспект доступен у {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_few": "Только {{count}} аспекта доступны у {{- heroName}} · $t(facetNotFound, {{- heroName }})",
