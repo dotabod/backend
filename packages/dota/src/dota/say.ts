@@ -9,6 +9,7 @@ import {
 import { chatClient } from '../twitch/chatClient.js'
 import type { SocketClient } from '../types.js'
 import { getStreamDelay } from './getStreamDelay.js'
+import { delayedQueue } from './lib/DelayedQueue.js'
 
 export function say(
   client: SocketClient,
@@ -55,10 +56,11 @@ export function say(
     return
   }
 
-  setTimeout(
-    () => {
-      client.name && chatClient.say(client.name, msg)
-    },
+  delayedQueue.addTask(
     getStreamDelay(client.settings, client.subscription),
+    (payload) => {
+      payload.clientName && chatClient.say(payload.clientName, payload.message)
+    },
+    { clientName: client.name, message: msg },
   )
 }

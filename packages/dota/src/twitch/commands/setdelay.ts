@@ -23,8 +23,8 @@ commandHandler.registerCommand('setdelay', {
     }
 
     let delayInSeconds = Number(args[0]) || 0
-    if (delayInSeconds > 300) {
-      delayInSeconds = 300
+    if (delayInSeconds > 3000) {
+      delayInSeconds = 3000
     } else if (delayInSeconds < 0) {
       delayInSeconds = 0
     }

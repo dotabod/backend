@@ -3,6 +3,7 @@ import { t } from 'i18next'
 import { redisClient } from '../../../db/redisInstance.js'
 import getHero, { type HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
+import { delayedQueue } from '../../lib/DelayedQueue.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 
@@ -20,7 +21,10 @@ eventHandler.registerEvent('player:kill_streak', {
     const previousStreak = Number(dotaClient.client.gsi?.previously?.player?.kill_streak)
     const lostStreak = previousStreak >= 3 && !streak
     if (lostStreak) {
-      clearTimeout(dotaClient.killstreakTimeout)
+      if (dotaClient.killstreakTaskId) {
+        delayedQueue.removeTask(dotaClient.killstreakTaskId)
+        dotaClient.killstreakTaskId = undefined
+      }
 
       say(
         dotaClient.client,
@@ -37,18 +41,23 @@ eventHandler.registerEvent('player:kill_streak', {
 
     if (streak <= 3) return
 
-    clearTimeout(dotaClient.killstreakTimeout)
-    dotaClient.killstreakTimeout = setTimeout(() => {
-      say(
-        dotaClient.client,
-        t('killstreak.won', {
-          emote: 'POGGIES',
-          count: streak,
-          heroName,
-          lng: dotaClient.client.locale,
-        }),
-        { chattersKey: 'killstreak' },
-      )
-    }, 15000)
+    if (dotaClient.killstreakTaskId) {
+      delayedQueue.removeTask(dotaClient.killstreakTaskId)
+    }
+    dotaClient.killstreakTaskId = delayedQueue.addTask(
+      15000,
+      () => {
+        say(
+          dotaClient.client,
+          t('killstreak.won', {
+            emote: 'POGGIES',
+            count: streak,
+            heroName,
+            lng: dotaClient.client.locale,
+          }),
+          { chattersKey: 'killstreak' },
+        )
+      }
+    )
   },
 })
