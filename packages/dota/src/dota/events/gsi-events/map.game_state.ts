@@ -94,8 +94,7 @@ eventHandler.registerEvent('map:game_state', {
             error: clipError.message,
           })
         }
-      },
-      { accountId, matchId: dotaClient.client.gsi?.map?.matchid, gameState }
+      }
     )
   },
 })
