@@ -287,12 +287,9 @@ export class GSIHandler implements GSIHandlerType {
         if (response.playerList.length) {
           server.io.to(this.client.token).emit('notable-players', response.playerList)
 
-          delayedQueue.addTask(
-            60 * 2000,
-            () => {
-              server.io.to(this.client.token).emit('notable-players', null)
-            },
-          )
+          delayedQueue.addTask(60 * 2000, () => {
+            server.io.to(this.client.token).emit('notable-players', null)
+          })
         }
       })
       .catch(() => {
@@ -602,10 +599,7 @@ export class GSIHandler implements GSIHandlerType {
       return
     }
 
-    delayedQueue.addTask(
-      getStreamDelay(client.settings, client.subscription),
-      this.openTheBet,
-    )
+    delayedQueue.addTask(getStreamDelay(client.settings, client.subscription), this.openTheBet)
 
     // .catch((e: any) => {
     //   logger.error(`[BETS] Could not add bet to channel`, {
@@ -890,50 +884,47 @@ export class GSIHandler implements GSIHandlerType {
         logger.error('err toggleHandler', { e })
       }
 
-      delayedQueue.addTask(
-        getStreamDelay(this.client.settings, this.client.subscription),
-        () => {
-          const message = won
-            ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
-            : t('bets.lost', { lng: this.client.locale, emote: 'Happi' })
+      delayedQueue.addTask(getStreamDelay(this.client.settings, this.client.subscription), () => {
+        const message = won
+          ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
+          : t('bets.lost', { lng: this.client.locale, emote: 'Happi' })
 
-          say(this.client, message, { delay: false, chattersKey: 'matchOutcome' })
+        say(this.client, message, { delay: false, chattersKey: 'matchOutcome' })
 
-          if (!betsEnabled) {
-            logger.info('Bets are not enabled, stopping here', {
+        if (!betsEnabled) {
+          logger.info('Bets are not enabled, stopping here', {
+            name: this.client.name,
+          })
+          this.resetClientState().catch(() => {
+            //
+          })
+          return
+        }
+
+        closeTwitchBet(won, this.getChannelId(), matchId)
+          .then(() => {
+            logger.info('[BETS] end bets', {
+              event: 'end_bets',
+              matchId,
               name: this.client.name,
+              winning_team: localWinner,
+              player_team: myTeam,
+              didWin: won,
             })
-            this.resetClientState().catch(() => {
-              //
+          })
+          .catch((e: any) => {
+            logger.error('[BETS] Error closing twitch bet', {
+              channel,
+              e: e?.message || e,
+              matchId,
             })
-            return
-          }
-
-          closeTwitchBet(won, this.getChannelId(), matchId)
-            .then(() => {
-              logger.info('[BETS] end bets', {
-                event: 'end_bets',
-                matchId,
-                name: this.client.name,
-                winning_team: localWinner,
-                player_team: myTeam,
-                didWin: won,
-              })
+          })
+          .finally(() => {
+            this.resetClientState().catch((e) => {
+              logger.error('Error resetting client state', { e })
             })
-            .catch((e: any) => {
-              logger.error('[BETS] Error closing twitch bet', {
-                channel,
-                e: e?.message || e,
-                matchId,
-              })
-            })
-            .finally(() => {
-              this.resetClientState().catch((e) => {
-                logger.error('Error resetting client state', { e })
-              })
-            })
-        },
-      )
+          })
+      })
     } catch (error) {
       logger.error('Error closing bets', { error, name: this.client.name })
     } finally {

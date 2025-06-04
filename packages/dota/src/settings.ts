@@ -14,10 +14,7 @@ export { DBSettings, type SettingKeys, type CommandKeys, type ChatterKeys }
 export const commands = defaultCommands
 export const defaultSettings = defaultSettingsStructure
 
-export const getRawSettingValue = (
-  key: SettingKeys,
-  data?: { key: string; value: any }[],
-) => {
+export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value: any }[]) => {
   // Rest of existing logic for handling settings
   if (!Array.isArray(data) || !data.length || !data.filter(Boolean).length) {
     return defaultSettings[key]

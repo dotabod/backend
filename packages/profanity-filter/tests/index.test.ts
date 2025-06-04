@@ -389,7 +389,7 @@ describe('Profanity Filter', () => {
         { phrase: 'transgender people are mentally ill', match: 'transgender' },
         { phrase: 'transgenderism is a delusion', match: 'transgender' },
         { phrase: 'transsexuals are delusional', match: 'transsexual' },
-        { phrase: 'trans people aren\'t real women', match: 'trans' },
+        { phrase: "trans people aren't real women", match: 'trans' },
         { phrase: 'trans ideology is dangerous', match: 'trans' },
         { phrase: 'trans agenda in schools', match: 'trans' },
         { phrase: 'only two genders exist', match: null },
@@ -410,11 +410,11 @@ describe('Profanity Filter', () => {
           matches?: string[]
           language?: string
         }
-        
+
         console.log({ phrase, details, match }, 'testing')
         expect(details.isFlagged).toBe(true)
         expect(details.source).toBe('hate-speech')
-        
+
         if (match && details.matches && details.matches.length > 0) {
           expect(details.matches[0]).toBe(match)
         }

@@ -1,9 +1,9 @@
 import { t } from 'i18next'
 
 import { redisClient } from '../../../db/redisInstance.js'
+import { delayedQueue } from '../../lib/DelayedQueue.js'
 import getHero, { type HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import { delayedQueue } from '../../lib/DelayedQueue.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 
@@ -44,20 +44,17 @@ eventHandler.registerEvent('player:kill_streak', {
     if (dotaClient.killstreakTaskId) {
       delayedQueue.removeTask(dotaClient.killstreakTaskId)
     }
-    dotaClient.killstreakTaskId = delayedQueue.addTask(
-      15000,
-      () => {
-        say(
-          dotaClient.client,
-          t('killstreak.won', {
-            emote: 'POGGIES',
-            count: streak,
-            heroName,
-            lng: dotaClient.client.locale,
-          }),
-          { chattersKey: 'killstreak' },
-        )
-      }
-    )
+    dotaClient.killstreakTaskId = delayedQueue.addTask(15000, () => {
+      say(
+        dotaClient.client,
+        t('killstreak.won', {
+          emote: 'POGGIES',
+          count: streak,
+          heroName,
+          lng: dotaClient.client.locale,
+        }),
+        { chattersKey: 'killstreak' },
+      )
+    })
   },
 })

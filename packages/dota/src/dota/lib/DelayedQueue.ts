@@ -23,7 +23,7 @@ export class DelayedQueue {
     delayMs: number,
     callback: (payload: any) => void | Promise<void>,
     payload: any = null,
-    priority: number = 0,
+    priority = 0,
   ): string {
     // Clamp delay to maximum allowed
     const clampedDelay = Math.min(delayMs, this.maxDelayMs)
@@ -40,14 +40,14 @@ export class DelayedQueue {
 
     // Insert task in sorted order (by executeAt, then by priority)
     this.insertTaskSorted(task)
-    
+
     logger.info(`DelayedQueue: Added task ${taskId} to execute in ${clampedDelay}ms`)
     return taskId
   }
 
   removeTask(taskId: string): boolean {
     const initialLength = this.tasks.length
-    this.tasks = this.tasks.filter(task => task.id !== taskId)
+    this.tasks = this.tasks.filter((task) => task.id !== taskId)
     return this.tasks.length < initialLength
   }
 
@@ -68,8 +68,10 @@ export class DelayedQueue {
       const mid = Math.floor((left + right) / 2)
       const midTask = this.tasks[mid]
 
-      if (midTask.executeAt < newTask.executeAt || 
-          (midTask.executeAt === newTask.executeAt && midTask.priority <= newTask.priority)) {
+      if (
+        midTask.executeAt < newTask.executeAt ||
+        (midTask.executeAt === newTask.executeAt && midTask.priority <= newTask.priority)
+      ) {
         left = mid + 1
       } else {
         right = mid
@@ -102,7 +104,7 @@ export class DelayedQueue {
     // Execute tasks concurrently
     if (tasksToExecute.length > 0) {
       logger.info(`DelayedQueue: Executing ${tasksToExecute.length} tasks`)
-      
+
       await Promise.allSettled(
         tasksToExecute.map(async (task) => {
           try {
@@ -111,7 +113,7 @@ export class DelayedQueue {
           } catch (error) {
             logger.error(`DelayedQueue: Error executing task ${task.id}`, { error })
           }
-        })
+        }),
       )
     }
   }
@@ -130,12 +132,12 @@ export class DelayedQueue {
   }
 
   // Graceful shutdown - execute remaining tasks or clear them
-  async shutdown(executeRemaining: boolean = false): Promise<void> {
+  async shutdown(executeRemaining = false): Promise<void> {
     this.stop()
-    
+
     if (executeRemaining && this.tasks.length > 0) {
       logger.info(`DelayedQueue: Executing ${this.tasks.length} remaining tasks during shutdown`)
-      
+
       await Promise.allSettled(
         this.tasks.map(async (task) => {
           try {
@@ -143,10 +145,10 @@ export class DelayedQueue {
           } catch (error) {
             logger.error(`DelayedQueue: Error executing task ${task.id} during shutdown`, { error })
           }
-        })
+        }),
       )
     }
-    
+
     this.tasks = []
     logger.info('DelayedQueue: Shutdown complete')
   }

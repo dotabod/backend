@@ -1,10 +1,10 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
-import { is8500Plus } from '../../../utils/index.js'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
+import { is8500Plus } from '../../../utils/index.js'
+import { addClipToDeletionQueue } from '../../GSIServer.js'
 import type { allStates } from '../../lib/consts.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
-import { addClipToDeletionQueue } from '../../GSIServer.js'
 
 eventHandler.registerEvent('map:game_state', {
   handler: async (dotaClient, gameState: (typeof allStates)[number]) => {

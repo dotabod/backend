@@ -2,10 +2,10 @@ import { t } from 'i18next'
 
 import { redisClient } from '../../../db/redisInstance.js'
 import { type DotaEvent, DotaEventTypes } from '../../../types.js'
+import { delayedQueue } from '../../lib/DelayedQueue.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import { delayedQueue } from '../../lib/DelayedQueue.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
 
@@ -70,23 +70,20 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
         return `${acc}, ${heroName}`
       })
 
-    dotaClient.bountyTaskId = delayedQueue.addTask(
-      15000,
-      () => {
-        say(
-          dotaClient.client,
-          t('bounties.pickup', {
-            emote: 'EZ Clap',
-            emote2: 'SeemsGood',
-            lng: dotaClient.client.locale,
-            bountyValue: event.bounty_value * dotaClient.bountyHeroNames.length,
-            totalBounties: dotaClient.bountyHeroNames.length,
-            heroNames: bountyHeroNamesString,
-          }),
-          { chattersKey: 'bounties' },
-        )
-        dotaClient.bountyHeroNames = []
-      }
-    )
+    dotaClient.bountyTaskId = delayedQueue.addTask(15000, () => {
+      say(
+        dotaClient.client,
+        t('bounties.pickup', {
+          emote: 'EZ Clap',
+          emote2: 'SeemsGood',
+          lng: dotaClient.client.locale,
+          bountyValue: event.bounty_value * dotaClient.bountyHeroNames.length,
+          totalBounties: dotaClient.bountyHeroNames.length,
+          heroNames: bountyHeroNamesString,
+        }),
+        { chattersKey: 'bounties' },
+      )
+      dotaClient.bountyHeroNames = []
+    })
   },
 })
