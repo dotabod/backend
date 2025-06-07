@@ -18,11 +18,11 @@ export interface GSIHandlerType {
   events: any[]
   bountyHeroNames: string[]
   noTpChatter: {
-    timeout?: NodeJS.Timeout
+    taskId?: string
     lastRemindedDate?: Date
   }
-  bountyTimeout?: NodeJS.Timeout
-  killstreakTimeout?: NodeJS.Timeout
+  bountyTaskId?: string
+  killstreakTaskId?: string
   endingBets: boolean
   openingBets: boolean
   creatingSteamAccount: boolean

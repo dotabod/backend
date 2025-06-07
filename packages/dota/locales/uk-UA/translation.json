@@ -75,7 +75,7 @@
   },
   "facet": "{{- heroName}} вибрав грань {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Вказано недійсну грань · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Використовуйте !facet {{- heroName}} 1 або !facet {{- heroName}} 2 · Dotabod знає тільки фактично обрану грань для даного героя ",
+  "facetNotFound": "Використовуйте !facet {{- heroName}} 1 або !facet {{- heroName}} 2 · Dotabod знає тільки грань стрімера",
   "facetSelection": "{{- heroName}} вибрав грань: {{- facetTitle}} · {{- facetDescription}}",
   "facetTotalLimit_one": "Лише {{count}} грань доступна для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_few": "Лише {{count}} грані доступна для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
@@ -148,7 +148,7 @@
     "won": "Остання гра: Перемога"
   },
   "lifetime": "Кількість ігор",
-  "matchData8500": "Valve вимкнула дані для 8500+ ММР матчів, але найближчим часом я вирішу це",
+  "matchData8500": "Valve вимкнула дані матчів для 8500+ ММР",
   "matchFound": "Отримано дані матчу: {{commandList}} - команди активовані.",
   "matchId": "ID матчу: {{matchId}}",
   "midasUsed": "Midas нарешті був використаний через {{seconds}} с {{emote}}",

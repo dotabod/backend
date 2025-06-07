@@ -1,9 +1,9 @@
 import { type BaseBetHandler, BetType } from './BetType.js'
-import { WinLossBetHandler } from './WinLossBetHandler.js'
+// import { WinLossBetHandler } from './WinLossBetHandler.js'
 
 // Factory functions to handle different bet types
 const handlers: Record<BetType, BaseBetHandler> = {
-  [BetType.WIN_LOSS]: new WinLossBetHandler(),
+  [BetType.WIN_LOSS]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
   [BetType.FIRST_TOWER]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
   [BetType.STREAMER_TP_LOCATION]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
   [BetType.DIE_BEFORE_MINUTE]: undefined as unknown as BaseBetHandler, // TODO: Will implement later

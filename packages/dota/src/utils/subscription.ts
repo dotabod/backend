@@ -131,6 +131,11 @@ export const FEATURE_TIERS: Record<
   'obs-picks': SUBSCRIPTION_TIERS.PRO,
   queueBlockerFindMatchText: SUBSCRIPTION_TIERS.PRO,
   winProbabilityOverlayIntervalMinutes: SUBSCRIPTION_TIERS.PRO,
+  'minimap-opacity': SUBSCRIPTION_TIERS.PRO,
+  showGiftAlerts: SUBSCRIPTION_TIERS.FREE,
+  lastFmRefreshRate: SUBSCRIPTION_TIERS.PRO,
+  disableAutoClipping: SUBSCRIPTION_TIERS.FREE,
+  crypto_payment_interest: SUBSCRIPTION_TIERS.FREE,
 } as const
 
 export type FeatureTier = keyof typeof FEATURE_TIERS

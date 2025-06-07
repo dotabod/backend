@@ -1,4 +1,4 @@
-import { getTwitchHeaders, logger, checkBotStatus, fetchConduitId } from '@dotabod/shared-utils'
+import { checkBotStatus, fetchConduitId, getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import type { TwitchEventTypes } from '../TwitchEventTypes.js'
 import { eventSubMap } from '../chatSubIds.js'
 import { genericSubscribe } from '../subscribeChatMessagesForUser.js'

@@ -248,7 +248,7 @@ async function saveMatchData(client: SocketClient) {
 
         const delayedData = await getDelayedDataPromise
 
-        if (delayedData?.match.lobby_type) {
+        if (delayedData?.match && delayedData.match.lobby_type !== undefined) {
           await Promise.all([
             redisClient.client.set(
               `${matchId}:${client.token}:lobbyType`,

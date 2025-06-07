@@ -2,7 +2,7 @@ import { logger } from '@dotabod/shared-utils'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 
-// This wont get triggered if they click disconnect and dont wait for the ancient to go to 0
+// This won’t get triggered if they click disconnect and don’t wait for the ancient to reach 0
 eventHandler.registerEvent('map:win_team', {
   handler: async (dotaClient, winningTeam: 'radiant' | 'dire') => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return

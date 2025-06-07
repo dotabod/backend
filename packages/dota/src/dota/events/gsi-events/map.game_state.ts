@@ -1,9 +1,11 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
+import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { is8500Plus } from '../../../utils/index.js'
+import { addClipToDeletionQueue } from '../../GSIServer.js'
+import { delayedQueue } from '../../lib/DelayedQueue.js'
 import type { allStates } from '../../lib/consts.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
-import { addClipToDeletionQueue } from '../../GSIServer.js'
 
 eventHandler.registerEvent('map:game_state', {
   handler: async (dotaClient, gameState: (typeof allStates)[number]) => {
@@ -11,6 +13,14 @@ eventHandler.registerEvent('map:game_state', {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi, false)) return
     if (!['DOTA_GAMERULES_STATE_STRATEGY_TIME'].includes(gameState)) return
+
+    // Check if auto clipping is disabled
+    const autoClippingEnabled = !getValueOrDefault(
+      DBSettings.disableAutoClipping,
+      dotaClient.client.settings,
+      dotaClient.client.subscription,
+    )
+    if (!autoClippingEnabled) return
 
     // Extract common log context
     const logContext = {
@@ -36,7 +46,7 @@ eventHandler.registerEvent('map:game_state', {
     // Create clip after delay
     const CLIP_DELAY_MS = 50000 // 50 seconds
 
-    setTimeout(async () => {
+    delayedQueue.addTask(CLIP_DELAY_MS, async () => {
       try {
         const api = await getTwitchAPI(accountId)
         const clipId = await api.clips.createClip({
@@ -82,6 +92,6 @@ eventHandler.registerEvent('map:game_state', {
           error: clipError.message,
         })
       }
-    }, CLIP_DELAY_MS)
+    })
   },
 })
