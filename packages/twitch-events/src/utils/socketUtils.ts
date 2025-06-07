@@ -1,7 +1,7 @@
 import { logger } from '@dotabod/shared-utils'
 import { botStatus } from '@dotabod/shared-utils'
 import { fetchConduitId } from '@dotabod/shared-utils'
-import { Server } from 'socket.io'
+import { Server, type Socket } from 'socket.io'
 import { handleNewUser } from '../handleNewUser.js'
 import { revokeEvent } from '../twitch/lib/revokeEvent.js'
 
@@ -21,7 +21,7 @@ export let eventsIOConnected = false
  * @param socket - The socket.io socket to emit to
  * @param forceRefresh - Whether to force refresh the conduit ID
  */
-async function sendConduitData(socket, forceRefresh = false) {
+async function sendConduitData(socket: Socket, forceRefresh = false) {
   try {
     logger.info('[TWITCHEVENTS] Getting conduit data', { forceRefresh })
     const conduitId = await fetchConduitId(forceRefresh)

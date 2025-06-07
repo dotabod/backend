@@ -347,11 +347,11 @@ const saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
     'buildings',
     'draft',
     'events',
-  ]
-  const dumpData = {}
+  ] as const
+  const dumpData: Record<string, any> = {}
   for (const key of keysToSave) {
     if (dotaClient.client.gsi?.[key]) {
-      dumpData[key] = dotaClient.client.gsi[key]
+      dumpData[key] = dotaClient.client.gsi[key as keyof Packet]
     }
   }
 
