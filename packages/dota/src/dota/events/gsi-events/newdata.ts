@@ -248,7 +248,7 @@ async function saveMatchData(client: SocketClient) {
 
         const delayedData = await getDelayedDataPromise
 
-        if (delayedData?.match.lobby_type) {
+        if (delayedData?.match && delayedData.match.lobby_type !== undefined) {
           await Promise.all([
             redisClient.client.set(
               `${matchId}:${client.token}:lobbyType`,
@@ -347,11 +347,11 @@ const saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
     'buildings',
     'draft',
     'events',
-  ]
-  const dumpData = {}
+  ] as const
+  const dumpData: Record<string, any> = {}
   for (const key of keysToSave) {
     if (dotaClient.client.gsi?.[key]) {
-      dumpData[key] = dotaClient.client.gsi[key]
+      dumpData[key] = dotaClient.client.gsi[key as keyof Packet]
     }
   }
 

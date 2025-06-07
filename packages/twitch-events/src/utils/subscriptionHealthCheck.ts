@@ -1,6 +1,7 @@
-import { getTwitchHeaders, logger, checkBotStatus, fetchConduitId } from '@dotabod/shared-utils'
+import { checkBotStatus, fetchConduitId, getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import type { TwitchEventTypes } from '../TwitchEventTypes.js'
 import { eventSubMap } from '../chatSubIds.js'
+import type { EventSubStatus } from '../interfaces.js'
 import { genericSubscribe } from '../subscribeChatMessagesForUser.js'
 import { getAccountIds } from '../twitch/lib/getAccountIds.js'
 import { rateLimiter } from './rateLimiterCore.js'
@@ -322,16 +323,16 @@ async function fetchSubscriptionsForHealthCheck(): Promise<void> {
 
       // Process subscriptions
       data.forEach((sub: any) => {
-        const broadcasterId = sub.condition.broadcaster_user_id || sub.condition.user_id
+        const broadcasterId = sub.condition?.broadcaster_user_id || sub.condition?.user_id
         if (!broadcasterId) return
 
         // Initialize broadcaster entry if it doesn't exist
         eventSubMap[broadcasterId] ??= {} as (typeof eventSubMap)[number]
 
         // Store subscription details
-        eventSubMap[broadcasterId][sub.type] = {
+        eventSubMap[broadcasterId][sub.type as keyof TwitchEventTypes] = {
           id: sub.id,
-          status: sub.status,
+          status: sub.status as EventSubStatus,
         }
 
         fetchedCount++

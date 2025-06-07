@@ -13,7 +13,12 @@ import {
 import profanityUtil from 'profanity-util'
 import { flatWords as russianBadWordsList } from 'russian-bad-words'
 import wash from 'washyourmouthoutwithsoap'
-import { detectAgeRestrictions, detectEvasionTactics, detectRussianProfanity, detectTransphobicContent } from './profanity-wordlists.js'
+import {
+  detectAgeRestrictions,
+  detectEvasionTactics,
+  detectRussianProfanity,
+  detectTransphobicContent,
+} from './profanity-wordlists.js'
 import { createTextVariations } from './text-normalization.js'
 
 interface ModerationResponse {
@@ -269,10 +274,14 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
     const allowedLangs = ['en', 'ru']
     for (const lang of Object.keys(naughtyWords)) {
       // Skip non-array properties and non-English/Russian languages
-      if (!Array.isArray(naughtyWords[lang]) || !allowedLangs.includes(lang)) continue
+      if (
+        !Array.isArray(naughtyWords[lang as keyof typeof naughtyWords]) ||
+        !allowedLangs.includes(lang)
+      )
+        continue
 
       // For each language's word list
-      const wordList = naughtyWords[lang] as string[]
+      const wordList = naughtyWords[lang as keyof typeof naughtyWords] as string[]
 
       // Only match very short words (less than 4 chars) if they're standalone words
       // This prevents false positives when a short profane word is part of a regular word
@@ -317,7 +326,12 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
   }
 
   // Layer 10: Custom detection - Russian profanity, evasion tactics, age restrictions, transphobic content
-  if (detectRussianProfanity(text) || detectEvasionTactics(text) || detectAgeRestrictions(text) || detectTransphobicContent(text)) {
+  if (
+    detectRussianProfanity(text) ||
+    detectEvasionTactics(text) ||
+    detectAgeRestrictions(text) ||
+    detectTransphobicContent(text)
+  ) {
     return '***'
   }
 
@@ -411,14 +425,14 @@ function getProfanityDetailsSingle(text: string): {
 
   // SPECIAL CASE FOR TEST COMPATIBILITY: Handle specific test phrases
   // This is needed because we want consistent output for our tests
-  const lowerText = text.toLowerCase();
+  const lowerText = text.toLowerCase()
   if (process.env.NODE_ENV === 'test') {
     if (lowerText.includes('transsexual')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['transsexual'] };
+      return { isFlagged: true, source: 'hate-speech', matches: ['transsexual'] }
     }
 
     if (lowerText.includes('trannies are sick')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['tranny'] };
+      return { isFlagged: true, source: 'hate-speech', matches: ['tranny'] }
     }
   }
 
@@ -499,10 +513,14 @@ function getProfanityDetailsSingle(text: string): {
     const allowedLangs = ['en', 'ru']
     for (const lang of Object.keys(naughtyWords)) {
       // Skip non-array properties and non-English/Russian languages
-      if (!Array.isArray(naughtyWords[lang]) || !allowedLangs.includes(lang)) continue
+      if (
+        !Array.isArray(naughtyWords[lang as keyof typeof naughtyWords]) ||
+        !allowedLangs.includes(lang)
+      )
+        continue
 
       // For each language's word list
-      const wordList = naughtyWords[lang] as string[]
+      const wordList = naughtyWords[lang as keyof typeof naughtyWords] as string[]
 
       // Use the same modified check as in moderateTextSingle
       const matchedWords = wordList.filter((word) => {
@@ -560,21 +578,26 @@ function getProfanityDetailsSingle(text: string): {
     // Extract the transphobic term or use the whole text as fallback
     // Sort by length (descending) to match the longest term first (e.g., "transgender" before "trans")
     // Force naughty-words and other libraries to defer to our hate-speech detection
-    const lowerText = text.toLowerCase();
+    const lowerText = text.toLowerCase()
 
     // Prioritize these specific matches to handle the test cases
     if (lowerText.includes('transsexual')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['transsexual'] };
-    } else if (lowerText.includes('transgender')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['transgender'] };
-    } else if (lowerText.includes('transvestite')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['transvestite'] };
-    } else if (lowerText.includes('tranny')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['tranny'] };
-    } else if (lowerText.includes('shemale')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['shemale'] };
-    } else if (lowerText.includes('trans')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['trans'] };
+      return { isFlagged: true, source: 'hate-speech', matches: ['transsexual'] }
+    }
+    if (lowerText.includes('transgender')) {
+      return { isFlagged: true, source: 'hate-speech', matches: ['transgender'] }
+    }
+    if (lowerText.includes('transvestite')) {
+      return { isFlagged: true, source: 'hate-speech', matches: ['transvestite'] }
+    }
+    if (lowerText.includes('tranny')) {
+      return { isFlagged: true, source: 'hate-speech', matches: ['tranny'] }
+    }
+    if (lowerText.includes('shemale')) {
+      return { isFlagged: true, source: 'hate-speech', matches: ['shemale'] }
+    }
+    if (lowerText.includes('trans')) {
+      return { isFlagged: true, source: 'hate-speech', matches: ['trans'] }
     }
 
     // Fallback to the whole text
@@ -593,8 +616,8 @@ function getProfanityDetailsSingle(text: string): {
   // Check for age restrictions (underage users)
   if (detectAgeRestrictions(text)) {
     // Extract the actual text for matching purposes rather than using a generic "underage" label
-    const ageMatch = text.match(/\b(i'?m\s+\d+|i\s+am\s+\d+|iam\s*\d+|age\s*[:=]?\s*\d+)/i);
-    const matchText = ageMatch ? ageMatch[1] : text;
+    const ageMatch = text.match(/\b(i'?m\s+\d+|i\s+am\s+\d+|iam\s*\d+|age\s*[:=]?\s*\d+)/i)
+    const matchText = ageMatch ? ageMatch[1] : text
     return { isFlagged: true, source: 'age-restriction', matches: [matchText] }
   }
 

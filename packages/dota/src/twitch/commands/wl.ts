@@ -1,15 +1,18 @@
 import { t } from 'i18next'
 
 import { logger } from '@dotabod/shared-utils'
-import { getWL } from '../../db/getWL.js'
+import { LOBBY_TYPE_RANKED, getWL } from '../../db/getWL.js'
+import { isArcade } from '../../dota/lib/isArcade.js'
+import { isSpectator } from '../../dota/lib/isSpectator.js'
 import { DBSettings, getValueOrDefault } from '../../settings.js'
+import { getRedisNumberValue } from '../../utils/index.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('wl', {
   aliases: ['score', 'winrate', 'wr'],
   dbkey: DBSettings.commandWL,
-  handler: (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, id: channelId, client },
     } = message
@@ -34,19 +37,36 @@ commandHandler.registerCommand('wl', {
       client.subscription,
     )
 
-    getWL({
-      lng: client.locale,
-      channelId: channelId,
-      mmrEnabled: mmrEnabled,
-      startDate: client.stream_start_date,
-    })
-      .then((res: any) => {
-        if (res?.msg) {
-          chatClient.say(channel, res.msg, message.user.messageId)
-        }
+    // Check if user is currently in a game to determine which game type to show
+    const currentMatchId = client.gsi?.map?.matchid
+    let currentGameIsRanked: boolean | null = null
+
+    if (
+      currentMatchId &&
+      Number(currentMatchId) &&
+      !isArcade(client.gsi) &&
+      !isSpectator(client.gsi)
+    ) {
+      const lobbyType = await getRedisNumberValue(`${currentMatchId}:${client.token}:lobbyType`)
+      if (lobbyType !== null) {
+        currentGameIsRanked = lobbyType === LOBBY_TYPE_RANKED
+      }
+    }
+
+    try {
+      const res = await getWL({
+        lng: client.locale,
+        channelId: channelId,
+        mmrEnabled: mmrEnabled,
+        startDate: client.stream_start_date,
+        currentGameIsRanked: currentGameIsRanked,
       })
-      .catch((e) => {
-        logger.error('[WL] Error getting WL', { error: e, channelId, name: client.name })
-      })
+
+      if (res?.msg) {
+        chatClient.say(channel, res.msg, message.user.messageId)
+      }
+    } catch (e) {
+      logger.error('[WL] Error getting WL', { error: e, channelId, name: client.name })
+    }
   },
 })

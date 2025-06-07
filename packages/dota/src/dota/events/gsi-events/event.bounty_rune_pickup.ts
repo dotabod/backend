@@ -2,6 +2,7 @@ import { t } from 'i18next'
 
 import { redisClient } from '../../../db/redisInstance.js'
 import { type DotaEvent, DotaEventTypes } from '../../../types.js'
+import { delayedQueue } from '../../lib/DelayedQueue.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -29,7 +30,9 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
       return
     }
 
-    clearTimeout(dotaClient.bountyTimeout)
+    if (dotaClient.bountyTaskId) {
+      delayedQueue.removeTask(dotaClient.bountyTaskId)
+    }
     let playerIdIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
     if (playerIdIndex === -1) {
       playerIdIndex = event.player_id
@@ -67,7 +70,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
         return `${acc}, ${heroName}`
       })
 
-    dotaClient.bountyTimeout = setTimeout(() => {
+    dotaClient.bountyTaskId = delayedQueue.addTask(15000, () => {
       say(
         dotaClient.client,
         t('bounties.pickup', {
@@ -81,6 +84,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
         { chattersKey: 'bounties' },
       )
       dotaClient.bountyHeroNames = []
-    }, 15000)
+    })
   },
 })

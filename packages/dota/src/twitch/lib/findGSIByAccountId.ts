@@ -8,10 +8,11 @@ import CustomError from '../../utils/customError.js'
 import { getPlayerFromArgs } from './getPlayerFromArgs.js'
 
 export function findSpectatorIdx(packet: Packet | undefined, heroOrAccountId: number | undefined) {
-  const teams = ['team2', 'team3']
+  const teams = ['team2', 'team3'] as const
 
   for (const team of teams) {
-    const players: Player[] = Object.values(packet?.player?.[team] ?? {})
+    const teamPlayers = packet?.player?.[team]
+    const players: Player[] = Object.values(teamPlayers ?? {})
     if (!players) continue
 
     for (let i = 0; i < players.length; i++) {
@@ -24,7 +25,7 @@ export function findSpectatorIdx(packet: Packet | undefined, heroOrAccountId: nu
           playerIdx = i + 5
         }
 
-        return { playerIdx, playerN: Object.keys(packet?.player?.[team])[i], teamN: team }
+        return { playerIdx, playerN: Object.keys(teamPlayers ?? {})[i], teamN: team }
       }
     }
   }

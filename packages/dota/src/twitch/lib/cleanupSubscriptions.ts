@@ -223,7 +223,7 @@ async function deleteCostSubsAndSetRequiresRefresh(singleLoop = false): Promise<
       return []
     }
 
-    const data = await response.json()
+    const data = (await response.json()) as { data: any[]; pagination: { cursor?: string } }
     const subscriptionsWithCostAboveZero = data.data.filter((sub: any) => sub.cost > 0)
     const broadcasterUserIds = subscriptionsWithCostAboveZero.map(
       (sub: any) => sub.condition.broadcaster_user_id || sub.condition.user_id,
@@ -243,7 +243,7 @@ async function deleteCostSubsAndSetRequiresRefresh(singleLoop = false): Promise<
 
     pageCount++
     if (singleLoop) break
-    cursor = data.pagination.cursor
+    cursor = data.pagination.cursor || null
   } while (cursor)
 
   console.log("Found subscriptions with 'cost' above zero:", allBroadcasterUserIds.length)

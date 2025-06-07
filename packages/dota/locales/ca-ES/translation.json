@@ -72,7 +72,7 @@
   },
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the actually chosen facet for the streamer's current hero",
+  "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the streamer's facet",
   "facetSelection": "{{- heroName}} selected facet: {{- facetTitle}} · {{- facetDescription}}",
   "facetTotalLimit_one": "Only {{count}} facet is available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_many": "",
@@ -134,7 +134,7 @@
     "won": "Won last game"
   },
   "lifetime": "Lifetime games",
-  "matchData8500": "Valve disabled data for 8500+ mmr matches, but I will have a solution soon ok",
+  "matchData8500": "Valve disabled data for 8500+ mmr matches",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",

@@ -10,7 +10,7 @@ import express, {
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import { Server, type Socket } from 'socket.io'
 
-import { logger, getTwitchAPI } from '@dotabod/shared-utils'
+import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import getDBUser from '../db/getDBUser.js'
 import supabase from '../db/supabase.js'
 import { twitchEvent } from '../twitch/index.js'
@@ -21,8 +21,8 @@ import type { GSIServerInterface } from './GSIServerTypes.js'
 import { newData, processChanges } from './globalEventEmitter.js'
 import { gsiHandlers } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
-import { validateToken } from './validateToken.js'
 import { deleteClipsBatch } from './lib/twitchUtils.js'
+import { validateToken } from './validateToken.js'
 
 // --- Clip Deletion Queue ---
 // Map<accountId: string, Set<clipSlug: string>>

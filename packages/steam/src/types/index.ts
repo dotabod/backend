@@ -125,9 +125,15 @@ export interface Entity {
 
 export type Minimap = Record<string, Entity>
 
+export type Team2PlayerId = `player${0 | 1 | 2 | 3 | 4}`
+export type Team3PlayerId = `player${5 | 6 | 7 | 8 | 9}`
+
+export type Team2Players<T> = { [K in Team2PlayerId]: T }
+export type Team3Players<T> = { [K in Team3PlayerId]: T }
+
 export interface Player {
-  team2?: { player0: Player; player1: Player; player2: Player; player3: Player; player4: Player }
-  team3?: { player5: Player; player6: Player; player7: Player; player8: Player; player9: Player }
+  team2?: Team2Players<Player>
+  team3?: Team3Players<Player>
   id?: number // hero id
   steamid: string // "76561198352664103",
   accountid: string //  "392398375",
@@ -169,8 +175,8 @@ export interface Player {
 }
 
 export interface Hero {
-  team2?: { player0: Hero; player1: Hero; player2: Hero; player3: Hero; player4: Hero }
-  team3?: { player5: Hero; player6: Hero; player7: Hero; player8: Hero; player9: Hero }
+  team2?: Team2Players<Hero>
+  team3?: Team3Players<Hero>
   id: number // -1 if hero not yet set
   name?: HeroNames // e.g. 'npc_dota_hero_antimage' once set
   xpos?: number // -5422,
@@ -246,8 +252,8 @@ export interface Ability {
 }
 
 export interface Items {
-  team2?: { player0: Items; player1: Items; player2: Items; player3: Items; player4: Items }
-  team3?: { player5: Items; player6: Items; player7: Items; player8: Items; player9: Items }
+  team2?: Team2Players<Items>
+  team3?: Team3Players<Items>
 
   // set once the game starts, i.e. game_state is set to "DOTA_GAMERULES_STATE_PRE_GAME"
   slot0?: Item

@@ -25,7 +25,7 @@ export async function genericSubscribe(
   broadcaster_user_id: string,
   type: keyof TwitchEventTypes,
   forceRefreshToken = false,
-) {
+): Promise<boolean> {
   // Don't subscribe to chat messages if the bot is banned
   // It will fail to subscribe anyway
   if (type === 'channel.chat.message') {
@@ -45,7 +45,7 @@ export async function genericSubscribe(
     return false
   }
 
-  return rateLimiter.schedule(async () => {
+  return rateLimiter.schedule(async (): Promise<boolean> => {
     // Get fresh headers with each request to avoid token expiration issues
     const headers = await getTwitchHeaders(undefined, forceRefreshToken)
 
@@ -226,7 +226,7 @@ export async function subscribeToAuthGrantOrRevoke(conduit_id: string, client_id
   const subscribeToAuthEvent = async (
     eventType: 'user.authorization.revoke' | 'user.authorization.grant',
   ) => {
-    return rateLimiter.schedule(async () => {
+    return rateLimiter.schedule(async (): Promise<boolean> => {
       // Get fresh headers for each request
       const headers = await getTwitchHeaders()
 
