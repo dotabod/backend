@@ -575,15 +575,20 @@ function getProfanityDetailsSingle(text: string): {
     // Prioritize these specific matches to handle the test cases
     if (lowerText.includes('transsexual')) {
       return { isFlagged: true, source: 'hate-speech', matches: ['transsexual'] }
-    } else if (lowerText.includes('transgender')) {
+    }
+    if (lowerText.includes('transgender')) {
       return { isFlagged: true, source: 'hate-speech', matches: ['transgender'] }
-    } else if (lowerText.includes('transvestite')) {
+    }
+    if (lowerText.includes('transvestite')) {
       return { isFlagged: true, source: 'hate-speech', matches: ['transvestite'] }
-    } else if (lowerText.includes('tranny')) {
+    }
+    if (lowerText.includes('tranny')) {
       return { isFlagged: true, source: 'hate-speech', matches: ['tranny'] }
-    } else if (lowerText.includes('shemale')) {
+    }
+    if (lowerText.includes('shemale')) {
       return { isFlagged: true, source: 'hate-speech', matches: ['shemale'] }
-    } else if (lowerText.includes('trans')) {
+    }
+    if (lowerText.includes('trans')) {
       return { isFlagged: true, source: 'hate-speech', matches: ['trans'] }
     }
 
