@@ -21,4 +21,4 @@ jobs:
       - name: Run TypeScript type check
         run: bun run typecheck:all
       - name: Run tests
-        run: bun run test
+        run: bun run test:all
