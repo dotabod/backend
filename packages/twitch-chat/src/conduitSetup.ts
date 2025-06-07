@@ -129,6 +129,13 @@ const createEventHandler = (type: keyof TwitchEventTypes, transform: (event: any
       },
       event,
     },
+  }: {
+    payload: {
+      subscription: {
+        condition: { broadcaster_user_id: string }
+      }
+      event: any
+    }
   }) => {
     const transformed = transform(event)
     handleObsEvents(type, broadcaster_user_id, transformed)

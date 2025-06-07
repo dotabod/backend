@@ -7,11 +7,11 @@
 
 import {
   createTextVariations,
+  normalizeRepeatedChars,
   normalizeText,
   prepareText,
   removeSeparators,
   stripNonAlphanumeric,
-  normalizeRepeatedChars,
 } from './text-normalization.js'
 
 /**
@@ -266,8 +266,8 @@ export const evasionPatterns = [
   /s\s*(?:\(.*?\)|<.*?>|\[.*?\]|\{.*?\})\s*h\s*(?:\(.*?\)|<.*?>|\[.*?\]|\{.*?\})\s*i\s*(?:\(.*?\)|<.*?>|\[.*?\]|\{.*?\})\s*t/i,
 
   // Special patterns for non-standard alphabets
-  /[ƒϝ𝐟𝒇𝕗][\s\W_]*[𝐮𝒖𝕦υ][\s\W_]*[𝐜𝒄𝕔ϲ][\s\W_]*[𝐤𝒌𝕜κϰ]/i, // Mathematical and other special Unicode font variants for "fuck"
-  /[𝐬𝒔𝕤ʂ][\s\W_]*[𝐡𝒉𝕙ɧ][\s\W_]*[𝐢𝒊𝕚ɪ][\s\W_]*[𝐭𝒕𝕥ƭ]/i, // Mathematical and IPA-like Unicode font variants for "shit"
+  /[ƒϝ𝐟𝒇𝕗][\s\W_]*[𝐮𝒖𝕦υ][\s\W_]*[𝐜𝒄𝕔ϲ][\s\W_]*[𝐤𝒌𝕜κϰ]/iu, // Mathematical and other special Unicode font variants for "fuck"
+  /[𝐬𝒔𝕤ʂ][\s\W_]*[𝐡𝒉𝕙ɧ][\s\W_]*[𝐢𝒊𝕚ɪ][\s\W_]*[𝐭𝒕𝕥ƭ]/iu, // Mathematical and IPA-like Unicode font variants for "shit"
 
   // Homoglyphs for common profanity (characters that look similar but have different Unicode code points)
   /[fḟƒғֆ][uüṳṵṷụűữųʉư][cċćĉčçсς][kḱǩķҝқҡκ]/i, // Homoglyphs for "fuck"
@@ -634,7 +634,7 @@ export function detectAgeRestrictions(text: string): boolean {
   for (const variant of variations) {
     for (const pattern of patterns) {
       const match = variant.match(pattern)
-      if (match && match[1]) {
+      if (match?.[1]) {
         const age = Number.parseInt(match[1], 10)
         // Flag if age is under 13 (COPPA compliance age)
         if (age < 13 && age > 0) {

@@ -143,8 +143,9 @@ function updateDataset(dataset: any[], regionMapping: RegionMapping) {
 
   // Add region information to remaining accounts
   for (const account of filteredDataset) {
-    account.region = regions[regionMapping[account.steam32Id]]
-    account.regionId = regionMapping[account.steam32Id]
+    const regionId = regionMapping[account.steam32Id]
+    account.region = regions[regionId.toString() as keyof typeof regions]
+    account.regionId = regionId
   }
 
   fs.writeFileSync('dataset-with-regions.json', JSON.stringify(filteredDataset, null, 2))

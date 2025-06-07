@@ -274,10 +274,14 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
     const allowedLangs = ['en', 'ru']
     for (const lang of Object.keys(naughtyWords)) {
       // Skip non-array properties and non-English/Russian languages
-      if (!Array.isArray(naughtyWords[lang]) || !allowedLangs.includes(lang)) continue
+      if (
+        !Array.isArray(naughtyWords[lang as keyof typeof naughtyWords]) ||
+        !allowedLangs.includes(lang)
+      )
+        continue
 
       // For each language's word list
-      const wordList = naughtyWords[lang] as string[]
+      const wordList = naughtyWords[lang as keyof typeof naughtyWords] as string[]
 
       // Only match very short words (less than 4 chars) if they're standalone words
       // This prevents false positives when a short profane word is part of a regular word
@@ -509,10 +513,14 @@ function getProfanityDetailsSingle(text: string): {
     const allowedLangs = ['en', 'ru']
     for (const lang of Object.keys(naughtyWords)) {
       // Skip non-array properties and non-English/Russian languages
-      if (!Array.isArray(naughtyWords[lang]) || !allowedLangs.includes(lang)) continue
+      if (
+        !Array.isArray(naughtyWords[lang as keyof typeof naughtyWords]) ||
+        !allowedLangs.includes(lang)
+      )
+        continue
 
       // For each language's word list
-      const wordList = naughtyWords[lang] as string[]
+      const wordList = naughtyWords[lang as keyof typeof naughtyWords] as string[]
 
       // Use the same modified check as in moderateTextSingle
       const matchedWords = wordList.filter((word) => {
@@ -575,15 +583,20 @@ function getProfanityDetailsSingle(text: string): {
     // Prioritize these specific matches to handle the test cases
     if (lowerText.includes('transsexual')) {
       return { isFlagged: true, source: 'hate-speech', matches: ['transsexual'] }
-    } else if (lowerText.includes('transgender')) {
+    }
+    if (lowerText.includes('transgender')) {
       return { isFlagged: true, source: 'hate-speech', matches: ['transgender'] }
-    } else if (lowerText.includes('transvestite')) {
+    }
+    if (lowerText.includes('transvestite')) {
       return { isFlagged: true, source: 'hate-speech', matches: ['transvestite'] }
-    } else if (lowerText.includes('tranny')) {
+    }
+    if (lowerText.includes('tranny')) {
       return { isFlagged: true, source: 'hate-speech', matches: ['tranny'] }
-    } else if (lowerText.includes('shemale')) {
+    }
+    if (lowerText.includes('shemale')) {
       return { isFlagged: true, source: 'hate-speech', matches: ['shemale'] }
-    } else if (lowerText.includes('trans')) {
+    }
+    if (lowerText.includes('trans')) {
       return { isFlagged: true, source: 'hate-speech', matches: ['trans'] }
     }
 
