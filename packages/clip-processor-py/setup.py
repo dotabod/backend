@@ -16,7 +16,7 @@ setup(
         "opencv-python==4.11.0.86",
         "pytesseract==0.3.10",
         "moviepy==1.0.3",
-        "requests==2.32.2",
+        "requests==2.32.4",
         "numpy==1.26.4",
         "Pillow==11.1.0",
         "beautifulsoup4==4.12.2",
