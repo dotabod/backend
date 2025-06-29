@@ -1,10 +1,8 @@
-import { logger } from '@dotabod/shared-utils'
+import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { Long } from 'mongodb'
-import { LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../db/getWL.js'
-import { getWL } from '../db/getWL.js'
+import { getWL, LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../db/getWL.js'
 import { redisClient } from '../db/redisInstance.js'
-import supabase from '../db/supabase.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
 import { notablePlayers } from '../steam/notableplayers.js'
 import { steamSocket } from '../steam/ws.js'
@@ -20,17 +18,16 @@ import {
   type SocketClient,
 } from '../types.js'
 import { getRedisNumberValue, steamID64toSteamID32 } from '../utils/index.js'
-import { setGSIHandlerConstructor } from './GSIHandlerFactory.js'
-import type { GSIHandlerType } from './GSIHandlerTypes.js'
-import { NeutralItemTimer } from './NeutralItemTimer.js'
 import { maybeSendRoshAegisEvent } from './events/gsi-events/maybeSendRoshAegisEvent.js'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/sendExtensionPubSubBroadcastMessageIfChanged.js'
 import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster.js'
 import type { DataBroadcasterInterface } from './events/minimap/DataBroadcasterTypes.js'
 import { minimapParser } from './events/minimap/parser.js'
+import { setGSIHandlerConstructor } from './GSIHandlerFactory.js'
+import type { GSIHandlerType } from './GSIHandlerTypes.js'
 import { getStreamDelay } from './getStreamDelay.js'
-import { delayedQueue } from './lib/DelayedQueue.js'
 import { blockTypes, pickSates } from './lib/consts.js'
+import { delayedQueue } from './lib/DelayedQueue.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import getHero, { type HeroNames } from './lib/getHero.js'
 import { getHeroById } from './lib/heroes.js'
@@ -38,6 +35,7 @@ import { isArcade } from './lib/isArcade.js'
 import { isSpectator } from './lib/isSpectator.js'
 import { getRankDetail } from './lib/ranks.js'
 import { updateMmr } from './lib/updateMmr.js'
+import { NeutralItemTimer } from './NeutralItemTimer.js'
 import { say } from './say.js'
 import { server } from './server.js'
 
@@ -1190,13 +1188,7 @@ export class GSIHandler implements GSIHandlerType {
     }
   }
 
-  private emitBlockEvent({
-    blockType,
-    state,
-  }: {
-    state?: string
-    blockType: BlockType
-  }) {
+  private emitBlockEvent({ blockType, state }: { state?: string; blockType: BlockType }) {
     if (this.blockCache === blockType) return
 
     this.blockCache = blockType

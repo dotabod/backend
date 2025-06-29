@@ -1,8 +1,6 @@
+import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-
-import { logger } from '@dotabod/shared-utils'
 import RedisClient from '../../../db/RedisClient.js'
-import supabase from '../../../db/supabase.js'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { openTwitchBet } from '../../../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../../../twitch/lib/refundTwitchBets.js'

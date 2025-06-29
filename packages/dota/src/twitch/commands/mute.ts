@@ -1,6 +1,5 @@
+import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-
-import supabase from '../../db/supabase.js'
 import { DBSettings, getValueOrDefault } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'

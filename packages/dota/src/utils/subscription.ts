@@ -1,9 +1,9 @@
-import type { Database } from '../db/supabase-types.js'
+import type { Database } from '@dotabod/shared-utils'
 import type { ChatterSettingKeys, SettingKeys } from '../types/settings.js'
 import {
+  isSubscriptionActive,
   SUBSCRIPTION_TIERS,
   type SubscriptionRow,
-  isSubscriptionActive,
 } from '../types/subscription.js'
 
 export const TIER_LEVELS: Record<Database['public']['Enums']['SubscriptionTier'], number> = {

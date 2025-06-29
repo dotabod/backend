@@ -1,7 +1,6 @@
+import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-
 import { MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/getWL.js'
-import supabase from '../../db/supabase.js'
 import { updateMmr } from '../../dota/lib/updateMmr.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'

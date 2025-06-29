@@ -1,18 +1,16 @@
 import http from 'node:http'
+import { getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
 import cors from 'cors'
 import express, {
+  type ErrorRequestHandler,
   json,
   type Request,
   type Response,
   urlencoded,
-  type ErrorRequestHandler,
 } from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import { Server, type Socket } from 'socket.io'
-
-import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import getDBUser from '../db/getDBUser.js'
-import supabase from '../db/supabase.js'
 import { twitchEvent } from '../twitch/index.js'
 import type { Ability, Item } from '../types.js'
 import { initDotaPatchChecker } from './DotaPatchChecker.js'

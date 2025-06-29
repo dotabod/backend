@@ -1,4 +1,4 @@
-import type { Database } from '../db/supabase-types.js'
+import type { Database } from '@dotabod/shared-utils'
 
 export type SubscriptionRow = Pick<
   Database['public']['Tables']['subscriptions']['Row'],

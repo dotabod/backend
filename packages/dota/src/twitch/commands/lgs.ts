@@ -1,7 +1,6 @@
+import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-
 import { LOBBY_TYPE_RANKED } from '../../db/getWL.js'
-import supabase from '../../db/supabase.js'
 import getHero, { type HeroNames } from '../../dota/lib/getHero.js'
 import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'

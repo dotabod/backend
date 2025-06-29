@@ -1,4 +1,4 @@
-import { logger } from '@dotabod/shared-utils'
+import { logger, supabase } from '@dotabod/shared-utils'
 import { createGSIHandler } from '../dota/GSIHandlerFactory.js'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers.js'
 import {
@@ -8,15 +8,18 @@ import {
   twitchIdToToken,
   twitchNameToToken,
 } from '../dota/lib/consts.js'
-import type { SocketClient } from '../types.js'
 import { isSubscriptionActive } from '../types/subscription.js'
-import supabase from './supabase.js'
+import type { SocketClient } from '../types.js'
 
 export default async function getDBUser({
   token,
   twitchId: providerAccountId,
   ip,
-}: { token?: string; twitchId?: string; ip?: string } = {}): Promise<{
+}: {
+  token?: string
+  twitchId?: string
+  ip?: string
+} = {}): Promise<{
   reason: string
   result: SocketClient | null | undefined
 }> {
@@ -160,7 +163,7 @@ export default async function getDBUser({
     lookingupToken.delete(lookupToken)
     return { reason: 'No Account found', result: undefined }
   }
-  let subscription: SocketClient['subscription'] | undefined = undefined
+  let subscription: SocketClient['subscription'] | undefined
   if (Array.isArray(user.subscriptions) && user.subscriptions.length > 0) {
     const activeSubscription =
       user.subscriptions.find((sub) => isSubscriptionActive(sub)) || user.subscriptions[0]

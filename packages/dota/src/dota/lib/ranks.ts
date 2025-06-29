@@ -1,9 +1,7 @@
+import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-
-import { logger } from '@dotabod/shared-utils'
-import RedisClient from '../../db/RedisClient.js'
 import { MULTIPLIER_SOLO } from '../../db/getWL.js'
-import supabase from '../../db/supabase.js'
+import RedisClient from '../../db/RedisClient.js'
 import { steamSocket } from '../../steam/ws.js'
 import type { Cards } from '../../types.js'
 import CustomError from '../../utils/customError.js'

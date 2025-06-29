@@ -1,9 +1,7 @@
-import { t } from 'i18next'
-
-import { logger } from '@dotabod/shared-utils'
+import { logger, supabase } from '@dotabod/shared-utils'
 import axios from 'axios'
+import { t } from 'i18next'
 import type { DelayedGames } from '../../../../steam/src/types/index.js'
-import supabase from '../../db/supabase.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { heroes } from '../../dota/lib/heroList.js'

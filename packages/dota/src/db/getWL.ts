@@ -1,7 +1,5 @@
+import { type Database, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-
-import type { Database } from './supabase-types.js'
-import supabase from './supabase.js'
 
 interface WL {
   lng: string
@@ -38,7 +36,10 @@ const updateStats = (
 
 export async function getWL({ lng, channelId, mmrEnabled, startDate, currentGameIsRanked }: WL) {
   if (!channelId) {
-    return Promise.resolve({ record: [{ win: 0, lose: 0, type: 'U' }], msg: null })
+    return Promise.resolve({
+      record: [{ win: 0, lose: 0, type: 'U' }],
+      msg: null,
+    })
   }
 
   const { data: matches, error } = await supabase.rpc('get_grouped_bets', {
@@ -52,7 +53,11 @@ export async function getWL({ lng, channelId, mmrEnabled, startDate, currentGame
     return { record: [{ win: 0, lose: 0, type: 'U' }], msg: null }
   }
 
-  const ranked: { win: number; lose: number; mmr: number } = { win: 0, lose: 0, mmr: 0 }
+  const ranked: { win: number; lose: number; mmr: number } = {
+    win: 0,
+    lose: 0,
+    mmr: 0,
+  }
   const unranked: { win: number; lose: number } = { win: 0, lose: 0 }
 
   matches.forEach((match) => {

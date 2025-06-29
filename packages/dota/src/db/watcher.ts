@@ -1,5 +1,5 @@
-import { getAuthProvider, getTwitchAPI } from '@dotabod/shared-utils'
-import { logger } from '@dotabod/shared-utils'
+import type { Tables } from '@dotabod/shared-utils'
+import { getAuthProvider, getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { clearCacheForUser } from '../dota/clearCacheForUser.js'
 import findUser from '../dota/lib/connectedStreamers.js'
@@ -12,8 +12,6 @@ import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { isSubscriptionActive } from '../types/subscription.js'
 import getDBUser from './getDBUser.js'
 import { handleUserOnlineMessages } from './handleScheduledMessages.js'
-import type { Tables } from './supabase-types.js'
-import supabase from './supabase.js'
 
 class SetupSupabase {
   channel: any // ReturnType<typeof supabase.channel>
@@ -200,7 +198,10 @@ class SetupSupabase {
               const authProvider = getAuthProvider()
               authProvider.removeUser(twitchId)
               getTwitchAPI(twitchId).catch((e) => {
-                logger.error('[TWITCHAPI] Error updating twurple token', { twitchId, e })
+                logger.error('[TWITCHAPI] Error updating twurple token', {
+                  twitchId,
+                  e,
+                })
               })
             }
           }

@@ -1,4 +1,4 @@
-import type { Database } from './db/supabase-types.js'
+import type { Database } from '@dotabod/shared-utils'
 import type { HeroNames } from './dota/lib/getHero.js'
 
 export interface SocketClient {

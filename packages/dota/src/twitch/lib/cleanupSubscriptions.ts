@@ -1,6 +1,6 @@
-import { getTwitchHeaders } from '@dotabod/shared-utils'
+import { getTwitchHeaders, supabase } from '@dotabod/shared-utils'
 import debounce from 'lodash.debounce'
-import supabase from '../../db/supabase.js'
+
 const headers = await getTwitchHeaders()
 
 function sleep(ms: number) {

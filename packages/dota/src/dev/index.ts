@@ -1,11 +1,8 @@
+import { getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
 import { faker } from '@faker-js/faker'
 import type { ApiClient } from '@twurple/api'
 import axios from 'axios'
-
-import { logger } from '@dotabod/shared-utils'
-import { getTwitchAPI } from '@dotabod/shared-utils'
 import { gameEnd } from '../__tests__/play-by-plays.js'
-import supabase from '../db/supabase.js'
 import { fetchOnlineUsers } from '../dota/events/gsi-events/__tests__/fetchOnlineUsers.js'
 import { DotaEventTypes } from '../types.js'
 
