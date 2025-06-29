@@ -107,6 +107,13 @@ async function startup() {
                   broadcaster_id: providerAccountId,
                   drop_reason: dropReason,
                 })
+              } else if (dropReason?.code === 'msg_rejected') {
+                // Don't disable for message moderation - bot can still send other messages
+                logger.warn('Chat message rejected by moderators, not disabling account:', {
+                  message: text,
+                  broadcaster_id: providerAccountId,
+                  drop_reason: dropReason,
+                })
               } else if (dropReason?.code) {
                 // Only disable for actual permission issues
                 await disableUser(providerAccountId, dropReason)

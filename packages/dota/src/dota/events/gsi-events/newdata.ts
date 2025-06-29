@@ -317,6 +317,25 @@ function cleanupMatchDataCache() {
 // Start the cleanup process
 cleanupMatchDataCache()
 
+// Cache to prevent excessive account sharing checks
+const accountSharingCheckCache = new Map<string, { lastCheck: number; result: boolean }>()
+const ACCOUNT_SHARING_CHECK_INTERVAL = 30000 // 30 seconds
+
+// Cleanup function for account sharing cache
+function cleanupAccountSharingCache() {
+  const now = Date.now()
+  for (const [key, value] of accountSharingCheckCache.entries()) {
+    if (now - value.lastCheck > ACCOUNT_SHARING_CHECK_INTERVAL * 2) {
+      accountSharingCheckCache.delete(key)
+    }
+  }
+  // Run cleanup every 5 minutes
+  setTimeout(cleanupAccountSharingCache, 300000)
+}
+
+// Start the account sharing cache cleanup process
+cleanupAccountSharingCache()
+
 // Account sharing detection
 async function checkAccountSharing(client: SocketClient, matchId: string): Promise<boolean> {
   if (!client.steam32Id || !matchId) return false
@@ -324,6 +343,14 @@ async function checkAccountSharing(client: SocketClient, matchId: string): Promi
   const steam32Id = client.steam32Id
   const currentToken = client.token
   const currentTime = Date.now()
+
+  // Rate limit account sharing checks to prevent CPU/DB spam
+  const cacheKey = `${steam32Id}:${currentToken}:${matchId}`
+  const cachedCheck = accountSharingCheckCache.get(cacheKey)
+  
+  if (cachedCheck && (currentTime - cachedCheck.lastCheck) < ACCOUNT_SHARING_CHECK_INTERVAL) {
+    return cachedCheck.result
+  }
 
   // Redis key to track active sessions for this Steam account
   const redisKey = `steam32Id:${steam32Id}:activeSession`
@@ -376,6 +403,8 @@ async function checkAccountSharing(client: SocketClient, matchId: string): Promi
             `The Dota account "${accountName}" is being used on multiple PCs with Dotabod. This account has been disabled to prevent conflicts. To re-enable, type !clearsharing, but you MUST delete the Dotabod GSI config file from the other PC first, or this will happen again.`,
           )
 
+          // Cache the result (account sharing detected) - use longer cache time to prevent spam
+          accountSharingCheckCache.set(cacheKey, { lastCheck: currentTime, result: true })
           return true // Account sharing detected and handled
         }
         // Existing session is newer, update Redis with current session as the active one
@@ -400,6 +429,8 @@ async function checkAccountSharing(client: SocketClient, matchId: string): Promi
       }),
     )
 
+    // Cache the result (no account sharing detected)
+    accountSharingCheckCache.set(cacheKey, { lastCheck: currentTime, result: false })
     return false // No account sharing detected
   } catch (error) {
     logger.error('[ACCOUNT_SHARING] Error checking account sharing', {
@@ -408,6 +439,8 @@ async function checkAccountSharing(client: SocketClient, matchId: string): Promi
       token: currentToken,
       matchId,
     })
+    // Cache the error result to prevent retrying too quickly
+    accountSharingCheckCache.set(cacheKey, { lastCheck: currentTime, result: false })
     return false
   }
 }
