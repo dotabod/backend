@@ -86,15 +86,22 @@ async function startup() {
 
             // Only disable if message failed to send
             if (!response.data?.[0]?.is_sent) {
-              // Bot must not be a moderator
-              if (response.data?.[0]?.drop_reason?.code === 'followers_only_mode') {
-                await disableUser(providerAccountId)
+              const dropReason = response.data?.[0]?.drop_reason
+              
+              // Handle different drop reason codes that require disabling
+              if (dropReason?.code === 'followers_only_mode') {
+                await disableUser(providerAccountId, dropReason)
+              } else if (dropReason?.code === 'user_warned') {
+                await disableUser(providerAccountId, dropReason)
+              } else if (dropReason?.code) {
+                // Handle other drop reason codes that indicate chat permission issues
+                await disableUser(providerAccountId, dropReason)
               } else {
-                // Log the entire message and response
+                // Log the entire message and response for unknown issues
                 logger.error('Failed to send chat message in drop reason:', {
                   message: text,
                   broadcaster_id: providerAccountId,
-                  drop_reason: response.data?.[0]?.drop_reason,
+                  drop_reason: dropReason,
                   response,
                 })
               }
@@ -120,7 +127,7 @@ async function startup() {
   }
 }
 
-async function disableUser(providerAccountId: string) {
+async function disableUser(providerAccountId: string, dropReason?: { code: string; message: string }) {
   const { data: user } = await supabase
     .from('accounts')
     .select('userId')
@@ -132,12 +139,38 @@ async function disableUser(providerAccountId: string) {
     return
   }
 
+  // Create metadata based on the drop reason
+  let metadata: any = {
+    drop_reason: dropReason?.code || 'unknown',
+    drop_reason_message: dropReason?.message || 'Unknown chat permission issue',
+  }
+
+  // Add specific details based on drop reason code
+  switch (dropReason?.code) {
+    case 'followers_only_mode':
+      metadata = {
+        ...metadata,
+        permission_required: 'moderator',
+        additional_info: 'Bot is not a moderator and channel has followers-only mode enabled',
+      }
+      break
+    case 'user_warned':
+      metadata = {
+        ...metadata,
+        warning_status: 'active',
+        additional_info: 'Bot account is currently warned and cannot send messages until warning is acknowledged',
+      }
+      break
+    default:
+      metadata = {
+        ...metadata,
+        additional_info: `Chat message blocked due to: ${dropReason?.message || 'Unknown reason'}`,
+      }
+      break
+  }
+
   // Track the disable reason before disabling
-  await trackDisableReason(user.userId, 'commandDisable', 'CHAT_PERMISSION_DENIED', {
-    drop_reason: 'followers_only_mode',
-    permission_required: 'moderator',
-    additional_info: 'Bot is not a moderator and channel has followers-only mode enabled',
-  })
+  await trackDisableReason(user.userId, 'commandDisable', 'CHAT_PERMISSION_DENIED', metadata)
 
   // Disable the user
   await supabase.from('settings').upsert(
@@ -152,7 +185,11 @@ async function disableUser(providerAccountId: string) {
     },
   )
 
-  logger.error('Failed to send chat message. Disabled user', providerAccountId)
+  logger.error('Failed to send chat message. Disabled user', {
+    providerAccountId,
+    dropReason: dropReason?.code,
+    dropReasonMessage: dropReason?.message,
+  })
 }
 
 // Start the service and handle any uncaught errors
