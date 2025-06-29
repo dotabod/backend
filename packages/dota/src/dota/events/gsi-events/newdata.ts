@@ -347,8 +347,8 @@ async function checkAccountSharing(client: SocketClient, matchId: string): Promi
   // Rate limit account sharing checks to prevent CPU/DB spam
   const cacheKey = `${steam32Id}:${currentToken}:${matchId}`
   const cachedCheck = accountSharingCheckCache.get(cacheKey)
-  
-  if (cachedCheck && (currentTime - cachedCheck.lastCheck) < ACCOUNT_SHARING_CHECK_INTERVAL) {
+
+  if (cachedCheck && currentTime - cachedCheck.lastCheck < ACCOUNT_SHARING_CHECK_INTERVAL) {
     return cachedCheck.result
   }
 

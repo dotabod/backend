@@ -13,8 +13,12 @@ export function toggleDotabod(token: string, isBotDisabled: boolean, channel: st
   const cacheKey = `${token}:${channel}`
   const cached = toggleMessageCache.get(cacheKey)
   const now = Date.now()
-  
-  if (cached && (now - cached.timestamp) < TOGGLE_MESSAGE_COOLDOWN && cached.disabled === isBotDisabled) {
+
+  if (
+    cached &&
+    now - cached.timestamp < TOGGLE_MESSAGE_COOLDOWN &&
+    cached.disabled === isBotDisabled
+  ) {
     logger.info('[TOGGLE] Skipping duplicate toggle message', { token, channel, isBotDisabled })
     return
   }
