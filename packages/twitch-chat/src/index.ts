@@ -87,7 +87,7 @@ async function startup() {
             // Only disable if message failed to send
             if (!response.data?.[0]?.is_sent) {
               const dropReason = response.data?.[0]?.drop_reason
-              
+
               // Handle different drop reason codes that require disabling
               if (dropReason?.code === 'followers_only_mode') {
                 await disableUser(providerAccountId, dropReason)
@@ -127,7 +127,10 @@ async function startup() {
   }
 }
 
-async function disableUser(providerAccountId: string, dropReason?: { code: string; message: string }) {
+async function disableUser(
+  providerAccountId: string,
+  dropReason?: { code: string; message: string },
+) {
   const { data: user } = await supabase
     .from('accounts')
     .select('userId')
@@ -158,7 +161,8 @@ async function disableUser(providerAccountId: string, dropReason?: { code: strin
       metadata = {
         ...metadata,
         warning_status: 'active',
-        additional_info: 'Bot account is currently warned and cannot send messages until warning is acknowledged',
+        additional_info:
+          'Bot account is currently warned and cannot send messages until warning is acknowledged',
       }
       break
     default:
