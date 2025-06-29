@@ -1,5 +1,6 @@
 import { getAppToken } from '@twurple/auth'
 import { getTwitchTokens } from './getTwitchTokens.js'
+
 // Cache for Twitch headers by twitchId
 const headerCache: Record<string, { headers: Record<string, string>; timestamp: number }> = {}
 const TOKEN_REFRESH_INTERVAL = 3600000 // 1 hour in milliseconds

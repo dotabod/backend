@@ -5,10 +5,10 @@ import { detect } from 'curse-filter'
 import leoProfanity from 'leo-profanity'
 import naughtyWords from 'naughty-words'
 import {
-  RegExpMatcher,
-  TextCensor,
   englishDataset,
   englishRecommendedTransformers,
+  RegExpMatcher,
+  TextCensor,
 } from 'obscenity'
 import profanityUtil from 'profanity-util'
 import { flatWords as russianBadWordsList } from 'russian-bad-words'

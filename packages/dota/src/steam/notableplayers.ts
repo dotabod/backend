@@ -4,8 +4,7 @@ import { t } from 'i18next'
 import { calculateAvg } from '../dota/lib/calculateAvg.js'
 import { getPlayers } from '../dota/lib/getPlayers.js'
 import { getHeroNameOrColor } from '../dota/lib/heroes.js'
-import type { Players, SocketClient } from '../types.js'
-import type { NotablePlayer } from '../types.js'
+import type { NotablePlayer, Players, SocketClient } from '../types.js'
 import MongoDBSingleton from './MongoDBSingleton.js'
 
 export interface Player {

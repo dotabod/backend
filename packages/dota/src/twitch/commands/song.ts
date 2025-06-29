@@ -1,7 +1,5 @@
 import { t } from 'i18next'
-
-import { DBSettings } from '../../settings.js'
-import { getValueOrDefault } from '../../settings.js'
+import { DBSettings, getValueOrDefault } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 

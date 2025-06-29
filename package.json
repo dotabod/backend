@@ -1,7 +1,9 @@
 {
   "name": "dotabod",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "cache:clean": "rm -rf $(echo bun pm cache) && rm -rf node_modules && rm bun.lock || true",
     "up": "bun upgrade-interactive --latest",
@@ -45,6 +47,8 @@
     "typescript": "^5.8"
   },
   "lint-staged": {
-    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --files-ignore-unknown=true"]
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --files-ignore-unknown=true"
+    ]
   }
 }

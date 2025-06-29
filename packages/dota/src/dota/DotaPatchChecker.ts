@@ -1,7 +1,6 @@
+import { logger } from '@dotabod/shared-utils'
 import axios from 'axios'
 import { t } from 'i18next'
-
-import { logger } from '@dotabod/shared-utils'
 import { gsiHandlers } from './lib/consts.js'
 import { say } from './say.js'
 

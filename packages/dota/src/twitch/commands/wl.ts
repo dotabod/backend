@@ -1,7 +1,6 @@
-import { t } from 'i18next'
-
 import { logger } from '@dotabod/shared-utils'
-import { LOBBY_TYPE_RANKED, getWL } from '../../db/getWL.js'
+import { t } from 'i18next'
+import { getWL, LOBBY_TYPE_RANKED } from '../../db/getWL.js'
 import { isArcade } from '../../dota/lib/isArcade.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
 import { DBSettings, getValueOrDefault } from '../../settings.js'

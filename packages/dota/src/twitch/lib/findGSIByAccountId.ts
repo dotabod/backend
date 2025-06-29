@@ -2,8 +2,7 @@ import { t } from 'i18next'
 
 import { getSpectatorPlayers } from '../../dota/lib/getSpectatorPlayers.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
-import type { Hero, Items } from '../../types.js'
-import type { Packet, Player } from '../../types.js'
+import type { Hero, Items, Packet, Player } from '../../types.js'
 import CustomError from '../../utils/customError.js'
 import { getPlayerFromArgs } from './getPlayerFromArgs.js'
 

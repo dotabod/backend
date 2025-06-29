@@ -1,6 +1,5 @@
-import type { NextFunction, Request, Response } from 'express'
-
 import { logger } from '@dotabod/shared-utils'
+import type { NextFunction, Request, Response } from 'express'
 import getDBUser from '../db/getDBUser.js'
 import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts.js'
 

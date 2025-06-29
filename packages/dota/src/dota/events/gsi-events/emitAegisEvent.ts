@@ -1,6 +1,6 @@
 import { getValueOrDefault } from '../../../settings.js'
-import type { SocketClient } from '../../../types.js'
 import { settingsKeys as DBSettings } from '../../../types/settings.js'
+import type { SocketClient } from '../../../types.js'
 import { server } from '../../server.js'
 import type { AegisRes } from './AegisRes.js'
 import { getNewAegisTime } from './getNewAegisTime.js'

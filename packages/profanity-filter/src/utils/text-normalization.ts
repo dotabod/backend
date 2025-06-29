@@ -1,4 +1,5 @@
 import { compressRepeatedCharacters } from './profanity-wordlists.js'
+
 /**
  * text-normalization.ts
  *
@@ -101,7 +102,7 @@ export function normalizeRepeatedChars(text: string): string {
  */
 export function removeSeparators(text: string): string {
   // Common separators: spaces, dots, asterisks, underscores, hyphens
-  return text.replace(/[\s\.\*_\-]/g, '')
+  return text.replace(/[\s.*_-]/g, '')
 }
 
 /**

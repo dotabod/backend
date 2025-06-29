@@ -4,7 +4,7 @@ import { fmtMSS, getRedisNumberValue } from '../../../utils/index.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
 import eventHandler from '../EventHandler.js'
-import { type RoshRes, emitRoshEvent, generateRoshanMessage } from './RoshRes.js'
+import { emitRoshEvent, generateRoshanMessage, type RoshRes } from './RoshRes.js'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
   handler: async (dotaClient, event: DotaEvent) => {

@@ -1,6 +1,6 @@
-import { type Tables, botStatus, logger, supabase } from '@dotabod/shared-utils'
-import express from 'express'
+import { botStatus, logger, supabase, type Tables } from '@dotabod/shared-utils'
 import type { ErrorRequestHandler } from 'express'
+import express from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import { handleNewUser } from '../handleNewUser.js'
 import { stopUserSubscriptions } from '../twitch/lib/revokeEvent.js'

@@ -1,6 +1,5 @@
-import { t } from 'i18next'
-
 import { logger } from '@dotabod/shared-utils'
+import { t } from 'i18next'
 import RedisClient from '../../db/RedisClient.js'
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'

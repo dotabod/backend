@@ -1,6 +1,5 @@
-import { createClient } from 'redis'
-
 import { logger } from '@dotabod/shared-utils'
+import { createClient } from 'redis'
 
 class RedisClient {
   private static instance: RedisClient

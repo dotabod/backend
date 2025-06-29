@@ -1,8 +1,7 @@
-import { checkBotStatus, logger } from '@dotabod/shared-utils'
-import { getTwitchHeaders } from '@dotabod/shared-utils'
-import type { TwitchEventTypes } from './TwitchEventTypes.js'
+import { checkBotStatus, getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import { eventSubMap } from './chatSubIds.js'
 import type { TwitchEventSubResponse } from './interfaces.js'
+import type { TwitchEventTypes } from './TwitchEventTypes.js'
 import { revokeEvent } from './twitch/lib/revokeEvent.js'
 import { rateLimiter } from './utils/rateLimiterCore.js'
 

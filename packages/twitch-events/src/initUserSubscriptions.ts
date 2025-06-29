@@ -1,8 +1,8 @@
 import { checkBotStatus, fetchConduitId, logger } from '@dotabod/shared-utils'
-import type { TwitchEventTypes } from './TwitchEventTypes.js'
 import { eventSubMap } from './chatSubIds.js'
 import { ensureBotIsModerator } from './ensureBotIsModerator.js'
 import { genericSubscribe } from './subscribeChatMessagesForUser.js'
+import type { TwitchEventTypes } from './TwitchEventTypes.js'
 
 // Get existing conduit ID and subscriptions
 const conduitId = await fetchConduitId()

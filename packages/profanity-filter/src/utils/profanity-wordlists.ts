@@ -279,7 +279,7 @@ export const evasionPatterns = [
  */
 function normalizeRussianText(text: string): string {
   // Remove separators (spaces, *, -, ., etc.) for Russian text
-  const noSeparators = text.replace(/[\s\.\*_\-]/g, '')
+  const noSeparators = text.replace(/[\s.*_-]/g, '')
 
   // Special handling for Russian character substitutions
   return noSeparators

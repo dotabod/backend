@@ -12,7 +12,9 @@ interface TwitchUserUpdateEvent {
 
 export function updateUserEvent({
   payload: { event },
-}: { payload: { event: TwitchUserUpdateEvent } }) {
+}: {
+  payload: { event: TwitchUserUpdateEvent }
+}) {
   logger.info(`${event.user_id} updateUserEvent`)
 
   async function handler() {

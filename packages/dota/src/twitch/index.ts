@@ -1,7 +1,6 @@
 import './commandLoader.js'
 
-import { logger } from '@dotabod/shared-utils'
-import { getTwitchAPI } from '@dotabod/shared-utils'
+import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import {
   EventSubChannelPollBeginEvent,
   EventSubChannelPollEndEvent,

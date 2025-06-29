@@ -1,5 +1,4 @@
-import { logger } from '@dotabod/shared-utils'
-import { getTwitchAPI } from '@dotabod/shared-utils'
+import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 
 export const refundTwitchBet = async (twitchId: string, specificPredictionId?: string) => {
   const api = await getTwitchAPI(twitchId)

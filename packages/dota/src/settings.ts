@@ -2,9 +2,9 @@ import {
   type ChatterKeys,
   type CommandKeys,
   settingsKeys as DBSettings,
-  type SettingKeys,
   defaultCommands,
   defaultSettingsStructure,
+  type SettingKeys,
 } from './types/settings.js'
 import type { SubscriptionRow } from './types/subscription.js'
 import { canAccessFeature } from './utils/subscription.js'
