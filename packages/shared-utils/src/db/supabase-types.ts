@@ -103,6 +103,56 @@ export type Database = {
           },
         ]
       }
+      advanced_bets: {
+        Row: {
+          bet_type: string
+          created_at: string
+          data: Json | null
+          id: number
+          match_id: string
+          outcome_1: string
+          outcome_2: string
+          predictionid: string | null
+          title: string
+          updated_at: string | null
+          winning_outcome: number | null
+        }
+        Insert: {
+          bet_type: string
+          created_at?: string
+          data?: Json | null
+          id?: number
+          match_id: string
+          outcome_1: string
+          outcome_2: string
+          predictionid?: string | null
+          title: string
+          updated_at?: string | null
+          winning_outcome?: number | null
+        }
+        Update: {
+          bet_type?: string
+          created_at?: string
+          data?: Json | null
+          id?: number
+          match_id?: string
+          outcome_1?: string
+          outcome_2?: string
+          predictionid?: string | null
+          title?: string
+          updated_at?: string | null
+          winning_outcome?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'advanced_bets_match_id_fkey'
+            columns: ['match_id']
+            isOneToOne: false
+            referencedRelation: 'matches'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       approved_moderators: {
         Row: {
           created_at: string
@@ -135,71 +185,44 @@ export type Database = {
           },
         ]
       }
-      matches: {
+      disable_notifications: {
         Row: {
+          acknowledged: boolean
+          auto_resolved: boolean
           created_at: string
-          dire_score: number | null
-          game_mode: number | null
-          hero_name: string | null
-          hero_slot: number | null
           id: string
-          is_doubledown: boolean
-          is_party: boolean
-          kda: Json | null
-          lobby_type: number | null
-          matchId: string
-          myTeam: string
-          predictionId: string | null
-          radiant_score: number | null
-          steam32Id: number | null
-          updated_at: string
-          userId: string
-          won: boolean | null
+          metadata: Json | null
+          reason: string
+          resolved_at: string | null
+          setting_key: string
+          user_id: string
         }
         Insert: {
+          acknowledged?: boolean
+          auto_resolved?: boolean
           created_at?: string
-          dire_score?: number | null
-          game_mode?: number | null
-          hero_name?: string | null
-          hero_slot?: number | null
           id?: string
-          is_doubledown?: boolean
-          is_party?: boolean
-          kda?: Json | null
-          lobby_type?: number | null
-          matchId: string
-          myTeam: string
-          predictionId?: string | null
-          radiant_score?: number | null
-          steam32Id?: number | null
-          updated_at?: string
-          userId: string
-          won?: boolean | null
+          metadata?: Json | null
+          reason: string
+          resolved_at?: string | null
+          setting_key: string
+          user_id: string
         }
         Update: {
+          acknowledged?: boolean
+          auto_resolved?: boolean
           created_at?: string
-          dire_score?: number | null
-          game_mode?: number | null
-          hero_name?: string | null
-          hero_slot?: number | null
           id?: string
-          is_doubledown?: boolean
-          is_party?: boolean
-          kda?: Json | null
-          lobby_type?: number | null
-          matchId?: string
-          myTeam?: string
-          predictionId?: string | null
-          radiant_score?: number | null
-          steam32Id?: number | null
-          updated_at?: string
-          userId?: string
-          won?: boolean | null
+          metadata?: Json | null
+          reason?: string
+          resolved_at?: string | null
+          setting_key?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'bets_userId_fkey'
-            columns: ['userId']
+            foreignKeyName: 'disable_notifications_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
@@ -332,6 +355,77 @@ export type Database = {
             columns: ['giftSubscriptionId']
             isOneToOne: false
             referencedRelation: 'gift_subscriptions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      matches: {
+        Row: {
+          created_at: string
+          dire_score: number | null
+          game_mode: number | null
+          hero_name: string | null
+          hero_slot: number | null
+          id: string
+          is_doubledown: boolean
+          is_party: boolean
+          kda: Json | null
+          lobby_type: number | null
+          matchId: string
+          myTeam: string
+          predictionId: string | null
+          radiant_score: number | null
+          steam32Id: number | null
+          updated_at: string
+          userId: string
+          won: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          dire_score?: number | null
+          game_mode?: number | null
+          hero_name?: string | null
+          hero_slot?: number | null
+          id?: string
+          is_doubledown?: boolean
+          is_party?: boolean
+          kda?: Json | null
+          lobby_type?: number | null
+          matchId: string
+          myTeam: string
+          predictionId?: string | null
+          radiant_score?: number | null
+          steam32Id?: number | null
+          updated_at?: string
+          userId: string
+          won?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          dire_score?: number | null
+          game_mode?: number | null
+          hero_name?: string | null
+          hero_slot?: number | null
+          id?: string
+          is_doubledown?: boolean
+          is_party?: boolean
+          kda?: Json | null
+          lobby_type?: number | null
+          matchId?: string
+          myTeam?: string
+          predictionId?: string | null
+          radiant_score?: number | null
+          steam32Id?: number | null
+          updated_at?: string
+          userId?: string
+          won?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'bets_userId_fkey'
+            columns: ['userId']
+            isOneToOne: false
+            referencedRelation: 'users'
             referencedColumns: ['id']
           },
         ]
@@ -511,7 +605,11 @@ export type Database = {
       }
       settings: {
         Row: {
+          auto_disabled_at: string | null
+          auto_disabled_by: string | null
           created_at: string
+          disable_metadata: Json | null
+          disable_reason: string | null
           id: string
           key: string
           updated_at: string
@@ -519,7 +617,11 @@ export type Database = {
           value: Json | null
         }
         Insert: {
+          auto_disabled_at?: string | null
+          auto_disabled_by?: string | null
           created_at?: string
+          disable_metadata?: Json | null
+          disable_reason?: string | null
           id?: string
           key: string
           updated_at?: string
@@ -527,7 +629,11 @@ export type Database = {
           value?: Json | null
         }
         Update: {
+          auto_disabled_at?: string | null
+          auto_disabled_by?: string | null
           created_at?: string
+          disable_metadata?: Json | null
+          disable_reason?: string | null
           id?: string
           key?: string
           updated_at?: string
@@ -790,10 +896,7 @@ export type Database = {
     }
     Functions: {
       get_grouped_bets: {
-        Args: {
-          channel_id: string
-          start_date: string
-        }
+        Args: { channel_id: string; start_date: string }
         Returns: {
           won: boolean
           lobby_type: number
@@ -825,25 +928,27 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, 'public'>]
+type DefaultSchema = Database[Extract<keyof Database, 'public'>]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema['Tables'] & PublicSchema['Views'])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions['schema']]['Tables'] &
-        Database[PublicTableNameOrOptions['schema']]['Views'])
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof (Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        Database[DefaultSchemaTableNameOrOptions['schema']]['Views'])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions['schema']]['Tables'] &
-      Database[PublicTableNameOrOptions['schema']]['Views'])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      Database[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema['Tables'] & PublicSchema['Views'])
-    ? (PublicSchema['Tables'] & PublicSchema['Views'])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -851,18 +956,22 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends keyof PublicSchema['Tables'] | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof Database },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema['Tables']
-    ? PublicSchema['Tables'][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -870,18 +979,22 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends keyof PublicSchema['Tables'] | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof Database },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema['Tables']
-    ? PublicSchema['Tables'][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -889,19 +1002,21 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends keyof PublicSchema['Enums'] | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions['schema']]['Enums']
+  DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums'] | { schema: keyof Database },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema['Enums']
-    ? PublicSchema['Enums'][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema['CompositeTypes']
+    | keyof DefaultSchema['CompositeTypes']
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
@@ -910,6 +1025,26 @@ export type CompositeTypes<
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema['CompositeTypes']
-    ? PublicSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      MessageStatus: ['PENDING', 'DELIVERED', 'FAILED', 'CANCELLED'],
+      SubscriptionStatus: [
+        'ACTIVE',
+        'CANCELED',
+        'INCOMPLETE',
+        'INCOMPLETE_EXPIRED',
+        'PAST_DUE',
+        'PAUSED',
+        'TRIALING',
+        'UNPAID',
+      ],
+      SubscriptionTier: ['FREE', 'PRO'],
+      TransactionType: ['RECURRING', 'LIFETIME'],
+    },
+  },
+} as const
