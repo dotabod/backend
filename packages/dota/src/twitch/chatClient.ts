@@ -52,7 +52,12 @@ const sendWhisper = (channel: string, text: string) => {
 
 // Chat client object
 export const chatClient = {
-  say: async (channel: string, text: string, reply_parent_message_id?: string, bypassDisableCheck = false) => {
+  say: async (
+    channel: string,
+    text: string,
+    reply_parent_message_id?: string,
+    bypassDisableCheck = false,
+  ) => {
     const user = findUserByName(channel.toLowerCase().replace('#', ''))
     const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
 
