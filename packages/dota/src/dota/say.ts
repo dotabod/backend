@@ -19,14 +19,26 @@ export function say(
     key,
     chattersKey,
     beta = false,
+    bypassDisableCheck = false,
   }: {
     key?: SettingKeys
     chattersKey?: keyof (typeof defaultSettings)['chatters']
     delay?: boolean
     beta?: boolean
+    bypassDisableCheck?: boolean
   } = {},
 ) {
   if (beta && !client.beta_tester) return
+
+  // Check if account is disabled - prevent all chat messages if disabled (unless bypassed)
+  if (!bypassDisableCheck) {
+    const isDisabled = getValueOrDefault(
+      DBSettings.commandDisable,
+      client.settings,
+      client.subscription,
+    )
+    if (isDisabled) return
+  }
 
   // Check global chatter access
   const chattersEnabled = getValueOrDefault(

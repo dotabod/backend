@@ -22,5 +22,5 @@ export function toggleDotabod(token: string, isBotDisabled: boolean, channel: st
     gsiHandler?.enable()
   }
 
-  chatClient.say(channel, t('toggle', { context: isBotDisabled ? 'disabled' : 'enabled', lng }))
+  chatClient.say(channel, t('toggle', { context: isBotDisabled ? 'disabled' : 'enabled', lng }), undefined, true)
 }

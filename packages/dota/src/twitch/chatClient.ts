@@ -1,4 +1,5 @@
 import { findUserByName } from '../dota/lib/connectedStreamers.js'
+import { DBSettings, getValueOrDefault } from '../settings.js'
 import { twitchChat } from '../steam/ws.js'
 
 // Rate limiting constants
@@ -51,11 +52,21 @@ const sendWhisper = (channel: string, text: string) => {
 
 // Chat client object
 export const chatClient = {
-  say: async (channel: string, text: string, reply_parent_message_id?: string) => {
+  say: async (channel: string, text: string, reply_parent_message_id?: string, bypassDisableCheck = false) => {
     const user = findUserByName(channel.toLowerCase().replace('#', ''))
     const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
 
     if (hasNewestScopes && user?.Account?.providerAccountId) {
+      // Check if account is disabled before emitting chat message (unless bypassed)
+      if (!bypassDisableCheck) {
+        const isDisabled = getValueOrDefault(
+          DBSettings.commandDisable,
+          user.settings,
+          user.subscription,
+        )
+        if (isDisabled) return
+      }
+
       twitchChat.emit('say', user?.Account?.providerAccountId, text, reply_parent_message_id)
     }
   },
