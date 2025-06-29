@@ -93,8 +93,22 @@ async function startup() {
                 await disableUser(providerAccountId, dropReason)
               } else if (dropReason?.code === 'user_warned') {
                 await disableUser(providerAccountId, dropReason)
+              } else if (dropReason?.code === 'rate_limited') {
+                // Don't disable for rate limiting - just log it
+                logger.warn('Chat message rate limited, not disabling account:', {
+                  message: text,
+                  broadcaster_id: providerAccountId,
+                  drop_reason: dropReason,
+                })
+              } else if (dropReason?.code === 'send_error') {
+                // Don't disable for generic send errors - just log them
+                logger.error('Chat message send error, not disabling account:', {
+                  message: text,
+                  broadcaster_id: providerAccountId,
+                  drop_reason: dropReason,
+                })
               } else if (dropReason?.code) {
-                // Handle other drop reason codes that indicate chat permission issues
+                // Only disable for actual permission issues
                 await disableUser(providerAccountId, dropReason)
               } else {
                 // Log the entire message and response for unknown issues

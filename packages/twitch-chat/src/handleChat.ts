@@ -93,9 +93,37 @@ export async function sendTwitchChatMessage(
     const response = await fetch(url, options)
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to send chat message: ${response.status} ${response.statusText} ${response.body} ${params.broadcaster_id}`,
-      )
+      let errorMessage = `Failed to send chat message: ${response.status} ${response.statusText}`
+      let dropReasonCode = 'send_error'
+
+      // Handle rate limiting specifically
+      if (response.status === 429) {
+        dropReasonCode = 'rate_limited'
+        errorMessage = `Rate limited: ${response.status} ${response.statusText}`
+      }
+
+      // Try to read the response body for more details
+      try {
+        const errorBody = await response.text()
+        if (errorBody) {
+          errorMessage += ` - ${errorBody}`
+        }
+      } catch {
+        // If we can't read the body, continue with the basic error
+      }
+
+      return {
+        data: [
+          {
+            message_id: '',
+            is_sent: false,
+            drop_reason: {
+              code: dropReasonCode,
+              message: errorMessage,
+            },
+          },
+        ],
+      }
     }
 
     return response.json() as Promise<TwitchChatMessageResponse>
