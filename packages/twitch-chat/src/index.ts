@@ -1,6 +1,12 @@
 import { lstatSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { checkBotStatus, getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
+import {
+  checkBotStatus,
+  getTwitchAPI,
+  logger,
+  supabase,
+  trackDisableReason,
+} from '@dotabod/shared-utils'
 import { use } from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 import { initializeSocket } from './conduitSetup.js'
@@ -125,6 +131,13 @@ async function disableUser(providerAccountId: string) {
     logger.error('Failed to send chat message: no user found', providerAccountId)
     return
   }
+
+  // Track the disable reason before disabling
+  await trackDisableReason(user.userId, 'commandDisable', 'chat_permission_denied', {
+    drop_reason: 'followers_only_mode',
+    permission_required: 'moderator',
+    additional_info: 'Bot is not a moderator and channel has followers-only mode enabled',
+  })
 
   // Disable the user
   await supabase.from('settings').upsert(

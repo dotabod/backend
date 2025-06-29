@@ -1,5 +1,5 @@
+import { supabase, trackResolveReason } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import supabase from '../../db/supabase.js'
 import { ranks } from '../../dota/lib/consts.js'
 import { DBSettings, getValueOrDefault } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
@@ -70,9 +70,14 @@ commandHandler.registerCommand('only', {
     // Handle disabling the mode
     const rankArg = args[0].toLowerCase().trim()
     if (disableCommands.includes(rankArg)) {
+      const userId = message.channel.client.token
+
+      // Track resolve reason when disabling rank restriction
+      await trackResolveReason(userId, DBSettings.rankOnly, false)
+
       await supabase.from('settings').upsert(
         {
-          userId: message.channel.client.token,
+          userId,
           key: DBSettings.rankOnly,
           value: JSON.stringify({
             ...rankOnlySettings,

@@ -192,7 +192,7 @@ export type Database = {
           created_at: string
           id: string
           metadata: Json | null
-          reason: string
+          reason: Database['public']['Enums']['DisableReason']
           resolved_at: string | null
           setting_key: string
           user_id: string
@@ -203,7 +203,7 @@ export type Database = {
           created_at?: string
           id?: string
           metadata?: Json | null
-          reason: string
+          reason: Database['public']['Enums']['DisableReason']
           resolved_at?: string | null
           setting_key: string
           user_id: string
@@ -214,7 +214,7 @@ export type Database = {
           created_at?: string
           id?: string
           metadata?: Json | null
-          reason?: string
+          reason?: Database['public']['Enums']['DisableReason']
           resolved_at?: string | null
           setting_key?: string
           user_id?: string
@@ -609,7 +609,7 @@ export type Database = {
           auto_disabled_by: string | null
           created_at: string
           disable_metadata: Json | null
-          disable_reason: string | null
+          disable_reason: Database['public']['Enums']['DisableReason'] | null
           id: string
           key: string
           updated_at: string
@@ -621,7 +621,7 @@ export type Database = {
           auto_disabled_by?: string | null
           created_at?: string
           disable_metadata?: Json | null
-          disable_reason?: string | null
+          disable_reason?: Database['public']['Enums']['DisableReason'] | null
           id?: string
           key: string
           updated_at?: string
@@ -633,7 +633,7 @@ export type Database = {
           auto_disabled_by?: string | null
           created_at?: string
           disable_metadata?: Json | null
-          disable_reason?: string | null
+          disable_reason?: Database['public']['Enums']['DisableReason'] | null
           id?: string
           key?: string
           updated_at?: string
@@ -909,6 +909,18 @@ export type Database = {
       }
     }
     Enums: {
+      DisableReason:
+        | 'TOKEN_REVOKED'
+        | 'MANUAL_DISABLE'
+        | 'STREAM_OFFLINE'
+        | 'CHAT_PERMISSION_DENIED'
+        | 'SUBSCRIPTION_INSUFFICIENT'
+        | 'API_ERROR'
+        | 'INVALID_TOKEN'
+        | 'CACHE_CLEARED'
+        | 'BOT_BANNED'
+        | 'GAME_STATE'
+        | 'RANK_RESTRICTION'
       MessageStatus: 'PENDING' | 'DELIVERED' | 'FAILED' | 'CANCELLED'
       SubscriptionStatus:
         | 'ACTIVE'
@@ -1032,6 +1044,19 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      DisableReason: [
+        'TOKEN_REVOKED',
+        'MANUAL_DISABLE',
+        'STREAM_OFFLINE',
+        'CHAT_PERMISSION_DENIED',
+        'SUBSCRIPTION_INSUFFICIENT',
+        'API_ERROR',
+        'INVALID_TOKEN',
+        'CACHE_CLEARED',
+        'BOT_BANNED',
+        'GAME_STATE',
+        'RANK_RESTRICTION',
+      ],
       MessageStatus: ['PENDING', 'DELIVERED', 'FAILED', 'CANCELLED'],
       SubscriptionStatus: [
         'ACTIVE',

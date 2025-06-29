@@ -1,4 +1,10 @@
-import { botStatus, getTwitchHeaders, logger, supabase } from '@dotabod/shared-utils'
+import {
+  botStatus,
+  getTwitchHeaders,
+  logger,
+  supabase,
+  trackDisableReason,
+} from '@dotabod/shared-utils'
 import { eventSubMap } from '../../chatSubIds.js'
 
 // Constants
@@ -66,6 +72,13 @@ async function disableChannel(broadcasterId: string) {
   }
 
   logger.info('twitch-events Disabling user', { twitchId: broadcasterId })
+
+  // Track the disable reason before disabling
+  await trackDisableReason(user.userId, 'commandDisable', 'token_revoked', {
+    requires_reauth: true,
+    additional_info: 'User revoked app permissions on Twitch',
+  })
+
   await supabase.from('settings').upsert(
     {
       userId: user.userId,

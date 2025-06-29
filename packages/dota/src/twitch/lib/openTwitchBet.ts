@@ -1,17 +1,23 @@
 import { moderateText } from '@dotabod/profanity-filter'
-import { logger } from '@dotabod/shared-utils'
-import { getTwitchAPI } from '@dotabod/shared-utils'
+import { getTwitchAPI, logger, supabase, trackDisableReason } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import supabase from '../../db/supabase.js'
 import { getTokenFromTwitchId } from '../../dota/lib/connectedStreamers.js'
 import { say } from '../../dota/say.js'
 import { DBSettings, defaultSettings, getValueOrDefault } from '../../settings.js'
 import type { SocketClient } from '../../types.js'
 
 // Disable the bet in settings for this user
-export async function disableBetsForTwitchId(twitchId: string) {
+export async function disableBetsForTwitchId(twitchId: string, errorMessage: string) {
   const token = getTokenFromTwitchId(twitchId)
   if (!token) return
+
+  // Track the disable reason before disabling
+  await trackDisableReason(token, DBSettings.bets, 'api_error', {
+    api_endpoint: 'Twitch Predictions API',
+    error_type: 'twitch_betting_api_failure',
+    error_message: errorMessage || 'Failed to create betting prediction',
+    additional_info: 'Betting disabled due to repeated API failures',
+  })
 
   await supabase.from('settings').upsert(
     {
@@ -96,7 +102,7 @@ export const openTwitchBet = async ({
 
       try {
         if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {
-          await disableBetsForTwitchId(twitchId)
+          await disableBetsForTwitchId(twitchId, 'Channel points not enabled')
           logger.info('[PREDICT] [BETS] Channel points not enabled for', {
             twitchId,
           })
