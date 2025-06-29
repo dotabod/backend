@@ -921,6 +921,7 @@ export type Database = {
         | 'BOT_BANNED'
         | 'GAME_STATE'
         | 'RANK_RESTRICTION'
+        | 'ACCOUNT_SHARING'
       MessageStatus: 'PENDING' | 'DELIVERED' | 'FAILED' | 'CANCELLED'
       SubscriptionStatus:
         | 'ACTIVE'
@@ -1056,6 +1057,7 @@ export const Constants = {
         'BOT_BANNED',
         'GAME_STATE',
         'RANK_RESTRICTION',
+        'ACCOUNT_SHARING',
       ],
       MessageStatus: ['PENDING', 'DELIVERED', 'FAILED', 'CANCELLED'],
       SubscriptionStatus: [

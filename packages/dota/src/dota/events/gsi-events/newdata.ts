@@ -1,4 +1,4 @@
-import { logger } from '@dotabod/shared-utils'
+import { logger, trackDisableReason } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { redisClient } from '../../../db/redisInstance.js'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
@@ -95,6 +95,13 @@ async function saveMatchData(client: SocketClient) {
   if (!matchId || !Number(matchId)) return
 
   if (!client.steam32Id) return
+
+  // Check for account sharing before proceeding with match data processing
+  const accountSharingDetected = await checkAccountSharing(client, matchId)
+  if (accountSharingDetected) {
+    // If account sharing is detected, stop processing for this client
+    return
+  }
 
   const cacheKey = `${matchId}:${client.token}`
 
@@ -309,6 +316,101 @@ function cleanupMatchDataCache() {
 
 // Start the cleanup process
 cleanupMatchDataCache()
+
+// Account sharing detection
+async function checkAccountSharing(client: SocketClient, matchId: string): Promise<boolean> {
+  if (!client.steam32Id || !matchId) return false
+
+  const steam32Id = client.steam32Id
+  const currentToken = client.token
+  const currentTime = Date.now()
+
+  // Redis key to track active sessions for this Steam account
+  const redisKey = `steam32Id:${steam32Id}:activeSession`
+
+  try {
+    // Get existing active session
+    const existingSession = await redisClient.client.get(redisKey)
+
+    if (existingSession) {
+      const sessionData = JSON.parse(existingSession)
+
+      // Check if it's a different token (different streamer/PC)
+      if (sessionData.token !== currentToken) {
+        // Determine which session is newer
+        const existingTimestamp = sessionData.timestamp || 0
+        const isCurrentSessionNewer = currentTime > existingTimestamp
+
+        if (isCurrentSessionNewer) {
+          // Current session is newer, disable it
+          logger.warn('[ACCOUNT_SHARING] Detected account sharing - disabling newer session', {
+            steam32Id,
+            currentToken,
+            existingToken: sessionData.token,
+            currentMatchId: matchId,
+            existingMatchId: sessionData.matchId,
+            accountName: client.gsi?.player?.name || 'Unknown',
+          })
+
+          // Get recurrence count
+          const recurrenceKey = `steam32Id:${steam32Id}:sharingCount`
+          const recurrenceCount = await redisClient.client.incr(recurrenceKey)
+          await redisClient.client.expire(recurrenceKey, 24 * 60 * 60) // Expire after 24 hours
+
+          // Track the disable reason
+          await trackDisableReason(currentToken, 'commandDisable', 'ACCOUNT_SHARING', {
+            conflicting_token: sessionData.token,
+            conflicting_account_name: sessionData.accountName || 'Unknown',
+            account_name: client.gsi?.player?.name || 'Unknown',
+            original_session_started: new Date(existingTimestamp).toISOString(),
+            conflict_detected_at: new Date(currentTime).toISOString(),
+            current_match_id: matchId,
+            existing_match_id: sessionData.matchId,
+            recurrence_count: recurrenceCount,
+          })
+
+          // Send chat message to the current (newer) session being disabled
+          const accountName = client.gsi?.player?.name || 'Unknown'
+          say(
+            client,
+            `The Dota account "${accountName}" is being used on multiple PCs with Dotabod. This account has been disabled to prevent conflicts. To re-enable, type !clearsharing, but you MUST delete the Dotabod GSI config file from the other PC first, or this will happen again.`,
+          )
+
+          return true // Account sharing detected and handled
+        }
+        // Existing session is newer, update Redis with current session as the active one
+        // This shouldn't happen often but handles edge cases
+        logger.info('[ACCOUNT_SHARING] Current session is older, updating active session', {
+          steam32Id,
+          currentToken,
+          existingToken: sessionData.token,
+        })
+      }
+    }
+
+    // Update or set the active session for this Steam account
+    await redisClient.client.setEx(
+      redisKey,
+      60 * 60, // Expire after 1 hour of inactivity
+      JSON.stringify({
+        token: currentToken,
+        matchId,
+        timestamp: currentTime,
+        accountName: client.gsi?.player?.name || 'Unknown',
+      }),
+    )
+
+    return false // No account sharing detected
+  } catch (error) {
+    logger.error('[ACCOUNT_SHARING] Error checking account sharing', {
+      error: error instanceof Error ? error.message : String(error),
+      steam32Id,
+      token: currentToken,
+      matchId,
+    })
+    return false
+  }
+}
 
 // Track the last time we saved data for each match
 const lastSaveTimeByMatch = new Map<string, number>()

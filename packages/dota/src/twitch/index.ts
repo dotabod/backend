@@ -92,7 +92,7 @@ twitchChat.on(
         lastMissingUserMessageTimestamps[channel] = now
         return
       }
-      logger.error('No client', { channel, user, text, reason, channelId })
+      // logger.error('No client', { channel, user, text, reason, channelId })
       return
     }
 
