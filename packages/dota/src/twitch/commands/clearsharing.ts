@@ -1,4 +1,6 @@
 import { trackResolveReason } from '@dotabod/shared-utils'
+import { t } from 'i18next'
+import { redisClient } from '../../db/redisInstance.js'
 import { DBSettings } from '../../settings.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
@@ -15,21 +17,25 @@ commandHandler.registerCommand('clearsharing', {
     const userId = message.channel.client.token
 
     try {
-      // Resolve the ACCOUNT_SHARING disable reason for commandDisable setting
+      // Clear Redis tracking of active Steam accounts for this token
+      const redisKey = `token:${userId}:activeSteam32Ids`
+      await redisClient.client.del(redisKey)
+
+      // Resolve any ACCOUNT_SHARING notifications for this user
       await trackResolveReason(userId, DBSettings.commandDisable, false)
 
-      // Send success message with warning
+      // Send success message with updated warning
       const channel = message.channel.client.name
       chatClient.say(
         channel,
-        'Account sharing disable cleared. WARNING: If the Dotabod GSI config file still exists on another PC, this account will be automatically disabled again when both are used simultaneously. You MUST delete the GSI file from the other PC to prevent this issue.',
+        t('clearsharing.success', { lng: client.locale }),
         message.user.messageId,
       )
     } catch (error) {
       const channel = message.channel.client.name
       chatClient.say(
         channel,
-        'Failed to clear account sharing disable. Please try again or contact support.',
+        t('clearsharing.error', { lng: client.locale }),
         message.user.messageId,
       )
     }

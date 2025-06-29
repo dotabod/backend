@@ -317,26 +317,26 @@ function cleanupMatchDataCache() {
 // Start the cleanup process
 cleanupMatchDataCache()
 
-// Cache to prevent excessive account sharing checks
-const accountSharingCheckCache = new Map<string, { lastCheck: number; result: boolean }>()
-const ACCOUNT_SHARING_CHECK_INTERVAL = 30000 // 30 seconds
+// Cache to prevent excessive account sharing logging
+const accountSharingLogCache = new Map<string, number>()
+const ACCOUNT_SHARING_LOG_INTERVAL = 300000 // 5 minutes
 
-// Cleanup function for account sharing cache
-function cleanupAccountSharingCache() {
+// Cleanup function for account sharing log cache
+function cleanupAccountSharingLogCache() {
   const now = Date.now()
-  for (const [key, value] of accountSharingCheckCache.entries()) {
-    if (now - value.lastCheck > ACCOUNT_SHARING_CHECK_INTERVAL * 2) {
-      accountSharingCheckCache.delete(key)
+  for (const [key, timestamp] of accountSharingLogCache.entries()) {
+    if (now - timestamp > ACCOUNT_SHARING_LOG_INTERVAL * 2) {
+      accountSharingLogCache.delete(key)
     }
   }
-  // Run cleanup every 5 minutes
-  setTimeout(cleanupAccountSharingCache, 300000)
+  // Run cleanup every 10 minutes
+  setTimeout(cleanupAccountSharingLogCache, 600000)
 }
 
-// Start the account sharing cache cleanup process
-cleanupAccountSharingCache()
+// Start the account sharing log cache cleanup process
+cleanupAccountSharingLogCache()
 
-// Account sharing detection
+// Account sharing detection - blocks processing for multiple Steam accounts per token
 async function checkAccountSharing(client: SocketClient, matchId: string): Promise<boolean> {
   if (!client.steam32Id || !matchId) return false
 
@@ -344,94 +344,89 @@ async function checkAccountSharing(client: SocketClient, matchId: string): Promi
   const currentToken = client.token
   const currentTime = Date.now()
 
-  // Rate limit account sharing checks to prevent CPU/DB spam
-  const cacheKey = `${steam32Id}:${currentToken}:${matchId}`
-  const cachedCheck = accountSharingCheckCache.get(cacheKey)
-
-  if (cachedCheck && currentTime - cachedCheck.lastCheck < ACCOUNT_SHARING_CHECK_INTERVAL) {
-    return cachedCheck.result
-  }
-
-  // Redis key to track active sessions for this Steam account
-  const redisKey = `steam32Id:${steam32Id}:activeSession`
+  // Redis key to track active Steam accounts for this token
+  const redisKey = `token:${currentToken}:activeSteam32Ids`
 
   try {
-    // Get existing active session
-    const existingSession = await redisClient.client.get(redisKey)
+    // Get existing active Steam accounts for this token
+    const existingSteamIds = await redisClient.client.get(redisKey)
+    let activeSteamIds: string[] = []
 
-    if (existingSession) {
-      const sessionData = JSON.parse(existingSession)
-
-      // Check if it's a different token (different streamer/PC)
-      if (sessionData.token !== currentToken) {
-        // Determine which session is newer
-        const existingTimestamp = sessionData.timestamp || 0
-        const isCurrentSessionNewer = currentTime > existingTimestamp
-
-        if (isCurrentSessionNewer) {
-          // Current session is newer, disable it
-          logger.warn('[ACCOUNT_SHARING] Detected account sharing - disabling newer session', {
-            steam32Id,
-            currentToken,
-            existingToken: sessionData.token,
-            currentMatchId: matchId,
-            existingMatchId: sessionData.matchId,
-            accountName: client.gsi?.player?.name || 'Unknown',
-          })
-
-          // Get recurrence count
-          const recurrenceKey = `steam32Id:${steam32Id}:sharingCount`
-          const recurrenceCount = await redisClient.client.incr(recurrenceKey)
-          await redisClient.client.expire(recurrenceKey, 24 * 60 * 60) // Expire after 24 hours
-
-          // Track the disable reason
-          await trackDisableReason(currentToken, 'commandDisable', 'ACCOUNT_SHARING', {
-            conflicting_token: sessionData.token,
-            conflicting_account_name: sessionData.accountName || 'Unknown',
-            account_name: client.gsi?.player?.name || 'Unknown',
-            original_session_started: new Date(existingTimestamp).toISOString(),
-            conflict_detected_at: new Date(currentTime).toISOString(),
-            current_match_id: matchId,
-            existing_match_id: sessionData.matchId,
-            recurrence_count: recurrenceCount,
-          })
-
-          // Send chat message to the current (newer) session being disabled
-          const accountName = client.gsi?.player?.name || 'Unknown'
-          say(
-            client,
-            `The Dota account "${accountName}" is being used on multiple PCs with Dotabod. This account has been disabled to prevent conflicts. To re-enable, type !clearsharing, but you MUST delete the Dotabod GSI config file from the other PC first, or this will happen again.`,
-          )
-
-          // Cache the result (account sharing detected) - use longer cache time to prevent spam
-          accountSharingCheckCache.set(cacheKey, { lastCheck: currentTime, result: true })
-          return true // Account sharing detected and handled
-        }
-        // Existing session is newer, update Redis with current session as the active one
-        // This shouldn't happen often but handles edge cases
-        logger.info('[ACCOUNT_SHARING] Current session is older, updating active session', {
-          steam32Id,
-          currentToken,
-          existingToken: sessionData.token,
-        })
-      }
+    if (existingSteamIds) {
+      activeSteamIds = JSON.parse(existingSteamIds)
     }
 
-    // Update or set the active session for this Steam account
-    await redisClient.client.setEx(
-      redisKey,
-      60 * 60, // Expire after 1 hour of inactivity
-      JSON.stringify({
-        token: currentToken,
-        matchId,
-        timestamp: currentTime,
-        accountName: client.gsi?.player?.name || 'Unknown',
-      }),
-    )
+    // Add current Steam ID if not already present
+    if (!activeSteamIds.includes(steam32Id.toString())) {
+      activeSteamIds.push(steam32Id.toString())
 
-    // Cache the result (no account sharing detected)
-    accountSharingCheckCache.set(cacheKey, { lastCheck: currentTime, result: false })
-    return false // No account sharing detected
+      // Update Redis with new list
+      await redisClient.client.setEx(
+        redisKey,
+        60, // Expire after 1 minute of inactivity
+        JSON.stringify(activeSteamIds),
+      )
+    }
+
+    // Check if multiple Steam accounts are active for this token
+    if (activeSteamIds.length > 1) {
+      const isFirstAccount = activeSteamIds[0] === steam32Id.toString()
+
+      if (isFirstAccount) {
+        // This is the first/primary Steam account - allow processing
+        return false
+      }
+      // This is an additional Steam account - block processing
+      logger.warn(
+        '[ACCOUNT_SHARING] Multiple Steam accounts detected for token - blocking additional account',
+        {
+          token: currentToken,
+          blockedSteam32Id: steam32Id,
+          primarySteam32Id: activeSteamIds[0],
+          allActiveSteamIds: activeSteamIds,
+          accountName: client.gsi?.player?.name || 'Unknown',
+        },
+      )
+
+      // Rate limit logging to database to prevent spam
+      const logCacheKey = `${currentToken}:${steam32Id}`
+      const lastLogged = accountSharingLogCache.get(logCacheKey)
+
+      if (!lastLogged || currentTime - lastLogged > ACCOUNT_SHARING_LOG_INTERVAL) {
+        // Log to database for frontend visibility
+        await trackDisableReason(
+          currentToken,
+          'commandDisable', // This won't actually disable the setting, just logs the notification
+          'ACCOUNT_SHARING',
+          {
+            blocked_steam32_id: steam32Id.toString(),
+            primary_steam32_id: activeSteamIds[0],
+            all_active_steam_ids: activeSteamIds,
+            account_name: client.gsi?.player?.name || 'Unknown',
+            conflict_detected_at: new Date(currentTime).toISOString(),
+            current_match_id: matchId,
+            block_reason: 'Multiple Steam accounts sending GSI data to same token',
+          },
+        )
+
+        // Update log cache
+        accountSharingLogCache.set(logCacheKey, currentTime)
+      }
+
+      // Send warning message to blocked account
+      const accountName = client.gsi?.player?.name || 'Unknown'
+      say(
+        client,
+        t('accountSharing.blocked', {
+          accountName,
+          lng: client.locale,
+        }),
+      )
+
+      return true // Block processing for this Steam account
+    }
+
+    return false // No blocking needed
   } catch (error) {
     logger.error('[ACCOUNT_SHARING] Error checking account sharing', {
       error: error instanceof Error ? error.message : String(error),
@@ -439,9 +434,7 @@ async function checkAccountSharing(client: SocketClient, matchId: string): Promi
       token: currentToken,
       matchId,
     })
-    // Cache the error result to prevent retrying too quickly
-    accountSharingCheckCache.set(cacheKey, { lastCheck: currentTime, result: false })
-    return false
+    return false // Allow processing on error
   }
 }
 
