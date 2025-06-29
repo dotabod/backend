@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.0.6/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -13,35 +13,43 @@
     "lineEnding": "lf",
     "lineWidth": 100,
     "attributePosition": "auto",
-    "ignore": [
-      "**/profanity-wordlists.ts",
-      "**/clip-processor-py/**",
-      "**/locales/**/*.json",
-      "**/.env*",
-      "**/.idea",
-      "**/node_modules",
-      "**/assets",
-      "**/dist/**",
-      "**/build",
-      "**/config.js",
-      "**/volumes",
-      "**/newrelic_agent.log",
-      "**/*.key"
+    "includes": [
+      "**",
+      "!**/profanity-wordlists.ts",
+      "!**/clip-processor-py/**",
+      "!**/locales/**/*.json",
+      "!**/.env*",
+      "!**/.idea",
+      "!**/node_modules",
+      "!**/assets",
+      "!**/dist/**",
+      "!**/build",
+      "!**/config.js",
+      "!**/volumes",
+      "!**/newrelic_agent.log",
+      "!**/*.key"
     ]
   },
-  "organizeImports": {
-    "enabled": true
-  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
-    "ignore": ["**/clip-processor-py/**"],
+    "includes": ["**", "!**/clip-processor-py/**"],
     "rules": {
       "complexity": {
         "noForEach": "off"
       },
       "style": {
         "noParameterAssign": "off",
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "off",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error"
       },
       "suspicious": {
         "noExplicitAny": "off"

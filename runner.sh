@@ -44,9 +44,7 @@ gentypes() {
 
     # Print the subdomain
     OUTPUT_DIRS=(
-        "packages/dota/src/db"
-        "packages/twitch-chat/src/db"
-        "packages/twitch-events/src/db"
+        "packages/shared-utils/src/db"
     )
 
     echo "Generating types for project $PROJECT_ID on $DOTABOD_ENV"
@@ -83,7 +81,7 @@ gentypes() {
                 echo "Colima is running but Docker socket may not be properly linked."
 
                 # Get Colima socket path
-                COLIMA_SOCKET=$(colima ssh -- echo -n '$HOME/.colima/default/docker.sock')
+                COLIMA_SOCKET=$(colima ssh -- echo -n "$HOME/.colima/default/docker.sock")
 
                 if [ -n "$COLIMA_SOCKET" ] && [ -S "$COLIMA_SOCKET" ]; then
                     echo "Setting DOCKER_HOST to use Colima socket"
