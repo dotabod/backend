@@ -26,7 +26,7 @@ commandHandler.registerCommand('toggle', {
       await trackResolveReason(userId, DBSettings.commandDisable, false)
     } else {
       // Disabling - track manual disable reason
-      await trackDisableReason(userId, DBSettings.commandDisable, 'manual_disable', {
+      await trackDisableReason(userId, DBSettings.commandDisable, 'MANUAL_DISABLE', {
         disabled_by: message.user.name,
         command: '!toggle',
         additional_info: `Manually disabled by ${message.user.name} via chat command`,

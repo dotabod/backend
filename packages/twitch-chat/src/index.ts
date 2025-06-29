@@ -133,7 +133,7 @@ async function disableUser(providerAccountId: string) {
   }
 
   // Track the disable reason before disabling
-  await trackDisableReason(user.userId, 'commandDisable', 'chat_permission_denied', {
+  await trackDisableReason(user.userId, 'commandDisable', 'CHAT_PERMISSION_DENIED', {
     drop_reason: 'followers_only_mode',
     permission_required: 'moderator',
     additional_info: 'Bot is not a moderator and channel has followers-only mode enabled',

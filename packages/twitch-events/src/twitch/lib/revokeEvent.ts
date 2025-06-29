@@ -74,7 +74,7 @@ async function disableChannel(broadcasterId: string) {
   logger.info('twitch-events Disabling user', { twitchId: broadcasterId })
 
   // Track the disable reason before disabling
-  await trackDisableReason(user.userId, 'commandDisable', 'token_revoked', {
+  await trackDisableReason(user.userId, 'commandDisable', 'TOKEN_REVOKED', {
     requires_reauth: true,
     additional_info: 'User revoked app permissions on Twitch',
   })

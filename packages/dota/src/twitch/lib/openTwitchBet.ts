@@ -12,7 +12,7 @@ export async function disableBetsForTwitchId(twitchId: string, errorMessage: str
   if (!token) return
 
   // Track the disable reason before disabling
-  await trackDisableReason(token, DBSettings.bets, 'api_error', {
+  await trackDisableReason(token, DBSettings.bets, 'API_ERROR', {
     api_endpoint: 'Twitch Predictions API',
     error_type: 'twitch_betting_api_failure',
     error_message: errorMessage || 'Failed to create betting prediction',
