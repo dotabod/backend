@@ -13,6 +13,63 @@ import { initializeSocket } from './conduitSetup.js'
 import { sendTwitchChatMessage } from './handleChat.js'
 import { io, setupSocketServer } from './utils/socketManager.js'
 
+// Temporary cache to prevent duplicate disableUser calls during race condition
+const disableUserCache = new Map<string, { timestamp: number; dropReason: string; providerAccountId: string }>()
+const DISABLE_CACHE_EXPIRY = 30000 // 30 seconds
+
+/**
+ * Clear disable cache for a user (called when they manually re-enable)
+ */
+export function clearDisableCache(userId: string) {
+  const keysToDelete: string[] = []
+  for (const key of disableUserCache.keys()) {
+    if (key.startsWith(`${userId}:`)) {
+      keysToDelete.push(key)
+    }
+  }
+
+  for (const key of keysToDelete) {
+    disableUserCache.delete(key)
+  }
+
+  if (keysToDelete.length > 0) {
+    logger.info('[DISABLE_CACHE] Cleared cache for user', {
+      userId,
+      clearedKeys: keysToDelete.length,
+    })
+  }
+}
+
+/**
+ * Check if a user is currently in the disable cache (being disabled)
+ */
+export function isUserBeingDisabled(userId: string): boolean {
+  const now = Date.now()
+  
+  for (const [key, value] of disableUserCache.entries()) {
+    if (key.startsWith(`${userId}:`) && (now - value.timestamp) < DISABLE_CACHE_EXPIRY) {
+      return true
+    }
+  }
+  
+  return false
+}
+
+/**
+ * Check if a broadcaster is currently being disabled (by providerAccountId)
+ */
+export function isBroadcasterBeingDisabled(providerAccountId: string): boolean {
+  const now = Date.now()
+  
+  for (const [key, value] of disableUserCache.entries()) {
+    if (value.providerAccountId === providerAccountId && (now - value.timestamp) < DISABLE_CACHE_EXPIRY) {
+      return true
+    }
+  }
+  
+  return false
+}
+
 if (!process.env.TWITCH_BOT_PROVIDERID) {
   throw new Error('TWITCH_BOT_PROVIDERID not set')
 }
@@ -65,6 +122,11 @@ async function startup() {
       }, 30000) // Wait 30 seconds before retry
     }
 
+    // Listen for disable cache clear events from other packages
+    io.on('clear-disable-cache', ({ userId }: { userId: string }) => {
+      clearDisableCache(userId)
+    })
+
     // Add event handlers for 'say' and 'whisper'
     io.on('connection', (socket) => {
       socket.on(
@@ -92,6 +154,9 @@ async function startup() {
               if (dropReason?.code === 'followers_only_mode') {
                 await disableUser(providerAccountId, dropReason)
               } else if (dropReason?.code === 'user_warned') {
+                await disableUser(providerAccountId, dropReason)
+              } else if (dropReason?.code === 'banned_phone_alias') {
+                // Bot's phone number is banned from the channel - this should disable the bot
                 await disableUser(providerAccountId, dropReason)
               } else if (dropReason?.code === 'rate_limited') {
                 // Don't disable for rate limiting - just log it
@@ -163,6 +228,35 @@ async function disableUser(
     return
   }
 
+  // Check if we've already disabled this user recently to prevent duplicate calls
+  const cacheKey = `${user.userId}:${dropReason?.code || 'unknown'}`
+  const cached = disableUserCache.get(cacheKey)
+  const now = Date.now()
+
+  if (cached && now - cached.timestamp < DISABLE_CACHE_EXPIRY) {
+    logger.info('[DISABLE_CACHE] Skipping duplicate disable call', {
+      userId: user.userId,
+      providerAccountId,
+      dropReason: dropReason?.code,
+      cachedAt: new Date(cached.timestamp).toISOString(),
+    })
+    return
+  }
+
+  // Add to cache to prevent duplicates
+  disableUserCache.set(cacheKey, {
+    timestamp: now,
+    dropReason: dropReason?.code || 'unknown',
+    providerAccountId,
+  })
+
+  // Clean up expired cache entries
+  for (const [key, value] of disableUserCache.entries()) {
+    if (now - value.timestamp >= DISABLE_CACHE_EXPIRY) {
+      disableUserCache.delete(key)
+    }
+  }
+
   // Create metadata based on the drop reason
   let metadata: any = {
     drop_reason: dropReason?.code || 'unknown',
@@ -197,7 +291,7 @@ async function disableUser(
   // Track the disable reason before disabling
   await trackDisableReason(user.userId, 'commandDisable', 'CHAT_PERMISSION_DENIED', metadata)
 
-  // Disable the user
+  // Disable the user in database
   await supabase.from('settings').upsert(
     {
       userId: user.userId,

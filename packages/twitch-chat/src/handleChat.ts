@@ -1,6 +1,7 @@
 import { checkBotStatus, getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { emitChatMessage, hasDotabodSocket } from './utils/socketManager.js'
+import { isBroadcasterBeingDisabled } from './index.js'
 
 function extractUserInfo(
   badges: {
@@ -79,6 +80,27 @@ interface SendChatMessageParams {
 export async function sendTwitchChatMessage(
   params: SendChatMessageParams,
 ): Promise<TwitchChatMessageResponse> {
+  // Check if this broadcaster is currently being disabled to prevent race condition
+  if (isBroadcasterBeingDisabled(params.broadcaster_id)) {
+    logger.info('[DISABLE_CACHE] Skipping chat message for broadcaster being disabled', {
+      broadcaster_id: params.broadcaster_id,
+      message: params.message,
+    })
+    
+    return {
+      data: [
+        {
+          message_id: '',
+          is_sent: false,
+          drop_reason: {
+            code: 'user_being_disabled',
+            message: 'User is currently being disabled, skipping chat message to prevent race condition',
+          },
+        },
+      ],
+    }
+  }
+
   const url = 'https://api.twitch.tv/helix/chat/messages'
   // Only the bot can send messages
   // Or a user with "user:bot" scope

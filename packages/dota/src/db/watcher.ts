@@ -8,6 +8,7 @@ import { getRankDetail } from '../dota/lib/ranks.js'
 import { server } from '../dota/server.js'
 import { DBSettings } from '../settings.js'
 import { chatClient } from '../twitch/chatClient.js'
+import { twitchChat } from '../steam/ws.js'
 import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { isSubscriptionActive } from '../types/subscription.js'
 import getDBUser from './getDBUser.js'
@@ -398,6 +399,11 @@ class SetupSupabase {
           const client = findUser(newObj.userId)
 
           if (newObj.key === DBSettings.commandDisable) {
+            // Notify twitch-chat package to clear disable cache when user is manually re-enabled
+            if (newObj.value === false) {
+              twitchChat.emit('clear-disable-cache', { userId: newObj.userId })
+            }
+
             if (!client) {
               // in case they ban dotabod and we reboot server,
               // we'll never have the client cached, so we have to lookup the user again
