@@ -14,7 +14,10 @@ import { sendTwitchChatMessage } from './handleChat.js'
 import { io, setupSocketServer } from './utils/socketManager.js'
 
 // Temporary cache to prevent duplicate disableUser calls during race condition
-const disableUserCache = new Map<string, { timestamp: number; dropReason: string; providerAccountId: string }>()
+const disableUserCache = new Map<
+  string,
+  { timestamp: number; dropReason: string; providerAccountId: string }
+>()
 const DISABLE_CACHE_EXPIRY = 30000 // 30 seconds
 
 /**
@@ -45,13 +48,13 @@ export function clearDisableCache(userId: string) {
  */
 export function isUserBeingDisabled(userId: string): boolean {
   const now = Date.now()
-  
+
   for (const [key, value] of disableUserCache.entries()) {
-    if (key.startsWith(`${userId}:`) && (now - value.timestamp) < DISABLE_CACHE_EXPIRY) {
+    if (key.startsWith(`${userId}:`) && now - value.timestamp < DISABLE_CACHE_EXPIRY) {
       return true
     }
   }
-  
+
   return false
 }
 
@@ -60,13 +63,16 @@ export function isUserBeingDisabled(userId: string): boolean {
  */
 export function isBroadcasterBeingDisabled(providerAccountId: string): boolean {
   const now = Date.now()
-  
+
   for (const [key, value] of disableUserCache.entries()) {
-    if (value.providerAccountId === providerAccountId && (now - value.timestamp) < DISABLE_CACHE_EXPIRY) {
+    if (
+      value.providerAccountId === providerAccountId &&
+      now - value.timestamp < DISABLE_CACHE_EXPIRY
+    ) {
       return true
     }
   }
-  
+
   return false
 }
 

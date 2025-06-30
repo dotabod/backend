@@ -1,7 +1,7 @@
 import { checkBotStatus, getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { emitChatMessage, hasDotabodSocket } from './utils/socketManager.js'
 import { isBroadcasterBeingDisabled } from './index.js'
+import { emitChatMessage, hasDotabodSocket } from './utils/socketManager.js'
 
 function extractUserInfo(
   badges: {
@@ -86,7 +86,7 @@ export async function sendTwitchChatMessage(
       broadcaster_id: params.broadcaster_id,
       message: params.message,
     })
-    
+
     return {
       data: [
         {
@@ -94,7 +94,8 @@ export async function sendTwitchChatMessage(
           is_sent: false,
           drop_reason: {
             code: 'user_being_disabled',
-            message: 'User is currently being disabled, skipping chat message to prevent race condition',
+            message:
+              'User is currently being disabled, skipping chat message to prevent race condition',
           },
         },
       ],
