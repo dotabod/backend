@@ -237,6 +237,13 @@
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
   "xpm": "Live XPM for {{- heroName}}: {{num}}",
+  "accountSharing": {
+    "blocked": "Multiple people are using Dotabod GSI files for this stream. Account \"{{accountName}}\" is blocked. Use !clearsharing to reset, but ensure only one person has the GSI file."
+  },
+  "clearsharing": {
+    "success": "Account sharing reset successfully. Multiple Steam accounts can now send GSI data again. WARNING: Make sure only one person has the Dotabod GSI config file, or conflicts will reoccur.",
+    "error": "Failed to clear account sharing. Please try again or contact support."
+  },
   "apm_one": "Kasalukuyang APM ni {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Kasalukuyang APM ni {{- heroName}}: {{count}} {{emote}}",
   "facetTotalLimit_one": "Only {{count}} facet is available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
