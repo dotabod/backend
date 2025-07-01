@@ -3,6 +3,20 @@ import { t } from 'i18next'
 import { isBroadcasterBeingDisabled } from './index.js'
 import { emitChatMessage, hasDotabodSocket } from './utils/socketManager.js'
 
+// Cache for deduplicating chat messages
+const messageDedupeCache = new Map<string, number>()
+const DEDUPE_WINDOW_MS = 5000 // 5 seconds
+
+// Clean up expired cache entries periodically
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, timestamp] of messageDedupeCache.entries()) {
+    if (now - timestamp > DEDUPE_WINDOW_MS) {
+      messageDedupeCache.delete(key)
+    }
+  }
+}, 30000) // Clean up every 30 seconds
+
 function extractUserInfo(
   badges: {
     [key: string]: string
@@ -101,6 +115,35 @@ export async function sendTwitchChatMessage(
       ],
     }
   }
+
+  // Check for duplicate messages within the dedupe window
+  const dedupeKey = `${params.broadcaster_id}:${params.message}`
+  const now = Date.now()
+  const lastSent = messageDedupeCache.get(dedupeKey)
+
+  if (lastSent && now - lastSent < DEDUPE_WINDOW_MS) {
+    logger.info('[DEDUPE] Dropping duplicate chat message', {
+      broadcaster_id: params.broadcaster_id,
+      message: params.message,
+      last_sent_ms_ago: now - lastSent,
+    })
+
+    return {
+      data: [
+        {
+          message_id: '',
+          is_sent: false,
+          drop_reason: {
+            code: 'duplicate_message',
+            message: `Duplicate message dropped (sent ${now - lastSent}ms ago): ${params.message}`,
+          },
+        },
+      ],
+    }
+  }
+
+  // Record this message in the cache
+  messageDedupeCache.set(dedupeKey, now)
 
   const url = 'https://api.twitch.tv/helix/chat/messages'
   // Only the bot can send messages
