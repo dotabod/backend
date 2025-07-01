@@ -1,5 +1,8 @@
 {
   "2mdelay": "(2 мин. задержка)",
+  "accountSharing": {
+    "blocked": "Multiple people are using Dotabod GSI files for this stream. Account \"{{accountName}}\" is blocked. Use !clearsharing to reset, but ensure only one person has the GSI file."
+  },
   "aegis": {
     "denied": "{{- heroName}} уничтожает аегис {{emote}}",
     "expired": "Аегис у {{- heroName}} закончился {{emote}}",
@@ -40,6 +43,10 @@
   },
   "chattersRank": "ранг @{{username}} {{rank}}",
   "chattersRankUnknown": "ранг @{{username}} неизвестен. Верифицируйте Dotabod, чтобы получить свой ранг! {{- url}}",
+  "clearsharing": {
+    "error": "Failed to clear account sharing. Please try again or contact support.",
+    "success": "Account sharing reset successfully. Multiple Steam accounts can now send GSI data again. WARNING: Make sure only one person has the Dotabod GSI config file, or conflicts will reoccur."
+  },
   "colors": {
     "blue": "Синий",
     "brown": "Коричневый",
