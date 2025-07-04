@@ -28,7 +28,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "clip-processor=src.dota_hero_detection:main",
+            "clip-processor=src.cli:main",
             "download-heroes=src.dota_heroes:main",
             "api-server=src.api_server:main",
         ],
