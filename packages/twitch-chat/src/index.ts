@@ -185,6 +185,13 @@ async function startup() {
                   broadcaster_id: providerAccountId,
                   drop_reason: dropReason,
                 })
+              } else if (dropReason?.code === 'duplicate_message') {
+                // Don't disable for duplicate messages - can retry later
+                logger.warn('Chat message dropped as duplicate, not disabling account:', {
+                  message: text,
+                  broadcaster_id: providerAccountId,
+                  drop_reason: dropReason,
+                })
               } else if (dropReason?.code) {
                 // Only disable for actual permission issues
                 await disableUser(providerAccountId, dropReason)
