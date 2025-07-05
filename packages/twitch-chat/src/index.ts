@@ -192,6 +192,16 @@ async function startup() {
                   broadcaster_id: providerAccountId,
                   drop_reason: dropReason,
                 })
+              } else if (dropReason?.code === 'msg_duplicate') {
+                // Don't disable for Twitch's 30-second duplicate restriction
+                logger.warn(
+                  'Chat message blocked by Twitch duplicate restriction, not disabling account:',
+                  {
+                    message: text,
+                    broadcaster_id: providerAccountId,
+                    drop_reason: dropReason,
+                  },
+                )
               } else if (dropReason?.code) {
                 // Only disable for actual permission issues
                 await disableUser(providerAccountId, dropReason)
