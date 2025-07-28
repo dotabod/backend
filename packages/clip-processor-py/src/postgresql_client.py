@@ -42,7 +42,7 @@ class PostgresClient:
         self.database_url = os.environ.get('DATABASE_URL')
         if not self.database_url:
             # Default connection string for local development
-            self.database_url = "postgresql://postgres:postgres@localhost:5432/clip_processor"
+            self.database_url = "postgresql://postgres:postgres@localhost:5439/clip_processor"
 
         self.results_table = "clip_results"
         self.queue_table = "processing_queue"
