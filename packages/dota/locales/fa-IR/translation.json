@@ -161,9 +161,9 @@
   "offline": "آفلاین",
   "online": "آنلاین",
   "overlayMissing": "Overlay not found. The {{command}} command requires the overlay to be added.",
-  "ping": "Pong {{emote}}",
+  "ping": "اوووی {{emote}}",
   "pleb": "پایینی یک pleb {{emote}}",
-  "pleb_off": "{{name}} {{emote}} nice job pleb",
+  "pleb_off": "{{name}} آفرین. خشتکت پاره شد {{emote}}",
   "plebSubRequired": "!pleb command can only be used if sub only mode is enabled.",
   "predictions": {
     "no": "نه",
@@ -191,10 +191,10 @@
   "resetwl": "در حال پاک کردن آمار کانال {{channel}} به 0",
   "roshanAlive": "روشان الان زنده اس {{emote}}",
   "roshanCount": {
-    "1": "دفعات زدن روشان: 1. دراپ بعدی: Cheese.",
-    "2": "دفعات زدن روشن: 2. دراپ بعدی: Cheese به همراه Aghanim یا refresher.",
-    "3": "دفعات زدن روشن: 3. دراپ بعدی: Cheese به همراه Aghanim یا refresher.",
-    "more_one": "دفعات زدن روشن: {{count}}. دراپ بعدی: Cheese به همراه Aghanim یا refresher.",
+    "1": "دفعات زدن روشان: 1. دراپ بعدی: پرچم دراز.",
+    "2": "دفعات زدن روشن: 2. دراپ بعدی: پرچم و پنیر.",
+    "3": "دفعات زدن روشن: 3. دراپ بعدی: پرچم و پنیر و رفرشر.",
+    "more_one": "دفعات زدن روشن: {{count}}. دراپ بعدی: پرچم و پنیر و رفرشر.",
     "more_other": "دفعات زدن روشن: {{count}}. دراپ بعدی: Cheese به همراه Aghanim یا refresher."
   },
   "roshanKilled": "روشان رو کوشتن. روشان بعدی بین {{min}} تا {{max}} دقیقه",
@@ -245,7 +245,7 @@
   "updateMmr_auto": "ام ام آر به {{mmr}} به روز رسانی شد",
   "updateMmr_manual": "ام ام آر به {{mmr}} به روز رسانی شد",
   "updateMmrMulti": "Multiple steam accounts, updating the one you are currently logged in with ({{steamId}})",
-  "updateMmrNoChange": "MMR already {{mmr}}, no change was made",
+  "updateMmrNoChange": "شلغم نپخته ام ام آر همین {{mmr}} هستش. هیچی عوض نکردم بشین دست نزن به تنظیمات. ",
   "version": {
     "commit": "Server running version {{version}}, here's what's missing compared to the latest version: {{- url}}",
     "unknown": "Couldn't find the last git commit, here's the repo {{- url}}"
