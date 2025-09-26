@@ -9,6 +9,7 @@ import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId.js'
 import {
   type Abilities,
   type Ability,
+  ChatMessageType,
   type DelayedGames,
   type Hero,
   type Item,
@@ -83,6 +84,7 @@ const matchDataCache = new Map<
     timestamp: number
   }
 >()
+const chatMessageTypesSet = new Set<string>(Object.values(ChatMessageType))
 // Cache expiration time in milliseconds
 const CACHE_EXPIRATION = 60000 // 1 minute
 
@@ -715,9 +717,40 @@ function handleNewEvents(data: Packet, dotaClient: GSIHandlerType) {
 
     // Emit events and log if necessary
     newEvents.forEach((event) => {
+      const rawData = (event).data
+      let dataType: string | undefined
+      let dataWasObject = false
+      let dataWasJsonParsed = false
+
+      if (typeof rawData === 'string') {
+        try {
+          const parsedData = JSON.parse(rawData) as { type?: unknown }
+          if (typeof parsedData?.type === 'string') {
+            dataType = parsedData.type
+          }
+          dataWasJsonParsed = true
+        } catch {
+          // Ignore malformed data payloads
+        }
+      } else if (rawData && typeof rawData === 'object') {
+        dataWasObject = true
+        const potentialType = (rawData).type
+        if (typeof potentialType === 'string') {
+          dataType = potentialType
+        }
+      }
+
+      const shouldLogUnknownEventType = !validEventTypes.has(event.event_type)
+      const shouldLogUnknownChatMessageType =
+        typeof dataType === 'string' && !chatMessageTypesSet.has(dataType)
+
       events.emit(`event:${event.event_type}`, event, dotaClient.client.token)
-      if (!validEventTypes.has(event.event_type)) {
-        logger.info('[NEWEVENT]', event)
+      if (shouldLogUnknownEventType || shouldLogUnknownChatMessageType) {
+        logger.info('[NEWEVENT]', {
+          event,
+          dataWasObject,
+          dataWasJsonParsed,
+        })
       }
     })
   }

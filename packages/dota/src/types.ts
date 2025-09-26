@@ -320,6 +320,7 @@ interface Draft {
   team2: TeamDraft
   team3: TeamDraft
 }
+
 interface TeamDraft {
   pick0_id: number // e.g.,  0,
   pick0_class: string // e.g.,  '',
@@ -347,6 +348,73 @@ interface TeamDraft {
   ban6_class: string // e.g.,  ''
 }
 
+export interface MessagesParsedWithData {
+  game_time:     number;
+  event_type:    DotaEventTypes;
+  player_id?:    number;
+  channel_type?: number;
+  data?:         ChatEventData;
+}
+
+export interface ChatEventData {
+  type:       ChatMessageType;
+  value:      number;
+  playerid1:  number;
+  playerid2:  number;
+  playerid3?: number;
+  playerid4?: number;
+  playerid5?: number;
+  playerid6?: number;
+  value2?:    number;
+  value3?:    number;
+  time:       number;
+}
+
+export enum ChatMessageType {
+  ChatMessageAlchemistGrantedScepter = "CHAT_MESSAGE_ALCHEMIST_GRANTED_SCEPTER",
+  ChatMessageBannerPlanted = "CHAT_MESSAGE_BANNER_PLANTED",
+  ChatMessageBarracksKill = "CHAT_MESSAGE_BARRACKS_KILL",
+  ChatMessageBuyback = "CHAT_MESSAGE_BUYBACK",
+  ChatMessageCantUseActionItem = "CHAT_MESSAGE_CANT_USE_ACTION_ITEM",
+  ChatMessageCourierLost = "CHAT_MESSAGE_COURIER_LOST",
+  ChatMessageCourierRespawned = "CHAT_MESSAGE_COURIER_RESPAWNED",
+  ChatMessageDisconnect = "CHAT_MESSAGE_DISCONNECT",
+  ChatMessageDisconnectTimeRemaining = "CHAT_MESSAGE_DISCONNECT_TIME_REMAINING",
+  ChatMessageDisconnectTimeRemainingPlural = "CHAT_MESSAGE_DISCONNECT_TIME_REMAINING_PLURAL",
+  ChatMessageDisconnectWaitForReconnect = "CHAT_MESSAGE_DISCONNECT_WAIT_FOR_RECONNECT",
+  ChatMessageEffigyKill = "CHAT_MESSAGE_EFFIGY_KILL",
+  ChatMessageFirstblood = "CHAT_MESSAGE_FIRSTBLOOD",
+  ChatMessageGlyphUsed = "CHAT_MESSAGE_GLYPH_USED",
+  ChatMessageHeroBanned = "CHAT_MESSAGE_HERO_BANNED",
+  ChatMessageHeroChoiceInvalid = "CHAT_MESSAGE_HERO_CHOICE_INVALID",
+  ChatMessageHeroDeny = "CHAT_MESSAGE_HERO_DENY",
+  ChatMessageHeroKill = "CHAT_MESSAGE_HERO_KILL",
+  ChatMessageInformational = "CHAT_MESSAGE_INFORMATIONAL",
+  ChatMessageInthebag = "CHAT_MESSAGE_INTHEBAG",
+  ChatMessageItemPurchase = "CHAT_MESSAGE_ITEM_PURCHASE",
+  ChatMessageMinibossKill = "CHAT_MESSAGE_MINIBOSS_KILL",
+  ChatMessageNewPlayerReminder = "CHAT_MESSAGE_NEW_PLAYER_REMINDER",
+  ChatMessageObserverWardKilled = "CHAT_MESSAGE_OBSERVER_WARD_KILLED",
+  ChatMessagePauseCountdown = "CHAT_MESSAGE_PAUSE_COUNTDOWN",
+  ChatMessagePaused = "CHAT_MESSAGE_PAUSED",
+  ChatMessagePlayerInGameBanText = "CHAT_MESSAGE_PLAYER_IN_GAME_BAN_TEXT",
+  ChatMessageRandom = "CHAT_MESSAGE_RANDOM",
+  ChatMessageRankWager = "CHAT_MESSAGE_RANK_WAGER",
+  ChatMessageReconnect = "CHAT_MESSAGE_RECONNECT",
+  ChatMessageReportReminder = "CHAT_MESSAGE_REPORT_REMINDER",
+  ChatMessageRoshanRoar = "CHAT_MESSAGE_ROSHAN_ROAR",
+  ChatMessageRuneBottle = "CHAT_MESSAGE_RUNE_BOTTLE",
+  ChatMessageRuneDeny = "CHAT_MESSAGE_RUNE_DENY",
+  ChatMessageScanUsed = "CHAT_MESSAGE_SCAN_USED",
+  ChatMessageSentryWardKilled = "CHAT_MESSAGE_SENTRY_WARD_KILLED",
+  ChatMessageStreakKill = "CHAT_MESSAGE_STREAK_KILL",
+  ChatMessageSuperCreeps = "CHAT_MESSAGE_SUPER_CREEPS",
+  ChatMessageTowerDeny = "CHAT_MESSAGE_TOWER_DENY",
+  ChatMessageTowerKill = "CHAT_MESSAGE_TOWER_KILL",
+  ChatMessageUnpauseCountdown = "CHAT_MESSAGE_UNPAUSE_COUNTDOWN",
+  ChatMessageVictoryPredictionStreak = "CHAT_MESSAGE_VICTORY_PREDICTION_STREAK",
+}
+
 export enum DotaEventTypes {
   RoshanKilled = 'roshan_killed',
   AegisPickedUp = 'aegis_picked_up',
@@ -354,12 +422,18 @@ export enum DotaEventTypes {
   Tip = 'tip',
   BountyPickup = 'bounty_rune_pickup',
   CourierKilled = 'courier_killed', // spectator only
+
+  ChatMessage = "chat_message",
+  GenericEvent = "generic_event",
 }
 
 export const validEventTypes = new Set(Object.values(DotaEventTypes))
 
 export interface DotaEvent {
   game_time: number // 810,
+  channel_type?: number; // 11 or 12 usually? guessing ally vs all chat
+  data?:         ChatEventData;
+
   event_type: DotaEventTypes
 
   // Event 'tip'
