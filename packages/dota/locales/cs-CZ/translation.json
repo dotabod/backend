@@ -39,9 +39,9 @@
     "pause": "{{emote}} Kdo to pauznul?",
     "smoked": "Ticho! {{- heroName}} použil smoke",
     "tpFound": "{{channel}} dobrá práce, úspěšně sis pořídil tp po $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
-    "tpFromDeath": "Thanks to this death you finally got a tp. And it only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
+    "tpFromDeath": "Díky této smrti jsi konečně získal tp. A trvalo to jen $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
-  "chattersRank": "@{{username}}'s rank is {{rank}}",
+  "chattersRank": "Hodnost tohoto hráče @{{username}} je {{rank}}",
   "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "clearsharing": {
     "error": "Failed to clear account sharing. Please try again or contact support.",
@@ -78,7 +78,7 @@
   "dota2pt": "Potřebuješ poradit co kupovat na {{- heroName}}? Nápady najdeš zde {{- url}}",
   "dotabod": "Jsem open-source bot vytvořený {{author}}. Více info na {{- url}}",
   "dotapatch": {
-    "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
+    "newPatch": "{{emote}} Byl vydán nový patch Doty 2: {{version}}. Podívejte se na poznámky k opravám na stránce https://www.dota2.com/patches"
   },
   "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Neplatný facet specifikace · $t(facetNotFound, {{- heroName }})",
@@ -173,7 +173,7 @@
   "noLastMatch": "Nenalezena data posledního zápasu {{emote}}",
   "noNotable": "Žádní známí hráči",
   "noShard": "{{- heroName}} has no shard upgrade.",
-  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
+  "notLive": "Stream není zapnutý {{emote}} . Je aktuálně zapnutý? Móderátoři použijí příkaz !online",
   "notPlaying": "Nehrajem {{emote}}",
   "npAdd": "Zkus !np add <steam32id> <playername>",
   "npAdded": "{{name}} přidán do !np pro tento kanál",
@@ -192,7 +192,7 @@
     "title": "Vyhrajeme s {{- heroName}}?",
     "yes": "Ano"
   },
-  "privateProfile": "Streamer's profile is private. The {{command}} command uses OpenDota and requires them to enable 'Expose Public Match Data' in their Dota settings.",
+  "privateProfile": "Profil streamera je soukromý. Příkaz {{command}} používá OpenDota a vyžaduje od nich povolení 'Zveřejnit data veřejných zápasů' v nastavení Doty.",
   "profileUrl": "Zde je {{- channel}}: {{- url}}",
   "rank": {
     "nextRankAt": "Další rank na",
