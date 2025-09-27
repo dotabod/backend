@@ -36,6 +36,7 @@
     "dotaconstants": "github:dotabod/dotaconstants",
     "express": "^4.21.2",
     "express-body-parser-error-handler": "^1.0.7",
+    "franc": "^6.2.0",
     "i18next": "^24.2.0",
     "i18next-fs-backend": "^2.6.0",
     "lodash.debounce": "^4.0.8",
