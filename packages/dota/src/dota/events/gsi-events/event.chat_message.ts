@@ -22,7 +22,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
     const message = moderateText(event.message?.trim())
-    if (!message || typeof message !== 'string') return
+    if (!message || typeof message !== 'string' || message === '***') return
 
     const detectedLang = franc(message)
     if (detectedLang !== 'eng' && detectedLang !== 'und') {
