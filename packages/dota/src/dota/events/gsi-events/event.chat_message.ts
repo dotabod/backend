@@ -2,6 +2,7 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import { translate } from '@vitalets/google-translate-api'
 import { franc } from 'franc'
+import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { DotaEventTypes } from '../../../types.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { server } from '../../server.js'
@@ -20,6 +21,15 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
   ) => {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
+
+    // Check global chatter access
+    const translateEnabled = getValueOrDefault(
+      DBSettings.autoTranslate,
+      dotaClient.client.settings,
+      dotaClient.client.subscription,
+    )
+
+    if (!translateEnabled) return
 
     const message = moderateText(event.message?.trim())
     if (!message || typeof message !== 'string' || message === '***') return

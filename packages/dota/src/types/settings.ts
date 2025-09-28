@@ -158,6 +158,8 @@ export const defaultSettingsStructure = {
   lastFmUsername: '',
   lastFmRefreshRate: 30, // in seconds
   disableAutoClipping: false,
+  autoTranslate: false,
+  translationLanguage: 'en',
   crypto_payment_interest: {
     interested: false,
     tier: 'PRO',

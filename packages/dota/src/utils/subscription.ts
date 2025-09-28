@@ -125,6 +125,8 @@ export const FEATURE_TIERS: Record<
   obsServerPort: SUBSCRIPTION_TIERS.PRO,
   battlepass: SUBSCRIPTION_TIERS.PRO,
   minimapRight: SUBSCRIPTION_TIERS.PRO,
+  autoTranslate: SUBSCRIPTION_TIERS.FREE,
+  translationLanguage: SUBSCRIPTION_TIERS.FREE,
   onlyParty: SUBSCRIPTION_TIERS.PRO,
   'obs-dc': SUBSCRIPTION_TIERS.PRO,
   'obs-minimap': SUBSCRIPTION_TIERS.PRO,
