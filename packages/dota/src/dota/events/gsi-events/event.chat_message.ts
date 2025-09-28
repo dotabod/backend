@@ -34,7 +34,13 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
     if (!translateEnabled) return
 
     const message = await moderateText(event.message?.trim())
-    if (!message || typeof message !== 'string' || message === '***') return
+    if (!message || typeof message !== 'string' || message === '***') {
+      logger.info(
+        '[Translate] Message was empty or contained only profanity, skipping translation.',
+        { token: dotaClient.getToken(), event, message },
+      )
+      return
+    }
 
     const detectedLang = franc(message)
     if (detectedLang !== 'eng' && detectedLang !== 'und') {
@@ -43,6 +49,13 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
         const moderatedTranslation = await moderateText(text)
 
         if (moderatedTranslation) {
+          logger.info('[Translate] Emitting translated chat message.', {
+            token: dotaClient.getToken(),
+            event,
+            detectedLang,
+            message,
+            moderatedTranslation,
+          })
           server.io.to(dotaClient.getToken()).emit('chatMessage', moderatedTranslation)
           say(
             dotaClient.client,
@@ -54,8 +67,13 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
           )
         }
       } catch (error) {
-        logger.error('Translation error:', { error, message })
+        logger.error('[Translate] Error:', { error, message })
       }
+    } else {
+      logger.info(
+        '[Translate] Message detected as English or undetermined language, skipping translation.',
+        { token: dotaClient.getToken(), event, detectedLang, message },
+      )
     }
   },
 })
