@@ -4,9 +4,9 @@ import { translate } from '@vitalets/google-translate-api'
 import { franc } from 'franc'
 import { t } from 'i18next'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
+import { chatClient } from '../../../twitch/chatClient.js'
 import { DotaEventTypes } from '../../../types.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import { say } from '../../say.js'
 import { server } from '../../server.js'
 import eventHandler from '../EventHandler.js'
 
@@ -35,30 +35,28 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
 
     const message = await moderateText(event.message?.trim())
     if (!message || typeof message !== 'string' || message === '***') {
-      logger.info(
-        '[Translate] Message was empty or contained only profanity, skipping translation.',
-        { token: dotaClient.getToken(), event, message },
-      )
       return
     }
 
     const detectedLang = franc(message)
-    if (detectedLang !== 'eng' && detectedLang !== 'und') {
+    if (
+      detectedLang !== 'eng' &&
+      detectedLang !== 'und' &&
+      detectedLang !== 'lvs' &&
+      detectedLang !== 'som'
+    ) {
       try {
         const { text } = await translate(message, { to: 'en' })
         const moderatedTranslation = await moderateText(text)
 
+        if (text?.trim()?.toLowerCase() === message.trim()?.toLowerCase()) {
+          return
+        }
+
         if (moderatedTranslation) {
-          logger.info('[Translate] Emitting translated chat message.', {
-            token: dotaClient.getToken(),
-            event,
-            detectedLang,
-            message,
-            moderatedTranslation,
-          })
           server.io.to(dotaClient.getToken()).emit('chatMessage', moderatedTranslation)
-          say(
-            dotaClient.client,
+          chatClient.say(
+            dotaClient.client.name,
             t('autoTranslate', {
               playerId: event.player_id,
               message: moderatedTranslation,
@@ -69,11 +67,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
       } catch (error) {
         logger.error('[Translate] Error:', { error, message })
       }
-    } else {
-      logger.info(
-        '[Translate] Message detected as English or undetermined language, skipping translation.',
-        { token: dotaClient.getToken(), event, detectedLang, message },
-      )
     }
   },
 })
