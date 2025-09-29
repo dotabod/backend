@@ -27,7 +27,12 @@ export async function checkAltAccount(
 
     chatClient.say(
       channel,
-      t('altAccount', { name: chattersUsername, lng: client.locale || 'en' }),
+      t('altAccount', {
+        emote: 'hesRight',
+        emote2: 'PepeMods',
+        name: chattersUsername,
+        lng: client.locale || 'en',
+      }),
       messageId,
     )
     lastAltAccountMessageTimestamps[chattersUsername] = now
