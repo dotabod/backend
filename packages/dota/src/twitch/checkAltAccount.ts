@@ -67,7 +67,7 @@ export async function checkAltAccount(
           channel,
           t('altAccount', {
             emote: 'hesRight',
-            emote2: 'pepeMods',
+            emote2: 'PepeMods',
             name: chattersUsername,
             lng: client.locale || 'en',
           }),
