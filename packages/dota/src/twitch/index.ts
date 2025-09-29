@@ -20,6 +20,7 @@ import { server } from '../dota/server.js'
 import { DBSettings, getValueOrDefault } from '../settings.js'
 import { twitchChat } from '../steam/ws.js'
 import { chatClient } from './chatClient.js'
+import { checkAltAccount } from './checkAltAccount.js'
 import commandHandler from './lib/CommandHandler.js'
 
 // Map to track the last time a rank warning message was sent to a channel
@@ -41,7 +42,7 @@ async function getUserRankTier(twitchUsername: string): Promise<number> {
   try {
     const profile = await getOpenDotaProfile(twitchUsername)
     return profile?.rank_tier || 0
-  } catch (error) {
+  } catch (_error) {
     return 0
   }
 }
@@ -98,6 +99,12 @@ twitchChat.on(
 
     if (lastMissingUserMessageTimestamps[channel]) {
       delete lastMissingUserMessageTimestamps[channel]
+    }
+
+    // Looks up the chatter's followage date, and their Twitch account creation date, and if its within 10 days of each other, sends a message replying to them
+    const shouldCheckAltAccount = `${channelId}` === '40754777' // Only check this for now
+    if (shouldCheckAltAccount) {
+      await checkAltAccount(channel, user, channelId, userInfo, messageId, client)
     }
 
     // Check if rankOnly mode is enabled

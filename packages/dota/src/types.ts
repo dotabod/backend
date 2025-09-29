@@ -150,7 +150,8 @@ export interface Player {
   commands_issued: number // 0,
   kill_list: Record<string, number>
   team_name: 'spectator' | 'radiant' | 'dire'
-  player_slot?: number
+  player_slot: number // 0 or 1 through 9 or 10, @TODO: need to verify still
+  team_slot: number // 1 = radiant or 2 = dire
   gold: number // 600,
   gold_reliable: number // 0,
   gold_unreliable: number //600,
@@ -181,7 +182,7 @@ export interface Hero {
   team2?: { player0: Hero; player1: Hero; player2: Hero; player3: Hero; player4: Hero }
   team3?: { player5: Hero; player6: Hero; player7: Hero; player8: Hero; player9: Hero }
   id: number // -1 if hero not yet set
-  facet?: number // 1 | 2,
+  facet?: number // 1 | 2 | 3,
   name?: HeroNames // e.g. 'npc_dota_hero_antimage' once set
   xpos?: number // -5422,
   ypos?: number // -4771,
@@ -216,7 +217,8 @@ export interface Hero {
   talent_5?: boolean // false,
   talent_6?: boolean // true,
   talent_7?: boolean // false,
-  talent_8?: boolean // true
+  talent_8?: boolean // true,
+  attributes_level?: number // 6 - total amount of attribute points they put in stats
 }
 
 export interface Abilities {
@@ -285,6 +287,7 @@ export interface Item {
   cooldown?: number // e.g. 0,
   item_level?: number // e.g. 1,2,3,4 = 9,8,7,6 seconds for bkb **new 3/12/2023**
   passive: boolean // e.g. true for item_paladin_sword
+  item_charges?: number // e.g. 2
   charges?: number // e.g. 2
 }
 interface Buildings {
