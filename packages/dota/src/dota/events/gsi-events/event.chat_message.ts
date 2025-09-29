@@ -7,6 +7,8 @@ import { t } from 'i18next'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { chatClient } from '../../../twitch/chatClient.js'
 import { DotaEventTypes } from '../../../types.js'
+import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
+import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { server } from '../../server.js'
 import eventHandler from '../EventHandler.js'
@@ -20,7 +22,7 @@ const CHATTING_WORD_THRESHOLD = 10 // Minimum words to consider as "chatting"
 const CHATTING_MESSAGE_THRESHOLD = 3 // Minimum messages within time window
 const CHATTING_TIME_WINDOW = 5000 // 5 seconds in milliseconds
 const CHATTING_COOLDOWN = 30000 // 30 seconds cooldown between "Chatting" messages
-const disableChatterMessage = true // Disable chatting detection for now
+const disableChatterMessage = false // Disable chatting detection for now
 
 // Track messages per player for chatting detection
 interface PlayerMessage {
@@ -160,21 +162,30 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
       return
     }
 
-    const wordCount = message.split(/\s+/).length
-
     // Check for chatting behavior
-    if (!disableChatterMessage) {
-      const chattingSeverity = shouldTriggerChattingAlert(
-        dotaClient.client.name,
-        event.player_id,
-        wordCount,
+    if (!disableChatterMessage && dotaClient.client.gsi?.player?.player_slot === event.player_id) {
+      // Check global chatter access
+      const chattingEmoteEnabled = getValueOrDefault(
+        DBSettings.chatters,
+        dotaClient.client.settings,
+        dotaClient.client.subscription,
+        'chattingSpamEmote',
       )
-      if (chattingSeverity > 0) {
-        sendChattingAlert(dotaClient, event.player_id, chattingSeverity)
+
+      if (chattingEmoteEnabled) {
+        const wordCount = message.split(/\s+/).length
+        const chattingSeverity = shouldTriggerChattingAlert(
+          dotaClient.client.name,
+          event.player_id,
+          wordCount,
+        )
+        if (chattingSeverity > 0) {
+          sendChattingAlert(dotaClient, event.player_id, chattingSeverity)
+        }
       }
     }
 
-    // Translation logic
+    // The rest of the code is translation logic
     if (disableTranslation || !authKey) {
       return
     }
@@ -214,11 +225,22 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
         }
 
         if (moderatedTranslation) {
+          const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
+
+          let playerIdIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
+          if (playerIdIndex === -1) {
+            playerIdIndex = event.player_id
+          }
+          const heroName = getHeroNameOrColor(
+            matchPlayers[playerIdIndex]?.heroid ?? 0,
+            playerIdIndex,
+          )
+
           server.io.to(dotaClient.getToken()).emit('chatMessage', moderatedTranslation)
           chatClient.say(
             dotaClient.client.name,
             t('autoTranslate', {
-              playerId: event.player_id,
+              heroName: heroName || event.player_id,
               message: moderatedTranslation,
               lng: dotaClient.client.locale,
             }),

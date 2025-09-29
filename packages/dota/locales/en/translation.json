@@ -262,5 +262,5 @@
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
   "xpm": "Live XPM for {{- heroName}}: {{num}}",
-  "autoTranslate": "Player {{playerId}} said: {{message}}"
+  "autoTranslate": "[Translation] {{- heroName}} said: {{message}}"
 }

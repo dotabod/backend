@@ -101,6 +101,9 @@ export const defaultChatters = {
   dotapatch: {
     enabled: true,
   },
+  chattingSpamEmote: {
+    enabled: false,
+  },
 } as const
 
 export type ChatterKeys = keyof typeof defaultChatters

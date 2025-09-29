@@ -150,6 +150,7 @@ export interface Player {
   commands_issued: number // 0,
   kill_list: Record<string, number>
   team_name: 'spectator' | 'radiant' | 'dire'
+  player_slot?: number
   gold: number // 600,
   gold_reliable: number // 0,
   gold_unreliable: number //600,
