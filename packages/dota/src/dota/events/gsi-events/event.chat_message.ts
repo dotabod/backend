@@ -10,6 +10,7 @@ import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { server } from '../../server.js'
 import eventHandler from '../EventHandler.js'
 
+const disableTranslation = true
 eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
   handler: async (
     dotaClient,
@@ -23,6 +24,11 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
   ) => {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
+
+    // Turned off for now, we are rate limited by Google Translate API
+    if (disableTranslation) {
+      return
+    }
 
     // Check global chatter access
     const translateEnabled = getValueOrDefault(
