@@ -33,6 +33,7 @@
     "chokidar": "^4.0.3",
     "cors": "^2.8.5",
     "country-code-emoji": "^2.3.0",
+    "deepl-node": "^1.19.1",
     "dotaconstants": "github:dotabod/dotaconstants",
     "express": "^4.21.2",
     "express-body-parser-error-handler": "^1.0.7",
