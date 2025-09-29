@@ -36,7 +36,7 @@ export async function checkAltAccount(
 
   // Not cached, perform the check
   try {
-    const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID!)
+    const api = await getTwitchAPI(twitchChannelId)
     const userData = await api.users.getUserByName(chattersUsername)
     if (!userData) {
       altAccountCache[chattersUsername] = false
