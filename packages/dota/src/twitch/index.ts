@@ -102,7 +102,7 @@ twitchChat.on(
     }
 
     // Looks up the chatter's followage date, and their Twitch account creation date, and if its within 10 days of each other, sends a message replying to them
-    const shouldCheckAltAccount = `${channelId}` === '40754777' // Only check this for now
+    const shouldCheckAltAccount = false // Only check this for now
     if (shouldCheckAltAccount) {
       await checkAltAccount(channel, user, channelId, userInfo, messageId, client)
     }
