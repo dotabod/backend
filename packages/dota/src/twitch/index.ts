@@ -27,6 +27,8 @@ import commandHandler from './lib/CommandHandler.js'
 const lastRankWarningTimestamps: Record<string, number> = {}
 const RANK_WARNING_COOLDOWN_MS = 30000 // 30 seconds
 
+let disableAltAccountCheck = false
+
 logger.info("Starting 'twitch' package")
 
 twitchChat.on('connect', () => {
@@ -101,8 +103,13 @@ twitchChat.on(
       delete lastMissingUserMessageTimestamps[channel]
     }
 
+    if (text === '!altcheck' && (userInfo.userId === '32474777' || isStaff)) {
+      disableAltAccountCheck = !disableAltAccountCheck
+      return
+    }
+
     // Looks up the chatter's followage date, and their Twitch account creation date, and if its within 10 days of each other, sends a message replying to them
-    const shouldCheckAltAccount = false // Only check this for now
+    const shouldCheckAltAccount = !disableAltAccountCheck && `${channelId}` === '40754777' // Only check this for now
     if (shouldCheckAltAccount) {
       await checkAltAccount(channel, user, channelId, userInfo, messageId, client)
     }

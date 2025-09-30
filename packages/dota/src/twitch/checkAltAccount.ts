@@ -7,6 +7,8 @@ const altAccountCache: Record<string, boolean> = {}
 const lastAltAccountMessageTimestamps: Record<string, number> = {}
 const ALT_ACCOUNT_COOLDOWN_MS = 300000 // 5 minutes
 
+const speak = true
+
 // Function to check for alt accounts with caching and cooldown
 export async function checkAltAccount(
   channel: string,
@@ -25,16 +27,18 @@ export async function checkAltAccount(
     const lastTime = lastAltAccountMessageTimestamps[chattersUsername] || 0
     if (now - lastTime < ALT_ACCOUNT_COOLDOWN_MS) return
 
-    chatClient.say(
-      channel,
-      t('altAccount', {
-        emote: 'hesRight',
-        emote2: 'PepeMods',
-        name: chattersUsername,
-        lng: client.locale || 'en',
-      }),
-      messageId,
-    )
+    if (speak) {
+      chatClient.say(
+        channel,
+        t('altAccount', {
+          emote: 'hesRight',
+          emote2: 'PepeMods',
+          name: chattersUsername,
+          lng: client.locale || 'en',
+        }),
+        messageId,
+      )
+    }
     lastAltAccountMessageTimestamps[chattersUsername] = now
     return
   }
@@ -60,7 +64,7 @@ export async function checkAltAccount(
     const followageDate = follow.followDate
     const timeDifference = accountCreationDate.getTime() - followageDate.getTime()
     const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24))
-    const isAlt = daysDifference < 10
+    const isAlt = daysDifference >= 0 && daysDifference < 10
 
     altAccountCache[chattersUsername] = isAlt
 
@@ -68,16 +72,18 @@ export async function checkAltAccount(
       const now = Date.now()
       const lastTime = lastAltAccountMessageTimestamps[chattersUsername] || 0
       if (now - lastTime >= ALT_ACCOUNT_COOLDOWN_MS) {
-        chatClient.say(
-          channel,
-          t('altAccount', {
-            emote: 'hesRight',
-            emote2: 'PepeMods',
-            name: chattersUsername,
-            lng: client.locale || 'en',
-          }),
-          messageId,
-        )
+        if (speak) {
+          chatClient.say(
+            channel,
+            t('altAccount', {
+              emote: 'hesRight',
+              emote2: 'PepeMods',
+              name: chattersUsername,
+              lng: client.locale || 'en',
+            }),
+            messageId,
+          )
+        }
         lastAltAccountMessageTimestamps[chattersUsername] = now
       }
     }
@@ -86,3 +92,7 @@ export async function checkAltAccount(
     altAccountCache[chattersUsername] = false // Don't retry on error
   }
 }
+
+//await checkAltAccount('masondota2', 'loco42001', '40754777', { userId: '899787215' }, 'message', {
+//  locale: 'en',
+//})
