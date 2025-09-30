@@ -126,8 +126,8 @@ export const FEATURE_TIERS: Record<
   obsServerPort: SUBSCRIPTION_TIERS.PRO,
   battlepass: SUBSCRIPTION_TIERS.PRO,
   minimapRight: SUBSCRIPTION_TIERS.PRO,
-  autoTranslate: SUBSCRIPTION_TIERS.FREE,
-  translationLanguage: SUBSCRIPTION_TIERS.FREE,
+  autoTranslate: SUBSCRIPTION_TIERS.PRO,
+  translationLanguage: SUBSCRIPTION_TIERS.PRO,
   onlyParty: SUBSCRIPTION_TIERS.PRO,
   'obs-dc': SUBSCRIPTION_TIERS.PRO,
   'obs-minimap': SUBSCRIPTION_TIERS.PRO,
@@ -139,6 +139,7 @@ export const FEATURE_TIERS: Record<
   lastFmRefreshRate: SUBSCRIPTION_TIERS.PRO,
   disableAutoClipping: SUBSCRIPTION_TIERS.FREE,
   crypto_payment_interest: SUBSCRIPTION_TIERS.FREE,
+  translateOnOverlay: SUBSCRIPTION_TIERS.PRO,
 } as const
 
 export type FeatureTier = keyof typeof FEATURE_TIERS

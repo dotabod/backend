@@ -173,6 +173,7 @@ export const defaultSettingsStructure = {
     minimumRank: 'Herald',
     minimumRankTier: 0,
   },
+  translateOnOverlay: false,
   ...defaultCommands,
 } as const
 

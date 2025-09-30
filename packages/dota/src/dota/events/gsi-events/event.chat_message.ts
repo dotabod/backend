@@ -191,14 +191,19 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
       return
     }
 
-    // Check global chatter access
-    const translateEnabled = getValueOrDefault(
+    const translateInChat = getValueOrDefault(
       DBSettings.autoTranslate,
       dotaClient.client.settings,
       dotaClient.client.subscription,
     )
 
-    if (!translateEnabled) return
+    const translateOnOverlay = getValueOrDefault(
+      DBSettings.translateOnOverlay,
+      dotaClient.client.settings,
+      dotaClient.client.subscription,
+    )
+
+    if (!translateInChat && !translateOnOverlay) return
 
     // Check global chatter access
     let toLanguage = getValueOrDefault(
@@ -237,15 +242,22 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
             playerIdIndex,
           )
 
-          server.io.to(dotaClient.getToken()).emit('chatMessage', moderatedTranslation)
-          chatClient.say(
-            dotaClient.client.name,
-            t('autoTranslate', {
-              heroName: is8500Plus(dotaClient.client) ? 'Hero' : heroName || event.player_id,
+          if (translateOnOverlay) {
+            server.io.to(dotaClient.client.token).emit('chatMessage', {
               message: moderatedTranslation,
-              lng: dotaClient.client.locale,
-            }),
-          )
+              timestamp: Date.now(),
+            })
+          }
+          if (translateInChat) {
+            chatClient.say(
+              dotaClient.client.name,
+              t('autoTranslate', {
+                heroName: is8500Plus(dotaClient.client) ? 'Hero' : heroName || event.player_id,
+                message: moderatedTranslation,
+                lng: dotaClient.client.locale,
+              }),
+            )
+          }
         }
       } catch (error) {
         logger.error('[Translate] Error:', { error, message })
