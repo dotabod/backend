@@ -1,3 +1,4 @@
+import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { getOpenDotaProfile, getRankDescription, getRankTitle } from '../../dota/lib/ranks.js'
@@ -42,7 +43,7 @@ commandHandler.registerCommand('mmr', {
         chatClient.say(
           channel,
           t('chattersRankUnknown', {
-            username,
+            username: (await moderateText(username)) || username,
             url: 'dotabod.com/verify',
             lng: message.channel.client.locale,
           }),
