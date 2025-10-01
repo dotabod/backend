@@ -10,8 +10,10 @@
     "snatched": "{{- heroName}} snatched the aegis PepeLaugh"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Durchschnittlicher Rang in diesem Spiel",
   "betaFeature": "[Beta-Funktion]",
   "betaTester": "$t(betaTester_on)",

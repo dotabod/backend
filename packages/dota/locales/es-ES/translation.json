@@ -10,9 +10,11 @@
     "snatched": "{{- heroName}} robó el aegis {{emote}}"
   },
   "aghs": "{{- heroName}} Aghanim: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "Actual APM para {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
   "apm_other": "Actual APM para {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "La media de este juego es",
   "betaFeature": "[función beta]",
   "betaTester": "$t(betaTester_on)",

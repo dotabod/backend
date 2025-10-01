@@ -10,9 +10,11 @@
     "snatched": "{{- heroName}} ha rubato l'egida {{emote}}"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "APM live per {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
   "apm_other": "APM live per {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Rank medio in questa partita",
   "betaFeature": "[funzione beta]",
   "betaTester": "$t(betaTester_on)",

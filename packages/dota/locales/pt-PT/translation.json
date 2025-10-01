@@ -10,9 +10,11 @@
     "snatched": "{{- heroName}} Negou a égide {{emote}}"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Média de rank este jogo",
   "betaFeature": "[recurso beta]",
   "betaTester": "$t(betaTester_on)",
