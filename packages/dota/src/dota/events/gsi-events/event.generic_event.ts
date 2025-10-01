@@ -11,7 +11,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.GenericEvent}`, {
 
     try {
       const data = JSON.parse(event.data ?? '{}') as ChatEventData
-      console.log(data)
 
       // Game abandoned type of events
       const gameAbandonedTypes = [
