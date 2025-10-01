@@ -27,7 +27,7 @@ import commandHandler from './lib/CommandHandler.js'
 const lastRankWarningTimestamps: Record<string, number> = {}
 const RANK_WARNING_COOLDOWN_MS = 30000 // 30 seconds
 
-let disableAltAccountCheck = false
+let disableAltAccountCheck = true
 
 logger.info("Starting 'twitch' package")
 
