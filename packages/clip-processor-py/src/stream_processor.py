@@ -36,11 +36,11 @@ import numpy as np
 
 # Try to import Dota 2 detection
 try:
-    from dota_hero_detection import process_frame_for_heroes
+    from detection.image_processing import process_frame_for_heroes
     DOTA_DETECTION_AVAILABLE = True
 except ImportError:
     DOTA_DETECTION_AVAILABLE = False
-    print("Warning: dota_hero_detection not available, will only capture frames without analysis")
+    print("Warning: detection module not available, will only capture frames without analysis")
 
 # Configure logging
 log_dir = Path("logs")
