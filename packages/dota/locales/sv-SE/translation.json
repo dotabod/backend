@@ -10,8 +10,10 @@
     "snatched": "{{- heroName}} snodde åt sig aegisen {{emote}}"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "Live APM för {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Live APM för {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Genomsnittlig rank denna match",
   "betaFeature": "[beta-funktion]",
   "betaTester": "$t(betaTester_on)",

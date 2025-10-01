@@ -10,8 +10,10 @@
     "snatched": "{{- heroName}} Aegis'i çaldı {{emote}}"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "{{- heroName}} için anlık APM: {{count}} {{emote}}",
   "apm_other": "{{- heroName}} için anlık APM: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Oyunun ortalama sıralaması",
   "betaFeature": "Beta özellikleri",
   "betaTester": "$t(betaTester_on)",

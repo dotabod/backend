@@ -10,8 +10,10 @@
     "snatched": "{{- heroName}} snatched the aegis {{emote}}"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -261,7 +263,5 @@
     "winProbability": "{{winRate}}% win probability at {{gameTime}}:00 · Next update in {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
-  "xpm": "Live XPM for {{- heroName}}: {{num}}",
-  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
-  "altAccount": "{{emote}} alt account detected {{emote2}}"
+  "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

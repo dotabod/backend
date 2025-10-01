@@ -232,6 +232,8 @@
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
   "xpm": "Live XPM for {{- heroName}}: {{num}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "facetTotalLimit_other": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",

@@ -1,7 +1,7 @@
 {
   "2mdelay": "(2 min opóźnienia)",
   "accountSharing": {
-    "blocked": "Multiple people are using Dotabod GSI files for this stream. Account \"{{accountName}}\" is blocked. Use !clearsharing to reset, but ensure only one person has the GSI file."
+    "blocked": "Wiele osób używa plików Dotabod GSI dla tego streamu. Konto \"{{accountName}}\" jest zablokowane. Użyj !clearshare, aby zresetować, ale upewnij się, że tylko jedna osoba ma plik GSI."
   },
   "aegis": {
     "denied": "{{- heroName}} dobił aegis {{emote}}",
@@ -10,10 +10,12 @@
     "snatched": "{{- heroName}} podwędził aegisa {{emote}}"
   },
   "aghs": "Aghanim dla {{- heroName}}: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alternatywne konto wykryte {{emote2}}",
   "apm_one": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Aktualny APM dla {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Tłumaczenie] {{- heroName}} powiedział(a): {{- message}}",
   "averageRank": "Średni ranking w tej grze",
   "betaFeature": "[funkcje beta]",
   "betaTester": "$t(betaTester_on)",
@@ -44,8 +46,8 @@
   "chattersRank": "@{{username}} ma rangę {{rank}}",
   "chattersRankUnknown": "@{{username}} nie ma jeszcze rangi. Zostań zweryfikowany przez Dotabod, aby przypisać rangę! {{- url}}",
   "clearsharing": {
-    "error": "Failed to clear account sharing. Please try again or contact support.",
-    "success": "Account sharing reset successfully. Multiple Steam accounts can now send GSI data again. WARNING: Make sure only one person has the Dotabod GSI config file, or conflicts will reoccur."
+    "error": "Nie udało się wyczyścić współdzielonych kont. Proszę spróbować ponownie lub skontaktować się z pomocą techniczną.",
+    "success": "Pomyślnie zresetowano współdzielenie kont. Współdzielone konta Steam mogą teraz ponownie wysyłać dane GSI. UWAGA: Upewnij się, że tylko jedna osoba ma plik konfiguracyjny GSI Dotaboda lub konflikty będą się powtarzały."
   },
   "colors": {
     "blue": "Niebieski",
