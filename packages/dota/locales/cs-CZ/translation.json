@@ -10,10 +10,12 @@
     "snatched": "{{- heroName}} ukradl aegis {{emote}}"
   },
   "aghs": "{{- heroName}} aghanimi: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "Aktuální APM za {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Aktuální APM za {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Průměrný rank této hry",
   "betaFeature": "[beta funkce]",
   "betaTester": "$t(betaTester_on)",

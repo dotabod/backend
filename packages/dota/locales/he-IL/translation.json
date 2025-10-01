@@ -10,10 +10,12 @@
     "snatched": "{{- heroName}} snatched the aegis {{emote}}"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_two": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",

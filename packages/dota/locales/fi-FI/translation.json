@@ -10,8 +10,10 @@
     "snatched": "{{- heroName}} nappasi aegiksen {{emote}}"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Keskimääräinen rankki pelissä",
   "betaFeature": "[beta-ominaisuus]",
   "betaTester": "$t(betaTester_on)",
