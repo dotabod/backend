@@ -2,7 +2,6 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import * as deepl from 'deepl-node'
 import { franc } from 'franc'
-import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { chatClient } from '../../../twitch/chatClient.js'
@@ -33,6 +32,22 @@ interface PlayerMessage {
 
 const playerMessages = new Map<string, PlayerMessage[]>()
 const lastChattingMessage = new Map<string, number>()
+
+// Debounce constants for translation
+const TRANSLATION_DEBOUNCE_TIME = 5000 // 5 seconds
+
+// Buffer for translation messages
+interface TranslationMessage {
+  message: string
+  playerId: number
+  heroName: string
+  timestamp: number
+}
+
+const translationBuffers = new Map<
+  string,
+  { messages: TranslationMessage[]; timeout: NodeJS.Timeout | null }
+>()
 
 type LanguageCodes =
   | 'en'
@@ -144,6 +159,85 @@ function sendChattingAlert(dotaClient: any, playerId: number, count: number): vo
   }
 }
 
+async function processTranslationBuffer(
+  buffer: TranslationMessage[],
+  dotaClient: any,
+  translateInChat: boolean,
+  translateOnOverlay: boolean,
+  typedLanguage: Omit<LanguageCodes, 'en'> & 'en-US',
+) {
+  if (buffer.length === 0) return
+
+  // Translate all messages in parallel
+  const translationPromises = buffer.map(async (item) => {
+    const detectedLang = franc(item.message, { minLength: 3 })
+    const isEnglish = detectedLang === 'eng' || detectedLang === 'sco'
+
+    if (!isEnglish && !isLikelyEnglish(item.message) && detectedLang !== 'und') {
+      try {
+        const { text } = await deeplClient.translateText(item.message, null, typedLanguage)
+        const moderatedTranslation = await moderateText(text)
+
+        // Skip if translation is identical or too short
+        const normalizedOriginal = normalizeText(item.message)
+        const normalizedTranslation = normalizeText(text)
+        if (normalizedTranslation === normalizedOriginal || normalizedTranslation.length < 3) {
+          return null
+        }
+
+        return {
+          heroName: item.heroName,
+          translation: moderatedTranslation,
+        }
+      } catch (error) {
+        logger.error('[Translate] Error:', { error, message: item.message })
+        return null
+      }
+    }
+    return null
+  })
+
+  const translations = await Promise.all(translationPromises)
+  const validTranslations = translations.filter((t) => t !== null)
+
+  if (validTranslations.length === 0) return
+
+  // Group translations by hero and merge messages from same hero
+  const heroMessages = new Map<string, string[]>()
+  for (const translation of validTranslations) {
+    if (translation?.translation) {
+      if (!heroMessages.has(translation.heroName)) {
+        heroMessages.set(translation.heroName, [])
+      }
+      heroMessages.get(translation.heroName)!.push(translation.translation)
+    }
+  }
+
+  // Format the merged message
+  const mergedParts: string[] = []
+  for (const [heroName, messages] of heroMessages) {
+    if (messages.length === 1) {
+      mergedParts.push(`${heroName}: ${messages[0]}`)
+    } else {
+      // Multiple messages from same hero - join with commas
+      mergedParts.push(`${heroName}: ${messages.join(', ')}`)
+    }
+  }
+
+  const mergedMessage = mergedParts.join(' | ')
+
+  if (translateOnOverlay) {
+    server.io.to(dotaClient.client.token).emit('chatMessage', {
+      message: mergedMessage,
+      timestamp: Date.now(),
+    })
+  }
+
+  if (translateInChat) {
+    chatClient.say(dotaClient.client.name, mergedMessage)
+  }
+}
+
 eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
   handler: async (
     dotaClient,
@@ -186,7 +280,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
       }
     }
 
-    // The rest of the code is translation logic
+    // Translation logic with debouncing
     if (disableTranslation || !authKey) {
       return
     }
@@ -214,54 +308,47 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
     if (toLanguage === 'en') toLanguage = 'en-US' // DeepL uses en-US instead of just en
     const typedLanguage = toLanguage as Omit<LanguageCodes, 'en'> & 'en-US'
 
-    const detectedLang = franc(message, { minLength: 3 })
-    const isEnglish = detectedLang === 'eng' || detectedLang === 'sco' // sco is Scots, very similar to English
+    const clientKey = dotaClient.client.name
+    let buffer = translationBuffers.get(clientKey)
+    if (!buffer) {
+      buffer = { messages: [], timeout: null }
+      translationBuffers.set(clientKey, buffer)
+    }
 
-    if (!isEnglish && !isLikelyEnglish(message) && detectedLang !== 'und') {
-      try {
-        const { text } = await deeplClient.translateText(message, null, typedLanguage)
-        const moderatedTranslation = await moderateText(text)
+    // Get hero name
+    const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
+    let playerIdIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
+    if (playerIdIndex === -1) {
+      playerIdIndex = event.player_id
+    }
+    const heroName = getHeroNameOrColor(matchPlayers[playerIdIndex]?.heroid ?? 0, playerIdIndex)
+    const displayHeroName = is8500Plus(dotaClient.client)
+      ? `Hero ${event.player_id}`
+      : heroName || event.player_id.toString()
 
-        // Skip if translation is identical (case-insensitive, ignoring punctuation and extra spaces)
-        const normalizedOriginal = normalizeText(message)
-        const normalizedTranslation = normalizeText(text)
+    // Add to buffer
+    buffer.messages.push({
+      message,
+      playerId: event.player_id,
+      heroName: displayHeroName,
+      timestamp: Date.now(),
+    })
 
-        if (normalizedTranslation === normalizedOriginal || normalizedTranslation.length < 3) {
-          return
-        }
-
-        if (moderatedTranslation) {
-          const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
-
-          let playerIdIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
-          if (playerIdIndex === -1) {
-            playerIdIndex = event.player_id
-          }
-          const heroName = getHeroNameOrColor(
-            matchPlayers[playerIdIndex]?.heroid ?? 0,
-            playerIdIndex,
+    // Set timeout if not already set
+    if (!buffer.timeout) {
+      buffer.timeout = setTimeout(async () => {
+        const currentBuffer = translationBuffers.get(clientKey)
+        if (currentBuffer) {
+          await processTranslationBuffer(
+            currentBuffer.messages,
+            dotaClient,
+            translateInChat,
+            translateOnOverlay,
+            typedLanguage,
           )
-
-          if (translateOnOverlay) {
-            server.io.to(dotaClient.client.token).emit('chatMessage', {
-              message: moderatedTranslation,
-              timestamp: Date.now(),
-            })
-          }
-          if (translateInChat) {
-            chatClient.say(
-              dotaClient.client.name,
-              t('autoTranslate', {
-                heroName: is8500Plus(dotaClient.client) ? 'Hero' : heroName || event.player_id,
-                message: moderatedTranslation,
-                lng: dotaClient.client.locale,
-              }),
-            )
-          }
+          translationBuffers.delete(clientKey)
         }
-      } catch (error) {
-        logger.error('[Translate] Error:', { error, message })
-      }
+      }, TRANSLATION_DEBOUNCE_TIME)
     }
   },
 })
