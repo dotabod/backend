@@ -32,16 +32,19 @@ export const is8500Plus = (dotaClient: SocketClient) => {
     (account) => dotaClient.steam32Id === account.steam32Id,
   )
 
-  // If not ranked, or mmr is 8500 or less or not set, return false
-  if (
-    !currentSteamAccount?.leaderboard_rank ||
-    (dotaClient.mmr && dotaClient.mmr <= 8500) ||
-    !dotaClient.mmr
-  ) {
-    return false
+  if(dotaClient.mmr && dotaClient.mmr > 8500) {
+    return true
+  }
+
+  if(currentSteamAccount && currentSteamAccount?.mmr >= 8500) {
+    return true
+  }
+
+  if(currentSteamAccount?.leaderboard_rank) {
+    return true
   }
 
   // Treating anyone with a leaderboard rank as 8500+
   // The lowest rank is 5000
-  return true
+  return false
 }
