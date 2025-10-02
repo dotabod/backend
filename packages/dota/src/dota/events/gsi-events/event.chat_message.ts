@@ -23,7 +23,7 @@ const CHATTING_WORD_THRESHOLD = 10 // Minimum words to consider as "chatting"
 const CHATTING_MESSAGE_THRESHOLD = 3 // Minimum messages within time window
 const CHATTING_TIME_WINDOW = 5000 // 5 seconds in milliseconds
 const CHATTING_COOLDOWN = 30000 // 30 seconds cooldown between "Chatting" messages
-const disableChatterMessage = false // Disable chatting detection for now
+const disableChatterMessage = true // Disable chatting detection for now
 
 // Track messages per player for chatting detection
 interface PlayerMessage {

@@ -10,10 +10,12 @@
     "snatched": "{{- heroName}} крадёт аегис {{emote}}"
   },
   "aghs": "{{- heroName}} аганим: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Средний ранг этой игры",
   "betaFeature": "[бета-функция]",
   "betaTester": "$t(betaTester_on)",

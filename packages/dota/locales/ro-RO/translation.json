@@ -10,9 +10,11 @@
     "snatched": "a furat aegisul"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "APM in timp real pentru",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Media rancurilor din acest joc",
   "betaFeature": "Functie in testare",
   "betaTester": "",

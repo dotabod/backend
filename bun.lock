@@ -790,7 +790,7 @@
 
     "dota2": ["dota2@github:dotabod/node-dota2#4a1a095", { "dependencies": { "deferred": "^0.7.10", "long": "^4.0.0", "merge": "^1.2.1", "steam": "https://github.com/dotabod/node-steam", "steam-resources": "https://github.com/dotabod/node-steam-resources", "winston": "^3.2.1" } }, "dotabod-node-dota2-4a1a095"],
 
-    "dotaconstants": ["dotaconstants@github:dotabod/dotaconstants#74ca8bf", {}, "dotabod-dotaconstants-74ca8bf"],
+    "dotaconstants": ["dotaconstants@github:dotabod/dotaconstants#ee4b6b2", {}, "dotabod-dotaconstants-ee4b6b2"],
 
     "dotenv": ["dotenv@16.4.7", "", {}, "sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ=="],
 

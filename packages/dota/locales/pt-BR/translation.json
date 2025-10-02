@@ -10,9 +10,11 @@
     "snatched": "{{- heroName}} roubou a égide! {{emote}}"
   },
   "aghs": "Cetro de Aghanim de {{- heroName}}: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "APM ao vivo de {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
   "apm_other": "APM ao vivo de {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Rank médio neste jogo",
   "betaFeature": "[recurso beta]",
   "betaTester": "$t(betaTester_on)",

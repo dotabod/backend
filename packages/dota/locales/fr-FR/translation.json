@@ -10,9 +10,11 @@
     "snatched": "{{- heroName}} a dérobé l'Aegis of the Immortal ! {{emote}}"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "APM en direct pour {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "",
   "apm_other": "APM en direct pour {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Rang moyen de ce match",
   "betaFeature": "[fonctionnalité beta]",
   "betaTester": "$t(betaTester_on)",

@@ -10,10 +10,12 @@
     "snatched": "{{- heroName}} викрав Аєгіс {{emote}}"
   },
   "aghs": "Аганім {{- heroName}} : {{- title}} · {{- description}}",
+  "altAccount": "{{emote}} alt account detected {{emote2}}",
   "apm_one": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Середній рейтинг цієї гри",
   "betaFeature": "[бета-функція]",
   "betaTester": "$t(betaTester_on)",

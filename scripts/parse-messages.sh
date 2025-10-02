@@ -50,13 +50,34 @@ echo "Messages extracted: $(jq 'length' "${messages_out}")" >&2
 
 # Step 2: Parse the messages array we just created (array of JSON strings)
 # Produce single output with inner .data parsed when possible, reading from the file we wrote in step 1
-jq '[.[]
+jq '
+  def parse_data_fields:
+    if type == "object" then
+      with_entries(
+        if .key == "data" then
+          .value |= (
+            if type == "string" then
+              (fromjson? // .) | parse_data_fields
+            else
+              parse_data_fields
+            end
+          )
+        else
+          .value |= parse_data_fields
+        end
+      )
+    elif type == "array" then
+      map(parse_data_fields)
+    else
+      .
+    end;
+
+  [.[]
     | select(type=="string")
     | fromjson?
-    | if has("data") and (.data|type=="string") then
-        (.data |= (fromjson? // .))
-      else . end
- ]' "$messages_out" > "$out"
+    | parse_data_fields
+  ]
+' "$messages_out" > "$out"
 echo "Wrote $out" >&2
 
 # Quick summary

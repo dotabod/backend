@@ -457,7 +457,7 @@ export const validEventTypes = new Set(Object.values(DotaEventTypes))
 export interface DotaEvent {
   game_time: number // 810,
   channel_type?: number // 11 or 12 usually? guessing ally vs all chat
-  data?: ChatEventData
+  data?: string // JSON string that should be parsed as ChatEventData
 
   event_type: DotaEventTypes
 
