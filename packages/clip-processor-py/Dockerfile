@@ -6,7 +6,8 @@ RUN apt-get update && \
   tesseract-ocr \
   tesseract-ocr-eng \
   tesseract-ocr-rus \
-  libgl1-mesa-glx \
+  # libgl1-mesa-glx is not available on newer Debian; use libgl1 instead
+  libgl1 \
   libglib2.0-0 \
   postgresql-client \
   libpq-dev \
