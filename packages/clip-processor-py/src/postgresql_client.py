@@ -147,12 +147,36 @@ class PostgresClient:
             """
             cursor.execute(create_queue_table_sql)
 
+            # Ensure new columns exist on results and queue tables (idempotent)
+            try:
+                cursor.execute(f"ALTER TABLE {self.results_table} ADD COLUMN IF NOT EXISTS match_id TEXT")
+            except Exception:
+                pass
+            try:
+                cursor.execute(f"ALTER TABLE {self.results_table} ADD COLUMN IF NOT EXISTS facets JSONB")
+            except Exception:
+                pass
+            try:
+                cursor.execute(f"ALTER TABLE {self.queue_table} ADD COLUMN IF NOT EXISTS match_id TEXT")
+            except Exception:
+                pass
+
             # Create an index on clip_id for faster lookups
             create_clip_index_sql = f"""
             CREATE INDEX IF NOT EXISTS idx_{self.results_table}_clip_id
             ON {self.results_table} (clip_id);
             """
             cursor.execute(create_clip_index_sql)
+
+            # Index on match_id for faster lookups
+            try:
+                cursor.execute(f"CREATE INDEX IF NOT EXISTS idx_{self.results_table}_match_id ON {self.results_table} (match_id)")
+            except Exception:
+                pass
+            try:
+                cursor.execute(f"CREATE INDEX IF NOT EXISTS idx_{self.queue_table}_match_id ON {self.queue_table} (match_id)")
+            except Exception:
+                pass
 
             # Create indices for the queue table
             create_queue_indices_sql = [
@@ -269,20 +293,20 @@ class PostgresClient:
             conn = self._get_connection()
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-            # Query for the clip by match ID, ordering by most recent
+            # Prefer the latest non-draft result
             query = f"""
             SELECT clip_id, clip_url, results, facets FROM {self.results_table}
             WHERE match_id = %s
+              AND COALESCE((results->>'is_draft')::boolean, FALSE) = FALSE
             ORDER BY processed_at DESC
             LIMIT 1
             """
 
             cursor.execute(query, (match_id,))
             row = cursor.fetchone()
-            cursor.close()
 
             if row:
-                logger.info(f"Found cached result for match ID: {match_id}")
+                logger.info(f"Found cached non-draft result for match ID: {match_id}")
                 result = row['results']
                 facets = row['facets']
                 # Add clip details to result
@@ -312,8 +336,37 @@ class PostgresClient:
                                 if hero_facet['position'] == position:
                                     hero['facet'] = hero_facet['facet']
                                     break
+                # Also attach latest draft info if available
+                try:
+                    draft = self.get_latest_draft_for_match(match_id)
+                    if draft:
+                        result.setdefault('draft_info', {})
+                        for key in ('captains', 'draft_lane_names', 'draft_player_order', 'is_draft'):
+                            if key in draft:
+                                result['draft_info'][key] = draft[key]
+                except Exception:
+                    pass
+
+                cursor.close()
                 return result
             else:
+                # Fallback: return latest draft-only result if no non-draft exists
+                query = f"""
+                SELECT clip_id, clip_url, results FROM {self.results_table}
+                WHERE match_id = %s
+                  AND COALESCE((results->>'is_draft')::boolean, FALSE) = TRUE
+                ORDER BY processed_at DESC
+                LIMIT 1
+                """
+                cursor.execute(query, (match_id,))
+                draft_row = cursor.fetchone()
+                cursor.close()
+                if draft_row:
+                    result = draft_row['results']
+                    if isinstance(result, dict):
+                        result['clip_id'] = draft_row['clip_id']
+                        result['clip_url'] = draft_row['clip_url']
+                    return result
                 logger.info(f"No cached result found for match ID: {match_id}")
                 return None
 
@@ -386,20 +439,20 @@ class PostgresClient:
             conn = self._get_connection()
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-            # First check for a completed successful result
+            # First check for a completed non-draft result
             query = f"""
             SELECT clip_id FROM {self.results_table}
             WHERE match_id = %s
+              AND COALESCE((results->>'is_draft')::boolean, FALSE) = FALSE
             ORDER BY processed_at DESC
             LIMIT 1
             """
             cursor.execute(query, (match_id,))
             result_row = cursor.fetchone()
 
-            # If we found a result, return it as completed
+            # If we found a non-draft result, return it as completed
             if result_row:
-                cursor.close()
-                logger.info(f"Found completed result for match ID: {match_id}")
+                logger.info(f"Found completed non-draft result for match ID: {match_id}")
                 return {
                     'found': True,
                     'status': 'completed',
@@ -423,7 +476,6 @@ class PostgresClient:
 
             # If found in queue, return the status
             if queue_row:
-                cursor.close()
                 logger.info(f"Found {queue_row['status']} request for match ID: {match_id}")
                 return {
                     'found': True,
@@ -441,7 +493,6 @@ class PostgresClient:
             """
             cursor.execute(query, (match_id,))
             failed_row = cursor.fetchone()
-            cursor.close()
 
             if failed_row:
                 logger.info(f"Found failed request for match ID: {match_id}")
@@ -450,6 +501,25 @@ class PostgresClient:
                     'status': 'failed',
                     'clip_id': failed_row.get('clip_id'),
                     'request_id': failed_row['request_id']
+                }
+
+            # If no completed non-draft result, check if a draft-only result exists
+            query = f"""
+            SELECT clip_id FROM {self.results_table}
+            WHERE match_id = %s
+              AND COALESCE((results->>'is_draft')::boolean, FALSE) = TRUE
+            ORDER BY processed_at DESC
+            LIMIT 1
+            """
+            cursor.execute(query, (match_id,))
+            draft_row = cursor.fetchone()
+
+            if draft_row:
+                logger.info(f"Found draft-only result for match ID: {match_id}")
+                return {
+                    'found': True,
+                    'status': 'draft',
+                    'clip_id': draft_row['clip_id']
                 }
 
             # No match found in results or queue

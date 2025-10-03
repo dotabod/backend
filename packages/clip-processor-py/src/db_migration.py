@@ -120,6 +120,30 @@ def create_initial_schema(cursor):
 
 def add_match_id_column(cursor):
     """Add match_id column to relevant tables."""
+    # Ensure processing_queue table exists (align with PostgresClient)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS processing_queue (
+        id SERIAL PRIMARY KEY,
+        request_id TEXT UNIQUE NOT NULL,
+        clip_id TEXT,
+        clip_url TEXT,
+        stream_username TEXT,
+        num_frames INTEGER DEFAULT 3,
+        debug BOOLEAN DEFAULT FALSE,
+        force BOOLEAN DEFAULT FALSE,
+        include_image BOOLEAN DEFAULT TRUE,
+        request_type TEXT NOT NULL,
+        status TEXT NOT NULL,
+        created_at TIMESTAMP NOT NULL,
+        started_at TIMESTAMP,
+        completed_at TIMESTAMP,
+        position INTEGER,
+        estimated_completion_time TIMESTAMP,
+        estimated_wait_seconds INTEGER,
+        result_id TEXT
+    )
+    """)
+
     # Add match_id to processing_queue table
     cursor.execute("""
     ALTER TABLE processing_queue

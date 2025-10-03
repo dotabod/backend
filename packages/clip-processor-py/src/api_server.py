@@ -614,59 +614,202 @@ def _normalize_name(s: str) -> str:
 
     - Lowercase
     - Unicode NFKD normalize
+    - Map common Cyrillic/Latin confusables to a shared ASCII skeleton
     - Keep only alphanumeric characters (Unicode), drop spaces/punct
     """
     if not s:
         return ''
     s = unicodedata.normalize('NFKD', s).lower().strip()
-    # Keep all unicode alnum characters
+
+    # Map common confusables (Cyrillic -> Latin skeleton)
+    conf = {
+        'а': 'a', 'à': 'a', 'á': 'a', 'â': 'a', 'ä': 'a', 'å': 'a',
+        'е': 'e', 'ё': 'e', 'è': 'e', 'é': 'e', 'ê': 'e', 'ë': 'e',
+        'о': 'o', 'ò': 'o', 'ó': 'o', 'ô': 'o', 'ö': 'o',
+        'р': 'p', 'с': 'c', 'х': 'x', 'у': 'y', 'к': 'k', 'в': 'v',
+        'м': 'm', 'т': 't', 'н': 'n', 'г': 'g', 'і': 'i', 'ї': 'i', 'й': 'i',
+        'б': 'b', 'д': 'd', 'ж': 'zh', 'з': 'z', 'и': 'i', 'л': 'l', 'п': 'p', 'ф': 'f', 'ч': 'ch', 'ш': 'sh', 'щ': 'sh', 'ы': 'y', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+    }
+    mapped = []
+    for ch in s:
+        if ch in conf:
+            mapped.append(conf[ch])
+        else:
+            mapped.append(ch)
+    s = ''.join(mapped)
+
+    # Keep alnum only
     return ''.join(ch for ch in s if ch.isalnum())
 
 
-def _align_players_with_draft(players: list, draft_order: list, min_ratio: float = 0.8):
-    """Return mapping and reordered players based on draft order names using fuzzy match.
+def _align_players_with_draft(players: list, draft_order: list, min_ratio: float = 0.7):
+    """Return mapping and reordered players based on draft order names using tolerant fuzzy match.
 
-    players: list of dicts with 'player_name'
-    draft_order: list of 10 names [RadiantCpt, DireCpt, name2..name9]
+    Rules (in priority):
+      1) exact normalized match
+      2) substring containment (either direction)
+      3) token overlap (>= 0.5)
+      4) difflib ratio (>= min_ratio)
     """
-    # Build normalized name maps
-    current_names = [_normalize_name(p.get('player_name', '')) for p in players]
-    draft_names = [_normalize_name(n) if n else '' for n in draft_order]
+    def tokens(s: str):
+        # split by spaces after unicode normalization; keep tokens length>=2
+        t = [t for t in re.split(r"\s+", s) if len(t) >= 2]
+        return t or ([s] if s else [])
 
-    # Exact matches first
+    current_raw = [p.get('player_name', '') or '' for p in players]
+    draft_raw = [n or '' for n in draft_order]
+
+    current_norm = [_normalize_name(x) for x in current_raw]
+    draft_norm = [_normalize_name(x) for x in draft_raw]
+
+    current_tokens = [tokens(x) for x in current_norm]
+    draft_tokens = [tokens(x) for x in draft_norm]
+
+    # Step 1: exact matches
     unmatched_current = set(range(len(players)))
-    unmatched_draft = set(i for i, n in enumerate(draft_names) if n)
+    unmatched_draft = set(i for i, n in enumerate(draft_norm) if n)
     mapping = {}
 
     for di in list(unmatched_draft):
-        dn = draft_names[di]
+        dn = draft_norm[di]
         if not dn:
             continue
         for ci in list(unmatched_current):
-            if dn and dn == current_names[ci] and dn != '':
+            if dn and dn == current_norm[ci] and dn != '':
                 mapping[di] = ci
                 unmatched_draft.discard(di)
                 unmatched_current.discard(ci)
                 break
 
-    # Fuzzy match remaining
+    # Build candidate scores for remaining pairs and greedy assign
+    candidates = []
     for di in list(unmatched_draft):
-        dn = draft_names[di]
+        dn = draft_norm[di]
         if not dn:
             continue
-        best = (-1.0, None)
+        dtoks = set(draft_tokens[di])
         for ci in list(unmatched_current):
-            if not current_names[ci]:
+            cn = current_norm[ci]
+            if not cn:
                 continue
-            ratio = difflib.SequenceMatcher(None, dn, current_names[ci]).ratio()
-            if ratio > best[0]:
-                best = (ratio, ci)
-        if best[0] >= min_ratio and best[1] is not None:
-            mapping[di] = best[1]
-            unmatched_draft.discard(di)
-            unmatched_current.discard(best[1])
+            ctoks = set(current_tokens[ci])
+            # Exact already handled; compute features
+            contain = 0
+            if dn and cn and (dn in cn or cn in dn):
+                contain = 1
+            # token overlap
+            overlap = 0.0
+            if dtoks:
+                matches = sum(1 for t in dtoks if any(t in c for c in ctoks))
+                overlap = matches / max(1, len(dtoks))
+            # diff ratio
+            ratio = difflib.SequenceMatcher(None, dn, cn).ratio()
+            # numeric alignment bonus
+            num_bonus = 0.05 if (re.match(r"^\d+", draft_raw[di] or '') and re.match(r"^\d+", current_raw[ci] or '')) else 0.0
 
-    # Build reordered players by draft index order where matched
+            # Build score
+            if contain:
+                score = 1.10 + num_bonus
+            elif overlap >= 0.6:
+                score = 1.00 + (overlap - 0.6) * 0.5 + num_bonus
+            else:
+                score = ratio + num_bonus
+
+            # Keep only reasonable candidates
+            if contain or overlap >= 0.5 or ratio >= min_ratio:
+                candidates.append((score, di, ci))
+
+    # Greedy assignment by highest score
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    for score, di, ci in candidates:
+        if di in unmatched_draft and ci in unmatched_current:
+            mapping[di] = ci
+            unmatched_draft.discard(di)
+            unmatched_current.discard(ci)
+
+    # Build reordered players
+    players_reordered = [None] * len(draft_order)
+    for di, ci in mapping.items():
+        if 0 <= ci < len(players):
+            players_reordered[di] = players[ci]
+
+    return mapping, players_reordered
+
+
+def _refine_alignment_with_captains_and_leftovers(mapping, players, draft_order, draft_info, strategy_captains=None):
+    """Refine mapping by using captains anchors and assigning remaining pairs.
+
+    - Force map draft index 0 (Radiant captain) and 1 (Dire captain) to names in result['captains']
+      if present and still unmatched.
+    - If exactly one or two pairs remain, assign greedily using the same scoring as alignment,
+      but without minimum thresholds.
+    """
+    # Build current state
+    current_norm = [_normalize_name(p.get('player_name', '') or '') for p in players]
+    draft_norm = [_normalize_name(n or '') for n in draft_order]
+
+    unmatched_draft = set(i for i, n in enumerate(draft_norm) if i not in mapping and n)
+    unmatched_current = set(i for i in range(len(players)) if i not in mapping.values())
+
+    # 1) Anchor captains if available
+    # Prefer draft captains as ground truth; fallback to strategy captains if draft missing
+    caps = (draft_info.get('captains') if isinstance(draft_info, dict) else None) or (strategy_captains or {})
+    cap_map = {0: caps.get('Radiant'), 1: caps.get('Dire')}
+    for di, cap_name in cap_map.items():
+        if cap_name and di in unmatched_draft:
+            cnorm = _normalize_name(cap_name)
+            # Find exact normalized match among unmatched current
+            for ci in list(unmatched_current):
+                if current_norm[ci] and current_norm[ci] == cnorm:
+                    mapping[di] = ci
+                    unmatched_draft.discard(di)
+                    unmatched_current.discard(ci)
+                    break
+
+    # 2) If leftovers remain (1-3 pairs), assign by best score without thresholds
+    if unmatched_draft and unmatched_current:
+        # reuse scoring from alignment
+        def tokens(s: str):
+            t = [t for t in re.split(r"\s+", s) if len(t) >= 2]
+            return t or ([s] if s else [])
+
+        draft_tokens = [tokens(x) for x in draft_norm]
+        current_tokens = [tokens(x) for x in current_norm]
+
+        candidates = []
+        for di in list(unmatched_draft):
+            dn = draft_norm[di]
+            if not dn:
+                continue
+            dtoks = set(draft_tokens[di])
+            for ci in list(unmatched_current):
+                cn = current_norm[ci]
+                if not cn:
+                    continue
+                ctoks = set(current_tokens[ci])
+                contain = 1 if (dn in cn or cn in dn) else 0
+                overlap = 0.0
+                if dtoks:
+                    matches = sum(1 for t in dtoks if any(t in c for c in ctoks))
+                    overlap = matches / max(1, len(dtoks))
+                ratio = difflib.SequenceMatcher(None, dn, cn).ratio()
+                num_bonus = 0.05 if (re.match(r"^\d+", draft_order[di] or '') and re.match(r"^\d+", players[ci].get('player_name', '') or '')) else 0.0
+                if contain:
+                    score = 1.10 + num_bonus
+                elif overlap > 0:
+                    score = 0.9 + overlap * 0.2 + num_bonus
+                else:
+                    score = ratio + num_bonus
+                candidates.append((score, di, ci))
+
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        for score, di, ci in candidates:
+            if di in unmatched_draft and ci in unmatched_current:
+                mapping[di] = ci
+                unmatched_draft.discard(di)
+                unmatched_current.discard(ci)
+
+    # Build reordered list
     players_reordered = [None] * len(draft_order)
     for di, ci in mapping.items():
         if 0 <= ci < len(players):
@@ -736,11 +879,15 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                     host_url = request.host_url.rstrip('/')
                     cached_result['saved_image_path'] = cached_result['saved_image_path'].replace('__HOST_URL__', host_url)
 
-                # Create a filtered result that includes the facet data
+                # For draft-only requests, return the cached draft payload as-is
+                if only_draft:
+                    return cached_result
+
+                # Otherwise, return a filtered result (strategy)
                 filtered_result = {
                     'saved_image_path': cached_result.get('saved_image_path'),
                     'players': cached_result.get('players', []),
-                    'heroes': cached_result.get('heroes', [])  # Include heroes which has facet data
+                    'heroes': cached_result.get('heroes', [])
                 }
                 return filtered_result
 
@@ -832,6 +979,15 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                     # Prepare players list from result
                     players_list = result.get('players') or []
                     mapping, reordered = _align_players_with_draft(players_list, draft['draft_player_order'])
+
+                    # Refinement: captains anchors and leftover resolution
+                    mapping, reordered = _refine_alignment_with_captains_and_leftovers(
+                        mapping,
+                        players_list,
+                        draft['draft_player_order'],
+                        draft_info=draft,
+                        strategy_captains=result.get('captains') if isinstance(result, dict) else None
+                    )
 
                     # Assign stable player_id from draft index to current players and heroes
                     # Assumes players[] and heroes[] are in the same order as constructed
@@ -1381,6 +1537,18 @@ def get_match_result(match_id):
                 'match_id': match_id,
                 'message': f"Match is currently {match_status.get('status')}"
             })
+
+        elif match_status.get('status') == 'draft':
+            # Return the latest draft result
+            draft = db_client.get_latest_draft_for_match(match_id)
+            if draft:
+                draft['match_id'] = match_id
+                return jsonify(draft)
+            return jsonify({
+                'error': 'Draft result not found',
+                'status': 'draft',
+                'match_id': match_id
+            }), 404
 
         else:  # Failed
             # If failed and no new clip_url, report failure
