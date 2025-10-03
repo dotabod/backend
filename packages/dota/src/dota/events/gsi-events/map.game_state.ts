@@ -69,20 +69,20 @@ eventHandler.registerEvent('map:game_state', {
             }
             // Fire and forget - don't wait for the response
             // TODO: Make an API that accepts processing this new clip state
-            // fetch(
-            //   `https://${visionApiHost}/detect_draft?clip_id=${clipId}&match_id=${dotaClient.client.gsi?.map?.matchid}`,
-            //   {
-            //     headers: {
-            //       'X-API-Key': process.env.VISION_API_KEY || '',
-            //     },
-            //   },
-            // ).catch((error) => {
-            //   logger.error('Error sending draft clip processing request', {
-            //     ...logContext,
-            //     error: error.message,
-            //     clipId,
-            //   })
-            // })
+            fetch(
+              `https://${visionApiHost}/detect_draft?clip_id=${clipId}&match_id=${dotaClient.client.gsi?.map?.matchid}`,
+              {
+                headers: {
+                  'X-API-Key': process.env.VISION_API_KEY || '',
+                },
+              },
+            ).catch((error) => {
+              logger.error('Error sending draft clip processing request', {
+                ...logContext,
+                error: error.message,
+                clipId,
+              })
+            })
 
             // Add clip to the deletion queue instead of using setTimeout
             // addClipToDeletionQueue(accountId, clipId)

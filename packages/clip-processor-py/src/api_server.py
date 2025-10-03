@@ -675,7 +675,7 @@ def _align_players_with_draft(players: list, draft_order: list, min_ratio: float
     return mapping, players_reordered
 
 
-def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True, from_worker=False, match_id=None):
+def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True, from_worker=False, match_id=None, only_draft=False):
     """
     Process a clip URL and return the result or add it to the queue.
 
@@ -803,7 +803,8 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
     # Process the clip
     result = process_clip_url(
         clip_url=clip_url,
-        debug=debug
+        debug=debug,
+        only_draft=only_draft
     )
 
     processing_time = time.time() - start_time
@@ -1066,6 +1067,84 @@ def detect_heroes():
         logger.error(f"Error processing clip: {str(e)}", exc_info=True)
         error_details = {
             'error': 'Error processing clip',
+            'message': str(e),
+            'trace': traceback.format_exc() if debug else None
+        }
+    return jsonify(error_details), 500
+
+@app.route('/detect_draft', methods=['GET'])
+@require_api_key
+def detect_draft():
+    """
+    Process a Twitch clip URL or clip ID and return draft detection results.
+
+    Query parameters:
+    - url: The Twitch clip URL to process (required if clip_id not provided)
+    - clip_id: The Twitch clip ID (required if url not provided)
+    - match_id: The Dota 2 match ID to associate with this clip (required)
+    - debug: Enable debug mode (optional, default=False)
+    - force: Force reprocessing even if cached (optional, default=False)
+    - include_image: Include frame image URL in response (optional, default=False)
+    - queue: Use queue system (optional, default=True)
+    """
+    clip_url = request.args.get('url')
+    clip_id = request.args.get('clip_id')
+    match_id = request.args.get('match_id')
+    debug = request.args.get('debug', 'false').lower() == 'true'
+    force = request.args.get('force', 'false').lower() == 'true'
+    include_image = request.args.get('include_image', 'true').lower() == 'true'
+    use_queue = request.args.get('queue', 'true').lower() == 'true'
+
+    # When running locally, override queue parameter to process immediately
+    if os.environ.get('RUN_LOCALLY') == 'true':
+        use_queue = False
+        logger.info("Running locally, overriding queue parameter to process immediately (draft)")
+
+    # Check if match_id is provided
+    if not match_id:
+        return jsonify({'error': 'Missing required parameter: match_id'}), 400
+
+    # Validate match_id is a number
+    try:
+        match_id = int(match_id)
+    except ValueError:
+        return jsonify({'error': 'Invalid match_id: must be a number'}), 400
+    match_id = str(match_id)
+
+    # Check if either clip_url or clip_id is provided
+    if not clip_url and not clip_id:
+        return jsonify({'error': 'Missing required parameter: either url or clip_id must be provided'}), 400
+
+    # If clip_id is provided but no url, construct the url
+    if clip_id and not clip_url:
+        clip_url = f"https://clips.twitch.tv/{clip_id}"
+        logger.info(f"Constructed clip URL from ID: {clip_url}")
+    elif clip_url and not clip_id:
+        extracted_clip_id = extract_clip_id(clip_url)
+        if extracted_clip_id:
+            clip_id = extracted_clip_id
+            logger.info(f"Extracted clip ID from URL: {clip_id}")
+        else:
+            logger.warning(f"Could not extract clip ID from URL: {clip_url}")
+            clip_id = clip_url  # Fallback
+
+    try:
+        result = process_clip_request(
+            clip_url=clip_url,
+            clip_id=clip_id,
+            debug=debug,
+            force=force,
+            include_image=include_image,
+            add_to_queue=use_queue,
+            match_id=match_id,
+            only_draft=True
+        )
+
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Error processing draft clip: {str(e)}", exc_info=True)
+        error_details = {
+            'error': 'Error processing draft clip',
             'message': str(e),
             'trace': traceback.format_exc() if debug else None
         }

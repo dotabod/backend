@@ -2398,7 +2398,7 @@ def processDraft(frame, debug=False):
         logger.error(f"Error processing draft frame: {e}")
         return result
 
-def process_media(media_source, source_type="clip", debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3):
+def process_media(media_source, source_type="clip", debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3, only_draft=False):
     """Process a clip URL or stream username and return the hero detection results.
 
     Args:
@@ -2542,13 +2542,17 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
             logger.error(f"Could not load frame: {frame_paths[0]}")
             return None
 
-        if isFrameDraft(frame):
-            logger.info("Frame draft detected; extracting captains from draft clip")
-            draft_result = processDraft(frame, debug=debug)
-            # Include basic source metadata for consistency
-            draft_result['source_type'] = source_type
-            draft_result['source'] = media_source
-            return draft_result
+        # If explicitly handling draft-only endpoint, run draft detection here
+        if only_draft:
+            if isFrameDraft(frame):
+                logger.info("Draft frame confirmed; extracting captains and draft lane names")
+                draft_result = processDraft(frame, debug=debug)
+                draft_result['source_type'] = source_type
+                draft_result['source'] = media_source
+                return draft_result
+            else:
+                logger.info("Not a draft frame according to detector")
+                return { 'is_draft': False, 'source_type': source_type, 'source': media_source }
 
         # Use all frames for color bar detection and hero identification
         logger.info(f"Analyzing all frames for hero color bars")
@@ -2659,7 +2663,7 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
         if 'total_execution' in performance_timer.timings and not performance_timer.timings['total_execution']['stopped']:
             performance_timer.stop('total_execution')
 
-def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False, show_timings=False):
+def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False, show_timings=False, only_draft=False):
     """Process a clip URL and return the hero detection results.
 
     Args:
@@ -2673,9 +2677,9 @@ def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False
         dict: Detection results or None if processing failed
     """
     return process_media(clip_url, source_type="clip", debug=debug, min_score=min_score,
-                        debug_templates=debug_templates, show_timings=show_timings)
+                        debug_templates=debug_templates, show_timings=show_timings, only_draft=only_draft)
 
-def process_stream_username(username, debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3):
+def process_stream_username(username, debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3, only_draft=False):
     """Process a Twitch stream by username and return the hero detection results.
 
     Args:
@@ -2690,7 +2694,7 @@ def process_stream_username(username, debug=False, min_score=0.4, debug_template
         dict: Detection results or None if processing failed
     """
     return process_media(username, source_type="stream", debug=debug, min_score=min_score,
-                        debug_templates=debug_templates, show_timings=show_timings, num_frames=num_frames)
+                         debug_templates=debug_templates, show_timings=show_timings, num_frames=num_frames, only_draft=only_draft)
 
 def annotate_rank_areas(top_bar, center_x, debug=False):
     """
