@@ -21,15 +21,11 @@ eventHandler.registerEvent('map:game_state', {
         gameState,
       )
     ) {
-      logger.info('[Draft Clip] Invalid game state', { name: dotaClient.client.name, gameState })
       return
     }
 
     // Only create a clip if the user is >= 8500 MMR or has an immortal rank
     if (!is8500Plus(dotaClient.client)) {
-      logger.info('[Draft Clip] MMR/rank too low for auto clipping', {
-        name: dotaClient.client.name,
-      })
       return
     }
 
@@ -40,9 +36,6 @@ eventHandler.registerEvent('map:game_state', {
       dotaClient.client.subscription,
     )
     if (!autoClippingEnabled) {
-      logger.info('[Draft Clip] Auto clipping disabled in settings', {
-        name: dotaClient.client.name,
-      })
       return
     }
 
