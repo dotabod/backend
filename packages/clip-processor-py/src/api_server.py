@@ -906,7 +906,8 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
             debug=debug,
             force=force,
             include_image=include_image,
-            match_id=match_id  # Pass match_id
+            match_id=match_id,  # Pass match_id
+            only_draft=only_draft
         )
 
         # Check if this is an existing request already in the queue
