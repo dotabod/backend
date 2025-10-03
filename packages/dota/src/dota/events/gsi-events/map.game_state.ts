@@ -50,8 +50,8 @@ eventHandler.registerEvent('map:game_state', {
 
     // Create a clip when the draft starts to get a list of players
     if (['DOTA_GAMERULES_STATE_PLAYER_DRAFT'].includes(gameState)) {
-      // 10 second delay to ensure the draft has started
-      delayedQueue.addTask(50000, async () => {
+      // Delay to ensure the draft has started
+      delayedQueue.addTask(46000, async () => {
         try {
           const api = await getTwitchAPI(accountId)
           const clipId = await api.clips.createClip({

@@ -325,6 +325,43 @@ class PostgresClient:
             if conn:
                 self._return_connection(conn)
 
+    def get_latest_draft_for_match(self, match_id: str) -> Optional[Dict[str, Any]]:
+        """Fetch the most recent draft-state result for a given match_id.
+
+        Returns the cached results JSON where results->>'is_draft' = 'true'.
+        """
+        if not self._initialized and not self.initialize():
+            logger.warning("PostgreSQL not initialized, can't fetch draft for match")
+            return None
+
+        conn = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+            query = f"""
+            SELECT clip_id, clip_url, results
+            FROM {self.results_table}
+            WHERE match_id = %s
+              AND (results->>'is_draft')::boolean = TRUE
+            ORDER BY processed_at DESC
+            LIMIT 1
+            """
+            cursor.execute(query, (match_id,))
+            row = cursor.fetchone()
+            cursor.close()
+
+            if row:
+                return row['results']
+            return None
+        except Exception as e:
+            logger.error(f"Error getting latest draft for match: {str(e)}")
+            logger.error(traceback.format_exc())
+            return None
+        finally:
+            if conn:
+                self._return_connection(conn)
+
     def check_for_match_processing(self, match_id: str) -> Optional[Dict[str, Any]]:
         """
         Check if a match is already being processed or has a successful result.

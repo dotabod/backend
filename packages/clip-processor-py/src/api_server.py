@@ -10,6 +10,8 @@ import os
 import json
 import logging
 from flask import Flask, request, jsonify, Response, send_file
+import difflib
+import unicodedata
 from urllib.parse import urlparse
 import traceback
 import re
@@ -607,6 +609,72 @@ def get_image_url(frame_path, clip_id):
         logger.error(f"Error copying frame image: {e}")
         return None, None
 
+def _normalize_name(s: str) -> str:
+    """Normalize names for matching across Latin and Cyrillic.
+
+    - Lowercase
+    - Unicode NFKD normalize
+    - Keep only alphanumeric characters (Unicode), drop spaces/punct
+    """
+    if not s:
+        return ''
+    s = unicodedata.normalize('NFKD', s).lower().strip()
+    # Keep all unicode alnum characters
+    return ''.join(ch for ch in s if ch.isalnum())
+
+
+def _align_players_with_draft(players: list, draft_order: list, min_ratio: float = 0.8):
+    """Return mapping and reordered players based on draft order names using fuzzy match.
+
+    players: list of dicts with 'player_name'
+    draft_order: list of 10 names [RadiantCpt, DireCpt, name2..name9]
+    """
+    # Build normalized name maps
+    current_names = [_normalize_name(p.get('player_name', '')) for p in players]
+    draft_names = [_normalize_name(n) if n else '' for n in draft_order]
+
+    # Exact matches first
+    unmatched_current = set(range(len(players)))
+    unmatched_draft = set(i for i, n in enumerate(draft_names) if n)
+    mapping = {}
+
+    for di in list(unmatched_draft):
+        dn = draft_names[di]
+        if not dn:
+            continue
+        for ci in list(unmatched_current):
+            if dn and dn == current_names[ci] and dn != '':
+                mapping[di] = ci
+                unmatched_draft.discard(di)
+                unmatched_current.discard(ci)
+                break
+
+    # Fuzzy match remaining
+    for di in list(unmatched_draft):
+        dn = draft_names[di]
+        if not dn:
+            continue
+        best = (-1.0, None)
+        for ci in list(unmatched_current):
+            if not current_names[ci]:
+                continue
+            ratio = difflib.SequenceMatcher(None, dn, current_names[ci]).ratio()
+            if ratio > best[0]:
+                best = (ratio, ci)
+        if best[0] >= min_ratio and best[1] is not None:
+            mapping[di] = best[1]
+            unmatched_draft.discard(di)
+            unmatched_current.discard(best[1])
+
+    # Build reordered players by draft index order where matched
+    players_reordered = [None] * len(draft_order)
+    for di, ci in mapping.items():
+        if 0 <= ci < len(players):
+            players_reordered[di] = players[ci]
+
+    return mapping, players_reordered
+
+
 def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True, from_worker=False, match_id=None):
     """
     Process a clip URL and return the result or add it to the queue.
@@ -754,6 +822,36 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                 result['saved_image_path'] = saved_image_path
                 # Store the actual frame path for potential future use
                 result['best_frame_path'] = str(frame_path)
+
+        # If this is a non-draft result and match_id is provided, try to align with draft
+        if match_id and not result.get('is_draft'):
+            try:
+                draft = db_client.get_latest_draft_for_match(match_id)
+                if draft and draft.get('draft_player_order'):
+                    # Prepare players list from result
+                    players_list = result.get('players') or []
+                    mapping, reordered = _align_players_with_draft(players_list, draft['draft_player_order'])
+
+                    # Assign stable player_id from draft index to current players and heroes
+                    # Assumes players[] and heroes[] are in the same order as constructed
+                    for di, ci in mapping.items():
+                        try:
+                            if 0 <= ci < len(players_list):
+                                # Ensure player_id on players
+                                result['players'][ci]['player_id'] = di
+                                # Mirror onto heroes by same index, if present
+                                if 'heroes' in result and 0 <= ci < len(result['heroes']):
+                                    result['heroes'][ci]['player_id'] = di
+                        except Exception:
+                            pass
+
+                    result['draft_alignment'] = {
+                        'mapping': mapping,
+                        'players_reordered': reordered,
+                        'draft_player_order': draft['draft_player_order']
+                    }
+            except Exception as e:
+                logger.warning(f"Draft alignment failed: {e}")
 
         if clip_id:
             # Skip saving frame_image_url when called from worker thread
