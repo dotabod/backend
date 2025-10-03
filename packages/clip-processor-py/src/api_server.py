@@ -247,21 +247,35 @@ def process_queue_worker():
 
             try:
                 if request['request_type'] == 'clip':
-                    # Check if there's already a completed result for this match_id
+                    # Check if there's already a relevant result for this match_id
                     match_id = request.get('match_id')
+                    only_draft = bool(request.get('only_draft'))
                     if match_id and not request.get('force', False):
-                        # Check if a previous request for this match has already completed successfully
-                        match_status = db_client.check_for_match_processing(match_id)
-                        if match_status and match_status.get('found') and match_status.get('status') == 'completed':
-                            # If there's a completed result, use that instead of processing this request
-                            existing_clip_id = match_status.get('clip_id')
-                            logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
-                            existing_result = db_client.get_clip_result(existing_clip_id)
-                            if existing_result:
-                                # Mark as completed but point to the existing result
-                                db_client.update_queue_status(request['request_id'], 'completed', result_id=existing_clip_id)
-                                logger.info(f"Using existing result for match ID {match_id}, request {request['request_id']}")
-                                continue  # Skip to the next request
+                        # If this is a draft-only request, only short-circuit if a draft already exists.
+                        if only_draft:
+                            try:
+                                draft_existing = db_client.get_latest_draft_for_match(match_id)
+                                if draft_existing:
+                                    existing_clip_id = draft_existing.get('clip_id') or 'unknown'
+                                    logger.info(f"Match ID {match_id} already has a draft result (clip {existing_clip_id}), using that instead for draft-only request")
+                                    # Mark as completed and reference the existing draft clip id if available
+                                    db_client.update_queue_status(request['request_id'], 'completed', result_id=existing_clip_id)
+                                    continue  # Skip to the next request
+                            except Exception:
+                                pass
+                        else:
+                            # For non-draft requests, reuse completed non-draft results if present
+                            match_status = db_client.check_for_match_processing(match_id)
+                            if match_status and match_status.get('found') and match_status.get('status') == 'completed':
+                                # If there's a completed result, use that instead of processing this request
+                                existing_clip_id = match_status.get('clip_id')
+                                logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
+                                existing_result = db_client.get_clip_result(existing_clip_id)
+                                if existing_result:
+                                    # Mark as completed but point to the existing result
+                                    db_client.update_queue_status(request['request_id'], 'completed', result_id=existing_clip_id)
+                                    logger.info(f"Using existing result for match ID {match_id}, request {request['request_id']}")
+                                    continue  # Skip to the next request
 
                     logger.info(f"Processing clip request: {request['clip_url']} ({request['request_id']})")
                     result = process_clip_request(
@@ -838,25 +852,40 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
     """
     # If force is True, we skip all cache checks and directly process the clip
     if not force:
-        # If we have a match_id, check if we already have a successful result for it
+        # If we have a match_id, check for existing relevant results
         if match_id:
-            match_status = db_client.check_for_match_processing(match_id)
-            if match_status and match_status.get('found') and match_status.get('status') == 'completed':
-                # If there's a completed result, use that instead of processing this request
-                existing_clip_id = match_status.get('clip_id')
-                logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
-                existing_result = db_client.get_clip_result(existing_clip_id)
-                if existing_result:
-                    # Replace placeholder with real host URL if needed
-                    if 'saved_image_path' in existing_result and existing_result['saved_image_path'] and '__HOST_URL__' in existing_result['saved_image_path'] and not from_worker:
-                        host_url = request.host_url.rstrip('/')
-                        existing_result['saved_image_path'] = existing_result['saved_image_path'].replace('__HOST_URL__', host_url)
+            if only_draft:
+                # For draft-only, return existing draft if present; otherwise, do not short-circuit on non-draft completion
+                try:
+                    draft_existing = db_client.get_latest_draft_for_match(match_id)
+                    if draft_existing:
+                        # Replace placeholder with real host URL if needed
+                        if 'saved_image_path' in draft_existing and draft_existing['saved_image_path'] and '__HOST_URL__' in draft_existing['saved_image_path'] and not from_worker:
+                            host_url = request.host_url.rstrip('/')
+                            draft_existing['saved_image_path'] = draft_existing['saved_image_path'].replace('__HOST_URL__', host_url)
+                        draft_existing['match_id'] = match_id
+                        return draft_existing
+                except Exception:
+                    pass
+            else:
+                # For non-draft requests, reuse completed non-draft results if present
+                match_status = db_client.check_for_match_processing(match_id)
+                if match_status and match_status.get('found') and match_status.get('status') == 'completed':
+                    # If there's a completed result, use that instead of processing this request
+                    existing_clip_id = match_status.get('clip_id')
+                    logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
+                    existing_result = db_client.get_clip_result(existing_clip_id)
+                    if existing_result:
+                        # Replace placeholder with real host URL if needed
+                        if 'saved_image_path' in existing_result and existing_result['saved_image_path'] and '__HOST_URL__' in existing_result['saved_image_path'] and not from_worker:
+                            host_url = request.host_url.rstrip('/')
+                            existing_result['saved_image_path'] = existing_result['saved_image_path'].replace('__HOST_URL__', host_url)
 
-                    # Add match_id for context
-                    existing_result['match_id'] = match_id
-                    existing_result['clip_id'] = existing_clip_id
+                        # Add match_id for context
+                        existing_result['match_id'] = match_id
+                        existing_result['clip_id'] = existing_clip_id
 
-                    return existing_result
+                        return existing_result
 
         # Check for cached result if not forced to reprocess
         if clip_id:
@@ -880,17 +909,20 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                     host_url = request.host_url.rstrip('/')
                     cached_result['saved_image_path'] = cached_result['saved_image_path'].replace('__HOST_URL__', host_url)
 
-                # For draft-only requests, return the cached draft payload as-is
-                if only_draft:
+                # For draft-only requests, only return cached result if it is a draft
+                if only_draft and cached_result.get('is_draft'):
                     return cached_result
-
-                # Otherwise, return a filtered result (strategy)
-                filtered_result = {
-                    'saved_image_path': cached_result.get('saved_image_path'),
-                    'players': cached_result.get('players', []),
-                    'heroes': cached_result.get('heroes', [])
-                }
-                return filtered_result
+                elif only_draft:
+                    # Cached result exists but is not draft; proceed to process draft
+                    pass
+                else:
+                    # For non-draft, return filtered strategy result
+                    filtered_result = {
+                        'saved_image_path': cached_result.get('saved_image_path'),
+                        'players': cached_result.get('players', []),
+                        'heroes': cached_result.get('heroes', [])
+                    }
+                    return filtered_result
 
     # Skip queueing when running locally
     if os.environ.get('RUN_LOCALLY') == 'true':

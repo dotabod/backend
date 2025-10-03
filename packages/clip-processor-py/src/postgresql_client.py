@@ -409,7 +409,14 @@ class PostgresClient:
             cursor.close()
 
             if row:
-                return row['results']
+                # Attach clip metadata for callers that need it
+                try:
+                    res = row['results'] if isinstance(row['results'], dict) else {}
+                    res['clip_id'] = row.get('clip_id')
+                    res['clip_url'] = row.get('clip_url')
+                    return res
+                except Exception:
+                    return row['results']
             return None
         except Exception as e:
             logger.error(f"Error getting latest draft for match: {str(e)}")
@@ -838,6 +845,21 @@ class PostgresClient:
                     logger.info(f"Returning existing queue entry for clip ID: {clip_id}")
                     # Let the finally block return the connection
                     return existing['request_id'], dict(existing)
+
+                # If this is a draft-only request and we already have a draft queued/processing for the same match, reuse it
+                if has_match_id_column and has_only_draft_column and match_id and only_draft:
+                    query = f"""
+                    SELECT * FROM {self.queue_table}
+                    WHERE match_id = %s AND status IN ('pending', 'processing') AND COALESCE(only_draft, FALSE) = TRUE
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                    """
+                    cursor.execute(query, (str(match_id),))
+                    existing_match_draft = cursor.fetchone()
+                    if existing_match_draft:
+                        cursor.close()
+                        logger.info(f"Found existing draft request for match {match_id} in queue ({existing_match_draft['request_id']}), returning it instead of enqueuing a duplicate")
+                        return existing_match_draft['request_id'], dict(existing_match_draft)
             elif request_type == 'stream' and stream_username:
                 query = f"""
                 SELECT * FROM {self.queue_table}
