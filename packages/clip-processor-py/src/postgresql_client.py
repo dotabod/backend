@@ -221,9 +221,9 @@ class PostgresClient:
             conn = self._get_connection()
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-            # Query for the clip by ID (include match_id so we can attach draft_info)
+            # Query for the clip by ID
             query = f"""
-            SELECT results, facets, match_id FROM {self.results_table}
+            SELECT results, facets FROM {self.results_table}
             WHERE clip_id = %s
             ORDER BY processed_at DESC
             LIMIT 1
@@ -237,7 +237,6 @@ class PostgresClient:
                 logger.info(f"Found cached result for clip ID: {clip_id}")
                 result = row['results']
                 facets = row['facets']
-                match_id = row.get('match_id') if isinstance(row, dict) else None
                 if facets:
                     # Add facets to players array
                     if 'players' in result:
@@ -262,18 +261,6 @@ class PostgresClient:
                                 if hero_facet['position'] == position:
                                     hero['facet'] = hero_facet['facet']
                                     break
-                # Attach draft_info if we have a match_id and a draft result exists
-                try:
-                    if match_id:
-                        draft = self.get_latest_draft_for_match(str(match_id))
-                        if draft:
-                            result.setdefault('draft_info', {})
-                            for key in ('captains', 'draft_lane_names', 'draft_player_order', 'is_draft'):
-                                if key in draft:
-                                    result['draft_info'][key] = draft[key]
-                except Exception:
-                    pass
-
                 return result
             else:
                 logger.info(f"No cached result found for clip ID: {clip_id}")
@@ -828,8 +815,8 @@ class PostgresClient:
                 if existing:
                     # Return the existing request info
                     cursor.close()
-                    self._return_connection(conn)
                     logger.info(f"Returning existing queue entry for clip ID: {clip_id}")
+                    # Let the finally block return the connection
                     return existing['request_id'], dict(existing)
             elif request_type == 'stream' and stream_username:
                 query = f"""
@@ -842,8 +829,8 @@ class PostgresClient:
                 if existing:
                     # Return the existing request info
                     cursor.close()
-                    self._return_connection(conn)
                     logger.info(f"Returning existing queue entry for stream: {stream_username}")
+                    # Let the finally block return the connection
                     return existing['request_id'], dict(existing)
 
             # Calculate position and estimated wait time
