@@ -272,7 +272,8 @@ def process_queue_worker():
                         include_image=request['include_image'],
                         add_to_queue=False,  # Don't re-queue
                         from_worker=True,    # Indicate this is called from worker thread
-                        match_id=request.get('match_id')  # Pass match_id if present
+                        match_id=request.get('match_id'),  # Pass match_id if present
+                        only_draft=bool(request.get('only_draft'))
                     )
                     logger.info(f"Processed clip request: {request['request_id']}")
 

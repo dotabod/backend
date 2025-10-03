@@ -160,6 +160,10 @@ class PostgresClient:
                 cursor.execute(f"ALTER TABLE {self.queue_table} ADD COLUMN IF NOT EXISTS match_id TEXT")
             except Exception:
                 pass
+            try:
+                cursor.execute(f"ALTER TABLE {self.queue_table} ADD COLUMN IF NOT EXISTS only_draft BOOLEAN DEFAULT FALSE")
+            except Exception:
+                pass
 
             # Create an index on clip_id for faster lookups
             create_clip_index_sql = f"""
@@ -744,7 +748,8 @@ class PostgresClient:
                     debug: bool = False,
                     force: bool = False,
                     include_image: bool = True,
-                    match_id: Optional[str] = None) -> Tuple[str, Dict[str, Any]]:
+                    match_id: Optional[str] = None,
+                    only_draft: bool = False) -> Tuple[str, Dict[str, Any]]:
         """
         Add a request to the processing queue.
 
@@ -766,8 +771,9 @@ class PostgresClient:
             logger.warning("PostgreSQL not initialized, can't add to queue")
             return str(uuid.uuid4()), {}
 
-        # Check if match_id column exists
+        # Check if match_id / only_draft columns exist
         has_match_id_column = False
+        has_only_draft_column = False
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
@@ -776,6 +782,11 @@ class PostgresClient:
             WHERE table_name = 'processing_queue' AND column_name = 'match_id'
             """)
             has_match_id_column = cursor.fetchone() is not None
+            cursor.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'processing_queue' AND column_name = 'only_draft'
+            """)
+            has_only_draft_column = cursor.fetchone() is not None
             cursor.close()
             self._return_connection(conn)
         except Exception as e:
@@ -805,6 +816,15 @@ class PostgresClient:
 
             # Check if there's already a pending or processing request for this clip/stream
             if request_type == 'clip' and clip_id:
+            # Consider only_draft flag when deduping queued clip requests
+            if has_only_draft_column:
+                query = f"""
+                SELECT * FROM {self.queue_table}
+                WHERE clip_id = %s AND status IN ('pending', 'processing') AND COALESCE(only_draft, FALSE) = %s
+                LIMIT 1
+                """
+                cursor.execute(query, (clip_id, only_draft))
+            else:
                 query = f"""
                 SELECT * FROM {self.queue_table}
                 WHERE clip_id = %s AND status IN ('pending', 'processing')
@@ -846,7 +866,22 @@ class PostgresClient:
             estimated_completion_time = now + timedelta(seconds=estimated_wait_seconds)
 
             # Insert the new request
-            if has_match_id_column:
+            if has_match_id_column and has_only_draft_column:
+                query = f"""
+                INSERT INTO {self.queue_table} (
+                    request_id, clip_id, clip_url, stream_username, num_frames,
+                    debug, force, include_image, request_type, status,
+                    created_at, position, estimated_completion_time, estimated_wait_seconds, match_id, only_draft
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING *
+                """
+                cursor.execute(query, (
+                    request_id, clip_id, clip_url, stream_username, num_frames,
+                    debug, force, include_image, request_type, 'pending',
+                    now, position, estimated_completion_time, estimated_wait_seconds, match_id, only_draft
+                ))
+            elif has_match_id_column and not has_only_draft_column:
                 query = f"""
                 INSERT INTO {self.queue_table} (
                     request_id, clip_id, clip_url, stream_username, num_frames,
