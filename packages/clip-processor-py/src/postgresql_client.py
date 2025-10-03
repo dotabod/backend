@@ -816,21 +816,21 @@ class PostgresClient:
 
             # Check if there's already a pending or processing request for this clip/stream
             if request_type == 'clip' and clip_id:
-            # Consider only_draft flag when deduping queued clip requests
-            if has_only_draft_column:
-                query = f"""
-                SELECT * FROM {self.queue_table}
-                WHERE clip_id = %s AND status IN ('pending', 'processing') AND COALESCE(only_draft, FALSE) = %s
-                LIMIT 1
-                """
-                cursor.execute(query, (clip_id, only_draft))
-            else:
-                query = f"""
-                SELECT * FROM {self.queue_table}
-                WHERE clip_id = %s AND status IN ('pending', 'processing')
-                LIMIT 1
-                """
-                cursor.execute(query, (clip_id,))
+                # Consider only_draft flag when deduping queued clip requests
+                if has_only_draft_column:
+                    query = f"""
+                    SELECT * FROM {self.queue_table}
+                    WHERE clip_id = %s AND status IN ('pending', 'processing') AND COALESCE(only_draft, FALSE) = %s
+                    LIMIT 1
+                    """
+                    cursor.execute(query, (clip_id, only_draft))
+                else:
+                    query = f"""
+                    SELECT * FROM {self.queue_table}
+                    WHERE clip_id = %s AND status IN ('pending', 'processing')
+                    LIMIT 1
+                    """
+                    cursor.execute(query, (clip_id,))
                 existing = cursor.fetchone()
                 if existing:
                     # Return the existing request info
