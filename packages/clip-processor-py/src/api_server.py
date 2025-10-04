@@ -22,6 +22,7 @@ from pathlib import Path
 import psycopg2
 from datetime import datetime, timedelta
 from functools import wraps
+import psutil
 
 # Configure logging
 log_dir = os.path.join(os.path.dirname(__file__), 'logs')
@@ -1406,6 +1407,19 @@ def detect_heroes_from_stream():
             'trace': traceback.format_exc() if debug else None
         }
         return jsonify(error_details), 500
+
+@app.route('/metrics', methods=['GET'])
+@require_api_key
+def metrics():
+    """Return current system metrics."""
+    process = psutil.Process(os.getpid())
+    return jsonify({
+        'cpu_percent': process.cpu_percent(interval=1),
+        'memory_mb': process.memory_info().rss / 1024 / 1024,
+        'num_threads': process.num_threads(),
+        'worker_running': worker_running,
+        'app_initialized': app_initialized
+    })
 
 def reset_stuck_processing_requests(timeout_minutes=1):
     """
