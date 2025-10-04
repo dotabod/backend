@@ -1,3 +1,4 @@
+import { sendExtensionPubSubBroadcastMessageIfChanged } from '.isendExtensionPubSubBroadcastMessageIfChanged.js'
 import { logger, trackDisableReason } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { redisClient } from '../../../db/redisInstance.js'
@@ -34,6 +35,7 @@ import { isSpectator } from '../../lib/isSpectator.js'
 import { say } from '../../say.js'
 import { server } from '../../server.js'
 import eventHandler from '../EventHandler.js'
+import { minimapParser } from '../minimap/parser.js'
 
 // Define a type for the global timeouts
 declare global {
@@ -773,7 +775,8 @@ function handleNewEvents(data: Packet, dotaClient: GSIHandlerType) {
         }
       } else if (rawData && typeof rawData === 'object') {
         dataWasObject = true
-        const potentialType = rawData.type
+        // Use type assertion to allow access to 'type' property safely
+        const potentialType = (rawData as { type?: unknown }).type
         if (typeof potentialType === 'string') {
           dataType = potentialType
         }
