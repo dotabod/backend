@@ -1,4 +1,3 @@
-import { sendExtensionPubSubBroadcastMessageIfChanged } from '.isendExtensionPubSubBroadcastMessageIfChanged.js'
 import { logger, trackDisableReason } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { redisClient } from '../../../db/redisInstance.js'
@@ -36,6 +35,7 @@ import { say } from '../../say.js'
 import { server } from '../../server.js'
 import eventHandler from '../EventHandler.js'
 import { minimapParser } from '../minimap/parser.js'
+import { sendExtensionPubSubBroadcastMessageIfChanged } from './sendExtensionPubSubBroadcastMessageIfChanged.js'
 
 // Define a type for the global timeouts
 declare global {
