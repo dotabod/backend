@@ -40,7 +40,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 logger.info("=== API Server logging initialized ===")
-NUM_WORKER_THREADS = int(os.environ.get('NUM_WORKER_THREADS', '2'))
+NUM_WORKER_THREADS = int(os.environ.get('NUM_WORKER_THREADS', '5'))
 worker_threads = []
 
 
