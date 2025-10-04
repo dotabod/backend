@@ -257,18 +257,8 @@ def process_queue_worker():
         while True:
             request = None
 
-            # Quick check without lock first
-            if db_client.is_queue_processing():
-                # Adaptive backoff when queue is busy
-                sleep_time = min(2 + (consecutive_empty_checks * 0.5), 10)
-                time.sleep(sleep_time)
-                continue
-
             # Acquire lock only to get next request
             with queue_lock:
-                if db_client.is_queue_processing():
-                    continue
-
                 request = db_client.get_next_pending_request()
 
                 if request:

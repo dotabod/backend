@@ -503,7 +503,6 @@ class PostgresClient:
             failed_row = cursor.fetchone()
 
             if failed_row:
-                logger.info(f"Found failed request for match ID: {match_id}")
                 return {
                     'found': True,
                     'status': 'failed',
