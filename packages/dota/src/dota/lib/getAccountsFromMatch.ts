@@ -28,6 +28,7 @@ interface VisionApiMatchHero {
   rank?: number
   team: string
   variant: string
+  player_id?: number
 }
 
 interface VisionApiMatchPlayer {
@@ -37,6 +38,7 @@ interface VisionApiMatchPlayer {
   position: number
   rank?: number
   team: string
+  player_id?: number
 }
 
 interface VisionApiMatchResponse {
@@ -149,7 +151,8 @@ export async function getAccountsFromMatch({
             rank: hero.rank,
             player_name: hero.hero_id === gsi?.hero?.id ? gsi?.player?.name : hero.player_name,
             accountid: hero.hero_id === gsi?.hero?.id ? Number(gsi?.player?.accountid) : 0, // Vision API doesn't provide account IDs
-            playerid: hero.hero_id === gsi?.hero?.id ? Number(gsi?.player?.id) : null,
+            playerid:
+              hero.hero_id === gsi?.hero?.id ? Number(gsi?.player?.id) : hero.player_id || null,
           }))
 
           return {

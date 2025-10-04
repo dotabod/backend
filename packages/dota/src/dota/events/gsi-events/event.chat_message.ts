@@ -318,13 +318,15 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
     // Get hero name
     const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
     let playerIdIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
-    if (playerIdIndex === -1) {
+    const foundInMatchPlayers = playerIdIndex !== -1
+    if (!foundInMatchPlayers) {
       playerIdIndex = event.player_id
     }
     const heroName = getHeroNameOrColor(matchPlayers[playerIdIndex]?.heroid ?? 0, playerIdIndex)
-    const displayHeroName = is8500Plus(dotaClient.client)
-      ? `Hero ${event.player_id}`
-      : heroName || event.player_id.toString()
+    const displayHeroName =
+      !foundInMatchPlayers && is8500Plus(dotaClient.client)
+        ? `Hero ${event.player_id}`
+        : heroName || event.player_id.toString()
 
     // Add to buffer
     buffer.messages.push({
