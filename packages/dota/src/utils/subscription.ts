@@ -140,6 +140,7 @@ export const FEATURE_TIERS: Record<
   disableAutoClipping: SUBSCRIPTION_TIERS.FREE,
   crypto_payment_interest: SUBSCRIPTION_TIERS.FREE,
   translateOnOverlay: SUBSCRIPTION_TIERS.PRO,
+  autoCommandsOnMatchStart: SUBSCRIPTION_TIERS.PRO,
 } as const
 
 export type FeatureTier = keyof typeof FEATURE_TIERS

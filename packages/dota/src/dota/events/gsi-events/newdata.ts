@@ -5,6 +5,7 @@ import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import MongoDBSingleton from '../../../steam/MongoDBSingleton.js'
 import { steamSocket } from '../../../steam/ws.js'
 import { getWinProbability2MinAgo } from '../../../stratz/livematch.js'
+import commandHandler from '../../../twitch/lib/CommandHandler.js' // Import commandHandler here
 import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId.js'
 import {
   type Abilities,
@@ -33,8 +34,6 @@ import { isSpectator } from '../../lib/isSpectator.js'
 import { say } from '../../say.js'
 import { server } from '../../server.js'
 import eventHandler from '../EventHandler.js'
-import { minimapParser } from '../minimap/parser.js'
-import { sendExtensionPubSubBroadcastMessageIfChanged } from './sendExtensionPubSubBroadcastMessageIfChanged.js'
 
 // Define a type for the global timeouts
 declare global {
@@ -63,6 +62,46 @@ function chatterMatchFound(client: SocketClient) {
         delay: false,
       },
     )
+  }
+
+  try {
+    // Send auto commands if enabled
+    const autoCommands = getValueOrDefault(
+      DBSettings.autoCommandsOnMatchStart,
+      client.settings,
+      client.subscription,
+    ) as string[]
+
+    if (autoCommands && autoCommands.length > 0) {
+      for (const commandKey of autoCommands) {
+        // Find the command in DelayedCommands that matches this key
+        const commandInfo = DelayedCommands.find((cmd) => cmd.key === commandKey)
+        if (commandInfo) {
+          // Simulate a command message
+          commandHandler
+            .handleMessage({
+              channel: {
+                name: client.name.startsWith('#') ? client.name : `#${client.name}`,
+                id: client.Account?.providerAccountId || '',
+                client,
+                settings: client.settings,
+              },
+              user: {
+                messageId: '',
+                name: client.name,
+                userId: client.Account?.providerAccountId || '',
+                permission: 3, // Broadcaster permission
+              },
+              content: commandInfo.command,
+            })
+            .catch((error: any) => {
+              logger.error('Error executing auto command:', error)
+            })
+        }
+      }
+    }
+  } catch (error) {
+    logger.error('Error sending auto commands:', error)
   }
 }
 
@@ -192,7 +231,7 @@ async function saveMatchData(client: SocketClient) {
             timestamp: Date.now(),
           })
         }
-      } catch (error) {
+      } catch (_error) {
         // Do nothing, we don't want to log this error
         // logger.error('Error getting steam server data', { error, matchId })
       } finally {
@@ -444,7 +483,7 @@ async function checkAccountSharing(client: SocketClient, matchId: string): Promi
 const lastSaveTimeByMatch = new Map<string, number>()
 const SAVE_INTERVAL = 60000 // 1 minute in milliseconds
 
-const saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
+const _saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
   if (!isPlayingMatch(dotaClient.client.gsi)) {
     return
   }
@@ -503,7 +542,7 @@ const saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
   }
 }
 
-const maybeSendTooltipData = async (dotaClient: GSIHandlerType) => {
+const _maybeSendTooltipData = async (dotaClient: GSIHandlerType) => {
   if (!dotaClient.client.beta_tester || !dotaClient.client.stream_online) {
     return
   }
@@ -646,7 +685,7 @@ eventHandler.registerEvent('newdata', {
   },
 })
 
-async function showProbability(dotaClient: GSIHandlerType) {
+async function _showProbability(dotaClient: GSIHandlerType) {
   const winChanceEnabled = getValueOrDefault(
     DBSettings.winProbabilityOverlay,
     dotaClient.client.settings,
@@ -717,7 +756,7 @@ function handleNewEvents(data: Packet, dotaClient: GSIHandlerType) {
 
     // Emit events and log if necessary
     newEvents.forEach((event) => {
-      const rawData = (event).data
+      const rawData = event.data
       let dataType: string | undefined
       let dataWasObject = false
       let dataWasJsonParsed = false
@@ -734,7 +773,7 @@ function handleNewEvents(data: Packet, dotaClient: GSIHandlerType) {
         }
       } else if (rawData && typeof rawData === 'object') {
         dataWasObject = true
-        const potentialType = (rawData).type
+        const potentialType = rawData.type
         if (typeof potentialType === 'string') {
           dataType = potentialType
         }

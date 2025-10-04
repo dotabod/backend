@@ -174,6 +174,7 @@ export const defaultSettingsStructure = {
     minimumRankTier: 0,
   },
   translateOnOverlay: false,
+  autoCommandsOnMatchStart: [],
   ...defaultCommands,
 } as const
 
