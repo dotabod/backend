@@ -1210,8 +1210,8 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
                     # If name is very short or very long, it might be an error
                     if len(player_name) < 2 or len(player_name) > 20:
                         logger.warning(f"Suspicious player name length: '{player_name}' ({len(player_name)} chars)")
-                        # if len(player_name) < 2:
-                            # player_name = None
+                        if len(player_name) < 2:
+                            player_name = None
             except Exception as e:
                 logger.error(f"Error extracting player name with OCR: {e}")
                 player_name = None
