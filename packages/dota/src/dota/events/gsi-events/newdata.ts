@@ -601,14 +601,13 @@ eventHandler.registerEvent('newdata', {
 
     // Workaround: Add draft start map check, since its not handled in previously/added
     // Its the first time gsi sends map data for a match, so we need to handle it here in newdata
-    if (isPlayingMatch(dotaClient.client.gsi, false)) {
-      if (draftStartByMatchId.get(dotaClient.client.gsi?.map?.matchid || '')) {
-        return
-      }
-
+    if (
+      isPlayingMatch(dotaClient.client.gsi, false) &&
+      data.map?.game_state === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT' &&
+      !draftStartByMatchId.get(dotaClient.client.gsi?.map?.matchid || '')
+    ) {
       draftStartByMatchId.set(dotaClient.client.gsi?.map?.matchid || '', true)
-      events.emit('map:game_state', 'DOTA_GAMERULES_STATE_STRATEGY_TIME', dotaClient.client.token)
-      return
+      events.emit('map:game_state', 'DOTA_GAMERULES_STATE_PLAYER_DRAFT', dotaClient.client.token)
     }
 
     if (!isPlayingMatch(dotaClient.client.gsi)) {
