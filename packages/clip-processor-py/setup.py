@@ -25,6 +25,7 @@ setup(
         "gunicorn==23.0.0",
         "streamlink==6.5.0",
         "psycopg2-binary==2.9.9",
+        "psutil==5.9.8",
     ],
     entry_points={
         "console_scripts": [
