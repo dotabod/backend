@@ -1210,8 +1210,8 @@ def extract_player_name(top_bar, center_x, team, position, debug=False):
                     # If name is very short or very long, it might be an error
                     if len(player_name) < 2 or len(player_name) > 20:
                         logger.warning(f"Suspicious player name length: '{player_name}' ({len(player_name)} chars)")
-                        if len(player_name) < 2:
-                            player_name = None
+                        # if len(player_name) < 2:
+                            # player_name = None
             except Exception as e:
                 logger.error(f"Error extracting player name with OCR: {e}")
                 player_name = None
@@ -1254,7 +1254,7 @@ def get_player_name_area_coordinates(top_bar, center_x, team, position):
     # Define the player name location relative to the hero portrait
     # Player name is in the bottom part of the hero portrait section
     player_y_start = HERO_TOP_PADDING + HERO_ACTUAL_HEIGHT + 5  # Start below the hero portrait
-    player_height = 23   # Reasonable height for player name
+    player_height = 26   # Reasonable height for player name
     player_width = HERO_WIDTH  # Slightly narrower than hero width to account for spacing
 
     # Make sure we're within bounds
@@ -1315,6 +1315,39 @@ def annotate_player_name_areas(top_bar, center_x, debug=False):
     except Exception as e:
         logger.error(f"Error creating player name area annotation: {e}")
         return top_bar
+
+def extract_team_captains_from_frame(frame_path, debug=False):
+    """Extract team captain names from the best frame's hero top bar.
+
+    Captains are defined as the first (left-most) player for Radiant and
+    the first (right-most) player for Dire in the hero top bar.
+
+    Returns a dict like { 'Radiant': name_or_None, 'Dire': name_or_None }.
+    """
+    try:
+        frame = load_image(frame_path)
+        if frame is None:
+            logger.warning(f"Could not load frame for captain extraction: {frame_path}")
+            return {}
+
+        success, top_bar, center_x = extract_hero_bar(frame, debug=debug)
+        if not success or top_bar is None:
+            logger.warning("Could not extract top bar for captain extraction")
+            return {}
+
+        captains = {}
+        if TESSERACT_AVAILABLE:
+            # Radiant captain at position 0
+            captains['Radiant'] = extract_player_name(top_bar, center_x, 'Radiant', 0, debug=debug)
+            # Dire captain at position 0
+            captains['Dire'] = extract_player_name(top_bar, center_x, 'Dire', 0, debug=debug)
+        else:
+            logger.debug("Tesseract unavailable; cannot OCR captain names")
+
+        return captains
+    except Exception as e:
+        logger.error(f"Error extracting team captains: {e}")
+        return {}
 
 def process_frame_for_heroes(frame_path, debug=False):
     """
@@ -2127,7 +2160,245 @@ def load_facet_templates_singleton():
         _LOADED_FACET_TEMPLATES = load_facet_templates()
     return _LOADED_FACET_TEMPLATES
 
-def process_media(media_source, source_type="clip", debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3):
+def _compute_draft_name_boxes(frame_width, frame_height):
+    """Compute draft name bounding boxes with optional scaling.
+
+    Uses user-provided constraints and scales them to the current frame size.
+    Environment overrides supported:
+      DRAFT_Y_START, DRAFT_Y_END, DRAFT_X_START_1, DRAFT_GAP,
+      DRAFT_NUM_NAMES, DRAFT_NAME_WIDTH, DRAFT_BASE_WIDTH, DRAFT_BASE_HEIGHT
+    """
+    # Default constraints (assumed for 1920x1080 sources unless overridden)
+    BASE_W = int(os.environ.get("DRAFT_BASE_WIDTH", 1920))
+    BASE_H = int(os.environ.get("DRAFT_BASE_HEIGHT", 1080))
+
+    Y_START = int(os.environ.get("DRAFT_Y_START", 480))
+    Y_END = int(os.environ.get("DRAFT_Y_END", 515))
+    X_START_1 = int(os.environ.get("DRAFT_X_START_1", 125))
+    GAP = int(os.environ.get("DRAFT_GAP", 10))
+    NUM_NAMES = int(os.environ.get("DRAFT_NUM_NAMES", 8))
+    NAME_WIDTH = int(os.environ.get("DRAFT_NAME_WIDTH", 200))  # Replace with actual width if known
+
+    # Scale to current frame resolution
+    scale_x = frame_width / float(BASE_W)
+    scale_y = frame_height / float(BASE_H)
+
+    y_start = int(round(Y_START * scale_y))
+    y_end = int(round(Y_END * scale_y))
+    x_start = int(round(X_START_1 * scale_x))
+    gap = int(round(GAP * scale_x))
+    name_w = int(round(NAME_WIDTH * scale_x))
+
+    boxes = []
+    cur_x = x_start
+    for _ in range(NUM_NAMES):
+        x1 = cur_x
+        x2 = cur_x + name_w
+        boxes.append((x1, y_start, x2, y_end))
+        cur_x = x2 + gap
+    return boxes
+
+
+def _ocr_text_from_region(img_bgr, lang="eng+rus", debug_name=None):
+    """Run OCR on a small region using conservative preprocessing.
+
+    Returns tuple (text, avg_confidence). If OCR unavailable, returns (None, 0).
+    """
+    if not TESSERACT_AVAILABLE:
+        return None, 0.0
+
+    try:
+        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+
+        # Levels adjustment and thresholding; try both polarities and pick best
+        levels = adjust_levels(gray, 80, 220, 3.0)
+
+        variants = []
+        for inv in (False, True):
+            if inv:
+                _, thr = cv2.threshold(levels, 150, 255, cv2.THRESH_BINARY_INV)
+            else:
+                _, thr = cv2.threshold(levels, 150, 255, cv2.THRESH_BINARY)
+            kernel = np.ones((1, 1), np.uint8)
+            thr = cv2.morphologyEx(thr, cv2.MORPH_OPEN, kernel)
+
+            data = pytesseract.image_to_data(
+                thr, config=r"--oem 3 --psm 7", lang=lang, output_type=pytesseract.Output.DICT
+            )
+            texts = [t for t in data.get('text', []) if t and t.strip()]
+            confs = [c for t, c in zip(data.get('text', []), data.get('conf', [])) if t and t.strip() and c > 0]
+            text_joined = " ".join(texts).strip()
+            avg_conf = (sum(confs) / len(confs)) if confs else 0.0
+            variants.append((text_joined, avg_conf, thr))
+
+        # Choose the variant with higher confidence and non-empty text
+        variants.sort(key=lambda x: (x[1], len(x[0])), reverse=True)
+        best_text, best_conf, best_img = variants[0]
+
+        if os.environ.get("DEBUG_IMAGES", "").lower() in ("1", "true", "yes") and debug_name:
+            dbg_img = best_img if len(best_img.shape) == 3 else cv2.cvtColor(best_img, cv2.COLOR_GRAY2BGR)
+            save_debug_image(
+                dbg_img,
+                f"draft_ocr_{debug_name}",
+                f"text='{(best_text or '').strip()[:24]}', conf={best_conf:.1f}"
+            )
+
+        # Clean up text: allow word chars, space, hyphen, dot
+        if best_text:
+            cleaned = re.sub(r"[^\w\s\-.]", "", best_text).strip()
+        else:
+            cleaned = ""
+
+        return cleaned if cleaned else None, float(best_conf)
+    except Exception as e:
+        logger.debug(f"Draft OCR error: {e}")
+        return None, 0.0
+
+
+def isFrameDraft(frame):
+    """Check if the given frame is a draft screen by OCR'ing fixed name lanes.
+
+    Heuristic: detect readable names in a row of NUM_NAMES boxes. If at least
+    half of the boxes yield plausible text, consider it a draft screen.
+    Coordinates are scaled from a 1920x1080 baseline unless overridden.
+    """
+    logger.info("Checking if frame is a draft screen")
+
+    try:
+        h, w = frame.shape[:2]
+
+        # Compute boxes per provided constraints
+        boxes = _compute_draft_name_boxes(w, h)
+
+        # Extract text from each box
+        extracted = []
+        for idx, (x1, y1, x2, y2) in enumerate(boxes):
+            # Clamp to bounds
+            x1c, y1c = max(0, x1), max(0, y1)
+            x2c, y2c = min(w, x2), min(h, y2)
+            if x2c <= x1c or y2c <= y1c:
+                extracted.append((None, 0.0))
+                continue
+            roi = frame[y1c:y2c, x1c:x2c]
+            text, conf = _ocr_text_from_region(roi, lang="eng+rus", debug_name=f"box{idx+1}")
+            extracted.append((text, conf))
+
+        # Optional debug visualization
+        vis = frame.copy()
+        detected_count = 0
+        for idx, (x1, y1, x2, y2) in enumerate(boxes):
+            text, conf = extracted[idx]
+            ok = bool(text) and len(text) >= 2 and re.search(r"[A-Za-zА-Яа-я]", text)
+            detected_count += 1 if ok else 0
+            color = (0, 200, 0) if ok else (0, 0, 200)
+            cv2.rectangle(vis, (x1, y1), (x2, y2), color, 1)
+            label = f"{idx+1}:{(text or '').strip()[:18]} ({conf:.0f})"
+            cv2.putText(vis, label, (x1, max(0, y1-5)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
+
+            # Save individual ROI with annotation
+            x1c, y1c = max(0, x1), max(0, y1)
+            x2c, y2c = min(w, x2), min(h, y2)
+            if x2c > x1c and y2c > y1c:
+                roi = frame[y1c:y2c, x1c:x2c]
+                save_debug_image(roi, f"draft_name_box_{idx+1}", f"{text or 'None'} (conf {conf:.1f})")
+
+        save_debug_image(vis, "draft_name_boxes", f"Detected {detected_count}/{len(boxes)}")
+
+        # Evaluate heuristic: count plausible names
+        def plausible(s):
+            if not s:
+                return False
+            # At least 2 chars and contains a letter
+            if len(s) < 2:
+                return False
+            return bool(re.search(r"[A-Za-zА-Яа-я]", s))
+
+        names = [t for (t, c) in extracted if plausible(t)]
+
+        # Require minimum number of detected names
+        min_required = max(3, len(boxes) // 2)  # at least half, but not less than 3
+        is_draft = len(names) >= min_required
+
+        logger.info(names)
+
+        if is_draft:
+            logger.info(f"Draft likely: detected {len(names)}/{len(boxes)} names")
+        else:
+            logger.debug(f"Draft unlikely: detected {len(names)}/{len(boxes)} names")
+
+        return is_draft
+    except Exception as e:
+        logger.error(f"Error during draft detection: {e}")
+        return False
+
+def processDraft(frame, debug=False):
+    """Process the draft screen frame and extract team captains.
+
+    Uses the existing top-bar player name extraction to read captains:
+    - Radiant captain at position 0
+    - Dire captain at position 0
+
+    Returns a dict with 'is_draft': True and 'captains'.
+    """
+    logger.info("Processing draft screen: extracting team captains")
+
+    result = { 'is_draft': True, 'captains': {'Radiant': None, 'Dire': None} }
+
+    try:
+        success, top_bar, center_x = extract_hero_bar(frame, debug=debug)
+        if not success or top_bar is None:
+            logger.warning("Could not extract hero top bar on draft frame")
+            return result
+
+        # Optionally annotate areas for debugging
+        if debug:
+            annotated = annotate_player_name_areas(top_bar, center_x, debug=debug)
+            save_debug_image(annotated, "draft_top_bar_player_areas", "Player name areas on draft screen")
+
+        # Extract captains using existing OCR routine
+        if TESSERACT_AVAILABLE:
+            rad = extract_player_name(top_bar, center_x, 'Radiant', 0, debug=debug)
+            dire = extract_player_name(top_bar, center_x, 'Dire', 0, debug=debug)
+            result['captains']['Radiant'] = rad
+            result['captains']['Dire'] = dire
+        else:
+            logger.warning("pytesseract not available; cannot OCR captain names on draft")
+
+        # Also extract draft-phase lane names from the fixed name strip
+        try:
+            h, w = frame.shape[:2]
+            boxes = _compute_draft_name_boxes(w, h)
+            lane_names = []
+            for idx, (x1, y1, x2, y2) in enumerate(boxes):
+                x1c, y1c = max(0, x1), max(0, y1)
+                x2c, y2c = min(w, x2), min(h, y2)
+                if x2c <= x1c or y2c <= y1c:
+                    lane_names.append(None)
+                    continue
+                roi = frame[y1c:y2c, x1c:x2c]
+                name, conf = _ocr_text_from_region(roi, lang="eng+rus", debug_name=f"draftlane_box{idx+1}")
+                # Keep None if not plausible
+                if name and len(name) >= 2 and re.search(r"[A-Za-zА-Яа-я]", name):
+                    lane_names.append(name)
+                else:
+                    lane_names.append(None)
+
+            result['draft_lane_names'] = lane_names
+
+            # Compose draft player order: [RadiantCaptain, DireCaptain, lane_names...]
+            draft_order = [result['captains']['Radiant'], result['captains']['Dire']] + lane_names
+            # Pad or trim to exactly 10 entries
+            draft_order = (draft_order + [None] * 10)[:10]
+            result['draft_player_order'] = draft_order
+        except Exception as e:
+            logger.debug(f"Error extracting draft lane names: {e}")
+
+        return result
+    except Exception as e:
+        logger.error(f"Error processing draft frame: {e}")
+        return result
+
+def process_media(media_source, source_type="clip", debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3, only_draft=False):
     """Process a clip URL or stream username and return the hero detection results.
 
     Args:
@@ -2150,6 +2421,7 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
 
     # Set debug level
     if debug:
+        logger.info("Debug mode enabled")
         logging.getLogger().setLevel(logging.DEBUG)
         os.environ["DEBUG_IMAGES"] = "1"
 
@@ -2265,6 +2537,23 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
 
             logger.info(f"Captured {len(frame_paths)} frames from stream")
 
+        frame = load_image(frame_paths[0])
+        if frame is None:
+            logger.error(f"Could not load frame: {frame_paths[0]}")
+            return None
+
+        # If explicitly handling draft-only endpoint, run draft detection here
+        if only_draft:
+            if isFrameDraft(frame):
+                logger.info("Draft frame confirmed; extracting captains and draft lane names")
+                draft_result = processDraft(frame, debug=debug)
+                draft_result['source_type'] = source_type
+                draft_result['source'] = media_source
+                return draft_result
+            else:
+                logger.info("Not a draft frame according to detector")
+                return { 'is_draft': False, 'source_type': source_type, 'source': media_source }
+
         # Use all frames for color bar detection and hero identification
         logger.info(f"Analyzing all frames for hero color bars")
 
@@ -2333,10 +2622,14 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
 
                 players.append(player)
 
+            # Extract team captains from the best frame
+            captains = extract_team_captains_from_frame(best_frame_path, debug=debug)
+
             # Format the result as a dictionary
             result = {
                 'heroes': heroes,
                 'players': players,
+                'captains': captains,
                 'color_match_score': best_match_score,
                 'color_match_percentage': f"{int(best_match_score*100)}%",
                 'processing_time': f"{processing_time:.2f}s",
@@ -2370,7 +2663,7 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
         if 'total_execution' in performance_timer.timings and not performance_timer.timings['total_execution']['stopped']:
             performance_timer.stop('total_execution')
 
-def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False, show_timings=False):
+def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False, show_timings=False, only_draft=False):
     """Process a clip URL and return the hero detection results.
 
     Args:
@@ -2384,9 +2677,9 @@ def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False
         dict: Detection results or None if processing failed
     """
     return process_media(clip_url, source_type="clip", debug=debug, min_score=min_score,
-                        debug_templates=debug_templates, show_timings=show_timings)
+                        debug_templates=debug_templates, show_timings=show_timings, only_draft=only_draft)
 
-def process_stream_username(username, debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3):
+def process_stream_username(username, debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3, only_draft=False):
     """Process a Twitch stream by username and return the hero detection results.
 
     Args:
@@ -2401,7 +2694,7 @@ def process_stream_username(username, debug=False, min_score=0.4, debug_template
         dict: Detection results or None if processing failed
     """
     return process_media(username, source_type="stream", debug=debug, min_score=min_score,
-                        debug_templates=debug_templates, show_timings=show_timings, num_frames=num_frames)
+                         debug_templates=debug_templates, show_timings=show_timings, num_frames=num_frames, only_draft=only_draft)
 
 def annotate_rank_areas(top_bar, center_x, debug=False):
     """

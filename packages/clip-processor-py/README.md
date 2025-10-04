@@ -53,7 +53,7 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install required Python packages
-pip install -r requirements.txt
+pip install --index-url https://pypi.org/simple/ -r requirements.txt
 
 # Create necessary directories
 mkdir -p temp assets

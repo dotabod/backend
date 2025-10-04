@@ -10,6 +10,8 @@ import os
 import json
 import logging
 from flask import Flask, request, jsonify, Response, send_file
+import difflib
+import unicodedata
 from urllib.parse import urlparse
 import traceback
 import re
@@ -245,21 +247,35 @@ def process_queue_worker():
 
             try:
                 if request['request_type'] == 'clip':
-                    # Check if there's already a completed result for this match_id
+                    # Check if there's already a relevant result for this match_id
                     match_id = request.get('match_id')
+                    only_draft = bool(request.get('only_draft'))
                     if match_id and not request.get('force', False):
-                        # Check if a previous request for this match has already completed successfully
-                        match_status = db_client.check_for_match_processing(match_id)
-                        if match_status and match_status.get('found') and match_status.get('status') == 'completed':
-                            # If there's a completed result, use that instead of processing this request
-                            existing_clip_id = match_status.get('clip_id')
-                            logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
-                            existing_result = db_client.get_clip_result(existing_clip_id)
-                            if existing_result:
-                                # Mark as completed but point to the existing result
-                                db_client.update_queue_status(request['request_id'], 'completed', result_id=existing_clip_id)
-                                logger.info(f"Using existing result for match ID {match_id}, request {request['request_id']}")
-                                continue  # Skip to the next request
+                        # If this is a draft-only request, only short-circuit if a draft already exists.
+                        if only_draft:
+                            try:
+                                draft_existing = db_client.get_latest_draft_for_match(match_id)
+                                if draft_existing:
+                                    existing_clip_id = draft_existing.get('clip_id') or 'unknown'
+                                    logger.info(f"Match ID {match_id} already has a draft result (clip {existing_clip_id}), using that instead for draft-only request")
+                                    # Mark as completed and reference the existing draft clip id if available
+                                    db_client.update_queue_status(request['request_id'], 'completed', result_id=existing_clip_id)
+                                    continue  # Skip to the next request
+                            except Exception:
+                                pass
+                        else:
+                            # For non-draft requests, reuse completed non-draft results if present
+                            match_status = db_client.check_for_match_processing(match_id)
+                            if match_status and match_status.get('found') and match_status.get('status') == 'completed':
+                                # If there's a completed result, use that instead of processing this request
+                                existing_clip_id = match_status.get('clip_id')
+                                logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
+                                existing_result = db_client.get_clip_result(existing_clip_id)
+                                if existing_result:
+                                    # Mark as completed but point to the existing result
+                                    db_client.update_queue_status(request['request_id'], 'completed', result_id=existing_clip_id)
+                                    logger.info(f"Using existing result for match ID {match_id}, request {request['request_id']}")
+                                    continue  # Skip to the next request
 
                     logger.info(f"Processing clip request: {request['clip_url']} ({request['request_id']})")
                     result = process_clip_request(
@@ -270,7 +286,8 @@ def process_queue_worker():
                         include_image=request['include_image'],
                         add_to_queue=False,  # Don't re-queue
                         from_worker=True,    # Indicate this is called from worker thread
-                        match_id=request.get('match_id')  # Pass match_id if present
+                        match_id=request.get('match_id'),  # Pass match_id if present
+                        only_draft=bool(request.get('only_draft'))
                     )
                     logger.info(f"Processed clip request: {request['request_id']}")
 
@@ -607,7 +624,216 @@ def get_image_url(frame_path, clip_id):
         logger.error(f"Error copying frame image: {e}")
         return None, None
 
-def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True, from_worker=False, match_id=None):
+def _normalize_name(s: str) -> str:
+    """Normalize names for matching across Latin and Cyrillic.
+
+    - Lowercase
+    - Unicode NFKD normalize
+    - Map common Cyrillic/Latin confusables to a shared ASCII skeleton
+    - Keep only alphanumeric characters (Unicode), drop spaces/punct
+    """
+    if not s:
+        return ''
+    s = unicodedata.normalize('NFKD', s).lower().strip()
+
+    # Map common confusables (Cyrillic -> Latin skeleton)
+    conf = {
+        'а': 'a', 'à': 'a', 'á': 'a', 'â': 'a', 'ä': 'a', 'å': 'a',
+        'е': 'e', 'ё': 'e', 'è': 'e', 'é': 'e', 'ê': 'e', 'ë': 'e',
+        'о': 'o', 'ò': 'o', 'ó': 'o', 'ô': 'o', 'ö': 'o',
+        'р': 'p', 'с': 'c', 'х': 'x', 'у': 'y', 'к': 'k', 'в': 'v',
+        'м': 'm', 'т': 't', 'н': 'n', 'г': 'g', 'і': 'i', 'ї': 'i', 'й': 'i',
+        'б': 'b', 'д': 'd', 'ж': 'zh', 'з': 'z', 'и': 'i', 'л': 'l', 'п': 'p', 'ф': 'f', 'ч': 'ch', 'ш': 'sh', 'щ': 'sh', 'ы': 'y', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+    }
+    mapped = []
+    for ch in s:
+        if ch in conf:
+            mapped.append(conf[ch])
+        else:
+            mapped.append(ch)
+    s = ''.join(mapped)
+
+    # Keep alnum only
+    return ''.join(ch for ch in s if ch.isalnum())
+
+
+def _align_players_with_draft(players: list, draft_order: list, min_ratio: float = 0.7):
+    """Return mapping and reordered players based on draft order names using tolerant fuzzy match.
+
+    Rules (in priority):
+      1) exact normalized match
+      2) substring containment (either direction)
+      3) token overlap (>= 0.5)
+      4) difflib ratio (>= min_ratio)
+    """
+    def tokens(s: str):
+        # split by spaces after unicode normalization; keep tokens length>=2
+        t = [t for t in re.split(r"\s+", s) if len(t) >= 2]
+        return t or ([s] if s else [])
+
+    current_raw = [p.get('player_name', '') or '' for p in players]
+    draft_raw = [n or '' for n in draft_order]
+
+    current_norm = [_normalize_name(x) for x in current_raw]
+    draft_norm = [_normalize_name(x) for x in draft_raw]
+
+    current_tokens = [tokens(x) for x in current_norm]
+    draft_tokens = [tokens(x) for x in draft_norm]
+
+    # Step 1: exact matches
+    unmatched_current = set(range(len(players)))
+    unmatched_draft = set(i for i, n in enumerate(draft_norm) if n)
+    mapping = {}
+
+    for di in list(unmatched_draft):
+        dn = draft_norm[di]
+        if not dn:
+            continue
+        for ci in list(unmatched_current):
+            if dn and dn == current_norm[ci] and dn != '':
+                mapping[di] = ci
+                unmatched_draft.discard(di)
+                unmatched_current.discard(ci)
+                break
+
+    # Build candidate scores for remaining pairs and greedy assign
+    candidates = []
+    for di in list(unmatched_draft):
+        dn = draft_norm[di]
+        if not dn:
+            continue
+        dtoks = set(draft_tokens[di])
+        for ci in list(unmatched_current):
+            cn = current_norm[ci]
+            if not cn:
+                continue
+            ctoks = set(current_tokens[ci])
+            # Exact already handled; compute features
+            contain = 0
+            if dn and cn and (dn in cn or cn in dn):
+                contain = 1
+            # token overlap
+            overlap = 0.0
+            if dtoks:
+                matches = sum(1 for t in dtoks if any(t in c for c in ctoks))
+                overlap = matches / max(1, len(dtoks))
+            # diff ratio
+            ratio = difflib.SequenceMatcher(None, dn, cn).ratio()
+            # numeric alignment bonus
+            num_bonus = 0.05 if (re.match(r"^\d+", draft_raw[di] or '') and re.match(r"^\d+", current_raw[ci] or '')) else 0.0
+
+            # Build score
+            if contain:
+                score = 1.10 + num_bonus
+            elif overlap >= 0.6:
+                score = 1.00 + (overlap - 0.6) * 0.5 + num_bonus
+            else:
+                score = ratio + num_bonus
+
+            # Keep only reasonable candidates
+            if contain or overlap >= 0.5 or ratio >= min_ratio:
+                candidates.append((score, di, ci))
+
+    # Greedy assignment by highest score
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    for score, di, ci in candidates:
+        if di in unmatched_draft and ci in unmatched_current:
+            mapping[di] = ci
+            unmatched_draft.discard(di)
+            unmatched_current.discard(ci)
+
+    # Build reordered players
+    players_reordered = [None] * len(draft_order)
+    for di, ci in mapping.items():
+        if 0 <= ci < len(players):
+            players_reordered[di] = players[ci]
+
+    return mapping, players_reordered
+
+
+def _refine_alignment_with_captains_and_leftovers(mapping, players, draft_order, draft_info, strategy_captains=None):
+    """Refine mapping by using captains anchors and assigning remaining pairs.
+
+    - Force map draft index 0 (Radiant captain) and 1 (Dire captain) to names in result['captains']
+      if present and still unmatched.
+    - If exactly one or two pairs remain, assign greedily using the same scoring as alignment,
+      but without minimum thresholds.
+    """
+    # Build current state
+    current_norm = [_normalize_name(p.get('player_name', '') or '') for p in players]
+    draft_norm = [_normalize_name(n or '') for n in draft_order]
+
+    unmatched_draft = set(i for i, n in enumerate(draft_norm) if i not in mapping and n)
+    unmatched_current = set(i for i in range(len(players)) if i not in mapping.values())
+
+    # 1) Anchor captains if available
+    # Prefer draft captains as ground truth; fallback to strategy captains if draft missing
+    caps = (draft_info.get('captains') if isinstance(draft_info, dict) else None) or (strategy_captains or {})
+    cap_map = {0: caps.get('Radiant'), 1: caps.get('Dire')}
+    for di, cap_name in cap_map.items():
+        if cap_name and di in unmatched_draft:
+            cnorm = _normalize_name(cap_name)
+            # Find exact normalized match among unmatched current
+            for ci in list(unmatched_current):
+                if current_norm[ci] and current_norm[ci] == cnorm:
+                    mapping[di] = ci
+                    unmatched_draft.discard(di)
+                    unmatched_current.discard(ci)
+                    break
+
+    # 2) If leftovers remain (1-3 pairs), assign by best score without thresholds
+    if unmatched_draft and unmatched_current:
+        # reuse scoring from alignment
+        def tokens(s: str):
+            t = [t for t in re.split(r"\s+", s) if len(t) >= 2]
+            return t or ([s] if s else [])
+
+        draft_tokens = [tokens(x) for x in draft_norm]
+        current_tokens = [tokens(x) for x in current_norm]
+
+        candidates = []
+        for di in list(unmatched_draft):
+            dn = draft_norm[di]
+            if not dn:
+                continue
+            dtoks = set(draft_tokens[di])
+            for ci in list(unmatched_current):
+                cn = current_norm[ci]
+                if not cn:
+                    continue
+                ctoks = set(current_tokens[ci])
+                contain = 1 if (dn in cn or cn in dn) else 0
+                overlap = 0.0
+                if dtoks:
+                    matches = sum(1 for t in dtoks if any(t in c for c in ctoks))
+                    overlap = matches / max(1, len(dtoks))
+                ratio = difflib.SequenceMatcher(None, dn, cn).ratio()
+                num_bonus = 0.05 if (re.match(r"^\d+", draft_order[di] or '') and re.match(r"^\d+", players[ci].get('player_name', '') or '')) else 0.0
+                if contain:
+                    score = 1.10 + num_bonus
+                elif overlap > 0:
+                    score = 0.9 + overlap * 0.2 + num_bonus
+                else:
+                    score = ratio + num_bonus
+                candidates.append((score, di, ci))
+
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        for score, di, ci in candidates:
+            if di in unmatched_draft and ci in unmatched_current:
+                mapping[di] = ci
+                unmatched_draft.discard(di)
+                unmatched_current.discard(ci)
+
+    # Build reordered list
+    players_reordered = [None] * len(draft_order)
+    for di, ci in mapping.items():
+        if 0 <= ci < len(players):
+            players_reordered[di] = players[ci]
+
+    return mapping, players_reordered
+
+
+def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True, from_worker=False, match_id=None, only_draft=False):
     """
     Process a clip URL and return the result or add it to the queue.
 
@@ -626,25 +852,40 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
     """
     # If force is True, we skip all cache checks and directly process the clip
     if not force:
-        # If we have a match_id, check if we already have a successful result for it
+        # If we have a match_id, check for existing relevant results
         if match_id:
-            match_status = db_client.check_for_match_processing(match_id)
-            if match_status and match_status.get('found') and match_status.get('status') == 'completed':
-                # If there's a completed result, use that instead of processing this request
-                existing_clip_id = match_status.get('clip_id')
-                logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
-                existing_result = db_client.get_clip_result(existing_clip_id)
-                if existing_result:
-                    # Replace placeholder with real host URL if needed
-                    if 'saved_image_path' in existing_result and existing_result['saved_image_path'] and '__HOST_URL__' in existing_result['saved_image_path'] and not from_worker:
-                        host_url = request.host_url.rstrip('/')
-                        existing_result['saved_image_path'] = existing_result['saved_image_path'].replace('__HOST_URL__', host_url)
+            if only_draft:
+                # For draft-only, return existing draft if present; otherwise, do not short-circuit on non-draft completion
+                try:
+                    draft_existing = db_client.get_latest_draft_for_match(match_id)
+                    if draft_existing:
+                        # Replace placeholder with real host URL if needed
+                        if 'saved_image_path' in draft_existing and draft_existing['saved_image_path'] and '__HOST_URL__' in draft_existing['saved_image_path'] and not from_worker:
+                            host_url = request.host_url.rstrip('/')
+                            draft_existing['saved_image_path'] = draft_existing['saved_image_path'].replace('__HOST_URL__', host_url)
+                        draft_existing['match_id'] = match_id
+                        return draft_existing
+                except Exception:
+                    pass
+            else:
+                # For non-draft requests, reuse completed non-draft results if present
+                match_status = db_client.check_for_match_processing(match_id)
+                if match_status and match_status.get('found') and match_status.get('status') == 'completed':
+                    # If there's a completed result, use that instead of processing this request
+                    existing_clip_id = match_status.get('clip_id')
+                    logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
+                    existing_result = db_client.get_clip_result(existing_clip_id)
+                    if existing_result:
+                        # Replace placeholder with real host URL if needed
+                        if 'saved_image_path' in existing_result and existing_result['saved_image_path'] and '__HOST_URL__' in existing_result['saved_image_path'] and not from_worker:
+                            host_url = request.host_url.rstrip('/')
+                            existing_result['saved_image_path'] = existing_result['saved_image_path'].replace('__HOST_URL__', host_url)
 
-                    # Add match_id for context
-                    existing_result['match_id'] = match_id
-                    existing_result['clip_id'] = existing_clip_id
+                        # Add match_id for context
+                        existing_result['match_id'] = match_id
+                        existing_result['clip_id'] = existing_clip_id
 
-                    return existing_result
+                        return existing_result
 
         # Check for cached result if not forced to reprocess
         if clip_id:
@@ -668,13 +909,20 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                     host_url = request.host_url.rstrip('/')
                     cached_result['saved_image_path'] = cached_result['saved_image_path'].replace('__HOST_URL__', host_url)
 
-                # Create a filtered result that includes the facet data
-                filtered_result = {
-                    'saved_image_path': cached_result.get('saved_image_path'),
-                    'players': cached_result.get('players', []),
-                    'heroes': cached_result.get('heroes', [])  # Include heroes which has facet data
-                }
-                return filtered_result
+                # For draft-only requests, only return cached result if it is a draft
+                if only_draft and cached_result.get('is_draft'):
+                    return cached_result
+                elif only_draft:
+                    # Cached result exists but is not draft; proceed to process draft
+                    pass
+                else:
+                    # For non-draft, return filtered strategy result
+                    filtered_result = {
+                        'saved_image_path': cached_result.get('saved_image_path'),
+                        'players': cached_result.get('players', []),
+                        'heroes': cached_result.get('heroes', [])
+                    }
+                    return filtered_result
 
     # Skip queueing when running locally
     if os.environ.get('RUN_LOCALLY') == 'true':
@@ -690,7 +938,8 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
             debug=debug,
             force=force,
             include_image=include_image,
-            match_id=match_id  # Pass match_id
+            match_id=match_id,  # Pass match_id
+            only_draft=only_draft
         )
 
         # Check if this is an existing request already in the queue
@@ -735,7 +984,8 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
     # Process the clip
     result = process_clip_url(
         clip_url=clip_url,
-        debug=debug
+        debug=debug,
+        only_draft=only_draft
     )
 
     processing_time = time.time() - start_time
@@ -754,6 +1004,45 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                 result['saved_image_path'] = saved_image_path
                 # Store the actual frame path for potential future use
                 result['best_frame_path'] = str(frame_path)
+
+        # If this is a non-draft result and match_id is provided, try to align with draft
+        if match_id and not result.get('is_draft'):
+            try:
+                draft = db_client.get_latest_draft_for_match(match_id)
+                if draft and draft.get('draft_player_order'):
+                    # Prepare players list from result
+                    players_list = result.get('players') or []
+                    mapping, reordered = _align_players_with_draft(players_list, draft['draft_player_order'])
+
+                    # Refinement: captains anchors and leftover resolution
+                    mapping, reordered = _refine_alignment_with_captains_and_leftovers(
+                        mapping,
+                        players_list,
+                        draft['draft_player_order'],
+                        draft_info=draft,
+                        strategy_captains=result.get('captains') if isinstance(result, dict) else None
+                    )
+
+                    # Assign stable player_id from draft index to current players and heroes
+                    # Assumes players[] and heroes[] are in the same order as constructed
+                    for di, ci in mapping.items():
+                        try:
+                            if 0 <= ci < len(players_list):
+                                # Ensure player_id on players
+                                result['players'][ci]['player_id'] = di
+                                # Mirror onto heroes by same index, if present
+                                if 'heroes' in result and 0 <= ci < len(result['heroes']):
+                                    result['heroes'][ci]['player_id'] = di
+                        except Exception:
+                            pass
+
+                    result['draft_alignment'] = {
+                        'mapping': mapping,
+                        'players_reordered': reordered,
+                        'draft_player_order': draft['draft_player_order']
+                    }
+            except Exception as e:
+                logger.warning(f"Draft alignment failed: {e}")
 
         if clip_id:
             # Skip saving frame_image_url when called from worker thread
@@ -968,6 +1257,84 @@ def detect_heroes():
         logger.error(f"Error processing clip: {str(e)}", exc_info=True)
         error_details = {
             'error': 'Error processing clip',
+            'message': str(e),
+            'trace': traceback.format_exc() if debug else None
+        }
+    return jsonify(error_details), 500
+
+@app.route('/detect_draft', methods=['GET'])
+@require_api_key
+def detect_draft():
+    """
+    Process a Twitch clip URL or clip ID and return draft detection results.
+
+    Query parameters:
+    - url: The Twitch clip URL to process (required if clip_id not provided)
+    - clip_id: The Twitch clip ID (required if url not provided)
+    - match_id: The Dota 2 match ID to associate with this clip (required)
+    - debug: Enable debug mode (optional, default=False)
+    - force: Force reprocessing even if cached (optional, default=False)
+    - include_image: Include frame image URL in response (optional, default=False)
+    - queue: Use queue system (optional, default=True)
+    """
+    clip_url = request.args.get('url')
+    clip_id = request.args.get('clip_id')
+    match_id = request.args.get('match_id')
+    debug = request.args.get('debug', 'false').lower() == 'true'
+    force = request.args.get('force', 'false').lower() == 'true'
+    include_image = request.args.get('include_image', 'true').lower() == 'true'
+    use_queue = request.args.get('queue', 'true').lower() == 'true'
+
+    # When running locally, override queue parameter to process immediately
+    if os.environ.get('RUN_LOCALLY') == 'true':
+        use_queue = False
+        logger.info("Running locally, overriding queue parameter to process immediately (draft)")
+
+    # Check if match_id is provided
+    if not match_id:
+        return jsonify({'error': 'Missing required parameter: match_id'}), 400
+
+    # Validate match_id is a number
+    try:
+        match_id = int(match_id)
+    except ValueError:
+        return jsonify({'error': 'Invalid match_id: must be a number'}), 400
+    match_id = str(match_id)
+
+    # Check if either clip_url or clip_id is provided
+    if not clip_url and not clip_id:
+        return jsonify({'error': 'Missing required parameter: either url or clip_id must be provided'}), 400
+
+    # If clip_id is provided but no url, construct the url
+    if clip_id and not clip_url:
+        clip_url = f"https://clips.twitch.tv/{clip_id}"
+        logger.info(f"Constructed clip URL from ID: {clip_url}")
+    elif clip_url and not clip_id:
+        extracted_clip_id = extract_clip_id(clip_url)
+        if extracted_clip_id:
+            clip_id = extracted_clip_id
+            logger.info(f"Extracted clip ID from URL: {clip_id}")
+        else:
+            logger.warning(f"Could not extract clip ID from URL: {clip_url}")
+            clip_id = clip_url  # Fallback
+
+    try:
+        result = process_clip_request(
+            clip_url=clip_url,
+            clip_id=clip_id,
+            debug=debug,
+            force=force,
+            include_image=include_image,
+            add_to_queue=use_queue,
+            match_id=match_id,
+            only_draft=True
+        )
+
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Error processing draft clip: {str(e)}", exc_info=True)
+        error_details = {
+            'error': 'Error processing draft clip',
             'message': str(e),
             'trace': traceback.format_exc() if debug else None
         }
@@ -1204,6 +1571,18 @@ def get_match_result(match_id):
                 'match_id': match_id,
                 'message': f"Match is currently {match_status.get('status')}"
             })
+
+        elif match_status.get('status') == 'draft':
+            # Return the latest draft result
+            draft = db_client.get_latest_draft_for_match(match_id)
+            if draft:
+                draft['match_id'] = match_id
+                return jsonify(draft)
+            return jsonify({
+                'error': 'Draft result not found',
+                'status': 'draft',
+                'match_id': match_id
+            }), 404
 
         else:  # Failed
             # If failed and no new clip_url, report failure

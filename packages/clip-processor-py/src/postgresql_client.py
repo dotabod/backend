@@ -147,12 +147,40 @@ class PostgresClient:
             """
             cursor.execute(create_queue_table_sql)
 
+            # Ensure new columns exist on results and queue tables (idempotent)
+            try:
+                cursor.execute(f"ALTER TABLE {self.results_table} ADD COLUMN IF NOT EXISTS match_id TEXT")
+            except Exception:
+                pass
+            try:
+                cursor.execute(f"ALTER TABLE {self.results_table} ADD COLUMN IF NOT EXISTS facets JSONB")
+            except Exception:
+                pass
+            try:
+                cursor.execute(f"ALTER TABLE {self.queue_table} ADD COLUMN IF NOT EXISTS match_id TEXT")
+            except Exception:
+                pass
+            try:
+                cursor.execute(f"ALTER TABLE {self.queue_table} ADD COLUMN IF NOT EXISTS only_draft BOOLEAN DEFAULT FALSE")
+            except Exception:
+                pass
+
             # Create an index on clip_id for faster lookups
             create_clip_index_sql = f"""
             CREATE INDEX IF NOT EXISTS idx_{self.results_table}_clip_id
             ON {self.results_table} (clip_id);
             """
             cursor.execute(create_clip_index_sql)
+
+            # Index on match_id for faster lookups
+            try:
+                cursor.execute(f"CREATE INDEX IF NOT EXISTS idx_{self.results_table}_match_id ON {self.results_table} (match_id)")
+            except Exception:
+                pass
+            try:
+                cursor.execute(f"CREATE INDEX IF NOT EXISTS idx_{self.queue_table}_match_id ON {self.queue_table} (match_id)")
+            except Exception:
+                pass
 
             # Create indices for the queue table
             create_queue_indices_sql = [
@@ -269,20 +297,20 @@ class PostgresClient:
             conn = self._get_connection()
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-            # Query for the clip by match ID, ordering by most recent
+            # Prefer the latest non-draft result
             query = f"""
             SELECT clip_id, clip_url, results, facets FROM {self.results_table}
             WHERE match_id = %s
+              AND COALESCE((results->>'is_draft')::boolean, FALSE) = FALSE
             ORDER BY processed_at DESC
             LIMIT 1
             """
 
             cursor.execute(query, (match_id,))
             row = cursor.fetchone()
-            cursor.close()
 
             if row:
-                logger.info(f"Found cached result for match ID: {match_id}")
+                logger.info(f"Found cached non-draft result for match ID: {match_id}")
                 result = row['results']
                 facets = row['facets']
                 # Add clip details to result
@@ -312,13 +340,86 @@ class PostgresClient:
                                 if hero_facet['position'] == position:
                                     hero['facet'] = hero_facet['facet']
                                     break
+                # Also attach latest draft info if available
+                try:
+                    draft = self.get_latest_draft_for_match(match_id)
+                    if draft:
+                        result.setdefault('draft_info', {})
+                        for key in ('captains', 'draft_lane_names', 'draft_player_order', 'is_draft'):
+                            if key in draft:
+                                result['draft_info'][key] = draft[key]
+                except Exception:
+                    pass
+
+                cursor.close()
                 return result
             else:
+                # Fallback: return latest draft-only result if no non-draft exists
+                query = f"""
+                SELECT clip_id, clip_url, results FROM {self.results_table}
+                WHERE match_id = %s
+                  AND COALESCE((results->>'is_draft')::boolean, FALSE) = TRUE
+                ORDER BY processed_at DESC
+                LIMIT 1
+                """
+                cursor.execute(query, (match_id,))
+                draft_row = cursor.fetchone()
+                cursor.close()
+                if draft_row:
+                    result = draft_row['results']
+                    if isinstance(result, dict):
+                        result['clip_id'] = draft_row['clip_id']
+                        result['clip_url'] = draft_row['clip_url']
+                    return result
                 logger.info(f"No cached result found for match ID: {match_id}")
                 return None
 
         except Exception as e:
             logger.error(f"Error getting clip result by match ID: {str(e)}")
+            logger.error(traceback.format_exc())
+            return None
+        finally:
+            if conn:
+                self._return_connection(conn)
+
+    def get_latest_draft_for_match(self, match_id: str) -> Optional[Dict[str, Any]]:
+        """Fetch the most recent draft-state result for a given match_id.
+
+        Returns the cached results JSON where results->>'is_draft' = 'true'.
+        """
+        if not self._initialized and not self.initialize():
+            logger.warning("PostgreSQL not initialized, can't fetch draft for match")
+            return None
+
+        conn = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+            query = f"""
+            SELECT clip_id, clip_url, results
+            FROM {self.results_table}
+            WHERE match_id = %s
+              AND (results->>'is_draft')::boolean = TRUE
+            ORDER BY processed_at DESC
+            LIMIT 1
+            """
+            cursor.execute(query, (match_id,))
+            row = cursor.fetchone()
+            cursor.close()
+
+            if row:
+                # Attach clip metadata for callers that need it
+                try:
+                    res = row['results'] if isinstance(row['results'], dict) else {}
+                    res['clip_id'] = row.get('clip_id')
+                    res['clip_url'] = row.get('clip_url')
+                    return res
+                except Exception:
+                    return row['results']
+            return None
+        except Exception as e:
+            logger.error(f"Error getting latest draft for match: {str(e)}")
             logger.error(traceback.format_exc())
             return None
         finally:
@@ -349,20 +450,20 @@ class PostgresClient:
             conn = self._get_connection()
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-            # First check for a completed successful result
+            # First check for a completed non-draft result
             query = f"""
             SELECT clip_id FROM {self.results_table}
             WHERE match_id = %s
+              AND COALESCE((results->>'is_draft')::boolean, FALSE) = FALSE
             ORDER BY processed_at DESC
             LIMIT 1
             """
             cursor.execute(query, (match_id,))
             result_row = cursor.fetchone()
 
-            # If we found a result, return it as completed
+            # If we found a non-draft result, return it as completed
             if result_row:
-                cursor.close()
-                logger.info(f"Found completed result for match ID: {match_id}")
+                logger.info(f"Found completed non-draft result for match ID: {match_id}")
                 return {
                     'found': True,
                     'status': 'completed',
@@ -386,7 +487,6 @@ class PostgresClient:
 
             # If found in queue, return the status
             if queue_row:
-                cursor.close()
                 logger.info(f"Found {queue_row['status']} request for match ID: {match_id}")
                 return {
                     'found': True,
@@ -404,7 +504,6 @@ class PostgresClient:
             """
             cursor.execute(query, (match_id,))
             failed_row = cursor.fetchone()
-            cursor.close()
 
             if failed_row:
                 logger.info(f"Found failed request for match ID: {match_id}")
@@ -413,6 +512,25 @@ class PostgresClient:
                     'status': 'failed',
                     'clip_id': failed_row.get('clip_id'),
                     'request_id': failed_row['request_id']
+                }
+
+            # If no completed non-draft result, check if a draft-only result exists
+            query = f"""
+            SELECT clip_id FROM {self.results_table}
+            WHERE match_id = %s
+              AND COALESCE((results->>'is_draft')::boolean, FALSE) = TRUE
+            ORDER BY processed_at DESC
+            LIMIT 1
+            """
+            cursor.execute(query, (match_id,))
+            draft_row = cursor.fetchone()
+
+            if draft_row:
+                logger.info(f"Found draft-only result for match ID: {match_id}")
+                return {
+                    'found': True,
+                    'status': 'draft',
+                    'clip_id': draft_row['clip_id']
                 }
 
             # No match found in results or queue
@@ -637,7 +755,8 @@ class PostgresClient:
                     debug: bool = False,
                     force: bool = False,
                     include_image: bool = True,
-                    match_id: Optional[str] = None) -> Tuple[str, Dict[str, Any]]:
+                    match_id: Optional[str] = None,
+                    only_draft: bool = False) -> Tuple[str, Dict[str, Any]]:
         """
         Add a request to the processing queue.
 
@@ -659,8 +778,9 @@ class PostgresClient:
             logger.warning("PostgreSQL not initialized, can't add to queue")
             return str(uuid.uuid4()), {}
 
-        # Check if match_id column exists
+        # Check if match_id / only_draft columns exist
         has_match_id_column = False
+        has_only_draft_column = False
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
@@ -669,6 +789,11 @@ class PostgresClient:
             WHERE table_name = 'processing_queue' AND column_name = 'match_id'
             """)
             has_match_id_column = cursor.fetchone() is not None
+            cursor.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'processing_queue' AND column_name = 'only_draft'
+            """)
+            has_only_draft_column = cursor.fetchone() is not None
             cursor.close()
             self._return_connection(conn)
         except Exception as e:
@@ -698,19 +823,43 @@ class PostgresClient:
 
             # Check if there's already a pending or processing request for this clip/stream
             if request_type == 'clip' and clip_id:
-                query = f"""
-                SELECT * FROM {self.queue_table}
-                WHERE clip_id = %s AND status IN ('pending', 'processing')
-                LIMIT 1
-                """
-                cursor.execute(query, (clip_id,))
+                # Consider only_draft flag when deduping queued clip requests
+                if has_only_draft_column:
+                    query = f"""
+                    SELECT * FROM {self.queue_table}
+                    WHERE clip_id = %s AND status IN ('pending', 'processing') AND COALESCE(only_draft, FALSE) = %s
+                    LIMIT 1
+                    """
+                    cursor.execute(query, (clip_id, only_draft))
+                else:
+                    query = f"""
+                    SELECT * FROM {self.queue_table}
+                    WHERE clip_id = %s AND status IN ('pending', 'processing')
+                    LIMIT 1
+                    """
+                    cursor.execute(query, (clip_id,))
                 existing = cursor.fetchone()
                 if existing:
                     # Return the existing request info
                     cursor.close()
-                    self._return_connection(conn)
                     logger.info(f"Returning existing queue entry for clip ID: {clip_id}")
+                    # Let the finally block return the connection
                     return existing['request_id'], dict(existing)
+
+                # If this is a draft-only request and we already have a draft queued/processing for the same match, reuse it
+                if has_match_id_column and has_only_draft_column and match_id and only_draft:
+                    query = f"""
+                    SELECT * FROM {self.queue_table}
+                    WHERE match_id = %s AND status IN ('pending', 'processing') AND COALESCE(only_draft, FALSE) = TRUE
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                    """
+                    cursor.execute(query, (str(match_id),))
+                    existing_match_draft = cursor.fetchone()
+                    if existing_match_draft:
+                        cursor.close()
+                        logger.info(f"Found existing draft request for match {match_id} in queue ({existing_match_draft['request_id']}), returning it instead of enqueuing a duplicate")
+                        return existing_match_draft['request_id'], dict(existing_match_draft)
             elif request_type == 'stream' and stream_username:
                 query = f"""
                 SELECT * FROM {self.queue_table}
@@ -722,8 +871,8 @@ class PostgresClient:
                 if existing:
                     # Return the existing request info
                     cursor.close()
-                    self._return_connection(conn)
                     logger.info(f"Returning existing queue entry for stream: {stream_username}")
+                    # Let the finally block return the connection
                     return existing['request_id'], dict(existing)
 
             # Calculate position and estimated wait time
@@ -739,7 +888,22 @@ class PostgresClient:
             estimated_completion_time = now + timedelta(seconds=estimated_wait_seconds)
 
             # Insert the new request
-            if has_match_id_column:
+            if has_match_id_column and has_only_draft_column:
+                query = f"""
+                INSERT INTO {self.queue_table} (
+                    request_id, clip_id, clip_url, stream_username, num_frames,
+                    debug, force, include_image, request_type, status,
+                    created_at, position, estimated_completion_time, estimated_wait_seconds, match_id, only_draft
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING *
+                """
+                cursor.execute(query, (
+                    request_id, clip_id, clip_url, stream_username, num_frames,
+                    debug, force, include_image, request_type, 'pending',
+                    now, position, estimated_completion_time, estimated_wait_seconds, match_id, only_draft
+                ))
+            elif has_match_id_column and not has_only_draft_column:
                 query = f"""
                 INSERT INTO {self.queue_table} (
                     request_id, clip_id, clip_url, stream_username, num_frames,
