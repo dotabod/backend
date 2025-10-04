@@ -310,7 +310,6 @@ class PostgresClient:
             row = cursor.fetchone()
 
             if row:
-                logger.info(f"Found cached non-draft result for match ID: {match_id}")
                 result = row['results']
                 facets = row['facets']
                 # Add clip details to result
@@ -463,7 +462,6 @@ class PostgresClient:
 
             # If we found a non-draft result, return it as completed
             if result_row:
-                logger.info(f"Found completed non-draft result for match ID: {match_id}")
                 return {
                     'found': True,
                     'status': 'completed',
@@ -534,7 +532,6 @@ class PostgresClient:
                 }
 
             # No match found in results or queue
-            logger.info(f"No processing found for match ID: {match_id}")
             return {
                 'found': False
             }
