@@ -95,6 +95,21 @@ IMAGE_DIR.mkdir(exist_ok=True, parents=True)
 # Allowed image extensions for security
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
 
+
+def parse_bool_param(value, default=False):
+    """Convert common truthy/falsy query strings to booleans."""
+    if value is None:
+        return default
+
+    normalized = str(value).strip().lower()
+
+    if normalized in {"1", "true", "yes", "y", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "n", "off"}:
+        return False
+
+    return default
+
 # Global lock for queue processing
 queue_lock = Lock()
 # Flag to indicate if worker thread is running
@@ -196,7 +211,7 @@ def start_worker_monitor():
 
     def periodic_worker_check():
         while True:
-            time.sleep(30)  # Check every 30 seconds
+            time.sleep(60)  # Check every 60 seconds
             check_worker_thread()
 
     # Start the monitor thread
@@ -212,40 +227,42 @@ def process_queue_worker():
 
     try:
         while True:
+            request = None
+
+            # Check if there's already a request being processed (OUTSIDE the lock)
+            if db_client.is_queue_processing():
+                logger.debug("A request is already being processed, waiting...")
+                time.sleep(2)  # Sleep OUTSIDE the lock
+                continue
+
+            # Only acquire lock when we need to get the next request
             with queue_lock:
-                # Check if there's a request being processed
+                # Double-check inside the lock
                 if db_client.is_queue_processing():
-                    logger.debug("A request is already being processed, waiting...")
-                    # Sleep briefly to avoid tight loop
-                    time.sleep(1)
                     continue
 
                 # Get the next pending request
                 request = db_client.get_next_pending_request()
-                logger.info(f"Next pending request: {request}")
 
-                if not request:
-                    # No pending requests, sleep and check again instead of exiting
-                    logger.debug("No pending requests in the queue, checking again in 5 seconds")
-                    # Don't set worker_running to False here anymore
+                if request:
+                    # Mark as processing immediately while we have the lock
+                    db_client.update_queue_status(request['request_id'], 'processing')
+                    logger.info(f"Picked up request {request['request_id']} from queue")
 
-            # If no requests, sleep outside the lock to prevent holding it
+            # If no requests, sleep and continue
             if not request:
-                time.sleep(5)  # Check for new requests every 5 seconds
+                logger.debug("No pending requests in the queue, checking again in 5 seconds")
+                time.sleep(5)
                 continue
 
-            # If we have a request, process it
-            with queue_lock:
-                # Mark the request as processing
-                db_client.update_queue_status(request['request_id'], 'processing')
-                logger.info(f"Processing request {request['request_id']} from queue")
-
-            # Process the request outside the lock to allow new requests to be added
+            # Process the request OUTSIDE the lock
+            logger.info(f"Processing request {request['request_id']} from queue")
             result = None
             error = None
             start_time = time.time()
 
             try:
+                # ... existing processing logic from lines 278-353 ...
                 if request['request_type'] == 'clip':
                     # Check if there's already a relevant result for this match_id
                     match_id = request.get('match_id')
@@ -258,24 +275,20 @@ def process_queue_worker():
                                 if draft_existing:
                                     existing_clip_id = draft_existing.get('clip_id') or 'unknown'
                                     logger.info(f"Match ID {match_id} already has a draft result (clip {existing_clip_id}), using that instead for draft-only request")
-                                    # Mark as completed and reference the existing draft clip id if available
                                     db_client.update_queue_status(request['request_id'], 'completed', result_id=existing_clip_id)
-                                    continue  # Skip to the next request
+                                    continue
                             except Exception:
                                 pass
                         else:
-                            # For non-draft requests, reuse completed non-draft results if present
                             match_status = db_client.check_for_match_processing(match_id)
                             if match_status and match_status.get('found') and match_status.get('status') == 'completed':
-                                # If there's a completed result, use that instead of processing this request
                                 existing_clip_id = match_status.get('clip_id')
                                 logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
                                 existing_result = db_client.get_clip_result(existing_clip_id)
                                 if existing_result:
-                                    # Mark as completed but point to the existing result
                                     db_client.update_queue_status(request['request_id'], 'completed', result_id=existing_clip_id)
                                     logger.info(f"Using existing result for match ID {match_id}, request {request['request_id']}")
-                                    continue  # Skip to the next request
+                                    continue
 
                     logger.info(f"Processing clip request: {request['clip_url']} ({request['request_id']})")
                     result = process_clip_request(
@@ -284,23 +297,18 @@ def process_queue_worker():
                         debug=request['debug'],
                         force=request['force'],
                         include_image=request['include_image'],
-                        add_to_queue=False,  # Don't re-queue
-                        from_worker=True,    # Indicate this is called from worker thread
-                        match_id=request.get('match_id'),  # Pass match_id if present
+                        add_to_queue=False,
+                        from_worker=True,
+                        match_id=request.get('match_id'),
                         only_draft=bool(request.get('only_draft'))
                     )
                     logger.info(f"Processed clip request: {request['request_id']}")
 
-                    # Add image URL to database result for worker thread - using HTTP URL
                     if result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info'] and request['clip_id']:
                         frame_path = result['best_frame_info']['frame_path']
-                        # Create an HTTP URL for the image
                         if Path(frame_path).exists():
-                            # Generate a URL for the image that can be accessed via HTTP
-                            # Since we can't access request.host_url from the worker thread,
-                            # save the frame_path and handle URL generation when serving the result
-                            # We'll use a placeholder that will be replaced when the result is served
                             result['saved_image_path'] = f"__HOST_URL__/images/{request['clip_id']}.jpg"
+
                 elif request['request_type'] == 'stream':
                     logger.info(f"Processing stream request: {request['stream_username']} ({request['request_id']})")
                     result = process_stream_request(
@@ -308,18 +316,18 @@ def process_queue_worker():
                         request['num_frames'],
                         request['debug'],
                         request['include_image'],
-                        add_to_queue=False,  # Don't re-queue
-                        from_worker=True     # Indicate this is called from worker thread
+                        add_to_queue=False,
+                        from_worker=True
                     )
                     logger.info(f"Processed stream request: {request['request_id']}")
 
-                    # Same for stream requests - using HTTP URL
                     if result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
                         frame_path = result['best_frame_info']['frame_path']
                         if Path(frame_path).exists():
                             result['saved_image_path'] = f"__HOST_URL__/images/stream_{request['stream_username']}.jpg"
                 else:
                     error = f"Unknown request type: {request['request_type']}"
+
             except Exception as e:
                 error = str(e)
                 logger.error(f"Error processing queued request {request['request_id']}: {error}")
@@ -328,40 +336,37 @@ def process_queue_worker():
             processing_time = time.time() - start_time
             logger.info(f"Request {request['request_id']} processed in {processing_time:.2f} seconds")
 
+            # Update status (quick operation, lock is fine here)
             with queue_lock:
                 if error:
                     db_client.update_queue_status(request['request_id'], 'failed')
                     logger.error(f"Failed to process request {request['request_id']}: {error}")
                 else:
-                    # Check if result contains an error
                     if isinstance(result, dict) and ('error' in result or not result.get('players', [])):
                         db_client.update_queue_status(request['request_id'], 'failed')
                         logger.error(f"Failed to process request {request['request_id']}: {result.get('error', 'No heroes detected')}")
                     else:
-                        # Update result with processing time
                         if result and isinstance(result, dict):
                             result['processing_time'] = f"{processing_time:.2f}s"
 
-                            # For clip requests, also save processing time in results table
                             if request['request_type'] == 'clip' and request['clip_id']:
-                                # Skip saving frame_image_url since that requires an active request context
                                 if 'frame_image_url' in result:
                                     del result['frame_image_url']
 
-                                # Replace placeholder with real host URL when the result is retrieved
                                 db_client.save_clip_result(
                                     request['clip_id'],
                                     request['clip_url'],
                                     result,
                                     processing_time_seconds=processing_time,
-                                    match_id=request.get('match_id')  # Pass match_id if present
+                                    match_id=request.get('match_id')
                                 )
 
                         db_client.update_queue_status(request['request_id'], 'completed', result_id=request.get('clip_id'))
                         logger.info(f"Completed processing request {request['request_id']}")
 
-            # Small sleep to prevent high CPU usage
+            # Small sleep between requests to prevent CPU thrashing
             time.sleep(0.1)
+
     except Exception as e:
         logger.error(f"Queue worker thread error: {e}")
         logger.error(traceback.format_exc())
@@ -433,13 +438,13 @@ def debug_queue():
         worker_status = "running" if worker_running else "not running"
 
         # Manual restart option
-        restart = request.args.get('restart', 'false').lower() == 'true'
+        restart = parse_bool_param(request.args.get('restart'))
         if restart and not worker_running:
             start_worker_thread()
             worker_status = "restarted"
 
         # Manual reset stuck processing requests option
-        reset_stuck = request.args.get('reset_stuck', 'false').lower() == 'true'
+        reset_stuck = parse_bool_param(request.args.get('reset_stuck'))
         if reset_stuck:
             num_reset = reset_stuck_processing_requests()
             worker_status = f"{worker_status}, reset {num_reset} stuck requests"
@@ -977,6 +982,14 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
             'message': 'Your request has been queued for processing'
         }
 
+    if os.environ.get('RUN_LOCALLY') != 'true':
+        logger.warning(
+            "Queue bypassed; processing clip synchronously (clip_id=%s, match_id=%s, only_draft=%s)",
+            clip_id,
+            match_id,
+            only_draft
+        )
+
     # Process the clip directly
     logger.info(f"Processing clip URL: {clip_url} (debug={debug}, force={force}, include_image={include_image})")
     start_time = time.time()
@@ -1185,10 +1198,10 @@ def detect_heroes():
     clip_url = request.args.get('url')
     clip_id = request.args.get('clip_id')
     match_id = request.args.get('match_id')
-    debug = request.args.get('debug', 'false').lower() == 'true'
-    force = request.args.get('force', 'false').lower() == 'true'
-    include_image = request.args.get('include_image', 'true').lower() == 'true'
-    use_queue = request.args.get('queue', 'true').lower() == 'true'
+    debug = parse_bool_param(request.args.get('debug'), False)
+    force = parse_bool_param(request.args.get('force'), False)
+    include_image = parse_bool_param(request.args.get('include_image'), True)
+    use_queue = parse_bool_param(request.args.get('queue'), True)
 
     # When running locally, override queue parameter to process immediately
     if os.environ.get('RUN_LOCALLY') == 'true':
@@ -1280,10 +1293,10 @@ def detect_draft():
     clip_url = request.args.get('url')
     clip_id = request.args.get('clip_id')
     match_id = request.args.get('match_id')
-    debug = request.args.get('debug', 'false').lower() == 'true'
-    force = request.args.get('force', 'false').lower() == 'true'
-    include_image = request.args.get('include_image', 'true').lower() == 'true'
-    use_queue = request.args.get('queue', 'true').lower() == 'true'
+    debug = parse_bool_param(request.args.get('debug'), False)
+    force = parse_bool_param(request.args.get('force'), False)
+    include_image = parse_bool_param(request.args.get('include_image'), True)
+    use_queue = parse_bool_param(request.args.get('queue'), True)
 
     # When running locally, override queue parameter to process immediately
     if os.environ.get('RUN_LOCALLY') == 'true':
@@ -1355,9 +1368,9 @@ def detect_heroes_from_stream():
     """
     username = request.args.get('username')
     num_frames = int(request.args.get('frames', '3'))
-    debug = request.args.get('debug', 'false').lower() == 'true'
-    include_image = request.args.get('include_image', 'false').lower() == 'true'
-    use_queue = request.args.get('queue', 'true').lower() == 'true'
+    debug = parse_bool_param(request.args.get('debug'), False)
+    include_image = parse_bool_param(request.args.get('include_image'), False)
+    use_queue = parse_bool_param(request.args.get('queue'), True)
 
     # When running locally, override queue parameter to process immediately
     if os.environ.get('RUN_LOCALLY') == 'true':
@@ -1471,10 +1484,10 @@ def get_match_result(match_id):
     - debug: Enable debug mode (optional, default=False)
     - include_image: Include frame image URL in response (optional, default=True)
     """
-    force = request.args.get('force', 'false').lower() == 'true'
+    force = parse_bool_param(request.args.get('force'), False)
     clip_url = request.args.get('clip_url')
-    debug = request.args.get('debug', 'false').lower() == 'true'
-    include_image = request.args.get('include_image', 'true').lower() == 'true'
+    debug = parse_bool_param(request.args.get('debug'), False)
+    include_image = parse_bool_param(request.args.get('include_image'), True)
 
     # Check if match_id is provided
     if not match_id:

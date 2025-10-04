@@ -13,11 +13,22 @@ from pathlib import Path
 # Add the src directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from api_server import process_clip_request, process_queue_worker, get_image_url
+from api_server import process_clip_request, process_queue_worker, get_image_url, parse_bool_param
 
 
 class APIServerTests(unittest.TestCase):
     """Test cases for the API server functionality"""
+
+    def test_parse_bool_param_truthy_and_falsy(self):
+        """Ensure parse_bool_param handles common truthy/falsy values."""
+        self.assertTrue(parse_bool_param("1", False))
+        self.assertTrue(parse_bool_param("TRUE", False))
+        self.assertTrue(parse_bool_param("yes", False))
+        self.assertFalse(parse_bool_param("0", True))
+        self.assertFalse(parse_bool_param("False", True))
+        self.assertFalse(parse_bool_param("no", True))
+        self.assertTrue(parse_bool_param(None, True))
+        self.assertFalse(parse_bool_param("unknown", False))
 
     @patch("api_server.process_clip_url")
     @patch("api_server.db_client")
