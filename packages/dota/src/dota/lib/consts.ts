@@ -109,3 +109,5 @@ export const twitchIdToToken = new Map<string, string>()
 export const twitchNameToToken = new Map<string, string>()
 export const pendingCheckAuth = new Map<string, boolean>()
 export const lookingupToken = new Map<string, boolean>()
+
+export const draftStartByMatchId = new Map<string, boolean>()

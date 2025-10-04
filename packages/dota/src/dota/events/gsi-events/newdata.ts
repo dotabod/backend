@@ -26,6 +26,7 @@ import { events } from '../../globalEventEmitter.js'
 import { checkPassiveMidas } from '../../lib/checkMidas.js'
 import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
 import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
+import { draftStartByMatchId } from '../../lib/consts.js'
 import { DelayedCommands } from '../../lib/DelayedCommands.js'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
 import { getSpectatorPlayers } from '../../lib/getSpectatorPlayers.js'
@@ -597,6 +598,18 @@ eventHandler.registerEvent('newdata', {
 
     // In case they connect to a game in progress and we missed the start event
     const setupOBSBlockersPromise = dotaClient.setupOBSBlockers(data.map?.game_state ?? '')
+
+    // Workaround: Add draft start map check, since its not handled in previously/added
+    // Its the first time gsi sends map data for a match, so we need to handle it here in newdata
+    if (isPlayingMatch(dotaClient.client.gsi, false)) {
+      if (draftStartByMatchId.get(dotaClient.client.gsi?.map?.matchid || '')) {
+        return
+      }
+
+      draftStartByMatchId.set(dotaClient.client.gsi?.map?.matchid || '', true)
+      events.emit('map:game_state', 'DOTA_GAMERULES_STATE_STRATEGY_TIME', dotaClient.client.token)
+      return
+    }
 
     if (!isPlayingMatch(dotaClient.client.gsi)) {
       await Promise.all([updateSteam32IdPromise, setupOBSBlockersPromise])

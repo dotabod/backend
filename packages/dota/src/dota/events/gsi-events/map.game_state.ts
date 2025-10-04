@@ -1,17 +1,13 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { is8500Plus } from '../../../utils/index.js'
-import type { allStates } from '../../lib/consts.js'
+import { type allStates, draftStartByMatchId } from '../../lib/consts.js'
 import { delayedQueue } from '../../lib/DelayedQueue.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
 
 eventHandler.registerEvent('map:game_state', {
   handler: async (dotaClient, gameState: (typeof allStates)[number]) => {
-    if (dotaClient.client.name.toLowerCase() === 'masondota2') {
-      logger.info('[Draft Clip] Processing mason', { name: dotaClient.client.name, gameState })
-    }
-
     // Early returns for invalid conditions
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi, false)) return
@@ -57,6 +53,7 @@ eventHandler.registerEvent('map:game_state', {
 
     // Create a clip when the draft starts to get a list of players
     if ('DOTA_GAMERULES_STATE_PLAYER_DRAFT' === gameState) {
+      draftStartByMatchId.set(dotaClient.client.gsi?.map?.matchid || '', true)
       logger.info('[Draft Clip] Draft started, creating clip in 46 seconds', logContext)
 
       // Delay to ensure the draft has started
