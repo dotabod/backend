@@ -485,7 +485,6 @@ class PostgresClient:
 
             # If found in queue, return the status
             if queue_row:
-                logger.info(f"Found {queue_row['status']} request for match ID: {match_id}")
                 return {
                     'found': True,
                     'status': queue_row['status'],
