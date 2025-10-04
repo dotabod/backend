@@ -40,6 +40,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 logger.info("=== API Server logging initialized ===")
+NUM_WORKER_THREADS = int(os.environ.get('NUM_WORKER_THREADS', '2'))
+worker_threads = []
+
 
 # Import the hero detection and hero data modules
 try:
@@ -184,27 +187,48 @@ def initialize_app():
         return False
 
 def start_worker_thread():
-    """Start the worker thread to process queued requests if not already running."""
-    global worker_running
+    """Start multiple worker threads to process queued requests if not already running."""
+    global worker_running, worker_threads
+
     # Don't start worker thread if running locally
     if os.environ.get('RUN_LOCALLY') == 'true':
         logger.info("Running locally, not starting worker thread")
         return
 
     if not worker_running:
-        worker_thread = threading.Thread(target=process_queue_worker, daemon=True)
-        worker_thread.start()
         worker_running = True
-        logger.info("Started queue worker thread")
-    else:
-        logger.debug("Worker thread is already running")
+        worker_threads = []
 
+        for i in range(NUM_WORKER_THREADS):
+            worker_thread = threading.Thread(
+                target=process_queue_worker,
+                daemon=True,
+                name=f"Worker-{i+1}"
+            )
+            worker_thread.start()
+            worker_threads.append(worker_thread)
+            logger.info(f"Started queue worker thread {i+1}/{NUM_WORKER_THREADS}")
+
+        logger.info(f"Started {NUM_WORKER_THREADS} queue worker threads")
+    else:
+        logger.debug("Worker threads are already running")
+
+# Update start_worker_monitor to check all threads
 def start_worker_monitor():
-    """Start a thread to monitor the worker thread and restart it if needed."""
-    def check_worker_thread():
-        logger.info(f"Checking worker thread status. Current status: running={worker_running}")
-        if not worker_running:
-            logger.info("Worker thread not running, restarting it...")
+    """Start a thread to monitor the worker threads and restart them if needed."""
+    def check_worker_threads():
+        global worker_running, worker_threads
+
+        logger.info(f"Checking worker threads status. Current status: running={worker_running}, threads={len(worker_threads)}")
+
+        # Check if any threads have died
+        alive_threads = [t for t in worker_threads if t.is_alive()]
+        dead_count = len(worker_threads) - len(alive_threads)
+
+        if dead_count > 0 or not worker_running:
+            logger.warning(f"Found {dead_count} dead worker threads, restarting all workers...")
+            worker_running = False
+            worker_threads = []
             start_worker_thread()
 
         # Also check for stuck requests
@@ -212,8 +236,8 @@ def start_worker_monitor():
 
     def periodic_worker_check():
         while True:
-            time.sleep(60)  # Check every 60 seconds
-            check_worker_thread()
+            time.sleep(300)  # Check every 5 minutes (reduced from 60s)
+            check_worker_threads()
 
     # Start the monitor thread
     monitor_thread = threading.Thread(target=periodic_worker_check, daemon=True)
@@ -224,58 +248,62 @@ def process_queue_worker():
     """Worker thread function to process queued requests."""
     global worker_running
 
-    logger.info("Queue worker thread started")
+    thread_name = threading.current_thread().name
+    logger.info(f"[{thread_name}] Queue worker thread started")
+
+    consecutive_empty_checks = 0
 
     try:
         while True:
             request = None
 
-            # Check if there's already a request being processed (OUTSIDE the lock)
+            # Quick check without lock first
             if db_client.is_queue_processing():
-                logger.debug("A request is already being processed, waiting...")
-                time.sleep(2)  # Sleep OUTSIDE the lock
+                # Adaptive backoff when queue is busy
+                sleep_time = min(2 + (consecutive_empty_checks * 0.5), 10)
+                time.sleep(sleep_time)
                 continue
 
-            # Only acquire lock when we need to get the next request
+            # Acquire lock only to get next request
             with queue_lock:
-                # Double-check inside the lock
                 if db_client.is_queue_processing():
                     continue
 
-                # Get the next pending request
                 request = db_client.get_next_pending_request()
 
                 if request:
-                    # Mark as processing immediately while we have the lock
+                    # Mark as processing immediately
                     db_client.update_queue_status(request['request_id'], 'processing')
-                    logger.info(f"Picked up request {request['request_id']} from queue")
+                    logger.info(f"[{thread_name}] Picked up request {request['request_id']} from queue")
+                    consecutive_empty_checks = 0
 
-            # If no requests, sleep and continue
+            # If no requests, use exponential backoff
             if not request:
-                logger.debug("No pending requests in the queue, checking again in 5 seconds")
-                time.sleep(5)
+                consecutive_empty_checks += 1
+                # Exponential backoff: 5s, 10s, 15s, ... max 60s
+                sleep_time = min(5 * consecutive_empty_checks, 60)
+                logger.debug(f"[{thread_name}] No pending requests, sleeping for {sleep_time}s")
+                time.sleep(sleep_time)
                 continue
 
             # Process the request OUTSIDE the lock
-            logger.info(f"Processing request {request['request_id']} from queue")
+            logger.info(f"[{thread_name}] Processing request {request['request_id']}")
             result = None
             error = None
             start_time = time.time()
 
             try:
-                # ... existing processing logic from lines 278-353 ...
+                # ... existing processing logic (lines 278-353) remains the same ...
                 if request['request_type'] == 'clip':
-                    # Check if there's already a relevant result for this match_id
                     match_id = request.get('match_id')
                     only_draft = bool(request.get('only_draft'))
                     if match_id and not request.get('force', False):
-                        # If this is a draft-only request, only short-circuit if a draft already exists.
                         if only_draft:
                             try:
                                 draft_existing = db_client.get_latest_draft_for_match(match_id)
                                 if draft_existing:
                                     existing_clip_id = draft_existing.get('clip_id') or 'unknown'
-                                    logger.info(f"Match ID {match_id} already has a draft result (clip {existing_clip_id}), using that instead for draft-only request")
+                                    logger.info(f"[{thread_name}] Match ID {match_id} already has a draft result (clip {existing_clip_id})")
                                     db_client.update_queue_status(request['request_id'], 'completed', result_id=existing_clip_id)
                                     continue
                             except Exception:
@@ -284,14 +312,13 @@ def process_queue_worker():
                             match_status = db_client.check_for_match_processing(match_id)
                             if match_status and match_status.get('found') and match_status.get('status') == 'completed':
                                 existing_clip_id = match_status.get('clip_id')
-                                logger.info(f"Match ID {match_id} already has a completed result for clip {existing_clip_id}, using that instead")
+                                logger.info(f"[{thread_name}] Match ID {match_id} already completed for clip {existing_clip_id}")
                                 existing_result = db_client.get_clip_result(existing_clip_id)
                                 if existing_result:
                                     db_client.update_queue_status(request['request_id'], 'completed', result_id=existing_clip_id)
-                                    logger.info(f"Using existing result for match ID {match_id}, request {request['request_id']}")
                                     continue
 
-                    logger.info(f"Processing clip request: {request['clip_url']} ({request['request_id']})")
+                    logger.info(f"[{thread_name}] Processing clip request: {request['clip_url']}")
                     result = process_clip_request(
                         clip_url=request['clip_url'],
                         clip_id=request['clip_id'],
@@ -303,7 +330,6 @@ def process_queue_worker():
                         match_id=request.get('match_id'),
                         only_draft=bool(request.get('only_draft'))
                     )
-                    logger.info(f"Processed clip request: {request['request_id']}")
 
                     if result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info'] and request['clip_id']:
                         frame_path = result['best_frame_info']['frame_path']
@@ -311,7 +337,7 @@ def process_queue_worker():
                             result['saved_image_path'] = f"__HOST_URL__/images/{request['clip_id']}.jpg"
 
                 elif request['request_type'] == 'stream':
-                    logger.info(f"Processing stream request: {request['stream_username']} ({request['request_id']})")
+                    logger.info(f"[{thread_name}] Processing stream request: {request['stream_username']}")
                     result = process_stream_request(
                         request['stream_username'],
                         request['num_frames'],
@@ -320,7 +346,6 @@ def process_queue_worker():
                         add_to_queue=False,
                         from_worker=True
                     )
-                    logger.info(f"Processed stream request: {request['request_id']}")
 
                     if result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
                         frame_path = result['best_frame_info']['frame_path']
@@ -331,21 +356,21 @@ def process_queue_worker():
 
             except Exception as e:
                 error = str(e)
-                logger.error(f"Error processing queued request {request['request_id']}: {error}")
+                logger.error(f"[{thread_name}] Error processing request {request['request_id']}: {error}")
                 logger.error(traceback.format_exc())
 
             processing_time = time.time() - start_time
-            logger.info(f"Request {request['request_id']} processed in {processing_time:.2f} seconds")
+            logger.info(f"[{thread_name}] Request {request['request_id']} processed in {processing_time:.2f}s")
 
-            # Update status (quick operation, lock is fine here)
+            # Update status
             with queue_lock:
                 if error:
                     db_client.update_queue_status(request['request_id'], 'failed')
-                    logger.error(f"Failed to process request {request['request_id']}: {error}")
+                    logger.error(f"[{thread_name}] Failed request {request['request_id']}: {error}")
                 else:
                     if isinstance(result, dict) and ('error' in result or not result.get('players', [])):
                         db_client.update_queue_status(request['request_id'], 'failed')
-                        logger.error(f"Failed to process request {request['request_id']}: {result.get('error', 'No heroes detected')}")
+                        logger.error(f"[{thread_name}] Failed request {request['request_id']}: {result.get('error', 'No heroes detected')}")
                     else:
                         if result and isinstance(result, dict):
                             result['processing_time'] = f"{processing_time:.2f}s"
@@ -363,18 +388,17 @@ def process_queue_worker():
                                 )
 
                         db_client.update_queue_status(request['request_id'], 'completed', result_id=request.get('clip_id'))
-                        logger.info(f"Completed processing request {request['request_id']}")
+                        logger.info(f"[{thread_name}] Completed request {request['request_id']}")
 
-            # Small sleep between requests to prevent CPU thrashing
-            time.sleep(0.1)
+            # Small sleep between requests
+            time.sleep(1.0)
 
     except Exception as e:
-        logger.error(f"Queue worker thread error: {e}")
+        logger.error(f"[{thread_name}] Queue worker thread error: {e}")
         logger.error(traceback.format_exc())
     finally:
-        with queue_lock:
-            worker_running = False
-        logger.info("Queue worker thread stopped")
+        # Don't set worker_running to False here since other threads might still be running
+        logger.info(f"[{thread_name}] Queue worker thread stopped")
 
 # Initialize app before first request
 @app.before_request
@@ -420,6 +444,8 @@ def debug_queue():
             LIMIT 10
         """)
         recent_requests = cursor.fetchall()
+        alive_threads = [t.name for t in worker_threads if t.is_alive()] if worker_threads else []
+        worker_status = f"running: {len(alive_threads)}/{NUM_WORKER_THREADS} threads active: {alive_threads}"
 
         # Format datetime objects for JSON and prepare force processing URL
         for req in recent_requests:
@@ -452,6 +478,8 @@ def debug_queue():
 
         return jsonify({
             'worker_status': worker_status,
+            'num_workers': NUM_WORKER_THREADS,
+            'alive_threads': alive_threads,
             'app_initialized': app_initialized,
             'queue_status': [dict(row) for row in status_counts],
             'recent_requests': [dict(row) for row in recent_requests]
@@ -1421,7 +1449,7 @@ def metrics():
         'app_initialized': app_initialized
     })
 
-def reset_stuck_processing_requests(timeout_minutes=1):
+def reset_stuck_processing_requests(timeout_minutes=2):
     """
     Reset any requests that have been stuck in processing state for too long.
 
