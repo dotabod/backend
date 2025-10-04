@@ -94,7 +94,7 @@ function chatterMatchFound(client: SocketClient) {
                 userId: client.Account?.providerAccountId || '',
                 permission: 3, // Broadcaster permission
               },
-              content: commandInfo.command,
+              content: `!${commandInfo.command}`,
             })
             .catch((error: any) => {
               logger.error('Error executing auto command:', error)
