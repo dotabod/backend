@@ -70,6 +70,7 @@
     "overlay_one": "{{count}} streamer använder overlayn",
     "overlay_other": "{{count}} streamare använder overlayn"
   },
+  "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Spelar nu: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Behöver du build-idéer av proffs för {{- heroName}}? Kolla här {{- url}}",
   "dotabod": "Jag är en bot med öppen källkod skapad av {{author}}. Mer info: {{- url}}",

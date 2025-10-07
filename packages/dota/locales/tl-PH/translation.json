@@ -9,6 +9,7 @@
     "pickup": "Napulot ni {{- heroName}} ang aegis!",
     "snatched": "Naagaw ni {{- heroName}} ang aegis {{emote}}"
   },
+  "countryPlayerList": "Playing with players from {{- countries}}",
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "altAccount": "{{emote}} alt account detected {{emote2}}",
   "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
