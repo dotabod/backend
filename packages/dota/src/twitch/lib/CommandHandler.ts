@@ -184,27 +184,32 @@ class CommandHandler {
 
     // If the command is disabled (by settings or subscription)
     if (!isCommandEnabled) {
-      // Check if the specific reason for being disabled is lack of subscription access.
-      // We only message the user about subscription issues if the command is *enabled* in their settings
-      // but they lack the required subscription tier.
-      if (options.dbkey && isCommandEnabledRaw) {
-        const { hasAccess } = canAccessFeature(options.dbkey, message.channel.client.subscription)
+      // Bypass list users can use commands even without subscription
+      if (this.bypassCooldownUsers.includes(message.user.name.toLowerCase())) {
+        // Allow bypass users to proceed
+      } else {
+        // Check if the specific reason for being disabled is lack of subscription access.
+        // We only message the user about subscription issues if the command is *enabled* in their settings
+        // but they lack the required subscription tier.
+        if (options.dbkey && isCommandEnabledRaw) {
+          const { hasAccess } = canAccessFeature(options.dbkey, message.channel.client.subscription)
 
-        // If disabled due to subscription AND not currently on cooldown AND the user hasn't explicitly disabled it in settings
-        if (!hasAccess && !commandIsOnCooldown) {
-          chatClient.say(
-            message.channel.name,
-            t('subscriptionRequired', {
-              channel: message.channel.client.name,
-              command: `!${commandName}`,
-              lng: message.channel.client.locale,
-            }),
-            message.user.messageId,
-          )
+          // If disabled due to subscription AND not currently on cooldown AND the user hasn't explicitly disabled it in settings
+          if (!hasAccess && !commandIsOnCooldown) {
+            chatClient.say(
+              message.channel.name,
+              t('subscriptionRequired', {
+                channel: message.channel.client.name,
+                command: `!${commandName}`,
+                lng: message.channel.client.locale,
+              }),
+              message.user.messageId,
+            )
+          }
         }
+        // Return because the command is disabled for whatever reason (settings or subscription)
+        return
       }
-      // Return because the command is disabled for whatever reason (settings or subscription)
-      return
     }
 
     // If the command is enabled, but currently on cooldown
