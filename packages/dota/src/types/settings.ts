@@ -17,6 +17,7 @@ export const defaultCommands = {
   commandSmurfs: true,
   commandProfile: true,
   commandLGS: true,
+  commandGeo: true,
   commandSteam: true,
   commandWL: true,
   commandXPM: true,

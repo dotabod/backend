@@ -1,9 +1,23 @@
 import RedisClient from '../db/RedisClient.js'
 import type { SocketClient } from '../types.js'
 
+const STEAMID64_OFFSET = 76561197960265728n
+
 export function steamID64toSteamID32(steamID64: string) {
   if (!steamID64) return null
-  return Number(steamID64.substr(-16, 16)) - 6561197960265728
+  try {
+    return Number(BigInt(steamID64) - STEAMID64_OFFSET)
+  } catch (error) {
+    return null
+  }
+}
+
+export function steamID32toSteamID64(steam32Id: number) {
+  try {
+    return (BigInt(steam32Id) + STEAMID64_OFFSET).toString()
+  } catch (error) {
+    return null
+  }
 }
 
 export function fmtMSS(totalSeconds: number) {

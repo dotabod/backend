@@ -35,6 +35,7 @@ export const FEATURE_TIERS: Record<
   chatters: SUBSCRIPTION_TIERS.FREE,
   commandFixparty: SUBSCRIPTION_TIERS.FREE,
   commandRefresh: SUBSCRIPTION_TIERS.FREE,
+  commandGeo: SUBSCRIPTION_TIERS.PRO,
   commandSetmmr: SUBSCRIPTION_TIERS.FREE,
   commandBeta: SUBSCRIPTION_TIERS.FREE,
   commandMute: SUBSCRIPTION_TIERS.FREE,
