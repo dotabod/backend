@@ -108,7 +108,6 @@ commandHandler.registerCommand('song', {
           artist: recentTrack.artist['#text'] || 'Unknown',
           title: recentTrack.name || 'Unknown',
           album: recentTrack.album['#text'] ? ` [${recentTrack.album['#text']}]` : '',
-          url: recentTrack.url || '',
           lng: client.locale,
         }),
         message.user.messageId,
