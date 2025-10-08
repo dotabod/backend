@@ -76,6 +76,7 @@
     "overlay_many": "{{count}} стрімери використовують оверлей",
     "overlay_other": "{{count}} стрімери використовують оверлей"
   },
+  "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Зараз відтворюється: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Ти не знаєш що купити на {{- heroName}}?  Подивись тут {{- url}}",
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",

@@ -9,6 +9,7 @@
     "pickup": "{{- heroName}} picked up the aegis!",
     "snatched": "{{- heroName}} snatched the aegis {{emote}}"
   },
+  "countryPlayerList": "Playing with players from {{- countries}}",
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "altAccount": "{{emote}} alt account detected {{emote2}}",
   "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",

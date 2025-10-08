@@ -67,6 +67,7 @@
     "gsi_other": "{{count}} streamers connected to Dotabod GSI",
     "overlay_other": "{{count}} streamers using the overlay"
   },
+  "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
