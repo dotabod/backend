@@ -105,6 +105,7 @@ commandHandler.registerCommand('song', {
       chatClient.say(
         channel,
         t('currentSong', {
+          url: "", // dont show the url
           artist: recentTrack.artist['#text'] || 'Unknown',
           title: recentTrack.name || 'Unknown',
           album: recentTrack.album['#text'] ? ` [${recentTrack.album['#text']}]` : '',
