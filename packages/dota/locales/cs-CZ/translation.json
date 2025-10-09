@@ -76,6 +76,7 @@
     "overlay_many": "{{count}} streamers using the overlay",
     "overlay_other": "{{count}} streameři využívají overlay"
   },
+  "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Nyní hraje: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Potřebuješ poradit co kupovat na {{- heroName}}? Nápady najdeš zde {{- url}}",
   "dotabod": "Jsem open-source bot vytvořený {{author}}. Více info na {{- url}}",

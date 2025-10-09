@@ -68,6 +68,7 @@
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_other": "{{count}} streamers gamit ang overlay"
   },
+  "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Kelangan mo ng matinding build para kay {{- heroName}}? Tignan mo dito {{- url}}",
   "dotabod": "Isa akong open source bot na gawa ni {{author}}. Karagdagang impormasyon: {{- url}}",

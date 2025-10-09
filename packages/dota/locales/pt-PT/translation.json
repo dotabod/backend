@@ -73,6 +73,7 @@
     "overlay_many": "",
     "overlay_other": "{{count}} streamers using the overlay"
   },
+  "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Precisa de builds profissionais para {{- heroName}}? Cheque aqui {{- url}}",
   "dotabod": "Eu sou um bot open source feito por {{author}}. Mais informações: {{- url}}",

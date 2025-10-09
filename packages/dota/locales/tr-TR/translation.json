@@ -70,6 +70,7 @@
     "overlay_one": "Arayüzü {{count}} yayıncı kullanıyor",
     "overlay_other": "Arayüzü {{count}} yayıncı kullanıyor"
   },
+  "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Daha iyi item tavsiyelerine mi ihtiyacın var {{- heroName}}? Buraya tıkla {{- url}}",
   "dotabod": "Ben {{author}} tarafından yaratılan açık kaynaklı bir botum. Daha detaylı bilgi için {{- url}}",
