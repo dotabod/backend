@@ -401,7 +401,9 @@ class Dota {
   }
 
   public getUserSteamServer = (steam32Id: number | string): Promise<string> => {
+    logger.info('[STEAM] Getting user steam server', { steam32Id })
     const steam_id = this.dota2.ToSteamID(Number(steam32Id))
+    logger.info('[STEAM] Got steam id', { steam_id })
 
     // Set up the retry operation
     const operation = retry.operation({
@@ -415,6 +417,7 @@ class Dota {
       operation.attempt(() => {
         this.dota2.spectateFriendGame({ steam_id }, (response: any, err: any) => {
           const theID = response?.server_steamid?.toString()
+          logger.info('[STEAM] Got user steam server', { theID, response, err, steam_id })
 
           const shouldRetry = !theID ? new Error('No ID yet, will keep trying.') : undefined
           if (operation.retry(shouldRetry)) return
