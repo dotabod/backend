@@ -46,7 +46,7 @@ declare global {
 // Initialize the global map if it doesn't exist
 global.timeoutMap = global.timeoutMap || {}
 
-function chatterMatchFound(client: SocketClient) {
+async function chatterMatchFound(client: SocketClient) {
   if (!client.stream_online) return
 
   const commands = DelayedCommands.filter((cmd) =>
@@ -75,13 +75,26 @@ function chatterMatchFound(client: SocketClient) {
       client.subscription,
     ) as string[]
 
+    logger.info('[AUTO_COMMANDS] Processing auto commands', {
+      autoCommands,
+      hasCommands: autoCommands && autoCommands.length > 0,
+      token: client.token,
+    })
+
     if (autoCommands && autoCommands.length > 0) {
       for (const commandKey of autoCommands) {
         // Find the command in DelayedCommands that matches this key
         const commandInfo = DelayedCommands.find((cmd) => cmd.key === commandKey)
+
         if (commandInfo) {
+          logger.info('[AUTO_COMMANDS] Executing auto command', {
+            commandKey,
+            command: commandInfo.command,
+            token: client.token,
+          })
+
           // Simulate a command message
-          commandHandler
+          await commandHandler
             .handleMessage({
               channel: {
                 name: client.name.startsWith('#') ? client.name : `#${client.name}`,
@@ -98,13 +111,30 @@ function chatterMatchFound(client: SocketClient) {
               content: commandInfo.command,
             })
             .catch((error: any) => {
-              logger.error('Error executing auto command:', error)
+              logger.error('[AUTO_COMMANDS] Error executing auto command', {
+                error,
+                commandKey,
+                command: commandInfo.command,
+              })
             })
+
+          logger.info('[AUTO_COMMANDS] Successfully executed auto command', {
+            commandKey,
+            command: commandInfo.command,
+          })
+
+          // Small delay between commands to prevent rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100))
+        } else {
+          logger.warn('[AUTO_COMMANDS] Command not found in DelayedCommands', {
+            commandKey,
+            token: client.token,
+          })
         }
       }
     }
   } catch (error) {
-    logger.error('Error sending auto commands:', error)
+    logger.error('[AUTO_COMMANDS] Error sending auto commands', { error })
   }
 }
 
@@ -317,7 +347,7 @@ async function saveMatchData(client: SocketClient) {
             timestamp: Date.now(),
           })
 
-          chatterMatchFound(client)
+          await chatterMatchFound(client)
         }
       } catch (error) {
         if (!(error instanceof CustomError)) {
