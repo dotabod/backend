@@ -1,11 +1,11 @@
 import { logger, trackDisableReason } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { redisClient } from '../../../db/redisInstance.js'
-import { DBSettings, getValueOrDefault } from '../../../settings.js'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME, getValueOrDefault } from '../../../settings.js'
 import MongoDBSingleton from '../../../steam/MongoDBSingleton.js'
 import { steamSocket } from '../../../steam/ws.js'
 import { getWinProbability2MinAgo } from '../../../stratz/livematch.js'
-import commandHandler from '../../../twitch/lib/CommandHandler.js'; // Import commandHandler here
+import commandHandler from '../../../twitch/lib/CommandHandler.js' // Import commandHandler here
 import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId.js'
 import {
   type Abilities,
@@ -124,7 +124,7 @@ async function chatterMatchFound(client: SocketClient) {
           })
 
           // Small delay between commands to prevent rate limiting
-          await new Promise(resolve => setTimeout(resolve, 100))
+          await new Promise((resolve) => setTimeout(resolve, 100))
         } else {
           logger.warn('[AUTO_COMMANDS] Command not found in DelayedCommands', {
             commandKey,
@@ -226,7 +226,14 @@ async function saveMatchData(client: SocketClient) {
 
     if (steamServerId && lobbyType !== null) return
 
-    if (!steamServerId && lobbyType === null && !is8500Plus(client)) {
+    // Feature flag: Valve disabled the spectate friend game proto
+    // Only attempt to get steam server if the feature is enabled
+    if (
+      !steamServerId &&
+      lobbyType === null &&
+      !is8500Plus(client) &&
+      ENABLE_SPECTATE_FRIEND_GAME
+    ) {
       // Fix: Check if we're already looking up this match to prevent race conditions
       if (steamServerLookupMap.has(matchId)) return
 

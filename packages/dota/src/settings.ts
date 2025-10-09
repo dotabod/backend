@@ -14,6 +14,10 @@ export { DBSettings, type SettingKeys, type CommandKeys, type ChatterKeys }
 export const commands = defaultCommands
 export const defaultSettings = defaultSettingsStructure
 
+// Feature flag: Valve disabled the spectate friend game proto
+// Set to true if Valve ever restores this functionality
+export const ENABLE_SPECTATE_FRIEND_GAME = false
+
 export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value: any }[]) => {
   // Rest of existing logic for handling settings
   if (!Array.isArray(data) || !data.length || !data.filter(Boolean).length) {

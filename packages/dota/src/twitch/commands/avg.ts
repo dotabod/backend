@@ -2,7 +2,7 @@ import { t } from 'i18next'
 
 import { calculateAvg } from '../../dota/lib/calculateAvg.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { DBSettings } from '../../settings.js'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings.js'
 import { is8500Plus } from '../../utils/index.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler from '../lib/CommandHandler.js'
@@ -38,9 +38,10 @@ commandHandler.registerCommand('avg', {
       players: matchPlayers,
     })
       .then((avg) => {
-        const append = is8500Plus(client)
-          ? ` · ${t('matchData8500', { emote: 'PoroSad', lng: client.locale })}`
-          : ''
+        const append =
+          !ENABLE_SPECTATE_FRIEND_GAME || is8500Plus(client)
+            ? ` · ${t('matchDataValveDisabled', { emote: 'PoroSad', lng: client.locale })}`
+            : ''
         chatClient.say(
           message.channel.name,
           `${avg}${avgDescriptor}${append}`,

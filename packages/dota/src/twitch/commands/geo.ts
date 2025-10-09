@@ -3,7 +3,7 @@ import { t } from 'i18next'
 import RedisClient from '../../db/RedisClient.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
-import { DBSettings } from '../../settings.js'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings.js'
 import CustomError from '../../utils/customError.js'
 import { is8500Plus, steamID64toSteamID32, steamID32toSteamID64 } from '../../utils/index.js'
 import { chatClient } from '../chatClient.js'
@@ -34,6 +34,12 @@ commandHandler.registerCommand('geo', {
 
     try {
       if (!isSpectator(client.gsi)) {
+        // Feature flag: Valve disabled the spectate friend game proto
+        // Show message immediately instead of waiting for timeout
+        if (!ENABLE_SPECTATE_FRIEND_GAME) {
+          throw new CustomError(t('matchDataValveDisabled', { emote: 'PoroSad', lng: locale }))
+        }
+
         if (is8500Plus(client)) {
           throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
         }

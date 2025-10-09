@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { DBSettings } from '../../settings.js'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings.js'
 import { smurfs } from '../../steam/smurfs.js'
 import { is8500Plus } from '../../utils/index.js'
 import { chatClient } from '../chatClient.js'
@@ -32,9 +32,10 @@ commandHandler.registerCommand('smurfs', {
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
 
-    const append = is8500Plus(client)
-      ? ` · ${t('matchData8500', { emote: 'PoroSad', lng: client.locale })}`
-      : ''
+    const append =
+      !ENABLE_SPECTATE_FRIEND_GAME || is8500Plus(client)
+        ? ` · ${t('matchDataValveDisabled', { emote: 'PoroSad', lng: client.locale })}`
+        : ''
 
     smurfs(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {

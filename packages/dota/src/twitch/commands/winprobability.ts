@@ -1,6 +1,6 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { DBSettings } from '../../settings.js'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings.js'
 import { getWinProbability2MinAgo } from '../../stratz/livematch.js'
 import { is8500Plus } from '../../utils/index.js'
 import { chatClient } from '../chatClient.js'
@@ -37,10 +37,10 @@ commandHandler.registerCommand('winprobability', {
       return
     }
 
-    if (is8500Plus(client)) {
+    if (!ENABLE_SPECTATE_FRIEND_GAME || is8500Plus(client)) {
       chatClient.say(
         channel,
-        t('matchData8500', { emote: 'PoroSad', lng: message.channel.client.locale }),
+        t('matchDataValveDisabled', { emote: 'PoroSad', lng: message.channel.client.locale }),
         message.user.messageId,
       )
       return

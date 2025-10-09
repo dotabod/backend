@@ -5,7 +5,7 @@ import { t } from 'i18next'
 import RedisClient from '../../db/RedisClient.js'
 import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
 import { isSpectator } from '../../dota/lib/isSpectator.js'
-import { DBSettings } from '../../settings.js'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings.js'
 import { steamSocket } from '../../steam/ws.js'
 import type { DelayedGames, Item, Packet, SocketClient } from '../../types.js'
 import CustomError from '../../utils/customError.js'
@@ -75,6 +75,12 @@ async function getItems({
         .filter(Boolean)
         .filter((item) => item !== 'empty')
   } else {
+    // Feature flag: Valve disabled the spectate friend game proto
+    // Show message immediately instead of waiting for timeout
+    if (!ENABLE_SPECTATE_FRIEND_GAME) {
+      throw new CustomError(t('matchDataValveDisabled', { emote: 'PoroSad', lng: locale }))
+    }
+
     if (is8500Plus(client)) {
       throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
     }

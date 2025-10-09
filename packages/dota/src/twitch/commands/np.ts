@@ -2,7 +2,7 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { DBSettings, getValueOrDefault } from '../../settings.js'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME, getValueOrDefault } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import type { NotablePlayers } from '../../steam/notableplayers.js'
 import { notablePlayers } from '../../steam/notableplayers.js'
@@ -152,11 +152,12 @@ commandHandler.registerCommand('np', {
       .then((desc) => {
         let append = ''
         if (
-          matchPlayers.length === 1 &&
-          matchPlayers[0].accountid === client.steam32Id &&
-          is8500Plus(client)
+          !ENABLE_SPECTATE_FRIEND_GAME ||
+          (matchPlayers.length === 1 &&
+            matchPlayers[0].accountid === client.steam32Id &&
+            is8500Plus(client))
         ) {
-          append = ` · ${t('matchData8500', { emote: 'PoroSad', lng: message.channel.client.locale })}`
+          append = ` · ${t('matchDataValveDisabled', { emote: 'PoroSad', lng: message.channel.client.locale })}`
         }
         chatClient.say(channel, desc.description + append, message.user.messageId)
       })
