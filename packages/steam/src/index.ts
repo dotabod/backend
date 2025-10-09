@@ -66,6 +66,7 @@ socketIoServer.on('connection', (socket) => {
 
   socket.on('getCards', async (accountIds: number[], refetchCards: boolean, callback: callback) => {
     if (!isConnectedToSteam) {
+      logger.error('[STEAM] Error getting cards, not connected to steam', { accountIds, refetchCards })
       callback('Steam not connected', null)
       return
     }
@@ -73,6 +74,7 @@ socketIoServer.on('connection', (socket) => {
       const result = await withTimeout(dota.getCards(accountIds, refetchCards))
       callback(null, result)
     } catch (e: any) {
+      logger.error('[STEAM] Error getting cards', { accountIds, refetchCards, errorAll: e, error: e.message })
       callback(e.message, null)
     }
   })
