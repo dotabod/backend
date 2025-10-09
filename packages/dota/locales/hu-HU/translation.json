@@ -137,6 +137,7 @@
   },
   "lifetime": "Összes lejátszott játék",
   "matchData8500": "Valve disabled data for 8500+ mmr matches",
+  "matchDataValveDisabled": "On Oct 9, 2025, Valve completely disabled retrieving data of other players in a match. I'll be looking for a workaround in the meantime. DM @TECHLEED on Twitch if you have any ideas.",
   "matchFound": "Meccs információ megtalálható {{commandList}} a parancsok aktívak.",
   "matchId": "Meccs ID: {{matchId}}",
   "midasUsed": "Midas végre használva volt, $t(seconds, {\"count\": {{seconds}} }) késéssel. {{emote}}",

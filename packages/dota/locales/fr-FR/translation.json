@@ -145,6 +145,7 @@
   },
   "lifetime": "Jeux à vie",
   "matchData8500": "Valve disabled data for 8500+ mmr matches",
+  "matchDataValveDisabled": "On Oct 9, 2025, Valve completely disabled retrieving data of other players in a match. I'll be looking for a workaround in the meantime. DM @TECHLEED on Twitch if you have any ideas.",
   "matchFound": "Données de match trouvées {{commandList}}, liste de commandes activée.",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas enfin utilisée,  $t(seconds, {\"count\": {{seconds}} }) en retard {{emote}}",
