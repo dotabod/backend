@@ -408,7 +408,7 @@ class Dota {
       retries: 35,
       factor: 1.1,
       minTimeout: 5000, // Minimum retry timeout (1 second)
-      maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
+      maxTimeout: 20_000, // Maximum retry timeout (10 seconds)
     })
 
     return new Promise((resolve, reject) => {
