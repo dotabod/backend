@@ -56,14 +56,26 @@ class PostgresClient:
         if not self._connection_pool:
             try:
                 self._connection_pool = pool.SimpleConnectionPool(
-                    1, 10, self.database_url
+                    1, 50, self.database_url
                 )
             except Exception as e:
                 logger.error(f"Error creating connection pool: {str(e)}")
                 return None
 
         try:
-            return self._connection_pool.getconn()
+            conn = self._connection_pool.getconn()
+            if conn:
+                # Validate the connection is still alive
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT 1")
+                    cursor.close()
+                except Exception as e:
+                    logger.warning(f"Connection validation failed, getting new connection: {str(e)}")
+                    # Return the bad connection and try to get a new one
+                    self._connection_pool.putconn(conn, close=True)
+                    conn = self._connection_pool.getconn()
+            return conn
         except Exception as e:
             logger.error(f"Error getting connection from pool: {str(e)}")
             return None
@@ -107,6 +119,9 @@ class PostgresClient:
                 return False
 
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for initialization")
+                return False
             cursor = conn.cursor()
 
             # Create the results table if it doesn't exist
@@ -223,6 +238,9 @@ class PostgresClient:
         conn = None
         try:
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for fetching clip result")
+                return None
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
             # Query for the clip by ID
@@ -295,6 +313,9 @@ class PostgresClient:
         conn = None
         try:
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for fetching clip result by match ID")
+                return None
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
             # Prefer the latest non-draft result
@@ -393,6 +414,9 @@ class PostgresClient:
         conn = None
         try:
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for fetching draft for match")
+                return None
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
             query = f"""
@@ -447,6 +471,9 @@ class PostgresClient:
         conn = None
         try:
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for match processing check")
+                return None
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
             # First check for a completed non-draft result
@@ -563,6 +590,9 @@ class PostgresClient:
         conn = None
         try:
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for saving clip result")
+                return False
             cursor = conn.cursor()
 
             # Extract facet information from result
@@ -604,7 +634,6 @@ class PostgresClient:
 
             conn.commit()
             cursor.close()
-            self._return_connection(conn)
             return True
 
         except Exception as e:
@@ -612,8 +641,10 @@ class PostgresClient:
             logger.error(traceback.format_exc())
             if conn:
                 conn.rollback()
-                self._return_connection(conn)
             return False
+        finally:
+            if conn:
+                self._return_connection(conn)
 
     def get_average_processing_time(self, request_type: str = 'clip') -> float:
         """
@@ -631,6 +662,9 @@ class PostgresClient:
         conn = None
         try:
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for getting average processing time")
+                return 15.0 if request_type == 'clip' else 25.0
             cursor = conn.cursor()
 
             if request_type == 'stream':
@@ -698,6 +732,9 @@ class PostgresClient:
         conn = None
         try:
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for checking if request is in queue")
+                return None
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
             query = None
@@ -778,19 +815,22 @@ class PostgresClient:
         has_only_draft_column = False
         try:
             conn = self._get_connection()
-            cursor = conn.cursor()
-            cursor.execute("""
-            SELECT column_name FROM information_schema.columns
-            WHERE table_name = 'processing_queue' AND column_name = 'match_id'
-            """)
-            has_match_id_column = cursor.fetchone() is not None
-            cursor.execute("""
-            SELECT column_name FROM information_schema.columns
-            WHERE table_name = 'processing_queue' AND column_name = 'only_draft'
-            """)
-            has_only_draft_column = cursor.fetchone() is not None
-            cursor.close()
-            self._return_connection(conn)
+            if conn is not None:
+                cursor = conn.cursor()
+                cursor.execute("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name = 'processing_queue' AND column_name = 'match_id'
+                """)
+                has_match_id_column = cursor.fetchone() is not None
+                cursor.execute("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name = 'processing_queue' AND column_name = 'only_draft'
+                """)
+                has_only_draft_column = cursor.fetchone() is not None
+                cursor.close()
+                self._return_connection(conn)
+            else:
+                logger.warning("Failed to get connection for checking queue columns")
         except Exception as e:
             logger.warning(f"Error checking for match_id column: {e}")
             # Continue anyway, we'll handle it in the query
@@ -814,6 +854,9 @@ class PostgresClient:
         conn = None
         try:
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for adding to queue")
+                return str(uuid.uuid4()), {}
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
             # Check if there's already a pending or processing request for this clip/stream
@@ -967,6 +1010,9 @@ class PostgresClient:
         conn = None
         try:
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for updating queue status")
+                return False
             cursor = conn.cursor()
 
             now = datetime.now()
@@ -1050,6 +1096,9 @@ class PostgresClient:
         conn = None
         try:
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for getting queue status")
+                return None
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
             query = f"""
@@ -1096,6 +1145,9 @@ class PostgresClient:
         conn = None
         try:
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for getting next pending request")
+                return None
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
             query = f"""
@@ -1138,6 +1190,9 @@ class PostgresClient:
         conn = None
         try:
             conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for checking if queue is processing")
+                return False
             cursor = conn.cursor()
 
             query = f"""

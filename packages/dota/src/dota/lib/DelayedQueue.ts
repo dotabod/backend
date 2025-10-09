@@ -41,7 +41,6 @@ export class DelayedQueue {
     // Insert task in sorted order (by executeAt, then by priority)
     this.insertTaskSorted(task)
 
-    logger.info(`DelayedQueue: Added task ${taskId} to execute in ${clampedDelay}ms`)
     return taskId
   }
 
@@ -103,8 +102,6 @@ export class DelayedQueue {
 
     // Execute tasks concurrently
     if (tasksToExecute.length > 0) {
-      logger.info(`DelayedQueue: Executing ${tasksToExecute.length} tasks`)
-
       await Promise.allSettled(
         tasksToExecute.map(async (task) => {
           try {
