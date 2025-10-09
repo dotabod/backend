@@ -5,7 +5,7 @@ import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import MongoDBSingleton from '../../../steam/MongoDBSingleton.js'
 import { steamSocket } from '../../../steam/ws.js'
 import { getWinProbability2MinAgo } from '../../../stratz/livematch.js'
-import commandHandler from '../../../twitch/lib/CommandHandler.js' // Import commandHandler here
+import commandHandler from '../../../twitch/lib/CommandHandler.js'; // Import commandHandler here
 import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId.js'
 import {
   type Abilities,
@@ -95,7 +95,7 @@ function chatterMatchFound(client: SocketClient) {
                 userId: client.Account?.providerAccountId || '',
                 permission: 3, // Broadcaster permission
               },
-              content: `!${commandInfo.command}`,
+              content: commandInfo.command,
             })
             .catch((error: any) => {
               logger.error('Error executing auto command:', error)
