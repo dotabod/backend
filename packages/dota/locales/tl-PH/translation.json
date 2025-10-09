@@ -9,7 +9,6 @@
     "pickup": "Napulot ni {{- heroName}} ang aegis!",
     "snatched": "Naagaw ni {{- heroName}} ang aegis {{emote}}"
   },
-  "countryPlayerList": "Playing with players from {{- countries}}",
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "altAccount": "{{emote}} alt account detected {{emote2}}",
   "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
@@ -69,6 +68,7 @@
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_other": "{{count}} streamers gamit ang overlay"
   },
+  "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Kelangan mo ng matinding build para kay {{- heroName}}? Tignan mo dito {{- url}}",
   "dotabod": "Isa akong open source bot na gawa ni {{author}}. Karagdagang impormasyon: {{- url}}",
