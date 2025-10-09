@@ -469,7 +469,6 @@ class Dota {
     return new Promise<Cards>((resolve, reject) => {
       if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
         {
-          logger.error('[STEAM] Error getting medal, not connected to Dota 2 GC', { account })
           reject(new CustomError('Error getting medal'))
         }
       else {
@@ -478,7 +477,6 @@ class Dota {
             logger.error('[STEAM] Error getting medal', { account, err })
             reject(err)
           }
-          logger.info('[STEAM] Successfully got medal', { account })
           resolve(card)
         })
       }
