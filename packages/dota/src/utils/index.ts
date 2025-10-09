@@ -1,17 +1,16 @@
 import RedisClient from '../db/RedisClient.js'
 import type { SocketClient } from '../types.js'
 
-const STEAMID64_OFFSET = 76561197960265728n
-
 export function steamID64toSteamID32(steamID64: string) {
   if (!steamID64) return null
   try {
-    return Number(BigInt(steamID64) - STEAMID64_OFFSET)
+    return Number(steamID64.substr(-16, 16)) - 6561197960265728
   } catch (error) {
     return null
   }
 }
 
+const STEAMID64_OFFSET = 76561197960265728n
 export function steamID32toSteamID64(steam32Id: number) {
   try {
     return (BigInt(steam32Id) + STEAMID64_OFFSET).toString()
@@ -46,15 +45,15 @@ export const is8500Plus = (dotaClient: SocketClient) => {
     (account) => dotaClient.steam32Id === account.steam32Id,
   )
 
-  if(dotaClient.mmr && dotaClient.mmr > 8500) {
+  if (dotaClient.mmr && dotaClient.mmr > 8500) {
     return true
   }
 
-  if(currentSteamAccount && currentSteamAccount?.mmr >= 8500) {
+  if (currentSteamAccount && currentSteamAccount?.mmr >= 8500) {
     return true
   }
 
-  if(currentSteamAccount?.leaderboard_rank) {
+  if (currentSteamAccount?.leaderboard_rank) {
     return true
   }
 

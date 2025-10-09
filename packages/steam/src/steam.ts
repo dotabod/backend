@@ -401,9 +401,7 @@ class Dota {
   }
 
   public getUserSteamServer = (steam32Id: number | string): Promise<string> => {
-    logger.info('[STEAM] Getting user steam server', { steam32Id })
     const steam_id = this.dota2.ToSteamID(Number(steam32Id))
-    logger.info('[STEAM] Got steam id', { steam_id })
 
     // Set up the retry operation
     const operation = retry.operation({
@@ -467,11 +465,9 @@ class Dota {
 
   private async fetchProfileCard(account: number): Promise<Cards> {
     return new Promise<Cards>((resolve, reject) => {
-      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
-        {
-          reject(new CustomError('Error getting medal'))
-        }
-      else {
+      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
+        reject(new CustomError('Error getting medal'))
+      } else {
         this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
           if (err) {
             logger.error('[STEAM] Error getting medal', { account, err })
