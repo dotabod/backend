@@ -348,7 +348,7 @@ class Dota {
   // @ts-expect-error no types exist
   handleMachineAuth(sentry, callback) {
     const hashedSentry = crypto.createHash('sha1').update(sentry.bytes).digest()
-    fs.writeFileSync('./src/steam/volumes/sentry', hashedSentry)
+    fs.writeFileSync('./src/steam/volumes/sentry', Uint8Array.from(hashedSentry))
     logger.info('[STEAM] sentryfile saved')
     callback({ sha_file: hashedSentry })
   }
