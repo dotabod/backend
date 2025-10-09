@@ -137,6 +137,7 @@
   },
   "lifetime": "تمام بازی ها",
   "matchData8500": "Valve disabled data for 8500+ mmr matches",
+  "matchDataValveDisabled": "On Oct 9, 2025, Valve completely disabled retrieving data of other players in a match. I'll be looking for a workaround in the meantime. DM @TECHLEED on Twitch if you have any ideas.",
   "matchFound": "بازی شروع شد. تمام این کامندها فعال است {{commandList}}",
   "matchId": "ایدی مچ: {{matchId}}",
   "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",

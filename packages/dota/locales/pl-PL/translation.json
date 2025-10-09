@@ -159,6 +159,7 @@
   },
   "lifetime": "Gier na koncie",
   "matchData8500": "Valve wyłączyło udostępnianie danych dla meczów powyżej 8500+ MMR",
+  "matchDataValveDisabled": "On Oct 9, 2025, Valve completely disabled retrieving data of other players in a match. I'll be looking for a workaround in the meantime. DM @TECHLEED on Twitch if you have any ideas.",
   "matchFound": "Znaleziono identyfikator gry {{commandList}} aktywne komendy.",
   "matchId": "Identyfikator meczu:  {{matchId}}",
   "midasUsed": "Midas został w końcu użyty, $t(seconds, {\"count\": {{seconds}} }) za późno {{emote}}",

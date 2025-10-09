@@ -137,6 +137,7 @@
   },
   "lifetime": "Toplam oyunlar",
   "matchData8500": "Valve disabled data for 8500+ mmr matches",
+  "matchDataValveDisabled": "On Oct 9, 2025, Valve completely disabled retrieving data of other players in a match. I'll be looking for a workaround in the meantime. DM @TECHLEED on Twitch if you have any ideas.",
   "matchFound": "Maç bilgileri bulundu ve {{commandList}} komutları aktifleştirildi.",
   "matchId": "Maç ID: {{matchId}}",
   "midasUsed": "Midası en sonunda $t(seconds, {\"count\": {{seconds}} }) sonra kullandın {{emote}}",
