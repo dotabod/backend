@@ -4,10 +4,10 @@ import type { Long } from 'mongodb'
 import { logger } from './utils/logger.js'
 
 function onGCSpectateFriendGameResponse(message: any, callback: any) {
-  logger.info('[STEAM] Got user steam server', { message })
   const response: { server_steamid: Long; watch_live_result: number } =
     Dota2.schema.CMsgSpectateFriendGameResponse.decode(message)
   if (callback !== undefined) {
+    logger.info('[STEAM] Got user steam server', { response })
     callback(response)
   }
 }
@@ -17,7 +17,6 @@ export function initSpectatorProtobuff() {
     friend: { steam_id: number; live: boolean },
     callback: any,
   ) {
-    logger.info('[STEAM] Spectating friend game', { friend })
     const localCallback = callback || null
     if (!this._gcReady) {
       logger.info("[STEAM] GC not ready, please listen for the 'ready' event.")
@@ -25,7 +24,6 @@ export function initSpectatorProtobuff() {
     }
     // CMsgSpectateFriendGame
     const payload = new Dota2.schema.CMsgSpectateFriendGame(friend)
-    logger.info('[STEAM] Sending to GC', { payload, friend })
     this.sendToGC(
       Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGame,
       payload,
