@@ -186,17 +186,31 @@ const handleServerCommand = async (message: MessageType, args: string[]) => {
 
   const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
-      reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: channel.client.locale })))
+      reject(new CustomError('timed out getting steam server'))
     }, 10000) // 10 second timeout
 
+    logger.info('[STEAM] Getting user steam server', {
+      steam32Id,
+      channelClientSteam32Id: channel.client.steam32Id,
+    })
     steamSocket.emit(
       'getUserSteamServer',
       steam32Id || channel.client.steam32Id,
       (err: any, steamServerId: string) => {
         clearTimeout(timeoutId)
         if (err) {
+          logger.error('[STEAM] Error getting user steam server', {
+            err,
+            steam32Id,
+            channelClientSteam32Id: channel.client.steam32Id,
+          })
           reject(err)
         } else {
+          logger.info('[STEAM] Got user steam server', {
+            steamServerId,
+            steam32Id,
+            channelClientSteam32Id: channel.client.steam32Id,
+          })
           resolve(steamServerId)
         }
       },
@@ -205,12 +219,27 @@ const handleServerCommand = async (message: MessageType, args: string[]) => {
 
   try {
     const steamServerId = await getDelayedDataPromise
+    logger.info('[STEAM] Got user steam server', {
+      steamServerId,
+      steam32Id,
+      channelClientSteam32Id: channel.client.steam32Id,
+    })
 
     if (!steamServerId) {
+      logger.error('[STEAM] No steam server id', {
+        steamServerId,
+        steam32Id,
+        channelClientSteam32Id: channel.client.steam32Id,
+      })
       chatClient.whisper(user.userId, t('gameNotFound', { lng: channel.client.locale }))
       return
     }
 
+    logger.info('[STEAM] Getting game data for steam server id', {
+      steamServerId,
+      steam32Id,
+      channelClientSteam32Id: channel.client.steam32Id,
+    })
     chatClient.whisper(user.userId, `Getting game data for ${steamServerId}`)
 
     const game = (
@@ -218,6 +247,12 @@ const handleServerCommand = async (message: MessageType, args: string[]) => {
         `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamServerId}`,
       )
     )?.data
+    logger.info('[STEAM] Got game data', {
+      game,
+      steamServerId,
+      steam32Id,
+      channelClientSteam32Id: channel.client.steam32Id,
+    })
     chatClient.whisper(user.userId, JSON.stringify(game))
     chatClient.whisper(
       user.userId,

@@ -66,7 +66,10 @@ socketIoServer.on('connection', (socket) => {
 
   socket.on('getCards', async (accountIds: number[], refetchCards: boolean, callback: callback) => {
     if (!isConnectedToSteam) {
-      logger.error('[STEAM] Error getting cards, not connected to steam', { accountIds, refetchCards })
+      logger.error('[STEAM] Error getting cards, not connected to steam', {
+        accountIds,
+        refetchCards,
+      })
       callback('Steam not connected', null)
       return
     }
@@ -74,7 +77,12 @@ socketIoServer.on('connection', (socket) => {
       const result = await withTimeout(dota.getCards(accountIds, refetchCards))
       callback(null, result)
     } catch (e: any) {
-      logger.error('[STEAM] Error getting cards', { accountIds, refetchCards, errorAll: e, error: e.message })
+      logger.error('[STEAM] Error getting cards', {
+        accountIds,
+        refetchCards,
+        errorAll: e,
+        error: e.message,
+      })
       callback(e.message, null)
     }
   })
@@ -94,13 +102,20 @@ socketIoServer.on('connection', (socket) => {
 
   socket.on('getUserSteamServer', async (steam32Id: number, callback: callback) => {
     if (!isConnectedToSteam) {
+      logger.error('[STEAM] Error getting user steam server, not connected to steam', { steam32Id })
       callback('Steam not connected', null)
       return
     }
     try {
       const result = await withTimeout(dota.getUserSteamServer(steam32Id))
+      logger.info('[STEAM] Got user steam server', { steam32Id, result })
       callback(null, result)
     } catch (e: any) {
+      logger.error('[STEAM] Error getting user steam server, unknown error', {
+        steam32Id,
+        e,
+        error: e.message,
+      })
       callback(e.message, null)
     }
   })
