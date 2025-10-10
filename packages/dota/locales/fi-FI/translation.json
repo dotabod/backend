@@ -137,6 +137,7 @@
   },
   "lifetime": "Pelejä yhteensä",
   "matchData8500": "Valve disabled data for 8500+ mmr matches",
+  "matchDataValveDisabled": "On Oct 9, 2025, Valve completely disabled retrieving data of other players in a match. I'll be looking for a workaround in the meantime. DM @TECHLEED on Twitch if you have any ideas.",
   "matchFound": "Ottelutiedot löydetty {{commandList}} komennot aktivoitu.",
   "matchId": "Ottelutunnus: {{matchId}}",
   "midasUsed": "Midas vihdoinkin käytetty, $t(seconds, {\"count\": {{seconds}} }) myöhään {{emote}}",
