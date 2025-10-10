@@ -6,7 +6,6 @@ import { gsiHandlers } from '../../dota/lib/consts.js'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
 import { heroes } from '../../dota/lib/heroList.js'
 import { server } from '../../dota/server.js'
-import { ENABLE_SPECTATE_FRIEND_GAME } from '../../settings.js'
 import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
 import { steamSocket } from '../../steam/ws.js'
 import { getWinProbability2MinAgo } from '../../stratz/livematch.js'
@@ -182,15 +181,6 @@ const handleServerCommand = async (message: MessageType, args: string[]) => {
   const [, steam32Id] = args
 
   if (!process.env.STEAM_WEB_API) {
-    return
-  }
-
-  // Feature flag: Valve disabled the spectate friend game proto
-  if (!ENABLE_SPECTATE_FRIEND_GAME) {
-    chatClient.whisper(
-      user.userId,
-      t('matchDataValveDisabled', { emote: 'PoroSad', lng: channel.client.locale }),
-    )
     return
   }
 
