@@ -43,6 +43,9 @@ export const FEATURE_TIERS: Record<
   commandDotabod: SUBSCRIPTION_TIERS.FREE,
   'mmr-tracker': SUBSCRIPTION_TIERS.FREE,
 
+  commandWon: SUBSCRIPTION_TIERS.FREE,
+  commandLost: SUBSCRIPTION_TIERS.FREE,
+
   commandOnly: SUBSCRIPTION_TIERS.PRO,
   rankOnly: SUBSCRIPTION_TIERS.PRO,
 

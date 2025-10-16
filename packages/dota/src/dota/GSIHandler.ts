@@ -17,7 +17,7 @@ import {
   EMatchOutcome,
   type SocketClient,
 } from '../types.js'
-import { getRedisNumberValue, steamID64toSteamID32 } from '../utils/index.js'
+import { getRedisNumberValue, is8500Plus, steamID64toSteamID32 } from '../utils/index.js'
 import { maybeSendRoshAegisEvent } from './events/gsi-events/maybeSendRoshAegisEvent.js'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/sendExtensionPubSubBroadcastMessageIfChanged.js'
 import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster.js'
@@ -92,6 +92,7 @@ export async function deleteRedisData(client: SocketClient) {
       .del(`${token}:playingTeam`)
       .del(`${token}:roshan`)
       .del(`${token}:treadtoggle`)
+      .del(`${token}:pendingManualResolution`)
       .exec()
   } catch (e) {
     logger.error('err deleteRedisData', { e })
@@ -527,6 +528,60 @@ export class GSIHandler implements GSIHandlerType {
     const matchId = (await redisClient.client.get(`${client.token}:matchId`)) ?? undefined
 
     if (!!matchId && !!client.gsi?.map?.matchid && matchId !== client.gsi.map.matchid) {
+      // Check if there's a pending manual resolution for the old match
+      const pendingResolution = await redisClient.client.get(
+        `${client.token}:pendingManualResolution`,
+      )
+      if (pendingResolution) {
+        try {
+          const { matchId: pendingMatchId } = JSON.parse(pendingResolution)
+
+          // If the pending match is the old one, refund it and notify
+          if (pendingMatchId === matchId) {
+            logger.info('[BETS] Expiring pending manual resolution - new match joined', {
+              name: client.name,
+              oldMatchId: matchId,
+              newMatchId: client.gsi.map.matchid,
+            })
+
+            const betsEnabled = getValueOrDefault(
+              DBSettings.bets,
+              client.settings,
+              client.subscription,
+            )
+            if (betsEnabled) {
+              const predictionResponse = await supabase
+                .from('matches')
+                .select('predictionId')
+                .eq('matchId', matchId.toString())
+                .eq('userId', client.token)
+                .is('won', null)
+                .single()
+              if (predictionResponse.data?.predictionId) {
+                await refundTwitchBet(this.getChannelId(), predictionResponse.data.predictionId)
+
+                const tellChatBets = getValueOrDefault(
+                  DBSettings.tellChatBets,
+                  client.settings,
+                  client.subscription,
+                )
+                if (tellChatBets && client.stream_online) {
+                  say(
+                    client,
+                    t('bets.manualResolutionExpired', {
+                      emote: 'FeelsBadMan',
+                      lng: client.locale,
+                    }),
+                  )
+                }
+              }
+            }
+          }
+        } catch (e) {
+          logger.error('[BETS] Error handling pending manual resolution expiration', { e })
+        }
+      }
+
       // We have the wrong matchid, reset vars and start over
       logger.info('[BETS] openBets resetClientState because stuck on old match id', {
         name: client.name,
@@ -961,17 +1016,54 @@ export class GSIHandler implements GSIHandlerType {
       return
     }
 
-    // Set up retry parameters
-    const MAX_RETRIES = 5 // Try up to 5 times
-    const RETRY_DELAY = 30000 // 30 seconds between retries (total 2.5 minutes)
-    let retryCount = 0
-
     logger.info('[BETS] Streamer exited the match before it ended with a winner', {
       name: this.client.name,
       matchId,
       openingBets: this.openingBets,
       endingBets: this.endingBets,
     })
+
+    // Check if player is high MMR (8500+)
+    const isHighMmr = is8500Plus(this.client)
+
+    if (isHighMmr) {
+      // For high MMR players, skip automatic retries and prompt for manual resolution
+      logger.info('[BETS] High MMR player detected, prompting for manual resolution', {
+        name: this.client.name,
+        matchId,
+        mmr: this.getMmr(),
+      })
+
+      // Set pending manual resolution flag in Redis
+      await redisClient.client.set(
+        `${this.client.token}:pendingManualResolution`,
+        JSON.stringify({ matchId, timestamp: Date.now() }),
+      )
+
+      // Send chat message to notify mods
+      const tellChatBets = getValueOrDefault(
+        DBSettings.tellChatBets,
+        this.client.settings,
+        this.client.subscription,
+      )
+      if (tellChatBets && this.client.stream_online) {
+        say(
+          this.client,
+          t('bets.manualResolution', {
+            emote: 'PauseChamp',
+            lng: this.client.locale,
+          }),
+        )
+      }
+
+      this.checkingEarlyDCWinner = false
+      return
+    }
+
+    // Set up retry parameters for lower MMR players
+    const MAX_RETRIES = 5 // Try up to 5 times
+    const RETRY_DELAY = 30000 // 30 seconds between retries (total 2.5 minutes)
+    let retryCount = 0
 
     const attemptFetchMatchData = async (): Promise<void> => {
       // Check if they rejoined the match they disconnected from
@@ -1002,48 +1094,39 @@ export class GSIHandler implements GSIHandlerType {
       }
 
       if (retryCount >= MAX_RETRIES) {
-        // Handle refunding bets after exhausting all retries
+        // Handle exhausting all retries - prompt for manual resolution instead of refunding
         if (this.client.stream_online) {
-          logger.info('Exceeded maximum retries for early DC match check', {
-            name: this.client.name,
-            matchId,
-          })
+          logger.info(
+            'Exceeded maximum retries for early DC match check, prompting for manual resolution',
+            {
+              name: this.client.name,
+              matchId,
+            },
+          )
 
-          const betsEnabled = getValueOrDefault(
-            DBSettings.bets,
+          // Set pending manual resolution flag in Redis
+          await redisClient.client.set(
+            `${this.client.token}:pendingManualResolution`,
+            JSON.stringify({ matchId, timestamp: Date.now() }),
+          )
+
+          // Send chat message to notify mods
+          const tellChatBets = getValueOrDefault(
+            DBSettings.tellChatBets,
             this.client.settings,
             this.client.subscription,
           )
-          if (betsEnabled) {
-            const predictionResponse = await supabase
-              .from('matches')
-              .select('predictionId')
-              .eq('matchId', matchId.toString())
-              .eq('userId', this.client.token)
-              .is('won', null)
-              .single()
-            if (predictionResponse.data?.predictionId) {
-              await refundTwitchBet(this.getChannelId(), predictionResponse.data.predictionId)
-              const tellChatBets = getValueOrDefault(
-                DBSettings.tellChatBets,
-                this.client.settings,
-                this.client.subscription,
-              )
-              if (tellChatBets) {
-                say(
-                  this.client,
-                  t('bets.notScored', {
-                    emote: 'D:',
-                    lng: this.client.locale,
-                    matchId,
-                  }),
-                )
-              }
-            }
+          if (tellChatBets) {
+            say(
+              this.client,
+              t('bets.manualResolution', {
+                emote: 'PauseChamp',
+                lng: this.client.locale,
+              }),
+            )
           }
         }
 
-        await this.resetClientState()
         // Reset the flag since we've exhausted retries
         this.checkingEarlyDCWinner = false
         return

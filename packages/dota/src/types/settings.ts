@@ -45,6 +45,8 @@ export const defaultCommands = {
   commandMute: true,
   commandLastFm: false,
   commandOnly: true,
+  commandWon: true,
+  commandLost: true,
 } as const
 
 export type CommandKeys = keyof typeof defaultCommands
