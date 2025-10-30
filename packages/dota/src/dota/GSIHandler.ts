@@ -954,7 +954,7 @@ export class GSIHandler implements GSIHandlerType {
           return
         }
 
-        closeTwitchBet(won, this.getChannelId(), matchId)
+        closeTwitchBet(won, this.getChannelId(), matchId, this.client.settings, this.client.subscription)
           .then(() => {
             logger.info('[BETS] end bets', {
               event: 'end_bets',

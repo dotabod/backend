@@ -1,6 +1,15 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
+import { DBSettings, getValueOrDefault } from '../../settings.js'
+import type { SocketClient } from '../../types.js'
+import { refundTwitchBet } from './refundTwitchBets.js'
 
-export async function closeTwitchBet(won: boolean, twitchId: string, matchId: string) {
+export async function closeTwitchBet(
+  won: boolean,
+  twitchId: string,
+  matchId: string,
+  settings?: SocketClient['settings'],
+  subscription?: SocketClient['subscription'],
+) {
   const api = await getTwitchAPI(twitchId)
 
   try {
@@ -28,6 +37,20 @@ export async function closeTwitchBet(won: boolean, twitchId: string, matchId: st
       //   logger.info('[PREDICT]','[BETS] Bet is not locked', channel)
       //   return
       // }
+
+      // Check if the discardZeroBets setting is enabled
+      const discardZeroBets = getValueOrDefault(DBSettings.discardZeroBets, settings, subscription)
+
+      // If enabled, check if either outcome has zero users
+      if (discardZeroBets && (wonOutcome.users === 0 || lossOutcome.users === 0)) {
+        logger.info('[PREDICT] [BETS] Refunding prediction - zero predictions on one side', {
+          twitchId,
+          matchId,
+          wonOutcomeUsers: wonOutcome.users,
+          lossOutcomeUsers: lossOutcome.users,
+        })
+        return refundTwitchBet(twitchId, predictions[0].id)
+      }
 
       return api.predictions
         .resolvePrediction(twitchId || '', predictions[0].id, won ? wonOutcome.id : lossOutcome.id)
