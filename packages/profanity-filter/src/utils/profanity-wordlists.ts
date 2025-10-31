@@ -28,6 +28,7 @@ export const russianProfanityList = [
   'блять',
   'пидор',
   'пидар',
+  'pidar', // Latin transliteration of пидар
   'хуй',
   'ебать',
   'нахуй',
@@ -312,6 +313,9 @@ function createRussianLatinVariations(text: string): string[] {
     b: 'в', // Latin b to Cyrillic в
     m: 'м', // Latin m to Cyrillic м
     t: 'т', // Latin t to Cyrillic т
+    d: 'д', // Latin d to Cyrillic д
+    i: 'и', // Latin i to Cyrillic и
+    r: 'р', // Latin r to Cyrillic р (alternative to p)
   }
 
   // Create a version where Latin characters are replaced with Cyrillic
