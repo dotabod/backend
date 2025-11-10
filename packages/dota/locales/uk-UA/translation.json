@@ -165,7 +165,7 @@
   },
   "lifetime": "Кількість ігор",
   "matchData8500": "Valve вимкнула дані матчів для 8500+ ММР",
-  "matchDataValveDisabled": "On Oct 9, 2025, Valve disabled player data in live matches. On Oct 14, I have found a workaround EZ . Stay tuned.",
+  "matchDataValveDisabled": "On Oct 9, 2025, Valve disabled player data in live matches.",
   "matchFound": "Отримано дані матчу: {{commandList}} - команди активовані.",
   "matchId": "ID матчу: {{matchId}}",
   "midasUsed": "Midas нарешті був використаний через {{seconds}} с {{emote}}",
