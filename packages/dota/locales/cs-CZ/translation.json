@@ -165,7 +165,7 @@
   },
   "lifetime": "Celkem her",
   "matchData8500": "Valve disabled data for 8500+ mmr matches",
-  "matchDataValveDisabled": "On Oct 9, 2025, Valve disabled player data in live matches. On Oct 14, I have found a workaround EZ . Stay tuned.",
+  "matchDataValveDisabled": "On Oct 9, 2025, Valve disabled player data in live matches.",
   "matchFound": "Data zápasu nalezena, příkazy {{commandList}} aktivovány.",
   "matchId": "ID zápasu: {{matchId}}",
   "midasUsed": "Midas byl úspěšně použit o $t(seconds, {\"count\": {{seconds}} }) sekund později {{emote}}",
