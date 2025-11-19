@@ -151,7 +151,7 @@
   },
   "lifetime": "Partidas totais jogadas",
   "matchData8500": "Valve disabled data for 8500+ mmr matches",
-  "matchDataValveDisabled": "On Oct 9, 2025, Valve disabled player data in live matches. On Oct 14, I have found a workaround EZ . Stay tuned.",
+  "matchDataValveDisabled": "On Oct 9, 2025, Valve disabled player data in live matches.",
   "matchFound": "Dados da partida encontrados comandos ativados: {{commandList}}",
   "matchId": "ID da partida: {{matchId}}",
   "midasUsed": "A midas foi finalmente usada, $t(seconds, {\"count\": {{seconds}} }) atrasados {{emote}}",
