@@ -4,6 +4,8 @@ import RedisClient from '../../../db/RedisClient.js'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { openTwitchBet } from '../../../twitch/lib/openTwitchBet.js'
 import { refundTwitchBet } from '../../../twitch/lib/refundTwitchBets.js'
+import { getStreamDelay } from '../../getStreamDelay.js'
+import { delayedQueue } from '../../lib/DelayedQueue.js'
 import getHero, { type HeroNames } from '../../lib/getHero.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { say } from '../../say.js'
@@ -44,57 +46,71 @@ eventHandler.registerEvent('hero:name', {
         .is('won', null)
         .single()
 
+      // KEEP IMMEDIATE REFUND - prevents betting on wrong hero
       if (betData?.predictionId) {
         await refundTwitchBet(dotaClient.getChannelId(), betData.predictionId)
       }
 
       const hero = getHero(name)
+      const oldHeroName = playingHero
+        ? (getHero(playingHero)?.localized_name ?? playingHero)
+        : playingHero
+      const newHeroName = hero?.localized_name ?? name
 
-      const bet = await openTwitchBet({
-        client: dotaClient.client,
-        heroName: hero?.localized_name,
-      })
-      if (bet?.id && betData?.predictionId) {
-        await supabase
-          .from('matches')
-          .update({
-            predictionId: bet.id,
-            updated_at: new Date().toISOString(),
+      // DELAY OPENING NEW BET by stream delay
+      delayedQueue.addTask(
+        getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription),
+        async () => {
+          // Open new bet after delay
+          const bet = await openTwitchBet({
+            client: dotaClient.client,
+            heroName: hero?.localized_name,
           })
-          .eq('predictionId', betData.predictionId)
-      } else if (betData?.predictionId) {
-        await supabase
-          .from('matches')
-          .update({ predictionId: null, updated_at: new Date().toISOString() })
-          .eq('predictionId', betData.predictionId)
-      }
 
-      const tellChatBets = getValueOrDefault(
-        DBSettings.tellChatBets,
-        dotaClient.client.settings,
-        dotaClient.client.subscription,
+          // Update database with new prediction ID
+          if (bet?.id && betData?.predictionId) {
+            await supabase
+              .from('matches')
+              .update({
+                predictionId: bet.id,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('predictionId', betData.predictionId)
+          } else if (betData?.predictionId) {
+            await supabase
+              .from('matches')
+              .update({ predictionId: null, updated_at: new Date().toISOString() })
+              .eq('predictionId', betData.predictionId)
+          }
+
+          // Send chat message with delay (defaults to true)
+          const tellChatBets = getValueOrDefault(
+            DBSettings.tellChatBets,
+            dotaClient.client.settings,
+            dotaClient.client.subscription,
+          )
+          if (tellChatBets) {
+            say(
+              dotaClient.client,
+              t('bets.remade', {
+                lng: dotaClient.client.locale,
+                emote: 'Okayeg 👍',
+                emote2: 'peepoGamble',
+                oldHeroName,
+                newHeroName,
+              }),
+            )
+          }
+
+          logger.info('[BETS] remade bets', {
+            event: 'open_bets',
+            oldHeroName,
+            newHeroName,
+            user: dotaClient.getToken(),
+            player_team: dotaClient.client.gsi?.player?.team_name,
+          })
+        },
       )
-      if (tellChatBets)
-        say(
-          dotaClient.client,
-          t('bets.remade', {
-            lng: dotaClient.client.locale,
-            emote: 'Okayeg 👍',
-            emote2: 'peepoGamble',
-            oldHeroName: playingHero
-              ? (getHero(playingHero)?.localized_name ?? playingHero)
-              : playingHero,
-            newHeroName: hero?.localized_name ?? name,
-          }),
-          { delay: false },
-        )
-      logger.info('[BETS] remade bets', {
-        event: 'open_bets',
-        oldHeroName: hero?.localized_name ?? playingHero,
-        newHeroName: name,
-        user: dotaClient.getToken(),
-        player_team: dotaClient.client.gsi?.player?.team_name,
-      })
     }
 
     await redisClient.client.set(`${dotaClient.getToken()}:playingHero`, name)
