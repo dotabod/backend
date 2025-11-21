@@ -24,7 +24,7 @@ jobs:
           yarn global add i18next-parser
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Change branch to the update branch
         id: commits
