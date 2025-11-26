@@ -19,6 +19,7 @@ import {
 } from '../types.js'
 import { getRedisNumberValue, is8500Plus, steamID64toSteamID32 } from '../utils/index.js'
 import { maybeSendRoshAegisEvent } from './events/gsi-events/maybeSendRoshAegisEvent.js'
+import { clearPlayingHeroSlotCache } from './events/gsi-events/newdata.js'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/sendExtensionPubSubBroadcastMessageIfChanged.js'
 import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster.js'
 import type { DataBroadcasterInterface } from './events/minimap/DataBroadcasterTypes.js'
@@ -74,6 +75,9 @@ export function emitMinimapBlockerStatus(client: SocketClient) {
 export async function deleteRedisData(client: SocketClient) {
   const { steam32Id, token } = client
   const matchId = (await redisClient.client.get(`${token}:matchId`)) ?? client.gsi?.map?.matchid
+
+  // Clear in-memory cache for playingHeroSlot
+  clearPlayingHeroSlotCache(token)
 
   try {
     await redisClient.client

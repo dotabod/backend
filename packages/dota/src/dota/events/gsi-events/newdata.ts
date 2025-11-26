@@ -523,6 +523,18 @@ async function checkAccountSharing(client: SocketClient, matchId: string): Promi
 const lastSaveTimeByMatch = new Map<string, number>()
 const SAVE_INTERVAL = 60000 // 1 minute in milliseconds
 
+// In-memory cache for playingHeroSlot to reduce Redis calls
+// Key: token, Value: hero slot number (or null if not set)
+const playingHeroSlotCache = new Map<string, number | null>()
+
+/**
+ * Clear the hero slot cache for a specific token.
+ * Should be called when a match ends.
+ */
+export function clearPlayingHeroSlotCache(token: string): void {
+  playingHeroSlotCache.delete(token)
+}
+
 const _saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
   if (!isPlayingMatch(dotaClient.client.gsi)) {
     return
@@ -670,12 +682,24 @@ eventHandler.registerEvent('newdata', {
     }
     // Can't just !dotaClient.heroSlot because it can be 0
     const purchaser = dotaClient.client.gsi?.items?.teleport0?.purchaser
-    const playingHeroSlot = await getRedisNumberValue(`${dotaClient.client.token}:playingHeroSlot`)
+
+    // Use in-memory cache first to avoid Redis call on every tick
+    let playingHeroSlot = playingHeroSlotCache.get(dotaClient.client.token)
+    if (playingHeroSlot === undefined) {
+      // Not in cache, check Redis
+      playingHeroSlot = await getRedisNumberValue(`${dotaClient.client.token}:playingHeroSlot`)
+      // Cache the result (including null)
+      playingHeroSlotCache.set(dotaClient.client.token, playingHeroSlot)
+    }
+
     if (playingHeroSlot === null && typeof purchaser === 'number') {
+      // Update both Redis and cache
       await Promise.all([
         redisClient.client.set(`${dotaClient.client.token}:playingHeroSlot`, purchaser),
         saveMatchData(dotaClient.client),
       ])
+      // Update cache with the new value
+      playingHeroSlotCache.set(dotaClient.client.token, purchaser)
 
       // This is the first time we've seen the hero slot, so we can't check anything else yet
       return
