@@ -26,5 +26,14 @@
     "require": ["tsconfig-paths/register"],
     "ignore": ["(?:^|/)node_modules/"]
   },
-  "exclude": ["node_modules", "dist", "build", "coverage", "**/*.test.ts", "**/*.spec.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "packages/clip-processor-py",
+    "services"
+  ]
 }
