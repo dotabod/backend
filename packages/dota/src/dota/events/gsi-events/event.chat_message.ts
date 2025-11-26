@@ -17,6 +17,54 @@ const disableTranslation = false
 const authKey = process.env.DEEPL_KEY || ''
 const deeplClient = new deepl.DeepLClient(authKey)
 
+// Mapping from app language codes to DeepL-supported target language codes
+// DeepL supported: BG, CS, DA, DE, EL, EN-GB, EN-US, ES, ET, FI, FR, HU, ID, IT, JA, KO, LT, LV, NB, NL, PL, PT-BR, PT-PT, RO, RU, SK, SL, SV, TR, UK, ZH
+const DEEPL_LANGUAGE_MAP: Record<string, string | null> = {
+  en: 'en-US',
+  'en-US': 'en-US',
+  'de-DE': 'DE',
+  'fr-FR': 'FR',
+  'es-ES': 'ES',
+  'pt-BR': 'PT-BR',
+  'pt-PT': 'PT-PT',
+  'ru-RU': 'RU',
+  'ja-JP': 'JA',
+  'ko-KR': 'KO',
+  'zh-CN': 'ZH',
+  'zh-TW': 'ZH',
+  'pl-PL': 'PL',
+  'it-IT': 'IT',
+  'nl-NL': 'NL',
+  'tr-TR': 'TR',
+  'uk-UA': 'UK',
+  'cs-CZ': 'CS',
+  'da-DK': 'DA',
+  'fi-FI': 'FI',
+  'el-GR': 'EL',
+  'hu-HU': 'HU',
+  'no-NO': 'NB',
+  'sv-SE': 'SV',
+  'ro-RO': 'RO',
+  // Unsupported languages map to null - skip translation for these
+  'af-ZA': null, // Afrikaans not supported
+  'ar-SA': null, // Arabic not supported
+  'ca-ES': null, // Catalan not supported
+  'fa-IR': null, // Farsi not supported
+  'he-IL': null, // Hebrew not supported
+  'sr-SP': null, // Serbian not supported
+  'th-TH': null, // Thai not supported
+  'tl-PH': null, // Tagalog not supported
+  'vi-VN': null, // Vietnamese not supported
+}
+
+/**
+ * Get the DeepL-compatible language code for a given app language code.
+ * Returns null if the language is not supported by DeepL.
+ */
+function getDeepLLanguage(appLanguage: string): string | null {
+  return DEEPL_LANGUAGE_MAP[appLanguage] ?? null
+}
+
 // Chatting detection constants
 const CHATTING_WORD_THRESHOLD = 10 // Minimum words to consider as "chatting"
 const CHATTING_MESSAGE_THRESHOLD = 3 // Minimum messages within time window
@@ -164,7 +212,7 @@ async function processTranslationBuffer(
   dotaClient: any,
   translateInChat: boolean,
   translateOnOverlay: boolean,
-  typedLanguage: Omit<LanguageCodes, 'en'> & 'en-US',
+  typedLanguage: deepl.TargetLanguageCode,
 ) {
   if (buffer.length === 0) return
 
@@ -300,13 +348,19 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
     if (!translateInChat && !translateOnOverlay) return
 
     // Check global chatter access
-    let toLanguage = getValueOrDefault(
+    const toLanguage = getValueOrDefault(
       DBSettings.translationLanguage,
       dotaClient.client.settings,
       dotaClient.client.subscription,
     )
-    if (toLanguage === 'en') toLanguage = 'en-US' // DeepL uses en-US instead of just en
-    const typedLanguage = toLanguage as Omit<LanguageCodes, 'en'> & 'en-US'
+
+    // Validate and convert language code to DeepL-supported format
+    const deeplLanguage = getDeepLLanguage(toLanguage)
+    if (!deeplLanguage) {
+      // Language not supported by DeepL, skip translation to avoid API errors
+      return
+    }
+    const typedLanguage = deeplLanguage as deepl.TargetLanguageCode
 
     const clientKey = dotaClient.client.name
     let buffer = translationBuffers.get(clientKey)
