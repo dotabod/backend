@@ -205,8 +205,16 @@ class Dota {
 
       let games: SteamMatchDetails[] = []
       const startGame = 90
+      let listenerRemoved = false
 
       // get a count of the match ids that are unique
+
+      const removeListener = () => {
+        if (!listenerRemoved) {
+          listenerRemoved = true
+          this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
+        }
+      }
 
       const callbackNotSpecificGames = (data: {
         specific_games: boolean
@@ -217,13 +225,17 @@ class Dota {
         games = games.concat(data?.game_list?.filter((game) => game.players?.length > 0))
         // add match ids to unique set
         if (data?.league_id === 0 && startGame === data?.start_game) {
-          this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
+          removeListener()
           resolve(this.filterUniqueGames(games))
         }
       }
 
-      this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
       this.dota2.on('sourceTVGamesData', callbackNotSpecificGames)
+
+      // Timeout to clean up the listener if the promise never resolves
+      setTimeout(() => {
+        removeListener()
+      }, 30_000)
 
       for (let start = 0; start < 100; start += 10) {
         setTimeout(() => {
@@ -330,6 +342,8 @@ class Dota {
 
   handleClientError(error: any) {
     logger.info('[STEAM] steam error', { error })
+    // Exit dota2 to stop its internal timers (like _sendClientHello) before reconnecting
+    this.dota2.exit()
     if (!this.isProduction()) {
       this.exit().catch((e) => logger.error('err steam error', { e }))
     }

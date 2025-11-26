@@ -15,6 +15,10 @@ dota.dota2.on('ready', () => {
   logger.info('[SERVER] Connected to dota game server')
   isConnectedToSteam = true
 })
+dota.dota2.on('unready', () => {
+  logger.info('[SERVER] Disconnected from dota game server')
+  isConnectedToSteam = false
+})
 
 type callback = (err: any, response: any) => void
 
