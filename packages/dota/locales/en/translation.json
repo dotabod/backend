@@ -31,10 +31,12 @@
     "notScored": "Match not scored {{emote}} Not adding or removing MMR for match {{matchId}}.",
     "open": "Bets open {{emote}}",
     "remade": "Swapped hero {{emote}} Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened {{emote2}}",
+    "noUnresolvedMatches": "No unresolved matches found {{emote}}",
     "retroactiveMatchExpired": "Match {{matchId}} is too old to resolve (must be from current stream) {{emote}}",
     "retroactiveMatchNotFound": "Match {{matchId}} not found or already resolved {{emote}}",
     "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
     "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
+    "unresolvedMatches": "{{count}} unresolved match(es) {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "won": "We have won {{emote}} go next"
   },
   "bounties": {
