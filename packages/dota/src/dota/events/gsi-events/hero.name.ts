@@ -38,6 +38,19 @@ eventHandler.registerEvent('hero:name', {
         return
       }
 
+      // Check if this is actually the same game - prevents refunding bets when a new game starts
+      const gsiMatchId = dotaClient.client.gsi?.map?.matchid
+      if (gsiMatchId && matchId !== gsiMatchId) {
+        // This is a new game, not a hero swap within the same game
+        // Don't refund/reopen bets - let openBets() handle the new game
+        logger.info('[BETS] Ignoring hero change - different match detected', {
+          redisMatchId: matchId,
+          gsiMatchId,
+          token: dotaClient.getToken(),
+        })
+        return
+      }
+
       const { data: betData } = await supabase
         .from('matches')
         .select('predictionId')
