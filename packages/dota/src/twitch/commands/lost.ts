@@ -7,16 +7,45 @@ import type { MatchMinimalDetailsResponse } from '../../types.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
+import { resolveMatchRetroactively } from '../lib/resolveMatch.js'
 
 commandHandler.registerCommand('lost', {
   permission: 2, // Mods and broadcaster only
   cooldown: 0,
   dbkey: DBSettings.commandLost,
-  handler: async (message: MessageType) => {
+  handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
       user: { name: username },
     } = message
+
+    // Check if a match ID was provided for retroactive resolution
+    const matchIdArg = args[0]?.trim()
+    if (matchIdArg) {
+      // Validate that it looks like a match ID (numeric)
+      if (!/^\d+$/.test(matchIdArg)) {
+        chatClient.say(
+          channel,
+          t('bets.retroactiveMatchNotFound', {
+            matchId: matchIdArg,
+            emote: 'PauseChamp',
+            lng: client.locale,
+          }),
+          message.user.messageId,
+        )
+        return
+      }
+
+      await resolveMatchRetroactively(
+        client,
+        matchIdArg,
+        false, // lost
+        username,
+        channel,
+        message.user.messageId,
+      )
+      return
+    }
 
     try {
       // Check if there's a pending manual resolution
