@@ -25,7 +25,7 @@ export async function closeTwitchBet(
     .getPredictions(twitchId, {
       limit: 1,
     })
-    .then(({ data: predictions }) => {
+    .then(async ({ data: predictions }) => {
       if (!Array.isArray(predictions) || !predictions.length) {
         logger.info('[PREDICT] Close bets - no predictions found', { token: twitchId, predictions })
         return
@@ -49,7 +49,8 @@ export async function closeTwitchBet(
           wonOutcomeUsers: wonOutcome.users,
           lossOutcomeUsers: lossOutcome.users,
         })
-        return refundTwitchBet(twitchId, predictions[0].id)
+        await refundTwitchBet(twitchId, predictions[0].id)
+        return
       }
 
       return api.predictions
