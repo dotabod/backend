@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List, Tuple
 import traceback
 import psycopg2
-from psycopg2 import pool
+from psycopg2.pool import ThreadedConnectionPool
 from psycopg2.extras import RealDictCursor
 import uuid
 import statistics
@@ -55,8 +55,8 @@ class PostgresClient:
         """Get a connection from the pool."""
         if not self._connection_pool:
             try:
-                self._connection_pool = pool.SimpleConnectionPool(
-                    1, 50, self.database_url
+                self._connection_pool = ThreadedConnectionPool(
+                    1, 10, self.database_url
                 )
             except Exception as e:
                 logger.error(f"Error creating connection pool: {str(e)}")

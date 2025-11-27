@@ -59,7 +59,7 @@ services:
         reservations:
           cpus: '0.2'
           memory: 256M
-    command: ["postgres", "-p", "5439"]
+    command: ["postgres", "-p", "5439", "-c", "max_connections=200"]
 
 volumes:
   postgres-data:
