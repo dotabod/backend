@@ -2,7 +2,7 @@ import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { is8500Plus } from '../../../utils/index.js'
 import { getStreamDelay } from '../../getStreamDelay.js'
-import { type allStates, draftStartByMatchId } from '../../lib/consts.js'
+import { type allStates, draftStartByMatchId, GLOBAL_DELAY } from '../../lib/consts.js'
 import { delayedQueue } from '../../lib/DelayedQueue.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import eventHandler from '../EventHandler.js'
@@ -60,7 +60,7 @@ eventHandler.registerEvent('map:game_state', {
       logger.info('[Draft Clip] Draft started, creating clip in 46 seconds + stream delay', logContext)
 
       // Delay to ensure the draft has started
-      delayedQueue.addTask(DRAFT_CLIP_DELAY_MS + streamDelay, async () => {
+      delayedQueue.addTask(DRAFT_CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, async () => {
         try {
           const api = await getTwitchAPI(accountId)
           const clipId = await api.clips.createClip({
@@ -118,7 +118,7 @@ eventHandler.registerEvent('map:game_state', {
       const CLIP_DELAY_MS = 50000 // 50 seconds
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
 
-      delayedQueue.addTask(CLIP_DELAY_MS + streamDelay, async () => {
+      delayedQueue.addTask(CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, async () => {
         try {
           const api = await getTwitchAPI(accountId)
           const clipId = await api.clips.createClip({
