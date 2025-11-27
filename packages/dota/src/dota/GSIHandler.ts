@@ -714,6 +714,7 @@ export class GSIHandler implements GSIHandlerType {
         userId: client.token,
         myTeam: client.gsi?.player?.team_name ?? '',
         steam32Id: client.steam32Id,
+        hero_name: client.gsi?.hero?.name || null,
       })
     }
 

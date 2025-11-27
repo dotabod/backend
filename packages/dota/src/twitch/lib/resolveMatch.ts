@@ -190,6 +190,17 @@ export async function resolveMatchRetroactively(
   channel: string,
   messageId: string,
 ): Promise<ResolveMatchResult> {
+  // Check if trying to resolve the current ongoing match
+  const currentMatchId = client.gsi?.map?.matchid
+  if (currentMatchId && matchId === currentMatchId) {
+    chatClient.say(
+      channel,
+      t('bets.cannotResolveCurrentMatch', { lng: client.locale }),
+      messageId,
+    )
+    return { success: false, errorKey: 'currentMatch' }
+  }
+
   logger.info('[BETS] Retroactive resolution requested', {
     name: client.name,
     matchId,
@@ -247,8 +258,8 @@ export async function resolveMatchRetroactively(
   const gcData = await getMatchDetails(matchId)
   const matchData = gcData?.matches?.[0]
 
-  // Determine lobby type and other details
-  const lobbyType = matchData?.lobby_type ?? match.lobby_type ?? 0
+  // Determine lobby type and other details (default to ranked if unknown)
+  const lobbyType = matchData?.lobby_type ?? match.lobby_type ?? LOBBY_TYPE_RANKED
   const gameMode = matchData?.game_mode ?? 22 // Default to All Pick
   const isParty = match.is_party ?? false
   const isRanked = lobbyType === LOBBY_TYPE_RANKED

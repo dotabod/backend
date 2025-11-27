@@ -19,11 +19,15 @@ commandHandler.registerCommand('unresolved', {
     const startDate =
       client.stream_start_date ?? new Date(Date.now() - 12 * 60 * 60 * 1000)
 
+    // Get current match ID to exclude it from unresolved list
+    const currentMatchId = client.gsi?.map?.matchid
+
     const { data: matches, error } = await supabase
       .from('matches')
       .select('matchId, hero_name, created_at')
       .eq('userId', client.token)
       .is('won', null)
+      .neq('matchId', currentMatchId ?? '')
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: false })
       .limit(10)
