@@ -1,6 +1,7 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { is8500Plus } from '../../../utils/index.js'
+import { getStreamDelay } from '../../getStreamDelay.js'
 import { type allStates, draftStartByMatchId } from '../../lib/consts.js'
 import { delayedQueue } from '../../lib/DelayedQueue.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
@@ -54,10 +55,12 @@ eventHandler.registerEvent('map:game_state', {
     // Create a clip when the draft starts to get a list of players
     if ('DOTA_GAMERULES_STATE_PLAYER_DRAFT' === gameState) {
       draftStartByMatchId.set(dotaClient.client.gsi?.map?.matchid || '', true)
-      logger.info('[Draft Clip] Draft started, creating clip in 46 seconds', logContext)
+      const DRAFT_CLIP_DELAY_MS = 46000 // 46 seconds
+      const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
+      logger.info('[Draft Clip] Draft started, creating clip in 46 seconds + stream delay', logContext)
 
       // Delay to ensure the draft has started
-      delayedQueue.addTask(46000, async () => {
+      delayedQueue.addTask(DRAFT_CLIP_DELAY_MS + streamDelay, async () => {
         try {
           const api = await getTwitchAPI(accountId)
           const clipId = await api.clips.createClip({
@@ -113,8 +116,9 @@ eventHandler.registerEvent('map:game_state', {
 
     if ('DOTA_GAMERULES_STATE_STRATEGY_TIME' === gameState) {
       const CLIP_DELAY_MS = 50000 // 50 seconds
+      const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
 
-      delayedQueue.addTask(CLIP_DELAY_MS, async () => {
+      delayedQueue.addTask(CLIP_DELAY_MS + streamDelay, async () => {
         try {
           const api = await getTwitchAPI(accountId)
           const clipId = await api.clips.createClip({
