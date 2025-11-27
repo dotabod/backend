@@ -29,6 +29,13 @@
     "notScored": "Match not scored {{emote}} Not adding or removing MMR for match {{matchId}}.",
     "open": "Bets open {{emote}}",
     "remade": "Swapped hero {{emote}} Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened {{emote2}}",
+    "noUnresolvedMatches": "No unresolved matches found {{emote}}",
+    "retroactiveMatchExpired": "Match {{matchId}} is too old to resolve (must be from current stream) {{emote}}",
+    "retroactiveMatchNotFound": "Match {{matchId}} not found or already resolved {{emote}}",
+    "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
+    "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
+    "unresolvedMatches": "{{count}} unresolved match(es) {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "cannotResolveCurrentMatch": "Cannot resolve the current ongoing match. Wait for the game to end or use !won / !lost without a match ID for pending resolutions.",
     "won": "We have won {{emote}} go next"
   },
   "bounties": {
@@ -128,7 +135,7 @@
   },
   "lifetime": "Lifetime games",
   "matchData8500": "Valve disabled data for 8500+ mmr matches",
-  "matchDataValveDisabled": "On Oct 9, 2025, Valve disabled player data in live matches. On Oct 14, I have found a workaround EZ . Stay tuned.",
+  "matchDataValveDisabled": "On Oct 9, 2025, Valve disabled player data in live matches.",
   "matchFound": "Match data found {{commandList}} commands activated.",
   "matchId": "Match ID: {{matchId}}",
   "midasUsed": "Midas was finally used, $t(seconds, {\"count\": {{seconds}} }) late {{emote}}",
