@@ -20,6 +20,7 @@
   "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
   "betaTester_on": "{{channel}} is now a beta tester. Visit discord.dotabod.com to see the beta features. Type !beta to undo",
   "bets": {
+    "cannotResolveCurrentMatch": "Cannot resolve the current ongoing match. Wait for the game to end or use !won / !lost without a match ID for pending resolutions.",
     "error": "Unable to open bets. $t(refreshToken)",
     "lost": "We have lost, gg nt {{emote}} go next",
     "manualResolution": "Disconnected before the match ended. Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
@@ -29,15 +30,17 @@
     "manualResolutionSuccess_won": "Bet manually resolved as WON by @{{username}}",
     "noPendingResolution": "No pending bet resolution needed {{emote}}",
     "notScored": "Match not scored {{emote}} Not adding or removing MMR for match {{matchId}}.",
+    "noUnresolvedMatches": "No unresolved matches found {{emote}}",
     "open": "Bets open {{emote}}",
     "remade": "Swapped hero {{emote}} Bets for {{- oldHeroName}} refunded and new gamba for {{- newHeroName}} opened {{emote2}}",
-    "noUnresolvedMatches": "No unresolved matches found {{emote}}",
     "retroactiveMatchExpired": "Match {{matchId}} is too old to resolve (must be from current stream) {{emote}}",
     "retroactiveMatchNotFound": "Match {{matchId}} not found or already resolved {{emote}}",
+    "retroactiveResolutionSuccess": "",
     "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
     "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
     "unresolvedMatches": "{{count}} unresolved match(es) {{emote}} Use !won or !lost with match ID: {{matchList}}",
-    "cannotResolveCurrentMatch": "Cannot resolve the current ongoing match. Wait for the game to end or use !won / !lost without a match ID for pending resolutions.",
+    "unresolvedMatches_one": "",
+    "unresolvedMatches_other": "",
     "won": "We have won {{emote}} go next"
   },
   "bounties": {
