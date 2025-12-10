@@ -1,7 +1,7 @@
 {
   "2mdelay": "(2 мин. задержка)",
   "accountSharing": {
-    "blocked": "Multiple people are using Dotabod GSI files for this stream. Account \"{{accountName}}\" is blocked. Use !clearsharing to reset, but ensure only one person has the GSI file."
+    "blocked": "Несколько человек используют GSI-файлы Dotabod для этого стрима. Аккаунт «{{accountName}}» заблокирован. Используйте команду !clearsharing, чтобы сбросить настройки, но убедитесь, что только один человек использует GSI-файл."
   },
   "aegis": {
     "denied": "{{- heroName}} уничтожает аегис {{emote}}",
@@ -10,29 +10,40 @@
     "snatched": "{{- heroName}} крадёт аегис {{emote}}"
   },
   "aghs": "{{- heroName}} аганим: {{- title}} · {{- description}}",
-  "altAccount": "{{emote}} alt account detected {{emote2}}",
+  "altAccount": "{{emote}} обнаружен альтернативный аккаунт {{emote2}}",
   "apm_one": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Текущий APM у {{- heroName}}: {{count}} {{emote}}",
-  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
+  "autoTranslate": "[Перевод] {{- heroName}} сказал: {{- message}}",
   "averageRank": "Средний ранг этой игры",
   "betaFeature": "[бета-функция]",
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} больше не является бета-тестером. Введите !beta, чтобы присоединиться снова",
   "betaTester_on": "{{channel}} стал бета-тестером. Посетите сайт discord.dotabod.com, чтобы ознакомиться с возможностями бета-версии. Введите !beta, чтобы отменить",
   "bets": {
+    "cannotResolveCurrentMatch": "Невозможно завершить текущий матч. Дождитесь окончания игры или используйте !won / !lost без указания ID матча для незавершённых ставок.",
     "error": "Невозможно открыть ставки. $t(refreshToken)",
     "lost": "Мы проиграли, гг удачи в следующей {{emote}}",
-    "manualResolution": "Disconnected before the match ended. Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
-    "manualResolutionError": "Error resolving bet manually {{emote}}",
-    "manualResolutionExpired": "Previous match bet expired and was refunded (mods not doing their jobs, next time use !won or !lost) {{emote}}",
-    "manualResolutionSuccess_lost": "Bet manually resolved as LOST by @{{username}}",
-    "manualResolutionSuccess_won": "Bet manually resolved as WON by @{{username}}",
-    "noPendingResolution": "No pending bet resolution needed {{emote}}",
+    "manualResolution": "Отключение произошло до окончания матча. Модераторы, используйте !won или !lost, чтобы вручную завершить ставку и засчитать победу/поражение {{emote}}",
+    "manualResolutionError": "Ошибка при ручном завершении ставки {{emote}}",
+    "manualResolutionExpired": "Ставка на предыдущий матч истекла и была возвращена (модераторы не справились со своей работой, в следующий раз используйте !won или !lost) {{emote}}",
+    "manualResolutionSuccess_lost": "Ставка была вручную отмечена как ПОРАЖЕНИЕ пользователем @{{username}}",
+    "manualResolutionSuccess_won": "Ставка была вручную отмечена как ПОБЕДА пользователем @{{username}}",
+    "noPendingResolution": "Нет ожидающих ставок для завершения {{emote}}",
     "notScored": "Матч не засчитан {{emote}} Рейтинг для матча {{matchId}} не будет изменен.",
+    "noUnresolvedMatches": "Не найдено незавершённых матчей {{emote}}",
     "open": "Ставки открыты {{emote}}",
     "remade": "Обменялись героями {{emote}} Ставка на {{- oldHeroName}} отменена и новая на {{- newHeroName}} открыта {{emote2}}",
+    "retroactiveMatchExpired": "Матч {{matchId}} слишком старый для завершения (должен быть из текущего стрима) {{emote}}",
+    "retroactiveMatchNotFound": "Матч {{matchId}} не найден или уже завершён {{emote}}",
+    "retroactiveResolutionSuccess": "",
+    "retroactiveResolutionSuccess_lost": "Матч {{matchId}} вручную отмечен как ПОРАЖЕНИЕ пользователем @{{username}}",
+    "retroactiveResolutionSuccess_won": "Матч {{matchId}} вручную отмечен как ПОБЕДА пользователем @{{username}}",
+    "unresolvedMatches_one": "",
+    "unresolvedMatches_few": "",
+    "unresolvedMatches_many": "",
+    "unresolvedMatches_other": "",
     "won": "Мы победили {{emote}}"
   },
   "bounties": {
@@ -52,8 +63,8 @@
   "chattersRank": "ранг @{{username}} {{rank}}",
   "chattersRankUnknown": "ранг @{{username}} неизвестен. Верифицируйте Dotabod, чтобы получить свой ранг! {{- url}}",
   "clearsharing": {
-    "error": "Failed to clear account sharing. Please try again or contact support.",
-    "success": "Account sharing reset successfully. Multiple Steam accounts can now send GSI data again. WARNING: Make sure only one person has the Dotabod GSI config file, or conflicts will reoccur."
+    "error": "Не удалось сбросить совместное использование аккаунта. Пожалуйста, попробуйте снова или свяжитесь с поддержкой.",
+    "success": "Совместное использование аккаунта успешно сброшено. Теперь несколько Steam-аккаунтов могут снова отправлять данные GSI. ВНИМАНИЕ: убедитесь, что только один человек имеет файл конфигурации Dotabod GSI, иначе конфликты повторятся."
   },
   "colors": {
     "blue": "Синий",
@@ -82,7 +93,7 @@
     "overlay_many": "{{count}} стримеров использует оверлей",
     "overlay_other": "{{count}} стримеров использует оверлей"
   },
-  "countryPlayerList": "Playing with players from {{- countries}}",
+  "countryPlayerList": "Игра с игроками из {{- countries}}",
   "currentSong": "Сейчас играет: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Нужны сборки от про-игроков для  {{- heroName}}? Посмотри здесь {{- url}}",
   "dotabod": "Я - бот с открытым исходным кодом, созданный {{author}}. Дополнительная информация: {{- url}}",
@@ -91,7 +102,7 @@
   },
   "facet": "{{number}} аспект {{- heroName}} - это {{- facetTitle}} · {{- facetDescription}}",
   "facetInvalid": "Указан неверный аспект · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the streamer's facet",
+  "facetNotFound": "Используйте !facet {{- heroName}} 1 или !facet {{- heroName}} 2 · Dotabod знает только facet стримера",
   "facetSelection": "{{- heroName}} выбрал аспект: {{- facetTitle}} · {{- facetDescription}}",
   "facetTotalLimit_one": "Только {{count}} аспект доступен у {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "facetTotalLimit_few": "Только {{count}} аспекта доступны у {{- heroName}} · $t(facetNotFound, {{- heroName }})",
@@ -164,8 +175,8 @@
     "won": "Последняя игра: победа"
   },
   "lifetime": "Количество игр",
-  "matchData8500": "Valve disabled data for 8500+ mmr matches",
-  "matchDataValveDisabled": "On Oct 9, 2025, Valve disabled player data in live matches. On Oct 14, I have found a workaround EZ . Stay tuned.",
+  "matchData8500": "Valve отключила передачу данных для матчей с MMR выше 8500",
+  "matchDataValveDisabled": "9 октября 2025 года Valve отключила данные игроков в текущих матчах.",
   "matchFound": "Данные матча получены {{commandList}} команды бота активны.",
   "matchId": "ID матча: {{matchId}}",
   "midasUsed": "Midas наконец-то был использован $t(seconds, {\"count\": {{seconds}} }) спустя {{emote}}",

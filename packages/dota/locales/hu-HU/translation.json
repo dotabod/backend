@@ -38,7 +38,6 @@
     "retroactiveResolutionSuccess": "",
     "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
     "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
-    "unresolvedMatches": "{{count}} unresolved match(es) {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "unresolvedMatches_one": "",
     "unresolvedMatches_other": "",
     "won": "Nyertünk"

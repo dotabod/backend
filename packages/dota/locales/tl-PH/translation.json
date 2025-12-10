@@ -18,6 +18,7 @@
   "betaTester_off": "Si {{channel}} ay hindi na beta tester. Itype ang !beta para sumali ulit",
   "betaTester_on": "Si {{channel}} ay beta tester na. Bumisita sa discord.dotabod.com para makita ang mga beta features. Itype ang !beta para bawiin",
   "bets": {
+    "cannotResolveCurrentMatch": "Cannot resolve the current ongoing match. Wait for the game to end or use !won / !lost without a match ID for pending resolutions.",
     "error": "Hindi maumpisahan ang mga pusta. $t(refreshToken)",
     "lost": "Talo tayo, gg nt {{emote}} go next",
     "manualResolution": "Disconnected before the match ended. Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
@@ -27,16 +28,17 @@
     "manualResolutionSuccess_won": "Bet manually resolved as WON by @{{username}}",
     "noPendingResolution": "No pending bet resolution needed {{emote}}",
     "notScored": "Hindi napuntosan ang laban {{emote}} Walang dagdag o bawas sa MMR para sa laban na {{matchId}}.",
+    "noUnresolvedMatches": "No unresolved matches found {{emote}}",
     "open": "Pustahan na {{emote}}",
     "remade": "Palit hero {{emote}} Taya kay {{- oldHeroName}} nabalik at bagong taya kay {{- newHeroName}} bukas {{emote2}}",
-    "noUnresolvedMatches": "No unresolved matches found {{emote}}",
     "retroactiveMatchExpired": "Match {{matchId}} is too old to resolve (must be from current stream) {{emote}}",
     "retroactiveMatchNotFound": "Match {{matchId}} not found or already resolved {{emote}}",
+    "retroactiveResolutionSuccess": "",
     "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
     "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
-    "unresolvedMatches": "{{count}} unresolved match(es) {{emote}} Use !won or !lost with match ID: {{matchList}}",
-    "cannotResolveCurrentMatch": "Cannot resolve the current ongoing match. Wait for the game to end or use !won / !lost without a match ID for pending resolutions.",
-    "won": "Panalo tayo {{emote}} sundan pa"
+    "won": "Panalo tayo {{emote}} sundan pa",
+    "unresolvedMatches_one": "",
+    "unresolvedMatches_other": ""
   },
   "bounties": {
     "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) galing bounty ({{totalBounties}}/4) {{emote}} Salamat {{heroNames}} {{emote2}}",
