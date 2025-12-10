@@ -1,7 +1,7 @@
 {
   "2mdelay": "(2-хв. затримка)",
   "accountSharing": {
-    "blocked": "Multiple people are using Dotabod GSI files for this stream. Account \"{{accountName}}\" is blocked. Use !clearsharing to reset, but ensure only one person has the GSI file."
+    "blocked": "Кілька людей використовують GSI-файли Dotabod для цього стріму. Обліковий запис \"{{accountName}}\" заблоковано. Використай команду !clearsharing, щоб скинути, але переконайся, що лише одна людина має GSI-файл."
   },
   "aegis": {
     "denied": "{{- heroName}} знищив Аєгіс {{emote}}",
@@ -10,37 +10,36 @@
     "snatched": "{{- heroName}} викрав Аєгіс {{emote}}"
   },
   "aghs": "Аганім {{- heroName}} : {{- title}} · {{- description}}",
-  "altAccount": "{{emote}} alt account detected {{emote2}}",
+  "altAccount": "{{emote}} Виявлено інший обліковий запис {{emote2}}",
   "apm_one": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
   "apm_few": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
   "apm_many": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Поточний APM для {{- heroName}}: {{count}} {{emote}}",
-  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
+  "autoTranslate": "[🇺🇦] {{- heroName}} сказав: {{- message}}",
   "averageRank": "Середній рейтинг цієї гри",
   "betaFeature": "[бета-функція]",
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} більше не є бета-тестером. Введіть !beta, щоб приєднатися знову ",
   "betaTester_on": "{{channel}} наразі є бета-тестером. Відвідайте discord.dotabod.com, щоб побачити можливості бета-версії. Введіть !beta, щоб скасувати",
   "bets": {
-    "cannotResolveCurrentMatch": "Cannot resolve the current ongoing match. Wait for the game to end or use !won / !lost without a match ID for pending resolutions.",
+    "cannotResolveCurrentMatch": "Неможливо обробити поточний активний матч. Дочекайся завершення гри або використай !won / !lost без ID матчу для виправлення невирішених результатів.",
     "error": "Не вдалося відкрити ставки. $t(refreshToken)",
     "lost": "Ми програли битву, але не війну. Команда знову заруїнила {{emote}}",
-    "manualResolution": "Disconnected before the match ended. Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
-    "manualResolutionError": "Error resolving bet manually {{emote}}",
-    "manualResolutionExpired": "Previous match bet expired and was refunded (mods not doing their jobs, next time use !won or !lost) {{emote}}",
-    "manualResolutionSuccess_lost": "Bet manually resolved as LOST by @{{username}}",
-    "manualResolutionSuccess_won": "Bet manually resolved as WON by @{{username}}",
-    "noPendingResolution": "No pending bet resolution needed {{emote}}",
+    "manualResolution": "Від'єднано перед закінченням матчу. Використай !won чи !lost для вирішення ставки власноруч, а також зміни кількість WL {{emote}}",
+    "manualResolutionError": "Помилка вирішення ставки власноруч {{emote}}",
+    "manualResolutionExpired": "Попередня ставка матчу закінчилася і була повернута (AFK модератори, наступного разу використовуйте !won або !lost) {{emote}}",
+    "manualResolutionSuccess_lost": "Ставка вручну позначена як LOST @{{username}}",
+    "manualResolutionSuccess_won": "Ставка власноруч позначена як WON @{{username}}",
+    "noPendingResolution": "Ставки не потребують їх завершення.",
     "notScored": "Матч не зараховано {{emote}}  Рейтинг для матчу {{matchId}} не буде змінений.",
-    "noUnresolvedMatches": "No unresolved matches found {{emote}}",
+    "noUnresolvedMatches": "Не знайдено незавершених ставок на матчі {{emote}}",
     "open": "Ставимо ставки, панство {{emote}}",
     "remade": "Герої свапнулись SuskaygeAgreeGe Бали за ставку на {{- oldHeroName}} повернено. Тепер ви можете поставити бали на {{- newHeroName}} peepoGamble",
-    "retroactiveMatchExpired": "Match {{matchId}} is too old to resolve (must be from current stream) {{emote}}",
-    "retroactiveMatchNotFound": "Match {{matchId}} not found or already resolved {{emote}}",
+    "retroactiveMatchExpired": "Матч {{matchId}} занадто старий, щоб його завершити (повинен бути з поточного етеру) {{emote}}",
+    "retroactiveMatchNotFound": "Матч {{matchId}} не знайдений або ставку вже завершено {{emote}}",
     "retroactiveResolutionSuccess": "",
-    "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
-    "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
-    "unresolvedMatches": "{{count}} unresolved match(es) {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "retroactiveResolutionSuccess_lost": "Матч {{matchId}} власноруч позначений як LOST @{{username}}",
+    "retroactiveResolutionSuccess_won": "Матч {{matchId}} власноруч позначений як WON @{{username}}",
     "unresolvedMatches_one": "",
     "unresolvedMatches_few": "",
     "unresolvedMatches_many": "",
@@ -64,8 +63,8 @@
   "chattersRank": "@{{username}} має ранг {{rank}}",
   "chattersRankUnknown": "@{{username}} має невідомий ранг. Станьте верифікованим користувачем Dotabod, щоб отримати свій ранг! {{- url}}",
   "clearsharing": {
-    "error": "Failed to clear account sharing. Please try again or contact support.",
-    "success": "Account sharing reset successfully. Multiple Steam accounts can now send GSI data again. WARNING: Make sure only one person has the Dotabod GSI config file, or conflicts will reoccur."
+    "error": "Не вдалося очистити обмін профілем. Спробуйте ще раз або зверніться до підтримки.",
+    "success": "Обмін даними облікового запису успішно скинуто. Тепер декілька облікових записів Steam можуть знову відправити дані GSI. УВАГА: Переконайтеся, що у користувача є файл конфігурації Dotabod GSI, або помилки будуть з'являтись."
   },
   "colors": {
     "blue": "Синій",
@@ -94,7 +93,7 @@
     "overlay_many": "{{count}} стрімери використовують оверлей",
     "overlay_other": "{{count}} стрімери використовують оверлей"
   },
-  "countryPlayerList": "Playing with players from {{- countries}}",
+  "countryPlayerList": "Грає з гравцями з {{- countries}}",
   "currentSong": "Зараз відтворюється: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Ти не знаєш що купити на {{- heroName}}?  Подивись тут {{- url}}",
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",
@@ -177,7 +176,7 @@
   },
   "lifetime": "Кількість ігор",
   "matchData8500": "Valve вимкнула дані матчів для 8500+ ММР",
-  "matchDataValveDisabled": "On Oct 9, 2025, Valve disabled player data in live matches.",
+  "matchDataValveDisabled": " З 9 жовтня 2025 року, Valve вимкнула дані гравців в прямому етері.",
   "matchFound": "Отримано дані матчу: {{commandList}} - команди активовані.",
   "matchId": "ID матчу: {{matchId}}",
   "midasUsed": "Midas нарешті був використаний через {{seconds}} с {{emote}}",
@@ -233,7 +232,7 @@
   "rankOnlyStatus_disabled": "Верифікований режим наразі вимкнено.",
   "rankOnlyStatus_enabled": "Увімкнено верифікований режим. Дозволено тільки {{rank}}+ звання можуть писати в чат. Відвідайте {{- url}} , щоб отримати підтвердження від Dotabod.",
   "refresh": "Перезапуск оверлея...",
-  "refreshToken": "Ваш обліковий запис Twitch повинен бути повторно підключений до Dotabod. {{channel}} вийдіть і увійдіть на dotabod.com, щоб виправити це.",
+  "refreshToken": "Ваш обліковий запис Twitch повинен бути повторно підключений до Dotabod. {{channel}} вийдіть і увійдіть на dotabod.com, щоб це виправити.",
   "resetwl": "Скинуто перемоги/поразки до 0 для {{channel}}",
   "roshanAlive": "Наразі Рошан живий {{emote}}",
   "roshanCount": {
