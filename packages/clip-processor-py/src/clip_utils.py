@@ -12,13 +12,17 @@ import cv2
 import numpy as np
 import time
 
+
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 # Create temp directory
 TEMP_DIR = Path("temp")
 TEMP_DIR.mkdir(exist_ok=True)
+
 
 def extract_clip_id(url):
     """Extract the clip ID from a Twitch clip URL."""
@@ -34,6 +38,7 @@ def extract_clip_id(url):
         return f"{match.group(1)}-{match.group(2)}"
     return match.group(1)
 
+
 def get_clip_details(url, max_retries=5, retry_delay=2):
     """Get clip details and download URL using Twitch's API."""
     clip_id = extract_clip_id(url)
@@ -47,7 +52,7 @@ def get_clip_details(url, max_retries=5, retry_delay=2):
             # First request: Get clip token and video qualities
             headers = {
                 "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",  # Public client ID used by web client
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             }
 
             # GraphQL query for clip info, similar to TwitchDownloader
@@ -73,16 +78,14 @@ def get_clip_details(url, max_retries=5, retry_delay=2):
                     }
                 }
                 """,
-                "variables": {
-                    "slug": clip_id
-                }
+                "variables": {"slug": clip_id},
             }
 
-            logger.info(f"Sending GQL request for clip: {clip_id} (attempt {retry_count + 1}/{max_retries})")
+            logger.info(
+                f"Sending GQL request for clip: {clip_id} (attempt {retry_count + 1}/{max_retries})"
+            )
             response = requests.post(
-                "https://gql.twitch.tv/gql",
-                headers=headers,
-                json=gql_query
+                "https://gql.twitch.tv/gql", headers=headers, json=gql_query
             )
             response.raise_for_status()
 
@@ -93,22 +96,34 @@ def get_clip_details(url, max_retries=5, retry_delay=2):
             clip_data = data.get("data", {}).get("clip")
 
             if not clip_data:
-                logger.error(f"Clip data not found in response: {json.dumps(data, indent=2)}")
+                logger.error(
+                    f"Clip data not found in response: {json.dumps(data, indent=2)}"
+                )
                 raise ValueError(f"Clip not found or inaccessible: {clip_id}")
 
             # Check if we have playback token and video qualities
-            if not clip_data.get("playbackAccessToken") or not clip_data.get("videoQualities"):
+            if not clip_data.get("playbackAccessToken") or not clip_data.get(
+                "videoQualities"
+            ):
                 clip_created_at = clip_data.get("createdAt")
-                logger.warning(f"Missing playback token or qualities for clip: {clip_id}, created at: {clip_created_at}")
+                logger.warning(
+                    f"Missing playback token or qualities for clip: {clip_id}, created at: {clip_created_at}"
+                )
 
                 # If we've tried the maximum number of times, log the clip data and raise an error
                 if retry_count >= max_retries - 1:
-                    logger.error(f"Missing playback token or qualities after {max_retries} attempts: {json.dumps(clip_data, indent=2)}")
-                    raise ValueError(f"Could not obtain playback token or video qualities for clip: {clip_id}")
+                    logger.error(
+                        f"Missing playback token or qualities after {max_retries} attempts: {json.dumps(clip_data, indent=2)}"
+                    )
+                    raise ValueError(
+                        f"Could not obtain playback token or video qualities for clip: {clip_id}"
+                    )
 
                 # Otherwise, increment retry counter and wait before trying again
                 retry_count += 1
-                logger.info(f"Clip may be newly created, waiting {retry_delay} seconds before retry {retry_count}/{max_retries}")
+                logger.info(
+                    f"Clip may be newly created, waiting {retry_delay} seconds before retry {retry_count}/{max_retries}"
+                )
                 time.sleep(retry_delay)
                 # Increase the delay for subsequent retries
                 retry_delay *= 1.5
@@ -123,7 +138,9 @@ def get_clip_details(url, max_retries=5, retry_delay=2):
             # Always use the highest quality available (which is the first in the list)
             # The videoQualities array is already sorted by quality in descending order
             best_quality = clip_data["videoQualities"][0]
-            logger.info(f"Selected highest available quality: {best_quality['quality']}p")
+            logger.info(
+                f"Selected highest available quality: {best_quality['quality']}p"
+            )
 
             logger.info(f"Selected quality: {best_quality['quality']}p")
 
@@ -132,38 +149,47 @@ def get_clip_details(url, max_retries=5, retry_delay=2):
             download_url = f"{best_quality['sourceURL']}?sig={token['signature']}&token={quote(token['value'])}"
 
             return {
-                'id': clip_id,
-                'url': url,
-                'download_url': download_url,
-                'duration': clip_data.get('durationSeconds'),
-                'title': clip_data.get('title'),
-                'broadcaster': clip_data.get('broadcaster', {}).get('displayName'),
-                'created_at': clip_data.get('createdAt'),
-                'qualities': clip_data['videoQualities'],
-                'selected_quality': best_quality['quality'],  # Store the selected quality
-                'available_qualities': available_qualities    # Store all available qualities
+                "id": clip_id,
+                "url": url,
+                "download_url": download_url,
+                "duration": clip_data.get("durationSeconds"),
+                "title": clip_data.get("title"),
+                "broadcaster": clip_data.get("broadcaster", {}).get("displayName"),
+                "created_at": clip_data.get("createdAt"),
+                "qualities": clip_data["videoQualities"],
+                "selected_quality": best_quality[
+                    "quality"
+                ],  # Store the selected quality
+                "available_qualities": available_qualities,  # Store all available qualities
             }
         except Exception as e:
             last_error = e
             if retry_count >= max_retries - 1:
-                logger.error(f"Error getting clip details using API after {max_retries} attempts: {e}")
+                logger.error(
+                    f"Error getting clip details using API after {max_retries} attempts: {e}"
+                )
                 raise
 
             retry_count += 1
-            logger.warning(f"Error on attempt {retry_count}/{max_retries}: {e}. Waiting {retry_delay} seconds before retry.")
+            logger.warning(
+                f"Error on attempt {retry_count}/{max_retries}: {e}. Waiting {retry_delay} seconds before retry."
+            )
             time.sleep(retry_delay)
             # Increase the delay for subsequent retries
             retry_delay *= 1.5
 
     # This code should not be reached due to the raise in the loop, but just in case
-    raise last_error or ValueError(f"Failed to get clip details after {max_retries} attempts")
+    raise last_error or ValueError(
+        f"Failed to get clip details after {max_retries} attempts"
+    )
+
 
 def download_clip(clip_details):
     """Download the clip using the download URL."""
-    if not clip_details.get('download_url'):
+    if not clip_details.get("download_url"):
         raise ValueError("No download URL available")
 
-    clip_id = clip_details['id']
+    clip_id = clip_details["id"]
     output_path = TEMP_DIR / f"{clip_id}.mp4"
 
     # Check if the file already exists in temp directory
@@ -175,19 +201,22 @@ def download_clip(clip_details):
         logger.info(f"Downloading clip to {output_path}")
 
         # Stream download with progress bar
-        response = requests.get(clip_details['download_url'], stream=True)
+        response = requests.get(clip_details["download_url"], stream=True)
         response.raise_for_status()
 
-        total_size = int(response.headers.get('content-length', 0))
+        total_size = int(response.headers.get("content-length", 0))
         block_size = 1024  # 1 Kibibyte
 
-        with open(output_path, 'wb') as f, tqdm(
-            desc="Downloading",
-            total=total_size,
-            unit='iB',
-            unit_scale=True,
-            unit_divisor=1024,
-        ) as bar:
+        with (
+            open(output_path, "wb") as f,
+            tqdm(
+                desc="Downloading",
+                total=total_size,
+                unit="iB",
+                unit_scale=True,
+                unit_divisor=1024,
+            ) as bar,
+        ):
             for data in response.iter_content(block_size):
                 size = f.write(data)
                 bar.update(size)
@@ -197,7 +226,10 @@ def download_clip(clip_details):
         logger.error(f"Error downloading clip: {e}")
         raise
 
-def extract_frames(video_path, clip_details=None, start_time=0, end_time=None, frame_interval=1):
+
+def extract_frames(
+    video_path, clip_details=None, start_time=0, end_time=None, frame_interval=1
+):
     """
     Extract frames from the video starting from the end and working backwards.
     Uses OpenCV directly instead of MoviePy for better compatibility with Twitch clips.
@@ -221,14 +253,16 @@ def extract_frames(video_path, clip_details=None, start_time=0, end_time=None, f
 
         # Get clip ID from video path to create a unique prefix for this clip's frames
         video_file = Path(video_path).name
-        clip_id = video_file.split('.')[0]  # Remove extension
+        clip_id = video_file.split(".")[0]  # Remove extension
         frame_prefix = f"{clip_id}_frame_"
 
         # Check if frames for this clip already exist
         existing_frames = sorted(list(frames_dir.glob(f"{clip_id}_frame_*.jpg")))
 
         if existing_frames:
-            logger.info(f"Found {len(existing_frames)} existing frames for this clip, reusing them")
+            logger.info(
+                f"Found {len(existing_frames)} existing frames for this clip, reusing them"
+            )
             return [str(frame) for frame in existing_frames]
 
         # Open the video file
@@ -251,16 +285,20 @@ def extract_frames(video_path, clip_details=None, start_time=0, end_time=None, f
         need_resize = False
         target_width, target_height = 1920, 1080  # 1080p resolution
 
-        if clip_details and 'selected_quality' in clip_details:
-            selected_quality = clip_details['selected_quality']
+        if clip_details and "selected_quality" in clip_details:
+            selected_quality = clip_details["selected_quality"]
             logger.info(f"Original video quality: {selected_quality}p")
 
             # Check if we need to resize based on selected quality
             if selected_quality != "1080":
                 need_resize = True
-                logger.info(f"Frames will be resized from {orig_width}x{orig_height} to {target_width}x{target_height}")
+                logger.info(
+                    f"Frames will be resized from {orig_width}x{orig_height} to {target_width}x{target_height}"
+                )
 
-        logger.info(f"Video properties: FPS={fps}, Frames={frame_count}, Resolution={orig_width}x{orig_height}, Duration={duration:.2f}s")
+        logger.info(
+            f"Video properties: FPS={fps}, Frames={frame_count}, Resolution={orig_width}x{orig_height}, Duration={duration:.2f}s"
+        )
 
         # If end_time is not specified, use the video duration
         if end_time is None:
@@ -292,12 +330,18 @@ def extract_frames(video_path, clip_details=None, start_time=0, end_time=None, f
                 ret, frame = cap.read()
 
                 if not ret:
-                    logger.warning(f"Could not read frame at timestamp {timestamp}s (frame {frame_idx})")
+                    logger.warning(
+                        f"Could not read frame at timestamp {timestamp}s (frame {frame_idx})"
+                    )
                     continue
 
                 # Resize frame to 1080p if needed
                 if need_resize and frame is not None:
-                    frame = cv2.resize(frame, (target_width, target_height), interpolation=cv2.INTER_LANCZOS4)
+                    frame = cv2.resize(
+                        frame,
+                        (target_width, target_height),
+                        interpolation=cv2.INTER_LANCZOS4,
+                    )
 
                 # Save the frame as an image with clip ID prefix
                 frame_path = frames_dir / f"{frame_prefix}{i:05d}.jpg"
@@ -331,12 +375,15 @@ def extract_frames(video_path, clip_details=None, start_time=0, end_time=None, f
             logger.info(f"Contents of temp directory: {os.listdir(TEMP_DIR)}")
 
         else:
-            logger.info(f"Successfully extracted {len(frame_paths)} frames to {frames_dir}")
+            logger.info(
+                f"Successfully extracted {len(frame_paths)} frames to {frames_dir}"
+            )
 
         return frame_paths
     except Exception as e:
         logger.error(f"Error extracting frames: {e}")
         raise
+
 
 def download_single_frame(clip_details, timestamp=None):
     """
@@ -350,10 +397,10 @@ def download_single_frame(clip_details, timestamp=None):
     Returns:
         Path to the extracted frame image
     """
-    if not clip_details.get('download_url'):
+    if not clip_details.get("download_url"):
         raise ValueError("No download URL available")
 
-    clip_id = clip_details['id']
+    clip_id = clip_details["id"]
 
     # Create frames directory
     frames_dir = TEMP_DIR / "frames"
@@ -376,7 +423,7 @@ def download_single_frame(clip_details, timestamp=None):
 
     try:
         # Create a temporary file for the video segment
-        with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_file:
             temp_path = temp_file.name
 
         # More aggressive approach to minimize download size:
@@ -388,26 +435,32 @@ def download_single_frame(clip_details, timestamp=None):
 
         # First, try to get just the MP4 header
         headers = {
-            'Range': f'bytes=0-{header_size-1}',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            "Range": f"bytes=0-{header_size - 1}",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         }
 
         logger.info(f"Downloading MP4 header (first {header_size} bytes)")
-        response = requests.get(clip_details['download_url'], headers=headers, stream=True)
+        response = requests.get(
+            clip_details["download_url"], headers=headers, stream=True
+        )
 
         # Check if we got a partial content response
         if response.status_code != 206:
-            logger.warning(f"Server doesn't support range requests (status: {response.status_code}). Falling back to alternative method.")
+            logger.warning(
+                f"Server doesn't support range requests (status: {response.status_code}). Falling back to alternative method."
+            )
             # Fall back to downloading a larger chunk from the beginning
             header_size = 5 * 1024 * 1024  # 5MB
             headers = {
-                'Range': f'bytes=0-{header_size-1}',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                "Range": f"bytes=0-{header_size - 1}",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             }
-            response = requests.get(clip_details['download_url'], headers=headers, stream=True)
+            response = requests.get(
+                clip_details["download_url"], headers=headers, stream=True
+            )
 
         # Write header portion to temp file
-        with open(temp_path, 'wb') as f:
+        with open(temp_path, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
@@ -415,7 +468,9 @@ def download_single_frame(clip_details, timestamp=None):
         # Open the file to check if we have enough data to get video info
         cap = cv2.VideoCapture(temp_path)
         if not cap.isOpened():
-            logger.warning("Couldn't open video with header only, downloading more data")
+            logger.warning(
+                "Couldn't open video with header only, downloading more data"
+            )
             cap.release()
 
             # If we couldn't open with just the header, download a bit more
@@ -423,14 +478,18 @@ def download_single_frame(clip_details, timestamp=None):
             download_size = 10 * 1024 * 1024  # 10MB from the beginning
 
             headers = {
-                'Range': f'bytes=0-{download_size-1}',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                "Range": f"bytes=0-{download_size - 1}",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             }
 
-            logger.info(f"Downloading larger portion of video from beginning: {download_size / (1024*1024):.1f}MB")
-            response = requests.get(clip_details['download_url'], headers=headers, stream=True)
+            logger.info(
+                f"Downloading larger portion of video from beginning: {download_size / (1024 * 1024):.1f}MB"
+            )
+            response = requests.get(
+                clip_details["download_url"], headers=headers, stream=True
+            )
 
-            with open(temp_path, 'wb') as f:
+            with open(temp_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
@@ -439,7 +498,9 @@ def download_single_frame(clip_details, timestamp=None):
             cap = cv2.VideoCapture(temp_path)
 
             if not cap.isOpened():
-                logger.warning("Still couldn't open video, attempting one final approach")
+                logger.warning(
+                    "Still couldn't open video, attempting one final approach"
+                )
                 cap.release()
 
                 # Last resort: try a direct seek approach
@@ -449,14 +510,18 @@ def download_single_frame(clip_details, timestamp=None):
 
                 # Download first chunk
                 headers = {
-                    'Range': f'bytes=0-{first_chunk_size-1}',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    "Range": f"bytes=0-{first_chunk_size - 1}",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
                 }
 
-                logger.info(f"Trying larger chunk approach: 0-{first_chunk_size-1} bytes")
-                response = requests.get(clip_details['download_url'], headers=headers, stream=True)
+                logger.info(
+                    f"Trying larger chunk approach: 0-{first_chunk_size - 1} bytes"
+                )
+                response = requests.get(
+                    clip_details["download_url"], headers=headers, stream=True
+                )
 
-                with open(temp_path, 'wb') as f:
+                with open(temp_path, "wb") as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         if chunk:
                             f.write(chunk)
@@ -466,7 +531,9 @@ def download_single_frame(clip_details, timestamp=None):
 
                 if not cap.isOpened():
                     # If all approaches fail, fall back to downloading the whole clip
-                    logger.warning("All optimized download approaches failed. Falling back to downloading the entire clip.")
+                    logger.warning(
+                        "All optimized download approaches failed. Falling back to downloading the entire clip."
+                    )
                     full_download = True
                 else:
                     full_download = False
@@ -477,20 +544,26 @@ def download_single_frame(clip_details, timestamp=None):
             ret, _ = cap.read()
             if not ret:
                 # If we can't read a frame, we need more data
-                logger.info("Header downloaded but can't read frames yet, downloading more data from beginning")
+                logger.info(
+                    "Header downloaded but can't read frames yet, downloading more data from beginning"
+                )
                 cap.release()
 
                 # Since we want the first frame, download more from the beginning
                 download_size = 10 * 1024 * 1024  # 10MB
                 headers = {
-                    'Range': f'bytes=0-{download_size}',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    "Range": f"bytes=0-{download_size}",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
                 }
 
-                logger.info(f"Downloading {download_size / (1024*1024):.1f}MB from beginning")
-                response = requests.get(clip_details['download_url'], headers=headers, stream=True)
+                logger.info(
+                    f"Downloading {download_size / (1024 * 1024):.1f}MB from beginning"
+                )
+                response = requests.get(
+                    clip_details["download_url"], headers=headers, stream=True
+                )
 
-                with open(temp_path, 'wb') as f:  # Overwrite with a fresh download
+                with open(temp_path, "wb") as f:  # Overwrite with a fresh download
                     for chunk in response.iter_content(chunk_size=8192):
                         if chunk:
                             f.write(chunk)
@@ -504,21 +577,29 @@ def download_single_frame(clip_details, timestamp=None):
 
         # If we need to download the full clip as a last resort
         if full_download:
-            logger.warning("Optimized approaches failed. Downloading entire clip as last resort.")
-            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+            logger.warning(
+                "Optimized approaches failed. Downloading entire clip as last resort."
+            )
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
 
             logger.info("Downloading the entire clip")
-            response = requests.get(clip_details['download_url'], headers=headers, stream=True)
+            response = requests.get(
+                clip_details["download_url"], headers=headers, stream=True
+            )
             response.raise_for_status()
 
-            with open(temp_path, 'wb') as f:
+            with open(temp_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
 
             cap = cv2.VideoCapture(temp_path)
             if not cap.isOpened():
-                raise ValueError(f"Could not open video file even after downloading the entire clip: {temp_path}")
+                raise ValueError(
+                    f"Could not open video file even after downloading the entire clip: {temp_path}"
+                )
 
         # Get video properties
         fps = cap.get(cv2.CAP_PROP_FPS)
@@ -527,7 +608,9 @@ def download_single_frame(clip_details, timestamp=None):
         orig_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         actual_duration = frame_count / fps if fps > 0 else 0
 
-        logger.info(f"Video properties: FPS={fps}, Frames={frame_count}, Duration={actual_duration:.2f}s, Resolution={orig_width}x{orig_height}")
+        logger.info(
+            f"Video properties: FPS={fps}, Frames={frame_count}, Duration={actual_duration:.2f}s, Resolution={orig_width}x{orig_height}"
+        )
 
         # For first frame, we'll use frame index 0
         frame_idx = 0
@@ -554,7 +637,9 @@ def download_single_frame(clip_details, timestamp=None):
         # Resize frame to 1080p if needed
         target_width, target_height = 1920, 1080
         if orig_width != target_width or orig_height != target_height:
-            frame = cv2.resize(frame, (target_width, target_height), interpolation=cv2.INTER_LANCZOS4)
+            frame = cv2.resize(
+                frame, (target_width, target_height), interpolation=cv2.INTER_LANCZOS4
+            )
 
         # Save the frame
         cv2.imwrite(str(frame_path), frame)
@@ -577,7 +662,7 @@ def download_single_frame(clip_details, timestamp=None):
         logger.error(f"Error extracting single frame: {e}")
         # Clean up temporary file if it exists
         try:
-            if 'temp_path' in locals() and os.path.exists(temp_path):
+            if "temp_path" in locals() and os.path.exists(temp_path):
                 os.unlink(temp_path)
         except:
             pass
