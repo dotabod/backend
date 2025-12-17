@@ -55,29 +55,15 @@ def get_clip_details(url, max_retries=5, retry_delay=2):
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             }
 
-            # GraphQL query for clip info, similar to TwitchDownloader
+            # Use Twitch's persisted query format (more reliable than full query)
             gql_query = {
-                "query": """
-                query($slug: ID!) {
-                    clip(slug: $slug) {
-                        playbackAccessToken(params: {platform: "web", playerType: "site", playerBackend: "mediaplayer"}) {
-                            signature
-                            value
-                        }
-                        videoQualities {
-                            frameRate
-                            quality
-                            sourceURL
-                        }
-                        title
-                        durationSeconds
-                        broadcaster {
-                            displayName
-                        }
-                        createdAt
+                "operationName": "VideoAccessToken_Clip",
+                "extensions": {
+                    "persistedQuery": {
+                        "version": 1,
+                        "sha256Hash": "36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11",
                     }
-                }
-                """,
+                },
                 "variables": {"slug": clip_id},
             }
 
@@ -146,7 +132,26 @@ def get_clip_details(url, max_retries=5, retry_delay=2):
 
             # Construct the download URL with signature and token
             token = clip_data["playbackAccessToken"]
-            download_url = f"{best_quality['sourceURL']}?sig={token['signature']}&token={quote(token['value'])}"
+            source_url = best_quality["sourceURL"]
+
+            # Log the sourceURL for debugging
+            logger.debug(f"Source URL from API: {source_url}")
+
+            # Validate that sourceURL is a complete URL
+            if not source_url or not source_url.startswith("http"):
+                logger.error(f"Invalid sourceURL from API: {source_url}")
+                logger.error(
+                    f"Full videoQualities data: {json.dumps(clip_data['videoQualities'], indent=2)}"
+                )
+                raise ValueError(
+                    f"Invalid sourceURL received from Twitch API: {source_url}"
+                )
+
+            # Construct download URL with token and sig parameters (matching Twitch's format)
+            download_url = (
+                f"{source_url}?token={quote(token['value'])}&sig={token['signature']}"
+            )
+            logger.debug(f"Constructed download URL: {download_url}")
 
             return {
                 "id": clip_id,
@@ -421,6 +426,7 @@ def download_single_frame(clip_details, timestamp=None):
 
     logger.info(f"Fetching single frame at timestamp {timestamp}s from clip {clip_id}")
 
+    temp_path = None
     try:
         # Create a temporary file for the video segment
         with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_file:
@@ -662,7 +668,7 @@ def download_single_frame(clip_details, timestamp=None):
         logger.error(f"Error extracting single frame: {e}")
         # Clean up temporary file if it exists
         try:
-            if "temp_path" in locals() and os.path.exists(temp_path):
+            if temp_path is not None and os.path.exists(temp_path):
                 os.unlink(temp_path)
         except:
             pass
