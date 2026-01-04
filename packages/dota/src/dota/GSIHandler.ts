@@ -329,13 +329,6 @@ export class GSIHandler implements GSIHandlerType {
         return
       }
 
-      // TODO: Not sure if .accountid actually exists for a solo gsi in non spectate mode
-      const isSameAccountId = this.getSteam32() === Number(this.client.gsi.player.accountid)
-      const isSameSteam32Id = this.getSteam32() === steam32Id
-      const isMultiAccount = this.client.multiAccount === steam32Id
-
-      if (isSameSteam32Id || isMultiAccount || isSameAccountId) return
-
       // User already has a steam32Id and its saved to the `steam_accounts` table
       const foundAct = this.client.SteamAccount.find((act) => act.steam32Id === steam32Id)
       if (foundAct) {
@@ -348,6 +341,9 @@ export class GSIHandler implements GSIHandlerType {
         this.emitBadgeUpdate()
         return
       }
+
+      const isMultiAccount = this.client.multiAccount === steam32Id
+      if (isMultiAccount) return
 
       // Continue to create this act in db
       // Default to the mmr from `users` table for this brand new steam account
@@ -386,7 +382,22 @@ export class GSIHandler implements GSIHandlerType {
     steam32Id: number,
   ) {
     if (res.userId === this.client.token) {
+      await supabase
+        .from('users')
+        .update({ mmr: 0, steam32Id: null, updated_at: new Date().toISOString() })
+        .eq('id', this.client.token)
+
       Object.assign(this.client, { mmr: res.mmr, steam32Id })
+
+      // Update local SteamAccount list if not present
+      if (!this.client.SteamAccount.find((act) => act.steam32Id === steam32Id)) {
+        this.client.SteamAccount.push({
+          mmr: res.mmr,
+          steam32Id,
+          name: this.client.gsi?.player?.name || null,
+          leaderboard_rank: null,
+        })
+      }
     } else {
       this.client.multiAccount = steam32Id
       const uniqueUserIds = Array.from(
@@ -405,17 +416,25 @@ export class GSIHandler implements GSIHandlerType {
   async createNewSteamAccount(mmr: number, steam32Id: number) {
     logger.info('[STEAM32ID] Adding steam32Id', { name: this.client.name })
 
+    const name = this.client.gsi?.player?.name || null
     await supabase.from('steam_accounts').insert({
       mmr,
       steam32Id,
       userId: this.client.token,
-      name: this.client.gsi?.player?.name,
+      name,
     })
 
     await supabase
       .from('users')
-      .update({ mmr: 0, updated_at: new Date().toISOString() })
+      .update({ mmr: 0, steam32Id: null, updated_at: new Date().toISOString() })
       .eq('id', this.client.token)
+
+    this.client.SteamAccount.push({
+      mmr,
+      steam32Id,
+      name,
+      leaderboard_rank: null,
+    })
 
     Object.assign(this.client, { mmr, steam32Id, multiAccount: undefined })
     this.emitBadgeUpdate()
@@ -959,7 +978,13 @@ export class GSIHandler implements GSIHandlerType {
           return
         }
 
-        closeTwitchBet(won, this.getChannelId(), matchId, this.client.settings, this.client.subscription)
+        closeTwitchBet(
+          won,
+          this.getChannelId(),
+          matchId,
+          this.client.settings,
+          this.client.subscription,
+        )
           .then(() => {
             logger.info('[BETS] end bets', {
               event: 'end_bets',
