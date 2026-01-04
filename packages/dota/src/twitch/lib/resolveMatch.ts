@@ -26,8 +26,7 @@ async function findUnresolvedMatch(
   streamStartDate?: Date | null,
 ): Promise<{ match: UnresolvedMatch | null; error: string | null }> {
   // Use stream start date or last 12 hours (same logic as getWL.ts)
-  const startDate =
-    streamStartDate ?? new Date(Date.now() - 12 * 60 * 60 * 1000)
+  const startDate = streamStartDate ?? new Date(Date.now() - 12 * 60 * 60 * 1000)
 
   const { data: match, error } = await supabase
     .from('matches')
@@ -193,11 +192,7 @@ export async function resolveMatchRetroactively(
   // Check if trying to resolve the current ongoing match
   const currentMatchId = client.gsi?.map?.matchid
   if (currentMatchId && matchId === currentMatchId) {
-    chatClient.say(
-      channel,
-      t('bets.cannotResolveCurrentMatch', { lng: client.locale }),
-      messageId,
-    )
+    chatClient.say(channel, t('bets.cannotResolveCurrentMatch', { lng: client.locale }), messageId)
     return { success: false, errorKey: 'currentMatch' }
   }
 
@@ -357,4 +352,3 @@ export async function resolveMatchRetroactively(
 
   return { success: true }
 }
-

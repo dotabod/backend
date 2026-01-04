@@ -44,9 +44,7 @@ describe('closeTwitchBet', () => {
 
     mockApi.predictions.getPredictions.mockResolvedValue({ data: mockPredictions })
 
-    const settings: SocketClient['settings'] = [
-      { key: DBSettings.discardZeroBets, value: false },
-    ]
+    const settings: SocketClient['settings'] = [{ key: DBSettings.discardZeroBets, value: false }]
 
     await closeTwitchBet(true, mockTwitchId, mockMatchId, settings, undefined)
 
@@ -71,9 +69,7 @@ describe('closeTwitchBet', () => {
 
     mockApi.predictions.getPredictions.mockResolvedValue({ data: mockPredictions })
 
-    const settings: SocketClient['settings'] = [
-      { key: DBSettings.discardZeroBets, value: true },
-    ]
+    const settings: SocketClient['settings'] = [{ key: DBSettings.discardZeroBets, value: true }]
 
     await closeTwitchBet(true, mockTwitchId, mockMatchId, settings, undefined)
 
@@ -103,9 +99,7 @@ describe('closeTwitchBet', () => {
 
     mockApi.predictions.getPredictions.mockResolvedValue({ data: mockPredictions })
 
-    const settings: SocketClient['settings'] = [
-      { key: DBSettings.discardZeroBets, value: true },
-    ]
+    const settings: SocketClient['settings'] = [{ key: DBSettings.discardZeroBets, value: true }]
 
     await closeTwitchBet(false, mockTwitchId, mockMatchId, settings, undefined)
 
@@ -126,9 +120,7 @@ describe('closeTwitchBet', () => {
 
     mockApi.predictions.getPredictions.mockResolvedValue({ data: mockPredictions })
 
-    const settings: SocketClient['settings'] = [
-      { key: DBSettings.discardZeroBets, value: true },
-    ]
+    const settings: SocketClient['settings'] = [{ key: DBSettings.discardZeroBets, value: true }]
 
     await closeTwitchBet(true, mockTwitchId, mockMatchId, settings, undefined)
 

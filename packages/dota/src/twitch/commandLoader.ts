@@ -54,4 +54,3 @@ import './commands/winprobability.ts'
 import './commands/wl.ts'
 import './commands/won.ts'
 import './commands/xpm.ts'
-

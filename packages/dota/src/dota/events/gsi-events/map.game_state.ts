@@ -57,7 +57,10 @@ eventHandler.registerEvent('map:game_state', {
       draftStartByMatchId.set(dotaClient.client.gsi?.map?.matchid || '', true)
       const DRAFT_CLIP_DELAY_MS = 46000 // 46 seconds
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
-      logger.info('[Draft Clip] Draft started, creating clip in 46 seconds + stream delay', logContext)
+      logger.info(
+        '[Draft Clip] Draft started, creating clip in 46 seconds + stream delay',
+        logContext,
+      )
 
       // Delay to ensure the draft has started
       delayedQueue.addTask(DRAFT_CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, async () => {
