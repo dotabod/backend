@@ -169,7 +169,7 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 - Use `liveBroadcasts.list` to find the active broadcast and obtain `liveChatId`.
 - Poll `liveChatMessages.list` respecting `pollingIntervalMillis` and page tokens; store `messageId`/timestamp with a short TTL (24–48h) to prevent replays without unbounded growth.
 - Normalize inbound messages into the existing command bus (user id, channel id, roles, message text). Map YouTube roles to Twitch equivalents (owner → broadcaster, moderator → moderator, member → sub, none → viewer).
-- Outbound messages: use `liveChatMessages.insert`; centralize rate limiting against YouTube Live Chat quota units (per current API docs) and fall back to compact messaging when near limits.
+- Outbound messages: use `liveChatMessages.insert`; centralize rate limiting against YouTube Data API quota units (default 10,000/day; `liveChatMessages.list` ~5 units, `liveChatMessages.insert` ~50 units per current docs) and fall back to compact messaging when near limits.
 - Moderation: handle errors for slow mode, members-only, or chat disabled; surface disable reasons through the same cache/telemetry used in Twitch (`disable_notifications` equivalents).
 
 ### Stream lifecycle and events (P1/P2)
@@ -180,7 +180,7 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 
 ### Feature parity mapping (P2)
 
-- **Predictions/bets**: Use YouTube Polls (if available) or emulate via chat messages + reaction parsing (feature-flagged, with documented parsing and error handling). Keep Supabase `advanced_bets` logic but flag provider to avoid mixing metrics.
+- **Predictions/bets**: YouTube does not expose poll creation via API; offer a manual-prompt flow (announce options in chat and parse reactions/keywords under a feature flag) or disable the feature for YouTube if accuracy is insufficient. Keep Supabase `advanced_bets` logic but flag provider to avoid mixing metrics.
 - **Auto chat commands**: Reuse existing handlers (MMR, notable players, items) with provider-aware transport.
 - **Overlays and sockets**: Ensure socket payloads include provider/channel identifiers so overlays work cross-platform without duplicating UI logic.
 - **Localization**: Reuse existing i18n files; add YouTube-specific system messages (errors, rate-limit notices).
