@@ -208,10 +208,10 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 
 ## Kick integration implementation plan (parity with Twitch/YouTube where possible)
 
-- **Objectives**: Deliver Kick chat/stream parity for the listed Twitch-dependent features: bets open/close, online/offline detection, automatic username change detection, poll/bets overlay, W/L tracking (beyond 12h), and avoiding manual `!resetwl`.
+- **Objectives**: Deliver Kick chat/stream parity for core Twitch-dependent features: bets open/close, online/offline detection, automatic username change detection, poll/bets overlay, W/L tracking beyond 12h without manual `!resetwl`, plus the existing chat commands.
 - **Provider model**: Reuse `StreamingProvider` contract; add a Kick implementation with provider-aware sockets defaulting to Twitch for backward compatibility.
 - **Auth**: Document Kick OAuth (or token) flow, scopes, and refresh handling; store as `provider: 'kick'` in Supabase `accounts` with channel metadata.
-- **Chat + commands**: Map existing chat command handlers to Kick transport; ensure role mapping (broadcaster/mod/moderator/subscriber) and rate-limiting aligned to Kick limits.
+- **Chat + commands**: Map existing chat command handlers to Kick transport; ensure role mapping (broadcaster/moderator/subscriber) and rate-limiting aligned to Kick limits.
 - **Bets/Polls**: If Kick exposes programmatic bet/poll APIs, wire analogous calls; otherwise, provide feature-flagged chat-driven fallback and disable overlay triggers when unsupported.
 - **Online/offline + username changes**: Poll or subscribe to Kick stream status/user profile updates; emit `stream.online/offline` equivalents and detect display-name changes to update downstream caches.
 - **W/L tracking**: Use Kick live-status to bound the window instead of 12h; auto-reset W/L on new session start to remove manual `!resetwl`.
