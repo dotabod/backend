@@ -208,14 +208,15 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 
 ## Kick integration implementation plan (parity with Twitch/YouTube where possible)
 
-- **Objectives**: Deliver Kick chat/stream parity for core Twitch-dependent features: bets open/close, online/offline detection, automatic username change detection, poll/bets overlay, W/L tracking beyond 12h without manual `!resetwl`, plus the existing chat commands.
-- **Provider model**: Reuse `StreamingProvider` contract; add a Kick implementation with provider-aware sockets defaulting to Twitch for backward compatibility.
-- **Auth**: Document Kick OAuth (or token) flow, scopes, and refresh handling; store as `provider: 'kick'` in Supabase `accounts` with channel metadata.
-- **Chat + commands**: Map existing chat command handlers to Kick transport; ensure role mapping (broadcaster/moderator/subscriber) and rate-limiting aligned to Kick limits.
-- **Bets/Polls**: If Kick exposes programmatic bet/poll APIs, wire analogous calls; otherwise, provide feature-flagged chat-driven fallback and disable overlay triggers when unsupported.
-- **Online/offline + username changes**: Poll or subscribe to Kick stream status/user profile updates; emit `stream.online/offline` equivalents and detect display-name changes to update downstream caches.
-- **W/L tracking**: Use Kick live-status to bound the window instead of 12h; auto-reset W/L on new session start to remove manual `!resetwl`.
-- **Observability**: Add provider-tagged metrics/logging for Kick transport, auth failures, and command success/error rates; health checks to verify channel linkage and live-status detection.
+- **Objectives & scope**: Deliver Kick chat/stream parity for core Twitch-dependent features: bets open/close, online/offline detection, automatic username change detection, poll/bets overlay, W/L tracking beyond 12h without manual `!resetwl`, plus the existing chat commands.
+- **Architecture**: Reuse the `StreamingProvider` contract and provider-aware sockets (default to Twitch when missing) to plug in a Kick transport; add `packages/kick-chat` and `packages/kick-events` mirrors if separation is needed.
+- **Authentication**: Document Kick OAuth/token flow, scopes/permissions, refresh, and revocation handling; store as `provider: 'kick'` with channel metadata in Supabase `accounts`.
+- **Data model/config**: Store Kick channel id/username and feature toggles (bets/polls enabled, overlay hooks, W/L auto-reset) and any chat state needed to dedupe messages (with TTL).
+- **Chat + commands**: Map existing chat command handlers to Kick transport; normalize roles (broadcaster/moderator/subscriber) and tune rate limits to Kick caps.
+- **Bets/Polls**: If Kick exposes programmatic bet/poll APIs, call them; otherwise, use feature-flagged chat-driven fallback (and disable overlay triggers when unsupported) to avoid misleading UI.
+- **Online/offline + username changes**: Poll/subscribe to Kick stream status and profile updates; emit `stream.online/offline` equivalents and detect display-name changes to refresh caches and overlays.
+- **W/L tracking**: Bound W/L windows using Kick live sessions; auto-reset at session start to remove manual `!resetwl` and allow accurate last-session stats.
+- **Observability & rollout**: Add provider-tagged metrics/logs for Kick transport/auth/command success; health checks for channel linkage and live-status detection; gate rollout behind a Kick beta allowlist before broad enablement.
 
 ## Technical Overview
 
