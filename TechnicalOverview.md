@@ -206,6 +206,17 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 - **Token revocation**: health checks plus UI banner; disable features gracefully and request re-auth.
 - **Feature gaps vs. Twitch**: define MVP (chat commands + stream status) and stage advanced features after stability metrics are green.
 
+## Kick integration implementation plan (parity with Twitch/YouTube where possible)
+
+- **Objectives**: Deliver Kick chat/stream parity for the listed Twitch-dependent features: bets open/close, online/offline detection, automatic username change detection, poll/bets overlay, W/L tracking (beyond 12h), and avoiding manual `!resetwl`.
+- **Provider model**: Reuse `StreamingProvider` contract; add a Kick implementation with provider-aware sockets defaulting to Twitch for backward compatibility.
+- **Auth**: Document Kick OAuth (or token) flow, scopes, and refresh handling; store as `provider: 'kick'` in Supabase `accounts` with channel metadata.
+- **Chat + commands**: Map existing chat command handlers to Kick transport; ensure role mapping (broadcaster/mod/moderator/subscriber) and rate-limiting aligned to Kick limits.
+- **Bets/Polls**: If Kick exposes programmatic bet/poll APIs, wire analogous calls; otherwise, provide feature-flagged chat-driven fallback and disable overlay triggers when unsupported.
+- **Online/offline + username changes**: Poll or subscribe to Kick stream status/user profile updates; emit `stream.online/offline` equivalents and detect display-name changes to update downstream caches.
+- **W/L tracking**: Use Kick live-status to bound the window instead of 12h; auto-reset W/L on new session start to remove manual `!resetwl`.
+- **Observability**: Add provider-tagged metrics/logging for Kick transport, auth failures, and command success/error rates; health checks to verify channel linkage and live-status detection.
+
 ## Technical Overview
 
 ### Internal microservices
