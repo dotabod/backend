@@ -126,6 +126,86 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 
 ![image](https://user-images.githubusercontent.com/1036968/235396718-f4cb5929-01f2-4937-ab7c-d7695fb931b6.png)
 
+## YouTube integration implementation plan
+
+### Objectives and success criteria
+
+- Deliver feature parity (or clear MVP subset) for streamers who broadcast on YouTube Live in addition to Twitch.
+- Keep the existing Twitch stack stable by isolating changes behind a provider abstraction.
+- Preserve latency-sensitive flows (game events → chat/output) with <5s added delay, accounting for YouTube chat polling intervals.
+- Track adoption via number of linked YouTube channels, active live chats, and command success/error rates.
+
+### Scope and phased rollout
+
+1. **Foundation (P0)**: OAuth + channel linkage, data model readiness, secrets/infra wiring, basic health checks.
+2. **Chat + stream lifecycle (P1)**: Bidirectional chat bridge (commands/responses), live/offline detection, moderation/error handling.
+3. **Feature parity (P2)**: Dota-driven automations (predictions/polls, overlays, auto-messages), localization, moderator controls.
+4. **Hardening & rollout (P3)**: Observability, rate-limit tuning, canary rollout to a small cohort, documentation and support.
+
+### Architecture approach
+
+- **Provider abstraction**: Introduce a `StreamingProvider` interface in `shared-utils` to unify auth tokens, chat send/receive, and stream status checks. Keep Twitch implementations intact and add a YouTube implementation that plugs into the same sockets used by `packages/twitch-chat`.
+- **New packages/services**:
+  - `packages/youtube-chat`: Mirrors `twitch-chat` but uses YouTube LiveChat APIs for ingest and message dispatch; reuses shared command handlers where possible.
+  - `packages/youtube-events`: Mirrors `twitch-events` for stream lifecycle and channel updates (using `liveBroadcasts`, `videos`, `subscriptions` APIs). Emits the same internal events consumed by downstream services.
+- **Sockets and API surface**: Extend existing socket events to include `provider` metadata so frontends and other services can route messages to the correct transport without duplicating handlers.
+- **Deployment**: Add Docker targets and compose entries mirroring Twitch services; gate startup on presence of Google credentials to avoid breaking existing environments.
+
+### Authentication and permissions
+
+- Create a Google Cloud project + OAuth client (web app) and store credentials via Doppler alongside Twitch secrets.
+- Scopes: `https://www.googleapis.com/auth/youtube.readonly` (live metadata), `.../youtube.force-ssl` (chat read/write), `.../youtube.channel-memberships.creator` if membership-specific features are needed. Keep scope set minimal for MVP.
+- Flow: front-end initiates Google OAuth; Supabase `accounts` table already supports generic providers—store `provider: 'google' | 'youtube'` with `refresh_token`, `access_token`, `expires_at`, `scope`.
+- Token refresh: implement Google OAuth refresh logic in `shared-utils` alongside existing Twitch token helpers; add retry/backoff and revocation detection.
+
+### Data model and configuration
+
+- Users table already has a `youtube` field (channel id/url). Enforce population during linkage; validate channel ownership by comparing OAuth channel id.
+- Add configuration fields (Supabase) for YouTube-specific toggles: chat language fallback, poll enablement, command prefixes, rate-limit ceilings.
+- Add tables/rows for live chat state if needed (e.g., `youtube_live_chats` storing `liveChatId`, `nextPageToken`, `pollIntervalMs`, last seen message timestamp) to avoid duplicate processing.
+
+### Chat ingestion and command handling (P1)
+
+- Use `liveBroadcasts.list` to find the active broadcast and obtain `liveChatId`.
+- Poll `liveChatMessages.list` respecting `pollingIntervalMillis` and page tokens; store `messageId`/timestamp to prevent replays.
+- Normalize inbound messages into the existing command bus (user id, channel id, roles, message text). Map YouTube roles to Twitch equivalents (owner → broadcaster, moderator → moderator, member → sub, none → viewer).
+- Outbound messages: use `liveChatMessages.insert`; centralize rate limiting (YouTube default ~11,000 messages/day) and fall back to compact messaging when near limits.
+- Moderation: handle errors for slow mode, members-only, or chat disabled; surface disable reasons through the same cache/telemetry used in Twitch (`disable_notifications` equivalents).
+
+### Stream lifecycle and events (P1/P2)
+
+- Detect live/offline via `liveBroadcasts.list` and `videos.list` status; emit internal `stream.online`/`stream.offline` events matching the payload shape from `twitch-events`.
+- Track title/category changes via `videos.update` or polling; propagate to overlays and chat announcements.
+- Implement health checks (cron) similar to Twitch subscription health: verify token validity, channel linkage, and active liveChatId presence; auto-heal by re-fetching live broadcast.
+
+### Feature parity mapping (P2)
+
+- **Predictions/bets**: Use YouTube Polls (if available) or emulate via chat messages + reaction parsing; keep Supabase `advanced_bets` logic but flag provider to avoid mixing metrics.
+- **Auto chat commands**: Reuse existing handlers (MMR, notable players, items) with provider-aware transport.
+- **Overlays and sockets**: Ensure socket payloads include provider/channel identifiers so overlays work cross-platform without duplicating UI logic.
+- **Localization**: Reuse existing i18n files; add YouTube-specific system messages (errors, rate-limit notices).
+
+### Observability, reliability, and limits (P3)
+
+- Metrics: poll latency, messages processed/sent, error codes per API, rate-limit headroom, per-channel disable events.
+- Logging: standardize Winston context fields (`provider`, `channelId`, `liveChatId`, `error.code`).
+- Alerts: trigger when polling falls behind (timestamp gap), repeated auth failures, or message send failures > threshold.
+- Quotas: track Google API quotas; add circuit breakers to pause non-essential features when nearing limits.
+
+### Rollout plan
+
+- Internal dogfood on a test channel; record flows and log volumes.
+- Beta allowlist (Supabase flag) to enable YouTube per user without affecting Twitch users.
+- Gradually expand cohort; monitor metrics and support channels.
+- Documentation: add setup guide (creating Google credentials, linking account), update README and dashboard onboarding once stable.
+
+### Risks and mitigations
+
+- **Higher latency from polling**: keep Dota-triggered messages concise, allow configurable batching, and pre-emptively refresh `liveChatId` on reconnect.
+- **Quota exhaustion**: cache broadcast/channel metadata aggressively; avoid redundant `liveChatMessages.insert` retries.
+- **Token revocation**: health checks plus UI banner; disable features gracefully and request re-auth.
+- **Feature gaps vs. Twitch**: define MVP (chat commands + stream status) and stage advanced features after stability metrics are green.
+
 ## Technical Overview
 
 ### Internal microservices
