@@ -144,11 +144,11 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 
 ### Architecture approach
 
-- **Provider abstraction**: Introduce a `StreamingProvider` interface in `shared-utils` to unify auth tokens, chat send/receive, and stream status checks. Keep Twitch implementations intact and add a YouTube implementation that plugs into the same sockets used by `packages/twitch-chat`.
+- **Provider abstraction**: Introduce a `StreamingProvider` interface in `shared-utils` to unify auth tokens, chat send/receive, and stream status checks (e.g., `authenticate/refresh`, `getLiveState`, `subscribeToChat`, `sendMessage`, `disconnect`, `mapRoles`). Keep Twitch implementations intact and add a YouTube implementation that plugs into the same sockets used by `packages/twitch-chat`.
 - **New packages/services**:
   - `packages/youtube-chat`: Mirrors `twitch-chat` but uses YouTube LiveChat APIs for ingest and message dispatch; reuses shared command handlers where possible.
   - `packages/youtube-events`: Mirrors `twitch-events` for stream lifecycle and channel updates (using `liveBroadcasts`, `videos`, `subscriptions` APIs). Emits the same internal events consumed by downstream services.
-- **Sockets and API surface**: Extend existing socket events to include `provider` metadata so frontends and other services can route messages to the correct transport without duplicating handlers.
+- **Sockets and API surface**: Extend existing socket events to include `provider` metadata so frontends and other services can route messages to the correct transport without duplicating handlers. Default provider to `twitch` when omitted and version new events if payload shapes change to keep existing consumers working.
 - **Deployment**: Add Docker targets and compose entries mirroring Twitch services; gate startup on presence of Google credentials to avoid breaking existing environments.
 
 ### Authentication and permissions
@@ -169,7 +169,7 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 - Use `liveBroadcasts.list` to find the active broadcast and obtain `liveChatId`.
 - Poll `liveChatMessages.list` respecting `pollingIntervalMillis` and page tokens; store `messageId`/timestamp with a short TTL (24–48h) to prevent replays without unbounded growth.
 - Normalize inbound messages into the existing command bus (user id, channel id, roles, message text). Map YouTube roles to Twitch equivalents (owner → broadcaster, moderator → moderator, member → sub, none → viewer).
-- Outbound messages: use `liveChatMessages.insert`; centralize rate limiting against YouTube Data API quota units (default 10,000/day; `liveChatMessages.list` ~5 units, `liveChatMessages.insert` ~50 units per current docs) and fall back to compact messaging when near limits.
+- Outbound messages: use `liveChatMessages.insert`; centralize rate limiting against YouTube Data API quota units (default 10,000/day; `liveChatMessages.list` and `insert` unit costs to be confirmed against current docs) and fall back to compact messaging when near limits.
 - Moderation: handle errors for slow mode, members-only, or chat disabled; surface disable reasons through the same cache/telemetry used in Twitch (`disable_notifications` equivalents).
 
 ### Stream lifecycle and events (P1/P2)
@@ -180,7 +180,7 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 
 ### Feature parity mapping (P2)
 
-- **Predictions/bets**: YouTube does not expose poll creation via API; offer a manual-prompt flow (announce options in chat and parse reactions/keywords under a feature flag) or disable the feature for YouTube if accuracy is insufficient. Keep Supabase `advanced_bets` logic but flag provider to avoid mixing metrics.
+- **Predictions/bets**: Verify whether YouTube exposes poll creation via `liveChatMessages.insert` variants; if unsupported or unreliable, fall back to a manual-prompt flow (announce options in chat and parse reactions/keywords under a feature flag) or disable the feature for YouTube. Keep Supabase `advanced_bets` logic but flag provider to avoid mixing metrics.
 - **Auto chat commands**: Reuse existing handlers (MMR, notable players, items) with provider-aware transport.
 - **Overlays and sockets**: Ensure socket payloads include provider/channel identifiers so overlays work cross-platform without duplicating UI logic.
 - **Localization**: Reuse existing i18n files; add YouTube-specific system messages (errors, rate-limit notices).
