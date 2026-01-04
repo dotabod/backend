@@ -213,7 +213,7 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 - **Authentication**: Document Kick OAuth/token flow, scopes/permissions, refresh, and revocation handling; store as `provider: 'kick'` with channel metadata in Supabase `accounts`.
 - **Data model/config**: Store Kick channel id/username and feature toggles (bets/polls enabled, overlay hooks, W/L auto-reset) and any chat state needed to dedupe messages (with TTL).
 - **Chat + commands**: Map existing chat command handlers to Kick transport; normalize roles (broadcaster/moderator/subscriber) and tune rate limits to Kick caps.
-- **Bets/Polls**: If Kick exposes programmatic bet/poll APIs, call them; otherwise, use feature-flagged chat-driven fallback (and disable overlay triggers when unsupported) to avoid misleading UI.
+- **Bets/Polls**: If Kick exposes programmatic bet/poll APIs, call them; otherwise, use a feature-flagged chat-driven fallback (announce options as numbered keywords like `1`/`2` and count matching messages or reactions) and disable overlay triggers when unsupported to avoid misleading UI.
 - **Online/offline + username changes**: Poll/subscribe to Kick stream status and profile updates; emit `stream.online/offline` equivalents and detect display-name changes to refresh caches and overlays.
 - **W/L tracking**: Bound W/L windows using Kick live sessions; auto-reset at session start to remove manual `!resetwl` and allow accurate last-session stats.
 - **Observability & rollout**: Add provider-tagged metrics/logs for Kick transport/auth/command success; health checks for channel linkage and live-status detection; gate rollout behind a Kick beta allowlist before broad enablement.
