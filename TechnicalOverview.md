@@ -154,7 +154,7 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 ### Authentication and permissions
 
 - Create a Google Cloud project + OAuth client (web app) and store credentials via Doppler alongside Twitch secrets.
-- Scopes: `https://www.googleapis.com/auth/youtube.readonly` (live metadata), `https://www.googleapis.com/auth/youtube.force-ssl` (chat read/write), `https://www.googleapis.com/auth/youtube.channel-memberships.creator` if membership-specific features are needed. Keep scope set minimal for MVP.
+- Scopes: `https://www.googleapis.com/auth/youtube.readonly` (live metadata), `https://www.googleapis.com/auth/youtube.force-ssl` (chat read/write—needed instead of broader `.../youtube`), `https://www.googleapis.com/auth/youtube.channel-memberships.creator` if membership-specific features are needed. Re-evaluate if a narrower live-stream scope (e.g., `youtube.liveBroadcast`) is sufficient before requesting broader access.
 - Flow: front-end initiates Google OAuth; Supabase `accounts` table already supports generic providers—store `provider: 'youtube'` with `refresh_token`, `access_token`, `expires_at`, `scope`, and channel metadata to disambiguate from any other Google-linked features.
 - Token refresh: implement Google OAuth refresh logic in `shared-utils` alongside existing Twitch token helpers; add retry/backoff and revocation detection.
 
@@ -167,7 +167,7 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 ### Chat ingestion and command handling (P1)
 
 - Use `liveBroadcasts.list` to find the active broadcast and obtain `liveChatId`.
-- Poll `liveChatMessages.list` respecting `pollingIntervalMillis` and page tokens; store `messageId`/timestamp to prevent replays.
+- Poll `liveChatMessages.list` respecting `pollingIntervalMillis` and page tokens; store `messageId`/timestamp with a short TTL (24–48h) to prevent replays without unbounded growth.
 - Normalize inbound messages into the existing command bus (user id, channel id, roles, message text). Map YouTube roles to Twitch equivalents (owner → broadcaster, moderator → moderator, member → sub, none → viewer).
 - Outbound messages: use `liveChatMessages.insert`; centralize rate limiting against YouTube Live Chat quota units (per current API docs) and fall back to compact messaging when near limits.
 - Moderation: handle errors for slow mode, members-only, or chat disabled; surface disable reasons through the same cache/telemetry used in Twitch (`disable_notifications` equivalents).
@@ -180,7 +180,7 @@ Secrets management uses Doppler, and injects into every Docker build on the fly.
 
 ### Feature parity mapping (P2)
 
-- **Predictions/bets**: Use YouTube Polls (if available) or emulate via chat messages + reaction parsing; keep Supabase `advanced_bets` logic but flag provider to avoid mixing metrics.
+- **Predictions/bets**: Use YouTube Polls (if available) or emulate via chat messages + reaction parsing (feature-flagged, with documented parsing and error handling). Keep Supabase `advanced_bets` logic but flag provider to avoid mixing metrics.
 - **Auto chat commands**: Reuse existing handlers (MMR, notable players, items) with provider-aware transport.
 - **Overlays and sockets**: Ensure socket payloads include provider/channel identifiers so overlays work cross-platform without duplicating UI logic.
 - **Localization**: Reuse existing i18n files; add YouTube-specific system messages (errors, rate-limit notices).
