@@ -8,15 +8,15 @@ interface HeroStat {
 }
 
 interface TodayHeroStatsParams {
-  channelId: string
+  token: string
   startDate?: Date | null
 }
 
 export async function getTodayHeroStats({
-  channelId,
+  token,
   startDate,
 }: TodayHeroStatsParams): Promise<HeroStat[]> {
-  if (!channelId) {
+  if (!token) {
     return []
   }
 
@@ -27,7 +27,7 @@ export async function getTodayHeroStats({
   const { data: matches, error } = await supabase
     .from('matches')
     .select('hero_name, won')
-    .eq('userId', channelId)
+    .eq('userId', token)
     .not('won', 'is', null)
     .not('hero_name', 'is', null)
     .gte('created_at', fromDate)
