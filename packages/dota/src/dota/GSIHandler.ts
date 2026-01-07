@@ -1409,12 +1409,7 @@ export class GSIHandler implements GSIHandlerType {
           logger.error('err sendExtensionPubSubBroadcastMessageIfChanged', { e })
         })
         this.emitBlockEvent({ state, blockType: null })
-
-        // Don't close bets if we were in spectator or arcade mode (including hero demo)
-        // because no bet was ever opened for those modes
-        if (this.blockCache !== 'spectator' && this.blockCache !== 'arcade') {
-          await this.closeBets()
-        }
+        await this.closeBets()
         return
       }
     } catch (error) {
