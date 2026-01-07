@@ -54,7 +54,7 @@ commandHandler.registerCommand('today', {
     }
 
     const heroStats = await getTodayHeroStats({
-      channelId: channelId,
+      token: client.token,
       startDate: client.stream_start_date,
     })
 
