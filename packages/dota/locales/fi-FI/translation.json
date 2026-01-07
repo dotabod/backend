@@ -241,6 +241,10 @@
     "from": "Tippi sankarilta {{- heroName}} {{emote}}",
     "to": "Tippaamme sankaria {{- heroName}} {{emote}}"
   },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary": "{{wins}}W {{losses}}L ({{total}} games)"
+  },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod on nyt poistettu käytöstä. Ei enää vastaa komentoihin eikä katsele pelitapahtumia. Ota käyttöön kirjoittamalla !toggle uudelleen.",
   "toggle_enabled": "Dotabod on nyt käytössä. Vastaa taas komentoihin ja katselee pelitapahtumia. Kirjoita !toggle uudelleen poistaaksesi käytöstä.",

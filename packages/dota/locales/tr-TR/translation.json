@@ -241,6 +241,10 @@
     "from": "{{- heroName}} tipledi{{emote}}",
     "to": "{{- heroName}} tipliyoruz {{emote}}"
   },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary": "{{wins}}W {{losses}}L ({{total}} games)"
+  },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod artık devre dışı. Artık komutlara yanıt vermeyecek veya oyun etkinliklerini izlemeyecek. !toggle yazarak tekrar aktif edebilirsin.",
   "toggle_enabled": "Dotabod artık aktif. Komutlara tekrar yanıt verebilir ve oyun içi etkinlikleri takip edebilir. !toggle yazarak devredışı bırakabilirsin.",

@@ -241,6 +241,10 @@
     "from": "{{- heroName}} تیپش کرد {{emote}}",
     "to": "{{- heroName}} تیپش کردم {{emote}}"
   },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary": "{{wins}}W {{losses}}L ({{total}} games)"
+  },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "بات غیرفعال شد. برای فعال سازی مجدد  !toggle  بزن",
   "toggle_enabled": "بات فعال شد. برای غیرفعال سازی مجدد  !toggle  بزن",

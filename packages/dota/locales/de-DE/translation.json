@@ -241,6 +241,10 @@
     "from": "The tip from {{- heroName}} ICANT",
     "to": "We tipping {{- heroName}} PepeLaugh"
   },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary": "{{wins}}W {{losses}}L ({{total}} games)"
+  },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod ist jetzt deaktiviert. Wird nicht mehr auf Befehle reagieren oder Spielereignisse beobachten. Tippe !toggle erneut um es zu aktivieren.",
   "toggle_enabled": "Dotabod ist jetzt aktiviert. Antworte erneut auf Befehle und beobachte Spielereignisse. Tippe !toggle erneut um zu deaktivieren.",

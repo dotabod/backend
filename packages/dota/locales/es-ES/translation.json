@@ -253,6 +253,10 @@
     "from": "La propina de {{- heroName}} {{emote}}",
     "to": "Estamos enviar propina {{- heroName}} {{emote}}"
   },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary": "{{wins}}W {{losses}}L ({{total}} games)"
+  },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod está desactivado. Ya no responderá a comandos ni verá eventos del juego. Vuelve a escribir !toggle para activarlo.",
   "toggle_enabled": "Dotabod está ahora activado. Vuelve a responder a los comandos y a ver los eventos del juego. Escribe !toggle de nuevo para desactivar.",
