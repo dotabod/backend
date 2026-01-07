@@ -56,7 +56,7 @@ function checkWashProfanity(text: string): { detected: boolean; locale?: string 
 }
 
 async function runTest() {
-  console.log('Testing enhanced profanity detection system:\n')
+  // console.log('Testing enhanced profanity detection system:\n')
 
   const testCases = [
     { text: 'Hello world, this is a normal text.', description: 'Normal text' },
@@ -94,26 +94,26 @@ async function runTest() {
   ]
 
   for (const testCase of testCases) {
-    console.log(`Testing: "${testCase.text}" (${testCase.description})`)
+    // console.log(`Testing: "${testCase.text}" (${testCase.description})`)
 
     const moderated = await moderateText(testCase.text)
     const details = getProfanityDetails(testCase.text)
 
-    console.log(`Moderated: "${moderated}"`)
-    console.log(`Detection source: ${details.source}`)
+    // console.log(`Moderated: "${moderated}"`)
+    // console.log(`Detection source: ${details.source}`)
     if (details.language) {
-      console.log(`Language detected: ${details.language}`)
+      // console.log(`Language detected: ${details.language}`)
     }
     if (details.matches) {
-      console.log(`Matched words: ${details.matches.join(', ')}`)
+      // console.log(`Matched words: ${details.matches.join(', ')}`)
     }
-    console.log('-------------------\n')
+    // console.log('-------------------\n')
   }
 }
 
 // Library comparison test
 async function compareLibraries() {
-  console.log('\n=== LIBRARY PERFORMANCE COMPARISON ===\n')
+  // console.log('\n=== LIBRARY PERFORMANCE COMPARISON ===\n')
 
   const testCases = [
     { text: 'Hello world, this is a normal text.', description: 'Normal text' },
@@ -171,15 +171,15 @@ async function compareLibraries() {
 
   for (const testCase of profanityTestCases) {
     // Process each test case with individual libraries
-    console.log(`\nTesting: "${testCase.text}" (${testCase.description})`)
-    console.log('Libraries that detected profanity:')
+    // console.log(`\nTesting: "${testCase.text}" (${testCase.description})`)
+    // console.log('Libraries that detected profanity:')
 
     // Test washyourmouthoutwithsoap
     const washResult = checkWashProfanity(testCase.text)
     scores.washyourmouthoutwithsoap!.total++
     if (washResult.detected) {
       scores.washyourmouthoutwithsoap!.detected++
-      console.log(`- washyourmouthoutwithsoap (locale: ${washResult.locale})`)
+      // console.log(`- washyourmouthoutwithsoap (locale: ${washResult.locale})`)
     }
 
     // Test bad-words
@@ -188,10 +188,10 @@ async function compareLibraries() {
       scores['bad-words']!.total++
       if (badWordsResult) {
         scores['bad-words']!.detected++
-        console.log('- bad-words')
+        // console.log('- bad-words')
       }
     } catch (error) {
-      console.log('- bad-words (error)')
+      // console.log('- bad-words (error)')
     }
 
     // Test leo-profanity
@@ -200,10 +200,10 @@ async function compareLibraries() {
       scores['leo-profanity']!.total++
       if (leoResult) {
         scores['leo-profanity']!.detected++
-        console.log('- leo-profanity')
+        // console.log('- leo-profanity')
       }
     } catch (error) {
-      console.log('- leo-profanity (error)')
+      // console.log('- leo-profanity (error)')
     }
 
     // Test naughty-words
@@ -219,7 +219,7 @@ async function compareLibraries() {
         const wordList = naughtyWords[lang] as string[]
         if (wordList.some((word) => testCase.text.toLowerCase().includes(word.toLowerCase()))) {
           naughtyWordsDetected = true
-          console.log(`- naughty-words (lang: ${lang})`)
+          // console.log(`- naughty-words (lang: ${lang})`)
           break
         }
       }
@@ -228,7 +228,7 @@ async function compareLibraries() {
         scores['naughty-words']!.detected++
       }
     } catch (error) {
-      console.log('- naughty-words (error)')
+      // console.log('- naughty-words (error)')
     }
 
     // Test profanity-util
@@ -237,10 +237,10 @@ async function compareLibraries() {
       scores['profanity-util']!.total++
       if (profanityUtilResult[1] > 0) {
         scores['profanity-util']!.detected++
-        console.log('- profanity-util')
+        // console.log('- profanity-util')
       }
     } catch (error) {
-      console.log('- profanity-util (error)')
+      // console.log('- profanity-util (error)')
     }
 
     // Test @2toad/profanity
@@ -249,10 +249,10 @@ async function compareLibraries() {
       scores['@2toad/profanity']!.total++
       if (toadResult) {
         scores['@2toad/profanity']!.detected++
-        console.log('- @2toad/profanity')
+        // console.log('- @2toad/profanity')
       }
     } catch (error) {
-      console.log('- @2toad/profanity (error)')
+      // console.log('- @2toad/profanity (error)')
     }
 
     // Test obscenity
@@ -261,10 +261,10 @@ async function compareLibraries() {
       scores.obscenity!.total++
       if (matches.length > 0) {
         scores.obscenity!.detected++
-        console.log('- obscenity')
+        // console.log('- obscenity')
       }
     } catch (error) {
-      console.log('- obscenity (error)')
+      // console.log('- obscenity (error)')
     }
 
     // Test curse-filter
@@ -283,10 +283,10 @@ async function compareLibraries() {
 
       if (curseDetected) {
         scores['curse-filter']!.detected++
-        console.log('- curse-filter')
+        // console.log('- curse-filter')
       }
     } catch (error) {
-      console.log('- curse-filter (error)')
+      // console.log('- curse-filter (error)')
     }
 
     // Test russian-bad-words
@@ -295,10 +295,10 @@ async function compareLibraries() {
       scores['russian-bad-words']!.total++
       if (russianResult) {
         scores['russian-bad-words']!.detected++
-        console.log('- russian-bad-words')
+        // console.log('- russian-bad-words')
       }
     } catch (error) {
-      console.log('- russian-bad-words (error)')
+      // console.log('- russian-bad-words (error)')
     }
 
     // Test custom wordlists
@@ -308,29 +308,29 @@ async function compareLibraries() {
 
       if (detectMultilingualProfanity(testCase.text)) {
         customDetected = true
-        console.log('- custom-wordlists (multilingual)')
+        // console.log('- custom-wordlists (multilingual)')
       }
 
       if (detectRussianProfanity(testCase.text)) {
         customDetected = true
-        console.log('- custom-wordlists (russian)')
+        // console.log('- custom-wordlists (russian)')
       }
 
       if (detectChineseProfanity(testCase.text)) {
         customDetected = true
-        console.log('- custom-wordlists (chinese)')
+        // console.log('- custom-wordlists (chinese)')
       }
 
       if (detectEvasionTactics(testCase.text)) {
         customDetected = true
-        console.log('- custom-wordlists (evasion)')
+        // console.log('- custom-wordlists (evasion)')
       }
 
       if (customDetected) {
         scores['custom-wordlists']!.detected++
       }
     } catch (error) {
-      console.log('- custom-wordlists (error)')
+      // console.log('- custom-wordlists (error)')
     }
   }
 
@@ -344,14 +344,14 @@ async function compareLibraries() {
     .sort((a, b) => b[1].rate - a[1].rate)
     .map(([name, stats]) => ({ name, ...stats }))
 
-  console.log('\n=== LIBRARY DETECTION RANKING ===')
-  console.log('Rank | Library | Detection Rate | Detected / Total')
-  console.log('-'.repeat(60))
+  // console.log('\n=== LIBRARY DETECTION RANKING ===')
+  // console.log('Rank | Library | Detection Rate | Detected / Total')
+  // console.log('-'.repeat(60))
 
   rankedLibraries.forEach((lib, index) => {
-    console.log(
-      `${index + 1}.   | ${lib.name.padEnd(22)} | ${lib.rate.toFixed(1)}% | ${lib.detected}/${lib.total}`,
-    )
+    // console.log(
+      // `${index + 1}.   | ${lib.name.padEnd(22)} | ${lib.rate.toFixed(1)}% | ${lib.detected}/${lib.total}`,
+    // )
   })
 }
 
