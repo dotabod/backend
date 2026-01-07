@@ -253,6 +253,10 @@
     "from": "A tip de {{- heroName}} {{emote}}",
     "to": "Estamos tipando {{- heroName}} {{emote}}"
   },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary": "{{wins}}W {{losses}}L ({{total}} games)"
+  },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod foi desabilitado. Não irei mais responder aos comandos, nem reagir aos eventos da partida. Digite !toggle novamente para habilitar.",
   "toggle_enabled": "Dotabod foi habilitado. Respondendo aos comandos e reagindo aos eventos da partida. Digite !toggle novamente para desabilitar.",

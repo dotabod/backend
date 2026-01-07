@@ -273,6 +273,10 @@
     "from": "Napiwek od {{- heroName}} {{emote}}",
     "to": "Tippujemy {{- heroName}} {{emote}}"
   },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary": "{{wins}}W {{losses}}L ({{total}} games)"
+  },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod jest teraz wyłączony. Nie będzie już odpowiadać na komendy ani oglądać wydarzeń w grze. Wpisz ponownie !toggle, aby włączyć.",
   "toggle_enabled": "Dotabod jest teraz włączony. Ponownie będzie wykonywał komendy oraz oglądał wydarzenia w grze. Wpisz ponownie !toggle, aby wyłączyć.",

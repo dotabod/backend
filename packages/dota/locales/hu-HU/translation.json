@@ -241,6 +241,10 @@
     "from": "{{- heroName}} borravalót adott {{emote}}",
     "to": "Borravalót adtunk {{- heroName}} {{emote}}"
   },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary": "{{wins}}W {{losses}}L ({{total}} games)"
+  },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod letiltva. Nem fog válaszolni a parancsokra vagy játékbeli eseményekre. A !toggle paranccsal újra aktiválhatod.",
   "toggle_enabled": "Dotabod engedélyezve. Válaszolni fog az parancsokra vagy játékbeli eseményekre. A !toggle paranccsal kikapcsolhatod.",

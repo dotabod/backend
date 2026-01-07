@@ -273,6 +273,10 @@
     "from": "Подяка від {{- heroName}} {{emote}}",
     "to": "Ми подякували {{- heroName}} за чудову гру {{emote}}"
   },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary": "{{wins}}W {{losses}}L ({{total}} games)"
+  },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod вимкнений. Він більше не буде відповідати на команди та не буде спостерігати за ігровими подіями. Введіть !toggle, щоб знову його увімкнути.",
   "toggle_enabled": "Dotabod тепер увімкнений. Знову реагує на команди та спостерігає за ігровими подіями. Введіть !toggle ще раз, щоб вимкнути.",

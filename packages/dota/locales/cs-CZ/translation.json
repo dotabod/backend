@@ -273,6 +273,10 @@
     "from": "Tip od {{- heroName}} {{emote}}",
     "to": "Tip pro {{- heroName}} {{emote}}"
   },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary": "{{wins}}W {{losses}}L ({{total}} games)"
+  },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod je nyní vypnutý. Nebudu odpovídat na příkazy ani sledovat hru. Napiš !toggle pro zapnutí.",
   "toggle_enabled": "Dotabod je nyní zapnutý. Budu odpovídat na příkazy a sledovat hru. Napiš !toggle pro vypnutí.",
