@@ -249,6 +249,10 @@
     "from": "The tip from {{- heroName}} {{emote}}",
     "to": "We tipping {{- heroName}} {{emote}}"
   },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary": "{{wins}}W {{losses}}L ({{total}} games)"
+  },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod is now disabled. Will no longer respond to commands nor watch game events. Type !toggle again to enable.",
   "toggle_enabled": "Dotabod is now enabled. Responding to commands again and watching game events. Type !toggle again to disable.",

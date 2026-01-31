@@ -47,6 +47,7 @@ export const defaultCommands = {
   commandOnly: true,
   commandWon: true,
   commandLost: true,
+  commandToday: true,
 } as const
 
 export type CommandKeys = keyof typeof defaultCommands

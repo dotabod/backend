@@ -1,9 +1,12 @@
-import { describe, it } from '@jest/globals'
+import { describe, it } from 'bun:test'
 
 import { gameEnd } from '../../../../__tests__/play-by-plays.js'
 import { apiClient } from '../../../../__tests__/utils.js'
 import { checkCallAndMemory } from './checkCallAndMemory.js'
 import { fetchOnlineUsers } from './fetchOnlineUsers.js'
+
+// Skip these integration tests when Supabase is not configured
+const skipIntegration = !process.env.DB_URL && !process.env.DB_SECRET
 
 const USER_COUNT = 1
 
@@ -27,7 +30,10 @@ async function postEventsForUsers(
   return await Promise.allSettled(promises)
 }
 
-describe('win events', () => {
+// Use describe.skip when infrastructure is not available
+const describeIntegration = skipIntegration ? describe.skip : describe
+
+describeIntegration('win events', () => {
   it('radiant won - should tell chat', async () => {
     const users = await fetchOnlineUsers(USER_COUNT)
     await postEventsForUsers(users, 'radiant')

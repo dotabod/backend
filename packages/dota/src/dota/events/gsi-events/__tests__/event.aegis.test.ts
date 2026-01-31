@@ -1,10 +1,13 @@
 import { faker } from '@faker-js/faker'
-import { describe, it } from '@jest/globals'
+import { describe, it } from 'bun:test'
 
 import { apiClient } from '../../../../__tests__/utils.js'
 import { DotaEventTypes } from '../../../../types.js'
 import { checkCallAndMemory } from './checkCallAndMemory.js'
 import { fetchOnlineUsers } from './fetchOnlineUsers.js'
+
+// Skip these integration tests when Supabase is not configured
+const skipIntegration = !process.env.DB_URL && !process.env.DB_SECRET
 
 const USER_COUNT = 1
 
@@ -31,6 +34,8 @@ async function postEventsForUsers(
   )
   await Promise.allSettled(promises)
 }
+
+const describeIntegration = skipIntegration ? describe.skip : describe
 
 describe('aegis events', () => {
   it(

@@ -46,6 +46,7 @@ export const FEATURE_TIERS: Record<
 
   commandWon: SUBSCRIPTION_TIERS.FREE,
   commandLost: SUBSCRIPTION_TIERS.FREE,
+  commandToday: SUBSCRIPTION_TIERS.FREE,
 
   commandOnly: SUBSCRIPTION_TIERS.PRO,
   rankOnly: SUBSCRIPTION_TIERS.PRO,

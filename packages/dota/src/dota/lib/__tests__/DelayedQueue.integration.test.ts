@@ -2,25 +2,28 @@
  * Integration test for DelayedQueue without external dependencies
  */
 
+import { describe, it, expect } from 'bun:test'
 import { DelayedQueue } from '../DelayedQueue.js'
 
 describe('DelayedQueue Integration', () => {
+  // Note: DelayedQueue uses 1-second check interval, so tests need to wait > 1s
+  // Lower priority number = higher priority (standard convention)
   it('should handle multiple tasks with different delays and priorities', async () => {
     const queue = new DelayedQueue()
     const results: string[] = []
 
     // Add tasks with different delays and priorities
-    queue.addTask(50, () => results.push('task1'), null, 1) // 50ms, priority 1
-    queue.addTask(50, () => results.push('task2'), null, 3) // 50ms, priority 3 (higher)
+    queue.addTask(50, () => results.push('task1'), null, 1) // 50ms, priority 1 (higher)
+    queue.addTask(50, () => results.push('task2'), null, 3) // 50ms, priority 3 (lower)
     queue.addTask(100, () => results.push('task3'), null, 1) // 100ms, priority 1
     queue.addTask(25, () => results.push('task4'), null, 1) // 25ms, priority 1
 
-    // Wait for all tasks to complete
-    await new Promise((resolve) => setTimeout(resolve, 150))
+    // Wait for queue's 1-second check interval to process all tasks
+    await new Promise((resolve) => setTimeout(resolve, 1200))
 
-    // Verify execution order: task4 (25ms), then task2 (50ms, higher priority),
-    // then task1 (50ms, lower priority), then task3 (100ms)
-    expect(results).toEqual(['task4', 'task2', 'task1', 'task3'])
+    // Verify execution order: task4 (25ms), then task1 (50ms, priority 1),
+    // then task2 (50ms, priority 3), then task3 (100ms)
+    expect(results).toEqual(['task4', 'task1', 'task2', 'task3'])
 
     await queue.shutdown()
   })

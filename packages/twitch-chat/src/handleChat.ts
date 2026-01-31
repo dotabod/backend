@@ -25,7 +25,9 @@ function extractUserInfo(
   chatterUserId: string,
 ) {
   return {
-    isMod: badges.some((badge) => badge.set_id === 'moderator'),
+    isMod: badges.some(
+      (badge) => badge.set_id === 'moderator' || badge.set_id === 'lead_moderator',
+    ),
     isBroadcaster: broadcasterUserId === chatterUserId,
     isSubscriber: badges.some((badge) => badge.set_id === 'subscriber'),
     userId: chatterUserId,

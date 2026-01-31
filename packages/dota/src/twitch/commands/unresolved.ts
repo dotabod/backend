@@ -16,8 +16,7 @@ commandHandler.registerCommand('unresolved', {
     } = message
 
     // Use stream start date or last 12 hours (same logic as getWL.ts and resolveMatch.ts)
-    const startDate =
-      client.stream_start_date ?? new Date(Date.now() - 12 * 60 * 60 * 1000)
+    const startDate = client.stream_start_date ?? new Date(Date.now() - 12 * 60 * 60 * 1000)
 
     // Get current match ID to exclude it from unresolved list
     const currentMatchId = client.gsi?.map?.matchid
@@ -66,4 +65,3 @@ commandHandler.registerCommand('unresolved', {
     )
   },
 })
-

@@ -142,7 +142,7 @@ describe('Profanity Filter', () => {
           matches?: string[]
           language?: string
         }
-        console.log({ details, word }, 'geczy')
+        // console.log({ details, word }, 'geczy')
         expect(moderated).not.toBe(profane)
         expect(moderated).toContain('***')
 
@@ -411,7 +411,7 @@ describe('Profanity Filter', () => {
           language?: string
         }
 
-        console.log({ phrase, details, match }, 'testing')
+        // console.log({ phrase, details, match }, 'testing')
         expect(details.isFlagged).toBe(true)
         expect(details.source).toBe('hate-speech')
 
@@ -454,7 +454,7 @@ describe('Profanity Filter', () => {
           matches?: string[]
           language?: string
         }
-        console.log({ word, moderated, details }, 'Checking word for false positive')
+        // console.log({ word, moderated, details }, 'Checking word for false positive')
         expect(moderated).toBe(word)
         expect(details.isFlagged).toBe(false)
       }

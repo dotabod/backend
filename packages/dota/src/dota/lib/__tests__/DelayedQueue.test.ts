@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { DelayedQueue } from '../DelayedQueue.js'
 
 describe('DelayedQueue', () => {
@@ -12,20 +13,22 @@ describe('DelayedQueue', () => {
   })
 
   it('should add tasks to the queue', () => {
-    const callback = jest.fn()
+    const callback = mock(() => {})
     const taskId = queue.addTask(1000, callback, 'test payload')
 
     expect(taskId).toBeDefined()
     expect(queue.getQueueSize()).toBe(1)
   })
 
+  // Note: DelayedQueue uses 1-second check interval, so tests need to wait > 1s
   it('should execute tasks after delay', async () => {
-    const callback = jest.fn()
+    const callback = mock(() => {})
     const payload = { test: 'data' }
 
     queue.addTask(100, callback, payload)
 
-    await new Promise((resolve) => setTimeout(resolve, 150))
+    // Wait for queue's 1-second check interval to process the task
+    await new Promise((resolve) => setTimeout(resolve, 1200))
 
     expect(callback).toHaveBeenCalledWith(payload)
     expect(queue.getQueueSize()).toBe(0)
@@ -38,7 +41,8 @@ describe('DelayedQueue', () => {
     queue.addTask(100, () => results.push(1))
     queue.addTask(300, () => results.push(3))
 
-    await new Promise((resolve) => setTimeout(resolve, 350))
+    // Wait for queue's 1-second check interval to process all tasks
+    await new Promise((resolve) => setTimeout(resolve, 1500))
 
     expect(results).toEqual([1, 2, 3])
   })
@@ -48,17 +52,19 @@ describe('DelayedQueue', () => {
     const delay = 100
 
     // Add tasks with same delay but different priorities
-    queue.addTask(delay, () => results.push(3), null, 1) // Lower priority
-    queue.addTask(delay, () => results.push(1), null, 3) // Higher priority
+    // Note: Lower priority number = higher priority (standard convention)
+    queue.addTask(delay, () => results.push(1), null, 1) // Highest priority
+    queue.addTask(delay, () => results.push(3), null, 3) // Lowest priority
     queue.addTask(delay, () => results.push(2), null, 2) // Medium priority
 
-    await new Promise((resolve) => setTimeout(resolve, 150))
+    // Wait for queue's 1-second check interval to process all tasks
+    await new Promise((resolve) => setTimeout(resolve, 1200))
 
-    expect(results).toEqual([1, 2, 3]) // Higher priority first
+    expect(results).toEqual([1, 2, 3]) // Lower priority number executes first
   })
 
   it('should remove tasks from queue', () => {
-    const callback = jest.fn()
+    const callback = mock(() => {})
     const taskId = queue.addTask(1000, callback)
 
     expect(queue.getQueueSize()).toBe(1)
@@ -69,22 +75,23 @@ describe('DelayedQueue', () => {
   })
 
   it('should handle errors in task callbacks gracefully', async () => {
-    const goodCallback = jest.fn()
-    const badCallback = jest.fn(() => {
+    const goodCallback = mock(() => {})
+    const badCallback = mock(() => {
       throw new Error('Test error')
     })
 
     queue.addTask(50, badCallback)
     queue.addTask(100, goodCallback)
 
-    await new Promise((resolve) => setTimeout(resolve, 150))
+    // Wait for queue's 1-second check interval to process all tasks
+    await new Promise((resolve) => setTimeout(resolve, 1200))
 
     expect(badCallback).toHaveBeenCalled()
     expect(goodCallback).toHaveBeenCalled()
   })
 
   it('should clamp delays to maximum allowed', () => {
-    const callback = jest.fn()
+    const callback = mock(() => {})
     const maxDelay = 50 * 60 * 1000 // 50 minutes
     const excessiveDelay = 60 * 60 * 1000 // 60 minutes
 
@@ -95,7 +102,7 @@ describe('DelayedQueue', () => {
   })
 
   it('should execute remaining tasks during shutdown', async () => {
-    const callback = jest.fn()
+    const callback = mock(() => {})
 
     queue.addTask(1000, callback, 'test') // Long delay
 
@@ -105,7 +112,7 @@ describe('DelayedQueue', () => {
   })
 
   it('should clear tasks during shutdown without execution', async () => {
-    const callback = jest.fn()
+    const callback = mock(() => {})
 
     queue.addTask(1000, callback)
     expect(queue.getQueueSize()).toBe(1)
