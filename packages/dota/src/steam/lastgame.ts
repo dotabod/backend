@@ -93,12 +93,7 @@ export default async function lastgame({
 
       // The delayed API didn't save their match, but we have it in supabase
       // Must mean they're a 8500+ player
-      const oldGame = lg.matchId
-
-      return `${t('lastgame.link', {
-        lng: locale,
-        url: `dotabuff.com/matches/${oldGame}`,
-      })} · ${t('matchData8500', { emote: 'PoroSad', lng: locale })}`
+      return t('matchData8500Alt', { lng: locale, command: '!lgs' })
     }
 
     const [gameOne, gameTwo] = gameHistory as unknown as DelayedGames[]
