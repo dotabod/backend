@@ -176,6 +176,7 @@
   },
   "lifetime": "Кількість ігор",
   "matchData8500": "Valve вимкнула дані матчів для 8500+ ММР",
+  "matchData8500Alt": "$t(matchData8500) · Try using {{command}}",
   "matchDataValveDisabled": " З 9 жовтня 2025 року, Valve вимкнула дані гравців в прямому етері.",
   "matchFound": "Отримано дані матчу: {{commandList}} - команди активовані.",
   "matchId": "ID матчу: {{matchId}}",
@@ -272,6 +273,13 @@
   "tip": {
     "from": "Подяка від {{- heroName}} {{emote}}",
     "to": "Ми подякували {{- heroName}} за чудову гру {{emote}}"
+  },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary_one": "{{wins}}W {{losses}}L ({{count}} game)",
+    "summary_few": "{{wins}}W {{losses}}L ({{count}} games)",
+    "summary_many": "{{wins}}W {{losses}}L ({{count}} games)",
+    "summary_other": "{{wins}}W {{losses}}L ({{count}} games)"
   },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod вимкнений. Він більше не буде відповідати на команди та не буде спостерігати за ігровими подіями. Введіть !toggle, щоб знову його увімкнути.",
