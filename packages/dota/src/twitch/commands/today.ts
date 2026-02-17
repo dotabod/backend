@@ -80,6 +80,7 @@ commandHandler.registerCommand('today', {
     const heroStatsStr = formattedStats.join(separator)
     const summaryStr = t('today.summary', {
       lng: client.locale,
+      count: totalGames,
       wins: totalWins,
       losses: totalLosses,
       total: totalGames,

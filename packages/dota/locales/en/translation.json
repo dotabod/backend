@@ -251,7 +251,8 @@
   },
   "today": {
     "noGames": "No games played yet today",
-    "summary": "{{wins}}W {{losses}}L ({{total}} games)"
+    "summary_one": "{{wins}}W {{losses}}L ({{count}} game)",
+    "summary_other": "{{wins}}W {{losses}}L ({{count}} games)"
   },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod is now disabled. Will no longer respond to commands nor watch game events. Type !toggle again to enable.",
