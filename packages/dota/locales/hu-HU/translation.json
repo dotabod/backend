@@ -152,6 +152,7 @@
   },
   "lifetime": "Összes lejátszott játék",
   "matchData8500": "Valve disabled data for 8500+ mmr matches",
+  "matchData8500Alt": "$t(matchData8500) · Try using {{command}}",
   "matchDataValveDisabled": "On Oct 9, 2025, Valve disabled player data in live matches.",
   "matchFound": "Meccs információ megtalálható {{commandList}} a parancsok aktívak.",
   "matchId": "Meccs ID: {{matchId}}",
@@ -240,6 +241,11 @@
   "tip": {
     "from": "{{- heroName}} borravalót adott {{emote}}",
     "to": "Borravalót adtunk {{- heroName}} {{emote}}"
+  },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary_one": "{{wins}}W {{losses}}L ({{count}} game)",
+    "summary_other": "{{wins}}W {{losses}}L ({{count}} games)"
   },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod letiltva. Nem fog válaszolni a parancsokra vagy játékbeli eseményekre. A !toggle paranccsal újra aktiválhatod.",

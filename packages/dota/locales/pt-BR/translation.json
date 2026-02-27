@@ -161,6 +161,7 @@
   },
   "lifetime": "Partidas totais jogadas",
   "matchData8500": "Valve disabled data for 8500+ mmr matches",
+  "matchData8500Alt": "$t(matchData8500) · Try using {{command}}",
   "matchDataValveDisabled": "On Oct 9, 2025, Valve disabled player data in live matches.",
   "matchFound": "Dados da partida encontrados comandos ativados: {{commandList}}",
   "matchId": "ID da partida: {{matchId}}",
@@ -252,6 +253,12 @@
   "tip": {
     "from": "A tip de {{- heroName}} {{emote}}",
     "to": "Estamos tipando {{- heroName}} {{emote}}"
+  },
+  "today": {
+    "noGames": "No games played yet today",
+    "summary_one": "{{wins}}W {{losses}}L ({{count}} game)",
+    "summary_many": "",
+    "summary_other": "{{wins}}W {{losses}}L ({{count}} games)"
   },
   "toggle": "$t(toggle_enabled)",
   "toggle_disabled": "Dotabod foi desabilitado. Não irei mais responder aos comandos, nem reagir aos eventos da partida. Digite !toggle novamente para habilitar.",
