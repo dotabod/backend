@@ -66,7 +66,7 @@ jobs:
 
       - name: Build and push
         if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' || steps.dota-changes.outputs.deps_changed == 'true' || steps.dota-changes.outputs.profanity_filter_changed == 'true' || steps.dota-changes.outputs.shared_utils_changed == 'true' }}
-        uses: docker/bake-action@v6
+        uses: docker/bake-action@v7
         with:
           push: true
           provenance: false
@@ -135,7 +135,7 @@ jobs:
 
       - name: Build and push
         if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.shared_utils_changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' }}
-        uses: docker/bake-action@v6
+        uses: docker/bake-action@v7
         with:
           push: true
           provenance: false
