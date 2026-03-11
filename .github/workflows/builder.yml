@@ -58,7 +58,7 @@ jobs:
 
       - name: Login to ghcr
         if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' || steps.dota-changes.outputs.deps_changed == 'true' || steps.dota-changes.outputs.profanity_filter_changed == 'true' || steps.dota-changes.outputs.shared_utils_changed == 'true' }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -127,7 +127,7 @@ jobs:
 
       - name: Login to ghcr
         if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.shared_utils_changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
