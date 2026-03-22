@@ -1,36 +1,3 @@
-import type { HeroNames } from '../getHero.js'
-
-export interface SocketClient {
-  name: string
-  token: string
-  stream_online: boolean
-  stream_start_date: Date | null
-  beta_tester: boolean
-  locale: string
-  multiAccount?: number
-  steam32Id: number | null // currently connected steam id
-  mmr: number // currently connected mmr
-  gsi?: Packet
-  Account: {
-    refresh_token: string
-    access_token: string
-    expires_at: number | null
-    scope: string | null
-    obtainment_timestamp: Date | null
-    expires_in: number | null
-    providerAccountId: string
-  } | null
-  SteamAccount: {
-    mmr: number
-    leaderboard_rank: number | null
-    name: string | null
-    steam32Id: number
-  }[]
-  settings: {
-    key: string
-    value: any
-  }[]
-}
 interface Provider {
   name: string // "Dota 2"
   appid: number // 570 for Dota 2
@@ -178,7 +145,7 @@ export interface Hero {
   team2?: Team2Players<Hero>
   team3?: Team3Players<Hero>
   id: number // -1 if hero not yet set
-  name?: HeroNames // e.g. 'npc_dota_hero_antimage' once set
+  name?: string
   xpos?: number // -5422,
   ypos?: number // -4771,
   level?: number // 27,

@@ -4,7 +4,7 @@ import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('dotabod', {
-  handler: (message: MessageType, args: string[]) => {
+  handler: (message: MessageType) => {
     const {
       channel: { name: channel, client },
     } = message
