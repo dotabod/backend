@@ -1,6 +1,6 @@
 import { heroes } from './heroList.js'
 
-export type HeroNames = string
+export type HeroNames = `npc_dota_hero_${string}`
 
 export default function handleGetHero(name?: HeroNames) {
   if (!name || typeof name !== 'string' || name.length < 3) return null
