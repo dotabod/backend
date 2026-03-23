@@ -96,7 +96,7 @@
   "countryPlayerList": "Грає з гравцями з {{- countries}}",
   "currentSong": "Зараз відтворюється: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Ти не знаєш що купити на {{- heroName}}?  Подивись тут {{- url}}",
-  "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Додаткова інформація: {{- url}}",
+  "dotabod": "I'm an open source bot made by {{author}}. Get Dotabod for your stream: {{- url}}",
   "dotapatch": {
     "newPatch": "{{emote}} В Dota 2 вийшов новий патч: {{version}}. Дізнайся найцікавіші оновлення на https://www.dota2.com/patches"
   },

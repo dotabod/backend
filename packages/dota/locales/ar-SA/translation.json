@@ -104,7 +104,7 @@
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "يلعب الآن: {{artist}} - {{title}}{{album}}{{url}}",
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
-  "dotabod": "I'm an open source bot made by {{author}}. More info: {{- url}}",
+  "dotabod": "I'm an open source bot made by {{author}}. Get Dotabod for your stream: {{- url}}",
   "dotapatch": {
     "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
   },
