@@ -96,7 +96,7 @@
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Nyní hraje: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Potřebuješ poradit co kupovat na {{- heroName}}? Nápady najdeš zde {{- url}}",
-  "dotabod": "Jsem open-source bot vytvořený {{author}}. Více info na {{- url}}",
+  "dotabod": "I'm an open source bot made by {{author}}. Get Dotabod for your stream: {{- url}}",
   "dotapatch": {
     "newPatch": "{{emote}} Byl vydán nový patch Doty 2: {{version}}. Podívejte se na poznámky k opravám na stránce https://www.dota2.com/patches"
   },

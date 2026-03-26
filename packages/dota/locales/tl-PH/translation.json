@@ -86,7 +86,7 @@
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Kelangan mo ng matinding build para kay {{- heroName}}? Tignan mo dito {{- url}}",
-  "dotabod": "Isa akong open source bot na gawa ni {{author}}. Karagdagang impormasyon: {{- url}}",
+  "dotabod": "I'm an open source bot made by {{author}}. Get Dotabod for your stream: {{- url}}",
   "dotapatch": {
     "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
   },

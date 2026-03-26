@@ -92,7 +92,7 @@
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
   "dota2pt": "Precisa de builds profissionais para {{- heroName}}? Cheque aqui {{- url}}",
-  "dotabod": "Eu sou um bot open source feito por {{author}}. Mais informações: {{- url}}",
+  "dotabod": "I'm an open source bot made by {{author}}. Get Dotabod for your stream: {{- url}}",
   "dotapatch": {
     "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
   },
