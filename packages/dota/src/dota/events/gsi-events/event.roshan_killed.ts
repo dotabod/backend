@@ -23,10 +23,10 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
     const gameTimeDiff =
       (dotaClient.client.gsi?.map?.game_time ?? event.game_time) - event.game_time
 
-    // min spawn for rosh in 5 + 3 minutes
-    let minS = 5 * 60 + 3 * 60 - gameTimeDiff
-    // max spawn for rosh in 5 + 3 + 3 minutes
-    let maxS = 5 * 60 + 3 * 60 + 3 * 60 - gameTimeDiff
+    // Roshan respawn window: 8 to 11 minutes after death (unchanged since patch 7.24)
+    // minS = 8 minutes (480 seconds), maxS = 11 minutes (660 seconds)
+    let minS = 8 * 60 - gameTimeDiff
+    let maxS = 11 * 60 - gameTimeDiff
 
     // Check if the game mode is Turbo (23)
     if (playingGameMode === 23) {
