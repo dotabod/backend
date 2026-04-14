@@ -4,10 +4,10 @@ import { NEUTRAL_ITEM_TIER_TIMES } from '../NeutralItemTimer.js'
 
 /**
  * Tests confirming neutral item tier availability times are valid
- * for Dota 2 patch 7.38 (changed from 7/17/27/37/67 min → 5/15/25/35/60 min).
+ * for Dota 2 patch 7.41 (Tier 1 now starts at 0:00).
  * Turbo times are exactly half of normal times.
  */
-describe('Neutral Item Tier Times (patch 7.38)', () => {
+describe('Neutral Item Tier Times (patch 7.41)', () => {
   it('has exactly 5 tiers', () => {
     expect(NEUTRAL_ITEM_TIER_TIMES).toHaveLength(5)
   })
@@ -17,9 +17,9 @@ describe('Neutral Item Tier Times (patch 7.38)', () => {
     expect(tierNumbers).toEqual([1, 2, 3, 4, 5])
   })
 
-  it('Tier 1 spawns at 5 minutes in normal mode', () => {
+  it('Tier 1 spawns at 0 minutes in normal mode', () => {
     const tier1 = NEUTRAL_ITEM_TIER_TIMES.find((t) => t.tier === 1)
-    expect(tier1?.normalTime).toBe(5)
+    expect(tier1?.normalTime).toBe(0)
   })
 
   it('Tier 2 spawns at 15 minutes in normal mode', () => {
@@ -48,9 +48,9 @@ describe('Neutral Item Tier Times (patch 7.38)', () => {
     }
   })
 
-  it('Tier 1 spawns at 2.5 minutes in turbo mode', () => {
+  it('Tier 1 spawns at 0 minutes in turbo mode', () => {
     const tier1 = NEUTRAL_ITEM_TIER_TIMES.find((t) => t.tier === 1)
-    expect(tier1?.turboTime).toBe(2.5)
+    expect(tier1?.turboTime).toBe(0)
   })
 
   it('Tier 5 spawns at 30 minutes in turbo mode', () => {
