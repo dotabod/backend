@@ -17,7 +17,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     const gameTimeDiff =
       (dotaClient.client.gsi?.map?.game_time ?? event.game_time) - event.game_time
 
-    // expire for aegis in 5 minutes
+    // Aegis of the Immortal expires 5 minutes after pickup (unchanged since patch 7.33)
     const expireS = 5 * 60 - gameTimeDiff
     const expireTime = (dotaClient.client.gsi?.map?.clock_time ?? 0) + expireS
 

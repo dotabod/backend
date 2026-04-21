@@ -4,22 +4,30 @@ import { getRedisNumberValue } from '../utils/index.js'
 import type { GSIHandlerType } from './GSIHandlerTypes.js'
 import { say } from './say.js'
 
-interface TierTime {
+export interface TierTime {
   tier: number
+  /** Minutes until this tier drops in a normal game (updated for patch 7.41) */
   normalTime: number
+  /** Minutes until this tier drops in a turbo game (half of normalTime) */
   turboTime: number
 }
 
+/**
+ * Neutral item tier availability times (Dota 2 patch 7.41).
+ * Tier 1 now starts at game start; higher tiers keep their current timings.
+ * Turbo times are exactly half of normal times.
+ */
+export const NEUTRAL_ITEM_TIER_TIMES: TierTime[] = [
+  { tier: 1, normalTime: 0, turboTime: 0 },
+  { tier: 2, normalTime: 15, turboTime: 7.5 },
+  { tier: 3, normalTime: 25, turboTime: 12.5 },
+  { tier: 4, normalTime: 35, turboTime: 17.5 },
+  { tier: 5, normalTime: 60, turboTime: 30 },
+]
+
 export class NeutralItemTimer {
   private notifiedTiers = new Set<number>()
-  //5, 15, 25, 35 and 60 - 7.38 patch
-  private readonly tierTimes: TierTime[] = [
-    { tier: 1, normalTime: 5, turboTime: 2.5 },
-    { tier: 2, normalTime: 15, turboTime: 7.5 },
-    { tier: 3, normalTime: 25, turboTime: 12.5 },
-    { tier: 4, normalTime: 35, turboTime: 17.5 },
-    { tier: 5, normalTime: 60, turboTime: 30 },
-  ]
+  private readonly tierTimes: TierTime[] = NEUTRAL_ITEM_TIER_TIMES
 
   // Track the last game time checked to avoid spam
   private lastCheckedTime = 0

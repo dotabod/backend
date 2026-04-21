@@ -53,6 +53,7 @@ async function checkMidasIterator(client: SocketClient) {
   const currentTime = new Date().getTime()
   const passiveMidasThreshold = 10000
 
+  // Hand of Midas has 2 charges since patch 7.38. Both charges full means player is not using it.
   if (midasCharges === 2 && !passiveMidasData.told && !passiveMidasData.firstNoticedPassive) {
     // Set the time when passive midas was first noticed
     await redisClient.client.json.set(`${token}:passiveMidas`, '$', {

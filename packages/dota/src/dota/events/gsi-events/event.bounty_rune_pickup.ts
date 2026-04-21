@@ -13,6 +13,8 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
   handler: async (dotaClient, event: DotaEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
+    // Only announce bounty rune pickups during the initial spawn window (first 2 minutes).
+    // Bounty runes also respawn periodically, but we only track the opening contest.
     if (Number(dotaClient.client.gsi?.map?.clock_time) > 120) return
 
     const playingTeam =
