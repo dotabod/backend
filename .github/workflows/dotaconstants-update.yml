@@ -1,0 +1,69 @@
+name: Update dotaconstants (low-noise)
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly check to avoid noisy update churn.
+    - cron: '30 6 * * 1'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: dotaconstants-update
+  cancel-in-progress: true
+
+jobs:
+  update-dotaconstants:
+    runs-on: ubuntu-latest
+    env:
+      UPDATE_BRANCH: ci/update-dotaconstants
+      BASE_BRANCH: master
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Detect patch-relevant changes and update lockfiles
+        id: scan
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python .github/scripts/update_dotaconstants.py
+
+      - name: Create Pull Request
+        if: steps.scan.outputs.should_update == 'true'
+        uses: peter-evans/create-pull-request@v8.1.0
+        with:
+          title: 'chore(dota): update dotaconstants for patch-relevant changes'
+          body: |
+            Automated dotaconstants refresh.
+
+            This PR is created only when patch-relevant datasets changed in `dotabod/dotaconstants`:
+            - `build/heroes.json`
+            - `build/items.json`
+            - `build/item_ids.json`
+            - `build/abilities.json`
+            - `build/hero_abilities.json`
+            - `build/aghs_desc.json`
+
+            Updated lockfiles:
+            - `bun.lock`
+            - `package-lock.json`
+
+            Comparison:
+            - Previous SHA: `${{ steps.scan.outputs.current_sha }}`
+            - Latest SHA: `${{ steps.scan.outputs.latest_sha }}`
+            - Changed relevant files: `${{ steps.scan.outputs.changed_files }}`
+          base: ${{ env.BASE_BRANCH }}
+          branch: ${{ env.UPDATE_BRANCH }}
+          commit-message: 'chore(dota): refresh dotaconstants lockfile pins'
+          delete-branch: true
+          add-paths: |
+            bun.lock
+            package-lock.json
