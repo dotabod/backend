@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, mock } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { refundTwitchBet } from '../refundTwitchBets.js'
 

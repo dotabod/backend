@@ -85,7 +85,7 @@ export function getHeroByName(name: string, heroIdsInMatch?: (number | undefined
           .trim() === localName,
     )
 
-    if (hasAlias) return true
+    return hasAlias
   })
 
   // then hero name

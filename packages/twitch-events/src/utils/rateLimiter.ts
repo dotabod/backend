@@ -15,13 +15,6 @@ interface TwitchSubscriptionTransport {
   conduit_id?: string
 }
 
-interface TwitchSubscriptionRequest {
-  type: string
-  version: string
-  condition: TwitchSubscriptionCondition
-  transport: TwitchSubscriptionTransport
-}
-
 interface TwitchSubscription {
   id: string
   status: 'enabled' | 'webhook_callback_verification_pending' | string

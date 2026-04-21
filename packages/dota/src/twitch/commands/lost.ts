@@ -1,12 +1,12 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { redisClient } from '../../db/redisInstance.js'
+import { gsiHandlers } from '../../dota/lib/consts.js'
 import { DBSettings } from '../../settings.js'
 import { steamSocket } from '../../steam/ws.js'
 import type { MatchMinimalDetailsResponse } from '../../types.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
-import { gsiHandlers } from '../../dota/lib/consts.js'
 import { resolveMatchRetroactively } from '../lib/resolveMatch.js'
 
 commandHandler.registerCommand('lost', {

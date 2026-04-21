@@ -9,7 +9,7 @@ import {
 import type { SubscriptionRow } from './types/subscription.js'
 import { canAccessFeature } from './utils/subscription.js'
 
-export { DBSettings, type SettingKeys, type CommandKeys, type ChatterKeys }
+export { type ChatterKeys, type CommandKeys, DBSettings, type SettingKeys }
 
 export const commands = defaultCommands
 export const defaultSettings = defaultSettingsStructure
