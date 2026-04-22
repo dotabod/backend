@@ -281,7 +281,9 @@ class GSIServer implements GSIServerInterface {
         // Check if the set still exists in case it was cleared/modified elsewhere
         const currentSet = clipsToDeleteQueue.get(accountId)
         if (currentSet) {
-          slugsArray.forEach((slug) => currentSet.delete(slug))
+          slugsArray.forEach((slug) => {
+            currentSet.delete(slug)
+          })
           // If the set becomes empty after deletion, remove the user entry
           if (currentSet.size === 0) {
             clipsToDeleteQueue.delete(accountId)

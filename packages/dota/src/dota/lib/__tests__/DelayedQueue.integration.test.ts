@@ -2,7 +2,7 @@
  * Integration test for DelayedQueue without external dependencies
  */
 
-import { describe, it, expect } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { DelayedQueue } from '../DelayedQueue.js'
 
 describe('DelayedQueue Integration', () => {

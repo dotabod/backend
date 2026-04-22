@@ -350,7 +350,7 @@ async function compareLibraries() {
 
   rankedLibraries.forEach((lib, index) => {
     // console.log(
-      // `${index + 1}.   | ${lib.name.padEnd(22)} | ${lib.rate.toFixed(1)}% | ${lib.detected}/${lib.total}`,
+    // `${index + 1}.   | ${lib.name.padEnd(22)} | ${lib.rate.toFixed(1)}% | ${lib.detected}/${lib.total}`,
     // )
   })
 }

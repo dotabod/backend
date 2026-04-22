@@ -1,5 +1,5 @@
-import { faker } from '@faker-js/faker'
 import { describe, it } from 'bun:test'
+import { faker } from '@faker-js/faker'
 
 import { apiClient } from '../../../../__tests__/utils.js'
 import { DotaEventTypes } from '../../../../types.js'

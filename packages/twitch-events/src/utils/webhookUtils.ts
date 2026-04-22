@@ -39,7 +39,7 @@ export const setupWebhooks = () => {
 
   webhookApp.use(bodyParserErrorHandler() as unknown as ErrorRequestHandler)
 
-  webhookApp.get('/webhook', (req, res) => {
+  webhookApp.get('/webhook', (_req, res) => {
     res.status(200).json({
       status: 'ok',
     })

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test'
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test'
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { DBSettings } from '../../../settings.js'
 import type { SocketClient } from '../../../types.js'
