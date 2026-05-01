@@ -131,21 +131,21 @@ def initialize_app():
         return True
 
     try:
-        # Step 1: Load hero data
-        logger.info("Loading hero data...")
+        # Step 1: Refresh hero metadata and portrait assets before template loading.
+        logger.info("Refreshing hero data and abilities...")
+        hero_abilities = get_hero_data(refresh=True)
+        if not hero_abilities:
+            logger.error("Failed to load hero abilities")
+            return False
+        logger.info(f"Successfully loaded abilities for {len(hero_abilities)} heroes")
+
+        # Step 1.5: Load hero templates after the roster refresh so new heroes are matchable.
+        logger.info("Loading hero templates...")
         heroes_data = load_heroes_data()
         if not heroes_data:
             logger.error("Failed to load hero templates")
             return False
         logger.info(f"Successfully loaded templates for {len(heroes_data)} heroes")
-
-        # Step 1.5: Load hero abilities
-        logger.info("Loading hero abilities...")
-        hero_abilities = get_hero_data()
-        if not hero_abilities:
-            logger.error("Failed to load hero abilities")
-            return False
-        logger.info(f"Successfully loaded abilities for {len(hero_abilities)} heroes")
 
         # Step 2: Run database migrations
         try:

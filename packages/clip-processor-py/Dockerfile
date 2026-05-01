@@ -6,7 +6,7 @@ RUN apt-get update && \
   tesseract-ocr \
   tesseract-ocr-eng \
   tesseract-ocr-rus \
-  # libgl1-mesa-glx is not available on newer Debian; use libgl1 instead
+  curl \
   libgl1 \
   libglib2.0-0 \
   postgresql-client \
@@ -35,11 +35,9 @@ RUN mkdir -p temp assets
 
 # Create a simple entrypoint script
 RUN echo '#!/bin/bash\n\
-  # Check if hero assets exist and download if needed\n\
-  if [ ! -d "assets/dota_heroes" ] || [ -z "$(ls -A assets/dota_heroes 2>/dev/null)" ]; then\n\
-  echo "Downloading hero reference images..."\n\
+  # Refresh hero assets on startup so newly released heroes become matchable.\n\
+  echo "Refreshing hero reference images..."\n\
   python -m src.dota_heroes\n\
-  fi\n\
   \n\
   # Print diagnostic information to help with debugging\n\
   echo "Debugging environment information:"\n\

@@ -13,108 +13,245 @@ logger = logging.getLogger(__name__)
 ASSETS_DIR = Path("assets") / "dota_heroes"
 ASSETS_DIR.mkdir(exist_ok=True, parents=True)
 
-# Updated API URL from Spectral.gg
-HERO_LIST_URL = "https://stats.spectral.gg/lrg2/api/?mod=metadata&gets=heroes&legacyh"
-HERO_IMAGE_BASE_URL = "https://courier.spectral.gg/images/dota/portraits_lg/"
+# Prefer Valve/OpenDota sources so new heroes are picked up even if the legacy
+# Spectral metadata endpoint is unavailable.
+VALVE_HERO_LIST_URL = "https://www.dota2.com/datafeed/herolist?language=english"
+ODOTA_HERO_LIST_URL = "https://raw.githubusercontent.com/odota/dotaconstants/master/build/heroes.json"
+LEGACY_HERO_LIST_URL = "https://stats.spectral.gg/lrg2/api/?mod=metadata&gets=heroes&legacyh"
+STEAM_HERO_IMAGE_BASE_URL = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/"
+LEGACY_HERO_IMAGE_BASE_URL = "https://courier.spectral.gg/images/dota/portraits_lg/"
 HERO_ABILITIES_URL = "https://raw.githubusercontent.com/odota/dotaconstants/refs/heads/master/build/hero_abilities.json"
 FACET_ICON_BASE_URL = "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/icons/facets/"
+REQUEST_TIMEOUT_SECONDS = 20
 
-def get_hero_list():
-    """Fetch the list of Dota 2 heroes from the Spectral.gg API."""
-    logger.info(f"Fetching hero list from {HERO_LIST_URL}")
+
+def hero_tag_from_internal_name(internal_name):
+    """Return the Dota asset tag from an internal hero name."""
+    return internal_name.replace("npc_dota_hero_", "", 1)
+
+
+def steam_hero_image_url(tag):
+    """Build the current Valve CDN portrait URL for a hero tag."""
+    return f"{STEAM_HERO_IMAGE_BASE_URL}{tag}.png"
+
+
+def legacy_hero_image_url(tag, variant=None):
+    """Build the legacy portrait URL for cached alternate portraits."""
+    suffix = f"_{variant}" if variant and variant != "base" else ""
+    return f"{LEGACY_HERO_IMAGE_BASE_URL}{tag}{suffix}.png"
+
+
+def normalize_hero(hero):
+    """Normalize hero metadata from Valve, OpenDota, or the legacy Spectral API."""
+    internal_name = hero.get("name", "")
+    tag = hero.get("tag") or hero_tag_from_internal_name(internal_name)
+    localized_name = (
+        hero.get("localized_name")
+        or hero.get("name_english_loc")
+        or hero.get("name_loc")
+        or tag.replace("_", " ").title()
+    )
+
+    return {
+        "id": hero.get("id"),
+        "name": internal_name or f"npc_dota_hero_{tag}",
+        "tag": tag,
+        "localized_name": localized_name,
+        "aliases": hero.get("aliases", ""),
+        "alt_name": hero.get("alt_name", ""),
+        "alticons": hero.get("alticons", []),
+    }
+
+
+def load_cached_hero_data(hero_data_path):
+    """Load cached hero data if available."""
+    if not hero_data_path.exists():
+        return None
 
     try:
-        response = requests.get(HERO_LIST_URL)
+        with open(hero_data_path, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"Error loading cached hero data: {e}")
+        return None
+
+
+def hero_roster_signature(hero_data):
+    """Build a stable signature for deciding when template cache is stale."""
+    return [
+        (
+            hero.get("id"),
+            hero.get("name"),
+            hero.get("tag"),
+            hero.get("localized_name"),
+            tuple(
+                (variant.get("variant"), variant.get("image_path"))
+                for variant in hero.get("variants", [])
+            ),
+        )
+        for hero in hero_data or []
+    ]
+
+
+def all_variant_images_exist(hero_data):
+    """Return whether all cached variant files exist on disk."""
+    for hero in hero_data or []:
+        for variant in hero.get("variants", []):
+            if not Path(variant["image_path"]).exists():
+                logger.warning(
+                    f"Image file missing for {hero['localized_name']} "
+                    f"({variant['variant']}): {variant['image_path']}"
+                )
+                return False
+    return True
+
+
+def invalidate_template_cache():
+    """Remove the precomputed template cache after roster or image changes."""
+    cache_path = ASSETS_DIR / "templates_cache.npz"
+    if cache_path.exists():
+        try:
+            cache_path.unlink()
+            logger.info(f"Removed stale template cache: {cache_path}")
+        except Exception as e:
+            logger.warning(f"Failed to remove stale template cache {cache_path}: {e}")
+
+
+def get_hero_list():
+    """Fetch the current Dota 2 hero list from live metadata sources."""
+    for source_name, source_url, parser in (
+        ("Valve", VALVE_HERO_LIST_URL, parse_valve_hero_list),
+        ("OpenDota", ODOTA_HERO_LIST_URL, parse_odota_hero_list),
+        ("Spectral", LEGACY_HERO_LIST_URL, parse_legacy_hero_list),
+    ):
+        logger.info(f"Fetching hero list from {source_name}: {source_url}")
+        try:
+            response = requests.get(source_url, timeout=REQUEST_TIMEOUT_SECONDS)
+            response.raise_for_status()
+            heroes = parser(response.json())
+
+            if heroes:
+                logger.info(f"Successfully fetched {len(heroes)} heroes from {source_name}")
+                return heroes
+
+            logger.warning(f"No heroes found in {source_name} response")
+        except Exception as e:
+            logger.warning(f"Error fetching hero list from {source_name}: {e}")
+
+    logger.error("Unable to fetch hero list from any source")
+    return []
+
+
+def parse_valve_hero_list(data):
+    """Parse Valve's Dota datafeed hero response."""
+    heroes = data.get("result", {}).get("data", {}).get("heroes", [])
+    return [normalize_hero(hero) for hero in heroes]
+
+
+def parse_odota_hero_list(data):
+    """Parse OpenDota dotaconstants hero metadata."""
+    heroes = data.values() if isinstance(data, dict) else data
+    return [normalize_hero(hero) for hero in heroes]
+
+
+def parse_legacy_hero_list(data):
+    """Parse the legacy Spectral hero response used by earlier builds."""
+    heroes = data.get("result", {}).get("heroes", [])
+    return [normalize_hero(hero) for hero in heroes]
+
+
+def download_image(image_url, image_path, description):
+    """Download an image if it is not already present."""
+    if image_path.exists():
+        return False
+
+    try:
+        logger.debug(f"Downloading {description} from {image_url}")
+        response = requests.get(image_url, stream=True, timeout=REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
 
-        data = response.json()
-        heroes = data.get("result", {}).get("heroes", [])
+        with open(image_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
 
-        if not heroes:
-            logger.error(f"No heroes found in response: {data}")
-            return []
-
-        logger.info(f"Successfully fetched {len(heroes)} heroes")
-        return heroes
-
+        logger.debug(f"Downloaded {description} to {image_path}")
+        return True
     except Exception as e:
-        logger.error(f"Error fetching hero list: {e}")
-        return []
+        logger.error(f"Error downloading {description}: {e}")
+        return False
 
-def download_hero_images(heroes):
+
+def merge_hero_variants(hero, existing_hero):
+    """Merge current hero metadata with cached base and alternate portrait variants."""
+    hero_id = hero.get("id")
+    tag = hero.get("tag")
+    existing_variants = {
+        variant.get("variant"): dict(variant)
+        for variant in (existing_hero or {}).get("variants", [])
+        if variant.get("variant")
+    }
+
+    base_variant = existing_variants.pop("base", {})
+    base_variant.update({
+        "variant": "base",
+        "image_path": str(ASSETS_DIR / f"{hero_id}_base.png"),
+        "image_url": steam_hero_image_url(tag),
+    })
+
+    variants = [base_variant]
+
+    for alticon in hero.get("alticons", []):
+        if alticon not in existing_variants:
+            existing_variants[alticon] = {
+                "variant": alticon,
+                "image_path": str(ASSETS_DIR / f"{hero_id}_{alticon}.png"),
+                "image_url": legacy_hero_image_url(tag, alticon),
+            }
+
+    variants.extend(existing_variants[variant] for variant in sorted(existing_variants))
+    return variants
+
+
+def download_hero_images(heroes, existing_hero_data=None):
     """Download hero images for all heroes in the list, including alt icons."""
     logger.info(f"Downloading hero images to {ASSETS_DIR}")
 
     hero_data = []
+    existing_by_id = {
+        hero.get("id"): hero
+        for hero in existing_hero_data or []
+    }
+    downloaded_any = False
 
     for hero in tqdm(heroes, desc="Downloading hero images"):
         hero_id = hero.get("id")
         full_name = hero.get("name")
         localized_name = hero.get("localized_name")
         tag = hero.get("tag")
-        alticons = hero.get("alticons", [])
-
-        # Store all variants for this hero
+        existing_hero = existing_by_id.get(hero_id)
         hero_variants = []
 
-        # Base hero image
-        base_image_url = f"{HERO_IMAGE_BASE_URL}{tag}.png"
-        base_filename = f"{hero_id}_base.png"
-        base_image_path = ASSETS_DIR / base_filename
+        for variant in merge_hero_variants(hero, existing_hero):
+            variant_name = variant.get("variant")
+            image_path = Path(variant["image_path"])
+            image_url = variant["image_url"]
+            description = f"{localized_name} {variant_name} portrait"
 
-        # Download base image if it doesn't exist
-        if not base_image_path.exists():
-            try:
-                logger.debug(f"Downloading base image for {localized_name} from {base_image_url}")
-                response = requests.get(base_image_url, stream=True)
-                response.raise_for_status()
+            if not image_path.exists():
+                downloaded = download_image(image_url, image_path, description)
+                downloaded_any = downloaded_any or downloaded
 
-                with open(base_image_path, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        f.write(chunk)
+            if image_path.exists():
+                hero_variants.append(variant)
+            elif variant_name == "base":
+                logger.error(f"Skipping {localized_name}: base portrait could not be downloaded")
+                break
+            else:
+                logger.warning(f"Skipping missing alternate portrait for {localized_name}: {variant_name}")
 
-                logger.debug(f"Downloaded base image for {localized_name} to {base_image_path}")
-            except Exception as e:
-                logger.error(f"Error downloading base image for {localized_name}: {e}")
-                # Continue to next hero if base image can't be downloaded
-                continue
-
-        # Add base variant to the list
-        hero_variants.append({
-            "variant": "base",
-            "image_path": str(base_image_path),
-            "image_url": base_image_url
-        })
-
-        # Download all alternate icons
-        for alticon in alticons:
-            alt_image_url = f"{HERO_IMAGE_BASE_URL}{tag}_{alticon}.png"
-            alt_filename = f"{hero_id}_{alticon}.png"
-            alt_image_path = ASSETS_DIR / alt_filename
-
-            # Download alt image if it doesn't exist
-            if not alt_image_path.exists():
-                try:
-                    logger.debug(f"Downloading {alticon} image for {localized_name} from {alt_image_url}")
-                    response = requests.get(alt_image_url, stream=True)
-                    response.raise_for_status()
-
-                    with open(alt_image_path, 'wb') as f:
-                        for chunk in response.iter_content(chunk_size=8192):
-                            f.write(chunk)
-
-                    logger.debug(f"Downloaded {alticon} image for {localized_name} to {alt_image_path}")
-                except Exception as e:
-                    logger.error(f"Error downloading {alticon} image for {localized_name}: {e}")
-                    # Skip this variant but continue with others
-                    continue
-
-            # Add alternate variant to the list
-            hero_variants.append({
-                "variant": alticon,
-                "image_path": str(alt_image_path),
-                "image_url": alt_image_url
-            })
+        if not hero_variants:
+            continue
 
         # Add hero with all its variants to the hero data
         hero_data.append({
@@ -122,8 +259,8 @@ def download_hero_images(heroes):
             "name": full_name,
             "tag": tag,
             "localized_name": localized_name,
-            "aliases": hero.get("aliases", ""),
-            "alt_name": hero.get("alt_name", ""),
+            "aliases": (existing_hero or {}).get("aliases", hero.get("aliases", "")),
+            "alt_name": (existing_hero or {}).get("alt_name", hero.get("alt_name", "")),
             "variants": hero_variants
         })
 
@@ -138,6 +275,9 @@ def download_hero_images(heroes):
 
     logger.info(f"Hero data saved to {hero_data_path}")
 
+    if downloaded_any:
+        invalidate_template_cache()
+
     return hero_data
 
 def download_hero_abilities():
@@ -145,7 +285,7 @@ def download_hero_abilities():
     logger.info(f"Downloading hero abilities data from {HERO_ABILITIES_URL}")
 
     try:
-        response = requests.get(HERO_ABILITIES_URL)
+        response = requests.get(HERO_ABILITIES_URL, timeout=REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
 
         abilities_data = response.json()
@@ -173,7 +313,11 @@ def download_hero_abilities():
                         if not icon_path.exists():
                             try:
                                 logger.debug(f"Downloading facet icon {icon_name} from {icon_url}")
-                                response = requests.get(icon_url, stream=True)
+                                response = requests.get(
+                                    icon_url,
+                                    stream=True,
+                                    timeout=REQUEST_TIMEOUT_SECONDS
+                                )
                                 response.raise_for_status()
 
                                 with open(icon_path, 'wb') as f:
@@ -190,13 +334,27 @@ def download_hero_abilities():
         logger.error(f"Error downloading hero abilities data: {e}")
         return None
 
-def get_hero_data():
+
+def add_abilities_to_hero_data(hero_data, abilities_data):
+    """Attach ability metadata to each hero record when available."""
+    if not abilities_data:
+        return hero_data
+
+    for hero in hero_data:
+        hero_id = f"npc_dota_hero_{hero['tag']}"
+        if hero_id in abilities_data:
+            hero['abilities'] = abilities_data[hero_id]
+
+    return hero_data
+
+
+def get_hero_data(refresh=True):
     """Get hero data, downloading images if needed."""
     # Check if we already have the hero data cached
     hero_data_path = ASSETS_DIR / "hero_data.json"
     abilities_path = ASSETS_DIR / "hero_abilities.json"
 
-    # Load or download abilities data first
+    # Load abilities data first. Refreshing keeps facets current for newly added heroes.
     abilities_data = None
     if abilities_path.exists():
         try:
@@ -206,56 +364,64 @@ def get_hero_data():
         except Exception as e:
             logger.error(f"Error loading cached hero abilities data: {e}")
 
-    if not abilities_data:
-        abilities_data = download_hero_abilities()
+    if refresh or not abilities_data:
+        refreshed_abilities = download_hero_abilities()
+        if refreshed_abilities:
+            abilities_data = refreshed_abilities
 
-    if hero_data_path.exists():
-        try:
-            with open(hero_data_path, 'r') as f:
-                hero_data = json.load(f)
+    cached_hero_data = load_cached_hero_data(hero_data_path)
+    cached_signature = hero_roster_signature(cached_hero_data)
 
-            logger.info(f"Loaded cached hero data with {len(hero_data)} heroes")
+    if cached_hero_data:
+        logger.info(f"Loaded cached hero data with {len(cached_hero_data)} heroes")
 
-            # Verify that all image files exist
-            all_exist = True
-            for hero in hero_data:
-                for variant in hero.get("variants", []):
-                    if not Path(variant["image_path"]).exists():
-                        logger.warning(f"Image file missing for {hero['localized_name']} ({variant['variant']}): {variant['image_path']}")
-                        all_exist = False
-                        break
+    heroes = get_hero_list() if refresh or not cached_hero_data else []
 
-            if all_exist:
-                # Add abilities data to hero data
-                if abilities_data:
-                    for hero in hero_data:
-                        hero_id = f"npc_dota_hero_{hero['tag']}"
-                        if hero_id in abilities_data:
-                            hero['abilities'] = abilities_data[hero_id]
-                return hero_data
-            else:
-                logger.info("Some hero images are missing, will re-download")
+    if cached_hero_data and heroes:
+        cached_ids = {hero.get("id") for hero in cached_hero_data}
+        current_ids = {hero.get("id") for hero in heroes}
+        missing_ids = sorted(current_ids - cached_ids)
+        cached_images_exist = all_variant_images_exist(cached_hero_data)
 
-        except Exception as e:
-            logger.error(f"Error loading cached hero data: {e}")
+        if not missing_ids and cached_images_exist:
+            logger.info("Cached hero data is current")
+            return add_abilities_to_hero_data(cached_hero_data, abilities_data)
+
+        if missing_ids:
+            logger.info(f"Cached hero data is missing hero IDs: {missing_ids}")
+        else:
+            logger.info("Some hero images are missing, will re-download")
+
+    elif cached_hero_data and not heroes:
+        logger.warning("Using cached hero data because live hero list could not be fetched")
+        if all_variant_images_exist(cached_hero_data):
+            return add_abilities_to_hero_data(cached_hero_data, abilities_data)
+
+        logger.info("Cached hero data has missing images and no live source is available")
 
     # If we reach here, we need to download the hero data
-    heroes = get_hero_list()
-    hero_data = download_hero_images(heroes)
+    if not heroes:
+        logger.error("No hero list available and cached hero data is unusable")
+        return []
 
-    # Add abilities data to hero data
-    if abilities_data:
-        for hero in hero_data:
-            hero_id = f"npc_dota_hero_{hero['tag']}"
-            if hero_id in abilities_data:
-                hero['abilities'] = abilities_data[hero_id]
+    hero_data = download_hero_images(heroes, existing_hero_data=cached_hero_data)
 
-    return hero_data
+    if hero_roster_signature(hero_data) != cached_signature:
+        invalidate_template_cache()
 
-if __name__ == "__main__":
-    # When run directly, download all hero images
-    hero_data = get_hero_data()
+    return add_abilities_to_hero_data(hero_data, abilities_data)
+
+
+def main():
+    """Download or refresh hero metadata and portrait assets."""
+    hero_data = get_hero_data(refresh=True)
 
     # Count total variants
     total_variants = sum(len(hero["variants"]) for hero in hero_data)
     print(f"Downloaded {total_variants} hero images for {len(hero_data)} heroes to {ASSETS_DIR}")
+    return 0 if hero_data else 1
+
+
+if __name__ == "__main__":
+    # When run directly, download all hero images
+    raise SystemExit(main())

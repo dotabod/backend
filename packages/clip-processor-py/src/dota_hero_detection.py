@@ -276,12 +276,22 @@ def load_heroes_data():
 
     if not HEROES_FILE.exists():
         logger.error(f"Heroes data file not found: {HEROES_FILE}")
-        logger.info("Please run dota_heroes.py to download hero data first")
-        return None
+        logger.info("Attempting to download hero data before loading templates")
+        try:
+            from dota_heroes import get_hero_data
+        except ImportError:
+            from .dota_heroes import get_hero_data
+
+        if not get_hero_data(refresh=True):
+            logger.info("Please run dota_heroes.py to download hero data first")
+            return None
 
     try:
         with open(HEROES_FILE, 'r') as f:
             heroes_data = json.load(f)
+
+        templates_dict = {}
+        templates_changed = False
 
         # Check if cache file exists
         if TEMPLATES_CACHE_FILE.exists():
@@ -303,9 +313,25 @@ def load_heroes_data():
                         variant['cached_template'] = templates_dict[cache_key]
                         templates_loaded += 1
                     else:
-                        variant['cached_template'] = None
+                        template_file = Path(template_path)
+                        if template_file.exists():
+                            template = load_image(template_file)
+                            if template is not None:
+                                template_cropped = crop_hero_portrait(template, debug=False)
+                                cached_template = cv2.resize(template_cropped, (128, 72))
+                                variant['cached_template'] = cached_template
+                                templates_dict[cache_key] = cached_template
+                                templates_loaded += 1
+                                templates_changed = True
+                            else:
+                                variant['cached_template'] = None
+                        else:
+                            variant['cached_template'] = None
 
             logger.debug(f"Loaded {templates_loaded} cached templates from disk")
+            if templates_changed:
+                logger.info("Saving updated template cache with newly discovered hero templates")
+                np.savez(str(TEMPLATES_CACHE_FILE), templates=templates_dict)
             performance_timer.stop('load_cached_templates')
 
             # Store in the singleton
