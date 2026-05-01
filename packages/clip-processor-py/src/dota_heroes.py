@@ -106,6 +106,31 @@ def all_variant_images_exist(hero_data):
     return True
 
 
+def get_missing_expected_variants(cached_hero_data, heroes):
+    """Return variants expected by live metadata but missing from cached hero data."""
+    cached_by_id = {
+        hero.get("id"): hero
+        for hero in cached_hero_data or []
+    }
+    missing_variants = []
+
+    for hero in heroes or []:
+        cached_hero = cached_by_id.get(hero.get("id"))
+        if not cached_hero:
+            continue
+
+        expected_variants = {"base", *hero.get("alticons", [])}
+        cached_variants = {
+            variant.get("variant")
+            for variant in cached_hero.get("variants", [])
+        }
+
+        for variant in sorted(expected_variants - cached_variants):
+            missing_variants.append((hero.get("id"), hero.get("localized_name"), variant))
+
+    return missing_variants
+
+
 def invalidate_template_cache():
     """Remove the precomputed template cache after roster or image changes."""
     cache_path = ASSETS_DIR / "templates_cache.npz"
@@ -118,7 +143,9 @@ def invalidate_template_cache():
 
 
 def get_hero_list():
-    """Fetch the current Dota 2 hero list from live metadata sources."""
+    """Fetch the current Dota 2 hero list and augment it with portrait variants."""
+    source_results = {}
+
     for source_name, source_url, parser in (
         ("Valve", VALVE_HERO_LIST_URL, parse_valve_hero_list),
         ("OpenDota", ODOTA_HERO_LIST_URL, parse_odota_hero_list),
@@ -132,14 +159,30 @@ def get_hero_list():
 
             if heroes:
                 logger.info(f"Successfully fetched {len(heroes)} heroes from {source_name}")
-                return heroes
+                source_results[source_name] = heroes
+                continue
 
             logger.warning(f"No heroes found in {source_name} response")
         except Exception as e:
             logger.warning(f"Error fetching hero list from {source_name}: {e}")
 
-    logger.error("Unable to fetch hero list from any source")
-    return []
+    heroes = (
+        source_results.get("Valve")
+        or source_results.get("OpenDota")
+        or source_results.get("Spectral")
+        or []
+    )
+
+    if not heroes:
+        logger.error("Unable to fetch hero list from any source")
+        return []
+
+    spectral_heroes = source_results.get("Spectral")
+    if spectral_heroes and spectral_heroes is not heroes:
+        heroes = merge_hero_metadata(heroes, spectral_heroes)
+        logger.info("Augmented hero list with Spectral portrait variant metadata")
+
+    return heroes
 
 
 def parse_valve_hero_list(data):
@@ -158,6 +201,32 @@ def parse_legacy_hero_list(data):
     """Parse the legacy Spectral hero response used by earlier builds."""
     heroes = data.get("result", {}).get("heroes", [])
     return [normalize_hero(hero) for hero in heroes]
+
+
+def merge_hero_metadata(base_heroes, augmenting_heroes):
+    """Merge richer metadata such as Spectral alticons into the current roster."""
+    augmenting_by_id = {
+        hero.get("id"): hero
+        for hero in augmenting_heroes
+    }
+    merged_heroes = []
+
+    for hero in base_heroes:
+        merged_hero = dict(hero)
+        augmenting_hero = augmenting_by_id.get(hero.get("id"))
+
+        if augmenting_hero:
+            for field in ("aliases", "alt_name"):
+                if not merged_hero.get(field) and augmenting_hero.get(field):
+                    merged_hero[field] = augmenting_hero[field]
+
+            merged_alticons = set(merged_hero.get("alticons", []))
+            merged_alticons.update(augmenting_hero.get("alticons", []))
+            merged_hero["alticons"] = sorted(merged_alticons)
+
+        merged_heroes.append(merged_hero)
+
+    return merged_heroes
 
 
 def download_image(image_url, image_path, description):
@@ -381,14 +450,17 @@ def get_hero_data(refresh=True):
         cached_ids = {hero.get("id") for hero in cached_hero_data}
         current_ids = {hero.get("id") for hero in heroes}
         missing_ids = sorted(current_ids - cached_ids)
+        missing_variants = get_missing_expected_variants(cached_hero_data, heroes)
         cached_images_exist = all_variant_images_exist(cached_hero_data)
 
-        if not missing_ids and cached_images_exist:
+        if not missing_ids and not missing_variants and cached_images_exist:
             logger.info("Cached hero data is current")
             return add_abilities_to_hero_data(cached_hero_data, abilities_data)
 
         if missing_ids:
             logger.info(f"Cached hero data is missing hero IDs: {missing_ids}")
+        elif missing_variants:
+            logger.info(f"Cached hero data is missing portrait variants: {missing_variants}")
         else:
             logger.info("Some hero images are missing, will re-download")
 

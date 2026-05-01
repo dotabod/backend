@@ -23,6 +23,19 @@ class FakeImageResponse:
         yield b"fake-image-bytes"
 
 
+class FakeJsonResponse:
+    """Small requests.Response stand in for JSON metadata."""
+
+    def __init__(self, data):
+        self.data = data
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return self.data
+
+
 class DotaHeroesTests(unittest.TestCase):
     def test_parse_valve_hero_list_normalizes_new_heroes(self):
         heroes = dota_heroes.parse_valve_hero_list({
@@ -44,7 +57,60 @@ class DotaHeroesTests(unittest.TestCase):
         self.assertEqual(heroes[0]["tag"], "largo")
         self.assertEqual(heroes[0]["localized_name"], "Largo")
 
-    def test_get_hero_data_refreshes_missing_remote_hero_and_preserves_variants(self):
+    def test_get_hero_list_uses_valve_roster_and_spectral_alticons(self):
+        valve_response = {
+            "result": {
+                "data": {
+                    "heroes": [
+                        {
+                            "id": 5,
+                            "name": "npc_dota_hero_crystal_maiden",
+                            "name_english_loc": "Crystal Maiden",
+                        },
+                        {
+                            "id": 155,
+                            "name": "npc_dota_hero_largo",
+                            "name_english_loc": "Largo",
+                        },
+                    ]
+                }
+            }
+        }
+        odota_response = {}
+        spectral_response = {
+            "result": {
+                "heroes": [
+                    {
+                        "id": 5,
+                        "name": "npc_dota_hero_crystal_maiden",
+                        "tag": "crystal_maiden",
+                        "localized_name": "Crystal Maiden",
+                        "aliases": "cm",
+                        "alticons": ["arcana"],
+                    }
+                ]
+            }
+        }
+
+        with patch.object(
+            dota_heroes.requests,
+            "get",
+            side_effect=[
+                FakeJsonResponse(valve_response),
+                FakeJsonResponse(odota_response),
+                FakeJsonResponse(spectral_response),
+            ],
+        ):
+            heroes = dota_heroes.get_hero_list()
+
+        crystal_maiden = next(hero for hero in heroes if hero["id"] == 5)
+        largo = next(hero for hero in heroes if hero["id"] == 155)
+
+        self.assertEqual(crystal_maiden["alticons"], ["arcana"])
+        self.assertEqual(crystal_maiden["aliases"], "cm")
+        self.assertEqual(largo["localized_name"], "Largo")
+
+    def test_get_hero_data_refreshes_missing_remote_hero_and_missing_variants(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             assets_dir = Path(temp_dir) / "dota_heroes"
             assets_dir.mkdir(parents=True)
@@ -82,6 +148,7 @@ class DotaHeroesTests(unittest.TestCase):
                     "id": 5,
                     "name": "npc_dota_hero_crystal_maiden",
                     "name_english_loc": "Crystal Maiden",
+                    "alticons": ["arcana"],
                 }),
                 dota_heroes.normalize_hero({
                     "id": 155,
@@ -98,12 +165,13 @@ class DotaHeroesTests(unittest.TestCase):
 
             hero_ids = {hero["id"] for hero in refreshed}
             self.assertEqual(hero_ids, {5, 155})
+            self.assertTrue((assets_dir / "5_arcana.png").exists())
             self.assertTrue((assets_dir / "155_base.png").exists())
             self.assertFalse((assets_dir / "templates_cache.npz").exists())
 
             crystal_maiden = next(hero for hero in refreshed if hero["id"] == 5)
             crystal_variants = {variant["variant"] for variant in crystal_maiden["variants"]}
-            self.assertEqual(crystal_variants, {"base", "persona1"})
+            self.assertEqual(crystal_variants, {"base", "persona1", "arcana"})
 
             largo = next(hero for hero in refreshed if hero["id"] == 155)
             self.assertEqual(largo["variants"][0]["image_url"], dota_heroes.steam_hero_image_url("largo"))
