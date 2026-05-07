@@ -16,8 +16,8 @@ describe('translation message formatting', () => {
   })
 
   it('adds translated in-game chat prefix and disclaimer', () => {
-    expect(formatTranslatedInGameChatMessage('Player 2: white slard')).toBe(
-      '[In-game chat translation] Player 2: white slard (auto-translated, may be inaccurate)',
+    expect(formatTranslatedInGameChatMessage('Player 2: where shard')).toBe(
+      '[In-game chat translation] Player 2: where shard (auto-translated, may be inaccurate)',
     )
   })
 })
