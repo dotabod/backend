@@ -27,6 +27,7 @@ describe('translation message formatting', () => {
 
   it('marks fallback hero labels as player labels', () => {
     expect(formatTranslatedSpeakerLabel('Hero 2', 2, 'en', true)).toBe('Player 2')
+    expect(formatTranslatedSpeakerLabel('2', 2, 'en', true)).toBe('Player 2')
   })
 
   it('includes player slot for known hero labels', () => {
