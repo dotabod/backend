@@ -36,21 +36,24 @@ export function formatTranslatedInGameChatMessage(message: string, locale: strin
   })
 }
 
+function isWithinTranslatedLimit(message: string, locale: string, maxLength: number): boolean {
+  return formatTranslatedInGameChatMessage(message, locale).length <= maxLength
+}
+
 function truncateToLimit(message: string, locale: string, maxLength: number): string {
-  if (formatTranslatedInGameChatMessage(message, locale).length <= maxLength) {
+  if (isWithinTranslatedLimit(message, locale, maxLength)) {
     return message
   }
 
   let left = 0
   let right = message.length
-  let best = TRUNCATION_SUFFIX
+  let best = ''
 
   while (left <= right) {
     const mid = Math.floor((left + right) / 2)
     const candidate = `${message.slice(0, mid)}${TRUNCATION_SUFFIX}`
-    const candidateLength = formatTranslatedInGameChatMessage(candidate, locale).length
 
-    if (candidateLength <= maxLength) {
+    if (isWithinTranslatedLimit(candidate, locale, maxLength)) {
       best = candidate
       left = mid + 1
     } else {
@@ -58,7 +61,11 @@ function truncateToLimit(message: string, locale: string, maxLength: number): st
     }
   }
 
-  return best
+  if (best) {
+    return best
+  }
+
+  return isWithinTranslatedLimit(TRUNCATION_SUFFIX, locale, maxLength) ? TRUNCATION_SUFFIX : ''
 }
 
 export function formatTranslatedInGameChatMessages(
@@ -72,7 +79,7 @@ export function formatTranslatedInGameChatMessages(
 
   for (const part of parts) {
     const candidate = currentChunk ? `${currentChunk}${MERGED_PART_SEPARATOR}${part}` : part
-    if (formatTranslatedInGameChatMessage(candidate, locale).length <= maxLength) {
+    if (isWithinTranslatedLimit(candidate, locale, maxLength)) {
       currentChunk = candidate
       continue
     }
