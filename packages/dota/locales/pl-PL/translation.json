@@ -62,6 +62,12 @@
   },
   "chattersRank": "@{{username}} ma rangę {{rank}}",
   "chattersRankUnknown": "@{{username}} nie ma jeszcze rangi. Zostań zweryfikowany przez Dotabod, aby przypisać rangę! {{- url}}",
+  "chatTranslation": {
+    "legacyHeroLabel": "Hero {{playerId}}",
+    "message": "[In-game chat translation] {{- message}} (auto-translated, may be inaccurate)",
+    "playerLabel": "Player {{playerId}}",
+    "speakerLabel": "{{- heroName}} (P{{playerId}})"
+  },
   "clearsharing": {
     "error": "Nie udało się wyczyścić współdzielonych kont. Proszę spróbować ponownie lub skontaktować się z pomocą techniczną.",
     "success": "Pomyślnie zresetowano współdzielenie kont. Współdzielone konta Steam mogą teraz ponownie wysyłać dane GSI. UWAGA: Upewnij się, że tylko jedna osoba ma plik konfiguracyjny GSI Dotaboda lub konflikty będą się powtarzały."

@@ -66,6 +66,12 @@
   },
   "chattersRank": "@{{username}}التصنيف هو{{rank}}",
   "chattersRankUnknown": "@{{username}} تصنيف غير معروف، اصبح Dotabod مفعل للحصول على تصنيفك!{{- url}}",
+  "chatTranslation": {
+    "legacyHeroLabel": "Hero {{playerId}}",
+    "message": "[In-game chat translation] {{- message}} (auto-translated, may be inaccurate)",
+    "playerLabel": "Player {{playerId}}",
+    "speakerLabel": "{{- heroName}} (P{{playerId}})"
+  },
   "clearsharing": {
     "error": "فشل في إلغاء مشاركة الحساب",
     "success": "تم بنجاح إعادة تعيين مشاركة الحساب، العديد من حسابات مسئولي البث يمكن أن ترسل بيانات GSI  مرة أخرى، تحذير:احرص على أن يكون ملف إعدادات GSI الخاص بـ Dotabod بحوذت شخص واحد، وإلا ستعود المشاكل للظهور مجددًا."

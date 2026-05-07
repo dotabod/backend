@@ -62,6 +62,12 @@
   },
   "chattersRank": "@{{username}} має ранг {{rank}}",
   "chattersRankUnknown": "@{{username}} має невідомий ранг. Станьте верифікованим користувачем Dotabod, щоб отримати свій ранг! {{- url}}",
+  "chatTranslation": {
+    "legacyHeroLabel": "Hero {{playerId}}",
+    "message": "[In-game chat translation] {{- message}} (auto-translated, may be inaccurate)",
+    "playerLabel": "Player {{playerId}}",
+    "speakerLabel": "{{- heroName}} (P{{playerId}})"
+  },
   "clearsharing": {
     "error": "Не вдалося очистити обмін профілем. Спробуйте ще раз або зверніться до підтримки.",
     "success": "Обмін даними облікового запису успішно скинуто. Тепер декілька облікових записів Steam можуть знову відправити дані GSI. УВАГА: Переконайтеся, що у користувача є файл конфігурації Dotabod GSI, або помилки будуть з'являтись."

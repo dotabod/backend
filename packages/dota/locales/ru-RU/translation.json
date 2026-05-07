@@ -62,6 +62,12 @@
   },
   "chattersRank": "ранг @{{username}} {{rank}}",
   "chattersRankUnknown": "ранг @{{username}} неизвестен. Верифицируйте Dotabod, чтобы получить свой ранг! {{- url}}",
+  "chatTranslation": {
+    "legacyHeroLabel": "Hero {{playerId}}",
+    "message": "[In-game chat translation] {{- message}} (auto-translated, may be inaccurate)",
+    "playerLabel": "Player {{playerId}}",
+    "speakerLabel": "{{- heroName}} (P{{playerId}})"
+  },
   "clearsharing": {
     "error": "Не удалось сбросить совместное использование аккаунта. Пожалуйста, попробуйте снова или свяжитесь с поддержкой.",
     "success": "Совместное использование аккаунта успешно сброшено. Теперь несколько Steam-аккаунтов могут снова отправлять данные GSI. ВНИМАНИЕ: убедитесь, что только один человек имеет файл конфигурации Dotabod GSI, иначе конфликты повторятся."
