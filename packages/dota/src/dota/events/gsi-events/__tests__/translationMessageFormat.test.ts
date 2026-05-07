@@ -15,6 +15,7 @@ describe('translation message formatting', () => {
         en: {
           translation: {
             chatTranslation: {
+              legacyHeroLabel: 'Hero {{playerId}}',
               message: '[In-game chat translation] {{- message}} (auto-translated, may be inaccurate)',
               playerLabel: 'Player {{playerId}}',
               speakerLabel: '{{- heroName}} (P{{playerId}})',
@@ -26,14 +27,12 @@ describe('translation message formatting', () => {
   })
 
   it('marks fallback hero labels as player labels', () => {
-    expect(formatTranslatedSpeakerLabel('Hero 2', 2, 'en', true)).toBe('Player 2')
-    expect(formatTranslatedSpeakerLabel('2', 2, 'en', true)).toBe('Player 2')
+    expect(formatTranslatedSpeakerLabel('Hero 2', 2, 'en')).toBe('Player 2')
+    expect(formatTranslatedSpeakerLabel('2', 2, 'en')).toBe('Player 2')
   })
 
   it('includes player slot for known hero labels', () => {
-    expect(formatTranslatedSpeakerLabel('Crystal Maiden', 4, 'en', false)).toBe(
-      'Crystal Maiden (P4)',
-    )
+    expect(formatTranslatedSpeakerLabel('Crystal Maiden', 4, 'en')).toBe('Crystal Maiden (P4)')
   })
 
   it('adds translated in-game chat prefix and disclaimer', () => {

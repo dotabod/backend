@@ -4,9 +4,15 @@ export function formatTranslatedSpeakerLabel(
   heroName: string,
   playerId: number,
   locale: string,
-  isFallbackSpeakerLabel: boolean,
 ): string {
-  if (isFallbackSpeakerLabel) {
+  const fallbackSpeakerLabels = new Set([
+    t('chatTranslation.legacyHeroLabel', {
+      lng: locale,
+      playerId,
+    }),
+    `${playerId}`,
+  ])
+  if (fallbackSpeakerLabels.has(heroName)) {
     return t('chatTranslation.playerLabel', {
       lng: locale,
       playerId,

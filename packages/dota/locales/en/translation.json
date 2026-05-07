@@ -60,6 +60,7 @@
   "chattersRank": "@{{username}}'s rank is {{rank}}",
   "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
   "chatTranslation": {
+    "legacyHeroLabel": "Hero {{playerId}}",
     "message": "[In-game chat translation] {{- message}} (auto-translated, may be inaccurate)",
     "playerLabel": "Player {{playerId}}",
     "speakerLabel": "{{- heroName}} (P{{playerId}})"

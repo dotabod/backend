@@ -2,6 +2,7 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import * as deepl from 'deepl-node'
 import { franc } from 'franc'
+import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../../settings.js'
 import { chatClient } from '../../../twitch/chatClient.js'
@@ -384,16 +385,18 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
       playerIdIndex = event.player_id
     }
     const heroName = getHeroNameOrColor(matchPlayers[playerIdIndex]?.heroid ?? 0, playerIdIndex)
+    const fallbackHeroLabel = t('chatTranslation.legacyHeroLabel', {
+      lng: dotaClient.client.locale,
+      playerId: event.player_id,
+    })
     const displayHeroName =
       !foundInMatchPlayers && is8500Plus(dotaClient.client)
-        ? `Hero ${event.player_id}`
+        ? fallbackHeroLabel
         : heroName || event.player_id.toString()
-    const isFallbackSpeakerLabel = !foundInMatchPlayers || !heroName
     const speakerLabel = formatTranslatedSpeakerLabel(
       displayHeroName,
       event.player_id,
       dotaClient.client.locale,
-      isFallbackSpeakerLabel,
     )
 
     // Add to buffer
