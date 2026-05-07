@@ -286,7 +286,10 @@ async function processTranslationBuffer(
   }
 
   if (translateInChat) {
-    chatClient.say(dotaClient.client.name, formatTranslatedInGameChatMessage(mergedMessage))
+    chatClient.say(
+      dotaClient.client.name,
+      formatTranslatedInGameChatMessage(mergedMessage, dotaClient.client.locale),
+    )
   }
 }
 
@@ -385,7 +388,13 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
       !foundInMatchPlayers && is8500Plus(dotaClient.client)
         ? `Hero ${event.player_id}`
         : heroName || event.player_id.toString()
-    const speakerLabel = formatTranslatedSpeakerLabel(displayHeroName, event.player_id)
+    const isFallbackSpeakerLabel = !foundInMatchPlayers || !heroName
+    const speakerLabel = formatTranslatedSpeakerLabel(
+      displayHeroName,
+      event.player_id,
+      dotaClient.client.locale,
+      isFallbackSpeakerLabel,
+    )
 
     // Add to buffer
     buffer.messages.push({
