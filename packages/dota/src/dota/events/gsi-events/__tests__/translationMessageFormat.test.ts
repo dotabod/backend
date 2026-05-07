@@ -3,6 +3,7 @@ import i18next from 'i18next'
 
 import {
   formatTranslatedInGameChatMessage,
+  formatTranslatedInGameChatMessages,
   formatTranslatedSpeakerLabel,
 } from '../translationMessageFormat.js'
 
@@ -39,5 +40,28 @@ describe('translation message formatting', () => {
     expect(formatTranslatedInGameChatMessage('Player 2: where shard', 'en')).toBe(
       '[In-game chat translation] Player 2: where shard (auto-translated, may be inaccurate)',
     )
+  })
+
+  it('splits translated messages to stay within twitch length limit', () => {
+    const longMessageA = `Player 1: ${'a'.repeat(220)}`
+    const longMessageB = `Player 2: ${'b'.repeat(220)}`
+    const split = formatTranslatedInGameChatMessages(
+      `${longMessageA} | ${longMessageB}`,
+      'en',
+      500,
+    )
+
+    expect(split.length).toBe(2)
+    for (const message of split) {
+      expect(message.length).toBeLessThanOrEqual(500)
+    }
+  })
+
+  it('truncates oversized translated segments to stay within twitch length limit', () => {
+    const split = formatTranslatedInGameChatMessages(`Player 1: ${'x'.repeat(700)}`, 'en', 500)
+
+    expect(split.length).toBe(1)
+    expect(split[0].length).toBeLessThanOrEqual(500)
+    expect(split[0]).toContain('…')
   })
 })

@@ -14,7 +14,7 @@ import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { server } from '../../server.js'
 import eventHandler from '../EventHandler.js'
 import {
-  formatTranslatedInGameChatMessage,
+  formatTranslatedInGameChatMessages,
   formatTranslatedSpeakerLabel,
 } from './translationMessageFormat.js'
 
@@ -287,10 +287,13 @@ async function processTranslationBuffer(
   }
 
   if (translateInChat) {
-    chatClient.say(
-      dotaClient.client.name,
-      formatTranslatedInGameChatMessage(mergedMessage, dotaClient.client.locale),
+    const translatedChatMessages = formatTranslatedInGameChatMessages(
+      mergedMessage,
+      dotaClient.client.locale,
     )
+    for (const translatedChatMessage of translatedChatMessages) {
+      chatClient.say(dotaClient.client.name, translatedChatMessage)
+    }
   }
 }
 
