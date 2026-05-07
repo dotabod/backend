@@ -12,6 +12,10 @@ import { getHeroNameOrColor } from '../../lib/heroes.js'
 import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
 import { server } from '../../server.js'
 import eventHandler from '../EventHandler.js'
+import {
+  formatTranslatedInGameChatMessage,
+  formatTranslatedSpeakerLabel,
+} from './translationMessageFormat.js'
 
 const disableTranslation = false
 const authKey = process.env.DEEPL_KEY || ''
@@ -88,7 +92,7 @@ const TRANSLATION_DEBOUNCE_TIME = 5000 // 5 seconds
 interface TranslationMessage {
   message: string
   playerId: number
-  heroName: string
+  speakerLabel: string
   timestamp: number
 }
 
@@ -234,7 +238,7 @@ async function processTranslationBuffer(
         }
 
         return {
-          heroName: item.heroName,
+          speakerLabel: item.speakerLabel,
           translation: moderatedTranslation,
         }
       } catch (error) {
@@ -254,10 +258,10 @@ async function processTranslationBuffer(
   const heroMessages = new Map<string, string[]>()
   for (const translation of validTranslations) {
     if (translation?.translation) {
-      if (!heroMessages.has(translation.heroName)) {
-        heroMessages.set(translation.heroName, [])
+      if (!heroMessages.has(translation.speakerLabel)) {
+        heroMessages.set(translation.speakerLabel, [])
       }
-      heroMessages.get(translation.heroName)!.push(translation.translation)
+      heroMessages.get(translation.speakerLabel)!.push(translation.translation)
     }
   }
 
@@ -282,7 +286,7 @@ async function processTranslationBuffer(
   }
 
   if (translateInChat) {
-    chatClient.say(dotaClient.client.name, mergedMessage)
+    chatClient.say(dotaClient.client.name, formatTranslatedInGameChatMessage(mergedMessage))
   }
 }
 
@@ -381,12 +385,13 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
       !foundInMatchPlayers && is8500Plus(dotaClient.client)
         ? `Hero ${event.player_id}`
         : heroName || event.player_id.toString()
+    const speakerLabel = formatTranslatedSpeakerLabel(displayHeroName, event.player_id)
 
     // Add to buffer
     buffer.messages.push({
       message,
       playerId: event.player_id,
-      heroName: displayHeroName,
+      speakerLabel,
       timestamp: Date.now(),
     })
 
