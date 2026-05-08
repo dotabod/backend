@@ -55,6 +55,12 @@
   },
   "chattersRank": "@{{username}}'s rank is {{rank}}",
   "chattersRankUnknown": "@{{username}}'s rank is unknown. Become Dotabod verified to get your rank! {{- url}}",
+  "chatTranslation": {
+    "legacyHeroLabel": "Hero {{playerId}}",
+    "message": "[In-game chat translation] {{- message}} (auto-translated, may be inaccurate)",
+    "playerLabel": "Player {{playerId}}",
+    "speakerLabel": "{{- heroName}} (P{{playerId}})"
+  },
   "clearsharing": {
     "error": "Failed to clear account sharing. Please try again or contact support.",
     "success": "Account sharing reset successfully. Multiple Steam accounts can now send GSI data again. WARNING: Make sure only one person has the Dotabod GSI config file, or conflicts will reoccur."
