@@ -13,6 +13,7 @@ import { toggleDotabod } from '../twitch/toggleDotabod.js'
 import { isSubscriptionActive } from '../types/subscription.js'
 import getDBUser from './getDBUser.js'
 import { handleUserOnlineMessages } from './handleScheduledMessages.js'
+import { handleStreamStatusTransition } from './handleStreamStatusTransition.js'
 
 class SetupSupabase {
   channel: any // ReturnType<typeof supabase.channel>
@@ -236,21 +237,19 @@ class SetupSupabase {
           client.beta_tester = newObj.beta_tester
           client.stream_online = newObj.stream_online
 
-          // They go offline
-          if (!newObj.stream_online && oldObj.stream_online) {
-            server.io.to(client.token).emit('refresh-settings', 'mutate')
+          const streamStatusTransition = handleStreamStatusTransition({
+            client,
+            connectedUser: gsiHandlers.get(client.token),
+            io: server.io,
+            logger,
+            oldStreamOnline: oldObj.stream_online,
+          })
+
+          if (streamStatusTransition.wentOffline) {
             return
           }
 
-          // They come online
-          if (client.stream_online && !oldObj.stream_online) {
-            const connectedUser = gsiHandlers.get(client.token)
-            if (connectedUser) {
-              connectedUser.enable()
-
-              server.io.to(client.token).emit('refresh-settings', 'mutate')
-            }
-
+          if (streamStatusTransition.cameOnline) {
             // Handle any pending scheduled messages for this user
             await handleUserOnlineMessages(client.token, client.name)
           }
