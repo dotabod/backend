@@ -2,6 +2,7 @@ import { logger } from '@dotabod/shared-utils'
 import type { NextFunction, Request, Response } from 'express'
 import getDBUser from '../db/getDBUser.js'
 import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts.js'
+import { recordGsiFirstSeen } from './setupSignals.js'
 
 export function validateToken(req: Request, res: Response, next: NextFunction) {
   const forwardedIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
@@ -38,6 +39,11 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
   getDBUser({ token, ip: forwardedIp })
     .then(({ result: client }) => {
       if (client?.token) {
+        // Record first-seen for the setup wizard's Step 2 verify-state, regardless of
+        // stream state. This is the signal that the cfg file is installed and Dota 2 is
+        // running. Cached + idempotent upsert under the hood.
+        recordGsiFirstSeen(client.token)
+
         if (!client.stream_online) {
           pendingCheckAuth.delete(token)
           res.status(200).json({

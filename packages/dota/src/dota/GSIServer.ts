@@ -20,6 +20,7 @@ import { newData, processChanges } from './globalEventEmitter.js'
 import { gsiHandlers } from './lib/consts.js'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
 import { deleteClipsBatch } from './lib/twitchUtils.js'
+import { recordOverlayFirstSeen } from './setupSignals.js'
 import { validateToken } from './validateToken.js'
 
 // --- Clip Deletion Queue ---
@@ -60,6 +61,10 @@ async function handleSocketConnection(socket: Socket) {
   const { token } = socket.handshake.auth
 
   await socket.join(token)
+
+  // Signal that this user's overlay browser source has connected at least once.
+  // Drives the setup wizard's Step 3 verify-state. Cached + idempotent.
+  recordOverlayFirstSeen(token)
 
   const handler = gsiHandlers.get(token)
   if (handler && !handler.disabled && handler.client.stream_online) {
