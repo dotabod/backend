@@ -68,7 +68,7 @@
   "chattersRankUnknown": "@{{username}} تصنيف غير معروف، اصبح Dotabod مفعل للحصول على تصنيفك!{{- url}}",
   "chatTranslation": {
     "legacyHeroLabel": "Hero {{playerId}}",
-    "message": "[In-game chat translation] {{- message}} (auto-translated, may be inaccurate)",
+    "message": "{{- message}} (translation of in-game chat)",
     "playerLabel": "Player {{playerId}}",
     "speakerLabel": "{{- heroName}} (P{{playerId}})"
   },
