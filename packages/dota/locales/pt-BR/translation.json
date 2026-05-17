@@ -62,7 +62,7 @@
   "chattersRankUnknown": "O rank de @{{username}} é desconhecido. Se torne um usuário verificado do Dotabod para obter seu rank! {{- url}}",
   "chatTranslation": {
     "legacyHeroLabel": "Hero {{playerId}}",
-    "message": "[In-game chat translation] {{- message}} (auto-translated, may be inaccurate)",
+    "message": "{{- message}} (translation of in-game chat)",
     "playerLabel": "Player {{playerId}}",
     "speakerLabel": "{{- heroName}} (P{{playerId}})"
   },
