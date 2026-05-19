@@ -237,36 +237,39 @@ export async function resolveMatchRetroactively(
 
   const previousWon = match.won
   const isCorrection = previousWon !== null
-
-  // Fetch match details from Steam for scores, lobby type, etc.
-  const gcData = await getMatchDetails(matchId)
-  const matchData = gcData?.matches?.[0]
-
-  // Determine lobby type and other details (default to ranked if unknown)
-  const lobbyType = matchData?.lobby_type ?? match.lobby_type ?? LOBBY_TYPE_RANKED
-  const gameMode = matchData?.game_mode ?? 22 // Default to All Pick
   const isParty = match.is_party ?? false
-  const isRanked = lobbyType === LOBBY_TYPE_RANKED
+  const handler = gsiHandlers.get(client.token)
 
-  // Get scores from Steam data if available
-  const scores = {
-    kda: null,
-    radiant_score: matchData?.radiant_score ?? null,
-    dire_score: matchData?.dire_score ?? null,
+  let lobbyType: number
+  if (isCorrection) {
+    // The row's lobby_type/scores were set at original resolution. Re-fetching
+    // from Steam risks clobbering them with null if Steam no longer has the
+    // match (common for older matches), so a flip only touches won + updated_at.
+    lobbyType = match.lobby_type ?? LOBBY_TYPE_RANKED
+
+    await supabase
+      .from('matches')
+      .update({ won, updated_at: new Date().toISOString() })
+      .eq('id', match.id)
+  } else {
+    const gcData = await getMatchDetails(matchId)
+    const matchData = gcData?.matches?.[0]
+    lobbyType = matchData?.lobby_type ?? match.lobby_type ?? LOBBY_TYPE_RANKED
+
+    await supabase
+      .from('matches')
+      .update({
+        won,
+        lobby_type: lobbyType,
+        game_mode: matchData?.game_mode ?? 22,
+        radiant_score: matchData?.radiant_score ?? null,
+        dire_score: matchData?.dire_score ?? null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', match.id)
   }
 
-  // Update the match in the database
-  await supabase
-    .from('matches')
-    .update({
-      won,
-      lobby_type: lobbyType,
-      game_mode: gameMode,
-      radiant_score: scores.radiant_score,
-      dire_score: scores.dire_score,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', match.id)
+  const isRanked = lobbyType === LOBBY_TYPE_RANKED
 
   logger.info('[BETS] Retroactive resolution - match updated in database', {
     name: client.name,
@@ -306,7 +309,6 @@ export async function resolveMatchRetroactively(
   // Already-resolved predictions can't be re-resolved on Twitch's side,
   // so we don't try when flipping a previously recorded result.
   if (!isCorrection && match.predictionId) {
-    const handler = gsiHandlers.get(client.token)
     const channelId = handler?.getChannelId() ?? client.Account?.providerAccountId
 
     if (channelId) {
@@ -321,8 +323,6 @@ export async function resolveMatchRetroactively(
     }
   }
 
-  // Emit WL update if handler exists
-  const handler = gsiHandlers.get(client.token)
   handler?.emitWLUpdate()
 
   // Send success message

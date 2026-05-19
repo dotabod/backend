@@ -9,6 +9,12 @@ import type { Database } from './supabase-types.js'
 const supabaseUrl = process.env.DB_URL || 'https://placeholder.invalid'
 const supabaseKey = process.env.DB_SECRET || 'placeholder-key'
 
+if (process.env.NODE_ENV !== 'test' && (!process.env.DB_URL || !process.env.DB_SECRET)) {
+  console.warn(
+    '[shared-utils] DB_URL or DB_SECRET missing; supabase client is using placeholder credentials and any real query will fail.',
+  )
+}
+
 type SupabaseClient = ReturnType<typeof createClient<Database>>
 
 let supabaseInstance: SupabaseClient | null = null

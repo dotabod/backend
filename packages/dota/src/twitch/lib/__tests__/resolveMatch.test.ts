@@ -646,6 +646,33 @@ describe('resolveMatchRetroactively', () => {
       expect(state.updateCalls[0].values).toMatchObject({ won: true })
     })
 
+    it('writes a minimal update on a flip (won + updated_at only, no Steam-sourced fields)', async () => {
+      state.sessionMatch = baseMatchRow({
+        won: false,
+        radiant_score: 42,
+        dire_score: 30,
+        lobby_type: 7,
+      } as any)
+      // Steam no longer has this match — simulates the older-match case.
+      state.steamSocketResponse = { matches: [] }
+      const client = makeClient()
+
+      await resolveMatchRetroactively(client, '7777777777', true, 'modUser', '#streamer', 'msg-1')
+
+      expect(state.updateCalls).toHaveLength(1)
+      const values = state.updateCalls[0].values
+      expect(values).toEqual({
+        won: true,
+        updated_at: expect.any(String),
+      })
+      // No score / lobby_type / game_mode fields, which would otherwise clobber
+      // the row with null when Steam returns nothing.
+      expect(values).not.toHaveProperty('radiant_score')
+      expect(values).not.toHaveProperty('dire_score')
+      expect(values).not.toHaveProperty('lobby_type')
+      expect(values).not.toHaveProperty('game_mode')
+    })
+
     it('never touches the prediction on a correction even when a valid prediction exists', async () => {
       state.sessionMatch = baseMatchRow({ won: false })
       state.predictions = [
