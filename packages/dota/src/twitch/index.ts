@@ -215,7 +215,7 @@ twitchChat.on(
       !toggleCommand?.aliases?.includes(text.replace('!', '').split(' ')[0]) &&
       text.split(' ')[0] !== '!toggle'
     ) {
-      logger.info('Bot is disabled', { channel, user, text })
+      logger.debug('Bot is disabled', { channel, user, text })
       return
     }
 
