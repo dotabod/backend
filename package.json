@@ -14,7 +14,9 @@
     "build:all": "bun run --cwd packages/shared-utils build && bun run --cwd packages/profanity-filter build && bun run --cwd packages/dota build && bun run --cwd packages/twitch-chat build && bun run --cwd packages/twitch-events build",
     "typecheck:all": "bun run --cwd packages/shared-utils typecheck && bun run --cwd packages/profanity-filter typecheck && bun run --cwd packages/dota typecheck && bun run --cwd packages/twitch-chat typecheck && bun run --cwd packages/twitch-events typecheck",
     "lint:all": "biome check .",
-    "test:all": "bun run --cwd packages/profanity-filter test"
+    "test": "bun run --cwd packages/dota test",
+    "test:unit": "bun run --cwd packages/dota test:unit",
+    "test:all": "bun run --cwd packages/profanity-filter test && bun run --cwd packages/dota test"
   },
   "trustedDependencies": [
     "@biomejs/biome",

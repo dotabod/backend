@@ -13,9 +13,11 @@
     "dev": "bun --watch src/index.ts",
     "docker:production": "bun src/index.ts",
     "docker:development": "bun --watch src/index.ts",
+    "prebuild": "rm -rf dist",
     "build": "bun build --target=bun --outfile=./dist/index.js --outdir=./dist --production ./src/index.ts",
     "fix-users": "doppler run -- bun ./src/dev/index.ts",
     "test": "doppler run -- bun jest",
+    "test:unit": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
