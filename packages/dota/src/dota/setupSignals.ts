@@ -28,7 +28,7 @@ async function recordFirstSeen(userId: string, key: SetupSignalKey) {
   const { error } = await supabase
     .from('settings')
     .upsert(
-      { userId, key, value: now, updated_at: now },
+      { userId, key, value: true, updated_at: now },
       { onConflict: 'userId, key', ignoreDuplicates: true },
     )
   if (error) logger.info('[setup-signals] upsert failed', { userId, key, error })
