@@ -1,3 +1,6 @@
+process.on('SIGTERM', () => process.exit(0))
+process.on('SIGINT', () => process.exit(0))
+
 import { lstatSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import {

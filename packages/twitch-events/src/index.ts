@@ -1,3 +1,6 @@
+process.on('SIGTERM', () => process.exit(0))
+process.on('SIGINT', () => process.exit(0))
+
 import { checkBotStatus, logger } from '@dotabod/shared-utils'
 import { fetchExistingSubscriptions, subsToCleanup } from './fetchExistingSubscriptions'
 import { subscribeToEvents } from './subscribeToEvents'
