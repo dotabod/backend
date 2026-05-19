@@ -17,7 +17,8 @@ describe('translation message formatting', () => {
           translation: {
             chatTranslation: {
               legacyHeroLabel: 'Hero {{playerId}}',
-              message: '[In-game chat translation] {{- message}} (auto-translated, may be inaccurate)',
+              message:
+                '[In-game chat translation] {{- message}} (auto-translated, may be inaccurate)',
               playerLabel: 'Player {{playerId}}',
               speakerLabel: '{{- heroName}} (P{{playerId}})',
             },
@@ -45,11 +46,7 @@ describe('translation message formatting', () => {
   it('splits translated messages to stay within twitch length limit', () => {
     const longMessageA = `Player 1: ${'a'.repeat(220)}`
     const longMessageB = `Player 2: ${'b'.repeat(220)}`
-    const split = formatTranslatedInGameChatMessages(
-      `${longMessageA} | ${longMessageB}`,
-      'en',
-      500,
-    )
+    const split = formatTranslatedInGameChatMessages(`${longMessageA} | ${longMessageB}`, 'en', 500)
 
     expect(split.length).toBe(2)
     for (const message of split) {

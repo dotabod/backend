@@ -5,4 +5,4 @@ pre-commit:
 pre-push:
   commands:
     biome:
-      run: npx @biomejs/biome check --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {push_files}
+      run: npx @biomejs/biome ci --colors=off .
