@@ -1080,6 +1080,7 @@ export class GSIHandler implements GSIHandlerType {
         say(
           this.client,
           t('bets.manualResolution', {
+            matchId,
             emote: 'PauseChamp',
             lng: this.client.locale,
           }),
@@ -1150,6 +1151,7 @@ export class GSIHandler implements GSIHandlerType {
             say(
               this.client,
               t('bets.manualResolution', {
+                matchId,
                 emote: 'PauseChamp',
                 lng: this.client.locale,
               }),

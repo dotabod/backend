@@ -57,6 +57,33 @@ async function findSessionMatch(
 }
 
 /**
+ * Find the most-recently-resolved match in the streaming session window.
+ * Used by `!won` / `!lost` (no arg) to auto-target the last result for a flip
+ * when there's no pending DC resolution waiting.
+ */
+export async function findMostRecentResolvedMatch(
+  userId: string,
+  streamStartDate: Date | null,
+  excludeMatchId?: string,
+): Promise<{ matchId: string } | null> {
+  const startDate = streamStartDate ?? new Date(Date.now() - 12 * 60 * 60 * 1000)
+
+  let query = supabase
+    .from('matches')
+    .select('matchId')
+    .eq('userId', userId)
+    .not('won', 'is', null)
+    .gte('created_at', startDate.toISOString())
+
+  if (excludeMatchId) {
+    query = query.neq('matchId', excludeMatchId)
+  }
+
+  const { data } = await query.order('created_at', { ascending: false }).limit(1).single()
+  return data ? { matchId: data.matchId } : null
+}
+
+/**
  * Fetch match details from Steam API
  */
 async function getMatchDetails(matchId: string): Promise<MatchMinimalDetailsResponse | null> {

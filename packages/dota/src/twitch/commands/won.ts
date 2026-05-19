@@ -7,7 +7,7 @@ import { steamSocket } from '../../steam/ws.js'
 import type { MatchMinimalDetailsResponse } from '../../types.js'
 import { chatClient } from '../chatClient.js'
 import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
-import { resolveMatchRetroactively } from '../lib/resolveMatch.js'
+import { findMostRecentResolvedMatch, resolveMatchRetroactively } from '../lib/resolveMatch.js'
 
 commandHandler.registerCommand('won', {
   permission: 2, // Mods and broadcaster only
@@ -54,6 +54,27 @@ commandHandler.registerCommand('won', {
       )
 
       if (!pendingResolution) {
+        // No DC waiting on a mod. Fall back to flipping the most recent
+        // resolved match so `!won` after a mistyped `!lost` still does the
+        // right thing without forcing the mod to dig up the matchId.
+        const recent = await findMostRecentResolvedMatch(
+          client.token,
+          client.stream_start_date,
+          client.gsi?.map?.matchid,
+        )
+
+        if (recent) {
+          await resolveMatchRetroactively(
+            client,
+            recent.matchId,
+            true,
+            username,
+            channel,
+            message.user.messageId,
+          )
+          return
+        }
+
         chatClient.say(
           channel,
           t('bets.noPendingResolution', {
@@ -150,6 +171,7 @@ commandHandler.registerCommand('won', {
         channel,
         t('bets.manualResolutionSuccess', {
           context: 'won',
+          matchId,
           username,
           lng: client.locale,
         }),

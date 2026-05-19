@@ -21,6 +21,10 @@ type Prediction = {
 const state: {
   sessionMatch: SessionMatchRow | null
   olderMatch: { id: string } | null
+  recentMatch: { matchId: string } | null
+  recentList: Array<{ matchId: string; hero_name: string | null; won: boolean }>
+  redisGet: Record<string, string | null>
+  redisDelCalls: string[]
   updateCalls: Array<{ values: Record<string, unknown>; whereId: string | null }>
   updateMmrCalls: Array<Record<string, unknown>>
   chatSayCalls: Array<{ channel: string; message: string; messageId?: string }>
@@ -34,6 +38,10 @@ const state: {
 } = {
   sessionMatch: null,
   olderMatch: null,
+  recentMatch: null,
+  recentList: [],
+  redisGet: {},
+  redisDelCalls: [],
   updateCalls: [],
   updateMmrCalls: [],
   chatSayCalls: [],
@@ -49,6 +57,10 @@ const state: {
 function resetState() {
   state.sessionMatch = null
   state.olderMatch = null
+  state.recentMatch = null
+  state.recentList = []
+  state.redisGet = {}
+  state.redisDelCalls = []
   state.updateCalls = []
   state.updateMmrCalls = []
   state.chatSayCalls = []
@@ -61,11 +73,14 @@ function resetState() {
   state.loggerInfoCalls = []
 }
 
-// Supabase chainable mock. The session-window query uses .gte while the
-// fallback older-match query does not, so we branch on that to return the
-// appropriate canned result.
+// Supabase chainable mock. Three query shapes need to be distinguished:
+//   - findSessionMatch in-window:        uses .gte, not .not    → state.sessionMatch
+//   - findSessionMatch fallback:         no .gte, no .not       → state.olderMatch
+//   - findMostRecentResolvedMatch:       uses .not('won', ...)  → state.recentMatch
 function createSupabaseFromBuilder() {
   let hasGte = false
+  let hasNot = false
+  let neqMatchId: string | null = null
   let mode: 'select' | 'update' | null = null
   let updateValues: Record<string, unknown> = {}
   let updateWhereId: string | null = null
@@ -93,7 +108,41 @@ function createSupabaseFromBuilder() {
       return builder
     },
     is: () => builder,
+    not: () => {
+      hasNot = true
+      return builder
+    },
+    neq: (col: string, val: string) => {
+      if (col === 'matchId') neqMatchId = val
+      return builder
+    },
+    order: () => builder,
+    // `.limit()` is the terminal call for list queries (e.g. !recent) which
+    // await the chain directly. It's also followed by `.single()` for
+    // findMostRecentResolvedMatch. Return a hybrid object that's both
+    // thenable (resolving to a list) and exposes `.single()` for the row case.
+    limit: () => ({
+      // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock
+      then: (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
+        Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
+      single: async () => {
+        if (state.recentMatch && state.recentMatch.matchId === neqMatchId) {
+          return { data: null, error: { message: 'excluded' } }
+        }
+        return state.recentMatch
+          ? { data: state.recentMatch, error: null }
+          : { data: null, error: { message: 'not found' } }
+      },
+    }),
     single: async () => {
+      if (hasNot) {
+        if (state.recentMatch && state.recentMatch.matchId === neqMatchId) {
+          return { data: null, error: { message: 'excluded' } }
+        }
+        return state.recentMatch
+          ? { data: state.recentMatch, error: null }
+          : { data: null, error: { message: 'not found' } }
+      }
       if (hasGte) {
         return state.sessionMatch
           ? { data: state.sessionMatch, error: null }
@@ -172,10 +221,18 @@ await i18next.init({
 })
 
 // Import after all module mocks are registered.
-const { resolveMatchRetroactively } = await import('../resolveMatch.js')
+const { resolveMatchRetroactively, findMostRecentResolvedMatch } = await import(
+  '../resolveMatch.js'
+)
 const { gsiHandlers } = await import('../../../dota/lib/consts.js')
 const { steamSocket } = await import('../../../steam/ws.js')
 const { chatClient } = await import('../../chatClient.js')
+const { redisClient } = await import('../../../db/redisInstance.js')
+const commandHandler = (await import('../CommandHandler.js')).default
+// Side-effect imports register the commands with the singleton handler.
+await import('../../commands/recent.js')
+await import('../../commands/won.js')
+await import('../../commands/lost.js')
 
 // Monkey-patch the singletons we need behavior control over. Mocking these
 // modules wholesale would force us to enumerate every other transitive export.
@@ -194,6 +251,15 @@ steamSocket.emit = ((
 chatClient.say = (async (channel: string, message: string, messageId?: string) => {
   state.chatSayCalls.push({ channel, message, messageId })
 }) as any
+
+;(redisClient as any).client = {
+  get: async (key: string) => state.redisGet[key] ?? null,
+  set: async () => 'OK',
+  del: async (key: string) => {
+    state.redisDelCalls.push(key)
+    return 1
+  },
+}
 
 const fakeGsiHandler = {
   getChannelId: () => state.channelId,
@@ -763,5 +829,196 @@ describe('resolveMatchRetroactively', () => {
 
       expect(state.chatSayCalls[0].messageId).toBe('reply-target-2')
     })
+  })
+})
+
+describe('findMostRecentResolvedMatch', () => {
+  beforeEach(() => {
+    resetState()
+  })
+
+  it('returns the most recently resolved match in the session', async () => {
+    state.recentMatch = { matchId: '9999999999' }
+
+    const result = await findMostRecentResolvedMatch('token-abc', new Date('2026-05-19T08:00:00Z'))
+
+    expect(result).toEqual({ matchId: '9999999999' })
+  })
+
+  it('returns null when no resolved matches exist in the session window', async () => {
+    state.recentMatch = null
+
+    const result = await findMostRecentResolvedMatch('token-abc', new Date('2026-05-19T08:00:00Z'))
+
+    expect(result).toBeNull()
+  })
+
+  it('falls back to the 12-hour window when stream_start_date is null', async () => {
+    state.recentMatch = { matchId: '9999999999' }
+
+    const result = await findMostRecentResolvedMatch('token-abc', null)
+
+    expect(result).toEqual({ matchId: '9999999999' })
+  })
+
+  it('excludes the in-progress match when given an excludeMatchId', async () => {
+    state.recentMatch = { matchId: '7777777777' }
+
+    const result = await findMostRecentResolvedMatch(
+      'token-abc',
+      new Date('2026-05-19T08:00:00Z'),
+      '7777777777',
+    )
+
+    expect(result).toBeNull()
+  })
+})
+
+type RegisteredCommand = {
+  handler: (
+    message: { user: any; content: string; channel: any },
+    args: string[],
+    commandUsed: string,
+  ) => Promise<void> | void
+}
+
+function buildMessage(args: string[], clientOverrides: Partial<Client> = {}) {
+  const client = makeClient(clientOverrides)
+  return {
+    user: { name: 'modUser', messageId: 'msg-1', permission: 2, userId: 'user-1' },
+    content: `!cmd ${args.join(' ')}`.trim(),
+    channel: {
+      name: '#streamer',
+      id: 'channel-1',
+      client,
+      settings: client.settings,
+    },
+  }
+}
+
+describe('command registration', () => {
+  it('registers !recent with its aliases', () => {
+    expect(commandHandler.commands.has('recent')).toBe(true)
+    expect(commandHandler.aliases.get('history')).toBe('recent')
+    expect(commandHandler.aliases.get('matches')).toBe('recent')
+  })
+
+  it('registers !won and !lost', () => {
+    expect(commandHandler.commands.has('won')).toBe(true)
+    expect(commandHandler.commands.has('lost')).toBe(true)
+  })
+})
+
+describe('!recent command handler', () => {
+  beforeEach(() => {
+    resetState()
+  })
+
+  it('says "no resolved matches" when none exist in the session', async () => {
+    state.recentList = []
+    const cmd = commandHandler.commands.get('recent') as RegisteredCommand
+    await cmd.handler(buildMessage([]), [], 'recent')
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toContain('No resolved matches in this stream yet')
+  })
+
+  it('formats a single resolved match with W and hero name', async () => {
+    state.recentList = [{ matchId: '7777777777', hero_name: 'npc_dota_hero_lina', won: true }]
+    const cmd = commandHandler.commands.get('recent') as RegisteredCommand
+    await cmd.handler(buildMessage([]), [], 'recent')
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toContain('Recent matches:')
+    expect(state.chatSayCalls[0].message).toContain('7777777777 W')
+    expect(state.chatSayCalls[0].message).toContain('Lina')
+  })
+
+  it('marks losses with L', async () => {
+    state.recentList = [{ matchId: '8888888888', hero_name: 'npc_dota_hero_pudge', won: false }]
+    const cmd = commandHandler.commands.get('recent') as RegisteredCommand
+    await cmd.handler(buildMessage([]), [], 'recent')
+
+    expect(state.chatSayCalls[0].message).toContain('8888888888 L')
+    expect(state.chatSayCalls[0].message).toContain('Pudge')
+  })
+
+  it('lists multiple matches comma-separated', async () => {
+    state.recentList = [
+      { matchId: '7777777777', hero_name: 'npc_dota_hero_lina', won: true },
+      { matchId: '8888888888', hero_name: 'npc_dota_hero_pudge', won: false },
+    ]
+    const cmd = commandHandler.commands.get('recent') as RegisteredCommand
+    await cmd.handler(buildMessage([]), [], 'recent')
+
+    const msg = state.chatSayCalls[0].message
+    expect(msg).toContain('7777777777 W (Lina)')
+    expect(msg).toContain('8888888888 L (Pudge)')
+    expect(msg.indexOf(',')).toBeGreaterThan(0)
+  })
+
+  it('falls back to "Unknown" when hero_name is null', async () => {
+    state.recentList = [{ matchId: '7777777777', hero_name: null, won: true }]
+    const cmd = commandHandler.commands.get('recent') as RegisteredCommand
+    await cmd.handler(buildMessage([]), [], 'recent')
+
+    expect(state.chatSayCalls[0].message).toContain('Unknown')
+  })
+})
+
+describe('!won / !lost fallback to most-recent resolved', () => {
+  beforeEach(() => {
+    resetState()
+    // No pending DC resolution by default — exercises the fallback branch.
+    state.redisGet = {}
+  })
+
+  it('!won with no arg and no pending resolution flips the most recent resolved match', async () => {
+    state.recentMatch = { matchId: '7777777777' }
+    state.sessionMatch = baseMatchRow({ matchId: '7777777777', won: false })
+
+    const cmd = commandHandler.commands.get('won') as RegisteredCommand
+    await cmd.handler(buildMessage([]), [], 'won')
+
+    expect(state.updateCalls).toHaveLength(1)
+    expect(state.updateCalls[0].values).toMatchObject({ won: true })
+
+    const finalSay = state.chatSayCalls[state.chatSayCalls.length - 1]
+    expect(finalSay.message).toContain('corrected from LOST to WON')
+  })
+
+  it('!lost with no arg and no pending resolution flips the most recent resolved match', async () => {
+    state.recentMatch = { matchId: '7777777777' }
+    state.sessionMatch = baseMatchRow({ matchId: '7777777777', won: true })
+
+    const cmd = commandHandler.commands.get('lost') as RegisteredCommand
+    await cmd.handler(buildMessage([]), [], 'lost')
+
+    expect(state.updateCalls).toHaveLength(1)
+    expect(state.updateCalls[0].values).toMatchObject({ won: false })
+
+    const finalSay = state.chatSayCalls[state.chatSayCalls.length - 1]
+    expect(finalSay.message).toContain('corrected from WON to LOST')
+  })
+
+  it('!won says "no pending resolution" when there is no recent resolved match either', async () => {
+    state.recentMatch = null
+
+    const cmd = commandHandler.commands.get('won') as RegisteredCommand
+    await cmd.handler(buildMessage([]), [], 'won')
+
+    expect(state.updateCalls).toHaveLength(0)
+    expect(state.chatSayCalls[0].message).toContain('No pending bet resolution needed')
+  })
+
+  it('!won no-ops when the most recent resolved match is already marked as won', async () => {
+    state.recentMatch = { matchId: '7777777777' }
+    state.sessionMatch = baseMatchRow({ matchId: '7777777777', won: true })
+
+    const cmd = commandHandler.commands.get('won') as RegisteredCommand
+    await cmd.handler(buildMessage([]), [], 'won')
+
+    expect(state.updateCalls).toHaveLength(0)
+    expect(state.chatSayCalls[0].message).toContain('is already marked as WON')
   })
 })
