@@ -463,7 +463,7 @@ export class GSIHandler implements GSIHandlerType {
       lobbyType,
     }
 
-    logger.info('[MMR Update] Begin updating mmr', extraInfo)
+    logger.debug('[MMR Update] Begin updating mmr', extraInfo)
 
     // This also updates WL for the unranked matches
     await supabase
@@ -483,7 +483,7 @@ export class GSIHandler implements GSIHandlerType {
       })
       .match({ matchId: `${matchId}`, userId: this.client.token })
 
-    logger.info('[DATABASE] Updated bet with winnings', extraInfo)
+    logger.debug('[DATABASE] Updated bet with winnings', extraInfo)
     this.emitWLUpdate()
 
     if (!ranked) {
@@ -500,7 +500,7 @@ export class GSIHandler implements GSIHandlerType {
         this.client.subscription,
       )
       if (mmrEnabled) {
-        logger.info('[MMR] Found steam32Id, updating mmr', extraInfo)
+        logger.debug('[MMR] Found steam32Id, updating mmr', extraInfo)
         await updateMmr({
           currentMmr: this.getMmr(),
           newMmr: newMMR,
@@ -791,7 +791,7 @@ export class GSIHandler implements GSIHandlerType {
               : null))
 
       if (this.openingBets || !matchId) {
-        logger.info('[BETS] Not closing bets', {
+        logger.debug('[BETS] Not closing bets', {
           name: this.client.name,
           openingBets: this.openingBets,
           playingMatchId: matchId,
@@ -849,7 +849,7 @@ export class GSIHandler implements GSIHandlerType {
         return
       }
 
-      logger.info('[BETS] Running end bets to award mmr and close predictions', {
+      logger.debug('[BETS] Running end bets to award mmr and close predictions', {
         name: this.client.name,
         matchId,
       })
@@ -969,7 +969,7 @@ export class GSIHandler implements GSIHandlerType {
         say(this.client, message, { delay: false, chattersKey: 'matchOutcome' })
 
         if (!betsEnabled) {
-          logger.info('Bets are not enabled, stopping here', {
+          logger.debug('Bets are not enabled, stopping here', {
             name: this.client.name,
           })
           this.resetClientState().catch(() => {
@@ -1398,7 +1398,7 @@ export class GSIHandler implements GSIHandlerType {
 
       // Unblock all, we are disconnected from the match
       if (!hasValidBlocker && this.blockCache) {
-        logger.info('[BETS] Close bets because unblocked all', {
+        logger.debug('[BETS] Close bets because unblocked all', {
           hasValidBlocker,
           state,
           blockCache: this.blockCache,

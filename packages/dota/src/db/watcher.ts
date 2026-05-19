@@ -432,7 +432,7 @@ class SetupSupabase {
           }
 
           // Sending this one even when offline, because they might be testing locally
-          logger.info('[WATCHER SETTING] Sending new setting value to socket', {
+          logger.debug('[WATCHER SETTING] Sending new setting value to socket', {
             name: client.name,
             key: newObj.key,
             value: newObj.value,
@@ -481,7 +481,7 @@ class SetupSupabase {
             return
           }
 
-          logger.info('[WATCHER STEAM] Updating steam accounts for', {
+          logger.debug('[WATCHER STEAM] Updating steam accounts for', {
             name: client.name,
           })
 
