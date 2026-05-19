@@ -7,7 +7,7 @@ import { steamSocket } from '../../steam/ws.js'
 import type { MatchMinimalDetailsResponse, SocketClient } from '../../types.js'
 import { chatClient } from '../chatClient.js'
 
-interface UnresolvedMatch {
+interface SessionMatch {
   id: string
   matchId: string
   myTeam: string
@@ -15,58 +15,45 @@ interface UnresolvedMatch {
   steam32Id: number | null
   lobby_type: number | null
   is_party: boolean | null
+  won: boolean | null
 }
 
 /**
- * Find an unresolved match within the streaming session time window
+ * Find a match (resolved or not) within the streaming session window.
+ * Returns 'expired' when the row exists but predates the session, so mods
+ * can be told why a correction was refused.
  */
-async function findUnresolvedMatch(
+async function findSessionMatch(
   userId: string,
   matchId: string,
   streamStartDate?: Date | null,
-): Promise<{ match: UnresolvedMatch | null; error: string | null }> {
-  // Use stream start date or last 12 hours (same logic as getWL.ts)
+): Promise<{ match: SessionMatch | null; error: string | null }> {
   const startDate = streamStartDate ?? new Date(Date.now() - 12 * 60 * 60 * 1000)
 
-  const { data: match, error } = await supabase
+  const { data: match } = await supabase
     .from('matches')
-    .select('id, matchId, myTeam, predictionId, steam32Id, lobby_type, is_party')
+    .select('id, matchId, myTeam, predictionId, steam32Id, lobby_type, is_party, won')
     .eq('matchId', matchId)
     .eq('userId', userId)
-    .is('won', null)
     .gte('created_at', startDate.toISOString())
     .single()
 
-  if (error || !match) {
-    // Check if the match exists but is already resolved
-    const { data: existingMatch } = await supabase
-      .from('matches')
-      .select('won')
-      .eq('matchId', matchId)
-      .eq('userId', userId)
-      .single()
-
-    if (existingMatch) {
-      return { match: null, error: 'alreadyResolved' }
-    }
-
-    // Check if match exists but is too old
-    const { data: oldMatch } = await supabase
-      .from('matches')
-      .select('id')
-      .eq('matchId', matchId)
-      .eq('userId', userId)
-      .is('won', null)
-      .single()
-
-    if (oldMatch) {
-      return { match: null, error: 'expired' }
-    }
-
-    return { match: null, error: 'notFound' }
+  if (match) {
+    return { match: match as SessionMatch, error: null }
   }
 
-  return { match: match as UnresolvedMatch, error: null }
+  const { data: olderMatch } = await supabase
+    .from('matches')
+    .select('id')
+    .eq('matchId', matchId)
+    .eq('userId', userId)
+    .single()
+
+  if (olderMatch) {
+    return { match: null, error: 'expired' }
+  }
+
+  return { match: null, error: 'notFound' }
 }
 
 /**
@@ -196,32 +183,16 @@ export async function resolveMatchRetroactively(
     return { success: false, errorKey: 'currentMatch' }
   }
 
+  // Find the match (resolved or not) within the session window
+  const { match, error } = await findSessionMatch(client.token, matchId, client.stream_start_date)
+
   logger.info('[BETS] Retroactive resolution requested', {
     name: client.name,
     matchId,
     won,
+    previousWon: match?.won ?? null,
     resolvedBy: resolvedByUsername,
   })
-
-  // Find the unresolved match
-  const { match, error } = await findUnresolvedMatch(
-    client.token,
-    matchId,
-    client.stream_start_date,
-  )
-
-  if (error === 'alreadyResolved') {
-    chatClient.say(
-      channel,
-      t('bets.retroactiveMatchNotFound', {
-        matchId,
-        emote: 'PauseChamp',
-        lng: client.locale,
-      }),
-      messageId,
-    )
-    return { success: false, errorKey: 'alreadyResolved' }
-  }
 
   if (error === 'expired') {
     chatClient.say(
@@ -248,6 +219,24 @@ export async function resolveMatchRetroactively(
     )
     return { success: false, errorKey: 'notFound' }
   }
+
+  // No-op: match is already marked the way the mod asked for.
+  if (match.won === won) {
+    chatClient.say(
+      channel,
+      t('bets.retroactiveAlreadyMatches', {
+        context: won ? 'won' : 'lost',
+        matchId,
+        emote: 'PauseChamp',
+        lng: client.locale,
+      }),
+      messageId,
+    )
+    return { success: true }
+  }
+
+  const previousWon = match.won
+  const isCorrection = previousWon !== null
 
   // Fetch match details from Steam for scores, lobby type, etc.
   const gcData = await getMatchDetails(matchId)
@@ -283,14 +272,17 @@ export async function resolveMatchRetroactively(
     name: client.name,
     matchId,
     won,
+    previousWon,
     lobbyType,
     isRanked,
   })
 
-  // Update MMR if it's a ranked game
+  // Update MMR if it's a ranked game. For a flip we need to reverse the old
+  // delta AND apply the new one, so the magnitude doubles.
   if (isRanked && match.steam32Id) {
     const mmrSize = isParty ? MULTIPLIER_PARTY : MULTIPLIER_SOLO
-    const newMMR = client.mmr + (won ? mmrSize : -mmrSize)
+    const mmrDelta = (won ? mmrSize : -mmrSize) * (isCorrection ? 2 : 1)
+    const newMMR = client.mmr + mmrDelta
 
     await updateMmr({
       currentMmr: client.mmr,
@@ -306,16 +298,18 @@ export async function resolveMatchRetroactively(
       oldMmr: client.mmr,
       newMmr: newMMR,
       isParty,
+      isCorrection,
     })
   }
 
-  // Try to close the specific Twitch prediction for this match
-  if (match.predictionId) {
+  // Close the specific Twitch prediction only on a first-time resolution.
+  // Already-resolved predictions can't be re-resolved on Twitch's side,
+  // so we don't try when flipping a previously recorded result.
+  if (!isCorrection && match.predictionId) {
     const handler = gsiHandlers.get(client.token)
     const channelId = handler?.getChannelId() ?? client.Account?.providerAccountId
 
     if (channelId) {
-      // Use the specific prediction ID from the match, not the current prediction
       const closed = await closeTwitchBetById(won, channelId, match.predictionId, matchId)
       if (closed) {
         logger.info('[BETS] Retroactive resolution - Twitch prediction closed', {
@@ -334,8 +328,9 @@ export async function resolveMatchRetroactively(
   // Send success message
   chatClient.say(
     channel,
-    t('bets.retroactiveResolutionSuccess', {
+    t(isCorrection ? 'bets.retroactiveCorrection' : 'bets.retroactiveResolutionSuccess', {
       context: won ? 'won' : 'lost',
+      previousContext: previousWon ? 'won' : 'lost',
       matchId,
       username: resolvedByUsername,
       lng: client.locale,
@@ -347,6 +342,8 @@ export async function resolveMatchRetroactively(
     name: client.name,
     matchId,
     won,
+    previousWon,
+    isCorrection,
     resolvedBy: resolvedByUsername,
   })
 

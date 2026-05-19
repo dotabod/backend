@@ -6,7 +6,7 @@ import { checkCallAndMemory } from './checkCallAndMemory.js'
 import { fetchOnlineUsers } from './fetchOnlineUsers.js'
 
 // Skip these integration tests when Supabase is not configured
-const skipIntegration = !process.env.DB_URL && !process.env.DB_SECRET
+const skipIntegration = !process.env.DB_URL || !process.env.DB_SECRET
 
 const USER_COUNT = 1
 

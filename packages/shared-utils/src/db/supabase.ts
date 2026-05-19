@@ -2,8 +2,12 @@ import { createClient } from '@supabase/supabase-js'
 
 import type { Database } from './supabase-types.js'
 
-const supabaseUrl = process.env.DB_URL ?? ''
-const supabaseKey = process.env.DB_SECRET ?? ''
+// Placeholders let the module import cleanly when env vars are absent
+// (e.g. unit tests without Doppler). Any real network call against the
+// resulting client will still fail, which is the desired behavior outside
+// of an integration environment.
+const supabaseUrl = process.env.DB_URL || 'https://placeholder.invalid'
+const supabaseKey = process.env.DB_SECRET || 'placeholder-key'
 
 type SupabaseClient = ReturnType<typeof createClient<Database>>
 
