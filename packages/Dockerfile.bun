@@ -71,4 +71,4 @@ COPY --from=builder /app/packages/shared-utils/package.json packages/shared-util
 # Environment and CMD
 WORKDIR /app/$BUILD_CONTEXT/
 ENV DOTABOD_ENV=$DOTABOD_ENV
-CMD ["bun", "run", "start"]
+CMD ["sh", "-c", "exec bun ${CPU_PROF:+--cpu-prof --cpu-prof-dir=/tmp/profiles} -r newrelic dist/index.js"]

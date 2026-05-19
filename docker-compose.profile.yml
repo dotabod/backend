@@ -1,0 +1,5 @@
+services:
+  dota:
+    command: ["bun", "-r", "newrelic", "--cpu-prof", "--cpu-prof-dir=/tmp/profiles", "dist/index.js"]
+    volumes:
+      - ./profiles:/tmp/profiles
