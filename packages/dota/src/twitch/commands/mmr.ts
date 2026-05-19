@@ -8,6 +8,7 @@ import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
 
 commandHandler.registerCommand('mmr', {
   aliases: ['rank', 'medal'],
+  dbkey: DBSettings.commandMmr,
   handler: async (message: MessageType, args: string[]) => {
     const {
       channel: { name: channel, client },
