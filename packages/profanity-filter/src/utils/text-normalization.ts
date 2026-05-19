@@ -1,11 +1,17 @@
-import { compressRepeatedCharacters } from './profanity-wordlists'
-
 /**
  * text-normalization.ts
  *
  * Utilities for text normalization and preprocessing to enhance profanity detection
  * by handling common obfuscation techniques.
  */
+
+/**
+ * Compresses repeated characters to single characters
+ * e.g., "fuuuuck" becomes "fuck"
+ */
+export function compressRepeatedCharacters(text: string): string {
+  return text.replace(/(.)\1+/g, '$1')
+}
 
 /**
  * Character mappings for common substitutions used to obfuscate profanity

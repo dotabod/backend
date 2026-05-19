@@ -1,6 +1,6 @@
 import { checkBotStatus, getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { isBroadcasterBeingDisabled } from './index'
+import { isBroadcasterBeingDisabled } from './disableCache'
 import { emitChatMessage, hasDotabodSocket } from './utils/socketManager'
 
 // Cache for deduplicating chat messages

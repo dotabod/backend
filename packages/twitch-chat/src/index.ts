@@ -10,71 +10,9 @@ import {
 import { use } from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 import { initializeSocket } from './conduitSetup'
+import { clearDisableCache, DISABLE_CACHE_EXPIRY, disableUserCache } from './disableCache'
 import { sendTwitchChatMessage } from './handleChat'
 import { io, setupSocketServer } from './utils/socketManager'
-
-// Temporary cache to prevent duplicate disableUser calls during race condition
-const disableUserCache = new Map<
-  string,
-  { timestamp: number; dropReason: string; providerAccountId: string }
->()
-const DISABLE_CACHE_EXPIRY = 30000 // 30 seconds
-
-/**
- * Clear disable cache for a user (called when they manually re-enable)
- */
-export function clearDisableCache(userId: string) {
-  const keysToDelete: string[] = []
-  for (const key of disableUserCache.keys()) {
-    if (key.startsWith(`${userId}:`)) {
-      keysToDelete.push(key)
-    }
-  }
-
-  for (const key of keysToDelete) {
-    disableUserCache.delete(key)
-  }
-
-  if (keysToDelete.length > 0) {
-    logger.info('[DISABLE_CACHE] Cleared cache for user', {
-      userId,
-      clearedKeys: keysToDelete.length,
-    })
-  }
-}
-
-/**
- * Check if a user is currently in the disable cache (being disabled)
- */
-export function isUserBeingDisabled(userId: string): boolean {
-  const now = Date.now()
-
-  for (const [key, value] of disableUserCache.entries()) {
-    if (key.startsWith(`${userId}:`) && now - value.timestamp < DISABLE_CACHE_EXPIRY) {
-      return true
-    }
-  }
-
-  return false
-}
-
-/**
- * Check if a broadcaster is currently being disabled (by providerAccountId)
- */
-export function isBroadcasterBeingDisabled(providerAccountId: string): boolean {
-  const now = Date.now()
-
-  for (const [key, value] of disableUserCache.entries()) {
-    if (
-      value.providerAccountId === providerAccountId &&
-      now - value.timestamp < DISABLE_CACHE_EXPIRY
-    ) {
-      return true
-    }
-  }
-
-  return false
-}
 
 if (!process.env.TWITCH_BOT_PROVIDERID) {
   throw new Error('TWITCH_BOT_PROVIDERID not set')

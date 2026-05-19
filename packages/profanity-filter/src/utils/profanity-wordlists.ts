@@ -14,14 +14,6 @@ import {
   stripNonAlphanumeric,
 } from './text-normalization'
 
-/**
- * Compresses repeated characters to single characters
- * e.g., "fuuuuck" becomes "fuck"
- */
-export function compressRepeatedCharacters(text: string): string {
-  return text.replace(/(.)\1+/g, '$1')
-}
-
 // Russian profanity terms (common ones)
 export const russianProfanityList = [
   'сука',
