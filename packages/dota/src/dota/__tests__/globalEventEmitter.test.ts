@@ -207,6 +207,141 @@ describe('gameEnd fixture replay — regression baseline', () => {
   })
 })
 
+describe('non-mutation: dispatch middleware leaves req.body intact', () => {
+  it('preserves every "dead" subtree (items/abilities/buildings/draft/provider) byte-for-byte', () => {
+    const body = {
+      previously: {
+        items: { slot0: { name: 'tango', cooldown: 0 } },
+        abilities: { ability0: { level: 0, cooldown: 0 } },
+        buildings: { radiant: { dota_goodguys_tower1_top: { health: 1600 } } },
+        draft: { activeteam: 2, pick0_id: 0 },
+        provider: { timestamp: 100 },
+      },
+      items: { slot0: { name: 'magic_wand', cooldown: 0 } },
+      abilities: { ability0: { level: 1, cooldown: 5 } },
+      buildings: { radiant: { dota_goodguys_tower1_top: { health: 1500 } } },
+      draft: { activeteam: 3, pick0_id: 1 },
+      provider: { timestamp: 101 },
+    }
+    const snapshot = structuredClone(body)
+    runPost(body)
+    expect(body).toEqual(snapshot)
+  })
+
+  it('preserves "live" subtrees (hero/map/player/event) byte-for-byte', () => {
+    const body = {
+      previously: {
+        hero: { alive: true, health: 1500 },
+        map: { game_state: 'X', clock_time: 100, game_time: 105 },
+        player: { kills: 0, gold: 600, deaths: 0 },
+      },
+      hero: { alive: false, health: 0, id: 74, name: 'CM' },
+      map: { game_state: 'Y', clock_time: 105, game_time: 110, win_team: 'radiant' },
+      player: { kills: 1, gold: 700, deaths: 0, kill_streak: 1, kill_list: { v_0: 1 } },
+    }
+    const snapshot = structuredClone(body)
+    runPost(body)
+    expect(body).toEqual(snapshot)
+  })
+})
+
+describe('downstream read path: client.gsi.* stays accessible (mirrors actual readers)', () => {
+  // validateToken (runs before our middleware) sets client.gsi = req.body.
+  // We simulate that here, then verify the field paths that real handlers read
+  // are still reachable after processChanges/newData run.
+  it('items.teleport0.purchaser (newdata.ts:684 — hero slot detection)', () => {
+    const body = {
+      items: { teleport0: { name: 'tp_scroll', cooldown: 0, purchaser: 3 } },
+      hero: { id: 74 },
+    }
+    const client = { gsi: body as any }
+    runPost(body)
+    expect(client.gsi?.items?.teleport0?.purchaser).toBe(3)
+  })
+
+  it('items[team][player].slot0 spectator-mode path (newdata.ts:614)', () => {
+    const body = {
+      items: {
+        team2: {
+          player0: {
+            slot0: { name: 'tango' },
+            slot1: { name: 'magic_wand' },
+          },
+        },
+      },
+    }
+    const client = { gsi: body as any }
+    runPost(body)
+    expect(client.gsi?.items?.team2?.player0?.slot0?.name).toBe('tango')
+  })
+
+  it('abilities.ability0 (newdata.ts:620)', () => {
+    const body = {
+      abilities: { ability0: { name: 'invoker_quas', level: 1, cooldown: 0 } },
+    }
+    const client = { gsi: body as any }
+    runPost(body)
+    expect(client.gsi?.abilities?.ability0?.level).toBe(1)
+  })
+
+  it('map.matchid (Draft Clip path, map.game_state.ts:57)', () => {
+    const body = {
+      previously: { map: { game_state: 'INIT' } },
+      map: { matchid: '8817000000', game_state: 'DOTA_GAMERULES_STATE_PLAYER_DRAFT' },
+    }
+    const client = { gsi: body as any }
+    runPost(body)
+    expect(client.gsi?.map?.matchid).toBe('8817000000')
+    // also verify the listener that drives this feature still fires
+    expect(callCount('map:game_state')).toBe(1)
+  })
+
+  it('map.game_time / clock_time (NeutralItemTimer.ts:42-45)', () => {
+    const body = {
+      previously: { map: { game_time: 100 } },
+      map: { game_time: 1200, clock_time: 1180 },
+    }
+    const client = { gsi: body as any }
+    runPost(body)
+    expect(client.gsi?.map?.game_time).toBe(1200)
+    expect(client.gsi?.map?.clock_time).toBe(1180)
+  })
+
+  it('hero fields used by midas/treads checks (checkMidas reads client.gsi)', () => {
+    const body = {
+      hero: { id: 74, alive: true, health: 1500, max_health: 1500, mana: 200 },
+      items: { slot0: { name: 'item_hand_of_midas', cooldown: 0 } },
+    }
+    const client = { gsi: body as any }
+    runPost(body)
+    expect(client.gsi?.hero?.alive).toBe(true)
+    expect(client.gsi?.items?.slot0?.name).toBe('item_hand_of_midas')
+  })
+
+  it('full Packet shape with every "dead" subtree present is still queryable end-to-end', () => {
+    const body = {
+      provider: { name: 'Dota 2', appid: 570, version: 47, timestamp: 1700000000 },
+      hero: { id: 74, alive: true },
+      map: { game_state: 'X', matchid: 'm1' },
+      player: { gold: 600 },
+      items: { slot0: { name: 'a' }, neutral0: { name: 'n' } },
+      abilities: { ability0: { level: 1 } },
+      buildings: { radiant: { fort: { health: 4250 } } },
+      draft: { activeteam: 2 },
+      events: [],
+      wearables: { wearable0: 1234 },
+    }
+    const client = { gsi: body as any }
+    runPost(body)
+    expect(client.gsi?.provider?.appid).toBe(570)
+    expect(client.gsi?.items?.neutral0?.name).toBe('n')
+    expect(client.gsi?.abilities?.ability0?.level).toBe(1)
+    expect(client.gsi?.buildings?.radiant?.fort?.health).toBe(4250)
+    expect(client.gsi?.draft?.activeteam).toBe(2)
+    expect(client.gsi?.wearables?.wearable0).toBe(1234)
+  })
+})
+
 describe('audit guards (lock in invariants the refactor relies on)', () => {
   const dotaSrc = path.resolve(__dirname, '..', '..')
 
