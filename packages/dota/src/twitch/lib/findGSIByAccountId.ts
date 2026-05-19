@@ -71,7 +71,11 @@ export async function findAccountFromCmd(
 
     const spectatorPlayers = getSpectatorPlayers(packet)
     const selectedPlayer = spectatorPlayers.find((a) => 'selected' in a && !!a.selected)
-    accountIdFromArgs = accountIdFromArgs ?? selectedPlayer?.accountid
+    // Fall back to the first player with a real hero id when no broadcast unit
+    // is selected, so callers like !facet get usable data instead of an
+    // undefined hero. Heroes still in pick (-1) skip the fallback.
+    const firstValidHero = spectatorPlayers.find((p) => Number(p.heroid) > 0)
+    accountIdFromArgs = accountIdFromArgs ?? selectedPlayer?.accountid ?? firstValidHero?.accountid
 
     const { playerIdx, playerN, teamN } = findSpectatorIdx(packet, accountIdFromArgs) ?? {}
 
@@ -85,10 +89,9 @@ export async function findAccountFromCmd(
     return { ourHero: false, playerIdx, accountIdFromArgs, player, items, hero }
   }
 
-  if (!accountIdFromArgs) {
-    throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
-  }
-
+  // Don't gate on accountIdFromArgs — packet.hero can be a valid flat hero
+  // even during brief windows (draft transitions, etc.) where player.accountid
+  // hasn't been populated yet. Callers run their own isValidHero check.
   return {
     ourHero: true,
     playerIdx,
