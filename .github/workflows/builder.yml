@@ -91,7 +91,7 @@ jobs:
             dockerfile: "packages/Dockerfile.bun"
           - service: steam
             changed_path: "^packages/steam/"
-            dockerfile: "packages/Dockerfile.steam"
+            dockerfile: "packages/Dockerfile.bun"
           - service: twitch-events
             changed_path: "^packages/twitch-events/"
             dockerfile: "packages/Dockerfile.bun"

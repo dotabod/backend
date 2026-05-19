@@ -1,3 +1,6 @@
+process.on('SIGTERM', () => process.exit(0))
+process.on('SIGINT', () => process.exit(0))
+
 import type { Socket } from 'socket.io'
 import { initSpectatorProtobuff } from './initSpectatorProtobuff'
 import { getSocketIoServer } from './socketServer'
@@ -152,23 +155,6 @@ socketIoServer.on('connection', (socket) => {
       callback(e.message, null)
     }
   })
-})
-
-// Cleanup on server shutdown
-process.on('SIGTERM', () => {
-  activeSockets.forEach((socket: any) => {
-    socket.disconnect(true)
-  })
-  socketIoServer.close()
-  process.exit(0)
-})
-
-process.on('SIGINT', () => {
-  activeSockets.forEach((socket: any) => {
-    socket.disconnect(true)
-  })
-  socketIoServer.close()
-  process.exit(0)
 })
 
 export default socketIoServer
