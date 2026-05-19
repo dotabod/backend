@@ -9,7 +9,7 @@ import Steam from 'steam'
 import steamErrors from 'steam-errors'
 import { hasSteamData } from './hasSteamData'
 import MongoDBSingleton from './MongoDBSingleton'
-import { socketIoServer } from './socketServer'
+import { getSocketIoServer } from './socketServer'
 import type { Cards, DelayedGames } from './types/index'
 import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails'
 import type { SteamMatchDetails } from './types/SteamMatchDetails'
@@ -768,7 +768,7 @@ export const GetRealTimeStats = async ({
 
         if (!forceRefetchAll) {
           // forward the msg to dota node app
-          socketIoServer.to('steam').emit('saveHeroesForMatchId', { matchId: match_id, token })
+          getSocketIoServer().to('steam').emit('saveHeroesForMatchId', { matchId: match_id, token })
         }
 
         // Remove from active requests before resolving

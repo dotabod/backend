@@ -1,6 +1,6 @@
 import type { Socket } from 'socket.io'
 import { initSpectatorProtobuff } from './initSpectatorProtobuff'
-import { socketIoServer } from './socketServer'
+import { getSocketIoServer } from './socketServer'
 import Dota, { GetRealTimeStats } from './steam'
 import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails'
 import { logger } from './utils/logger'
@@ -10,6 +10,7 @@ let isConnectedToSteam = false
 
 initSpectatorProtobuff()
 
+const socketIoServer = getSocketIoServer()
 const dota = Dota.getInstance()
 dota.dota2.on('ready', () => {
   logger.info('[SERVER] Connected to dota game server')
