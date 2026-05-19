@@ -16,8 +16,7 @@
     "prebuild": "rm -rf dist",
     "build": "bun build --target=bun --outfile=./dist/index.js --outdir=./dist --production ./src/index.ts",
     "fix-users": "doppler run -- bun ./src/dev/index.ts",
-    "test": "doppler run -- bun jest",
-    "test:unit": "bun test",
+    "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -55,19 +54,15 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^9.3.0",
-    "@jest/globals": "^29.7.0",
     "@testing-library/dom": "^10.4.0",
     "@types/body-parser": "^1.19.5",
     "@types/express": "^5.0.0",
-    "@types/jest": "^29.5.14",
     "@types/lodash.isequal": "^4.5.8",
     "@types/memoizee": "^0.4.11",
     "@types/node": "^22.10.2",
     "@types/retry": "^0.12.5",
     "@types/steam": "^0.0.34",
-    "jest": "^29.7.0",
     "lint-staged": "^15.3.0",
-    "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8"
