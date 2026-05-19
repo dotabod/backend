@@ -1,6 +1,6 @@
-import supabase from '../db/supabase.js'
-import { logger } from '../logger.js'
-import type { DisableReason, DisableReasonMetadata } from './types.js'
+import supabase from '../db/supabase'
+import { logger } from '../logger'
+import type { DisableReason, DisableReasonMetadata } from './types'
 
 /**
  * Track when a setting is disabled and why

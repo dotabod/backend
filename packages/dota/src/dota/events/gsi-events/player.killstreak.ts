@@ -1,11 +1,11 @@
 import { t } from 'i18next'
 
-import { redisClient } from '../../../db/redisInstance.js'
-import { delayedQueue } from '../../lib/DelayedQueue.js'
-import getHero, { type HeroNames } from '../../lib/getHero.js'
-import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import { say } from '../../say.js'
-import eventHandler from '../EventHandler.js'
+import { redisClient } from '../../../db/redisInstance'
+import { delayedQueue } from '../../lib/DelayedQueue'
+import getHero, { type HeroNames } from '../../lib/getHero'
+import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { say } from '../../say'
+import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent('player:kill_streak', {
   handler: async (dotaClient, streak: number) => {

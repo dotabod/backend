@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
 import { resetUtilsState, utilsState } from './setupMocks.ts'
 
-const { getTwitchHeaders } = await import('../src/twitch/getTwitchHeaders.js')
+const { getTwitchHeaders } = await import('../src/twitch/getTwitchHeaders')
 
 beforeEach(() => {
   resetUtilsState()

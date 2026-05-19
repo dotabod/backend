@@ -4,19 +4,19 @@ import * as deepl from 'deepl-node'
 import { franc } from 'franc'
 import { t } from 'i18next'
 
-import { DBSettings, getValueOrDefault } from '../../../settings.js'
-import { chatClient } from '../../../twitch/chatClient.js'
-import { DotaEventTypes } from '../../../types.js'
-import { is8500Plus } from '../../../utils/index.js'
-import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
-import { getHeroNameOrColor } from '../../lib/heroes.js'
-import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import { server } from '../../server.js'
-import eventHandler from '../EventHandler.js'
+import { DBSettings, getValueOrDefault } from '../../../settings'
+import { chatClient } from '../../../twitch/chatClient'
+import { DotaEventTypes } from '../../../types'
+import { is8500Plus } from '../../../utils/index'
+import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
+import { getHeroNameOrColor } from '../../lib/heroes'
+import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { server } from '../../server'
+import eventHandler from '../EventHandler'
 import {
   formatTranslatedInGameChatMessages,
   formatTranslatedSpeakerLabel,
-} from './translationMessageFormat.js'
+} from './translationMessageFormat'
 
 const disableTranslation = false
 const authKey = process.env.DEEPL_KEY || ''

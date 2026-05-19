@@ -1,11 +1,11 @@
 import { t } from 'i18next'
 
-import { calculateAvg } from '../../dota/lib/calculateAvg.js'
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings.js'
-import { is8500Plus } from '../../utils/index.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
+import { calculateAvg } from '../../dota/lib/calculateAvg'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
+import { is8500Plus } from '../../utils/index'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('avg', {
   onlyOnline: true,

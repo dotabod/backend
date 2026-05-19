@@ -1,7 +1,7 @@
 import { botStatus, fetchConduitId, logger } from '@dotabod/shared-utils'
 import { Server, type Socket } from 'socket.io'
-import { handleNewUser } from '../handleNewUser.js'
-import { revokeEvent } from '../twitch/lib/revokeEvent.js'
+import { handleNewUser } from '../handleNewUser'
+import { revokeEvent } from '../twitch/lib/revokeEvent'
 
 export const socketIo = new Server(5015, {
   cors: {

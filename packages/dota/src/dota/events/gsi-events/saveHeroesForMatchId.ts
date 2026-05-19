@@ -1,5 +1,5 @@
-import { redisClient } from '../../../db/redisInstance.js'
-import eventHandler from '../EventHandler.js'
+import { redisClient } from '../../../db/redisInstance'
+import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent('saveHeroesForMatchId', {
   handler: async (dotaClient, { matchId }: { matchId: string }) => {

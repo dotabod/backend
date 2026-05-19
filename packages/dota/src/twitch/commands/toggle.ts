@@ -1,6 +1,6 @@
 import { supabase, trackDisableReason, trackResolveReason } from '@dotabod/shared-utils'
-import { DBSettings, getValueOrDefault } from '../../settings.js'
-import commandHandler from '../lib/CommandHandler.js'
+import { DBSettings, getValueOrDefault } from '../../settings'
+import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('toggle', {
   aliases: ['disable', 'enable'],

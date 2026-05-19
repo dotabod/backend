@@ -1,11 +1,11 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { getRawSettingValue, getValueOrDefault, type SettingKeys } from '../../settings.js'
-import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
-import type { SubscriptionRow } from '../../types/subscription.js'
-import type { SocketClient } from '../../types.js'
-import { canAccessFeature } from '../../utils/subscription.js'
-import { chatClient } from '../chatClient.js'
+import { getRawSettingValue, getValueOrDefault, type SettingKeys } from '../../settings'
+import MongoDBSingleton from '../../steam/MongoDBSingleton'
+import type { SocketClient } from '../../types'
+import type { SubscriptionRow } from '../../types/subscription'
+import { canAccessFeature } from '../../utils/subscription'
+import { chatClient } from '../chatClient'
 
 export interface UserType {
   name: string

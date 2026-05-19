@@ -1,7 +1,7 @@
 import { ApiClient } from '@twurple/api'
-import { logger } from '../logger.js'
-import { getAuthProvider } from './getAuthProvider.js'
-import { getTwitchTokens } from './getTwitchTokens.js'
+import { logger } from '../logger'
+import { getAuthProvider } from './getAuthProvider'
+import { getTwitchTokens } from './getTwitchTokens'
 
 // Singleton instance of the API client
 let apiClient: ApiClient | null = null

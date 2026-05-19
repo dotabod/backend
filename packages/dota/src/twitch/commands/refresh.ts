@@ -1,8 +1,8 @@
 import { t } from 'i18next'
 
-import { server } from '../../dota/server.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import { server } from '../../dota/server'
+import { chatClient } from '../chatClient'
+import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('refresh', {
   permission: 2,

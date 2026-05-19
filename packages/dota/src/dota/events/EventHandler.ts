@@ -1,6 +1,6 @@
-import type { GSIHandlerType } from '../GSIHandlerTypes.js'
-import { events } from '../globalEventEmitter.js'
-import { gsiHandlers } from '../lib/consts.js'
+import type { GSIHandlerType } from '../GSIHandlerTypes'
+import { events } from '../globalEventEmitter'
+import { gsiHandlers } from '../lib/consts'
 
 export interface EventOptions {
   handler: (dotaClient: GSIHandlerType, data: any) => Promise<void> | void

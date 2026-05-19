@@ -12,7 +12,7 @@ import {
   prepareText,
   removeSeparators,
   stripNonAlphanumeric,
-} from './text-normalization.js'
+} from './text-normalization'
 
 /**
  * Compresses repeated characters to single characters

@@ -1,4 +1,4 @@
-import type { Entity } from '../../../types.js'
+import type { Entity } from '../../../types'
 
 /**
  * Represents a single entity data structure with data, lastUpdate, and timeout

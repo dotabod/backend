@@ -1,14 +1,14 @@
-import './events/gsiEventLoader.js'
+import './events/gsiEventLoader'
 import { lstatSync, readdirSync } from 'node:fs'
 import path, { join } from 'node:path'
 import { logger } from '@dotabod/shared-utils'
 import chokidar from 'chokidar'
 import i18next from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
-import RedisClient from '../db/RedisClient.js'
-import SetupSupabase from '../db/watcher.js'
-import GSIServer from './GSIServer.js'
-import { server } from './server.js'
+import RedisClient from '../db/RedisClient'
+import SetupSupabase from '../db/watcher'
+import GSIServer from './GSIServer'
+import { server } from './server'
 
 logger.info("Starting 'dota' package")
 

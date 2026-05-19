@@ -5,16 +5,16 @@ import {
   updateConduitShard as sharedUpdateConduitShard,
 } from '@dotabod/shared-utils'
 import { io as socketClient } from 'socket.io-client'
-import type { TwitchEventTypes } from './event-handlers/events.js'
-import { offlineEvent } from './event-handlers/offlineEvent.js'
-import { onlineEvent } from './event-handlers/onlineEvent.js'
-import { transformBetData } from './event-handlers/transformBetData.js'
-import { transformPollData } from './event-handlers/transformPollData.js'
-import { updateUserEvent } from './event-handlers/updateUserEvent.js'
-import { EventsubSocket } from './eventSubSocket.js'
-import { twitchEvent } from './events.js'
-import { handleChatMessage } from './handleChat.js'
-import { emitEvent, hasDotabodSocket } from './utils/socketManager.js'
+import type { TwitchEventTypes } from './event-handlers/events'
+import { offlineEvent } from './event-handlers/offlineEvent'
+import { onlineEvent } from './event-handlers/onlineEvent'
+import { transformBetData } from './event-handlers/transformBetData'
+import { transformPollData } from './event-handlers/transformPollData'
+import { updateUserEvent } from './event-handlers/updateUserEvent'
+import { EventsubSocket } from './eventSubSocket'
+import { twitchEvent } from './events'
+import { handleChatMessage } from './handleChat'
+import { emitEvent, hasDotabodSocket } from './utils/socketManager'
 
 const headers = await getTwitchHeaders()
 

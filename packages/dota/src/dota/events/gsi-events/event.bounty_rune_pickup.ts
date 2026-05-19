@@ -1,13 +1,13 @@
 import { t } from 'i18next'
 
-import { redisClient } from '../../../db/redisInstance.js'
-import { type DotaEvent, DotaEventTypes } from '../../../types.js'
-import { delayedQueue } from '../../lib/DelayedQueue.js'
-import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
-import { getHeroNameOrColor } from '../../lib/heroes.js'
-import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import { say } from '../../say.js'
-import eventHandler from '../EventHandler.js'
+import { redisClient } from '../../../db/redisInstance'
+import { type DotaEvent, DotaEventTypes } from '../../../types'
+import { delayedQueue } from '../../lib/DelayedQueue'
+import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
+import { getHeroNameOrColor } from '../../lib/heroes'
+import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { say } from '../../say'
+import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
   handler: async (dotaClient, event: DotaEvent) => {

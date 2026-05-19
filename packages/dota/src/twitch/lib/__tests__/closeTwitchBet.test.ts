@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test'
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
-import { DBSettings } from '../../../settings.js'
-import type { SocketClient } from '../../../types.js'
-import { closeTwitchBet } from '../closeTwitchBet.js'
-import { refundTwitchBet } from '../refundTwitchBets.js'
+import { DBSettings } from '../../../settings'
+import type { SocketClient } from '../../../types'
+import { closeTwitchBet } from '../closeTwitchBet'
+import { refundTwitchBet } from '../refundTwitchBets'
 
 // Note: Bun doesn't support jest.mock() for module mocking in the same way
 // These tests require module-level mocking which needs different approach in Bun

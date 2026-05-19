@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
-import type { DisableReason } from '../src/disableReason/types.js'
+import type { DisableReason } from '../src/disableReason/types'
 import { resetUtilsState, utilsState } from './setupMocks.ts'
 
-const { trackDisableReason, trackResolveReason } = await import('../src/disableReason/service.js')
+const { trackDisableReason, trackResolveReason } = await import('../src/disableReason/service')
 
 beforeEach(() => {
   resetUtilsState()

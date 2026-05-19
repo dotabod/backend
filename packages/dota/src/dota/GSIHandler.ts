@@ -1,44 +1,44 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { Long } from 'mongodb'
-import { getWL, LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../db/getWL.js'
-import { redisClient } from '../db/redisInstance.js'
-import { DBSettings, getValueOrDefault } from '../settings.js'
-import { notablePlayers } from '../steam/notableplayers.js'
-import { steamSocket } from '../steam/ws.js'
-import { closeTwitchBet } from '../twitch/lib/closeTwitchBet.js'
-import { openTwitchBet } from '../twitch/lib/openTwitchBet.js'
-import { refundTwitchBet } from '../twitch/lib/refundTwitchBets.js'
-import type { MatchMinimalDetailsResponse } from '../types.js'
+import { getWL, LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../db/getWL'
+import { redisClient } from '../db/redisInstance'
+import { DBSettings, getValueOrDefault } from '../settings'
+import { notablePlayers } from '../steam/notableplayers'
+import { steamSocket } from '../steam/ws'
+import { closeTwitchBet } from '../twitch/lib/closeTwitchBet'
+import { openTwitchBet } from '../twitch/lib/openTwitchBet'
+import { refundTwitchBet } from '../twitch/lib/refundTwitchBets'
+import type { MatchMinimalDetailsResponse } from '../types'
 import {
   type BlockType,
   type DotaEvent,
   DotaGcTeam,
   EMatchOutcome,
   type SocketClient,
-} from '../types.js'
-import { getRedisNumberValue, is8500Plus, steamID64toSteamID32 } from '../utils/index.js'
-import { maybeSendRoshAegisEvent } from './events/gsi-events/maybeSendRoshAegisEvent.js'
-import { clearPlayingHeroSlotCache } from './events/gsi-events/newdata.js'
-import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/sendExtensionPubSubBroadcastMessageIfChanged.js'
-import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster.js'
-import type { DataBroadcasterInterface } from './events/minimap/DataBroadcasterTypes.js'
-import { minimapParser } from './events/minimap/parser.js'
-import { setGSIHandlerConstructor } from './GSIHandlerFactory.js'
-import type { GSIHandlerType } from './GSIHandlerTypes.js'
-import { getStreamDelay } from './getStreamDelay.js'
-import { blockTypes, pickSates } from './lib/consts.js'
-import { delayedQueue } from './lib/DelayedQueue.js'
-import { getAccountsFromMatch } from './lib/getAccountsFromMatch.js'
-import getHero, { type HeroNames } from './lib/getHero.js'
-import { getHeroById } from './lib/heroes.js'
-import { isArcade } from './lib/isArcade.js'
-import { isSpectator } from './lib/isSpectator.js'
-import { getRankDetail } from './lib/ranks.js'
-import { updateMmr } from './lib/updateMmr.js'
-import { NeutralItemTimer } from './NeutralItemTimer.js'
-import { say } from './say.js'
-import { server } from './server.js'
+} from '../types'
+import { getRedisNumberValue, is8500Plus, steamID64toSteamID32 } from '../utils/index'
+import { maybeSendRoshAegisEvent } from './events/gsi-events/maybeSendRoshAegisEvent'
+import { clearPlayingHeroSlotCache } from './events/gsi-events/newdata'
+import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-events/sendExtensionPubSubBroadcastMessageIfChanged'
+import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster'
+import type { DataBroadcasterInterface } from './events/minimap/DataBroadcasterTypes'
+import { minimapParser } from './events/minimap/parser'
+import { setGSIHandlerConstructor } from './GSIHandlerFactory'
+import type { GSIHandlerType } from './GSIHandlerTypes'
+import { getStreamDelay } from './getStreamDelay'
+import { blockTypes, pickSates } from './lib/consts'
+import { delayedQueue } from './lib/DelayedQueue'
+import { getAccountsFromMatch } from './lib/getAccountsFromMatch'
+import getHero, { type HeroNames } from './lib/getHero'
+import { getHeroById } from './lib/heroes'
+import { isArcade } from './lib/isArcade'
+import { isSpectator } from './lib/isSpectator'
+import { getRankDetail } from './lib/ranks'
+import { updateMmr } from './lib/updateMmr'
+import { NeutralItemTimer } from './NeutralItemTimer'
+import { say } from './say'
+import { server } from './server'
 
 // Finally, we have a user and a GSI client
 interface MMR {
@@ -550,7 +550,7 @@ export class GSIHandler implements GSIHandlerType {
 
     const matchId = (await redisClient.client.get(`${client.token}:matchId`)) ?? undefined
 
-    if (!!matchId && !!client.gsi?.map?.matchid && matchId !== client.gsi.map.matchid) {
+    if (matchId && client.gsi?.map?.matchid && matchId !== client.gsi.map.matchid) {
       // Check if there's a pending manual resolution for the old match
       const pendingResolution = await redisClient.client.get(
         `${client.token}:pendingManualResolution`,

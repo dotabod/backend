@@ -2,9 +2,9 @@ import { botStatus, logger, supabase, type Tables } from '@dotabod/shared-utils'
 import type { ErrorRequestHandler } from 'express'
 import express from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
-import { handleNewUser } from '../handleNewUser.js'
-import { stopUserSubscriptions } from '../twitch/lib/revokeEvent.js'
-import { isAuthenticated } from './authUtils.js'
+import { handleNewUser } from '../handleNewUser'
+import { stopUserSubscriptions } from '../twitch/lib/revokeEvent'
+import { isAuthenticated } from './authUtils'
 
 if (!process.env.TWITCH_CLIENT_ID) {
   throw new Error('TWITCH_CLIENT_ID is not defined')

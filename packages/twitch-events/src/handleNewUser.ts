@@ -1,6 +1,6 @@
 import { logger, supabase } from '@dotabod/shared-utils'
-import { initUserSubscriptions } from './initUserSubscriptions.js'
-import { getBotInstance } from './twitch/lib/BotApiSingleton.js'
+import { initUserSubscriptions } from './initUserSubscriptions'
+import { getBotInstance } from './twitch/lib/BotApiSingleton'
 
 const botApi = getBotInstance()
 export async function handleNewUser(providerAccountId: string, resubscribeEvents = true) {

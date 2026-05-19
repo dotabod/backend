@@ -1,6 +1,6 @@
-import RedisClient from '../../db/RedisClient.js'
-import type { GSIHandlerType } from '../GSIHandlerTypes.js'
-import { findItem } from './findItem.js'
+import RedisClient from '../../db/RedisClient'
+import type { GSIHandlerType } from '../GSIHandlerTypes'
+import { findItem } from './findItem'
 
 export async function calculateManaSaved(dotaClient: GSIHandlerType) {
   const { treadsData } = dotaClient

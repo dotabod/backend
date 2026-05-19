@@ -1,10 +1,10 @@
 import { t } from 'i18next'
 
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { DBSettings } from '../../settings.js'
-import lastgame from '../../steam/lastgame.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { DBSettings } from '../../settings'
+import lastgame from '../../steam/lastgame'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('lg', {
   aliases: ['lastgame'],

@@ -1,8 +1,8 @@
 import { t } from 'i18next'
 
-import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
+import { chatClient } from '../chatClient'
+import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('friends', {
   permission: 4,

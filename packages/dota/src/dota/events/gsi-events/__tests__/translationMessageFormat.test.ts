@@ -5,7 +5,7 @@ import {
   formatTranslatedInGameChatMessage,
   formatTranslatedInGameChatMessages,
   formatTranslatedSpeakerLabel,
-} from '../translationMessageFormat.js'
+} from '../translationMessageFormat'
 
 describe('translation message formatting', () => {
   beforeAll(async () => {

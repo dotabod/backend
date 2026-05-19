@@ -1,8 +1,8 @@
 import { t } from 'i18next'
-import { DBSettings, getValueOrDefault } from '../../../settings.js'
-import type { SocketClient } from '../../../types.js'
-import { server } from '../../server.js'
-import { getRoshCountMessage } from './getRoshCountMessage.js'
+import { DBSettings, getValueOrDefault } from '../../../settings'
+import type { SocketClient } from '../../../types'
+import { server } from '../../server'
+import { getRoshCountMessage } from './getRoshCountMessage'
 
 export interface RoshRes {
   minS: number

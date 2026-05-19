@@ -1,9 +1,9 @@
 import { t } from 'i18next'
 
-import { redisClient } from '../../db/redisInstance.js'
-import type { SocketClient } from '../../types.js'
-import { say } from '../say.js'
-import { findItem } from './findItem.js'
+import { redisClient } from '../../db/redisInstance'
+import type { SocketClient } from '../../types'
+import { say } from '../say'
+import { findItem } from './findItem'
 
 /**
  * Checks if the player has a midas and if it's on cooldown or not

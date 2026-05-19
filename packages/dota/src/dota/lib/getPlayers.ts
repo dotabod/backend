@@ -1,11 +1,11 @@
 import { t } from 'i18next'
 
-import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
-import { steamSocket } from '../../steam/ws.js'
-import type { Cards, DelayedGames, Players } from '../../types.js'
-import CustomError from '../../utils/customError.js'
-import { getAccountsFromMatch } from './getAccountsFromMatch.js'
-import { getHeroNameOrColor } from './heroes.js'
+import MongoDBSingleton from '../../steam/MongoDBSingleton'
+import { steamSocket } from '../../steam/ws'
+import type { Cards, DelayedGames, Players } from '../../types'
+import CustomError from '../../utils/customError'
+import { getAccountsFromMatch } from './getAccountsFromMatch'
+import { getHeroNameOrColor } from './heroes'
 
 export async function getPlayers({
   locale,

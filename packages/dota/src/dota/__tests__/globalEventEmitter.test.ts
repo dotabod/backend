@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it } from 'bun:test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
-import { gameEnd } from '../../__tests__/fixtures/gameEnd.js'
-import { events, newData, processChanges } from '../globalEventEmitter.js'
+import { gameEnd } from '../../__tests__/fixtures/gameEnd'
+import { events, newData, processChanges } from '../globalEventEmitter'
 
 // The 18 listener names registered by dota/events/gsiEventLoader.ts in
 // production. Hardcoded so the test file is self-contained and doesn't

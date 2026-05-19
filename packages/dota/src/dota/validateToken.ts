@@ -1,8 +1,8 @@
 import { logger } from '@dotabod/shared-utils'
 import type { NextFunction, Request, Response } from 'express'
-import getDBUser from '../db/getDBUser.js'
-import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts.js'
-import { recordGsiFirstSeen } from './setupSignals.js'
+import getDBUser from '../db/getDBUser'
+import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts'
+import { recordGsiFirstSeen } from './setupSignals'
 
 export function validateToken(req: Request, res: Response, next: NextFunction) {
   const forwardedIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress

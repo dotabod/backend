@@ -1,4 +1,4 @@
-import './commandLoader.js'
+import './commandLoader'
 
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import {
@@ -12,16 +12,16 @@ import {
 } from '@twurple/eventsub-base'
 import { t } from 'i18next'
 import { io as socketIo } from 'socket.io-client'
-import getDBUser from '../db/getDBUser.js'
-import findUser, { getTokenFromTwitchId } from '../dota/lib/connectedStreamers.js'
-import { plebMode } from '../dota/lib/consts.js'
-import { getOpenDotaProfile, getRankTitle } from '../dota/lib/ranks.js'
-import { server } from '../dota/server.js'
-import { DBSettings, getValueOrDefault } from '../settings.js'
-import { twitchChat } from '../steam/ws.js'
-import { chatClient } from './chatClient.js'
-import { checkAltAccount } from './checkAltAccount.js'
-import commandHandler from './lib/CommandHandler.js'
+import getDBUser from '../db/getDBUser'
+import findUser, { getTokenFromTwitchId } from '../dota/lib/connectedStreamers'
+import { plebMode } from '../dota/lib/consts'
+import { getOpenDotaProfile, getRankTitle } from '../dota/lib/ranks'
+import { server } from '../dota/server'
+import { DBSettings, getValueOrDefault } from '../settings'
+import { twitchChat } from '../steam/ws'
+import { chatClient } from './chatClient'
+import { checkAltAccount } from './checkAltAccount'
+import commandHandler from './lib/CommandHandler'
 
 // Map to track the last time a rank warning message was sent to a channel
 const lastRankWarningTimestamps: Record<string, number> = {}

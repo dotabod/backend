@@ -1,7 +1,7 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
-import { DBSettings, getValueOrDefault } from '../../settings.js'
-import type { SocketClient } from '../../types.js'
-import { refundTwitchBet } from './refundTwitchBets.js'
+import { DBSettings, getValueOrDefault } from '../../settings'
+import type { SocketClient } from '../../types'
+import { refundTwitchBet } from './refundTwitchBets'
 
 export async function closeTwitchBet(
   won: boolean,

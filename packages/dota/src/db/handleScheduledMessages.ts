@@ -1,5 +1,5 @@
 import { logger, supabase } from '@dotabod/shared-utils'
-import { chatClient } from '../twitch/chatClient.js'
+import { chatClient } from '../twitch/chatClient'
 
 /**
  * Replaces placeholders in a message with their actual values

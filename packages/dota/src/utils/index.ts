@@ -1,5 +1,5 @@
-import RedisClient from '../db/RedisClient.js'
-import type { SocketClient } from '../types.js'
+import RedisClient from '../db/RedisClient'
+import type { SocketClient } from '../types'
 
 export function steamID64toSteamID32(steamID64: string) {
   if (!steamID64) return null

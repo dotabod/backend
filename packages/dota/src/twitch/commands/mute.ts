@@ -1,8 +1,8 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { DBSettings, getValueOrDefault } from '../../settings.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
+import { DBSettings, getValueOrDefault } from '../../settings'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('mute', {
   aliases: ['unmute'],

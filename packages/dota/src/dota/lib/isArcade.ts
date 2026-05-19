@@ -1,4 +1,4 @@
-import type { Packet } from '../../types.js'
+import type { Packet } from '../../types'
 
 export function isArcade(gsi?: Packet) {
   if (!gsi) return false

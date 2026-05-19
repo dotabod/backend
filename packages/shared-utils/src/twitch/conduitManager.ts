@@ -1,5 +1,5 @@
-import { logger } from '../logger.js'
-import { getTwitchHeaders } from './getTwitchHeaders.js'
+import { logger } from '../logger'
+import { getTwitchHeaders } from './getTwitchHeaders'
 
 // Cache controls
 const CACHE_TIMEOUT = 1000 * 60 * 60 * 24 // 24 hours

@@ -1,12 +1,12 @@
 import { logger, trackDisableReason } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { redisClient } from '../../../db/redisInstance.js'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME, getValueOrDefault } from '../../../settings.js'
-import MongoDBSingleton from '../../../steam/MongoDBSingleton.js'
-import { steamSocket } from '../../../steam/ws.js'
-import { getWinProbability2MinAgo } from '../../../stratz/livematch.js'
-import commandHandler from '../../../twitch/lib/CommandHandler.js' // Import commandHandler here
-import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId.js'
+import { redisClient } from '../../../db/redisInstance'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME, getValueOrDefault } from '../../../settings'
+import MongoDBSingleton from '../../../steam/MongoDBSingleton'
+import { steamSocket } from '../../../steam/ws'
+import { getWinProbability2MinAgo } from '../../../stratz/livematch'
+import commandHandler from '../../../twitch/lib/CommandHandler' // Import commandHandler here
+import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId'
 import {
   type Abilities,
   type Ability,
@@ -18,25 +18,25 @@ import {
   type Packet,
   type SocketClient,
   validEventTypes,
-} from '../../../types.js'
-import CustomError from '../../../utils/customError.js'
-import { getRedisNumberValue, is8500Plus } from '../../../utils/index.js'
-import type { GSIHandlerType } from '../../GSIHandlerTypes.js'
-import { events } from '../../globalEventEmitter.js'
-import { checkPassiveMidas } from '../../lib/checkMidas.js'
-import { checkPassiveTp } from '../../lib/checkPassiveTp.js'
-import { calculateManaSaved } from '../../lib/checkTreadToggle.js'
-import { draftStartByMatchId } from '../../lib/consts.js'
-import { DelayedCommands } from '../../lib/DelayedCommands.js'
-import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
-import { getSpectatorPlayers } from '../../lib/getSpectatorPlayers.js'
-import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import { isSpectator } from '../../lib/isSpectator.js'
-import { say } from '../../say.js'
-import { server } from '../../server.js'
-import eventHandler from '../EventHandler.js'
-import { minimapParser } from '../minimap/parser.js'
-import { sendExtensionPubSubBroadcastMessageIfChanged } from './sendExtensionPubSubBroadcastMessageIfChanged.js'
+} from '../../../types'
+import CustomError from '../../../utils/customError'
+import { getRedisNumberValue, is8500Plus } from '../../../utils/index'
+import type { GSIHandlerType } from '../../GSIHandlerTypes'
+import { events } from '../../globalEventEmitter'
+import { checkPassiveMidas } from '../../lib/checkMidas'
+import { checkPassiveTp } from '../../lib/checkPassiveTp'
+import { calculateManaSaved } from '../../lib/checkTreadToggle'
+import { draftStartByMatchId } from '../../lib/consts'
+import { DelayedCommands } from '../../lib/DelayedCommands'
+import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
+import { getSpectatorPlayers } from '../../lib/getSpectatorPlayers'
+import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { isSpectator } from '../../lib/isSpectator'
+import { say } from '../../say'
+import { server } from '../../server'
+import eventHandler from '../EventHandler'
+import { minimapParser } from '../minimap/parser'
+import { sendExtensionPubSubBroadcastMessageIfChanged } from './sendExtensionPubSubBroadcastMessageIfChanged'
 
 // Define a type for the global timeouts
 declare global {

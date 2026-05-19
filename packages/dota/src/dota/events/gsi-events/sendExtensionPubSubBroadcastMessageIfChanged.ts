@@ -1,6 +1,6 @@
 import { sendExtensionPubSubBroadcastMessage } from '@twurple/ebs-helper'
-import { redisClient } from '../../../db/redisInstance.js'
-import type { GSIHandlerType } from '../../GSIHandlerTypes.js'
+import { redisClient } from '../../../db/redisInstance'
+import type { GSIHandlerType } from '../../GSIHandlerTypes'
 export const sendExtensionPubSubBroadcastMessageIfChanged = async (
   dotaClient: GSIHandlerType,
   messageToSend: any,

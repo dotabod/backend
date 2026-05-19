@@ -7,7 +7,7 @@
 // register competing factories for the same module spec.
 import { mock } from 'bun:test'
 import type { Database } from '@dotabod/shared-utils'
-import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/sharedMocks.js'
+import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/sharedMocks'
 
 export { PRO_SUB }
 
@@ -224,7 +224,7 @@ mock.module('@dotabod/shared-utils', () =>
   }),
 )
 
-mock.module('../../../dota/lib/updateMmr.js', () => ({
+mock.module('../../../dota/lib/updateMmr', () => ({
   updateMmr: async (args: Record<string, unknown>) => {
     state.updateMmrCalls.push(args)
   },
@@ -234,8 +234,8 @@ mock.module('../../../dota/lib/updateMmr.js', () => ({
 // Mock only the network-touching functions in ranks.js. The rest
 // (rankTierToMmr, mmrToRankTier, etc.) are pure helpers used elsewhere in
 // the dota source, so we re-export them as-is from the real module.
-const realRanks = await import('../../../dota/lib/ranks.js')
-mock.module('../../../dota/lib/ranks.js', () => ({
+const realRanks = await import('../../../dota/lib/ranks')
+mock.module('../../../dota/lib/ranks', () => ({
   ...realRanks,
   getOpenDotaProfile: async () => state.openDotaProfile,
   getRankTitle: () => state.rankTitle,
@@ -245,28 +245,28 @@ mock.module('../../../dota/lib/ranks.js', () => ({
 await initTestI18n()
 
 // Import after all module mocks are registered.
-const resolveMatchModule = await import('../resolveMatch.js')
+const resolveMatchModule = await import('../resolveMatch')
 export const resolveMatchRetroactively = resolveMatchModule.resolveMatchRetroactively
 export const findMostRecentResolvedMatch = resolveMatchModule.findMostRecentResolvedMatch
-const { gsiHandlers } = await import('../../../dota/lib/consts.js')
-const { steamSocket } = await import('../../../steam/ws.js')
-const { chatClient } = await import('../../chatClient.js')
-const { redisClient } = await import('../../../db/redisInstance.js')
-export const commandHandler = (await import('../CommandHandler.js')).default
+const { gsiHandlers } = await import('../../../dota/lib/consts')
+const { steamSocket } = await import('../../../steam/ws')
+const { chatClient } = await import('../../chatClient')
+const { redisClient } = await import('../../../db/redisInstance')
+export const commandHandler = (await import('../CommandHandler')).default
 // Side-effect imports register the commands with the singleton handler.
-await import('../../commands/recent.js')
-await import('../../commands/won.js')
-await import('../../commands/lost.js')
-await import('../../commands/ping.js')
-await import('../../commands/locale.js')
-await import('../../commands/delay.js')
-await import('../../commands/wl.js')
-await import('../../commands/mmr.js')
-await import('../../commands/gpm.js')
-await import('../../commands/dotabuff.js')
-await import('../../commands/pleb.js')
-await import('../../commands/apm.js')
-await import('../../commands/avg.js')
+await import('../../commands/recent')
+await import('../../commands/won')
+await import('../../commands/lost')
+await import('../../commands/ping')
+await import('../../commands/locale')
+await import('../../commands/delay')
+await import('../../commands/wl')
+await import('../../commands/mmr')
+await import('../../commands/gpm')
+await import('../../commands/dotabuff')
+await import('../../commands/pleb')
+await import('../../commands/apm')
+await import('../../commands/avg')
 
 // Monkey-patch the singletons we need behavior control over. Mocking these
 // modules wholesale would force us to enumerate every other transitive export.

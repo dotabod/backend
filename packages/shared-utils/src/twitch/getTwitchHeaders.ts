@@ -1,5 +1,5 @@
 import { getAppToken } from '@twurple/auth'
-import { getTwitchTokens } from './getTwitchTokens.js'
+import { getTwitchTokens } from './getTwitchTokens'
 
 // Cache for Twitch headers by twitchId
 const headerCache: Record<string, { headers: Record<string, string>; timestamp: number }> = {}

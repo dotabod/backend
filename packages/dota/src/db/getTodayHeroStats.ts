@@ -1,6 +1,6 @@
 import { supabase } from '@dotabod/shared-utils'
-import getHero, { type HeroNames } from '../dota/lib/getHero.js'
-import { getSessionStartDate } from './streamWindow.js'
+import getHero, { type HeroNames } from '../dota/lib/getHero'
+import { getSessionStartDate } from './streamWindow'
 
 interface HeroStat {
   heroName: string

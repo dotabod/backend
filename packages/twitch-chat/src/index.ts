@@ -9,9 +9,9 @@ import {
 } from '@dotabod/shared-utils'
 import { use } from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
-import { initializeSocket } from './conduitSetup.js'
-import { sendTwitchChatMessage } from './handleChat.js'
-import { io, setupSocketServer } from './utils/socketManager.js'
+import { initializeSocket } from './conduitSetup'
+import { sendTwitchChatMessage } from './handleChat'
+import { io, setupSocketServer } from './utils/socketManager'
 
 // Temporary cache to prevent duplicate disableUser calls during race condition
 const disableUserCache = new Map<

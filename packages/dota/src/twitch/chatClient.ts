@@ -1,6 +1,6 @@
-import { findUserByName } from '../dota/lib/connectedStreamers.js'
-import { DBSettings, getValueOrDefault } from '../settings.js'
-import { twitchChat } from '../steam/ws.js'
+import { findUserByName } from '../dota/lib/connectedStreamers'
+import { DBSettings, getValueOrDefault } from '../settings'
+import { twitchChat } from '../steam/ws'
 
 // Rate limiting constants
 const MAX_WHISPERS_PER_SECOND = 3

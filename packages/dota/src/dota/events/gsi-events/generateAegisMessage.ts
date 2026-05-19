@@ -1,6 +1,6 @@
 import { t } from 'i18next'
-import type { AegisRes } from './AegisRes.js'
-import { getNewAegisTime } from './getNewAegisTime.js'
+import type { AegisRes } from './AegisRes'
+import { getNewAegisTime } from './getNewAegisTime'
 
 export function generateAegisMessage(res: AegisRes, lng: string) {
   res = getNewAegisTime(res)

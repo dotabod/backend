@@ -1,5 +1,5 @@
 import { logger, supabase } from '@dotabod/shared-utils'
-import { SETUP_SIGNAL_KEYS, type SetupSignalKey } from './setupSignalKeys.js'
+import { SETUP_SIGNAL_KEYS, type SetupSignalKey } from './setupSignalKeys'
 
 // Bounded LRU-ish dedupe. Capped per-process so a long uptime with many users
 // can't grow these unboundedly. On eviction the next packet pays one redundant

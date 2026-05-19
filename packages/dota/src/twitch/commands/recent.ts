@@ -1,9 +1,9 @@
 import { t } from 'i18next'
-import getHero, { type HeroNames } from '../../dota/lib/getHero.js'
-import { DBSettings } from '../../settings.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
-import { findResolvedMatchesInSession } from '../lib/resolveMatch.js'
+import getHero, { type HeroNames } from '../../dota/lib/getHero'
+import { DBSettings } from '../../settings'
+import { chatClient } from '../chatClient'
+import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import { findResolvedMatchesInSession } from '../lib/resolveMatch'
 
 commandHandler.registerCommand('recent', {
   aliases: ['history', 'matches'],

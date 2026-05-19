@@ -1,4 +1,4 @@
-import type { TwitchEventTypes } from './TwitchEventTypes.js'
+import type { TwitchEventTypes } from './TwitchEventTypes'
 export interface TwitchConduitResponse {
   data: Array<{
     /** Unique identifier for the conduit */

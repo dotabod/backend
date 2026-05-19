@@ -1,14 +1,14 @@
 import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME, getValueOrDefault } from '../../settings.js'
-import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
-import type { NotablePlayers } from '../../steam/notableplayers.js'
-import { notablePlayers } from '../../steam/notableplayers.js'
-import { is8500Plus } from '../../utils/index.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME, getValueOrDefault } from '../../settings'
+import MongoDBSingleton from '../../steam/MongoDBSingleton'
+import type { NotablePlayers } from '../../steam/notableplayers'
+import { notablePlayers } from '../../steam/notableplayers'
+import { is8500Plus } from '../../utils/index'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('np', {
   dbkey: DBSettings.commandNP,

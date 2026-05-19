@@ -1,13 +1,13 @@
 import isEqual from 'lodash.isequal'
 
-import { server } from '../../server.js'
+import { server } from '../../server'
 import type {
   DataBroadcasterInterface,
   EntityData,
   MinimapData,
   MinimapEntityType,
   ParsedData,
-} from './DataBroadcasterTypes.js'
+} from './DataBroadcasterTypes'
 
 const DEFAULT_DATA: MinimapData = {
   heroes: {

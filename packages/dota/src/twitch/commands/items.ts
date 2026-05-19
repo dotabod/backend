@@ -2,17 +2,17 @@ import DOTA_ITEM_IDS from 'dotaconstants/build/item_ids.json' with { type: 'json
 import DOTA_ITEMS from 'dotaconstants/build/items.json' with { type: 'json' }
 import { t } from 'i18next'
 
-import RedisClient from '../../db/RedisClient.js'
-import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
-import { isSpectator } from '../../dota/lib/isSpectator.js'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings.js'
-import { steamSocket } from '../../steam/ws.js'
-import type { DelayedGames, Item, Packet, SocketClient } from '../../types.js'
-import CustomError from '../../utils/customError.js'
-import { is8500Plus } from '../../utils/index.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
-import { profileLink } from './profileLink.js'
+import RedisClient from '../../db/RedisClient'
+import { getHeroNameOrColor } from '../../dota/lib/heroes'
+import { isSpectator } from '../../dota/lib/isSpectator'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
+import { steamSocket } from '../../steam/ws'
+import type { DelayedGames, Item, Packet, SocketClient } from '../../types'
+import CustomError from '../../utils/customError'
+import { is8500Plus } from '../../utils/index'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
+import { profileLink } from './profileLink'
 
 function formatItemList(itemList: string[]) {
   const itemCounts = {} as Record<string, number>

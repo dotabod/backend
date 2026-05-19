@@ -1,9 +1,9 @@
 import { t } from 'i18next'
 
-import { redisClient } from '../../db/redisInstance.js'
-import type { SocketClient } from '../../types.js'
-import { say } from '../say.js'
-import { isPlayingMatch } from './isPlayingMatch.js'
+import { redisClient } from '../../db/redisInstance'
+import type { SocketClient } from '../../types'
+import { say } from '../say'
+import { isPlayingMatch } from './isPlayingMatch'
 
 const PASSIVE_THRESHOLD_SECONDS = 30 * 1000
 

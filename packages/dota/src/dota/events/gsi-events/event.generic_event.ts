@@ -1,8 +1,8 @@
-import { type ChatEventData, type DotaEvent, DotaEventTypes } from '../../../types.js'
-import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
-import { getHeroNameOrColor } from '../../lib/heroes.js'
-import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import eventHandler from '../EventHandler.js'
+import { type ChatEventData, type DotaEvent, DotaEventTypes } from '../../../types'
+import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
+import { getHeroNameOrColor } from '../../lib/heroes'
+import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.GenericEvent}`, {
   handler: async (dotaClient, event: DotaEvent) => {

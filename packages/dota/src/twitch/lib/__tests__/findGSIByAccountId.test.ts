@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 
-import { findAccountFromCmd } from '../findGSIByAccountId.js'
+import { findAccountFromCmd } from '../findGSIByAccountId'
 
 // findAccountFromCmd is exercised three ways: by Twitch chat commands like
 // !facet / !gpm / !items on the streamer's own match (default branch), on a

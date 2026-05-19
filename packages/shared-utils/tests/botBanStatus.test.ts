@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
 import { resetUtilsState, utilsState } from './setupMocks.ts'
 
-const { botStatus, checkBotStatus } = await import('../src/twitch/botBanStatus.js')
+const { botStatus, checkBotStatus } = await import('../src/twitch/botBanStatus')
 
 beforeEach(() => {
   resetUtilsState()

@@ -1,5 +1,5 @@
-import { logger } from '../logger.js'
-import { getTwitchTokens } from './getTwitchTokens.js'
+import { logger } from '../logger'
+import { getTwitchTokens } from './getTwitchTokens'
 
 // Bot status tracking
 export const botStatus = {

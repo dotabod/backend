@@ -1,5 +1,5 @@
-import { getSupabaseClient } from '../db/supabase.js'
-import { logger } from '../logger.js'
+import { getSupabaseClient } from '../db/supabase'
+import { logger } from '../logger'
 
 export interface TwitchTokens {
   access_token: string

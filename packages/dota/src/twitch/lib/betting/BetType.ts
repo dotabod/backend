@@ -1,4 +1,4 @@
-import type { SocketClient } from '../../../types.js'
+import type { SocketClient } from '../../../types'
 
 export enum BetType {
   WIN_LOSS = 'win_loss',

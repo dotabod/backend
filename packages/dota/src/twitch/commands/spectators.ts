@@ -1,10 +1,10 @@
 import { t } from 'i18next'
-import { isSpectator } from '../../dota/lib/isSpectator.js'
-import { DBSettings } from '../../settings.js'
-import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
-import type { DelayedGames } from '../../types.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
+import { isSpectator } from '../../dota/lib/isSpectator'
+import { DBSettings } from '../../settings'
+import MongoDBSingleton from '../../steam/MongoDBSingleton'
+import type { DelayedGames } from '../../types'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('spectators', {
   aliases: ['specs'],

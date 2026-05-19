@@ -1,13 +1,13 @@
-import RedisClient from '../../../db/RedisClient.js'
-import { type DotaEvent, DotaEventTypes } from '../../../types.js'
-import { fmtMSS } from '../../../utils/index.js'
-import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch.js'
-import { getHeroNameOrColor } from '../../lib/heroes.js'
-import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import { say } from '../../say.js'
-import eventHandler from '../EventHandler.js'
-import { emitAegisEvent } from './emitAegisEvent.js'
-import { generateAegisMessage } from './generateAegisMessage.js'
+import RedisClient from '../../../db/RedisClient'
+import { type DotaEvent, DotaEventTypes } from '../../../types'
+import { fmtMSS } from '../../../utils/index'
+import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
+import { getHeroNameOrColor } from '../../lib/heroes'
+import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { say } from '../../say'
+import eventHandler from '../EventHandler'
+import { emitAegisEvent } from './emitAegisEvent'
+import { generateAegisMessage } from './generateAegisMessage'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
   handler: async (dotaClient, event: DotaEvent) => {

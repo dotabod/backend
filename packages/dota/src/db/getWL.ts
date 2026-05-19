@@ -1,6 +1,6 @@
 import { type Database, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { getSessionStartDate } from './streamWindow.js'
+import { getSessionStartDate } from './streamWindow'
 
 interface WL {
   lng: string

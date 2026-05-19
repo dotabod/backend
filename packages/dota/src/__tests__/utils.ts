@@ -1,6 +1,6 @@
 import { spyOn } from 'bun:test'
 import axios from 'axios'
-import { chatClient } from '../twitch/chatClient.js'
+import { chatClient } from '../twitch/chatClient'
 
 export const apiClient = axios.create({
   baseURL: 'http://localhost:5120',

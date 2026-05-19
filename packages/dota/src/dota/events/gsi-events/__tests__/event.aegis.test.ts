@@ -1,10 +1,10 @@
 import { describe, it } from 'bun:test'
 import { faker } from '@faker-js/faker'
 
-import { apiClient } from '../../../../__tests__/utils.js'
-import { DotaEventTypes } from '../../../../types.js'
-import { checkCallAndMemory } from './checkCallAndMemory.js'
-import { fetchOnlineUsers } from './fetchOnlineUsers.js'
+import { apiClient } from '../../../../__tests__/utils'
+import { DotaEventTypes } from '../../../../types'
+import { checkCallAndMemory } from './checkCallAndMemory'
+import { fetchOnlineUsers } from './fetchOnlineUsers'
 
 // Skip these integration tests when Supabase is not configured
 const skipIntegration = !process.env.DB_URL || !process.env.DB_SECRET

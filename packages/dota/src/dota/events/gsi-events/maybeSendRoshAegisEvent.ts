@@ -1,8 +1,8 @@
-import { redisClient } from '../../../db/redisInstance.js'
-import type { SocketClient } from '../../../types.js'
-import type { AegisRes } from './AegisRes.js'
-import { emitAegisEvent } from './emitAegisEvent.js'
-import { emitRoshEvent, type RoshRes } from './RoshRes.js'
+import { redisClient } from '../../../db/redisInstance'
+import type { SocketClient } from '../../../types'
+import type { AegisRes } from './AegisRes'
+import { emitAegisEvent } from './emitAegisEvent'
+import { emitRoshEvent, type RoshRes } from './RoshRes'
 
 export async function maybeSendRoshAegisEvent(token: string, client?: SocketClient) {
   if (!client) return

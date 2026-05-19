@@ -1,8 +1,8 @@
 import { t } from 'i18next'
-import { redisClient } from '../db/redisInstance.js'
-import { getRedisNumberValue } from '../utils/index.js'
-import type { GSIHandlerType } from './GSIHandlerTypes.js'
-import { say } from './say.js'
+import { redisClient } from '../db/redisInstance'
+import { getRedisNumberValue } from '../utils/index'
+import type { GSIHandlerType } from './GSIHandlerTypes'
+import { say } from './say'
 
 export interface TierTime {
   tier: number

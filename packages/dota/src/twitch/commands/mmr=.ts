@@ -1,8 +1,8 @@
 import { t } from 'i18next'
 
-import { type UpdateMmrParams, updateMmr } from '../../dota/lib/updateMmr.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
+import { type UpdateMmrParams, updateMmr } from '../../dota/lib/updateMmr'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
 
 const isNumberValid = (num: string) => num && Number(num) >= 0 && Number(num) <= 20_000
 

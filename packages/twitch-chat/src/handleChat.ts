@@ -1,7 +1,7 @@
 import { checkBotStatus, getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { isBroadcasterBeingDisabled } from './index.js'
-import { emitChatMessage, hasDotabodSocket } from './utils/socketManager.js'
+import { isBroadcasterBeingDisabled } from './index'
+import { emitChatMessage, hasDotabodSocket } from './utils/socketManager'
 
 // Cache for deduplicating chat messages
 const messageDedupeCache = new Map<string, number>()

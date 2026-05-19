@@ -14,14 +14,14 @@ import { englishDataset, englishRecommendedTransformers, RegExpMatcher } from 'o
 import profanityUtil from 'profanity-util'
 import { flatWords as russianBadWordsList } from 'russian-bad-words'
 import wash from 'washyourmouthoutwithsoap'
-import { getProfanityDetails, moderateText } from '../src/utils/moderation.js'
+import { getProfanityDetails, moderateText } from '../src/utils/moderation'
 import {
   detectChineseProfanity,
   detectEvasionTactics,
   detectMultilingualProfanity,
   detectRussianProfanity,
-} from '../src/utils/profanity-wordlists.js'
-import { createTextVariations } from '../src/utils/text-normalization.js'
+} from '../src/utils/profanity-wordlists'
+import { createTextVariations } from '../src/utils/text-normalization'
 
 // Initialize necessary libraries
 const badWords = new Filter()

@@ -1,4 +1,4 @@
-import { heroes } from './heroList.js'
+import { heroes } from './heroList'
 
 export type HeroNames = `npc_dota_hero_${string}`
 

@@ -1,4 +1,4 @@
-import type { DelayedGames } from './types/index.js'
+import type { DelayedGames } from './types/index'
 
 const isDev = process.env.DOTABOD_ENV === 'development'
 

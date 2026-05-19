@@ -91,13 +91,13 @@ const supabaseMock = {
   from: (table: string) => createTableBuilder(table),
 }
 
-mock.module('../src/db/supabase.js', () => ({
+mock.module('../src/db/supabase', () => ({
   default: supabaseMock,
   supabase: supabaseMock,
   getSupabaseClient: () => supabaseMock,
 }))
 
-mock.module('../src/logger.js', () => ({
+mock.module('../src/logger', () => ({
   logger: {
     info: (message: string, meta?: Record<string, unknown>) => {
       utilsState.loggerInfoCalls.push({ message, meta: meta ?? {} })

@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia'
-import { getProfanityDetails, moderateText } from './utils/moderation.js'
+import { getProfanityDetails, moderateText } from './utils/moderation'
 
 // Create Elysia app
 const app = new Elysia()

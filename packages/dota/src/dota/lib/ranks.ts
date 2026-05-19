@@ -1,11 +1,11 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { MULTIPLIER_SOLO } from '../../db/getWL.js'
-import RedisClient from '../../db/RedisClient.js'
-import { steamSocket } from '../../steam/ws.js'
-import type { Cards } from '../../types.js'
-import CustomError from '../../utils/customError.js'
-import { leaderRanks, ranks } from './consts.js'
+import { MULTIPLIER_SOLO } from '../../db/getWL'
+import RedisClient from '../../db/RedisClient'
+import { steamSocket } from '../../steam/ws'
+import type { Cards } from '../../types'
+import CustomError from '../../utils/customError'
+import { leaderRanks, ranks } from './consts'
 
 export function rankTierToMmr(rankTier: string | number) {
   if (!Number(rankTier)) {

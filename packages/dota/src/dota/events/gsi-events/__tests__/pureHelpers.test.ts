@@ -3,9 +3,9 @@ import { initTestI18n } from '../../../../__tests__/sharedMocks.ts'
 
 await initTestI18n()
 
-const { generateAegisMessage } = await import('../generateAegisMessage.js')
-const { getRoshCountMessage } = await import('../getRoshCountMessage.js')
-const { getNewAegisTime } = await import('../getNewAegisTime.js')
+const { generateAegisMessage } = await import('../generateAegisMessage')
+const { getRoshCountMessage } = await import('../getRoshCountMessage')
+const { getNewAegisTime } = await import('../getNewAegisTime')
 
 describe('generateAegisMessage', () => {
   it('returns aegis.pickup when the aegis is still active', () => {

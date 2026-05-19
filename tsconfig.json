@@ -3,8 +3,8 @@
   "compilerOptions": {
     "lib": ["ESNext"],
     "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "nodenext",
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
     "sourceMap": true,
     "strictNullChecks": true,
     "types": ["node"],

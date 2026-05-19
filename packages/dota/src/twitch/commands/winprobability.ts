@@ -1,10 +1,10 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings.js'
-import { getWinProbability2MinAgo } from '../../stratz/livematch.js'
-import { is8500Plus } from '../../utils/index.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
+import { getWinProbability2MinAgo } from '../../stratz/livematch'
+import { is8500Plus } from '../../utils/index'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
 
 const WinRateCache: {
   [id: string]: {

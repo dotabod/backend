@@ -1,13 +1,13 @@
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
-import RedisClient from '../../db/RedisClient.js'
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { isSpectator } from '../../dota/lib/isSpectator.js'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings.js'
-import CustomError from '../../utils/customError.js'
-import { is8500Plus, steamID32toSteamID64, steamID64toSteamID32 } from '../../utils/index.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import RedisClient from '../../db/RedisClient'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { isSpectator } from '../../dota/lib/isSpectator'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
+import CustomError from '../../utils/customError'
+import { is8500Plus, steamID32toSteamID64, steamID64toSteamID32 } from '../../utils/index'
+import { chatClient } from '../chatClient'
+import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('geo', {
   aliases: ['country', 'location'],

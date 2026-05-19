@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 
-import type { Database } from './supabase-types.js'
+import type { Database } from './supabase-types'
 
 // Placeholders let the module import cleanly when env vars are absent
 // (e.g. unit tests without Doppler). Any real network call against the

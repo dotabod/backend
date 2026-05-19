@@ -1,8 +1,8 @@
-import RedisClient from '../../../db/RedisClient.js'
-import { getRedisNumberValue } from '../../../utils/index.js'
-import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import { server } from '../../server.js'
-import eventHandler from '../EventHandler.js'
+import RedisClient from '../../../db/RedisClient'
+import { getRedisNumberValue } from '../../../utils/index'
+import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { server } from '../../server'
+import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent('hero:alive', {
   handler: async (dotaClient, alive: boolean) => {

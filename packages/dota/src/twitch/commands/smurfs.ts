@@ -1,11 +1,11 @@
 import { t } from 'i18next'
 
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings.js'
-import { smurfs } from '../../steam/smurfs.js'
-import { is8500Plus } from '../../utils/index.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
+import { smurfs } from '../../steam/smurfs'
+import { is8500Plus } from '../../utils/index'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('smurfs', {
   aliases: ['lifetimes', 'totals', 'games', 'smurf'],

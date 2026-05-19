@@ -1,6 +1,6 @@
 import { type Db, MongoClient } from 'mongodb'
 import retry from 'retry'
-import { logger } from './utils/logger.js'
+import { logger } from './utils/logger'
 
 class MongoDBSingleton {
   clientPromise: Promise<Db> | null = null

@@ -3,6 +3,8 @@
   "_version": "20.1.0",
   "extends": "@tsconfig/node21/tsconfig.json",
   "compilerOptions": {
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
     "declaration": true,
     "declarationMap": true,
     "composite": true,

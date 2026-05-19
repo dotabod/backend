@@ -1,15 +1,15 @@
 // Database utilities
-export { default as supabase, getSupabaseClient } from './db/supabase.js'
-export type { Database, Tables } from './db/supabase-types.js'
+export { default as supabase, getSupabaseClient } from './db/supabase'
+export type { Database, Tables } from './db/supabase-types'
 
 // Disable reason tracking
-export * from './disableReason/index.js'
+export * from './disableReason/index'
 
 // Logger
-export { logger } from './logger.js'
+export { logger } from './logger'
 
 // Bot status tracking
-export { botStatus, checkBotStatus } from './twitch/botBanStatus.js'
+export { botStatus, checkBotStatus } from './twitch/botBanStatus'
 
 // Conduit management
 export {
@@ -17,11 +17,11 @@ export {
   type TwitchConduitCreateResponse,
   type TwitchConduitResponse,
   updateConduitShard,
-} from './twitch/conduitManager.js'
+} from './twitch/conduitManager'
 
 // Twitch utilities
-export { getAuthProvider } from './twitch/getAuthProvider.js'
-export { getTwitchAPI } from './twitch/getTwitchAPI.js'
-export { getTwitchHeaders } from './twitch/getTwitchHeaders.js'
-export { getTwitchTokens, type TwitchTokens } from './twitch/getTwitchTokens.js'
-export { hasTokens } from './twitch/hasTokens.js'
+export { getAuthProvider } from './twitch/getAuthProvider'
+export { getTwitchAPI } from './twitch/getTwitchAPI'
+export { getTwitchHeaders } from './twitch/getTwitchHeaders'
+export { getTwitchTokens, type TwitchTokens } from './twitch/getTwitchTokens'
+export { hasTokens } from './twitch/hasTokens'

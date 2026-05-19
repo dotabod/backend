@@ -10,7 +10,7 @@ import {
   twitchNameToToken,
 } from './dbMocks.ts'
 
-const { default: getDBUser } = await import('../getDBUser.js')
+const { default: getDBUser } = await import('../getDBUser')
 
 beforeEach(() => {
   resetDbState()

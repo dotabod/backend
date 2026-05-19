@@ -1,4 +1,4 @@
-import type { AegisRes } from './AegisRes.js'
+import type { AegisRes } from './AegisRes'
 
 export function getNewAegisTime(res: AegisRes) {
   // calculate seconds delta between now and expireDate

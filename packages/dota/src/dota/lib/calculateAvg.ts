@@ -1,6 +1,6 @@
-import { getPlayers } from '../../dota/lib/getPlayers.js'
-import type { Players } from '../../types.js'
-import { getRankDetail, rankTierToMmr } from './ranks.js'
+import { getPlayers } from '../../dota/lib/getPlayers'
+import type { Players } from '../../types'
+import { getRankDetail, rankTierToMmr } from './ranks'
 
 interface Avg {
   locale: string

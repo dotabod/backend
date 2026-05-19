@@ -1,10 +1,10 @@
 import type { Database } from '@dotabod/shared-utils'
-import type { ChatterSettingKeys, SettingKeys } from '../types/settings.js'
+import type { ChatterSettingKeys, SettingKeys } from '../types/settings'
 import {
   isSubscriptionActive,
   SUBSCRIPTION_TIERS,
   type SubscriptionRow,
-} from '../types/subscription.js'
+} from '../types/subscription'
 
 export const TIER_LEVELS: Record<Database['public']['Enums']['SubscriptionTier'], number> = {
   [SUBSCRIPTION_TIERS.FREE]: 0,

@@ -1,9 +1,9 @@
 import type { Socket } from 'socket.io'
-import { initSpectatorProtobuff } from './initSpectatorProtobuff.js'
-import { socketIoServer } from './socketServer.js'
-import Dota, { GetRealTimeStats } from './steam.js'
-import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails.js'
-import { logger } from './utils/logger.js'
+import { initSpectatorProtobuff } from './initSpectatorProtobuff'
+import { socketIoServer } from './socketServer'
+import Dota, { GetRealTimeStats } from './steam'
+import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails'
+import { logger } from './utils/logger'
 
 let hasDotabodSocket = false
 let isConnectedToSteam = false

@@ -1,9 +1,9 @@
 import { checkBotStatus, getTwitchHeaders, logger } from '@dotabod/shared-utils'
-import { eventSubMap } from './chatSubIds.js'
-import type { TwitchEventSubResponse } from './interfaces.js'
-import type { TwitchEventTypes } from './TwitchEventTypes.js'
-import { revokeEvent } from './twitch/lib/revokeEvent.js'
-import { rateLimiter } from './utils/rateLimiterCore.js'
+import { eventSubMap } from './chatSubIds'
+import type { TwitchEventSubResponse } from './interfaces'
+import type { TwitchEventTypes } from './TwitchEventTypes'
+import { revokeEvent } from './twitch/lib/revokeEvent'
+import { rateLimiter } from './utils/rateLimiterCore'
 
 // Don't cache headers, we'll get fresh ones each time
 const botUserId = process.env.TWITCH_BOT_PROVIDERID

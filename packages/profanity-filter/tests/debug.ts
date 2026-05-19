@@ -8,13 +8,13 @@ import {
   detectEvasionTactics,
   detectMultilingualProfanity,
   evasionPatterns,
-} from '../src/utils/profanity-wordlists.js'
+} from '../src/utils/profanity-wordlists'
 import {
   createTextVariations,
   normalizeText,
   prepareText,
   removeSeparators,
-} from '../src/utils/text-normalization.js'
+} from '../src/utils/text-normalization'
 
 // Test text that's getting false positive
 const testText = 'Will we win with Riki?'

@@ -1,4 +1,4 @@
-import type { GSIHandlerType } from '../GSIHandlerTypes.js'
+import type { GSIHandlerType } from '../GSIHandlerTypes'
 
 // full list at https://github.com/SteamDatabase/GameTracking-Dota2/blob/master/Protobufs/dota_shared_enums.proto
 export const allStates = [

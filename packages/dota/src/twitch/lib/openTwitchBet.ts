@@ -1,10 +1,10 @@
 import { moderateText } from '@dotabod/profanity-filter'
 import { getTwitchAPI, logger, supabase, trackDisableReason } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { getTokenFromTwitchId } from '../../dota/lib/connectedStreamers.js'
-import { say } from '../../dota/say.js'
-import { DBSettings, defaultSettings, getValueOrDefault } from '../../settings.js'
-import type { SocketClient } from '../../types.js'
+import { getTokenFromTwitchId } from '../../dota/lib/connectedStreamers'
+import { say } from '../../dota/say'
+import { DBSettings, defaultSettings, getValueOrDefault } from '../../settings'
+import type { SocketClient } from '../../types'
 
 // Disable the bet in settings for this user
 export async function disableBetsForTwitchId(twitchId: string, errorMessage: string) {

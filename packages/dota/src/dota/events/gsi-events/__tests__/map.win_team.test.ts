@@ -1,9 +1,9 @@
 import { describe, it } from 'bun:test'
 
-import { gameEnd } from '../../../../__tests__/play-by-plays.js'
-import { apiClient } from '../../../../__tests__/utils.js'
-import { checkCallAndMemory } from './checkCallAndMemory.js'
-import { fetchOnlineUsers } from './fetchOnlineUsers.js'
+import { gameEnd } from '../../../../__tests__/play-by-plays'
+import { apiClient } from '../../../../__tests__/utils'
+import { checkCallAndMemory } from './checkCallAndMemory'
+import { fetchOnlineUsers } from './fetchOnlineUsers'
 
 // Skip these integration tests when Supabase is not configured
 const skipIntegration = !process.env.DB_URL || !process.env.DB_SECRET

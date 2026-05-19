@@ -1,11 +1,11 @@
 import { moderateText } from '@dotabod/profanity-filter'
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
-import { calculateAvg } from '../dota/lib/calculateAvg.js'
-import { getPlayers } from '../dota/lib/getPlayers.js'
-import { getHeroNameOrColor } from '../dota/lib/heroes.js'
-import type { NotablePlayer, Players, SocketClient } from '../types.js'
-import MongoDBSingleton from './MongoDBSingleton.js'
+import { calculateAvg } from '../dota/lib/calculateAvg'
+import { getPlayers } from '../dota/lib/getPlayers'
+import { getHeroNameOrColor } from '../dota/lib/heroes'
+import type { NotablePlayer, Players, SocketClient } from '../types'
+import MongoDBSingleton from './MongoDBSingleton'
 
 export interface Player {
   accountid: number

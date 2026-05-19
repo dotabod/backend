@@ -1,6 +1,6 @@
-import { type BaseBetHandler, BetType } from './BetType.js'
+import { type BaseBetHandler, BetType } from './BetType'
 
-// import { WinLossBetHandler } from './WinLossBetHandler.js'
+// import { WinLossBetHandler } from './WinLossBetHandler'
 
 // Factory functions to handle different bet types
 const handlers: Record<BetType, BaseBetHandler> = {

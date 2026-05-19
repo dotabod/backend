@@ -1,11 +1,11 @@
 import { t } from 'i18next'
 
-import { calculateAvg } from '../dota/lib/calculateAvg.js'
-import { ranks } from '../dota/lib/consts.js'
-import { getPlayers } from '../dota/lib/getPlayers.js'
-import { getHeroNameOrColor } from '../dota/lib/heroes.js'
-import type { Medals, Players } from '../types.js'
-import MongoDBSingleton from './MongoDBSingleton.js'
+import { calculateAvg } from '../dota/lib/calculateAvg'
+import { ranks } from '../dota/lib/consts'
+import { getPlayers } from '../dota/lib/getPlayers'
+import { getHeroNameOrColor } from '../dota/lib/heroes'
+import type { Medals, Players } from '../types'
+import MongoDBSingleton from './MongoDBSingleton'
 
 export async function gameMedals(
   locale: string,

@@ -1,5 +1,5 @@
-import type { SocketClient } from '../types.js'
-import type { GSIHandlerType } from './GSIHandlerTypes.js'
+import type { SocketClient } from '../types'
+import type { GSIHandlerType } from './GSIHandlerTypes'
 
 // This is a placeholder for now - the actual implementation will be set at runtime
 let GSIHandlerConstructor: (client: SocketClient) => GSIHandlerType = () => {

@@ -1,4 +1,4 @@
-import type { Packet, Players } from '../../types.js'
+import type { Packet, Players } from '../../types'
 
 export function getSpectatorPlayers(gsi?: Packet) {
   let matchPlayers: Players & { selected: boolean }[] = []

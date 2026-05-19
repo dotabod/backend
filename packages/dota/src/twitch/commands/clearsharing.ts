@@ -1,9 +1,9 @@
 import { trackResolveReason } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { redisClient } from '../../db/redisInstance.js'
-import { DBSettings } from '../../settings.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
+import { redisClient } from '../../db/redisInstance'
+import { DBSettings } from '../../settings'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('clearsharing', {
   aliases: ['forcelink'],

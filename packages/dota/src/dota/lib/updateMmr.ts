@@ -1,10 +1,10 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/getWL.js'
-import { DBSettings, getValueOrDefault } from '../../settings.js'
-import { chatClient } from '../../twitch/chatClient.js'
-import findUser from './connectedStreamers.js'
-import { GLOBAL_DELAY } from './consts.js'
+import { MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/getWL'
+import { DBSettings, getValueOrDefault } from '../../settings'
+import { chatClient } from '../../twitch/chatClient'
+import findUser from './connectedStreamers'
+import { GLOBAL_DELAY } from './consts'
 
 interface TellChatNewMMRParams {
   locale: string

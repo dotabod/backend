@@ -1,10 +1,10 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch.js'
-import { getHeroNameOrColor } from '../dota/lib/heroes.js'
-import type { DelayedGames, Players } from '../types.js'
-import CustomError from '../utils/customError.js'
-import MongoDBSingleton from './MongoDBSingleton.js'
+import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch'
+import { getHeroNameOrColor } from '../dota/lib/heroes'
+import type { DelayedGames, Players } from '../types'
+import CustomError from '../utils/customError'
+import MongoDBSingleton from './MongoDBSingleton'
 
 const generateMessage = (
   locale: string,

@@ -4,7 +4,7 @@
 //
 // Filename ends in `Mocks.ts` (not `.test.ts`) so bun's runner skips it.
 import { mock } from 'bun:test'
-import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.js'
+import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks'
 
 export type TableResult = { data: unknown; error: unknown } | null
 
@@ -93,13 +93,13 @@ await initTestI18n()
 // Stub the GSIHandler constructor so getDBUser can build a handler without
 // pulling in real Dota wiring. Returns the minimal shape that getDBUser stores
 // in `gsiHandlers`: just enough that the cache-hit branch returns the client.
-const { setGSIHandlerConstructor } = await import('../../dota/GSIHandlerFactory.js')
+const { setGSIHandlerConstructor } = await import('../../dota/GSIHandlerFactory')
 setGSIHandlerConstructor((client) => ({ client }) as any)
 
 // Re-export the module-level Maps so each test can reset them in beforeEach.
 // getDBUser mutates these singletons directly.
 export const { gsiHandlers, invalidTokens, lookingupToken, twitchIdToToken, twitchNameToToken } =
-  await import('../../dota/lib/consts.js')
+  await import('../../dota/lib/consts')
 
 export function resetUserCaches() {
   gsiHandlers.clear()

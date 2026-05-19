@@ -1,14 +1,14 @@
 import { t } from 'i18next'
 
-import RedisClient from '../../db/RedisClient.js'
-import type { AegisRes } from '../../dota/events/gsi-events/AegisRes.js'
-import { generateAegisMessage } from '../../dota/events/gsi-events/generateAegisMessage.js'
-import type { RoshRes } from '../../dota/events/gsi-events/RoshRes.js'
-import { generateRoshanMessage } from '../../dota/events/gsi-events/RoshRes.js'
-import { isPlayingMatch } from '../../dota/lib/isPlayingMatch.js'
-import { DBSettings } from '../../settings.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
+import RedisClient from '../../db/RedisClient'
+import type { AegisRes } from '../../dota/events/gsi-events/AegisRes'
+import { generateAegisMessage } from '../../dota/events/gsi-events/generateAegisMessage'
+import type { RoshRes } from '../../dota/events/gsi-events/RoshRes'
+import { generateRoshanMessage } from '../../dota/events/gsi-events/RoshRes'
+import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
+import { DBSettings } from '../../settings'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('roshan', {
   onlyOnline: true,

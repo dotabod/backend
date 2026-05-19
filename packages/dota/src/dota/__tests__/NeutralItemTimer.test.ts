@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 
-import { NEUTRAL_ITEM_TIER_TIMES } from '../NeutralItemTimer.js'
+import { NEUTRAL_ITEM_TIER_TIMES } from '../NeutralItemTimer'
 
 /**
  * Tests confirming neutral item tier availability times are valid

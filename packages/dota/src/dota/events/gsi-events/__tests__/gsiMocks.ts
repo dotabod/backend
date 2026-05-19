@@ -2,7 +2,7 @@
 // and asserts on captured chat output / redis writes / socket emits.
 // Filename intentionally not `.test.ts` so bun's runner ignores it.
 import { mock } from 'bun:test'
-import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../../__tests__/sharedMocks.js'
+import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../../__tests__/sharedMocks'
 
 export type MatchPlayer = { heroid: number; accountid: number; playerid: number | null }
 
@@ -73,7 +73,7 @@ const fakeRedisClient = {
     },
   },
 }
-mock.module('../../../../db/RedisClient.js', () => ({
+mock.module('../../../../db/RedisClient', () => ({
   default: {
     getInstance: () => ({ client: fakeRedisClient }),
   },
@@ -87,7 +87,7 @@ mock.module('../../../../db/RedisClient.js', () => ({
 // harnesses monkey-patch the same singleton — see `installGsiMocks` below,
 // which is called in `beforeEach` to ensure gsi tests own the binding.
 
-mock.module('../../../lib/getAccountsFromMatch.js', () => ({
+mock.module('../../../lib/getAccountsFromMatch', () => ({
   getAccountsFromMatch: async () => ({ matchPlayers: gsiState.matchPlayers }),
 }))
 
@@ -113,18 +113,18 @@ const fakeDelayedQueue = {
   },
   getQueueSize: () => 0,
 }
-mock.module('../../../lib/DelayedQueue.js', () => ({
+mock.module('../../../lib/DelayedQueue', () => ({
   delayedQueue: fakeDelayedQueue,
   DelayedQueue: class {},
 }))
 
 await initTestI18n()
 
-const { events } = await import('../../../globalEventEmitter.js')
-const { gsiHandlers } = await import('../../../lib/consts.js')
-const { chatClient } = await import('../../../../twitch/chatClient.js')
-const { server } = await import('../../../server.js')
-const { redisClient } = await import('../../../../db/redisInstance.js')
+const { events } = await import('../../../globalEventEmitter')
+const { gsiHandlers } = await import('../../../lib/consts')
+const { chatClient } = await import('../../../../twitch/chatClient')
+const { server } = await import('../../../server')
+const { redisClient } = await import('../../../../db/redisInstance')
 
 // Re-install chatClient + server patches each time. setupMocks.ts in the
 // twitch suite ALSO monkey-patches chatClient.say at its module load time;
@@ -154,15 +154,15 @@ export function installGsiMocks() {
 installGsiMocks()
 
 // Side-effect imports register handlers via `eventHandler.registerEvent`.
-await import('../event.aegis_picked_up.js')
-await import('../event.aegis_denied.js')
-await import('../event.roshan_killed.js')
-await import('../event.tip.js')
-await import('../event.bounty_rune_pickup.js')
-await import('../map.paused.js')
-await import('../map.win_team.js')
-await import('../hero.smoked.js')
-await import('../player.killstreak.js')
+await import('../event.aegis_picked_up')
+await import('../event.aegis_denied')
+await import('../event.roshan_killed')
+await import('../event.tip')
+await import('../event.bounty_rune_pickup')
+await import('../map.paused')
+await import('../map.win_team')
+await import('../hero.smoked')
+await import('../player.killstreak')
 
 export { events, gsiHandlers }
 

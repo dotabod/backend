@@ -1,11 +1,11 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
-import { DBSettings, getValueOrDefault } from '../../../settings.js'
-import { is8500Plus } from '../../../utils/index.js'
-import { getStreamDelay } from '../../getStreamDelay.js'
-import { type allStates, draftStartByMatchId, GLOBAL_DELAY } from '../../lib/consts.js'
-import { delayedQueue } from '../../lib/DelayedQueue.js'
-import { isPlayingMatch } from '../../lib/isPlayingMatch.js'
-import eventHandler from '../EventHandler.js'
+import { DBSettings, getValueOrDefault } from '../../../settings'
+import { is8500Plus } from '../../../utils/index'
+import { getStreamDelay } from '../../getStreamDelay'
+import { type allStates, draftStartByMatchId, GLOBAL_DELAY } from '../../lib/consts'
+import { delayedQueue } from '../../lib/DelayedQueue'
+import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent('map:game_state', {
   handler: async (dotaClient, gameState: (typeof allStates)[number]) => {

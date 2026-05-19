@@ -1,8 +1,8 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { gsiHandlers } from '../dota/lib/consts.js'
-import { chatClient } from './chatClient.js'
-import { twitchEvent } from './index.js'
+import { gsiHandlers } from '../dota/lib/consts'
+import { chatClient } from './chatClient'
+import { twitchEvent } from './index'
 
 // Deduplication cache to prevent duplicate toggle messages
 const toggleMessageCache = new Map<string, { timestamp: number; disabled: boolean }>()

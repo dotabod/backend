@@ -1,12 +1,12 @@
 import { getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/getWL.js'
-import { getSessionStartDate } from '../../db/streamWindow.js'
-import { gsiHandlers } from '../../dota/lib/consts.js'
-import { updateMmr } from '../../dota/lib/updateMmr.js'
-import { steamSocket } from '../../steam/ws.js'
-import type { MatchMinimalDetailsResponse, SocketClient } from '../../types.js'
-import { chatClient } from '../chatClient.js'
+import { LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/getWL'
+import { getSessionStartDate } from '../../db/streamWindow'
+import { gsiHandlers } from '../../dota/lib/consts'
+import { updateMmr } from '../../dota/lib/updateMmr'
+import { steamSocket } from '../../steam/ws'
+import type { MatchMinimalDetailsResponse, SocketClient } from '../../types'
+import { chatClient } from '../chatClient'
 
 interface SessionMatch {
   id: string

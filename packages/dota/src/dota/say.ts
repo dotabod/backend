@@ -1,15 +1,10 @@
 import { t } from 'i18next'
 
-import {
-  DBSettings,
-  type defaultSettings,
-  getValueOrDefault,
-  type SettingKeys,
-} from '../settings.js'
-import { chatClient } from '../twitch/chatClient.js'
-import type { SocketClient } from '../types.js'
-import { getStreamDelay } from './getStreamDelay.js'
-import { delayedQueue } from './lib/DelayedQueue.js'
+import { DBSettings, type defaultSettings, getValueOrDefault, type SettingKeys } from '../settings'
+import { chatClient } from '../twitch/chatClient'
+import type { SocketClient } from '../types'
+import { getStreamDelay } from './getStreamDelay'
+import { delayedQueue } from './lib/DelayedQueue'
 
 export function say(
   client: SocketClient,

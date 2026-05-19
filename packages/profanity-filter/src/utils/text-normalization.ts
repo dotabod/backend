@@ -1,4 +1,4 @@
-import { compressRepeatedCharacters } from './profanity-wordlists.js'
+import { compressRepeatedCharacters } from './profanity-wordlists'
 
 /**
  * text-normalization.ts

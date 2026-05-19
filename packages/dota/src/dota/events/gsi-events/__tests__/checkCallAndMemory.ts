@@ -1,4 +1,4 @@
-import { twitchChatSpy } from '../../../../__tests__/utils.js'
+import { twitchChatSpy } from '../../../../__tests__/utils'
 
 export async function checkCallAndMemory(regexPattern: RegExp, userCount: number) {
   return new Promise<void>((resolve, reject) => {

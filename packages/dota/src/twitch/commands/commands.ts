@@ -1,7 +1,7 @@
 import { t } from 'i18next'
-import { DBSettings } from '../../settings.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import { DBSettings } from '../../settings'
+import { chatClient } from '../chatClient'
+import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('commands', {
   dbkey: DBSettings.commandCommands,

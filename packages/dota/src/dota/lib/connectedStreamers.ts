@@ -1,6 +1,6 @@
-import type { SocketClient } from '../../types.js'
-import type { GSIHandlerType } from '../GSIHandlerTypes.js'
-import { gsiHandlers, twitchIdToToken, twitchNameToToken } from './consts.js'
+import type { SocketClient } from '../../types'
+import type { GSIHandlerType } from '../GSIHandlerTypes'
+import { gsiHandlers, twitchIdToToken, twitchNameToToken } from './consts'
 
 export function getTokenFromTwitchId(twitchId?: string | null) {
   if (!twitchId) return null

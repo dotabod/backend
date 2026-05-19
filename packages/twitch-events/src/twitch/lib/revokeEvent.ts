@@ -5,7 +5,7 @@ import {
   supabase,
   trackDisableReason,
 } from '@dotabod/shared-utils'
-import { eventSubMap } from '../../chatSubIds.js'
+import { eventSubMap } from '../../chatSubIds'
 
 // Constants
 const headers = await getTwitchHeaders()

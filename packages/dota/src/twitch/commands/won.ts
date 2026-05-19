@@ -1,13 +1,13 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { redisClient } from '../../db/redisInstance.js'
-import { gsiHandlers } from '../../dota/lib/consts.js'
-import { DBSettings } from '../../settings.js'
-import { steamSocket } from '../../steam/ws.js'
-import type { MatchMinimalDetailsResponse } from '../../types.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
-import { resolveByMostRecentMatch, resolveMatchRetroactively } from '../lib/resolveMatch.js'
+import { redisClient } from '../../db/redisInstance'
+import { gsiHandlers } from '../../dota/lib/consts'
+import { DBSettings } from '../../settings'
+import { steamSocket } from '../../steam/ws'
+import type { MatchMinimalDetailsResponse } from '../../types'
+import { chatClient } from '../chatClient'
+import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import { resolveByMostRecentMatch, resolveMatchRetroactively } from '../lib/resolveMatch'
 
 commandHandler.registerCommand('won', {
   permission: 2, // Mods and broadcaster only

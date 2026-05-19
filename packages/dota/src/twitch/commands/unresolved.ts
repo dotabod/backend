@@ -1,10 +1,10 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { getSessionStartDate } from '../../db/streamWindow.js'
-import getHero, { type HeroNames } from '../../dota/lib/getHero.js'
-import { DBSettings } from '../../settings.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import { getSessionStartDate } from '../../db/streamWindow'
+import getHero, { type HeroNames } from '../../dota/lib/getHero'
+import { DBSettings } from '../../settings'
+import { chatClient } from '../chatClient'
+import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('unresolved', {
   aliases: ['pending'],

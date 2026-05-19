@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
 import { dbState, resetDbState } from './dbMocks.ts'
 
-const { getTodayHeroStats } = await import('../getTodayHeroStats.js')
+const { getTodayHeroStats } = await import('../getTodayHeroStats')
 
 describe('getTodayHeroStats', () => {
   beforeEach(() => {

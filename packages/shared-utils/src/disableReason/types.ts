@@ -1,4 +1,4 @@
-import type { Database, Json } from '../db/supabase-types.js'
+import type { Database, Json } from '../db/supabase-types'
 
 export type DisableReason = Database['public']['Enums']['DisableReason']
 

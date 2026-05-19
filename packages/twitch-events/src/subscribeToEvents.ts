@@ -1,8 +1,8 @@
 import { fetchConduitId, logger } from '@dotabod/shared-utils'
-import { initUserSubscriptions } from './initUserSubscriptions.js'
-import { subscribeToAuthGrantOrRevoke } from './subscribeChatMessagesForUser.js'
-import { getAccountIds } from './twitch/lib/getAccountIds.js'
-import { rateLimiter } from './utils/rateLimiterCore.js'
+import { initUserSubscriptions } from './initUserSubscriptions'
+import { subscribeToAuthGrantOrRevoke } from './subscribeChatMessagesForUser'
+import { getAccountIds } from './twitch/lib/getAccountIds'
+import { rateLimiter } from './utils/rateLimiterCore'
 
 /**
  * Subscribe all users to Twitch events with optimized batching for scale

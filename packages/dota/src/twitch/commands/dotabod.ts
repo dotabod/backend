@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import { chatClient } from '../chatClient'
+import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('dotabod', {
   handler: (message: MessageType) => {

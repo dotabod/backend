@@ -1,9 +1,9 @@
 import { supabase, trackResolveReason } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { ranks } from '../../dota/lib/consts.js'
-import { DBSettings, getValueOrDefault } from '../../settings.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import { ranks } from '../../dota/lib/consts'
+import { DBSettings, getValueOrDefault } from '../../settings'
+import { chatClient } from '../chatClient'
+import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
 // Extract unique rank titles and map them to their base tier values
 const rankTitles: Record<string, number> = {}

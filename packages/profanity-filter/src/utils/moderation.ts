@@ -18,8 +18,8 @@ import {
   detectEvasionTactics,
   detectRussianProfanity,
   detectTransphobicContent,
-} from './profanity-wordlists.js'
-import { createTextVariations } from './text-normalization.js'
+} from './profanity-wordlists'
+import { createTextVariations } from './text-normalization'
 
 interface ModerationResponse {
   id: string

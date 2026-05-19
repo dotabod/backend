@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from 'bun:test'
-import { DelayedQueue } from '../DelayedQueue.js'
+import { DelayedQueue } from '../DelayedQueue'
 
 describe('DelayedQueue Integration', () => {
   // Note: DelayedQueue uses 1-second check interval, so tests need to wait > 1s

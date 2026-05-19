@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'bun:test'
-import { getProfanityDetails, moderateText } from '../src/utils/moderation.js'
+import { getProfanityDetails, moderateText } from '../src/utils/moderation'
 import {
   detectEvasionTactics,
   detectMultilingualProfanity,
   detectRussianProfanity,
-} from '../src/utils/profanity-wordlists.js'
+} from '../src/utils/profanity-wordlists'
 
 describe('Profanity Filter', () => {
   describe('Basic profanity detection', () => {

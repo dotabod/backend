@@ -1,9 +1,9 @@
 import { t } from 'i18next'
 
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch.js'
-import { getHeroById, getHeroByName, heroColors } from '../../dota/lib/heroes.js'
-import type { Packet, Players } from '../../types.js'
-import CustomError from '../../utils/customError.js'
+import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { getHeroById, getHeroByName, heroColors } from '../../dota/lib/heroes'
+import type { Packet, Players } from '../../types'
+import CustomError from '../../utils/customError'
 
 export async function getPlayerFromArgs({
   args,

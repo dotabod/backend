@@ -1,6 +1,6 @@
-import MongoDBSingleton from '../../steam/MongoDBSingleton.js'
-import type { DelayedGames, Packet, Players } from '../../types.js'
-import { getSpectatorPlayers } from './getSpectatorPlayers.js'
+import MongoDBSingleton from '../../steam/MongoDBSingleton'
+import type { DelayedGames, Packet, Players } from '../../types'
+import { getSpectatorPlayers } from './getSpectatorPlayers'
 
 function getAllPlayers(data: DelayedGames) {
   const players: Players = []

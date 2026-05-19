@@ -1,8 +1,8 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { server } from '../../dota/server.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import { server } from '../../dota/server'
+import { chatClient } from '../chatClient'
+import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('resetwl', {
   permission: 2,

@@ -1,11 +1,11 @@
 import DOTA_HERO_ABILITIES from 'dotaconstants/build/hero_abilities.json' with { type: 'json' }
 import { t } from 'i18next'
-import { gsiHandlers } from '../../dota/lib/consts.js'
-import { getHeroById, getHeroNameOrColor } from '../../dota/lib/heroes.js'
-import { DBSettings } from '../../settings.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
-import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
+import { gsiHandlers } from '../../dota/lib/consts'
+import { getHeroById, getHeroNameOrColor } from '../../dota/lib/heroes'
+import { DBSettings } from '../../settings'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
+import { findAccountFromCmd } from '../lib/findGSIByAccountId'
 
 commandHandler.registerCommand('facet', {
   onlyOnline: true,

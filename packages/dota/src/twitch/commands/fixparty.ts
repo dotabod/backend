@@ -1,9 +1,9 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { MULTIPLIER_PARTY } from '../../db/getWL.js'
-import { updateMmr } from '../../dota/lib/updateMmr.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler from '../lib/CommandHandler.js'
+import { MULTIPLIER_PARTY } from '../../db/getWL'
+import { updateMmr } from '../../dota/lib/updateMmr'
+import { chatClient } from '../chatClient'
+import commandHandler from '../lib/CommandHandler'
 
 interface PartyMmr {
   currentMmr: number

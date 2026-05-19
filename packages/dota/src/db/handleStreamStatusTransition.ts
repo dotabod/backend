@@ -1,6 +1,6 @@
 import type { Server } from 'socket.io'
-import type { GSIHandlerType } from '../dota/GSIHandlerTypes.js'
-import type { SocketClient } from '../types.js'
+import type { GSIHandlerType } from '../dota/GSIHandlerTypes'
+import type { SocketClient } from '../types'
 
 type Logger = {
   error: (message: string, meta?: Record<string, unknown>) => void

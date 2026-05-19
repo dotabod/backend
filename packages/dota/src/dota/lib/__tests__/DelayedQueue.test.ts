@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
-import { DelayedQueue } from '../DelayedQueue.js'
+import { DelayedQueue } from '../DelayedQueue'
 
 describe('DelayedQueue', () => {
   let queue: DelayedQueue

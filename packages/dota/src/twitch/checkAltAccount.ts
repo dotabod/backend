@@ -1,6 +1,6 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { chatClient } from './chatClient.js'
+import { chatClient } from './chatClient'
 
 // Maps for alt account detection
 const altAccountCache: Record<string, boolean> = {}

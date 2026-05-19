@@ -1,7 +1,7 @@
 import { getAuthProvider } from '@dotabod/shared-utils'
-import type { SocketClient } from '../types.js'
-import { deleteRedisData } from './GSIHandler.js'
-import { gsiHandlers, invalidTokens, twitchIdToToken, twitchNameToToken } from './lib/consts.js'
+import type { SocketClient } from '../types'
+import { deleteRedisData } from './GSIHandler'
+import { gsiHandlers, invalidTokens, twitchIdToToken, twitchNameToToken } from './lib/consts'
 
 // three types of in-memory cache exists
 export async function clearCacheForUser(client?: SocketClient) {

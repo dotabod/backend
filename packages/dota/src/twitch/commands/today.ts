@@ -1,8 +1,8 @@
 import { t } from 'i18next'
-import { getTodayHeroStats } from '../../db/getTodayHeroStats.js'
-import { DBSettings } from '../../settings.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
+import { getTodayHeroStats } from '../../db/getTodayHeroStats'
+import { DBSettings } from '../../settings'
+import { chatClient } from '../chatClient'
+import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
 // Twitch chat limit is 500 characters
 const TWITCH_CHAR_LIMIT = 500

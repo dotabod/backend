@@ -1,5 +1,5 @@
-import type { MatchMinimalDetailsResponse, SocketClient } from '../types.js'
-import type { DataBroadcasterInterface } from './events/minimap/DataBroadcasterTypes.js'
+import type { MatchMinimalDetailsResponse, SocketClient } from '../types'
+import type { DataBroadcasterInterface } from './events/minimap/DataBroadcasterTypes'
 
 // Type definition for GSIHandler that can be used without importing the actual class
 export interface GSIHandlerType {

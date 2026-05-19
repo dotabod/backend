@@ -1,10 +1,10 @@
 import { t } from 'i18next'
 
-import { getSpectatorPlayers } from '../../dota/lib/getSpectatorPlayers.js'
-import { isSpectator } from '../../dota/lib/isSpectator.js'
-import type { Hero, Items, Packet, Player } from '../../types.js'
-import CustomError from '../../utils/customError.js'
-import { getPlayerFromArgs } from './getPlayerFromArgs.js'
+import { getSpectatorPlayers } from '../../dota/lib/getSpectatorPlayers'
+import { isSpectator } from '../../dota/lib/isSpectator'
+import type { Hero, Items, Packet, Player } from '../../types'
+import CustomError from '../../utils/customError'
+import { getPlayerFromArgs } from './getPlayerFromArgs'
 
 export function findSpectatorIdx(packet: Packet | undefined, heroOrAccountId: number | undefined) {
   const teams = ['team2', 'team3'] as const

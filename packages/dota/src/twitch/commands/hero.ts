@@ -1,12 +1,12 @@
 import { t } from 'i18next'
 
-import { gsiHandlers } from '../../dota/lib/consts.js'
-import { getHeroNameOrColor } from '../../dota/lib/heroes.js'
-import { server } from '../../dota/server.js'
-import { DBSettings } from '../../settings.js'
-import { chatClient } from '../chatClient.js'
-import commandHandler, { type MessageType } from '../lib/CommandHandler.js'
-import { findAccountFromCmd } from '../lib/findGSIByAccountId.js'
+import { gsiHandlers } from '../../dota/lib/consts'
+import { getHeroNameOrColor } from '../../dota/lib/heroes'
+import { server } from '../../dota/server'
+import { DBSettings } from '../../settings'
+import { chatClient } from '../chatClient'
+import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import { findAccountFromCmd } from '../lib/findGSIByAccountId'
 
 commandHandler.registerCommand('hero', {
   onlyOnline: true,

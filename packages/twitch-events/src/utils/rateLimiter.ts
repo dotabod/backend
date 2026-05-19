@@ -1,5 +1,5 @@
 import { fetchConduitId, getTwitchHeaders, logger } from '@dotabod/shared-utils'
-import { rateLimiter } from './rateLimiterCore.js'
+import { rateLimiter } from './rateLimiterCore'
 
 interface TwitchSubscriptionCondition {
   broadcaster_user_id?: string
