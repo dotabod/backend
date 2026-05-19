@@ -1,54 +1,11 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
-import {
-  baseMatchRow,
-  type Client,
-  commandHandler,
-  makeClient,
-  resetState,
-  state,
-} from './setupMocks.ts'
+import { baseMatchRow, commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // End-to-end integration tests that exercise `commandHandler.handleMessage()`:
 //   parsing → alias resolution → settings/subscription gate → permission check
 //   → cooldown → handler dispatch.
 // These complement the unit tests in resolveMatch.test.ts (which call handlers
 // directly) by proving the wiring works for real chat input strings.
-
-function makeMessage({
-  content,
-  permission,
-  channelId = 'channel-1',
-  userName = 'modUser',
-  clientOverrides = {},
-}: {
-  content: string
-  permission: number
-  channelId?: string
-  userName?: string
-  clientOverrides?: Partial<Client>
-}) {
-  // A Pro subscription bypasses the subscription gate in `canAccessFeature`
-  // so the integration tests can focus on dispatch + permission behavior.
-  const client = makeClient({
-    subscription: {
-      id: 'sub-1',
-      tier: 'PRO',
-      status: 'ACTIVE',
-      isGift: false,
-    } as any,
-    ...clientOverrides,
-  })
-  return {
-    user: { name: userName, messageId: 'msg-1', permission, userId: 'user-1' },
-    content,
-    channel: {
-      name: '#streamer',
-      id: channelId,
-      client,
-      settings: client.settings,
-    },
-  }
-}
 
 describe('CommandHandler dispatch (integration)', () => {
   beforeEach(() => {

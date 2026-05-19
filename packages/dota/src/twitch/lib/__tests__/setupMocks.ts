@@ -6,6 +6,10 @@
 // state closure. Defining the harness once avoids races where two test files
 // register competing factories for the same module spec.
 import { mock } from 'bun:test'
+import type { Database } from '@dotabod/shared-utils'
+import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/sharedMocks.ts'
+
+export { PRO_SUB }
 
 export type SessionMatchRow = {
   id: string
@@ -24,6 +28,13 @@ export type Prediction = {
   outcomes: { id: string; users: number; title: string }[]
 }
 
+export type OpenDotaProfile = {
+  rank_tier: number
+  leaderboard_rank: number
+} | null
+
+export type GroupedBet = Database['public']['Functions']['get_grouped_bets']['Returns'][0]
+
 export const state: {
   sessionMatch: SessionMatchRow | null
   olderMatch: { id: string } | null
@@ -41,6 +52,14 @@ export const state: {
   emitWLUpdateCalls: number
   channelId: string | null
   loggerInfoCalls: Array<{ message: string; meta: Record<string, unknown> }>
+  groupedBets: GroupedBet[]
+  groupedBetsError: unknown
+  openDotaProfile: OpenDotaProfile
+  rankTitle: string
+  rankDescription: string | null
+  botBanned: boolean
+  subscriberOnlyMode: boolean
+  chatSettingsUpdates: Array<{ channelId: string; settings: Record<string, unknown> }>
 } = {
   sessionMatch: null,
   olderMatch: null,
@@ -58,6 +77,14 @@ export const state: {
   emitWLUpdateCalls: 0,
   channelId: null,
   loggerInfoCalls: [],
+  groupedBets: [],
+  groupedBetsError: null,
+  openDotaProfile: null,
+  rankTitle: 'Immortal',
+  rankDescription: null,
+  botBanned: false,
+  subscriberOnlyMode: false,
+  chatSettingsUpdates: [],
 }
 
 export function resetState() {
@@ -77,6 +104,14 @@ export function resetState() {
   state.emitWLUpdateCalls = 0
   state.channelId = null
   state.loggerInfoCalls = []
+  state.groupedBets = []
+  state.groupedBetsError = null
+  state.openDotaProfile = null
+  state.rankTitle = 'Immortal'
+  state.rankDescription = null
+  state.botBanned = false
+  state.subscriberOnlyMode = false
+  state.chatSettingsUpdates = []
 }
 
 // Supabase chainable mock. Three query shapes need to be distinguished:
@@ -165,6 +200,12 @@ function createSupabaseFromBuilder() {
 
 const supabaseMock = {
   from: () => createSupabaseFromBuilder(),
+  rpc: async () => {
+    if (state.groupedBetsError) {
+      return { data: null, error: state.groupedBetsError }
+    }
+    return { data: state.groupedBets, error: null }
+  },
 }
 
 const loggerMock = {
@@ -184,29 +225,33 @@ const getTwitchAPIMock = async () => ({
       return {}
     },
   },
+  asUser: async (
+    _twitchId: string,
+    cb: (ctx: {
+      chat: {
+        getSettings: (channelId: string) => Promise<{ subscriberOnlyModeEnabled: boolean }>
+        updateSettings: (channelId: string, settings: Record<string, unknown>) => Promise<void>
+      }
+    }) => unknown,
+  ) =>
+    cb({
+      chat: {
+        getSettings: async () => ({ subscriberOnlyModeEnabled: state.subscriberOnlyMode }),
+        updateSettings: async (channelId: string, settings: Record<string, unknown>) => {
+          state.chatSettingsUpdates.push({ channelId, settings })
+        },
+      },
+    }),
 })
 
-// `@dotabod/shared-utils` has a wide surface (some of it imported transitively
-// by chatClient and friends), so the mock needs to cover everything that any
-// importer in the graph asks for at runtime. Types are erased so they aren't
-// listed.
-mock.module('@dotabod/shared-utils', () => ({
-  supabase: supabaseMock,
-  default: supabaseMock,
-  getSupabaseClient: () => supabaseMock,
-  logger: loggerMock,
-  getTwitchAPI: getTwitchAPIMock,
-  getAuthProvider: () => ({}),
-  getTwitchHeaders: () => ({}),
-  getTwitchTokens: async () => ({ access_token: '', refresh_token: '' }),
-  hasTokens: () => true,
-  botStatus: { isBanned: false },
-  checkBotStatus: async () => false,
-  fetchConduitId: async () => '',
-  updateConduitShard: async () => undefined,
-  trackDisableReason: async () => undefined,
-  trackResolveReason: async () => undefined,
-}))
+mock.module('@dotabod/shared-utils', () =>
+  buildSharedUtilsMock({
+    supabase: supabaseMock,
+    logger: loggerMock,
+    getTwitchAPI: getTwitchAPIMock,
+    checkBotStatus: async () => state.botBanned,
+  }),
+)
 
 mock.module('../../../dota/lib/updateMmr.js', () => ({
   updateMmr: async (args: Record<string, unknown>) => {
@@ -215,16 +260,18 @@ mock.module('../../../dota/lib/updateMmr.js', () => ({
   tellChatNewMMR: () => undefined,
 }))
 
-// Use the real i18next with the actual English translation file so tests
-// assert on the strings that will land in chat. Avoids mocking i18next, which
-// would leak into other test files since `mock.module()` is process-wide.
-const i18next = (await import('i18next')).default
-const enTranslation = (await import('../../../../locales/en/translation.json')).default
-await i18next.init({
-  lng: 'en',
-  fallbackLng: 'en',
-  resources: { en: { translation: enTranslation } },
-})
+// Mock only the network-touching functions in ranks.js. The rest
+// (rankTierToMmr, mmrToRankTier, etc.) are pure helpers used elsewhere in
+// the dota source, so we re-export them as-is from the real module.
+const realRanks = await import('../../../dota/lib/ranks.js')
+mock.module('../../../dota/lib/ranks.js', () => ({
+  ...realRanks,
+  getOpenDotaProfile: async () => state.openDotaProfile,
+  getRankTitle: () => state.rankTitle,
+  getRankDescription: async () => state.rankDescription,
+}))
+
+await initTestI18n()
 
 // Import after all module mocks are registered.
 const resolveMatchModule = await import('../resolveMatch.js')
@@ -239,6 +286,16 @@ export const commandHandler = (await import('../CommandHandler.js')).default
 await import('../../commands/recent.js')
 await import('../../commands/won.js')
 await import('../../commands/lost.js')
+await import('../../commands/ping.js')
+await import('../../commands/locale.js')
+await import('../../commands/delay.js')
+await import('../../commands/wl.js')
+await import('../../commands/mmr.js')
+await import('../../commands/gpm.js')
+await import('../../commands/dotabuff.js')
+await import('../../commands/pleb.js')
+await import('../../commands/apm.js')
+await import('../../commands/avg.js')
 
 // Monkey-patch the singletons we need behavior control over. Mocking these
 // modules wholesale would force us to enumerate every other transitive export.
@@ -315,3 +372,24 @@ export const baseMatchRow = (overrides: Partial<SessionMatchRow> = {}): SessionM
   won: null,
   ...overrides,
 })
+
+export function makeMessage({
+  content,
+  permission = 2,
+  channelId = 'channel-1',
+  userName = 'modUser',
+  clientOverrides = {},
+}: {
+  content: string
+  permission?: number
+  channelId?: string
+  userName?: string
+  clientOverrides?: Partial<Client>
+}) {
+  const client = makeClient({ subscription: PRO_SUB, ...clientOverrides })
+  return {
+    user: { name: userName, messageId: 'msg-1', permission, userId: 'user-1' },
+    content,
+    channel: { name: '#streamer', id: channelId, client, settings: client.settings },
+  }
+}
