@@ -112,7 +112,7 @@ describe('CommandHandler dispatch (integration)', () => {
 
   describe('!won / !lost end-to-end via handleMessage', () => {
     it('!lost with no arg and no pending resolution flips the most-recent resolved match', async () => {
-      state.recentMatch = { matchId: '7777777777' }
+      state.recentList = [{ matchId: '7777777777', hero_name: null, won: true }]
       state.sessionMatch = baseMatchRow({ matchId: '7777777777', won: true })
 
       await commandHandler.handleMessage(makeMessage({ content: '!lost', permission: 2 }))

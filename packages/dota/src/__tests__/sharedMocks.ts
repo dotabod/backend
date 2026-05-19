@@ -9,11 +9,14 @@
 // two harnesses in lockstep without copy/paste drift.
 
 type SupabaseLike = unknown
+// Loose function signature so callers can supply any of the typical logger
+// shapes (message + optional meta, variadic args, etc.) without TS contravariance
+// rejecting them. Tests just care that the methods exist and capture calls.
 type LoggerLike = {
-  info: (...args: unknown[]) => void
-  error: (...args: unknown[]) => void
-  warn: (...args: unknown[]) => void
-  debug: (...args: unknown[]) => void
+  info: (...args: any[]) => void
+  error: (...args: any[]) => void
+  warn: (...args: any[]) => void
+  debug: (...args: any[]) => void
 }
 
 export function buildSharedUtilsMock(opts: {

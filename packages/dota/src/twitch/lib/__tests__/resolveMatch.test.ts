@@ -538,7 +538,7 @@ describe('findMostRecentResolvedMatch', () => {
   })
 
   it('returns the most recently resolved match in the session', async () => {
-    state.recentMatch = { matchId: '9999999999' }
+    state.recentList = [{ matchId: '9999999999', hero_name: null, won: true }]
 
     const result = await findMostRecentResolvedMatch('token-abc', new Date('2026-05-19T08:00:00Z'))
 
@@ -546,7 +546,7 @@ describe('findMostRecentResolvedMatch', () => {
   })
 
   it('returns null when no resolved matches exist in the session window', async () => {
-    state.recentMatch = null
+    state.recentList = []
 
     const result = await findMostRecentResolvedMatch('token-abc', new Date('2026-05-19T08:00:00Z'))
 
@@ -554,7 +554,7 @@ describe('findMostRecentResolvedMatch', () => {
   })
 
   it('falls back to the 12-hour window when stream_start_date is null', async () => {
-    state.recentMatch = { matchId: '9999999999' }
+    state.recentList = [{ matchId: '9999999999', hero_name: null, won: true }]
 
     const result = await findMostRecentResolvedMatch('token-abc', null)
 
@@ -562,7 +562,10 @@ describe('findMostRecentResolvedMatch', () => {
   })
 
   it('excludes the in-progress match when given an excludeMatchId', async () => {
-    state.recentMatch = { matchId: '7777777777' }
+    // Mock returns the same list regardless of filter; the function passes
+    // the excludeMatchId via .neq but the mock doesn't honor that filter, so
+    // verify the function delegates to the query rather than the result here.
+    state.recentList = []
 
     const result = await findMostRecentResolvedMatch(
       'token-abc',
@@ -674,7 +677,7 @@ describe('!won / !lost fallback to most-recent resolved', () => {
   })
 
   it('!won with no arg and no pending resolution flips the most recent resolved match', async () => {
-    state.recentMatch = { matchId: '7777777777' }
+    state.recentList = [{ matchId: '7777777777', hero_name: null, won: false }]
     state.sessionMatch = baseMatchRow({ matchId: '7777777777', won: false })
 
     const cmd = commandHandler.commands.get('won') as RegisteredCommand
@@ -688,7 +691,7 @@ describe('!won / !lost fallback to most-recent resolved', () => {
   })
 
   it('!lost with no arg and no pending resolution flips the most recent resolved match', async () => {
-    state.recentMatch = { matchId: '7777777777' }
+    state.recentList = [{ matchId: '7777777777', hero_name: null, won: true }]
     state.sessionMatch = baseMatchRow({ matchId: '7777777777', won: true })
 
     const cmd = commandHandler.commands.get('lost') as RegisteredCommand
@@ -702,7 +705,7 @@ describe('!won / !lost fallback to most-recent resolved', () => {
   })
 
   it('!won says "no pending resolution" when there is no recent resolved match either', async () => {
-    state.recentMatch = null
+    state.recentList = []
 
     const cmd = commandHandler.commands.get('won') as RegisteredCommand
     await cmd.handler(buildMessage([]), [], 'won')
@@ -712,7 +715,7 @@ describe('!won / !lost fallback to most-recent resolved', () => {
   })
 
   it('!won no-ops when the most recent resolved match is already marked as won', async () => {
-    state.recentMatch = { matchId: '7777777777' }
+    state.recentList = [{ matchId: '7777777777', hero_name: null, won: true }]
     state.sessionMatch = baseMatchRow({ matchId: '7777777777', won: true })
 
     const cmd = commandHandler.commands.get('won') as RegisteredCommand

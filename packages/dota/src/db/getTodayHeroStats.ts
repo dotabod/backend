@@ -1,5 +1,6 @@
 import { supabase } from '@dotabod/shared-utils'
 import getHero, { type HeroNames } from '../dota/lib/getHero.js'
+import { getSessionStartDate } from './streamWindow.js'
 
 interface HeroStat {
   heroName: string
@@ -20,9 +21,7 @@ export async function getTodayHeroStats({
     return []
   }
 
-  // Default to 12 hours ago if no start date provided (same as getWL)
-  const fromDate =
-    startDate?.toISOString() ?? new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+  const fromDate = getSessionStartDate(startDate).toISOString()
 
   const { data: matches, error } = await supabase
     .from('matches')

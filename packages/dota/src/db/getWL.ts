@@ -1,5 +1,6 @@
 import { type Database, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+import { getSessionStartDate } from './streamWindow.js'
 
 interface WL {
   lng: string
@@ -44,9 +45,7 @@ export async function getWL({ lng, channelId, mmrEnabled, startDate, currentGame
 
   const { data: matches, error } = await supabase.rpc('get_grouped_bets', {
     channel_id: channelId,
-    start_date:
-      startDate?.toISOString() ??
-      new Date(new Date().getTime() - 12 * 60 * 60 * 1000).toISOString(),
+    start_date: getSessionStartDate(startDate).toISOString(),
   })
 
   if (error) {

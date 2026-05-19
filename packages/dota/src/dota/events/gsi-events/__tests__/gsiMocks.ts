@@ -2,7 +2,7 @@
 // and asserts on captured chat output / redis writes / socket emits.
 // Filename intentionally not `.test.ts` so bun's runner ignores it.
 import { mock } from 'bun:test'
-import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../../__tests__/sharedMocks.ts'
+import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../../__tests__/sharedMocks.js'
 
 export type MatchPlayer = { heroid: number; accountid: number; playerid: number | null }
 

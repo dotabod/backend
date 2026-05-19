@@ -4,7 +4,7 @@
 //
 // Filename ends in `Mocks.ts` (not `.test.ts`) so bun's runner skips it.
 import { mock } from 'bun:test'
-import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
+import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.js'
 
 export type TableResult = { data: unknown; error: unknown } | null
 

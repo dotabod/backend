@@ -1,6 +1,7 @@
 import { getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/getWL.js'
+import { getSessionStartDate } from '../../db/streamWindow.js'
 import { gsiHandlers } from '../../dota/lib/consts.js'
 import { updateMmr } from '../../dota/lib/updateMmr.js'
 import { steamSocket } from '../../steam/ws.js'
@@ -28,7 +29,7 @@ async function findSessionMatch(
   matchId: string,
   streamStartDate?: Date | null,
 ): Promise<{ match: SessionMatch | null; error: string | null }> {
-  const startDate = streamStartDate ?? new Date(Date.now() - 12 * 60 * 60 * 1000)
+  const startDate = getSessionStartDate(streamStartDate)
 
   const { data: match } = await supabase
     .from('matches')
@@ -56,6 +57,45 @@ async function findSessionMatch(
   return { match: null, error: 'notFound' }
 }
 
+export interface ResolvedMatchRow {
+  matchId: string
+  hero_name: string | null
+  won: boolean
+}
+
+/**
+ * Fetch resolved (`won` is not null) matches in the streaming session window,
+ * newest first. Shared by `!recent` (limit 5), `!won` / `!lost` fallback
+ * (limit 1), and any future history-style command.
+ */
+export async function findResolvedMatchesInSession(
+  userId: string,
+  streamStartDate: Date | null,
+  opts: { limit: number; excludeMatchId?: string } = { limit: 5 },
+): Promise<ResolvedMatchRow[]> {
+  const startDate = getSessionStartDate(streamStartDate)
+
+  let query = supabase
+    .from('matches')
+    .select('matchId, hero_name, won')
+    .eq('userId', userId)
+    .not('won', 'is', null)
+    .gte('created_at', startDate.toISOString())
+
+  if (opts.excludeMatchId) {
+    query = query.neq('matchId', opts.excludeMatchId)
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false }).limit(opts.limit)
+
+  if (error) {
+    logger.warn('[BETS] findResolvedMatchesInSession query failed', { userId, error })
+    return []
+  }
+
+  return (data ?? []) as ResolvedMatchRow[]
+}
+
 /**
  * Find the most-recently-resolved match in the streaming session window.
  * Used by `!won` / `!lost` (no arg) to auto-target the last result for a flip
@@ -66,21 +106,34 @@ export async function findMostRecentResolvedMatch(
   streamStartDate: Date | null,
   excludeMatchId?: string,
 ): Promise<{ matchId: string } | null> {
-  const startDate = streamStartDate ?? new Date(Date.now() - 12 * 60 * 60 * 1000)
+  const [match] = await findResolvedMatchesInSession(userId, streamStartDate, {
+    limit: 1,
+    excludeMatchId,
+  })
+  return match ? { matchId: match.matchId } : null
+}
 
-  let query = supabase
-    .from('matches')
-    .select('matchId')
-    .eq('userId', userId)
-    .not('won', 'is', null)
-    .gte('created_at', startDate.toISOString())
+/**
+ * Shared fallback for `!won` / `!lost` (no arg) when there's no pending DC
+ * resolution: flip the most recently resolved match. Returns true if the
+ * flip happened (caller skips the "no pending resolution" chat output).
+ */
+export async function resolveByMostRecentMatch(
+  client: SocketClient,
+  won: boolean,
+  username: string,
+  channel: string,
+  messageId: string,
+): Promise<boolean> {
+  const recent = await findMostRecentResolvedMatch(
+    client.token,
+    client.stream_start_date,
+    client.gsi?.map?.matchid,
+  )
+  if (!recent) return false
 
-  if (excludeMatchId) {
-    query = query.neq('matchId', excludeMatchId)
-  }
-
-  const { data } = await query.order('created_at', { ascending: false }).limit(1).single()
-  return data ? { matchId: data.matchId } : null
+  await resolveMatchRetroactively(client, recent.matchId, won, username, channel, messageId)
+  return true
 }
 
 /**

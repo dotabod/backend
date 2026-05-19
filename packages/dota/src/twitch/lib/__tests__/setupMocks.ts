@@ -7,7 +7,7 @@
 // register competing factories for the same module spec.
 import { mock } from 'bun:test'
 import type { Database } from '@dotabod/shared-utils'
-import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/sharedMocks.ts'
+import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/sharedMocks.js'
 
 export { PRO_SUB }
 
@@ -38,7 +38,6 @@ export type GroupedBet = Database['public']['Functions']['get_grouped_bets']['Re
 export const state: {
   sessionMatch: SessionMatchRow | null
   olderMatch: { id: string } | null
-  recentMatch: { matchId: string } | null
   recentList: Array<{ matchId: string; hero_name: string | null; won: boolean }>
   redisGet: Record<string, string | null>
   redisDelCalls: string[]
@@ -63,7 +62,6 @@ export const state: {
 } = {
   sessionMatch: null,
   olderMatch: null,
-  recentMatch: null,
   recentList: [],
   redisGet: {},
   redisDelCalls: [],
@@ -90,7 +88,6 @@ export const state: {
 export function resetState() {
   state.sessionMatch = null
   state.olderMatch = null
-  state.recentMatch = null
   state.recentList = []
   state.redisGet = {}
   state.redisDelCalls = []
@@ -115,13 +112,11 @@ export function resetState() {
 }
 
 // Supabase chainable mock. Three query shapes need to be distinguished:
-//   - findSessionMatch in-window:        uses .gte, not .not    → state.sessionMatch
-//   - findSessionMatch fallback:         no .gte, no .not       → state.olderMatch
-//   - findMostRecentResolvedMatch:       uses .not('won', ...)  → state.recentMatch
+//   - findSessionMatch in-window:        uses .gte, ends with .single()  → state.sessionMatch
+//   - findSessionMatch fallback:         no .gte, ends with .single()    → state.olderMatch
+//   - findResolvedMatchesInSession:      uses .limit(), awaited directly → state.recentList
 function createSupabaseFromBuilder() {
   let hasGte = false
-  let hasNot = false
-  let neqMatchId: string | null = null
   let mode: 'select' | 'update' | null = null
   let updateValues: Record<string, unknown> = {}
   let updateWhereId: string | null = null
@@ -149,41 +144,17 @@ function createSupabaseFromBuilder() {
       return builder
     },
     is: () => builder,
-    not: () => {
-      hasNot = true
-      return builder
-    },
-    neq: (col: string, val: string) => {
-      if (col === 'matchId') neqMatchId = val
-      return builder
-    },
+    not: () => builder,
+    neq: () => builder,
     order: () => builder,
-    // `.limit()` is the terminal call for list queries (e.g. !recent) which
-    // await the chain directly. It's also followed by `.single()` for
-    // findMostRecentResolvedMatch. Return a hybrid object that's both
-    // thenable (resolving to a list) and exposes `.single()` for the row case.
+    // `.limit()` is the terminal call for list queries (e.g. !recent, the
+    // won/lost fallback). The result is awaited directly.
     limit: () => ({
       // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock
       then: (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
         Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
-      single: async () => {
-        if (state.recentMatch && state.recentMatch.matchId === neqMatchId) {
-          return { data: null, error: { message: 'excluded' } }
-        }
-        return state.recentMatch
-          ? { data: state.recentMatch, error: null }
-          : { data: null, error: { message: 'not found' } }
-      },
     }),
     single: async () => {
-      if (hasNot) {
-        if (state.recentMatch && state.recentMatch.matchId === neqMatchId) {
-          return { data: null, error: { message: 'excluded' } }
-        }
-        return state.recentMatch
-          ? { data: state.recentMatch, error: null }
-          : { data: null, error: { message: 'not found' } }
-      }
       if (hasGte) {
         return state.sessionMatch
           ? { data: state.sessionMatch, error: null }
