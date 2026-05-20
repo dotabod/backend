@@ -1,22 +1,55 @@
 import { logger } from './logger'
 
-const INTERVAL_MS = 30_000
+type HeartbeatStatus = { up: boolean; msg?: string }
 
-export function startHeartbeat(): void {
-  const pushUrl = process.env.KUMA_PUSH_URL
-  if (!pushUrl) {
-    logger.warn('KUMA_PUSH_URL not set, uptime heartbeat disabled')
+type HeartbeatOptions = {
+  url?: string
+  getStatus?: () => HeartbeatStatus
+  intervalMs?: number
+  debounceMs?: number
+  name?: string
+}
+
+export function startHeartbeat(opts: HeartbeatOptions = {}): void {
+  const {
+    url = process.env.KUMA_PUSH_URL,
+    getStatus = () => ({ up: true, msg: 'OK' }),
+    intervalMs = 30_000,
+    debounceMs = 0,
+    name = 'uptime heartbeat',
+  } = opts
+
+  if (!url) {
+    logger.warn(`${name}: push URL not set, heartbeat disabled`)
     return
   }
 
+  let downSince: number | null = null
+
   const ping = async () => {
+    const { up, msg } = getStatus()
+
+    // Debounce: only report down once continuously down for debounceMs
+    let report = up
+    if (up) {
+      downSince = null
+    } else {
+      const now = Date.now()
+      if (downSince === null) downSince = now
+      report = now - downSince < debounceMs
+    }
+
+    const status = report ? 'up' : 'down'
+    const message = msg ?? (report ? 'OK' : 'down')
     try {
-      await fetch(`${pushUrl}?status=up&msg=OK`, { signal: AbortSignal.timeout(10_000) })
+      await fetch(`${url}?status=${status}&msg=${encodeURIComponent(message)}`, {
+        signal: AbortSignal.timeout(10_000),
+      })
     } catch (e) {
-      logger.error('Failed to send uptime heartbeat', e)
+      logger.error(`${name}: failed to send heartbeat`, e)
     }
   }
 
   void ping()
-  setInterval(() => void ping(), INTERVAL_MS)
+  setInterval(() => void ping(), intervalMs)
 }

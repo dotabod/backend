@@ -13,6 +13,12 @@ type CloseCodeDescription = {
   [code: number]: string
 }
 
+let eventsubConnected = false
+
+export function isEventsubConnected(): boolean {
+  return eventsubConnected
+}
+
 export class EventsubSocket extends EventEmitter {
   private counter = 0
   private readonly closeCodes: CloseCodeDescription = {
@@ -71,6 +77,7 @@ export class EventsubSocket extends EventEmitter {
   }
 
   private handleClose(close: WebSocket.CloseEvent, isReconnect: boolean): void {
+    eventsubConnected = false
     this.emit('close', close)
     console.debug(
       `Connection Closed: ${close.code} Reason - ${this.closeCodes[close.code] || 'Unknown'}`,
@@ -145,6 +152,7 @@ export class EventsubSocket extends EventEmitter {
     console.debug(`This is Socket ID ${id}`)
     console.debug(`Silence timeout set to ${keepalive_timeout_seconds} seconds`)
 
+    eventsubConnected = true
     if (isReconnect) {
       this.emit('reconnected', id)
     } else {
@@ -175,6 +183,7 @@ export class EventsubSocket extends EventEmitter {
     }
     clearTimeout(this.silenceHandler)
     this.silenceHandler = setTimeout(() => {
+      eventsubConnected = false
       this.emit('session_silenced')
       if (this.silenceReconnect) {
         this.close()

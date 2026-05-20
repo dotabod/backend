@@ -5,6 +5,7 @@ import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import { handleNewUser } from '../handleNewUser'
 import { stopUserSubscriptions } from '../twitch/lib/revokeEvent'
 import { isAuthenticated } from './authUtils'
+import { eventsIOConnected } from './socketUtils'
 
 if (!process.env.TWITCH_CLIENT_ID) {
   throw new Error('TWITCH_CLIENT_ID is not defined')
@@ -39,9 +40,13 @@ export const setupWebhooks = () => {
 
   webhookApp.use(bodyParserErrorHandler() as unknown as ErrorRequestHandler)
 
+  // Always 200 so the existing HTTP monitor stays a liveness signal; the body's
+  // eventsConnected reflects whether twitch-chat is connected and forwarding events,
+  // which a separate keyword monitor checks for "events flowing".
   webhookApp.get('/webhook', (_req, res) => {
     res.status(200).json({
       status: 'ok',
+      eventsConnected: eventsIOConnected,
     })
   })
 

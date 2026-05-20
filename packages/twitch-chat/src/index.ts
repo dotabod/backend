@@ -15,6 +15,7 @@ import { use } from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 import { initializeSocket } from './conduitSetup'
 import { clearDisableCache, DISABLE_CACHE_EXPIRY, disableUserCache } from './disableCache'
+import { isEventsubConnected } from './eventSubSocket'
 import { sendTwitchChatMessage } from './handleChat'
 import { io, setupSocketServer } from './utils/socketManager'
 
@@ -55,6 +56,17 @@ async function startup() {
 
     // Report liveness to the Uptime Kuma push monitor
     startHeartbeat()
+
+    // Report whether the bot's Twitch EventSub connection is live (separate monitor)
+    startHeartbeat({
+      url: process.env.KUMA_PUSH_URL_EVENTSUB,
+      name: 'eventsub heartbeat',
+      debounceMs: 90_000,
+      getStatus: () => ({
+        up: isEventsubConnected(),
+        msg: isEventsubConnected() ? 'connected' : 'eventsub disconnected',
+      }),
+    })
 
     // Initialize Twitch EventSub connection
     try {

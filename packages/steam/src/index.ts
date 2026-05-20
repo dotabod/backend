@@ -19,6 +19,17 @@ const socketIoServer = getSocketIoServer()
 // Report liveness to the Uptime Kuma push monitor
 startHeartbeat()
 
+// Report whether the connection to the Steam/Dota game coordinator is live (separate monitor)
+startHeartbeat({
+  url: process.env.KUMA_PUSH_URL_GC,
+  name: 'steam gc heartbeat',
+  debounceMs: 90_000,
+  getStatus: () => ({
+    up: isConnectedToSteam,
+    msg: isConnectedToSteam ? 'connected' : 'steam gc disconnected',
+  }),
+})
+
 const dota = Dota.getInstance()
 dota.dota2.on('ready', () => {
   logger.info('[SERVER] Connected to dota game server')
