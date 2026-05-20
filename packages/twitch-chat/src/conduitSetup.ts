@@ -270,12 +270,11 @@ async function initializeSocket() {
       }
     })
 
-    // Track last revocation time for each user to implement debouncing
-    const lastRevocationTime = new Map<string, number>()
-    const DEBOUNCE_TIME = 3000 // 3 seconds debounce
-
-    // Track subscription types received per user during debounce period
-    const userSubscriptionTypes = new Map<string, Set<string>>()
+    const DEBOUNCE_TIME = 3000
+    const userRevocationState = new Map<
+      string,
+      { windowStart: number; types: Set<string>; hasEmitted: boolean }
+    >()
 
     mySocket.on(
       'revocation',
@@ -330,49 +329,34 @@ async function initializeSocket() {
         }
 
         const now = Date.now()
-        const lastTime = lastRevocationTime.get(userId) || 0
         const subscriptionType = payload.subscription.type
 
-        // Check if we're still within a debounce period for this user
-        if (now - lastTime <= DEBOUNCE_TIME) {
-          // Add this subscription type to the set for this user
-          if (!userSubscriptionTypes.has(userId)) {
-            userSubscriptionTypes.set(userId, new Set())
-          }
-          userSubscriptionTypes.get(userId)?.add(subscriptionType)
+        let state = userRevocationState.get(userId)
+        if (!state || now - state.windowStart > DEBOUNCE_TIME) {
+          state = { windowStart: now, types: new Set([subscriptionType]), hasEmitted: false }
+          userRevocationState.set(userId, state)
         } else {
-          // Outside debounce period, reset tracking for this user
-          userSubscriptionTypes.set(userId, new Set([subscriptionType]))
-          lastRevocationTime.set(userId, now)
+          state.types.add(subscriptionType)
         }
 
-        // Only emit if either:
-        // 1. We have multiple subscription types within the debounce period, or
-        // 2. The subscription type is not 'channel.chat.message'
-        const subscriptionTypes = userSubscriptionTypes.get(userId) || new Set()
-        const hasMultipleTypes = subscriptionTypes.size > 1
-        const isOnlyChatMessage =
-          subscriptionTypes.size === 1 && subscriptionTypes.has('channel.chat.message')
-
-        if (isOnlyChatMessage) {
-          // Bot banned
-          botStatus.isBanned = true
-          logger.info('Bot was banned by Twitch! isOnlyChatMessage')
+        if (state.hasEmitted) {
+          return
         }
 
-        if (hasMultipleTypes || !isOnlyChatMessage) {
+        const isOnlyChatMessage = state.types.size === 1 && state.types.has('channel.chat.message')
+
+        if (!isOnlyChatMessage) {
           logger.info('Revocation with multiple types or non-chat type', {
             userId,
-            types: Array.from(subscriptionTypes),
+            types: Array.from(state.types),
             payload,
           })
           twitchEvent.emit('revoke', userId)
         } else {
-          logger.info('Skipping revoke emit for single chat.message revocation', {
-            userId,
-            type: subscriptionType,
-          })
+          botStatus.isBanned = true
+          logger.info('Bot was banned by Twitch! isOnlyChatMessage')
         }
+        state.hasEmitted = true
       },
     )
 
