@@ -80,7 +80,7 @@ def _resolve_available_download_url(qualities, token):
     }
     for download_url, quality in candidates:
         try:
-            response = requests.get(download_url, headers=headers, stream=True)
+            response = requests.get(download_url, headers=headers, stream=True, timeout=10)
             response.close()
             if response.status_code == 404:
                 logger.warning(
