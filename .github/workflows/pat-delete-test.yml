@@ -1,0 +1,33 @@
+name: PAT delete test
+
+# Temporary: verifies secrets.GHA_PAT can delete a GHCR package version
+# (i.e. carries delete:packages). Deletes exactly the version id passed in.
+# Remove this workflow after the one-off check.
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Container package name'
+        default: dota
+      version_id:
+        description: 'Exact version id to delete (must be a safe orphan)'
+        required: true
+
+permissions:
+  packages: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Attempt delete with GHA_PAT
+        env:
+          GH_TOKEN: ${{ secrets.GHA_PAT }}
+        run: |
+          set -x
+          gh api -X DELETE \
+            "/orgs/${{ github.repository_owner }}/packages/container/${{ inputs.package }}/versions/${{ inputs.version_id }}" \
+            && echo "RESULT=DELETE_OK (GHA_PAT has delete:packages)" \
+            || { echo "RESULT=DELETE_FAILED (likely missing delete:packages)"; exit 1; }
