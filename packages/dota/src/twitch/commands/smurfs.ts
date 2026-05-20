@@ -1,9 +1,8 @@
 import { t } from 'i18next'
 
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
+import { DBSettings } from '../../settings'
 import { smurfs } from '../../steam/smurfs'
-import { is8500Plus } from '../../utils/index'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
@@ -11,7 +10,7 @@ commandHandler.registerCommand('smurfs', {
   aliases: ['lifetimes', 'totals', 'games', 'smurf'],
   onlyOnline: true,
   dbkey: DBSettings.commandSmurfs,
-  handler: async (message, args) => {
+  handler: async (message) => {
     const {
       channel: { client },
     } = message
@@ -32,14 +31,9 @@ commandHandler.registerCommand('smurfs', {
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
 
-    const append =
-      !ENABLE_SPECTATE_FRIEND_GAME || is8500Plus(client)
-        ? ` · ${t('matchDataValveDisabled', { emote: 'PoroSad', lng: client.locale })}`
-        : ''
-
     smurfs(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {
-        chatClient.say(message.channel.name, desc + append, message.user.messageId)
+        chatClient.say(message.channel.name, desc, message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(
