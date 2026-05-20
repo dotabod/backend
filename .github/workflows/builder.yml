@@ -19,118 +19,51 @@ on:
       - '.github/workflows/builder.yml' # The build workflow itself (affects all images)
 
 jobs:
-  # Dota job remains separate because it has extra change checks
-  dota:
-    runs-on: ubuntu-latest
-    environment: prod
-    permissions:
-      packages: write
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 2
-
-      - name: Check for changes in dota service
-        id: dota-changes
-        run: |
-          git diff --name-only HEAD^ HEAD | grep -q "^packages/profanity-filter/" && echo "profanity_filter_changed=true" >> $GITHUB_OUTPUT || echo "profanity_filter_changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^package.json\|^bun.lock" && echo "deps_changed=true" >> $GITHUB_OUTPUT || echo "deps_changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^packages/dota/" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^packages/shared-utils/" && echo "shared_utils_changed=true" >> $GITHUB_OUTPUT || echo "shared_utils_changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^packages/Dockerfile.bun" && echo "dockerfile_changed=true" >> $GITHUB_OUTPUT || echo "dockerfile_changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^docker-compose.yml" && echo "compose_changed=true" >> $GITHUB_OUTPUT || echo "compose_changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^.github/workflows/builder.yml" && echo "workflow_changed=true" >> $GITHUB_OUTPUT || echo "workflow_changed=false" >> $GITHUB_OUTPUT
-
-      - name: Extract branch name
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' || steps.dota-changes.outputs.deps_changed == 'true' || steps.dota-changes.outputs.profanity_filter_changed == 'true' || steps.dota-changes.outputs.shared_utils_changed == 'true' || steps.dota-changes.outputs.workflow_changed == 'true' }}
-        shell: bash
-        run: |
-          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-          # Sanitize branch name for Docker tag (replace '/' with '-')
-          echo "DOCKER_TAG=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
-          # Immutable per-commit tag + OCI label metadata
-          echo "GIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
-
-      - name: Set up Docker Buildx
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' || steps.dota-changes.outputs.deps_changed == 'true' || steps.dota-changes.outputs.profanity_filter_changed == 'true' || steps.dota-changes.outputs.shared_utils_changed == 'true' || steps.dota-changes.outputs.workflow_changed == 'true' }}
-        uses: docker/setup-buildx-action@v4
-        with:
-          driver-opts: |
-            network=host
-            image=moby/buildkit:latest
-          buildkitd-flags: --debug
-
-      - name: Login to ghcr
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' || steps.dota-changes.outputs.deps_changed == 'true' || steps.dota-changes.outputs.profanity_filter_changed == 'true' || steps.dota-changes.outputs.shared_utils_changed == 'true' || steps.dota-changes.outputs.workflow_changed == 'true' }}
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHA_PAT }}
-
-      - name: Build and push
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' || steps.dota-changes.outputs.deps_changed == 'true' || steps.dota-changes.outputs.profanity_filter_changed == 'true' || steps.dota-changes.outputs.shared_utils_changed == 'true' || steps.dota-changes.outputs.workflow_changed == 'true' }}
-        uses: docker/bake-action@v7
-        with:
-          push: true
-          provenance: false
-          targets: dota
-          set: |
-            *.platform=linux/arm64
-            dota.tags=ghcr.io/${{ github.repository_owner }}/dota:${{ env.DOCKER_TAG }}
-            dota.tags+=ghcr.io/${{ github.repository_owner }}/dota:sha-${{ env.GIT_SHA }}
-            *.labels.org.opencontainers.image.revision=${{ github.sha }}
-            *.labels.org.opencontainers.image.created=${{ env.BUILD_DATE }}
-            *.labels.org.opencontainers.image.version=${{ env.DOCKER_TAG }}
-            *.cache-from=
-            *.cache-to=
-
-  # Combined job for twitch-chat, steam, and twitch-events using a matrix
-  services:
+  build:
     runs-on: ubuntu-latest
     environment: prod
     permissions:
       packages: write
     strategy:
+      fail-fast: false
       matrix:
         include:
+          - service: dota
+            paths: '^packages/(dota|profanity-filter|shared-utils)/|^packages/Dockerfile\.bun|^docker-compose\.yml|^package\.json|^bun\.lock|^\.github/workflows/builder\.yml'
           - service: twitch-chat
-            changed_path: "^packages/twitch-chat/"
-            dockerfile: "packages/Dockerfile.bun"
+            paths: '^packages/(twitch-chat|shared-utils)/|^packages/Dockerfile\.bun|^docker-compose\.yml|^\.github/workflows/builder\.yml'
           - service: steam
-            changed_path: "^packages/steam/"
-            dockerfile: "packages/Dockerfile.bun"
+            paths: '^packages/(steam|shared-utils)/|^packages/Dockerfile\.bun|^docker-compose\.yml|^\.github/workflows/builder\.yml'
           - service: twitch-events
-            changed_path: "^packages/twitch-events/"
-            dockerfile: "packages/Dockerfile.bun"
+            paths: '^packages/(twitch-events|shared-utils)/|^packages/Dockerfile\.bun|^docker-compose\.yml|^\.github/workflows/builder\.yml'
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 2
 
-      - name: Check for changes in ${{ matrix.service }} service
+      - name: Check for relevant changes
         id: changes
         run: |
-          git diff --name-only HEAD^ HEAD | grep -q "${{ matrix.changed_path }}" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^packages/shared-utils/" && echo "shared_utils_changed=true" >> $GITHUB_OUTPUT || echo "shared_utils_changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^${{ matrix.dockerfile }}" && echo "dockerfile_changed=true" >> $GITHUB_OUTPUT || echo "dockerfile_changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^docker-compose.yml" && echo "compose_changed=true" >> $GITHUB_OUTPUT || echo "compose_changed=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD | grep -q "^.github/workflows/builder.yml" && echo "workflow_changed=true" >> $GITHUB_OUTPUT || echo "workflow_changed=false" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || \
+             git diff --name-only HEAD^ HEAD | grep -qE "${{ matrix.paths }}"; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Extract branch name
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.shared_utils_changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' || steps.changes.outputs.workflow_changed == 'true' }}
+        if: steps.changes.outputs.should_build == 'true'
         shell: bash
         run: |
-          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
           # Sanitize branch name for Docker tag (replace '/' with '-')
-          echo "DOCKER_TAG=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
+          echo "DOCKER_TAG=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> "$GITHUB_ENV"
           # Immutable per-commit tag + OCI label metadata
-          echo "GIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
+          echo "GIT_SHA=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+          echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.shared_utils_changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' || steps.changes.outputs.workflow_changed == 'true' }}
+        if: steps.changes.outputs.should_build == 'true'
         uses: docker/setup-buildx-action@v4
         with:
           driver-opts: |
@@ -139,7 +72,7 @@ jobs:
           buildkitd-flags: --debug
 
       - name: Login to ghcr
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.shared_utils_changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' || steps.changes.outputs.workflow_changed == 'true' }}
+        if: steps.changes.outputs.should_build == 'true'
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -147,7 +80,7 @@ jobs:
           password: ${{ secrets.GHA_PAT }}
 
       - name: Build and push
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.shared_utils_changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' || steps.changes.outputs.workflow_changed == 'true' }}
+        if: steps.changes.outputs.should_build == 'true'
         uses: docker/bake-action@v7
         with:
           push: true
