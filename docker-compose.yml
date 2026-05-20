@@ -28,7 +28,10 @@ services:
       - NEW_RELIC_APP_NAME=twitch-chat
       - NEW_RELIC_NATIVE_METRICS_ENABLED=false
       - NEW_RELIC_ENABLED
-      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      # Host-side newrelic-infra+fluent-bit already forwards every container's
+      # stdout to NR. Disabling the in-app agent's forwarder avoids 2x ingest
+      # (each application log line was hitting NR via both paths).
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED=false
       - NEW_RELIC_LOG=stdout
       - NEW_RELIC_LICENSE_KEY
       - DATABASE_URL
@@ -62,7 +65,10 @@ services:
       - NEW_RELIC_APP_NAME=steam
       - NEW_RELIC_NATIVE_METRICS_ENABLED=false
       - NEW_RELIC_ENABLED
-      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      # Host-side newrelic-infra+fluent-bit already forwards every container's
+      # stdout to NR. Disabling the in-app agent's forwarder avoids 2x ingest
+      # (each application log line was hitting NR via both paths).
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED=false
       - NEW_RELIC_LOG=stdout
       - NEW_RELIC_LICENSE_KEY
       - MONGO_URL
@@ -95,7 +101,10 @@ services:
       - NEW_RELIC_APP_NAME=twitch-events
       - NEW_RELIC_NATIVE_METRICS_ENABLED=false
       - NEW_RELIC_ENABLED
-      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      # Host-side newrelic-infra+fluent-bit already forwards every container's
+      # stdout to NR. Disabling the in-app agent's forwarder avoids 2x ingest
+      # (each application log line was hitting NR via both paths).
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED=false
       - NEW_RELIC_LOG=stdout
       - NEW_RELIC_LICENSE_KEY
       - DATABASE_URL
@@ -146,7 +155,10 @@ services:
       - NEW_RELIC_APP_NAME=dota
       - NEW_RELIC_NATIVE_METRICS_ENABLED=false
       - NEW_RELIC_ENABLED
-      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
+      # Host-side newrelic-infra+fluent-bit already forwards every container's
+      # stdout to NR. Disabling the in-app agent's forwarder avoids 2x ingest
+      # (each application log line was hitting NR via both paths).
+      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED=false
       - NEW_RELIC_LOG=stdout
       - NEW_RELIC_LICENSE_KEY
       - DOTABOD_ENV
