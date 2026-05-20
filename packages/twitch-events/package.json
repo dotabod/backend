@@ -30,11 +30,6 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
-    "@types/node": "^22.10.2",
-    "lint-staged": "^15.3.0",
-    "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8"
+    "@types/express": "^5.0.0"
   }
 }

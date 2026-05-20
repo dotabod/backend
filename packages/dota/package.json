@@ -59,14 +59,10 @@
     "@testing-library/dom": "^10.4.0",
     "@types/body-parser": "^1.19.5",
     "@types/express": "^5.0.0",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/lodash.isequal": "^4.5.8",
     "@types/memoizee": "^0.4.11",
-    "@types/node": "^22.10.2",
     "@types/retry": "^0.12.5",
-    "@types/steam": "^0.0.34",
-    "lint-staged": "^15.3.0",
-    "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8"
+    "@types/steam": "^0.0.34"
   }
 }

@@ -27,7 +27,6 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
     "@types/bun": "latest",
-    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^22.10.2",
     "lefthook": "^1.11.6",
     "lint-staged": "^15.3.0",

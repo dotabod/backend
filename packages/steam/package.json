@@ -21,7 +21,6 @@
     "@types/bytebuffer": "^5.0.49",
     "@types/long": "^5.0.0",
     "@types/memoizee": "^0.4.11",
-    "@types/node": "^22.10.2",
     "@types/retry": "^0.12.5",
     "@types/steam": "^0.0.32"
   },
