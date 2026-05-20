@@ -1,6 +1,7 @@
 process.on('SIGTERM', () => process.exit(0))
 process.on('SIGINT', () => process.exit(0))
 
+import { startHeartbeat } from '@dotabod/shared-utils'
 import type { Socket } from 'socket.io'
 import { initSpectatorProtobuff } from './initSpectatorProtobuff'
 import { getSocketIoServer } from './socketServer'
@@ -14,6 +15,10 @@ let isConnectedToSteam = false
 initSpectatorProtobuff()
 
 const socketIoServer = getSocketIoServer()
+
+// Report liveness to the Uptime Kuma push monitor
+startHeartbeat()
+
 const dota = Dota.getInstance()
 dota.dota2.on('ready', () => {
   logger.info('[SERVER] Connected to dota game server')

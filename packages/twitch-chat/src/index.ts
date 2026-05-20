@@ -7,6 +7,7 @@ import {
   checkBotStatus,
   getTwitchAPI,
   logger,
+  startHeartbeat,
   supabase,
   trackDisableReason,
 } from '@dotabod/shared-utils'
@@ -51,6 +52,9 @@ async function startup() {
 
     // Initialize socket server
     setupSocketServer()
+
+    // Report liveness to the Uptime Kuma push monitor
+    startHeartbeat()
 
     // Initialize Twitch EventSub connection
     try {

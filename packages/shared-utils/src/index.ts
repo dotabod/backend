@@ -4,7 +4,8 @@ export type { Database, Tables } from './db/supabase-types'
 
 // Disable reason tracking
 export * from './disableReason/index'
-
+// Uptime monitoring
+export { startHeartbeat } from './heartbeat'
 // Logger
 export { logger } from './logger'
 
