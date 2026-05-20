@@ -36,6 +36,7 @@ import { say } from '../../say'
 import { server } from '../../server'
 import eventHandler from '../EventHandler'
 import { minimapParser } from '../minimap/parser'
+import { selectNewEvents } from './selectNewEvents'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './sendExtensionPubSubBroadcastMessageIfChanged'
 
 // Define a type for the global timeouts
@@ -817,15 +818,10 @@ async function _showProbability(dotaClient: GSIHandlerType) {
 }
 
 function handleNewEvents(data: Packet, dotaClient: GSIHandlerType) {
-  // Create a set for faster lookup of existing events
-  const existingEventsSet = new Set(dotaClient.events.map((e) => `${e.game_time}-${e.event_type}`))
+  // Deduped against already-seen events by `${game_time}-${event_type}`.
+  const newEvents = selectNewEvents(dotaClient.events, data.events)
 
-  // Filter new events
-  const newEvents = data.events?.filter(
-    ({ game_time, event_type }) => !existingEventsSet.has(`${game_time}-${event_type}`),
-  )
-
-  if (newEvents?.length) {
+  if (newEvents.length) {
     // Merge new and existing events
     dotaClient.events = [...dotaClient.events, ...newEvents]
 
