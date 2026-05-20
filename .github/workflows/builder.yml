@@ -72,7 +72,7 @@ jobs:
           provenance: false
           targets: dota
           set: |
-            *.platform=linux/arm64,linux/amd64/v3
+            *.platform=linux/arm64
             dota.tags=ghcr.io/${{ github.repository_owner }}/dota:${{ env.DOCKER_TAG }}
             *.cache-from=
             *.cache-to=
@@ -141,7 +141,7 @@ jobs:
           provenance: false
           targets: ${{ matrix.service }}
           set: |
-            *.platform=linux/arm64,linux/amd64/v3
+            *.platform=linux/arm64
             ${{ matrix.service }}.tags=ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ env.DOCKER_TAG }}
             *.cache-from=
             *.cache-to=
