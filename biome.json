@@ -26,7 +26,6 @@
       "!**/build",
       "!**/config.js",
       "!**/volumes",
-      "!**/newrelic_agent.log",
       "!**/*.key"
     ]
   },

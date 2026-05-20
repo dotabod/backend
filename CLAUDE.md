@@ -35,6 +35,6 @@ ssh oracle 'sudo cat /var/lib/docker/volumes/<uuid>-profiles/_data/CPU.*.cpuprof
 
 Open in Chrome DevTools → Performance → Load profile. Source maps resolve frames to `src/...`. Set `CPU_PROF=` back to empty + Restart when done.
 
-**Required env on every NR-instrumented service:** `NEW_RELIC_NATIVE_METRICS_ENABLED=false` — NR's native-metrics .node binary is V8-linked and crashes Bun (JSC).
+**Monitoring:** Services run with no in-container New Relic APM agent. Observability comes from the Oracle host `newrelic-infra` agent: `nri-docker` emits `ContainerSample` (CPU/mem/restart, faceted by `label.coolify.resourceName`) and host fluent-bit forwards container logs to NR with a `container_name` attribute.
 
 **Rollback to a prior image:** look up a previous master digest with `gh api "/orgs/dotabod/packages/container/<service>/versions?per_page=5" --jq '.[] | select(.metadata.container.tags == ["master"]) | .name'`, then paste `sha256-<digest>` (dash, not colon) in Coolify's image tag/hash field and Redeploy.

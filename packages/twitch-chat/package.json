@@ -23,7 +23,6 @@
     "@twurple/eventsub-base": "^7.2.1",
     "@twurple/eventsub-ws": "^7.2.1",
     "socket.io": "^4.8.1",
-    "newrelic": "^12.0.0",
     "winston": "^3.17.0"
   },
   "devDependencies": {

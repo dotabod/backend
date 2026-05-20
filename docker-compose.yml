@@ -10,15 +10,6 @@ services:
     container_name: twitch-chat
     image: "ghcr.io/dotabod/twitch-chat:master"
     restart: on-failure:5
-    # Use the local driver so this container's stdout is NOT picked up by
-    # newrelic-infra's host-side fluent-bit (which tails json-file logs at
-    # /var/lib/docker/containers/*/*.log). The in-app NR APM agent forwards
-    # logs to NR with entity.guid, keeping the APM↔Logs UI linkage intact.
-    logging:
-      driver: local
-      options:
-        max-size: "10m"
-        max-file: "3"
     build:
       context: .
       dockerfile: ./packages/Dockerfile.bun
@@ -32,14 +23,6 @@ services:
           - "ghcr.io/dotabod/cache-twitch-chat:master"
     hostname: twitch-chat
     environment:
-      - NEW_RELIC_NO_CONFIG_FILE
-      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
-      - NEW_RELIC_APP_NAME=twitch-chat
-      - NEW_RELIC_NATIVE_METRICS_ENABLED=false
-      - NEW_RELIC_ENABLED
-      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
-      - NEW_RELIC_LOG=stdout
-      - NEW_RELIC_LICENSE_KEY
       - DATABASE_URL
       - DB_SECRET
       - DB_URL
@@ -53,11 +36,6 @@ services:
     container_name: steam
     image: "ghcr.io/dotabod/steam:master"
     restart: on-failure:5
-    logging:
-      driver: local
-      options:
-        max-size: "10m"
-        max-file: "3"
     build:
       context: .
       dockerfile: ./packages/Dockerfile.bun
@@ -71,14 +49,6 @@ services:
           - "ghcr.io/dotabod/cache-steam:master"
     hostname: steam
     environment:
-      - NEW_RELIC_NO_CONFIG_FILE
-      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
-      - NEW_RELIC_APP_NAME=steam
-      - NEW_RELIC_NATIVE_METRICS_ENABLED=false
-      - NEW_RELIC_ENABLED
-      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
-      - NEW_RELIC_LOG=stdout
-      - NEW_RELIC_LICENSE_KEY
       - MONGO_URL
       - STEAM_PASS
       - STEAM_USER
@@ -91,11 +61,6 @@ services:
     container_name: twitch-events
     image: "ghcr.io/dotabod/twitch-events:master"
     restart: on-failure:5
-    logging:
-      driver: local
-      options:
-        max-size: "10m"
-        max-file: "3"
     build:
       context: .
       dockerfile: ./packages/Dockerfile.bun
@@ -109,14 +74,6 @@ services:
           - "ghcr.io/dotabod/cache-twitch-events:master"
     hostname: twitch-events
     environment:
-      - NEW_RELIC_NO_CONFIG_FILE
-      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
-      - NEW_RELIC_APP_NAME=twitch-events
-      - NEW_RELIC_NATIVE_METRICS_ENABLED=false
-      - NEW_RELIC_ENABLED
-      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
-      - NEW_RELIC_LOG=stdout
-      - NEW_RELIC_LICENSE_KEY
       - DATABASE_URL
       - DB_SECRET
       - DB_URL
@@ -135,11 +92,6 @@ services:
     container_name: dota
     image: "ghcr.io/dotabod/dota:master"
     restart: on-failure:5
-    logging:
-      driver: local
-      options:
-        max-size: "10m"
-        max-file: "3"
     depends_on:
       - redis
       - steam
@@ -165,14 +117,6 @@ services:
       - DB_SECRET
       - DB_URL
       - MONGO_URL
-      - NEW_RELIC_NO_CONFIG_FILE
-      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
-      - NEW_RELIC_APP_NAME=dota
-      - NEW_RELIC_NATIVE_METRICS_ENABLED=false
-      - NEW_RELIC_ENABLED
-      - NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED
-      - NEW_RELIC_LOG=stdout
-      - NEW_RELIC_LICENSE_KEY
       - DOTABOD_ENV
       - STEAM_WEB_API
       - STRATZ_TOKEN
