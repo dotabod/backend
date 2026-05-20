@@ -44,6 +44,18 @@ RUN bun run build
 
 #-----------------------
 
+# Runtime-only deps: drop devDependencies (biome, @types, etc.) so the prod
+# image ships only what `bun dist/index.js` needs. Reuses base's warm bun
+# cache, so this is a fast relink, not a re-download.
+# typescript is then pruned explicitly: it's pulled only as an *optional*
+# type-time peer of i18next/elysia and is never imported at runtime.
+FROM base AS prod-deps
+RUN rm -rf node_modules \
+  && bun install --production \
+  && rm -rf node_modules/typescript node_modules/.bin/tsc node_modules/.bin/tsserver
+
+#-----------------------
+
 FROM oven/bun:1.3.14-slim AS prod
 
 ARG BUILD_CONTEXT
@@ -55,7 +67,7 @@ LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
     org.opencontainers.image.licenses="AGPL-3.0"
 
 WORKDIR /app
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=prod-deps /app/node_modules ./node_modules
 
 COPY --from=builder /app/$BUILD_CONTEXT/dist $BUILD_CONTEXT/dist/
 COPY --from=builder /app/$BUILD_CONTEXT/locales $BUILD_CONTEXT/locales/

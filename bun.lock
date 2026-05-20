@@ -87,9 +87,6 @@
         "@types/leo-profanity": "^1.5.4",
         "@types/naughty-words": "^1.2.3",
       },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
     },
     "packages/shared-utils": {
       "name": "@dotabod/shared-utils",
@@ -102,9 +99,6 @@
         "i18next": "^22.5.1",
         "socket.io-client": "^4.7.2",
         "winston": "^3.17.0",
-      },
-      "peerDependencies": {
-        "typescript": "^5.8",
       },
     },
     "packages/steam": {

@@ -8,9 +8,6 @@
     }
   },
   "type": "module",
-  "peerDependencies": {
-    "typescript": "^5.8"
-  },
   "scripts": {
     "build:yarn": "tsc --build --verbose",
     "build": "bun build --target=bun --outfile=./dist/index.js --outdir=./dist --production --sourcemap=external --packages=external ./src/index.ts",
