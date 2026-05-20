@@ -13,6 +13,7 @@ export const socketIo = new Server(5015, {
 // the socketio hooks onto the listener http server that it creates
 export const DOTABOD_EVENTS_ROOM = 'twitch-channel-events'
 export let eventsIOConnected = false
+const connectedClients = new Set<string>()
 
 /**
  * Sends the conduit ID to the requesting client
@@ -49,31 +50,16 @@ export const setupSocketIO = () => {
     logger.info('[TWITCHEVENTS] Joining socket to room')
     await socket.join(DOTABOD_EVENTS_ROOM)
 
-    logger.info('[TWITCHEVENTS] eventsIOConnected = true')
+    // Track liveness by connected-client count so a reconnecting client's old
+    // socket disconnecting can't strand the flag false while a new one is live.
+    connectedClients.add(socket.id)
     eventsIOConnected = true
-
-    socket.on('connect_error', (err) => {
-      logger.info(`[TWITCHEVENTS] socket connect_error due to ${err.message}`)
-      eventsIOConnected = false
-    })
+    logger.info('[TWITCHEVENTS] client connected', { clients: connectedClients.size })
 
     socket.on('disconnect', () => {
-      logger.info('[TWITCHEVENTS] Socket disconnected')
-      eventsIOConnected = false
-    })
-
-    socket.on('reconnect', (attemptNumber) => {
-      logger.info(`[TWITCHEVENTS] Socket reconnected on attempt ${attemptNumber}`)
-      eventsIOConnected = true
-    })
-
-    socket.on('reconnect_attempt', (attemptNumber) => {
-      logger.info(`[TWITCHEVENTS] Socket reconnect attempt ${attemptNumber}`)
-    })
-
-    socket.on('reconnect_failed', () => {
-      logger.info('[TWITCHEVENTS] Socket failed to reconnect')
-      eventsIOConnected = false
+      connectedClients.delete(socket.id)
+      eventsIOConnected = connectedClients.size > 0
+      logger.info('[TWITCHEVENTS] Socket disconnected', { clients: connectedClients.size })
     })
 
     // Handle conduit data requests from twitch-chat
