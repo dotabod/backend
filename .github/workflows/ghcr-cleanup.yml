@@ -27,6 +27,7 @@ permissions:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    environment: prod # GHA_PAT lives in the prod environment (same as builder.yml)
     strategy:
       fail-fast: false
       matrix:
