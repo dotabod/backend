@@ -77,6 +77,13 @@ export class EventsubSocket extends EventEmitter {
   }
 
   private handleClose(close: WebSocket.CloseEvent, isReconnect: boolean): void {
+    // Ignore closes from a stale socket (e.g. the old connection shutting down
+    // after a session_reconnect handed off to a new one). Otherwise it clobbers
+    // the live connection's status and can spawn duplicate reconnects.
+    if (close.target !== this.eventsub) {
+      return
+    }
+
     eventsubConnected = false
     this.emit('close', close)
     console.debug(
@@ -181,6 +188,9 @@ export class EventsubSocket extends EventEmitter {
     if (keepalive_timeout_seconds) {
       this.silenceTime = keepalive_timeout_seconds + 1
     }
+    // Any keepalive/notification proves the connection is live — refresh the
+    // flag so a stale close can't leave it stuck false while events still flow.
+    eventsubConnected = true
     clearTimeout(this.silenceHandler)
     this.silenceHandler = setTimeout(() => {
       eventsubConnected = false
