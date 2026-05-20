@@ -39,6 +39,67 @@ def extract_clip_id(url):
     return match.group(1)
 
 
+def _build_download_url(source_url, token):
+    """Sign a rendition's sourceURL with the clip's playback access token."""
+    return f"{source_url}?token={quote(token['value'])}&sig={token['signature']}"
+
+
+def _resolve_available_download_url(qualities, token):
+    """Pick a download URL whose rendition actually exists on the CDN.
+
+    Twitch's videoQualities sometimes advertises a quality (e.g. 1080) whose file
+    was never produced, so CloudFront returns 404. Probe candidates highest->lowest
+    with a tiny Range request and fall back to the token's signed clip_uri (which is
+    guaranteed to exist). Returns (download_url, quality) for the first candidate
+    that does not 404; if every candidate 404s or cannot be probed, returns the
+    highest so the caller's existing error handling still fires.
+    """
+    candidates = []  # (download_url, quality)
+    for q in qualities:
+        source_url = q.get("sourceURL")
+        if source_url and source_url.startswith("http"):
+            candidates.append((_build_download_url(source_url, token), q.get("quality")))
+
+    # Append the token's signed clip_uri as a guaranteed-good fallback.
+    try:
+        clip_uri = json.loads(token["value"]).get("clip_uri")
+        if clip_uri and clip_uri.startswith("http"):
+            fallback_url = _build_download_url(clip_uri, token)
+            if all(fallback_url != url for url, _ in candidates):
+                m = re.search(r"/(\d+)/index\.mp4", clip_uri)
+                candidates.append((fallback_url, m.group(1) if m else None))
+    except (ValueError, KeyError, TypeError) as e:
+        logger.warning(f"Could not parse clip_uri from token value: {e}")
+
+    if not candidates:
+        raise ValueError("No valid sourceURL or clip_uri available for clip")
+
+    headers = {
+        "Range": "bytes=0-0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    }
+    for download_url, quality in candidates:
+        try:
+            response = requests.get(download_url, headers=headers, stream=True)
+            response.close()
+            if response.status_code == 404:
+                logger.warning(
+                    f"Rendition missing (404) for quality {quality}, trying next candidate"
+                )
+                continue
+            logger.info(
+                f"Resolved available download URL at quality {quality} (status {response.status_code})"
+            )
+            return download_url, quality
+        except requests.RequestException as e:
+            logger.warning(f"Probe failed for quality {quality}: {e}; trying next candidate")
+
+    logger.error(
+        "All candidate renditions returned 404 or failed to probe; using highest as last resort"
+    )
+    return candidates[0]
+
+
 def get_clip_details(url, max_retries=5, retry_delay=2):
     """Get clip details and download URL using Twitch's API."""
     clip_id = extract_clip_id(url)
@@ -119,38 +180,15 @@ def get_clip_details(url, max_retries=5, retry_delay=2):
             available_qualities = [q["quality"] for q in clip_data["videoQualities"]]
             logger.info(f"Available qualities: {available_qualities}")
 
-            # Try to find 1080p quality if available, otherwise use the best available quality
-            best_quality = clip_data["videoQualities"][0]  # Default to highest quality
-            # Always use the highest quality available (which is the first in the list)
-            # The videoQualities array is already sorted by quality in descending order
-            best_quality = clip_data["videoQualities"][0]
-            logger.info(
-                f"Selected highest available quality: {best_quality['quality']}p"
-            )
-
-            logger.info(f"Selected quality: {best_quality['quality']}p")
-
-            # Construct the download URL with signature and token
             token = clip_data["playbackAccessToken"]
-            source_url = best_quality["sourceURL"]
 
-            # Log the sourceURL for debugging
-            logger.debug(f"Source URL from API: {source_url}")
-
-            # Validate that sourceURL is a complete URL
-            if not source_url or not source_url.startswith("http"):
-                logger.error(f"Invalid sourceURL from API: {source_url}")
-                logger.error(
-                    f"Full videoQualities data: {json.dumps(clip_data['videoQualities'], indent=2)}"
-                )
-                raise ValueError(
-                    f"Invalid sourceURL received from Twitch API: {source_url}"
-                )
-
-            # Construct download URL with token and sig parameters (matching Twitch's format)
-            download_url = (
-                f"{source_url}?token={quote(token['value'])}&sig={token['signature']}"
+            # Pick a rendition that actually exists on the CDN. Twitch sometimes
+            # advertises a quality whose file was never produced (CloudFront 404s),
+            # so probe candidates highest->lowest and fall back to the token clip_uri.
+            download_url, selected_quality = _resolve_available_download_url(
+                clip_data["videoQualities"], token
             )
+            logger.info(f"Selected quality: {selected_quality}p")
             logger.debug(f"Constructed download URL: {download_url}")
 
             return {
@@ -162,10 +200,8 @@ def get_clip_details(url, max_retries=5, retry_delay=2):
                 "broadcaster": clip_data.get("broadcaster", {}).get("displayName"),
                 "created_at": clip_data.get("createdAt"),
                 "qualities": clip_data["videoQualities"],
-                "selected_quality": best_quality[
-                    "quality"
-                ],  # Store the selected quality
-                "available_qualities": available_qualities,  # Store all available qualities
+                "selected_quality": selected_quality,  # Actual rendition downloaded
+                "available_qualities": available_qualities,  # All advertised qualities
             }
         except Exception as e:
             last_error = e
