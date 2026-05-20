@@ -19,6 +19,8 @@
   },
   "dependencies": {
     "@dotabod/shared-utils": "workspace:*",
+    "@twurple/api": "7.2.1",
+    "@twurple/auth": "7.2.1",
     "express": "^4.21.2",
     "express-body-parser-error-handler": "^1.0.7",
     "i18next": "^24.2.0",
