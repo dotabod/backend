@@ -24,7 +24,7 @@ os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, 'postgresql_client.log')
 logging.basicConfig(
     force=True,
-    level=logging.INFO,
+    level=getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
@@ -285,7 +285,7 @@ class PostgresClient:
                                     break
                 return result
             else:
-                logger.info(f"No cached result found for clip ID: {clip_id}")
+                logger.debug(f"No cached result found for clip ID: {clip_id}")
                 return None
 
         except Exception as e:
@@ -391,7 +391,7 @@ class PostgresClient:
                         result['clip_id'] = draft_row['clip_id']
                         result['clip_url'] = draft_row['clip_url']
                     return result
-                logger.info(f"No cached result found for match ID: {match_id}")
+                logger.debug(f"No cached result found for match ID: {match_id}")
                 return None
 
         except Exception as e:
@@ -1165,7 +1165,7 @@ class PostgresClient:
                 logger.info(f"Retrieved next pending request: {request['request_id']}")
                 return dict(request)
             else:
-                logger.info("No pending requests in queue")
+                logger.debug("No pending requests in queue")
                 return None
 
         except Exception as e:

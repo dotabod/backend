@@ -17,7 +17,7 @@ os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, 'db_migration.log')
 logging.basicConfig(
     force=True,
-    level=logging.INFO,
+    level=getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),

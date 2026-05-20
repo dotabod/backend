@@ -48,7 +48,7 @@ log_dir.mkdir(exist_ok=True)
 log_file = log_dir / 'stream_processor.log'
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),

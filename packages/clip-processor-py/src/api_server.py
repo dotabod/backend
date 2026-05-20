@@ -30,7 +30,7 @@ os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, 'api_server.log')
 logging.basicConfig(
     force=True,
-    level=logging.INFO,
+    level=getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
@@ -219,7 +219,7 @@ def start_worker_monitor():
     def check_worker_threads():
         global worker_running, worker_threads
 
-        logger.info(f"Checking worker threads status. Current status: running={worker_running}, threads={len(worker_threads)}")
+        logger.debug(f"Checking worker threads status. Current status: running={worker_running}, threads={len(worker_threads)}")
 
         # Check if any threads have died
         alive_threads = [t for t in worker_threads if t.is_alive()]

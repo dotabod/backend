@@ -79,7 +79,7 @@ except ImportError:
     from facet_detection import load_facet_templates, process_team_facets, detect_hero_facet, get_hero_abilities
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO), format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Define expected colors for each hero position
