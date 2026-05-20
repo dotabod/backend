@@ -48,6 +48,9 @@ jobs:
           echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
           # Sanitize branch name for Docker tag (replace '/' with '-')
           echo "DOCKER_TAG=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
+          # Immutable per-commit tag + OCI label metadata
+          echo "GIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         if: ${{ github.event_name == 'workflow_dispatch' || steps.dota-changes.outputs.changed == 'true' || steps.dota-changes.outputs.dockerfile_changed == 'true' || steps.dota-changes.outputs.compose_changed == 'true' || steps.dota-changes.outputs.deps_changed == 'true' || steps.dota-changes.outputs.profanity_filter_changed == 'true' || steps.dota-changes.outputs.shared_utils_changed == 'true' || steps.dota-changes.outputs.workflow_changed == 'true' }}
@@ -76,6 +79,10 @@ jobs:
           set: |
             *.platform=linux/arm64
             dota.tags=ghcr.io/${{ github.repository_owner }}/dota:${{ env.DOCKER_TAG }}
+            dota.tags+=ghcr.io/${{ github.repository_owner }}/dota:sha-${{ env.GIT_SHA }}
+            *.labels.org.opencontainers.image.revision=${{ github.sha }}
+            *.labels.org.opencontainers.image.created=${{ env.BUILD_DATE }}
+            *.labels.org.opencontainers.image.version=${{ env.DOCKER_TAG }}
             *.cache-from=
             *.cache-to=
 
@@ -118,6 +125,9 @@ jobs:
           echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
           # Sanitize branch name for Docker tag (replace '/' with '-')
           echo "DOCKER_TAG=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
+          # Immutable per-commit tag + OCI label metadata
+          echo "GIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         if: ${{ github.event_name == 'workflow_dispatch' || steps.changes.outputs.changed == 'true' || steps.changes.outputs.shared_utils_changed == 'true' || steps.changes.outputs.dockerfile_changed == 'true' || steps.changes.outputs.compose_changed == 'true' || steps.changes.outputs.workflow_changed == 'true' }}
@@ -146,5 +156,9 @@ jobs:
           set: |
             *.platform=linux/arm64
             ${{ matrix.service }}.tags=ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ env.DOCKER_TAG }}
+            ${{ matrix.service }}.tags+=ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:sha-${{ env.GIT_SHA }}
+            *.labels.org.opencontainers.image.revision=${{ github.sha }}
+            *.labels.org.opencontainers.image.created=${{ env.BUILD_DATE }}
+            *.labels.org.opencontainers.image.version=${{ env.DOCKER_TAG }}
             *.cache-from=
             *.cache-to=

@@ -1,0 +1,46 @@
+name: GHCR cleanup
+
+# Keeps the container registry from re-accumulating thousands of stale versions.
+# Now that builder.yml pushes an immutable :sha-<commit> tag per build, old
+# images stay tagged (traceable) instead of becoming untagged orphans, so this
+# just caps how many we retain and sweeps any leftover untagged manifests.
+#
+# The action is multi-arch aware: keeping a tagged index keeps its child
+# platform manifests, so this won't corrupt a live image.
+#
+# NOTE: secrets.GHA_PAT must be a classic PAT with `write:packages` AND
+# `delete:packages` scopes, otherwise the delete calls 403.
+
+on:
+  schedule:
+    - cron: '0 4 * * 0' # Sundays 04:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Preview only — list what would be deleted, delete nothing'
+        type: boolean
+        default: true
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [dota, twitch-chat, twitch-events, steam]
+    steps:
+      - uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          owner: ${{ github.repository_owner }}
+          packages: ${{ matrix.package }}
+          # Keep the newest 30 tagged builds (sha-* + branch tags). Generous on
+          # purpose: deploys are manual, so a service may run an image several
+          # builds old — keep enough that its tag isn't pruned out from under it.
+          keep-n-tagged: 30
+          exclude-tags: master
+          delete-untagged: true
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+          token: ${{ secrets.GHA_PAT }}
