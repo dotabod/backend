@@ -16,11 +16,6 @@ services:
       args:
         - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/twitch-chat
-      x-bake:
-        cache-from:
-          - "ghcr.io/dotabod/cache-twitch-chat:master"
-        cache-to:
-          - "ghcr.io/dotabod/cache-twitch-chat:master"
     hostname: twitch-chat
     environment:
       - DATABASE_URL
@@ -42,11 +37,6 @@ services:
       args:
         - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/steam
-      x-bake:
-        cache-from:
-          - "ghcr.io/dotabod/cache-steam:master"
-        cache-to:
-          - "ghcr.io/dotabod/cache-steam:master"
     hostname: steam
     environment:
       - MONGO_URL
@@ -67,11 +57,6 @@ services:
       args:
         - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/twitch-events
-      x-bake:
-        cache-from:
-          - "ghcr.io/dotabod/cache-twitch-events:master"
-        cache-to:
-          - "ghcr.io/dotabod/cache-twitch-events:master"
     hostname: twitch-events
     environment:
       - DATABASE_URL
@@ -104,11 +89,6 @@ services:
       args:
         - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/dota
-      x-bake:
-        cache-from:
-          - "ghcr.io/dotabod/cache-dota:master"
-        cache-to:
-          - "ghcr.io/dotabod/cache-dota:master"
     hostname: dota
     environment:
       - D2PT_TOKEN
