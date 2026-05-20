@@ -28,6 +28,8 @@ export type Prediction = {
   outcomes: { id: string; users: number; title: string }[]
 }
 
+export type PredictionsCall = { twitchId: string; opts: { limit: number } }
+
 export type OpenDotaProfile = {
   rank_tier: number
   leaderboard_rank: number
@@ -48,6 +50,10 @@ export const state: {
   steamSocketError: unknown
   predictions: Prediction[]
   resolvePredictionCalls: Array<{ twitchId: string; predictionId: string; outcomeId: string }>
+  cancelPredictionCalls: Array<{ twitchId: string; predictionId: string }>
+  getPredictionsCalls: PredictionsCall[]
+  getPredictionsError: unknown
+  loggerErrorCalls: Array<{ message: string; meta: Record<string, unknown> }>
   emitWLUpdateCalls: number
   channelId: string | null
   loggerInfoCalls: Array<{ message: string; meta: Record<string, unknown> }>
@@ -72,6 +78,10 @@ export const state: {
   steamSocketError: null,
   predictions: [],
   resolvePredictionCalls: [],
+  cancelPredictionCalls: [],
+  getPredictionsCalls: [],
+  getPredictionsError: null,
+  loggerErrorCalls: [],
   emitWLUpdateCalls: 0,
   channelId: null,
   loggerInfoCalls: [],
@@ -98,6 +108,10 @@ export function resetState() {
   state.steamSocketError = null
   state.predictions = []
   state.resolvePredictionCalls = []
+  state.cancelPredictionCalls = []
+  state.getPredictionsCalls = []
+  state.getPredictionsError = null
+  state.loggerErrorCalls = []
   state.emitWLUpdateCalls = 0
   state.channelId = null
   state.loggerInfoCalls = []
@@ -183,16 +197,29 @@ const loggerMock = {
   info: (message: string, meta?: Record<string, unknown>) => {
     state.loggerInfoCalls.push({ message, meta: meta ?? {} })
   },
-  error: () => undefined,
+  error: (message: string, meta?: Record<string, unknown>) => {
+    state.loggerErrorCalls.push({ message, meta: meta ?? {} })
+  },
   warn: () => undefined,
   debug: () => undefined,
 }
 
 const getTwitchAPIMock = async () => ({
+  streams: {
+    createStreamMarker: async () => ({}),
+  },
   predictions: {
-    getPredictions: async () => ({ data: state.predictions }),
+    getPredictions: async (twitchId: string, opts: { limit: number }) => {
+      state.getPredictionsCalls.push({ twitchId, opts })
+      if (state.getPredictionsError) throw state.getPredictionsError
+      return { data: state.predictions }
+    },
     resolvePrediction: async (twitchId: string, predictionId: string, outcomeId: string) => {
       state.resolvePredictionCalls.push({ twitchId, predictionId, outcomeId })
+      return {}
+    },
+    cancelPrediction: async (twitchId: string, predictionId: string) => {
+      state.cancelPredictionCalls.push({ twitchId, predictionId })
       return {}
     },
   },
@@ -248,6 +275,8 @@ await initTestI18n()
 const resolveMatchModule = await import('../resolveMatch')
 export const resolveMatchRetroactively = resolveMatchModule.resolveMatchRetroactively
 export const findMostRecentResolvedMatch = resolveMatchModule.findMostRecentResolvedMatch
+export const { closeTwitchBet } = await import('../closeTwitchBet')
+export const { refundTwitchBet } = await import('../refundTwitchBets')
 const { gsiHandlers } = await import('../../../dota/lib/consts')
 const { steamSocket } = await import('../../../steam/ws')
 const { chatClient } = await import('../../chatClient')
