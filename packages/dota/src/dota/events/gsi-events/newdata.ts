@@ -35,7 +35,8 @@ import { isSpectator } from '../../lib/isSpectator'
 import { say } from '../../say'
 import { server } from '../../server'
 import eventHandler from '../EventHandler'
-import { minimapParser } from '../minimap/parser'
+// minimap overlay is unused in prod — disabled to skip per-tick parse; revive by uncommenting
+// import { minimapParser } from '../minimap/parser'
 import { selectNewEvents } from './selectNewEvents'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './sendExtensionPubSubBroadcastMessageIfChanged'
 
@@ -672,15 +673,16 @@ eventHandler.registerEvent('newdata', {
       return
     }
 
+    // minimap overlay is unused in prod — disabled to skip per-tick parse; revive by uncommenting
     // only if they're in a match ^ and they're a beta tester
-    if (dotaClient.client.beta_tester && dotaClient.client.stream_online) {
-      const enabled = getValueOrDefault(
-        DBSettings['minimap-blocker'],
-        dotaClient.client.settings,
-        dotaClient.client.subscription,
-      )
-      if (enabled) minimapParser.init(data, dotaClient.mapBlocker)
-    }
+    // if (dotaClient.client.beta_tester && dotaClient.client.stream_online) {
+    //   const enabled = getValueOrDefault(
+    //     DBSettings['minimap-blocker'],
+    //     dotaClient.client.settings,
+    //     dotaClient.client.subscription,
+    //   )
+    //   if (enabled) minimapParser.init(data, dotaClient.mapBlocker)
+    // }
     // Can't just !dotaClient.heroSlot because it can be 0
     const purchaser = dotaClient.client.gsi?.items?.teleport0?.purchaser
 
