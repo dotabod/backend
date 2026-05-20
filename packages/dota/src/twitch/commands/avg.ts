@@ -2,15 +2,14 @@ import { t } from 'i18next'
 
 import { calculateAvg } from '../../dota/lib/calculateAvg'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
-import { is8500Plus } from '../../utils/index'
+import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('avg', {
   onlyOnline: true,
   dbkey: DBSettings.commandAvg,
-  handler: async (message, args) => {
+  handler: async (message) => {
     const {
       channel: { client },
     } = message
@@ -38,15 +37,7 @@ commandHandler.registerCommand('avg', {
       players: matchPlayers,
     })
       .then((avg) => {
-        const append =
-          !ENABLE_SPECTATE_FRIEND_GAME || is8500Plus(client)
-            ? ` · ${t('matchDataValveDisabled', { emote: 'PoroSad', lng: client.locale })}`
-            : ''
-        chatClient.say(
-          message.channel.name,
-          `${avg}${avgDescriptor}${append}`,
-          message.user.messageId,
-        )
+        chatClient.say(message.channel.name, `${avg}${avgDescriptor}`, message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(

@@ -1,9 +1,8 @@
 import { t } from 'i18next'
 
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
+import { DBSettings } from '../../settings'
 import { gameMedals } from '../../steam/medals'
-import { is8500Plus } from '../../utils/index'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
@@ -11,7 +10,7 @@ commandHandler.registerCommand('gm', {
   aliases: ['medals', 'ranks'],
   onlyOnline: true,
   dbkey: DBSettings.commandGM,
-  handler: async (message, args) => {
+  handler: async (message) => {
     const {
       channel: { client },
     } = message
@@ -33,17 +32,7 @@ commandHandler.registerCommand('gm', {
 
     gameMedals(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {
-        let append = ''
-        if (
-          !ENABLE_SPECTATE_FRIEND_GAME ||
-          (matchPlayers.length === 1 &&
-            matchPlayers[0].accountid === client.steam32Id &&
-            is8500Plus(client))
-        ) {
-          append = ` · ${t('matchDataValveDisabled', { emote: 'PoroSad', lng: message.channel.client.locale })}`
-        }
-
-        chatClient.say(message.channel.name, desc + append, message.user.messageId)
+        chatClient.say(message.channel.name, desc, message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(
