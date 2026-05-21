@@ -57,10 +57,21 @@ export function getHeroById(id?: number) {
   return null
 }
 
+// dota2.com renamed this hero to "Outworld Destroyer", but dotaconstants still
+// reports the old localized name "Outworld Devourer" — override its slug.
+const heroPageSlugOverrides: Partial<Record<HeroNames, string>> = {
+  npc_dota_hero_obsidian_destroyer: 'outworlddestroyer',
+}
+
 export function getHeroPageUrl(id?: number): string | null {
   const hero = getHeroById(id)
   if (!hero) return null
-  return `dota2.com/hero/${hero.key.replace('npc_dota_hero_', '')}`
+  // dota2.com routes on the English localized name, lowercased with spaces
+  // removed (hyphens/apostrophes kept) — e.g. "Shadow Fiend" -> shadowfiend,
+  // "Anti-Mage" -> anti-mage, "Nature's Prophet" -> nature'sprophet.
+  const slug =
+    heroPageSlugOverrides[hero.key] ?? hero.localized_name.toLowerCase().replace(/ /g, '')
+  return `dota2.com/hero/${slug}`
 }
 
 export function withHeroLink(text: string, id?: number): string {
