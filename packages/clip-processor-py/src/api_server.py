@@ -699,7 +699,7 @@ def _align_players_with_draft(players: list, draft_order: list, min_ratio: float
     Rules (in priority):
       1) exact normalized match
       2) substring containment (either direction)
-      3) token overlap (>= 0.5)
+      3) token overlap (candidate gate >= 0.5; boosted match >= 0.6)
       4) difflib ratio (>= min_ratio)
     """
     current_raw = [p.get('player_name', '') or '' for p in players]
@@ -860,6 +860,33 @@ def _refine_alignment_with_captains_and_leftovers(mapping, players, draft_order,
     return mapping, players_reordered
 
 
+def _build_queue_response(request_id, queue_info, noun):
+    """Build the queued-request API response.
+
+    `noun` ("clip"/"stream") only shapes the user-facing message. A deduplicated
+    entry reports its existing state; a fresh enqueue reports it as newly queued.
+    The caller decides whether to start the worker (only fresh inserts need it).
+    """
+    response = {
+        'queued': True,
+        'request_id': request_id,
+        'clip_id': queue_info.get('clip_id'),
+        'status': queue_info.get('status', 'pending'),
+        'position': queue_info.get('position', 1),
+        'estimated_wait_seconds': queue_info.get('estimated_wait_seconds', 0),
+        'estimated_completion_time': queue_info.get('estimated_completion_time'),
+    }
+
+    if not queue_info.get('deduplicated'):
+        response['message'] = 'Your request has been queued for processing'
+    elif queue_info.get('status') == 'processing':
+        response['message'] = f'This {noun} is currently being processed'
+    else:
+        response['message'] = f'This {noun} is already in the processing queue'
+
+    return response
+
+
 def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True, from_worker=False, match_id=None, only_draft=False):
     """
     Process a clip URL and return the result or add it to the queue.
@@ -969,41 +996,10 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
             only_draft=only_draft
         )
 
-        # Only an already-queued duplicate short-circuits here; a fresh insert
-        # (also 'pending') must fall through to start the worker.
-        if queue_info.get('deduplicated'):
-            # Create a response with queue status info
-            response = {
-                'queued': True,
-                'request_id': request_id,
-                'clip_id': queue_info.get('clip_id'),
-                'status': queue_info.get('status', 'pending'),
-                'position': queue_info.get('position', 1),
-                'estimated_wait_seconds': queue_info.get('estimated_wait_seconds', 0),
-                'estimated_completion_time': queue_info.get('estimated_completion_time'),
-            }
-
-            if queue_info.get('status') == 'processing':
-                response['message'] = 'This clip is currently being processed'
-            else:
-                response['message'] = 'This clip is already in the processing queue'
-
-            return response
-
-        # Start worker thread if not running
-        start_worker_thread()
-
-        # Return queue status
-        return {
-            'queued': True,
-            'request_id': request_id,
-            'clip_id': queue_info.get('clip_id'),
-            'status': queue_info.get('status', 'pending'),
-            'position': queue_info.get('position', 1),
-            'estimated_wait_seconds': queue_info.get('estimated_wait_seconds', 0),
-            'estimated_completion_time': queue_info.get('estimated_completion_time'),
-            'message': 'Your request has been queued for processing'
-        }
+        # A fresh enqueue must start the worker; a dedup hit is already queued.
+        if not queue_info.get('deduplicated'):
+            start_worker_thread()
+        return _build_queue_response(request_id, queue_info, 'clip')
 
     if os.environ.get('RUN_LOCALLY') != 'true':
         logger.warning(
@@ -1136,41 +1132,10 @@ def process_stream_request(username, num_frames=3, debug=False, include_image=Tr
             include_image=include_image
         )
 
-        # Only an already-queued duplicate short-circuits here; a fresh insert
-        # (also 'pending') must fall through to start the worker.
-        if queue_info.get('deduplicated'):
-            # Create a response with queue status info
-            response = {
-                'queued': True,
-                'request_id': request_id,
-                'clip_id': queue_info.get('clip_id'),
-                'status': queue_info.get('status', 'pending'),
-                'position': queue_info.get('position', 1),
-                'estimated_wait_seconds': queue_info.get('estimated_wait_seconds', 0),
-                'estimated_completion_time': queue_info.get('estimated_completion_time'),
-            }
-
-            if queue_info.get('status') == 'processing':
-                response['message'] = 'This stream is currently being processed'
-            else:
-                response['message'] = 'This stream is already in the processing queue'
-
-            return response
-
-        # Start worker thread if not running
-        start_worker_thread()
-
-        # Return queue status
-        return {
-            'queued': True,
-            'request_id': request_id,
-            'clip_id': queue_info.get('clip_id'),
-            'status': queue_info.get('status', 'pending'),
-            'position': queue_info.get('position', 1),
-            'estimated_wait_seconds': queue_info.get('estimated_wait_seconds', 0),
-            'estimated_completion_time': queue_info.get('estimated_completion_time'),
-            'message': 'Your request has been queued for processing'
-        }
+        # A fresh enqueue must start the worker; a dedup hit is already queued.
+        if not queue_info.get('deduplicated'):
+            start_worker_thread()
+        return _build_queue_response(request_id, queue_info, 'stream')
 
     # Process the stream directly
     logger.info(f"Processing stream for username: {username} (frames={num_frames}, debug={debug}, include_image={include_image})")
