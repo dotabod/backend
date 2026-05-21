@@ -866,7 +866,7 @@ class PostgresClient:
                     cursor.close()
                     logger.info(f"Returning existing queue entry for clip ID: {clip_id}")
                     # Let the finally block return the connection
-                    return existing['request_id'], dict(existing)
+                    return existing['request_id'], {**dict(existing), 'deduplicated': True}
 
                 # If this is a draft-only request and we already have a draft queued/processing for the same match, reuse it
                 if has_match_id_column and has_only_draft_column and match_id and only_draft:
@@ -881,7 +881,7 @@ class PostgresClient:
                     if existing_match_draft:
                         cursor.close()
                         logger.info(f"Found existing draft request for match {match_id} in queue ({existing_match_draft['request_id']}), returning it instead of enqueuing a duplicate")
-                        return existing_match_draft['request_id'], dict(existing_match_draft)
+                        return existing_match_draft['request_id'], {**dict(existing_match_draft), 'deduplicated': True}
             elif request_type == 'stream' and stream_username:
                 query = f"""
                 SELECT * FROM {self.queue_table}
@@ -895,7 +895,7 @@ class PostgresClient:
                     cursor.close()
                     logger.info(f"Returning existing queue entry for stream: {stream_username}")
                     # Let the finally block return the connection
-                    return existing['request_id'], dict(existing)
+                    return existing['request_id'], {**dict(existing), 'deduplicated': True}
 
             # Calculate position and estimated wait time
             cursor.execute(f"SELECT COUNT(*) FROM {self.queue_table} WHERE status = 'pending'")
