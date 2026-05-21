@@ -145,6 +145,22 @@ describe('!facet', () => {
     expect(msg).toContain('Scholar of Koryx')
   })
 
+  // Regression: Drow Ranger's first facet (drow_ranger_high_ground) is a removed
+  // facet that lingers in dotaconstants with an empty title. It must not render as
+  // a blank "1: " entry; Sidestep is the only real facet and should be listed as 1.
+  it('skips facets that have no title', async () => {
+    await commandHandler.handleMessage(
+      makeMessage({
+        content: '!facet',
+        clientOverrides: { gsi: playingGsi({ hero: { id: 6 } }) },
+      }),
+    )
+    expect(state.chatSayCalls).toHaveLength(1)
+    const msg = state.chatSayCalls[0].message
+    expect(msg).toContain('1: Sidestep')
+    expect(msg).not.toContain('2: Sidestep')
+  })
+
   it('reports a specific facet by number', async () => {
     await commandHandler.handleMessage(
       makeMessage({

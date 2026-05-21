@@ -118,6 +118,9 @@ const isValidHero = (hero: any): boolean => {
 }
 
 // dotaconstants flags every facet `deprecated`, including current in-game ones,
-// so we cannot filter on it — return the hero's full facet list as-is.
+// so we can't filter on that. Stale/removed facets instead linger with an empty
+// `title`, which renders as a blank "N: " entry — drop those.
 const getFacets = (heroData: ReturnType<typeof getHeroById>) =>
-  DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.facets ?? []
+  (DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.facets ?? []).filter(
+    (facet) => facet.title?.trim(),
+  )
