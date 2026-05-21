@@ -197,6 +197,16 @@ CLOCK_RIGHT_EXTEND = 148  # pixels
 # Total clock width based on asymmetric extensions
 CLOCK_TOTAL_WIDTH = CLOCK_LEFT_EXTEND + CLOCK_RIGHT_EXTEND
 
+# Confidence-aware detection tunables
+# Per-slot template match_score below this is treated as low-confidence (likely an
+# occluded portrait or a misclassification) and flagged after re-scan.
+HERO_CONFIDENCE_THRESHOLD = float(os.environ.get("HERO_CONFIDENCE_THRESHOLD", 0.75))
+# A frame must yield at least this many strong (>= threshold) slots to count as a live
+# Dota HUD; otherwise it's rejected as not-a-match (e.g. streamer alt-tabbed).
+MIN_VALID_SLOTS = int(os.environ.get("MIN_VALID_SLOTS", 8))
+# Number of extra frames to pull from a clip when re-scanning low-confidence slots.
+RESCAN_FRAME_COUNT = int(os.environ.get("RESCAN_FRAME_COUNT", 3))
+
 # Mapping of known heroes
 HEROES_FILE = HEROES_DIR / "hero_data.json"
 # Cache file for precomputed templates
@@ -1971,6 +1981,75 @@ def process_frames_for_heroes(frame_paths, debug=False):
 
     return heroes, best_frame_info
 
+
+def is_low_confidence(hero, threshold=HERO_CONFIDENCE_THRESHOLD):
+    """Whether a detected hero's template match is below the confidence threshold."""
+    return hero.get('match_score', 0.0) < threshold
+
+
+def redetect_low_confidence_slots(heroes, extra_frame_paths, threshold=HERO_CONFIDENCE_THRESHOLD, debug=False):
+    """Re-scan additional frames to recover slots whose match_score is below threshold.
+
+    A portrait can be occluded (e.g. an OBS overlay) in the chosen best frame but clear
+    in another frame of the same clip. For each (team, position) slot currently below
+    threshold, run full detection on the extra frames and keep the highest-confidence
+    read. Strong slots are left untouched. Returns the (possibly updated) heroes list.
+    """
+    if not heroes or not extra_frame_paths:
+        return heroes
+
+    weak_slots = {
+        (h['team'], h['position'])
+        for h in heroes
+        if is_low_confidence(h, threshold)
+    }
+    if not weak_slots:
+        return heroes
+
+    by_slot = {(h['team'], h['position']): h for h in heroes}
+
+    for frame_path in extra_frame_paths:
+        if not weak_slots:
+            break
+        try:
+            candidates = process_frame_for_heroes(frame_path, debug=debug)
+        except Exception as e:
+            logger.warning(f"Re-scan failed for frame {frame_path}: {e}")
+            continue
+        for cand in candidates:
+            slot = (cand.get('team'), cand.get('position'))
+            if slot not in weak_slots:
+                continue
+            current = by_slot.get(slot)
+            if current is None:
+                continue
+            if cand.get('match_score', 0.0) > current.get('match_score', 0.0):
+                logger.info(
+                    f"Re-scan improved {slot[0]} pos {slot[1]+1}: "
+                    f"{current.get('hero_localized_name')} ({current.get('match_score', 0.0):.3f}) -> "
+                    f"{cand.get('hero_localized_name')} ({cand.get('match_score', 0.0):.3f})"
+                )
+                by_slot[slot] = cand
+                if not is_low_confidence(cand, threshold):
+                    weak_slots.discard(slot)
+
+    updated = list(by_slot.values())
+    updated.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
+    return updated
+
+
+def is_valid_hud(heroes, threshold=HERO_CONFIDENCE_THRESHOLD, min_valid=MIN_VALID_SLOTS):
+    """Whether a frame looks like a live Dota match HUD.
+
+    Guards against non-Dota frames (streamer alt-tabbed / Dota closed) that produce a
+    handful of spurious low-confidence template matches. A real live frame yields many
+    confident hero slots; garbage frames do not.
+    """
+    if not heroes:
+        return False
+    strong = sum(1 for h in heroes if not is_low_confidence(h, threshold))
+    return strong >= min_valid
+
 def adjust_levels(image, black_point, white_point, gamma):
     """
     Apply a levels adjustment to an image similar to Photoshop's Levels filter.
@@ -2480,6 +2559,7 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
 
     try:
         frame_paths = []
+        clip_details = None
 
         if source_type == "clip":
             clip_url = media_source
@@ -2588,6 +2668,36 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
         heroes, best_frame_info = process_frames_for_heroes(frame_paths, debug=debug)
         processing_time = performance_timer.stop('process_frames')
 
+        # Re-scan extra frames to recover low-confidence slots (e.g. a portrait occluded
+        # by an overlay in the chosen frame but clear elsewhere) before flagging/gating.
+        if heroes and any(is_low_confidence(h) for h in heroes):
+            extra_frames = []
+            if source_type == "clip" and clip_details is not None:
+                try:
+                    clip_path = download_clip(clip_details)
+                    duration = clip_details.get('duration') or 0
+                    interval = max(1, int(duration / (RESCAN_FRAME_COUNT + 1))) if duration else 5
+                    rescan_frames = extract_frames(clip_path, clip_details=clip_details, frame_interval=interval)
+                    extra_frames = [f for f in rescan_frames if f != best_frame_info.get('frame_path')]
+                except Exception as e:
+                    logger.warning(f"Could not gather re-scan frames for clip: {e}")
+            elif source_type == "stream":
+                extra_frames = [f for f in frame_paths if f != best_frame_info.get('frame_path')]
+
+            if extra_frames:
+                logger.info(f"Re-scanning {len(extra_frames)} extra frame(s) for low-confidence slots")
+                heroes = redetect_low_confidence_slots(heroes, extra_frames, debug=debug)
+
+        # Reject frames that aren't a confident live Dota HUD (e.g. streamer alt-tabbed,
+        # Dota not open) instead of emitting garbage heroes.
+        if heroes and not is_valid_hud(heroes):
+            strong = sum(1 for h in heroes if not is_low_confidence(h))
+            logger.warning(
+                f"Rejecting frame: only {strong} confident hero slot(s) "
+                f"(need >= {MIN_VALID_SLOTS}); likely not a live Dota match"
+            )
+            return None
+
         if heroes:
             # Get the best frame information from process_frames_for_heroes
             best_frame_index = best_frame_info['frame_index']
@@ -2605,6 +2715,12 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
 
             # Sort by team and position
             heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
+
+            # Flag slots that remain below the confidence threshold after re-scan so
+            # consumers can caveat or hide a likely-wrong hero.
+            for hero in heroes:
+                if is_low_confidence(hero):
+                    hero['low_confidence'] = True
 
             # Check if rank banners were extracted
             rank_banners_extracted = any('rank_banner_shape' in hero for hero in heroes)
@@ -2645,6 +2761,10 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
                 # Add facet information if available
                 if 'facet' in hero and 'name' in hero['facet']:
                     player['facet'] = hero['facet']['name']
+
+                # Mirror the low-confidence flag onto the player view
+                if hero.get('low_confidence'):
+                    player['low_confidence'] = True
 
                 players.append(player)
 
