@@ -1,11 +1,16 @@
-import { beforeEach, describe, expect, it } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { RateLimiter, resetState } from '../../__tests__/sharedMocks.ts'
 
 const makeHeaders = (h: Record<string, string>) => new Headers(h)
+const realSetTimeout = globalThis.setTimeout
 
 describe('RateLimiter', () => {
   beforeEach(() => {
     resetState()
+  })
+
+  afterEach(() => {
+    globalThis.setTimeout = realSetTimeout
   })
 
   describe('updateLimits', () => {
@@ -68,13 +73,20 @@ describe('RateLimiter', () => {
     })
 
     it('waits for reset then refills remaining when the budget is exhausted', async () => {
+      // Fire the backoff timer immediately so the wait branch runs without real
+      // elapsed time (and without depending on wall-clock arithmetic).
+      globalThis.setTimeout = ((cb: () => void) => {
+        cb()
+        return 0 as unknown as ReturnType<typeof setTimeout>
+      }) as typeof setTimeout
+
       const rl = new RateLimiter()
-      // remaining 0, reset ~15ms ahead -> exercises the wait branch deterministically.
+      // remaining 0, reset well in the future -> always takes the wait branch.
       rl.updateLimits(
         makeHeaders({
           'Ratelimit-Limit': '50',
           'Ratelimit-Remaining': '0',
-          'Ratelimit-Reset': String(Math.ceil((Date.now() + 15) / 1000)),
+          'Ratelimit-Reset': String(Math.ceil((Date.now() + 60_000) / 1000)),
         }),
       )
 

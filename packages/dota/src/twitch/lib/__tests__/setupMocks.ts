@@ -66,6 +66,8 @@ export const state: {
   botBanned: boolean
   subscriberOnlyMode: boolean
   chatSettingsUpdates: Array<{ channelId: string; settings: Record<string, unknown> }>
+  // Result returned by the mocked MongoDB `delayedGames` findOne (ranked, spectators, ...).
+  delayedGame: Record<string, unknown> | null
 } = {
   sessionMatch: null,
   olderMatch: null,
@@ -95,6 +97,7 @@ export const state: {
   botBanned: false,
   subscriberOnlyMode: false,
   chatSettingsUpdates: [],
+  delayedGame: null,
 }
 
 export function resetState() {
@@ -126,6 +129,7 @@ export function resetState() {
   state.botBanned = false
   state.subscriberOnlyMode = false
   state.chatSettingsUpdates = []
+  state.delayedGame = null
 }
 
 // Supabase chainable mock. Three query shapes need to be distinguished:
@@ -276,6 +280,19 @@ mock.module('../../../dota/lib/ranks', () => ({
   getRankDescription: async () => state.rankDescription,
 }))
 
+// Mongo is only used by a few match-data commands (ranked, spectators, ...).
+// connect() yields a db whose delayedGames.findOne returns state.delayedGame.
+mock.module('../../../steam/MongoDBSingleton', () => ({
+  default: {
+    connect: async () => ({
+      collection: () => ({
+        findOne: async () => state.delayedGame,
+      }),
+    }),
+    close: async () => undefined,
+  },
+}))
+
 await initTestI18n()
 
 // Import after all module mocks are registered.
@@ -320,6 +337,16 @@ await import('../../commands/modsonly')
 await import('../../commands/only')
 await import('../../commands/setdelay')
 await import('../../commands/mute')
+await import('../../commands/ranked')
+await import('../../commands/spectators')
+await import('../../commands/friends')
+await import('../../commands/opendota')
+await import('../../commands/profile')
+await import('../../commands/beta')
+await import('../../commands/toggle')
+await import('../../commands/today')
+await import('../../commands/clearsharing')
+await import('../../commands/lgs')
 
 // Monkey-patch the singletons we need behavior control over. Mocking these
 // modules wholesale would force us to enumerate every other transitive export.

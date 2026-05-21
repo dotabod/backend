@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
+import { DBSettings } from '../../../settings.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // Mod commands that persist a setting via supabase.from('settings').upsert()
@@ -19,7 +20,7 @@ describe('!setdelay', () => {
   it('persists the delay in milliseconds and confirms', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!setdelay 5' }))
     expect(state.upsertCalls).toHaveLength(1)
-    expect(state.upsertCalls[0].values).toMatchObject({ key: 'streamDelay', value: 5000 })
+    expect(state.upsertCalls[0].values).toMatchObject({ key: DBSettings.streamDelay, value: 5000 })
     expect(state.chatSayCalls[0].message).toContain('5')
   })
 
@@ -68,7 +69,7 @@ describe('!mute', () => {
   it('toggles the chatter setting and announces it', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!mute' }))
     expect(state.upsertCalls).toHaveLength(1)
-    expect(state.upsertCalls[0].values).toMatchObject({ key: 'chatter' })
+    expect(state.upsertCalls[0].values).toMatchObject({ key: DBSettings.chatter })
     expect(typeof state.upsertCalls[0].values.value).toBe('boolean')
     expect(state.chatSayCalls).toHaveLength(1)
   })
