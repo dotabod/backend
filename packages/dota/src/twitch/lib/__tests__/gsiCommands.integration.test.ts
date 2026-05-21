@@ -1,12 +1,20 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
+import { t } from 'i18next'
 import { getHeroNameOrColor } from '../../../dota/lib/heroes.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // GSI-reading commands that format output from client.gsi (no DB/network).
-// hero id 1 (Anti-Mage) has aghs_desc data, so the aghs/shard valid-hero paths
-// always echo the hero name regardless of has_scepter/has_shard.
+// hero id 1 (Anti-Mage) has aghs_desc data + an innate, so those valid-hero
+// paths always echo the hero name. Its facets are all flagged deprecated in
+// dotaconstants, so for the !facet happy path we use Storm Spirit (id 17),
+// which has a live (non-deprecated) facet.
 const HERO_ID = 1
 const heroName = getHeroNameOrColor(HERO_ID)
+const FACET_HERO_ID = 17
+const facetHeroName = getHeroNameOrColor(FACET_HERO_ID)
+const notLive = t('notLive', { emote: 'PauseChamp', lng: 'en' })
+const notPlaying = t('notPlaying', { emote: 'PauseChamp', lng: 'en' })
+const gameNotFound = t('gameNotFound', { lng: 'en' })
 
 const playingGsi = (extra: Record<string, unknown> = {}) =>
   ({ map: { matchid: '7777777777' }, hero: { id: HERO_ID }, player: {}, ...extra }) as any
@@ -22,13 +30,15 @@ describe('!xpm', () => {
       makeMessage({ content: '!xpm', clientOverrides: { stream_online: false } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notLive)
   })
 
   it('reports 0 xpm when there is no GSI data', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!xpm' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('0')
+    expect(state.chatSayCalls[0].message).toBe(
+      t('xpm', { heroName: getHeroNameOrColor(0), num: 0, lng: 'en' }),
+    )
   })
 
   it('reports the player xpm from GSI', async () => {
@@ -58,7 +68,7 @@ describe('!aghs', () => {
   it('reports notPlaying when there is no live match', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!aghs' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 
   it('reports gameNotFound when in a match but the hero is invalid', async () => {
@@ -69,7 +79,7 @@ describe('!aghs', () => {
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.toLowerCase()).toContain('game')
+    expect(state.chatSayCalls[0].message).toBe(gameNotFound)
   })
 
   it('echoes the hero name for a valid hero in a live match', async () => {
@@ -85,7 +95,7 @@ describe('!shard', () => {
   it('reports notPlaying when there is no live match', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!shard' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 
   it('echoes the hero name for a valid hero in a live match', async () => {
@@ -101,18 +111,19 @@ describe('!facet', () => {
   it('reports notPlaying when there is no live match', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!facet' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 
-  it('produces a single chat reply for a valid hero in a live match', async () => {
+  it('reports the selected facet for a hero with a live facet', async () => {
     await commandHandler.handleMessage(
       makeMessage({
         content: '!facet',
-        clientOverrides: { gsi: playingGsi({ hero: { id: HERO_ID, facet: 1 } }) },
+        clientOverrides: { gsi: playingGsi({ hero: { id: FACET_HERO_ID, facet: 1 } }) },
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.length).toBeGreaterThan(0)
+    expect(state.chatSayCalls[0].message).toContain(facetHeroName)
+    expect(state.chatSayCalls[0].message).toContain('Shock Collar')
   })
 })
 
@@ -120,7 +131,7 @@ describe('!innate', () => {
   it('reports notPlaying when there is no live match', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!innate' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 
   it('reports gameNotFound when in a match but the hero is invalid', async () => {
@@ -131,14 +142,15 @@ describe('!innate', () => {
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.toLowerCase()).toContain('game')
+    expect(state.chatSayCalls[0].message).toBe(t('gameNotFound', { lng: 'en' }))
   })
 
-  it('produces a single chat reply for a valid hero in a live match', async () => {
+  it("reports the hero's innate for a valid hero in a live match", async () => {
     await commandHandler.handleMessage(
       makeMessage({ content: '!innate', clientOverrides: { gsi: playingGsi() } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.length).toBeGreaterThan(0)
+    expect(state.chatSayCalls[0].message).toContain(heroName)
+    expect(state.chatSayCalls[0].message).toContain('Persecutor')
   })
 })

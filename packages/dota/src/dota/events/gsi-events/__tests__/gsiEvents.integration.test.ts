@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
+import { t } from 'i18next'
 import { flushAsync } from '../../../../__tests__/sharedMocks.ts'
+import { getHeroNameOrColor } from '../../../lib/heroes.ts'
 import {
   events,
   gsiHandlers,
@@ -69,7 +71,9 @@ describe('event:aegis_denied', () => {
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
-    expect(gsiState.chatSayCalls[0].message).toContain('ICANT')
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('aegis.denied', { lng: 'en', heroName: getHeroNameOrColor(5, 0), emote: 'ICANT' }),
+    )
   })
 })
 
@@ -124,7 +128,9 @@ describe('map:paused', () => {
     expect(gsiState.ioEmitCalls).toHaveLength(1)
     expect(gsiState.ioEmitCalls[0]).toMatchObject({ event: 'paused', payload: true })
     expect(gsiState.chatSayCalls).toHaveLength(1)
-    expect(gsiState.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('chatters.pause', { emote: 'PauseChamp', lng: 'en' }),
+    )
   })
 
   it('emits socket but no chat when paused=false', async () => {
@@ -192,7 +198,9 @@ describe('event:tip', () => {
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
-    expect(gsiState.chatSayCalls[0].message).toContain('ICANT')
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('tip.from', { emote: 'ICANT', lng: 'en', heroName: getHeroNameOrColor(1, 0) }),
+    )
   })
 
   it('chats the tip-from-me message when the local player is the sender', async () => {
@@ -212,7 +220,9 @@ describe('event:tip', () => {
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
-    expect(gsiState.chatSayCalls[0].message).toContain('PepeLaugh')
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('tip.to', { emote: 'PepeLaugh', lng: 'en', heroName: getHeroNameOrColor(2, 1) }),
+    )
   })
 })
 
@@ -316,7 +326,9 @@ describe('player:kill_streak', () => {
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
-    expect(gsiState.chatSayCalls[0].message).toContain('BibleThump')
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('killstreak.lost', { emote: 'BibleThump', count: 5, heroName: 'Lina', lng: 'en' }),
+    )
   })
 
   it('skips streaks of 3 or less (no chat output)', async () => {

@@ -169,7 +169,6 @@ describe('Profanity Filter', () => {
       detailsArray.forEach((detail, index) => {
         expect(detail.isFlagged).toBe(true)
         if (detail.matches) {
-          expect(detail.matches).toBeDefined()
           expect(
             detail.matches?.includes(badWords[index]) ||
               badWords[index].includes(detail.matches?.[0] ?? ''),

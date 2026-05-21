@@ -12,11 +12,17 @@ describe('DelayedQueue', () => {
     queue.shutdown()
   })
 
-  it('should add tasks to the queue', () => {
+  it('should add tasks to the queue and return a unique usable id', () => {
     const callback = mock(() => {})
     const taskId = queue.addTask(1000, callback, 'test payload')
+    const secondId = queue.addTask(1000, callback, 'test payload')
 
-    expect(taskId).toBeDefined()
+    expect(typeof taskId).toBe('string')
+    expect(taskId.length).toBeGreaterThan(0)
+    expect(secondId).not.toBe(taskId)
+    expect(queue.getQueueSize()).toBe(2)
+    // The returned id identifies the task it created.
+    expect(queue.removeTask(taskId)).toBe(true)
     expect(queue.getQueueSize()).toBe(1)
   })
 

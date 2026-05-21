@@ -18,7 +18,6 @@ type FetchResponse = {
 }
 
 export const state: {
-  isDisabled: boolean
   isBanned: boolean
   hasSocket: boolean
   emitCalls: Array<{
@@ -31,8 +30,11 @@ export const state: {
   fetchImpl: (url: string, options: any) => Promise<FetchResponse>
   fetchThrows: unknown
   logError: Array<{ message: string; meta: Record<string, unknown> }>
+  // supabase: accounts.select(...).single() result, and captured users.update() calls.
+  dbAccount: { userId: string } | null
+  accountError: unknown
+  userUpdates: Array<{ values: Record<string, unknown>; whereId: unknown }>
 } = {
-  isDisabled: false,
   isBanned: false,
   hasSocket: true,
   emitCalls: [],
@@ -43,10 +45,13 @@ export const state: {
   }),
   fetchThrows: null,
   logError: [],
+  dbAccount: { userId: 'user-1' },
+  accountError: null,
+  userUpdates: [],
 }
 
 export function resetState() {
-  state.isDisabled = false
+  disableUserCache.clear()
   state.isBanned = false
   state.hasSocket = true
   state.emitCalls = []
@@ -57,8 +62,34 @@ export function resetState() {
   })
   state.fetchThrows = null
   state.logError = []
+  state.dbAccount = { userId: 'user-1' }
+  state.accountError = null
+  state.userUpdates = []
   clearDedupeCache()
 }
+
+// Minimal chainable supabase mock: accounts.select().eq()...single() yields
+// state.dbAccount; users.update(values).eq('id', x) records into userUpdates.
+function createSupabaseBuilder() {
+  const builder: any = {
+    select: () => builder,
+    eq: (col: string, val: unknown) => {
+      if (builder._updateValues && col === 'id') {
+        state.userUpdates.push({ values: builder._updateValues, whereId: val })
+        return Promise.resolve({ data: null, error: null })
+      }
+      return builder
+    },
+    single: async () => ({ data: state.dbAccount, error: state.accountError }),
+    update: (values: Record<string, unknown>) => {
+      builder._updateValues = values
+      return builder
+    },
+    _updateValues: null as Record<string, unknown> | null,
+  }
+  return builder
+}
+const supabaseMock = { from: () => createSupabaseBuilder() }
 
 mock.module('@dotabod/shared-utils', () => ({
   logger: {
@@ -70,14 +101,11 @@ mock.module('@dotabod/shared-utils', () => ({
   },
   checkBotStatus: async () => state.isBanned,
   getTwitchHeaders: async () => ({ Authorization: 'Bearer test' }),
+  supabase: supabaseMock,
 }))
 
 mock.module('i18next', () => ({
   t: (key: string) => `t:${key}`,
-}))
-
-mock.module('../disableCache', () => ({
-  isBroadcasterBeingDisabled: () => state.isDisabled,
 }))
 
 mock.module('../utils/socketManager', () => ({
@@ -99,10 +127,23 @@ globalThis.fetch = (async (url: string, options: any) => {
   return state.fetchImpl(url, options)
 }) as unknown as typeof fetch
 
-// Import after mocks are registered.
+// Import after mocks are registered. disableCache is the REAL module (not
+// mocked) so its logic is covered; tests drive it via disableUserCache.
+export const {
+  disableUserCache,
+  clearDisableCache,
+  isUserBeingDisabled,
+  isBroadcasterBeingDisabled,
+} = await import('../disableCache')
+export const { onlineEvents } = await import('../event-handlers/events')
+export const { onlineEvent } = await import('../event-handlers/onlineEvent')
+export const { offlineEvent } = await import('../event-handlers/offlineEvent')
+export const { updateUserEvent } = await import('../event-handlers/updateUserEvent')
 export const {
   sendTwitchChatMessage,
   handleChatMessage,
   ChatMessageResponseCode,
   clearDedupeCache,
 } = await import('../handleChat')
+
+export const flushMacrotasks = () => new Promise<void>((r) => setTimeout(r, 5))

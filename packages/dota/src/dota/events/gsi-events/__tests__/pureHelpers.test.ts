@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { t } from 'i18next'
 import { initTestI18n } from '../../../../__tests__/sharedMocks.ts'
 
 await initTestI18n()
@@ -35,7 +36,7 @@ describe('generateAegisMessage', () => {
       },
       'en',
     )
-    expect(msg).toContain('PepeLaugh')
+    expect(msg).toBe(t('aegis.snatched', { emote: 'PepeLaugh', lng: 'en', heroName: 'Pudge' }))
   })
 
   it('returns aegis.expired when expireS recalculates to 0', () => {

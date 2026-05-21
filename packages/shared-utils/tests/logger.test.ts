@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, mock } from 'bun:test'
+import { afterEach, describe, expect, it, mock, spyOn } from 'bun:test'
 
 const originalEnv = { ...process.env }
 
@@ -7,13 +7,42 @@ afterEach(() => {
   mock.restore()
 })
 
+// Winston delivers to transports via a stream, so flush a tick before asserting.
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
+
+async function captureLogs(emit: (logger: any) => void) {
+  const { logger } = await import('../src/logger')
+  const transport = logger.transports[0]
+  const captured: any[] = []
+  spyOn(transport, 'log').mockImplementation((info: any, next?: () => void) => {
+    captured.push(info)
+    next?.()
+  })
+  emit(logger)
+  await flush()
+  return captured
+}
+
 describe('shared-utils logger', () => {
-  it('constructs and logs without throwing', async () => {
-    const { logger } = await import('../src/logger')
-    expect(() => {
-      logger.info('hello info')
-      logger.warn('hello warn')
-      logger.error('hello error', { extra: 'meta' })
-    }).not.toThrow()
+  it('passes level, message and structured metadata through to the transport', async () => {
+    const captured = await captureLogs((logger) => logger.error('boom', { requestId: 'abc-123' }))
+
+    expect(captured).toHaveLength(1)
+    const info = captured[0]
+    expect(info.level).toContain('error')
+    expect(info.message).toBe('boom')
+    expect(info.requestId).toBe('abc-123')
+    // The printf format renders a single line carrying message + metadata.
+    const line = String(info[Symbol.for('message')])
+    expect(line).toContain('boom')
+    expect(line).toContain('abc-123')
+  })
+
+  it('extracts the stack when an Error is supplied as metadata', async () => {
+    const err = new Error('kaboom')
+    const captured = await captureLogs((logger) => logger.error('failed', { e: err }))
+
+    expect(captured).toHaveLength(1)
+    expect(captured[0]['e.stack']).toContain('kaboom')
   })
 })

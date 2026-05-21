@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
-import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
+import { t } from 'i18next'
+import { commandHandler, liveGsi, makeMessage, resetState, state } from './setupMocks.ts'
 
 // Profile-link family (opendota, profile) plus the broadcaster-only !friends.
-const liveGsi = () =>
-  ({ map: { matchid: '7777777777' }, player: { accountid: 99999 }, hero: { id: 1 } }) as any
+const notLive = t('notLive', { emote: 'PauseChamp', lng: 'en' })
+const notPlaying = t('notPlaying', { emote: 'PauseChamp', lng: 'en' })
 
 beforeEach(() => {
   resetState()
@@ -22,7 +23,7 @@ describe('!opendota', () => {
       makeMessage({ content: '!opendota', clientOverrides: { steam32Id: null } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 
   it('chats the player opendota URL from a live match when args are given', async () => {
@@ -46,7 +47,7 @@ describe('!profile', () => {
       makeMessage({ content: '!profile', clientOverrides: { stream_online: false } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notLive)
   })
 })
 
@@ -54,7 +55,7 @@ describe('!friends', () => {
   it('reports noHero when there is no hero in GSI', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!friends', permission: 4 }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.toLowerCase()).toContain('hero')
+    expect(state.chatSayCalls[0].message).toBe(t('noHero', { lng: 'en' }))
   })
 
   it('reports notPlaying when a hero exists but there is no live match', async () => {
@@ -66,7 +67,7 @@ describe('!friends', () => {
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 
   it('blocks non-broadcaster permission levels', async () => {

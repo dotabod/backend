@@ -21,7 +21,10 @@ os.environ.setdefault("RUN_LOCALLY", "true")
 
 # Native / heavy modules replaced by mocks. The source modules only touch these
 # inside image/stream code paths we don't drive directly in these tests.
-_STUBBED = ("cv2", "numpy", "tqdm", "streamlink", "pytesseract", "moviepy")
+# numpy and cv2 (opencv-python-headless) are real offline deps so image logic can
+# be tested with actual arrays. streamlink/pytesseract/moviepy/waitress stay
+# stubbed (network / OCR binary / WSGI server not needed for unit tests).
+_STUBBED = ("tqdm", "streamlink", "pytesseract", "moviepy", "waitress")
 for _name in _STUBBED:
     sys.modules.setdefault(_name, MagicMock())
 # streamlink.stream is imported as a submodule; give it a mock too.

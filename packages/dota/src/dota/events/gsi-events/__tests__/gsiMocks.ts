@@ -163,6 +163,7 @@ await import('../map.paused')
 await import('../map.win_team')
 await import('../hero.smoked')
 await import('../player.killstreak')
+await import('../player.deaths')
 
 export { events, gsiHandlers }
 

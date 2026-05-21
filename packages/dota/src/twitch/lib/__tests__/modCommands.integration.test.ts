@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
+import { t } from 'i18next'
 import { modMode } from '../../../dota/lib/consts.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
@@ -43,7 +44,9 @@ describe('!modsonly', () => {
       subscriberOnlyModeEnabled: true,
     })
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('BASED Clap')
+    expect(state.chatSayCalls[0].message).toBe(
+      t('modsOnly', { emote: 'BASED Clap', context: 'on', lng: 'en' }),
+    )
   })
 
   it('disables the mode on the second use (toggle off)', async () => {

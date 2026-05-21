@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
 import {
   clearSubscriptions,
+  eventSubMap,
+  fetchState,
   resetState,
   runSubscriptionHealthCheck,
   seedSubscriptions,
@@ -23,6 +25,9 @@ describe('runSubscriptionHealthCheck', () => {
   beforeEach(() => {
     resetState()
     clearSubscriptions()
+    // fetchState is process-wide; reset so a prior file's queued response can't leak in.
+    fetchState.queue = []
+    fetchState.calls = []
   })
 
   it('throws when no conduit ID is available', async () => {
@@ -95,5 +100,32 @@ describe('runSubscriptionHealthCheck', () => {
     expect(result.errorCount).toBe(ALL.length)
     expect(result.userErrors['twitch 500']).toBe(ALL.length)
     expect(result.fixedSubscriptions).toBe(0)
+  })
+
+  it('fetches existing subscriptions from the API when the cache is empty', async () => {
+    state.accountIds = ['111']
+    // eventSubMap empty (cleared in beforeEach) -> triggers the API fetch path.
+    fetchState.queue = [
+      {
+        status: 200,
+        json: {
+          data: [
+            {
+              id: 's1',
+              status: 'enabled',
+              type: 'stream.online',
+              condition: { broadcaster_user_id: '111' },
+            },
+          ],
+          pagination: {},
+        },
+      },
+    ]
+
+    await runSubscriptionHealthCheck()
+
+    expect(fetchState.calls.some((u) => u.includes('eventsub/subscriptions'))).toBe(true)
+    // The fetched stream.online sub was loaded into the cache for that broadcaster.
+    expect(eventSubMap['111']?.['stream.online']).toMatchObject({ id: 's1' })
   })
 })

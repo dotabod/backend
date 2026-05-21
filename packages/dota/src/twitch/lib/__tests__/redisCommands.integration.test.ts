@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
+import { t } from 'i18next'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 beforeEach(() => {
@@ -11,7 +12,7 @@ describe('!clearsharing', () => {
     await commandHandler.handleMessage(makeMessage({ content: '!clearsharing' }))
     expect(state.redisDelCalls).toContain('token:token-abc:activeSteam32Ids')
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.length).toBeGreaterThan(0)
+    expect(state.chatSayCalls[0].message).toBe(t('clearsharing.success', { lng: 'en' }))
   })
 
   it('blocks viewers (permission below mod)', async () => {
@@ -29,7 +30,7 @@ describe('!lgs', () => {
       makeMessage({ content: '!lgs', clientOverrides: { steam32Id: null } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.toLowerCase()).toContain('steam')
+    expect(state.chatSayCalls[0].message).toBe(t('unknownSteam', { lng: 'en' }))
   })
 
   it('reports the multiAccount message when no steam id and multiAccount is set', async () => {
@@ -40,6 +41,8 @@ describe('!lgs', () => {
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('dotabod.com/dashboard/features')
+    expect(state.chatSayCalls[0].message).toBe(
+      t('multiAccount', { lng: 'en', url: 'dotabod.com/dashboard/features' }),
+    )
   })
 })

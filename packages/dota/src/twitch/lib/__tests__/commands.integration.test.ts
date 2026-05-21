@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
+import { t } from 'i18next'
 import { flushAsync } from '../../../__tests__/sharedMocks.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // Integration tests that exercise individual chat command handlers via
 // `commandHandler.handleMessage()`. Companion to `CommandHandler.integration.test.ts`
 // (which focuses on parsing/aliases/permissions/cooldowns).
+const notLive = t('notLive', { emote: 'PauseChamp', lng: 'en' })
+const notPlaying = t('notPlaying', { emote: 'PauseChamp', lng: 'en' })
+const unknownSteam = t('unknownSteam', { lng: 'en' })
+const multiAccount = t('multiAccount', { lng: 'en', url: 'dotabod.com/dashboard/features' })
 
 beforeEach(() => {
   resetState()
@@ -15,7 +20,7 @@ describe('!ping', () => {
   it('replies with the ping message', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!ping' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('EZ Clap')
+    expect(state.chatSayCalls[0].message).toBe(t('ping', { emote: 'EZ Clap', lng: 'en' }))
   })
 
   it('does not echo for plain text', async () => {
@@ -73,7 +78,7 @@ describe('!delay', () => {
       makeMessage({ content: '!delay', clientOverrides: { stream_online: false } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notLive)
   })
 })
 
@@ -86,7 +91,7 @@ describe('!wl', () => {
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('dotabod.com/dashboard/features')
+    expect(state.chatSayCalls[0].message).toBe(multiAccount)
   })
 
   it('reports unknownSteam when steam32Id is unset and not multiAccount', async () => {
@@ -94,7 +99,7 @@ describe('!wl', () => {
       makeMessage({ content: '!wl', clientOverrides: { steam32Id: null } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.toLowerCase()).toContain('steam')
+    expect(state.chatSayCalls[0].message).toBe(unknownSteam)
   })
 
   it('reports ranked + unranked W/L from supabase.rpc results', async () => {
@@ -166,7 +171,7 @@ describe('!mmr', () => {
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('dotabod.com/dashboard/features')
+    expect(state.chatSayCalls[0].message).toBe(multiAccount)
   })
 })
 
@@ -176,7 +181,7 @@ describe('!gpm', () => {
       makeMessage({ content: '!gpm', clientOverrides: { stream_online: false } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notLive)
   })
 
   it('chats gpm_zero when GSI is missing', async () => {
@@ -216,7 +221,7 @@ describe('!dotabuff', () => {
     )
     expect(state.chatSayCalls).toHaveLength(1)
     // profileLink throws notPlaying → caught by handler → chat error.
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 })
 
@@ -238,7 +243,7 @@ describe('!pleb', () => {
       subscriberOnlyModeEnabled: false,
     })
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('👇')
+    expect(state.chatSayCalls[0].message).toBe(t('pleb', { emote: '👇', lng: 'en' }))
   })
 
   it('does nothing when the bot is banned', async () => {
@@ -263,7 +268,7 @@ describe('!apm', () => {
   it('chats an error when no GSI match is available', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!apm' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 
   it('chats an apm number when GSI has commands_issued and game_time', async () => {
@@ -291,7 +296,7 @@ describe('!avg', () => {
       makeMessage({ content: '!avg', clientOverrides: { steam32Id: null } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.toLowerCase()).toContain('steam')
+    expect(state.chatSayCalls[0].message).toBe(unknownSteam)
   })
 
   it('reports multiAccount when steam32Id is unset and multiAccount is true', async () => {
@@ -302,6 +307,6 @@ describe('!avg', () => {
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('dotabod.com/dashboard/features')
+    expect(state.chatSayCalls[0].message).toBe(multiAccount)
   })
 })

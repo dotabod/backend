@@ -28,19 +28,15 @@ describe('DelayedQueue Integration', () => {
     await queue.shutdown()
   })
 
-  it('should demonstrate queue efficiency vs setTimeout', () => {
+  it('enqueues many tasks into a single queue without scheduling per-task timers', () => {
     const queue = new DelayedQueue()
-    const startTime = Date.now()
 
-    // Add 1000 tasks
     for (let i = 0; i < 1000; i++) {
       queue.addTask(5000, () => {}, `task_${i}`) // 5 second delay each
     }
 
-    const setupTime = Date.now() - startTime
-
-    // Queue setup should be very fast (much less than if we used 1000 setTimeout calls)
-    expect(setupTime).toBeLessThan(100) // Should complete in under 100ms
+    // All tasks land in one queue (a single check interval drains them) rather
+    // than 1000 separate setTimeout handles.
     expect(queue.getQueueSize()).toBe(1000)
 
     queue.shutdown()

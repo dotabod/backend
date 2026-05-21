@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
+import { t } from 'i18next'
 import { flushAsync } from '../../../__tests__/sharedMocks.ts'
 import { DBSettings } from '../../../settings.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
@@ -30,12 +31,27 @@ describe('!beta', () => {
 })
 
 describe('!toggle', () => {
-  it('persists the inverted commandDisable flag (no chat output)', async () => {
+  it('disables the bot by persisting commandDisable=true from the default (off)', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!toggle' }))
     expect(state.upsertCalls).toHaveLength(1)
     expect(state.upsertCalls[0].values).toMatchObject({
       key: DBSettings.commandDisable,
       value: true,
+    })
+    expect(state.chatSayCalls).toHaveLength(0)
+  })
+
+  it('re-enables the bot by persisting commandDisable=false when already disabled', async () => {
+    await commandHandler.handleMessage(
+      makeMessage({
+        content: '!toggle',
+        clientOverrides: { settings: [{ key: DBSettings.commandDisable, value: true }] } as any,
+      }),
+    )
+    expect(state.upsertCalls).toHaveLength(1)
+    expect(state.upsertCalls[0].values).toMatchObject({
+      key: DBSettings.commandDisable,
+      value: false,
     })
     expect(state.chatSayCalls).toHaveLength(0)
   })
@@ -54,7 +70,7 @@ describe('!today', () => {
       makeMessage({ content: '!today', clientOverrides: { steam32Id: null } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.toLowerCase()).toContain('steam')
+    expect(state.chatSayCalls[0].message).toBe(t('unknownSteam', { lng: 'en' }))
   })
 
   it('reports the multiAccount message when no steam id and multiAccount is set', async () => {
@@ -65,6 +81,21 @@ describe('!today', () => {
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('dotabod.com/dashboard/features')
+    expect(state.chatSayCalls[0].message).toBe(
+      t('multiAccount', { lng: 'en', url: 'dotabod.com/dashboard/features' }),
+    )
+  })
+
+  it('groups today matches into per-hero win/loss records', async () => {
+    state.recentList = [
+      { hero_name: 'npc_dota_hero_antimage', won: true },
+      { hero_name: 'npc_dota_hero_antimage', won: false },
+      { hero_name: 'npc_dota_hero_axe', won: true },
+    ] as any
+    await commandHandler.handleMessage(makeMessage({ content: '!today' }))
+    expect(state.chatSayCalls).toHaveLength(1)
+    const msg = state.chatSayCalls[0].message
+    expect(msg).toContain('Anti-Mage 1-1')
+    expect(msg).toContain('Axe 1-0')
   })
 })

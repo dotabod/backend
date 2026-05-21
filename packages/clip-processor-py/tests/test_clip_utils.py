@@ -237,3 +237,102 @@ def test_download_single_frame_reuses_existing_frame(tmp_path):
         out = clip_utils.download_single_frame({"id": "c1", "download_url": "http://x"})
     assert out.endswith("c1.jpg")
     mock_requests.get.assert_not_called()  # reused, never hit the network
+
+
+# --------------------------------------------------------------------------- #
+# download_clip
+# --------------------------------------------------------------------------- #
+def test_download_clip_raises_without_url():
+    with pytest.raises(ValueError, match="No download URL"):
+        clip_utils.download_clip({"id": "c1"})
+
+
+def test_download_clip_reuses_existing_file(tmp_path):
+    (tmp_path / "c1.mp4").write_bytes(b"cached")
+    with patch.object(clip_utils, "TEMP_DIR", tmp_path), \
+         patch("clip_utils.requests") as req:
+        out = clip_utils.download_clip({"id": "c1", "download_url": "http://x"})
+    assert out.endswith("c1.mp4")
+    req.get.assert_not_called()
+
+
+def test_download_clip_streams_and_writes(tmp_path):
+    resp = MagicMock()
+    resp.raise_for_status.return_value = None
+    resp.headers.get.return_value = 6
+    resp.iter_content.return_value = [b"abc", b"def"]
+    with patch.object(clip_utils, "TEMP_DIR", tmp_path), \
+         patch.object(clip_utils, "tqdm", MagicMock()), \
+         patch("clip_utils.requests") as req:
+        req.get.return_value = resp
+        out = clip_utils.download_clip({"id": "c2", "download_url": "http://x"})
+    assert (tmp_path / "c2.mp4").read_bytes() == b"abcdef"
+    assert out.endswith("c2.mp4")
+
+
+# --------------------------------------------------------------------------- #
+# extract_frames
+# --------------------------------------------------------------------------- #
+def test_extract_frames_reuses_existing(tmp_path):
+    frames = tmp_path / "frames"
+    frames.mkdir()
+    (frames / "clip9_frame_00000.jpg").write_bytes(b"x")
+    with patch.object(clip_utils, "TEMP_DIR", tmp_path), \
+         patch.object(clip_utils, "cv2") as cv2:
+        out = clip_utils.extract_frames(str(tmp_path / "clip9.mp4"))
+    assert len(out) == 1
+    cv2.VideoCapture.assert_not_called()
+
+
+def test_extract_frames_raises_when_video_unopenable(tmp_path):
+    cap = MagicMock()
+    cap.isOpened.return_value = False
+    with patch.object(clip_utils, "TEMP_DIR", tmp_path), \
+         patch.object(clip_utils, "cv2") as cv2:
+        cv2.VideoCapture.return_value = cap
+        with pytest.raises(ValueError, match="Could not open video"):
+            clip_utils.extract_frames(str(tmp_path / "missing.mp4"))
+
+
+def _opened_capture(cv2):
+    # 30fps over 30 frames -> 1s duration (2 timestamps); 1280x720 -> sub-1080.
+    cv2.CAP_PROP_FPS, cv2.CAP_PROP_FRAME_COUNT = "fps", "count"
+    cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT = "w", "h"
+    props = {"fps": 30, "count": 30, "w": 1280, "h": 720}
+    cap = MagicMock()
+    cap.isOpened.return_value = True
+    cap.get.side_effect = lambda prop: props[prop]
+    cap.read.return_value = (True, object())
+    cv2.VideoCapture.return_value = cap
+
+    def _imwrite(path, frame):
+        from pathlib import Path
+        Path(path).write_bytes(b"jpegbytes")
+        return True
+
+    cv2.imwrite.side_effect = _imwrite
+    return cap
+
+
+def test_extract_frames_resizes_when_not_1080(tmp_path):
+    with patch.object(clip_utils, "TEMP_DIR", tmp_path), \
+         patch.object(clip_utils, "tqdm", MagicMock()), \
+         patch.object(clip_utils, "cv2") as cv2:
+        _opened_capture(cv2)
+        out = clip_utils.extract_frames(
+            str(tmp_path / "c3.mp4"), clip_details={"selected_quality": "720"}
+        )
+    assert len(out) == 2  # timestamps 0.0 and 1.0
+    cv2.resize.assert_called()
+
+
+def test_extract_frames_no_resize_when_1080(tmp_path):
+    with patch.object(clip_utils, "TEMP_DIR", tmp_path), \
+         patch.object(clip_utils, "tqdm", MagicMock()), \
+         patch.object(clip_utils, "cv2") as cv2:
+        _opened_capture(cv2)
+        out = clip_utils.extract_frames(
+            str(tmp_path / "c4.mp4"), clip_details={"selected_quality": "1080"}
+        )
+    assert len(out) == 2
+    cv2.resize.assert_not_called()

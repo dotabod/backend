@@ -66,11 +66,21 @@ describe('!only', () => {
 })
 
 describe('!mute', () => {
-  it('toggles the chatter setting and announces it', async () => {
+  it('mutes by persisting chatter=false when it was on (the default) and announces it', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!mute' }))
     expect(state.upsertCalls).toHaveLength(1)
-    expect(state.upsertCalls[0].values).toMatchObject({ key: DBSettings.chatter })
-    expect(typeof state.upsertCalls[0].values.value).toBe('boolean')
+    expect(state.upsertCalls[0].values).toMatchObject({ key: DBSettings.chatter, value: false })
+    expect(state.chatSayCalls).toHaveLength(1)
+  })
+
+  it('un-mutes by persisting chatter=true when it was already off', async () => {
+    await commandHandler.handleMessage(
+      makeMessage({
+        content: '!mute',
+        clientOverrides: { settings: [{ key: DBSettings.chatter, value: false }] } as any,
+      }),
+    )
+    expect(state.upsertCalls[0].values).toMatchObject({ key: DBSettings.chatter, value: true })
     expect(state.chatSayCalls).toHaveLength(1)
   })
 

@@ -7,10 +7,11 @@ methods plus a single `_process_stream` iteration with `_capture_frame`/
 """
 
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+import stream_processor
 from stream_processor import StreamManager, StreamStatus
 
 
@@ -19,6 +20,20 @@ def manager():
     mgr = StreamManager(capture_interval=3, max_concurrent=10, quality="720p")
     yield mgr
     mgr.executor.shutdown(wait=False)
+
+
+@pytest.fixture(autouse=True)
+def _no_capture_sleep():
+    # _capture_frame sleeps 0.2s per skipped frame; collapse it.
+    with patch.object(stream_processor.time, "sleep"):
+        yield
+
+
+def _mock_capture(read_result, opened=True):
+    cap = MagicMock()
+    cap.isOpened.return_value = opened
+    cap.read.return_value = read_result
+    return cap
 
 
 # --------------------------------------------------------------------------- #
@@ -121,3 +136,201 @@ def test_process_stream_counts_dota_match(manager):
         asyncio.run(manager._process_stream("a"))
     assert manager.streams["a"]["dota_matches"] == 1
     assert manager.stats["dota_matches_found"] == 1
+
+
+# --------------------------------------------------------------------------- #
+# _capture_frame
+# --------------------------------------------------------------------------- #
+def test_capture_frame_returns_none_without_stream_url(manager):
+    with patch.object(stream_processor, "get_stream_url", return_value=None):
+        assert asyncio.run(manager._capture_frame("a")) is None
+
+
+def test_capture_frame_returns_none_when_capture_not_opened(manager):
+    cap = _mock_capture((True, object()), opened=False)
+    with patch.object(stream_processor, "get_stream_url", return_value="http://s"), \
+         patch.object(stream_processor.cv2, "VideoCapture", return_value=cap):
+        assert asyncio.run(manager._capture_frame("a")) is None
+
+
+def test_capture_frame_returns_none_on_preparing_screen(manager):
+    cap = _mock_capture((True, object()))
+    with patch.object(stream_processor, "get_stream_url", return_value="http://s"), \
+         patch.object(stream_processor.cv2, "VideoCapture", return_value=cap), \
+         patch.object(stream_processor, "is_preparing_screen", return_value=True):
+        assert asyncio.run(manager._capture_frame("a")) is None
+    cap.release.assert_called()
+
+
+def test_capture_frame_returns_none_when_read_fails(manager):
+    cap = _mock_capture((False, None))
+    with patch.object(stream_processor, "get_stream_url", return_value="http://s"), \
+         patch.object(stream_processor.cv2, "VideoCapture", return_value=cap):
+        assert asyncio.run(manager._capture_frame("a")) is None
+
+
+def test_capture_frame_writes_and_returns_path(manager, tmp_path):
+    cap = _mock_capture((True, object()))
+    with patch.object(stream_processor, "FRAMES_DIR", tmp_path), \
+         patch.object(stream_processor, "get_stream_url", return_value="http://s"), \
+         patch.object(stream_processor.cv2, "VideoCapture", return_value=cap), \
+         patch.object(stream_processor.cv2, "imwrite", return_value=True) as imwrite, \
+         patch.object(stream_processor, "is_preparing_screen", return_value=False):
+        out = asyncio.run(manager._capture_frame("alice"))
+    assert out is not None and out.endswith(".jpg") and "alice" in out
+    imwrite.assert_called()
+    cap.release.assert_called()
+
+
+# --------------------------------------------------------------------------- #
+# _process_frame
+# --------------------------------------------------------------------------- #
+def test_process_frame_skips_when_detection_unavailable(manager):
+    with patch.object(stream_processor, "DOTA_DETECTION_AVAILABLE", False):
+        assert asyncio.run(manager._process_frame("a", "/t/f.jpg")) is False
+
+
+def test_process_frame_detects_match_and_writes_result(manager, tmp_path):
+    with patch.object(stream_processor, "DOTA_DETECTION_AVAILABLE", True), \
+         patch.object(stream_processor, "RESULTS_DIR", tmp_path), \
+         patch.object(stream_processor, "process_frame_for_heroes",
+                      return_value={"heroes": [{"name": "x"}]}):
+        assert asyncio.run(manager._process_frame("alice", "/t/f.jpg")) is True
+    assert (tmp_path / "alice").exists()
+
+
+def test_process_frame_returns_false_when_no_heroes(manager, tmp_path):
+    with patch.object(stream_processor, "DOTA_DETECTION_AVAILABLE", True), \
+         patch.object(stream_processor, "RESULTS_DIR", tmp_path), \
+         patch.object(stream_processor, "process_frame_for_heroes", return_value={"heroes": []}):
+        assert asyncio.run(manager._process_frame("alice", "/t/f.jpg")) is False
+
+
+# --------------------------------------------------------------------------- #
+# _initialize / _scheduler
+# --------------------------------------------------------------------------- #
+def test_initialize_queues_all_streams(manager):
+    manager.add_stream("a")
+    manager.add_stream("b")
+    async def drive():
+        await manager._initialize()
+        return manager.stream_queue.qsize()
+    with patch.object(stream_processor.random, "uniform", return_value=0):
+        assert asyncio.run(drive()) == 2
+
+
+def test_scheduler_dispatches_due_stream(manager):
+    manager.add_stream("a")
+    processed = []
+    async def fake_process(u):
+        processed.append(u)
+    async def drive():
+        manager.running = True
+        manager.stream_queue = asyncio.PriorityQueue()
+        await manager.stream_queue.put((0, "a"))  # due now
+        task = asyncio.create_task(manager._scheduler())
+        for _ in range(5):
+            await asyncio.sleep(0)
+            if processed:
+                break
+        manager.running = False
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+    with patch.object(manager, "_process_stream", side_effect=fake_process):
+        asyncio.run(drive())
+    assert processed == ["a"]
+
+
+def test_scheduler_skips_removed_stream(manager):
+    async def drive():
+        manager.running = True
+        manager.stream_queue = asyncio.PriorityQueue()
+        await manager.stream_queue.put((0, "gone"))  # not in self.streams
+        task = asyncio.create_task(manager._scheduler())
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        manager.running = False
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+    with patch.object(manager, "_process_stream", new=AsyncMock()) as proc:
+        asyncio.run(drive())
+        proc.assert_not_called()
+
+
+# --------------------------------------------------------------------------- #
+# _health_check / _cleanup (one iteration, then running flips off)
+# --------------------------------------------------------------------------- #
+def test_health_check_runs_one_iteration(manager):
+    manager.add_stream("a")
+    manager.stats["total_captures"] = 4
+    manager.stats["successful_captures"] = 2
+
+    async def fake_sleep(_):
+        manager.running = False
+
+    async def drive():
+        manager.running = True
+        with patch.object(stream_processor.asyncio, "sleep", fake_sleep):
+            await manager._health_check()
+
+    asyncio.run(drive())  # exits cleanly after one pass
+
+
+def test_cleanup_removes_old_frames(manager, tmp_path):
+    import os
+    old = tmp_path / "old.jpg"
+    new = tmp_path / "new.jpg"
+    old.write_bytes(b"x")
+    new.write_bytes(b"x")
+    old_time = __import__("time").time() - (stream_processor.MAX_FRAME_AGE + 100)
+    os.utime(old, (old_time, old_time))
+
+    async def fake_sleep(_):
+        manager.running = False
+
+    async def drive():
+        manager.running = True
+        with patch.object(stream_processor, "FRAMES_DIR", tmp_path), \
+             patch.object(stream_processor.asyncio, "sleep", fake_sleep):
+            await manager._cleanup()
+
+    asyncio.run(drive())
+    assert not old.exists()
+    assert new.exists()
+
+
+# --------------------------------------------------------------------------- #
+# start / stop lifecycle
+# --------------------------------------------------------------------------- #
+def test_start_noop_when_already_running(manager):
+    manager.running = True
+    with patch.object(stream_processor.threading, "Thread") as thread:
+        manager.start()
+    thread.assert_not_called()
+
+
+def test_stop_noop_when_not_running(manager):
+    manager.running = False
+    manager.stop()  # must not raise
+    assert manager.running is False
+
+
+def test_stop_flips_running_flag(manager):
+    manager.running = True
+    manager.stop()
+    assert manager.running is False
+
+
+def test_run_starts_tasks_and_stops_cleanly(manager, tmp_path):
+    async def drive():
+        with patch.object(stream_processor, "FRAMES_DIR", tmp_path):
+            task = asyncio.create_task(manager.run())
+            for _ in range(5):
+                await asyncio.sleep(0)
+                if manager.running:
+                    break
+            assert manager.running is True
+            manager.stop()
+            await asyncio.wait_for(task, timeout=3)
+    asyncio.run(drive())
+    assert manager.running is False

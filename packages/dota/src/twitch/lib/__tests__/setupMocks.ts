@@ -189,6 +189,11 @@ function createSupabaseFromBuilder() {
         ? { data: state.olderMatch, error: null }
         : { data: null, error: { message: 'not found' } }
     },
+    // Terminal for chains awaited directly without .limit()/.single() (e.g.
+    // getTodayHeroStats ends in .order()). Resolves the list result.
+    // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock
+    then: (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
+      Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
   }
 
   return builder
@@ -354,6 +359,15 @@ await import('../../commands/gm')
 await import('../../commands/np')
 await import('../../commands/smurfs')
 await import('../../commands/lg')
+await import('../../commands/count')
+await import('../../commands/refresh')
+await import('../../commands/online')
+await import('../../commands/resetwl')
+await import('../../commands/hero')
+await import('../../commands/fixparty')
+await import('../../commands/fixdbl')
+await import('../../commands/winprobability')
+await import('../../commands/unresolved')
 
 // Monkey-patch the singletons we need behavior control over. Mocking these
 // modules wholesale would force us to enumerate every other transitive export.
@@ -389,6 +403,18 @@ const fakeGsiHandler = {
   },
 } as any
 gsiHandlers.set('token-abc', fakeGsiHandler)
+
+// Inject a stub socket.io server so commands that talk to the overlay
+// (count, refresh, online, resetwl, hero) don't throw "Server not initialized".
+// fetchSockets returns [] so overlay-dependent paths take their empty branch.
+const { server } = await import('../../../dota/server')
+server.setServer({
+  io: {
+    to: () => ({ emit: () => undefined }),
+    in: () => ({ fetchSockets: async () => [] }),
+    fetchSockets: async () => [],
+  },
+} as any)
 
 export type Client = Parameters<typeof resolveMatchRetroactively>[0]
 
@@ -430,6 +456,16 @@ export const baseMatchRow = (overrides: Partial<SessionMatchRow> = {}): SessionM
   won: null,
   ...overrides,
 })
+
+// A minimal "in a live match as your own hero" GSI packet. `extra` shallow-
+// merges so callers can override player/hero (e.g. set player.xpm).
+export const liveGsi = (extra: Record<string, unknown> = {}) =>
+  ({
+    map: { matchid: '7777777777' },
+    player: { accountid: 99999 },
+    hero: { id: 1 },
+    ...extra,
+  }) as any
 
 export function makeMessage({
   content,

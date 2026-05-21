@@ -1,8 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import { t } from 'i18next'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // Covers the simple, formatting-only commands (no GSI/DB coupling) dispatched
 // via commandHandler.handleMessage(). Companion to commands.integration.test.ts.
+const notLive = t('notLive', { emote: 'PauseChamp', lng: 'en' })
+const unknownSteam = t('unknownSteam', { lng: 'en' })
+const multiAccount = t('multiAccount', { lng: 'en', url: 'dotabod.com/dashboard/features' })
 
 beforeEach(() => {
   resetState()
@@ -61,7 +65,7 @@ describe('!steam', () => {
       makeMessage({ content: '!steam', clientOverrides: { steam32Id: null } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.toLowerCase()).toContain('steam')
+    expect(state.chatSayCalls[0].message).toBe(unknownSteam)
   })
 
   it('reports the multiAccount message when no steam32Id and multiAccount is set', async () => {
@@ -72,7 +76,7 @@ describe('!steam', () => {
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('dotabod.com/dashboard/features')
+    expect(state.chatSayCalls[0].message).toBe(multiAccount)
   })
 })
 
@@ -80,7 +84,7 @@ describe('!match', () => {
   it('reports gameNotFound when there is no live match', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!match' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.toLowerCase()).toContain('game')
+    expect(state.chatSayCalls[0].message).toBe(t('gameNotFound', { lng: 'en' }))
   })
 
   it('chats the match id when GSI has one', async () => {
@@ -99,7 +103,7 @@ describe('!match', () => {
       makeMessage({ content: '!match', clientOverrides: { stream_online: false } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notLive)
   })
 })
 
@@ -112,7 +116,7 @@ describe('!song', () => {
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.toLowerCase()).toMatch(/last|fm|configure/)
+    expect(state.chatSayCalls[0].message).toBe(t('lastFmNotConfigured', { lng: 'en' }))
   })
 
   it('blocks when the stream is offline (onlyOnline gate)', async () => {
@@ -120,6 +124,6 @@ describe('!song', () => {
       makeMessage({ content: '!song', clientOverrides: { stream_online: false } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notLive)
   })
 })

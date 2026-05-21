@@ -54,3 +54,6 @@ Thumbs.db
 
 # Logs
 **/logs/*
+
+# Stream API runtime config
+config/

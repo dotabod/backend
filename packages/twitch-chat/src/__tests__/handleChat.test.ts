@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
-import { handleChatMessage, resetState, sendTwitchChatMessage, state } from './sharedMocks.ts'
+import {
+  disableUserCache,
+  handleChatMessage,
+  resetState,
+  sendTwitchChatMessage,
+  state,
+} from './sharedMocks.ts'
 
 type EventOverrides = {
   text?: string
@@ -101,7 +107,11 @@ describe('sendTwitchChatMessage', () => {
   beforeEach(() => resetState())
 
   it('drops the message when the broadcaster is being disabled', async () => {
-    state.isDisabled = true
+    disableUserCache.set('user-1:b1', {
+      timestamp: Date.now(),
+      dropReason: 'manual',
+      providerAccountId: 'b1',
+    })
     const res = await sendTwitchChatMessage({
       broadcaster_id: 'b1',
       sender_id: 's1',

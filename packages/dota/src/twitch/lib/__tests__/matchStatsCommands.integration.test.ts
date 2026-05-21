@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
-import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
+import { t } from 'i18next'
+import { commandHandler, liveGsi, makeMessage, resetState, state } from './setupMocks.ts'
 
 // !items and !stats read live player data. Since ENABLE_SPECTATE_FRIEND_GAME
 // is false (Valve disabled the live-spectate proto), the non-spectator path
 // short-circuits to the "Valve disabled" message before touching Redis/steam.
-const liveGsi = () =>
-  ({ map: { matchid: '7777777777' }, player: { accountid: 99999 }, hero: { id: 1 } }) as any
+const valveDisabled = t('matchDataValveDisabled', { lng: 'en' })
+const notLive = t('notLive', { emote: 'PauseChamp', lng: 'en' })
+const notPlaying = t('notPlaying', { emote: 'PauseChamp', lng: 'en' })
 
 beforeEach(() => {
   resetState()
@@ -18,13 +20,13 @@ describe('!items', () => {
       makeMessage({ content: '!items', clientOverrides: { stream_online: false } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notLive)
   })
 
   it('reports notPlaying when there is no live match id', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!items' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 
   it('reports gameNotFound for a non-numeric match id', async () => {
@@ -35,7 +37,7 @@ describe('!items', () => {
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message.toLowerCase()).toContain('game')
+    expect(state.chatSayCalls[0].message).toBe(t('gameNotFound', { lng: 'en' }))
   })
 
   it('reports the Valve-disabled message for a live non-spectator match', async () => {
@@ -43,7 +45,7 @@ describe('!items', () => {
       makeMessage({ content: '!items', clientOverrides: { gsi: liveGsi() } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('Valve disabled')
+    expect(state.chatSayCalls[0].message).toBe(valveDisabled)
   })
 })
 
@@ -51,7 +53,7 @@ describe('!stats', () => {
   it('reports notPlaying when there is no live match id', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!stats' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('PauseChamp')
+    expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 
   it('reports the Valve-disabled message for a live non-spectator match', async () => {
@@ -59,7 +61,7 @@ describe('!stats', () => {
       makeMessage({ content: '!stats', clientOverrides: { gsi: liveGsi() } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('Valve disabled')
+    expect(state.chatSayCalls[0].message).toBe(valveDisabled)
   })
 
   it('routes the !kda alias to the same handler', async () => {
@@ -67,6 +69,6 @@ describe('!stats', () => {
       makeMessage({ content: '!kda', clientOverrides: { gsi: liveGsi() } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('Valve disabled')
+    expect(state.chatSayCalls[0].message).toBe(valveDisabled)
   })
 })
