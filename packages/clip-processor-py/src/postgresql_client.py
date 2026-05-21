@@ -263,11 +263,13 @@ class PostgresClient:
                     # Add facets to players array
                     if 'players' in result:
                         for player in result['players']:
-                            team = player['team'].lower()
-                            position = player['position']
+                            team = (player.get('team') or '').lower()
+                            position = player.get('position')
+                            if not team or position is None:
+                                continue
 
                             # Find matching facet info
-                            for hero_facet in facets[team]:
+                            for hero_facet in facets.get(team, []):
                                 if hero_facet['position'] == position:
                                     player['facet'] = hero_facet['facet']
                                     break
@@ -275,11 +277,13 @@ class PostgresClient:
                     # Also add facets to heroes array if present
                     if 'heroes' in result:
                         for hero in result['heroes']:
-                            team = hero['team'].lower()
+                            team = (hero.get('team') or '').lower()
+                            if not team or hero.get('position') is None:
+                                continue
                             position = hero['position'] + 1  # Convert to 1-indexed
 
                             # Find matching facet info
-                            for hero_facet in facets[team]:
+                            for hero_facet in facets.get(team, []):
                                 if hero_facet['position'] == position:
                                     hero['facet'] = hero_facet['facet']
                                     break
@@ -340,11 +344,13 @@ class PostgresClient:
                 if facets:
                     if 'players' in result:
                         for player in result['players']:
-                            team = player['team'].lower()
-                            position = player['position']
+                            team = (player.get('team') or '').lower()
+                            position = player.get('position')
+                            if not team or position is None:
+                                continue
 
                             # Find matching facet info
-                            for hero_facet in facets[team]:
+                            for hero_facet in facets.get(team, []):
                                 if hero_facet['position'] == position:
                                     player['facet'] = hero_facet['facet']
                                     break
@@ -352,11 +358,13 @@ class PostgresClient:
                     # Also add facets to heroes array if present
                     if 'heroes' in result:
                         for hero in result['heroes']:
-                            team = hero['team'].lower()
+                            team = (hero.get('team') or '').lower()
+                            if not team or hero.get('position') is None:
+                                continue
                             position = hero['position'] + 1  # Convert to 1-indexed
 
                             # Find matching facet info
-                            for hero_facet in facets[team]:
+                            for hero_facet in facets.get(team, []):
                                 if hero_facet['position'] == position:
                                     hero['facet'] = hero_facet['facet']
                                     break

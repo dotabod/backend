@@ -610,7 +610,7 @@ def extract_clip_id(clip_url):
     parsed = urlparse(clip_url)
     if parsed.path:
         # Get last part of path
-        path_parts = parsed.path.strip('/').split('/')
+        path_parts = [p for p in parsed.path.strip('/').split('/') if p]
         if path_parts:
             return path_parts[-1]
 
