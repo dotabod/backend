@@ -1,7 +1,7 @@
 import DOTA_HERO_ABILITIES from 'dotaconstants/build/hero_abilities.json' with { type: 'json' }
 import { t } from 'i18next'
 import { gsiHandlers } from '../../dota/lib/consts'
-import { getHeroById, getHeroNameOrColor } from '../../dota/lib/heroes'
+import { getHeroById, getHeroNameOrColor, withHeroLink } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
@@ -43,67 +43,60 @@ commandHandler.registerCommand('facet', {
       }
 
       const heroData = getHeroById(hero.id)
-      const requestedFacet = Number(args[args.length - 1]) || hero.facet
-      const heroFacet = getHeroFacet(heroData, requestedFacet || hero.facet || 0)
-      const totalFacets = getFacetCount(heroData)
+      const facets = getFacets(heroData)
+      const totalFacets = facets.length
+      const heroName = getHeroNameOrColor(hero.id, playerIdx)
 
       if (!totalFacets) {
         chatClient.say(
           channelName,
-          t('missingMatchData', { emote: 'PauseChamp', lng: channelClient.locale }),
+          withHeroLink(
+            t('facetTotalLimit', { lng: channelClient.locale, count: 0, heroName }),
+            hero.id,
+          ),
           message.user.messageId,
         )
         return
       }
 
-      if (requestedFacet && totalFacets < requestedFacet) {
+      // GSI never reliably reports the selected facet, so we can't show "their"
+      // facet. A numeric arg looks up that facet; otherwise list them all.
+      const requestedFacet = Number(args[args.length - 1])
+      if (Number.isInteger(requestedFacet) && requestedFacet >= 1) {
+        if (requestedFacet > totalFacets) {
+          chatClient.say(
+            channelName,
+            withHeroLink(
+              t('facetTotalLimit', { lng: channelClient.locale, count: totalFacets, heroName }),
+              hero.id,
+            ),
+            message.user.messageId,
+          )
+          return
+        }
+
+        const facet = facets[requestedFacet - 1]
         chatClient.say(
           channelName,
-          t('facetTotalLimit', {
-            lng: channelClient.locale,
-            count: totalFacets,
-            heroName: getHeroNameOrColor(hero.id, playerIdx),
-          }),
+          withHeroLink(
+            t('facet', {
+              lng: channelClient.locale,
+              heroName,
+              facetTitle: facet.title,
+              facetDescription: facet.description,
+              number: requestedFacet,
+            }),
+            hero.id,
+          ),
           message.user.messageId,
         )
         return
       }
 
-      if (!heroFacet) {
-        chatClient.say(
-          channelName,
-          t('facetNotFound', {
-            lng: channelClient.locale,
-            heroName: getHeroNameOrColor(hero.id, playerIdx),
-          }),
-          message.user.messageId,
-        )
-        return
-      }
-
-      if (hero.facet && (!requestedFacet || hero.facet === requestedFacet)) {
-        chatClient.say(
-          channelName,
-          t('facetSelection', {
-            lng: channelClient.locale,
-            heroName: getHeroNameOrColor(hero.id, playerIdx),
-            facetTitle: heroFacet.title,
-            facetDescription: heroFacet.description,
-          }),
-          message.user.messageId,
-        )
-        return
-      }
-
+      const list = facets.map((facet, index) => `${index + 1}: ${facet.title}`).join(' · ')
       chatClient.say(
         channelName,
-        t('facet', {
-          lng: channelClient.locale,
-          heroName: getHeroNameOrColor(hero.id, playerIdx),
-          facetTitle: heroFacet.title,
-          facetDescription: heroFacet.description,
-          number: requestedFacet || hero.facet,
-        }),
+        withHeroLink(t('facetList', { lng: channelClient.locale, heroName, list }), hero.id),
         message.user.messageId,
       )
     } catch (error: any) {
@@ -123,18 +116,8 @@ const isValidGSIHandler = (gsiHandler: any, matchId: any): boolean => {
 const isValidHero = (hero: any): boolean => {
   return typeof hero?.id === 'number' && !!getHeroById(hero.id)
 }
-const getFacetCount = (heroData: ReturnType<typeof getHeroById>) => {
-  const facets =
-    DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.facets || []
-  return facets.filter((facet) => (facet as any).deprecated !== 'true').length || null
-}
 
-const getHeroFacet = (
-  heroData: ReturnType<typeof getHeroById>,
-  facetIndex: number,
-): { title: string; description: string } | null => {
-  const facets =
-    DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.facets || []
-  const nonDeprecatedFacets = facets.filter((facet) => (facet as any).deprecated !== 'true')
-  return nonDeprecatedFacets[facetIndex - 1] || null
-}
+// dotaconstants flags every facet `deprecated`, including current in-game ones,
+// so we cannot filter on it — return the hero's full facet list as-is.
+const getFacets = (heroData: ReturnType<typeof getHeroById>) =>
+  DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.facets ?? []

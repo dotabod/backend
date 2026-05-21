@@ -1,7 +1,7 @@
 import DOTA_AGHS from 'dotaconstants/build/aghs_desc.json' with { type: 'json' }
 import { t } from 'i18next'
 import { gsiHandlers } from '../../dota/lib/consts'
-import { getHeroById, getHeroNameOrColor } from '../../dota/lib/heroes'
+import { getHeroById, getHeroNameOrColor, withHeroLink } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
@@ -57,22 +57,28 @@ commandHandler.registerCommand('shard', {
       if (!heroShard.has_shard) {
         return chatClient.say(
           channelName,
-          t('noShard', {
-            lng: channelClient.locale,
-            heroName: getHeroNameOrColor(hero.id, playerIdx),
-          }),
+          withHeroLink(
+            t('noShard', {
+              lng: channelClient.locale,
+              heroName: getHeroNameOrColor(hero.id, playerIdx),
+            }),
+            hero.id,
+          ),
           message.user.messageId,
         )
       }
 
       chatClient.say(
         channelName,
-        t('shard', {
-          lng: channelClient.locale,
-          heroName: getHeroNameOrColor(hero.id, playerIdx),
-          title: heroShard?.shard_skill_name,
-          description: heroShard?.shard_desc,
-        }),
+        withHeroLink(
+          t('shard', {
+            lng: channelClient.locale,
+            heroName: getHeroNameOrColor(hero.id, playerIdx),
+            title: heroShard?.shard_skill_name,
+            description: heroShard?.shard_desc,
+          }),
+          hero.id,
+        ),
         message.user.messageId,
       )
     } catch (error: any) {

@@ -1,7 +1,7 @@
 import DOTA_AGHS from 'dotaconstants/build/aghs_desc.json' with { type: 'json' }
 import { t } from 'i18next'
 import { gsiHandlers } from '../../dota/lib/consts'
-import { getHeroById, getHeroNameOrColor } from '../../dota/lib/heroes'
+import { getHeroById, getHeroNameOrColor, withHeroLink } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
@@ -57,22 +57,28 @@ commandHandler.registerCommand('aghs', {
       if (!heroAghs.has_scepter) {
         return chatClient.say(
           channelName,
-          t('noAghs', {
-            lng: channelClient.locale,
-            heroName: getHeroNameOrColor(hero.id, playerIdx),
-          }),
+          withHeroLink(
+            t('noAghs', {
+              lng: channelClient.locale,
+              heroName: getHeroNameOrColor(hero.id, playerIdx),
+            }),
+            hero.id,
+          ),
           message.user.messageId,
         )
       }
 
       chatClient.say(
         channelName,
-        t('aghs', {
-          lng: channelClient.locale,
-          heroName: getHeroNameOrColor(hero.id, playerIdx),
-          title: heroAghs?.scepter_skill_name,
-          description: heroAghs?.scepter_desc,
-        }),
+        withHeroLink(
+          t('aghs', {
+            lng: channelClient.locale,
+            heroName: getHeroNameOrColor(hero.id, playerIdx),
+            title: heroAghs?.scepter_skill_name,
+            description: heroAghs?.scepter_desc,
+          }),
+          hero.id,
+        ),
         message.user.messageId,
       )
     } catch (error: any) {

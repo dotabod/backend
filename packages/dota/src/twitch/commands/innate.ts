@@ -2,7 +2,7 @@ import DOTA_ABILITIES from 'dotaconstants/build/abilities.json' with { type: 'js
 import DOTA_HERO_ABILITIES from 'dotaconstants/build/hero_abilities.json' with { type: 'json' }
 import { t } from 'i18next'
 import { gsiHandlers } from '../../dota/lib/consts'
-import { getHeroById, getHeroNameOrColor } from '../../dota/lib/heroes'
+import { getHeroById, getHeroNameOrColor, withHeroLink } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
@@ -57,12 +57,15 @@ commandHandler.registerCommand('innate', {
 
       chatClient.say(
         channelName,
-        t('innate', {
-          lng: channelClient.locale,
-          heroName: getHeroNameOrColor(hero.id, playerIdx),
-          title: heroInnate.title,
-          description: heroInnate.description,
-        }),
+        withHeroLink(
+          t('innate', {
+            lng: channelClient.locale,
+            heroName: getHeroNameOrColor(hero.id, playerIdx),
+            title: heroInnate.title,
+            description: heroInnate.description,
+          }),
+          hero.id,
+        ),
         message.user.messageId,
       )
     } catch (error: any) {

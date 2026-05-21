@@ -57,6 +57,17 @@ export function getHeroById(id?: number) {
   return null
 }
 
+export function getHeroPageUrl(id?: number): string | null {
+  const hero = getHeroById(id)
+  if (!hero) return null
+  return `dota2.com/hero/${hero.key.replace('npc_dota_hero_', '')}`
+}
+
+export function withHeroLink(text: string, id?: number): string {
+  const url = getHeroPageUrl(id)
+  return url ? `${text} · ${url}` : text
+}
+
 export function getHeroByName(name: string, heroIdsInMatch?: (number | undefined)[]) {
   if (!name) return null
 
