@@ -23,6 +23,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Avoid circular dependencies (see CIRCULAR-DEPS.md)
 - Docker Compose is used for development and production environments
 
+## Single-replica constraint (no horizontal scaling / rolling overlap)
+
+Each service must run as **exactly one replica**. They are stateful singletons and running two at once breaks things: `dota` holds per-token game state in memory and fires non-idempotent side effects with no cross-instance coordination (no socket.io Redis adapter, so overlay emits only reach the process the overlay's socket is on; no Redis lock around bet open/close, so two instances can create duplicate Twitch predictions; `map.game_state` can double-create clips). `steam` logs into one Steam account (a 2nd login mutually kicks the Dota GC session). `twitch-chat` registers an EventSub conduit shard per instance (two → duplicate chat messages). `twitch-events` is the singleton conduit manager. This also rules out Coolify *rolling* deploys (which briefly run old+new together); deploys are a hard cutover, which is fine — each service recovers in single-digit seconds and the GSI/socket/webhook paths all self-heal via retry/reconnect. To ever scale `dota` past one replica you'd first need a socket.io Redis adapter + a cross-instance bet lock (covering both `GSIHandler` and `events/gsi-events/hero.name.ts`).
+
 ## CPU profile capture (Coolify)
 
 Each service runs on Coolify with `bun --cpu-prof` gated by the `CPU_PROF` env var. Coolify app UUIDs: dota `i8gccg8`, twitch-events `zwg4g4c`, twitch-chat `zwgkg48`, steam `wsgwk8s`.
