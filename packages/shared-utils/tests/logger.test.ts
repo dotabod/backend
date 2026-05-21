@@ -1,4 +1,10 @@
 import { afterEach, describe, expect, it, mock, spyOn } from 'bun:test'
+import { createAppLogger } from '../src/logger-impl'
+
+// Sibling tests' setupMocks globally mock '../src/logger' (no transports). Re-point
+// it to a real winston logger built from the unmocked factory so this file gets the
+// genuine instance regardless of file ordering.
+mock.module('../src/logger', () => ({ logger: createAppLogger() }))
 
 const originalEnv = { ...process.env }
 
