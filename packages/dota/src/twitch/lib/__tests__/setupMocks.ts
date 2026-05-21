@@ -339,6 +339,9 @@ await import('../../commands/setdelay')
 await import('../../commands/mute')
 await import('../../commands/ranked')
 await import('../../commands/spectators')
+await import('../../commands/friends')
+await import('../../commands/opendota')
+await import('../../commands/profile')
 
 // Monkey-patch the singletons we need behavior control over. Mocking these
 // modules wholesale would force us to enumerate every other transitive export.
