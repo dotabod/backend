@@ -1471,6 +1471,18 @@ def reset_stuck_processing_requests(timeout_minutes=2):
         logger.error(traceback.format_exc())
         return 0
 
+def _draft_response(match_id, status, heroes_status):
+    """Return a jsonify'd draft result (player names, heroes pending/failed) for
+    a match, or None if no draft result exists. `status` is omitted when None."""
+    draft = db_client.get_latest_draft_for_match(match_id)
+    if not draft:
+        return None
+    draft['match_id'] = match_id
+    if status is not None:
+        draft['status'] = status
+    draft['heroes_status'] = heroes_status
+    return jsonify(draft)
+
 @app.route('/match/<match_id>', methods=['GET'])
 @require_api_key
 def get_match_result(match_id):
@@ -1578,7 +1590,11 @@ def get_match_result(match_id):
                 }), 500
 
         elif match_status.get('status') in ('pending', 'processing'):
-            # If the match is in queue, return status
+            # A gameplay clip is still being processed. If a draft result already
+            # exists, surface its player names now with heroes still pending.
+            draft_response = _draft_response(match_id, match_status.get('status'), 'waiting')
+            if draft_response:
+                return draft_response
             return jsonify({
                 'status': match_status.get('status'),
                 'clip_id': match_status.get('clip_id'),
@@ -1588,11 +1604,10 @@ def get_match_result(match_id):
             })
 
         elif match_status.get('status') == 'draft':
-            # Return the latest draft result
-            draft = db_client.get_latest_draft_for_match(match_id)
-            if draft:
-                draft['match_id'] = match_id
-                return jsonify(draft)
+            # Return the latest draft result (player names only, heroes pending).
+            draft_response = _draft_response(match_id, None, 'waiting')
+            if draft_response:
+                return draft_response
             return jsonify({
                 'error': 'Draft result not found',
                 'status': 'draft',
@@ -1600,8 +1615,12 @@ def get_match_result(match_id):
             }), 404
 
         else:  # Failed
-            # If failed and no new clip_url, report failure
+            # If failed and no new clip_url, report failure. But if we captured a
+            # draft result, still return its player names with heroes_status=failed.
             if not clip_url:
+                draft_response = _draft_response(match_id, 'failed', 'failed')
+                if draft_response:
+                    return draft_response
                 return jsonify({
                     'error': 'Previous processing failed',
                     'status': 'failed',

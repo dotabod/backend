@@ -1,5 +1,5 @@
 import MongoDBSingleton from '../../steam/MongoDBSingleton'
-import type { DelayedGames, Packet, Players } from '../../types'
+import type { DelayedGames, HeroesStatus, Packet, Players } from '../../types'
 import { getSpectatorPlayers } from './getSpectatorPlayers'
 
 function getAllPlayers(data: DelayedGames) {
@@ -45,6 +45,9 @@ interface VisionApiMatchResponse {
   match_id: string
   heroes: VisionApiMatchHero[]
   players: VisionApiMatchPlayer[]
+  // Present when only a draft clip has been processed (player names, no heroes)
+  heroes_status?: HeroesStatus
+  draft_player_order?: (string | null)[]
   // other fields not needed for our use case
 }
 
@@ -59,6 +62,7 @@ export async function getAccountsFromMatch({
 } = {}): Promise<{
   matchPlayers: Players
   accountIds: number[]
+  heroesStatus?: HeroesStatus
 }> {
   const players = searchPlayers?.length ? searchPlayers : getSpectatorPlayers(gsi)
 
@@ -139,6 +143,27 @@ export async function getAccountsFromMatch({
           const data = (await apiResponse.json()) as VisionApiMatchResponse
 
           if (!Array.isArray(data.heroes) || data.heroes.length === 0) {
+            // Draft-only result: heroes aren't detected yet, but the draft clip
+            // gave us player names. Surface those so commands can show players.
+            const draftNames = (data.draft_player_order ?? []).filter(
+              (name): name is string => typeof name === 'string' && name.trim().length > 0,
+            )
+
+            if (draftNames.length > 0) {
+              const matchPlayers: Players = draftNames.map((name) => ({
+                heroid: undefined,
+                accountid: 0,
+                playerid: null,
+                player_name: name,
+              }))
+
+              return {
+                matchPlayers,
+                accountIds: [],
+                heroesStatus: data.heroes_status ?? 'waiting',
+              }
+            }
+
             return {
               matchPlayers: [],
               accountIds: [],

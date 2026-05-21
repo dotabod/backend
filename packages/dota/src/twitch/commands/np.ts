@@ -133,7 +133,7 @@ commandHandler.registerCommand('np', {
       return
     }
 
-    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
+    const { matchPlayers, heroesStatus } = await getAccountsFromMatch({ gsi: client.gsi })
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
       client.settings,
@@ -147,6 +147,7 @@ commandHandler.registerCommand('np', {
       players: matchPlayers,
       enableFlags: enableCountries,
       steam32Id: client.steam32Id,
+      heroesStatus,
     })
       .then((desc) => {
         chatClient.say(channel, desc.description, message.user.messageId)

@@ -194,6 +194,8 @@
   "noShard": "{{- heroName}} has no shard upgrade.",
   "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Not playing {{emote}}",
+  "notablePlayersNoHeroes": "heroes not found",
+  "notablePlayersWaitingHeroes": "waiting on heroes",
   "npAdd": "Try !np add <steam32id> <playername>",
   "npAdded": "Added {{name}} to !np for this channel",
   "npRemove": "Try !np remove <steam32id>",

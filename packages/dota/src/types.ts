@@ -661,6 +661,10 @@ export type Players = {
   player_name?: string
 }[]
 
+// Set when only a draft clip has been processed for a match: player names are
+// known but hero detection is still pending ('waiting') or didn't succeed ('failed').
+export type HeroesStatus = 'waiting' | 'failed'
+
 export type BlockType =
   | 'spectator'
   | 'empty'

@@ -4,7 +4,7 @@ import { t } from 'i18next'
 import { calculateAvg } from '../dota/lib/calculateAvg'
 import { getPlayers } from '../dota/lib/getPlayers'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
-import type { NotablePlayer, Players, SocketClient } from '../types'
+import type { HeroesStatus, NotablePlayer, Players, SocketClient } from '../types'
 import MongoDBSingleton from './MongoDBSingleton'
 
 export interface Player {
@@ -26,6 +26,7 @@ export async function notablePlayers({
   players,
   enableFlags,
   steam32Id,
+  heroesStatus,
 }: {
   client?: SocketClient
   locale: string
@@ -34,12 +35,22 @@ export async function notablePlayers({
   players?: Players
   enableFlags?: boolean
   steam32Id: number | null
+  heroesStatus?: HeroesStatus
 }) {
-  const { matchPlayers, accountIds, gameMode } = await getPlayers({
-    locale,
-    currentMatchId,
-    players,
-  })
+  // Draft-only path: the players passed in are OCR'd draft names with no ranks
+  // or hero data, so skip getPlayers (which would fire a needless Steam getCards
+  // lookup) and use them directly.
+  const { matchPlayers, accountIds, gameMode } = heroesStatus
+    ? {
+        matchPlayers: players ?? [],
+        accountIds: (players ?? []).map((p) => p.accountid),
+        gameMode: undefined,
+      }
+    : await getPlayers({
+        locale,
+        currentMatchId,
+        players,
+      })
 
   const mongo = MongoDBSingleton
   const db = await mongo.connect()
@@ -51,34 +62,42 @@ export async function notablePlayers({
           .findOne({ id: gameMode }, { projection: { _id: 0, name: 1 } })
       : { name: null }
 
-    const nps = await db
-      .collection<NotablePlayers>('notablePlayers')
-      .find(
-        {
-          account_id: {
-            $in: accountIds,
-          },
-          channel: {
-            $in: [null, twitchChannelId],
-          },
-        },
-        {
-          projection: {
-            _id: 0,
-            account_id: 1,
-            name: 1,
-            country_code: 1,
-          },
-        },
-      )
-      .toArray()
+    // Draft-only players have accountid 0, which can never match a stored
+    // record, so skip the lookup entirely when there are no real account ids.
+    const hasRealAccounts = accountIds.some((id) => id !== 0)
+    const nps = hasRealAccounts
+      ? await db
+          .collection<NotablePlayers>('notablePlayers')
+          .find(
+            {
+              account_id: {
+                $in: accountIds,
+              },
+              channel: {
+                $in: [null, twitchChannelId],
+              },
+            },
+            {
+              projection: {
+                _id: 0,
+                account_id: 1,
+                name: 1,
+                country_code: 1,
+              },
+            },
+          )
+          .toArray()
+      : []
 
-    // Description text
-    const avg = await calculateAvg({
-      locale: locale,
-      currentMatchId: currentMatchId,
-      players: players,
-    })
+    // Description text. When only draft player names are available (no heroes
+    // yet) there are no ranks to average, so skip the avg lookup entirely.
+    const avg = heroesStatus
+      ? null
+      : await calculateAvg({
+          locale: locale,
+          currentMatchId: currentMatchId,
+          players: players,
+        })
 
     const proPlayers: NotablePlayer[] = []
 
@@ -121,13 +140,20 @@ export async function notablePlayers({
       if (np || matchPlayers[i].player_name) proPlayers.push(playerData)
     }
 
-    const modeText =
-      typeof mode?.name === 'string' ? `${mode.name} [${avg} avg]: ` : `[${avg} avg]: `
+    let modeText: string
+    if (heroesStatus) {
+      const noteKey =
+        heroesStatus === 'failed' ? 'notablePlayersNoHeroes' : 'notablePlayersWaitingHeroes'
+      modeText = `[${t(noteKey, { lng: locale })}]: `
+    } else {
+      modeText = typeof mode?.name === 'string' ? `${mode.name} [${avg} avg]: ` : `[${avg} avg]: `
+    }
     const proPlayersString = proPlayers
       .map((m) => {
         const country: string =
           enableFlags && m.country_code ? `${countryCodeEmoji(m.country_code)} ` : ''
-        return `${country}${m.name} (${m.heroName})`
+        // Draft-only: heroes unknown, show names without the "(Hero)" suffix.
+        return heroesStatus ? `${country}${m.name}` : `${country}${m.name} (${m.heroName})`
       })
       .join(' · ')
 
