@@ -1,62 +1,28 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
-import type { ApiClient } from '@twurple/api'
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { is8500Plus } from '../../../utils/index'
 import { getStreamDelay } from '../../getStreamDelay'
 import { type allStates, draftStartByMatchId, GLOBAL_DELAY } from '../../lib/consts'
+import { type CreateReadyClipOptions, createReadyClip } from '../../lib/createReadyClip'
 import { delayedQueue } from '../../lib/DelayedQueue'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import eventHandler from '../EventHandler'
-
-// Twitch needs time to transcode a freshly captured clip. Until it does, the
-// clip reports duration 0 and its video renditions 404, so the vision processor
-// has no frame to analyze. Poll until the clip is transcoded before submitting.
-async function waitForClipReady(
-  api: ApiClient,
-  clipId: string,
-  logContext: Record<string, unknown>,
-): Promise<boolean> {
-  const MAX_ATTEMPTS = 6
-  const POLL_INTERVAL_MS = 5000
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    try {
-      const clip = await api.clips.getClipById(clipId)
-      if (clip && clip.duration > 0) return true
-    } catch (error: any) {
-      logger.warn('[Clip] Error checking clip readiness', {
-        ...logContext,
-        clipId,
-        attempt,
-        error: error.message,
-      })
-    }
-    if (attempt < MAX_ATTEMPTS)
-      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS))
-  }
-  return false
-}
 
 async function createAndSubmitClip(
   accountId: string,
   matchId: string | undefined,
   detectPath: 'detect' | 'detect_draft',
+  opts: CreateReadyClipOptions,
   logPrefix: string,
   logContext: Record<string, unknown>,
 ): Promise<void> {
   try {
     const api = await getTwitchAPI(accountId)
-    const clipId = await api.clips.createClip({
-      createAfterDelay: true,
-      channel: accountId,
-    })
+    const clipId = await createReadyClip(api, accountId, opts, logPrefix, logContext)
 
-    logger.info(`${logPrefix} clip created`, { ...logContext, clipId })
-
-    const ready = await waitForClipReady(api, clipId, logContext)
-    if (!ready) {
-      logger.error(`${logPrefix} clip never finished transcoding; skipping vision submission`, {
+    if (!clipId) {
+      logger.error(`${logPrefix} no usable clip after retries; skipping vision submission`, {
         ...logContext,
-        clipId,
       })
       return
     }
@@ -85,6 +51,21 @@ async function createAndSubmitClip(
       error: clipError.message,
     })
   }
+}
+
+// Heroes stay on the HUD all game, so retry generously with no deadline.
+const GAMEPLAY_CLIP_OPTS: CreateReadyClipOptions = {
+  maxAttempts: 3,
+  pollAttempts: 3,
+  pollIntervalMs: 5000,
+}
+
+// The draft screen is only visible briefly, so time-box the retries.
+const DRAFT_CLIP_OPTS: CreateReadyClipOptions = {
+  maxAttempts: 3,
+  pollAttempts: 2,
+  pollIntervalMs: 4000,
+  deadlineMs: 25000,
 }
 
 eventHandler.registerEvent('map:game_state', {
@@ -148,6 +129,7 @@ eventHandler.registerEvent('map:game_state', {
           accountId,
           dotaClient.client.gsi?.map?.matchid,
           'detect_draft',
+          DRAFT_CLIP_OPTS,
           '[Draft Clip]',
           logContext,
         )
@@ -164,6 +146,7 @@ eventHandler.registerEvent('map:game_state', {
           accountId,
           dotaClient.client.gsi?.map?.matchid,
           'detect',
+          GAMEPLAY_CLIP_OPTS,
           '[Clip]',
           logContext,
         )
