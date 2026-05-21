@@ -55,10 +55,9 @@ def test_extract_facet_region_none_portrait_returns_none():
     assert facet_detection.extract_facet_region(None, "Radiant") is None
 
 
-def test_extract_facet_region_radiant_uses_top_left_corner():
-    # A fake portrait: .shape gives (h, w); slicing returns a sentinel whose own
-    # slicing/shape is benign. We assert the Radiant branch starts at the left
-    # edge (x == FACET_SIDE_MARGIN) by capturing the slice indices.
+def _recording_portrait():
+    """A fake portrait whose .shape feeds the bounds math and whose __getitem__
+    records the (y, x) slice the extractor used, so we can assert the corner."""
     captured = {}
 
     class FakePortrait:
@@ -67,27 +66,22 @@ def test_extract_facet_region_radiant_uses_top_left_corner():
         def __getitem__(self, key):
             captured["yx"] = key
             region = MagicMock()
-            region.shape = (28, 28, 3)  # color -> triggers cvtColor path (stubbed)
+            region.shape = (28, 28, 3)  # color -> triggers the stubbed cvtColor path
             return region
 
-    facet_detection.extract_facet_region(FakePortrait(), "Radiant")
-    y_slice, x_slice = captured["yx"]
+    return FakePortrait(), captured
+
+
+def test_extract_facet_region_radiant_uses_top_left_corner():
+    portrait, captured = _recording_portrait()
+    facet_detection.extract_facet_region(portrait, "Radiant")
+    _, x_slice = captured["yx"]
     assert x_slice.start == facet_detection.FACET_SIDE_MARGIN  # left corner for Radiant
 
 
 def test_extract_facet_region_dire_uses_right_corner():
-    captured = {}
-
-    class FakePortrait:
-        shape = (72, 108, 3)
-
-        def __getitem__(self, key):
-            captured["yx"] = key
-            region = MagicMock()
-            region.shape = (28, 28, 3)
-            return region
-
-    facet_detection.extract_facet_region(FakePortrait(), "Dire")
-    y_slice, x_slice = captured["yx"]
+    portrait, captured = _recording_portrait()
+    facet_detection.extract_facet_region(portrait, "Dire")
+    _, x_slice = captured["yx"]
     # Dire pulls from the right side, so x start is well into the portrait width.
     assert x_slice.start > 0

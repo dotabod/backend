@@ -221,6 +221,37 @@ class PostgresClient:
             if conn:
                 self._return_connection(conn)
 
+    @staticmethod
+    def _merge_facets_into_result(result: Dict[str, Any], facets: Optional[Dict[str, Any]]) -> None:
+        """Attach stored facet info onto a result's players/heroes in place.
+
+        players carry 1-indexed positions; heroes are 0-indexed, hence the +1.
+        Rows missing team/position are skipped, and an absent team key is treated
+        as empty so a partial facets payload never discards the cached result.
+        """
+        if not facets or not isinstance(result, dict):
+            return
+
+        for player in result.get('players', []):
+            team = (player.get('team') or '').lower()
+            position = player.get('position')
+            if not team or position is None:
+                continue
+            for hero_facet in facets.get(team, []):
+                if hero_facet['position'] == position:
+                    player['facet'] = hero_facet['facet']
+                    break
+
+        for hero in result.get('heroes', []):
+            team = (hero.get('team') or '').lower()
+            if not team or hero.get('position') is None:
+                continue
+            position = hero['position'] + 1
+            for hero_facet in facets.get(team, []):
+                if hero_facet['position'] == position:
+                    hero['facet'] = hero_facet['facet']
+                    break
+
     def get_clip_result(self, clip_id: str) -> Optional[Dict[str, Any]]:
         """
         Get cached result for a clip_id if it exists.
@@ -258,35 +289,7 @@ class PostgresClient:
             if row:
                 logger.info(f"Found cached result for clip ID: {clip_id}")
                 result = row['results']
-                facets = row['facets']
-                if facets:
-                    # Add facets to players array
-                    if 'players' in result:
-                        for player in result['players']:
-                            team = (player.get('team') or '').lower()
-                            position = player.get('position')
-                            if not team or position is None:
-                                continue
-
-                            # Find matching facet info
-                            for hero_facet in facets.get(team, []):
-                                if hero_facet['position'] == position:
-                                    player['facet'] = hero_facet['facet']
-                                    break
-
-                    # Also add facets to heroes array if present
-                    if 'heroes' in result:
-                        for hero in result['heroes']:
-                            team = (hero.get('team') or '').lower()
-                            if not team or hero.get('position') is None:
-                                continue
-                            position = hero['position'] + 1  # Convert to 1-indexed
-
-                            # Find matching facet info
-                            for hero_facet in facets.get(team, []):
-                                if hero_facet['position'] == position:
-                                    hero['facet'] = hero_facet['facet']
-                                    break
+                self._merge_facets_into_result(result, row['facets'])
                 return result
             else:
                 logger.debug(f"No cached result found for clip ID: {clip_id}")
@@ -336,38 +339,11 @@ class PostgresClient:
 
             if row:
                 result = row['results']
-                facets = row['facets']
                 # Add clip details to result
                 if isinstance(result, dict):
                     result['clip_id'] = row['clip_id']
                     result['clip_url'] = row['clip_url']
-                if facets:
-                    if 'players' in result:
-                        for player in result['players']:
-                            team = (player.get('team') or '').lower()
-                            position = player.get('position')
-                            if not team or position is None:
-                                continue
-
-                            # Find matching facet info
-                            for hero_facet in facets.get(team, []):
-                                if hero_facet['position'] == position:
-                                    player['facet'] = hero_facet['facet']
-                                    break
-
-                    # Also add facets to heroes array if present
-                    if 'heroes' in result:
-                        for hero in result['heroes']:
-                            team = (hero.get('team') or '').lower()
-                            if not team or hero.get('position') is None:
-                                continue
-                            position = hero['position'] + 1  # Convert to 1-indexed
-
-                            # Find matching facet info
-                            for hero_facet in facets.get(team, []):
-                                if hero_facet['position'] == position:
-                                    hero['facet'] = hero_facet['facet']
-                                    break
+                self._merge_facets_into_result(result, row['facets'])
                 # Also attach latest draft info if available
                 try:
                     draft = self.get_latest_draft_for_match(match_id)
