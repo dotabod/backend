@@ -14,6 +14,7 @@
     "docker:production": "bun ./dist/index.js",
     "docker:development": "bun src/index.ts",
     "build": "bun build --target=bun --outfile=./dist/index.js --outdir=./dist --production --sourcemap=external --packages=external ./src/index.ts",
+    "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

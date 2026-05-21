@@ -44,6 +44,7 @@ export const state: {
   redisGet: Record<string, string | null>
   redisDelCalls: string[]
   updateCalls: Array<{ values: Record<string, unknown>; whereId: string | null }>
+  upsertCalls: Array<{ values: Record<string, unknown>; options?: unknown }>
   updateMmrCalls: Array<Record<string, unknown>>
   chatSayCalls: Array<{ channel: string; message: string; messageId?: string }>
   steamSocketResponse: { matches: unknown[] } | null
@@ -72,6 +73,7 @@ export const state: {
   redisGet: {},
   redisDelCalls: [],
   updateCalls: [],
+  upsertCalls: [],
   updateMmrCalls: [],
   chatSayCalls: [],
   steamSocketResponse: null,
@@ -102,6 +104,7 @@ export function resetState() {
   state.redisGet = {}
   state.redisDelCalls = []
   state.updateCalls = []
+  state.upsertCalls = []
   state.updateMmrCalls = []
   state.chatSayCalls = []
   state.steamSocketResponse = null
@@ -144,6 +147,10 @@ function createSupabaseFromBuilder() {
       mode = 'update'
       updateValues = values
       return builder
+    },
+    upsert: (values: Record<string, unknown>, options?: unknown) => {
+      state.upsertCalls.push({ values, options })
+      return Promise.resolve({ data: null, error: null })
     },
     eq: (col: string, val: string) => {
       if (mode === 'update' && col === 'id') {
@@ -296,6 +303,23 @@ await import('../../commands/dotabuff')
 await import('../../commands/pleb')
 await import('../../commands/apm')
 await import('../../commands/avg')
+await import('../../commands/version')
+await import('../../commands/commands')
+await import('../../commands/dotabod')
+await import('../../commands/steam')
+await import('../../commands/song')
+await import('../../commands/match')
+await import('../../commands/xpm')
+await import('../../commands/aghs')
+await import('../../commands/shard')
+await import('../../commands/d2pt')
+await import('../../commands/facet')
+await import('../../commands/innate')
+await import('../../commands/mmr=')
+await import('../../commands/modsonly')
+await import('../../commands/only')
+await import('../../commands/setdelay')
+await import('../../commands/mute')
 
 // Monkey-patch the singletons we need behavior control over. Mocking these
 // modules wholesale would force us to enumerate every other transitive export.
