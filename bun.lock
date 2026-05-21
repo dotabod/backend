@@ -566,7 +566,7 @@
 
     "dota2": ["dota2@github:dotabod/node-dota2#4a1a095", { "dependencies": { "deferred": "^0.7.10", "long": "^4.0.0", "merge": "^1.2.1", "steam": "https://github.com/dotabod/node-steam", "steam-resources": "https://github.com/dotabod/node-steam-resources", "winston": "^3.2.1" } }, "dotabod-node-dota2-4a1a095", "sha512-7WiqPRFSb9Dx7VDBNgZ7k4VSbMG1aDP/Oe0tYWpbs4fjQoh/5C62rynpNyu6I16SdPiv4an7aEKYxZZS9GG6kQ=="],
 
-    "dotaconstants": ["dotaconstants@github:dotabod/dotaconstants#af4ee03", {}, "dotabod-dotaconstants-af4ee03", "sha512-+mmUs5+GIn+LpkmEHS8fdfpomCOyYbLCKqHzXhv/bjzVExwqIKzDlUoMTa1Qk9X3O5fpffBIIZK1+wm69y0ukg=="],
+    "dotaconstants": ["dotaconstants@github:dotabod/dotaconstants#7b8f034", {}, "dotabod-dotaconstants-7b8f034", "sha512-CW6v0Pmz0I2g/Rb2Xj6QSHlg3KvHIPVCrbhRfqtWoDk5AWvUqNcsT9S1zj5KQEywosDmwfpFS2DPb9JGYQpSRQ=="],
 
     "dotenv": ["dotenv@16.4.7", "", {}, "sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ=="],
 
