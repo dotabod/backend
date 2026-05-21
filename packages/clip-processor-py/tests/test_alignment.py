@@ -90,6 +90,27 @@ def test_cyrillic_confusable_aligns_to_latin():
     assert mapping == {0: 0}
 
 
+def test_word_swapped_multiword_names_align_via_token_overlap():
+    # Regression guard for the tokenizer fix: before tokenizing the raw name,
+    # "Team Liquid" / "Liquid Team" collapsed to single tokens and the difflib
+    # ratio (~0.60) fell below min_ratio (0.7), leaving them UNMATCHED. Token
+    # overlap (1.0) now aligns them.
+    players = _p("Liquid Team")
+    draft = ["Team Liquid"]
+    mapping, reordered = _align_players_with_draft(players, draft)
+    assert mapping == {0: 0}
+    assert reordered[0]["player_name"] == "Liquid Team"
+
+
+def test_partial_token_overlap_below_threshold_stays_unmatched():
+    # Only one of two draft words appears -> overlap 0.5, below the 0.6 cutoff,
+    # and the difflib ratio is low, so it remains unmatched (no false positive).
+    players = _p("Evil Geniuses")
+    draft = ["Team Spirit"]
+    mapping, _ = _align_players_with_draft(players, draft)
+    assert mapping == {}
+
+
 def test_reordered_length_matches_draft_when_counts_differ():
     players = _p("Miracle-", "N0tail")
     draft = ["Miracle-", "N0tail", "Topson"]  # one extra draft slot
@@ -182,15 +203,12 @@ def test_refine_captain_anchor_takes_precedence_over_ambiguous_leftover():
     assert reordered[0]["player_name"] == "Cap"
 
 
-def test_refine_word_reordered_team_names_do_not_align_well():
-    # Documents a real limitation: _normalize_name strips spaces, collapsing
-    # "Team Liquid" / "Liquid Team" into single tokens, so the token-overlap path
-    # cannot recover word-swapped names. They still get *assigned* here (refine has
-    # no threshold), but only via the weak difflib-ratio fallback, not containment.
+def test_refine_word_reordered_team_names_align_via_token_overlap():
+    # Tokens come from the raw name, so word-swapped multi-word names align via
+    # token overlap (every word of one appears in the other).
     players = _p("Liquid Team")
     draft = ["Team Liquid"]
     mapping, _ = _refine_alignment_with_captains_and_leftovers(
         {}, players, draft, draft_info={}
     )
-    # assigned (no threshold in refine) but not by containment
     assert mapping == {0: 0}

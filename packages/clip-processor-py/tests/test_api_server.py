@@ -121,17 +121,51 @@ def test_process_stream_request_direct_handles_no_result():
     assert "error" in result
 
 
-def test_process_stream_request_queue_path_returns_queue_info(monkeypatch):
+def test_process_stream_request_new_insert_starts_worker(monkeypatch):
+    # A fresh enqueue (no 'deduplicated' flag) must start the worker and report
+    # it as newly queued -- NOT as "already in the queue".
     monkeypatch.setenv("RUN_LOCALLY", "false")
     db = MagicMock()
     db.add_to_queue.return_value = ("rid", {"status": "pending", "position": 2, "estimated_wait_seconds": 30})
     with patch.object(api_server, "db_client", db), \
-         patch.object(api_server, "start_worker_thread"):
+         patch.object(api_server, "start_worker_thread") as start_worker:
         result = api_server.process_stream_request("streamer", add_to_queue=True)
     assert result["queued"] is True
     assert result["request_id"] == "rid"
-    assert result["status"] == "pending"
     assert result["position"] == 2
+    assert "already in the processing queue" not in result.get("message", "")
+    start_worker.assert_called_once()
+
+
+def test_process_stream_request_dedup_hit_does_not_start_worker(monkeypatch):
+    monkeypatch.setenv("RUN_LOCALLY", "false")
+    db = MagicMock()
+    db.add_to_queue.return_value = (
+        "existing", {"status": "pending", "position": 5, "deduplicated": True},
+    )
+    with patch.object(api_server, "db_client", db), \
+         patch.object(api_server, "start_worker_thread") as start_worker:
+        result = api_server.process_stream_request("streamer", add_to_queue=True)
+    assert result["request_id"] == "existing"
+    assert result["message"] == "This stream is already in the processing queue"
+    start_worker.assert_not_called()
+
+
+def test_process_clip_request_dedup_hit_reports_already_queued(monkeypatch):
+    monkeypatch.setenv("RUN_LOCALLY", "false")
+    db = MagicMock()
+    db.get_clip_result.return_value = None
+    db.check_for_match_processing.return_value = {"found": False}
+    db.add_to_queue.return_value = (
+        "existing", {"status": "processing", "position": 1, "deduplicated": True},
+    )
+    with patch.object(api_server, "db_client", db), \
+         patch.object(api_server, "start_worker_thread") as start_worker:
+        result = api_server.process_clip_request(
+            clip_url="u", clip_id="abc", add_to_queue=True,
+        )
+    assert result["message"] == "This clip is currently being processed"
+    start_worker.assert_not_called()
 
 
 # --------------------------------------------------------------------------- #

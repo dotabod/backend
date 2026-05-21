@@ -681,6 +681,18 @@ def _normalize_name(s: str) -> str:
     return ''.join(ch for ch in s if ch.isalnum())
 
 
+def _normalize_tokens(s: str) -> list:
+    """Split a raw name into normalized word tokens (length >= 2).
+
+    Tokenizing the *raw* name (before `_normalize_name` strips spaces) is what lets
+    word-swapped multi-word names ("Team Liquid" / "Liquid Team") align via token
+    overlap; tokenizing the already-collapsed normalized form never could.
+    """
+    if not s:
+        return []
+    return [t for t in (_normalize_name(w) for w in re.split(r"\s+", s.strip())) if len(t) >= 2]
+
+
 def _align_players_with_draft(players: list, draft_order: list, min_ratio: float = 0.7):
     """Return mapping and reordered players based on draft order names using tolerant fuzzy match.
 
@@ -690,19 +702,14 @@ def _align_players_with_draft(players: list, draft_order: list, min_ratio: float
       3) token overlap (>= 0.5)
       4) difflib ratio (>= min_ratio)
     """
-    def tokens(s: str):
-        # split by spaces after unicode normalization; keep tokens length>=2
-        t = [t for t in re.split(r"\s+", s) if len(t) >= 2]
-        return t or ([s] if s else [])
-
     current_raw = [p.get('player_name', '') or '' for p in players]
     draft_raw = [n or '' for n in draft_order]
 
     current_norm = [_normalize_name(x) for x in current_raw]
     draft_norm = [_normalize_name(x) for x in draft_raw]
 
-    current_tokens = [tokens(x) for x in current_norm]
-    draft_tokens = [tokens(x) for x in draft_norm]
+    current_tokens = [_normalize_tokens(x) for x in current_raw]
+    draft_tokens = [_normalize_tokens(x) for x in draft_raw]
 
     # Step 1: exact matches
     unmatched_current = set(range(len(players)))
@@ -807,13 +814,9 @@ def _refine_alignment_with_captains_and_leftovers(mapping, players, draft_order,
 
     # 2) If leftovers remain (1-3 pairs), assign by best score without thresholds
     if unmatched_draft and unmatched_current:
-        # reuse scoring from alignment
-        def tokens(s: str):
-            t = [t for t in re.split(r"\s+", s) if len(t) >= 2]
-            return t or ([s] if s else [])
-
-        draft_tokens = [tokens(x) for x in draft_norm]
-        current_tokens = [tokens(x) for x in current_norm]
+        # reuse scoring from alignment (tokenize raw names so word order can match)
+        draft_tokens = [_normalize_tokens(n or '') for n in draft_order]
+        current_tokens = [_normalize_tokens(p.get('player_name', '') or '') for p in players]
 
         candidates = []
         for di in list(unmatched_draft):
@@ -966,8 +969,9 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
             only_draft=only_draft
         )
 
-        # Check if this is an existing request already in the queue
-        if 'status' in queue_info and queue_info.get('status') in ('pending', 'processing'):
+        # Only an already-queued duplicate short-circuits here; a fresh insert
+        # (also 'pending') must fall through to start the worker.
+        if queue_info.get('deduplicated'):
             # Create a response with queue status info
             response = {
                 'queued': True,
@@ -979,10 +983,10 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                 'estimated_completion_time': queue_info.get('estimated_completion_time'),
             }
 
-            if queue_info.get('status') == 'pending':
-                response['message'] = 'This clip is already in the processing queue'
-            elif queue_info.get('status') == 'processing':
+            if queue_info.get('status') == 'processing':
                 response['message'] = 'This clip is currently being processed'
+            else:
+                response['message'] = 'This clip is already in the processing queue'
 
             return response
 
@@ -1132,8 +1136,9 @@ def process_stream_request(username, num_frames=3, debug=False, include_image=Tr
             include_image=include_image
         )
 
-        # Check if this is an existing request already in the queue
-        if 'status' in queue_info and queue_info.get('status') in ('pending', 'processing'):
+        # Only an already-queued duplicate short-circuits here; a fresh insert
+        # (also 'pending') must fall through to start the worker.
+        if queue_info.get('deduplicated'):
             # Create a response with queue status info
             response = {
                 'queued': True,
@@ -1145,10 +1150,10 @@ def process_stream_request(username, num_frames=3, debug=False, include_image=Tr
                 'estimated_completion_time': queue_info.get('estimated_completion_time'),
             }
 
-            if queue_info.get('status') == 'pending':
-                response['message'] = 'This stream is already in the processing queue'
-            elif queue_info.get('status') == 'processing':
+            if queue_info.get('status') == 'processing':
                 response['message'] = 'This stream is currently being processed'
+            else:
+                response['message'] = 'This stream is already in the processing queue'
 
             return response
 
