@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
+import { LOBBY_TYPE_RANKED } from '../../../db/getWL.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // Commands that read live match data from the (mocked) MongoDB delayedGames
 // collection via state.delayedGame.
-const LOBBY_TYPE_RANKED = 7
-
 const liveGsi = () => ({ map: { matchid: '7777777777' } }) as any
 
 beforeEach(() => {
@@ -54,7 +53,7 @@ describe('!ranked', () => {
     expect(state.chatSayCalls[0].message.toLowerCase()).toContain('steam')
   })
 
-  it('reports ranked_no for a non-match lobby id of 0', async () => {
+  it('reports not-ranked for a non-match lobby id of 0', async () => {
     await commandHandler.handleMessage(
       makeMessage({
         content: '!ranked',
@@ -62,6 +61,7 @@ describe('!ranked', () => {
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message.toLowerCase()).toContain('not ranked')
   })
 
   it('reports ranked yes when the Mongo lobby_type is ranked', async () => {
@@ -70,6 +70,9 @@ describe('!ranked', () => {
       makeMessage({ content: '!ranked', clientOverrides: { gsi: liveGsi() } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
+    const msg = state.chatSayCalls[0].message.toLowerCase()
+    expect(msg).toContain('ranked')
+    expect(msg).not.toContain('not ranked')
   })
 
   it('reports ranked no when the Mongo lobby_type is unranked', async () => {
@@ -78,6 +81,7 @@ describe('!ranked', () => {
       makeMessage({ content: '!ranked', clientOverrides: { gsi: liveGsi() } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message.toLowerCase()).toContain('not ranked')
   })
 
   it('reports missingMatchData when Mongo has no row', async () => {

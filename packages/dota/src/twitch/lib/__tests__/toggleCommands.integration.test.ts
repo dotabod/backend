@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
 import { flushAsync } from '../../../__tests__/sharedMocks.ts'
+import { DBSettings } from '../../../settings.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // Mod commands that flip a persisted flag (beta -> users.update, toggle ->
@@ -32,7 +33,10 @@ describe('!toggle', () => {
   it('persists the inverted commandDisable flag (no chat output)', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!toggle' }))
     expect(state.upsertCalls).toHaveLength(1)
-    expect(state.upsertCalls[0].values).toMatchObject({ key: 'commandDisable', value: true })
+    expect(state.upsertCalls[0].values).toMatchObject({
+      key: DBSettings.commandDisable,
+      value: true,
+    })
     expect(state.chatSayCalls).toHaveLength(0)
   })
 

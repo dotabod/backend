@@ -57,6 +57,7 @@ export function resetState() {
   })
   state.fetchThrows = null
   state.logError = []
+  clearDedupeCache()
 }
 
 mock.module('@dotabod/shared-utils', () => ({
@@ -99,6 +100,9 @@ globalThis.fetch = (async (url: string, options: any) => {
 }) as unknown as typeof fetch
 
 // Import after mocks are registered.
-export const { sendTwitchChatMessage, handleChatMessage, ChatMessageResponseCode } = await import(
-  '../handleChat'
-)
+export const {
+  sendTwitchChatMessage,
+  handleChatMessage,
+  ChatMessageResponseCode,
+  clearDedupeCache,
+} = await import('../handleChat')
