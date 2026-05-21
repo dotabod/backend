@@ -1,23 +1,22 @@
-import { afterEach, describe, expect, it, mock, spyOn } from 'bun:test'
+import { afterEach, describe, expect, it, spyOn } from 'bun:test'
 import { createAppLogger } from '../src/logger-impl'
 
-// Sibling tests' setupMocks globally mock '../src/logger' (no transports). Re-point
-// it to a real winston logger built from the unmocked factory so this file gets the
-// genuine instance regardless of file ordering.
-mock.module('../src/logger', () => ({ logger: createAppLogger() }))
+// Build the genuine winston logger directly from the factory rather than mocking
+// '../src/logger'. Sibling tests' setupMocks globally mock that module (no
+// transports); re-pointing it here leaked the real logger into other files via
+// mock.restore(), so we avoid touching the module mock entirely.
 
 const originalEnv = { ...process.env }
 
 afterEach(() => {
   process.env = { ...originalEnv }
-  mock.restore()
 })
 
 // Winston delivers to transports via a stream, so flush a tick before asserting.
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 async function captureLogs(emit: (logger: any) => void) {
-  const { logger } = await import('../src/logger')
+  const logger = createAppLogger()
   const transport = logger.transports[0]
   const captured: any[] = []
   spyOn(transport, 'log').mockImplementation((info: any, next?: () => void) => {
