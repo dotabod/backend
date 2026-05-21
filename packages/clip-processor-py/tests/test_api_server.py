@@ -1,178 +1,309 @@
-#!/usr/bin/env python3
+"""Characterization tests for api_server: pure helpers, the queue worker
+dispatch, and the process_clip_request cache matrix.
+
+These pin behavior before `process_queue_worker` (145 lines) and
+`process_clip_request` (243 lines) get decomposed.
 """
-Tests for the API server functionality, focusing on queue processing and frame_image_url handling
-"""
 
-import unittest
-from unittest.mock import patch, MagicMock, ANY
-import os
-import sys
-import json
-from pathlib import Path
+from unittest.mock import MagicMock, patch
 
-# Add the src directory to the Python path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+import pytest
 
-from api_server import process_clip_request, process_queue_worker, get_image_url, parse_bool_param
+import api_server
 
 
-class APIServerTests(unittest.TestCase):
-    """Test cases for the API server functionality"""
+class _StopLoop(Exception):
+    """Sentinel used to break process_queue_worker's `while True` after one pass."""
 
-    def test_parse_bool_param_truthy_and_falsy(self):
-        """Ensure parse_bool_param handles common truthy/falsy values."""
-        self.assertTrue(parse_bool_param("1", False))
-        self.assertTrue(parse_bool_param("TRUE", False))
-        self.assertTrue(parse_bool_param("yes", False))
-        self.assertFalse(parse_bool_param("0", True))
-        self.assertFalse(parse_bool_param("False", True))
-        self.assertFalse(parse_bool_param("no", True))
-        self.assertTrue(parse_bool_param(None, True))
-        self.assertFalse(parse_bool_param("unknown", False))
 
-    @patch("api_server.process_clip_url")
-    @patch("api_server.db_client")
-    @patch("api_server.get_image_url")
-    def test_process_clip_request_from_worker(self, mock_get_image_url, mock_db_client, mock_process_clip_url):
-        """Test that frame_image_url is handled correctly when called from worker thread"""
-        # Setup mocks
-        mock_process_clip_url.return_value = {
-            "best_frame_info": {
-                "frame_path": "/path/to/frame.jpg"
-            }
-        }
-        mock_get_image_url.return_value = "http://example.com/images/frame.jpg"
-        mock_db_client.get_clip_result.return_value = None
-        mock_db_client.save_clip_result.return_value = True
+# --------------------------------------------------------------------------- #
+# parse_bool_param
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize(
+    "value, default, expected",
+    [
+        ("1", False, True),
+        ("TRUE", False, True),
+        ("yes", False, True),
+        ("on", False, True),
+        ("0", True, False),
+        ("False", True, False),
+        ("no", True, False),
+        ("off", True, False),
+        (None, True, True),
+        (None, False, False),
+        ("unknown", False, False),
+        ("unknown", True, True),
+    ],
+)
+def test_parse_bool_param(value, default, expected):
+    assert api_server.parse_bool_param(value, default) is expected
 
-        # Test direct processing (not from worker)
-        result = process_clip_request(
-            clip_url="https://clips.twitch.tv/test",
-            clip_id="test123",
-            debug=False,
-            force=True,
-            include_image=True,
-            add_to_queue=False,
-            from_worker=False
+
+# --------------------------------------------------------------------------- #
+# extract_clip_id
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize(
+    "url, expected",
+    [
+        ("https://clips.twitch.tv/AbcDef123", "AbcDef123"),
+        ("https://www.twitch.tv/streamer/clip/Funny-Clip-Name", "Funny-Clip-Name"),
+        ("https://example.com/x?clip=My-Clip-99", "My-Clip-99"),
+        # pattern 1 stops at the first non-alnum (hyphen not allowed there)
+        ("https://clips.twitch.tv/Foo-Bar", "Foo"),
+        # no pattern matches -> last path segment fallback
+        ("https://example.com/some/path/segment", "segment"),
+    ],
+)
+def test_extract_clip_id(url, expected):
+    assert api_server.extract_clip_id(url) == expected
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://example.com",       # bare domain, no path
+        "https://example.com/",      # trailing slash only
+        "https://clips.twitch.tv/?x=1",  # query only, no clip slug
+    ],
+)
+def test_extract_clip_id_junk_urls_return_none(url):
+    # BUG TARGET #4: for URLs with no usable clip slug, extract_clip_id falls
+    # through to the last path segment and returns "" (empty string) instead of
+    # None. An empty clip_id then becomes a cache key / queue-dedup key downstream
+    # and can collide across unrelated requests. Correct behavior: return None.
+    assert api_server.extract_clip_id(url) is None
+
+
+# --------------------------------------------------------------------------- #
+# reset_stuck_processing_requests
+# --------------------------------------------------------------------------- #
+def test_reset_stuck_counts_both_started_and_null_started():
+    db = MagicMock()
+    cursor = MagicMock()
+    db._get_connection.return_value.cursor.return_value = cursor
+    # one row with started_at, two rows with NULL started_at -> total 3
+    cursor.fetchall.side_effect = [[("r1",)], [("r2",), ("r3",)]]
+    with patch.object(api_server, "db_client", db):
+        total = api_server.reset_stuck_processing_requests(timeout_minutes=2)
+    assert total == 3
+    assert cursor.execute.call_count == 2
+    db._get_connection.return_value.commit.assert_called_once()
+
+
+def test_reset_stuck_returns_zero_on_db_error():
+    db = MagicMock()
+    db._get_connection.return_value.cursor.return_value.execute.side_effect = RuntimeError("boom")
+    with patch.object(api_server, "db_client", db):
+        assert api_server.reset_stuck_processing_requests() == 0
+
+
+# --------------------------------------------------------------------------- #
+# process_stream_request
+# --------------------------------------------------------------------------- #
+def test_process_stream_request_direct_returns_result():
+    # conftest sets RUN_LOCALLY=true, which forces add_to_queue=False (direct path).
+    stream_result = {"players": [{"player_name": "x"}]}
+    with patch.object(api_server, "process_stream_username", return_value=stream_result) as psu:
+        result = api_server.process_stream_request(
+            "streamer", num_frames=3, include_image=False, from_worker=True
         )
+    psu.assert_called_once()
+    assert result["players"] == [{"player_name": "x"}]
+    assert "processing_time" in result
 
-        # Verify frame_image_url is included
-        self.assertIn("frame_image_url", result)
-        mock_get_image_url.assert_called_once()
 
-        # Reset mocks
-        mock_get_image_url.reset_mock()
-        mock_db_client.save_clip_result.reset_mock()
-
-        # Test processing from worker
-        result = process_clip_request(
-            clip_url="https://clips.twitch.tv/test",
-            clip_id="test123",
-            debug=False,
-            force=True,
-            include_image=True,
-            add_to_queue=False,
-            from_worker=True
+def test_process_stream_request_direct_handles_no_result():
+    with patch.object(api_server, "process_stream_username", return_value=None):
+        result = api_server.process_stream_request(
+            "streamer", include_image=False, from_worker=True
         )
+    assert "error" in result
 
-        # Verify frame_image_url is NOT included when called from worker thread
-        self.assertNotIn("frame_image_url", result)
-        mock_get_image_url.assert_not_called()
 
-        # Verify frame_image_url is removed before saving to database
-        mock_db_client.save_clip_result.assert_called_once()
-        saved_result = mock_db_client.save_clip_result.call_args[0][2]
-        self.assertNotIn("frame_image_url", saved_result)
+def test_process_stream_request_queue_path_returns_queue_info(monkeypatch):
+    monkeypatch.setenv("RUN_LOCALLY", "false")
+    db = MagicMock()
+    db.add_to_queue.return_value = ("rid", {"status": "pending", "position": 2, "estimated_wait_seconds": 30})
+    with patch.object(api_server, "db_client", db), \
+         patch.object(api_server, "start_worker_thread"):
+        result = api_server.process_stream_request("streamer", add_to_queue=True)
+    assert result["queued"] is True
+    assert result["request_id"] == "rid"
+    assert result["status"] == "pending"
+    assert result["position"] == 2
 
-    @patch("api_server.db_client")
-    def test_get_cached_result_from_worker(self, mock_db_client):
-        """Test that frame_image_url is not added to cached results when called from worker thread"""
-        # Setup mock
-        mock_db_client.get_clip_result.return_value = {
-            "best_frame_path": "/path/to/frame.jpg"
-        }
 
-        # When from_worker is False, we should try to add frame_image_url
-        with patch("api_server.Path.exists", return_value=True), \
-             patch("api_server.get_image_url", return_value="http://example.com/images/frame.jpg") as mock_get_image_url:
+# --------------------------------------------------------------------------- #
+# get_image_url
+# --------------------------------------------------------------------------- #
+def test_get_image_url_builds_url_from_request_host(tmp_path):
+    fake_request = MagicMock()
+    fake_request.host_url = "http://vision.local/"
+    with patch.object(api_server, "IMAGE_DIR", tmp_path), \
+         patch.object(api_server, "request", fake_request), \
+         patch("shutil.copy2") as copy2:
+        image_url, saved = api_server.get_image_url("/frames/best.jpg", "clip42")
+    copy2.assert_called_once()
+    assert image_url == "http://vision.local/images/clip42.jpg"
+    assert saved == image_url
 
-            # Test retrieving cached result (not from worker)
-            result = process_clip_request(
-                clip_url="https://clips.twitch.tv/test",
-                clip_id="test123",
-                debug=False,
-                force=False,
-                include_image=True,
-                add_to_queue=False,
-                from_worker=False
-            )
 
-            # Verify we attempted to add frame_image_url
-            self.assertIn("frame_image_url", result)
-            mock_get_image_url.assert_called_once()
+def test_get_image_url_returns_none_on_copy_failure(tmp_path):
+    with patch.object(api_server, "IMAGE_DIR", tmp_path), \
+         patch("shutil.copy2", side_effect=OSError("disk full")):
+        assert api_server.get_image_url("/frames/best.jpg", "clip42") == (None, None)
 
-            # Reset mocks
-            mock_get_image_url.reset_mock()
 
-            # Test retrieving cached result (from worker)
-            result = process_clip_request(
-                clip_url="https://clips.twitch.tv/test",
-                clip_id="test123",
-                debug=False,
-                force=False,
-                include_image=True,
-                add_to_queue=False,
-                from_worker=True
-            )
+# --------------------------------------------------------------------------- #
+# process_queue_worker dispatch
+# --------------------------------------------------------------------------- #
+def _run_worker_once(db, first_request):
+    """Drive process_queue_worker through exactly one request then stop."""
+    db.get_next_pending_request.side_effect = [first_request, _StopLoop()]
+    with patch.object(api_server, "db_client", db), \
+         patch.object(api_server.time, "sleep"):
+        # _StopLoop propagates to the worker's broad except and ends the loop.
+        api_server.process_queue_worker()
 
-            # Verify we did NOT attempt to add frame_image_url
-            self.assertNotIn("frame_image_url", result)
-            mock_get_image_url.assert_not_called()
 
-    @patch("api_server.db_client")
-    @patch("api_server.process_clip_request")
-    def test_process_queue_worker_removes_frame_image_url(self, mock_process_clip_request, mock_db_client):
-        """Test that process_queue_worker handles frame_image_url correctly"""
-        # Setup mocks
-        mock_db_client.is_queue_processing.side_effect = [False, True]  # Run only once
-        mock_db_client.get_next_pending_request.return_value = {
-            "request_id": "req123",
-            "request_type": "clip",
-            "clip_url": "https://clips.twitch.tv/test",
-            "clip_id": "test123",
-            "debug": False,
-            "force": False,
-            "include_image": True
-        }
+def test_worker_clip_branch_saves_result_without_frame_image_url():
+    db = MagicMock()
+    clip_request = {
+        "request_id": "req1",
+        "request_type": "clip",
+        "clip_url": "https://clips.twitch.tv/abc",
+        "clip_id": "abc",
+        "debug": False,
+        "force": False,
+        "include_image": True,
+    }
+    worker_result = {"players": [{"player_name": "x"}], "frame_image_url": "http://img/x.jpg"}
 
-        # Mock the result from process_clip_request including a frame_image_url
-        mock_process_clip_request.return_value = {
-            "best_frame_info": {"frame_path": "/path/to/frame.jpg"},
-            "frame_image_url": "http://example.com/images/frame.jpg"
-        }
+    with patch.object(api_server, "process_clip_request", return_value=worker_result) as pcr:
+        _run_worker_once(db, clip_request)
 
-        # Run the worker
-        with patch("api_server.time.sleep"):  # Skip sleep
-            process_queue_worker()
+    # routed to clip processing as a worker call
+    assert pcr.call_count == 1
+    assert pcr.call_args.kwargs["from_worker"] is True
+    assert pcr.call_args.kwargs["add_to_queue"] is False
 
-        # Verify process_clip_request was called with from_worker=True
-        mock_process_clip_request.assert_called_once_with(
-            ANY, ANY, ANY, ANY, ANY, add_to_queue=False, from_worker=True
+    # frame_image_url stripped before persisting
+    db.save_clip_result.assert_called_once()
+    saved_result = db.save_clip_result.call_args[0][2]
+    assert "frame_image_url" not in saved_result
+
+    # status transitions: processing -> completed
+    statuses = [c.args[1] for c in db.update_queue_status.call_args_list]
+    assert statuses == ["processing", "completed"]
+
+
+def test_worker_stream_branch_does_not_call_save_clip_result():
+    db = MagicMock()
+    stream_request = {
+        "request_id": "req2",
+        "request_type": "stream",
+        "stream_username": "streamer",
+        "num_frames": 3,
+        "debug": False,
+        "include_image": True,
+    }
+    worker_result = {"players": [{"player_name": "x"}]}
+
+    with patch.object(api_server, "process_stream_request", return_value=worker_result) as psr:
+        _run_worker_once(db, stream_request)
+
+    assert psr.call_count == 1
+    assert psr.call_args.kwargs["from_worker"] is True
+    db.save_clip_result.assert_not_called()
+    statuses = [c.args[1] for c in db.update_queue_status.call_args_list]
+    assert statuses == ["processing", "completed"]
+
+
+def test_worker_marks_failed_when_no_players_detected():
+    db = MagicMock()
+    clip_request = {
+        "request_id": "req3",
+        "request_type": "clip",
+        "clip_url": "https://clips.twitch.tv/abc",
+        "clip_id": "abc",
+        "debug": False,
+        "force": False,
+        "include_image": True,
+    }
+    with patch.object(api_server, "process_clip_request", return_value={"players": []}):
+        _run_worker_once(db, clip_request)
+
+    statuses = [c.args[1] for c in db.update_queue_status.call_args_list]
+    assert statuses == ["processing", "failed"]
+    db.save_clip_result.assert_not_called()
+
+
+# --------------------------------------------------------------------------- #
+# process_clip_request cache matrix (force=False)
+# --------------------------------------------------------------------------- #
+def test_clip_request_returns_existing_draft_for_match():
+    db = MagicMock()
+    db.get_latest_draft_for_match.return_value = {"is_draft": True, "clip_id": "old"}
+    with patch.object(api_server, "db_client", db):
+        result = api_server.process_clip_request(
+            clip_url="u", clip_id="abc", match_id="m1", only_draft=True,
+            add_to_queue=False, from_worker=True,
         )
-
-        # Verify frame_image_url is removed before saving to database
-        mock_db_client.save_clip_result.assert_called_once()
-
-        # Check if first argument of the third call has frame_image_url removed
-        # (db_client.update_queue_status will be called first, then save_clip_result)
-        saved_args = mock_db_client.save_clip_result.call_args[0]
-
-        # The result should be the third argument (index 2)
-        saved_result = saved_args[2] if len(saved_args) > 2 else {}
-
-        # Verify frame_image_url was removed
-        self.assertNotIn("frame_image_url", saved_result)
+    assert result["match_id"] == "m1"
+    db.get_clip_result.assert_not_called()
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_clip_request_reuses_completed_match_result():
+    db = MagicMock()
+    db.check_for_match_processing.return_value = {"found": True, "status": "completed", "clip_id": "old"}
+    db.get_clip_result.return_value = {"players": [{"player_name": "x"}]}
+    with patch.object(api_server, "db_client", db):
+        result = api_server.process_clip_request(
+            clip_url="u", clip_id="abc", match_id="m1", only_draft=False,
+            add_to_queue=False, from_worker=True,
+        )
+    assert result["match_id"] == "m1"
+    assert result["clip_id"] == "old"
+
+
+def test_clip_request_returns_cached_draft_when_only_draft():
+    db = MagicMock()
+    db.get_clip_result.return_value = {"is_draft": True, "players": [], "saved_image_path": None}
+    with patch.object(api_server, "db_client", db):
+        result = api_server.process_clip_request(
+            clip_url="u", clip_id="abc", only_draft=True,
+            add_to_queue=False, from_worker=True,
+        )
+    assert result["is_draft"] is True
+
+
+def test_clip_request_returns_filtered_cache_for_non_draft():
+    db = MagicMock()
+    db.get_clip_result.return_value = {
+        "is_draft": False,
+        "players": [{"player_name": "x"}],
+        "heroes": [{"name": "h"}],
+        "saved_image_path": "/img/x.jpg",
+        "extra": "should-be-dropped",
+    }
+    with patch.object(api_server, "db_client", db):
+        result = api_server.process_clip_request(
+            clip_url="u", clip_id="abc", only_draft=False,
+            add_to_queue=False, from_worker=True,
+        )
+    assert set(result.keys()) == {"saved_image_path", "players", "heroes"}
+    assert "extra" not in result
+
+
+def test_clip_request_force_skips_cache_and_processes():
+    db = MagicMock()
+    with patch.object(api_server, "db_client", db), \
+         patch.object(api_server, "process_clip_url", return_value={"players": [{"player_name": "x"}]}) as pcu:
+        result = api_server.process_clip_request(
+            clip_url="u", clip_id="abc", force=True,
+            add_to_queue=False, from_worker=True, include_image=False,
+        )
+    db.get_clip_result.assert_not_called()
+    pcu.assert_called_once()
+    assert result["players"] == [{"player_name": "x"}]

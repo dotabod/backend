@@ -33,7 +33,13 @@ assets/reference.png
 
 # Virtual environment
 venv/
+.venv/
 .env/
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Editor files
 .vscode/
