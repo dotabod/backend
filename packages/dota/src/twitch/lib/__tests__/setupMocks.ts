@@ -347,6 +347,13 @@ await import('../../commands/toggle')
 await import('../../commands/today')
 await import('../../commands/clearsharing')
 await import('../../commands/lgs')
+await import('../../commands/items')
+await import('../../commands/stats')
+await import('../../commands/geo')
+await import('../../commands/gm')
+await import('../../commands/np')
+await import('../../commands/smurfs')
+await import('../../commands/lg')
 
 // Monkey-patch the singletons we need behavior control over. Mocking these
 // modules wholesale would force us to enumerate every other transitive export.
