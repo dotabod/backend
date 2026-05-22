@@ -9,6 +9,7 @@ export interface GSIHandlerType {
   ) => Promise<void>
   openBets: (client: SocketClient) => Promise<void>
   emitNotablePlayers: () => Promise<void>
+  emitStreamersInMatch: () => Promise<void>
   emitBadgeUpdate: () => void
   updateSteam32Id: () => Promise<void>
   setupOBSBlockers: (gameState: string) => Promise<void>

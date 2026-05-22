@@ -6,6 +6,7 @@ eventHandler.registerEvent('saveHeroesForMatchId', {
     const playingMatchId = await redisClient.client.get(`${dotaClient.getToken()}:matchId`)
     if (playingMatchId && playingMatchId === matchId) {
       await dotaClient.emitNotablePlayers()
+      await dotaClient.emitStreamersInMatch()
     }
   },
 })

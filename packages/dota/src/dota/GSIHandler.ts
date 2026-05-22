@@ -31,6 +31,7 @@ import { blockTypes, pickSates } from './lib/consts'
 import { delayedQueue } from './lib/DelayedQueue'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch'
 import getHero, { type HeroNames } from './lib/getHero'
+import { getStreamersInMatch } from './lib/getStreamersInMatch'
 import { getHeroById } from './lib/heroes'
 import { isArcade } from './lib/isArcade'
 import { isSpectator } from './lib/isSpectator'
@@ -351,6 +352,35 @@ export class GSIHandler implements GSIHandlerType {
       .catch(() => {
         // stream not live
       })
+  }
+
+  async emitStreamersInMatch() {
+    if (!this.client.stream_online) return
+
+    const announceEnabled = getValueOrDefault(
+      DBSettings.streamersAnnounce,
+      this.client.settings,
+      this.client.subscription,
+    )
+    if (!announceEnabled) return
+
+    const matchId = this.client.gsi?.map?.matchid
+    if (!matchId) return
+
+    // Only announce once per match (steam can emit saveHeroesForMatchId repeatedly).
+    const announcedKey = `${this.client.token}:streamersAnnounced`
+    if ((await redisClient.client.get(announcedKey)) === matchId) return
+
+    const count = await getStreamersInMatch({
+      gsi: this.client.gsi,
+      excludeUserId: this.client.token,
+    })
+    if (count <= 0) return
+
+    await redisClient.client.set(announcedKey, matchId)
+    say(this.client, t('streamersInMatchAnnounce', { count, lng: this.client.locale }), {
+      key: DBSettings.streamersAnnounce,
+    })
   }
 
   emitBadgeUpdate() {

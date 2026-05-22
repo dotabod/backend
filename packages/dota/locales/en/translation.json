@@ -262,6 +262,13 @@
   "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "There is no stream delay on this channel",
+  "streamersInMatch_zero": "No other Dotabod streamers in this match {{emote}}",
+  "streamersInMatch_one": "Playing with {{count}} other Dotabod streamer {{emote}}",
+  "streamersInMatch_other": "Playing with {{count}} other Dotabod streamers {{emote}}",
+  "streamersInMatchAnnounce_one": "By the way, {{count}} other Dotabod streamer is in this match",
+  "streamersInMatchAnnounce_other": "By the way, {{count}} other Dotabod streamers are in this match",
+  "streamersSuffix_one": "{{count}} other streamer in match",
+  "streamersSuffix_other": "{{count}} other streamers in match",
   "subscriptionRequired": "✨ Unlock this command and more features with Dotabod Pro. Visit dotabod.com to subscribe or dotabod.com/{{channel}}/gift to gift your streamer a sub!",
   "tip": {
     "from": "The tip from {{- heroName}} {{emote}}",

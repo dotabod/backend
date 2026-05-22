@@ -47,6 +47,7 @@ export const defaultCommands = {
   commandWon: true,
   commandLost: true,
   commandToday: true,
+  commandStreamers: true,
 } as const
 
 export type CommandKeys = keyof typeof defaultCommands
@@ -151,6 +152,8 @@ export const defaultSettingsStructure = {
   notablePlayersOverlay: true,
   notablePlayersOverlayFlags: true,
   notablePlayersOverlayFlagsCmd: true,
+  streamersNpSuffix: false,
+  streamersAnnounce: false,
   winProbabilityOverlay: false,
   advancedBets: false,
   discardZeroBets: false,

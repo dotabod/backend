@@ -2,6 +2,7 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { getStreamersInMatch } from '../../dota/lib/getStreamersInMatch'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import type { NotablePlayers } from '../../steam/notableplayers'
@@ -151,8 +152,23 @@ commandHandler.registerCommand('np', {
       steam32Id: client.steam32Id,
       heroesStatus,
     })
-      .then((desc) => {
-        chatClient.say(channel, withClippingNote(desc.description, note), message.user.messageId)
+      .then(async (desc) => {
+        let description = desc.description
+        const showStreamers = getValueOrDefault(
+          DBSettings.streamersNpSuffix,
+          client.settings,
+          client.subscription,
+        )
+        if (showStreamers) {
+          const count = await getStreamersInMatch({
+            players: matchPlayers,
+            excludeUserId: client.token,
+          })
+          if (count > 0) {
+            description = `${description} · ${t('streamersSuffix', { count, lng: client.locale })}`
+          }
+        }
+        chatClient.say(channel, withClippingNote(description, note), message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(
