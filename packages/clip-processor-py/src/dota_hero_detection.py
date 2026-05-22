@@ -1837,7 +1837,7 @@ def match_in_game_icon(icon, templates, top_n=3):
     return results[:top_n]
 
 
-def process_frame_for_in_game_heroes(frame_path, debug=False):
+def process_frame_for_in_game_heroes(frame_path, debug=False, frame=None):
     """
     Identify the 10 heroes from the live in-game top HUD bar of a single frame.
 
@@ -1846,10 +1846,13 @@ def process_frame_for_in_game_heroes(frame_path, debug=False):
     resolves duplicates. Skips the picking-only player-name / rank / facet steps,
     which target the larger loadout layout and aren't legible on the in-game bar.
     Returns hero dicts (team, position, hero_id, hero_localized_name, match_score).
+
+    ``frame`` may be passed pre-decoded to avoid re-reading the file.
     """
     performance_timer.start('process_in_game_frame')
     try:
-        frame = load_image(frame_path)
+        if frame is None:
+            frame = load_image(frame_path)
         if frame is None:
             logger.error(f"Could not load frame: {frame_path}")
             return []
@@ -1864,13 +1867,19 @@ def process_frame_for_in_game_heroes(frame_path, debug=False):
             logger.warning(f"No in-game hero icons extracted from frame: {frame_path}")
             return []
 
-        hero_candidates = []
-        for team, position, hero_icon in hero_icons:
+        # Match the 10 slots concurrently; cv2.matchTemplate releases the GIL, so
+        # threads give a near-linear speedup (mirrors the picking path).
+        def _match_slot(slot):
+            team, position, hero_icon = slot
             matches = match_in_game_icon(hero_icon, templates)
             for m in matches:
                 m['team'] = team
                 m['position'] = position
-            hero_candidates.append(matches)
+            return matches
+
+        max_workers = min(os.cpu_count() or 4, 4)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            hero_candidates = list(executor.map(_match_slot, hero_icons))
 
         identified_heroes = resolve_hero_duplicates(hero_candidates, debug=debug)
         identified_heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
@@ -2840,7 +2849,7 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
         # in-game confidence threshold rather than the default.
         if in_game:
             thr = IN_GAME_CONFIDENCE_THRESHOLD
-            heroes = process_frame_for_in_game_heroes(frame_paths[0], debug=debug)
+            heroes = process_frame_for_in_game_heroes(frame_paths[0], debug=debug, frame=frame)
             if heroes:
                 heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
                 for hero in heroes:

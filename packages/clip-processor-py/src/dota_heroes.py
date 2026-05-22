@@ -295,6 +295,13 @@ def discover_spectral_variants(heroes, cached_hero_data=None):
 
     discovered = 0
     with requests.Session() as session:
+        # Size the connection pool to the worker count so keep-alive is reused
+        # instead of churning ("Connection pool is full") under concurrency.
+        adapter = requests.adapters.HTTPAdapter(
+            pool_connections=SPECTRAL_PROBE_MAX_WORKERS,
+            pool_maxsize=SPECTRAL_PROBE_MAX_WORKERS,
+        )
+        session.mount("https://", adapter)
         with ThreadPoolExecutor(max_workers=SPECTRAL_PROBE_MAX_WORKERS) as executor:
             future_to_item = {
                 executor.submit(spectral_variant_exists, session, hero.get("tag"), variant): (hero, variant)
