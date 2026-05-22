@@ -394,6 +394,10 @@ chatClient.say = (async (channel: string, message: string, messageId?: string) =
     state.redisDelCalls.push(key)
     return 1
   },
+  json: {
+    get: async () => null,
+    set: async () => 'OK',
+  },
 }
 
 const fakeGsiHandler = {

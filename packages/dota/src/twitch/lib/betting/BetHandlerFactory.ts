@@ -3,19 +3,19 @@ import { type BaseBetHandler, BetType } from './BetType'
 // import { WinLossBetHandler } from './WinLossBetHandler'
 
 // Factory functions to handle different bet types
-const handlers: Record<BetType, BaseBetHandler> = {
-  [BetType.WIN_LOSS]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
-  [BetType.FIRST_TOWER]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
-  [BetType.STREAMER_TP_LOCATION]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
-  [BetType.DIE_BEFORE_MINUTE]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
-  [BetType.ROSH_DEATH_TIME]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
-  [BetType.FIRST_ROSH_TEAM]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
-  [BetType.FIRST_BLOOD]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
-  [BetType.ITEM_TIMING]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
-  [BetType.CS_BY_MINUTE]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
-  [BetType.KDA_BY_MINUTE]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
-  [BetType.BUILDING_DESTROYED_BY_MINUTE]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
-  [BetType.GAME_DURATION]: undefined as unknown as BaseBetHandler, // TODO: Will implement later
+const handlers: Record<BetType, BaseBetHandler | undefined> = {
+  [BetType.WIN_LOSS]: undefined, // TODO: Will implement later
+  [BetType.FIRST_TOWER]: undefined, // TODO: Will implement later
+  [BetType.STREAMER_TP_LOCATION]: undefined, // TODO: Will implement later
+  [BetType.DIE_BEFORE_MINUTE]: undefined, // TODO: Will implement later
+  [BetType.ROSH_DEATH_TIME]: undefined, // TODO: Will implement later
+  [BetType.FIRST_ROSH_TEAM]: undefined, // TODO: Will implement later
+  [BetType.FIRST_BLOOD]: undefined, // TODO: Will implement later
+  [BetType.ITEM_TIMING]: undefined, // TODO: Will implement later
+  [BetType.CS_BY_MINUTE]: undefined, // TODO: Will implement later
+  [BetType.KDA_BY_MINUTE]: undefined, // TODO: Will implement later
+  [BetType.BUILDING_DESTROYED_BY_MINUTE]: undefined, // TODO: Will implement later
+  [BetType.GAME_DURATION]: undefined, // TODO: Will implement later
 }
 
 /**
@@ -39,5 +39,5 @@ export function getHandler(type: BetType): BaseBetHandler {
  * @returns Array of implemented bet handlers
  */
 export function getAvailableHandlers(): BaseBetHandler[] {
-  return Object.values(handlers).filter(Boolean)
+  return Object.values(handlers).filter((handler): handler is BaseBetHandler => Boolean(handler))
 }

@@ -1,5 +1,4 @@
 import { logger, supabase } from '@dotabod/shared-utils'
-import type { RedisJSON } from '@redis/json/dist/commands'
 import { t } from 'i18next'
 import { MULTIPLIER_SOLO } from '../../db/getWL'
 import RedisClient from '../../db/RedisClient'
@@ -116,9 +115,9 @@ export async function lookupLeaderRank(
 
   const redisClient = RedisClient.getInstance()
   // Try to get the cached result first
-  const medalCache = await redisClient.client.json.get(cacheKey)
+  const medalCache = await redisClient.getJson<LeaderRankData>(cacheKey)
   if (medalCache) {
-    result = medalCache as unknown as LeaderRankData
+    result = medalCache
   } else {
     try {
       const getCardPromise = new Promise<Cards>((resolve, reject) => {
@@ -153,7 +152,7 @@ export async function lookupLeaderRank(
       result = { myRank, mmr, standing }
 
       // Cache the result
-      await redisClient.client.json.set(cacheKey, '$', result as unknown as RedisJSON)
+      await redisClient.setJson(cacheKey, result)
     } catch (e) {
       return defaultNotFound
     }

@@ -5,6 +5,11 @@ import type { SocketClient } from '../../types'
 import { say } from '../say'
 import { findItem } from './findItem'
 
+interface PassiveMidasData {
+  firstNoticedPassive: number
+  told: number
+}
+
 /**
  * Checks if the player has a midas and if it's on cooldown or not
  * @param data - The packet with all the player data
@@ -41,10 +46,9 @@ async function checkMidasIterator(client: SocketClient) {
   if (!midasItem || !midasItem[0]) return false
 
   // Get passive midas data from Redis
-  const passiveMidasData = ((await redisClient.client.json.get(`${token}:passiveMidas`)) as {
-    firstNoticedPassive: number
-    told: number
-  } | null) || {
+  const passiveMidasData = (await redisClient.getJson<PassiveMidasData>(
+    `${token}:passiveMidas`,
+  )) || {
     firstNoticedPassive: 0,
     told: 0,
   }
@@ -56,7 +60,7 @@ async function checkMidasIterator(client: SocketClient) {
   // Hand of Midas has 2 charges since patch 7.38. Both charges full means player is not using it.
   if (midasCharges === 2 && !passiveMidasData.told && !passiveMidasData.firstNoticedPassive) {
     // Set the time when passive midas was first noticed
-    await redisClient.client.json.set(`${token}:passiveMidas`, '$', {
+    await redisClient.setJson(`${token}:passiveMidas`, {
       ...passiveMidasData,
       firstNoticedPassive: currentTime,
     })
@@ -68,7 +72,7 @@ async function checkMidasIterator(client: SocketClient) {
     !passiveMidasData.told
   ) {
     // Set the time when passive midas was told to chat
-    await redisClient.client.json.set(`${token}:passiveMidas`, '$', {
+    await redisClient.setJson(`${token}:passiveMidas`, {
       ...passiveMidasData,
       told: currentTime,
     })

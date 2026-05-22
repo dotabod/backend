@@ -11,9 +11,7 @@ eventHandler.registerEvent('hero:alive', {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
     const redisClient = RedisClient.getInstance()
-    const redisJson = (await redisClient.client.json.get(
-      `${dotaClient.getToken()}:aegis`,
-    )) as unknown as AegisRes | null
+    const redisJson = await redisClient.getJson<AegisRes>(`${dotaClient.getToken()}:aegis`)
 
     // Case one, we had aegis, and we die with it. Triggers on an aegis death
     const playingHeroSlot = await getRedisNumberValue(`${dotaClient.getToken()}:playingHeroSlot`)

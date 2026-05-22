@@ -942,9 +942,9 @@ export class GSIHandler implements GSIHandlerType {
 
       const TreadToggleData = this.treadsData
       const toggleHandler = async () => {
-        const treadToggleData = (await redisClient.client.json.get(
+        const treadToggleData = await redisClient.getJson<typeof TreadToggleData>(
           `${this.client.token}:treadtoggle`,
-        )) as unknown as typeof TreadToggleData | null
+        )
 
         if (treadToggleData?.treadToggles && this.client.stream_online) {
           say(

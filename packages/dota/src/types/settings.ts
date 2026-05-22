@@ -186,6 +186,6 @@ export const defaultSettingsStructure = {
 export type SettingKeys = keyof typeof defaultSettingsStructure
 
 export const settingsKeys = {} as Record<SettingKeys, SettingKeys>
-for (const key of Object.keys(defaultSettingsStructure) as unknown as SettingKeys[]) {
+for (const key of Object.keys(defaultSettingsStructure) as SettingKeys[]) {
   settingsKeys[key] = key
 }

@@ -7,16 +7,18 @@ import { isPlayingMatch } from './isPlayingMatch'
 
 const PASSIVE_THRESHOLD_SECONDS = 30 * 1000
 
+interface PassiveTpData {
+  firstNoticedPassive: number
+  told: number
+}
+
 // todo: make sure streamer has gold to buy tp?
 export async function checkPassiveTp(client: SocketClient) {
   if (!isPlayingMatch(client.gsi)) return
   if (!client.stream_online) return
   if (Number(client.gsi?.map?.clock_time) <= 30) return
 
-  const passiveTpData = ((await redisClient.client.json.get(`${client.token}:passiveTp`)) as {
-    firstNoticedPassive: number
-    told: number
-  } | null) || {
+  const passiveTpData = (await redisClient.getJson<PassiveTpData>(`${client.token}:passiveTp`)) || {
     firstNoticedPassive: 0,
     told: 0,
   }
@@ -68,7 +70,7 @@ export async function checkPassiveTp(client: SocketClient) {
   const currentTime = Date.now()
   if (!hasTp && !passiveTpData.told && !passiveTpData.firstNoticedPassive) {
     // Set the time when passive midas was first noticed
-    await redisClient.client.json.set(`${client.token}:passiveTp`, '$', {
+    await redisClient.setJson(`${client.token}:passiveTp`, {
       ...passiveTpData,
       firstNoticedPassive: currentTime,
     })
@@ -79,7 +81,7 @@ export async function checkPassiveTp(client: SocketClient) {
     currentTime - passiveTpData.firstNoticedPassive > PASSIVE_THRESHOLD_SECONDS &&
     !passiveTpData.told
   ) {
-    await redisClient.client.json.set(`${client.token}:passiveTp`, '$', {
+    await redisClient.setJson(`${client.token}:passiveTp`, {
       ...passiveTpData,
       told: Date.now(),
     })
@@ -102,7 +104,7 @@ export async function checkPassiveTp(client: SocketClient) {
  */
 async function resetPassiveTime(token: string) {
   // Reset the passive tp data in Redis
-  await redisClient.client.json.set(`${token}:passiveTp`, '$', {
+  await redisClient.setJson(`${token}:passiveTp`, {
     firstNoticedPassive: 0,
     told: 0,
   })

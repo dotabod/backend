@@ -82,7 +82,7 @@ class MinimapParser {
 
     const parsed = this.parse(data)
 
-    if ((parsed.status as unknown) === false) {
+    if (parsed.status.active === false) {
       const currentTime = new Date().getTime()
       if (currentTime - this.lastBroadcastTime >= 5000) {
         dataBroadcaster.sendData(parsed)

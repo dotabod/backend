@@ -13,9 +13,7 @@ eventHandler.registerEvent('player:kill_list', {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
     const redisClient = RedisClient.getInstance()
-    const redisJson = (await redisClient.client.json.get(
-      `${dotaClient.getToken()}:aegis`,
-    )) as unknown as AegisRes | null
+    const redisJson = await redisClient.getJson<AegisRes>(`${dotaClient.getToken()}:aegis`)
     if (typeof redisJson?.playerId !== 'number') return
 
     // Remove aegis icon from the player we just killed

@@ -25,40 +25,36 @@ export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value
   }
 
   const dbVal = data.find((s) => s.key === key)?.value
+  const defaultValue = defaultSettings[key]
 
   // Undefined is not touching the option in FE yet
   // So we give them our best default
   if (dbVal === undefined) {
-    return defaultSettings[key]
+    return defaultValue
   }
 
   try {
     if (typeof dbVal === 'string') {
       const val = JSON.parse(dbVal)
-      if (typeof val === 'object' && typeof defaultSettings[key] === 'object') {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      if (typeof val === 'object' && typeof defaultValue === 'object') {
         return {
-          ...(defaultSettings[key] as any),
+          ...defaultValue,
           ...val,
         }
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return val
     }
 
-    if (typeof dbVal === 'object' && typeof defaultSettings[key] === 'object') {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    if (typeof dbVal === 'object' && typeof defaultValue === 'object') {
       return {
-        ...(defaultSettings[key] as any),
+        ...defaultValue,
         ...dbVal,
       }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return dbVal
   } catch {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return dbVal
   }
 }
@@ -73,8 +69,9 @@ export const getValueOrDefault = (
   const featureKey = chatterKey ? (`chatters.${chatterKey}` as const) : key
   const { hasAccess } = canAccessFeature(featureKey, subscription)
   if (!hasAccess) {
+    const defaultValue = defaultSettings[key]
     // For boolean settings, return false if no access
-    if (typeof defaultSettings[key] === 'boolean') {
+    if (typeof defaultValue === 'boolean') {
       return false
     }
     // For chatters object, return with disabled state
@@ -85,14 +82,14 @@ export const getValueOrDefault = (
       }
     }
     // For objects (like betsInfo), return default with disabled state
-    if (typeof defaultSettings[key] === 'object') {
+    if (typeof defaultValue === 'object') {
       return {
-        ...(defaultSettings[key] as any),
+        ...defaultValue,
         enabled: false,
       }
     }
     // For other types, return default value
-    return defaultSettings[key]
+    return defaultValue
   }
 
   return getRawSettingValue(key, data)

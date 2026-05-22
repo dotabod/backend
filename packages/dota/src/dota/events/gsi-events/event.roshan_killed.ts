@@ -42,9 +42,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
     const maxDate = dotaClient.addSecondsToNow(maxS)
 
     // TODO: move this to a redis handler
-    const redisJson = (await redisClient.client.json.get(
-      `${dotaClient.getToken()}:roshan`,
-    )) as RoshRes | null
+    const redisJson = await redisClient.getJson<RoshRes>(`${dotaClient.getToken()}:roshan`)
     const count = redisJson ? Number(redisJson.count) : 0
     const res = {
       minS,
@@ -56,7 +54,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
       count: count + 1,
     }
 
-    await redisClient.client.json.set(`${dotaClient.getToken()}:roshan`, '$', res)
+    await redisClient.setJson(`${dotaClient.getToken()}:roshan`, res)
 
     say(dotaClient.client, generateRoshanMessage(res, dotaClient.client.locale), {
       chattersKey: 'roshanKilled',

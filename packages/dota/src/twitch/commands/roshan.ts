@@ -34,10 +34,10 @@ commandHandler.registerCommand('roshan', {
     }
 
     const redisClient = RedisClient.getInstance()
-    const roshJson = (await redisClient.client.json.get(`${client.token}:roshan`)) as RoshRes | null
-    const aegisRes = (await redisClient.client.json.get(
-      `${client.token}:aegis`,
-    )) as unknown as AegisRes | null
+    const [roshJson, aegisRes] = await Promise.all([
+      redisClient.getJson<RoshRes>(`${client.token}:roshan`),
+      redisClient.getJson<AegisRes>(`${client.token}:aegis`),
+    ])
 
     if (!roshJson?.minS && !roshJson?.maxS) {
       chatClient.say(

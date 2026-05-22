@@ -96,7 +96,7 @@ export default async function lastgame({
       return t('matchData8500Alt', { lng: locale, command: '!lgs' })
     }
 
-    const [gameOne, gameTwo] = gameHistory as unknown as DelayedGames[]
+    const [gameOne, gameTwo] = gameHistory
     const oldGame = gameOne.match.match_id === currentMatchId ? gameTwo : gameOne
 
     if (!currentPlayers?.length) {

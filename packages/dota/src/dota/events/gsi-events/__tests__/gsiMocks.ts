@@ -73,9 +73,14 @@ const fakeRedisClient = {
     },
   },
 }
+const fakeRedisInstance = {
+  client: fakeRedisClient,
+  getJson: async (key: string) => fakeRedisClient.json.get(key),
+  setJson: (key: string, value: unknown) => fakeRedisClient.json.set(key, '$', value),
+}
 mock.module('../../../../db/RedisClient', () => ({
   default: {
-    getInstance: () => ({ client: fakeRedisClient }),
+    getInstance: () => fakeRedisInstance,
   },
 }))
 

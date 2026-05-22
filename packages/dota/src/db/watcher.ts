@@ -16,7 +16,9 @@ import { handleUserOnlineMessages } from './handleScheduledMessages'
 import { handleStreamStatusTransition } from './handleStreamStatusTransition'
 
 class SetupSupabase {
-  channel: any // ReturnType<typeof supabase.channel>
+  // supabase realtime `.on('postgres_changes')` overloads require RealtimePostgresChangesPayload
+  // callbacks; typing this properly cascades into every handler, so it stays loose here.
+  channel: any
   IS_DEV: boolean
 
   constructor() {
@@ -226,7 +228,7 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'users' },
-        async (payload: any) => {
+        async (payload: { new: Tables<'users'>; old: Tables<'users'> }) => {
           const newObj: Tables<'users'> = payload.new
           const oldObj: Tables<'users'> = payload.old
           const client = findUser(newObj.id)
@@ -393,7 +395,7 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'settings' },
-        (payload: any) => {
+        (payload: { new: Tables<'settings'> }) => {
           const newObj: Tables<'settings'> = payload.new
           const client = findUser(newObj.userId)
 
@@ -443,7 +445,11 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'steam_accounts' },
-        async (payload: any) => {
+        async (payload: {
+          new: Tables<'steam_accounts'>
+          old: Tables<'steam_accounts'>
+          eventType: string
+        }) => {
           const newObj: Tables<'steam_accounts'> = payload.new
           const oldObj: Tables<'steam_accounts'> = payload.old
           const client = findUser(newObj.userId || oldObj.userId)
@@ -517,7 +523,7 @@ class SetupSupabase {
           }
         },
       )
-      .subscribe((status: string, err: any) => {
+      .subscribe((status: string, err?: Error) => {
         logger.info('[SUPABASE] Subscription status on dota:', { status, err })
       })
   }

@@ -7,12 +7,10 @@ import { emitRoshEvent, type RoshRes } from './RoshRes'
 export async function maybeSendRoshAegisEvent(token: string, client?: SocketClient) {
   if (!client) return
 
-  const aegisRes = (await redisClient.client.json.get(
-    `${token}:aegis`,
-  )) as unknown as AegisRes | null
-  const roshRes = (await redisClient.client.json.get(
-    `${token}:roshan`,
-  )) as unknown as RoshRes | null
+  const [aegisRes, roshRes] = await Promise.all([
+    redisClient.getJson<AegisRes>(`${token}:aegis`),
+    redisClient.getJson<RoshRes>(`${token}:roshan`),
+  ])
 
   if (aegisRes) {
     emitAegisEvent(aegisRes, token, client)

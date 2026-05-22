@@ -66,7 +66,7 @@ async function getItems({
       Object.values(items)
         .map((itemN) => {
           const item = itemN as Item
-          const itemShortname = item.name.replace('item_', '') as unknown as keyof typeof DOTA_ITEMS
+          const itemShortname = item.name.replace('item_', '') as keyof typeof DOTA_ITEMS
           const itemFound = DOTA_ITEMS[itemShortname]
           const itemName: string | boolean = itemFound && 'dname' in itemFound && itemFound.dname
 
@@ -134,7 +134,7 @@ async function getItems({
       itemIds.length > 0 &&
       itemIds
         .map((itemId) => {
-          const id = itemId as unknown as keyof typeof DOTA_ITEM_IDS
+          const id = String(itemId) as keyof typeof DOTA_ITEM_IDS
           const itemShortname = DOTA_ITEM_IDS[id] as keyof typeof DOTA_ITEMS
           const item = DOTA_ITEMS[itemShortname]
           const itemName: string | boolean = item && 'dname' in item && item.dname

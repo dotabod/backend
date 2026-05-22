@@ -220,6 +220,8 @@ function revokeEvent(data: {
   }
 }
 
+// EventSub payloads aren't modeled centrally (TwitchEventTypes only carries versions);
+// handlers stay typed at their definitions, so this registry holds them via `any`.
 const eventHandlers: Partial<Record<keyof TwitchEventTypes, (data: any) => void>> = {
   'stream.online': onlineEvent,
   'stream.offline': offlineEvent,
