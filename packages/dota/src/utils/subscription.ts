@@ -99,7 +99,6 @@ export const FEATURE_TIERS: Record<
   queueBlocker: SUBSCRIPTION_TIERS.PRO,
   queueBlockerFindMatch: SUBSCRIPTION_TIERS.PRO,
   commandSpectators: SUBSCRIPTION_TIERS.FREE,
-  commandFacet: SUBSCRIPTION_TIERS.FREE,
   commandInnate: SUBSCRIPTION_TIERS.FREE,
   commandShard: SUBSCRIPTION_TIERS.FREE,
   commandAghs: SUBSCRIPTION_TIERS.FREE,

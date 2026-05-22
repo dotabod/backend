@@ -30,8 +30,8 @@ describe('getHeroPageUrl', () => {
 
 describe('withHeroLink', () => {
   it('appends the hero link with a separator when the hero resolves', () => {
-    expect(withHeroLink('Meepo facets: 1: Foo', 82)).toBe(
-      'Meepo facets: 1: Foo · dota2.com/hero/meepo',
+    expect(withHeroLink('Meepo innate: Divided We Stand', 82)).toBe(
+      'Meepo innate: Divided We Stand · dota2.com/hero/meepo',
     )
   })
 

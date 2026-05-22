@@ -59,7 +59,7 @@ export async function findAccountFromCmd(
       playerIdx,
       accountIdFromArgs,
       player: { accountid: accountIdFromArgs },
-      hero: { id: data?.player?.heroid, facet: data?.player?.facet },
+      hero: { id: data?.player?.heroid },
     }
   }
 
@@ -72,7 +72,7 @@ export async function findAccountFromCmd(
     const spectatorPlayers = getSpectatorPlayers(packet)
     const selectedPlayer = spectatorPlayers.find((a) => 'selected' in a && !!a.selected)
     // Fall back to the first player with a real hero id when no broadcast unit
-    // is selected, so callers like !facet get usable data instead of an
+    // is selected, so callers like !items get usable data instead of an
     // undefined hero. Heroes still in pick (-1) skip the fallback.
     const firstValidHero = spectatorPlayers.find((p) => Number(p.heroid) > 0)
     accountIdFromArgs = accountIdFromArgs ?? selectedPlayer?.accountid ?? firstValidHero?.accountid

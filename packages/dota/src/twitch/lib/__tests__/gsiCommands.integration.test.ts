@@ -1,17 +1,13 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
 import { t } from 'i18next'
-import { getHeroNameOrColor, withHeroLink } from '../../../dota/lib/heroes.ts'
+import { getHeroNameOrColor } from '../../../dota/lib/heroes.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // GSI-reading commands that format output from client.gsi (no DB/network).
 // hero id 1 (Anti-Mage) has aghs_desc data + an innate, so those valid-hero
-// paths always echo the hero name. dotaconstants flags every facet `deprecated`
-// (including current in-game ones), so !facet ignores that flag entirely — both
-// Anti-Mage and Storm Spirit (id 17) list their facets.
+// paths always echo the hero name.
 const HERO_ID = 1
 const heroName = getHeroNameOrColor(HERO_ID)
-const FACET_HERO_ID = 17
-const facetHeroName = getHeroNameOrColor(FACET_HERO_ID)
 const notLive = t('notLive', { emote: 'PauseChamp', lng: 'en' })
 const notPlaying = t('notPlaying', { emote: 'PauseChamp', lng: 'en' })
 const gameNotFound = t('gameNotFound', { lng: 'en' })
@@ -104,85 +100,6 @@ describe('!shard', () => {
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain(heroName)
-  })
-})
-
-describe('!facet', () => {
-  it('reports notPlaying when there is no live match', async () => {
-    await commandHandler.handleMessage(makeMessage({ content: '!facet' }))
-    expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toBe(notPlaying)
-  })
-
-  it('lists every facet for the hero when no number is given', async () => {
-    await commandHandler.handleMessage(
-      makeMessage({
-        content: '!facet',
-        clientOverrides: { gsi: playingGsi({ hero: { id: FACET_HERO_ID } }) },
-      }),
-    )
-    expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain(facetHeroName)
-    expect(state.chatSayCalls[0].message).toContain('Shock Collar')
-    expect(state.chatSayCalls[0].message).toContain('Static Slide')
-  })
-
-  // Regression: every Invoker facet is flagged `deprecated: "true"` in
-  // dotaconstants. The old `deprecated !== 'true'` filter zeroed the facet count
-  // and returned missingMatchData ("Waiting for current match data") for ~84% of
-  // heroes. We now list facets regardless of the flag.
-  it('lists facets for a hero whose facets are all flagged deprecated', async () => {
-    await commandHandler.handleMessage(
-      makeMessage({
-        content: '!facet',
-        clientOverrides: { gsi: playingGsi({ hero: { id: 74 } }) },
-      }),
-    )
-    expect(state.chatSayCalls).toHaveLength(1)
-    const msg = state.chatSayCalls[0].message
-    expect(msg).not.toBe(t('missingMatchData', { emote: 'PauseChamp', lng: 'en' }))
-    expect(msg).toContain(getHeroNameOrColor(74))
-    expect(msg).toContain('Scholar of Koryx')
-  })
-
-  // Regression: Drow Ranger's first facet (drow_ranger_high_ground) is a removed
-  // facet that lingers in dotaconstants with an empty title. It must not render as
-  // a blank "1: " entry; Sidestep is the only real facet and should be listed as 1.
-  it('skips facets that have no title', async () => {
-    await commandHandler.handleMessage(
-      makeMessage({
-        content: '!facet',
-        clientOverrides: { gsi: playingGsi({ hero: { id: 6 } }) },
-      }),
-    )
-    expect(state.chatSayCalls).toHaveLength(1)
-    const msg = state.chatSayCalls[0].message
-    expect(msg).toContain('1: Sidestep')
-    expect(msg).not.toContain('2: Sidestep')
-  })
-
-  it('reports a specific facet by number', async () => {
-    await commandHandler.handleMessage(
-      makeMessage({
-        content: '!facet 2',
-        clientOverrides: { gsi: playingGsi({ hero: { id: HERO_ID } }) },
-      }),
-    )
-    expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('Mana Thirst')
-  })
-
-  it('reports the facet limit when the number exceeds the hero facet count', async () => {
-    await commandHandler.handleMessage(
-      makeMessage({
-        content: '!facet 9',
-        clientOverrides: { gsi: playingGsi({ hero: { id: HERO_ID } }) },
-      }),
-    )
-    expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toBe(
-      withHeroLink(t('facetTotalLimit', { lng: 'en', count: 2, heroName }), HERO_ID),
-    )
   })
 })
 
