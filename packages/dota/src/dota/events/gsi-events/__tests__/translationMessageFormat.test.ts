@@ -1,5 +1,6 @@
-import { beforeAll, describe, expect, it } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import i18next from 'i18next'
+import { initTestI18n } from '../../../../__tests__/sharedMocks'
 
 import {
   formatTranslatedInGameChatMessage,
@@ -26,6 +27,13 @@ describe('translation message formatting', () => {
         },
       },
     })
+  })
+
+  // If i18next.init() above re-initialized with the narrow bundle it would
+  // break sibling test files that expect the full English bundle. Restore it
+  // here so subsequent tests (regardless of file order) find all keys.
+  afterAll(async () => {
+    await initTestI18n()
   })
 
   it('marks fallback hero labels as player labels', () => {

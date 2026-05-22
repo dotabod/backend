@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
@@ -33,7 +33,11 @@ type ListenerName = (typeof LISTENER_NAMES)[number]
 type Call = { args: unknown[] }
 const spies = new Map<ListenerName, Call[]>()
 
+// Listeners that existed before installSpies() wiped them. Restored in afterEach.
+let savedListeners: Array<[string | symbol, ReturnType<typeof events.rawListeners>]> = []
+
 function installSpies() {
+  savedListeners = events.eventNames().map((name) => [name, events.rawListeners(name)])
   events.removeAllListeners()
   spies.clear()
   for (const name of LISTENER_NAMES) {
@@ -68,6 +72,15 @@ function callCountsByName(): Record<string, number> {
 
 beforeEach(() => {
   installSpies()
+})
+
+afterEach(() => {
+  events.removeAllListeners()
+  for (const [name, listeners] of savedListeners) {
+    for (const listener of listeners) {
+      events.on(name as string, listener as any)
+    }
+  }
 })
 
 describe('recursiveEmit dispatch — scalar leaf cases', () => {

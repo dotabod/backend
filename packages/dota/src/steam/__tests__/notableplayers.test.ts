@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
 import type { Players } from '../../types'
 
@@ -44,6 +44,12 @@ mock.module('../../dota/lib/calculateAvg', () => ({ calculateAvg: async () => 'D
 await initTestI18n()
 
 const { notablePlayers } = await import('../notableplayers.ts')
+
+// getPlayersMock is stateful; clear call history before each test so randomized
+// test ordering doesn't bleed mockResolvedValueOnce calls across describes.
+beforeEach(() => {
+  getPlayersMock.mockClear()
+})
 
 const draftPlayers: Players = [
   { heroid: undefined, accountid: 0, playerid: null, player_name: 'Dendi' },

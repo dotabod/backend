@@ -36,6 +36,9 @@ export function resetDbState() {
   dbState.updates = []
   dbState.loggerErrorCalls = []
   dbState.loggerInfoCalls = []
+  // Re-assert our mock in case a sibling harness (setupMocks, gsiMocks) replaced
+  // @dotabod/shared-utils with a different supabase factory since last test ran.
+  reinstallDbMock()
 }
 
 function createTableBuilder(table: string) {
@@ -84,9 +87,12 @@ const loggerMock = {
   debug: () => undefined,
 }
 
-mock.module('@dotabod/shared-utils', () =>
-  buildSharedUtilsMock({ supabase: supabaseMock, logger: loggerMock }),
-)
+function reinstallDbMock() {
+  mock.module('@dotabod/shared-utils', () =>
+    buildSharedUtilsMock({ supabase: supabaseMock, logger: loggerMock }),
+  )
+}
+reinstallDbMock()
 
 await initTestI18n()
 

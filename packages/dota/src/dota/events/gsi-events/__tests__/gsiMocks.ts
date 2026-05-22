@@ -99,9 +99,15 @@ mock.module('../../../lib/getAccountsFromMatch', () => ({
 // `delayedQueue.addTask` fires the callback synchronously so tests can assert
 // on the chat output without waiting on real timers. `removeTask` tracks the
 // id so tests can verify the bounty / killstreak cancellation path.
+//
+// We patch the singleton's own methods instead of mocking the module so that
+// test files importing the real `DelayedQueue` class (unit/integration tests)
+// are not affected — mock.module would replace the class with `class {}`.
 let taskIdCounter = 0
-const fakeDelayedQueue = {
-  addTask: (
+const { delayedQueue: realDelayedQueue } = await import('../../../lib/DelayedQueue')
+
+function installDelayedQueueMock() {
+  ;(realDelayedQueue as any).addTask = (
     delayMs: number,
     callback: (payload: unknown) => void | Promise<void>,
     payload: unknown = null,
@@ -111,17 +117,14 @@ const fakeDelayedQueue = {
     const id = `task-${taskIdCounter}`
     void callback(payload)
     return id
-  },
-  removeTask: (id: string) => {
+  }
+  ;(realDelayedQueue as any).removeTask = (id: string) => {
     gsiState.delayedQueueRemovedIds.push(id)
     return true
-  },
-  getQueueSize: () => 0,
+  }
+  ;(realDelayedQueue as any).getQueueSize = () => 0
 }
-mock.module('../../../lib/DelayedQueue', () => ({
-  delayedQueue: fakeDelayedQueue,
-  DelayedQueue: class {},
-}))
+installDelayedQueueMock()
 
 await initTestI18n()
 
@@ -152,6 +155,8 @@ export function installGsiMocks() {
       }),
     },
   } as any)
+
+  installDelayedQueueMock()
 }
 
 // Run once at harness load so tests can import + assert without first

@@ -130,9 +130,13 @@ export function resetState() {
   state.subscriberOnlyMode = false
   state.chatSettingsUpdates = []
   state.delayedGame = null
-  // Re-assert the shared-utils mock in case a sibling test file's narrower
-  // mock won bun's global registry since the last test ran.
-  reinstallSharedUtilsMock()
+  // Re-assert all module mocks (shared-utils, updateMmr, ranks, MongoDBSingleton)
+  // in case a sibling test file replaced any of them since the last test ran.
+  reinstallModuleMocks()
+  // Re-assert singleton patches; gsiMocks.ts also patches these in its own
+  // installGsiMocks() and whichever ran last wins — reasserting here ensures
+  // twitch tests own the bindings regardless of file-discovery order.
+  installTwitchMocks()
 }
 
 // Supabase chainable mock. Three query shapes need to be distinguished:
@@ -404,23 +408,6 @@ steamSocket.emit = ((
   cb(null, state.steamSocketResponse ?? { matches: [] })
 }) as any
 
-chatClient.say = (async (channel: string, message: string, messageId?: string) => {
-  state.chatSayCalls.push({ channel, message, messageId })
-}) as any
-
-;(redisClient as any).client = {
-  get: async (key: string) => state.redisGet[key] ?? null,
-  set: async () => 'OK',
-  del: async (key: string) => {
-    state.redisDelCalls.push(key)
-    return 1
-  },
-  json: {
-    get: async () => null,
-    set: async () => 'OK',
-  },
-}
-
 const fakeGsiHandler = {
   getChannelId: () => state.channelId,
   emitWLUpdate: () => {
@@ -429,17 +416,48 @@ const fakeGsiHandler = {
 } as any
 gsiHandlers.set('token-abc', fakeGsiHandler)
 
-// Inject a stub socket.io server so commands that talk to the overlay
-// (count, refresh, online, resetwl, hero) don't throw "Server not initialized".
-// fetchSockets returns [] so overlay-dependent paths take their empty branch.
 const { server } = await import('../../../dota/server')
-server.setServer({
-  io: {
-    to: () => ({ emit: () => undefined }),
-    in: () => ({ fetchSockets: async () => [] }),
-    fetchSockets: async () => [],
-  },
-} as any)
+
+// Re-assert chatClient / redisClient / server patches each time. gsiMocks.ts
+// also monkey-patches these singletons in its installGsiMocks(); whichever
+// harness loaded last wins. Calling this in resetState() (which every twitch
+// test calls in beforeEach) guarantees the twitch patches are active.
+export function installTwitchMocks() {
+  chatClient.say = (async (channel: string, message: string, messageId?: string) => {
+    state.chatSayCalls.push({ channel, message, messageId })
+  }) as any
+
+  ;(redisClient as any).client = {
+    get: async (key: string) => state.redisGet[key] ?? null,
+    set: async () => 'OK',
+    del: async (key: string) => {
+      state.redisDelCalls.push(key)
+      return 1
+    },
+    json: {
+      get: async () => null,
+      set: async () => 'OK',
+    },
+  }
+
+  // Inject a stub socket.io server so commands that talk to the overlay
+  // (count, refresh, online, resetwl, hero) don't throw "Server not initialized".
+  // fetchSockets returns [] so overlay-dependent paths take their empty branch.
+  server.setServer({
+    io: {
+      to: () => ({ emit: () => undefined }),
+      in: () => ({ fetchSockets: async () => [] }),
+      fetchSockets: async () => [],
+    },
+  } as any)
+
+  // Re-register the fake gsi handler; getDBUser.test.ts calls gsiHandlers.clear()
+  // in its beforeEach, which wipes this entry and makes `!hero` fall through to
+  // "not playing" (the command guards on gsiHandlers.get(token) being truthy).
+  gsiHandlers.set('token-abc', fakeGsiHandler)
+}
+
+installTwitchMocks()
 
 export type Client = Parameters<typeof resolveMatchRetroactively>[0]
 
