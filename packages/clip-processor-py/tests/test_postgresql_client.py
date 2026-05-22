@@ -156,6 +156,26 @@ def test_add_to_queue_inserts_and_returns_position(db_client, mock_cursor):
     db_client._mock_conn.commit.assert_called_once()
 
 
+def test_add_to_queue_accepts_clip_in_game(db_client, mock_cursor):
+    # Regression: 'clip_in_game' must be treated as a clip, not rejected by the
+    # request-type whitelist (which previously dropped every queued in-game request).
+    mock_cursor.fetchone.side_effect = [
+        None,            # match_id column check
+        None,            # only_draft column check
+        None,            # no existing duplicate
+        {"count": 0},    # pending count -> position 1
+        [15.0],          # get_average_processing_time
+        {"request_id": "ig-id", "status": "pending", "position": 1},  # RETURNING *
+    ]
+    request_id, queue_info = db_client.add_to_queue(
+        request_type="clip_in_game", clip_id="ig-clip", clip_url="https://clips.twitch.tv/ig-clip"
+    )
+    # Not the invalid-type early return (which yields an empty queue_info).
+    assert queue_info.get("status") == "pending"
+    assert queue_info.get("position") == 1
+    db_client._mock_conn.commit.assert_called_once()
+
+
 @pytest.mark.parametrize(
     "fetched, expected",
     [

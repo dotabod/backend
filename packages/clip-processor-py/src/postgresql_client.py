@@ -882,13 +882,15 @@ class PostgresClient:
             logger.warning(f"Error checking for match_id column: {e}")
             # Continue anyway, we'll handle it in the query
 
-        # Validate request type
-        if request_type not in ('clip', 'stream'):
+        # Validate request type. 'clip_in_game' is a clip whose frame is the live
+        # in-game HUD bar (vs the pre-game screens) — treated as a clip everywhere
+        # storage/validation branches on request type.
+        if request_type not in ('clip', 'clip_in_game', 'stream'):
             logger.error(f"Invalid request type: {request_type}")
             return str(uuid.uuid4()), {}
 
         # Check parameters based on request type
-        if request_type == 'clip' and not clip_url:
+        if request_type in ('clip', 'clip_in_game') and not clip_url:
             logger.error("Missing clip_url for clip request")
             return str(uuid.uuid4()), {}
         elif request_type == 'stream' and not stream_username:
@@ -907,7 +909,7 @@ class PostgresClient:
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
             # Check if there's already a pending or processing request for this clip/stream
-            if request_type == 'clip' and clip_id:
+            if request_type in ('clip', 'clip_in_game') and clip_id:
                 # Consider only_draft flag when deduping queued clip requests
                 if has_only_draft_column:
                     query = f"""
