@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { type DotaEvent, DotaEventTypes } from '../../../types'
+import { DotaEventTypes, type TipEvent } from '../../../types'
 import { getRedisNumberValue } from '../../../utils/index'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
 import { getHeroNameOrColor } from '../../lib/heroes'
@@ -9,7 +9,7 @@ import { say } from '../../say'
 import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
-  handler: async (dotaClient, event: DotaEvent) => {
+  handler: async (dotaClient, event: TipEvent) => {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 

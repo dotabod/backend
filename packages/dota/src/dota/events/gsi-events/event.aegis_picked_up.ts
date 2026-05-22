@@ -1,6 +1,6 @@
 import { logger } from '@dotabod/shared-utils'
 import RedisClient from '../../../db/RedisClient'
-import { type DotaEvent, DotaEventTypes } from '../../../types'
+import { type AegisPickedUpEvent, DotaEventTypes } from '../../../types'
 import { fmtMSS, is8500Plus } from '../../../utils/index'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
 import { getHeroNameOrColor } from '../../lib/heroes'
@@ -11,7 +11,7 @@ import { emitAegisEvent } from './emitAegisEvent'
 import { generateAegisMessage } from './generateAegisMessage'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
-  handler: async (dotaClient, event: DotaEvent) => {
+  handler: async (dotaClient, event: AegisPickedUpEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 

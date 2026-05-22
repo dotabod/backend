@@ -1,7 +1,7 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { type DotaEvent, DotaEventTypes } from '../../../types'
+import { type AegisDeniedEvent, DotaEventTypes } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
 import { getHeroNameOrColor } from '../../lib/heroes'
@@ -10,7 +10,7 @@ import { say } from '../../say'
 import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
-  handler: async (dotaClient, event: DotaEvent) => {
+  handler: async (dotaClient, event: AegisDeniedEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 

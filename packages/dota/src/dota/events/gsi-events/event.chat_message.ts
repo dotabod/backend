@@ -6,7 +6,7 @@ import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { chatClient } from '../../../twitch/chatClient'
-import { DotaEventTypes } from '../../../types'
+import { type ChatMessageEvent, DotaEventTypes } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
 import type { GSIHandlerType } from '../../GSIHandlerTypes'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
@@ -299,16 +299,7 @@ async function processTranslationBuffer(
 }
 
 eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
-  handler: async (
-    dotaClient,
-    event: {
-      game_time: number
-      player_id: number
-      channel_type: number
-      event_type: string
-      message: string
-    },
-  ) => {
+  handler: async (dotaClient, event: ChatMessageEvent) => {
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 

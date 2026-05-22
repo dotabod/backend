@@ -455,39 +455,73 @@ export enum DotaEventTypes {
 
 export const validEventTypes = new Set(Object.values(DotaEventTypes))
 
+// Raw GSI `events[]` entry. Dota emits any event type carrying only the fields
+// for THAT type, so everything except game_time/event_type is optional here —
+// don't assume a field exists off a raw DotaEvent. Handlers, which know their
+// event_type, should type their payload as the precise *Event interfaces below
+// (they get only the fields that event actually sends, verified live).
 export interface DotaEvent {
-  game_time: number // 810,
-  channel_type?: number // 11 or 12 usually? guessing ally vs all chat
-  data?: string // JSON string that should be parsed as ChatEventData
-
+  game_time: number
   event_type: DotaEventTypes
+  // chat_message
+  channel_type?: number // 11/12, ally vs all chat
+  message?: string
+  // generic_event
+  data?: string // JSON string parsed as ChatEventData
+  // tip
+  sender_player_id?: number
+  receiver_player_id?: number
+  tip_amount?: number
+  // courier_killed (spectator only)
+  courier_team?: string
+  owning_player_id?: number
+  // bounty_rune_pickup
+  player_id?: number
+  team?: 'radiant' | 'dire'
+  bounty_value?: number
+  team_gold?: number
+  // roshan_killed (NOTE: carries killer_player_id, NOT player_id)
+  killed_by_team?: 'radiant' | 'dire'
+  killer_player_id?: number
+  // aegis_picked_up
+  snatched?: boolean
+}
 
-  // Event 'tip'
-  sender_player_id: number // 7,
-  receiver_player_id: number // 3,
-  tip_amount: number // 50
-
-  // Event 'courier_killed'
-  courier_team: string // 'dire',
-  killer_player_id: number // 1,
-  owning_player_id: number // 5
-
-  // Event 'bounty_rune_pickup'
-  player_id: number // 9,
-  team: string // 'dire',
-  bounty_value: number // 45,
-  team_gold: number // 225
-
-  // Event 'roshan_killed'
-  killed_by_team: 'radiant' | 'dire'
-  //killer_player_id: 7; // present on roshan_killed; NOT player_id
-
-  // Event 'aegis_picked_up'
-  //player_id: 7;
+interface BaseDotaEvent {
+  game_time: number
+}
+export interface AegisPickedUpEvent extends BaseDotaEvent {
+  event_type: DotaEventTypes.AegisPickedUp
+  player_id: number
   snatched: boolean
-
-  // Event 'aegis_denied'
-  //player_id: 7;
+}
+export interface AegisDeniedEvent extends BaseDotaEvent {
+  event_type: DotaEventTypes.AegisDenied
+  player_id: number
+}
+export interface RoshanKilledEvent extends BaseDotaEvent {
+  event_type: DotaEventTypes.RoshanKilled
+  killed_by_team: 'radiant' | 'dire'
+  killer_player_id: number
+}
+export interface TipEvent extends BaseDotaEvent {
+  event_type: DotaEventTypes.Tip
+  sender_player_id: number
+  receiver_player_id: number
+  tip_amount: number
+}
+export interface BountyRunePickupEvent extends BaseDotaEvent {
+  event_type: DotaEventTypes.BountyPickup
+  player_id: number
+  team: 'radiant' | 'dire'
+  bounty_value: number
+  team_gold: number
+}
+export interface ChatMessageEvent extends BaseDotaEvent {
+  event_type: DotaEventTypes.ChatMessage
+  player_id: number
+  channel_type: number
+  message: string
 }
 /**
  *

@@ -1,6 +1,4 @@
 import { type ChatEventData, type DotaEvent, DotaEventTypes } from '../../../types'
-import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
-import { getHeroNameOrColor } from '../../lib/heroes'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import eventHandler from '../EventHandler'
 
@@ -23,14 +21,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.GenericEvent}`, {
         // TODO: Handle game abandoned events
         return
       }
-
-      const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
-
-      let playerIdIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
-      if (playerIdIndex === -1) {
-        playerIdIndex = event.player_id
-      }
-      const heroName = getHeroNameOrColor(matchPlayers[playerIdIndex]?.heroid ?? 0, playerIdIndex)
     } catch {
       return
     }

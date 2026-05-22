@@ -1,5 +1,5 @@
 import RedisClient from '../../../db/RedisClient'
-import { type DotaEvent, DotaEventTypes } from '../../../types'
+import { DotaEventTypes, type RoshanKilledEvent } from '../../../types'
 import { fmtMSS, getRedisNumberValue } from '../../../utils/index'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import { say } from '../../say'
@@ -7,7 +7,7 @@ import eventHandler from '../EventHandler'
 import { emitRoshEvent, generateRoshanMessage, type RoshRes } from './RoshRes'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
-  handler: async (dotaClient, event: DotaEvent) => {
+  handler: async (dotaClient, event: RoshanKilledEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
 

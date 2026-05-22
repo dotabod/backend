@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { redisClient } from '../../../db/redisInstance'
-import { type DotaEvent, DotaEventTypes } from '../../../types'
+import { type BountyRunePickupEvent, DotaEventTypes } from '../../../types'
 import { delayedQueue } from '../../lib/DelayedQueue'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
 import { getHeroNameOrColor } from '../../lib/heroes'
@@ -10,7 +10,7 @@ import { say } from '../../say'
 import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
-  handler: async (dotaClient, event: DotaEvent) => {
+  handler: async (dotaClient, event: BountyRunePickupEvent) => {
     if (!isPlayingMatch(dotaClient.client.gsi)) return
     if (!dotaClient.client.stream_online) return
     // Only announce bounty rune pickups during the initial spawn window (first 2 minutes).
