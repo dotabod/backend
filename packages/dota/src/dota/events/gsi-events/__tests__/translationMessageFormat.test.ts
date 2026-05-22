@@ -23,6 +23,7 @@ describe('translation message formatting', () => {
                 '[In-game chat translation] {{- message}} (auto-translated, may be inaccurate)',
               playerLabel: 'Player {{playerId}}',
               speakerLabel: '{{- heroName}} (P{{playerId}})',
+              unknownPlayer: 'a player',
             },
           },
         },
@@ -37,9 +38,10 @@ describe('translation message formatting', () => {
     await initTestI18n()
   })
 
-  it('marks fallback hero labels as player labels', () => {
-    expect(formatTranslatedSpeakerLabel('Hero 2', 2, 'en')).toBe('Player 2')
-    expect(formatTranslatedSpeakerLabel('2', 2, 'en')).toBe('Player 2')
+  it('maps fallback hero labels to a neutral player label (no positional number)', () => {
+    // never "Player 2"/"P2" — the number would misread as the 2nd top-bar slot
+    expect(formatTranslatedSpeakerLabel('Hero 2', 2, 'en')).toBe('a player')
+    expect(formatTranslatedSpeakerLabel('2', 2, 'en')).toBe('a player')
   })
 
   it('includes player slot for known hero labels', () => {

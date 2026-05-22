@@ -78,7 +78,8 @@
     "legacyHeroLabel": "Hero {{playerId}}",
     "message": "{{- message}} (translation of in-game chat)",
     "playerLabel": "Player {{playerId}}",
-    "speakerLabel": "{{- heroName}} (P{{playerId}})"
+    "speakerLabel": "{{- heroName}} (P{{playerId}})",
+    "unknownPlayer": "a player"
   },
   "clearsharing": {
     "error": "Failed to clear account sharing. Please try again or contact support.",

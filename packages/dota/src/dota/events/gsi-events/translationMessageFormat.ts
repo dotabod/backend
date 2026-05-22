@@ -17,10 +17,10 @@ export function formatTranslatedSpeakerLabel(
     `${playerId}`,
   ])
   if (fallbackSpeakerLabels.has(heroName)) {
-    return t('chatTranslation.playerLabel', {
-      lng: locale,
-      playerId,
-    })
+    // No hero resolved — use a neutral label. Never expose the numeric player_id
+    // here: it's 0-indexed (off-by-one from the 1-10 top bar) and reshuffled at
+    // 8500+, so "Player 9" would wrongly imply the 9th-slot / Green player.
+    return t('chatTranslation.unknownPlayer', { lng: locale })
   }
   return t('chatTranslation.speakerLabel', {
     lng: locale,
