@@ -2,6 +2,7 @@ import os
 import json
 import requests
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from tqdm import tqdm
 
@@ -23,6 +24,15 @@ LEGACY_HERO_IMAGE_BASE_URL = "https://courier.spectral.gg/images/dota/portraits_
 HERO_ABILITIES_URL = "https://raw.githubusercontent.com/odota/dotaconstants/refs/heads/master/build/hero_abilities.json"
 FACET_ICON_BASE_URL = "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/icons/facets/"
 REQUEST_TIMEOUT_SECONDS = 20
+
+# Alternate-portrait suffixes that exist for *some* heroes on the Spectral CDN
+# but are not reliably listed in each hero's `alticons` metadata. We probe these
+# per hero so the asset pipeline self-heals on prod (where assets/ is gitignored
+# and re-downloaded at startup). `_persona2`/`_arcana` are intentionally omitted
+# because they do not exist anywhere on Spectral.
+CANDIDATE_SPECTRAL_SUFFIXES = ("alt", "alt1", "alt2", "alt3", "persona1")
+SPECTRAL_PROBE_TIMEOUT_SECONDS = 10
+SPECTRAL_PROBE_MAX_WORKERS = 16
 
 
 def hero_tag_from_internal_name(internal_name):
@@ -229,6 +239,87 @@ def merge_hero_metadata(base_heroes, augmenting_heroes):
     return merged_heroes
 
 
+def spectral_variant_exists(session, tag, variant):
+    """Return True if a Spectral portrait for ``tag``/``variant`` is available.
+
+    Treats an HTTP 200 with an image content-type as "exists". Any transient
+    error is swallowed (treated as "does not exist") so one bad probe never
+    crashes the wider refresh.
+    """
+    url = legacy_hero_image_url(tag, variant)
+    try:
+        response = session.get(url, timeout=SPECTRAL_PROBE_TIMEOUT_SECONDS, stream=True)
+        try:
+            content_type = response.headers.get("Content-Type", "")
+            exists = response.status_code == 200 and content_type.startswith("image/")
+        finally:
+            response.close()
+        return exists
+    except Exception as e:
+        logger.debug(f"Probe failed for {url}: {e}")
+        return False
+
+
+def discover_spectral_variants(heroes, cached_hero_data=None):
+    """Probe the Spectral CDN for extra portrait variants and merge them in.
+
+    For each hero not already probed (per the ``spectral_probed`` marker carried
+    in cached hero data), probe every candidate suffix and add any that exist to
+    the hero's ``alticons``. Heroes are marked ``spectral_probed`` so subsequent
+    runs are effectively a single probe pass; brand-new heroes still get probed.
+    Returns ``heroes`` mutated in place for convenience.
+    """
+    probed_ids = {
+        hero.get("id")
+        for hero in cached_hero_data or []
+        if hero.get("spectral_probed")
+    }
+
+    to_probe = [hero for hero in heroes if hero.get("id") not in probed_ids]
+    for hero in heroes:
+        # Carry the cached marker forward for heroes we skip this run.
+        if hero.get("id") in probed_ids:
+            hero["spectral_probed"] = True
+
+    if not to_probe:
+        return heroes
+
+    logger.info(f"Probing Spectral for alternate portraits across {len(to_probe)} heroes")
+
+    # (hero, variant) work items across all heroes, probed concurrently.
+    work = [
+        (hero, variant)
+        for hero in to_probe
+        for variant in CANDIDATE_SPECTRAL_SUFFIXES
+    ]
+
+    discovered = 0
+    with requests.Session() as session:
+        with ThreadPoolExecutor(max_workers=SPECTRAL_PROBE_MAX_WORKERS) as executor:
+            future_to_item = {
+                executor.submit(spectral_variant_exists, session, hero.get("tag"), variant): (hero, variant)
+                for hero, variant in work
+            }
+            for future in as_completed(future_to_item):
+                hero, variant = future_to_item[future]
+                try:
+                    exists = future.result()
+                except Exception as e:
+                    logger.debug(f"Probe future failed for {hero.get('tag')} {variant}: {e}")
+                    continue
+
+                if exists and variant not in hero.get("alticons", []):
+                    merged = sorted({*hero.get("alticons", []), variant})
+                    hero["alticons"] = merged
+                    discovered += 1
+
+    for hero in to_probe:
+        hero["spectral_probed"] = True
+
+    logger.info(f"Discovered {discovered} additional Spectral portrait variant(s)")
+    return heroes
+
+
 def download_image(image_url, image_path, description):
     """Download an image if it is not already present."""
     if image_path.exists():
@@ -330,6 +421,9 @@ def download_hero_images(heroes, existing_hero_data=None):
             "localized_name": localized_name,
             "aliases": (existing_hero or {}).get("aliases", hero.get("aliases", "")),
             "alt_name": (existing_hero or {}).get("alt_name", hero.get("alt_name", "")),
+            "spectral_probed": bool(
+                hero.get("spectral_probed") or (existing_hero or {}).get("spectral_probed")
+            ),
             "variants": hero_variants
         })
 
@@ -446,14 +540,27 @@ def get_hero_data(refresh=True):
 
     heroes = get_hero_list() if refresh or not cached_hero_data else []
 
+    # Probe the Spectral CDN for portrait variants missing from `alticons`
+    # metadata so newly discovered variants flow through the normal download
+    # path. Heroes already probed (per cached marker) are skipped.
+    if heroes:
+        discover_spectral_variants(heroes, cached_hero_data)
+
     if cached_hero_data and heroes:
         cached_ids = {hero.get("id") for hero in cached_hero_data}
         current_ids = {hero.get("id") for hero in heroes}
         missing_ids = sorted(current_ids - cached_ids)
         missing_variants = get_missing_expected_variants(cached_hero_data, heroes)
         cached_images_exist = all_variant_images_exist(cached_hero_data)
+        # Newly probed heroes need their `spectral_probed` marker persisted so we
+        # don't re-probe every run, even when no new variant was discovered.
+        probed_ids = {h.get("id") for h in heroes if h.get("spectral_probed")}
+        cached_probed_ids = {
+            h.get("id") for h in cached_hero_data if h.get("spectral_probed")
+        }
+        newly_probed = bool(probed_ids - cached_probed_ids)
 
-        if not missing_ids and not missing_variants and cached_images_exist:
+        if not missing_ids and not missing_variants and cached_images_exist and not newly_probed:
             logger.info("Cached hero data is current")
             return add_abilities_to_hero_data(cached_hero_data, abilities_data)
 

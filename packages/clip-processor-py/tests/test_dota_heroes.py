@@ -3,7 +3,7 @@
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import dota_heroes
 
@@ -14,6 +14,33 @@ class FakeImageResponse:
 
     def iter_content(self, chunk_size=8192):
         yield b"fake-image-bytes"
+
+
+class FakeProbeResponse:
+    """Mimics a streamed HEAD/GET probe response for variant discovery."""
+
+    def __init__(self, status_code=200, content_type="image/png"):
+        self.status_code = status_code
+        self.headers = {"Content-Type": content_type} if content_type else {}
+
+    def close(self):
+        return None
+
+
+def _probe_session(existing_urls):
+    """Build a mock requests.Session whose .get() returns 200 only for known urls."""
+    session = MagicMock()
+
+    def fake_get(url, **kwargs):
+        if url in existing_urls:
+            return FakeProbeResponse(200, "image/png")
+        return FakeProbeResponse(404, "text/html")
+
+    session.get.side_effect = fake_get
+    # Usable as a context manager (`with requests.Session() as session:`).
+    session.__enter__ = MagicMock(return_value=session)
+    session.__exit__ = MagicMock(return_value=False)
+    return session
 
 
 class FakeJsonResponse:
@@ -138,6 +165,7 @@ def test_get_hero_data_refreshes_missing_remote_hero_and_missing_variants():
         with patch.object(dota_heroes, "ASSETS_DIR", assets_dir), \
              patch.object(dota_heroes, "download_hero_abilities", return_value={}), \
              patch.object(dota_heroes, "get_hero_list", return_value=current_heroes), \
+             patch.object(dota_heroes.requests, "Session", return_value=_probe_session(set())), \
              patch.object(dota_heroes.requests, "get", return_value=FakeImageResponse()):
             refreshed = dota_heroes.get_hero_data(refresh=True)
 
@@ -246,6 +274,142 @@ def test_get_missing_expected_variants_skips_unknown_hero():
     heroes = [{"id": 99, "localized_name": "New", "alticons": ["x"]}]
     # hero not in cache -> skipped (handled by full download path, not "missing")
     assert dota_heroes.get_missing_expected_variants(cached, heroes) == []
+
+
+# --------------------------------------------------------------------------- #
+# spectral_variant_exists / discover_spectral_variants
+# --------------------------------------------------------------------------- #
+def test_spectral_variant_exists_true_for_image_200():
+    session = _probe_session({dota_heroes.legacy_hero_image_url("wisp", "alt")})
+    assert dota_heroes.spectral_variant_exists(session, "wisp", "alt") is True
+
+
+def test_spectral_variant_exists_false_for_404():
+    session = _probe_session(set())  # nothing exists
+    assert dota_heroes.spectral_variant_exists(session, "wisp", "alt") is False
+
+
+def test_spectral_variant_exists_false_for_non_image_200():
+    session = MagicMock()
+    session.get.return_value = FakeProbeResponse(200, "text/html")
+    assert dota_heroes.spectral_variant_exists(session, "wisp", "alt") is False
+
+
+def test_spectral_variant_exists_swallows_probe_exception():
+    session = MagicMock()
+    session.get.side_effect = RuntimeError("network down")
+    # A probe failure must be swallowed and treated as "does not exist".
+    assert dota_heroes.spectral_variant_exists(session, "wisp", "alt") is False
+
+
+def test_discover_spectral_variants_adds_existing_suffixes():
+    heroes = [
+        dota_heroes.normalize_hero(
+            {"id": 91, "name": "npc_dota_hero_wisp", "name_english_loc": "Io"}
+        ),
+        dota_heroes.normalize_hero(
+            {"id": 20, "name": "npc_dota_hero_vengefulspirit", "name_english_loc": "Vengeful Spirit"}
+        ),
+    ]
+    existing = {
+        dota_heroes.legacy_hero_image_url("wisp", "alt"),
+        dota_heroes.legacy_hero_image_url("vengefulspirit", "alt1"),
+        dota_heroes.legacy_hero_image_url("vengefulspirit", "alt2"),
+        dota_heroes.legacy_hero_image_url("vengefulspirit", "alt3"),
+    }
+    with patch.object(dota_heroes.requests, "Session", return_value=_probe_session(existing)):
+        dota_heroes.discover_spectral_variants(heroes, cached_hero_data=None)
+
+    by_id = {h["id"]: h for h in heroes}
+    assert by_id[91]["alticons"] == ["alt"]
+    assert by_id[20]["alticons"] == ["alt1", "alt2", "alt3"]
+    assert all(h["spectral_probed"] for h in heroes)
+
+
+def test_discover_spectral_variants_skips_already_probed_heroes():
+    heroes = [
+        dota_heroes.normalize_hero(
+            {"id": 91, "name": "npc_dota_hero_wisp", "name_english_loc": "Io"}
+        ),
+    ]
+    cached = [{"id": 91, "spectral_probed": True}]
+    session = _probe_session({dota_heroes.legacy_hero_image_url("wisp", "alt")})
+    with patch.object(dota_heroes.requests, "Session", return_value=session):
+        dota_heroes.discover_spectral_variants(heroes, cached_hero_data=cached)
+
+    # Already probed -> no network probe, marker carried forward, no new alticons.
+    session.get.assert_not_called()
+    assert heroes[0]["alticons"] == []
+    assert heroes[0]["spectral_probed"] is True
+
+
+def test_discover_spectral_variants_swallows_session_failures():
+    heroes = [
+        dota_heroes.normalize_hero(
+            {"id": 91, "name": "npc_dota_hero_wisp", "name_english_loc": "Io"}
+        ),
+    ]
+    session = MagicMock()
+    session.get.side_effect = RuntimeError("boom")
+    session.__enter__ = MagicMock(return_value=session)
+    session.__exit__ = MagicMock(return_value=False)
+    with patch.object(dota_heroes.requests, "Session", return_value=session):
+        # Per-hero probe failures must not crash discovery.
+        dota_heroes.discover_spectral_variants(heroes, cached_hero_data=None)
+
+    assert heroes[0]["alticons"] == []
+    assert heroes[0]["spectral_probed"] is True
+
+
+def test_get_hero_data_downloads_discovered_variant_and_persists_marker():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        assets_dir = Path(temp_dir) / "dota_heroes"
+        assets_dir.mkdir(parents=True)
+        (assets_dir / "91_base.png").write_bytes(b"existing-base")
+
+        cached_hero_data = [
+            {
+                "id": 91,
+                "name": "npc_dota_hero_wisp",
+                "tag": "wisp",
+                "localized_name": "Io",
+                "aliases": "",
+                "alt_name": "",
+                "variants": [
+                    {
+                        "variant": "base",
+                        "image_path": str(assets_dir / "91_base.png"),
+                        "image_url": "https://old.example/wisp.png",
+                    },
+                ],
+            }
+        ]
+        (assets_dir / "hero_data.json").write_text(json.dumps(cached_hero_data))
+
+        current_heroes = [
+            dota_heroes.normalize_hero(
+                {"id": 91, "name": "npc_dota_hero_wisp", "name_english_loc": "Io"}
+            ),
+        ]
+        existing = {dota_heroes.legacy_hero_image_url("wisp", "alt")}
+
+        with patch.object(dota_heroes, "ASSETS_DIR", assets_dir), \
+             patch.object(dota_heroes, "download_hero_abilities", return_value={}), \
+             patch.object(dota_heroes, "get_hero_list", return_value=current_heroes), \
+             patch.object(dota_heroes.requests, "Session", return_value=_probe_session(existing)), \
+             patch.object(dota_heroes.requests, "get", return_value=FakeImageResponse()):
+            refreshed = dota_heroes.get_hero_data(refresh=True)
+
+        # Discovered "_alt" portrait was downloaded and recorded.
+        assert (assets_dir / "91_alt.png").exists()
+        io_hero = next(h for h in refreshed if h["id"] == 91)
+        variants = {v["variant"] for v in io_hero["variants"]}
+        assert variants == {"base", "alt"}
+        assert io_hero["spectral_probed"] is True
+
+        # Marker persisted to disk so a second pass is a no-op (no re-probe).
+        on_disk = json.loads((assets_dir / "hero_data.json").read_text())
+        assert on_disk[0]["spectral_probed"] is True
 
 
 # --------------------------------------------------------------------------- #
