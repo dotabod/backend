@@ -144,7 +144,7 @@ async function getMatchDetails(matchId: string): Promise<MatchMinimalDetailsResp
     steamSocket.emit(
       'getMatchMinimalDetails',
       { match_id: Number(matchId) },
-      (err: any, response: any) => {
+      (err: unknown, response: MatchMinimalDetailsResponse) => {
         if (err) {
           logger.info('[BETS] Could not get match details for retroactive resolution', {
             matchId,

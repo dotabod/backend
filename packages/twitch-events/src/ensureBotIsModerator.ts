@@ -19,9 +19,9 @@ export async function ensureBotIsModerator(broadcasterId: string) {
 
     try {
       await api.moderation.addModerator(broadcasterId, process.env.TWITCH_BOT_PROVIDERID!)
-    } catch (modError: any) {
+    } catch (modError: unknown) {
       // If the error is because the bot is already a moderator, this is not a real error
-      if (modError?._body?.includes('user is already a mod')) {
+      if ((modError as { _body?: string })?._body?.includes('user is already a mod')) {
         logger.debug('[TWITCHEVENTS] Bot is already a moderator', { broadcasterId })
         return
       }

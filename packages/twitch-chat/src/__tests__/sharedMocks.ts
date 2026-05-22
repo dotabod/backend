@@ -26,8 +26,8 @@ export const state: {
     text: string
     opts: Record<string, unknown>
   }>
-  fetchCalls: Array<{ url: string; options: any }>
-  fetchImpl: (url: string, options: any) => Promise<FetchResponse>
+  fetchCalls: Array<{ url: string; options: RequestInit | undefined }>
+  fetchImpl: (url: string, options: RequestInit | undefined) => Promise<FetchResponse>
   fetchThrows: unknown
   logError: Array<{ message: string; meta: Record<string, unknown> }>
   // supabase: accounts.select(...).single() result, and captured users.update() calls.
@@ -70,8 +70,16 @@ export function resetState() {
 
 // Minimal chainable supabase mock: accounts.select().eq()...single() yields
 // state.dbAccount; users.update(values).eq('id', x) records into userUpdates.
+interface SupabaseBuilder {
+  select: () => SupabaseBuilder
+  eq: (col: string, val: unknown) => SupabaseBuilder | Promise<{ data: null; error: null }>
+  single: () => Promise<{ data: { userId: string } | null; error: unknown }>
+  update: (values: Record<string, unknown>) => SupabaseBuilder
+  _updateValues: Record<string, unknown> | null
+}
+
 function createSupabaseBuilder() {
-  const builder: any = {
+  const builder: SupabaseBuilder = {
     select: () => builder,
     eq: (col: string, val: unknown) => {
       if (builder._updateValues && col === 'id') {
@@ -121,7 +129,7 @@ mock.module('../utils/socketManager', () => ({
 }))
 
 // Route fetch through state so each test controls the HTTP response.
-globalThis.fetch = (async (url: string, options: any) => {
+globalThis.fetch = (async (url: string, options: RequestInit | undefined) => {
   state.fetchCalls.push({ url, options })
   if (state.fetchThrows) throw state.fetchThrows
   return state.fetchImpl(url, options)

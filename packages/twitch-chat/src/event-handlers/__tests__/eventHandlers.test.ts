@@ -8,6 +8,9 @@ import {
   state,
   updateUserEvent,
 } from '../../__tests__/sharedMocks.ts'
+import type { TwitchOfflineEvent } from '../offlineEvent.ts'
+import type { TwitchOnlineEvent } from '../onlineEvent.ts'
+import type { TwitchUserUpdateEvent } from '../updateUserEvent.ts'
 
 const realSetTimeout = globalThis.setTimeout
 
@@ -18,7 +21,7 @@ beforeEach(() => {
 
 describe('onlineEvent', () => {
   const evt = (id = 'b1', started_at = '2026-05-20T00:00:00.000Z') => ({
-    payload: { event: { broadcaster_user_id: id, started_at } as any },
+    payload: { event: { broadcaster_user_id: id, started_at } as TwitchOnlineEvent },
   })
 
   it('records the online timestamp and marks the user online', async () => {
@@ -42,7 +45,9 @@ describe('onlineEvent', () => {
 })
 
 describe('offlineEvent', () => {
-  const evt = (id = 'b1') => ({ payload: { event: { broadcaster_user_id: id } as any } })
+  const evt = (id = 'b1') => ({
+    payload: { event: { broadcaster_user_id: id } as TwitchOfflineEvent },
+  })
 
   // offlineEvent debounces with a real setTimeout(..., 10000); fire it instantly.
   beforeEach(() => {
@@ -76,7 +81,13 @@ describe('offlineEvent', () => {
 describe('updateUserEvent', () => {
   it('updates name/displayName, filtering out falsy fields', async () => {
     updateUserEvent({
-      payload: { event: { user_id: 'b1', user_login: 'newname', user_name: 'NewName' } as any },
+      payload: {
+        event: {
+          user_id: 'b1',
+          user_login: 'newname',
+          user_name: 'NewName',
+        } as TwitchUserUpdateEvent,
+      },
     })
     await flushMacrotasks()
     expect(state.userUpdates).toHaveLength(1)
@@ -86,7 +97,13 @@ describe('updateUserEvent', () => {
   it('does not update when the account is not found', async () => {
     state.dbAccount = null
     updateUserEvent({
-      payload: { event: { user_id: 'b1', user_login: 'newname', user_name: 'NewName' } as any },
+      payload: {
+        event: {
+          user_id: 'b1',
+          user_login: 'newname',
+          user_name: 'NewName',
+        } as TwitchUserUpdateEvent,
+      },
     })
     await flushMacrotasks()
     expect(state.userUpdates).toHaveLength(0)

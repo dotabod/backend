@@ -13,6 +13,18 @@ type CloseCodeDescription = {
   [code: number]: string
 }
 
+interface SessionWelcomePayload {
+  session: { id: string; keepalive_timeout_seconds: number }
+}
+
+interface NotificationPayload {
+  subscription: { type: string }
+}
+
+interface SessionReconnectPayload {
+  session: { reconnect_url: string }
+}
+
 let eventsubConnected = false
 
 export function isEventsubConnected(): boolean {
@@ -151,7 +163,7 @@ export class EventsubSocket extends EventEmitter {
     }
   }
 
-  private handleSessionWelcome(payload: any, isReconnect: boolean): void {
+  private handleSessionWelcome(payload: SessionWelcomePayload, isReconnect: boolean): void {
     const { session } = payload
     const { id, keepalive_timeout_seconds } = session
 
@@ -169,13 +181,16 @@ export class EventsubSocket extends EventEmitter {
     this.silence(keepalive_timeout_seconds)
   }
 
-  private handleNotification(metadata: any, payload: any): void {
+  private handleNotification(
+    metadata: Record<string, unknown>,
+    payload: NotificationPayload,
+  ): void {
     const { type } = payload.subscription
     this.emit(type, { metadata, payload })
     this.silence()
   }
 
-  private handleSessionReconnect(payload: any): void {
+  private handleSessionReconnect(payload: SessionReconnectPayload): void {
     this.eventsub.is_reconnecting = true
     const { reconnect_url } = payload.session
 

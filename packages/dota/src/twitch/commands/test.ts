@@ -43,7 +43,7 @@ const generateLogQuery = (user: Awaited<ReturnType<typeof fetchUserByName>>) => 
   if (!user) return
 
   const steamAccountQueries = user.steam_accounts
-    .map((account: any) => `steam32Id:${account.steam32Id} or`)
+    .map((account) => `steam32Id:${account.steam32Id} or`)
     .join(' ')
 
   return `
@@ -98,12 +98,12 @@ const handleCardsCommand = async (message: MessageType) => {
     gsi: channel.client.gsi,
   })
 
-  const getCardsPromise = new Promise<any>((resolve, reject) => {
+  const getCardsPromise = new Promise<unknown>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: channel.client.locale })))
     }, 10000) // 5 second timeout
 
-    steamSocket.emit('getCards', accountIds, false, (err: any, response: any) => {
+    steamSocket.emit('getCards', accountIds, false, (err: unknown, response: unknown) => {
       clearTimeout(timeoutId)
       if (err) {
         reject(err)
@@ -128,7 +128,7 @@ const handleCardsCommand = async (message: MessageType) => {
 const handleCardCommand = (message: MessageType, args: string[]) => {
   const [, accountId] = args
 
-  const getCardPromise = new Promise<any>((resolve, reject) => {
+  const getCardPromise = new Promise<unknown>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(
         new CustomError(
@@ -137,7 +137,7 @@ const handleCardCommand = (message: MessageType, args: string[]) => {
       )
     }, 5000) // 5 second timeout
 
-    steamSocket.emit('getCard', Number(accountId), (err: any, response: any) => {
+    steamSocket.emit('getCard', Number(accountId), (err: unknown, response: unknown) => {
       clearTimeout(timeoutId)
       if (err) {
         reject(err)
@@ -196,7 +196,7 @@ const handleServerCommand = async (message: MessageType, args: string[]) => {
     steamSocket.emit(
       'getUserSteamServer',
       steam32Id || channel.client.steam32Id,
-      (err: any, steamServerId: string) => {
+      (err: unknown, steamServerId: string) => {
         clearTimeout(timeoutId)
         if (err) {
           logger.error('[STEAM] Error getting user steam server', {
@@ -316,22 +316,23 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
         `Requesting opendota match data from overlay for match "${bet.matchId}" with hero id "${heroId}"...`,
       )
       const lastSocket = sockets[sockets.length - 1]
+      type RequestMatchDataResponse = {
+        radiantWin: boolean
+        radiantScore: number
+        direScore: number
+        kills: number
+        deaths: number
+        assists: number
+        lobbyType: number
+      } | null
       try {
-        const response = await new Promise<{
-          radiantWin: boolean
-          radiantScore: number
-          direScore: number
-          kills: number
-          deaths: number
-          assists: number
-          lobbyType: number
-        } | null>((resolve, reject) => {
+        const response = await new Promise<RequestMatchDataResponse>((resolve, reject) => {
           lastSocket
             .timeout(25000)
             .emit(
               'requestMatchData',
               { matchId: bet.matchId, heroId },
-              (err: any, response: any) => {
+              (err: unknown, response: RequestMatchDataResponse) => {
                 chatClient.whisper(
                   twitchChatId,
                   `Match ${bet.matchId}: ${JSON.stringify(response)}`,

@@ -414,7 +414,7 @@ export interface Match {
   positive_votes: number
   negative_votes: number
   game_mode: number
-  picks_bans: any[]
+  picks_bans: unknown[]
   match_seq_num: null
   replay_state: number
   radiant_guild_id: null
@@ -423,7 +423,7 @@ export interface Match {
   dire_team_tag: null
   series_id: number
   series_type: number
-  broadcaster_channels: any[]
+  broadcaster_channels: unknown[]
   engine: number
   custom_game_data: null
   match_flags: number
@@ -434,8 +434,8 @@ export interface Match {
   tournament_id: null
   tournament_round: null
   pre_game_duration: number
-  mvp_account_id: any[]
-  coaches: any[]
+  mvp_account_id: unknown[]
+  coaches: unknown[]
   level: string
   timestamp: string
 }

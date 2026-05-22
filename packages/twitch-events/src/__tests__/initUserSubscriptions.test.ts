@@ -48,13 +48,16 @@ describe('initUserSubscriptions', () => {
   })
 
   it('does nothing when all required subscriptions already exist', async () => {
-    seedSubscriptions('111', REQUIRED as any)
+    seedSubscriptions('111', REQUIRED)
     await initUserSubscriptions('111')
     expect(state.subscribeCalls).toHaveLength(0)
   })
 
   it('only subscribes the missing types for a partially-subscribed user', async () => {
-    seedSubscriptions('111', REQUIRED.filter((t) => t !== 'channel.poll.end') as any)
+    seedSubscriptions(
+      '111',
+      REQUIRED.filter((t) => t !== 'channel.poll.end'),
+    )
     await initUserSubscriptions('111')
     expect(state.subscribeCalls.map((c) => c.type)).toEqual(['channel.poll.end'])
   })
@@ -63,7 +66,7 @@ describe('initUserSubscriptions', () => {
     // Existing user missing one critical (stream.online) and one secondary (channel.poll.end).
     seedSubscriptions(
       '111',
-      REQUIRED.filter((t) => t !== 'stream.online' && t !== 'channel.poll.end') as any,
+      REQUIRED.filter((t) => t !== 'stream.online' && t !== 'channel.poll.end'),
     )
     await initUserSubscriptions('111')
     const types = state.subscribeCalls.map((c) => c.type).sort()

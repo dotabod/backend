@@ -1,4 +1,5 @@
 import { logger, supabase } from '@dotabod/shared-utils'
+import type { RedisJSON } from '@redis/json/dist/commands'
 import { t } from 'i18next'
 import { MULTIPLIER_SOLO } from '../../db/getWL'
 import RedisClient from '../../db/RedisClient'
@@ -125,7 +126,7 @@ export async function lookupLeaderRank(
           reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: 'en' })))
         }, 10000) // 5 second timeout
 
-        steamSocket.emit('getCard', steam32Id, (err: any, card: Cards) => {
+        steamSocket.emit('getCard', steam32Id, (err: unknown, card: Cards) => {
           clearTimeout(timeoutId)
           if (err) {
             reject(err)
@@ -152,7 +153,7 @@ export async function lookupLeaderRank(
       result = { myRank, mmr, standing }
 
       // Cache the result
-      await redisClient.client.json.set(cacheKey, '$', result as any)
+      await redisClient.client.json.set(cacheKey, '$', result as unknown as RedisJSON)
     } catch (e) {
       return defaultNotFound
     }

@@ -7,7 +7,27 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-async function fetchSubscriptionsWithStatus(status?: string, cursor?: string): Promise<any> {
+interface TwitchSubscription {
+  id: string
+  cost: number
+  condition: {
+    broadcaster_user_id?: string
+    user_id?: string
+  }
+}
+
+interface TwitchSubscriptionsResponse {
+  data: TwitchSubscription[]
+  pagination: { cursor?: string }
+  total?: number
+  total_cost?: number
+  max_total_cost?: number
+}
+
+async function fetchSubscriptionsWithStatus(
+  status?: string,
+  cursor?: string,
+): Promise<TwitchSubscriptionsResponse | undefined> {
   const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
   if (status) url.searchParams.append('status', status)
   if (cursor) {
@@ -24,7 +44,7 @@ async function fetchSubscriptionsWithStatus(status?: string, cursor?: string): P
     )
     return
   }
-  return response.json()
+  return (await response.json()) as TwitchSubscriptionsResponse
 }
 
 // Assuming this counter is defined outside of the deleteSubscription function
@@ -130,6 +150,7 @@ async function markRevokedAuthorizationsAsRequiresRefresh(singleLoop = false) {
     do {
       try {
         const data = await fetchSubscriptionsWithStatus(status, cursor)
+        if (!data) break
         console.log(
           `Found subscriptions with status ${status} that require deletion:`,
           data.data.length,
@@ -139,7 +160,7 @@ async function markRevokedAuthorizationsAsRequiresRefresh(singleLoop = false) {
           const twitchId = sub.condition.broadcaster_user_id
           await deleteSubscription(sub.id)
 
-          if (!updatePromises.has(twitchId)) {
+          if (twitchId && !updatePromises.has(twitchId)) {
             updatePromises.set(twitchId, updateAccountRequiresRefresh(twitchId))
           }
         }
@@ -166,6 +187,7 @@ async function deleteStatuses(singleLoop = false) {
     do {
       try {
         const data = await fetchSubscriptionsWithStatus(status, cursor)
+        if (!data) break
         console.log(
           `Found subscriptions with status ${status} that require deletion:`,
           data.data.length,
@@ -191,6 +213,7 @@ async function deleteStatuses(singleLoop = false) {
 async function getCountOfSubscriptionsWithStatus(status?: string): Promise<number> {
   try {
     const data = await fetchSubscriptionsWithStatus(status)
+    if (!data) return 0
     console.log('max total cost: ', data?.max_total_cost)
     console.log('total cost: ', data?.total_cost)
     console.log('total found: ', data?.data.length)
@@ -201,7 +224,7 @@ async function getCountOfSubscriptionsWithStatus(status?: string): Promise<numbe
   }
 }
 
-async function deleteCostSubsAndSetRequiresRefresh(singleLoop = false): Promise<any[]> {
+async function deleteCostSubsAndSetRequiresRefresh(singleLoop = false): Promise<string[]> {
   const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
   let allBroadcasterUserIds: string[] = []
   let cursor: string | null = null
@@ -223,18 +246,18 @@ async function deleteCostSubsAndSetRequiresRefresh(singleLoop = false): Promise<
       return []
     }
 
-    const data = (await response.json()) as { data: any[]; pagination: { cursor?: string } }
-    const subscriptionsWithCostAboveZero = data.data.filter((sub: any) => sub.cost > 0)
+    const data = (await response.json()) as TwitchSubscriptionsResponse
+    const subscriptionsWithCostAboveZero = data.data.filter((sub) => sub.cost > 0)
     const broadcasterUserIds = subscriptionsWithCostAboveZero.map(
-      (sub: any) => sub.condition.broadcaster_user_id || sub.condition.user_id,
+      (sub) => sub.condition.broadcaster_user_id || sub.condition.user_id || '',
     )
     allBroadcasterUserIds = allBroadcasterUserIds.concat(broadcasterUserIds)
 
     subsetsOfBroadcasterUserIds.push(broadcasterUserIds)
 
     // Save sub ids to subIdMap
-    subscriptionsWithCostAboveZero.forEach((sub: any) => {
-      const broadcasterUserId = sub.condition.broadcaster_user_id || sub.condition.user_id
+    subscriptionsWithCostAboveZero.forEach((sub) => {
+      const broadcasterUserId = sub.condition.broadcaster_user_id || sub.condition.user_id || ''
       if (!subIdMap[broadcasterUserId]) {
         subIdMap[broadcasterUserId] = []
       }
@@ -248,8 +271,8 @@ async function deleteCostSubsAndSetRequiresRefresh(singleLoop = false): Promise<
 
   console.log("Found subscriptions with 'cost' above zero:", allBroadcasterUserIds.length)
 
-  const updateRefreshPromises: Promise<any>[] = []
-  const deleteSubPromises: Promise<any>[] = []
+  const updateRefreshPromises: Promise<unknown>[] = []
+  const deleteSubPromises: Promise<unknown>[] = []
 
   for (const providerAccountId of allBroadcasterUserIds) {
     if (providerAccountId) {

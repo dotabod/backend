@@ -62,7 +62,7 @@ export type DisableNotificationData = {
 export interface ReasonContext {
   userId: string
   settingKey: string
-  currentValue?: any
-  previousValue?: any
+  currentValue?: unknown
+  previousValue?: unknown
   timestamp: Date
 }

@@ -74,7 +74,7 @@ async function checkForNewDotaPatch(): Promise<{ isNewPatch: boolean; version: s
 /**
  * Get detailed information for a specific patch version
  */
-export async function getPatchDetails(version: string): Promise<any | null> {
+export async function getPatchDetails(version: string): Promise<unknown> {
   try {
     const url = DOTA_PATCH_DETAILS_URL.replace('{version}', version)
     const response = await axios.get(url)

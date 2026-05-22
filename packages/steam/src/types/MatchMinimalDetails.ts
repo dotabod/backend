@@ -22,7 +22,7 @@ export interface MatchMinimal {
   game_mode: number
   match_outcome: number
   players: MatchPlayer[]
-  tourney: any
+  tourney: unknown
   radiant_score: number
   dire_score: number
   lobby_type: number
@@ -30,7 +30,7 @@ export interface MatchMinimal {
 
 export interface MatchMinimalDetailsResponse {
   matches: MatchMinimal[]
-  last_match: any
+  last_match: unknown
 }
 
 export enum EMatchOutcome {
@@ -55,7 +55,7 @@ export enum EMatchOutcome {
   k_EMatchOutcome_NotScored_Suspicious = 69,
 }
 
-export function eMatchOutcomeFromJSON(object: any): EMatchOutcome {
+export function eMatchOutcomeFromJSON(object: number | string): EMatchOutcome {
   switch (object) {
     case 0:
     case 'k_EMatchOutcome_Unknown':

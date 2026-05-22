@@ -219,16 +219,34 @@ export async function sendTwitchChatMessage(
   }
 }
 
+interface ChatMessageNotification {
+  payload: {
+    subscription?: unknown
+    event?: {
+      chatter_user_login: string
+      chatter_user_id: string
+      message: { text: string }
+      message_id: string
+      broadcaster_user_id: string
+      broadcaster_user_login: string
+      badges: { [key: string]: string }[]
+      reply?: { parent_message_id?: string } | null
+      source_message_id: string | null
+    }
+  }
+}
+
 /**
  * Handles incoming chat messages from the EventSub WebSocket
  * @param message The WebSocket message payload
  */
-export async function handleChatMessage(message: any): Promise<void> {
+export async function handleChatMessage(message: ChatMessageNotification): Promise<void> {
   if (!('subscription' in message.payload && 'event' in message.payload)) {
     return
   }
 
   const event = message.payload.event
+  if (!event) return
   const {
     chatter_user_login,
     chatter_user_id,

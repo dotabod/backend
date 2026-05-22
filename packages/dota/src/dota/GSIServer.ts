@@ -294,10 +294,10 @@ class GSIServer implements GSIServerInterface {
             clipsToDeleteQueue.delete(accountId)
           }
         }
-      } catch (error: any) {
+      } catch (error) {
         logger.error('[GSI_ClipDelete] Error processing deletion batch for user', {
           ...logContext,
-          error: error.message,
+          error: (error as Error).message,
         })
         // Keep slugs in the queue for retry on next interval
       }

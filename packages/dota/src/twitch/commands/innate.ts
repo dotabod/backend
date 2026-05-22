@@ -1,6 +1,7 @@
 import DOTA_ABILITIES from 'dotaconstants/build/abilities.json' with { type: 'json' }
 import DOTA_HERO_ABILITIES from 'dotaconstants/build/hero_abilities.json' with { type: 'json' }
 import { t } from 'i18next'
+import type { GSIHandlerType } from '../../dota/GSIHandlerTypes'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { getHeroById, getHeroNameOrColor, withHeroLink } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
@@ -68,21 +69,24 @@ commandHandler.registerCommand('innate', {
         ),
         message.user.messageId,
       )
-    } catch (error: any) {
+    } catch (error) {
       chatClient.say(
         channelName,
-        error.message ?? t('gameNotFound', { lng: channelClient.locale }),
+        (error as Error).message ?? t('gameNotFound', { lng: channelClient.locale }),
         message.user.messageId,
       )
     }
   },
 })
 
-const isValidGSIHandler = (gsiHandler: any, matchId: any): boolean => {
+const isValidGSIHandler = (
+  gsiHandler: GSIHandlerType | undefined,
+  matchId: string | undefined,
+): boolean => {
   return !!gsiHandler && !!matchId
 }
 
-const isValidHero = (hero: any): boolean => {
+const isValidHero = (hero: { id?: number } | null | undefined): boolean => {
   return typeof hero?.id === 'number' && !!getHeroById(hero.id)
 }
 

@@ -218,7 +218,7 @@ class Dota {
 
       const callbackNotSpecificGames = (data: {
         specific_games: boolean
-        game_list: any[]
+        game_list: SteamMatchDetails[]
         league_id: number
         start_game: number
       }) => {
@@ -323,7 +323,7 @@ class Dota {
     this.steamClient.on('servers', this.handleServerUpdate.bind(this))
   }
 
-  handleLogOnResponse(logonResp: any) {
+  handleLogOnResponse(logonResp: { eresult: number }) {
     // @ts-expect-error no types exist
     if (logonResp.eresult === Steam.EResult.OK) {
       logger.info('[STEAM] Logged on.')
@@ -333,14 +333,14 @@ class Dota {
     }
   }
 
-  handleLoggedOff(eresult: any) {
+  handleLoggedOff(eresult: number) {
     // @ts-expect-error no types exist
     if (this.isProduction()) this.steamClient.connect()
     logger.info('[STEAM] Logged off from Steam.', { eresult })
     this.logSteamError(eresult)
   }
 
-  handleClientError(error: any) {
+  handleClientError(error: unknown) {
     logger.info('[STEAM] steam error', { error })
     // Exit dota2 to stop its internal timers (like _sendClientHello) before reconnecting
     this.dota2.exit()
@@ -351,7 +351,7 @@ class Dota {
     if (this.isProduction()) this.steamClient.connect()
   }
 
-  handleServerUpdate(servers: any) {
+  handleServerUpdate(servers: unknown) {
     fs.writeFileSync('./src/steam/volumes/servers.json', JSON.stringify(servers))
   }
 
@@ -377,12 +377,12 @@ class Dota {
     }
   }
 
-  public requestMatchDetails = (matchIds: number): Promise<any> => {
+  public requestMatchDetails = (matchIds: number): Promise<unknown> => {
     return new Promise((resolve, reject) => {
       if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
         reject(new CustomError('Not connected to Dota 2 GC'))
       else {
-        this.dota2.requestMatchDetails(matchIds, (err: any, data: any) => {
+        this.dota2.requestMatchDetails(matchIds, (err: unknown, data: unknown) => {
           if (err) reject(err)
           resolve(data)
         })
@@ -427,16 +427,19 @@ class Dota {
 
     return new Promise((resolve, reject) => {
       operation.attempt(() => {
-        this.dota2.spectateFriendGame({ steam_id }, (response: any, err: any) => {
-          const theID = response?.server_steamid?.toString()
-          logger.info('[STEAM] Got user steam server', { theID, response, err, steam_id })
+        this.dota2.spectateFriendGame(
+          { steam_id },
+          (response: { server_steamid?: { toString(): string } } | undefined, err?: unknown) => {
+            const theID = response?.server_steamid?.toString()
+            logger.info('[STEAM] Got user steam server', { theID, response, err, steam_id })
 
-          const shouldRetry = !theID ? new Error('No ID yet, will keep trying.') : undefined
-          if (operation.retry(shouldRetry)) return
+            const shouldRetry = !theID ? new Error('No ID yet, will keep trying.') : undefined
+            if (operation.retry(shouldRetry)) return
 
-          if (theID) resolve(theID)
-          else reject('No spectator match found')
-        })
+            if (theID) resolve(theID)
+            else reject('No spectator match found')
+          },
+        )
       })
     })
   }
@@ -482,7 +485,7 @@ class Dota {
       if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
         reject(new CustomError('Error getting medal'))
       } else {
-        this.dota2.requestProfileCard(account, (err: any, card: Cards) => {
+        this.dota2.requestProfileCard(account, (err: unknown, card: Cards) => {
           if (err) {
             logger.error('[STEAM] Error getting medal', { account, err })
             reject(err)
@@ -603,7 +606,7 @@ class Dota {
       else {
         this.dota2.requestMatchMinimalDetails(
           matchIds,
-          (err: any, data: MatchMinimalDetailsResponse) => {
+          (err: unknown, data: MatchMinimalDetailsResponse) => {
             if (err) reject(err)
             resolve(data)
           },
@@ -798,7 +801,7 @@ export const GetRealTimeStats = async ({
   requestPromise.catch(() => {
     // Only remove from activeRequests if it's not a rate limit error
     // Rate limit errors are handled separately with timeouts
-    if (!(requestPromise as any).__isRateLimited) {
+    if (!(requestPromise as { __isRateLimited?: boolean }).__isRateLimited) {
       activeRequests.delete(match_id)
     }
   })

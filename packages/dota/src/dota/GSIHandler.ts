@@ -45,7 +45,11 @@ interface MMR {
   scores: {
     radiant_score: number | null
     dire_score: number | null
-    kda: any
+    kda: {
+      kills: number | null
+      deaths: number | null
+      assists: number | null
+    }
   }
   gameMode: number
   increase: boolean
@@ -715,10 +719,10 @@ export class GSIHandler implements GSIHandlerType {
 
         betId = bet?.id
       }
-    } catch (e: any) {
+    } catch (e) {
       logger.error('[BETS] Error opening twitch bet', {
         channel: client.name,
-        e: e?.message || e,
+        e: (e as Error)?.message || e,
         matchId,
       })
 
@@ -995,10 +999,10 @@ export class GSIHandler implements GSIHandlerType {
               didWin: won,
             })
           })
-          .catch((e: any) => {
+          .catch((e: unknown) => {
             logger.error('[BETS] Error closing twitch bet', {
               channel,
-              e: e?.message || e,
+              e: (e as Error)?.message || e,
               matchId,
             })
           })
@@ -1171,7 +1175,7 @@ export class GSIHandler implements GSIHandlerType {
             steamSocket.emit(
               'getMatchMinimalDetails',
               { match_id: Number(matchId) },
-              (err: any, response: any) => {
+              (err: unknown, response: MatchMinimalDetailsResponse) => {
                 if (err) {
                   reject(err)
                 } else {

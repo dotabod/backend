@@ -1,4 +1,4 @@
-import type { MatchMinimalDetailsResponse, SocketClient } from '../types'
+import type { DotaEvent, MatchMinimalDetailsResponse, SocketClient } from '../types'
 import type { DataBroadcasterInterface } from './events/minimap/DataBroadcasterTypes'
 
 // Type definition for GSIHandler that can be used without importing the actual class
@@ -15,7 +15,7 @@ export interface GSIHandlerType {
   emitWLUpdate: () => void
   client: SocketClient
   blockCache: string | null
-  events: any[]
+  events: DotaEvent[]
   bountyHeroNames: string[]
   noTpChatter: {
     taskId?: string

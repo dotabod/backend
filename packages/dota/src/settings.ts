@@ -18,7 +18,7 @@ export const defaultSettings = defaultSettingsStructure
 // Set to true if Valve ever restores this functionality
 export const ENABLE_SPECTATE_FRIEND_GAME = false
 
-export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value: any }[]) => {
+export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value: unknown }[]) => {
   // Rest of existing logic for handling settings
   if (!Array.isArray(data) || !data.length || !data.filter(Boolean).length) {
     return defaultSettings[key]
@@ -34,7 +34,7 @@ export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value
 
   try {
     if (typeof dbVal === 'string') {
-      const val = JSON.parse(dbVal) as unknown as any
+      const val = JSON.parse(dbVal)
       if (typeof val === 'object' && typeof defaultSettings[key] === 'object') {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return {
@@ -65,7 +65,7 @@ export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value
 
 export const getValueOrDefault = (
   key: SettingKeys,
-  data?: { key: string; value: any }[],
+  data?: { key: string; value: unknown }[],
   subscription?: SubscriptionRow,
   chatterKey?: ChatterKeys,
 ) => {

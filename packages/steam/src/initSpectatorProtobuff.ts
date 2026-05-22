@@ -3,8 +3,11 @@ import Dota2 from 'dota2'
 import type { Long } from 'mongodb'
 import { logger } from './utils/logger'
 
-function onGCSpectateFriendGameResponse(message: any, callback: any) {
-  const response: { server_steamid: Long; watch_live_result: number } =
+type SpectateFriendGameResponse = { server_steamid: Long; watch_live_result: number }
+type SpectateFriendGameCallback = (response: SpectateFriendGameResponse, err?: unknown) => void
+
+function onGCSpectateFriendGameResponse(message: Buffer, callback?: SpectateFriendGameCallback) {
+  const response: SpectateFriendGameResponse =
     Dota2.schema.CMsgSpectateFriendGameResponse.decode(message)
   if (callback !== undefined) {
     logger.info('[STEAM] Got user steam server', { response })
@@ -15,7 +18,7 @@ function onGCSpectateFriendGameResponse(message: any, callback: any) {
 export function initSpectatorProtobuff() {
   Dota2.Dota2Client.prototype.spectateFriendGame = function (
     friend: { steam_id: number; live: boolean },
-    callback: any,
+    callback: SpectateFriendGameCallback,
   ) {
     const localCallback = callback || null
     if (!this._gcReady) {

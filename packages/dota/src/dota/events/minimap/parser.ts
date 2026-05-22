@@ -82,7 +82,7 @@ class MinimapParser {
 
     const parsed = this.parse(data)
 
-    if (parsed.status === false) {
+    if ((parsed.status as unknown) === false) {
       const currentTime = new Date().getTime()
       if (currentTime - this.lastBroadcastTime >= 5000) {
         dataBroadcaster.sendData(parsed)
@@ -115,7 +115,7 @@ class MinimapParser {
     return !!(entity.visionrange && entity.visionrange > 1)
   }
 
-  isValidHero(entity: any): boolean {
+  isValidHero(entity: Entity): boolean {
     // Remove Monkey King Aghs Illus
     if (entity.unitname.includes('hero_monkey_king')) {
       return entity.visionrange > 500
@@ -124,7 +124,7 @@ class MinimapParser {
     return true
   }
 
-  cleanData(entity: Entity): any {
+  cleanData(entity: Entity): Entity {
     // Simplify Coordinates
     if (entity.xpos !== undefined) {
       if (entity.xpos >= 0) {
@@ -209,7 +209,13 @@ class MinimapParser {
     }
 
     // Parse Status
-    const status: any = {
+    const status: {
+      active: boolean
+      paused: boolean
+      playing: boolean
+      hero: string | undefined
+      team: string | undefined
+    } = {
       active: true,
       paused: this.isGamePaused(data.map),
       playing: this.isPlaying(data.player),
@@ -218,7 +224,15 @@ class MinimapParser {
     }
 
     // Parse Minimap
-    const minimap: any = {
+    const minimap: {
+      heroes: Entity[]
+      hero_units: Entity[]
+      couriers: Entity[]
+      creeps: Entity[]
+      buildings: Entity[]
+      tp: Entity[]
+      scan: Entity[]
+    } = {
       heroes: [],
       hero_units: [],
       couriers: [],

@@ -105,8 +105,8 @@ commandHandler.registerCommand('geo', {
         }),
         message.user.messageId,
       )
-    } catch (e: any) {
-      const msg = !e?.message ? t('gameNotFound', { lng: locale }) : e.message
+    } catch (e) {
+      const msg = !(e as Error)?.message ? t('gameNotFound', { lng: locale }) : (e as Error).message
       chatClient.say(channel, msg, message.user.messageId)
     }
   },

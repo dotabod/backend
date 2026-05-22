@@ -8,6 +8,7 @@ import { DBSettings, getValueOrDefault } from '../../../settings'
 import { chatClient } from '../../../twitch/chatClient'
 import { DotaEventTypes } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
+import type { GSIHandlerType } from '../../GSIHandlerTypes'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
 import { getHeroNameOrColor } from '../../lib/heroes'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
@@ -201,7 +202,7 @@ function shouldTriggerChattingAlert(
   return Math.min(8, Math.max(0, totalSeverity))
 }
 
-function sendChattingAlert(dotaClient: any, playerId: number, count: number): void {
+function sendChattingAlert(dotaClient: GSIHandlerType, playerId: number, count: number): void {
   const compositeKey = `${dotaClient.client.name}-${playerId}`
   const now = Date.now()
   lastChattingMessage.set(compositeKey, now)
@@ -214,7 +215,7 @@ function sendChattingAlert(dotaClient: any, playerId: number, count: number): vo
 
 async function processTranslationBuffer(
   buffer: TranslationMessage[],
-  dotaClient: any,
+  dotaClient: GSIHandlerType,
   translateInChat: boolean,
   translateOnOverlay: boolean,
   typedLanguage: deepl.TargetLanguageCode,

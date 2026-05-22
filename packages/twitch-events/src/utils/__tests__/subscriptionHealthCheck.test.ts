@@ -43,7 +43,7 @@ describe('runSubscriptionHealthCheck', () => {
 
   it('reports no issues when every subscription already exists', async () => {
     state.accountIds = ['111']
-    seedSubscriptions('111', ALL as any)
+    seedSubscriptions('111', ALL)
 
     const result = await runSubscriptionHealthCheck()
 

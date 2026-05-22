@@ -53,7 +53,7 @@ export function emitChatMessage(
 }
 
 // Emit an event to connected sockets
-export function emitEvent(type: string, broadcasterId: string, data: any): void {
+export function emitEvent(type: string, broadcasterId: string, data: unknown): void {
   io.to('twitch-chat-messages').emit('event', type, broadcasterId, data)
 }
 

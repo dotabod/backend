@@ -134,7 +134,10 @@ const regions = {
 }
 
 // update the dataset with the region for each account
-function updateDataset(dataset: any[], regionMapping: RegionMapping) {
+function updateDataset(
+  dataset: { steam32Id: number; region?: string; regionId?: number }[],
+  regionMapping: RegionMapping,
+) {
   // Filter out accounts with region 0
   const filteredDataset = dataset.filter((account) => {
     const regionId = regionMapping[account.steam32Id]

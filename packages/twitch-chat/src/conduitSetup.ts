@@ -113,7 +113,7 @@ const legacyEventHandlerNames: Partial<Record<keyof TwitchEventTypes, string>> =
   'channel.poll.end': 'subscribeToChannelPollEndEvents',
 }
 
-const handleObsEvents = (type: keyof TwitchEventTypes, broadcasterId: string, data: any) => {
+const handleObsEvents = (type: keyof TwitchEventTypes, broadcasterId: string, data: unknown) => {
   if (hasDotabodSocket()) {
     const name = legacyEventHandlerNames[type] || type
     emitEvent(name, broadcasterId, data)
@@ -121,7 +121,7 @@ const handleObsEvents = (type: keyof TwitchEventTypes, broadcasterId: string, da
 }
 
 // Helper function to extract broadcaster ID and transform event data
-const createEventHandler = (type: keyof TwitchEventTypes, transform: (event: any) => any) => {
+const createEventHandler = <T, R>(type: keyof TwitchEventTypes, transform: (event: T) => R) => {
   return ({
     payload: {
       subscription: {
@@ -134,7 +134,7 @@ const createEventHandler = (type: keyof TwitchEventTypes, transform: (event: any
       subscription: {
         condition: { broadcaster_user_id: string }
       }
-      event: any
+      event: T
     }
   }) => {
     const transformed = transform(event)

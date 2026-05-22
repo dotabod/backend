@@ -1,7 +1,7 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { onlineEvents } from './events'
 
-interface TwitchOnlineEvent {
+export interface TwitchOnlineEvent {
   id: string
   broadcaster_user_id: string
   broadcaster_user_login: string

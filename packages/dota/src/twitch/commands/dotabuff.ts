@@ -49,10 +49,10 @@ commandHandler.registerCommand('dotabuff', {
         )
         return
       }
-    } catch (e: any) {
+    } catch (e) {
       chatClient.say(
         message.channel.name,
-        e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
         message.user.messageId,
       )
     }

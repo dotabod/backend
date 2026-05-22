@@ -246,7 +246,7 @@ const events = {
   subscribeToChannelPollEndEvents: EventSubChannelPollEndEvent,
 }
 
-twitchChat.on('event', (eventName: keyof typeof events, broadcasterId: string, data: any) => {
+twitchChat.on('event', (eventName: keyof typeof events, broadcasterId: string, data: unknown) => {
   // Can start doing something with the events
 
   const token = getTokenFromTwitchId(broadcasterId)

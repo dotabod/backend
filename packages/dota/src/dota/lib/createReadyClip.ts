@@ -39,11 +39,11 @@ export async function createReadyClip(
         createAfterDelay: true,
         channel: accountId,
       })
-    } catch (error: any) {
+    } catch (error) {
       logger.error(`${logPrefix} createClip failed`, {
         ...logContext,
         attempt,
-        error: error.message,
+        error: (error as Error).message,
       })
       continue
     }
@@ -58,13 +58,13 @@ export async function createReadyClip(
           logger.info(`${logPrefix} clip ready`, { ...logContext, clipId, attempt })
           return clipId
         }
-      } catch (error: any) {
+      } catch (error) {
         logger.warn(`${logPrefix} Error checking clip readiness`, {
           ...logContext,
           clipId,
           attempt,
           poll,
-          error: error.message,
+          error: (error as Error).message,
         })
       }
       if (poll < opts.pollAttempts) await sleep(opts.pollIntervalMs)

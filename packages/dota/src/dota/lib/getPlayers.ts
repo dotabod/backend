@@ -61,7 +61,7 @@ export async function getPlayers({
           reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
         }, 10000) // 5 second timeout
 
-        steamSocket.emit('getCards', accountIds, false, (err: any, cards: any) => {
+        steamSocket.emit('getCards', accountIds, false, (err: unknown, cards: Cards[]) => {
           clearTimeout(timeoutId)
           if (err) {
             reject(err)

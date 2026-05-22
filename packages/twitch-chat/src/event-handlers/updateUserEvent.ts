@@ -1,7 +1,7 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 
 // const botApi = getBotInstance()
-interface TwitchUserUpdateEvent {
+export interface TwitchUserUpdateEvent {
   user_id: string
   user_login: string
   user_name: string

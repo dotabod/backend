@@ -40,7 +40,7 @@ dota.dota2.on('unready', () => {
   isConnectedToSteam = false
 })
 
-type callback = (err: any, response: any) => void
+type callback = (err: string | null, response: unknown) => void
 
 // Store active sockets with cleanup capability
 const activeSockets = new Set()
@@ -79,10 +79,10 @@ socketIoServer.on('connection', (socket) => {
   })
 
   // Add timeout for long-running operations (e.g., 30 seconds)
-  const withTimeout = (fn: Promise<any>, timeoutMs = 30000) => {
+  const withTimeout = <T>(fn: Promise<T>, timeoutMs = 30000): Promise<T> => {
     return Promise.race([
       fn,
-      new Promise((_, reject) =>
+      new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('Operation timed out')), timeoutMs),
       ),
     ])
@@ -100,14 +100,14 @@ socketIoServer.on('connection', (socket) => {
     try {
       const result = await withTimeout(dota.getCards(accountIds, refetchCards))
       callback(null, result)
-    } catch (e: any) {
+    } catch (e) {
       logger.error('[STEAM] Error getting cards', {
         accountIds,
         refetchCards,
         errorAll: e,
-        error: e.message,
+        error: (e as Error).message,
       })
-      callback(e.message, null)
+      callback((e as Error).message, null)
     }
   })
 
@@ -119,8 +119,8 @@ socketIoServer.on('connection', (socket) => {
     try {
       const result = await withTimeout(dota.getCard(accountId))
       callback(null, result)
-    } catch (e: any) {
-      callback(e.message, null)
+    } catch (e) {
+      callback((e as Error).message, null)
     }
   })
 
@@ -134,28 +134,31 @@ socketIoServer.on('connection', (socket) => {
       const result = await withTimeout(dota.getUserSteamServer(steam32Id))
       logger.info('[STEAM] Got user steam server', { steam32Id, result })
       callback(null, result)
-    } catch (e: any) {
+    } catch (e) {
       logger.error('[STEAM] Error getting user steam server, unknown error', {
         steam32Id,
         e,
-        error: e.message,
+        error: (e as Error).message,
       })
-      callback(e.message, null)
+      callback((e as Error).message, null)
     }
   })
 
-  socket.on('getRealTimeStats', async (data: any, callback: callback) => {
-    if (!isConnectedToSteam) {
-      callback('Steam not connected', null)
-      return
-    }
-    try {
-      const result = await withTimeout(GetRealTimeStats(data))
-      callback(null, result)
-    } catch (e: any) {
-      callback(e.message, null)
-    }
-  })
+  socket.on(
+    'getRealTimeStats',
+    async (data: Parameters<typeof GetRealTimeStats>[0], callback: callback) => {
+      if (!isConnectedToSteam) {
+        callback('Steam not connected', null)
+        return
+      }
+      try {
+        const result = await withTimeout(GetRealTimeStats(data))
+        callback(null, result)
+      } catch (e) {
+        callback((e as Error).message, null)
+      }
+    },
+  )
 
   socket.on('getMatchMinimalDetails', async (data: { match_id: number }, callback: callback) => {
     if (!isConnectedToSteam) {
@@ -167,8 +170,8 @@ socketIoServer.on('connection', (socket) => {
         dota.requestMatchMinimalDetails([data.match_id]),
       )
       callback(null, response)
-    } catch (e: any) {
-      callback(e.message, null)
+    } catch (e) {
+      callback((e as Error).message, null)
     }
   })
 })

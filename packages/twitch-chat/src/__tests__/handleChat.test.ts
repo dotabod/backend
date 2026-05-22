@@ -61,7 +61,7 @@ describe('handleChatMessage', () => {
   it('strips the leading @mention from a reply that contains a command', async () => {
     await handleChatMessage({
       ...makeMessage({ text: '@streamer !mmr' }),
-    } as any)
+    })
     expect(state.emitCalls[0].text).toBe('!mmr')
   })
 

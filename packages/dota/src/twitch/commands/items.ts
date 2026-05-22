@@ -106,7 +106,7 @@ async function getItems({
           steam_server_id: steamServerId,
           token,
         },
-        (err: any, cards: any) => {
+        (err: unknown, cards: DelayedGames) => {
           clearTimeout(timeoutId)
           if (err) {
             reject(err)
@@ -189,8 +189,10 @@ commandHandler.registerCommand('items', {
         command,
       })
       chatClient.say(client.name, t('heroItems.list', res), message.user.messageId)
-    } catch (e: any) {
-      const msg = !e?.message ? t('gameNotFound', { lng: client.locale }) : e?.message
+    } catch (e) {
+      const msg = !(e as Error)?.message
+        ? t('gameNotFound', { lng: client.locale })
+        : (e as Error)?.message
       chatClient.say(client.name, msg, message.user.messageId)
     }
   },

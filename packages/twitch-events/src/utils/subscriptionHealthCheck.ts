@@ -314,6 +314,10 @@ async function fetchSubscriptionsForHealthCheck(): Promise<void> {
           status: string
           type: string
           version: string
+          condition?: {
+            broadcaster_user_id?: string
+            user_id?: string
+          }
         }[]
         pagination: {
           cursor: string
@@ -322,7 +326,7 @@ async function fetchSubscriptionsForHealthCheck(): Promise<void> {
       const { data, pagination } = result
 
       // Process subscriptions
-      data.forEach((sub: any) => {
+      data.forEach((sub) => {
         const broadcasterId = sub.condition?.broadcaster_user_id || sub.condition?.user_id
         if (!broadcasterId) return
 

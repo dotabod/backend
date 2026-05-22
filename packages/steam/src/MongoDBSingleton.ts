@@ -39,11 +39,11 @@ class MongoDBSingleton {
 
           // Resolve the promise with the client
           resolve(client.db())
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.log({ error })
           logger.info('Retrying mongo connection', { currentAttempt })
           // If the retry operation has been exhausted, reject the promise with the error
-          if (operation.retry(error)) {
+          if (operation.retry(error as Error)) {
             return
           }
           reject(error)

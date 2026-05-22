@@ -5,6 +5,7 @@ import { lstatSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import {
   checkBotStatus,
+  type DisableReasonMetadata,
   getTwitchAPI,
   logger,
   startHeartbeat,
@@ -238,7 +239,7 @@ async function disableUser(
   }
 
   // Create metadata based on the drop reason
-  let metadata: any = {
+  let metadata: DisableReasonMetadata = {
     drop_reason: dropReason?.code || 'unknown',
     drop_reason_message: dropReason?.message || 'Unknown chat permission issue',
   }

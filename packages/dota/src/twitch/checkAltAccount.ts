@@ -1,5 +1,6 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+import type { SocketClient } from '../types'
 import { chatClient } from './chatClient'
 
 // Maps for alt account detection
@@ -16,7 +17,7 @@ export async function checkAltAccount(
   twitchChannelId: string,
   userInfo: { userId: string },
   messageId: string,
-  client: any,
+  client: SocketClient,
 ) {
   // If already cached as not an alt account, skip
   if (altAccountCache[chattersUsername] === false) return

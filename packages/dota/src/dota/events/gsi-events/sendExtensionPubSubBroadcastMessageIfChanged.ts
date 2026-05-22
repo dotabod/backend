@@ -3,7 +3,7 @@ import { redisClient } from '../../../db/redisInstance'
 import type { GSIHandlerType } from '../../GSIHandlerTypes'
 export const sendExtensionPubSubBroadcastMessageIfChanged = async (
   dotaClient: GSIHandlerType,
-  messageToSend: any,
+  messageToSend: unknown,
 ) => {
   const { client } = dotaClient
   const redisKey = `${client.token}:lastMessage`

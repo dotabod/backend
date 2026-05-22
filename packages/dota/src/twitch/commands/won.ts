@@ -112,7 +112,7 @@ commandHandler.registerCommand('won', {
         steamSocket.emit(
           'getMatchMinimalDetails',
           { match_id: Number(matchId) },
-          (err: any, response: any) => {
+          (err: unknown, response: MatchMinimalDetailsResponse) => {
             if (err) {
               reject(err)
             } else {

@@ -7,7 +7,7 @@ interface RateLimitInfo {
 }
 
 export class RateLimiter {
-  private queue: Array<() => Promise<any>> = []
+  private queue: Array<() => Promise<unknown>> = []
   private processing = false
   private rateLimitInfo: RateLimitInfo = {
     limit: 800, // Default limit

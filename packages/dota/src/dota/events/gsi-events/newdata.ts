@@ -112,7 +112,7 @@ async function chatterMatchFound(client: SocketClient) {
               },
               content: commandInfo.command,
             })
-            .catch((error: any) => {
+            .catch((error: unknown) => {
               logger.error('[AUTO_COMMANDS] Error executing auto command', {
                 error,
                 commandKey,
@@ -248,14 +248,18 @@ async function saveMatchData(client: SocketClient) {
             reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: client.locale })))
           }, 10000) // 10 second timeout
 
-          steamSocket.emit('getUserSteamServer', client.steam32Id, (err: any, cards: any) => {
-            clearTimeout(timeoutId)
-            if (err) {
-              reject(err)
-            } else {
-              resolve(cards)
-            }
-          })
+          steamSocket.emit(
+            'getUserSteamServer',
+            client.steam32Id,
+            (err: unknown, cards: string) => {
+              clearTimeout(timeoutId)
+              if (err) {
+                reject(err)
+              } else {
+                resolve(cards)
+              }
+            },
+          )
         })
 
         const steamServerId = await getDelayedDataPromise
@@ -324,7 +328,7 @@ async function saveMatchData(client: SocketClient) {
               steam_server_id: currentSteamServerId.toString(),
               token: client.token,
             },
-            (err: any, data: DelayedGames) => {
+            (err: unknown, data: DelayedGames) => {
               clearTimeout(timeoutId)
               if (err) {
                 reject(err)
@@ -570,7 +574,7 @@ const _saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
     'draft',
     'events',
   ] as const
-  const dumpData: Record<string, any> = {}
+  const dumpData: Record<string, unknown> = {}
   for (const key of keysToSave) {
     if (dotaClient.client.gsi?.[key]) {
       dumpData[key] = dotaClient.client.gsi[key as keyof Packet]

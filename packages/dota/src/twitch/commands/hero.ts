@@ -39,10 +39,10 @@ commandHandler.registerCommand('hero', {
         message,
       })
       return
-    } catch (e: any) {
+    } catch (e) {
       chatClient.say(
         message.channel.name,
-        e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
         message.user.messageId,
       )
     }
@@ -147,7 +147,7 @@ async function getHeroMsg({
     .emit(
       'requestHeroData',
       { allTime: false, heroId, steam32Id },
-      (err: any, response: heroRecords) => {
+      (err: unknown, response: heroRecords) => {
         if (!response) return
 
         const { win, lose } = response

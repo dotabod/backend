@@ -1,11 +1,11 @@
 import { logger } from '@dotabod/shared-utils'
 
-export interface DelayedTask {
+export interface DelayedTask<T = unknown> {
   id: string
   executeAt: number
   priority: number
-  payload: any
-  callback: (payload: any) => void | Promise<void>
+  payload: T
+  callback: (payload: T) => void | Promise<void>
 }
 
 export class DelayedQueue {
@@ -19,10 +19,10 @@ export class DelayedQueue {
     this.start()
   }
 
-  addTask(
+  addTask<T = unknown>(
     delayMs: number,
-    callback: (payload: any) => void | Promise<void>,
-    payload: any = null,
+    callback: (payload: T) => void | Promise<void>,
+    payload: T = null as T,
     priority = 0,
   ): string {
     // Clamp delay to maximum allowed
@@ -30,7 +30,7 @@ export class DelayedQueue {
     const taskId = this.generateTaskId()
     const executeAt = Date.now() + clampedDelay
 
-    const task: DelayedTask = {
+    const task: DelayedTask<T> = {
       id: taskId,
       executeAt,
       priority,
@@ -39,7 +39,7 @@ export class DelayedQueue {
     }
 
     // Insert task in sorted order (by executeAt, then by priority)
-    this.insertTaskSorted(task)
+    this.insertTaskSorted(task as DelayedTask)
 
     return taskId
   }

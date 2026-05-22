@@ -14,7 +14,7 @@ export const retryCustom = async <T>(fn: () => Promise<T>): Promise<T> => {
       try {
         const result = await fn()
         resolve(result)
-      } catch (err: any) {
+      } catch {
         if (!operation.retry(new Error('retrying'))) {
           reject(operation.mainError())
         }

@@ -103,7 +103,7 @@ const main = async () => {
   return initServer()
 }
 
-const logAndExit = (err: any) => {
+const logAndExit = (err: unknown) => {
   logger.error('Unhandled error occurred. Exiting...', { error: err })
   console.log(err)
   process.exit(1)

@@ -85,11 +85,11 @@ export async function deleteClipsBatch(
         response: result,
       })
     }
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Error deleting clip batch via GQL', {
       ...logContext,
       slugsCount: clipSlugs.length,
-      error: error.message,
+      error: (error as Error).message,
     })
   }
 }

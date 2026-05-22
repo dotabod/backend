@@ -50,10 +50,10 @@ async function createAndSubmitClip(
         clipId,
       })
     })
-  } catch (clipError: any) {
+  } catch (clipError) {
     logger.error(`${logPrefix} Error creating clip`, {
       ...logContext,
-      error: clipError.message,
+      error: (clipError as Error).message,
     })
   }
 }

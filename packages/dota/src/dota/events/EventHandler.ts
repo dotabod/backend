@@ -8,7 +8,7 @@ export interface EventOptions {
 
 class EventHandler {
   registerEvent = (eventName: string, options: EventOptions) => {
-    events.on(eventName, (data: any, token: string) => {
+    events.on(eventName, (data: unknown, token: string) => {
       if (!gsiHandlers.has(token)) return
       const client = gsiHandlers.get(token)
 

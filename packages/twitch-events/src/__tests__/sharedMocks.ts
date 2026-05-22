@@ -73,10 +73,20 @@ export function resetState() {
 
 // Chainable supabase mock. accounts...single() -> dbUser; settings select ->
 // dbSettings; update/upsert/delete are captured / resolve.
+interface SbBuilder {
+  select: () => SbBuilder
+  update: (v: Record<string, unknown>) => SbBuilder
+  delete: () => SbBuilder
+  upsert: (v: Record<string, unknown>) => Promise<{ data: null; error: null }>
+  eq: () => SbBuilder
+  single: () => Promise<{ data: unknown; error: null }>
+  then: (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => unknown
+}
+
 function sbBuilder(table: string) {
   let mode: 'select' | 'update' | 'delete' = 'select'
   let values: Record<string, unknown> = {}
-  const b: any = {
+  const b: SbBuilder = {
     select: () => b,
     update: (v: Record<string, unknown>) => {
       mode = 'update'
@@ -186,7 +196,7 @@ export const { handleNewUser } = await import('../handleNewUser')
 export const { ensureBotIsModerator } = await import('../ensureBotIsModerator')
 export const { checkAndFixUserSubscriptions } = await import('../utils/rateLimiter')
 
-export function seedSubscriptions(userId: string, types: (keyof TwitchEventTypes)[]) {
+export function seedSubscriptions(userId: string, types: readonly (keyof TwitchEventTypes)[]) {
   eventSubMap[userId] = Object.fromEntries(
     types.map((type) => [type, { id: `${userId}-${type}`, status: 'enabled' }]),
   ) as (typeof eventSubMap)[string]
