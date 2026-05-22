@@ -20,6 +20,13 @@ export interface UnresolvedMatch {
   updated_at: string
 }
 
+// Set once per match when its single reminder is sent; also set eagerly for
+// matches that can never be resolved (no-stats) so they're never nudged. TTL
+// outlives a streaming session.
+export const REMINDER_FLAG_TTL_S = 24 * 60 * 60
+export const reminderSentFlagKey = (token: string, matchId: string) =>
+  `${token}:${matchId}:unresolvedReminderSent`
+
 export async function getUnresolvedMatches(client: SocketClient): Promise<UnresolvedMatch[]> {
   const startDate = getSessionStartDate(client.stream_start_date)
   const currentMatchId = client.gsi?.map?.matchid
@@ -39,7 +46,9 @@ export async function getUnresolvedMatches(client: SocketClient): Promise<Unreso
 }
 
 export function formatTimeAgo(date: Date, now: Date = new Date()): string {
-  const minutes = Math.max(0, Math.round((now.getTime() - date.getTime()) / 60000))
+  const elapsed = now.getTime() - date.getTime()
+  if (Number.isNaN(elapsed)) return ''
+  const minutes = Math.max(0, Math.floor(elapsed / 60000))
   if (minutes < 60) return `${minutes}m ago`
   const hours = Math.floor(minutes / 60)
   const remMinutes = minutes % 60
@@ -74,7 +83,8 @@ export function formatUnresolvedMatch(match: UnresolvedMatch, now: Date = new Da
 
   const endedAt = match.updated_at || match.created_at
   if (endedAt) {
-    parts.push(`~${formatTimeAgo(new Date(endedAt), now)}`)
+    const ago = formatTimeAgo(new Date(endedAt), now)
+    if (ago) parts.push(`~${ago}`)
   }
 
   return `${match.matchId} (${parts.join(', ')})`

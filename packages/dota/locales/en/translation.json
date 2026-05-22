@@ -23,7 +23,7 @@
     "cannotResolveCurrentMatch": "Cannot resolve the current ongoing match. Wait for the game to end or use !won / !lost without a match ID for pending resolutions.",
     "error": "Unable to open bets. $t(refreshToken)",
     "lost": "We have lost, gg nt {{emote}} go next",
-    "manualResolution": "Disconnected before match {{matchId}} ended. {{details}} Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
+    "manualResolution": "Disconnected before the match ended. {{details}} Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
     "manualResolutionError": "Error resolving bet manually {{emote}}",
     "manualResolutionExpired": "Previous match bet expired and was refunded (mods not doing their jobs, next time use !won or !lost) {{emote}}",
     "manualResolutionSuccess_lost": "Match {{matchId}} manually resolved as LOST by @{{username}}",

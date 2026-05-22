@@ -35,7 +35,11 @@ import { getHeroById } from './lib/heroes'
 import { isArcade } from './lib/isArcade'
 import { isSpectator } from './lib/isSpectator'
 import { getRankDetail } from './lib/ranks'
-import { formatUnresolvedMatch } from './lib/unresolvedMatches'
+import {
+  formatUnresolvedMatch,
+  REMINDER_FLAG_TTL_S,
+  reminderSentFlagKey,
+} from './lib/unresolvedMatches'
 import { updateMmr } from './lib/updateMmr'
 import { NeutralItemTimer } from './NeutralItemTimer'
 import { say } from './say'
@@ -132,6 +136,20 @@ export class GSIHandler implements GSIHandlerType {
   treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
   disabled = false
 
+  // Last fresh in-game stats, kept up to date while the streamer is actively
+  // playing. By the time an early DC fires, the live GSI packet has usually
+  // shed these values, so we fall back to this cache for the unresolved-match
+  // snapshot. Keyed by matchId so a new game can't reuse stale numbers.
+  private lastInGameSnapshot: {
+    matchId: string
+    kills: number | null
+    deaths: number | null
+    assists: number | null
+    duration: number | null
+    radiant_score: number | null
+    dire_score: number | null
+  } | null = null
+
   mapBlocker: DataBroadcasterInterface
   neutralItemTimer: NeutralItemTimer
 
@@ -196,6 +214,36 @@ export class GSIHandler implements GSIHandlerType {
     this.treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
     this.creatingSteamAccount = false
     this.checkingEarlyDCWinner = false
+    this.lastInGameSnapshot = null
+  }
+
+  private async suppressUnresolvedReminder(matchId: string | number) {
+    if (!this.client.token) return
+    try {
+      await redisClient.client.setEx(
+        reminderSentFlagKey(this.client.token, matchId.toString()),
+        REMINDER_FLAG_TTL_S,
+        '1',
+      )
+    } catch (e) {
+      logger.error('[BETS] Error suppressing unresolved reminder', { e, matchId })
+    }
+  }
+
+  private captureInGameSnapshot() {
+    const matchId = this.client.gsi?.map?.matchid
+    if (!matchId || matchId === '0') return
+
+    const prev = this.lastInGameSnapshot?.matchId === matchId ? this.lastInGameSnapshot : null
+    this.lastInGameSnapshot = {
+      matchId,
+      kills: this.client.gsi?.player?.kills ?? prev?.kills ?? null,
+      deaths: this.client.gsi?.player?.deaths ?? prev?.deaths ?? null,
+      assists: this.client.gsi?.player?.assists ?? prev?.assists ?? null,
+      duration: this.client.gsi?.map?.game_time ?? prev?.duration ?? null,
+      radiant_score: this.client.gsi?.map?.radiant_score ?? prev?.radiant_score ?? null,
+      dire_score: this.client.gsi?.map?.dire_score ?? prev?.dire_score ?? null,
+    }
   }
 
   private resetBetData() {
@@ -903,6 +951,8 @@ export class GSIHandler implements GSIHandlerType {
             }
           }
         }
+        // No-stats match can never be resolved with !won/!lost; don't nag for it.
+        await this.suppressUnresolvedReminder(matchId)
         await this.resetClientState()
         return
       }
@@ -1058,18 +1108,23 @@ export class GSIHandler implements GSIHandlerType {
       endingBets: this.endingBets,
     })
 
-    // Persist the last-known GSI snapshot so unresolved-match messages can show
-    // KDA / score / length. The buffer is freshest now; it may be gone by the
-    // time retries exhaust. A later real resolution overwrites these.
+    // Persist a snapshot so unresolved-match messages can show KDA / score /
+    // length. The live packet that triggered the DC has usually already shed
+    // these values, so prefer the cached last-in-game snapshot for this match.
+    const cached =
+      this.lastInGameSnapshot?.matchId === matchId.toString() ? this.lastInGameSnapshot : null
     const snapshotKda = {
-      kills: this.client.gsi?.player?.kills ?? null,
-      deaths: this.client.gsi?.player?.deaths ?? null,
-      assists: this.client.gsi?.player?.assists ?? null,
-      duration: this.client.gsi?.map?.game_time ?? null,
+      kills: this.client.gsi?.player?.kills ?? cached?.kills ?? null,
+      deaths: this.client.gsi?.player?.deaths ?? cached?.deaths ?? null,
+      assists: this.client.gsi?.player?.assists ?? cached?.assists ?? null,
+      duration: this.client.gsi?.map?.game_time ?? cached?.duration ?? null,
     }
-    const snapshotRadiant = this.client.gsi?.map?.radiant_score ?? null
-    const snapshotDire = this.client.gsi?.map?.dire_score ?? null
+    const snapshotRadiant = this.client.gsi?.map?.radiant_score ?? cached?.radiant_score ?? null
+    const snapshotDire = this.client.gsi?.map?.dire_score ?? cached?.dire_score ?? null
     const nowIso = new Date().toISOString()
+    // Only write while still unresolved and only if no snapshot exists yet, so a
+    // concurrent resolution can't be clobbered and re-entry can't reset updated_at
+    // (the reminder's 10-minute anchor).
     await supabase
       .from('matches')
       .update({
@@ -1079,8 +1134,10 @@ export class GSIHandler implements GSIHandlerType {
         updated_at: nowIso,
       })
       .match({ matchId: matchId.toString(), userId: this.client.token })
+      .is('won', null)
+      .is('kda', null)
 
-    const details = formatUnresolvedMatch({
+    const snapshotMatch = {
       matchId: matchId.toString(),
       hero_name: this.client.gsi?.hero?.name ?? null,
       kda: snapshotKda,
@@ -1088,7 +1145,7 @@ export class GSIHandler implements GSIHandlerType {
       dire_score: snapshotDire,
       created_at: nowIso,
       updated_at: nowIso,
-    })
+    }
 
     // Check if player is high MMR (8500+)
     const isHighMmr = is8500Plus(this.client)
@@ -1118,7 +1175,7 @@ export class GSIHandler implements GSIHandlerType {
           this.client,
           t('bets.manualResolution', {
             matchId,
-            details,
+            details: formatUnresolvedMatch(snapshotMatch),
             emote: 'PauseChamp',
             lng: this.client.locale,
           }),
@@ -1190,7 +1247,7 @@ export class GSIHandler implements GSIHandlerType {
               this.client,
               t('bets.manualResolution', {
                 matchId,
-                details,
+                details: formatUnresolvedMatch(snapshotMatch),
                 emote: 'PauseChamp',
                 lng: this.client.locale,
               }),
@@ -1298,6 +1355,8 @@ export class GSIHandler implements GSIHandlerType {
               }
             }
           }
+          // No-stats match can never be resolved with !won/!lost; don't nag for it.
+          await this.suppressUnresolvedReminder(matchId)
           await this.resetClientState()
           return
         } else {
@@ -1420,6 +1479,7 @@ export class GSIHandler implements GSIHandlerType {
         this.emitBlockEvent({ state, blockType: matchingBlocker.type })
 
         if (matchingBlocker.type === 'playing') {
+          this.captureInGameSnapshot()
           emitMinimapBlockerStatus(this.client)
           this.emitBadgeUpdate()
           this.emitWLUpdate()

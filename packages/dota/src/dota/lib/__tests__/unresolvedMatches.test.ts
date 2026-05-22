@@ -30,6 +30,15 @@ describe('formatTimeAgo', () => {
   it('clamps future timestamps to 0m', () => {
     expect(formatTimeAgo(new Date('2026-05-22T12:05:00.000Z'), now)).toBe('0m ago')
   })
+
+  it('floors partial minutes instead of rounding up', () => {
+    // 90 seconds ago -> 1m, not 2m
+    expect(formatTimeAgo(new Date('2026-05-22T11:58:30.000Z'), now)).toBe('1m ago')
+  })
+
+  it('returns empty string for an invalid date', () => {
+    expect(formatTimeAgo(new Date('not-a-date'), now)).toBe('')
+  })
 })
 
 describe('formatUnresolvedMatch', () => {
@@ -66,5 +75,11 @@ describe('formatUnresolvedMatch', () => {
     expect(formatUnresolvedMatch(baseMatch({ hero_name: null, kda: null }), now)).toBe(
       '8821007388 (Unknown, 32-28, ~15m ago)',
     )
+  })
+
+  it('omits the time segment when the timestamp is invalid', () => {
+    expect(
+      formatUnresolvedMatch(baseMatch({ hero_name: null, kda: null, updated_at: 'garbage' }), now),
+    ).toBe('8821007388 (Unknown, 32-28)')
   })
 })
