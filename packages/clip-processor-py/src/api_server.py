@@ -284,7 +284,8 @@ def process_queue_worker():
 
             try:
                 # ... existing processing logic (lines 278-353) remains the same ...
-                if request['request_type'] == 'clip':
+                if request['request_type'] in ('clip', 'clip_in_game'):
+                    in_game = request['request_type'] == 'clip_in_game'
                     match_id = request.get('match_id')
                     only_draft = bool(request.get('only_draft'))
                     if match_id and not request.get('force', False):
@@ -298,7 +299,9 @@ def process_queue_worker():
                                     continue
                             except Exception:
                                 pass
-                        else:
+                        elif not in_game:
+                            # In-game clips always process (they add a fresh, higher-confidence
+                            # detection); only pre-game gameplay clips skip on a completed match.
                             match_status = db_client.check_for_match_processing(match_id)
                             if match_status and match_status.get('found') and match_status.get('status') == 'completed':
                                 existing_clip_id = match_status.get('clip_id')
@@ -318,7 +321,8 @@ def process_queue_worker():
                         add_to_queue=False,
                         from_worker=True,
                         match_id=request.get('match_id'),
-                        only_draft=bool(request.get('only_draft'))
+                        only_draft=bool(request.get('only_draft')),
+                        in_game=in_game
                     )
 
                     if result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info'] and request['clip_id']:
@@ -365,7 +369,7 @@ def process_queue_worker():
                         if result and isinstance(result, dict):
                             result['processing_time'] = f"{processing_time:.2f}s"
 
-                            if request['request_type'] == 'clip' and request['clip_id']:
+                            if request['request_type'] in ('clip', 'clip_in_game') and request['clip_id']:
                                 if 'frame_image_url' in result:
                                     del result['frame_image_url']
 
@@ -887,7 +891,7 @@ def _build_queue_response(request_id, queue_info, noun):
     return response
 
 
-def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True, from_worker=False, match_id=None, only_draft=False):
+def process_clip_request(clip_url, clip_id, debug=False, force=False, include_image=True, add_to_queue=True, from_worker=False, match_id=None, only_draft=False, in_game=False):
     """
     Process a clip URL and return the result or add it to the queue.
 
@@ -921,8 +925,10 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                         return draft_existing
                 except Exception:
                     pass
-            else:
-                # For non-draft requests, reuse completed non-draft results if present
+            elif not in_game:
+                # For non-draft requests, reuse completed non-draft results if present.
+                # In-game requests skip this so they always add a fresh, higher-confidence
+                # detection even when the match already has a pre-game result.
                 match_status = db_client.check_for_match_processing(match_id)
                 if match_status and match_status.get('found') and match_status.get('status') == 'completed':
                     # If there's a completed result, use that instead of processing this request
@@ -986,7 +992,7 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
     # If queuing is enabled, add to queue and return queue info
     if add_to_queue:
         request_id, queue_info = db_client.add_to_queue(
-            request_type='clip',
+            request_type='clip_in_game' if in_game else 'clip',
             clip_id=clip_id,
             clip_url=clip_url,
             debug=debug,
@@ -1017,7 +1023,8 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
     result = process_clip_url(
         clip_url=clip_url,
         debug=debug,
-        only_draft=only_draft
+        only_draft=only_draft,
+        in_game=in_game
     )
 
     processing_time = time.time() - start_time
@@ -1263,6 +1270,66 @@ def detect_heroes():
             'trace': traceback.format_exc() if debug else None
         }
     return jsonify(error_details), 500
+
+@app.route('/detect_in_game', methods=['GET'])
+@require_api_key
+def detect_in_game():
+    """
+    Process a Twitch clip and detect heroes from the live in-game top HUD bar.
+
+    Same parameters as /detect; routed through the in-game (smaller top-bar)
+    detection path. Used for the clip captured once the player has loaded into the
+    game, which is less likely to be obscured by overlays than the pre-game screens.
+    """
+    clip_url = request.args.get('url')
+    clip_id = request.args.get('clip_id')
+    match_id = request.args.get('match_id')
+    debug = parse_bool_param(request.args.get('debug'), False)
+    force = parse_bool_param(request.args.get('force'), False)
+    include_image = parse_bool_param(request.args.get('include_image'), True)
+    use_queue = parse_bool_param(request.args.get('queue'), True)
+
+    if os.environ.get('RUN_LOCALLY') == 'true':
+        use_queue = False
+
+    if not match_id:
+        return jsonify({'error': 'Missing required parameter: match_id'}), 400
+    try:
+        match_id = int(match_id)
+    except ValueError:
+        return jsonify({'error': 'Invalid match_id: must be a number'}), 400
+    match_id = str(match_id)
+
+    if not clip_url and not clip_id:
+        return jsonify({'error': 'Missing required parameter: either url or clip_id must be provided'}), 400
+
+    if clip_id and not clip_url:
+        clip_url = f"https://clips.twitch.tv/{clip_id}"
+        logger.info(f"Constructed clip URL from ID: {clip_url}")
+    elif clip_url and not clip_id:
+        extracted_clip_id = extract_clip_id(clip_url)
+        clip_id = extracted_clip_id if extracted_clip_id else clip_url
+
+    try:
+        result = process_clip_request(
+            clip_url=clip_url,
+            clip_id=clip_id,
+            debug=debug,
+            force=force,
+            include_image=include_image,
+            add_to_queue=use_queue,
+            match_id=match_id,
+            in_game=True
+        )
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Error processing in-game clip: {str(e)}", exc_info=True)
+        error_details = {
+            'error': 'Error processing in-game clip',
+            'message': str(e),
+            'trace': traceback.format_exc() if debug else None
+        }
+        return jsonify(error_details), 500
 
 @app.route('/detect_draft', methods=['GET'])
 @require_api_key

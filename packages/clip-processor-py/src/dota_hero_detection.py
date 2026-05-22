@@ -197,6 +197,29 @@ CLOCK_RIGHT_EXTEND = 148  # pixels
 # Total clock width based on asymmetric extensions
 CLOCK_TOTAL_WIDTH = CLOCK_LEFT_EXTEND + CLOCK_RIGHT_EXTEND
 
+# In-game (GAME_IN_PROGRESS) top-bar geometry. Unlike the picking/strategy screen
+# above, the live HUD hero bar is smaller and tighter. Values are the 1920x1080
+# reference pixels from the tooltips overlay (tooltips/src/components/TopHud.tsx:
+# hero 60x40, margin 0 1px -> 62px pitch, clock 205px -> +/-102.5 from center,
+# skew +/-9deg, top:0). Clips are fetched at 1080p so the same fixed-px,
+# center-anchored approach as the picking extractor applies.
+IN_GAME_HERO_WIDTH = 60
+IN_GAME_HERO_GAP = 2  # 62px pitch (60 + 1px margin each side)
+# Clock is 205px wide and centered on screen center, so each side's hero block
+# starts 205/2 = 102.5px from center. radiant slot left-x = cx - 102.5 - (5-i)*62;
+# dire slot left-x = cx + 102.5 + i*62.
+IN_GAME_CLOCK_LEFT_EXTEND = 102
+IN_GAME_CLOCK_RIGHT_EXTEND = 102
+# The top few px of each in-game slot are a solid team-colour / HP strip that hurts
+# template matching, so trim them before de-skewing.
+IN_GAME_TOP_PADDING = 5
+IN_GAME_ACTUAL_HEIGHT = 40
+# In-game icons are matched with TM_CCOEFF_NORMED (mean-subtracted, far more
+# discriminative on these small icons than the picking path's TM_CCORR_NORMED).
+# CCOEFF scores run lower than CCORR, so the confidence gate is lower too.
+IN_GAME_CONFIDENCE_THRESHOLD = float(os.environ.get("IN_GAME_CONFIDENCE_THRESHOLD", 0.30))
+IN_GAME_BORDER_SIZE = 20
+
 # Confidence-aware detection tunables
 # Per-slot template match_score below this is treated as low-confidence (likely an
 # occluded portrait or a misclassification) and flagged after re-scan.
@@ -664,6 +687,59 @@ def extract_hero_icons(top_bar, center_x, debug=False):
         return hero_icons
     except Exception as e:
         logger.error(f"Error extracting hero icons: {e}")
+        return []
+
+def extract_in_game_hero_icons(frame, debug=False):
+    """
+    Extract the 10 hero icons from the live in-game (GAME_IN_PROGRESS) top HUD bar.
+
+    The in-game icons are smaller/tighter than the picking bar and sheared ~9deg
+    (tooltips/src/components/TopHud.tsx: hero 60x40, 62px pitch, clock +/-102.5).
+    Each slot is de-skewed with a perspective warp into an upright rectangle so it
+    aligns with the unskewed hero templates, and the top colour/HP strip is trimmed.
+    Returns (team, position, icon_image) tuples, left-to-right within each team.
+    """
+    try:
+        height, width = frame.shape[:2]
+        center_x = width // 2
+
+        hw = IN_GAME_HERO_WIDTH
+        pitch = IN_GAME_HERO_WIDTH + IN_GAME_HERO_GAP
+        top_pad = IN_GAME_TOP_PADDING
+        ah = IN_GAME_ACTUAL_HEIGHT - top_pad
+        skew = int(np.tan(np.radians(SKEW_ANGLE_DEGREES)) * ah)
+        dst = np.float32([[0, 0], [hw, 0], [hw, ah], [0, ah]])
+
+        if width < 2 * (5 * pitch) + IN_GAME_CLOCK_LEFT_EXTEND + IN_GAME_CLOCK_RIGHT_EXTEND or height < IN_GAME_ACTUAL_HEIGHT:
+            logger.warning(f"Frame too small for in-game hero bar: {width}x{height}")
+            return []
+
+        hero_icons = []
+
+        # Radiant (left, positive skew)
+        for i in range(5):
+            x = center_x - IN_GAME_CLOCK_LEFT_EXTEND - (5 - i) * pitch
+            src = np.float32([[x, top_pad], [x + hw, top_pad],
+                              [x + hw + skew, top_pad + ah], [x + skew, top_pad + ah]])
+            icon = cv2.warpPerspective(frame, cv2.getPerspectiveTransform(src, dst), (hw, ah))
+            if debug:
+                save_debug_image(icon, f"ingame_radiant_hero_{i + 1}")
+            hero_icons.append(("Radiant", i, icon))
+
+        # Dire (right, negative skew)
+        for i in range(5):
+            x = center_x + IN_GAME_CLOCK_RIGHT_EXTEND + i * pitch
+            src = np.float32([[x, top_pad], [x + hw, top_pad],
+                              [x + hw - skew, top_pad + ah], [x - skew, top_pad + ah]])
+            icon = cv2.warpPerspective(frame, cv2.getPerspectiveTransform(src, dst), (hw, ah))
+            if debug:
+                save_debug_image(icon, f"ingame_dire_hero_{i + 1}")
+            hero_icons.append(("Dire", i, icon))
+
+        logger.debug(f"Extracted {len(hero_icons)} de-skewed in-game hero icons")
+        return hero_icons
+    except Exception as e:
+        logger.error(f"Error extracting in-game hero icons: {e}")
         return []
 
 def crop_hero_portrait(hero_icon, debug=False):
@@ -1707,6 +1783,105 @@ def process_frame_for_heroes(frame_path, debug=False):
         duration = performance_timer.stop('process_frame')
         logger.info(f"Frame processing completed in {duration:.3f} seconds")
 
+_IN_GAME_TEMPLATES = None
+
+
+def load_in_game_templates():
+    """Full-portrait hero templates (base + alt/persona variants) for in-game matching.
+
+    The picking path matches a cropped face region (crop_hero_portrait) because its
+    bar shows large loadout portraits. The de-skewed in-game icon is already a tight
+    face, so it matches best against the *whole* portrait — these are the raw portrait
+    variant files resized to 128x72 with a black border for slide matching. Including
+    alt/persona variants is what lets arcana/persona icons (e.g. Terrorblade arcana)
+    match. Cached in memory after first load.
+    """
+    global _IN_GAME_TEMPLATES
+    if _IN_GAME_TEMPLATES is not None:
+        return _IN_GAME_TEMPLATES
+    heroes_data = load_heroes_data()
+    templates = []
+    bs = IN_GAME_BORDER_SIZE
+    for hero in (heroes_data or []):
+        hid = hero.get('id')
+        for path in sorted(HEROES_DIR.glob(f"{hid}_*.png")):
+            img = load_image(str(path))
+            if img is None:
+                continue
+            tpl = cv2.resize(img, (128, 72))
+            bordered = cv2.copyMakeBorder(tpl, bs, bs, bs, bs, cv2.BORDER_CONSTANT, value=[0, 0, 0])
+            templates.append((hid, hero.get('name'), hero.get('localized_name'), bordered))
+    _IN_GAME_TEMPLATES = templates
+    logger.info(f"Loaded {len(templates)} in-game hero templates")
+    return templates
+
+
+def match_in_game_icon(icon, templates, top_n=3):
+    """Top-N hero matches for a de-skewed in-game icon via TM_CCOEFF_NORMED slide.
+
+    The icon (128x72) slides within each bordered template to tolerate small
+    alignment error. CCOEFF (mean-subtracted) discriminates these small icons far
+    better than the picking path's CCORR. variant is left blank so duplicate
+    resolution keys on hero_id (one slot per hero regardless of which variant won).
+    """
+    resized = cv2.resize(icon, (128, 72))
+    results = []
+    for hid, hname, hloc, bordered in templates:
+        res = cv2.matchTemplate(bordered, resized, cv2.TM_CCOEFF_NORMED)
+        _, score, _, _ = cv2.minMaxLoc(res)
+        results.append({
+            'hero_id': hid, 'hero_name': hname, 'hero_localized_name': hloc,
+            'variant': '', 'match_score': float(score),
+        })
+    results.sort(key=lambda r: r['match_score'], reverse=True)
+    return results[:top_n]
+
+
+def process_frame_for_in_game_heroes(frame_path, debug=False):
+    """
+    Identify the 10 heroes from the live in-game top HUD bar of a single frame.
+
+    De-skews each top-bar slot (extract_in_game_hero_icons) and matches the upright
+    icon against full-portrait templates with CCOEFF (match_in_game_icon), then
+    resolves duplicates. Skips the picking-only player-name / rank / facet steps,
+    which target the larger loadout layout and aren't legible on the in-game bar.
+    Returns hero dicts (team, position, hero_id, hero_localized_name, match_score).
+    """
+    performance_timer.start('process_in_game_frame')
+    try:
+        frame = load_image(frame_path)
+        if frame is None:
+            logger.error(f"Could not load frame: {frame_path}")
+            return []
+
+        templates = load_in_game_templates()
+        if not templates:
+            logger.error("No in-game hero templates available")
+            return []
+
+        hero_icons = extract_in_game_hero_icons(frame, debug=debug)
+        if not hero_icons:
+            logger.warning(f"No in-game hero icons extracted from frame: {frame_path}")
+            return []
+
+        hero_candidates = []
+        for team, position, hero_icon in hero_icons:
+            matches = match_in_game_icon(hero_icon, templates)
+            for m in matches:
+                m['team'] = team
+                m['position'] = position
+            hero_candidates.append(matches)
+
+        identified_heroes = resolve_hero_duplicates(hero_candidates, debug=debug)
+        identified_heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
+        return identified_heroes
+    except Exception as e:
+        logger.error(f"Error processing frame for in-game heroes: {e}")
+        return []
+    finally:
+        duration = performance_timer.stop('process_in_game_frame')
+        logger.info(f"In-game frame processing completed in {duration:.3f} seconds")
+
 def detect_hero_color_bars(frame_path, expected_colors, debug=False):
     """
     Detect hero color bars in the top padding section of hero portraits.
@@ -2503,7 +2678,7 @@ def processDraft(frame, debug=False):
         logger.error(f"Error processing draft frame: {e}")
         return result
 
-def process_media(media_source, source_type="clip", debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3, only_draft=False):
+def process_media(media_source, source_type="clip", debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3, only_draft=False, in_game=False):
     """Process a clip URL or stream username and return the hero detection results.
 
     Args:
@@ -2660,6 +2835,44 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
                 logger.info("Not a draft frame according to detector")
                 return { 'is_draft': False, 'source_type': source_type, 'source': media_source }
 
+        # In-game (live HUD) detection: the smaller top-bar geometry, heroes only.
+        # CCOEFF scores are lower than the picking path's CCORR, so gate on the
+        # in-game confidence threshold rather than the default.
+        if in_game:
+            thr = IN_GAME_CONFIDENCE_THRESHOLD
+            heroes = process_frame_for_in_game_heroes(frame_paths[0], debug=debug)
+            if heroes:
+                heroes.sort(key=lambda h: (h['team'] == 'Dire', h['position']))
+                for hero in heroes:
+                    if is_low_confidence(hero, thr):
+                        hero['low_confidence'] = True
+            if not heroes or not is_valid_hud(heroes, threshold=thr):
+                strong = sum(1 for h in heroes if not is_low_confidence(h, thr)) if heroes else 0
+                logger.warning(
+                    f"Rejecting in-game frame: only {strong} confident hero slot(s) "
+                    f"(need >= {MIN_VALID_SLOTS}); likely not a live Dota match"
+                )
+                return None
+            players = []
+            for hero in heroes:
+                player = {
+                    'position': hero['position'] + 1,
+                    'team': hero['team'],
+                    'hero': hero['hero_localized_name'],
+                    'hero_id': hero['hero_id'],
+                }
+                if hero.get('low_confidence'):
+                    player['low_confidence'] = True
+                players.append(player)
+            return {
+                'heroes': heroes,
+                'players': players,
+                'is_draft': False,
+                'detection_source': 'in_game',
+                'source_type': source_type,
+                'source': media_source,
+            }
+
         # Use all frames for color bar detection and hero identification
         logger.info(f"Analyzing all frames for hero color bars")
 
@@ -2809,7 +3022,7 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
         if 'total_execution' in performance_timer.timings and not performance_timer.timings['total_execution']['stopped']:
             performance_timer.stop('total_execution')
 
-def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False, show_timings=False, only_draft=False):
+def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False, show_timings=False, only_draft=False, in_game=False):
     """Process a clip URL and return the hero detection results.
 
     Args:
@@ -2818,12 +3031,13 @@ def process_clip_url(clip_url, debug=False, min_score=0.4, debug_templates=False
         min_score (float): Minimum score threshold
         debug_templates (bool): Enable template debugging
         show_timings (bool): Show timing information
+        in_game (bool): Detect from the live in-game top bar instead of the picking layout
 
     Returns:
         dict: Detection results or None if processing failed
     """
     return process_media(clip_url, source_type="clip", debug=debug, min_score=min_score,
-                        debug_templates=debug_templates, show_timings=show_timings, only_draft=only_draft)
+                        debug_templates=debug_templates, show_timings=show_timings, only_draft=only_draft, in_game=in_game)
 
 def process_stream_username(username, debug=False, min_score=0.4, debug_templates=False, show_timings=False, num_frames=3, only_draft=False):
     """Process a Twitch stream by username and return the hero detection results.
