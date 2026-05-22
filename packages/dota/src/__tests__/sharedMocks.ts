@@ -49,13 +49,21 @@ export function buildSharedUtilsMock(opts: {
 // multiple harnesses can call this safely.
 export async function initTestI18n() {
   const i18next = (await import('i18next')).default
-  if (i18next.isInitialized) return
   const enTranslation = (await import('../../locales/en/translation.json')).default
-  await i18next.init({
-    lng: 'en',
-    fallbackLng: 'en',
-    resources: { en: { translation: enTranslation } },
-  })
+  if (!i18next.isInitialized) {
+    await i18next.init({
+      lng: 'en',
+      fallbackLng: 'en',
+      resources: { en: { translation: enTranslation } },
+    })
+    return
+  }
+  // i18next is a global singleton shared by every test file in the run. Another
+  // file may have initialized it with a narrower resource set (e.g.
+  // translationMessageFormat.test.ts), which would leave handlers here emitting
+  // raw keys like "aegis.expired". Merge the full English bundle back in so
+  // `t()` resolves real strings regardless of bun's file-execution order.
+  i18next.addResourceBundle('en', 'translation', enTranslation, true, true)
 }
 
 // A Pro subscription bypasses `canAccessFeature` gates everywhere settings/

@@ -30,8 +30,11 @@ jobs:
         # Install at the root level to set up workspace packages properly
         run: bun install
 
-      - name: Build all packages
-        run: bun run build:all
+      - name: Build shared-utils
+        # The health check runs twitch-events from source; @dotabod/shared-utils
+        # is its only workspace dependency resolved from dist. Building everything
+        # would pull in the steam package, whose package.json this workflow deletes.
+        run: bun run --cwd packages/shared-utils build
 
       - name: Run Health Check
         working-directory: ./packages/twitch-events

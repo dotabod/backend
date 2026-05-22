@@ -130,6 +130,9 @@ export function resetState() {
   state.subscriberOnlyMode = false
   state.chatSettingsUpdates = []
   state.delayedGame = null
+  // Re-assert the shared-utils mock in case a sibling test file's narrower
+  // mock won bun's global registry since the last test ran.
+  reinstallSharedUtilsMock()
 }
 
 // Supabase chainable mock. Three query shapes need to be distinguished:
@@ -258,45 +261,64 @@ const getTwitchAPIMock = async () => ({
     }),
 })
 
-mock.module('@dotabod/shared-utils', () =>
-  buildSharedUtilsMock({
-    supabase: supabaseMock,
-    logger: loggerMock,
-    getTwitchAPI: getTwitchAPIMock,
-    checkBotStatus: async () => state.botBanned,
-  }),
-)
-
-mock.module('../../../dota/lib/updateMmr', () => ({
-  updateMmr: async (args: Record<string, unknown>) => {
-    state.updateMmrCalls.push(args)
-  },
-  tellChatNewMMR: () => undefined,
-}))
-
-// Mock only the network-touching functions in ranks.js. The rest
-// (rankTierToMmr, mmrToRankTier, etc.) are pure helpers used elsewhere in
-// the dota source, so we re-export them as-is from the real module.
 const realRanks = await import('../../../dota/lib/ranks')
-mock.module('../../../dota/lib/ranks', () => ({
-  ...realRanks,
-  getOpenDotaProfile: async () => state.openDotaProfile,
-  getRankTitle: () => state.rankTitle,
-  getRankDescription: async () => state.rankDescription,
-}))
 
-// Mongo is only used by a few match-data commands (ranked, spectators, ...).
-// connect() yields a db whose delayedGames.findOne returns state.delayedGame.
-mock.module('../../../steam/MongoDBSingleton', () => ({
-  default: {
-    connect: async () => ({
-      collection: () => ({
-        findOne: async () => state.delayedGame,
-      }),
+// bun's `mock.module` registry is global and last-write-wins, and the
+// `@dotabod/shared-utils` exports (supabase, getTwitchAPI) are *live bindings*
+// resolved at call time. Sibling test files register their own narrower mocks
+// (e.g. `supabase: {}`); if one of those is the last registration before our
+// suite's tests run, our handlers resolve a degenerate supabase/api and crash.
+// `resetState()` re-asserts this from every suite's `beforeEach`, so the
+// complete shared-utils surface is guaranteed active whenever our tests run,
+// independent of the file-discovery order bun happens to pick. Scoped to
+// shared-utils only — re-registering the modules below in `beforeEach` could
+// clobber sibling harnesses (gsiMocks) that mock the same specs differently.
+function reinstallSharedUtilsMock() {
+  mock.module('@dotabod/shared-utils', () =>
+    buildSharedUtilsMock({
+      supabase: supabaseMock,
+      logger: loggerMock,
+      getTwitchAPI: getTwitchAPIMock,
+      checkBotStatus: async () => state.botBanned,
     }),
-    close: async () => undefined,
-  },
-}))
+  )
+}
+
+function reinstallModuleMocks() {
+  reinstallSharedUtilsMock()
+
+  mock.module('../../../dota/lib/updateMmr', () => ({
+    updateMmr: async (args: Record<string, unknown>) => {
+      state.updateMmrCalls.push(args)
+    },
+    tellChatNewMMR: () => undefined,
+  }))
+
+  // Mock only the network-touching functions in ranks.js. The rest
+  // (rankTierToMmr, mmrToRankTier, etc.) are pure helpers used elsewhere in
+  // the dota source, so we re-export them as-is from the real module.
+  mock.module('../../../dota/lib/ranks', () => ({
+    ...realRanks,
+    getOpenDotaProfile: async () => state.openDotaProfile,
+    getRankTitle: () => state.rankTitle,
+    getRankDescription: async () => state.rankDescription,
+  }))
+
+  // Mongo is only used by a few match-data commands (ranked, spectators, ...).
+  // connect() yields a db whose delayedGames.findOne returns state.delayedGame.
+  mock.module('../../../steam/MongoDBSingleton', () => ({
+    default: {
+      connect: async () => ({
+        collection: () => ({
+          findOne: async () => state.delayedGame,
+        }),
+      }),
+      close: async () => undefined,
+    },
+  }))
+}
+
+reinstallModuleMocks()
 
 await initTestI18n()
 

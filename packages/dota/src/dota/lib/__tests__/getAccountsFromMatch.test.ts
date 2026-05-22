@@ -22,7 +22,11 @@ mock.module('../../../steam/MongoDBSingleton', () => ({
   },
 }))
 
-const { getAccountsFromMatch } = await import('../getAccountsFromMatch.ts')
+// Import via a query suffix so bun re-evaluates the real module instead of
+// returning a stub. Other harnesses (gsiMocks, lastgame) register process-wide
+// `mock.module('.../getAccountsFromMatch', …)` stubs that would otherwise win
+// the global registry race and replace the very function this file tests.
+const { getAccountsFromMatch } = await import('../getAccountsFromMatch.ts?real')
 
 const realFetch = globalThis.fetch
 

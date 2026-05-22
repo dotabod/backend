@@ -39,12 +39,6 @@ mock.module('../MongoDBSingleton', () => ({
   },
 }))
 
-// Not exercised on the not-playing branch, but stubbed so importing lastgame
-// doesn't pull in the spectator/socket transitive deps.
-mock.module('../../dota/lib/getAccountsFromMatch', () => ({
-  getAccountsFromMatch: async () => ({ matchPlayers: [], accountIds: [] }),
-}))
-
 await initTestI18n()
 
 const lastgame = (await import('../lastgame.ts')).default
