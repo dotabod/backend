@@ -46,6 +46,10 @@ import { NeutralItemTimer } from './NeutralItemTimer'
 import { say } from './say'
 import { server } from './server'
 
+// Delay before the "other streamers in match" announce, giving co-players' openBets time to insert
+// their own `matches` rows (players load into a game at slightly different times).
+const STREAMERS_ANNOUNCE_DELAY_MS = 90_000
+
 // Finally, we have a user and a GSI client
 interface MMR {
   scores: {
@@ -354,8 +358,9 @@ export class GSIHandler implements GSIHandlerType {
       })
   }
 
-  async emitStreamersInMatch() {
+  async emitStreamersInMatch(matchId = this.client.gsi?.map?.matchid) {
     if (!this.client.stream_online) return
+    if (!matchId || matchId === '0') return
 
     const announceEnabled = getValueOrDefault(
       DBSettings.streamersAnnounce,
@@ -364,15 +369,13 @@ export class GSIHandler implements GSIHandlerType {
     )
     if (!announceEnabled) return
 
-    const matchId = this.client.gsi?.map?.matchid
-    if (!matchId) return
-
-    // Only announce once per match (steam can emit saveHeroesForMatchId repeatedly).
+    // Announce at most once per match (guards rejoins and any duplicate scheduling).
     const announcedKey = `${this.client.token}:streamersAnnounced`
     if ((await redisClient.client.get(announcedKey)) === matchId) return
 
     const count = await getStreamersInMatch({
       gsi: this.client.gsi,
+      matchId,
       excludeUserId: this.client.token,
     })
     if (count <= 0) return
@@ -818,6 +821,13 @@ export class GSIHandler implements GSIHandlerType {
         steam32Id: client.steam32Id,
         hero_name: client.gsi?.hero?.name || null,
       })
+
+      if (getValueOrDefault(DBSettings.streamersAnnounce, client.settings, client.subscription)) {
+        const announceMatchId = matchId
+        delayedQueue.addTask(STREAMERS_ANNOUNCE_DELAY_MS, () => {
+          void this.emitStreamersInMatch(announceMatchId)
+        })
+      }
     }
 
     if (betsEnabled) {

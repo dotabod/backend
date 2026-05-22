@@ -2,6 +2,8 @@ import type { DelayedGames } from './types/index'
 
 const isDev = process.env.DOTABOD_ENV === 'development'
 
+// NOTE: this only recognizes the GetRealTimeStats `teams[]` shape. It returns false for docs written
+// by the SourceTV feed (flat top-level `players[]`), even though those carry account IDs + heroes.
 export function hasSteamData(game?: DelayedGames | null) {
   const hasTeams = Array.isArray(game?.teams) && game?.teams.length === 2
   const hasPlayers =

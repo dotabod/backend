@@ -50,6 +50,9 @@ const getApiUrl = (steam_server_id: string) => {
   return `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steam_server_id}`
 }
 
+// Writer #1 of the `delayedGames` collection: the `teams[]` shape, from the on-demand
+// GetRealTimeStats fetch. Currently dormant — GetRealTimeStats is gated off in the dota app
+// (ENABLE_SPECTATE_FRIEND_GAME = false; Valve disabled the spectate-friend proto).
 // Saves the match to MongoDB and fetches new medals if needed
 const saveMatch = async ({
   match_id,
@@ -148,6 +151,10 @@ class Dota {
     }
   }
 
+  // Writer #2 of the `delayedGames` collection (the only active one today): polls the GC's public
+  // spectatable-game list (sourceTVGamesData) every 30s and upserts the flat `players[]` shape
+  // (accountid + heroid) + average_mmr + spectators. Only covers games the GC broadcasts (notable /
+  // high-MMR / tournament) — not most streamers' pub games. Does NOT emit saveHeroesForMatchId.
   private async getGames() {
     // Check if the Dota2 game coordinator and Steam client are ready
     if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) return

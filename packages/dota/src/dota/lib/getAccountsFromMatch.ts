@@ -2,6 +2,18 @@ import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import type { DelayedGames, HeroesStatus, Packet, Players } from '../../types'
 import { getSpectatorPlayers } from './getSpectatorPlayers'
 
+// Where the roster comes from. The `delayedGames` Mongo collection has two possible doc shapes,
+// written by two different producers in the steam service:
+//   - SourceTV feed (Dota.getGames, steam.ts) — the ONLY active writer today. Flat top-level
+//     `players[]` (accountid + heroid) + `average_mmr` + `spectators`. Only covers games the GC
+//     broadcasts as publicly spectatable (notable / high-MMR / tournament). Handled by the
+//     `response.players` branch below.
+//   - GetRealTimeStats (saveMatch, steam.ts) — writes the `teams[]` shape, but it's gated off
+//     (ENABLE_SPECTATE_FRIEND_GAME = false; Valve disabled the spectate-friend proto). Handled by
+//     the `response.teams` branches below, effectively dormant.
+// So an ordinary streamer's pub match usually has NO doc at all and we fall through to the GSI-only
+// fallback (just the streamer's own hero/account).
+
 function getAllPlayers(data: DelayedGames) {
   const players: Players = []
   data.teams.forEach((team) => {

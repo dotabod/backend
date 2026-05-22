@@ -40,6 +40,9 @@ export const getRedisNumberValue = async (key: string) => {
   return value !== null ? Number(value) : null
 }
 
+// Tier gate. Today it mainly skips the (already-disabled) GetRealTimeStats fetch and routes high-MMR
+// hero data through the clip/vision path instead. It does NOT affect the SourceTV `delayedGames`
+// feed (which lists games regardless of any single streamer's MMR).
 export const is8500Plus = (dotaClient: SocketClient) => {
   const currentSteamAccount = dotaClient.SteamAccount?.find(
     (account) => dotaClient.steam32Id === account.steam32Id,

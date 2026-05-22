@@ -162,6 +162,7 @@ commandHandler.registerCommand('np', {
         if (showStreamers) {
           const count = await getStreamersInMatch({
             players: matchPlayers,
+            matchId: client.gsi?.map?.matchid,
             excludeUserId: client.token,
           })
           if (count > 0) {
