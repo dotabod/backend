@@ -2,7 +2,6 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import * as deepl from 'deepl-node'
 import { franc } from 'franc'
-import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { chatClient } from '../../../twitch/chatClient'
