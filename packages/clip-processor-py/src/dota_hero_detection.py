@@ -1891,6 +1891,31 @@ def process_frame_for_in_game_heroes(frame_path, debug=False, frame=None):
         duration = performance_timer.stop('process_in_game_frame')
         logger.info(f"In-game frame processing completed in {duration:.3f} seconds")
 
+
+def build_players_from_heroes(heroes):
+    """Project detected heroes into the user-facing players[] view (1-indexed
+    position). Optional rank/player_name/facet/low_confidence are included only
+    when present, so it serves both the picking path and the sparser in-game path.
+    """
+    players = []
+    for hero in heroes:
+        player = {
+            'position': hero['position'] + 1,
+            'team': hero['team'],
+            'hero': hero['hero_localized_name'],
+            'hero_id': hero['hero_id'],
+        }
+        if 'rank' in hero:
+            player['rank'] = hero['rank']
+        if 'player_name' in hero:
+            player['player_name'] = hero['player_name']
+        if 'facet' in hero and 'name' in hero['facet']:
+            player['facet'] = hero['facet']['name']
+        if hero.get('low_confidence'):
+            player['low_confidence'] = True
+        players.append(player)
+    return players
+
 def detect_hero_color_bars(frame_path, expected_colors, debug=False):
     """
     Detect hero color bars in the top padding section of hero portraits.
@@ -2862,17 +2887,7 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
                     f"(need >= {MIN_VALID_SLOTS}); likely not a live Dota match"
                 )
                 return None
-            players = []
-            for hero in heroes:
-                player = {
-                    'position': hero['position'] + 1,
-                    'team': hero['team'],
-                    'hero': hero['hero_localized_name'],
-                    'hero_id': hero['hero_id'],
-                }
-                if hero.get('low_confidence'):
-                    player['low_confidence'] = True
-                players.append(player)
+            players = build_players_from_heroes(heroes)
             return {
                 'heroes': heroes,
                 'players': players,
@@ -2963,32 +2978,7 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
                 logger.info(f"Player names detected for {sum(1 for h in heroes if 'player_name' in h)}/{len(heroes)} heroes")
 
             # Create a more accessible players structure
-            players = []
-            for hero in heroes:
-                player = {
-                    'position': hero['position'] + 1,  # 1-indexed position for users
-                    'team': hero['team'],
-                    'hero': hero['hero_localized_name'],
-                    'hero_id': hero['hero_id']
-                }
-
-                # Add rank information if available
-                if 'rank' in hero:
-                    player['rank'] = hero['rank']
-
-                # Add player name if available
-                if 'player_name' in hero:
-                    player['player_name'] = hero['player_name']
-
-                # Add facet information if available
-                if 'facet' in hero and 'name' in hero['facet']:
-                    player['facet'] = hero['facet']['name']
-
-                # Mirror the low-confidence flag onto the player view
-                if hero.get('low_confidence'):
-                    player['low_confidence'] = True
-
-                players.append(player)
+            players = build_players_from_heroes(heroes)
 
             # Extract team captains from the best frame
             captains = extract_team_captains_from_frame(best_frame_path, debug=debug)

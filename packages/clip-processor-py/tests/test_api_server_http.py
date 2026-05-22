@@ -169,3 +169,44 @@ def test_detect_in_game_missing_clip_and_url_returns_400(client):
     assert resp.status_code == 400
     assert "url or clip_id" in resp.get_json()["error"]
     pcr.assert_not_called()
+
+
+# --------------------------------------------------------------------------- #
+# /detect and /detect_draft share _parse_clip_request_args with /detect_in_game;
+# guard the shared validation on these previously-untested endpoints.
+# --------------------------------------------------------------------------- #
+def test_detect_routes_to_clip_request(client):
+    expected = {"players": [{"player_name": "x"}], "heroes": [{"name": "h"}]}
+    with patch.object(api_server, "process_clip_request", return_value=expected) as pcr:
+        resp = client.get("/detect?clip_id=abc&match_id=12345")
+    assert resp.status_code == 200
+    assert resp.get_json() == expected
+    assert pcr.call_args.kwargs["clip_id"] == "abc"
+    assert pcr.call_args.kwargs["match_id"] == "12345"
+    assert pcr.call_args.kwargs["clip_url"] == "https://clips.twitch.tv/abc"
+    # Plain /detect is neither draft nor in-game.
+    assert pcr.call_args.kwargs.get("in_game") in (None, False)
+
+
+def test_detect_missing_match_id_returns_400(client):
+    with patch.object(api_server, "process_clip_request") as pcr:
+        resp = client.get("/detect?clip_id=abc")
+    assert resp.status_code == 400
+    assert "match_id" in resp.get_json()["error"]
+    pcr.assert_not_called()
+
+
+def test_detect_draft_routes_to_clip_request_only_draft(client):
+    with patch.object(api_server, "process_clip_request", return_value={"is_draft": True}) as pcr:
+        resp = client.get("/detect_draft?clip_id=abc&match_id=12345")
+    assert resp.status_code == 200
+    assert pcr.call_args.kwargs["only_draft"] is True
+    assert pcr.call_args.kwargs["clip_id"] == "abc"
+
+
+def test_detect_draft_non_numeric_match_id_returns_400(client):
+    with patch.object(api_server, "process_clip_request") as pcr:
+        resp = client.get("/detect_draft?clip_id=abc&match_id=notanumber")
+    assert resp.status_code == 400
+    assert "match_id" in resp.get_json()["error"]
+    pcr.assert_not_called()

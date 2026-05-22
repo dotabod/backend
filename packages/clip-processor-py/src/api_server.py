@@ -1176,6 +1176,56 @@ def process_stream_request(username, num_frames=3, debug=False, include_image=Tr
     else:
         return {'error': 'Failed to process stream or no heroes detected'}
 
+def _parse_clip_request_args():
+    """Parse/validate the shared query params for the /detect* clip endpoints.
+
+    Returns (params, None) on success — a dict with clip_url, clip_id, match_id,
+    debug, force, include_image, use_queue — or (None, (response, status)) when a
+    required param is missing/invalid, which the caller returns directly.
+    """
+    clip_url = request.args.get('url')
+    clip_id = request.args.get('clip_id')
+    match_id = request.args.get('match_id')
+    debug = parse_bool_param(request.args.get('debug'), False)
+    force = parse_bool_param(request.args.get('force'), False)
+    include_image = parse_bool_param(request.args.get('include_image'), True)
+    use_queue = parse_bool_param(request.args.get('queue'), True)
+
+    # When running locally, override queue parameter to process immediately
+    if os.environ.get('RUN_LOCALLY') == 'true':
+        use_queue = False
+        logger.info("Running locally, overriding queue parameter to process immediately")
+
+    if not match_id:
+        return None, (jsonify({'error': 'Missing required parameter: match_id'}), 400)
+    try:
+        match_id = int(match_id)
+    except ValueError:
+        return None, (jsonify({'error': 'Invalid match_id: must be a number'}), 400)
+    match_id = str(match_id)
+
+    if not clip_url and not clip_id:
+        return None, (jsonify({'error': 'Missing required parameter: either url or clip_id must be provided'}), 400)
+
+    # Reconstruct whichever of clip_url / clip_id is missing
+    if clip_id and not clip_url:
+        clip_url = f"https://clips.twitch.tv/{clip_id}"
+        logger.info(f"Constructed clip URL from ID: {clip_url}")
+    elif clip_url and not clip_id:
+        extracted_clip_id = extract_clip_id(clip_url)
+        if extracted_clip_id:
+            clip_id = extracted_clip_id
+            logger.info(f"Extracted clip ID from URL: {clip_id}")
+        else:
+            logger.warning(f"Could not extract clip ID from URL: {clip_url}")
+            clip_id = clip_url  # Use URL as ID fallback
+
+    return {
+        'clip_url': clip_url, 'clip_id': clip_id, 'match_id': match_id,
+        'debug': debug, 'force': force, 'include_image': include_image, 'use_queue': use_queue,
+    }, None
+
+
 @app.route('/detect', methods=['GET'])
 @require_api_key
 def detect_heroes():
@@ -1191,49 +1241,12 @@ def detect_heroes():
     - include_image: Include frame image URL in response (optional, default=False)
     - queue: Use queue system (optional, default=True)
     """
-    clip_url = request.args.get('url')
-    clip_id = request.args.get('clip_id')
-    match_id = request.args.get('match_id')
-    debug = parse_bool_param(request.args.get('debug'), False)
-    force = parse_bool_param(request.args.get('force'), False)
-    include_image = parse_bool_param(request.args.get('include_image'), True)
-    use_queue = parse_bool_param(request.args.get('queue'), True)
-
-    # When running locally, override queue parameter to process immediately
-    if os.environ.get('RUN_LOCALLY') == 'true':
-        use_queue = False
-        logger.info("Running locally, overriding queue parameter to process immediately")
-
-    # Check if match_id is provided
-    if not match_id:
-        return jsonify({'error': 'Missing required parameter: match_id'}), 400
-
-    # Validate match_id is a number
-    try:
-        match_id = int(match_id)
-    except ValueError:
-        return jsonify({'error': 'Invalid match_id: must be a number'}), 400
-
-    # Convert back to string for consistent handling in the rest of the code
-    match_id = str(match_id)
-
-    # Check if either clip_url or clip_id is provided
-    if not clip_url and not clip_id:
-        return jsonify({'error': 'Missing required parameter: either url or clip_id must be provided'}), 400
-
-    # If clip_id is provided but no url, construct the url
-    if clip_id and not clip_url:
-        clip_url = f"https://clips.twitch.tv/{clip_id}"
-        logger.info(f"Constructed clip URL from ID: {clip_url}")
-    # If only URL is provided, try to extract clip_id
-    elif clip_url and not clip_id:
-        extracted_clip_id = extract_clip_id(clip_url)
-        if extracted_clip_id:
-            clip_id = extracted_clip_id
-            logger.info(f"Extracted clip ID from URL: {clip_id}")
-        else:
-            logger.warning(f"Could not extract clip ID from URL: {clip_url}")
-            clip_id = clip_url  # Use URL as ID fallback
+    params, error = _parse_clip_request_args()
+    if error:
+        return error
+    clip_url, clip_id, match_id = params['clip_url'], params['clip_id'], params['match_id']
+    debug, force, include_image, use_queue = (
+        params['debug'], params['force'], params['include_image'], params['use_queue'])
 
     # Basic URL validation
     try:
@@ -1281,34 +1294,12 @@ def detect_in_game():
     detection path. Used for the clip captured once the player has loaded into the
     game, which is less likely to be obscured by overlays than the pre-game screens.
     """
-    clip_url = request.args.get('url')
-    clip_id = request.args.get('clip_id')
-    match_id = request.args.get('match_id')
-    debug = parse_bool_param(request.args.get('debug'), False)
-    force = parse_bool_param(request.args.get('force'), False)
-    include_image = parse_bool_param(request.args.get('include_image'), True)
-    use_queue = parse_bool_param(request.args.get('queue'), True)
-
-    if os.environ.get('RUN_LOCALLY') == 'true':
-        use_queue = False
-
-    if not match_id:
-        return jsonify({'error': 'Missing required parameter: match_id'}), 400
-    try:
-        match_id = int(match_id)
-    except ValueError:
-        return jsonify({'error': 'Invalid match_id: must be a number'}), 400
-    match_id = str(match_id)
-
-    if not clip_url and not clip_id:
-        return jsonify({'error': 'Missing required parameter: either url or clip_id must be provided'}), 400
-
-    if clip_id and not clip_url:
-        clip_url = f"https://clips.twitch.tv/{clip_id}"
-        logger.info(f"Constructed clip URL from ID: {clip_url}")
-    elif clip_url and not clip_id:
-        extracted_clip_id = extract_clip_id(clip_url)
-        clip_id = extracted_clip_id if extracted_clip_id else clip_url
+    params, error = _parse_clip_request_args()
+    if error:
+        return error
+    clip_url, clip_id, match_id = params['clip_url'], params['clip_id'], params['match_id']
+    debug, force, include_image, use_queue = (
+        params['debug'], params['force'], params['include_image'], params['use_queue'])
 
     try:
         result = process_clip_request(
@@ -1346,46 +1337,12 @@ def detect_draft():
     - include_image: Include frame image URL in response (optional, default=False)
     - queue: Use queue system (optional, default=True)
     """
-    clip_url = request.args.get('url')
-    clip_id = request.args.get('clip_id')
-    match_id = request.args.get('match_id')
-    debug = parse_bool_param(request.args.get('debug'), False)
-    force = parse_bool_param(request.args.get('force'), False)
-    include_image = parse_bool_param(request.args.get('include_image'), True)
-    use_queue = parse_bool_param(request.args.get('queue'), True)
-
-    # When running locally, override queue parameter to process immediately
-    if os.environ.get('RUN_LOCALLY') == 'true':
-        use_queue = False
-        logger.info("Running locally, overriding queue parameter to process immediately (draft)")
-
-    # Check if match_id is provided
-    if not match_id:
-        return jsonify({'error': 'Missing required parameter: match_id'}), 400
-
-    # Validate match_id is a number
-    try:
-        match_id = int(match_id)
-    except ValueError:
-        return jsonify({'error': 'Invalid match_id: must be a number'}), 400
-    match_id = str(match_id)
-
-    # Check if either clip_url or clip_id is provided
-    if not clip_url and not clip_id:
-        return jsonify({'error': 'Missing required parameter: either url or clip_id must be provided'}), 400
-
-    # If clip_id is provided but no url, construct the url
-    if clip_id and not clip_url:
-        clip_url = f"https://clips.twitch.tv/{clip_id}"
-        logger.info(f"Constructed clip URL from ID: {clip_url}")
-    elif clip_url and not clip_id:
-        extracted_clip_id = extract_clip_id(clip_url)
-        if extracted_clip_id:
-            clip_id = extracted_clip_id
-            logger.info(f"Extracted clip ID from URL: {clip_id}")
-        else:
-            logger.warning(f"Could not extract clip ID from URL: {clip_url}")
-            clip_id = clip_url  # Fallback
+    params, error = _parse_clip_request_args()
+    if error:
+        return error
+    clip_url, clip_id, match_id = params['clip_url'], params['clip_id'], params['match_id']
+    debug, force, include_image, use_queue = (
+        params['debug'], params['force'], params['include_image'], params['use_queue'])
 
     try:
         result = process_clip_request(
