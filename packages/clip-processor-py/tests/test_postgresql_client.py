@@ -214,12 +214,12 @@ def test_is_request_in_queue_returns_none_when_absent(db_client, mock_cursor):
 # --------------------------------------------------------------------------- #
 def test_match_result_prefers_non_draft_and_attaches_clip_meta(db_client, mock_cursor):
     db_client.get_latest_draft_for_match = MagicMock(return_value=None)
-    mock_cursor.fetchone.return_value = {
+    mock_cursor.fetchall.return_value = [{
         "clip_id": "c1",
         "clip_url": "u1",
         "results": {"is_draft": False, "players": [{"player_name": "x"}]},
         "facets": None,
-    }
+    }]
     out = db_client.get_clip_result_by_match_id("m1")
     assert out["clip_id"] == "c1"
     assert out["clip_url"] == "u1"
@@ -231,7 +231,7 @@ def test_match_result_merges_facets_into_players_and_heroes(db_client, mock_curs
     # 1-indexed (player) position. The heroes loop adds +1 to realign, so the
     # SAME facet must land on both the player and its corresponding hero.
     db_client.get_latest_draft_for_match = MagicMock(return_value=None)
-    mock_cursor.fetchone.return_value = {
+    mock_cursor.fetchall.return_value = [{
         "clip_id": "c1",
         "clip_url": "u1",
         "results": {
@@ -240,7 +240,7 @@ def test_match_result_merges_facets_into_players_and_heroes(db_client, mock_curs
             "heroes": [{"name": "h", "team": "Radiant", "position": 0}],
         },
         "facets": {"radiant": [{"position": 1, "facet": 7}], "dire": []},
-    }
+    }]
     out = db_client.get_clip_result_by_match_id("m1")
     assert out["players"][0]["facet"] == 7
     assert out["heroes"][0]["facet"] == 7  # +1 realignment lands on the same facet
@@ -250,49 +250,109 @@ def test_match_result_attaches_draft_info(db_client, mock_cursor):
     db_client.get_latest_draft_for_match = MagicMock(
         return_value={"is_draft": True, "captains": {"Radiant": "Cap"}, "draft_player_order": ["a"]}
     )
-    mock_cursor.fetchone.return_value = {
+    mock_cursor.fetchall.return_value = [{
         "clip_id": "c1", "clip_url": "u1",
         "results": {"is_draft": False, "players": []}, "facets": None,
-    }
+    }]
     out = db_client.get_clip_result_by_match_id("m1")
     assert out["draft_info"]["captains"] == {"Radiant": "Cap"}
     assert out["draft_info"]["draft_player_order"] == ["a"]
 
 
 def test_match_result_falls_back_to_draft_when_no_non_draft(db_client, mock_cursor):
-    # First query (non-draft) returns nothing; fallback draft query returns a row.
-    mock_cursor.fetchone.side_effect = [
-        None,
-        {"clip_id": "cd", "clip_url": "ud", "results": {"is_draft": True, "players": []}},
-    ]
+    # Non-draft query returns nothing; fallback draft query (fetchone) returns a row.
+    mock_cursor.fetchall.return_value = []
+    mock_cursor.fetchone.return_value = {
+        "clip_id": "cd", "clip_url": "ud", "results": {"is_draft": True, "players": []},
+    }
     out = db_client.get_clip_result_by_match_id("m1")
     assert out["clip_id"] == "cd"
     assert out["is_draft"] is True
 
 
 def test_match_result_returns_none_when_nothing_found(db_client, mock_cursor):
-    mock_cursor.fetchone.side_effect = [None, None]
+    mock_cursor.fetchall.return_value = []
+    mock_cursor.fetchone.return_value = None
     assert db_client.get_clip_result_by_match_id("m1") is None
 
 
 def test_match_result_survives_facets_missing_a_team_key(db_client, mock_cursor):
-    # BUG TARGET #1: stored facets dict is missing the 'dire' key (legacy/partial
-    # payload), and a Dire player is present. The merge does `facets['dire']`
-    # which raises KeyError; the broad except swallows it and the whole cached
-    # read returns None -> silent cache miss -> needless reprocessing in prod.
-    # Correct behavior: still return the cached result.
+    # Stored facets dict is missing the 'dire' key (legacy/partial payload) and a
+    # Dire player is present. facets.get('dire', []) must not raise -> still return
+    # the cached result rather than a silent cache miss.
     db_client.get_latest_draft_for_match = MagicMock(return_value=None)
-    mock_cursor.fetchone.return_value = {
+    mock_cursor.fetchall.return_value = [{
         "clip_id": "c1", "clip_url": "u1",
         "results": {
             "is_draft": False,
             "players": [{"player_name": "x", "team": "Dire", "position": 2}],
         },
         "facets": {"radiant": [{"position": 1, "facet": 7}]},  # no 'dire' key
-    }
+    }]
     out = db_client.get_clip_result_by_match_id("m1")
     assert out is not None
     assert out["clip_id"] == "c1"
+
+
+def test_match_result_in_game_overrides_lower_confidence_per_slot(db_client, mock_cursor):
+    # Two non-draft rows for the same match: a pre-game clip and a higher-confidence
+    # in-game clip. Each slot should resolve to the hero with the higher match_score.
+    db_client.get_latest_draft_for_match = MagicMock(return_value=None)
+    pregame = {
+        "is_draft": False,
+        "heroes": [
+            {"team": "Radiant", "position": 0, "hero_id": 1, "hero_localized_name": "Anti-Mage", "match_score": 0.80},
+            {"team": "Radiant", "position": 1, "hero_id": 2, "hero_localized_name": "Axe", "match_score": 0.70},
+        ],
+    }
+    ingame = {
+        "is_draft": False,
+        "detection_source": "in_game",
+        "heroes": [
+            # Same slot 0, but a different (more confident) hero -> should win.
+            {"team": "Radiant", "position": 0, "hero_id": 5, "hero_localized_name": "Crystal Maiden", "match_score": 0.95},
+            # Slot 1 lower than pre-game -> pre-game keeps it.
+            {"team": "Radiant", "position": 1, "hero_id": 2, "hero_localized_name": "Axe", "match_score": 0.60},
+        ],
+    }
+    # Newest first (base row = in-game), both returned by the non-draft query.
+    mock_cursor.fetchall.return_value = [
+        {"clip_id": "cg", "clip_url": "ug", "results": ingame, "facets": None},
+        {"clip_id": "cp", "clip_url": "up", "results": pregame, "facets": None},
+    ]
+    out = db_client.get_clip_result_by_match_id("m1")
+    by_slot = {(h["team"], h["position"]): h for h in out["heroes"]}
+    assert by_slot[("Radiant", 0)]["hero_id"] == 5  # in-game (0.95) beat pre-game (0.80)
+    assert by_slot[("Radiant", 1)]["hero_id"] == 2  # pre-game (0.70) beat in-game (0.60)
+    # players[] is rebuilt from the merged heroes
+    assert {p["hero_id"] for p in out["players"]} == {5, 2}
+
+
+def test_match_result_in_game_fills_missing_slot_from_pregame(db_client, mock_cursor):
+    # In-game clip only detected one slot; the other is filled from the pre-game clip.
+    db_client.get_latest_draft_for_match = MagicMock(return_value=None)
+    pregame = {
+        "is_draft": False,
+        "heroes": [
+            {"team": "Dire", "position": 0, "hero_id": 9, "hero_localized_name": "Mirana", "match_score": 0.85},
+            {"team": "Dire", "position": 1, "hero_id": 10, "hero_localized_name": "Morphling", "match_score": 0.85},
+        ],
+    }
+    ingame = {
+        "is_draft": False,
+        "detection_source": "in_game",
+        "heroes": [
+            {"team": "Dire", "position": 0, "hero_id": 11, "hero_localized_name": "Phantom Lancer", "match_score": 0.99},
+        ],
+    }
+    mock_cursor.fetchall.return_value = [
+        {"clip_id": "cg", "clip_url": "ug", "results": ingame, "facets": None},
+        {"clip_id": "cp", "clip_url": "up", "results": pregame, "facets": None},
+    ]
+    out = db_client.get_clip_result_by_match_id("m1")
+    by_slot = {(h["team"], h["position"]): h["hero_id"] for h in out["heroes"]}
+    assert by_slot[("Dire", 0)] == 11  # in-game won its slot
+    assert by_slot[("Dire", 1)] == 10  # filled from pre-game
 
 
 # --------------------------------------------------------------------------- #

@@ -303,6 +303,58 @@ class PostgresClient:
             if conn:
                 self._return_connection(conn)
 
+    @staticmethod
+    def _merge_hero_slots(results_list: list) -> list:
+        """Merge heroes across multiple non-draft results, one winner per slot.
+
+        For each (team, position) slot, keep the hero with the highest match_score
+        across all results; on a tie prefer an in-game detection (cleaner top bar).
+        Returns heroes sorted by team then position.
+        """
+        best: Dict[Any, tuple] = {}
+        for res in results_list:
+            if not isinstance(res, dict):
+                continue
+            is_in_game = res.get('detection_source') == 'in_game'
+            for hero in res.get('heroes') or []:
+                team = hero.get('team')
+                position = hero.get('position')
+                if team is None or position is None:
+                    continue
+                score = hero.get('match_score') or 0
+                key = (team, position)
+                current = best.get(key)
+                if (current is None
+                        or score > current[0]
+                        or (score == current[0] and is_in_game and not current[1])):
+                    best[key] = (score, is_in_game, hero)
+        merged = [entry[2] for entry in best.values()]
+        merged.sort(key=lambda h: (h.get('team') == 'Dire', h.get('position', 0)))
+        return merged
+
+    @staticmethod
+    def _players_from_heroes(heroes: list) -> list:
+        """Rebuild the user-facing players[] view from merged heroes[]."""
+        players = []
+        for hero in heroes:
+            player = {
+                'position': (hero.get('position') or 0) + 1,
+                'team': hero.get('team'),
+                'hero': hero.get('hero_localized_name'),
+                'hero_id': hero.get('hero_id'),
+            }
+            if 'rank' in hero:
+                player['rank'] = hero['rank']
+            if 'player_name' in hero:
+                player['player_name'] = hero['player_name']
+            facet = hero.get('facet')
+            if isinstance(facet, dict) and 'name' in facet:
+                player['facet'] = facet['name']
+            if hero.get('low_confidence'):
+                player['low_confidence'] = True
+            players.append(player)
+        return players
+
     def get_clip_result_by_match_id(self, match_id: str) -> Optional[Dict[str, Any]]:
         """
         Get cached result for a match_id if it exists.
@@ -325,25 +377,36 @@ class PostgresClient:
                 return None
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-            # Prefer the latest non-draft result
+            # Fetch ALL non-draft results for the match (newest first) and merge them
+            # per hero slot by confidence, so a higher-confidence detection (e.g. the
+            # in-game top-bar clip) overrides a weaker pre-game one and partial clips
+            # fill each other's gaps.
             query = f"""
             SELECT clip_id, clip_url, results, facets FROM {self.results_table}
             WHERE match_id = %s
               AND COALESCE((results->>'is_draft')::boolean, FALSE) = FALSE
             ORDER BY processed_at DESC
-            LIMIT 1
             """
 
             cursor.execute(query, (match_id,))
-            row = cursor.fetchone()
+            rows = cursor.fetchall()
 
-            if row:
-                result = row['results']
-                # Add clip details to result
-                if isinstance(result, dict):
-                    result['clip_id'] = row['clip_id']
-                    result['clip_url'] = row['clip_url']
-                self._merge_facets_into_result(result, row['facets'])
+            if rows:
+                # Base the response on the most recent row (non-hero fields, image, ids).
+                base = rows[0]
+                result = base['results'] if isinstance(base['results'], dict) else {}
+                result['clip_id'] = base['clip_id']
+                result['clip_url'] = base['clip_url']
+
+                # Override heroes/players with the per-slot highest-confidence merge,
+                # then apply stored facets to the merged players/heroes.
+                merged_heroes = self._merge_hero_slots([r['results'] for r in rows])
+                if merged_heroes:
+                    result['heroes'] = merged_heroes
+                    result['players'] = self._players_from_heroes(merged_heroes)
+
+                self._merge_facets_into_result(result, base['facets'])
+
                 # Also attach latest draft info if available
                 try:
                     draft = self.get_latest_draft_for_match(match_id)
