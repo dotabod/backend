@@ -1,0 +1,118 @@
+# DRAFT — NOT WIRED INTO PROD.
+#
+# Refresh canonical in-game hero top-bar icon templates (incl. arcana/persona
+# variants) by extracting them from the real Dota 2 VPK. Modeled on the existing
+# low-noise "Update dotaconstants" workflow: cheap change-detection first
+# (hash the icon file list from GameTracking-Dota2), only run the expensive
+# DepotDownloader + VRF extraction when the icon set actually changed, then open a PR.
+#
+# To activate: move to ../.github/workflows/ after the extract pipeline is validated
+# on a runner (depot id, anonymous access, and -filelist download footprint).
+
+name: Update hero icons from VPK (low-noise) [DRAFT]
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly check; extraction only runs when the icon set changed.
+    - cron: '40 6 * * 1'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: hero-icons-update
+  cancel-in-progress: true
+
+jobs:
+  update-hero-icons:
+    runs-on: ubuntu-latest
+    env:
+      UPDATE_BRANCH: ci/update-hero-icons
+      BASE_BRANCH: master
+      PKG_DIR: packages/clip-processor-py
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # --- cheap change-detection: hash only the icon lines of pak01_dir.txt -----
+      - name: Detect hero icon set changes
+        id: scan
+        run: |
+          set -euo pipefail
+          MANIFEST=https://raw.githubusercontent.com/SteamDatabase/GameTracking-Dota2/master/game/dota/pak01_dir.txt
+          STORE="${PKG_DIR}/vpk-extraction/icons_manifest.sha"
+
+          curl -fsSL "$MANIFEST" -o pak01_dir.txt
+          # Hash path+CRC of just the top-bar icon files (stable, order-independent).
+          NEW_SHA=$(grep -E 'panorama/images/heroes/icons/npc_dota_hero_.*_png\.vtex_c' pak01_dir.txt \
+            | sort | sha256sum | awk '{print $1}')
+          OLD_SHA=$(cat "$STORE" 2>/dev/null || echo "none")
+
+          echo "new_sha=$NEW_SHA" >> "$GITHUB_OUTPUT"
+          echo "old_sha=$OLD_SHA" >> "$GITHUB_OUTPUT"
+          if [ "$NEW_SHA" = "$OLD_SHA" ]; then
+            echo "should_update=false" >> "$GITHUB_OUTPUT"
+            echo "Hero icon set unchanged ($NEW_SHA); skipping extraction."
+          else
+            echo "should_update=true" >> "$GITHUB_OUTPUT"
+            echo "Hero icon set changed: $OLD_SHA -> $NEW_SHA"
+          fi
+
+      # --- expensive path: only when the icon set changed ------------------------
+      - name: Setup .NET (for DepotDownloader)
+        if: steps.scan.outputs.should_update == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Python
+        if: steps.scan.outputs.should_update == 'true'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Free up disk + use /mnt for large downloads
+        if: steps.scan.outputs.should_update == 'true'
+        run: |
+          df -h
+          sudo mkdir -p /mnt/dota
+          sudo chown "$USER" /mnt/dota
+
+      - name: Extract icons from VPK
+        if: steps.scan.outputs.should_update == 'true'
+        working-directory: ${{ env.PKG_DIR }}
+        env:
+          WORK_DIR: /mnt/dota
+          # DEPOT_ID can be overridden if SteamDB shows a new content depot id.
+        run: |
+          chmod +x vpk-extraction/extract-icons.sh
+          ./vpk-extraction/extract-icons.sh
+
+      - name: Record new manifest hash
+        if: steps.scan.outputs.should_update == 'true'
+        run: |
+          echo "${{ steps.scan.outputs.new_sha }}" > "${PKG_DIR}/vpk-extraction/icons_manifest.sha"
+
+      - name: Create Pull Request
+        if: steps.scan.outputs.should_update == 'true'
+        uses: peter-evans/create-pull-request@v8.1.1
+        with:
+          title: 'chore(clip-vision): refresh in-game hero icon templates from VPK'
+          body: |
+            Automated refresh of canonical in-game top-bar hero icons
+            (including arcana/persona variants) extracted from the real Dota 2 VPK
+            via DepotDownloader + ValveResourceFormat.
+
+            - Manifest source: `GameTracking-Dota2/game/dota/pak01_dir.txt`
+            - Icon set hash: `${{ steps.scan.outputs.old_sha }}` -> `${{ steps.scan.outputs.new_sha }}`
+            - New/updated templates: `assets/dota_heroes/{id}_icon[_variant].png`
+            - `templates_cache.npz` invalidated so templates recompute.
+          base: ${{ env.BASE_BRANCH }}
+          branch: ${{ env.UPDATE_BRANCH }}
+          commit-message: 'chore(clip-vision): refresh VPK hero icon templates'
+          delete-branch: true
+          add-paths: |
+            packages/clip-processor-py/assets/dota_heroes/*_icon*.png
+            packages/clip-processor-py/vpk-extraction/icons_manifest.sha
