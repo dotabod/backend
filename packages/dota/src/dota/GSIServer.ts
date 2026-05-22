@@ -19,6 +19,7 @@ import type { GSIServerInterface } from './GSIServerTypes'
 import { newData, processChanges } from './globalEventEmitter'
 import { gsiHandlers } from './lib/consts'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch'
+import { remindUnresolvedMatches } from './lib/remindUnresolvedMatches'
 import { deleteClipsBatch } from './lib/twitchUtils'
 import { recordOverlayFirstSeen } from './setupSignals'
 import { validateToken } from './validateToken'
@@ -120,6 +121,7 @@ class GSIServer implements GSIServerInterface {
     // Track resubscribe request timestamps separately from regular GSI posts
     const resubscribeRequestTimestamps = new Map<string, number>()
     const RESUBSCRIBE_CLEANUP_TIMEOUT = 24 * 60 * 60 * 1000 // 24 hours
+    const UNRESOLVED_REMINDER_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
 
     // Function to clean up old resubscribe request timestamps
     function cleanupResubscribeTimestamps() {
@@ -223,6 +225,13 @@ class GSIServer implements GSIServerInterface {
 
     // Set up the repeating timer for cleaning up resubscribe timestamps
     setInterval(cleanupResubscribeTimestamps, RESUBSCRIBE_CLEANUP_TIMEOUT)
+
+    // Nudge mods once per unresolved match while the stream is live
+    setInterval(() => {
+      remindUnresolvedMatches().catch((e) => {
+        logger.error('[BETS] remindUnresolvedMatches failed', { e })
+      })
+    }, UNRESOLVED_REMINDER_INTERVAL_MS)
 
     // Initialize the Dota patch checker with a 5-minute check interval
     initDotaPatchChecker(5)

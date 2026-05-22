@@ -35,6 +35,7 @@ import { getHeroById } from './lib/heroes'
 import { isArcade } from './lib/isArcade'
 import { isSpectator } from './lib/isSpectator'
 import { getRankDetail } from './lib/ranks'
+import { formatUnresolvedMatch } from './lib/unresolvedMatches'
 import { updateMmr } from './lib/updateMmr'
 import { NeutralItemTimer } from './NeutralItemTimer'
 import { say } from './say'
@@ -1057,6 +1058,38 @@ export class GSIHandler implements GSIHandlerType {
       endingBets: this.endingBets,
     })
 
+    // Persist the last-known GSI snapshot so unresolved-match messages can show
+    // KDA / score / length. The buffer is freshest now; it may be gone by the
+    // time retries exhaust. A later real resolution overwrites these.
+    const snapshotKda = {
+      kills: this.client.gsi?.player?.kills ?? null,
+      deaths: this.client.gsi?.player?.deaths ?? null,
+      assists: this.client.gsi?.player?.assists ?? null,
+      duration: this.client.gsi?.map?.game_time ?? null,
+    }
+    const snapshotRadiant = this.client.gsi?.map?.radiant_score ?? null
+    const snapshotDire = this.client.gsi?.map?.dire_score ?? null
+    const nowIso = new Date().toISOString()
+    await supabase
+      .from('matches')
+      .update({
+        kda: snapshotKda,
+        radiant_score: snapshotRadiant,
+        dire_score: snapshotDire,
+        updated_at: nowIso,
+      })
+      .match({ matchId: matchId.toString(), userId: this.client.token })
+
+    const details = formatUnresolvedMatch({
+      matchId: matchId.toString(),
+      hero_name: this.client.gsi?.hero?.name ?? null,
+      kda: snapshotKda,
+      radiant_score: snapshotRadiant,
+      dire_score: snapshotDire,
+      created_at: nowIso,
+      updated_at: nowIso,
+    })
+
     // Check if player is high MMR (8500+)
     const isHighMmr = is8500Plus(this.client)
 
@@ -1085,6 +1118,7 @@ export class GSIHandler implements GSIHandlerType {
           this.client,
           t('bets.manualResolution', {
             matchId,
+            details,
             emote: 'PauseChamp',
             lng: this.client.locale,
           }),
@@ -1156,6 +1190,7 @@ export class GSIHandler implements GSIHandlerType {
               this.client,
               t('bets.manualResolution', {
                 matchId,
+                details,
                 emote: 'PauseChamp',
                 lng: this.client.locale,
               }),

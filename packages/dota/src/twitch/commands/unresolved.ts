@@ -1,7 +1,5 @@
-import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { getSessionStartDate } from '../../db/streamWindow'
-import getHero, { type HeroNames } from '../../dota/lib/getHero'
+import { formatUnresolvedMatch, getUnresolvedMatches } from '../../dota/lib/unresolvedMatches'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler, { type MessageType } from '../lib/CommandHandler'
@@ -16,20 +14,9 @@ commandHandler.registerCommand('unresolved', {
       channel: { name: channel, client },
     } = message
 
-    const startDate = getSessionStartDate(client.stream_start_date)
-    const currentMatchId = client.gsi?.map?.matchid
+    const matches = await getUnresolvedMatches(client)
 
-    const { data: matches, error } = await supabase
-      .from('matches')
-      .select('matchId, hero_name, created_at')
-      .eq('userId', client.token)
-      .is('won', null)
-      .neq('matchId', currentMatchId ?? '')
-      .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(10)
-
-    if (error || !matches || matches.length === 0) {
+    if (matches.length === 0) {
       chatClient.say(
         channel,
         t('bets.noUnresolvedMatches', {
@@ -41,14 +28,7 @@ commandHandler.registerCommand('unresolved', {
       return
     }
 
-    // Format the match list with hero names
-    const matchList = matches
-      .map((m) => {
-        const hero = getHero(m.hero_name as HeroNames)
-        const heroName = hero?.localized_name ?? m.hero_name ?? 'Unknown'
-        return `${m.matchId} (${heroName})`
-      })
-      .join(', ')
+    const matchList = matches.map((m) => formatUnresolvedMatch(m)).join(', ')
     const count = matches.length
 
     chatClient.say(
