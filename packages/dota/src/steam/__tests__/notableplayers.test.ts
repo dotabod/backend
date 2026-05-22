@@ -100,4 +100,33 @@ describe('notablePlayers — normal path (heroes known)', () => {
 
     expect(result.description).toBe('[Divine avg]: Bob (Anti-Mage)')
   })
+
+  it('keeps a vision-detected hero whose name OCR came back empty', async () => {
+    // High-MMR vision path: the Vision API never provides account ids (accountid 0),
+    // so the notable-player lookup can never match. A confidently-detected hero
+    // whose name OCR missed (Techies in match 8821057580) must still appear,
+    // falling back to a "Player N" label rather than vanishing from the roster.
+    getPlayersMock.mockResolvedValueOnce({
+      matchPlayers: [
+        { heroid: 1, accountid: 0, playerid: null, player_name: 'Named' },
+        { heroid: 2, accountid: 0, playerid: null },
+      ],
+      accountIds: [0, 0],
+      gameMode: undefined,
+    })
+
+    const result = await notablePlayers({
+      locale: 'en',
+      twitchChannelId: 'chan',
+      currentMatchId: '123',
+      players: undefined,
+      steam32Id: null,
+    })
+
+    expect(result.playerList).toHaveLength(2)
+    expect(result.playerList[0].name).toBe('Named')
+    const nameless = result.playerList[1]
+    expect(nameless.name).toBe('Player 2')
+    expect(nameless.heroName).not.toBe('?')
+  })
 })

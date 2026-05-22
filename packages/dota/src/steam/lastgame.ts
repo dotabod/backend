@@ -42,6 +42,23 @@ interface LastgameParams {
   currentPlayers?: Players
 }
 
+// Supabase is the source of truth for a user's own finished matches (written from
+// their GSI). delayedGames is fed by Valve's realtime spectator API, which returns
+// nothing for 8500+/Immortal players, so its newest cached entry can be a stale
+// older match. Prefer Supabase for the "last game" link.
+async function getLatestFinishedMatchId(steam32Id: number): Promise<string | null> {
+  const { data } = await supabase
+    .from('matches')
+    .select('matchId')
+    .eq('steam32Id', steam32Id)
+    .not('won', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single()
+
+  return data?.matchId != null ? String(data.matchId) : null
+}
+
 export default async function lastgame({
   locale,
   steam32Id,
@@ -69,10 +86,12 @@ export default async function lastgame({
       const msg = !currentMatchId
         ? t('notPlaying', { emote: 'PauseChamp', lng: locale })
         : t('gameNotFound', { lng: locale })
-      return gameHistory[0]?.match?.match_id
+      const lastMatchId =
+        (await getLatestFinishedMatchId(steam32Id)) ?? gameHistory[0]?.match?.match_id ?? null
+      return lastMatchId
         ? `${msg} · ${t('lastgame.link', {
             lng: locale,
-            url: `dotabuff.com/matches/${gameHistory[0].match.match_id}`,
+            url: `dotabuff.com/matches/${lastMatchId}`,
           })}`
         : msg
     }

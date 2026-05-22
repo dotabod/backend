@@ -375,6 +375,39 @@ def test_match_result_in_game_fills_missing_slot_from_pregame(db_client, mock_cu
     assert by_slot[("Dire", 1)] == 10  # filled from pre-game
 
 
+def test_match_result_carries_player_name_from_lower_score_detection(db_client, mock_cursor):
+    # The Techies incident: the pre-game clip wins the slot on match_score but its
+    # name OCR missed (no player_name), while a lower-score detection of the same
+    # slot did capture the name. The merge must keep the higher-score hero identity
+    # yet still carry player_name/rank across, or the player is dropped downstream.
+    db_client.get_latest_draft_for_match = MagicMock(return_value=None)
+    pregame = {
+        "is_draft": False,
+        "heroes": [
+            {"team": "Radiant", "position": 3, "hero_id": 105,
+             "hero_localized_name": "Techies", "match_score": 0.99},  # no player_name
+        ],
+    }
+    named = {
+        "is_draft": False,
+        "heroes": [
+            {"team": "Radiant", "position": 3, "hero_id": 105,
+             "hero_localized_name": "Techies", "match_score": 0.62,
+             "player_name": "spleen", "rank": 459},
+        ],
+    }
+    mock_cursor.fetchall.return_value = [
+        {"clip_id": "cn", "clip_url": "un", "results": named, "facets": None},
+        {"clip_id": "cp", "clip_url": "up", "results": pregame, "facets": None},
+    ]
+    out = db_client.get_clip_result_by_match_id("m1")
+    techies = out["heroes"][0]
+    assert techies["match_score"] == 0.99      # higher-score identity kept
+    assert techies["player_name"] == "spleen"  # name carried from lower-score detection
+    assert techies["rank"] == 459              # rank carried too
+    assert out["players"][0]["player_name"] == "spleen"
+
+
 # --------------------------------------------------------------------------- #
 # get_latest_draft_for_match
 # --------------------------------------------------------------------------- #

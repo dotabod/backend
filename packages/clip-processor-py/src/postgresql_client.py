@@ -309,9 +309,18 @@ class PostgresClient:
 
         For each (team, position) slot, keep the hero with the highest match_score
         across all results; on a tie prefer an in-game detection (cleaner top bar).
+
+        player_name and rank are filled separately from the highest-scoring
+        detection that actually has them, independent of which detection wins the
+        hero identity. A clip can read a clean hero portrait yet miss the name (e.g.
+        the in-game bar skips name OCR entirely), so the slot winner often lacks a
+        name another clip captured; without this, that name is silently discarded.
         Returns heroes sorted by team then position.
         """
         best: Dict[Any, tuple] = {}
+        # Per slot, the highest-scoring detection that supplied each side field.
+        best_name: Dict[Any, tuple] = {}
+        best_rank: Dict[Any, tuple] = {}
         for res in results_list:
             if not isinstance(res, dict):
                 continue
@@ -328,7 +337,20 @@ class PostgresClient:
                         or score > current[0]
                         or (score == current[0] and is_in_game and not current[1])):
                     best[key] = (score, is_in_game, hero)
-        merged = [entry[2] for entry in best.values()]
+                name = hero.get('player_name')
+                if name and (key not in best_name or score > best_name[key][0]):
+                    best_name[key] = (score, name)
+                rank = hero.get('rank')
+                if rank is not None and (key not in best_rank or score > best_rank[key][0]):
+                    best_rank[key] = (score, rank)
+        merged = []
+        for key, entry in best.items():
+            hero = dict(entry[2])
+            if not hero.get('player_name') and key in best_name:
+                hero['player_name'] = best_name[key][1]
+            if hero.get('rank') is None and key in best_rank:
+                hero['rank'] = best_rank[key][1]
+            merged.append(hero)
         merged.sort(key=lambda h: (h.get('team') == 'Dire', h.get('position', 0)))
         return merged
 

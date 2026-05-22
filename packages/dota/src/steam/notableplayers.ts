@@ -136,8 +136,13 @@ export async function notablePlayers({
         isMe: isCurrentPlayer,
       }
 
-      // Only add to proPlayers if this is a notable player
-      if (np || matchPlayers[i].player_name) proPlayers.push(playerData)
+      // Show a player when they're a tracked pro (np), when a name was detected,
+      // or when this is a vision-detected hero (accountid 0 sentinel from the
+      // Vision API, which never provides account ids so np can never match). The
+      // vision path is the high-MMR roster view, so a confidently-detected hero
+      // must not vanish just because its name OCR came back empty.
+      const isVisionHero = player.accountid === 0 && (player.heroid ?? 0) > 0
+      if (np || matchPlayers[i].player_name || isVisionHero) proPlayers.push(playerData)
     }
 
     let modeText: string
