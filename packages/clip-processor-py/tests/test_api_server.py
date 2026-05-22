@@ -254,6 +254,116 @@ def test_worker_stream_branch_does_not_call_save_clip_result():
     assert statuses == ["processing", "completed"]
 
 
+def test_worker_clip_in_game_branch_calls_process_with_in_game_true():
+    db = MagicMock()
+    request = {
+        "request_id": "rig1",
+        "request_type": "clip_in_game",
+        "clip_url": "https://clips.twitch.tv/abc",
+        "clip_id": "abc",
+        "debug": False,
+        "force": False,
+        "include_image": True,
+        "match_id": "999",
+    }
+    worker_result = {"players": [{"player_name": "x"}]}
+    with patch.object(api_server, "process_clip_request", return_value=worker_result) as pcr:
+        _run_worker_once(db, request)
+
+    assert pcr.call_count == 1
+    assert pcr.call_args.kwargs["in_game"] is True
+    assert pcr.call_args.kwargs["from_worker"] is True
+
+
+def test_worker_clip_in_game_not_skipped_by_completed_match():
+    # A completed match short-circuits a normal 'clip' request, but an in-game
+    # request must always process (it's a fresh, higher-confidence detection).
+    db = MagicMock()
+    db.check_for_match_processing.return_value = {
+        "found": True, "status": "completed", "clip_id": "old",
+    }
+    db.get_clip_result.return_value = {"players": [{"player_name": "cached"}]}
+    request = {
+        "request_id": "rig2",
+        "request_type": "clip_in_game",
+        "clip_url": "https://clips.twitch.tv/abc",
+        "clip_id": "abc",
+        "debug": False,
+        "force": False,
+        "include_image": True,
+        "match_id": "999",
+    }
+    with patch.object(api_server, "process_clip_request",
+                      return_value={"players": [{"player_name": "fresh"}]}) as pcr:
+        _run_worker_once(db, request)
+
+    # Must NOT short-circuit on the completed match -> processing actually ran.
+    pcr.assert_called_once()
+    assert pcr.call_args.kwargs["in_game"] is True
+    # The completed-match dedup branch is skipped for in-game, so the existing
+    # result is never fetched.
+    db.check_for_match_processing.assert_not_called()
+
+
+def test_worker_normal_clip_is_skipped_by_completed_match():
+    # Contrast case: a plain 'clip' request with a completed match short-circuits
+    # WITHOUT calling process_clip_request.
+    db = MagicMock()
+    db.check_for_match_processing.return_value = {
+        "found": True, "status": "completed", "clip_id": "old",
+    }
+    db.get_clip_result.return_value = {"players": [{"player_name": "cached"}]}
+    request = {
+        "request_id": "rc1",
+        "request_type": "clip",
+        "clip_url": "https://clips.twitch.tv/abc",
+        "clip_id": "abc",
+        "debug": False,
+        "force": False,
+        "include_image": True,
+        "match_id": "999",
+    }
+    with patch.object(api_server, "process_clip_request") as pcr:
+        _run_worker_once(db, request)
+
+    pcr.assert_not_called()
+    statuses = [c.args[1] for c in db.update_queue_status.call_args_list]
+    assert statuses[-1] == "completed"
+
+
+def test_process_clip_request_in_game_enqueues_as_clip_in_game(monkeypatch):
+    # in_game=True + add_to_queue must enqueue with request_type='clip_in_game'.
+    monkeypatch.setenv("RUN_LOCALLY", "false")
+    db = MagicMock()
+    db.get_clip_result.return_value = None
+    db.add_to_queue.return_value = (
+        "rid", {"status": "pending", "position": 1},
+    )
+    with patch.object(api_server, "db_client", db), \
+         patch.object(api_server, "start_worker_thread"):
+        api_server.process_clip_request(
+            clip_url="u", clip_id="abc", add_to_queue=True, in_game=True,
+        )
+    assert db.add_to_queue.call_args.kwargs["request_type"] == "clip_in_game"
+
+
+def test_process_clip_request_in_game_skips_completed_match_cache(monkeypatch):
+    # in_game=True must not reuse a completed non-draft match result.
+    monkeypatch.setenv("RUN_LOCALLY", "false")
+    db = MagicMock()
+    db.get_clip_result.return_value = None
+    db.add_to_queue.return_value = ("rid", {"status": "pending", "position": 1})
+    with patch.object(api_server, "db_client", db), \
+         patch.object(api_server, "start_worker_thread"):
+        api_server.process_clip_request(
+            clip_url="u", clip_id="abc", match_id="m1",
+            add_to_queue=True, in_game=True,
+        )
+    # The completed-match reuse branch is gated on `not in_game`, so it's skipped.
+    db.check_for_match_processing.assert_not_called()
+    db.add_to_queue.assert_called_once()
+
+
 def test_worker_marks_failed_when_no_players_detected():
     db = MagicMock()
     clip_request = {
