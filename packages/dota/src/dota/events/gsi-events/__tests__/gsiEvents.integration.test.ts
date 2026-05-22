@@ -68,6 +68,26 @@ describe('event:aegis_picked_up', () => {
     expect(gsiState.chatSayCalls[0].message).not.toContain('Green')
   })
 
+  it('uses the snatched message when the aegis was snatched', async () => {
+    const handler = makeGsiHandler()
+    registerHandler(handler)
+    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+
+    events.emit(
+      'event:aegis_picked_up',
+      { player_id: 0, game_time: 600, snatched: true },
+      handler.getToken(),
+    )
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('aegis.snatched', { emote: 'PepeLaugh', lng: 'en', heroName: getHeroNameOrColor(5, 0) }),
+    )
+    // snatched flag must survive the handler→redis→message wiring
+    expect((gsiState.redisJsonSetCalls[0].value as { snatched: boolean }).snatched).toBe(true)
+  })
+
   it('skips when stream is offline', async () => {
     const handler = makeGsiHandler({ client: { ...makeGsiHandler().client, stream_online: false } })
     registerHandler(handler)
@@ -305,6 +325,27 @@ describe('event:tip', () => {
       t('tip.fromUnknown', { emote: 'ICANT', lng: 'en' }),
     )
   })
+
+  it('omits the tipped name when 8500+ sender (local) and no hero is resolved', async () => {
+    const handler = makeGsiHandler()
+    handler.client.mmr = 9000
+    registerHandler(handler)
+    gsiState.matchPlayers = []
+    // local player is the sender (slot 0)
+    gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '0'
+
+    events.emit(
+      'event:tip',
+      { sender_player_id: 0, receiver_player_id: 1, game_time: 600 },
+      handler.getToken(),
+    )
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('tip.toUnknown', { emote: 'PepeLaugh', lng: 'en' }),
+    )
+  })
 })
 
 describe('event:bounty_rune_pickup', () => {
@@ -323,7 +364,34 @@ describe('event:bounty_rune_pickup', () => {
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
-    expect(gsiState.chatSayCalls[0].message.toLowerCase()).toMatch(/bount|gold|rune/)
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('bounties.pickup', {
+        emote: 'EZ Clap',
+        emote2: 'SeemsGood',
+        lng: 'en',
+        bountyValue: 40,
+        totalBounties: 1,
+        heroNames: getHeroNameOrColor(1, 0),
+      }),
+    )
+  })
+
+  it('skips a bounty when the picker has no resolved hero (no color guess)', async () => {
+    const handler = makeGsiHandler()
+    handler.client.gsi.map.clock_time = 60
+    registerHandler(handler)
+    // roster present but the slot has no heroid (delayedGames is heroless now)
+    gsiState.matchPlayers = [{ heroid: undefined as unknown as number, accountid: 11, playerid: 0 }]
+    gsiState.redisGet[`${handler.client.token}:playingTeam`] = 'radiant'
+
+    events.emit(
+      'event:bounty_rune_pickup',
+      { player_id: 0, team: 'radiant', bounty_value: 40, game_time: 60 },
+      handler.getToken(),
+    )
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(0)
   })
 
   it('skips bounties picked up after the 2-minute window', async () => {
