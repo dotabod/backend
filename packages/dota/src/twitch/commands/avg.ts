@@ -5,6 +5,7 @@ import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
+import { clippingDisabledNote, withClippingNote } from '../lib/clippingNote'
 
 commandHandler.registerCommand('avg', {
   onlyOnline: true,
@@ -30,6 +31,7 @@ commandHandler.registerCommand('avg', {
     const avgDescriptor = ` - ${t('averageRank', { lng: client.locale })}`
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
+    const note = clippingDisabledNote(client, matchPlayers)
 
     calculateAvg({
       locale: client.locale,
@@ -37,12 +39,16 @@ commandHandler.registerCommand('avg', {
       players: matchPlayers,
     })
       .then((avg) => {
-        chatClient.say(message.channel.name, `${avg}${avgDescriptor}`, message.user.messageId)
+        chatClient.say(
+          message.channel.name,
+          withClippingNote(`${avg}${avgDescriptor}`, note),
+          message.user.messageId,
+        )
       })
       .catch((e) => {
         chatClient.say(
           message.channel.name,
-          e?.message ?? t('gameNotFound', { lng: client.locale }),
+          withClippingNote(e?.message ?? t('gameNotFound', { lng: client.locale }), note),
           message.user.messageId,
         )
       })

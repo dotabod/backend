@@ -80,6 +80,7 @@
     "error": "Failed to clear account sharing. Please try again or contact support.",
     "success": "Account sharing reset successfully. Multiple Steam accounts can now send GSI data again. WARNING: Make sure only one person has the Dotabod GSI config file, or conflicts will reoccur."
   },
+  "clippingDisabled": "the streamer turned off auto-clipping, which Dotabod needs to read live game data in 8500+ MMR games",
   "colors": {
     "blue": "Blue",
     "brown": "Brown",

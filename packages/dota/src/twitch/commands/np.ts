@@ -8,6 +8,7 @@ import type { NotablePlayers } from '../../steam/notableplayers'
 import { notablePlayers } from '../../steam/notableplayers'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
+import { clippingDisabledNote, withClippingNote } from '../lib/clippingNote'
 
 commandHandler.registerCommand('np', {
   dbkey: DBSettings.commandNP,
@@ -134,6 +135,7 @@ commandHandler.registerCommand('np', {
     }
 
     const { matchPlayers, heroesStatus } = await getAccountsFromMatch({ gsi: client.gsi })
+    const note = clippingDisabledNote(client, matchPlayers)
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
       client.settings,
@@ -150,12 +152,15 @@ commandHandler.registerCommand('np', {
       heroesStatus,
     })
       .then((desc) => {
-        chatClient.say(channel, desc.description, message.user.messageId)
+        chatClient.say(channel, withClippingNote(desc.description, note), message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(
           channel,
-          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+          withClippingNote(
+            e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+            note,
+          ),
           message.user.messageId,
         )
       })

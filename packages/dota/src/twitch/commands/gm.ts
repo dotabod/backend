@@ -5,6 +5,7 @@ import { DBSettings } from '../../settings'
 import { gameMedals } from '../../steam/medals'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
+import { clippingDisabledNote, withClippingNote } from '../lib/clippingNote'
 
 commandHandler.registerCommand('gm', {
   aliases: ['medals', 'ranks'],
@@ -29,15 +30,19 @@ commandHandler.registerCommand('gm', {
     }
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
+    const note = clippingDisabledNote(client, matchPlayers)
 
     gameMedals(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {
-        chatClient.say(message.channel.name, desc, message.user.messageId)
+        chatClient.say(message.channel.name, withClippingNote(desc, note), message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(
           message.channel.name,
-          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+          withClippingNote(
+            e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+            note,
+          ),
           message.user.messageId,
         )
       })
