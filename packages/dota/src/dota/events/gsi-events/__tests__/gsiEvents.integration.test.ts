@@ -285,6 +285,26 @@ describe('event:tip', () => {
       t('tip.to', { emote: 'PepeLaugh', lng: 'en', heroName: getHeroNameOrColor(2, 1) }),
     )
   })
+
+  it('omits the tipper name when 8500+ and no hero is resolved', async () => {
+    const handler = makeGsiHandler()
+    handler.client.mmr = 9000
+    registerHandler(handler)
+    gsiState.matchPlayers = []
+    gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
+
+    events.emit(
+      'event:tip',
+      { sender_player_id: 0, receiver_player_id: 1, game_time: 600 },
+      handler.getToken(),
+    )
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('tip.fromUnknown', { emote: 'ICANT', lng: 'en' }),
+    )
+  })
 })
 
 describe('event:bounty_rune_pickup', () => {

@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { DotaEventTypes, type TipEvent } from '../../../types'
-import { getRedisNumberValue } from '../../../utils/index'
+import { getRedisNumberValue, is8500Plus } from '../../../utils/index'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
 import { getHeroNameOrColor } from '../../lib/heroes'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
@@ -28,30 +28,37 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
     if (receiverPlayerIdIndex === -1) {
       receiverPlayerIdIndex = event.receiver_player_id
     }
-    const heroName = getHeroNameOrColor(
-      matchPlayers[senderPlayerIdIndex]?.heroid ?? 0,
-      senderPlayerIdIndex,
-    )
+    // sub-8500 may use the player-slot color; 8500+ only names a real resolved
+    // hero (player_id is reshuffled there), else a generic message — see aegis.
+    const high = is8500Plus(dotaClient.client)
+    const senderHeroid = matchPlayers[senderPlayerIdIndex]?.heroid
+    const heroName =
+      senderHeroid || !high ? getHeroNameOrColor(senderHeroid ?? 0, senderPlayerIdIndex) : null
 
     const playingHeroSlot = await getRedisNumberValue(`${dotaClient.getToken()}:playingHeroSlot`)
 
     if (receiverPlayerIdIndex === playingHeroSlot) {
       say(
         dotaClient.client,
-        t('tip.from', { emote: 'ICANT', lng: dotaClient.client.locale, heroName }),
+        heroName
+          ? t('tip.from', { emote: 'ICANT', lng: dotaClient.client.locale, heroName })
+          : t('tip.fromUnknown', { emote: 'ICANT', lng: dotaClient.client.locale }),
         { chattersKey: 'tip' },
       )
     }
 
     if (senderPlayerIdIndex === playingHeroSlot) {
-      const toHero = getHeroNameOrColor(
-        matchPlayers[receiverPlayerIdIndex]?.heroid ?? 0,
-        receiverPlayerIdIndex,
-      )
+      const receiverHeroid = matchPlayers[receiverPlayerIdIndex]?.heroid
+      const toHero =
+        receiverHeroid || !high
+          ? getHeroNameOrColor(receiverHeroid ?? 0, receiverPlayerIdIndex)
+          : null
 
       say(
         dotaClient.client,
-        t('tip.to', { emote: 'PepeLaugh', lng: dotaClient.client.locale, heroName: toHero }),
+        toHero
+          ? t('tip.to', { emote: 'PepeLaugh', lng: dotaClient.client.locale, heroName: toHero })
+          : t('tip.toUnknown', { emote: 'PepeLaugh', lng: dotaClient.client.locale }),
         { chattersKey: 'tip' },
       )
     }

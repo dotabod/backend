@@ -495,6 +495,8 @@ export interface AegisPickedUpEvent extends BaseDotaEvent {
   player_id: number
   snatched: boolean
 }
+// NOT verified against live capture (0 aegis_denied seen in sampling) — assumed to
+// mirror aegis_picked_up; the handler only reads player_id + game_time regardless.
 export interface AegisDeniedEvent extends BaseDotaEvent {
   event_type: DotaEventTypes.AegisDenied
   player_id: number
