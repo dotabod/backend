@@ -9,7 +9,7 @@ export function getSpectatorPlayers(gsi?: Packet) {
         accountid: Number(
           gsi.player?.team2?.[playerIdx as keyof typeof gsi.player.team2]?.accountid,
         ),
-        playerid: Number(playerIdx),
+        playerid: Number(playerIdx.replace('player', '')),
         selected: !!gsi.hero?.team2?.[playerIdx as keyof typeof gsi.hero.team2]?.selected_unit,
       })),
       ...Object.keys(gsi.hero.team3).map((playerIdx) => ({
@@ -17,7 +17,7 @@ export function getSpectatorPlayers(gsi?: Packet) {
         accountid: Number(
           gsi.player?.team3?.[playerIdx as keyof typeof gsi.player.team3]?.accountid,
         ),
-        playerid: Number(playerIdx),
+        playerid: Number(playerIdx.replace('player', '')),
         selected: !!gsi.hero?.team3?.[playerIdx as keyof typeof gsi.hero.team3]?.selected_unit,
       })),
     ]

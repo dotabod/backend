@@ -90,8 +90,9 @@ describe('getSpectatorPlayers', () => {
 
     const players = getSpectatorPlayers(gsi)
     expect(players).toHaveLength(2)
-    expect(players[0]).toMatchObject({ heroid: 1, accountid: 111, selected: true })
-    expect(players[1]).toMatchObject({ heroid: 2, accountid: 222, selected: false })
+    // playerid must be the numeric slot parsed from the "playerN" key (not NaN)
+    expect(players[0]).toMatchObject({ heroid: 1, accountid: 111, playerid: 0, selected: true })
+    expect(players[1]).toMatchObject({ heroid: 2, accountid: 222, playerid: 5, selected: false })
   })
 })
 
