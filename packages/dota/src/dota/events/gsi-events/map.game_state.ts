@@ -65,12 +65,17 @@ const GAMEPLAY_CLIP_OPTS: CreateReadyClipOptions = {
   pollIntervalMs: 5000,
 }
 
-// The draft screen is only visible briefly, so time-box the retries.
+// The draft screen is only visible briefly, so keep the retry budget time-boxed,
+// but give the FIRST clip a long enough poll window (~20s) to outlast Twitch's
+// ~15s transcode. Recreating a clip restarts that transcode clock, so the old
+// too-short window (2 x 4s = ~8s) abandoned every clip mid-transcode and failed
+// ~100% of the time. Polling the same clip longer doesn't move its content
+// (createAfterDelay captured the buffer at creation), so the draft UI is intact.
 const DRAFT_CLIP_OPTS: CreateReadyClipOptions = {
-  maxAttempts: 3,
-  pollAttempts: 2,
-  pollIntervalMs: 4000,
-  deadlineMs: 25000,
+  maxAttempts: 2,
+  pollAttempts: 5,
+  pollIntervalMs: 5000,
+  deadlineMs: 45000,
 }
 
 eventHandler.registerEvent('map:game_state', {

@@ -102,6 +102,65 @@ describe('createReadyClip', () => {
     expect(getCreateCalls()).toBe(2)
   })
 
+  it('catches a clip that only transcodes after several polls (draft window)', async () => {
+    // Twitch transcode takes ~15s; the draft path's old 2-poll (~8s) window
+    // abandoned the clip mid-transcode and failed ~100% of the time. The clip
+    // here reports duration 0 for the first 3 polls, then transcodes on the 4th.
+    let polls = 0
+    const api = {
+      clips: {
+        createClip: async () => 'slow',
+        getClipById: async (_id: string) => {
+          polls += 1
+          return { duration: polls >= 4 ? 30 : 0 }
+        },
+      },
+    } as any
+
+    // Draft-like opts: 5 polls is a long enough window to reach the 4th poll.
+    const result = await createReadyClip(
+      api,
+      'acct',
+      { maxAttempts: 2, pollAttempts: 5, pollIntervalMs: 1 },
+      '[Test]',
+      {},
+    )
+
+    expect(result).toBe('slow') // the original clip, not a recreation
+    expect(polls).toBe(4) // returned as soon as it transcoded
+  })
+
+  it('abandons the same slow clip with the old too-short window', async () => {
+    // Same ~15s transcode, but the old draft window (2 polls) gives up before
+    // the clip is ready and recreates — proving the window length was the bug.
+    let createCalls = 0
+    const perClipPolls: Record<string, number> = {}
+    const api = {
+      clips: {
+        createClip: async () => {
+          createCalls += 1
+          return `clip-${createCalls}`
+        },
+        getClipById: async (id: string) => {
+          perClipPolls[id] = (perClipPolls[id] ?? 0) + 1
+          // Each fresh clip needs 4 polls to transcode; 2 polls never reaches it.
+          return { duration: perClipPolls[id] >= 4 ? 30 : 0 }
+        },
+      },
+    } as any
+
+    const result = await createReadyClip(
+      api,
+      'acct',
+      { maxAttempts: 2, pollAttempts: 2, pollIntervalMs: 1 },
+      '[Test]',
+      {},
+    )
+
+    expect(result).toBeNull() // never caught a transcode within 2 polls
+    expect(createCalls).toBe(2) // burned both attempts recreating
+  })
+
   it('stops early and returns null once the deadline is exceeded', async () => {
     const { api, getCreateCalls } = fakeApi({
       clipIds: ['dud', 'd2', 'd3', 'd4', 'd5'],
