@@ -48,10 +48,10 @@
     "retroactiveResolutionSuccess": "",
     "retroactiveResolutionSuccess_lost": "Матч {{matchId}} вручную отмечен как ПОРАЖЕНИЕ пользователем @{{username}}",
     "retroactiveResolutionSuccess_won": "Матч {{matchId}} вручную отмечен как ПОБЕДА пользователем @{{username}}",
-    "unresolvedMatches_one": "",
-    "unresolvedMatches_few": "",
-    "unresolvedMatches_many": "",
-    "unresolvedMatches_other": "",
+    "unresolvedMatches_one": "{{count}} unresolved match {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedMatches_few": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedMatches_many": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "won": "Мы победили {{emote}}"
   },
   "bounties": {
@@ -114,14 +114,6 @@
   "dotapatch": {
     "newPatch": "{{emote}} Выпущен новый патч для Dota 2: {{version}}. Посмотрите примечания к нему на https://www.dota2.com/patches"
   },
-  "facet": "{{number}} аспект {{- heroName}} - это {{- facetTitle}} · {{- facetDescription}}",
-  "facetInvalid": "Указан неверный аспект · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Используйте !facet {{- heroName}} 1 или !facet {{- heroName}} 2 · Dotabod знает только facet стримера",
-  "facetSelection": "{{- heroName}} выбрал аспект: {{- facetTitle}} · {{- facetDescription}}",
-  "facetTotalLimit_one": "Только {{count}} аспект доступен у {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_few": "Только {{count}} аспекта доступны у {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_many": "Только {{count}} аспектов доступно у {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_other": "Только {{count}} аспекта доступна у {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Игра не найдена",
   "giftSub": "Подарок Dotabod Pro был только что подарен {{- senderName}}!",
   "giftSubAnonymous": "Подарок Dotabod Pro был только что подарен анонимно!",
@@ -209,6 +201,8 @@
   "noLastMatch": "Не найдена последняя игра {{emote}}",
   "noNotable": "Нет отмеченных игроков",
   "noShard": "У {{- heroName}} нет улучшения шарда.",
+  "notablePlayersNoHeroes": "heroes not found",
+  "notablePlayersWaitingHeroes": "waiting on heroes",
   "notLive": "Стрим офлайн {{emote}} . На самом деле онлайн? Модераторы, напишите !online",
   "notPlaying": "Не играет {{emote}}",
   "npAdd": "Попробуйте !np add <стим ID> <имя игрока>",

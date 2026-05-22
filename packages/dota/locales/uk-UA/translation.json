@@ -48,10 +48,10 @@
     "retroactiveResolutionSuccess": "",
     "retroactiveResolutionSuccess_lost": "Матч {{matchId}} власноруч позначений як LOST @{{username}}",
     "retroactiveResolutionSuccess_won": "Матч {{matchId}} власноруч позначений як WON @{{username}}",
-    "unresolvedMatches_one": "",
-    "unresolvedMatches_few": "",
-    "unresolvedMatches_many": "",
-    "unresolvedMatches_other": "",
+    "unresolvedMatches_one": "{{count}} unresolved match {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedMatches_few": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedMatches_many": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "won": "Ми перемогли {{emote}}. Підтримуйте Україну та донатьте на ЗСУ <3"
   },
   "bounties": {
@@ -114,14 +114,6 @@
   "dotapatch": {
     "newPatch": "{{emote}} В Dota 2 вийшов новий патч: {{version}}. Дізнайся найцікавіші оновлення на https://www.dota2.com/patches"
   },
-  "facet": "{{- heroName}} вибрав грань {{number}}: {{- facetTitle}} · {{- facetDescription}}",
-  "facetInvalid": "Вказано недійсну грань · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Використовуйте !facet {{- heroName}} 1 або !facet {{- heroName}} 2 · Dotabod знає тільки грань стрімера",
-  "facetSelection": "{{- heroName}} вибрав грань: {{- facetTitle}} · {{- facetDescription}}",
-  "facetTotalLimit_one": "Лише {{count}} грань доступна для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_few": "Лише {{count}} грані доступна для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_many": "{{count}} грані доступна для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_other": "Лише {{count}} грані доступна для {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Матч не знайдено",
   "giftSub": "Dotabod Pro був щойно подарований {{- senderName}}!",
   "giftSubAnonymous": "Підписка на Dotabod Pro була щойно анонімно подарована!",
@@ -209,6 +201,8 @@
   "noLastMatch": "Не знайдено останню гру {{emote}}",
   "noNotable": "Немає відомих гравців",
   "noShard": "{{- heroName}} бродиться без шарду",
+  "notablePlayersNoHeroes": "heroes not found",
+  "notablePlayersWaitingHeroes": "waiting on heroes",
   "notLive": "Стрім офлайн {{emote}} . Насправді онлайн? Модератори, напишіть !online",
   "notPlaying": "Не грає {{emote}}",
   "npAdd": "Спробуйте !np add <steam32id> <playername>",

@@ -48,10 +48,10 @@
     "retroactiveResolutionSuccess": "",
     "retroactiveResolutionSuccess_lost": "Mecz {{{matchId}} ręcznie oznaczony jako PRZEGRANY przez @{{username}}",
     "retroactiveResolutionSuccess_won": "Mecz {{{matchId}} ręcznie oznaczony jako WYGRANY przez @{{username}}",
-    "unresolvedMatches_one": "",
-    "unresolvedMatches_few": "",
-    "unresolvedMatches_many": "",
-    "unresolvedMatches_other": "",
+    "unresolvedMatches_one": "{{count}} unresolved match {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedMatches_few": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedMatches_many": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "won": "Wygraliśmy {{emote}} dawaj nexta "
   },
   "bounties": {
@@ -114,14 +114,6 @@
   "dotapatch": {
     "newPatch": "{{emote}} Nowy aktualizacja rozgrywki do Dota 2 została wydana: {{version}}. Sprawdź informacje na https://www.dota2.com/patches"
   },
-  "facet": "Aspekt {{- heroName}} {{number}}: {{- facetTitle}} · {{- facetDescription}}",
-  "facetInvalid": "Nieprawidłowy aspekt · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Użyj !facet {{- heroName}} 1 lub !facet {{- heroName}} 2 · Dotabod zna wyłącznie aspekt streamera",
-  "facetSelection": "{{- heroName}} wybrał aspekt: {{- facetTitle}} · {{- facetDescription}}",
-  "facetTotalLimit_one": "Tylko {{count}} aspekt jest dostępny dla {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_few": "Tylko {{count}} aspekty są dostępne dla {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_many": "Tylko {{count}} aspekty są dostępne dla {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_other": "Tylko {{count}} aspekty są dostępne dla {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Gra nie została znaleziona",
   "giftSub": "Prezentowa subskrypcja Dotabod Pro została właśnie podarowana przez {{- senderName}}!",
   "giftSubAnonymous": "Prezentowa subskrypcja Dotabod Pro została właśnie podarowana przez Anonimowego darczyńce👻!",
@@ -209,6 +201,8 @@
   "noLastMatch": "Nie znaleziono ostatniej gry {{emote}}",
   "noNotable": "Brak godnych uwagi graczy",
   "noShard": "{{- heroName}} nie ma ulepszeń odłamka aghanima.",
+  "notablePlayersNoHeroes": "heroes not found",
+  "notablePlayersWaitingHeroes": "waiting on heroes",
   "notLive": "Transmisja nie jest aktywna {{emote}}. W rzeczywistości nadajesz Na Żywo? Moderatorze wpisz !online",
   "notPlaying": "Aktualnie nie gramy {{emote}}",
   "npAdd": "Spróbuj !np add <steam32id> <playername>, aby dodać godnego uwagi zawodnika",

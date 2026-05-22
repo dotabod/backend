@@ -45,8 +45,8 @@
     "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
     "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
     "won": "Panalo tayo {{emote}} sundan pa",
-    "unresolvedMatches_one": "",
-    "unresolvedMatches_other": ""
+    "unresolvedMatches_one": "{{count}} unresolved match {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}"
   },
   "bounties": {
     "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) galing bounty ({{totalBounties}}/4) {{emote}} Salamat {{heroNames}} {{emote2}}",
@@ -104,10 +104,6 @@
   "dotapatch": {
     "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
   },
-  "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
-  "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the streamer's facet",
-  "facetSelection": "{{- heroName}} selected facet: {{- facetTitle}} · {{- facetDescription}}",
   "gameNotFound": "Walang nakitang laro",
   "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
@@ -180,6 +176,8 @@
   "noShard": "{{- heroName}} has no shard upgrade.",
   "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Not playing {{emote}}",
+  "notablePlayersNoHeroes": "heroes not found",
+  "notablePlayersWaitingHeroes": "waiting on heroes",
   "npAdd": "Try !np add <steam32id> <playername>",
   "npAdded": "Added {{name}} to !np for this channel",
   "npRemove": "Try !np remove <steam32id>",
@@ -285,8 +283,6 @@
   "xpm": "Live XPM for {{- heroName}}: {{num}}",
   "apm_one": "Kasalukuyang APM ni {{- heroName}}: {{count}} {{emote}}",
   "apm_other": "Kasalukuyang APM ni {{- heroName}}: {{count}} {{emote}}",
-  "facetTotalLimit_one": "Only {{count}} facet is available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_other": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gpm_one": "Kasalukuyang GPM para kay {{- heroName}}: {{num}}. {{heroKills}} galing patay sa mga hero, {{creepKills}} galing patay sa mga creeps.",
   "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "seconds_one": "{{count}} second",
