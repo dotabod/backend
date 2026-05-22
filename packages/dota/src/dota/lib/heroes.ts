@@ -33,9 +33,10 @@ export const translatedColor = (color: string, lng: string) => {
 }
 
 // Dota's fixed slot→color order (0-4 Radiant, 5-9 Dire). WARNING: indexing this
-// by a GSI events[].player_id is unreliable — Dota reshuffles player_id in some
-// games (not only Captain's Mode), so it can resolve the wrong player/side.
-// Only trust it when a real hero (from clip/vision or own GSI) couldn't be found.
+// by a GSI events[].player_id is unreliable — Dota reshuffles player_id, mostly in
+// high-immortal / ranked-roles games (live: ~57% of 8500+ vs ~0% of confirmed
+// sub-8500), so it can resolve the wrong player/side. Only trust it when a real
+// hero (from clip/vision or own GSI) couldn't be found.
 export const heroColors = 'Blue,Teal,Purple,Yellow,Orange,Pink,Olive,Cyan,Green,Brown'.split(',')
 export function getHeroNameOrColor(id?: number, index?: number) {
   if (!id && typeof index === 'number') return heroColors[index]

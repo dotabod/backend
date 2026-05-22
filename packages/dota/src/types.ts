@@ -149,9 +149,11 @@ export interface Player {
   kill_streak: number // 0,
   commands_issued: number // 0,
   kill_list: Record<string, number>
-  team_name: 'spectator' | 'radiant' | 'dire'
-  player_slot: number // 0 or 1 through 9 or 10, @TODO: need to verify still
-  team_slot: number // 1 = radiant or 2 = dire
+  team_name: 'spectator' | 'radiant' | 'dire' // authoritative side — use this, NOT slot, for team
+  // Lobby slot. Verified live: does NOT follow "0-4 radiant / 5-9 dire" — e.g. slot 9 can be radiant.
+  // Don't derive team or hero color from player_slot; it's reshuffled (esp. high-immortal / ranked roles).
+  player_slot: number
+  team_slot: number // position WITHIN the team, 0-4 (both teams use 0-4) — NOT a team indicator
   gold: number // 600,
   gold_reliable: number // 0,
   gold_unreliable: number //600,
@@ -477,12 +479,12 @@ export interface DotaEvent {
   team_gold: number // 225
 
   // Event 'roshan_killed'
-  killed_by_team: 'dire'
-  //killer_player_id: 7;
+  killed_by_team: 'radiant' | 'dire'
+  //killer_player_id: 7; // present on roshan_killed; NOT player_id
 
   // Event 'aegis_picked_up'
   //player_id: 7;
-  snatched: false
+  snatched: boolean
 
   // Event 'aegis_denied'
   //player_id: 7;

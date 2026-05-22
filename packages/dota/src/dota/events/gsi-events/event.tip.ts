@@ -15,16 +15,18 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
 
+    // tip events carry sender_player_id / receiver_player_id, NOT player_id —
+    // the fallback must use those, or the index becomes undefined and tips break.
     let senderPlayerIdIndex = matchPlayers.findIndex((p) => p.playerid === event.sender_player_id)
     if (senderPlayerIdIndex === -1) {
-      senderPlayerIdIndex = event.player_id
+      senderPlayerIdIndex = event.sender_player_id
     }
 
     let receiverPlayerIdIndex = matchPlayers.findIndex(
       (p) => p.playerid === event.receiver_player_id,
     )
     if (receiverPlayerIdIndex === -1) {
-      receiverPlayerIdIndex = event.player_id
+      receiverPlayerIdIndex = event.receiver_player_id
     }
     const heroName = getHeroNameOrColor(
       matchPlayers[senderPlayerIdIndex]?.heroid ?? 0,

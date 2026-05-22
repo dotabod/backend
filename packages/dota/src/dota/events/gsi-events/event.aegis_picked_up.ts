@@ -36,9 +36,10 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     // delayedGames no longer carries hero data, so sub-8500 falls back to the
     // player-slot color (mostly right). For 8500+ the only roster source is the
     // clip/vision path; if it hasn't resolved a real hero, don't guess a color.
-    // event.player_id is NOT a dependable slot/color index — Dota reshuffles it
-    // in some games (verified live, not only Captain's Mode), so the color guess
-    // can be the wrong player/side. The [AEGIS] log below captures ground truth.
+    // event.player_id is NOT a dependable slot/color index — Dota reshuffles it,
+    // mostly in high-immortal/ranked-roles games (verified live: ~57% of 8500+
+    // matches vs ~0% of confirmed sub-8500), so the color guess can be the wrong
+    // player/side. The [AEGIS] log below captures ground truth.
     const heroName = heroid || !high ? getHeroNameOrColor(heroid ?? 0, playerIdIndex) : null
 
     logger.info('[AEGIS] pickup attribution', {
