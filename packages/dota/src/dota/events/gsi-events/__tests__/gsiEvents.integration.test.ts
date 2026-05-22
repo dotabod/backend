@@ -38,6 +38,36 @@ describe('event:aegis_picked_up', () => {
     expect(gsiState.chatSayCalls[0].message.toLowerCase()).toContain('aegis')
   })
 
+  it('uses the player-slot color when sub-8500 and no hero is resolved', async () => {
+    const handler = makeGsiHandler()
+    registerHandler(handler)
+    // No roster (delayedGames no longer carries heroes) → falls back to color.
+    gsiState.matchPlayers = []
+
+    events.emit('event:aegis_picked_up', { player_id: 8, game_time: 600 }, handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('aegis.pickup', { lng: 'en', heroName: getHeroNameOrColor(0, 8) }),
+    )
+    expect(gsiState.chatSayCalls[0].message).toContain('Green')
+  })
+
+  it('does not guess a color when 8500+ and no hero is resolved', async () => {
+    const handler = makeGsiHandler()
+    handler.client.mmr = 9000
+    registerHandler(handler)
+    gsiState.matchPlayers = []
+
+    events.emit('event:aegis_picked_up', { player_id: 8, game_time: 600 }, handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toBe(t('aegis.pickupUnknown', { lng: 'en' }))
+    expect(gsiState.chatSayCalls[0].message).not.toContain('Green')
+  })
+
   it('skips when stream is offline', async () => {
     const handler = makeGsiHandler({ client: { ...makeGsiHandler().client, stream_online: false } })
     registerHandler(handler)
@@ -74,6 +104,37 @@ describe('event:aegis_denied', () => {
     expect(gsiState.chatSayCalls[0].message).toBe(
       t('aegis.denied', { lng: 'en', heroName: getHeroNameOrColor(5, 0), emote: 'ICANT' }),
     )
+  })
+
+  it('uses the player-slot color when sub-8500 and no hero is resolved', async () => {
+    const handler = makeGsiHandler()
+    registerHandler(handler)
+    gsiState.matchPlayers = []
+
+    events.emit('event:aegis_denied', { player_id: 8, game_time: 600 }, handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('aegis.denied', { lng: 'en', heroName: getHeroNameOrColor(0, 8), emote: 'ICANT' }),
+    )
+    expect(gsiState.chatSayCalls[0].message).toContain('Green')
+  })
+
+  it('does not guess a color when 8500+ and no hero is resolved', async () => {
+    const handler = makeGsiHandler()
+    handler.client.mmr = 9000
+    registerHandler(handler)
+    gsiState.matchPlayers = []
+
+    events.emit('event:aegis_denied', { player_id: 8, game_time: 600 }, handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('aegis.deniedUnknown', { lng: 'en', emote: 'ICANT' }),
+    )
+    expect(gsiState.chatSayCalls[0].message).not.toContain('Green')
   })
 })
 

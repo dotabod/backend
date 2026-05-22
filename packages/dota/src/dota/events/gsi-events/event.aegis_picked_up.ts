@@ -1,6 +1,7 @@
+import { logger } from '@dotabod/shared-utils'
 import RedisClient from '../../../db/RedisClient'
 import { type DotaEvent, DotaEventTypes } from '../../../types'
-import { fmtMSS } from '../../../utils/index'
+import { fmtMSS, is8500Plus } from '../../../utils/index'
 import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
 import { getHeroNameOrColor } from '../../lib/heroes'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
@@ -30,7 +31,26 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     if (playerIdIndex === -1) {
       playerIdIndex = event.player_id
     }
-    const heroName = getHeroNameOrColor(matchPlayers[playerIdIndex]?.heroid ?? 0, playerIdIndex)
+    const heroid = matchPlayers[playerIdIndex]?.heroid
+    const high = is8500Plus(dotaClient.client)
+    // delayedGames no longer carries hero data, so sub-8500 falls back to the
+    // player-slot color (mostly right). For 8500+ the only roster source is the
+    // clip/vision path; if it hasn't resolved a real hero, don't guess a color.
+    // event.player_id is NOT a dependable slot/color index — Dota reshuffles it
+    // in some games (verified live, not only Captain's Mode), so the color guess
+    // can be the wrong player/side. The [AEGIS] log below captures ground truth.
+    const heroName = heroid || !high ? getHeroNameOrColor(heroid ?? 0, playerIdIndex) : null
+
+    logger.info('[AEGIS] pickup attribution', {
+      token: dotaClient.getToken(),
+      matchId: dotaClient.client.gsi?.map?.matchid,
+      player_id: event.player_id,
+      resolvedIndex: playerIdIndex,
+      is8500Plus: high,
+      rosterSize: matchPlayers.length,
+      roster: matchPlayers.map((p) => ({ playerid: p.playerid, heroid: p.heroid })),
+      heroName,
+    })
 
     const res = {
       expireS,

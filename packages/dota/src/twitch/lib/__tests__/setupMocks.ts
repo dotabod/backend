@@ -434,6 +434,9 @@ export function installTwitchMocks() {
       state.redisDelCalls.push(key)
       return 1
     },
+    zAdd: async () => 0,
+    zRem: async () => 0,
+    zRangeByScore: async () => [] as string[],
     json: {
       get: async () => null,
       set: async () => 'OK',

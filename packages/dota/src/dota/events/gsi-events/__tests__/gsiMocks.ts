@@ -43,6 +43,7 @@ export function resetGsiState() {
   gsiState.ioEmitCalls = []
   gsiState.delayedQueueAddCalls = []
   gsiState.delayedQueueRemovedIds = []
+  taskIdCounter = 0
 }
 
 // --- Mocks ---
@@ -59,6 +60,12 @@ mock.module('@dotabod/shared-utils', () =>
 const fakeRedisClient = {
   get: async (key: string) => gsiState.redisGet[key] ?? null,
   set: async () => 'OK',
+  // Sorted-set stubs used by clipSchedule.ts (scheduleClip / rearmPersistedClips).
+  // Errors are caught by clipSchedule's own try/catch, so returning silently is
+  // fine for tests that don't exercise the durability path directly.
+  zAdd: async () => 0,
+  zRem: async () => 0,
+  zRangeByScore: async () => [] as string[],
   json: {
     get: async (key: string) => gsiState.redisJson[key] ?? null,
     set: async (key: string, path: string, value: unknown) => {

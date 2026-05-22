@@ -54,6 +54,51 @@ describe('generateAegisMessage', () => {
     )
     expect(msg).toContain('Lina')
   })
+
+  it('returns aegis.pickupUnknown when heroName is null and aegis is active', () => {
+    const msg = generateAegisMessage(
+      {
+        expireS: 290,
+        playerId: 0,
+        expireTime: '12:35',
+        expireDate: new Date(Date.now() + 290_000),
+        snatched: false,
+        heroName: null,
+      },
+      'en',
+    )
+    expect(msg).toBe(t('aegis.pickupUnknown', { lng: 'en' }))
+  })
+
+  it('returns aegis.snatchedUnknown when heroName is null and snatched', () => {
+    const msg = generateAegisMessage(
+      {
+        expireS: 200,
+        playerId: 0,
+        expireTime: '10:00',
+        expireDate: new Date(Date.now() + 200_000),
+        snatched: true,
+        heroName: null,
+      },
+      'en',
+    )
+    expect(msg).toBe(t('aegis.snatchedUnknown', { lng: 'en' }))
+  })
+
+  it('returns aegis.expiredUnknown when heroName is null and aegis has expired', () => {
+    const msg = generateAegisMessage(
+      {
+        expireS: 10,
+        playerId: 0,
+        expireTime: '0:10',
+        expireDate: new Date(Date.now() - 60_000),
+        snatched: false,
+        heroName: null,
+      },
+      'en',
+    )
+    expect(msg).toBe(t('aegis.expiredUnknown', { emote: ':)', lng: 'en' }))
+  })
 })
 
 describe('getRoshCountMessage', () => {

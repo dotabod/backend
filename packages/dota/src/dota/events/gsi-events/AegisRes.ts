@@ -4,5 +4,5 @@ export interface AegisRes {
   expireTime: string
   expireDate: Date
   snatched: boolean
-  heroName: string
+  heroName: string | null
 }
