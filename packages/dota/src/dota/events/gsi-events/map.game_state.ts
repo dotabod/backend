@@ -1,82 +1,16 @@
-import { getTwitchAPI, logger } from '@dotabod/shared-utils'
+import { logger } from '@dotabod/shared-utils'
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { is8500Plus } from '../../../utils/index'
 import { getStreamDelay } from '../../getStreamDelay'
+import { DRAFT_CLIP_OPTS, GAMEPLAY_CLIP_OPTS, scheduleClip } from '../../lib/clipSchedule'
 import {
   type allStates,
   draftStartByMatchId,
   GLOBAL_DELAY,
   gameInProgressClipByMatchId,
 } from '../../lib/consts'
-import { type CreateReadyClipOptions, createReadyClip } from '../../lib/createReadyClip'
-import { delayedQueue } from '../../lib/DelayedQueue'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import eventHandler from '../EventHandler'
-
-async function createAndSubmitClip(
-  accountId: string,
-  matchId: string | undefined,
-  detectPath: 'detect' | 'detect_draft' | 'detect_in_game',
-  opts: CreateReadyClipOptions,
-  logPrefix: string,
-  logContext: Record<string, unknown>,
-): Promise<void> {
-  try {
-    const api = await getTwitchAPI(accountId)
-    const clipId = await createReadyClip(api, accountId, opts, logPrefix, logContext)
-
-    if (!clipId) {
-      logger.error(`${logPrefix} no usable clip after retries; skipping vision submission`, {
-        ...logContext,
-      })
-      return
-    }
-
-    const visionApiHost = process.env.VISION_API_HOST
-    if (!visionApiHost) {
-      logger.error(`${logPrefix} No VISION_API_HOST set`, logContext)
-      return
-    }
-
-    // Fire and forget - don't wait for the response
-    fetch(`https://${visionApiHost}/${detectPath}?clip_id=${clipId}&match_id=${matchId}`, {
-      headers: {
-        'X-API-Key': process.env.VISION_API_KEY || '',
-      },
-    }).catch((error) => {
-      logger.error(`${logPrefix} Error sending clip processing request`, {
-        ...logContext,
-        error: error.message,
-        clipId,
-      })
-    })
-  } catch (clipError) {
-    logger.error(`${logPrefix} Error creating clip`, {
-      ...logContext,
-      error: (clipError as Error).message,
-    })
-  }
-}
-
-// Heroes stay on the HUD all game, so retry generously with no deadline.
-const GAMEPLAY_CLIP_OPTS: CreateReadyClipOptions = {
-  maxAttempts: 3,
-  pollAttempts: 3,
-  pollIntervalMs: 5000,
-}
-
-// The draft screen is only visible briefly, so keep the retry budget time-boxed,
-// but give the FIRST clip a long enough poll window (~20s) to outlast Twitch's
-// ~15s transcode. Recreating a clip restarts that transcode clock, so the old
-// too-short window (2 x 4s = ~8s) abandoned every clip mid-transcode and failed
-// ~100% of the time. Polling the same clip longer doesn't move its content
-// (createAfterDelay captured the buffer at creation), so the draft UI is intact.
-const DRAFT_CLIP_OPTS: CreateReadyClipOptions = {
-  maxAttempts: 2,
-  pollAttempts: 5,
-  pollIntervalMs: 5000,
-  deadlineMs: 45000,
-}
 
 eventHandler.registerEvent('map:game_state', {
   handler: async (dotaClient, gameState: (typeof allStates)[number]) => {
@@ -146,15 +80,13 @@ eventHandler.registerEvent('map:game_state', {
       )
 
       // Delay to ensure the draft has started
-      delayedQueue.addTask(DRAFT_CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, async () => {
-        await createAndSubmitClip(
-          accountId,
-          dotaClient.client.gsi?.map?.matchid,
-          'detect_draft',
-          DRAFT_CLIP_OPTS,
-          '[Draft Clip]',
-          logContext,
-        )
+      await scheduleClip(DRAFT_CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, {
+        accountId,
+        matchId: dotaClient.client.gsi?.map?.matchid,
+        detectPath: 'detect_draft',
+        opts: DRAFT_CLIP_OPTS,
+        logPrefix: '[Draft Clip]',
+        logContext,
       })
       return
     }
@@ -163,15 +95,13 @@ eventHandler.registerEvent('map:game_state', {
       const CLIP_DELAY_MS = 50000 // 50 seconds
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
 
-      delayedQueue.addTask(CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, async () => {
-        await createAndSubmitClip(
-          accountId,
-          dotaClient.client.gsi?.map?.matchid,
-          'detect',
-          GAMEPLAY_CLIP_OPTS,
-          '[Clip]',
-          logContext,
-        )
+      await scheduleClip(CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, {
+        accountId,
+        matchId: dotaClient.client.gsi?.map?.matchid,
+        detectPath: 'detect',
+        opts: GAMEPLAY_CLIP_OPTS,
+        logPrefix: '[Clip]',
+        logContext,
       })
       return
     }
@@ -187,15 +117,13 @@ eventHandler.registerEvent('map:game_state', {
       const IN_GAME_CLIP_DELAY_MS = 60000 // settle ~1 min in; top bar is up all game
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
 
-      delayedQueue.addTask(IN_GAME_CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, async () => {
-        await createAndSubmitClip(
-          accountId,
-          matchId,
-          'detect_in_game',
-          GAMEPLAY_CLIP_OPTS,
-          '[In-Game Clip]',
-          logContext,
-        )
+      await scheduleClip(IN_GAME_CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, {
+        accountId,
+        matchId,
+        detectPath: 'detect_in_game',
+        opts: GAMEPLAY_CLIP_OPTS,
+        logPrefix: '[In-Game Clip]',
+        logContext,
       })
     }
   },

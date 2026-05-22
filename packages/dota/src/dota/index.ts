@@ -8,6 +8,7 @@ import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
 import RedisClient from '../db/RedisClient'
 import SetupSupabase from '../db/watcher'
 import GSIServer from './GSIServer'
+import { rearmPersistedClips } from './lib/clipSchedule'
 import { server } from './server'
 
 logger.info("Starting 'dota' package")
@@ -67,6 +68,9 @@ const setupRedisClient = async () => {
   logger.info('Redis client connected')
   await redisClient.connectSubscriber()
   logger.info('Redis subscriber connected')
+
+  // Re-arm clip tasks that a restart dropped from the in-memory DelayedQueue.
+  await rearmPersistedClips()
 }
 
 const initServer = () => {
