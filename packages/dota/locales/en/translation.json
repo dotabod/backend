@@ -264,6 +264,7 @@
   },
   "today": {
     "noGames": "No games played yet today",
+    "single": "{{- heroName}} {{wins}}-{{losses}} today",
     "summary_one": "{{wins}}W {{losses}}L ({{count}} game)",
     "summary_other": "{{wins}}W {{losses}}L ({{count}} games)"
   },

@@ -63,6 +63,22 @@ commandHandler.registerCommand('today', {
       return
     }
 
+    // A single hero makes the summary a verbatim repeat of the breakdown, so collapse to one line
+    if (heroStats.length === 1) {
+      const [stat] = heroStats
+      chatClient.say(
+        channel,
+        t('today.single', {
+          lng: client.locale,
+          heroName: stat.heroName,
+          wins: stat.wins,
+          losses: stat.losses,
+        }),
+        message.user.messageId,
+      )
+      return
+    }
+
     // Format each hero stat
     const formattedStats = heroStats.map((stat) =>
       formatHeroStat(stat.heroName, stat.wins, stat.losses),
