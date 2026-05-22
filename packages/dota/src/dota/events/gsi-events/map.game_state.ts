@@ -2,7 +2,12 @@ import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { is8500Plus } from '../../../utils/index'
 import { getStreamDelay } from '../../getStreamDelay'
-import { type allStates, draftStartByMatchId, GLOBAL_DELAY } from '../../lib/consts'
+import {
+  type allStates,
+  draftStartByMatchId,
+  GLOBAL_DELAY,
+  gameInProgressClipByMatchId,
+} from '../../lib/consts'
 import { type CreateReadyClipOptions, createReadyClip } from '../../lib/createReadyClip'
 import { delayedQueue } from '../../lib/DelayedQueue'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
@@ -11,7 +16,7 @@ import eventHandler from '../EventHandler'
 async function createAndSubmitClip(
   accountId: string,
   matchId: string | undefined,
-  detectPath: 'detect' | 'detect_draft',
+  detectPath: 'detect' | 'detect_draft' | 'detect_in_game',
   opts: CreateReadyClipOptions,
   logPrefix: string,
   logContext: Record<string, unknown>,
@@ -75,9 +80,21 @@ eventHandler.registerEvent('map:game_state', {
     if (!isPlayingMatch(dotaClient.client.gsi, false)) return
 
     if (
-      !['DOTA_GAMERULES_STATE_STRATEGY_TIME', 'DOTA_GAMERULES_STATE_PLAYER_DRAFT'].includes(
-        gameState,
-      )
+      ![
+        'DOTA_GAMERULES_STATE_STRATEGY_TIME',
+        'DOTA_GAMERULES_STATE_PLAYER_DRAFT',
+        'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+      ].includes(gameState)
+    ) {
+      return
+    }
+
+    // In-game capture is gated off until the processor's top-bar detection
+    // (/detect_in_game) ships. Short-circuit before the work below so disabling
+    // it costs nothing on every game-start transition.
+    if (
+      'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS' === gameState &&
+      process.env.VISION_IN_GAME_ENABLED !== 'true'
     ) {
       return
     }
@@ -148,6 +165,30 @@ eventHandler.registerEvent('map:game_state', {
           'detect',
           GAMEPLAY_CLIP_OPTS,
           '[Clip]',
+          logContext,
+        )
+      })
+      return
+    }
+
+    // The in-game top HUD hero bar shows all 10 heroes for the whole match and is
+    // less likely to be covered by OBS overlays than the pre-game screens, so grab
+    // an extra clip once the player has loaded in.
+    if ('DOTA_GAMERULES_STATE_GAME_IN_PROGRESS' === gameState) {
+      const matchId = dotaClient.client.gsi?.map?.matchid || ''
+      if (gameInProgressClipByMatchId.get(matchId)) return
+      gameInProgressClipByMatchId.set(matchId, true)
+
+      const IN_GAME_CLIP_DELAY_MS = 60000 // settle ~1 min in; top bar is up all game
+      const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
+
+      delayedQueue.addTask(IN_GAME_CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, async () => {
+        await createAndSubmitClip(
+          accountId,
+          matchId,
+          'detect_in_game',
+          GAMEPLAY_CLIP_OPTS,
+          '[In-Game Clip]',
           logContext,
         )
       })

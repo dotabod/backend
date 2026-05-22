@@ -111,3 +111,4 @@ export const pendingCheckAuth = new Map<string, boolean>()
 export const lookingupToken = new Map<string, boolean>()
 
 export const draftStartByMatchId = new Map<string, boolean>()
+export const gameInProgressClipByMatchId = new Map<string, boolean>()
