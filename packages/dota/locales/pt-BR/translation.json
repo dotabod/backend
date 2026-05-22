@@ -47,9 +47,9 @@
     "retroactiveResolutionSuccess": "",
     "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
     "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
-    "unresolvedMatches_one": "",
+    "unresolvedMatches_one": "{{count}} unresolved match {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "unresolvedMatches_many": "",
-    "unresolvedMatches_other": "",
+    "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "won": "Nós ganhamos! {{emote}} Vamos para a próxima partida."
   },
   "bounties": {
@@ -110,13 +110,6 @@
   "dotapatch": {
     "newPatch": "{{emote}} A nova atualização de Dota 2 foi lançada: {{version}}. Confira as notas de atualização em https://www.dota2.com/patches"
   },
-  "facet": "{{- heroName}} faceta {{number}}: {{- facetTitle}} · {{- facetDescription}}",
-  "facetInvalid": "Faceta inválida especificada · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the streamer's facet",
-  "facetSelection": "{{- heroName}} faceta selecionada: {{- facetTitle}} · {{- facetDescription}}",
-  "facetTotalLimit_one": "Somente {{count}} faceta está disponível para {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_many": "",
-  "facetTotalLimit_other": "Somente {{count}} facetas estão disponíveis para {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Jogo não encontrado",
   "giftSub": "Um sub de presente do Dotabod Pro foi presenteado por {{- senderName}}!",
   "giftSubAnonymous": "Um sub de presente do Dotabod Pro foi presenteado anonimamente!",
@@ -194,6 +187,8 @@
   "noLastMatch": "Última partida não foi encontrada {{emote}}",
   "noNotable": "Nenhum jogador notável",
   "noShard": "Não há aprimoramento de fragmento de Aghanim para {{- heroName}}.",
+  "notablePlayersNoHeroes": "heroes not found",
+  "notablePlayersWaitingHeroes": "waiting on heroes",
   "notLive": "A transmissão não está ao vivo {{emote}}. Está ao vivo? Mods, digite \"!online\"",
   "notPlaying": "Não está jogando {{emote}}",
   "npAdd": "Tente  !np add <steam32id> <playername>",

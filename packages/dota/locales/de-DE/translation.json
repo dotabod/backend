@@ -46,8 +46,8 @@
     "retroactiveResolutionSuccess": "",
     "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
     "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
-    "unresolvedMatches_one": "",
-    "unresolvedMatches_other": "",
+    "unresolvedMatches_one": "{{count}} unresolved match {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "won": "We have won Happi go next"
   },
   "bounties": {
@@ -106,12 +106,6 @@
   "dotapatch": {
     "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
   },
-  "facet": "{{- heroName}} facet {{number}}: {{- facetTitle}} · {{- facetDescription}}",
-  "facetInvalid": "Invalid facet specified · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the streamer's facet",
-  "facetSelection": "{{- heroName}} selected facet: {{- facetTitle}} · {{- facetDescription}}",
-  "facetTotalLimit_one": "Only {{count}} facet is available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_other": "Only {{count}} facets are available for {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Spiel wurde nicht gefunden",
   "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
@@ -185,6 +179,8 @@
   "noLastMatch": "Did not find a last match PauseChamp",
   "noNotable": "Keine nennenswerten Spieler",
   "noShard": "{{- heroName}} has no shard upgrade.",
+  "notablePlayersNoHeroes": "heroes not found",
+  "notablePlayersWaitingHeroes": "waiting on heroes",
   "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
   "notPlaying": "Not playing PauseChamp",
   "npAdd": "Versuche !np add <steam32id> <playername>",

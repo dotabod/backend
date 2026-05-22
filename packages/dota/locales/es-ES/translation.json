@@ -47,9 +47,9 @@
     "retroactiveResolutionSuccess": "",
     "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
     "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
-    "unresolvedMatches_one": "",
+    "unresolvedMatches_one": "{{count}} unresolved match {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "unresolvedMatches_many": "",
-    "unresolvedMatches_other": "",
+    "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "won": "Hemos ganado"
   },
   "bounties": {
@@ -110,13 +110,6 @@
   "dotapatch": {
     "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
   },
-  "facet": "{{- heroName}} faceta {{number}}: {{- facetTitle}} · {{- facetDescription}}",
-  "facetInvalid": "La faceta especificada es inválida · $t(facetNotFound, {{- heroName }})",
-  "facetNotFound": "Use !facet {{- heroName}} 1 or !facet {{- heroName}} 2 · Dotabod only knows the streamer's facet",
-  "facetSelection": "{{- heroName}} Faceta seleccionada: {{- facetTitle}} · {{- facetDescription}}",
-  "facetTotalLimit_one": "Solo {{count}} faceta está disponible para {{- heroName}} · $t(facetNotFound, {{- heroName }})",
-  "facetTotalLimit_many": "",
-  "facetTotalLimit_other": "Solo {{count}} facetas están disponibles para {{- heroName}} · $t(facetNotFound, {{- heroName }})",
   "gameNotFound": "Juego no encontrado",
   "giftSub": "¡Un sub para Dotabod Pro ha sido regalado por {{- senderName}}!",
   "giftSubAnonymous": "¡Un sub para Dotabod Pro ha sido regalado anónimamente!",
@@ -194,6 +187,8 @@
   "noLastMatch": "No se ha encontrado la ultimo partido {{emote}}",
   "noNotable": "No hay jugadores destacados",
   "noShard": "{{- heroName}} No tiene una mejora de fragmento.",
+  "notablePlayersNoHeroes": "heroes not found",
+  "notablePlayersWaitingHeroes": "waiting on heroes",
   "notLive": "Stream fuera de línea {{emote}}. ¿Actualmente en vivo? Moderadores escriban !online",
   "notPlaying": "No esta jugando {{emote}}",
   "npAdd": "Usa !np add<steam32id> <playername>",
