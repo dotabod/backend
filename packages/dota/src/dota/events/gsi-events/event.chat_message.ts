@@ -17,6 +17,7 @@ import eventHandler from '../EventHandler'
 import {
   formatTranslatedInGameChatMessages,
   formatTranslatedSpeakerLabel,
+  resolveTranslatedHeroName,
 } from './translationMessageFormat'
 
 const disableTranslation = false
@@ -380,14 +381,13 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
       playerIdIndex = event.player_id
     }
     const heroName = getHeroNameOrColor(matchPlayers[playerIdIndex]?.heroid ?? 0, playerIdIndex)
-    const fallbackHeroLabel = t('chatTranslation.legacyHeroLabel', {
-      lng: dotaClient.client.locale,
+    const displayHeroName = resolveTranslatedHeroName({
+      heroName,
       playerId: event.player_id,
+      foundInMatchPlayers,
+      isHighMmr: is8500Plus(dotaClient.client),
+      locale: dotaClient.client.locale,
     })
-    const displayHeroName =
-      !foundInMatchPlayers && is8500Plus(dotaClient.client)
-        ? fallbackHeroLabel
-        : heroName || event.player_id.toString()
     const speakerLabel = formatTranslatedSpeakerLabel(
       displayHeroName,
       event.player_id,

@@ -29,6 +29,25 @@ export function formatTranslatedSpeakerLabel(
   })
 }
 
+// Decides the speaker name shown for a translated in-game chat line.
+// For 8500+ players whose slot wasn't found in the roster, event.player_id is
+// reshuffled (verified live) so a heroColors guess would be the wrong player —
+// fall back to a neutral "Player N" label instead. Sub-8500 keeps the resolved
+// name/color, and we use the player_id string only when nothing else is known.
+export function resolveTranslatedHeroName(params: {
+  heroName: string
+  playerId: number
+  foundInMatchPlayers: boolean
+  isHighMmr: boolean
+  locale: string
+}): string {
+  const { heroName, playerId, foundInMatchPlayers, isHighMmr, locale } = params
+  if (!foundInMatchPlayers && isHighMmr) {
+    return t('chatTranslation.legacyHeroLabel', { lng: locale, playerId })
+  }
+  return heroName || String(playerId)
+}
+
 export function formatTranslatedInGameChatMessage(message: string, locale: string): string {
   return t('chatTranslation.message', {
     lng: locale,

@@ -6,6 +6,7 @@ import {
   formatTranslatedInGameChatMessage,
   formatTranslatedInGameChatMessages,
   formatTranslatedSpeakerLabel,
+  resolveTranslatedHeroName,
 } from '../translationMessageFormat'
 
 describe('translation message formatting', () => {
@@ -43,6 +44,58 @@ describe('translation message formatting', () => {
 
   it('includes player slot for known hero labels', () => {
     expect(formatTranslatedSpeakerLabel('Crystal Maiden', 4, 'en')).toBe('Crystal Maiden (P4)')
+  })
+
+  describe('resolveTranslatedHeroName', () => {
+    it('uses the resolved name when the slot was found in the roster', () => {
+      // even for 8500+, a real roster hit is trustworthy
+      expect(
+        resolveTranslatedHeroName({
+          heroName: 'Invoker',
+          playerId: 9,
+          foundInMatchPlayers: true,
+          isHighMmr: true,
+          locale: 'en',
+        }),
+      ).toBe('Invoker')
+    })
+
+    it('falls back to a neutral player label for 8500+ when slot not in roster', () => {
+      // player_id is reshuffled at 8500+, so the color guess would be wrong
+      expect(
+        resolveTranslatedHeroName({
+          heroName: 'Brown',
+          playerId: 9,
+          foundInMatchPlayers: false,
+          isHighMmr: true,
+          locale: 'en',
+        }),
+      ).toBe('Hero 9')
+    })
+
+    it('keeps the player-slot color sub-8500 when slot not in roster', () => {
+      expect(
+        resolveTranslatedHeroName({
+          heroName: 'Green',
+          playerId: 8,
+          foundInMatchPlayers: false,
+          isHighMmr: false,
+          locale: 'en',
+        }),
+      ).toBe('Green')
+    })
+
+    it('falls back to the player_id string when no name is known', () => {
+      expect(
+        resolveTranslatedHeroName({
+          heroName: '',
+          playerId: 3,
+          foundInMatchPlayers: false,
+          isHighMmr: false,
+          locale: 'en',
+        }),
+      ).toBe('3')
+    })
   })
 
   it('adds translated in-game chat prefix and disclaimer', () => {
