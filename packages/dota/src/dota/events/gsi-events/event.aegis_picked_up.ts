@@ -27,20 +27,22 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
 
-    let playerIdIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
-    if (playerIdIndex === -1) {
-      playerIdIndex = event.player_id
-    }
+    const foundIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
+    const playerIdIndex = foundIndex === -1 ? event.player_id : foundIndex
     const heroid = matchPlayers[playerIdIndex]?.heroid
     const high = is8500Plus(dotaClient.client)
-    // delayedGames no longer carries hero data, so sub-8500 falls back to the
-    // player-slot color (mostly right). For 8500+ the only roster source is the
-    // clip/vision path; if it hasn't resolved a real hero, don't guess a color.
     // event.player_id is NOT a dependable slot/color index — Dota reshuffles it,
-    // mostly in high-immortal/ranked-roles games (verified live: ~57% of 8500+
-    // matches vs ~0% of confirmed sub-8500), so the color guess can be the wrong
-    // player/side. The [AEGIS] log below captures ground truth.
-    const heroName = heroid || !high ? getHeroNameOrColor(heroid ?? 0, playerIdIndex) : null
+    // mostly in high-immortal/ranked-roles games (~57% of 8500+ vs ~0% of confirmed
+    // sub-8500). For 8500+ we only name a hero when we positively matched the
+    // player by `playerid` in the roster; otherwise we'd be indexing by raw
+    // event.player_id (possibly wrong hero) or showing a slot color (possibly
+    // wrong side). For <8500 we keep the existing behavior — hero from the
+    // index fallback if the roster carries one, otherwise the slot color.
+    const heroName = high
+      ? foundIndex !== -1 && heroid
+        ? getHeroNameOrColor(heroid, playerIdIndex)
+        : null
+      : getHeroNameOrColor(heroid ?? 0, playerIdIndex)
 
     logger.info('[AEGIS] pickup attribution', {
       token: dotaClient.getToken(),

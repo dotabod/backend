@@ -44,6 +44,7 @@
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.4.0",
     "@types/express": "^5.0.0",
     "@types/lodash.isequal": "^4.5.8",
     "@types/retry": "^0.12.5"

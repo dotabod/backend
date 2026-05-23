@@ -4,12 +4,20 @@
   "ignoreBinaries": ["doppler", "upgrade-interactive", "i18next"],
   "workspaces": {
     ".": {},
-    "packages/dota": {},
-    "packages/profanity-filter": {},
+    "packages/dota": {
+      "entry": ["src/index.ts", "src/dev/index.ts", "src/**/__tests__/**/*.ts", "src/**/*.test.ts"]
+    },
+    "packages/profanity-filter": {
+      "entry": ["index.ts", "src/example-client.ts", "tests/**/*.ts"]
+    },
     "packages/shared-utils": {},
     "packages/steam": {},
     "packages/twitch": {},
-    "packages/twitch-chat": {},
-    "packages/twitch-events": {}
+    "packages/twitch-chat": {
+      "entry": ["src/index.ts", "src/**/__tests__/**/*.ts"]
+    },
+    "packages/twitch-events": {
+      "entry": ["src/index.ts", "src/**/__tests__/**/*.ts"]
+    }
   }
 }

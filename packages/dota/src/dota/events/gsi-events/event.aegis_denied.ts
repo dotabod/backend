@@ -16,16 +16,18 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
 
     const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
 
-    let playerIdIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
-    if (playerIdIndex === -1) {
-      playerIdIndex = event.player_id
-    }
-    // Same gating as event.aegis_picked_up: sub-8500 may use the player-slot
-    // color, 8500+ only names a real resolved hero. event.player_id is not a
-    // dependable slot/color index (Dota reshuffles it in some games).
+    const foundIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
+    const playerIdIndex = foundIndex === -1 ? event.player_id : foundIndex
     const heroid = matchPlayers[playerIdIndex]?.heroid
     const high = is8500Plus(dotaClient.client)
-    const heroName = heroid || !high ? getHeroNameOrColor(heroid ?? 0, playerIdIndex) : null
+    // Same gating as event.aegis_picked_up: 8500+ only names a hero when we
+    // positively matched the player by `playerid` in the roster — indexing by
+    // raw event.player_id is unreliable in reshuffled high-immortal games.
+    const heroName = high
+      ? foundIndex !== -1 && heroid
+        ? getHeroNameOrColor(heroid, playerIdIndex)
+        : null
+      : getHeroNameOrColor(heroid ?? 0, playerIdIndex)
 
     logger.info('[AEGIS] denied attribution', {
       token: dotaClient.getToken(),

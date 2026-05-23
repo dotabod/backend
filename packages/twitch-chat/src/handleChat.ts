@@ -8,6 +8,10 @@ const messageDedupeCache = new Map<string, number>()
 const DEDUPE_WINDOW_MS = 5000 // 5 seconds
 
 // Test seam: clears the module-level dedupe cache so suites don't leak state.
+export function clearDedupeCache() {
+  messageDedupeCache.clear()
+}
+
 // Clean up expired cache entries periodically
 setInterval(() => {
   const now = Date.now()
