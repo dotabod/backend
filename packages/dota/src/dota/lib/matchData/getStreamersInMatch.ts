@@ -1,6 +1,6 @@
 import { supabase } from '@dotabod/shared-utils'
-import type { Packet, Players } from '../../types'
-import { getAccountsFromMatch } from './getAccountsFromMatch'
+import type { Packet, Players } from '../../../types'
+import { getAccountsFromMatch } from '../getAccountsFromMatch'
 
 // Counts distinct OTHER Dotabod users in the current match. Names are never returned — only an
 // anonymized count — to avoid cross-chat witch-hunts.
@@ -10,8 +10,12 @@ import { getAccountsFromMatch } from './getAccountsFromMatch'
 //      Reliable for ALL MMRs and the only source that catches a streamer's own pub game, since most
 //      pub games never land in `delayedGames`.
 //   2. Roster lookup — only contributes for SourceTV-listed games (the games the GC broadcasts as
-//      spectatable, which is all `delayedGames` carries now). Catches registered Dotabod users in the
-//      roster even if they aren't currently live. Adds nothing for ordinary pub games (no doc).
+//      spectatable, which is all `delayedGames` carries now). Catches registered Dotabod users in
+//      the roster even if they aren't currently live. Adds nothing for ordinary pub games (no doc).
+//
+// New code should prefer `MatchDataService.getStreamersInMatchCount()` — it shares the roster
+// memoization across other lookups on the same instance. This standalone function exists so that
+// the in-flight callers (np.ts, streamers.ts, GSIHandler) keep working until Phase B migrates them.
 export async function getStreamersInMatch({
   gsi,
   players,

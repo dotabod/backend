@@ -31,10 +31,10 @@ import { blockTypes, pickSates } from './lib/consts'
 import { delayedQueue } from './lib/DelayedQueue'
 import { getAccountsFromMatch } from './lib/getAccountsFromMatch'
 import getHero, { type HeroNames } from './lib/getHero'
-import { getStreamersInMatch } from './lib/getStreamersInMatch'
 import { getHeroById } from './lib/heroes'
 import { isArcade } from './lib/isArcade'
 import { isSpectator } from './lib/isSpectator'
+import { getStreamersInMatch } from './lib/matchData'
 import { getRankDetail } from './lib/ranks'
 import {
   formatUnresolvedMatch,
@@ -211,7 +211,7 @@ export class GSIHandler implements GSIHandlerType {
   }
 
   public addSecondsToNow(seconds: number) {
-    return new Date(new Date().getTime() + seconds * 1000)
+    return new Date(Date.now() + seconds * 1000)
   }
 
   private resetPlayerData() {
@@ -623,7 +623,7 @@ export class GSIHandler implements GSIHandlerType {
     }
 
     // We at least want the hero name so it can go in the twitch bet title
-    if (!client.gsi.hero?.name || !client.gsi.hero.name.length) {
+    if (!client.gsi.hero?.name?.length) {
       // console.log(`if (!client.gsi.hero?.name || !client.gsi.hero.name.length) {`)
       return
     }

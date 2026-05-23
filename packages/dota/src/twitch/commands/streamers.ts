@@ -1,6 +1,6 @@
 import { t } from 'i18next'
-import { getStreamersInMatch } from '../../dota/lib/getStreamersInMatch'
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
+import { getStreamersInMatch } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'

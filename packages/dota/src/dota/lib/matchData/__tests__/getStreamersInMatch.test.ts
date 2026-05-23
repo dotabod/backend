@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test'
-import { buildSharedUtilsMock } from '../../../__tests__/sharedMocks.ts'
-import type { Players } from '../../../types'
+import { buildSharedUtilsMock } from '../../../../__tests__/sharedMocks.ts'
+import type { Players } from '../../../../types'
 
 const noopLogger = {
   info: () => undefined,
