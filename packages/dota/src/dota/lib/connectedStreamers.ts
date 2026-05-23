@@ -12,7 +12,7 @@ export function getTokenFromTwitchId(twitchId?: string | null) {
   return token
 }
 
-export function getTokenFromTwitchName(name?: string | null) {
+function getTokenFromTwitchName(name?: string | null) {
   if (!name) return null
   if (!twitchNameToToken.has(name)) return null
 

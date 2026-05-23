@@ -27,10 +27,8 @@
     "curse-filter": "^6.0.0",
     "elysia": "^1.2.25",
     "leo-profanity": "^1.7.0",
-    "multilingual-profanity-filter": "^1.0.5",
     "naughty-words": "^1.2.0",
     "obscenity": "^0.4.3",
-    "profanity-filter": "^0.2.1",
     "profanity-util": "^0.2.0",
     "russian-bad-words": "^0.5.0",
     "washyourmouthoutwithsoap": "^1.0.2"

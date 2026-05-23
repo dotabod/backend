@@ -1,37 +1,5 @@
-import { t } from 'i18next'
 import type { HeroNames } from './getHero'
 import { heroes } from './heroList'
-
-export const translatedColor = (color: string, lng: string) => {
-  if (lng === 'en') return color
-
-  const props = { lng }
-  switch (color) {
-    case 'Blue':
-      return t('colors.blue', props)
-    case 'Teal':
-      return t('colors.teal', props)
-    case 'Purple':
-      return t('colors.purple', props)
-    case 'Yellow':
-      return t('colors.yellow', props)
-    case 'Orange':
-      return t('colors.orange', props)
-    case 'Pink':
-      return t('colors.pink', props)
-    case 'Olive':
-      return t('colors.olive', props)
-    case 'Cyan':
-      return t('colors.cyan', props)
-    case 'Green':
-      return t('colors.green', props)
-    case 'Brown':
-      return t('colors.brown', props)
-    default:
-      return color
-  }
-}
-
 // Dota's fixed slot→color order (0-4 Radiant, 5-9 Dire). WARNING: indexing this
 // by a GSI events[].player_id is unreliable — Dota reshuffles player_id, mostly in
 // high-immortal / ranked-roles games (live: ~57% of 8500+ vs ~0% of confirmed
@@ -130,5 +98,3 @@ export function getHeroByName(name: string, heroIdsInMatch?: (number | undefined
 
   return hero
 }
-
-export default heroes

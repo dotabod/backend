@@ -15,7 +15,7 @@ import {
 } from './text-normalization'
 
 // Russian profanity terms (common ones)
-export const russianProfanityList = [
+const russianProfanityList = [
   'сука',
   'блять',
   'пидор',
@@ -103,7 +103,7 @@ export const russianProfanityList = [
 ]
 
 // Chinese profanity terms
-export const chineseProfanityList = [
+const chineseProfanityList = [
   '操你妈',
   '肏你妈',
   '草你妈',
@@ -127,7 +127,7 @@ export const chineseProfanityList = [
 ]
 
 // Additional European languages profanity
-export const europeanProfanityList = {
+const europeanProfanityList = {
   // Spanish
   spanish: [
     'puta',
@@ -226,7 +226,7 @@ const europeanLeetSpeakMap: Record<string, string[]> = {
 }
 
 // Regex patterns for detecting common evasion tactics
-export const evasionPatterns = [
+const evasionPatterns = [
   // Leetspeak patterns
   /[f]+[\s_]*[u]+[\s_]*[c]+[\s_]*[k]+/i, // F*u*c*k variations
   /[s]+[\s_]*[h]+[\s_]*[i]+[\s_]*[t]+/i, // S*h*i*t variations

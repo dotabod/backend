@@ -103,42 +103,6 @@ const translationBuffers = new Map<
   { messages: TranslationMessage[]; timeout: NodeJS.Timeout | null }
 >()
 
-// biome-ignore lint/correctness/noUnusedVariables: documented list of supported speech-to-text language codes
-type LanguageCodes =
-  | 'en'
-  | 'af-ZA'
-  | 'ar-SA'
-  | 'ca-ES'
-  | 'cs-CZ'
-  | 'da-DK'
-  | 'de-DE'
-  | 'el-GR'
-  | 'es-ES'
-  | 'fa-IR'
-  | 'fi-FI'
-  | 'fr-FR'
-  | 'he-IL'
-  | 'hu-HU'
-  | 'it-IT'
-  | 'ja-JP'
-  | 'ko-KR'
-  | 'nl-NL'
-  | 'no-NO'
-  | 'pl-PL'
-  | 'pt-BR'
-  | 'pt-PT'
-  | 'ro-RO'
-  | 'ru-RU'
-  | 'sr-SP'
-  | 'th-TH'
-  | 'tl-PH'
-  | 'sv-SE'
-  | 'tr-TR'
-  | 'uk-UA'
-  | 'vi-VN'
-  | 'zh-CN'
-  | 'zh-TW'
-
 function detectNonLatinCharacters(message: string): boolean {
   const hasCyrillic = /[\u0400-\u04FF]/.test(message)
   const hasArabic = /[\u0600-\u06FF]/.test(message)

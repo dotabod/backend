@@ -11,8 +11,6 @@ let lastCheckTimestamp = 0
 
 // API endpoints for Dota 2 patch notes
 const DOTA_PATCH_LIST_URL = 'https://www.dota2.com/datafeed/patchnoteslist?language=english'
-const DOTA_PATCH_DETAILS_URL =
-  'https://www.dota2.com/datafeed/patchnotes?version={version}&language=english'
 
 /**
  * Check for new Dota 2 patches using the official API
@@ -68,26 +66,6 @@ async function checkForNewDotaPatch(): Promise<{ isNewPatch: boolean; version: s
   } catch (error) {
     logger.error('[DotaPatchChecker] Error checking for new Dota 2 patch:', { error })
     return { isNewPatch: false, version: null }
-  }
-}
-
-/**
- * Get detailed information for a specific patch version
- */
-export async function getPatchDetails(version: string): Promise<unknown> {
-  try {
-    const url = DOTA_PATCH_DETAILS_URL.replace('{version}', version)
-    const response = await axios.get(url)
-
-    if (!response.data || response.data.success === false) {
-      logger.warn(`[DotaPatchChecker] Could not get details for patch ${version}`)
-      return null
-    }
-
-    return response.data
-  } catch (error) {
-    logger.error(`[DotaPatchChecker] Error getting details for patch ${version}:`, { error })
-    return null
   }
 }
 

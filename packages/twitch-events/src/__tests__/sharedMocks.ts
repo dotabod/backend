@@ -189,9 +189,7 @@ export const { fetchExistingSubscriptions, subsToCleanup } = await import(
 )
 export const { initUserSubscriptions } = await import('../initUserSubscriptions')
 export const { subscribeToEvents } = await import('../subscribeToEvents')
-export const { revokeEvent, stopUserSubscriptions, deleteSubscription } = await import(
-  '../twitch/lib/revokeEvent'
-)
+export const { revokeEvent, stopUserSubscriptions } = await import('../twitch/lib/revokeEvent')
 export const { handleNewUser } = await import('../handleNewUser')
 export const { ensureBotIsModerator } = await import('../ensureBotIsModerator')
 export const { checkAndFixUserSubscriptions } = await import('../utils/rateLimiter')

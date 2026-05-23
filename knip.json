@@ -1,11 +1,15 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignore": ["packages/clip-processor-py/**"],
+  "ignoreBinaries": ["doppler", "upgrade-interactive", "i18next"],
   "workspaces": {
-    ".": {
-      "entry": ["scripts/**/*.ts"]
-    },
-    "packages/*": {
-      "entry": ["src/index.ts"]
-    }
+    ".": {},
+    "packages/dota": {},
+    "packages/profanity-filter": {},
+    "packages/shared-utils": {},
+    "packages/steam": {},
+    "packages/twitch": {},
+    "packages/twitch-chat": {},
+    "packages/twitch-events": {}
   }
 }

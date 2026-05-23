@@ -437,7 +437,7 @@ const { server } = await import('../../../dota/server')
 // also monkey-patches these singletons in its installGsiMocks(); whichever
 // harness loaded last wins. Calling this in resetState() (which every twitch
 // test calls in beforeEach) guarantees the twitch patches are active.
-export function installTwitchMocks() {
+function installTwitchMocks() {
   chatClient.say = (async (channel: string, message: string, messageId?: string) => {
     state.chatSayCalls.push({ channel, message, messageId })
   }) as any

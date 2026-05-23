@@ -2,7 +2,7 @@ import type { GSIHandlerType } from '../GSIHandlerTypes'
 import { events } from '../globalEventEmitter'
 import { gsiHandlers } from '../lib/consts'
 
-export interface EventOptions<T = unknown> {
+interface EventOptions<T = unknown> {
   handler: (dotaClient: GSIHandlerType, data: T) => Promise<void> | void
 }
 

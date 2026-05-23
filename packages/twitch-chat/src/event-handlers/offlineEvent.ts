@@ -14,7 +14,6 @@ export function offlineEvent({ payload: { event } }: { payload: { event: TwitchO
   // if we do, then we can safely assume that the offline event is a false positive
   setTimeout(() => {
     if (onlineEvents.has(event.broadcaster_user_id)) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const onlineEventDate = onlineEvents.get(event.broadcaster_user_id)
       const now = new Date()
       const diff = now.getTime() - (onlineEventDate?.getTime() ?? now.getTime())

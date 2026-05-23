@@ -13,7 +13,7 @@ export interface RoshRes {
   maxDate: Date
   count: number
 }
-export function getNewRoshTime(res: RoshRes) {
+function getNewRoshTime(res: RoshRes) {
   // Recalculate using server time for seconds left
   const min = Math.floor((new Date(res.minDate).getTime() - Date.now()) / 1000)
   const max = Math.floor((new Date(res.maxDate).getTime() - Date.now()) / 1000)

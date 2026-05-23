@@ -23,7 +23,6 @@ class MongoDBSingleton {
       })
 
       // Attempt to connect to MongoDB with the retry operation
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       operation.attempt(async (currentAttempt) => {
         try {
           // Connect to MongoDB

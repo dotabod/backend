@@ -6,20 +6,11 @@ import {
   type SubscriptionRow,
 } from '../types/subscription'
 
-export const TIER_LEVELS: Record<Database['public']['Enums']['SubscriptionTier'], number> = {
+const TIER_LEVELS: Record<Database['public']['Enums']['SubscriptionTier'], number> = {
   [SUBSCRIPTION_TIERS.FREE]: 0,
   [SUBSCRIPTION_TIERS.PRO]: 1,
 }
-
-export const PRICE_PERIODS = {
-  MONTHLY: 'monthly',
-  ANNUAL: 'annual',
-  LIFETIME: 'lifetime',
-} as const
-
-export type PricePeriod = (typeof PRICE_PERIODS)[keyof typeof PRICE_PERIODS]
-
-export const FEATURE_TIERS: Record<
+const FEATURE_TIERS: Record<
   SettingKeys | ChatterSettingKeys,
   Database['public']['Enums']['SubscriptionTier']
 > = {
@@ -154,7 +145,7 @@ export const FEATURE_TIERS: Record<
 export type FeatureTier = keyof typeof FEATURE_TIERS
 
 // Add new mapping for generic features
-export const GENERIC_FEATURE_TIERS = {
+const GENERIC_FEATURE_TIERS = {
   managers: SUBSCRIPTION_TIERS.PRO,
   autoOBS: SUBSCRIPTION_TIERS.PRO,
   autoInstaller: SUBSCRIPTION_TIERS.PRO,
@@ -181,7 +172,7 @@ export function isChatterKey(key: string): boolean {
   return key.startsWith('chatters.')
 }
 
-export const GRACE_PERIOD_END = new Date('2025-04-30T23:59:59.999Z')
+const GRACE_PERIOD_END = new Date('2025-04-30T23:59:59.999Z')
 
 // Add a function to check if we're in the grace period
 export function isInGracePeriod(): boolean {

@@ -18,12 +18,9 @@ export const allStates = [
   'DOTA_GAMERULES_STATE_LAST',
 ]
 
-export const playingStates = [
-  'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
-  'DOTA_GAMERULES_STATE_PRE_GAME',
-]
+const playingStates = ['DOTA_GAMERULES_STATE_GAME_IN_PROGRESS', 'DOTA_GAMERULES_STATE_PRE_GAME']
 
-export const dontBlockStates = [
+const dontBlockStates = [
   'DOTA_GAMERULES_STATE_INIT',
   'DOTA_GAMERULES_STATE_PLAYER_DRAFT',
   'DOTA_GAMERULES_STATE_WAIT_FOR_PLAYERS_TO_LOAD',
@@ -40,7 +37,7 @@ export const dontBlockStates = [
 ]
 
 export const pickSates = ['DOTA_GAMERULES_STATE_HERO_SELECTION']
-export const draftStates = ['DOTA_GAMERULES_STATE_PLAYER_DRAFT']
+const draftStates = ['DOTA_GAMERULES_STATE_PLAYER_DRAFT']
 
 export const blockTypes = [
   { type: 'draft', states: draftStates },

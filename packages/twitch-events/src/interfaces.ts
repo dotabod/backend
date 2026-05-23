@@ -1,12 +1,4 @@
 import type { TwitchEventTypes } from './TwitchEventTypes'
-export interface TwitchConduitResponse {
-  data: Array<{
-    /** Unique identifier for the conduit */
-    id: string
-    /** Number of shards associated with this conduit */
-    shard_count: number
-  }>
-}
 
 export interface TwitchEventSubResponse {
   // A list that contains the single subscription that you created
@@ -48,7 +40,7 @@ export interface TwitchEventSubResponse {
 }
 
 /** Transport details for EventSub notifications */
-export interface TwitchEventSubSubscriptionTransport {
+interface TwitchEventSubSubscriptionTransport {
   /** The transport method - either webhook or websocket */
   method: 'webhook' | 'websocket'
   /** The callback URL where notifications are sent (webhook only) */
@@ -83,7 +75,7 @@ export type EventSubStatus =
   | 'websocket_failed_to_reconnect'
 
 /** Individual EventSub subscription */
-export interface TwitchEventSubSubscription {
+interface TwitchEventSubSubscription {
   /** Unique identifier for this subscription */
   id: string
   /** Current status of the subscription */

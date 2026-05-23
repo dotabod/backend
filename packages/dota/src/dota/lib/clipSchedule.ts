@@ -65,7 +65,7 @@ export interface ClipScheduleDeps {
   logger: Pick<typeof logger, 'info' | 'error'>
 }
 
-export async function createAndSubmitClip(payload: ClipTaskPayload): Promise<void> {
+async function createAndSubmitClip(payload: ClipTaskPayload): Promise<void> {
   const { accountId, matchId, detectPath, opts, logPrefix, logContext } = payload
   try {
     const api = await getTwitchAPI(accountId)

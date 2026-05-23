@@ -8,10 +8,6 @@ const messageDedupeCache = new Map<string, number>()
 const DEDUPE_WINDOW_MS = 5000 // 5 seconds
 
 // Test seam: clears the module-level dedupe cache so suites don't leak state.
-export function clearDedupeCache() {
-  messageDedupeCache.clear()
-}
-
 // Clean up expired cache entries periodically
 setInterval(() => {
   const now = Date.now()
@@ -37,17 +33,6 @@ function extractUserInfo(
     isSubscriber: badges.some((badge) => badge.set_id === 'subscriber'),
     userId: chatterUserId,
   }
-}
-
-/**
- * Response codes for chat message API
- */
-export enum ChatMessageResponseCode {
-  Success = 200,
-  BadRequest = 400,
-  Unauthorized = 401,
-  Forbidden = 403,
-  UnprocessableEntity = 422,
 }
 
 /**

@@ -101,21 +101,6 @@ Example player from spec mode
   gold_spent_on_buybacks: 0
 */
 
-export interface Wearables {
-  wearable0: number
-  wearable1: number
-  wearable2: number
-  wearable3: number
-  wearable4: number
-  wearable5: number
-  wearable6: number
-  wearable7: number
-  wearable8: number
-  wearable9: number
-  wearable10: number
-  wearable11: number
-}
-
 export interface Entity {
   xpos: number
   ypos: number
@@ -131,7 +116,7 @@ export interface Entity {
   teamP?: string // parser
 }
 
-export type Minimap = Record<string, Entity>
+type Minimap = Record<string, Entity>
 
 export interface Player {
   team2?: { player0: Player; player1: Player; player2: Player; player3: Player; player4: Player }
@@ -353,14 +338,6 @@ interface TeamDraft {
   ban6_class: string // e.g.,  ''
 }
 
-export interface MessagesParsedWithData {
-  game_time: number
-  event_type: DotaEventTypes
-  player_id?: number
-  channel_type?: number
-  data?: ChatEventData
-}
-
 export interface ChatEventData {
   type: ChatMessageType
   value: number
@@ -550,86 +527,6 @@ export interface Packet {
   added?: Omit<Packet, 'added'> // it has the same structure as above, and has a value "true"
 }
 
-export interface GCMatchData {
-  result: number
-  match?: Match
-  vote: number
-}
-
-export interface Match {
-  duration: number
-  starttime: number
-  players: Player[]
-  match_id: ID
-  tower_status: number[]
-  barracks_status: number[]
-  cluster: number
-  first_blood_time: number
-  replay_salt: number
-  server_ip: null
-  server_port: null
-  lobby_type: number
-  human_players: number
-  average_skill: null
-  game_balance: null
-  radiant_team_id: null
-  dire_team_id: null
-  leagueid: number
-  radiant_team_name: null
-  dire_team_name: null
-  radiant_team_logo: null
-  dire_team_logo: null
-  radiant_team_logo_url: null
-  dire_team_logo_url: null
-  radiant_team_complete: null
-  dire_team_complete: null
-  positive_votes: number
-  negative_votes: number
-  game_mode: number
-  picks_bans: unknown[]
-  match_seq_num: null
-  replay_state: number
-  radiant_guild_id: null
-  dire_guild_id: null
-  radiant_team_tag: null
-  dire_team_tag: null
-  series_id: number
-  series_type: number
-  broadcaster_channels: unknown[]
-  engine: number
-  custom_game_data: null
-  match_flags: number
-  private_metadata_key: null
-  radiant_team_score: number
-  dire_team_score: number
-  match_outcome: number
-  tournament_id: null
-  tournament_round: null
-  pre_game_duration: number
-  mvp_account_id: unknown[]
-  coaches: unknown[]
-  level: string
-  timestamp: string
-}
-
-export interface ID {
-  low: number
-  high: number
-  unsigned: boolean
-}
-
-export interface HeroDamage {
-  pre_reduction: number
-  post_reduction: number
-  damage_type: number
-}
-
-export interface PermanentBuff {
-  permanent_buff: number
-  stack_count: number
-  grant_time: number
-}
-
 export interface NotablePlayer {
   heroId: number
   account_id: number
@@ -713,7 +610,7 @@ export type BlockType =
   | 'draft'
   | null
 
-export interface MatchPlayer {
+interface MatchPlayer {
   account_id: number
   hero_id: number
   kills: number
@@ -727,28 +624,11 @@ export interface MatchPlayer {
 }
 
 export enum EMatchOutcome {
-  k_EMatchOutcome_Unknown = 0,
   k_EMatchOutcome_RadVictory = 2,
   k_EMatchOutcome_DireVictory = 3,
-  k_EMatchOutcome_NeutralVictory = 4,
-  k_EMatchOutcome_NoTeamWinner = 5,
-  k_EMatchOutcome_Custom1Victory = 6,
-  k_EMatchOutcome_Custom2Victory = 7,
-  k_EMatchOutcome_Custom3Victory = 8,
-  k_EMatchOutcome_Custom4Victory = 9,
-  k_EMatchOutcome_Custom5Victory = 10,
-  k_EMatchOutcome_Custom6Victory = 11,
-  k_EMatchOutcome_Custom7Victory = 12,
-  k_EMatchOutcome_Custom8Victory = 13,
-  k_EMatchOutcome_NotScored_PoorNetworkConditions = 64,
-  k_EMatchOutcome_NotScored_Leaver = 65,
-  k_EMatchOutcome_NotScored_ServerCrash = 66,
-  k_EMatchOutcome_NotScored_NeverStarted = 67,
-  k_EMatchOutcome_NotScored_Canceled = 68,
-  k_EMatchOutcome_NotScored_Suspicious = 69,
 }
 
-export interface MatchMinimal {
+interface MatchMinimal {
   match_id: {
     low: number
     high: number
@@ -775,17 +655,4 @@ export interface MatchMinimalDetailsResponse {
 export enum DotaGcTeam {
   DOTA_GC_TEAM_GOOD_GUYS = 0,
   DOTA_GC_TEAM_BAD_GUYS = 1,
-  DOTA_GC_TEAM_BROADCASTER = 2,
-  DOTA_GC_TEAM_SPECTATOR = 3,
-  DOTA_GC_TEAM_PLAYER_POOL = 4,
-  DOTA_GC_TEAM_NOTEAM = 5,
-  DOTA_GC_TEAM_CUSTOM_1 = 6,
-  DOTA_GC_TEAM_CUSTOM_2 = 7,
-  DOTA_GC_TEAM_CUSTOM_3 = 8,
-  DOTA_GC_TEAM_CUSTOM_4 = 9,
-  DOTA_GC_TEAM_CUSTOM_5 = 10,
-  DOTA_GC_TEAM_CUSTOM_6 = 11,
-  DOTA_GC_TEAM_CUSTOM_7 = 12,
-  DOTA_GC_TEAM_CUSTOM_8 = 13,
-  DOTA_GC_TEAM_NEUTRALS = 14,
 }

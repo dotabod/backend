@@ -66,7 +66,7 @@ export function say(
   delayedQueue.addTask(
     getStreamDelay(client.settings, client.subscription),
     (payload) => {
-      payload.clientName && chatClient.say(payload.clientName, payload.message)
+      if (payload.clientName) chatClient.say(payload.clientName, payload.message)
     },
     { clientName: client.name, message: msg },
   )

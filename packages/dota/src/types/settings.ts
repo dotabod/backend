@@ -53,7 +53,7 @@ export const defaultCommands = {
 export type CommandKeys = keyof typeof defaultCommands
 
 // Define the chatter types
-export const defaultChatters = {
+const defaultChatters = {
   midas: {
     enabled: true,
   },

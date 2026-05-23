@@ -299,10 +299,6 @@ export class MatchDataService {
 
 // Re-exported for tests + ergonomic consumer imports.
 export type {
-  Coverage,
-  MatchStage,
   ResolvedRoster,
-  RosterCompleteness,
   RosterPlayer,
-  RosterSource,
 } from './types'

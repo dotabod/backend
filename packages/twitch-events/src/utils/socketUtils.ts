@@ -3,7 +3,7 @@ import { Server, type Socket } from 'socket.io'
 import { handleNewUser } from '../handleNewUser'
 import { revokeEvent } from '../twitch/lib/revokeEvent'
 
-export const socketIo = new Server(5015, {
+const socketIo = new Server(5015, {
   cors: {
     origin: '*', // This allows any origin - adjust for production
     methods: ['GET', 'POST'],
@@ -11,7 +11,7 @@ export const socketIo = new Server(5015, {
 })
 
 // the socketio hooks onto the listener http server that it creates
-export const DOTABOD_EVENTS_ROOM = 'twitch-channel-events'
+const DOTABOD_EVENTS_ROOM = 'twitch-channel-events'
 export let eventsIOConnected = false
 const connectedClients = new Set<string>()
 

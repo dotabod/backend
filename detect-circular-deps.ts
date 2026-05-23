@@ -41,7 +41,7 @@ function isInternalModule(modulePath: string): boolean {
     modulePath.startsWith('./') ||
     modulePath.startsWith('../') ||
     modulePath.startsWith('/') ||
-    /^@dotabod\//.test(modulePath)
+    modulePath.startsWith('@dotabod/')
   )
 }
 

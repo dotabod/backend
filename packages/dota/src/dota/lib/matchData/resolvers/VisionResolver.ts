@@ -26,7 +26,7 @@ interface VisionApiResponse {
 export type VisionFetcher = (matchId: string) => Promise<VisionApiResponse | null>
 
 // Default fetcher: hits `${VISION_API_HOST}/match/${matchId}` with the API key from env.
-export const defaultVisionFetcher: VisionFetcher = async (matchId) => {
+const defaultVisionFetcher: VisionFetcher = async (matchId) => {
   const host = process.env.VISION_API_HOST
   if (!host) return null
   try {

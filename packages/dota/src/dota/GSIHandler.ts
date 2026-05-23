@@ -118,7 +118,7 @@ export async function deleteRedisData(client: SocketClient) {
 }
 
 // That means the user opened OBS and connected to Dota 2 GSI
-export class GSIHandler implements GSIHandlerType {
+class GSIHandler implements GSIHandlerType {
   client: SocketClient
 
   // Server could reboot and lose these in memory

@@ -5,7 +5,7 @@ interface Provider {
   timestamp: number // Unix epoch time stamp in seconds of datapoint
 }
 
-export interface MapData {
+interface MapData {
   name: string // e.g. 'start' (for standard games), 'last_hit_trainer', etc.
   matchid: string // "6845526874";
   game_time: number // 34;
@@ -60,22 +60,7 @@ Example player from spec mode
   gold_spent_on_buybacks: 0
 */
 
-export interface Wearables {
-  wearable0: number
-  wearable1: number
-  wearable2: number
-  wearable3: number
-  wearable4: number
-  wearable5: number
-  wearable6: number
-  wearable7: number
-  wearable8: number
-  wearable9: number
-  wearable10: number
-  wearable11: number
-}
-
-export interface Entity {
+interface Entity {
   xpos: number
   ypos: number
   image: string
@@ -90,15 +75,15 @@ export interface Entity {
   teamP?: string // parser
 }
 
-export type Minimap = Record<string, Entity>
+type Minimap = Record<string, Entity>
 
 export type Team2PlayerId = `player${0 | 1 | 2 | 3 | 4}`
 export type Team3PlayerId = `player${5 | 6 | 7 | 8 | 9}`
 
-export type Team2Players<T> = { [K in Team2PlayerId]: T }
-export type Team3Players<T> = { [K in Team3PlayerId]: T }
+type Team2Players<T> = { [K in Team2PlayerId]: T }
+type Team3Players<T> = { [K in Team3PlayerId]: T }
 
-export interface Player {
+interface Player {
   team2?: Team2Players<Player>
   team3?: Team3Players<Player>
   id?: number // hero id
@@ -141,7 +126,7 @@ export interface Player {
   gold_spent_on_buybacks: number //0;
 }
 
-export interface Hero {
+interface Hero {
   team2?: Team2Players<Hero>
   team3?: Team3Players<Hero>
   id: number // -1 if hero not yet set
@@ -182,7 +167,7 @@ export interface Hero {
   talent_8?: boolean // true
 }
 
-export interface Abilities {
+interface Abilities {
   // set once the game starts, i.e. game_state is set to "DOTA_GAMERULES_STATE_PRE_GAME"
   ability0?: Ability
   ability1?: Ability
@@ -205,7 +190,7 @@ export interface Abilities {
   ability18?: Ability
   ability19?: Ability
 }
-export interface Ability {
+interface Ability {
   name: string // e.g. "antimage_mana_break" or "seasonal_ti11_balloon"
   level: number // e.g. 1,
   can_cast: boolean // e.g. false,
@@ -218,7 +203,7 @@ export interface Ability {
   charge_cooldown: number // e.g. 0
 }
 
-export interface Items {
+interface Items {
   team2?: Team2Players<Items>
   team3?: Team3Players<Items>
 
@@ -241,7 +226,7 @@ export interface Items {
   teleport0?: Item
   neutral0?: Item
 }
-export interface Item {
+interface Item {
   name: string // e.g. item_power_treads or "empty"
   purchaser?: number // 5,
   can_cast?: boolean // e.g. true,
@@ -311,7 +296,7 @@ interface TeamDraft {
   ban6_class: string // e.g.,  ''
 }
 
-export enum DotaEventTypes {
+enum DotaEventTypes {
   RoshanKilled = 'roshan_killed',
   AegisPickedUp = 'aegis_picked_up',
   AegisDenied = 'aegis_denied',
@@ -320,9 +305,7 @@ export enum DotaEventTypes {
   CourierKilled = 'courier_killed', // spectator only
 }
 
-export const validEventTypes = new Set(Object.values(DotaEventTypes))
-
-export interface DotaEvent {
+interface DotaEvent {
   game_time: number // 810,
   event_type: DotaEventTypes
 
@@ -376,102 +359,6 @@ export interface Packet {
   events?: DotaEvent[]
   previously?: Omit<Packet, 'previously'> & { map: MapData | boolean }
   added?: Omit<Packet, 'added'> // it has the same structure as above, and has a value "true"
-}
-
-export interface GCMatchData {
-  result: number
-  match?: Match
-  vote: number
-}
-
-export interface Match {
-  duration: number
-  starttime: number
-  players: Player[]
-  match_id: ID
-  tower_status: number[]
-  barracks_status: number[]
-  cluster: number
-  first_blood_time: number
-  replay_salt: number
-  server_ip: null
-  server_port: null
-  lobby_type: number
-  human_players: number
-  average_skill: null
-  game_balance: null
-  radiant_team_id: null
-  dire_team_id: null
-  leagueid: number
-  radiant_team_name: null
-  dire_team_name: null
-  radiant_team_logo: null
-  dire_team_logo: null
-  radiant_team_logo_url: null
-  dire_team_logo_url: null
-  radiant_team_complete: null
-  dire_team_complete: null
-  positive_votes: number
-  negative_votes: number
-  game_mode: number
-  picks_bans: unknown[]
-  match_seq_num: null
-  replay_state: number
-  radiant_guild_id: null
-  dire_guild_id: null
-  radiant_team_tag: null
-  dire_team_tag: null
-  series_id: number
-  series_type: number
-  broadcaster_channels: unknown[]
-  engine: number
-  custom_game_data: null
-  match_flags: number
-  private_metadata_key: null
-  radiant_team_score: number
-  dire_team_score: number
-  match_outcome: number
-  tournament_id: null
-  tournament_round: null
-  pre_game_duration: number
-  mvp_account_id: unknown[]
-  coaches: unknown[]
-  level: string
-  timestamp: string
-}
-
-export interface ID {
-  low: number
-  high: number
-  unsigned: boolean
-}
-
-export interface HeroDamage {
-  pre_reduction: number
-  post_reduction: number
-  damage_type: number
-}
-
-export interface PermanentBuff {
-  permanent_buff: number
-  stack_count: number
-  grant_time: number
-}
-
-export interface NotablePlayer {
-  heroId: number
-  account_id: number
-  position: number
-  heroName: string
-  name: string
-  image?: string
-  country_code: string
-}
-
-export interface Medals {
-  id: string
-  name: string
-  rank_tier: number
 }
 
 export interface DelayedGames {

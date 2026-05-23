@@ -14,13 +14,7 @@ interface TellChatNewMMRParams {
   streamDelay: number
 }
 
-export function tellChatNewMMR({
-  streamDelay,
-  locale,
-  token,
-  mmr = 0,
-  oldMmr = 0,
-}: TellChatNewMMRParams) {
+function tellChatNewMMR({ streamDelay, locale, token, mmr = 0, oldMmr = 0 }: TellChatNewMMRParams) {
   const client = findUser(token)
   if (!client) return
 

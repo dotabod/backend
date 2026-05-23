@@ -9,7 +9,7 @@
  * Compresses repeated characters to single characters
  * e.g., "fuuuuck" becomes "fuck"
  */
-export function compressRepeatedCharacters(text: string): string {
+function compressRepeatedCharacters(text: string): string {
   return text.replace(/(.)\1+/g, '$1')
 }
 

@@ -1,17 +1,14 @@
 import {
   type ChatterKeys,
-  type CommandKeys,
   settingsKeys as DBSettings,
-  defaultCommands,
   defaultSettingsStructure,
   type SettingKeys,
 } from './types/settings'
 import type { SubscriptionRow } from './types/subscription'
 import { canAccessFeature } from './utils/subscription'
 
-export { type ChatterKeys, type CommandKeys, DBSettings, type SettingKeys }
+export { type ChatterKeys, DBSettings, type SettingKeys }
 
-export const commands = defaultCommands
 export const defaultSettings = defaultSettingsStructure
 
 // Feature flag for the spectate-friend → GetRealTimeStats chain. KEEP the gated code intact —

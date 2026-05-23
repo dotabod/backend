@@ -63,7 +63,7 @@ const _censor = new TextCensor()
  * Whitelist of words that might be falsely detected as profanity
  * but should be allowed as legitimate language
  */
-export const SAFE_WORDS_WHITELIST = [
+const SAFE_WORDS_WHITELIST = [
   // Common English words falsely flagged
   'classic',
   'scunthorpe',

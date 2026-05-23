@@ -147,11 +147,6 @@ export const { onlineEvents } = await import('../event-handlers/events')
 export const { onlineEvent } = await import('../event-handlers/onlineEvent')
 export const { offlineEvent } = await import('../event-handlers/offlineEvent')
 export const { updateUserEvent } = await import('../event-handlers/updateUserEvent')
-export const {
-  sendTwitchChatMessage,
-  handleChatMessage,
-  ChatMessageResponseCode,
-  clearDedupeCache,
-} = await import('../handleChat')
+export const { sendTwitchChatMessage, handleChatMessage } = await import('../handleChat')
 
 export const flushMacrotasks = () => new Promise<void>((r) => setTimeout(r, 5))

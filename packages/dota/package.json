@@ -22,17 +22,10 @@
   "dependencies": {
     "@dotabod/profanity-filter": "workspace:*",
     "@dotabod/shared-utils": "workspace:*",
-    "@node-steam/id": "^1.2.0",
     "@twurple/api": "7.2.1",
     "@twurple/ebs-helper": "^7.2.1",
     "@twurple/eventsub-base": "^7.2.1",
-    "@twurple/eventsub-ws": "^7.2.1",
-    "@types/long": "^5.0.0",
-    "@types/lru-cache": "^7.10.10",
-    "@vitalets/google-translate-api": "^9.2.1",
     "axios": "1.7.9",
-    "axios-retry": "^4.5.0",
-    "body-parser": "^1.20.3",
     "chokidar": "^4.0.3",
     "cors": "^2.8.5",
     "country-code-emoji": "^2.3.0",
@@ -43,26 +36,16 @@
     "franc": "^6.2.0",
     "i18next": "^24.2.0",
     "i18next-fs-backend": "^2.6.0",
-    "lodash.debounce": "^4.0.8",
     "lodash.isequal": "^4.5.0",
-    "lru-cache": "^11.0.2",
     "mongodb": "^6.12.0",
     "redis": "^4.7.0",
     "retry": "^0.13.1",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1",
-    "tsx": "^4.19.2",
-    "winston": "^3.17.0"
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
-    "@faker-js/faker": "^9.3.0",
-    "@testing-library/dom": "^10.4.0",
-    "@types/body-parser": "^1.19.5",
     "@types/express": "^5.0.0",
-    "@types/lodash.debounce": "^4.0.9",
     "@types/lodash.isequal": "^4.5.8",
-    "@types/memoizee": "^0.4.11",
-    "@types/retry": "^0.12.5",
-    "@types/steam": "^0.0.34"
+    "@types/retry": "^0.12.5"
   }
 }

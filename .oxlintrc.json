@@ -20,5 +20,19 @@
   },
   "env": {
     "builtin": true
-  }
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/__tests__/**",
+        "**/*.test.ts",
+        "**/tests/**",
+        "**/setupMocks.ts",
+        "**/sharedMocks.ts"
+      ],
+      "rules": {
+        "unicorn/no-thenable": "off"
+      }
+    }
+  ]
 }

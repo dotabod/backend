@@ -7,11 +7,6 @@ import { getHeroNameOrColor } from '../dota/lib/heroes'
 import type { HeroesStatus, NotablePlayer, Players, SocketClient } from '../types'
 import MongoDBSingleton from './MongoDBSingleton'
 
-export interface Player {
-  accountid: number
-  heroid: number
-}
-
 export interface NotablePlayers {
   account_id: number
   name: string

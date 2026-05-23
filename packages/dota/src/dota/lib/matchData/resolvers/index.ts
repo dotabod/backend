@@ -4,10 +4,6 @@
 export { GsiSelfResolver } from './GsiSelfResolver'
 export { GsiSpectatorResolver } from './GsiSpectatorResolver'
 export { ResolverChain } from './ResolverChain'
-export {
-  type RawRoster,
-  type ResolverContext,
-  RosterResolver,
-} from './RosterResolver'
-export { type DocFetcher, SourceTvResolver } from './SourceTvResolver'
-export { defaultVisionFetcher, type VisionFetcher, VisionResolver } from './VisionResolver'
+
+export { SourceTvResolver } from './SourceTvResolver'
+export { type VisionFetcher, VisionResolver } from './VisionResolver'

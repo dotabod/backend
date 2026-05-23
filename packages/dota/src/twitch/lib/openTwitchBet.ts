@@ -7,7 +7,7 @@ import { DBSettings, defaultSettings, getValueOrDefault } from '../../settings'
 import type { SocketClient } from '../../types'
 
 // Disable the bet in settings for this user
-export async function disableBetsForTwitchId(twitchId: string, errorMessage: string) {
+async function disableBetsForTwitchId(twitchId: string, errorMessage: string) {
   const token = getTokenFromTwitchId(twitchId)
   if (!token) return
 

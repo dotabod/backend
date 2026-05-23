@@ -29,13 +29,6 @@ import { validateToken } from './validateToken'
 const clipsToDeleteQueue = new Map<string, Set<string>>()
 let isProcessingDeleteQueue = false // Simple lock
 const _CLIP_DELETE_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
-
-export function addClipToDeletionQueue(accountId: string, clipSlug: string): void {
-  if (!clipsToDeleteQueue.has(accountId)) {
-    clipsToDeleteQueue.set(accountId, new Set<string>())
-  }
-  clipsToDeleteQueue.get(accountId)?.add(clipSlug)
-}
 // --- End Clip Deletion Queue ---
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
@@ -173,7 +166,6 @@ class GSIServer implements GSIServerInterface {
       res.status(200).json({ status: 'ok' })
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     app.get('/tooltips/:channelId', async (req: Request, res: Response) => {
       // make sure channel id is a number
       if (!req.params.channelId.match(/^\d+$/)) {

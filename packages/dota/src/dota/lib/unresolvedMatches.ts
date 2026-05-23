@@ -3,7 +3,7 @@ import { getSessionStartDate } from '../../db/streamWindow'
 import type { SocketClient } from '../../types'
 import getHero, { type HeroNames } from './getHero'
 
-export interface UnresolvedKda {
+interface UnresolvedKda {
   kills?: number | null
   deaths?: number | null
   assists?: number | null

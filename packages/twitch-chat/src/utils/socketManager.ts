@@ -22,13 +22,13 @@ export function hasDotabodSocket(): boolean {
 }
 
 // Add a socket to the connected sockets map
-export function addSocket(socketId: string): void {
+function addSocket(socketId: string): void {
   connectedSockets.set(socketId, true)
   logger.info(`Socket ${socketId} added, total sockets: ${connectedSockets.size}`)
 }
 
 // Remove a socket from the connected sockets map
-export function removeSocket(socketId: string): void {
+function removeSocket(socketId: string): void {
   connectedSockets.delete(socketId)
   logger.info(`Socket ${socketId} removed, remaining sockets: ${connectedSockets.size}`)
 }

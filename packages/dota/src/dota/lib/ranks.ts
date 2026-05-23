@@ -95,10 +95,7 @@ interface LeaderRankData {
   standing: number | null
 }
 
-export async function lookupLeaderRank(
-  mmr: number,
-  steam32Id?: number | null,
-): Promise<LeaderRankData> {
+async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise<LeaderRankData> {
   const defaultNotFound: LeaderRankData = {
     myRank: leaderRanks[leaderRanks.length - 1],
     mmr,
@@ -174,7 +171,6 @@ export async function getRankDetail(mmr: string | number, steam32Id?: number | n
   const [myRank, nextRank] = ranks.filter((rank) => mmrNum <= rank.range[1])
 
   // Its not always truthy, nextRank can be beyond the range
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const nextMMR = nextRank?.range[0] || myRank?.range[1]
   const mmrToNextRank = nextMMR - mmrNum
   const winsToNextRank = Math.ceil(mmrToNextRank / MULTIPLIER_SOLO)

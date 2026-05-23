@@ -570,7 +570,6 @@ class Dota {
       const oldestKey = [...this.cache.entries()].reduce(
         (oldest, [key, entry]) => {
           if (!oldest) return key
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           return entry.timestamp < (this.cache.get(oldest)?.timestamp || 0) ? key : oldest
         },
         null as number | null,
@@ -653,7 +652,8 @@ process
     logger.info('[STEAM] Received SIGTERM')
 
     const dota = Dota.getInstance()
-    Promise.all([dota.exit()])
+    dota
+      .exit()
       .then(() => process.exit(0))
       .catch((e) => {
         logger.info('[STEAM]', e)
@@ -663,7 +663,8 @@ process
     logger.info('[STEAM] Received SIGINT')
 
     const dota = Dota.getInstance()
-    Promise.all([dota.exit()])
+    dota
+      .exit()
       .then(() => process.exit(0))
       .catch((e) => {
         logger.info('[STEAM]', e)
@@ -717,7 +718,6 @@ export const GetRealTimeStats = async ({
   })
 
   const requestPromise = new Promise<DelayedGames>((resolve, _reject) => {
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     operation.attempt(async (currentAttempt) => {
       let game: DelayedGames
       try {
