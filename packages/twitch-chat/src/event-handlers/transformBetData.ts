@@ -13,15 +13,17 @@ interface PredictionOutcome {
 
 interface PredictionEvent {
   title: string
+  locks_at?: string
   locked_at?: string
+  ended_at?: string
   outcomes?: PredictionOutcome[]
 }
 
 export const transformBetData = (event: PredictionEvent) => {
-  const hasLockDate = 'locked_at' in event
+  const rawDate = event.locks_at ?? event.locked_at ?? event.ended_at
   return {
     title: event.title,
-    endDate: hasLockDate ? new Date(event.locked_at as string) : '',
+    endDate: rawDate ? new Date(rawDate) : '',
     outcomes: event?.outcomes?.map((outcome) => {
       const hasTopPredictors = 'top_predictors' in outcome
 

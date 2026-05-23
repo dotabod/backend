@@ -19,6 +19,47 @@ describe('transformBetData', () => {
     expect(result.endDate).toBe('')
   })
 
+  it('maps locks_at to endDate for begin/progress events', () => {
+    const result = transformBetData({
+      title: 'Will we win?',
+      locks_at: '2026-06-01T12:00:00.000Z',
+      outcomes: [],
+    })
+
+    expect(result.endDate).toEqual(new Date('2026-06-01T12:00:00.000Z'))
+  })
+
+  it('maps ended_at to endDate for end events', () => {
+    const result = transformBetData({
+      title: 'Done',
+      ended_at: '2026-06-01T12:30:00.000Z',
+      outcomes: [],
+    })
+
+    expect(result.endDate).toEqual(new Date('2026-06-01T12:30:00.000Z'))
+  })
+
+  it('prefers locks_at over locked_at over ended_at when multiple are present', () => {
+    const result = transformBetData({
+      title: 'Priority',
+      locks_at: '2026-06-01T12:00:00.000Z',
+      locked_at: '2026-06-01T12:15:00.000Z',
+      ended_at: '2026-06-01T12:30:00.000Z',
+      outcomes: [],
+    })
+
+    expect(result.endDate).toEqual(new Date('2026-06-01T12:00:00.000Z'))
+
+    const lockedAndEnded = transformBetData({
+      title: 'Locked',
+      locked_at: '2026-06-01T12:15:00.000Z',
+      ended_at: '2026-06-01T12:30:00.000Z',
+      outcomes: [],
+    })
+
+    expect(lockedAndEnded.endDate).toEqual(new Date('2026-06-01T12:15:00.000Z'))
+  })
+
   it('maps outcomes with top_predictors into totals and topUsers', () => {
     const result = transformBetData({
       title: 'Match',
