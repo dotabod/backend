@@ -68,6 +68,28 @@ describe('event:aegis_picked_up', () => {
     expect(gsiState.chatSayCalls[0].message).not.toContain('Green')
   })
 
+  // Regression: 8500+ with a 10-row roster where playerids are all null (Vision
+  // returned heroes without draft alignment) — pre-fix the gate `heroid || !high`
+  // emitted `getHeroNameOrColor(matchPlayers[3].heroid, 3)` since `heroid` was
+  // truthy at the array-index fallback, naming the wrong hero on stream.
+  it('does not name a hero at 8500+ when the roster has heroes but the player_id is unmatched', async () => {
+    const handler = makeGsiHandler()
+    handler.client.mmr = 9000
+    registerHandler(handler)
+    gsiState.matchPlayers = Array.from({ length: 10 }, (_, i) => ({
+      heroid: 10 + i,
+      accountid: 100 + i,
+      playerid: null,
+    }))
+
+    events.emit('event:aegis_picked_up', { player_id: 3, game_time: 600 }, handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toBe(t('aegis.pickupUnknown', { lng: 'en' }))
+    expect(gsiState.chatSayCalls[0].message).not.toContain(getHeroNameOrColor(13, 3))
+  })
+
   it('uses the snatched message when the aegis was snatched', async () => {
     const handler = makeGsiHandler()
     registerHandler(handler)
@@ -157,6 +179,26 @@ describe('event:aegis_denied', () => {
       t('aegis.deniedUnknown', { lng: 'en', emote: 'ICANT' }),
     )
     expect(gsiState.chatSayCalls[0].message).not.toContain('Green')
+  })
+
+  it('does not name a hero at 8500+ when the roster has heroes but the player_id is unmatched', async () => {
+    const handler = makeGsiHandler()
+    handler.client.mmr = 9000
+    registerHandler(handler)
+    gsiState.matchPlayers = Array.from({ length: 10 }, (_, i) => ({
+      heroid: 10 + i,
+      accountid: 100 + i,
+      playerid: null,
+    }))
+
+    events.emit('event:aegis_denied', { player_id: 3, game_time: 600 }, handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('aegis.deniedUnknown', { lng: 'en', emote: 'ICANT' }),
+    )
+    expect(gsiState.chatSayCalls[0].message).not.toContain(getHeroNameOrColor(13, 3))
   })
 })
 
@@ -352,6 +394,58 @@ describe('event:tip', () => {
       t('tip.toUnknown', { emote: 'PepeLaugh', lng: 'en' }),
     )
   })
+
+  it('omits the tipper name at 8500+ when the roster has heroes but the sender is unmatched', async () => {
+    const handler = makeGsiHandler()
+    handler.client.mmr = 9000
+    registerHandler(handler)
+    gsiState.matchPlayers = Array.from({ length: 10 }, (_, i) => ({
+      heroid: 10 + i,
+      accountid: 100 + i,
+      playerid: null,
+    }))
+    // local player is the receiver (slot 1)
+    gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
+
+    events.emit(
+      'event:tip',
+      { sender_player_id: 3, receiver_player_id: 1, game_time: 600 },
+      handler.getToken(),
+    )
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('tip.fromUnknown', { emote: 'ICANT', lng: 'en' }),
+    )
+    expect(gsiState.chatSayCalls[0].message).not.toContain(getHeroNameOrColor(13, 3))
+  })
+
+  it('omits the tipped name at 8500+ when the receiver is unmatched (local player is sender)', async () => {
+    const handler = makeGsiHandler()
+    handler.client.mmr = 9000
+    registerHandler(handler)
+    gsiState.matchPlayers = Array.from({ length: 10 }, (_, i) => ({
+      heroid: 10 + i,
+      accountid: 100 + i,
+      playerid: null,
+    }))
+    // local player is the sender (slot 0)
+    gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '0'
+
+    events.emit(
+      'event:tip',
+      { sender_player_id: 0, receiver_player_id: 4, game_time: 600 },
+      handler.getToken(),
+    )
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toBe(
+      t('tip.toUnknown', { emote: 'PepeLaugh', lng: 'en' }),
+    )
+    expect(gsiState.chatSayCalls[0].message).not.toContain(getHeroNameOrColor(14, 4))
+  })
 })
 
 describe('event:bounty_rune_pickup', () => {
@@ -410,6 +504,28 @@ describe('event:bounty_rune_pickup', () => {
     events.emit(
       'event:bounty_rune_pickup',
       { player_id: 0, team: 'radiant', bounty_value: 40, game_time: 200 },
+      handler.getToken(),
+    )
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(0)
+  })
+
+  it('skips an 8500+ bounty when the roster has heroes but the picker is unmatched', async () => {
+    const handler = makeGsiHandler()
+    handler.client.mmr = 9000
+    handler.client.gsi.map.clock_time = 60
+    registerHandler(handler)
+    gsiState.matchPlayers = Array.from({ length: 10 }, (_, i) => ({
+      heroid: 10 + i,
+      accountid: 100 + i,
+      playerid: null,
+    }))
+    gsiState.redisGet[`${handler.client.token}:playingTeam`] = 'radiant'
+
+    events.emit(
+      'event:bounty_rune_pickup',
+      { player_id: 3, team: 'radiant', bounty_value: 40, game_time: 60 },
       handler.getToken(),
     )
     await flushAsync()

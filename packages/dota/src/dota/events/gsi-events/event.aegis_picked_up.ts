@@ -1,4 +1,3 @@
-import { logger } from '@dotabod/shared-utils'
 import RedisClient from '../../../db/RedisClient'
 import { type AegisPickedUpEvent, DotaEventTypes } from '../../../types'
 import { fmtMSS, is8500Plus } from '../../../utils/index'
@@ -25,7 +24,9 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     // server time
     const expireDate = dotaClient.addSecondsToNow(expireS)
 
-    const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
+    const { matchPlayers } = await getAccountsFromMatch({
+      gsi: dotaClient.client.gsi,
+    })
 
     const foundIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
     const playerIdIndex = foundIndex === -1 ? event.player_id : foundIndex
@@ -43,17 +44,6 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
         ? getHeroNameOrColor(heroid, playerIdIndex)
         : null
       : getHeroNameOrColor(heroid ?? 0, playerIdIndex)
-
-    logger.info('[AEGIS] pickup attribution', {
-      token: dotaClient.getToken(),
-      matchId: dotaClient.client.gsi?.map?.matchid,
-      player_id: event.player_id,
-      resolvedIndex: playerIdIndex,
-      is8500Plus: high,
-      rosterSize: matchPlayers.length,
-      roster: matchPlayers.map((p) => ({ playerid: p.playerid, heroid: p.heroid })),
-      heroName,
-    })
 
     const res = {
       expireS,
