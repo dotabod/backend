@@ -10,6 +10,7 @@ export default defineConfig({
   fmt: {
     singleQuote: true,
     semi: false,
+    useTabs: false,
   },
   lint: {
     plugins: ['typescript', 'unicorn', 'oxc'],
