@@ -11,8 +11,7 @@ from pathlib import Path
 OWNER = 'dotabod'
 REPO = 'dotaconstants'
 
-BUN_LOCK_PATH = Path('bun.lock')
-NPM_LOCK_PATH = Path('package-lock.json')
+PNPM_LOCK_PATH = Path('pnpm-lock.yaml')
 
 # Only files with direct gameplay / command-facing impact.
 # This keeps automation focused and avoids PR noise from unrelated metadata churn.
@@ -62,19 +61,14 @@ def fetch_bytes(url: str) -> bytes:
     return response.read()
 
 
-def extract_bun_sha() -> str:
-  text = BUN_LOCK_PATH.read_text(encoding='utf-8')
-  match = re.search(r'dotaconstants#([0-9a-f]{7,40})', text)
+def extract_current_sha() -> str:
+  text = PNPM_LOCK_PATH.read_text(encoding='utf-8')
+  match = re.search(
+    r'codeload\.github\.com/dotabod/dotaconstants/tar\.gz/([0-9a-f]{40})',
+    text,
+  )
   if not match:
-    fail('could not locate dotaconstants SHA in bun.lock')
-  return match.group(1)
-
-
-def extract_npm_sha() -> str:
-  text = NPM_LOCK_PATH.read_text(encoding='utf-8')
-  match = re.search(r'dotaconstants\.git#([0-9a-f]{40})', text)
-  if not match:
-    fail('could not locate dotaconstants SHA in package-lock.json')
+    fail('could not locate dotaconstants SHA in pnpm-lock.yaml')
   return match.group(1)
 
 
@@ -110,45 +104,24 @@ def get_changed_patch_relevant_files(current_sha: str, latest_sha: str) -> list[
   return changed_files
 
 
-def update_lockfiles(latest_sha: str) -> None:
-  short_sha = latest_sha[:7]
-
-  bun_text = BUN_LOCK_PATH.read_text(encoding='utf-8')
-  bun_pattern = re.compile(
-    r'("dotaconstants": \["dotaconstants@github:dotabod/dotaconstants#)[0-9a-f]{7,40}'
-    r'(", \{\}, "dotabod-dotaconstants-)[0-9a-f]{7,40}("\],)',
-  )
-  bun_text, bun_replacements = bun_pattern.subn(
-    rf'\g<1>{short_sha}\g<2>{short_sha}\g<3>',
-    bun_text,
-    count=1,
-  )
-  if bun_replacements != 1:
-    fail('expected exactly one dotaconstants entry update in bun.lock')
-
-  npm_text = NPM_LOCK_PATH.read_text(encoding='utf-8')
-  npm_pattern = re.compile(
-    r'(git\+ssh://git@github\.com/dotabod/dotaconstants\.git#)[0-9a-f]{40}',
-  )
-  npm_text, npm_replacements = npm_pattern.subn(rf'\g<1>{latest_sha}', npm_text, count=1)
-  if npm_replacements != 1:
-    fail('expected exactly one dotaconstants resolved entry update in package-lock.json')
-
-  BUN_LOCK_PATH.write_text(bun_text, encoding='utf-8')
-  NPM_LOCK_PATH.write_text(npm_text, encoding='utf-8')
+def update_lockfile(current_sha: str, latest_sha: str) -> None:
+  text = PNPM_LOCK_PATH.read_text(encoding='utf-8')
+  # pnpm lockfile references the git-hosted tarball with the full SHA in
+  # multiple places (specifier line, package key, resolution block). Replace
+  # every occurrence atomically.
+  updated_text = text.replace(current_sha, latest_sha)
+  occurrences = text.count(current_sha)
+  if occurrences == 0:
+    fail('no dotaconstants SHA occurrences found in pnpm-lock.yaml')
+  if updated_text == text:
+    fail('SHA replacement produced no changes')
+  PNPM_LOCK_PATH.write_text(updated_text, encoding='utf-8')
+  print(f'replaced {occurrences} occurrence(s) of {current_sha[:7]} → {latest_sha[:7]}')
 
 
 def main() -> None:
   token = os.getenv('GITHUB_TOKEN')
-  bun_sha = extract_bun_sha()
-  npm_sha = extract_npm_sha()
-
-  if not npm_sha.startswith(bun_sha):
-    print(
-      f'warning: lockfiles currently disagree (bun={bun_sha}, npm={npm_sha}); using bun as baseline',
-    )
-
-  current_sha = bun_sha
+  current_sha = extract_current_sha()
   latest_sha = get_latest_sha(token)
 
   print(f'current_sha={current_sha}')
@@ -157,7 +130,7 @@ def main() -> None:
   write_output('current_sha', current_sha)
   write_output('latest_sha', latest_sha)
 
-  if latest_sha.startswith(current_sha):
+  if latest_sha == current_sha:
     print('dotaconstants is already up to date')
     write_output('should_update', 'false')
     write_output('reason', 'already_up_to_date')
@@ -174,7 +147,7 @@ def main() -> None:
     return
 
   print(f'patch-relevant updates detected: {changed_files_output}')
-  update_lockfiles(latest_sha)
+  update_lockfile(current_sha, latest_sha)
   write_output('should_update', 'true')
   write_output('reason', 'patch_relevant_changes')
 

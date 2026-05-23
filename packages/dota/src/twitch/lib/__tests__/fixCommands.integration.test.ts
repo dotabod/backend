@@ -1,8 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vite-plus/test'
+// setupMocks MUST be imported before any dota source modules — its top-level
+// `vi.doMock('@dotabod/shared-utils', …)` only applies to imports that evaluate
+// after it. Statically importing `getWL` or `fixdbl` ahead of this line would
+// resolve shared-utils to the real module and cache it, breaking the mock.
+import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 import { t } from 'i18next'
 import { MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../../db/getWL.ts'
 import { toggleDoubledownMmr } from '../../commands/fixdbl.ts'
-import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 const lastMatch = (overrides: Record<string, unknown> = {}) =>
   [

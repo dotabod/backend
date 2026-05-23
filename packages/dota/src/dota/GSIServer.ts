@@ -167,13 +167,13 @@ class GSIServer implements GSIServerInterface {
     })
 
     app.get('/tooltips/:channelId', async (req: Request, res: Response) => {
+      const { channelId } = req.params
       // make sure channel id is a number
-      if (!req.params.channelId.match(/^\d+$/)) {
+      if (typeof channelId !== 'string' || !channelId.match(/^\d+$/)) {
         res.status(200).json({ status: 'ok' })
         return
       }
 
-      const { channelId } = req.params
       const { result: user } = await getDBUser({ twitchId: channelId })
       if (!user?.gsi) {
         res.status(200).json({ status: 'ok' })

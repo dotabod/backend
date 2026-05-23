@@ -7,9 +7,9 @@
 // register competing factories for the same module spec.
 import { vi } from 'vite-plus/test'
 import type { Database } from '@dotabod/shared-utils'
-import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/sharedMocks'
+import { buildSharedUtilsMock, initTestI18n, PRO_SUB as SHARED_PRO_SUB } from '../../../__tests__/sharedMocks'
 
-export { PRO_SUB }
+export const PRO_SUB = SHARED_PRO_SUB
 
 export type SessionMatchRow = {
   id: string
@@ -270,18 +270,10 @@ const getTwitchAPIMock = async () => ({
     }),
 })
 
-const realRanks = await import('../../../dota/lib/ranks')
-
-// bun's `mock.module` registry is global and last-write-wins, and the
-// `@dotabod/shared-utils` exports (supabase, getTwitchAPI) are *live bindings*
-// resolved at call time. Sibling test files register their own narrower mocks
-// (e.g. `supabase: {}`); if one of those is the last registration before our
-// suite's tests run, our handlers resolve a degenerate supabase/api and crash.
-// `resetState()` re-asserts this from every suite's `beforeEach`, so the
-// complete shared-utils surface is guaranteed active whenever our tests run,
-// independent of the file-discovery order bun happens to pick. Scoped to
-// shared-utils only — re-registering the modules below in `beforeEach` could
-// clobber sibling harnesses (gsiMocks) that mock the same specs differently.
+// Register the @dotabod/shared-utils mock BEFORE any dynamic import that
+// might pull in modules whose static `import { supabase } from '@dotabod/shared-utils'`
+// would otherwise resolve to the real module and get cached by vitest's module
+// loader. Once cached, no later vi.doMock can replace it.
 function reinstallSharedUtilsMock() {
   vi.doMock('@dotabod/shared-utils', () =>
     buildSharedUtilsMock({
@@ -292,6 +284,9 @@ function reinstallSharedUtilsMock() {
     }),
   )
 }
+reinstallSharedUtilsMock()
+
+const realRanks = await import('../../../dota/lib/ranks')
 
 function reinstallModuleMocks() {
   reinstallSharedUtilsMock()

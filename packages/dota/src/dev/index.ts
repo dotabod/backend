@@ -103,13 +103,13 @@ async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
       displayName: streamer?.displayName,
       name: streamer?.name,
       stream_online: !!stream?.startDate,
-      stream_start_date: stream?.startDate ?? null,
+      stream_start_date: stream?.startDate?.toISOString() ?? null,
     }
 
     // remove falsy values from data (like displayName: undefined)
     const filteredData = Object.fromEntries(
       Object.entries(data).filter(([_key, value]) => Boolean(value)),
-    )
+    ) as Partial<typeof data>
 
     let userId: string | null = null
     if (providerAccountId) {

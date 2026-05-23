@@ -42,6 +42,18 @@ const supabase = {
 
 vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase, logger: noopLogger }))
 
+// getStreamersInMatch can fall through to getAccountsFromMatch when no roster
+// is provided, which reaches into Mongo. Stub it so tests without roster don't
+// hang trying to connect to a real Mongo singleton.
+vi.doMock('../../../../steam/MongoDBSingleton', () => ({
+  default: {
+    connect: async () => ({
+      collection: () => ({ findOne: async () => null }),
+    }),
+    close: async () => undefined,
+  },
+}))
+
 const { getStreamersInMatch } = await import('../getStreamersInMatch.ts')
 
 const players = (accountIds: number[]): Players =>

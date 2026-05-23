@@ -33,5 +33,7 @@ jobs:
         run: pnpm --filter @dotabod/shared-utils --filter @dotabod/profanity-filter run build
       - name: Lint + format check
         run: pnpm exec vp check
+      - name: Typecheck
+        run: pnpm -r run typecheck
       - name: Run tests
         run: pnpm exec vp test

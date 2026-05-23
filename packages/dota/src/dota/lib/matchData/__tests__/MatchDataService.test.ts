@@ -39,12 +39,20 @@ vi.doMock('@dotabod/shared-utils', () =>
 
 let mongoDoc: unknown = null
 let mongoCallCount = 0
+// Tests can install a one-shot override that runs in place of the default
+// `findOne` body — used by retry-after-error scenarios. Cleared after firing
+// to fall back to the steady-state mock.
+let mongoFindOneOverride: (() => Promise<unknown>) | null = null
 
 vi.doMock('../../../../steam/MongoDBSingleton', () => ({
   default: {
     connect: async () => ({
       collection: () => ({
         findOne: async () => {
+          if (mongoFindOneOverride) {
+            const override = mongoFindOneOverride
+            return await override()
+          }
           mongoCallCount++
           return mongoDoc
         },
@@ -518,20 +526,11 @@ describe('MatchDataService — memoization', () => {
 
   it('rejected memoization clears the slot — retry can succeed', async () => {
     let calls = 0
-    vi.doMock('../../../../steam/MongoDBSingleton', () => ({
-      default: {
-        connect: async () => ({
-          collection: () => ({
-            findOne: async () => {
-              calls++
-              if (calls === 1) throw new Error('transient mongo')
-              return sourceTvDoc()
-            },
-          }),
-        }),
-        close: async () => undefined,
-      },
-    }))
+    mongoFindOneOverride = async () => {
+      calls++
+      if (calls === 1) throw new Error('transient mongo')
+      return sourceTvDoc()
+    }
     noVisionHost()
     const svc = new MatchDataService(makeClient())
     let firstErr: unknown = null
@@ -544,20 +543,7 @@ describe('MatchDataService — memoization', () => {
     const r = await svc.resolveRoster()
     expect(r.source).toBe('sourcetv')
     expect(calls).toBe(2)
-    // Restore the original mongo mock for subsequent tests in this file.
-    vi.doMock('../../../../steam/MongoDBSingleton', () => ({
-      default: {
-        connect: async () => ({
-          collection: () => ({
-            findOne: async () => {
-              mongoCallCount++
-              return mongoDoc
-            },
-          }),
-        }),
-        close: async () => undefined,
-      },
-    }))
+    mongoFindOneOverride = null
   })
 })
 
