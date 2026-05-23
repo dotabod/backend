@@ -1,7 +1,23 @@
+import { moderateText } from '@dotabod/profanity-filter'
 import { t } from 'i18next'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler, { type MessageType } from '../lib/CommandHandler'
+
+// Last.fm's JSON API returns track/artist/album names with HTML-encoded entities
+// (e.g. "&#39;" for "'", "&amp;" for "&"). Twitch chat doesn't render HTML, so
+// we decode the common entities before emitting.
+const decodeHtmlEntities = (s: string): string =>
+  s
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex: string) =>
+      String.fromCodePoint(Number.parseInt(hex, 16)),
+    )
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
 
 interface LastFmImage {
   size: 'small' | 'medium' | 'large' | 'extralarge'
@@ -101,15 +117,23 @@ commandHandler.registerCommand('song', {
         return
       }
 
-      // Send the song information to chat
+      const [artist, title, albumText] = await Promise.all([
+        moderateText(decodeHtmlEntities(recentTrack.artist['#text'] || 'Unknown')),
+        moderateText(decodeHtmlEntities(recentTrack.name || 'Unknown')),
+        moderateText(decodeHtmlEntities(recentTrack.album['#text'] || '')),
+      ])
+
+      // Twitch chat isn't HTML, so disable i18next's default HTML-escape —
+      // otherwise the decoded apostrophes get re-encoded back to "&#39;".
       chatClient.say(
         channel,
         t('currentSong', {
           url: '', // dont show the url
-          artist: recentTrack.artist['#text'] || 'Unknown',
-          title: recentTrack.name || 'Unknown',
-          album: recentTrack.album['#text'] ? ` [${recentTrack.album['#text']}]` : '',
+          artist: artist || 'Unknown',
+          title: title || 'Unknown',
+          album: albumText ? ` [${albumText}]` : '',
           lng: client.locale,
+          interpolation: { escapeValue: false },
         }),
         message.user.messageId,
       )

@@ -68,6 +68,9 @@ export const state: {
   chatSettingsUpdates: Array<{ channelId: string; settings: Record<string, unknown> }>
   // Result returned by the mocked MongoDB `delayedGames` findOne (ranked, spectators, ...).
   delayedGame: Record<string, unknown> | null
+  // Optional override for the mocked `moderateText` — return a custom redacted
+  // string. Default passthrough returns the input as-is.
+  moderateTextOverride: ((text?: string | string[]) => string | string[] | undefined) | null
 } = {
   sessionMatch: null,
   olderMatch: null,
@@ -98,6 +101,7 @@ export const state: {
   subscriberOnlyMode: false,
   chatSettingsUpdates: [],
   delayedGame: null,
+  moderateTextOverride: null,
 }
 
 export function resetState() {
@@ -130,6 +134,7 @@ export function resetState() {
   state.subscriberOnlyMode = false
   state.chatSettingsUpdates = []
   state.delayedGame = null
+  state.moderateTextOverride = null
   // Re-assert all module mocks (shared-utils, updateMmr, ranks, MongoDBSingleton)
   // in case a sibling test file replaced any of them since the last test ran.
   reinstallModuleMocks()
@@ -306,6 +311,16 @@ function reinstallModuleMocks() {
     getOpenDotaProfile: async () => state.openDotaProfile,
     getRankTitle: () => state.rankTitle,
     getRankDescription: async () => state.rankDescription,
+  }))
+
+  // Profanity filter does local + OpenAI checks; mock to keep tests offline and
+  // deterministic. Default passthrough; tests that want to assert profanity
+  // handling can override `state.moderateTextOverride`.
+  mock.module('@dotabod/profanity-filter', () => ({
+    moderateText: async (text?: string | string[]) => {
+      if (state.moderateTextOverride) return state.moderateTextOverride(text)
+      return text
+    },
   }))
 
   // Mongo is only used by a few match-data commands (ranked, spectators, ...).

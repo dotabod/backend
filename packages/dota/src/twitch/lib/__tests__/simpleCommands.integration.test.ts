@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 import { t } from 'i18next'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
@@ -108,6 +108,34 @@ describe('!match', () => {
 })
 
 describe('!song', () => {
+  const realFetch = globalThis.fetch
+  const origApiKey = process.env.LASTFM_API_KEY
+
+  const lastFmSettings = [
+    { key: 'commandLastFm', value: true },
+    { key: 'lastFmUsername', value: 'someuser' },
+  ]
+
+  function mockLastFm(payload: unknown) {
+    globalThis.fetch = (async () => ({
+      ok: true,
+      json: async () => payload,
+    })) as unknown as typeof fetch
+  }
+
+  beforeAll(() => {
+    process.env.LASTFM_API_KEY = 'test-key'
+  })
+
+  afterAll(() => {
+    if (origApiKey === undefined) delete process.env.LASTFM_API_KEY
+    else process.env.LASTFM_API_KEY = origApiKey
+  })
+
+  afterEach(() => {
+    globalThis.fetch = realFetch
+  })
+
   it('reports lastFmNotConfigured when the command is enabled but no username is set', async () => {
     await commandHandler.handleMessage(
       makeMessage({
@@ -125,5 +153,97 @@ describe('!song', () => {
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(notLive)
+  })
+
+  // Last.fm returns HTML-encoded entities in track/artist/album names
+  // (e.g. `&#39;` for `'`, `&amp;` for `&`). Forwarding those to chat verbatim
+  // shows up as the literal `&#39;` — observed in production on
+  // "Fuck Wit Dre Day (And Everybody&#39;s Celebratin&#39;)".
+  it('decodes HTML entities from Last.fm in the chat message', async () => {
+    // Simulate the wire format Last.fm actually sends.
+    mockLastFm({
+      recenttracks: {
+        track: [
+          {
+            artist: { '#text': 'Dr. Dre &amp; Friends' },
+            name: 'Fuck Wit Dre Day (And Everybody&#39;s Celebratin&#39;)',
+            album: { '#text': 'The Chronic' },
+            '@attr': { nowplaying: 'true' },
+          },
+        ],
+        '@attr': {},
+      },
+    } as any)
+
+    await commandHandler.handleMessage(
+      makeMessage({ content: '!song', clientOverrides: { settings: lastFmSettings } as any }),
+    )
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    const msg = state.chatSayCalls[0].message
+    expect(msg).not.toContain('&#39;')
+    expect(msg).not.toContain('&amp;')
+    expect(msg).toContain("Everybody's Celebratin'")
+    expect(msg).toContain('Dr. Dre & Friends')
+    expect(msg).toContain('[The Chronic]')
+  })
+
+  it('runs artist/title/album through moderateText before emitting', async () => {
+    state.moderateTextOverride = (text?: string | string[]) => {
+      if (typeof text !== 'string') return text
+      // Pretend the filter redacted these fields.
+      if (text === 'Bad Artist') return '***'
+      if (text === 'Bad Title') return '***'
+      if (text === 'Bad Album') return '***'
+      return text
+    }
+    mockLastFm({
+      recenttracks: {
+        track: [
+          {
+            artist: { '#text': 'Bad Artist' },
+            name: 'Bad Title',
+            album: { '#text': 'Bad Album' },
+            '@attr': { nowplaying: 'true' },
+          },
+        ],
+        '@attr': {},
+      },
+    } as any)
+
+    await commandHandler.handleMessage(
+      makeMessage({ content: '!song', clientOverrides: { settings: lastFmSettings } as any }),
+    )
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    const msg = state.chatSayCalls[0].message
+    expect(msg).not.toContain('Bad Artist')
+    expect(msg).not.toContain('Bad Title')
+    expect(msg).not.toContain('Bad Album')
+    expect(msg).toContain('***')
+  })
+
+  it('reports songNotPlaying when Last.fm has no current track', async () => {
+    mockLastFm({
+      recenttracks: {
+        track: [
+          {
+            artist: { '#text': 'Dr. Dre' },
+            name: 'Nuthin But A G Thang',
+            album: { '#text': 'The Chronic' },
+            // no @attr.nowplaying → not currently playing
+            date: { uts: '1700000000', '#text': '...' },
+          },
+        ],
+        '@attr': {},
+      },
+    } as any)
+
+    await commandHandler.handleMessage(
+      makeMessage({ content: '!song', clientOverrides: { settings: lastFmSettings } as any }),
+    )
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toBe(t('songNotPlaying', { lng: 'en' }))
   })
 })
