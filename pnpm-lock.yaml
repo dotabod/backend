@@ -175,6 +175,9 @@ importers:
       dota2:
         specifier: https://github.com/dotabod/node-dota2
         version: https://codeload.github.com/dotabod/node-dota2/tar.gz/4a1a09537d5bead430c36427b9a50b770abe56fc
+      long:
+        specifier: ^5.3.1
+        version: 5.3.2
       mongodb:
         specifier: ^6.5.0
         version: 6.21.0
@@ -206,6 +209,9 @@ importers:
 
   packages/twitch-chat:
     dependencies:
+      '@dotabod/shared-utils':
+        specifier: workspace:*
+        version: link:../shared-utils
       i18next:
         specifier: ^24.2.0
         version: 24.2.3(typescript@5.9.3)
@@ -218,6 +224,13 @@ importers:
       socket.io-client:
         specifier: ^4.8.1
         version: 4.8.3
+      ws:
+        specifier: ^8.17.1
+        version: 8.20.1
+    devDependencies:
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.1
 
   packages/twitch-events:
     dependencies:

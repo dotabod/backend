@@ -19,9 +19,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dotabod/shared-utils": "workspace:*",
     "i18next": "^24.2.0",
     "i18next-fs-backend": "^2.6.0",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "ws": "^8.17.1"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
   }
 }

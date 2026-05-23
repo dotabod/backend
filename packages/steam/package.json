@@ -21,6 +21,7 @@
   "dependencies": {
     "@dotabod/shared-utils": "workspace:*",
     "dota2": "https://github.com/dotabod/node-dota2",
+    "long": "^5.3.1",
     "mongodb": "^6.5.0",
     "retry": "^0.13.1",
     "socket.io": "^4.7.5",
