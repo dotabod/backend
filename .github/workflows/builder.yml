@@ -74,7 +74,9 @@ jobs:
   build:
     needs: changes
     if: needs.changes.outputs.services != '[]'
-    runs-on: ubuntu-latest
+    # Native arm64 runner (free on public repos) — avoids the ~5-10x QEMU
+    # emulation overhead from building linux/arm64 on ubuntu-latest (amd64).
+    runs-on: ubuntu-24.04-arm
     environment: prod
     permissions:
       packages: write

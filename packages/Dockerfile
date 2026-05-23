@@ -1,5 +1,12 @@
 FROM node:24-slim AS base
 
+# git: pnpm --legacy deploy re-resolves git-hosted deps (steam-resources) via
+# `git ls-remote`, which isn't in node:24-slim. ca-certificates is needed for
+# HTTPS clones to succeed.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN corepack enable && corepack prepare pnpm@11.2.2 --activate
 
 # BUILD_CONTEXT like "packages/twitch-chat" or "packages/twitch-events"
