@@ -32,6 +32,27 @@ import type { ResolvedRoster, RosterPlayer } from './types'
 // I/O failure doesn't poison the instance; but `client.gsi` is captured by reference, so don't
 // reuse an instance across distinct GSI ticks. Construct anew per query.
 
+/**
+ * Service for resolving and querying match data (roster, Mongo doc, Steam cards) for a single
+ * GSI tick / request. Dispatches resolver chain (gsi-spectator → sourcetv → vision → gsi-self)
+ * and memoizes I/O for the lifetime of the instance.
+ *
+ * **Contract: construct a fresh instance per query.** Do not cache across distinct GSI ticks —
+ * `client.gsi` is captured by reference and memoized values will go stale.
+ *
+ * Do:
+ * ```ts
+ * const mds = new MatchDataService(client)
+ * const roster = await mds.resolveRoster()
+ * const mmr = await mds.getAverageMmr() // dedupes Mongo I/O with resolveRoster()
+ * ```
+ *
+ * Don't:
+ * ```ts
+ * // Reusing across ticks leaks stale state.
+ * class Handler { private mds = new MatchDataService(this.client) }
+ * ```
+ */
 export class MatchDataService {
   private readonly chain: ResolverChain
 
@@ -167,6 +188,17 @@ export class MatchDataService {
     const doc = await this.getDelayedGameDoc()
     const v = (doc as { spectators?: unknown } | null)?.spectators
     return typeof v === 'number' && Number.isFinite(v) ? v : null
+  }
+
+  // --- Roster projections ---
+
+  async getAccountIds(): Promise<number[]> {
+    const roster = await this.resolveRoster()
+    return [
+      ...new Set(
+        roster.players.map((p) => p.accountId).filter((id): id is number => id !== null && id > 0),
+      ),
+    ]
   }
 
   // --- Per-slot lookup primitives ---
