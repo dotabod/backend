@@ -298,7 +298,4 @@ export class MatchDataService {
 }
 
 // Re-exported for tests + ergonomic consumer imports.
-export type {
-  ResolvedRoster,
-  RosterPlayer,
-} from './types'
+export type { ResolvedRoster, RosterPlayer } from './types'

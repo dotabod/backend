@@ -29,11 +29,13 @@ To test if the stream capture is working without running the full hero detection
 ```
 
 For example:
+
 ```bash
 ./capture-stream-test.sh arteezy
 ```
 
 This will:
+
 - Connect to the Twitch stream
 - Capture a single frame
 - Save it to the temp/frames directory
@@ -48,11 +50,13 @@ To detect heroes from a live Twitch stream:
 ```
 
 For example:
+
 ```bash
 ./detect-stream.sh arteezy 3 heroes.json
 ```
 
 Parameters:
+
 - `<twitch_username>`: The Twitch username of the streamer (required)
 - `[frames]`: Number of frames to capture (default: 3)
 - `[output_file]`: Output JSON file (default: heroes.json)
@@ -62,6 +66,7 @@ Parameters:
 You can also use the API server to detect heroes from a live stream:
 
 1. Start the API server:
+
    ```bash
    python src/api_server.py
    ```
@@ -76,6 +81,7 @@ You can also use the API server to detect heroes from a live stream:
 ### Stream Not Found
 
 If the stream is not found, make sure:
+
 - The Twitch username is correct
 - The streamer is currently live
 - Your internet connection is working
@@ -110,6 +116,7 @@ The system now has built-in handling for Twitch's "preparing your stream" screen
 For optimal detection of "preparing" screens:
 
 1. **Install pytesseract** for OCR text detection:
+
    ```bash
    pip install pytesseract
    ```
@@ -131,6 +138,7 @@ If you're still encountering issues with ads or "preparing" screens after these 
 ### Import Error
 
 If you see "stream_utils module not available" errors:
+
 - Make sure you ran the `install-deps.sh` script
 - Check that streamlink is installed correctly
 - Try running `./capture-stream-test.sh <username>` to isolate the issue
@@ -165,6 +173,7 @@ python src/dota_hero_detection.py --stream <username> --frames <num_frames> --de
 If you're having trouble with the stream detection, you can check:
 
 1. If Streamlink can access the stream:
+
    ```bash
    streamlink https://www.twitch.tv/<username> --stream-url best
    ```

@@ -55,3 +55,4 @@ Circular dependencies by package:
 - dota: 2 circular dependencies
 - shared-utils: 1 circular dependencies
 Analysis completed in 0.534 seconds.
+```

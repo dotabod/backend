@@ -1,11 +1,11 @@
 services:
   twitch-chat:
-    image: "ghcr.io/dotabod/twitch-chat:master"
+    image: 'ghcr.io/dotabod/twitch-chat:master'
     volumes:
       - $PWD/packages/twitch-chat/src/:/app/packages/twitch-chat/src/
 
   steam:
-    image: "ghcr.io/dotabod/steam:master"
+    image: 'ghcr.io/dotabod/steam:master'
     develop:
       watch:
         - action: sync
@@ -15,7 +15,7 @@ services:
           path: $PWD/packages/steam/package.json
 
   twitch-events:
-    image: "ghcr.io/dotabod/twitch-events:master"
+    image: 'ghcr.io/dotabod/twitch-events:master'
     develop:
       watch:
         - action: sync
@@ -25,7 +25,7 @@ services:
           path: $PWD/packages/twitch-events/package.json
 
   dota:
-    image: "ghcr.io/dotabod/dota:master"
+    image: 'ghcr.io/dotabod/dota:master'
     develop:
       watch:
         - action: sync
@@ -37,7 +37,7 @@ services:
         - action: rebuild
           path: $PWD/packages/dota/package.json
     ports:
-      - "5120:5120"
+      - '5120:5120'
 
 volumes:
   mongodb_data:

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'vite-plus/test'
 import { fmtMSS, is8500Plus, steamID32toSteamID64, steamID64toSteamID32 } from '../index.ts'
 
 describe('steamID conversions', () => {

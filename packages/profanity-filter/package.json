@@ -1,24 +1,25 @@
 {
   "name": "@dotabod/profanity-filter",
-  "module": "index.ts",
+  "files": [
+    "dist",
+    "index.ts"
+  ],
   "type": "module",
-  "scripts": {
-    "build": "bun build --target=bun --outfile=./dist/index.js --outdir=./dist --production --sourcemap=external --packages=external ./index.ts",
-    "test": "bun test",
-    "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage",
-    "typecheck": "tsc --noEmit"
-  },
   "main": "index.ts",
+  "module": "index.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./index.ts"
     }
   },
-  "devDependencies": {
-    "@types/leo-profanity": "^1.5.4",
-    "@types/naughty-words": "^1.2.3"
+  "scripts": {
+    "prebuild": "rm -rf dist",
+    "build": "vp pack index.ts -f esm -d dist --sourcemap",
+    "test": "vp test",
+    "test:watch": "vp test watch",
+    "test:coverage": "vp test run --coverage",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@2toad/profanity": "^3.1.1",
@@ -32,5 +33,9 @@
     "profanity-util": "^0.2.0",
     "russian-bad-words": "^0.5.0",
     "washyourmouthoutwithsoap": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/leo-profanity": "^1.5.4",
+    "@types/naughty-words": "^1.2.3"
   }
 }

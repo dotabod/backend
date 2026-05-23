@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
 import { resetUtilsState } from './setupMocks.ts'
 
 // The module reads TWITCH_CONDUIT_ID once at import time; clear it first so the

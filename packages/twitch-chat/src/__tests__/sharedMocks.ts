@@ -1,13 +1,13 @@
 // Shared test harness for twitch-chat. Filename is intentionally NOT `.test.ts`
 // so bun's runner ignores it.
 //
-// Why this exists: bun's `mock.module()` is process-wide. Any test file that
+// Why this exists: bun's `vi.doMock()` is process-wide. Any test file that
 // needs `@dotabod/shared-utils`, `i18next`, or the sibling modules below mocked
 // must route through this single harness so competing factories for the same
 // module spec don't collide when the whole suite runs together. Import the SUT
 // from here, not from its real path. (The pure transform tests don't touch
 // these modules, so they import their SUTs directly.)
-import { mock } from 'bun:test'
+import { vi } from 'vite-plus/test'
 
 type FetchResponse = {
   ok: boolean
@@ -99,7 +99,7 @@ function createSupabaseBuilder() {
 }
 const supabaseMock = { from: () => createSupabaseBuilder() }
 
-mock.module('@dotabod/shared-utils', () => ({
+vi.doMock('@dotabod/shared-utils', () => ({
   logger: {
     info: () => undefined,
     warn: () => undefined,
@@ -112,11 +112,11 @@ mock.module('@dotabod/shared-utils', () => ({
   supabase: supabaseMock,
 }))
 
-mock.module('i18next', () => ({
+vi.doMock('i18next', () => ({
   t: (key: string) => `t:${key}`,
 }))
 
-mock.module('../utils/socketManager', () => ({
+vi.doMock('../utils/socketManager', () => ({
   hasDotabodSocket: () => state.hasSocket,
   emitChatMessage: (
     broadcasterLogin: string,
@@ -147,8 +147,7 @@ export const { onlineEvents } = await import('../event-handlers/events')
 export const { onlineEvent } = await import('../event-handlers/onlineEvent')
 export const { offlineEvent } = await import('../event-handlers/offlineEvent')
 export const { updateUserEvent } = await import('../event-handlers/updateUserEvent')
-export const { sendTwitchChatMessage, handleChatMessage, clearDedupeCache } = await import(
-  '../handleChat'
-)
+export const { sendTwitchChatMessage, handleChatMessage, clearDedupeCache } =
+  await import('../handleChat')
 
 export const flushMacrotasks = () => new Promise<void>((r) => setTimeout(r, 5))

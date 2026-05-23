@@ -1,44 +1,32 @@
 {
   "name": "dotabod",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
-    "cache:clean": "rm -rf $(echo bun pm cache) && rm -rf node_modules && rm bun.lock || true",
-    "up": "bun upgrade-interactive --latest",
+    "cache:clean": "rm -rf node_modules pnpm-lock.yaml",
+    "up": "pnpm update --interactive --latest",
     "nps": "doppler run -- bash services/mongodb/updatenps.sh",
     "exportnps": "doppler run -- bash services/mongodb/export.sh",
     "just": "doppler run -- bash runner.sh",
     "just-prod": "DOPPLER_CONFIG=prd doppler run -- bash runner.sh",
-    "build:all": "bun run --cwd packages/shared-utils build && bun run --cwd packages/profanity-filter build && bun run --cwd packages/dota build && bun run --cwd packages/twitch-chat build && bun run --cwd packages/twitch-events build && bun run --cwd packages/steam build",
-    "typecheck:all": "bun run --cwd packages/shared-utils typecheck && bun run --cwd packages/profanity-filter typecheck && bun run --cwd packages/dota typecheck && bun run --cwd packages/twitch-chat typecheck && bun run --cwd packages/twitch-events typecheck && bun run --cwd packages/steam typecheck",
-    "lint:all": "oxlint && biome check .",
-    "lint:fix": "oxlint --fix && biome check --write .",
+    "build:all": "pnpm -r run build",
+    "typecheck:all": "pnpm -r run typecheck",
+    "lint:all": "vp check",
+    "lint:fix": "vp lint --fix && vp fmt",
     "knip": "knip",
-    "test": "bun run --cwd packages/dota test",
-    "test:all": "bun run --cwd packages/shared-utils test && bun run --cwd packages/profanity-filter test && bun run --cwd packages/dota test && bun run --cwd packages/twitch-events test && bun run --cwd packages/twitch-chat test"
+    "test": "vp test",
+    "test:all": "vp test"
   },
-  "trustedDependencies": [
-    "@biomejs/biome",
-    "es5-ext",
-    "esbuild",
-    "lefthook",
-    "protobufjs"
-  ],
   "devDependencies": {
-    "@biomejs/biome": "^2.4.15",
-    "@types/bun": "latest",
     "@types/node": "^22.10.2",
     "knip": "^6.14.2",
     "lefthook": "^1.11.6",
-    "oxlint": "^1.66.0",
     "ts-morph": "^28.0.0",
-    "typescript": "^5.8"
+    "typescript": "^5.8",
+    "vite-plus": "latest"
   },
-  "lint-staged": {
-    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-      "biome check --files-ignore-unknown=true"
-    ]
-  }
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+  },
+  "packageManager": "pnpm@11.2.2"
 }

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock } from '../../../../__tests__/sharedMocks.ts'
 import type { Players } from '../../../../types'
 
@@ -40,7 +40,7 @@ const supabase = {
   },
 }
 
-mock.module('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase, logger: noopLogger }))
+vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase, logger: noopLogger }))
 
 const { getStreamersInMatch } = await import('../getStreamersInMatch.ts')
 

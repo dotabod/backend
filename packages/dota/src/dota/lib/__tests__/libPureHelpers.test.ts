@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'bun:test'
+import { afterEach, describe, expect, it } from 'vite-plus/test'
 import { DBSettings } from '../../../settings.ts'
 import {
   findGSIHandlerByTwitchId,

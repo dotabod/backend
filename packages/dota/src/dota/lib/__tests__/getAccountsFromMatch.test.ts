@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock } from '../../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
@@ -8,12 +8,10 @@ const noopLogger = {
   debug: () => undefined,
 }
 
-mock.module('@dotabod/shared-utils', () =>
-  buildSharedUtilsMock({ supabase: {}, logger: noopLogger }),
-)
+vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase: {}, logger: noopLogger }))
 
 // No delayedGames doc → the function falls through to the Vision API path.
-mock.module('../../../steam/MongoDBSingleton', () => ({
+vi.doMock('../../../steam/MongoDBSingleton', () => ({
   default: {
     connect: async () => ({
       collection: () => ({ findOne: async () => null }),
@@ -24,7 +22,7 @@ mock.module('../../../steam/MongoDBSingleton', () => ({
 
 // Import via a query suffix so bun re-evaluates the real module instead of
 // returning a stub. Other harnesses (gsiMocks, lastgame) register process-wide
-// `mock.module('.../getAccountsFromMatch', …)` stubs that would otherwise win
+// `vi.doMock('.../getAccountsFromMatch', …)` stubs that would otherwise win
 // the global registry race and replace the very function this file tests.
 const { getAccountsFromMatch } = await import('../getAccountsFromMatch.ts?real')
 

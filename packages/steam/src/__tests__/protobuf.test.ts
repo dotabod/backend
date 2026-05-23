@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'vite-plus/test'
 // @ts-expect-error no types
 import Dota2 from 'dota2'
 // @ts-expect-error no types — `long` is a transitive dep of dota2

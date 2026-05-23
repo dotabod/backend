@@ -1,5 +1,9 @@
 {
   "name": "@dotabod/shared-utils",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
   "module": "src/index.ts",
   "exports": {
     ".": {
@@ -7,12 +11,11 @@
       "types": "./src/index.ts"
     }
   },
-  "type": "module",
   "scripts": {
-    "build:yarn": "tsc --build --verbose",
-    "build": "bun build --target=bun --outfile=./dist/index.js --outdir=./dist --production --sourcemap=external --packages=external ./src/index.ts",
+    "prebuild": "rm -rf dist",
+    "build": "vp pack src/index.ts -f esm -d dist --sourcemap",
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "vp test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.21.0",

@@ -12,12 +12,7 @@ npm install @dotabod/shared-utils
 
 ```typescript
 // Import the utilities you need
-import {
-  logger,
-  getTwitchAPI,
-  checkBotStatus,
-  getAuthProvider
-} from '@dotabod/shared-utils'
+import { logger, getTwitchAPI, checkBotStatus, getAuthProvider } from '@dotabod/shared-utils'
 
 // Use them in your code
 const api = await getTwitchAPI('twitchUserId')

@@ -53,8 +53,7 @@ jobs:
             - `build/aghs_desc.json`
 
             Updated lockfiles:
-            - `bun.lock`
-            - `package-lock.json`
+            - `pnpm-lock.yaml`
 
             Comparison:
             - Previous SHA: `${{ steps.scan.outputs.current_sha }}`
@@ -65,5 +64,4 @@ jobs:
           commit-message: 'chore(dota): refresh dotaconstants lockfile pins'
           delete-branch: true
           add-paths: |
-            bun.lock
-            package-lock.json
+            pnpm-lock.yaml

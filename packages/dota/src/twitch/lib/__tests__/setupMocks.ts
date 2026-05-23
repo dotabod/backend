@@ -2,10 +2,10 @@
 // NOT `.test.ts` so bun's runner doesn't try to execute it.
 //
 // Both `resolveMatch.test.ts` and `CommandHandler.integration.test.ts` import
-// this module so they share a single `mock.module()` factory and a single
+// this module so they share a single `vi.doMock()` factory and a single
 // state closure. Defining the harness once avoids races where two test files
 // register competing factories for the same module spec.
-import { mock } from 'bun:test'
+import { vi } from 'vite-plus/test'
 import type { Database } from '@dotabod/shared-utils'
 import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/sharedMocks'
 
@@ -283,7 +283,7 @@ const realRanks = await import('../../../dota/lib/ranks')
 // shared-utils only — re-registering the modules below in `beforeEach` could
 // clobber sibling harnesses (gsiMocks) that mock the same specs differently.
 function reinstallSharedUtilsMock() {
-  mock.module('@dotabod/shared-utils', () =>
+  vi.doMock('@dotabod/shared-utils', () =>
     buildSharedUtilsMock({
       supabase: supabaseMock,
       logger: loggerMock,
@@ -296,7 +296,7 @@ function reinstallSharedUtilsMock() {
 function reinstallModuleMocks() {
   reinstallSharedUtilsMock()
 
-  mock.module('../../../dota/lib/updateMmr', () => ({
+  vi.doMock('../../../dota/lib/updateMmr', () => ({
     updateMmr: async (args: Record<string, unknown>) => {
       state.updateMmrCalls.push(args)
     },
@@ -306,7 +306,7 @@ function reinstallModuleMocks() {
   // Mock only the network-touching functions in ranks.js. The rest
   // (rankTierToMmr, mmrToRankTier, etc.) are pure helpers used elsewhere in
   // the dota source, so we re-export them as-is from the real module.
-  mock.module('../../../dota/lib/ranks', () => ({
+  vi.doMock('../../../dota/lib/ranks', () => ({
     ...realRanks,
     getOpenDotaProfile: async () => state.openDotaProfile,
     getRankTitle: () => state.rankTitle,
@@ -316,7 +316,7 @@ function reinstallModuleMocks() {
   // Profanity filter does local + OpenAI checks; mock to keep tests offline and
   // deterministic. Default passthrough; tests that want to assert profanity
   // handling can override `state.moderateTextOverride`.
-  mock.module('@dotabod/profanity-filter', () => ({
+  vi.doMock('@dotabod/profanity-filter', () => ({
     moderateText: async (text?: string | string[]) => {
       if (state.moderateTextOverride) return state.moderateTextOverride(text)
       return text
@@ -325,7 +325,7 @@ function reinstallModuleMocks() {
 
   // Mongo is only used by a few match-data commands (ranked, spectators, ...).
   // connect() yields a db whose delayedGames.findOne returns state.delayedGame.
-  mock.module('../../../steam/MongoDBSingleton', () => ({
+  vi.doMock('../../../steam/MongoDBSingleton', () => ({
     default: {
       connect: async () => ({
         collection: () => ({

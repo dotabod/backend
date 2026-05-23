@@ -36,7 +36,7 @@ In addition to the external libraries, the system includes custom detection for:
 4. Common evasion tactics:
    - Stretched characters (e.g., "fuuuuck")
    - Leetspeak (e.g., "f4ck")
-   - Separated characters (e.g., "f*u*c*k")
+   - Separated characters (e.g., "f*u*c\*k")
    - Unicode substitutions (e.g., "ƒʊ¢κ")
 
 ## Text Normalization
@@ -60,33 +60,35 @@ The main functions provided by the system are:
 ### `moderateText(text: string): Promise<string>`
 
 Checks the input text for profanity across all layers and returns:
+
 - The original text if no profanity is detected
-- "***" if profanity is detected
+- "\*\*\*" if profanity is detected
 
 ```typescript
-import { moderateText } from './utils/moderation.js';
+import { moderateText } from './utils/moderation.js'
 
 // Example usage
-const result = await moderateText("Hello world");
-console.log(result); // "Hello world" (if clean)
+const result = await moderateText('Hello world')
+console.log(result) // "Hello world" (if clean)
 
-const profaneResult = await moderateText("f*ck this");
-console.log(profaneResult); // "***" (if profane)
+const profaneResult = await moderateText('f*ck this')
+console.log(profaneResult) // "***" (if profane)
 ```
 
 ### `getProfanityDetails(text: string): { isFlagged: boolean, source: string, matches?: string[], language?: string }`
 
 Returns detailed information about why text was flagged, including:
+
 - Which detection system flagged it
 - The matched profane words
 - The language detected (when available)
 
 ```typescript
-import { getProfanityDetails } from './utils/moderation.js';
+import { getProfanityDetails } from './utils/moderation.js'
 
 // Example usage
-const details = getProfanityDetails("F*ck this");
-console.log(details);
+const details = getProfanityDetails('F*ck this')
+console.log(details)
 // Output: { isFlagged: true, source: 'obscenity', matches: ['F*ck'] }
 ```
 
@@ -103,9 +105,10 @@ The system is designed to be thorough rather than highly optimized for speed. It
 To add support for additional languages or specific terms:
 
 1. Add new words to the existing libraries that support custom wordlists:
+
    ```typescript
-   badWords.addWords('custom', 'words', 'here');
-   leoProfanity.add(['custom', 'words', 'here']);
+   badWords.addWords('custom', 'words', 'here')
+   leoProfanity.add(['custom', 'words', 'here'])
    ```
 
 2. Extend the custom wordlists in `profanity-wordlists.ts`
@@ -123,6 +126,7 @@ The system includes comprehensive testing to ensure all detection layers work co
 - Embedded profanity detection
 
 Test results demonstrate high accuracy across languages and obfuscation techniques with the following layers performing exceptionally well:
+
 - washyourmouthoutwithsoap (50+ languages)
 - russian-bad-words (specialized Russian detection)
 - obscenity (evasion tactics)

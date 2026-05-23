@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from 'bun:test'
+import { describe, expect, it, vi } from 'vite-plus/test'
 // @ts-expect-error no types
 import Dota2 from 'dota2'
 import { initSpectatorProtobuff } from '../initSpectatorProtobuff'
@@ -15,7 +15,7 @@ describe('initSpectatorProtobuff', () => {
 
   it('spectateFriendGame returns null and does not call the GC when not ready', () => {
     initSpectatorProtobuff()
-    const sendToGC = mock(() => {})
+    const sendToGC = vi.fn(() => {})
     const ctx = { _gcReady: false, sendToGC }
 
     const result = Dota2.Dota2Client.prototype.spectateFriendGame.call(
@@ -30,7 +30,7 @@ describe('initSpectatorProtobuff', () => {
 
   it('spectateFriendGame sends the spectate request to the GC when ready', () => {
     initSpectatorProtobuff()
-    const sendToGC = mock(() => {})
+    const sendToGC = vi.fn(() => {})
     const ctx = { _gcReady: true, sendToGC }
 
     Dota2.Dota2Client.prototype.spectateFriendGame.call(

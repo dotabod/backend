@@ -15,30 +15,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
+      - uses: pnpm/action-setup@v4
         with:
-          bun-version: 1.3.14
-      - name: Cache bun install
-        uses: actions/cache@v5
+          version: 11.2.2
+      - uses: actions/setup-node@v4
         with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
+          node-version: 24
+          cache: pnpm
       - name: Install dependencies
         uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3
           retry_wait_seconds: 10
-          command: bun install --frozen-lockfile --no-progress
+          command: pnpm install --frozen-lockfile
       - name: Build workspace deps for tests
-        run: |
-          bun run --cwd packages/shared-utils build
-          bun run --cwd packages/profanity-filter build
-      - name: Run Biome
-        run: bunx @biomejs/biome ci .
-      - name: Run TypeScript type check
-        run: bun run typecheck:all
+        run: pnpm --filter @dotabod/shared-utils --filter @dotabod/profanity-filter run build
+      - name: Lint + format check
+        run: pnpm exec vp check
       - name: Run tests
-        run: bun run test:all
+        run: pnpm exec vp test

@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test'
+import { describe, expect, test } from 'vite-plus/test'
 import { getProfanityDetails, moderateText } from '../src/utils/moderation'
 
 // Helper function for testing

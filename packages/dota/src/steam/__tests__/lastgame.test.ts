@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from 'bun:test'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
@@ -23,11 +23,11 @@ const supabaseChain: any = {
   single: async () => ({ data: supabaseMatchRow }),
 }
 
-mock.module('@dotabod/shared-utils', () =>
+vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({ supabase: supabaseChain, logger: noopLogger }),
 )
 
-mock.module('../MongoDBSingleton', () => ({
+vi.doMock('../MongoDBSingleton', () => ({
   default: {
     connect: async () => ({
       collection: () => ({

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
 import { initTestI18n } from '../../../../__tests__/sharedMocks.ts'
 

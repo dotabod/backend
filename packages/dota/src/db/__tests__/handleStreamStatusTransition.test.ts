@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { handleStreamStatusTransition } from '../handleStreamStatusTransition'
 
 const createIo = () => {
-  const emit = mock(() => undefined)
-  const to = mock(() => ({ emit }))
+  const emit = vi.fn(() => undefined)
+  const to = vi.fn(() => ({ emit }))
 
   return {
     emit,
@@ -20,7 +20,7 @@ const createClient = (streamOnline: boolean) => ({
 
 describe('handleStreamStatusTransition', () => {
   const logger = {
-    error: mock(() => undefined),
+    error: vi.fn(() => undefined),
   }
 
   beforeEach(() => {
@@ -44,7 +44,7 @@ describe('handleStreamStatusTransition', () => {
 
   it('emits refresh-settings and enables the GSI handler when a stream comes online', () => {
     const { emit, io, to } = createIo()
-    const enable = mock(() => undefined)
+    const enable = vi.fn(() => undefined)
 
     const result = handleStreamStatusTransition({
       client: createClient(true),
@@ -76,7 +76,7 @@ describe('handleStreamStatusTransition', () => {
 
   it('does not let enable failures block the refresh-settings emit', () => {
     const { emit, io } = createIo()
-    const enable = mock(() => {
+    const enable = vi.fn(() => {
       throw new Error('enable failed')
     })
 

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
 import { RateLimiter, resetState } from '../../__tests__/sharedMocks.ts'
 
 const makeHeaders = (h: Record<string, string>) => new Headers(h)

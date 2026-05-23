@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'vite-plus/test'
 import net from 'node:net'
 
 // The node-steam Connection class extends net.Socket via util.inherits and uses

@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it } from 'bun:test'
+import { afterAll, describe, expect, it } from 'vite-plus/test'
 import type { AddressInfo } from 'node:net'
 import { io as ioClient } from 'socket.io-client'
 import { createSocketServer } from '../socketServer'

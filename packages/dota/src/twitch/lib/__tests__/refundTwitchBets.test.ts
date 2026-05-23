@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { refundTwitchBet, resetState, state } from './setupMocks'
 
 describe('refundTwitchBet', () => {

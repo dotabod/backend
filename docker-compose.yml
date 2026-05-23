@@ -1,18 +1,18 @@
 services:
   redis:
     container_name: redis
-    image: "redis/redis-stack-server:latest"
+    image: 'redis/redis-stack-server:latest'
     restart: on-failure:5
     volumes:
       - redis_data:/data
 
   twitch-chat:
     container_name: twitch-chat
-    image: "ghcr.io/dotabod/twitch-chat:master"
+    image: 'ghcr.io/dotabod/twitch-chat:master'
     restart: on-failure:5
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.bun
+      dockerfile: ./packages/Dockerfile
       args:
         - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/twitch-chat
@@ -29,11 +29,11 @@ services:
 
   steam:
     container_name: steam
-    image: "ghcr.io/dotabod/steam:master"
+    image: 'ghcr.io/dotabod/steam:master'
     restart: on-failure:5
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.bun
+      dockerfile: ./packages/Dockerfile
       args:
         - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/steam
@@ -47,13 +47,13 @@ services:
 
   twitch-events:
     ports:
-      - "5011:5011"
+      - '5011:5011'
     container_name: twitch-events
-    image: "ghcr.io/dotabod/twitch-events:master"
+    image: 'ghcr.io/dotabod/twitch-events:master'
     restart: on-failure:5
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.bun
+      dockerfile: ./packages/Dockerfile
       args:
         - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/twitch-events
@@ -73,9 +73,9 @@ services:
 
   dota:
     ports:
-      - "5120:5120"
+      - '5120:5120'
     container_name: dota
-    image: "ghcr.io/dotabod/dota:master"
+    image: 'ghcr.io/dotabod/dota:master'
     restart: on-failure:5
     depends_on:
       - redis
@@ -85,7 +85,7 @@ services:
     # random
     build:
       context: .
-      dockerfile: ./packages/Dockerfile.bun
+      dockerfile: ./packages/Dockerfile
       args:
         - DOTABOD_ENV=${DOTABOD_ENV:-development}
         - BUILD_CONTEXT=packages/dota

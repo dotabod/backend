@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "127.0.0.1:5000:5000"  # Bind to localhost only
+      - '127.0.0.1:5000:5000' # Bind to localhost only
     volumes:
       - ./temp:/app/temp
       - ./assets:/app/assets
@@ -15,8 +15,8 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5439/clip_processor
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/app:/app/src
-      - MAX_CONCURRENT_WORKERS=1  # Limit to one concurrent process
-      - QUEUE_POLLING_INTERVAL=1  # Check queue every 1 second
+      - MAX_CONCURRENT_WORKERS=1 # Limit to one concurrent process
+      - QUEUE_POLLING_INTERVAL=1 # Check queue every 1 second
     deploy:
       resources:
         limits:
@@ -27,7 +27,7 @@ services:
           memory: 1G
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:5000/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -38,7 +38,7 @@ services:
   db:
     image: postgres:14
     ports:
-      - "127.0.0.1:5439:5439"  # Bind to localhost only
+      - '127.0.0.1:5439:5439' # Bind to localhost only
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
@@ -47,7 +47,7 @@ services:
       - POSTGRES_DB=clip_processor
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -p 5439"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres -p 5439']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -59,7 +59,7 @@ services:
         reservations:
           cpus: '0.2'
           memory: 256M
-    command: ["postgres", "-p", "5439", "-c", "max_connections=200"]
+    command: ['postgres', '-p', '5439', '-c', 'max_connections=200']
 
 volumes:
   postgres-data:

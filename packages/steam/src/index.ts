@@ -128,7 +128,9 @@ socketIoServer.on('connection', (socket) => {
   // See memory `keep-spectate-friend-path`. Re-enable + test once bot-friend management exists.
   socket.on('getUserSteamServer', async (steam32Id: number, callback: callback) => {
     if (!isConnectedToSteam) {
-      logger.error('[STEAM] Error getting user steam server, not connected to steam', { steam32Id })
+      logger.error('[STEAM] Error getting user steam server, not connected to steam', {
+        steam32Id,
+      })
       callback('Steam not connected', null)
       return
     }

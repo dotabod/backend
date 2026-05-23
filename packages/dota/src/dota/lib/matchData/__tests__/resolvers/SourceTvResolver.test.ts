@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'vite-plus/test'
 import type { DelayedGames } from '../../../../../types'
 import { SourceTvResolver } from '../../resolvers/SourceTvResolver'
 

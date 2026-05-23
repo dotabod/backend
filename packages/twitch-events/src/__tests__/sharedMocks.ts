@@ -1,12 +1,12 @@
 // Shared test harness for twitch-events. Filename is intentionally NOT
 // `.test.ts` so bun's runner ignores it.
 //
-// Why this exists: bun's `mock.module()` is process-wide. Every test file that
+// Why this exists: bun's `vi.doMock()` is process-wide. Every test file that
 // needs `@dotabod/shared-utils` (or the sibling modules below) mocked must go
 // through this single harness, otherwise competing factories for the same
 // module spec collide when the whole suite runs together (passes in isolation,
 // fails together). Import the SUTs from here, not from their real paths.
-import { mock } from 'bun:test'
+import { vi } from 'vite-plus/test'
 import type { TwitchEventTypes } from '../TwitchEventTypes.ts'
 
 type LogCall = { message: string; meta: Record<string, unknown> }
@@ -124,7 +124,7 @@ const logger = {
   debug: () => undefined,
 }
 
-mock.module('@dotabod/shared-utils', () => ({
+vi.doMock('@dotabod/shared-utils', () => ({
   logger,
   supabase: supabaseMock,
   default: supabaseMock,
@@ -143,19 +143,19 @@ mock.module('@dotabod/shared-utils', () => ({
   }),
 }))
 
-mock.module('../twitch/lib/BotApiSingleton', () => ({
+vi.doMock('../twitch/lib/BotApiSingleton', () => ({
   getBotInstance: () => ({
     streams: { getStreamByUserId: async () => state.stream },
     users: { getUserById: async () => state.streamer },
   }),
 }))
 
-mock.module('../twitch/lib/getAccountIds', () => ({
+vi.doMock('../twitch/lib/getAccountIds', () => ({
   getAccountIds: async () => state.accountIds,
   getAllAccountIds: async () => state.accountIds,
 }))
 
-mock.module('../subscribeChatMessagesForUser', () => ({
+vi.doMock('../subscribeChatMessagesForUser', () => ({
   genericSubscribe: async (conduitId: string, userId: string, type: keyof TwitchEventTypes) => {
     state.subscribeCalls.push({ conduitId, userId, type })
     return state.subscribeResult(userId, type)
@@ -184,9 +184,8 @@ globalThis.fetch = (async (url: string) => {
 export const { eventSubMap } = await import('../chatSubIds')
 export const { runSubscriptionHealthCheck } = await import('../utils/subscriptionHealthCheck')
 export const { RateLimiter } = await import('../utils/rateLimiterCore')
-export const { fetchExistingSubscriptions, subsToCleanup } = await import(
-  '../fetchExistingSubscriptions'
-)
+export const { fetchExistingSubscriptions, subsToCleanup } =
+  await import('../fetchExistingSubscriptions')
 export const { initUserSubscriptions } = await import('../initUserSubscriptions')
 export const { subscribeToEvents } = await import('../subscribeToEvents')
 export const { revokeEvent, stopUserSubscriptions } = await import('../twitch/lib/revokeEvent')

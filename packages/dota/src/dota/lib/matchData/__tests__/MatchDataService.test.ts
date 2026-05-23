@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock } from '../../../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
@@ -28,19 +28,19 @@ const supabaseStub = {
   },
 }
 
-mock.module('@dotabod/shared-utils', () =>
+vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({ supabase: supabaseStub, logger: noopLogger }),
 )
 
 // Lower-level mocks (Mongo + steam socket). We do NOT mock `getAccountsFromMatch` itself —
-// `mock.module()` is process-wide and would pollute sibling test files that depend on its real
+// `vi.doMock()` is process-wide and would pollute sibling test files that depend on its real
 // behaviour. Instead we let the real helper run its fall-through against our controlled
 // Mongo doc / Vision fetch / GSI fixtures.
 
 let mongoDoc: unknown = null
 let mongoCallCount = 0
 
-mock.module('../../../../steam/MongoDBSingleton', () => ({
+vi.doMock('../../../../steam/MongoDBSingleton', () => ({
   default: {
     connect: async () => ({
       collection: () => ({
@@ -58,7 +58,7 @@ let cardsResponse: Array<Record<string, unknown>> = []
 let socketCallCount = 0
 let socketLastIds: number[] = []
 
-mock.module('../../../../steam/ws', () => ({
+vi.doMock('../../../../steam/ws', () => ({
   steamSocket: {
     emit: (
       _event: string,
@@ -518,7 +518,7 @@ describe('MatchDataService — memoization', () => {
 
   it('rejected memoization clears the slot — retry can succeed', async () => {
     let calls = 0
-    mock.module('../../../../steam/MongoDBSingleton', () => ({
+    vi.doMock('../../../../steam/MongoDBSingleton', () => ({
       default: {
         connect: async () => ({
           collection: () => ({
@@ -545,7 +545,7 @@ describe('MatchDataService — memoization', () => {
     expect(r.source).toBe('sourcetv')
     expect(calls).toBe(2)
     // Restore the original mongo mock for subsequent tests in this file.
-    mock.module('../../../../steam/MongoDBSingleton', () => ({
+    vi.doMock('../../../../steam/MongoDBSingleton', () => ({
       default: {
         connect: async () => ({
           collection: () => ({

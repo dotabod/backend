@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'vite-plus/test'
 import { formatTimeAgo, formatUnresolvedMatch, type UnresolvedMatch } from '../unresolvedMatches.ts'
 
 const now = new Date('2026-05-22T12:00:00.000Z')

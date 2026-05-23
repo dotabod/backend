@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
 import { flushAsync } from '../../../../__tests__/sharedMocks.ts'
 import { getHeroNameOrColor } from '../../../lib/heroes.ts'
@@ -89,7 +89,9 @@ describe('event:aegis_picked_up', () => {
   })
 
   it('skips when stream is offline', async () => {
-    const handler = makeGsiHandler({ client: { ...makeGsiHandler().client, stream_online: false } })
+    const handler = makeGsiHandler({
+      client: { ...makeGsiHandler().client, stream_online: false },
+    })
     registerHandler(handler)
 
     events.emit('event:aegis_picked_up', { player_id: 0, game_time: 600 }, handler.getToken())
@@ -187,7 +189,9 @@ describe('event:roshan_killed', () => {
   })
 
   it('skips when stream is offline', async () => {
-    const handler = makeGsiHandler({ client: { ...makeGsiHandler().client, stream_online: false } })
+    const handler = makeGsiHandler({
+      client: { ...makeGsiHandler().client, stream_online: false },
+    })
     registerHandler(handler)
 
     events.emit('event:roshan_killed', { game_time: 600 }, handler.getToken())
@@ -226,7 +230,9 @@ describe('map:paused', () => {
   })
 
   it('skips entirely when stream is offline', async () => {
-    const handler = makeGsiHandler({ client: { ...makeGsiHandler().client, stream_online: false } })
+    const handler = makeGsiHandler({
+      client: { ...makeGsiHandler().client, stream_online: false },
+    })
     registerHandler(handler)
 
     events.emit('map:paused', true, handler.getToken())

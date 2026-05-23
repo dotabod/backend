@@ -8,17 +8,17 @@ pythonpath = [".", "src"]
 
 [dependency-groups]
 dev = [
-    "pytest>=8",
-    "pytest-cov",
-    "pytest-mock",
-    # Light runtime deps the modules import at module load time. The heavy native
-    # deps (opencv/numpy/streamlink/etc.) are stubbed in tests/conftest.py.
-    "flask",
-    "requests",
-    "psutil",
-    "psycopg2-binary",
-    "beautifulsoup4",
-    "Pillow",
-    "numpy>=2.4.6",
-    "opencv-python-headless>=4.13.0.92",
+  "pytest>=8",
+  "pytest-cov",
+  "pytest-mock",
+  # Light runtime deps the modules import at module load time. The heavy native
+  # deps (opencv/numpy/streamlink/etc.) are stubbed in tests/conftest.py.
+  "flask",
+  "requests",
+  "psutil",
+  "psycopg2-binary",
+  "beautifulsoup4",
+  "Pillow",
+  "numpy>=2.4.6",
+  "opencv-python-headless>=4.13.0.92",
 ]

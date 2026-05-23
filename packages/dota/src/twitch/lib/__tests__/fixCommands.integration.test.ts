@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
 import { MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../../db/getWL.ts'
 import { toggleDoubledownMmr } from '../../commands/fixdbl.ts'

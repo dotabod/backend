@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { resetUtilsState, utilsState } from './setupMocks.ts'
 
 const { getTwitchHeaders } = await import('../src/twitch/getTwitchHeaders')

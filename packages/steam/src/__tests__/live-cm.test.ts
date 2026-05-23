@@ -1,4 +1,4 @@
-import { describe, it } from 'bun:test'
+import { describe, it } from 'vite-plus/test'
 // @ts-expect-error no types
 import Steam from 'steam'
 

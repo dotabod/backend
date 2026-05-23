@@ -18,23 +18,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: pnpm/action-setup@v4
         with:
-          bun-version: 1.3.14
+          version: 11.2.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
 
       - name: Delete Steam package.json
         run: rm -f packages/steam/package.json
 
       - name: Install dependencies
-        # Install at the root level to set up workspace packages properly
-        run: bun install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build shared-utils
         # The health check runs twitch-events from source; @dotabod/shared-utils
         # is its only workspace dependency resolved from dist. Building everything
         # would pull in the steam package, whose package.json this workflow deletes.
-        run: bun run --cwd packages/shared-utils build
+        run: pnpm --filter @dotabod/shared-utils run build
 
       - name: Run Health Check
         working-directory: ./packages/twitch-events
@@ -46,4 +49,4 @@ jobs:
           DB_SECRET: ${{ secrets.DB_SECRET }}
           DB_URL: ${{ secrets.DB_URL }}
           # Add any other required environment variables
-        run: bun run subscription-health-check
+        run: pnpm run subscription-health-check

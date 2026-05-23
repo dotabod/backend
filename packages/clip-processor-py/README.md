@@ -27,17 +27,20 @@ This Python tool processes a Twitch clip to extract player names and ranks from 
 First, ensure you have Python 3.7+ installed. Then install Tesseract OCR:
 
 **On macOS:**
+
 ```bash
 brew install tesseract
 ```
 
 **On Ubuntu/Debian:**
+
 ```bash
 sudo apt-get update
 sudo apt-get install -y tesseract-ocr
 ```
 
 **On Windows:**
+
 - Download and install the [Tesseract installer](https://github.com/UB-Mannheim/tesseract/wiki)
 - Add Tesseract to your PATH environment variable
 
@@ -176,6 +179,7 @@ For best results:
 The hero detection feature uses template matching to identify Dota 2 heroes in the top bar of the game interface. To improve hero detection:
 
 1. The system automatically downloads hero images from the Dota 2 API when first run. You can manually trigger this by running:
+
    ```bash
    python src/dota_heroes.py
    ```
@@ -215,7 +219,7 @@ The script outputs a JSON file (default: `results.json`) with the extracted info
       "hero_name": "npc_dota_hero_axe",
       "hero_localized_name": "Axe",
       "match_score": 0.912
-    },
+    }
     // ... more heroes ...
   ],
   "players": [
@@ -224,7 +228,7 @@ The script outputs a JSON file (default: `results.json`) with the extracted info
       "name": "Player1",
       "rank": "4127",
       "hero": "spectre"
-    },
+    }
     // ... more players ...
   ]
 }
@@ -267,6 +271,7 @@ This service provides a REST API for detecting Dota 2 heroes in Twitch clips and
 Detect heroes in a Twitch clip specified by URL or clip ID.
 
 #### Parameters:
+
 - `url`: The Twitch clip URL (required if `clip_id` not provided)
 - `clip_id`: The Twitch clip ID (required if `url` not provided)
 - `debug`: Enable debug mode (optional, default=false)
@@ -275,6 +280,7 @@ Detect heroes in a Twitch clip specified by URL or clip ID.
 - `queue`: Use queue system (optional, default=true)
 
 #### Response (when queued):
+
 ```json
 {
   "queued": true,
@@ -288,6 +294,7 @@ Detect heroes in a Twitch clip specified by URL or clip ID.
 ```
 
 #### Response (when completed):
+
 ```json
 {
   "detected_heroes": ["axe", "crystal_maiden", "pudge"],
@@ -305,6 +312,7 @@ Detect heroes in a Twitch clip specified by URL or clip ID.
 Detect heroes in a live Twitch stream by username.
 
 #### Parameters:
+
 - `username`: The Twitch username of the streamer (required)
 - `frames`: Number of frames to capture and analyze (optional, default=3)
 - `debug`: Enable debug mode (optional, default=false)
@@ -316,6 +324,7 @@ Detect heroes in a live Twitch stream by username.
 Check the status of a queued request by its ID.
 
 #### Response:
+
 ```json
 {
   "request_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -356,6 +365,7 @@ To prevent redundant processing, the system checks if a clip ID or stream userna
 - This applies to requests with status 'pending' (waiting in queue) or 'processing' (currently being analyzed)
 
 Example response for a duplicate request:
+
 ```json
 {
   "queued": true,
@@ -426,6 +436,7 @@ The Docker configuration is optimized for this single-worker approach, using Gun
 ## Development
 
 ### Prerequisites
+
 - Python 3.9+
 - PostgreSQL
 - Tesseract OCR

@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from 'bun:test'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/sharedMocks.ts'
 import type { Players, SocketClient } from '../../../types'
 
@@ -9,9 +9,7 @@ const noopLogger = {
   debug: () => undefined,
 }
 
-mock.module('@dotabod/shared-utils', () =>
-  buildSharedUtilsMock({ supabase: {}, logger: noopLogger }),
-)
+vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase: {}, logger: noopLogger }))
 
 await initTestI18n()
 

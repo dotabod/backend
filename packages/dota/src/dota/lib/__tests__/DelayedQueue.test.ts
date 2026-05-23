@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { DelayedQueue } from '../DelayedQueue'
 
 describe('DelayedQueue', () => {
@@ -13,7 +13,7 @@ describe('DelayedQueue', () => {
   })
 
   it('should add tasks to the queue and return a unique usable id', () => {
-    const callback = mock(() => {})
+    const callback = vi.fn(() => {})
     const taskId = queue.addTask(1000, callback, 'test payload')
     const secondId = queue.addTask(1000, callback, 'test payload')
 
@@ -28,7 +28,7 @@ describe('DelayedQueue', () => {
 
   // Note: DelayedQueue uses 1-second check interval, so tests need to wait > 1s
   it('should execute tasks after delay', async () => {
-    const callback = mock(() => {})
+    const callback = vi.fn(() => {})
     const payload = { test: 'data' }
 
     queue.addTask(100, callback, payload)
@@ -70,7 +70,7 @@ describe('DelayedQueue', () => {
   })
 
   it('should remove tasks from queue', () => {
-    const callback = mock(() => {})
+    const callback = vi.fn(() => {})
     const taskId = queue.addTask(1000, callback)
 
     expect(queue.getQueueSize()).toBe(1)
@@ -81,8 +81,8 @@ describe('DelayedQueue', () => {
   })
 
   it('should handle errors in task callbacks gracefully', async () => {
-    const goodCallback = mock(() => {})
-    const badCallback = mock(() => {
+    const goodCallback = vi.fn(() => {})
+    const badCallback = vi.fn(() => {
       throw new Error('Test error')
     })
 
@@ -97,7 +97,7 @@ describe('DelayedQueue', () => {
   })
 
   it('should clamp delays to maximum allowed', () => {
-    const callback = mock(() => {})
+    const callback = vi.fn(() => {})
     const maxDelay = 50 * 60 * 1000 // 50 minutes
     const excessiveDelay = 60 * 60 * 1000 // 60 minutes
 
@@ -108,7 +108,7 @@ describe('DelayedQueue', () => {
   })
 
   it('should execute remaining tasks during shutdown', async () => {
-    const callback = mock(() => {})
+    const callback = vi.fn(() => {})
 
     queue.addTask(1000, callback, 'test') // Long delay
 
@@ -118,7 +118,7 @@ describe('DelayedQueue', () => {
   })
 
   it('should clear tasks during shutdown without execution', async () => {
-    const callback = mock(() => {})
+    const callback = vi.fn(() => {})
 
     queue.addTask(1000, callback)
     expect(queue.getQueueSize()).toBe(1)

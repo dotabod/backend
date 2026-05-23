@@ -140,7 +140,9 @@ export class DelayedQueue {
           try {
             await task.callback(task.payload)
           } catch (error) {
-            logger.error(`DelayedQueue: Error executing task ${task.id} during shutdown`, { error })
+            logger.error(`DelayedQueue: Error executing task ${task.id} during shutdown`, {
+              error,
+            })
           }
         }),
       )

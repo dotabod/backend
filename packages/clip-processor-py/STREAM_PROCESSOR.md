@@ -50,6 +50,7 @@ Start the processor with default settings:
 ```
 
 This will:
+
 - Capture one frame every 3 seconds
 - Process up to 100 streams simultaneously
 - Use 720p quality to balance bandwidth and analysis accuracy
@@ -73,16 +74,19 @@ Options:
 ### Examples
 
 Capture frames every 5 seconds:
+
 ```bash
 ./stream-processor.sh -i 5
 ```
 
 Load streamers from a file:
+
 ```bash
 ./stream-processor.sh -f streamers.txt
 ```
 
 Use lower quality to save bandwidth:
+
 ```bash
 ./stream-processor.sh -q 480p
 ```
@@ -104,24 +108,25 @@ wagamamatv
 
 The solution provides a REST API for managing streams:
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/status` | GET | Get system status |
-| `/api/streams` | GET | Get all stream statuses |
-| `/api/streams` | POST | Add a stream to monitor |
-| `/api/streams/bulk` | POST | Add multiple streams |
-| `/api/streams/<username>` | GET | Get status of a specific stream |
-| `/api/streams/<username>` | DELETE | Remove a stream |
-| `/api/streams/<username>/priority` | PUT | Update stream priority |
-| `/api/frames/<username>/<filename>` | GET | Get a captured frame image |
-| `/api/config` | GET | Get current configuration |
-| `/api/config` | PUT | Update configuration |
-| `/api/restart` | POST | Restart the stream manager |
-| `/api/metrics` | GET | Get metrics in Prometheus format |
+| Endpoint                            | Method | Description                      |
+| ----------------------------------- | ------ | -------------------------------- |
+| `/api/status`                       | GET    | Get system status                |
+| `/api/streams`                      | GET    | Get all stream statuses          |
+| `/api/streams`                      | POST   | Add a stream to monitor          |
+| `/api/streams/bulk`                 | POST   | Add multiple streams             |
+| `/api/streams/<username>`           | GET    | Get status of a specific stream  |
+| `/api/streams/<username>`           | DELETE | Remove a stream                  |
+| `/api/streams/<username>/priority`  | PUT    | Update stream priority           |
+| `/api/frames/<username>/<filename>` | GET    | Get a captured frame image       |
+| `/api/config`                       | GET    | Get current configuration        |
+| `/api/config`                       | PUT    | Update configuration             |
+| `/api/restart`                      | POST   | Restart the stream manager       |
+| `/api/metrics`                      | GET    | Get metrics in Prometheus format |
 
 ### API Examples
 
 Add a stream:
+
 ```bash
 curl -X POST -H "Content-Type: application/json" \
   -d '{"username": "gorgc", "priority": 3}' \
@@ -129,6 +134,7 @@ curl -X POST -H "Content-Type: application/json" \
 ```
 
 Add multiple streams:
+
 ```bash
 curl -X POST -H "Content-Type: application/json" \
   -d '{"streams": ["gorgc", "admiralbulldog", "dendi"]}' \
@@ -136,6 +142,7 @@ curl -X POST -H "Content-Type: application/json" \
 ```
 
 Change capture interval:
+
 ```bash
 curl -X PUT -H "Content-Type: application/json" \
   -d '{"capture_interval": 5}' \
@@ -152,6 +159,7 @@ The stream processor uses a combination of asynchronous programming (asyncio) an
 4. **Resource Limiting**: Prevents overloading the system with too many concurrent connections
 
 The process flow:
+
 1. Add streams to the manager
 2. Scheduler determines when to capture from each stream
 3. Frame is captured from the Twitch stream

@@ -1,7 +1,7 @@
 // Test harness for GSI event handlers. Drives `events.emit(...)` directly
 // and asserts on captured chat output / redis writes / socket emits.
 // Filename intentionally not `.test.ts` so bun's runner ignores it.
-import { mock } from 'bun:test'
+import { vi } from 'vite-plus/test'
 import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../../__tests__/sharedMocks'
 
 export type MatchPlayer = { heroid: number; accountid: number; playerid: number | null }
@@ -48,7 +48,7 @@ export function resetGsiState() {
 
 // --- Mocks ---
 
-mock.module('@dotabod/shared-utils', () =>
+vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({
     supabase: { from: () => ({}), rpc: async () => ({ data: [], error: null }) },
     logger: { info: () => {}, error: () => {}, warn: () => {}, debug: () => {} },
@@ -85,7 +85,7 @@ const fakeRedisInstance = {
   getJson: async (key: string) => fakeRedisClient.json.get(key),
   setJson: (key: string, value: unknown) => fakeRedisClient.json.set(key, '$', value),
 }
-mock.module('../../../../db/RedisClient', () => ({
+vi.doMock('../../../../db/RedisClient', () => ({
   default: {
     getInstance: () => fakeRedisInstance,
   },
@@ -99,7 +99,7 @@ mock.module('../../../../db/RedisClient', () => ({
 // harnesses monkey-patch the same singleton — see `installGsiMocks` below,
 // which is called in `beforeEach` to ensure gsi tests own the binding.
 
-mock.module('../../../lib/getAccountsFromMatch', () => ({
+vi.doMock('../../../lib/getAccountsFromMatch', () => ({
   getAccountsFromMatch: async () => ({ matchPlayers: gsiState.matchPlayers }),
 }))
 

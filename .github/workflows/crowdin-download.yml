@@ -3,11 +3,11 @@ name: Crowdin Download Translations
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: '0 */6 * * *'
 
 jobs:
   download:
-    environment: "prod"
+    environment: 'prod'
     name: Synchronize with Crowdin
     runs-on: ubuntu-latest
     env:
@@ -67,7 +67,7 @@ jobs:
         if: ${{ steps.count.outputs.lines != '0' }}
         uses: peter-evans/create-pull-request@v8.1.1
         with:
-          title: "[CI] New Crowdin Translations"
+          title: '[CI] New Crowdin Translations'
           body: The latest approved translations from Crowdin
           base: ${{ env.BASE_BRANCH }}
           branch: ${{ env.UPDATE_BRANCH }}

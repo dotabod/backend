@@ -3,7 +3,7 @@
 // mock.module's ranks to stub getRankTitle/getRankDescription/getOpenDotaProfile).
 // rankTierToMmr/mmrToRankTier/estimateMMR/getRankDetail are preserved real via
 // that harness's spread, so they're stable no matter the suite run order.
-import { describe, expect, it, mock } from 'bun:test'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock } from '../../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
@@ -15,9 +15,7 @@ const noopLogger = {
 
 // ranks.ts -> getWL imports `supabase`/`logger` from shared-utils at load time;
 // these helpers never touch it at runtime, so a no-op surface is enough.
-mock.module('@dotabod/shared-utils', () =>
-  buildSharedUtilsMock({ supabase: {}, logger: noopLogger }),
-)
+vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase: {}, logger: noopLogger }))
 
 const { rankTierToMmr, mmrToRankTier, estimateMMR, getRankDetail } = await import('../ranks.ts')
 

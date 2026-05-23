@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
 import { commandHandler, liveGsi, makeMessage, resetState, state } from './setupMocks.ts'
 

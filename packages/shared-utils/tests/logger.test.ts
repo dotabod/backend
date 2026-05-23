@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, spyOn } from 'bun:test'
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
 import { createAppLogger } from '../src/logger-impl'
 
 // Build the genuine winston logger directly from the factory rather than mocking
@@ -19,7 +19,7 @@ async function captureLogs(emit: (logger: any) => void) {
   const logger = createAppLogger()
   const transport = logger.transports[0]
   const captured: any[] = []
-  spyOn(transport, 'log').mockImplementation((info: any, next?: () => void) => {
+  vi.spyOn(transport, 'log').mockImplementation((info: any, next?: () => void) => {
     captured.push(info)
     next?.()
   })

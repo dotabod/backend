@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - "**"
+      - '**'
 
 concurrency:
   group: builder-${{ github.ref }}
@@ -22,7 +22,7 @@ jobs:
 
       # Single source of truth for the build dependency graph. paths-filter
       # diffs the full push range (github.event.before..after), so multi-commit
-      # pushes can't skip a rebuild. package.json/bun.lock are listed for every
+      # pushes can't skip a rebuild. package.json/pnpm-lock.yaml are listed for every
       # service since they all share the root lockfile + bun install.
       - uses: dorny/paths-filter@v4.0.1
         id: filter
@@ -32,34 +32,34 @@ jobs:
               - 'packages/dota/**'
               - 'packages/profanity-filter/**'
               - 'packages/shared-utils/**'
-              - 'packages/Dockerfile.bun'
+              - 'packages/Dockerfile'
               - 'docker-compose.yml'
               - 'package.json'
-              - 'bun.lock'
+              - 'pnpm-lock.yaml'
               - '.github/workflows/builder.yml'
             twitch-chat:
               - 'packages/twitch-chat/**'
               - 'packages/shared-utils/**'
-              - 'packages/Dockerfile.bun'
+              - 'packages/Dockerfile'
               - 'docker-compose.yml'
               - 'package.json'
-              - 'bun.lock'
+              - 'pnpm-lock.yaml'
               - '.github/workflows/builder.yml'
             steam:
               - 'packages/steam/**'
               - 'packages/shared-utils/**'
-              - 'packages/Dockerfile.bun'
+              - 'packages/Dockerfile'
               - 'docker-compose.yml'
               - 'package.json'
-              - 'bun.lock'
+              - 'pnpm-lock.yaml'
               - '.github/workflows/builder.yml'
             twitch-events:
               - 'packages/twitch-events/**'
               - 'packages/shared-utils/**'
-              - 'packages/Dockerfile.bun'
+              - 'packages/Dockerfile'
               - 'docker-compose.yml'
               - 'package.json'
-              - 'bun.lock'
+              - 'pnpm-lock.yaml'
               - '.github/workflows/builder.yml'
 
       - name: Select services to build

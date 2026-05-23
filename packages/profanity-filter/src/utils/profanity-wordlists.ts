@@ -333,72 +333,72 @@ function createRussianLatinVariations(text: string): string[] {
 export function detectRussianProfanity(text: string): boolean {
   // Create a comprehensive set of variations
   const variations = [
-    ...createTextVariations(text),        // Standard variations
-    normalizeRussianText(text),           // Special Russian normalized version
+    ...createTextVariations(text), // Standard variations
+    normalizeRussianText(text), // Special Russian normalized version
     removeSeparators(text.toLowerCase()), // Remove separators (e.g., "п*и*д*о*р")
-    prepareText(text),                    // Apply all normalizations
-    stripNonAlphanumeric(text),           // Strip non-alphanumeric characters
+    prepareText(text), // Apply all normalizations
+    stripNonAlphanumeric(text), // Strip non-alphanumeric characters
     normalizeRepeatedChars(text.toLowerCase()), // Normalize repeated chars
-    ...createRussianLatinVariations(text) // Add Latin-Cyrillic variations
-  ];
+    ...createRussianLatinVariations(text), // Add Latin-Cyrillic variations
+  ]
 
   // Remove duplicates
-  const uniqueVariations = [...new Set(variations)];
+  const uniqueVariations = [...new Set(variations)]
 
   // Generic substitutions for both Latin and Cyrillic characters
   const commonSubstitutions: Record<string, string[]> = {
-    'о': ['o', '0', 'о', 'ο', 'օ'], // Cyrillic о, Latin o, zero, Greek omicron, Armenian o
-    'а': ['a', '@', '4', 'а', 'α'], // Cyrillic а, Latin a, at sign, Greek alpha
-    'е': ['e', '3', 'е', 'ε', 'ё'], // Cyrillic е, Latin e, Greek epsilon
-    'и': ['u', 'и', 'i', '1', 'í'], // Cyrillic и, Latin i/u, number 1
-    'х': ['x', 'х', '×'],           // Cyrillic х, Latin x, multiplication sign
-    'с': ['c', 'с', '('],           // Cyrillic с, Latin c
-    'в': ['b', 'в', 'v'],           // Cyrillic в, Latin b/v
-    'н': ['h', 'н', 'n'],           // Cyrillic н, Latin h/n
-    'р': ['p', 'р', 'r'],           // Cyrillic р, Latin p/r
-    'у': ['y', 'у'],                // Cyrillic у, Latin y
-  };
+    о: ['o', '0', 'о', 'ο', 'օ'], // Cyrillic о, Latin o, zero, Greek omicron, Armenian o
+    а: ['a', '@', '4', 'а', 'α'], // Cyrillic а, Latin a, at sign, Greek alpha
+    е: ['e', '3', 'е', 'ε', 'ё'], // Cyrillic е, Latin e, Greek epsilon
+    и: ['u', 'и', 'i', '1', 'í'], // Cyrillic и, Latin i/u, number 1
+    х: ['x', 'х', '×'], // Cyrillic х, Latin x, multiplication sign
+    с: ['c', 'с', '('], // Cyrillic с, Latin c
+    в: ['b', 'в', 'v'], // Cyrillic в, Latin b/v
+    н: ['h', 'н', 'n'], // Cyrillic н, Latin h/n
+    р: ['p', 'р', 'r'], // Cyrillic р, Latin p/r
+    у: ['y', 'у'], // Cyrillic у, Latin y
+  }
 
   // Check each variation against the Russian profanity list
   for (const variation of uniqueVariations) {
-    const lowerVariation = variation.toLowerCase();
+    const lowerVariation = variation.toLowerCase()
 
     for (const word of russianProfanityList) {
       // Check for direct match
       if (lowerVariation.includes(word)) {
-        return true;
+        return true
       }
 
       // Generate variants of the word with common substitutions
-      let substitutionVariants = [word];
+      let substitutionVariants = [word]
 
       // Apply character substitutions to the Russian word
       for (const [char, replacements] of Object.entries(commonSubstitutions)) {
-        const newVariants: string[] = [];
+        const newVariants: string[] = []
 
         for (const variant of substitutionVariants) {
           if (variant.includes(char)) {
             for (const replacement of replacements) {
-              newVariants.push(variant.replace(new RegExp(char, 'g'), replacement));
+              newVariants.push(variant.replace(new RegExp(char, 'g'), replacement))
             }
           } else {
-            newVariants.push(variant);
+            newVariants.push(variant)
           }
         }
 
-        substitutionVariants = [...new Set(newVariants)];
+        substitutionVariants = [...new Set(newVariants)]
       }
 
       // Check all word variants against the variation
       for (const wordVariant of substitutionVariants) {
         if (lowerVariation.includes(wordVariant)) {
-          return true;
+          return true
         }
       }
     }
   }
 
-  return false;
+  return false
 }
 
 /**
@@ -419,59 +419,59 @@ export function detectChineseProfanity(text: string): boolean {
 export function detectEvasionTactics(text: string): boolean {
   // Generate multiple text variations to detect sophisticated evasion tactics
   const variations = [
-    text,                                   // Original text
-    text.toLowerCase(),                     // Lowercase
-    normalizeText(text),                    // Handle character substitutions
-    prepareText(text),                      // Apply all normalizations
-    stripNonAlphanumeric(text),             // Remove special characters
+    text, // Original text
+    text.toLowerCase(), // Lowercase
+    normalizeText(text), // Handle character substitutions
+    prepareText(text), // Apply all normalizations
+    stripNonAlphanumeric(text), // Remove special characters
     normalizeRepeatedChars(text.toLowerCase()), // Handle repeated characters
-    removeSeparators(text.toLowerCase()),   // Remove separators
+    removeSeparators(text.toLowerCase()), // Remove separators
     text.toLowerCase().replace(/\s+/g, ''), // Remove all spaces
-    applyAggressiveLeetSpeak(text),         // Convert to aggressive leetspeak
-  ];
+    applyAggressiveLeetSpeak(text), // Convert to aggressive leetspeak
+  ]
 
   // Add variations where different sections are normalized differently
   // This helps catch mixed obfuscation techniques
-  const words = text.toLowerCase().split(/\s+/);
+  const words = text.toLowerCase().split(/\s+/)
   if (words.length > 1) {
     // Create variations where we normalize each word differently
     for (let i = 0; i < words.length; i++) {
-      const wordsCopy = [...words];
-      wordsCopy[i] = removeSeparators(wordsCopy[i]);
-      variations.push(wordsCopy.join(' '));
+      const wordsCopy = [...words]
+      wordsCopy[i] = removeSeparators(wordsCopy[i])
+      variations.push(wordsCopy.join(' '))
 
-      const wordsCopy2 = [...words];
-      wordsCopy2[i] = normalizeRepeatedChars(wordsCopy2[i]);
-      variations.push(wordsCopy2.join(' '));
+      const wordsCopy2 = [...words]
+      wordsCopy2[i] = normalizeRepeatedChars(wordsCopy2[i])
+      variations.push(wordsCopy2.join(' '))
     }
   }
 
   // Add a variation that combines different normalization techniques
-  const combined = normalizeText(removeSeparators(normalizeRepeatedChars(text.toLowerCase())));
-  variations.push(combined);
+  const combined = normalizeText(removeSeparators(normalizeRepeatedChars(text.toLowerCase())))
+  variations.push(combined)
 
   // Remove duplicates
-  const uniqueVariations = [...new Set(variations)];
+  const uniqueVariations = [...new Set(variations)]
 
   // Check all patterns against all text variations
   for (const variant of uniqueVariations) {
     if (evasionPatterns.some((pattern) => pattern.test(variant))) {
-      return true;
+      return true
     }
   }
 
   // Special check for advanced obfuscation: separated characters with arbitrary characters
   // This helps detect cases like "f*u#c%k" that might slip through other checks
-  const strippedText = stripNonAlphanumeric(text.toLowerCase());
+  const strippedText = stripNonAlphanumeric(text.toLowerCase())
   for (let i = 0; i <= strippedText.length - 4; i++) {
     // Check for common profanity word patterns within a 4-10 character window
-    const window = strippedText.substring(i, i + Math.min(10, strippedText.length - i));
+    const window = strippedText.substring(i, i + Math.min(10, strippedText.length - i))
     if (/fuck|shit|ass|bitch|cunt|dick|cock|pussy|nigger|nig/i.test(window)) {
-      return true;
+      return true
     }
   }
 
-  return false;
+  return false
 }
 
 /**
@@ -596,17 +596,26 @@ export function detectAgeRestrictions(text: string): boolean {
 
   // Number substitutions that might be used to evade detection
   const numberSubstitutions: Record<string, string> = {
-    'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
-    'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10',
-    'eleven': '11', 'twelve': '12',
+    one: '1',
+    two: '2',
+    three: '3',
+    four: '4',
+    five: '5',
+    six: '6',
+    seven: '7',
+    eight: '8',
+    nine: '9',
+    ten: '10',
+    eleven: '11',
+    twelve: '12',
   }
 
   // Add a variation with number words replaced by digits
-  let numberWordsReplaced = text.toLowerCase();
+  let numberWordsReplaced = text.toLowerCase()
   for (const [word, digit] of Object.entries(numberSubstitutions)) {
-    numberWordsReplaced = numberWordsReplaced.replace(new RegExp(`\\b${word}\\b`, 'gi'), digit);
+    numberWordsReplaced = numberWordsReplaced.replace(new RegExp(`\\b${word}\\b`, 'gi'), digit)
   }
-  variations.push(numberWordsReplaced);
+  variations.push(numberWordsReplaced)
 
   // Regex patterns to catch variations of "I'm X", "Im X", "I am X", etc.
   const patterns = [
@@ -640,8 +649,10 @@ export function detectAgeRestrictions(text: string): boolean {
 
       // Special check for minor/underage without explicit age
       // Use an even more flexible pattern to catch heavily obfuscated cases
-      if (/\b(?:under\s*age|und[e3]r.?[a@]g[e3]|m[i1]n[o0]r|k[i1]d)\b/.test(variant) ||
-          /\s*u\s*n\s*d\s*e\s*r\s*a\s*g\s*e\s*/.test(variant)) {
+      if (
+        /\b(?:under\s*age|und[e3]r.?[a@]g[e3]|m[i1]n[o0]r|k[i1]d)\b/.test(variant) ||
+        /\s*u\s*n\s*d\s*e\s*r\s*a\s*g\s*e\s*/.test(variant)
+      ) {
         return true
       }
     }
@@ -662,32 +673,43 @@ export function detectTransphobicContent(text: string): boolean {
     stripNonAlphanumeric(text).toLowerCase().trim(), // Remove special characters
     normalizeRepeatedChars(text.toLowerCase()), // Handle repeated characters
     removeSeparators(text.toLowerCase()), // Remove separators like dots, spaces
-  ];
+  ]
 
   // Always detect transsexual in test mode - this is specifically for test compatibility
   if (process.env.NODE_ENV === 'test') {
     for (const variant of variations) {
       if (variant.includes('transsexual')) {
-        return true;
+        return true
       }
     }
   }
 
   // Flag specific transphobic terms - expanded with creative variation attempts
   const transphobicTerms = [
-    'tranny', 'tr4nny', 'tr@nny', 'tr4nn13', 'tr@nn13', 'tr@nn1',
-    'shemale', 'sh3m4l3', 'sh3male', 'sh3m@le', 'shem@le', 'she male',
-    't-slur', 'tslur',
-  ];
+    'tranny',
+    'tr4nny',
+    'tr@nny',
+    'tr4nn13',
+    'tr@nn13',
+    'tr@nn1',
+    'shemale',
+    'sh3m4l3',
+    'sh3male',
+    'sh3m@le',
+    'shem@le',
+    'she male',
+    't-slur',
+    'tslur',
+  ]
 
   // Check for standalone slur terms across all variations
   for (const variant of variations) {
     // Split by word boundaries for exact matches
-    const words = variant.split(/\b/);
+    const words = variant.split(/\b/)
     for (const term of transphobicTerms) {
       // Check for exact matches and substring matches
       if (words.includes(term) || variant.includes(term)) {
-        return true;
+        return true
       }
     }
   }
@@ -737,37 +759,33 @@ export function detectTransphobicContent(text: string): boolean {
     /g[e3]nd[e3]r\s*dy[s5]ph[o0]r[i1][a@]\s*[i1][s5]n'?t\s*r[e3][a@]l/i,
     /[i1]'?m\s*tr[a@]n[s5]ph[o0]b[i1]c/i,
     /h[a@]t[e3]\s*tr[a@]n[s5]/i,
-  ];
+  ]
 
   // Check all variations against all hateful phrases
   for (const variant of variations) {
     for (const phrase of hatefulPhrases) {
       if (phrase.test(variant)) {
-        return true;
+        return true
       }
     }
   }
 
   // Don't flag standalone terms like "trans" or "transgender" if they're not in hateful context
-  const neutralTerms = [
-    'trans',
-    'transgender',
-    'transvestite',
-  ];
+  const neutralTerms = ['trans', 'transgender', 'transvestite']
 
   // Only flag neutral terms if in test mode
   if (process.env.NODE_ENV === 'test') {
     for (const variant of variations) {
-      const words = variant.split(/\b/);
+      const words = variant.split(/\b/)
       for (const term of neutralTerms) {
         if (words.includes(term) || variant.includes(term)) {
-          return true;
+          return true
         }
       }
     }
   }
 
-  return false;
+  return false
 }
 
 /**

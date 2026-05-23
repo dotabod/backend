@@ -33,7 +33,7 @@ to 128x72. New variant PNGs only need to land in that directory with sensible na
   Valve ships the override icon under the hero's own name with the variant suffix.
 - **CI blocker to decide:** anonymous depot download of app 570 content is large
   (the Source 2 content depots are tens of GB combined). DepotDownloader with a
-  `-filelist` limits *which files are written to disk*, but it still must process the
+  `-filelist` limits _which files are written to disk_, but it still must process the
   full depot manifest. The single `pak01_dir.vpk` + its referenced numbered chunks
   that actually contain `panorama/images/heroes/icons/` is far smaller than a full
   install, but exact bytes need to be measured on a first run (see "CI feasibility").
@@ -42,13 +42,13 @@ to 128x72. New variant PNGs only need to land in that directory with sensible na
 
 ## Source comparison (real VPK vs the GitHub mirrors)
 
-| Source | Has the binary icon art? | Notes |
-|---|---|---|
-| **`dotabuff/d2vpkr`** | **No** | Only tracks `dota/resource` (cursor, flash3, localization, overviews) and `dota/scripts` (VDF→JSON text). README states it tracks "only a subset of files." There is **no** `panorama/images/heroes` tree at all. This is what our dotaconstants pipeline reads — it is text/data only. |
-| **`SteamDatabase/GameTracking-Dota2`** | **No (art), Yes (file *listing*)** | Tracks the panorama *directory structure* and the authoritative VPK index `game/dota/pak01_dir.txt`, but **not** the binary `.vtex_c` texture content (`panorama/images` contains only a `temp/` folder). Excellent as the authoritative source of exact paths + variant names, useless as an art source. |
-| **Real Dota 2 client VPK (app 570)** | **Yes** | The only source that actually contains the `npc_dota_hero_*_png.vtex_c` icon textures. Requires DepotDownloader/SteamCMD + VRF decompile. |
+| Source                                 | Has the binary icon art?           | Notes                                                                                                                                                                                                                                                                                                     |
+| -------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`dotabuff/d2vpkr`**                  | **No**                             | Only tracks `dota/resource` (cursor, flash3, localization, overviews) and `dota/scripts` (VDF→JSON text). README states it tracks "only a subset of files." There is **no** `panorama/images/heroes` tree at all. This is what our dotaconstants pipeline reads — it is text/data only.                   |
+| **`SteamDatabase/GameTracking-Dota2`** | **No (art), Yes (file _listing_)** | Tracks the panorama _directory structure_ and the authoritative VPK index `game/dota/pak01_dir.txt`, but **not** the binary `.vtex_c` texture content (`panorama/images` contains only a `temp/` folder). Excellent as the authoritative source of exact paths + variant names, useless as an art source. |
+| **Real Dota 2 client VPK (app 570)**   | **Yes**                            | The only source that actually contains the `npc_dota_hero_*_png.vtex_c` icon textures. Requires DepotDownloader/SteamCMD + VRF decompile.                                                                                                                                                                 |
 
-Conclusion: **the real VPK is required for the art.** We *do*, however, lean on
+Conclusion: **the real VPK is required for the art.** We _do_, however, lean on
 `GameTracking-Dota2/game/dota/pak01_dir.txt` as a free, hourly-updated **manifest of
 exactly which icon files (and variants) exist** — useful both for the CI change-detection
 ("did the icon set change?") trigger and to know what to expect after extraction.
@@ -75,7 +75,8 @@ landscape art as additional templates, since the matcher crops + resizes anyway,
 File-name pattern (compiled): `npc_dota_hero_<tag>[_<variant>]_png.vtex_c`
 
 As of the current `pak01_dir.txt` snapshot there are **173** icon files: **127 base**
-+ **46 variant** icons. The full variant list (from `panorama/images/heroes/icons/`):
+
+- **46 variant** icons. The full variant list (from `panorama/images/heroes/icons/`):
 
 ```
 antimage_persona1        crystal_maiden_alt1      crystal_maiden_persona1
@@ -131,27 +132,27 @@ This is why the suffixes line up 1:1 with the variants our matcher already globs
 
 For each extracted `npc_dota_hero_<tag>[_<variant>]_png.png`:
 
-| Extracted suffix | Our template file | Example |
-|---|---|---|
-| (none / base) | `{id}_base.png` | `npc_dota_hero_axe_png` → `2_base.png` |
-| `_alt` | `{id}_alt.png` | `..._rubick_alt_png` → `86_alt.png` |
-| `_alt1` | `{id}_alt1.png` | `..._terrorblade_alt1_png` → `109_alt1.png` |
-| `_persona1` | `{id}_persona1.png` | `..._pudge_persona1_png` → `14_persona1.png` |
+| Extracted suffix | Our template file   | Example                                      |
+| ---------------- | ------------------- | -------------------------------------------- |
+| (none / base)    | `{id}_base.png`     | `npc_dota_hero_axe_png` → `2_base.png`       |
+| `_alt`           | `{id}_alt.png`      | `..._rubick_alt_png` → `86_alt.png`          |
+| `_alt1`          | `{id}_alt1.png`     | `..._terrorblade_alt1_png` → `109_alt1.png`  |
+| `_persona1`      | `{id}_persona1.png` | `..._pudge_persona1_png` → `14_persona1.png` |
 
 Because the matcher crops + resizes to 128x72 itself, we do **not** need to pre-resize.
 We just emit the decompiled PNG at native resolution under the mapped name. The
 existing `invalidate_template_cache()` logic (deletes `templates_cache.npz`) should be
 triggered whenever new PNGs land so templates get recomputed.
 
-**Naming caution:** the in-VPK `icons/` art is the *small square* icon, whereas the
-existing Spectral templates in `assets/dota_heroes/` are the *large landscape* portrait
+**Naming caution:** the in-VPK `icons/` art is the _small square_ icon, whereas the
+existing Spectral templates in `assets/dota_heroes/` are the _large landscape_ portrait
 (`portraits_lg`). These are visually different crops. Two options:
 
 - **(Recommended) Add, don't replace.** Land VPK icons under a distinct variant token
   so both sources coexist as templates, e.g. `{id}_icon.png`, `{id}_icon_alt1.png`,
   `{id}_icon_persona1.png`. The matcher globs `{id}_*.png` so it will pick them up,
   and more templates per hero generally helps top-bar matching (the top bar shows the
-  small icon, so these may even match *better* than the landscape portraits).
+  small icon, so these may even match _better_ than the landscape portraits).
 - **(Alt) Replace** the Spectral set entirely with VPK `icons/`. Riskier — changes the
   95%-accuracy baseline — so prefer adding first and A/B with the eval scripts
   (`eval_in_game.py`, `eval3.py`, `eval5.py`) before considering replacement.
@@ -165,9 +166,9 @@ The draft `extract-icons.sh` uses the `_icon` suffix scheme so it is purely addi
 - **DepotDownloader** (SteamRE) — depot download via SteamKit2. Supports anonymous
   login and `-filelist` to restrict extracted files. Distributed as a self-contained
   .NET binary / NuGet tool (`dotnet tool install -g DepotDownloader`).
-  - Caveat: "free-to-play" does not guarantee the *anonymous* account can pull the
+  - Caveat: "free-to-play" does not guarantee the _anonymous_ account can pull the
     app's content depots. Several SteamRE issues show `App is not available from this
-    account` for some f2p titles under anonymous. **Dota 2 (570) dedicated-server +
+account` for some f2p titles under anonymous. **Dota 2 (570) dedicated-server +
     content depots are generally anonymous-accessible**, but the CI job MUST treat
     "anonymous failed" as a first-class failure and surface it (fallback would require
     a real Steam account secret, which we likely do not want in CI).
@@ -191,7 +192,7 @@ Concerns / mitigations:
    partition and slow. Mitigations:
    - Use DepotDownloader `-filelist` with regex limited to
      `game/dota/pak01_dir.vpk` and the `pak01` data chunks. DepotDownloader only
-     *writes* matched files, but it still downloads the data chunks that contain them.
+     _writes_ matched files, but it still downloads the data chunks that contain them.
      The chunks holding `panorama/images/heroes/icons/` are a small fraction of the
      full game, but the exact footprint must be measured on a first manual/CI run.
    - Target only the **content depot** that holds panorama (historically 373301 /

@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     steps:
-      - name: "Release to Prod and Dev"
+      - name: 'Release to Prod and Dev'
         run: |
           notify_coolify() {
             local env_name=$1

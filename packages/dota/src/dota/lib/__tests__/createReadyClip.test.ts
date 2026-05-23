@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from 'bun:test'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock } from '../../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
@@ -10,9 +10,7 @@ const noopLogger = {
 
 // createReadyClip only touches `logger` from shared-utils; the Twitch ApiClient
 // is passed in, so a no-op surface keeps the test fully offline.
-mock.module('@dotabod/shared-utils', () =>
-  buildSharedUtilsMock({ supabase: {}, logger: noopLogger }),
-)
+vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase: {}, logger: noopLogger }))
 
 const { createReadyClip } = await import('../createReadyClip.ts')
 

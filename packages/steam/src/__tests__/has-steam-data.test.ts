@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, it } from 'vite-plus/test'
 import { hasSteamData } from '../hasSteamData'
 import type { DelayedGames } from '../types/index'
 

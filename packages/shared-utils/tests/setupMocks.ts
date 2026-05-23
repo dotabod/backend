@@ -1,7 +1,7 @@
 // Test harness for shared-utils. Mocks supabase, @twurple/auth, and logger so
 // each test can drive specific code paths without real network or DB access.
 // Filename intentionally not `.test.ts` so bun's runner ignores it.
-import { mock } from 'bun:test'
+import { vi } from 'vite-plus/test'
 
 export const utilsState: {
   // Recorded supabase writes for assertions.
@@ -91,13 +91,13 @@ const supabaseMock = {
   from: (table: string) => createTableBuilder(table),
 }
 
-mock.module('../src/db/supabase', () => ({
+vi.doMock('../src/db/supabase', () => ({
   default: supabaseMock,
   supabase: supabaseMock,
   getSupabaseClient: () => supabaseMock,
 }))
 
-mock.module('../src/logger', () => ({
+vi.doMock('../src/logger', () => ({
   logger: {
     info: (message: string, meta?: Record<string, unknown>) => {
       utilsState.loggerInfoCalls.push({ message, meta: meta ?? {} })
@@ -110,7 +110,7 @@ mock.module('../src/logger', () => ({
   },
 }))
 
-mock.module('@twurple/auth', () => ({
+vi.doMock('@twurple/auth', () => ({
   getAppToken: async () => {
     if (utilsState.appTokenError) throw utilsState.appTokenError
     return utilsState.appToken

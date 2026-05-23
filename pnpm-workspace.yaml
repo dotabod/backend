@@ -1,0 +1,11 @@
+packages:
+  - 'packages/*'
+
+allowBuilds:
+  es5-ext: true
+  lefthook: true
+  esbuild: true
+  '@biomejs/biome': true
+  protobufjs: true
+
+blockExoticSubdeps: false

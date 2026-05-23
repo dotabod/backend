@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
 import type { Players } from '../../types'
 
@@ -9,17 +9,15 @@ const noopLogger = {
   debug: () => undefined,
 }
 
-mock.module('@dotabod/shared-utils', () =>
-  buildSharedUtilsMock({ supabase: {}, logger: noopLogger }),
-)
+vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase: {}, logger: noopLogger }))
 
-mock.module('@dotabod/profanity-filter', () => ({
+vi.doMock('@dotabod/profanity-filter', () => ({
   moderateText: async (text: string) => text,
 }))
 
 // Mongo yields no game mode and no DB-stored notable players, so output reflects
 // only the players passed in.
-mock.module('../MongoDBSingleton', () => ({
+vi.doMock('../MongoDBSingleton', () => ({
   default: {
     connect: async () => ({
       collection: () => ({
@@ -33,13 +31,13 @@ mock.module('../MongoDBSingleton', () => ({
 
 // getPlayers / calculateAvg are only reached on the non-draft path. Stub them so
 // importing notableplayers doesn't pull in their transitive deps (steam socket).
-const getPlayersMock = mock(async () => ({
+const getPlayersMock = vi.fn(async () => ({
   matchPlayers: [] as Players,
   accountIds: [] as number[],
   gameMode: undefined,
 }))
-mock.module('../../dota/lib/getPlayers', () => ({ getPlayers: getPlayersMock }))
-mock.module('../../dota/lib/calculateAvg', () => ({ calculateAvg: async () => 'Divine' }))
+vi.doMock('../../dota/lib/getPlayers', () => ({ getPlayers: getPlayersMock }))
+vi.doMock('../../dota/lib/calculateAvg', () => ({ calculateAvg: async () => 'Divine' }))
 
 await initTestI18n()
 

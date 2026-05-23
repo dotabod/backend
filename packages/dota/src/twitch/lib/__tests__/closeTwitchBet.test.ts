@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { DBSettings } from '../../../settings'
 import type { SocketClient } from '../../../types'
 import { closeTwitchBet, PRO_SUB, resetState, state } from './setupMocks'
