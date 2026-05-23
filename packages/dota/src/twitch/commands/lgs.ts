@@ -9,7 +9,7 @@ import commandHandler from '../lib/CommandHandler'
 commandHandler.registerCommand('lgs', {
   aliases: ['lastgamescore', 'lgscore', 'lgwl'],
   dbkey: DBSettings.commandLGS,
-  handler: async (message, args) => {
+  handler: async (message, _args) => {
     if (!message.channel.client.steam32Id) {
       chatClient.say(
         message.channel.name,

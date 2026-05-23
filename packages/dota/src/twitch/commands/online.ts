@@ -8,7 +8,7 @@ commandHandler.registerCommand('online', {
   aliases: ['offline'],
   permission: 2,
   cooldown: 0,
-  handler: async (message, args, command) => {
+  handler: async (message, _args, command) => {
     const {
       channel: { client },
     } = message

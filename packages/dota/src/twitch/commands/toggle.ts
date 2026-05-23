@@ -6,7 +6,7 @@ commandHandler.registerCommand('toggle', {
   aliases: ['disable', 'enable'],
   permission: 2,
   cooldown: 0,
-  handler: async (message, args) => {
+  handler: async (message, _args) => {
     const {
       channel: { client },
     } = message

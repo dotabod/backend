@@ -1,10 +1,5 @@
 import { describe, expect, test } from 'bun:test'
 import { getProfanityDetails, moderateText } from '../src/utils/moderation'
-import {
-  detectAgeRestrictions,
-  detectEvasionTactics,
-  detectTransphobicContent,
-} from '../src/utils/profanity-wordlists'
 
 // Helper function for testing
 async function testBadPhrase(phrase: string, description: string) {

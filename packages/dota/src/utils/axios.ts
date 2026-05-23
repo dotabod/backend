@@ -28,7 +28,7 @@ axiosRetry(axios, {
   retryDelay: (retryCount: number) => {
     return retryCount * 4000
   },
-  retryCondition: (error: unknown) => {
+  retryCondition: (_error: unknown) => {
     return true
   },
 })

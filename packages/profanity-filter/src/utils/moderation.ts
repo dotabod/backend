@@ -57,7 +57,7 @@ const matcher = new RegExpMatcher({
   ...englishRecommendedTransformers,
 })
 
-const censor = new TextCensor()
+const _censor = new TextCensor()
 
 /**
  * Whitelist of words that might be falsely detected as profanity
@@ -556,7 +556,7 @@ function getProfanityDetailsSingle(text: string): {
   // Check with @2toad/profanity
   for (const variation of textVariations) {
     if (profanity.exists(variation)) {
-      const censored = profanity.censor(variation)
+      const _censored = profanity.censor(variation)
       return { isFlagged: true, source: '@2toad/profanity', matches: [variation] }
     }
   }

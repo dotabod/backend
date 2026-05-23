@@ -9,7 +9,7 @@ import Dota, { GetRealTimeStats } from './steam'
 import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails'
 import { logger } from './utils/logger'
 
-let hasDotabodSocket = false
+let _hasDotabodSocket = false
 let isConnectedToSteam = false
 
 initSpectatorProtobuff()
@@ -53,15 +53,15 @@ socketIoServer.on('connection', (socket) => {
   // Cleanup function
   const cleanupSocket = (sock: Socket) => {
     activeSockets.delete(sock)
-    hasDotabodSocket = activeSockets.size > 0
+    _hasDotabodSocket = activeSockets.size > 0
     sock.removeAllListeners()
     sock.disconnect(true)
   }
 
   try {
     void socket.join('steam')
-    hasDotabodSocket = true
-  } catch (e) {
+    _hasDotabodSocket = true
+  } catch (_e) {
     console.log('Could not join steam socket')
     cleanupSocket(socket)
     return

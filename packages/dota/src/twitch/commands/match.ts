@@ -6,7 +6,7 @@ import commandHandler, { type MessageType } from '../lib/CommandHandler'
 commandHandler.registerCommand('match', {
   aliases: ['matchid'],
   onlyOnline: true,
-  handler: (message: MessageType, args: string[]) => {
+  handler: (message: MessageType, _args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message

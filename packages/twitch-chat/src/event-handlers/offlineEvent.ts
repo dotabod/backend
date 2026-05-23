@@ -34,7 +34,7 @@ export function offlineEvent({ payload: { event } }: { payload: { event: TwitchO
         .eq('providerAccountId', event.broadcaster_user_id)
         .single()
 
-      if (!user || !user.userId) {
+      if (!user?.userId) {
         logger.info('[TWITCHEVENTS] user not found', {
           twitchId: event.broadcaster_user_id,
         })

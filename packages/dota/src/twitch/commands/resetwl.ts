@@ -7,7 +7,7 @@ import commandHandler, { type MessageType } from '../lib/CommandHandler'
 commandHandler.registerCommand('resetwl', {
   permission: 2,
   cooldown: 0,
-  handler: (message: MessageType, args: string[]) => {
+  handler: (message: MessageType, _args: string[]) => {
     async function handler() {
       const {
         channel: { name: channel, client },

@@ -9,7 +9,7 @@ commandHandler.registerCommand('clearsharing', {
   aliases: ['forcelink'],
   permission: 2,
   cooldown: 30,
-  handler: async (message, args) => {
+  handler: async (message, _args) => {
     const {
       channel: { client },
     } = message
@@ -31,7 +31,7 @@ commandHandler.registerCommand('clearsharing', {
         t('clearsharing.success', { lng: client.locale }),
         message.user.messageId,
       )
-    } catch (error) {
+    } catch (_error) {
       const channel = message.channel.client.name
       chatClient.say(
         channel,

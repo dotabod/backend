@@ -96,7 +96,7 @@ export const openTwitchBet = async ({
           })
           return
         }
-      } catch (e) {
+      } catch (_e) {
         // just means couldn't find the error in the stack
       }
 
@@ -108,7 +108,7 @@ export const openTwitchBet = async ({
           })
         }
         return
-      } catch (e) {
+      } catch (_e) {
         // just means couldn't json parse the message for the case above
       }
 
@@ -137,7 +137,7 @@ export const openTwitchBet = async ({
 
           return
         }
-      } catch (e) {
+      } catch (_e) {
         // just means couldn't json parse the message for the two cases above
       }
 

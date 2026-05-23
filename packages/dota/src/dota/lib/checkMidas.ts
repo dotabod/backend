@@ -42,7 +42,9 @@ async function checkMidasIterator(client: SocketClient) {
   // Find the midas in player's inventory
   const midasItem = findItem({ itemName: 'item_hand_of_midas', searchStashAlso: true, data })
 
-  // Check if player has a midas
+  // Check if player has a midas. findItem returns `Item[] | false`, so an
+  // optional-chain shortcut here would skip narrowing on the `false` arm.
+  // biome-ignore lint/complexity/useOptionalChain: union with `false` (not nullish)
   if (!midasItem || !midasItem[0]) return false
 
   // Get passive midas data from Redis
@@ -54,7 +56,7 @@ async function checkMidasIterator(client: SocketClient) {
   }
 
   const midasCharges = Number(midasItem[0].charges)
-  const currentTime = new Date().getTime()
+  const currentTime = Date.now()
   const passiveMidasThreshold = 10000
 
   // Hand of Midas has 2 charges since patch 7.38. Both charges full means player is not using it.

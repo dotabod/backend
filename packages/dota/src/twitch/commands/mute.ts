@@ -8,7 +8,7 @@ commandHandler.registerCommand('mute', {
   aliases: ['unmute'],
   permission: 2,
   cooldown: 0,
-  handler: async (message, args) => {
+  handler: async (message, _args) => {
     const {
       channel: { client },
     } = message

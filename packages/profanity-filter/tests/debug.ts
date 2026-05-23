@@ -9,12 +9,7 @@ import {
   detectMultilingualProfanity,
   evasionPatterns,
 } from '../src/utils/profanity-wordlists'
-import {
-  createTextVariations,
-  normalizeText,
-  prepareText,
-  removeSeparators,
-} from '../src/utils/text-normalization'
+import { createTextVariations } from '../src/utils/text-normalization'
 
 // Test text that's getting false positive
 const testText = 'Will we win with Riki?'
@@ -23,16 +18,16 @@ const testText = 'Will we win with Riki?'
 // console.log(`Testing text: "${testText}"`)
 
 // Check if it's detected by multilingual
-const isMultilingual = detectMultilingualProfanity(testText)
+const _isMultilingual = detectMultilingualProfanity(testText)
 // console.log(`Detected by multilingual function: ${isMultilingual}`)
 
 // Check if it's detected by evasion tactics
-const isEvasion = detectEvasionTactics(testText)
+const _isEvasion = detectEvasionTactics(testText)
 // console.log(`Detected by evasion tactics: ${isEvasion}`)
 
 // Debug evasion patterns
 // console.log('\nTesting each evasion pattern:')
-evasionPatterns.forEach((pattern, index) => {
+evasionPatterns.forEach((pattern, _index) => {
   const match = pattern.test(testText)
   // console.log(`Pattern ${index} (${pattern}): ${match}`)
 
@@ -40,7 +35,7 @@ evasionPatterns.forEach((pattern, index) => {
   if (match) {
     // Reset the lastIndex to ensure we get all matches
     pattern.lastIndex = 0
-    const matches = testText.match(pattern)
+    const _matches = testText.match(pattern)
     // console.log(`  - Matched: ${matches?.join(', ')}`)
   }
 })
@@ -48,11 +43,11 @@ evasionPatterns.forEach((pattern, index) => {
 // Debug text variations
 // console.log('\nText variations generated:')
 const variations = createTextVariations(testText)
-variations.forEach((variation, index) => {
+variations.forEach((variation, _index) => {
   // console.log(`Variation ${index}: "${variation}"`)
 
   // Test each variation against each pattern
-  evasionPatterns.forEach((pattern, patternIndex) => {
+  evasionPatterns.forEach((pattern, _patternIndex) => {
     // Reset lastIndex since we're reusing the regex
     pattern.lastIndex = 0
     const match = pattern.test(variation)
@@ -61,7 +56,7 @@ variations.forEach((variation, index) => {
 
       // Reset again to get matches
       pattern.lastIndex = 0
-      const matches = variation.match(pattern)
+      const _matches = variation.match(pattern)
       // console.log(`    Matched: ${matches?.join(', ')}`)
     }
   })
@@ -87,12 +82,12 @@ const variationsToTest = [
 
 // console.log('\nTesting text variations to isolate trigger:')
 variationsToTest.forEach((text) => {
-  const isMultilingual = detectMultilingualProfanity(text)
+  const _isMultilingual = detectMultilingualProfanity(text)
   const isEvasion = detectEvasionTactics(text)
   // console.log(`"${text}": multilingual=${isMultilingual}, evasion=${isEvasion}`)
 
   if (isEvasion) {
-    evasionPatterns.forEach((pattern, index) => {
+    evasionPatterns.forEach((pattern, _index) => {
       // Reset lastIndex to ensure we get correct results
       pattern.lastIndex = 0
       const match = pattern.test(text)

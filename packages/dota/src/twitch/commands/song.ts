@@ -64,7 +64,7 @@ commandHandler.registerCommand('song', {
   aliases: ['lastfm', 'music', 'nowplaying'],
   onlyOnline: true,
   dbkey: DBSettings.commandLastFm,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, _args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -104,7 +104,7 @@ commandHandler.registerCommand('song', {
       }
 
       const tracks = data.recenttracks?.track
-      if (!tracks || !tracks.length) {
+      if (!tracks?.length) {
         chatClient.say(channel, t('songNotPlaying', { lng: client.locale }), message.user.messageId)
         return
       }

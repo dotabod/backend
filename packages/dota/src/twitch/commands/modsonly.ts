@@ -10,7 +10,7 @@ commandHandler.registerCommand('modsonly', {
   permission: 2,
   cooldown: 0,
   dbkey: DBSettings.commandModsonly,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, _args: string[]) => {
     const {
       channel: { name: channel, id: channelId, client },
     } = message

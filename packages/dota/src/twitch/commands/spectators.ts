@@ -10,7 +10,7 @@ commandHandler.registerCommand('spectators', {
   aliases: ['specs'],
   onlyOnline: true,
   dbkey: DBSettings.commandSpectators,
-  handler: async (message, args) => {
+  handler: async (message, _args) => {
     const {
       channel: { name: channel, client },
     } = message

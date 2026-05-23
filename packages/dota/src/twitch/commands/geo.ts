@@ -14,7 +14,7 @@ commandHandler.registerCommand('geo', {
   permission: 2,
   dbkey: DBSettings.commandGeo,
 
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, _args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message

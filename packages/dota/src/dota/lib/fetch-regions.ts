@@ -43,7 +43,7 @@ async function fetchWithBackoff(steam32Id: number, retryCount = 0): Promise<numb
     for (const [regionId, data] of Object.entries(response.data.region)) {
       if (data.games > maxGames) {
         maxGames = data.games
-        mostPlayedRegion = Number.parseInt(regionId)
+        mostPlayedRegion = Number.parseInt(regionId, 10)
       }
     }
 
@@ -60,7 +60,7 @@ async function fetchWithBackoff(steam32Id: number, retryCount = 0): Promise<numb
     return null
   }
 }
-async function main() {
+async function _main() {
   try {
     // Read account IDs from the JSON file
     const accountIds = dataset.map((account) => account.steam32Id)
@@ -134,7 +134,7 @@ const regions = {
 }
 
 // update the dataset with the region for each account
-function updateDataset(
+function _updateDataset(
   dataset: { steam32Id: number; region?: string; regionId?: number }[],
   regionMapping: RegionMapping,
 ) {

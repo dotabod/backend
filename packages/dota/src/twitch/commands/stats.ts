@@ -99,7 +99,7 @@ async function getStats({
       )
     })
 
-    const delayedData = await getDelayedDataPromise.catch((error) => {
+    const delayedData = await getDelayedDataPromise.catch((_error) => {
       throw new CustomError(t('gameNotFound', { lng: locale }))
     })
 

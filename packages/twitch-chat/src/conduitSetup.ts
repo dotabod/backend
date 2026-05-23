@@ -4,7 +4,6 @@ import {
   logger,
   updateConduitShard as sharedUpdateConduitShard,
 } from '@dotabod/shared-utils'
-import { io as socketClient } from 'socket.io-client'
 import type { TwitchEventTypes } from './event-handlers/events'
 import { offlineEvent } from './event-handlers/offlineEvent'
 import { onlineEvent } from './event-handlers/onlineEvent'
@@ -16,7 +15,7 @@ import { twitchEvent } from './events'
 import { handleChatMessage } from './handleChat'
 import { emitEvent, hasDotabodSocket } from './utils/socketManager'
 
-const headers = await getTwitchHeaders()
+const _headers = await getTwitchHeaders()
 
 // Create a socket client to connect to the twitch-events service
 const eventsSocket = twitchEvent

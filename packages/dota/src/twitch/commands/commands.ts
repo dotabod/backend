@@ -5,7 +5,7 @@ import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('commands', {
   dbkey: DBSettings.commandCommands,
-  handler: (message: MessageType, args: string[]) => {
+  handler: (message: MessageType, _args: string[]) => {
     const channel = message.channel.client.name
     chatClient.say(
       channel,

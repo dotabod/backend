@@ -10,7 +10,7 @@ commandHandler.registerCommand('lg', {
   aliases: ['lastgame'],
   onlyOnline: true,
   dbkey: DBSettings.commandLG,
-  handler: async (message, args) => {
+  handler: async (message, _args) => {
     const {
       channel: { client },
     } = message

@@ -305,7 +305,7 @@ class SetupSupabase {
           const client = findUser(subscriptionData.userId)
 
           // Only proceed if the client is found and currently considered online
-          if (!client || !client.stream_online) {
+          if (!client?.stream_online) {
             logger.info('Gift notification skipped: Client not found or not online', {
               userId: subscriptionData.userId,
               found: !!client,

@@ -4,7 +4,7 @@ import { chatClient } from '../chatClient'
 import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('version', {
-  handler: (message: MessageType, args: string[]) => {
+  handler: (message: MessageType, _args: string[]) => {
     if (!process.env.COMMIT_HASH) {
       chatClient.say(
         message.channel.name,

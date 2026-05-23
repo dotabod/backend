@@ -26,11 +26,11 @@ async function testAPI() {
 
   // Check API info
   try {
-    const response = await axios.get(API_URL)
+    const _response = await axios.get(API_URL)
     // console.log('API Info:')
     // console.log(response.data)
     // console.log('-------------------\n')
-  } catch (error) {
+  } catch (_error) {
     console.error('Error connecting to API. Is the server running?')
     process.exit(1)
   }
@@ -39,7 +39,7 @@ async function testAPI() {
   // console.log('Testing /moderate endpoint:')
   for (const testCase of testCases) {
     try {
-      const response = await axios.post(`${API_URL}/moderate`, {
+      const _response = await axios.post(`${API_URL}/moderate`, {
         text: testCase.text,
       })
 

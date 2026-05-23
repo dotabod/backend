@@ -147,7 +147,7 @@ async function getHeroMsg({
     .emit(
       'requestHeroData',
       { allTime: false, heroId, steam32Id },
-      (err: unknown, response: heroRecords) => {
+      (_err: unknown, response: heroRecords) => {
         if (!response) return
 
         const { win, lose } = response

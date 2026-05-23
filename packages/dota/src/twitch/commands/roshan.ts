@@ -14,7 +14,7 @@ commandHandler.registerCommand('roshan', {
   onlyOnline: true,
   aliases: ['rosh', 'aegis'],
   dbkey: DBSettings.commandRosh,
-  handler: async (message, args) => {
+  handler: async (message, _args) => {
     const {
       channel: { name: channel, client },
     } = message

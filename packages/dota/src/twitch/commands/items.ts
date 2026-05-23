@@ -118,7 +118,7 @@ async function getItems({
       )
     })
 
-    const delayedData = await getDelayedDataPromise.catch((error) => {
+    const delayedData = await getDelayedDataPromise.catch((_error) => {
       throw new CustomError(t('gameNotFound', { lng: locale }))
     })
 
@@ -145,6 +145,9 @@ async function getItems({
         .filter(Boolean)
   }
 
+  // itemList can be `string[] | false` from the `Array.isArray && ... && ...` chain
+  // above, so optional-chain would skip narrowing on the `false` arm.
+  // biome-ignore lint/complexity/useOptionalChain: union with `false` (not nullish)
   if (!itemList || !itemList.length) {
     throw new CustomError(
       t('heroItems.empty', {

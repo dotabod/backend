@@ -22,7 +22,7 @@ async function checkForNewDotaPatch(): Promise<{ isNewPatch: boolean; version: s
     // Get the list of patches
     const response = await axios.get(DOTA_PATCH_LIST_URL)
 
-    if (!response.data || !response.data.patches || !response.data.patches.length) {
+    if (!response.data?.patches?.length) {
       logger.warn('[DotaPatchChecker] No patch data found in API response')
       return { isNewPatch: false, version: null }
     }
@@ -96,7 +96,7 @@ export async function getPatchDetails(version: string): Promise<unknown> {
  */
 function notifyClientsAboutNewPatch(version: string): void {
   // Iterate through all connected clients
-  for (const [token, handler] of gsiHandlers.entries()) {
+  for (const [_token, handler] of gsiHandlers.entries()) {
     if (handler && !handler.disabled && handler.client.stream_online) {
       say(
         handler.client,

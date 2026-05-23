@@ -53,7 +53,7 @@ const maxRequestsBeforePause = 800
 const pauseDuration = 65000 // 65 seconds in milliseconds
 
 async function deleteSubscription(id: string) {
-  let retryDelay = 60 // Start with a 60 second delay
+  let _retryDelay = 60 // Start with a 60 second delay
   const maxRetries = 5 // Maximum number of retries
   let attempt = 0 // Current attempt
 
@@ -90,7 +90,7 @@ async function deleteSubscription(id: string) {
       console.log(`Rate limit exceeded. Waiting for ${waitTime}ms`)
       await sleep(waitTime) // Wait until rate limit is reset
       attempt++ // Increment attempt counter
-      retryDelay *= 1.2 // Exponential back-off
+      _retryDelay *= 1.2 // Exponential back-off
     } else {
       // If the request failed for reasons other than rate limit, throw an error
       console.error(`Failed to delete subscription: ${response.status} // ${await response.text()}`)
@@ -141,7 +141,7 @@ async function updateAccountRequiresRefresh(twitchId: string) {
   return debouncedUpdateAccounts()
 }
 
-async function markRevokedAuthorizationsAsRequiresRefresh(singleLoop = false) {
+async function _markRevokedAuthorizationsAsRequiresRefresh(singleLoop = false) {
   const statuses = ['user_removed', 'authorization_revoked']
   const updatePromises = new Map()
 
@@ -179,7 +179,7 @@ async function markRevokedAuthorizationsAsRequiresRefresh(singleLoop = false) {
   }
 }
 
-async function deleteStatuses(singleLoop = false) {
+async function _deleteStatuses(singleLoop = false) {
   const statuses = ['user_removed', 'authorization_revoked', 'webhook_callback_verification_failed']
 
   for (const status of statuses) {
@@ -224,7 +224,7 @@ async function getCountOfSubscriptionsWithStatus(status?: string): Promise<numbe
   }
 }
 
-async function deleteCostSubsAndSetRequiresRefresh(singleLoop = false): Promise<string[]> {
+async function _deleteCostSubsAndSetRequiresRefresh(singleLoop = false): Promise<string[]> {
   const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
   let allBroadcasterUserIds: string[] = []
   let cursor: string | null = null

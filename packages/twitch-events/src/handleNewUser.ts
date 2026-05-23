@@ -26,7 +26,7 @@ export async function handleNewUser(providerAccountId: string, resubscribeEvents
 
     // remove falsy values from data (like displayName: undefined)
     const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([key, value]) => Boolean(value)),
+      Object.entries(data).filter(([_key, value]) => Boolean(value)),
     )
 
     const { data: user } = await supabase
@@ -36,7 +36,7 @@ export async function handleNewUser(providerAccountId: string, resubscribeEvents
       .eq('provider', 'twitch')
       .single()
 
-    if (!user || !user.userId) {
+    if (!user?.userId) {
       logger.info('[TWITCHEVENTS] user not found', { providerAccountId })
       return
     }

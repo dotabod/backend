@@ -6,7 +6,7 @@ import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('count', {
-  handler: async (message, args) => {
+  handler: async (message, _args) => {
     const sockets = (await server.io.fetchSockets()).length
     const gsiSize = gsiHandlers.size
 

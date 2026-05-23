@@ -11,7 +11,7 @@ import commandHandler, { type MessageType } from '../lib/CommandHandler'
 commandHandler.registerCommand('wl', {
   aliases: ['score', 'winrate', 'wr'],
   dbkey: DBSettings.commandWL,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, _args: string[]) => {
     const {
       channel: { name: channel, id: channelId, client },
     } = message

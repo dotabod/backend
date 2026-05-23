@@ -14,7 +14,7 @@ import { isSubscriptionActive } from '../types/subscription'
 export default async function getDBUser({
   token,
   twitchId: providerAccountId,
-  ip,
+  ip: _ip,
 }: {
   token?: string
   twitchId?: string
@@ -136,7 +136,7 @@ export default async function getDBUser({
     return { reason: `Error fetching user from supabase: ${userError.message}`, result: null }
   }
 
-  if (!user || !user.id) {
+  if (!user?.id) {
     logger.info('Invalid token', { token: lookupToken })
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)

@@ -13,7 +13,7 @@ commandHandler.registerCommand('ranked', {
   aliases: ['isranked'],
   onlyOnline: true,
   dbkey: DBSettings.commandRanked,
-  handler: async (message, args) => {
+  handler: async (message, _args) => {
     const {
       channel: { name: channel, client },
     } = message

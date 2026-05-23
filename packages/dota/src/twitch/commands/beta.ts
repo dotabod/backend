@@ -7,7 +7,7 @@ commandHandler.registerCommand('beta', {
   aliases: ['joinbeta', 'leavebeta', 'betaoff', 'betaon'],
   permission: 2,
   cooldown: 0,
-  handler: (message: MessageType, args: string[]) => {
+  handler: (message: MessageType, _args: string[]) => {
     async function handler() {
       await supabase
         .from('users')

@@ -6,7 +6,7 @@ import type { AegisRes } from './AegisRes'
 import { getNewAegisTime } from './getNewAegisTime'
 
 export function emitAegisEvent(res: AegisRes, token: string, client: SocketClient) {
-  if (!res || !res.expireDate) return
+  if (!res?.expireDate) return
 
   res = getNewAegisTime(res)
   if (res.expireS <= 0) return

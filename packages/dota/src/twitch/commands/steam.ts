@@ -9,7 +9,7 @@ commandHandler.registerCommand('steam', {
   permission: 2,
   dbkey: DBSettings.commandSteam,
 
-  handler: (message: MessageType, args: string[]) => {
+  handler: (message: MessageType, _args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message

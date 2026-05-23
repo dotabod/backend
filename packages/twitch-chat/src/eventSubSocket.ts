@@ -88,7 +88,7 @@ export class EventsubSocket extends EventEmitter {
     console.debug('Opened Connection to Twitch')
   }
 
-  private handleClose(close: WebSocket.CloseEvent, isReconnect: boolean): void {
+  private handleClose(close: WebSocket.CloseEvent, _isReconnect: boolean): void {
     // Ignore closes from a stale socket (e.g. the old connection shutting down
     // after a session_reconnect handed off to a new one). Otherwise it clobbers
     // the live connection's status and can spawn duplicate reconnects.

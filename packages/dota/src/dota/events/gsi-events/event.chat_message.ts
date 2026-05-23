@@ -103,6 +103,7 @@ const translationBuffers = new Map<
   { messages: TranslationMessage[]; timeout: NodeJS.Timeout | null }
 >()
 
+// biome-ignore lint/correctness/noUnusedVariables: documented list of supported speech-to-text language codes
 type LanguageCodes =
   | 'en'
   | 'af-ZA'

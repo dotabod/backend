@@ -207,7 +207,7 @@ class Dota {
 
   // Fetch games from the Dota2 game coordinator
   private fetchGames(): Promise<SteamMatchDetails[]> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) return
 
       let games: SteamMatchDetails[] = []
@@ -306,7 +306,7 @@ class Dota {
     if (fs.existsSync(serverPath)) {
       try {
         Steam.servers = JSON.parse(fs.readFileSync(serverPath).toString())
-      } catch (e) {
+      } catch (_e) {
         // Ignore
       }
     }
@@ -412,7 +412,7 @@ class Dota {
       steamErrors(eresult, (err, errorObject) => {
         logger.info('[STEAM]', { errorObject, err })
       })
-    } catch (e) {
+    } catch (_e) {
       // Ignore
     }
   }
@@ -716,7 +716,7 @@ export const GetRealTimeStats = async ({
     maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
   })
 
-  const requestPromise = new Promise<DelayedGames>((resolve, reject) => {
+  const requestPromise = new Promise<DelayedGames>((resolve, _reject) => {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     operation.attempt(async (currentAttempt) => {
       let game: DelayedGames

@@ -7,7 +7,7 @@ import commandHandler, { type MessageType } from '../lib/CommandHandler'
 commandHandler.registerCommand('friends', {
   permission: 4,
 
-  handler: (message: MessageType, args: string[]) => {
+  handler: (message: MessageType, _args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message

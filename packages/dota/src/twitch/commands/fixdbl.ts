@@ -21,7 +21,7 @@ commandHandler.registerCommand('fixdbl', {
   aliases: ['fixdd'],
   permission: 2,
   cooldown: 0,
-  handler: async (message, args) => {
+  handler: async (message, _args) => {
     const { data } = await supabase
       .from('matches')
       .select('matchId, won, is_party, id, is_doubledown')

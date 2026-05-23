@@ -28,7 +28,7 @@ import { validateToken } from './validateToken'
 // Map<accountId: string, Set<clipSlug: string>>
 const clipsToDeleteQueue = new Map<string, Set<string>>()
 let isProcessingDeleteQueue = false // Simple lock
-const CLIP_DELETE_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
+const _CLIP_DELETE_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
 
 export function addClipToDeletionQueue(accountId: string, clipSlug: string): void {
   if (!clipsToDeleteQueue.has(accountId)) {
@@ -109,7 +109,7 @@ class GSIServer implements GSIServerInterface {
 
     app.post(
       '/',
-      (req: Request, res: Response, next: () => void) => {
+      (_req: Request, _res: Response, next: () => void) => {
         next()
       },
       validateToken,
@@ -206,7 +206,7 @@ class GSIServer implements GSIServerInterface {
       res.status(200).json(messageToSend)
     })
 
-    app.get('/', (req: Request, res: Response) => {
+    app.get('/', (_req: Request, res: Response) => {
       res.status(200).json({ status: 'ok' })
     })
 

@@ -5,7 +5,7 @@ export function steamID64toSteamID32(steamID64: string) {
   if (!steamID64) return null
   try {
     return Number(steamID64.substr(-16, 16)) - 6561197960265728
-  } catch (error) {
+  } catch (_error) {
     return null
   }
 }
@@ -14,7 +14,7 @@ const STEAMID64_OFFSET = 76561197960265728n
 export function steamID32toSteamID64(steam32Id: number) {
   try {
     return (BigInt(steam32Id) + STEAMID64_OFFSET).toString()
-  } catch (error) {
+  } catch (_error) {
     return null
   }
 }

@@ -49,9 +49,9 @@ export function mmrToRankTier(mmr: number): number {
     // If MMR falls within this rank's range
     if (mmr >= min && mmr <= max) {
       // Extract the medal number from the image (first digit)
-      const medal = Number.parseInt(rank.image.charAt(0))
+      const medal = Number.parseInt(rank.image.charAt(0), 10)
       // Extract the stars from the image (second digit)
-      const stars = Number.parseInt(rank.image.charAt(1))
+      const stars = Number.parseInt(rank.image.charAt(1), 10)
 
       // Calculate rank tier (medal * 10 + stars)
       return medal * 10 + stars
@@ -153,7 +153,7 @@ export async function lookupLeaderRank(
 
       // Cache the result
       await redisClient.setJson(cacheKey, result)
-    } catch (e) {
+    } catch (_e) {
       return defaultNotFound
     }
   }

@@ -23,7 +23,7 @@ export async function gameMedals(
       .find({ rank_tier: { $in: cards.map((card) => card.rank_tier) } })
       .toArray()
 
-    const medals = cards.map((card, i) => {
+    const medals = cards.map((card, _i) => {
       const currentMedal = medalQuery.find(
         (temporaryMedal) => temporaryMedal.rank_tier === card.rank_tier,
       )
@@ -71,7 +71,7 @@ export async function gameMedals(
       }
 
       if (a.startsWith('#') || b.startsWith('#')) {
-        return Number.parseInt(b.substring(1)) - Number.parseInt(a.substring(1))
+        return Number.parseInt(b.substring(1), 10) - Number.parseInt(a.substring(1), 10)
       }
 
       return 0

@@ -36,7 +36,7 @@ commandHandler.registerCommand('today', {
   dbkey: DBSettings.commandToday,
   handler: async (message: MessageType) => {
     const {
-      channel: { name: channel, id: channelId, client },
+      channel: { name: channel, client },
     } = message
 
     if (!client.steam32Id) {

@@ -8,7 +8,7 @@ import commandHandler, { type MessageType } from '../lib/CommandHandler'
 commandHandler.registerCommand('pleb', {
   permission: 2,
   dbkey: DBSettings.commandPleb,
-  handler: async (message: MessageType, args: string[]) => {
+  handler: async (message: MessageType, _args: string[]) => {
     const {
       channel: { name: channel, id: channelId },
     } = message

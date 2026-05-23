@@ -61,15 +61,15 @@ async function postEventsForUsers(
   await Promise.allSettled(promises)
 }
 
-async function testAegis() {
+async function _testAegis() {
   const users = await fetchOnlineUsers(USER_COUNT)
   await postWinEventsForUsers(users, 'radiant')
   await postEventsForUsers(users, DotaEventTypes.AegisPickedUp)
 }
 
-async function fixNewUsers() {
+async function _fixNewUsers() {
   console.log('running fixNewUsers')
-  const { data: users, error } = await supabase
+  const { data: users } = await supabase
     .from('users')
     .select('id, Account:accounts(providerAccountId)')
     .is('displayName', null)
@@ -108,7 +108,7 @@ async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
 
     // remove falsy values from data (like displayName: undefined)
     const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([key, value]) => Boolean(value)),
+      Object.entries(data).filter(([_key, value]) => Boolean(value)),
     )
 
     let userId: string | null = null

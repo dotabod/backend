@@ -247,7 +247,7 @@ export async function updateConduitShard(
       )
 
       // Force token refresh by getting fresh headers
-      const freshHeaders = await getTwitchHeaders()
+      const _freshHeaders = await getTwitchHeaders()
 
       // Retry with exponential backoff (max 5 retries)
       if (retryCount < 5) {

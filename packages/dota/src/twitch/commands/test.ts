@@ -61,7 +61,7 @@ const generateLogQuery = (user: Awaited<ReturnType<typeof fetchUserByName>>) => 
   `
 }
 
-const handleUserCommand = (message: MessageType, args: string[]) => {
+const handleUserCommand = (message: MessageType, _args: string[]) => {
   const {
     user: { userId },
     channel: { name: channel, client },
@@ -164,7 +164,7 @@ const handleLogsCommand = async (message: MessageType) => {
   chatClient.whisper(user.userId, query || "Couldn't find user")
 }
 
-const handleWpCommand = async (message: MessageType, args: string[]) => {
+const handleWpCommand = async (message: MessageType, _args: string[]) => {
   if (!message?.channel?.client?.gsi?.map?.matchid) {
     chatClient.whisper(message.user.userId, 'No match id found')
     return
@@ -326,7 +326,7 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
         lobbyType: number
       } | null
       try {
-        const response = await new Promise<RequestMatchDataResponse>((resolve, reject) => {
+        const response = await new Promise<RequestMatchDataResponse>((resolve, _reject) => {
           lastSocket
             .timeout(25000)
             .emit(
