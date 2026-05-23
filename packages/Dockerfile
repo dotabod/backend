@@ -9,6 +9,7 @@ WORKDIR /app
 # Workspace manifests + tooling config
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY tsconfig.json vite.config.ts ./
+COPY patches patches/
 
 # All workspace package.json files (needed so pnpm install hydrates the graph
 # even if only one service is being built)
