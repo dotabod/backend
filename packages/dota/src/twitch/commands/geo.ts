@@ -33,8 +33,8 @@ commandHandler.registerCommand('geo', {
 
     try {
       if (!isSpectator(client.gsi)) {
-        // Feature flag: Valve disabled the spectate friend game proto
-        // Show message immediately instead of waiting for timeout
+        // PRESERVED — gated, not dead. Branches below come back if ENABLE_SPECTATE_FRIEND_GAME is
+        // re-enabled with bot-friend management. See memory `keep-spectate-friend-path`.
         if (!ENABLE_SPECTATE_FRIEND_GAME) {
           throw new CustomError(t('matchDataValveDisabled', { emote: 'PoroSad', lng: locale }))
         }

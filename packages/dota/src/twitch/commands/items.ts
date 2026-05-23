@@ -75,8 +75,9 @@ async function getItems({
         .filter(Boolean)
         .filter((item) => item !== 'empty')
   } else {
-    // Feature flag: Valve disabled the spectate friend game proto
-    // Show message immediately instead of waiting for timeout
+    // PRESERVED — gated, not dead. The branches below (steamServerId redis read + getRealTimeStats
+    // emit) come back to life if `ENABLE_SPECTATE_FRIEND_GAME` is re-enabled AND bot-streamer
+    // friendship is managed at scale. See memory `keep-spectate-friend-path`.
     if (!ENABLE_SPECTATE_FRIEND_GAME) {
       throw new CustomError(t('matchDataValveDisabled', { emote: 'PoroSad', lng: locale }))
     }

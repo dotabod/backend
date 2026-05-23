@@ -421,6 +421,11 @@ class Dota {
     return process.env.DOTABOD_ENV === 'production'
   }
 
+  // PRESERVED — gated, not dead. The underlying `dota2.spectateFriendGame` RPC requires the
+  // streamer to be Steam-friends with the Dotabod bot. Bot-side flag `ENABLE_SPECTATE_FRIEND_GAME`
+  // is off until we build streamer↔bot friend management at scale, at which point this is the
+  // chokepoint that obtains the `server_steam_id` for `GetRealTimeStats`. See memory
+  // `keep-spectate-friend-path`. Do not delete.
   public getUserSteamServer = (steam32Id: number | string): Promise<string> => {
     const steam_id = this.dota2.ToSteamID(Number(steam32Id))
 

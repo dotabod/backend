@@ -228,8 +228,9 @@ async function saveMatchData(client: SocketClient) {
 
     if (steamServerId && lobbyType !== null) return
 
-    // Feature flag: Valve disabled the spectate friend game proto
-    // Only attempt to get steam server if the feature is enabled
+    // PRESERVED — gated, not dead. This block is the sole writer of the redis steamServerId key
+    // that `!items`/`!stats`/`!geo`/`!winprobability` later read. Gated off pending bot-friend
+    // management at scale; see memory `keep-spectate-friend-path`.
     if (
       !steamServerId &&
       lobbyType === null &&

@@ -14,8 +14,11 @@ export { type ChatterKeys, type CommandKeys, DBSettings, type SettingKeys }
 export const commands = defaultCommands
 export const defaultSettings = defaultSettingsStructure
 
-// Feature flag: Valve disabled the spectate friend game proto
-// Set to true if Valve ever restores this functionality
+// Feature flag for the spectate-friend → GetRealTimeStats chain. KEEP the gated code intact —
+// it's preserved on purpose pending a future bot↔streamer Steam friend-management initiative,
+// not dead. See memory `keep-spectate-friend-path` for the revival plan + what to leave alone.
+// Empirically (2026-05-22) `dota2.spectateFriendGame` returns no callback for non-friend streamers
+// at either MMR tier; can't tell if Valve killed it or just our missing-friendship.
 export const ENABLE_SPECTATE_FRIEND_GAME = false
 
 export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value: unknown }[]) => {

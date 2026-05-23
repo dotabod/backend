@@ -37,6 +37,8 @@ commandHandler.registerCommand('winprobability', {
       return
     }
 
+    // PRESERVED — gated, not dead. Branches below come back if ENABLE_SPECTATE_FRIEND_GAME is
+    // re-enabled with bot-friend management. See memory `keep-spectate-friend-path`.
     if (!ENABLE_SPECTATE_FRIEND_GAME || is8500Plus(client)) {
       chatClient.say(
         channel,
