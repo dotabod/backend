@@ -3,21 +3,28 @@
   "ignore": ["packages/clip-processor-py/**"],
   "ignoreBinaries": ["doppler", "upgrade-interactive", "i18next"],
   "workspaces": {
-    ".": {},
+    ".": {
+      "entry": [
+        "detect-circular-deps.ts",
+        "scripts/remove-unused-decls.ts",
+        "services/crowdin/src/i18next-parser.config.js",
+        "services/mongodb/src/init.js"
+      ]
+    },
     "packages/dota": {
-      "entry": ["src/index.ts", "src/dev/index.ts", "src/**/__tests__/**/*.ts", "src/**/*.test.ts"]
+      "entry": ["src/dev/index.ts", "src/**/__tests__/**/*.ts", "src/**/*.test.ts"]
     },
     "packages/profanity-filter": {
-      "entry": ["index.ts", "src/example-client.ts", "tests/**/*.ts"]
+      "entry": ["src/example-client.ts", "tests/**/*.ts"]
     },
     "packages/shared-utils": {},
     "packages/steam": {},
     "packages/twitch": {},
     "packages/twitch-chat": {
-      "entry": ["src/index.ts", "src/**/__tests__/**/*.ts"]
+      "entry": ["src/**/__tests__/**/*.ts"]
     },
     "packages/twitch-events": {
-      "entry": ["src/index.ts", "src/**/__tests__/**/*.ts"]
+      "entry": ["src/**/__tests__/**/*.ts"]
     }
   }
 }

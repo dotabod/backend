@@ -1,5 +1,5 @@
 // Define the basic command types
-export const defaultCommands = {
+const defaultCommands = {
   commandAPM: true,
   commandAvg: true,
   commandCommands: true,
@@ -49,8 +49,6 @@ export const defaultCommands = {
   commandToday: true,
   commandStreamers: true,
 } as const
-
-export type CommandKeys = keyof typeof defaultCommands
 
 // Define the chatter types
 const defaultChatters = {
