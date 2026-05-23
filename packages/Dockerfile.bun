@@ -60,6 +60,7 @@ FROM oven/bun:1.3.14-slim AS prod
 
 ARG BUILD_CONTEXT
 ARG DOTABOD_ENV
+ARG COMMIT_HASH
 
 # Meta-data and labels
 LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
@@ -83,4 +84,5 @@ COPY --from=builder /app/packages/shared-utils/package.json packages/shared-util
 # Environment and CMD
 WORKDIR /app/$BUILD_CONTEXT/
 ENV DOTABOD_ENV=$DOTABOD_ENV
+ENV COMMIT_HASH=$COMMIT_HASH
 CMD ["sh", "-c", "exec bun ${CPU_PROF:+--cpu-prof --cpu-prof-dir=/tmp/profiles} dist/index.js"]
