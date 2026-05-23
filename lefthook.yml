@@ -1,8 +1,17 @@
 pre-commit:
   commands:
+    oxlint:
+      glob: '*.{js,jsx,ts,tsx,mjs,cjs}'
+      run: |
+        npx oxlint --fix {staged_files} \
+          && git add {staged_files} \
+          && npx oxlint {staged_files}
     biome:
       run: npx @biomejs/biome check --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {staged_files}
 pre-push:
   commands:
+    oxlint:
+      glob: '*.{js,jsx,ts,tsx,mjs,cjs}'
+      run: npx oxlint {push_files}
     biome:
       run: npx @biomejs/biome ci --colors=off .
