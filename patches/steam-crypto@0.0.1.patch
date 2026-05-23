@@ -1,0 +1,42 @@
+diff --git a/index.js b/index.js
+index ba5c9dac4e1b003177f460af28005a92351e632f..35359bf2d1a8da4f578065c50856523efb9a05e8 100644
+--- a/index.js
++++ b/index.js
+@@ -10,25 +10,26 @@ exports.generateSessionKey = function() {
+   };
+ };
+ 
++// Patched for Node 24: original used the streaming Transform API (.end()/.read()) which can
++// return partial data before _flush completes. Switched to the synchronous .update()/.final()
++// Buffer API which always returns the full cipher output in one call.
+ exports.symmetricEncrypt = function(input, key) {
+   var iv = crypto.randomBytes(16);
+   var aesIv = crypto.createCipheriv('aes-256-ecb', key, '');
+   aesIv.setAutoPadding(false);
+-  aesIv.end(iv);
+-  
++  var encIv = Buffer.concat([aesIv.update(iv), aesIv.final()]);
++
+   var aesData = crypto.createCipheriv('aes-256-cbc', key, iv);
+-  aesData.end(input);
+-  
+-  return Buffer.concat([aesIv.read(), aesData.read()]);
++  var encData = Buffer.concat([aesData.update(input), aesData.final()]);
++
++  return Buffer.concat([encIv, encData]);
+ };
+ 
+ exports.symmetricDecrypt = function(input, key) {
+   var aesIv = crypto.createDecipheriv('aes-256-ecb', key, '');
+   aesIv.setAutoPadding(false);
+-  aesIv.end(input.slice(0, 16));
+-  
+-  var aesData = crypto.createDecipheriv('aes-256-cbc', key, aesIv.read());
+-  aesData.end(input.slice(16));
+-  
+-  return aesData.read();
++  var iv = Buffer.concat([aesIv.update(input.slice(0, 16)), aesIv.final()]);
++
++  var aesData = crypto.createDecipheriv('aes-256-cbc', key, iv);
++  return Buffer.concat([aesData.update(input.slice(16)), aesData.final()]);
+ };

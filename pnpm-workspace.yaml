@@ -13,3 +13,6 @@ allowBuilds:
   protobufjs: true
 
 blockExoticSubdeps: false
+
+patchedDependencies:
+  steam-crypto@0.0.1: patches/steam-crypto@0.0.1.patch

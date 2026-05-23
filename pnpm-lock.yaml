@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
   injectWorkspacePackages: true
 
+patchedDependencies:
+  steam-crypto@0.0.1: f660d1a533f85081dab059801eb0cf52da18049fd953454670e28364c0d69d68
+
 importers:
 
   .:
@@ -202,7 +205,7 @@ importers:
         version: 1.4.1
       steam-crypto:
         specifier: ^0.0.1
-        version: 0.0.1
+        version: 0.0.1(patch_hash=f660d1a533f85081dab059801eb0cf52da18049fd953454670e28364c0d69d68)
       steam-errors:
         specifier: ^1.0.0
         version: 1.0.0
@@ -4528,7 +4531,7 @@ snapshots:
 
   std-env@4.1.0: {}
 
-  steam-crypto@0.0.1: {}
+  steam-crypto@0.0.1(patch_hash=f660d1a533f85081dab059801eb0cf52da18049fd953454670e28364c0d69d68): {}
 
   steam-errors@1.0.0: {}
 
@@ -4543,14 +4546,14 @@ snapshots:
       adm-zip: 0.4.16
       buffer-crc32: 0.2.13
       bytebuffer: 5.0.1
-      steam-crypto: 0.0.1
+      steam-crypto: 0.0.1(patch_hash=f660d1a533f85081dab059801eb0cf52da18049fd953454670e28364c0d69d68)
 
   steam@https://codeload.github.com/dotabod/node-steam/tar.gz/e9aa23d43a7a06090a2d96eb4e39aa889c7b8cbb:
     dependencies:
       adm-zip: 0.4.16
       buffer-crc32: 0.2.13
       bytebuffer: 5.0.1
-      steam-crypto: 0.0.1
+      steam-crypto: 0.0.1(patch_hash=f660d1a533f85081dab059801eb0cf52da18049fd953454670e28364c0d69d68)
       steam-resources: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45
 
   string-width@1.0.2:
