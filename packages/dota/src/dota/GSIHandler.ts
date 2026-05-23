@@ -36,6 +36,7 @@ import { isArcade } from './lib/isArcade'
 import { isSpectator } from './lib/isSpectator'
 import { getStreamersInMatch } from './lib/matchData'
 import { getRankDetail } from './lib/ranks'
+import { buildUnresolvedSnapshot, type InGameSnapshot } from './lib/buildUnresolvedSnapshot'
 import {
   formatUnresolvedMatch,
   REMINDER_FLAG_TTL_S,
@@ -141,19 +142,12 @@ class GSIHandler implements GSIHandlerType {
   treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
   disabled = false
 
-  // Last fresh in-game stats, kept up to date while the streamer is actively
-  // playing. By the time an early DC fires, the live GSI packet has usually
-  // shed these values, so we fall back to this cache for the unresolved-match
+  // Last fresh in-game stats, kept up to date on every GSI tick while the
+  // streamer is actively playing. By the time an early DC fires, the live GSI
+  // packet has usually shed these values (hero/player blocks empty, scores
+  // back to 0), so we fall back to this cache for the unresolved-match
   // snapshot. Keyed by matchId so a new game can't reuse stale numbers.
-  private lastInGameSnapshot: {
-    matchId: string
-    kills: number | null
-    deaths: number | null
-    assists: number | null
-    duration: number | null
-    radiant_score: number | null
-    dire_score: number | null
-  } | null = null
+  private lastInGameSnapshot: InGameSnapshot | null = null
 
   mapBlocker: DataBroadcasterInterface
   neutralItemTimer: NeutralItemTimer
@@ -240,8 +234,10 @@ class GSIHandler implements GSIHandlerType {
     if (!matchId || matchId === '0') return
 
     const prev = this.lastInGameSnapshot?.matchId === matchId ? this.lastInGameSnapshot : null
+    const liveHero = this.client.gsi?.hero?.name
     this.lastInGameSnapshot = {
       matchId,
+      hero_name: (liveHero && liveHero.length > 0 ? liveHero : prev?.hero_name) ?? null,
       kills: this.client.gsi?.player?.kills ?? prev?.kills ?? null,
       deaths: this.client.gsi?.player?.deaths ?? prev?.deaths ?? null,
       assists: this.client.gsi?.player?.assists ?? prev?.assists ?? null,
@@ -1148,44 +1144,40 @@ class GSIHandler implements GSIHandlerType {
       endingBets: this.endingBets,
     })
 
-    // Persist a snapshot so unresolved-match messages can show KDA / score /
-    // length. The live packet that triggered the DC has usually already shed
-    // these values, so prefer the cached last-in-game snapshot for this match.
+    // Persist a snapshot so unresolved-match messages can show hero / KDA /
+    // score / length. The live packet that triggered the DC has usually shed
+    // these values (hero/player empty, scores back to 0), so the merge prefers
+    // the cached last-in-game snapshot for this match.
     const cached =
       this.lastInGameSnapshot?.matchId === matchId.toString() ? this.lastInGameSnapshot : null
-    const snapshotKda = {
-      kills: this.client.gsi?.player?.kills ?? cached?.kills ?? null,
-      deaths: this.client.gsi?.player?.deaths ?? cached?.deaths ?? null,
-      assists: this.client.gsi?.player?.assists ?? cached?.assists ?? null,
-      duration: this.client.gsi?.map?.game_time ?? cached?.duration ?? null,
-    }
-    const snapshotRadiant = this.client.gsi?.map?.radiant_score ?? cached?.radiant_score ?? null
-    const snapshotDire = this.client.gsi?.map?.dire_score ?? cached?.dire_score ?? null
-    const nowIso = new Date().toISOString()
+    const snapshotMatch = buildUnresolvedSnapshot({
+      matchId: matchId.toString(),
+      gsi: this.client.gsi,
+      cached,
+      now: new Date(),
+    })
     // Only write while still unresolved and only if no snapshot exists yet, so a
     // concurrent resolution can't be clobbered and re-entry can't reset updated_at
-    // (the reminder's 10-minute anchor).
+    // (the reminder's 10-minute anchor). hero_name is set at bet-open and again
+    // on hero swap — only overwrite it when we actually have one.
+    const kdaForDb = {
+      kills: snapshotMatch.kda?.kills ?? null,
+      deaths: snapshotMatch.kda?.deaths ?? null,
+      assists: snapshotMatch.kda?.assists ?? null,
+      duration: snapshotMatch.kda?.duration ?? null,
+    }
     await supabase
       .from('matches')
       .update({
-        kda: snapshotKda,
-        radiant_score: snapshotRadiant,
-        dire_score: snapshotDire,
-        updated_at: nowIso,
+        ...(snapshotMatch.hero_name ? { hero_name: snapshotMatch.hero_name } : {}),
+        kda: kdaForDb,
+        radiant_score: snapshotMatch.radiant_score,
+        dire_score: snapshotMatch.dire_score,
+        updated_at: snapshotMatch.updated_at,
       })
       .match({ matchId: matchId.toString(), userId: this.client.token })
       .is('won', null)
       .is('kda', null)
-
-    const snapshotMatch = {
-      matchId: matchId.toString(),
-      hero_name: this.client.gsi?.hero?.name ?? null,
-      kda: snapshotKda,
-      radiant_score: snapshotRadiant,
-      dire_score: snapshotDire,
-      created_at: nowIso,
-      updated_at: nowIso,
-    }
 
     // Check if player is high MMR (8500+)
     const isHighMmr = is8500Plus(this.client)
@@ -1515,11 +1507,18 @@ class GSIHandler implements GSIHandlerType {
       const matchingBlocker = blockTypes.find((blocker) => blocker.states.includes(state ?? ''))
       const hasValidBlocker = !!matchingBlocker
 
+      // Refresh the unresolved-match cache on every GSI tick while playing —
+      // not only on the state transition into 'playing'. Capturing once at
+      // game-start leaves the cache frozen at 0/0/0, 0-0, ~0s, which is what
+      // showed up in chat after early DCs.
+      if (matchingBlocker?.type === 'playing') {
+        this.captureInGameSnapshot()
+      }
+
       if (matchingBlocker && this.blockCache !== matchingBlocker.type) {
         this.emitBlockEvent({ state, blockType: matchingBlocker.type })
 
         if (matchingBlocker.type === 'playing') {
-          this.captureInGameSnapshot()
           emitMinimapBlockerStatus(this.client)
           this.emitBadgeUpdate()
           this.emitWLUpdate()
