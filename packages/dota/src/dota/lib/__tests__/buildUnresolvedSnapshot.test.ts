@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test'
-import { buildUnresolvedSnapshot, mergeInGameSnapshotTick } from '../buildUnresolvedSnapshot.ts'
+import {
+  buildClosingScores,
+  buildUnresolvedSnapshot,
+  mergeInGameSnapshotTick,
+} from '../buildUnresolvedSnapshot.ts'
 import { formatUnresolvedMatch } from '../unresolvedMatches.ts'
 
 // Regression: the user disconnected mid-match and the bot announced
@@ -258,5 +262,70 @@ describe('mergeInGameSnapshotTick', () => {
     expect(next.kills).toBe(null)
     expect(next.hero_name).toBe(null)
     expect(next.duration).toBe(null)
+  })
+})
+
+// `buildClosingScores` merges the Steam GC `MatchMinimalDetailsResponse`
+// with live GSI when the match ends with a winner. Both are monotonic, so
+// a stub from either side with kills=0 must not regress the other source's
+// real value — otherwise the persisted `matches.kda` ends up as 0/0/0 and
+// the W/L summary in chat is wrong.
+describe('buildClosingScores', () => {
+  it('prefers live GSI when the Steam GC stub reports 0 KDA but live is real', () => {
+    const scores = buildClosingScores({
+      gcPlayer: { kills: 0, deaths: 0, assists: 0 },
+      gcMatch: { radiant_score: 0, dire_score: 0 },
+      gsi: {
+        player: { kills: 14, deaths: 4, assists: 9 },
+        map: { matchid: matchId, game_time: 2400, radiant_score: 38, dire_score: 27 },
+      },
+    })
+
+    expect(scores.kda).toEqual({ kills: 14, deaths: 4, assists: 9 })
+    expect(scores.radiant_score).toBe(38)
+    expect(scores.dire_score).toBe(27)
+  })
+
+  it('prefers Steam GC when GC reports real values and live has cleared', () => {
+    const scores = buildClosingScores({
+      gcPlayer: { kills: 14, deaths: 4, assists: 9 },
+      gcMatch: { radiant_score: 38, dire_score: 27 },
+      gsi: {
+        player: { kills: 0, deaths: 0, assists: 0 },
+        map: { matchid: matchId, game_time: 0, radiant_score: 0, dire_score: 0 },
+      },
+    })
+
+    expect(scores.kda).toEqual({ kills: 14, deaths: 4, assists: 9 })
+    expect(scores.radiant_score).toBe(38)
+    expect(scores.dire_score).toBe(27)
+  })
+
+  it('uses live values when GC is absent (no MatchMinimalDetailsResponse)', () => {
+    const scores = buildClosingScores({
+      gcPlayer: null,
+      gcMatch: null,
+      gsi: {
+        player: { kills: 7, deaths: 2, assists: 11 },
+        map: { matchid: matchId, game_time: 1800, radiant_score: 30, dire_score: 25 },
+      },
+    })
+
+    expect(scores.kda).toEqual({ kills: 7, deaths: 2, assists: 11 })
+    expect(scores.radiant_score).toBe(30)
+    expect(scores.dire_score).toBe(25)
+  })
+
+  it('returns a legitimate 0 when both sources agree on 0 (support player, no kills)', () => {
+    const scores = buildClosingScores({
+      gcPlayer: { kills: 0, deaths: 5, assists: 18 },
+      gcMatch: { radiant_score: 24, dire_score: 30 },
+      gsi: {
+        player: { kills: 0, deaths: 5, assists: 18 },
+        map: { matchid: matchId, game_time: 2700, radiant_score: 24, dire_score: 30 },
+      },
+    })
+
+    expect(scores.kda).toEqual({ kills: 0, deaths: 5, assists: 18 })
   })
 })

@@ -37,6 +37,7 @@ import { isSpectator } from './lib/isSpectator'
 import { getStreamersInMatch } from './lib/matchData'
 import { getRankDetail } from './lib/ranks'
 import {
+  buildClosingScores,
   buildUnresolvedSnapshot,
   type InGameSnapshot,
   mergeInGameSnapshotTick,
@@ -907,15 +908,11 @@ class GSIHandler implements GSIHandlerType {
       }
 
       const localWinner = winningTeam
-      const scores = {
-        kda: {
-          kills: player?.kills ?? this.client.gsi?.player?.kills ?? null,
-          deaths: player?.deaths ?? this.client.gsi?.player?.deaths ?? null,
-          assists: player?.assists ?? this.client.gsi?.player?.assists ?? null,
-        },
-        radiant_score: match?.radiant_score ?? this.client.gsi?.map?.radiant_score ?? null,
-        dire_score: match?.dire_score ?? this.client.gsi?.map?.dire_score ?? null,
-      }
+      const scores = buildClosingScores({
+        gcPlayer: player,
+        gcMatch: match,
+        gsi: this.client.gsi,
+      })
       const won = myTeam === localWinner
       logger.info('[BETS] end bets won data', {
         playingMatchId: matchId,

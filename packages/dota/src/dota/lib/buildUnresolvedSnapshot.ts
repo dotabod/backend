@@ -75,6 +75,35 @@ export function mergeInGameSnapshotTick(args: {
   }
 }
 
+// Final-match scores merged from the Steam GC `MatchMinimalDetailsResponse`
+// (authoritative once Steam has indexed the match) and the live GSI player
+// block (authoritative until then). Both sources are monotonic during a
+// match, so a stub response from either side that reports 0 must not regress
+// the persisted KDA / score the way a naive `??` chain would.
+export function buildClosingScores(args: {
+  gcPlayer:
+    | { kills?: number | null; deaths?: number | null; assists?: number | null }
+    | null
+    | undefined
+  gcMatch: { radiant_score?: number | null; dire_score?: number | null } | null | undefined
+  gsi: LiveGsiLike | null | undefined
+}): {
+  kda: { kills: number | null; deaths: number | null; assists: number | null }
+  radiant_score: number | null
+  dire_score: number | null
+} {
+  const { gcPlayer, gcMatch, gsi } = args
+  return {
+    kda: {
+      kills: monotonic(gcPlayer?.kills, gsi?.player?.kills),
+      deaths: monotonic(gcPlayer?.deaths, gsi?.player?.deaths),
+      assists: monotonic(gcPlayer?.assists, gsi?.player?.assists),
+    },
+    radiant_score: monotonic(gcMatch?.radiant_score, gsi?.map?.radiant_score),
+    dire_score: monotonic(gcMatch?.dire_score, gsi?.map?.dire_score),
+  }
+}
+
 // Build the snapshot we hand off at early-DC time. Hero name prefers cache
 // (live blocks are shed on DC), numeric fields take the max of live and
 // cache so a cleared live tick can't pair real KDA with a 0:00 duration.
