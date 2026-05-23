@@ -112,6 +112,10 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GHA_PAT }}
 
+      # cache-to mode=min only exports the final-stage layers (vs mode=max
+      # exporting every intermediate step). Saves ~25-30s of cache upload per
+      # build; tradeoff is that intermediate stages re-run on cache miss — but
+      # those steps total ~10s, so we come out ahead.
       - name: Build and push
         uses: docker/bake-action@v7
         with:
@@ -127,8 +131,4 @@ jobs:
             *.labels.org.opencontainers.image.created=${{ env.BUILD_DATE }}
             *.labels.org.opencontainers.image.version=${{ env.DOCKER_TAG }}
             *.cache-from=type=gha,scope=${{ matrix.service }}
-            # mode=min only exports the final-stage layers (vs mode=max exporting
-            # every intermediate step). Saves ~25-30s of cache upload per build;
-            # tradeoff is that intermediate stages re-run on cache miss — but
-            # those steps total ~10s, so we come out ahead.
             *.cache-to=type=gha,mode=min,scope=${{ matrix.service }}
