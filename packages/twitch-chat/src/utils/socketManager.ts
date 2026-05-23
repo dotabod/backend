@@ -76,6 +76,10 @@ export function setupSocketServer(): void {
       return
     }
 
+    socket.on('getVersion', (ack: (commitHash: string | null) => void) => {
+      ack(process.env.COMMIT_HASH ?? null)
+    })
+
     socket.on('reconnect', () => {
       logger.info(`Reconnecting to the server. Socket ID: ${socket.id}`)
       addSocket(socket.id)

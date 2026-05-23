@@ -18,6 +18,7 @@ services:
         - BUILD_CONTEXT=packages/twitch-chat
     hostname: twitch-chat
     environment:
+      - COMMIT_HASH
       - DATABASE_URL
       - DB_SECRET
       - DB_URL
@@ -39,6 +40,7 @@ services:
         - BUILD_CONTEXT=packages/steam
     hostname: steam
     environment:
+      - COMMIT_HASH
       - MONGO_URL
       - STEAM_PASS
       - STEAM_USER
@@ -59,6 +61,7 @@ services:
         - BUILD_CONTEXT=packages/twitch-events
     hostname: twitch-events
     environment:
+      - COMMIT_HASH
       - DATABASE_URL
       - DB_SECRET
       - DB_URL

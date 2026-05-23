@@ -88,6 +88,10 @@ socketIoServer.on('connection', (socket) => {
     ])
   }
 
+  socket.on('getVersion', (ack: (commitHash: string | null) => void) => {
+    ack(process.env.COMMIT_HASH ?? null)
+  })
+
   socket.on('getCards', async (accountIds: number[], refetchCards: boolean, callback: callback) => {
     if (!isConnectedToSteam) {
       logger.error('[STEAM] Error getting cards, not connected to steam', {

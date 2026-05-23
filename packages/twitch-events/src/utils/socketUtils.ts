@@ -62,6 +62,10 @@ export const setupSocketIO = () => {
       logger.info('[TWITCHEVENTS] Socket disconnected', { clients: connectedClients.size })
     })
 
+    socket.on('getVersion', (ack: (commitHash: string | null) => void) => {
+      ack(process.env.COMMIT_HASH ?? null)
+    })
+
     // Handle conduit data requests from twitch-chat
     socket.on('getConduitData', (options = { forceRefresh: false }) => {
       void sendConduitData(socket, options.forceRefresh)
