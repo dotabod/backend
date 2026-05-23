@@ -1,6 +1,11 @@
 packages:
   - 'packages/*'
 
+# Required by non-legacy `pnpm deploy` (used in the Docker build). Causes
+# workspace deps to be hard-linked into each package's node_modules instead
+# of symlinked, which is what deploy needs to produce a portable tree.
+injectWorkspacePackages: true
+
 allowBuilds:
   es5-ext: true
   lefthook: true

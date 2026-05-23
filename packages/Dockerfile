@@ -1,12 +1,5 @@
 FROM node:24-slim AS base
 
-# git: pnpm --legacy deploy re-resolves git-hosted deps (steam-resources) via
-# `git ls-remote`, which isn't in node:24-slim. ca-certificates is needed for
-# HTTPS clones to succeed.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends git ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
 RUN corepack enable && corepack prepare pnpm@11.2.2 --activate
 
 # BUILD_CONTEXT like "packages/twitch-chat" or "packages/twitch-events"
@@ -43,9 +36,10 @@ RUN pnpm --filter @dotabod/profanity-filter --filter @dotabod/shared-utils run b
 RUN pnpm --filter ./$BUILD_CONTEXT run build
 
 # pnpm deploy emits a flat, production-ready tree (no symlinks, no devDeps)
-# suitable for direct copy into the final stage. --legacy is required because
-# this workspace doesn't use injected workspace dependencies.
-RUN pnpm --filter ./$BUILD_CONTEXT --prod --legacy deploy /deploy
+# suitable for direct copy into the final stage. Non-legacy deploy honors the
+# lockfile and hard-links workspace deps (enabled by `injectWorkspacePackages:
+# true` in pnpm-workspace.yaml), avoiding the slow re-resolve from package.json.
+RUN pnpm --filter ./$BUILD_CONTEXT --prod deploy /deploy
 
 #------------------------ prod
 
