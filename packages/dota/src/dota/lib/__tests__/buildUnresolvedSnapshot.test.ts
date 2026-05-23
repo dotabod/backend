@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test'
-import { buildUnresolvedSnapshot } from '../buildUnresolvedSnapshot.ts'
+import { buildUnresolvedSnapshot, mergeInGameSnapshotTick } from '../buildUnresolvedSnapshot.ts'
 import { formatUnresolvedMatch } from '../unresolvedMatches.ts'
 
 // Regression: the user disconnected mid-match and the bot announced
@@ -96,7 +96,7 @@ describe('buildUnresolvedSnapshot', () => {
     expect(formatUnresolvedMatch(snapshot, now)).toBe(`${matchId} (Unknown, ~0m ago)`)
   })
 
-  it('prefers live game_time over cached duration', () => {
+  it('prefers live game_time over cached duration when live is fresher', () => {
     const snapshot = buildUnresolvedSnapshot({
       matchId,
       gsi: {
@@ -118,5 +118,145 @@ describe('buildUnresolvedSnapshot', () => {
     })
 
     expect(snapshot.kda?.duration).toBe(999)
+  })
+
+  // Regression: monotonic fields (KDA, scores, duration) only ever increase
+  // during a match. If the DC packet zeroes them (live=0) while the cache holds
+  // the last good values, we must NOT regress — otherwise the chat message
+  // pairs real cached KDA with a 0:00 duration ("Dark Seer, 7/3/12, 21-18,
+  // 0:00") which is internally contradictory and visibly worse than the
+  // all-zeros message this commit fixed.
+  it('keeps cached duration and scores when the live packet zeroed them', () => {
+    const snapshot = buildUnresolvedSnapshot({
+      matchId,
+      gsi: {
+        hero: {},
+        player: {},
+        map: { matchid: matchId, game_time: 0, radiant_score: 0, dire_score: 0 },
+      },
+      cached: {
+        matchId,
+        hero_name: 'npc_dota_hero_dark_seer',
+        kills: 7,
+        deaths: 3,
+        assists: 12,
+        radiant_score: 21,
+        dire_score: 18,
+        duration: 720,
+      },
+      now,
+    })
+
+    expect(snapshot.kda?.duration).toBe(720)
+    expect(snapshot.radiant_score).toBe(21)
+    expect(snapshot.dire_score).toBe(18)
+    expect(formatUnresolvedMatch(snapshot, now)).toBe(
+      `${matchId} (Dark Seer, 7/3/12, 21-18, 12:00, ~0m ago)`,
+    )
+  })
+})
+
+// `mergeInGameSnapshotTick` is the per-tick cache update that runs on every
+// GSI packet during 'playing'. Same monotonic invariant: a tick where live
+// values are lower than the cache (Dota's GSI occasionally emits a cleared
+// player/map block while state stays GAME_IN_PROGRESS) must NOT overwrite
+// real cached values with zeros.
+describe('mergeInGameSnapshotTick', () => {
+  it('captures the first tick when there is no prev snapshot', () => {
+    const next = mergeInGameSnapshotTick({
+      matchId,
+      gsi: {
+        hero: { name: 'npc_dota_hero_dark_seer' },
+        player: { kills: 0, deaths: 0, assists: 0 },
+        map: { matchid: matchId, game_time: 5, radiant_score: 0, dire_score: 0 },
+      },
+      prev: null,
+    })
+
+    expect(next).toEqual({
+      matchId,
+      hero_name: 'npc_dota_hero_dark_seer',
+      kills: 0,
+      deaths: 0,
+      assists: 0,
+      duration: 5,
+      radiant_score: 0,
+      dire_score: 0,
+    })
+  })
+
+  it('does not let a cleared tick (live=0) overwrite cached non-zero values', () => {
+    const next = mergeInGameSnapshotTick({
+      matchId,
+      gsi: {
+        hero: { name: 'npc_dota_hero_dark_seer' },
+        player: { kills: 0, deaths: 0, assists: 0 },
+        map: { matchid: matchId, game_time: 0, radiant_score: 0, dire_score: 0 },
+      },
+      prev: {
+        matchId,
+        hero_name: 'npc_dota_hero_dark_seer',
+        kills: 7,
+        deaths: 3,
+        assists: 12,
+        duration: 720,
+        radiant_score: 21,
+        dire_score: 18,
+      },
+    })
+
+    expect(next.kills).toBe(7)
+    expect(next.deaths).toBe(3)
+    expect(next.assists).toBe(12)
+    expect(next.duration).toBe(720)
+    expect(next.radiant_score).toBe(21)
+    expect(next.dire_score).toBe(18)
+  })
+
+  it('advances values when the live tick is greater than the cache', () => {
+    const next = mergeInGameSnapshotTick({
+      matchId,
+      gsi: {
+        hero: { name: 'npc_dota_hero_dark_seer' },
+        player: { kills: 8, deaths: 3, assists: 14 },
+        map: { matchid: matchId, game_time: 800, radiant_score: 22, dire_score: 18 },
+      },
+      prev: {
+        matchId,
+        hero_name: 'npc_dota_hero_dark_seer',
+        kills: 7,
+        deaths: 3,
+        assists: 12,
+        duration: 720,
+        radiant_score: 21,
+        dire_score: 18,
+      },
+    })
+
+    expect(next.kills).toBe(8)
+    expect(next.assists).toBe(14)
+    expect(next.duration).toBe(800)
+    expect(next.radiant_score).toBe(22)
+  })
+
+  it('discards prev when the matchId changes (new game)', () => {
+    const next = mergeInGameSnapshotTick({
+      matchId: '9999',
+      gsi: { hero: {}, player: {}, map: { matchid: '9999' } },
+      prev: {
+        matchId,
+        hero_name: 'npc_dota_hero_dark_seer',
+        kills: 7,
+        deaths: 3,
+        assists: 12,
+        duration: 720,
+        radiant_score: 21,
+        dire_score: 18,
+      },
+    })
+
+    expect(next.kills).toBe(null)
+    expect(next.hero_name).toBe(null)
+    expect(next.duration).toBe(null)
   })
 })

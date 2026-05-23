@@ -36,7 +36,11 @@ import { isArcade } from './lib/isArcade'
 import { isSpectator } from './lib/isSpectator'
 import { getStreamersInMatch } from './lib/matchData'
 import { getRankDetail } from './lib/ranks'
-import { buildUnresolvedSnapshot, type InGameSnapshot } from './lib/buildUnresolvedSnapshot'
+import {
+  buildUnresolvedSnapshot,
+  type InGameSnapshot,
+  mergeInGameSnapshotTick,
+} from './lib/buildUnresolvedSnapshot'
 import {
   formatUnresolvedMatch,
   REMINDER_FLAG_TTL_S,
@@ -233,18 +237,11 @@ class GSIHandler implements GSIHandlerType {
     const matchId = this.client.gsi?.map?.matchid
     if (!matchId || matchId === '0') return
 
-    const prev = this.lastInGameSnapshot?.matchId === matchId ? this.lastInGameSnapshot : null
-    const liveHero = this.client.gsi?.hero?.name
-    this.lastInGameSnapshot = {
+    this.lastInGameSnapshot = mergeInGameSnapshotTick({
       matchId,
-      hero_name: (liveHero && liveHero.length > 0 ? liveHero : prev?.hero_name) ?? null,
-      kills: this.client.gsi?.player?.kills ?? prev?.kills ?? null,
-      deaths: this.client.gsi?.player?.deaths ?? prev?.deaths ?? null,
-      assists: this.client.gsi?.player?.assists ?? prev?.assists ?? null,
-      duration: this.client.gsi?.map?.game_time ?? prev?.duration ?? null,
-      radiant_score: this.client.gsi?.map?.radiant_score ?? prev?.radiant_score ?? null,
-      dire_score: this.client.gsi?.map?.dire_score ?? prev?.dire_score ?? null,
-    }
+      gsi: this.client.gsi,
+      prev: this.lastInGameSnapshot,
+    })
   }
 
   private resetBetData() {
