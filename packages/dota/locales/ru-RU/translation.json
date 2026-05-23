@@ -5,9 +5,13 @@
   },
   "aegis": {
     "denied": "{{- heroName}} уничтожает аегис {{emote}}",
+    "deniedUnknown": "Aegis denied {{emote}}",
     "expired": "Аегис у {{- heroName}} закончился {{emote}}",
+    "expiredUnknown": "Aegis expired {{emote}}",
     "pickup": "{{- heroName}} подбирает аегис!",
-    "snatched": "{{- heroName}} крадёт аегис {{emote}}"
+    "pickupUnknown": "Aegis picked up!",
+    "snatched": "{{- heroName}} крадёт аегис {{emote}}",
+    "snatchedUnknown": "Aegis snatched PepeLaugh"
   },
   "aghs": "{{- heroName}} аганим: {{- title}} · {{- description}}",
   "altAccount": "{{emote}} обнаружен альтернативный аккаунт {{emote2}}",
@@ -25,7 +29,7 @@
     "cannotResolveCurrentMatch": "Невозможно завершить текущий матч. Дождитесь окончания игры или используйте !won / !lost без указания ID матча для незавершённых ставок.",
     "error": "Невозможно открыть ставки. $t(refreshToken)",
     "lost": "Мы проиграли, гг удачи в следующей {{emote}}",
-    "manualResolution": "Disconnected before match {{matchId}} ended. Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
+    "manualResolution": "Disconnected before the match ended. {{details}} Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
     "manualResolutionError": "Ошибка при ручном завершении ставки {{emote}}",
     "manualResolutionExpired": "Ставка на предыдущий матч истекла и была возвращена (модераторы не справились со своей работой, в следующий раз используйте !won или !lost) {{emote}}",
     "manualResolutionSuccess_lost": "Match {{matchId}} manually resolved as LOST by @{{username}}",
@@ -52,6 +56,10 @@
     "unresolvedMatches_few": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "unresolvedMatches_many": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedReminder_one": "Reminder: {{count}} match still needs resolving {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedReminder_few": "Reminder: {{count}} matches still need resolving {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedReminder_many": "Reminder: {{count}} matches still need resolving {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedReminder_other": "Reminder: {{count}} matches still need resolving {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "won": "Мы победили {{emote}}"
   },
   "bounties": {
@@ -74,12 +82,14 @@
     "legacyHeroLabel": "Hero {{playerId}}",
     "message": "{{- message}} (translation of in-game chat)",
     "playerLabel": "Player {{playerId}}",
-    "speakerLabel": "{{- heroName}} (P{{playerId}})"
+    "speakerLabel": "{{- heroName}} (P{{playerId}})",
+    "unknownPlayer": "a player"
   },
   "clearsharing": {
     "error": "Не удалось сбросить совместное использование аккаунта. Пожалуйста, попробуйте снова или свяжитесь с поддержкой.",
     "success": "Совместное использование аккаунта успешно сброшено. Теперь несколько Steam-аккаунтов могут снова отправлять данные GSI. ВНИМАНИЕ: убедитесь, что только один человек имеет файл конфигурации Dotabod GSI, иначе конфликты повторятся."
   },
+  "clippingDisabled": "the streamer turned off auto-clipping, which Dotabod needs to read live game data in 8500+ MMR games",
   "colors": {
     "blue": "Синий",
     "brown": "Коричневый",
@@ -277,13 +287,28 @@
   "stream_on": "Dotabod будет рассматривать {{channel}} как онлайн. Используйте !offline для отмены",
   "streamDelay": "Задержка стрима: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "На этом канале нет задержки стрима",
+  "streamersInMatch_one": "Playing with {{count}} other Dotabod streamer {{emote}}",
+  "streamersInMatch_few": "Playing with {{count}} other Dotabod streamers {{emote}}",
+  "streamersInMatch_many": "Playing with {{count}} other Dotabod streamers {{emote}}",
+  "streamersInMatch_other": "Playing with {{count}} other Dotabod streamers {{emote}}",
+  "streamersInMatchAnnounce_one": "By the way, {{count}} other Dotabod streamer is in this match",
+  "streamersInMatchAnnounce_few": "By the way, {{count}} other Dotabod streamers are in this match",
+  "streamersInMatchAnnounce_many": "By the way, {{count}} other Dotabod streamers are in this match",
+  "streamersInMatchAnnounce_other": "By the way, {{count}} other Dotabod streamers are in this match",
+  "streamersSuffix_one": "{{count}} other streamer in match",
+  "streamersSuffix_few": "{{count}} other streamers in match",
+  "streamersSuffix_many": "{{count}} other streamers in match",
+  "streamersSuffix_other": "{{count}} other streamers in match",
   "subscriptionRequired": "✨ Разблокируйте эту команду и другие функции с Dotabod Pro. Посетите dotabod.com, чтобы подписаться или dotabod.com/{{channel}}/gift чтобы подарить стримеру!",
   "tip": {
     "from": "Благодарность от {{- heroName}} {{emote}}",
-    "to": "Мы поблагодарили {{- heroName}} {{emote}}"
+    "fromUnknown": "We got tipped {{emote}}",
+    "to": "Мы поблагодарили {{- heroName}} {{emote}}",
+    "toUnknown": "We tipping someone {{emote}}"
   },
   "today": {
     "noGames": "No games played yet today",
+    "single": "{{- heroName}} {{wins}}-{{losses}} today",
     "summary_one": "{{wins}}W {{losses}}L ({{count}} game)",
     "summary_few": "{{wins}}W {{losses}}L ({{count}} games)",
     "summary_many": "{{wins}}W {{losses}}L ({{count}} games)",

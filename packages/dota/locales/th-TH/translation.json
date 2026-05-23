@@ -5,9 +5,13 @@
   },
   "aegis": {
     "denied": "{{- heroName}} denied the aegis {{emote}}",
+    "deniedUnknown": "Aegis denied {{emote}}",
     "expired": "{{- heroName}}'s aegis expired {{emote}}",
+    "expiredUnknown": "Aegis expired {{emote}}",
     "pickup": "{{- heroName}} picked up the aegis!",
-    "snatched": "{{- heroName}} snatched the aegis {{emote}}"
+    "pickupUnknown": "Aegis picked up!",
+    "snatched": "{{- heroName}} snatched the aegis {{emote}}",
+    "snatchedUnknown": "Aegis snatched PepeLaugh"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "altAccount": "{{emote}} alt account detected {{emote2}}",
@@ -21,7 +25,7 @@
     "cannotResolveCurrentMatch": "Cannot resolve the current ongoing match. Wait for the game to end or use !won / !lost without a match ID for pending resolutions.",
     "error": "Unable to open bets. $t(refreshToken)",
     "lost": "We have lost, gg nt {{emote}} go next",
-    "manualResolution": "Disconnected before match {{matchId}} ended. Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
+    "manualResolution": "Disconnected before the match ended. {{details}} Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
     "manualResolutionError": "Error resolving bet manually {{emote}}",
     "manualResolutionExpired": "Previous match bet expired and was refunded (mods not doing their jobs, next time use !won or !lost) {{emote}}",
     "manualResolutionSuccess_lost": "Match {{matchId}} manually resolved as LOST by @{{username}}",
@@ -45,7 +49,8 @@
     "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
     "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
     "won": "We have won {{emote}} go next",
-    "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}"
+    "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedReminder_other": "Reminder: {{count}} matches still need resolving {{emote}} Use !won or !lost with match ID: {{matchList}}"
   },
   "bounties": {
     "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) from bounty ({{totalBounties}}/4) {{emote}} Thanks {{heroNames}} {{emote2}}",
@@ -67,12 +72,14 @@
     "legacyHeroLabel": "Hero {{playerId}}",
     "message": "{{- message}} (translation of in-game chat)",
     "playerLabel": "Player {{playerId}}",
-    "speakerLabel": "{{- heroName}} (P{{playerId}})"
+    "speakerLabel": "{{- heroName}} (P{{playerId}})",
+    "unknownPlayer": "a player"
   },
   "clearsharing": {
     "error": "Failed to clear account sharing. Please try again or contact support.",
     "success": "Account sharing reset successfully. Multiple Steam accounts can now send GSI data again. WARNING: Make sure only one person has the Dotabod GSI config file, or conflicts will reoccur."
   },
+  "clippingDisabled": "the streamer turned off auto-clipping, which Dotabod needs to read live game data in 8500+ MMR games",
   "colors": {
     "blue": "Blue",
     "brown": "Brown",
@@ -165,10 +172,10 @@
   "noLastMatch": "Did not find a last match {{emote}}",
   "noNotable": "No notable players",
   "noShard": "{{- heroName}} has no shard upgrade.",
-  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
-  "notPlaying": "Not playing {{emote}}",
   "notablePlayersNoHeroes": "heroes not found",
   "notablePlayersWaitingHeroes": "waiting on heroes",
+  "notLive": "Stream not live {{emote}} . Actually live? Mods type !online",
+  "notPlaying": "Not playing {{emote}}",
   "npAdd": "Try !np add <steam32id> <playername>",
   "npAdded": "Added {{name}} to !np for this channel",
   "npRemove": "Try !np remove <steam32id>",
@@ -231,10 +238,13 @@
   "subscriptionRequired": "✨ Unlock this command and more features with Dotabod Pro. Visit dotabod.com to subscribe or dotabod.com/{{channel}}/gift to gift your streamer a sub!",
   "tip": {
     "from": "The tip from {{- heroName}} {{emote}}",
-    "to": "We tipping {{- heroName}} {{emote}}"
+    "fromUnknown": "We got tipped {{emote}}",
+    "to": "We tipping {{- heroName}} {{emote}}",
+    "toUnknown": "We tipping someone {{emote}}"
   },
   "today": {
     "noGames": "No games played yet today",
+    "single": "{{- heroName}} {{wins}}-{{losses}} today",
     "summary_other": "{{wins}}W {{losses}}L ({{count}} games)"
   },
   "toggle": "$t(toggle_enabled)",
@@ -270,5 +280,8 @@
   "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
   "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
   "seconds_other": "{{count}} seconds",
+  "streamersInMatch_other": "Playing with {{count}} other Dotabod streamers {{emote}}",
+  "streamersInMatchAnnounce_other": "By the way, {{count}} other Dotabod streamers are in this match",
+  "streamersSuffix_other": "{{count}} other streamers in match",
   "treadToggle_other": "We toggled treads {{count}} times to save a total {{manaCount}} mana this match."
 }
