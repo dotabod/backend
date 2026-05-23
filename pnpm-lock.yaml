@@ -196,6 +196,12 @@ importers:
       socket.io-client:
         specifier: ^4.7.5
         version: 4.8.3
+      steam:
+        specifier: ^1.4.1
+        version: 1.4.1
+      steam-crypto:
+        specifier: ^0.0.1
+        version: 0.0.1
       steam-errors:
         specifier: ^1.0.0
         version: 1.0.0
@@ -2355,6 +2361,13 @@ packages:
   steam-resources@https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45:
     resolution: {gitHosted: true, tarball: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45}
     version: 1.2.2
+
+  steam@1.4.1:
+    resolution: {integrity: sha512-JBJaDNd2lz5a4q/VCBhf3n0L8WWB+A+VCLqWbNycRhembfJ759lBHueXLvibZBvii00rS1pQPPJ0hiea9B5oQg==}
+    engines: {node: '>=4.1.1'}
+    deprecated: this project is not maintained
+    bundledDependencies:
+      - steam-resources
 
   steam@https://codeload.github.com/dotabod/node-steam/tar.gz/e9aa23d43a7a06090a2d96eb4e39aa889c7b8cbb:
     resolution: {gitHosted: true, tarball: https://codeload.github.com/dotabod/node-steam/tar.gz/e9aa23d43a7a06090a2d96eb4e39aa889c7b8cbb}
@@ -4523,6 +4536,13 @@ snapshots:
       bytebuffer: 5.0.1
       csv-parse: 4.16.3
       protobufjs: 4.1.3
+
+  steam@1.4.1:
+    dependencies:
+      adm-zip: 0.4.16
+      buffer-crc32: 0.2.13
+      bytebuffer: 5.0.1
+      steam-crypto: 0.0.1
 
   steam@https://codeload.github.com/dotabod/node-steam/tar.gz/e9aa23d43a7a06090a2d96eb4e39aa889c7b8cbb:
     dependencies:
