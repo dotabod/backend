@@ -33,23 +33,27 @@ export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value
     return defaultValue
   }
 
+  const isPlainObject = (v: unknown): boolean =>
+    typeof v === 'object' && v !== null && !Array.isArray(v)
+
   try {
     if (typeof dbVal === 'string') {
-      const val = JSON.parse(dbVal)
-      if (typeof val === 'object' && typeof defaultValue === 'object') {
+      // biome-ignore lint/suspicious/noExplicitAny: callers depend on the merged value being `any`
+      const val = JSON.parse(dbVal) as any
+      if (isPlainObject(val) && isPlainObject(defaultValue)) {
         return {
-          ...defaultValue,
-          ...val,
+          ...(defaultValue as object),
+          ...(val as object),
         }
       }
 
       return val
     }
 
-    if (typeof dbVal === 'object' && typeof defaultValue === 'object') {
+    if (isPlainObject(dbVal) && isPlainObject(defaultValue)) {
       return {
-        ...defaultValue,
-        ...dbVal,
+        ...(defaultValue as object),
+        ...(dbVal as object),
       }
     }
 
@@ -82,9 +86,9 @@ export const getValueOrDefault = (
       }
     }
     // For objects (like betsInfo), return default with disabled state
-    if (typeof defaultValue === 'object') {
+    if (typeof defaultValue === 'object' && defaultValue !== null && !Array.isArray(defaultValue)) {
       return {
-        ...defaultValue,
+        ...(defaultValue as Record<string, unknown>),
         enabled: false,
       }
     }

@@ -395,7 +395,7 @@ commandHandler.registerCommand('test', {
         handleGameCommand(message)
         break
       case '2m':
-        handle2mDataCommand(message)
+        void handle2mDataCommand(message)
         break
       case 'reset':
         await handleResetCommand(message)
@@ -410,10 +410,10 @@ commandHandler.registerCommand('test', {
         await handleLogsCommand(message)
         break
       case 'server':
-        handleServerCommand(message, args)
+        void handleServerCommand(message, args)
         break
       case 'wp':
-        handleWpCommand(message, args)
+        void handleWpCommand(message, args)
         break
       case 'fixwins':
         await fixWins(

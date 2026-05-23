@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vite-plus/test'
 import { getProfanityDetails, moderateText } from '../src/utils/moderation'
 
 // Helper function for testing
-async function testBadPhrase(phrase: string, description: string) {
+function testBadPhrase(phrase: string, description: string) {
   test(`should detect ${description}`, async () => {
     const moderated = await moderateText(phrase)
     expect(moderated).not.toBe(phrase)

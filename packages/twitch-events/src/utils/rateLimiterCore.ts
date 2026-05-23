@@ -97,7 +97,7 @@ export class RateLimiter {
           reject(error)
         }
       })
-      this.processQueue()
+      void this.processQueue()
     })
   }
 }

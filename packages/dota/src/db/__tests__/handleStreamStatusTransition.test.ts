@@ -1,3 +1,4 @@
+import type { Server } from 'socket.io'
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { handleStreamStatusTransition } from '../handleStreamStatusTransition'
 
@@ -7,7 +8,7 @@ const createIo = () => {
 
   return {
     emit,
-    io: { to },
+    io: { to } as unknown as Pick<Server, 'to'>,
     to,
   }
 }

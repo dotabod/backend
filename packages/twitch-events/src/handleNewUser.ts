@@ -51,7 +51,7 @@ export async function handleNewUser(providerAccountId: string, resubscribeEvents
 
   if (resubscribeEvents) {
     try {
-      initUserSubscriptions(providerAccountId)
+      void initUserSubscriptions(providerAccountId)
     } catch (e) {
       logger.info('[TWITCHEVENTS] error on handlenewuser', { e })
     }

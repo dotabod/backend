@@ -26,7 +26,7 @@ async function sendMessageToUser(userId: string, username: string, messageConten
       return false
     }
 
-    await chatClient.say(username, processedMessage)
+    chatClient.say(username, processedMessage)
     logger.info(`Sent scheduled message to ${username}: ${processedMessage}`)
     return true
   } catch (error) {

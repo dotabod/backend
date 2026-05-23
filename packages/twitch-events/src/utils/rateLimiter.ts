@@ -17,7 +17,7 @@ interface TwitchSubscriptionTransport {
 
 interface TwitchSubscription {
   id: string
-  status: 'enabled' | 'webhook_callback_verification_pending' | string
+  status: string
   type: string
   version: string
   condition: TwitchSubscriptionCondition

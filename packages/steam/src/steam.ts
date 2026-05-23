@@ -143,7 +143,7 @@ class Dota {
 
   private checkAccounts = async () => {
     if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) return
-    this.getGames()
+    void this.getGames()
 
     if (!this.interval) {
       // Get latest games every 30 seconds

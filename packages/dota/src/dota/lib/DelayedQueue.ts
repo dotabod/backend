@@ -85,7 +85,7 @@ export class DelayedQueue {
 
     this.isRunning = true
     this.intervalId = setInterval(() => {
-      this.processTasks()
+      void this.processTasks()
     }, this.checkInterval)
 
     logger.info('DelayedQueue: Started processing')

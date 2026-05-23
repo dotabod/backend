@@ -7,7 +7,11 @@
 // register competing factories for the same module spec.
 import { vi } from 'vite-plus/test'
 import type { Database } from '@dotabod/shared-utils'
-import { buildSharedUtilsMock, initTestI18n, PRO_SUB as SHARED_PRO_SUB } from '../../../__tests__/sharedMocks'
+import {
+  buildSharedUtilsMock,
+  initTestI18n,
+  PRO_SUB as SHARED_PRO_SUB,
+} from '../../../__tests__/sharedMocks'
 
 export const PRO_SUB = SHARED_PRO_SUB
 

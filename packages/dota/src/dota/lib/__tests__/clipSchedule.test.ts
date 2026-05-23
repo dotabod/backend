@@ -31,7 +31,10 @@ function makeDeps() {
       runCalls += 1
     },
     now: () => now,
-    logger: { info: () => undefined, error: () => undefined },
+    logger: {
+      info: () => undefined,
+      error: () => undefined,
+    } as unknown as ClipScheduleDeps['logger'],
   }
 
   return {

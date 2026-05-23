@@ -909,7 +909,7 @@ class GSIHandler implements GSIHandlerType {
       // An early without waiting for ancient to blow up
       // We have to check every few seconds with an api to see if the match is over
       if (!winningTeam) {
-        this.checkEarlyDCWinner(matchId)
+        void this.checkEarlyDCWinner(matchId)
         return
       }
 

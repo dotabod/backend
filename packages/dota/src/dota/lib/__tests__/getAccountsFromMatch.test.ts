@@ -24,7 +24,11 @@ vi.doMock('../../../steam/MongoDBSingleton', () => ({
 // returning a stub. Other harnesses (gsiMocks, lastgame) register process-wide
 // `vi.doMock('.../getAccountsFromMatch', …)` stubs that would otherwise win
 // the global registry race and replace the very function this file tests.
-const { getAccountsFromMatch } = await import('../getAccountsFromMatch.ts?real')
+const realModuleSpecifier = '../getAccountsFromMatch.ts?real'
+const realModule = (await import(
+  realModuleSpecifier
+)) as typeof import('../getAccountsFromMatch.ts')
+const { getAccountsFromMatch } = realModule
 
 const realFetch = globalThis.fetch
 

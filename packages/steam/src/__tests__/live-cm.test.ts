@@ -1,5 +1,4 @@
 import { describe, it } from 'vite-plus/test'
-// @ts-expect-error no types
 import Steam from 'steam'
 
 // Live end-to-end probe against a real Steam CM. Skipped unless STEAM_LIVE=1
@@ -12,7 +11,10 @@ const maybe = live ? describe : describe.skip
 
 maybe('Steam CM live connect (STEAM_LIVE=1)', () => {
   it('receives an encryptionRequest within 10s and then disconnects cleanly', async () => {
-    const client = new Steam.SteamClient()
+    const client = new Steam.SteamClient() as Steam.SteamClient & {
+      connect: () => void
+      disconnect: () => void
+    }
     await new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => {
         try {

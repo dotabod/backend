@@ -64,7 +64,7 @@ export const setupSocketIO = () => {
 
     // Handle conduit data requests from twitch-chat
     socket.on('getConduitData', (options = { forceRefresh: false }) => {
-      sendConduitData(socket, options.forceRefresh)
+      void sendConduitData(socket, options.forceRefresh)
     })
 
     socket.on('grant', (providerAccountId: string) => {
@@ -76,17 +76,17 @@ export const setupSocketIO = () => {
     })
 
     socket.on('revoke', (providerAccountId: string) => {
-      revokeEvent({ providerAccountId })
+      void revokeEvent({ providerAccountId })
     })
 
     socket.on('enable', (providerAccountId: string) => {
       logger.info('[TWITCHEVENTS] Enabling events for user', { providerAccountId })
-      handleNewUser(providerAccountId, true)
+      void handleNewUser(providerAccountId, true)
     })
 
     socket.on('resubscribe', (providerAccountId: string) => {
       logger.info('[TWITCHEVENTS] Resubscribing to events for user', { providerAccountId })
-      handleNewUser(providerAccountId, true)
+      void handleNewUser(providerAccountId, true)
     })
   })
 }

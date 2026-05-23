@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test'
 // @ts-expect-error no types
 import Dota2 from 'dota2'
-// @ts-expect-error no types — `long` is a transitive dep of dota2
 import Long from 'long'
 
 describe('protobufjs@4 + bytebuffer@5 round-trip under bun', () => {

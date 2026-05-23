@@ -114,7 +114,7 @@ export async function revokeEvent({ providerAccountId }: { providerAccountId: st
       pendingRevokes.delete(providerAccountId)
 
       try {
-        stopUserSubscriptions(providerAccountId)
+        void stopUserSubscriptions(providerAccountId)
       } catch (e) {
         logger.info('Failed to delete subscriptions', { error: e, twitchId: providerAccountId })
       }

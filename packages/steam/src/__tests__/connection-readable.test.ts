@@ -10,7 +10,6 @@ import net from 'node:net'
 // Regression guard for oven-sh/bun#6080 ("Readable.prototype is undefined") —
 // reproduces under bun 1.0.3 and 1.1.8, fixed by 1.2.8.
 
-// @ts-expect-error no types
 const Connection = require('steam/lib/connection') as new () => net.Socket & {
   on(event: 'packet', listener: (body: Buffer) => void): unknown
   on(event: string | symbol, listener: (...args: unknown[]) => void): unknown

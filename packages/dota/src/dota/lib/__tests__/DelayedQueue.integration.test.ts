@@ -13,10 +13,38 @@ describe('DelayedQueue Integration', () => {
     const results: string[] = []
 
     // Add tasks with different delays and priorities
-    queue.addTask(50, () => results.push('task1'), null, 1) // 50ms, priority 1 (higher)
-    queue.addTask(50, () => results.push('task2'), null, 3) // 50ms, priority 3 (lower)
-    queue.addTask(100, () => results.push('task3'), null, 1) // 100ms, priority 1
-    queue.addTask(25, () => results.push('task4'), null, 1) // 25ms, priority 1
+    queue.addTask(
+      50,
+      () => {
+        results.push('task1')
+      },
+      null,
+      1,
+    ) // 50ms, priority 1 (higher)
+    queue.addTask(
+      50,
+      () => {
+        results.push('task2')
+      },
+      null,
+      3,
+    ) // 50ms, priority 3 (lower)
+    queue.addTask(
+      100,
+      () => {
+        results.push('task3')
+      },
+      null,
+      1,
+    ) // 100ms, priority 1
+    queue.addTask(
+      25,
+      () => {
+        results.push('task4')
+      },
+      null,
+      1,
+    ) // 25ms, priority 1
 
     // Wait for queue's 1-second check interval to process all tasks
     await new Promise((resolve) => setTimeout(resolve, 1200))
@@ -28,7 +56,7 @@ describe('DelayedQueue Integration', () => {
     await queue.shutdown()
   })
 
-  it('enqueues many tasks into a single queue without scheduling per-task timers', () => {
+  it('enqueues many tasks into a single queue without scheduling per-task timers', async () => {
     const queue = new DelayedQueue()
 
     for (let i = 0; i < 1000; i++) {
@@ -39,6 +67,6 @@ describe('DelayedQueue Integration', () => {
     // than 1000 separate setTimeout handles.
     expect(queue.getQueueSize()).toBe(1000)
 
-    queue.shutdown()
+    await queue.shutdown()
   })
 })

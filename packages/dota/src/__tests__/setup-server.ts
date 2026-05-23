@@ -1,4 +1,0 @@
-// import { server } from '../dota/index'
-
-// calling it just to be able to import and start the server
-// server.dota

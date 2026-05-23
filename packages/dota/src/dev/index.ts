@@ -23,7 +23,7 @@ async function postWinEventsForUsers(
   }[],
   win_team: 'radiant' | 'dire' = 'radiant',
 ) {
-  const promises = users.map((user) => {
+  const promises = users.flatMap((user) => {
     return gameEnd({
       win_team,
       matchId: '123',

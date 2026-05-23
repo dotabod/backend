@@ -104,9 +104,33 @@ describe('!wl', () => {
 
   it('reports ranked + unranked W/L from supabase.rpc results', async () => {
     state.groupedBets = [
-      { won: true, _count_won: 3, lobby_type: 7, is_party: false, is_doubledown: false },
-      { won: false, _count_won: 1, lobby_type: 7, is_party: false, is_doubledown: false },
-      { won: true, _count_won: 2, lobby_type: 0, is_party: false, is_doubledown: false },
+      {
+        won: true,
+        _count_won: 3,
+        lobby_type: 7,
+        is_party: false,
+        is_doubledown: false,
+        _count_is_party: 0,
+        _count_is_doubledown: 0,
+      },
+      {
+        won: false,
+        _count_won: 1,
+        lobby_type: 7,
+        is_party: false,
+        is_doubledown: false,
+        _count_is_party: 0,
+        _count_is_doubledown: 0,
+      },
+      {
+        won: true,
+        _count_won: 2,
+        lobby_type: 0,
+        is_party: false,
+        is_doubledown: false,
+        _count_is_party: 0,
+        _count_is_doubledown: 0,
+      },
     ]
     await commandHandler.handleMessage(makeMessage({ content: '!wl' }))
     expect(state.chatSayCalls).toHaveLength(1)

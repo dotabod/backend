@@ -290,7 +290,7 @@ export class MatchDataService {
       )
       steamSocket.emit('getCards', accountIds, false, (err: unknown, cards: Cards[]) => {
         clearTimeout(timeout)
-        if (err) reject(err instanceof Error ? err : new Error(String(err)))
+        if (err) reject(err instanceof Error ? err : new Error(JSON.stringify(err)))
         else resolve(cards ?? [])
       })
     })

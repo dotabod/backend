@@ -18,5 +18,5 @@ export { createTextVariations, normalizeText, prepareText } from './src/utils/te
 
 // If this file is run directly, start the API server
 if (import.meta.main) {
-  import('./src/index')
+  void import('./src/index')
 }

@@ -189,7 +189,7 @@ interface RankDescription {
   locale: string
   mmr: string | number
   steam32Id?: number
-  showRankMmr: boolean
+  showRankMmr?: boolean
 }
 
 // Used for chatting !mmr

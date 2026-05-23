@@ -1,16 +1,18 @@
 import { afterAll, describe, expect, it } from 'vite-plus/test'
-import type { AddressInfo } from 'node:net'
+import type { AddressInfo, Server as HttpServer } from 'node:net'
 import { io as ioClient } from 'socket.io-client'
 import { createSocketServer } from '../socketServer'
 
 const server = createSocketServer(0)
-const httpServer = server.httpServer!
+const httpServer = server.httpServer as HttpServer & {
+  closeAllConnections?: () => void
+}
 const port = (httpServer.address() as AddressInfo).port
 
 afterAll(async () => {
   server.disconnectSockets(true)
   await new Promise<void>((resolve) => {
-    server.close(() => resolve())
+    void server.close(() => resolve())
     httpServer.closeAllConnections?.()
   })
 }, 10_000)

@@ -30,7 +30,7 @@ describe('initSpectatorProtobuff', () => {
 
   it('spectateFriendGame sends the spectate request to the GC when ready', () => {
     initSpectatorProtobuff()
-    const sendToGC = vi.fn(() => {})
+    const sendToGC = vi.fn((..._args: unknown[]) => {})
     const ctx = { _gcReady: true, sendToGC }
 
     Dota2.Dota2Client.prototype.spectateFriendGame.call(

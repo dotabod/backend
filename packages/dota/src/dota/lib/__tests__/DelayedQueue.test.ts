@@ -8,8 +8,8 @@ describe('DelayedQueue', () => {
     queue = new DelayedQueue()
   })
 
-  afterEach(() => {
-    queue.shutdown()
+  afterEach(async () => {
+    await queue.shutdown()
   })
 
   it('should add tasks to the queue and return a unique usable id', () => {
@@ -43,9 +43,15 @@ describe('DelayedQueue', () => {
   it('should execute tasks in order of execution time', async () => {
     const results: number[] = []
 
-    queue.addTask(200, () => results.push(2))
-    queue.addTask(100, () => results.push(1))
-    queue.addTask(300, () => results.push(3))
+    queue.addTask(200, () => {
+      results.push(2)
+    })
+    queue.addTask(100, () => {
+      results.push(1)
+    })
+    queue.addTask(300, () => {
+      results.push(3)
+    })
 
     // Wait for queue's 1-second check interval to process all tasks
     await new Promise((resolve) => setTimeout(resolve, 1500))
@@ -59,9 +65,30 @@ describe('DelayedQueue', () => {
 
     // Add tasks with same delay but different priorities
     // Note: Lower priority number = higher priority (standard convention)
-    queue.addTask(delay, () => results.push(1), null, 1) // Highest priority
-    queue.addTask(delay, () => results.push(3), null, 3) // Lowest priority
-    queue.addTask(delay, () => results.push(2), null, 2) // Medium priority
+    queue.addTask(
+      delay,
+      () => {
+        results.push(1)
+      },
+      null,
+      1,
+    ) // Highest priority
+    queue.addTask(
+      delay,
+      () => {
+        results.push(3)
+      },
+      null,
+      3,
+    ) // Lowest priority
+    queue.addTask(
+      delay,
+      () => {
+        results.push(2)
+      },
+      null,
+      2,
+    ) // Medium priority
 
     // Wait for queue's 1-second check interval to process all tasks
     await new Promise((resolve) => setTimeout(resolve, 1200))

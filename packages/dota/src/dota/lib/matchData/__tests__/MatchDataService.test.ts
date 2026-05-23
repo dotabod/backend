@@ -506,13 +506,13 @@ describe('MatchDataService — memoization', () => {
     mongoDoc = sourceTvDoc()
     noVisionHost()
     const ws = await import('../../../../steam/ws')
-    const realEmit = ws.steamSocket.emit
+    const realEmit = ws.steamSocket.emit.bind(ws.steamSocket)
     ws.steamSocket.emit = ((
       _event: string,
       _ids: number[],
       _refetch: boolean,
       cb: (err: unknown, cards: unknown) => void,
-    ) => cb(new Error('socket boom'), null)) as typeof realEmit
+    ) => cb(new Error('socket boom'), null)) as typeof ws.steamSocket.emit
     let caught: unknown = null
     try {
       await new MatchDataService(makeClient()).getCards()

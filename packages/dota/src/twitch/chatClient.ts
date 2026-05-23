@@ -52,17 +52,16 @@ const sendWhisper = (channel: string, text: string) => {
 
 // Chat client object
 export const chatClient = {
-  say: async (
+  say: (
     channel: string,
     text: string,
     reply_parent_message_id?: string,
     bypassDisableCheck = false,
-  ) => {
+  ): void => {
     const user = findUserByName(channel.toLowerCase().replace('#', ''))
     const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
 
     if (hasNewestScopes && user?.Account?.providerAccountId) {
-      // Check if account is disabled before emitting chat message (unless bypassed)
       if (!bypassDisableCheck) {
         const isDisabled = getValueOrDefault(
           DBSettings.commandDisable,
@@ -77,6 +76,6 @@ export const chatClient = {
   },
   whisper: (channel: string, text: string | undefined) => {
     whisperQueue.push({ channel, text: text || 'Empty whisper message, monka' })
-    processQueue()
+    void processQueue()
   },
 }
