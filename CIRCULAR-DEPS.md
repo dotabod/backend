@@ -10,11 +10,11 @@ This tool helps identify circular dependencies in the codebase, which can lead t
 ## Usage
 
 ```bash
-# Run with Bun
+# Run directly (uses the pnpm dlx tsx shebang)
 ./detect-circular-deps.ts
 
-# Or explicitly with Bun
-bun detect-circular-deps.ts
+# Or invoke tsx explicitly
+pnpm dlx tsx detect-circular-deps.ts
 ```
 
 ## How It Works

@@ -23,7 +23,7 @@ jobs:
       # Single source of truth for the build dependency graph. paths-filter
       # diffs the full push range (github.event.before..after), so multi-commit
       # pushes can't skip a rebuild. package.json/pnpm-lock.yaml are listed for every
-      # service since they all share the root lockfile + bun install.
+      # service since they all share the root lockfile + pnpm install.
       - uses: dorny/paths-filter@v4.0.1
         id: filter
         with:

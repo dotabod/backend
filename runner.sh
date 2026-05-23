@@ -112,7 +112,7 @@ gentypes() {
         exit 1
     fi
 
-    bunx supabase gen types typescript --db-url "$DATABASE_URL" --schema public >"$TEMP_FILE"
+    pnpm dlx supabase gen types typescript --db-url "$DATABASE_URL" --schema public >"$TEMP_FILE"
     # Check if the generated types file is empty
     if [ ! -s "$TEMP_FILE" ]; then
         echo "Error: Generated types file is empty. There might be an issue with the database connection or schema."
@@ -123,7 +123,7 @@ gentypes() {
     # Check if the temp file has content before proceeding
     if [ -s "$TEMP_FILE" ]; then
         echo "Successfully generated types from database schema."
-        bun biome format --write "$TEMP_FILE"
+        pnpm exec vp fmt "$TEMP_FILE"
 
         # If empty after formatting, exit
         if [ ! -s "$TEMP_FILE" ]; then

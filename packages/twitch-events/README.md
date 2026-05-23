@@ -32,7 +32,7 @@ You can run the health check manually:
 cd packages/twitch-events
 
 # Run the health check
-bun run subscription-health-check
+pnpm subscription-health-check
 ```
 
 ### Automated Monitoring
@@ -61,11 +61,11 @@ If you're encountering issues with Twitch events not being received:
 
 ```bash
 # Start the service in development mode
-bun run docker:development
+pnpm docker:development
 
 # Build the production bundle
-bun run build
+pnpm build
 
 # Start the service in production mode
-bun run docker:production
+pnpm docker:production
 ```

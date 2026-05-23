@@ -2,7 +2,7 @@
  * Example Client for Profanity Filter API
  *
  * This script demonstrates how to use the Profanity Filter API
- * Run with: bun run src/example-client.ts
+ * Run with: pnpm dlx tsx src/example-client.ts
  */
 
 import axios from 'axios'
