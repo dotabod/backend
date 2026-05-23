@@ -1,66 +1,27 @@
 import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import type { DelayedGames, HeroesStatus, Packet, Players } from '../../types'
-import { getSpectatorPlayers } from './getSpectatorPlayers'
+import {
+  GsiSelfResolver,
+  GsiSpectatorResolver,
+  ResolverChain,
+  SourceTvResolver,
+  VisionResolver,
+} from './matchData/resolvers'
 
-// Where the roster comes from. The `delayedGames` Mongo collection has two possible doc shapes,
-// written by two different producers in the steam service:
-//   - SourceTV feed (Dota.getGames, steam.ts) — the ONLY active writer today. Flat top-level
-//     `players[]` (accountid + heroid) + `average_mmr` + `spectators`. Only covers games the GC
-//     broadcasts as publicly spectatable (notable / high-MMR / tournament). Handled by the
-//     `response.players` branch below.
-//   - GetRealTimeStats (saveMatch, steam.ts) — writes the `teams[]` shape, but it's gated off
-//     (ENABLE_SPECTATE_FRIEND_GAME = false; Valve disabled the spectate-friend proto). Handled by
-//     the `response.teams` branches below, effectively dormant.
-// So an ordinary streamer's pub match usually has NO doc at all and we fall through to the GSI-only
-// fallback (just the streamer's own hero/account).
+// Phase B adapter. Preserves the legacy `{ matchPlayers, accountIds, heroesStatus? }` shape so
+// every existing caller keeps working, but internally delegates to the same `ResolverChain` that
+// `MatchDataService` uses. Each invocation builds a fresh chain — no memoization, matching the
+// previous stateless behavior. New code should prefer `MatchDataService` (per-instance dedup of
+// Mongo / Vision / cards I/O) or one of its projections like `mds.getAccountIds()`.
 
-function getAllPlayers(data: DelayedGames) {
-  const players: Players = []
-  data.teams.forEach((team) => {
-    team.players.forEach((player) => {
-      players.push({
-        heroid: player.heroid,
-        accountid: Number(player.accountid),
-        playerid: null,
-        // TODO: could get team_slot from here
-      })
-    })
-  })
-  return players
-}
-
-// Interface for Vision API match response
-interface VisionApiMatchHero {
-  hero_id: number
-  hero_name: string
-  hero_localized_name: string
-  match_score: number
-  position: number
-  player_name?: string
-  rank?: number
-  team: string
-  variant: string
-  player_id?: number
-}
-
-interface VisionApiMatchPlayer {
-  hero: string
-  hero_id: number
-  player_name?: string
-  position: number
-  rank?: number
-  team: string
-  player_id?: number
-}
-
-interface VisionApiMatchResponse {
-  match_id: string
-  heroes: VisionApiMatchHero[]
-  players: VisionApiMatchPlayer[]
-  // Present when only a draft clip has been processed (player names, no heroes)
-  heroes_status?: HeroesStatus
-  draft_player_order?: (string | null)[]
-  // other fields not needed for our use case
+async function fetchDelayedGameDoc(matchId: string): Promise<DelayedGames | null> {
+  const mongo = MongoDBSingleton
+  const db = await mongo.connect()
+  try {
+    return await db.collection<DelayedGames>('delayedGames').findOne({ 'match.match_id': matchId })
+  } finally {
+    await mongo.close()
+  }
 }
 
 export async function getAccountsFromMatch({
@@ -76,144 +37,40 @@ export async function getAccountsFromMatch({
   accountIds: number[]
   heroesStatus?: HeroesStatus
 }> {
-  const players = searchPlayers?.length ? searchPlayers : getSpectatorPlayers(gsi)
-
-  // spectator account ids
-  if (Array.isArray(players) && players.length) {
+  // Pre-supplied roster short-circuit. Used by `getPlayers.ts` when the caller already has the
+  // player list from elsewhere and just needs the standard return shape.
+  if (searchPlayers?.length) {
     return {
-      matchPlayers: players,
-      accountIds: players.map((player) => player.accountid),
+      matchPlayers: searchPlayers,
+      accountIds: searchPlayers.map((p) => p.accountid),
     }
   }
 
   const matchId = searchMatchId || gsi?.map?.matchid
+  const chain = new ResolverChain([
+    new GsiSpectatorResolver(),
+    new SourceTvResolver(fetchDelayedGameDoc),
+    new VisionResolver(),
+    new GsiSelfResolver(),
+  ])
+  const raw = await chain.resolve({ gsi, matchId })
 
-  const mongo = MongoDBSingleton
-  const db = await mongo.connect()
-
-  try {
-    const response = await db
-      .collection<DelayedGames>('delayedGames')
-      .findOne({ 'match.match_id': matchId })
-
-    const hasTwoTeams = Array.isArray(response?.teams) && response?.teams.length === 2
-
-    // i think this is faster than using response.players (game source tv)
-    if (!hasTwoTeams && Array.isArray(response?.teams)) {
-      const players = getAllPlayers(response)
-      return {
-        matchPlayers: players,
-        accountIds: players.map((a) => Number(a.accountid)),
-      }
-    }
-
-    // this probably never gets called now
-    if (response?.players?.length && !hasTwoTeams) {
-      return {
-        matchPlayers: response.players.map((a) => ({
-          heroid: a.heroid,
-          accountid: Number(a.accountid),
-          playerid: null, // Unknown until we have two teams
-        })),
-        accountIds: response.players.map((a) => Number(a.accountid)),
-      }
-    }
-
-    if (hasTwoTeams) {
-      const matchPlayers = [
-        ...response.teams[0].players.map((a) => ({
-          heroid:
-            a.heroid ||
-            response?.players?.find((p) => Number(p.accountid) === Number(a.accountid))?.heroid,
-          accountid: Number(a.accountid),
-          playerid: a.playerid,
-        })),
-        ...response.teams[1].players.map((a) => ({
-          heroid:
-            a.heroid ||
-            response?.players?.find((p) => Number(p.accountid) === Number(a.accountid))?.heroid,
-          accountid: Number(a.accountid),
-          playerid: a.playerid,
-        })),
-      ]
-      return {
-        matchPlayers,
-        accountIds: matchPlayers.map((player) => player.accountid),
-      }
-    }
-
-    if (matchId && process.env.VISION_API_HOST) {
-      try {
-        const apiUrl = `https://${process.env.VISION_API_HOST}/match/${matchId}`
-        const apiResponse = await fetch(apiUrl, {
-          headers: {
-            'X-API-Key': process.env.VISION_API_KEY || '',
-          },
-        })
-
-        if (apiResponse.ok) {
-          const data = (await apiResponse.json()) as VisionApiMatchResponse
-
-          if (!Array.isArray(data.heroes) || data.heroes.length === 0) {
-            // Draft-only result: heroes aren't detected yet, but the draft clip
-            // gave us player names. Surface those so commands can show players.
-            const draftNames = (data.draft_player_order ?? []).filter(
-              (name): name is string => typeof name === 'string' && name.trim().length > 0,
-            )
-
-            if (draftNames.length > 0) {
-              const matchPlayers: Players = draftNames.map((name) => ({
-                heroid: undefined,
-                accountid: 0,
-                playerid: null,
-                player_name: name,
-              }))
-
-              return {
-                matchPlayers,
-                accountIds: [],
-                heroesStatus: data.heroes_status ?? 'waiting',
-              }
-            }
-
-            return {
-              matchPlayers: [],
-              accountIds: [],
-            }
-          }
-
-          // Convert Vision API response to our player format
-          const matchPlayers: Players = data.heroes.map((hero) => ({
-            heroid: hero.hero_id,
-            rank: hero.rank,
-            player_name: hero.hero_id === gsi?.hero?.id ? gsi?.player?.name : hero.player_name,
-            accountid: hero.hero_id === gsi?.hero?.id ? Number(gsi?.player?.accountid) : 0, // Vision API doesn't provide account IDs
-            playerid:
-              hero.hero_id === gsi?.hero?.id ? Number(gsi?.player?.id) : hero.player_id || null,
-          }))
-
-          return {
-            matchPlayers,
-            accountIds: matchPlayers.map((player) => player.accountid).filter((id) => id !== 0),
-          }
-        }
-      } catch (error) {
-        // Silent fail - if Vision API fails, we'll fall back to default return
-        console.error('Failed to fetch from Vision API:', error)
-      }
-    }
-  } finally {
-    await mongo.close()
+  if (!raw) {
+    return { matchPlayers: [], accountIds: [] }
   }
 
-  return {
-    matchPlayers: [
-      {
-        heroid: gsi?.hero?.id,
-        accountid: Number(gsi?.player?.accountid),
-        playerid: null,
-      },
-    ],
-    accountIds: [Number(gsi?.player?.accountid)],
-  }
+  // Per-source accountIds derivation matches the legacy branches:
+  //   - vision-heroes drops 0s (Vision API populates accountid=0 for non-self players)
+  //   - vision-draft has no accountIds (draft names only)
+  //   - everything else passes through Number()
+  const accountIds: number[] =
+    raw.source === 'vision-heroes'
+      ? raw.matchPlayers.map((p) => Number(p.accountid)).filter((id) => id !== 0)
+      : raw.source === 'vision-draft'
+        ? []
+        : raw.matchPlayers.map((p) => Number(p.accountid))
+
+  return raw.heroesStatus !== undefined
+    ? { matchPlayers: raw.matchPlayers, accountIds, heroesStatus: raw.heroesStatus }
+    : { matchPlayers: raw.matchPlayers, accountIds }
 }
