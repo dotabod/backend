@@ -191,7 +191,6 @@ function createSupabaseFromBuilder() {
     // `.limit()` is the terminal call for list queries (e.g. !recent, the
     // won/lost fallback). The result is awaited directly.
     limit: () => ({
-      // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock
       then: (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
         Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
     }),
@@ -207,7 +206,6 @@ function createSupabaseFromBuilder() {
     },
     // Terminal for chains awaited directly without .limit()/.single() (e.g.
     // getTodayHeroStats ends in .order()). Resolves the list result.
-    // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock
     then: (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
       Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
   }

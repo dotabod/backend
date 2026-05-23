@@ -9,7 +9,6 @@ export async function calculateManaSaved(dotaClient: GSIHandlerType) {
   if (!data?.hero?.mana || !data.hero.max_mana) return
   const hasPowerTreads = findItem({ itemName: 'item_power_treads', searchStashAlso: false, data })
   // findItem returns `Item[] | false`; optional-chain would skip narrowing on `false`.
-  // biome-ignore lint/complexity/useOptionalChain: union with `false` (not nullish)
   if (!hasPowerTreads || !hasPowerTreads[0]) return
 
   const maxMana = data.hero.max_mana

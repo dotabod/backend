@@ -7,7 +7,6 @@ import { type RawRoster, type ResolverContext, RosterResolver } from './RosterRe
 export class GsiSpectatorResolver extends RosterResolver {
   readonly name = 'gsi-spectator' as const
 
-  // biome-ignore lint/suspicious/useAwait: contract requires Promise return; no I/O here
   async resolve({ gsi }: ResolverContext): Promise<RawRoster | null> {
     if (!gsi || !isSpectator(gsi)) return null
     const players = getSpectatorPlayers(gsi)

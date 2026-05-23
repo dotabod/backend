@@ -15,7 +15,6 @@ class FakeResolver extends RosterResolver {
   ) {
     super()
   }
-  // biome-ignore lint/suspicious/useAwait: contract requires Promise return
   async resolve(_ctx: ResolverContext): Promise<RawRoster | null> {
     this.callCount++
     return this.result

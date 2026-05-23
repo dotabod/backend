@@ -77,7 +77,6 @@ function createTableBuilder(table: string) {
       filters.push({ method: 'is', col, val })
       return updateChain
     },
-    // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock
     then: (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
       utilsState.updates.push({ table, values: updateValues, filters })
       return Promise.resolve({ data: null, error: null }).then(onFulfilled)

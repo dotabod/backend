@@ -64,7 +64,6 @@ function createTableBuilder(table: string) {
     order: () => builder,
     limit: () => builder,
     single: async () => result,
-    // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock
     then: (onFulfilled: (value: TableResult) => unknown) =>
       Promise.resolve(result).then(onFulfilled),
   }

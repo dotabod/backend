@@ -38,7 +38,6 @@ export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value
 
   try {
     if (typeof dbVal === 'string') {
-      // biome-ignore lint/suspicious/noExplicitAny: callers depend on the merged value being `any`
       const val = JSON.parse(dbVal) as any
       if (isPlainObject(val) && isPlainObject(defaultValue)) {
         return {

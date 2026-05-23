@@ -103,7 +103,6 @@ function sbBuilder(table: string) {
     },
     eq: () => b,
     single: async () => ({ data: table === 'accounts' ? state.dbUser : null, error: null }),
-    // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock
     then: (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
       if (mode === 'update') state.updates.push({ table, values })
       const data = mode === 'select' && table === 'settings' ? state.dbSettings : null

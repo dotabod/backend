@@ -44,7 +44,6 @@ async function checkMidasIterator(client: SocketClient) {
 
   // Check if player has a midas. findItem returns `Item[] | false`, so an
   // optional-chain shortcut here would skip narrowing on the `false` arm.
-  // biome-ignore lint/complexity/useOptionalChain: union with `false` (not nullish)
   if (!midasItem || !midasItem[0]) return false
 
   // Get passive midas data from Redis

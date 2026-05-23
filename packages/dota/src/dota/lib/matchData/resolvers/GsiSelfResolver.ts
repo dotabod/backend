@@ -6,7 +6,6 @@ import { type RawRoster, type ResolverContext, RosterResolver } from './RosterRe
 export class GsiSelfResolver extends RosterResolver {
   readonly name = 'gsi-self' as const
 
-  // biome-ignore lint/suspicious/useAwait: contract requires Promise return; no I/O here
   async resolve({ gsi }: ResolverContext): Promise<RawRoster | null> {
     if (!gsi) return null
     const heroid = gsi.hero?.id
