@@ -22,11 +22,10 @@ export function formatTranslatedSpeakerLabel(
     // 8500+, so "Player 9" would wrongly imply the 9th-slot / Green player.
     return t('chatTranslation.unknownPlayer', { lng: locale })
   }
-  return t('chatTranslation.speakerLabel', {
-    lng: locale,
-    heroName,
-    playerId,
-  })
+  // Hero resolved — show only the name. Deliberately omit a "(P9)" player_id
+  // suffix: player_id is 0-indexed (off-by-one from the 1-10 top bar) and
+  // reshuffled at 8500+, so it would mislead viewers about slot/color.
+  return heroName
 }
 
 // Decides the speaker name shown for a translated in-game chat line.

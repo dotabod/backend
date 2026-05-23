@@ -44,8 +44,9 @@ describe('translation message formatting', () => {
     expect(formatTranslatedSpeakerLabel('2', 2, 'en')).toBe('a player')
   })
 
-  it('includes player slot for known hero labels', () => {
-    expect(formatTranslatedSpeakerLabel('Crystal Maiden', 4, 'en')).toBe('Crystal Maiden (P4)')
+  it('shows only the hero name (no positional suffix) for known heroes', () => {
+    // we deliberately do NOT append "(P4)" — the number would misread as a top-bar slot
+    expect(formatTranslatedSpeakerLabel('Crystal Maiden', 4, 'en')).toBe('Crystal Maiden')
   })
 
   describe('resolveTranslatedHeroName', () => {
