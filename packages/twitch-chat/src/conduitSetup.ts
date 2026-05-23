@@ -254,21 +254,49 @@ async function initializeSocket() {
     })
 
     mySocket.on('connected', async (session_id: string) => {
-      logger.info(`Socket has connected ${session_id} for ${conduitId}`)
+      logger.info('[TWITCHCHAT] Socket connected (initial)', {
+        sessionId: session_id,
+        conduitId: `${conduitId.substring(0, 8)}...`,
+      })
       await updateConduitShard(session_id, conduitId)
     })
 
-    mySocket.on('error', (error: Error) => {
-      logger.error('Socket Error', { error })
+    mySocket.on('reconnected', async (session_id: string) => {
+      logger.info('[TWITCHCHAT] Socket reconnected', {
+        sessionId: session_id,
+        conduitId: `${conduitId.substring(0, 8)}...`,
+      })
+      await updateConduitShard(session_id, conduitId)
     })
 
-    mySocket.on('close', (code: number, reason: string) => {
-      logger.info(`Socket closed with code ${code} and reason: ${reason}`)
+    mySocket.on('close', (close: { code: number; reason?: string }) => {
+      logger.info('[TWITCHCHAT] EventSub close event surfaced', {
+        code: close?.code,
+        reason: close?.reason,
+      })
+    })
 
-      // Handle specific close codes
-      if (code === 4003) {
-        logger.info('Connection unused, will reconnect when ready')
+    // Safety net: if Twitch goes silent and the close path doesn't recover the
+    // socket (we've seen the connection get stuck with eventsubConnected=false
+    // and no log activity), force a full re-init.
+    let silencedRecoveryInFlight = false
+    mySocket.on('session_silenced', () => {
+      if (silencedRecoveryInFlight) {
+        logger.warn('[TWITCHCHAT] session_silenced fired again while recovery in flight')
+        return
       }
+      silencedRecoveryInFlight = true
+      logger.warn('[TWITCHCHAT] session_silenced — forcing full re-init in 5s')
+      setTimeout(() => {
+        initializeSocket()
+          .then(() => logger.info('[TWITCHCHAT] Re-init after silence completed'))
+          .catch((e) =>
+            logger.error('[TWITCHCHAT] Re-init after silence failed', { error: e?.message }),
+          )
+          .finally(() => {
+            silencedRecoveryInFlight = false
+          })
+      }, 5000)
     })
 
     const DEBOUNCE_TIME = 3000

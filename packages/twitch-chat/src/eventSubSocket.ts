@@ -85,49 +85,85 @@ export class EventsubSocket extends EventEmitter {
 
   private handleOpen(): void {
     this.backoff = 0
-    console.debug('Opened Connection to Twitch')
+    logger.info('[EVENTSUB] WebSocket open', {
+      counter: this.eventsub.counter,
+      url: this.mainUrl,
+    })
   }
 
   private handleClose(close: WebSocket.CloseEvent, _isReconnect: boolean): void {
+    const reasonText = this.closeCodes[close.code] || 'Unknown'
+    const isStale = close.target !== this.eventsub
+    const wsId = this.eventsub.twitch_websocket_id
+
     // Ignore closes from a stale socket (e.g. the old connection shutting down
     // after a session_reconnect handed off to a new one). Otherwise it clobbers
     // the live connection's status and can spawn duplicate reconnects.
-    if (close.target !== this.eventsub) {
+    if (isStale) {
+      logger.info('[EVENTSUB] Stale close ignored', {
+        code: close.code,
+        reason: reasonText,
+        wsCounter: (close.target as typeof this.eventsub)?.counter,
+        currentCounter: this.eventsub.counter,
+      })
       return
     }
 
     eventsubConnected = false
     this.emit('close', close)
-    console.debug(
-      `Connection Closed: ${close.code} Reason - ${this.closeCodes[close.code] || 'Unknown'}`,
-    )
+    logger.info('[EVENTSUB] WebSocket closed', {
+      code: close.code,
+      reason: reasonText,
+      wasClean: close.wasClean,
+      twitchWsId: wsId,
+      counter: this.eventsub.counter,
+    })
 
     if (close.code === 4003) {
-      console.debug('Connection unused. Reconnecting after delay...')
-
       // Use exponential backoff for 4003 error (connection unused)
       this.backoff = Math.min(this.backoff + 1, 5) // Cap backoff factor at 5
       const reconnectDelay = this.backoff * this.backoffStack
-
-      console.debug(`Reconnecting in ${reconnectDelay}ms (backoff: ${this.backoff})`)
+      logger.info('[EVENTSUB] Reconnecting after 4003 (connection unused)', {
+        backoff: this.backoff,
+        delayMs: reconnectDelay,
+      })
       setTimeout(() => this.connect(this.mainUrl, true), reconnectDelay)
       return
     }
 
     if (close.code === 4004) {
-      console.debug('Old Connection is 4004-ing')
+      // Reconnect grace expired. Normally this fires on the OLD socket after
+      // session_reconnect handed off, in which case the stale check above
+      // already skipped us. Reaching this branch means it's the *current*
+      // socket — we must reconnect or we'll be stuck silent.
+      logger.warn(
+        '[EVENTSUB] 4004 on live socket — reconnect grace expired without handoff, retrying',
+        { backoff: this.backoff, twitchWsId: wsId },
+      )
+      this.backoff++
+      setTimeout(() => this.connect(this.mainUrl, true), this.backoff * this.backoffStack)
       return
     }
 
     if (!this.disableAutoReconnect) {
       this.backoff++
-      console.debug('Retrying connection in', this.backoff * this.backoffStack)
+      logger.info('[EVENTSUB] Scheduling reconnect', {
+        code: close.code,
+        backoff: this.backoff,
+        delayMs: this.backoff * this.backoffStack,
+      })
       setTimeout(() => this.connect(this.mainUrl, true), this.backoff * this.backoffStack)
+    } else {
+      logger.warn('[EVENTSUB] Auto-reconnect disabled — staying down', { code: close.code })
     }
   }
 
   private handleError(err: WebSocket.ErrorEvent): void {
-    console.debug('Connection Error', err)
+    logger.error('[EVENTSUB] WebSocket error', {
+      message: err.message,
+      type: err.type,
+      counter: this.eventsub.counter,
+    })
   }
 
   private handleMessage(message: WebSocket.MessageEvent): void {
@@ -150,7 +186,7 @@ export class EventsubSocket extends EventEmitter {
         this.handleSessionReconnect(payload)
         break
       case 'websocket_disconnect':
-        console.debug('Received Disconnect', payload)
+        logger.info('[EVENTSUB] Received websocket_disconnect from Twitch', { payload })
         break
       case 'revocation': {
         logger.info('[TWITCHEVENTS] Revocation', { data })
@@ -158,7 +194,7 @@ export class EventsubSocket extends EventEmitter {
         break
       }
       default:
-        console.debug('Unexpected message type', metadata, payload)
+        logger.warn('[EVENTSUB] Unexpected message type', { metadata, payload })
         break
     }
   }
@@ -168,8 +204,12 @@ export class EventsubSocket extends EventEmitter {
     const { id, keepalive_timeout_seconds } = session
 
     this.eventsub.twitch_websocket_id = id
-    console.debug(`This is Socket ID ${id}`)
-    console.debug(`Silence timeout set to ${keepalive_timeout_seconds} seconds`)
+    logger.info('[EVENTSUB] Session welcome', {
+      sessionId: id,
+      keepaliveSeconds: keepalive_timeout_seconds,
+      isReconnect,
+      counter: this.eventsub.counter,
+    })
 
     eventsubConnected = true
     if (isReconnect) {
@@ -194,7 +234,11 @@ export class EventsubSocket extends EventEmitter {
     this.eventsub.is_reconnecting = true
     const { reconnect_url } = payload.session
 
-    console.debug(`Reconnect request to ${reconnect_url}`)
+    logger.info('[EVENTSUB] session_reconnect received', {
+      reconnectUrl: reconnect_url,
+      oldCounter: this.eventsub.counter,
+      oldWsId: this.eventsub.twitch_websocket_id,
+    })
     this.emit('session_reconnect', reconnect_url)
     this.connect(reconnect_url, true)
   }
@@ -209,6 +253,13 @@ export class EventsubSocket extends EventEmitter {
     clearTimeout(this.silenceHandler)
     this.silenceHandler = setTimeout(() => {
       eventsubConnected = false
+      logger.warn('[EVENTSUB] session_silenced — no keepalive in window', {
+        silenceTimeSec: this.silenceTime,
+        twitchWsId: this.eventsub.twitch_websocket_id,
+        wsReadyState: this.eventsub.readyState,
+        counter: this.eventsub.counter,
+        willClose: this.silenceReconnect,
+      })
       this.emit('session_silenced')
       if (this.silenceReconnect) {
         this.close()
