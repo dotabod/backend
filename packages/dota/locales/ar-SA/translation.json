@@ -5,9 +5,13 @@
   },
   "aegis": {
     "denied": "{{- heroName}} رفض الرعاية {{emote}}",
+    "deniedUnknown": "Aegis denied {{emote}}",
     "expired": "اسم البطل\n",
+    "expiredUnknown": "Aegis expired {{emote}}",
     "pickup": "التقط {{- heroName}} الحماية! اسم البطل\n",
-    "snatched": "{{emote}}{{- heroName}} خطف ايجيس"
+    "pickupUnknown": "Aegis picked up!",
+    "snatched": "{{emote}}{{- heroName}} خطف ايجيس",
+    "snatchedUnknown": "Aegis snatched PepeLaugh"
   },
   "aghs": "{{- heroName}}عصا أغانيم :{{- title}}.{{- description}}",
   "altAccount": "{{emote}} alt account detected {{emote2}}",
@@ -27,7 +31,7 @@
     "cannotResolveCurrentMatch": "Cannot resolve the current ongoing match. Wait for the game to end or use !won / !lost without a match ID for pending resolutions.",
     "error": "تعذّر فتح الرهانات.$t(refreshToken)",
     "lost": "لقد خسرنا، لعبة جيدة، أحسنت،{{emote}} ننتقل إلى الجولة التالية.",
-    "manualResolution": "Disconnected before match {{matchId}} ended. Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
+    "manualResolution": "Disconnected before the match ended. {{details}} Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
     "manualResolutionError": "Error resolving bet manually {{emote}}",
     "manualResolutionExpired": "Previous match bet expired and was refunded (mods not doing their jobs, next time use !won or !lost) {{emote}}",
     "manualResolutionSuccess_lost": "Match {{matchId}} manually resolved as LOST by @{{username}}",
@@ -56,6 +60,12 @@
     "unresolvedMatches_few": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "unresolvedMatches_many": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedReminder_zero": "Reminder: {{count}} matches still need resolving {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedReminder_one": "Reminder: {{count}} match still needs resolving {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedReminder_two": "Reminder: {{count}} matches still need resolving {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedReminder_few": "Reminder: {{count}} matches still need resolving {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedReminder_many": "Reminder: {{count}} matches still need resolving {{emote}} Use !won or !lost with match ID: {{matchList}}",
+    "unresolvedReminder_other": "Reminder: {{count}} matches still need resolving {{emote}} Use !won or !lost with match ID: {{matchList}}",
     "won": "We have won {{emote}} go next"
   },
   "bounties": {
@@ -78,12 +88,14 @@
     "legacyHeroLabel": "Hero {{playerId}}",
     "message": "{{- message}} (translation of in-game chat)",
     "playerLabel": "Player {{playerId}}",
-    "speakerLabel": "{{- heroName}} (P{{playerId}})"
+    "speakerLabel": "{{- heroName}} (P{{playerId}})",
+    "unknownPlayer": "a player"
   },
   "clearsharing": {
     "error": "فشل في إلغاء مشاركة الحساب",
     "success": "تم بنجاح إعادة تعيين مشاركة الحساب، العديد من حسابات مسئولي البث يمكن أن ترسل بيانات GSI  مرة أخرى، تحذير:احرص على أن يكون ملف إعدادات GSI الخاص بـ Dotabod بحوذت شخص واحد، وإلا ستعود المشاكل للظهور مجددًا."
   },
+  "clippingDisabled": "the streamer turned off auto-clipping, which Dotabod needs to read live game data in 8500+ MMR games",
   "colors": {
     "blue": "أزرق",
     "brown": "بني",
@@ -306,13 +318,34 @@
   "stream_on": "Dotabod will treat {{channel}} as online. Type !offline to undo",
   "streamDelay": "Stream delay: $t(seconds, {\"count\": {{seconds}} })",
   "streamDelayNone": "There is no stream delay on this channel",
+  "streamersInMatch_zero": "Playing with {{count}} other Dotabod streamers {{emote}}",
+  "streamersInMatch_one": "Playing with {{count}} other Dotabod streamer {{emote}}",
+  "streamersInMatch_two": "Playing with {{count}} other Dotabod streamers {{emote}}",
+  "streamersInMatch_few": "Playing with {{count}} other Dotabod streamers {{emote}}",
+  "streamersInMatch_many": "Playing with {{count}} other Dotabod streamers {{emote}}",
+  "streamersInMatch_other": "Playing with {{count}} other Dotabod streamers {{emote}}",
+  "streamersInMatchAnnounce_zero": "By the way, {{count}} other Dotabod streamers are in this match",
+  "streamersInMatchAnnounce_one": "By the way, {{count}} other Dotabod streamer is in this match",
+  "streamersInMatchAnnounce_two": "By the way, {{count}} other Dotabod streamers are in this match",
+  "streamersInMatchAnnounce_few": "By the way, {{count}} other Dotabod streamers are in this match",
+  "streamersInMatchAnnounce_many": "By the way, {{count}} other Dotabod streamers are in this match",
+  "streamersInMatchAnnounce_other": "By the way, {{count}} other Dotabod streamers are in this match",
+  "streamersSuffix_zero": "{{count}} other streamers in match",
+  "streamersSuffix_one": "{{count}} other streamer in match",
+  "streamersSuffix_two": "{{count}} other streamers in match",
+  "streamersSuffix_few": "{{count}} other streamers in match",
+  "streamersSuffix_many": "{{count}} other streamers in match",
+  "streamersSuffix_other": "{{count}} other streamers in match",
   "subscriptionRequired": "✨ Unlock this command and more features with Dotabod Pro. Visit dotabod.com to subscribe or dotabod.com/{{channel}}/gift to gift your streamer a sub!",
   "tip": {
     "from": "The tip from {{- heroName}} {{emote}}",
-    "to": "We tipping {{- heroName}} {{emote}}"
+    "fromUnknown": "We got tipped {{emote}}",
+    "to": "We tipping {{- heroName}} {{emote}}",
+    "toUnknown": "We tipping someone {{emote}}"
   },
   "today": {
     "noGames": "No games played yet today",
+    "single": "{{- heroName}} {{wins}}-{{losses}} today",
     "summary_zero": "{{wins}}W {{losses}}L ({{count}} games)",
     "summary_one": "{{wins}}W {{losses}}L ({{count}} game)",
     "summary_two": "{{wins}}W {{losses}}L ({{count}} games)",
