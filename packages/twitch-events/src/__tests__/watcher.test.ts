@@ -286,6 +286,49 @@ describe('setupAccountWatcher', () => {
       expect(state.removeChannelCount).toBe(0)
       expect(state.channelCreationCount).toBe(1)
     })
+
+    it('schedules a reconnect when supabase.channel() throws synchronously', async () => {
+      // Force the next channel() to throw — simulates a Realtime client in
+      // a bad state. Before the guard, this would take down the watcher
+      // silently (no listener attached, no reconnect scheduled).
+      vi.useFakeTimers()
+      resetState()
+      state.channelCreationError = new Error('realtime client not ready')
+      setupAccountWatcher()
+
+      // The status callback never attached (channel() threw), but the catch
+      // path logged an error and scheduled a reconnect.
+      expect(state.logError.some((l) => l.message.includes('supabase.channel() threw'))).toBe(true)
+
+      // Clear the error so the next channel() call succeeds.
+      state.channelCreationError = null
+      await vi.advanceTimersByTimeAsync(5100)
+
+      // Reconnect ran: a fresh channel was created and handlers attached.
+      expect(state.channelCreationCount).toBeGreaterThanOrEqual(2)
+      expect(state.channelHandlers.size).toBe(4)
+    })
+
+    it('schedules a reconnect when channel.on() throws synchronously', async () => {
+      // Force the first .on(...) call to throw — simulates a bad option shape
+      // or a state.channel mutation. Without the chain-level try/catch the
+      // .subscribe() at the end never attaches and reconnect cannot fire.
+      vi.useFakeTimers()
+      resetState()
+      state.channelOnError = new Error('invalid event filter')
+      setupAccountWatcher()
+
+      expect(state.logError.some((l) => l.message.includes('channel.on/.subscribe threw'))).toBe(
+        true,
+      )
+
+      // Clear the error and let the reconnect tick.
+      state.channelOnError = null
+      await vi.advanceTimersByTimeAsync(5100)
+
+      // The reconnect created a fresh channel and attached all 4 handlers.
+      expect(state.channelHandlers.size).toBe(4)
+    })
   })
 
   it('handler logs at error level when handleNewUser throws (so reconciliation cycle sees it)', async () => {

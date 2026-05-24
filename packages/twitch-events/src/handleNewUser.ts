@@ -107,10 +107,13 @@ export async function handleNewUser(
           .eq('id', userId)
         profileUpdated = true
       } else {
-        // No accounts row — either the user truly doesn't exist (caller bug)
-        // or the Realtime event raced replication past our one retry. Skip
-        // the profile update; let the next reconciliation pick it up.
-        logger.warn('[TWITCHEVENTS] handleNewUser: no accounts row for providerAccountId', {
+        // Both attempts returned null. Either the caller has a bogus
+        // providerAccountId (e.g. INSERT race for a row that was deleted
+        // before replication finished) OR replica lag is >REPLICA_LAG_RETRY_MS.
+        // Surface at error level so the alert pipeline catches it — repeated
+        // misses here mean missing subscriptions that the 5-min healthcheck
+        // would have to reconcile.
+        logger.error('[TWITCHEVENTS] handleNewUser: no accounts row after retry', {
           providerAccountId,
         })
       }

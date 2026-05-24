@@ -69,6 +69,12 @@ export const state: {
   // verify the handleNewUser path continues into subscription registration
   // even when the Twitch profile-fetch step fails.
   streamError: Error | null
+  // If set, supabase.channel() throws this error synchronously. Used to
+  // exercise the watcher's "channel-creation threw" reconnect path.
+  channelCreationError: Error | null
+  // If set, the realtime channel's `.on(...)` throws this error on the FIRST
+  // call. Used to exercise the watcher's "channel setup threw" reconnect path.
+  channelOnError: Error | null
 } = {
   conduitId: 'conduit-1',
   isBanned: false,
@@ -95,6 +101,8 @@ export const state: {
   accountsLookupResults: [],
   usersLookupResults: [],
   streamError: null,
+  channelCreationError: null,
+  channelOnError: null,
 }
 
 export function resetState() {
@@ -123,6 +131,8 @@ export function resetState() {
   state.accountsLookupResults = []
   state.usersLookupResults = []
   state.streamError = null
+  state.channelCreationError = null
+  state.channelOnError = null
 }
 
 // Chainable supabase mock. accounts...single() -> dbUser; settings select ->
@@ -191,8 +201,14 @@ interface RealtimeChannelMock {
 }
 
 function realtimeChannelMock(): RealtimeChannelMock {
+  let onCallsSoFar = 0
   const channel: RealtimeChannelMock = {
     on: (_type, opts, handler) => {
+      if (state.channelOnError && onCallsSoFar === 0) {
+        onCallsSoFar++
+        throw state.channelOnError
+      }
+      onCallsSoFar++
       state.channelHandlers.set(`${opts.event}:${opts.table}`, handler)
       return channel
     },
@@ -210,6 +226,7 @@ const supabaseMock = {
   from: (table: string) => sbBuilder(table),
   channel: () => {
     state.channelCreationCount++
+    if (state.channelCreationError) throw state.channelCreationError
     return realtimeChannelMock()
   },
   removeChannel: (_channel: unknown) => {

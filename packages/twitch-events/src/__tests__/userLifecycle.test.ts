@@ -33,22 +33,27 @@ describe('handleNewUser', () => {
     expect(state.subscribeCalls.length).toBeGreaterThan(0)
   })
 
-  it('skips the profile update when the account is not found (after replica-lag retry)', async () => {
+  it('skips the profile update and logs at ERROR level when the account is not found after retry', async () => {
     // The lookup retries once with a 1s wait to mitigate Realtime/replica
     // races. Use fake timers so the test isn't slowed by the real delay.
+    // Persistent null (both attempts) means either a bogus providerAccountId
+    // or replica lag >REPLICA_LAG_RETRY_MS — surface at error level so the
+    // alert pipeline picks it up. (Previously logged as warn, which made
+    // genuine replication problems invisible.)
     vi.useFakeTimers()
     state.dbUser = null
     const work = handleNewUser('111', false)
-    // Drive the retry timer to completion.
     await vi.advanceTimersByTimeAsync(1100)
     await work
     vi.useRealTimers()
     expect(state.updates).toHaveLength(0)
     expect(
-      state.logWarn.some(
-        (l) => l.message === '[TWITCHEVENTS] handleNewUser: no accounts row for providerAccountId',
+      state.logError.some(
+        (l) => l.message === '[TWITCHEVENTS] handleNewUser: no accounts row after retry',
       ),
     ).toBe(true)
+    // The legacy warn must NOT fire — observability would miss the issue.
+    expect(state.logWarn.some((l) => l.message.includes('no accounts row'))).toBe(false)
   })
 
   it('throws when initUserSubscriptions returns false (critical subscription failed)', async () => {

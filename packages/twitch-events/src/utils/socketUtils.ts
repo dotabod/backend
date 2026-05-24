@@ -45,6 +45,30 @@ async function sendConduitData(socket: Socket, forceRefresh = false) {
   }
 }
 
+// handleNewUser throws on critical-sub failure; without a .catch the
+// rejection becomes an unhandledRejection (twitch-events has no process-level
+// handler) and Node 24 crashes the single-replica service. Extracted from
+// the inline socket handler so it can be regression-tested directly.
+export function onSocketEnable(providerAccountId: string): void {
+  logger.info('[TWITCHEVENTS] Enabling events for user', { providerAccountId })
+  handleNewUser(providerAccountId, true).catch((error) => {
+    logger.error('[TWITCHEVENTS] socket enable handleNewUser failed', {
+      providerAccountId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  })
+}
+
+export function onSocketResubscribe(providerAccountId: string): void {
+  logger.info('[TWITCHEVENTS] Resubscribing to events for user', { providerAccountId })
+  handleNewUser(providerAccountId, true).catch((error) => {
+    logger.error('[TWITCHEVENTS] socket resubscribe handleNewUser failed', {
+      providerAccountId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  })
+}
+
 export const setupSocketIO = () => {
   socketIo.on('connection', async (socket) => {
     logger.info('[TWITCHEVENTS] Joining socket to room')
@@ -84,26 +108,11 @@ export const setupSocketIO = () => {
     })
 
     socket.on('enable', (providerAccountId: string) => {
-      logger.info('[TWITCHEVENTS] Enabling events for user', { providerAccountId })
-      // handleNewUser throws on critical-sub failure; without a .catch the
-      // rejection becomes an unhandledRejection (twitch-events has no
-      // process-level handler) and Node 24 crashes the single-replica service.
-      handleNewUser(providerAccountId, true).catch((error) => {
-        logger.error('[TWITCHEVENTS] socket enable handleNewUser failed', {
-          providerAccountId,
-          error: error instanceof Error ? error.message : String(error),
-        })
-      })
+      onSocketEnable(providerAccountId)
     })
 
     socket.on('resubscribe', (providerAccountId: string) => {
-      logger.info('[TWITCHEVENTS] Resubscribing to events for user', { providerAccountId })
-      handleNewUser(providerAccountId, true).catch((error) => {
-        logger.error('[TWITCHEVENTS] socket resubscribe handleNewUser failed', {
-          providerAccountId,
-          error: error instanceof Error ? error.message : String(error),
-        })
-      })
+      onSocketResubscribe(providerAccountId)
     })
   })
 }
