@@ -1,7 +1,7 @@
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
 import RedisClient from '../../db/RedisClient'
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { MatchDataService } from '../../dota/lib/matchData'
 import { isSpectator } from '../../dota/lib/isSpectator'
 import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
 import CustomError from '../../utils/customError'
@@ -52,7 +52,7 @@ commandHandler.registerCommand('geo', {
         }
       }
 
-      const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
+      const matchPlayers = await new MatchDataService(client).getMatchPlayers()
 
       if (!Array.isArray(matchPlayers) || matchPlayers.length === 0) {
         throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))

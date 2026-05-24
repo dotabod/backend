@@ -30,7 +30,7 @@ commandHandler.registerCommand('streamers', {
       return
     }
 
-    const count = await getStreamersInMatch({ gsi: client.gsi, excludeUserId: client.token })
+    const count = await getStreamersInMatch({ client, excludeUserId: client.token })
 
     chatClient.say(
       channel,

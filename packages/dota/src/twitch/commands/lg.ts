@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import lastgame from '../../steam/lastgame'
 import { chatClient } from '../chatClient'
@@ -29,7 +29,7 @@ commandHandler.registerCommand('lg', {
       return
     }
 
-    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
+    const matchPlayers = await new MatchDataService(client).getMatchPlayers()
 
     lastgame({
       currentMatchId: message.channel.client.gsi?.map?.matchid,

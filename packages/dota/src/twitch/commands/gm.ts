@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { gameMedals } from '../../steam/medals'
 import { chatClient } from '../chatClient'
@@ -29,7 +29,7 @@ commandHandler.registerCommand('gm', {
       return
     }
 
-    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
+    const matchPlayers = await new MatchDataService(client).getMatchPlayers()
     const note = clippingDisabledNote(client, matchPlayers)
 
     gameMedals(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)

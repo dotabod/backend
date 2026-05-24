@@ -1,8 +1,7 @@
 import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
-import { getStreamersInMatch } from '../../dota/lib/matchData'
+import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import type { NotablePlayers } from '../../steam/notableplayers'
@@ -135,7 +134,9 @@ commandHandler.registerCommand('np', {
       return
     }
 
-    const { matchPlayers, heroesStatus } = await getAccountsFromMatch({ gsi: client.gsi })
+    const mds = new MatchDataService(client)
+    const matchPlayers = await mds.getMatchPlayers()
+    const heroesStatus = await mds.getHeroesStatus()
     const note = clippingDisabledNote(client, matchPlayers)
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
@@ -160,11 +161,9 @@ commandHandler.registerCommand('np', {
           client.subscription,
         )
         if (showStreamers) {
-          const count = await getStreamersInMatch({
-            players: matchPlayers,
-            matchId: client.gsi?.map?.matchid,
-            excludeUserId: client.token,
-          })
+          // Same `mds` instance memoizes the roster across getMatchPlayers + getStreamersInMatchCount,
+          // so this doesn't pay a second Mongo round-trip.
+          const count = await mds.getStreamersInMatchCount({ excludeUserId: client.token })
           if (count > 0) {
             description = `${description} · ${t('streamersSuffix', { count, lng: client.locale })}`
           }

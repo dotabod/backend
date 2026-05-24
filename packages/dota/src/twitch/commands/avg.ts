@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { calculateAvg } from '../../dota/lib/calculateAvg'
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
@@ -30,7 +30,7 @@ commandHandler.registerCommand('avg', {
 
     const avgDescriptor = ` - ${t('averageRank', { lng: client.locale })}`
 
-    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
+    const matchPlayers = await new MatchDataService(client).getMatchPlayers()
     const note = clippingDisabledNote(client, matchPlayers)
 
     calculateAvg({

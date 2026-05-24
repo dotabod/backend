@@ -1,7 +1,7 @@
 import { supabase } from '@dotabod/shared-utils'
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { steamSocket } from '../../../steam/ws'
-import type { Cards, DelayedGames, SocketClient } from '../../../types'
+import type { Cards, DelayedGames, HeroesStatus, Players, SocketClient } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
 import { getHeroNameOrColor, heroColors } from '../heroes'
 import { isArcade } from '../isArcade'
@@ -199,6 +199,25 @@ export class MatchDataService {
         roster.players.map((p) => p.accountId).filter((id): id is number => id !== null && id > 0),
       ),
     ]
+  }
+
+  // Legacy-shape projection for callers that still pass `Players` to downstream helpers
+  // (clippingDisabledNote, notablePlayers, calculateAvg, gameMedals, smurfs, ...). Keeps caller
+  // diffs tiny during the Phase 4 migration. Field rename only — no semantic changes.
+  async getMatchPlayers(): Promise<Players> {
+    const roster = await this.resolveRoster()
+    return roster.players.map((p) => ({
+      heroid: p.heroId ?? undefined,
+      accountid: p.accountId ?? 0,
+      playerid: p.slot,
+      ...(p.rank !== null ? { rank: p.rank } : {}),
+      ...(p.playerName !== null ? { player_name: p.playerName } : {}),
+    }))
+  }
+
+  async getHeroesStatus(): Promise<HeroesStatus | undefined> {
+    const roster = await this.resolveRoster()
+    return roster.heroesStatus
   }
 
   // --- Per-slot lookup primitives ---

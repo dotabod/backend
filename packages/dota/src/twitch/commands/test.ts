@@ -3,7 +3,7 @@ import axios from 'axios'
 import { t } from 'i18next'
 import type { DelayedGames } from '../../../../steam/src/types/index'
 import { gsiHandlers } from '../../dota/lib/consts'
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { MatchDataService } from '../../dota/lib/matchData'
 import { heroes } from '../../dota/lib/heroList'
 import { server } from '../../dota/server'
 import MongoDBSingleton from '../../steam/MongoDBSingleton'
@@ -94,9 +94,7 @@ const handleResetCommand = async (message: MessageType) => {
 }
 const handleCardsCommand = async (message: MessageType) => {
   const { user, channel } = message
-  const { accountIds } = await getAccountsFromMatch({
-    gsi: channel.client.gsi,
-  })
+  const accountIds = await new MatchDataService(channel.client).getAccountIds()
 
   const getCardsPromise = new Promise<unknown>((resolve, reject) => {
     const timeoutId = setTimeout(() => {

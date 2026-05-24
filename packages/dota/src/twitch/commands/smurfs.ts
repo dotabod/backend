@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
+import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { smurfs } from '../../steam/smurfs'
 import { chatClient } from '../chatClient'
@@ -29,7 +29,7 @@ commandHandler.registerCommand('smurfs', {
       return
     }
 
-    const { matchPlayers } = await getAccountsFromMatch({ gsi: client.gsi })
+    const matchPlayers = await new MatchDataService(client).getMatchPlayers()
 
     smurfs(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)
       .then((desc) => {

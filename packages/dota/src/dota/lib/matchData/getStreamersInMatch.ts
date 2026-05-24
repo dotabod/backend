@@ -1,6 +1,6 @@
 import { supabase } from '@dotabod/shared-utils'
-import type { Packet, Players } from '../../../types'
-import { getAccountsFromMatch } from '../getAccountsFromMatch'
+import type { Players, SocketClient } from '../../../types'
+import { MatchDataService } from './MatchDataService'
 
 // Counts distinct OTHER Dotabod users in the current match. Names are never returned — only an
 // anonymized count — to avoid cross-chat witch-hunts.
@@ -13,16 +13,16 @@ import { getAccountsFromMatch } from '../getAccountsFromMatch'
 //      spectatable, which is all `delayedGames` carries now). Catches registered Dotabod users in
 //      the roster even if they aren't currently live. Adds nothing for ordinary pub games (no doc).
 //
-// New code should prefer `MatchDataService.getStreamersInMatchCount()` — it shares the roster
-// memoization across other lookups on the same instance. This standalone function exists so that
-// the in-flight callers (np.ts, streamers.ts, GSIHandler) keep working until Phase B migrates them.
+// New code should prefer `MatchDataService.getStreamersInMatchCount()` directly — it shares the
+// roster memoization with other lookups on the same instance. This standalone function exists for
+// the in-flight callers that don't yet have a shared instance.
 export async function getStreamersInMatch({
-  gsi,
+  client,
   players,
-  matchId = gsi?.map?.matchid,
+  matchId = client?.gsi?.map?.matchid,
   excludeUserId,
 }: {
-  gsi?: Packet
+  client?: SocketClient
   players?: Players
   matchId?: string
   excludeUserId: string
@@ -41,7 +41,9 @@ export async function getStreamersInMatch({
   const accountIds = (
     players?.length
       ? players.map((p) => p.accountid)
-      : (await getAccountsFromMatch({ gsi })).accountIds
+      : client
+        ? await new MatchDataService(client).getAccountIds()
+        : []
   ).filter((id): id is number => !!id && id !== 0)
   if (accountIds.length) {
     const { data } = await supabase

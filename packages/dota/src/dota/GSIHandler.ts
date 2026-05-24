@@ -368,7 +368,7 @@ class GSIHandler implements GSIHandlerType {
     if ((await redisClient.client.get(announcedKey)) === matchId) return
 
     const count = await getStreamersInMatch({
-      gsi: this.client.gsi,
+      client: this.client,
       matchId,
       excludeUserId: this.client.token,
     })
