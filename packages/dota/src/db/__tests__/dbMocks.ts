@@ -20,6 +20,7 @@ export const dbState: {
   // Logger captures.
   loggerErrorCalls: Array<{ message: string; meta: Record<string, unknown> }>
   loggerInfoCalls: Array<{ message: string; meta: Record<string, unknown> }>
+  loggerWarnCalls: Array<{ message: string; meta: Record<string, unknown> }>
 } = {
   tableResults: {},
   rpcResult: null,
@@ -27,6 +28,7 @@ export const dbState: {
   updates: [],
   loggerErrorCalls: [],
   loggerInfoCalls: [],
+  loggerWarnCalls: [],
 }
 
 export function resetDbState() {
@@ -36,6 +38,7 @@ export function resetDbState() {
   dbState.updates = []
   dbState.loggerErrorCalls = []
   dbState.loggerInfoCalls = []
+  dbState.loggerWarnCalls = []
   // Re-assert our mock in case a sibling harness (setupMocks, gsiMocks) replaced
   // @dotabod/shared-utils with a different supabase factory since last test ran.
   reinstallDbMock()
@@ -82,7 +85,9 @@ const loggerMock = {
   error: (message: string, meta?: Record<string, unknown>) => {
     dbState.loggerErrorCalls.push({ message, meta: meta ?? {} })
   },
-  warn: () => undefined,
+  warn: (message: string, meta?: Record<string, unknown>) => {
+    dbState.loggerWarnCalls.push({ message, meta: meta ?? {} })
+  },
   debug: () => undefined,
 }
 

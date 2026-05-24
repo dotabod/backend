@@ -9,6 +9,7 @@ import RedisClient from '../db/RedisClient'
 import SetupSupabase from '../db/watcher'
 import GSIServer from './GSIServer'
 import { rearmPersistedClips } from './lib/clipSchedule'
+import { hydrateInvalidTokens } from './lib/invalidTokens'
 import { server } from './server'
 
 logger.info("Starting 'dota' package")
@@ -71,6 +72,10 @@ const setupRedisClient = async () => {
 
   // Re-arm clip tasks that a restart dropped from the in-memory DelayedQueue.
   await rearmPersistedClips()
+
+  // Seed the in-memory invalidTokens cache from Redis so deploys don't re-spam
+  // logs for the same population of stale GSI / Twitch tokens.
+  await hydrateInvalidTokens()
 }
 
 const initServer = () => {

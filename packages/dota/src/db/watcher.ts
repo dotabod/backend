@@ -177,7 +177,10 @@ class SetupSupabase {
           const oldObj = payload.old
 
           if (newObj.requires_refresh === true && oldObj.requires_refresh === false) {
+            // Persist both keyspaces: getDBUser is called with either the user.id
+            // (GSI path) or the providerAccountId (Twitch chat / tooltips path).
             invalidTokens.add(newObj.userId)
+            if (newObj.providerAccountId) invalidTokens.add(newObj.providerAccountId)
             const client = findUser(newObj.userId)
             if (client) {
               await clearCacheForUser(client)
@@ -214,6 +217,7 @@ class SetupSupabase {
           // Which allows us to update the authProvider object
           if (newObj.requires_refresh === false && oldObj.requires_refresh === true) {
             invalidTokens.delete(newObj.userId)
+            if (newObj.providerAccountId) invalidTokens.delete(newObj.providerAccountId)
             logger.info('[WATCHER ACCOUNT] Refreshing account', {
               twitchId: newObj.providerAccountId,
             })

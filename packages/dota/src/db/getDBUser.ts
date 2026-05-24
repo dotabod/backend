@@ -42,7 +42,6 @@ export default async function getDBUser({
   lookingupToken.set(lookupToken, true)
 
   if (!lookupToken) {
-    logger.error('[USER] 1 Error checking auth', { token: lookupToken, error: 'No token' })
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
     return { reason: 'No lookup token provided', result: null }
@@ -59,12 +58,16 @@ export default async function getDBUser({
     userId = data?.userId ?? null
 
     if (error) {
-      logger.error('[USER] 2 Error checking auth', {
-        lookupToken,
-        providerAccountId,
-        error,
-      })
-      invalidTokens.add(lookupToken)
+      if (error.code === 'PGRST116') {
+        // Genuine "0 rows" (DB enforces uniqueness on provider+providerAccountId,
+        // so >1 rows can't surface as PGRST116 here). Safe to persist for 24h.
+        invalidTokens.add(lookupToken)
+      } else {
+        // Transient DB error — log for observability but only cache in-memory
+        // so recovery on next deploy doesn't require waiting out the 24h TTL.
+        logger.error('[USER] accounts lookup failed', { lookupToken, providerAccountId, error })
+        invalidTokens.addEphemeral(lookupToken)
+      }
       lookingupToken.delete(lookupToken)
       return {
         reason: `Error looking up userId by providerAccountId: ${error.message}`,
@@ -74,11 +77,6 @@ export default async function getDBUser({
   }
 
   if (!userId) {
-    logger.error('[USER] 2 Error checking auth', {
-      lookupToken,
-      providerAccountId,
-      error: 'No token',
-    })
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
     return { reason: 'No userId found', result: null }
@@ -131,7 +129,15 @@ export default async function getDBUser({
 
   // Handle errors
   if (userError) {
-    invalidTokens.add(lookupToken)
+    if (userError.code === 'PGRST116') {
+      // Genuine "0 rows" — user was deleted (users.id is the primary key so
+      // >1 rows can't surface as PGRST116). Safe to persist for 24h.
+      invalidTokens.add(lookupToken)
+    } else {
+      // Transient DB error — log for observability but only cache in-memory.
+      logger.error('[USER] users lookup failed', { lookupToken, error: userError })
+      invalidTokens.addEphemeral(lookupToken)
+    }
     lookingupToken.delete(lookupToken)
     return { reason: `Error fetching user from supabase: ${userError.message}`, result: null }
   }

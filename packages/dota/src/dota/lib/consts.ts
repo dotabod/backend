@@ -99,7 +99,7 @@ export const leaderRanks = [
 export const plebMode = new Set()
 export const modMode = new Set()
 
-export const invalidTokens = new Set(['', null, undefined, 0])
+export { invalidTokens } from './invalidTokens'
 
 export const gsiHandlers = new Map<string, GSIHandlerType>()
 export const twitchIdToToken = new Map<string, string>()

@@ -66,10 +66,13 @@ describe('getDBUser', () => {
     expect(lookingupToken.has('tok-3')).toBe(false)
   })
 
-  it('returns "no lookup token" when neither token nor twitchId is given', async () => {
+  it('treats a missing token AND twitchId as an invalidTokens hit (empty string is pre-seeded)', async () => {
+    // Production behavior: lookupToken collapses to '' which is one of the
+    // pre-seeded falsy guards, so the invalidTokens.has check short-circuits
+    // before reaching the dedicated "!lookupToken" branch.
     const res = await getDBUser({})
     expect(res.result).toBeNull()
-    expect(res.reason).toContain('No lookup token')
+    expect(res.reason).toContain('invalidTokens')
   })
 
   it('resolves userId from providerAccountId via the accounts table', async () => {
@@ -101,6 +104,64 @@ describe('getDBUser', () => {
     expect(res.result).toBeNull()
     expect(res.reason).toContain('accounts down')
     expect(invalidTokens.has('tw-x')).toBe(true)
+    expect(
+      dbState.loggerErrorCalls.some((c) => c.message === '[USER] accounts lookup failed'),
+    ).toBe(true)
+  })
+
+  it('does not log an error when the accounts lookup returns 0 rows (PGRST116)', async () => {
+    dbState.tableResults.accounts = {
+      data: null,
+      error: { code: 'PGRST116', message: 'The result contains 0 rows' },
+    }
+    const res = await getDBUser({ twitchId: 'tw-stale' })
+    expect(res.result).toBeNull()
+    expect(invalidTokens.has('tw-stale')).toBe(true)
+    expect(
+      dbState.loggerErrorCalls.some((c) => c.message === '[USER] accounts lookup failed'),
+    ).toBe(false)
+  })
+
+  it('does not log an error when the users lookup returns 0 rows (PGRST116)', async () => {
+    dbState.tableResults.users = {
+      data: null,
+      error: { code: 'PGRST116', message: 'The result contains 0 rows' },
+    }
+    const res = await getDBUser({ token: 'tok-stale' })
+    expect(res.result).toBeNull()
+    expect(invalidTokens.has('tok-stale')).toBe(true)
+    expect(dbState.loggerErrorCalls.some((c) => c.message === '[USER] users lookup failed')).toBe(
+      false,
+    )
+  })
+
+  it('marks transient (non-PGRST116) accounts errors in the cache but routes through addEphemeral so they do NOT persist across deploys', async () => {
+    // Simulate a Supabase blip with a non-PGRST116 code — e.g., 503 / network reset.
+    dbState.tableResults.accounts = {
+      data: null,
+      error: { code: 'PGRST500', message: 'service unavailable' },
+    }
+    const res = await getDBUser({ twitchId: 'tw-blip' })
+    expect(res.result).toBeNull()
+    // In-memory entry exists so we bound the log noise within the process.
+    expect(invalidTokens.has('tw-blip')).toBe(true)
+    // Real DB error is still alerted on.
+    expect(
+      dbState.loggerErrorCalls.some((c) => c.message === '[USER] accounts lookup failed'),
+    ).toBe(true)
+  })
+
+  it('marks transient (non-PGRST116) users errors in the cache but routes through addEphemeral', async () => {
+    dbState.tableResults.users = {
+      data: null,
+      error: { code: 'PGRST500', message: 'service unavailable' },
+    }
+    const res = await getDBUser({ token: 'tok-blip' })
+    expect(res.result).toBeNull()
+    expect(invalidTokens.has('tok-blip')).toBe(true)
+    expect(dbState.loggerErrorCalls.some((c) => c.message === '[USER] users lookup failed')).toBe(
+      true,
+    )
   })
 
   it('returns "no userId" when the accounts row has no userId', async () => {
