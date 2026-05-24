@@ -101,6 +101,23 @@ describe('trackResolveReason', () => {
     ).toBe(true)
   })
 
+  it('folds opts.enabledValue into the settings UPDATE (single write)', async () => {
+    await trackResolveReason('user-1', 'commandDisable', false, { enabledValue: false })
+
+    const settingsUpdate = utilsState.updates.find((u) => u.table === 'settings')
+    expect(settingsUpdate?.values).toMatchObject({
+      disable_reason: null,
+      value: false,
+    })
+  })
+
+  it('does not write value when opts.enabledValue is omitted', async () => {
+    await trackResolveReason('user-1', 'someSetting')
+
+    const settingsUpdate = utilsState.updates.find((u) => u.table === 'settings')
+    expect(settingsUpdate?.values).not.toHaveProperty('value')
+  })
+
   it('logs an info entry on success', async () => {
     await trackResolveReason('user-1', 'someSetting')
     expect(utilsState.loggerInfoCalls).toHaveLength(1)

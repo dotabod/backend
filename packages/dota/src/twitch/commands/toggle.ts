@@ -1,4 +1,4 @@
-import { supabase, trackDisableReason, trackResolveReason } from '@dotabod/shared-utils'
+import { trackDisableReason, trackResolveReason } from '@dotabod/shared-utils'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import commandHandler from '../lib/CommandHandler'
 
@@ -32,18 +32,7 @@ commandHandler.registerCommand('toggle', {
         { disabledValue: true },
       )
     } else {
-      await trackResolveReason(userId, DBSettings.commandDisable, false)
-      await supabase.from('settings').upsert(
-        {
-          userId,
-          key: DBSettings.commandDisable,
-          value: false,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'userId, key',
-        },
-      )
+      await trackResolveReason(userId, DBSettings.commandDisable, false, { enabledValue: false })
     }
   },
 })

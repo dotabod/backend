@@ -35,7 +35,7 @@ export function buildSharedUtilsMock(opts: {
     userId: string,
     settingKey: string,
     autoResolved?: boolean,
-    opts?: { reason?: string },
+    opts?: { reason?: string; enabledValue?: boolean },
   ) => Promise<void>
   recordDisableNotification?: (
     userId: string,

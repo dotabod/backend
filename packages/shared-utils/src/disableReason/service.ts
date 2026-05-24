@@ -122,17 +122,21 @@ export async function trackDisableReason(
 
 /**
  * Clear the disable-tracking fields on a `settings` row and mark its open
- * `disable_notifications` rows resolved. Does not change the setting's `value`.
+ * `disable_notifications` rows resolved.
  *
- * Pass `opts.reason` to only resolve notifications matching that reason (e.g.
- * `!clearsharing` should only resolve `ACCOUNT_SHARING` rows, not unrelated
- * `CHAT_PERMISSION_DENIED` ones).
+ * - `opts.reason`: only resolve notifications matching that reason (e.g.
+ *   `!clearsharing` should only resolve `ACCOUNT_SHARING` rows, not unrelated
+ *   `CHAT_PERMISSION_DENIED` ones).
+ * - `opts.enabledValue`: if provided, also write this as the settings `value`
+ *   in the same UPDATE. Use this when the resolve also flips the feature back
+ *   on, so the realtime watcher only sees ONE settings change (otherwise a
+ *   second `settings.upsert` by the caller fires it again).
  */
 export async function trackResolveReason(
   userId: string,
   settingKey: string,
   autoResolved = false,
-  opts: { reason?: DisableReason } = {},
+  opts: { reason?: DisableReason; enabledValue?: boolean } = {},
 ): Promise<void> {
   try {
     const now = new Date()
@@ -145,6 +149,7 @@ export async function trackResolveReason(
         auto_disabled_by: null,
         disable_metadata: null,
         updated_at: now.toISOString(),
+        ...(opts.enabledValue !== undefined ? { value: opts.enabledValue } : {}),
       })
       .eq('userId', userId)
       .eq('key', settingKey)

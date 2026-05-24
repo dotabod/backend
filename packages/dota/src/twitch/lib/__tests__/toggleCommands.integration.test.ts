@@ -46,23 +46,22 @@ describe('!toggle', () => {
     expect(state.trackResolveReasonCalls).toHaveLength(0)
   })
 
-  it('re-enables the bot by persisting commandDisable=false when already disabled', async () => {
+  it('re-enables the bot via trackResolveReason with enabledValue:false (single write)', async () => {
     await commandHandler.handleMessage(
       makeMessage({
         content: '!toggle',
         clientOverrides: { settings: [{ key: DBSettings.commandDisable, value: true }] } as any,
       }),
     )
-    expect(state.upsertCalls).toHaveLength(1)
-    expect(state.upsertCalls[0].values).toMatchObject({
-      key: DBSettings.commandDisable,
-      value: false,
-    })
+    // No explicit settings upsert — trackResolveReason folds the value flip
+    // into its UPDATE so the watcher only fires once.
+    expect(state.upsertCalls).toHaveLength(0)
     expect(state.chatSayCalls).toHaveLength(0)
     expect(state.trackResolveReasonCalls).toHaveLength(1)
     expect(state.trackResolveReasonCalls[0]).toMatchObject({
       settingKey: DBSettings.commandDisable,
       autoResolved: false,
+      opts: { enabledValue: false },
     })
     expect(state.trackDisableReasonCalls).toHaveLength(0)
   })

@@ -86,7 +86,7 @@ export const state: {
     userId: string
     settingKey: string
     autoResolved?: boolean
-    opts?: { reason?: string }
+    opts?: { reason?: string; enabledValue?: boolean }
   }>
   recordDisableNotificationCalls: Array<{
     userId: string
