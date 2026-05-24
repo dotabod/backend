@@ -28,13 +28,10 @@ export const state: {
   dbSettings: Array<{ key: string; value: unknown }>
   upserts: Array<{ table: string; values: Record<string, unknown> }>
   updates: Array<{ table: string; values: Record<string, unknown> }>
-  trackDisableCalls: Array<{
-    userId: string
-    settingKey: string
-    reason: string
-    metadata?: Record<string, unknown>
-    opts?: { disabledValue?: boolean }
-  }>
+  commandDisableCalls: Array<
+    | { kind: 'disable'; userId: string; reason: string; metadata?: Record<string, unknown> }
+    | { kind: 'enable'; userId: string; opts?: { reason?: string; autoResolved?: boolean } }
+  >
   // botApi (handleNewUser) + getTwitchAPI moderation (ensureBotIsModerator).
   stream: { startDate: Date } | null
   streamer: { displayName: string; name: string } | null
@@ -53,7 +50,7 @@ export const state: {
   dbSettings: [],
   upserts: [],
   updates: [],
-  trackDisableCalls: [],
+  commandDisableCalls: [],
   stream: null,
   streamer: { displayName: 'Streamer', name: 'streamer' },
   addModeratorError: null,
@@ -73,7 +70,7 @@ export function resetState() {
   state.dbSettings = []
   state.upserts = []
   state.updates = []
-  state.trackDisableCalls = []
+  state.commandDisableCalls = []
   state.stream = null
   state.streamer = { displayName: 'Streamer', name: 'streamer' }
   state.addModeratorError = null
@@ -136,14 +133,13 @@ vi.doMock('@dotabod/shared-utils', () => ({
   logger,
   supabase: supabaseMock,
   default: supabaseMock,
-  trackDisableReason: async (
-    userId: string,
-    settingKey: string,
-    reason: string,
-    metadata?: Record<string, unknown>,
-    opts?: { disabledValue?: boolean },
-  ) => {
-    state.trackDisableCalls.push({ userId, settingKey, reason, metadata, opts })
+  commandDisable: {
+    disable: async (userId: string, reason: string, metadata?: Record<string, unknown>) => {
+      state.commandDisableCalls.push({ kind: 'disable', userId, reason, metadata })
+    },
+    enable: async (userId: string, opts?: { reason?: string; autoResolved?: boolean }) => {
+      state.commandDisableCalls.push({ kind: 'enable', userId, opts })
+    },
   },
   botStatus: { isBanned: false },
   checkBotStatus: async () => state.isBanned,

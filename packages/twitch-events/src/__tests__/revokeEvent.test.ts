@@ -56,13 +56,12 @@ describe('revokeEvent', () => {
     expect(
       state.updates.some((u) => u.table === 'accounts' && u.values.requires_refresh === true),
     ).toBe(true)
-    // Single audited write via trackDisableReason with disabledValue:true —
+    // Routes through commandDisable.disable — single audited write,
     // no separate settings upsert (avoids watcher double-fire).
-    expect(state.trackDisableCalls).toHaveLength(1)
-    expect(state.trackDisableCalls[0]).toMatchObject({
-      settingKey: 'commandDisable',
+    expect(state.commandDisableCalls).toHaveLength(1)
+    expect(state.commandDisableCalls[0]).toMatchObject({
+      kind: 'disable',
       reason: 'TOKEN_REVOKED',
-      opts: { disabledValue: true },
     })
     expect(
       state.upserts.some((u) => u.table === 'settings' && u.values.key === 'commandDisable'),
@@ -77,6 +76,6 @@ describe('revokeEvent', () => {
     await new Promise((r) => realSetTimeout(r, 5))
 
     expect(state.upserts).toHaveLength(0)
-    expect(state.trackDisableCalls).toHaveLength(0)
+    expect(state.commandDisableCalls).toHaveLength(0)
   })
 })

@@ -1,4 +1,4 @@
-import { logger, recordDisableNotification } from '@dotabod/shared-utils'
+import { commandDisable, logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { redisClient } from '../../../db/redisInstance'
 import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME, getValueOrDefault } from '../../../settings'
@@ -481,7 +481,7 @@ async function checkAccountSharing(client: SocketClient, matchId: string): Promi
       const lastLogged = accountSharingLogCache.get(logCacheKey)
 
       if (!lastLogged || currentTime - lastLogged > ACCOUNT_SHARING_LOG_INTERVAL) {
-        await recordDisableNotification(currentToken, 'commandDisable', 'ACCOUNT_SHARING', {
+        await commandDisable.recordNotification(currentToken, 'ACCOUNT_SHARING', {
           blocked_steam32_id: steam32Id.toString(),
           primary_steam32_id: activeSteamIds[0],
           all_active_steam_ids: activeSteamIds,

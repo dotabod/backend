@@ -17,9 +17,9 @@ describe('!clearsharing', () => {
 
   it('resolves only ACCOUNT_SHARING notifications, not unrelated commandDisable rows', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!clearsharing' }))
-    expect(state.trackResolveReasonCalls).toHaveLength(1)
-    expect(state.trackResolveReasonCalls[0]).toMatchObject({
-      settingKey: 'commandDisable',
+    expect(state.commandDisableCalls).toHaveLength(1)
+    expect(state.commandDisableCalls[0]).toMatchObject({
+      kind: 'enable',
       opts: { reason: 'ACCOUNT_SHARING' },
     })
   })

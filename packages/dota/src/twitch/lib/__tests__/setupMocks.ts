@@ -99,6 +99,16 @@ export const state: {
     settingKey: string
     opts?: { reason?: string; autoResolved?: boolean }
   }>
+  commandDisableCalls: Array<
+    | { kind: 'disable'; userId: string; reason: string; metadata?: Record<string, unknown> }
+    | { kind: 'enable'; userId: string; opts?: { reason?: string; autoResolved?: boolean } }
+    | {
+        kind: 'recordNotification'
+        userId: string
+        reason: string
+        metadata?: Record<string, unknown>
+      }
+  >
 } = {
   sessionMatch: null,
   olderMatch: null,
@@ -134,6 +144,7 @@ export const state: {
   trackResolveReasonCalls: [],
   recordDisableNotificationCalls: [],
   resolveDisableNotificationCalls: [],
+  commandDisableCalls: [],
 }
 
 export function resetState() {
@@ -171,6 +182,7 @@ export function resetState() {
   state.trackResolveReasonCalls = []
   state.recordDisableNotificationCalls = []
   state.resolveDisableNotificationCalls = []
+  state.commandDisableCalls = []
   // Re-assert all module mocks (shared-utils, updateMmr, ranks, MongoDBSingleton)
   // in case a sibling test file replaced any of them since the last test ran.
   reinstallModuleMocks()
@@ -326,6 +338,22 @@ function reinstallSharedUtilsMock() {
       },
       resolveDisableNotifications: async (userId, settingKey, opts) => {
         state.resolveDisableNotificationCalls.push({ userId, settingKey, opts })
+      },
+      commandDisable: {
+        disable: async (userId, reason, metadata) => {
+          state.commandDisableCalls.push({ kind: 'disable', userId, reason, metadata })
+        },
+        enable: async (userId, opts) => {
+          state.commandDisableCalls.push({ kind: 'enable', userId, opts })
+        },
+        recordNotification: async (userId, reason, metadata) => {
+          state.commandDisableCalls.push({
+            kind: 'recordNotification',
+            userId,
+            reason,
+            metadata,
+          })
+        },
       },
     }),
   )

@@ -1,9 +1,9 @@
 import {
   botStatus,
+  commandDisable,
   getTwitchHeaders,
   logger,
   supabase,
-  trackDisableReason,
 } from '@dotabod/shared-utils'
 import { eventSubMap } from '../../chatSubIds'
 
@@ -73,16 +73,10 @@ async function disableChannel(broadcasterId: string) {
 
   logger.info('twitch-events Disabling user', { twitchId: broadcasterId })
 
-  await trackDisableReason(
-    user.userId,
-    'commandDisable',
-    'TOKEN_REVOKED',
-    {
-      requires_reauth: true,
-      additional_info: 'User revoked app permissions on Twitch',
-    },
-    { disabledValue: true },
-  )
+  await commandDisable.disable(user.userId, 'TOKEN_REVOKED', {
+    requires_reauth: true,
+    additional_info: 'User revoked app permissions on Twitch',
+  })
 }
 
 // Track pending revoke operations to debounce multiple calls

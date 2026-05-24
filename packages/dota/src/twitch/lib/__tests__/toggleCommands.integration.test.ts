@@ -31,39 +31,30 @@ describe('!beta', () => {
 })
 
 describe('!toggle', () => {
-  it('disables the bot via trackDisableReason with disabledValue:true (single write)', async () => {
+  it('routes to commandDisable.disable when currently enabled', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!toggle', userName: 'modUser' }))
-    // No explicit settings upsert — trackDisableReason performs the write internally.
     expect(state.upsertCalls).toHaveLength(0)
     expect(state.chatSayCalls).toHaveLength(0)
-    expect(state.trackDisableReasonCalls).toHaveLength(1)
-    expect(state.trackDisableReasonCalls[0]).toMatchObject({
-      settingKey: DBSettings.commandDisable,
+    expect(state.commandDisableCalls).toHaveLength(1)
+    expect(state.commandDisableCalls[0]).toMatchObject({
+      kind: 'disable',
       reason: 'MANUAL_DISABLE',
       metadata: { disabled_by: 'modUser', command: '!toggle' },
-      opts: { disabledValue: true },
     })
-    expect(state.trackResolveReasonCalls).toHaveLength(0)
   })
 
-  it('re-enables the bot via trackResolveReason with enabledValue:false (single write)', async () => {
+  it('routes to commandDisable.enable when currently disabled', async () => {
     await commandHandler.handleMessage(
       makeMessage({
         content: '!toggle',
         clientOverrides: { settings: [{ key: DBSettings.commandDisable, value: true }] } as any,
       }),
     )
-    // No explicit settings upsert — trackResolveReason folds the value flip
-    // into its UPDATE so the watcher only fires once.
     expect(state.upsertCalls).toHaveLength(0)
     expect(state.chatSayCalls).toHaveLength(0)
-    expect(state.trackResolveReasonCalls).toHaveLength(1)
-    expect(state.trackResolveReasonCalls[0]).toMatchObject({
-      settingKey: DBSettings.commandDisable,
-      autoResolved: false,
-      opts: { enabledValue: false },
-    })
-    expect(state.trackDisableReasonCalls).toHaveLength(0)
+    expect(state.commandDisableCalls).toHaveLength(1)
+    expect(state.commandDisableCalls[0]).toMatchObject({ kind: 'enable' })
+    expect((state.commandDisableCalls[0] as { opts?: unknown }).opts).toBeUndefined()
   })
 
   it('blocks viewers (permission below mod)', async () => {
@@ -71,8 +62,7 @@ describe('!toggle', () => {
       makeMessage({ content: '!toggle', permission: 0, userName: 'viewer' }),
     )
     expect(state.upsertCalls).toHaveLength(0)
-    expect(state.trackDisableReasonCalls).toHaveLength(0)
-    expect(state.trackResolveReasonCalls).toHaveLength(0)
+    expect(state.commandDisableCalls).toHaveLength(0)
   })
 })
 

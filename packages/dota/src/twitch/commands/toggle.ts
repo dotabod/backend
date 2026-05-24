@@ -1,4 +1,4 @@
-import { trackDisableReason, trackResolveReason } from '@dotabod/shared-utils'
+import { commandDisable } from '@dotabod/shared-utils'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import commandHandler from '../lib/CommandHandler'
 
@@ -19,20 +19,14 @@ commandHandler.registerCommand('toggle', {
 
     const userId = message.channel.client.token
 
-    if (!isBotDisabled) {
-      await trackDisableReason(
-        userId,
-        DBSettings.commandDisable,
-        'MANUAL_DISABLE',
-        {
-          disabled_by: message.user.name,
-          command: '!toggle',
-          additional_info: `Manually disabled by ${message.user.name} via chat command`,
-        },
-        { disabledValue: true },
-      )
+    if (isBotDisabled) {
+      await commandDisable.enable(userId)
     } else {
-      await trackResolveReason(userId, DBSettings.commandDisable, false, { enabledValue: false })
+      await commandDisable.disable(userId, 'MANUAL_DISABLE', {
+        disabled_by: message.user.name,
+        command: '!toggle',
+        additional_info: `Manually disabled by ${message.user.name} via chat command`,
+      })
     }
   },
 })

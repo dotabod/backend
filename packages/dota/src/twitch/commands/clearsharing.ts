@@ -1,7 +1,6 @@
-import { trackResolveReason } from '@dotabod/shared-utils'
+import { commandDisable } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { redisClient } from '../../db/redisInstance'
-import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
@@ -21,11 +20,9 @@ commandHandler.registerCommand('clearsharing', {
       const redisKey = `token:${userId}:activeSteam32Ids`
       await redisClient.client.del(redisKey)
 
-      // Resolve only ACCOUNT_SHARING notifications — don't touch unrelated
-      // commandDisable notifications (CHAT_PERMISSION_DENIED, TOKEN_REVOKED).
-      await trackResolveReason(userId, DBSettings.commandDisable, false, {
-        reason: 'ACCOUNT_SHARING',
-      })
+      // Only resolve ACCOUNT_SHARING audit rows — leaves unrelated
+      // CHAT_PERMISSION_DENIED / TOKEN_REVOKED notifications intact.
+      await commandDisable.enable(userId, { reason: 'ACCOUNT_SHARING' })
 
       // Send success message with updated warning
       const channel = message.channel.client.name

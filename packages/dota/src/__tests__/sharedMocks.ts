@@ -48,6 +48,15 @@ export function buildSharedUtilsMock(opts: {
     settingKey: string,
     opts?: { reason?: string; autoResolved?: boolean },
   ) => Promise<void>
+  commandDisable?: {
+    disable: (userId: string, reason: string, metadata?: Record<string, unknown>) => Promise<void>
+    enable: (userId: string, opts?: { reason?: string; autoResolved?: boolean }) => Promise<void>
+    recordNotification: (
+      userId: string,
+      reason: string,
+      metadata?: Record<string, unknown>,
+    ) => Promise<void>
+  }
 }) {
   return {
     supabase: opts.supabase,
@@ -67,6 +76,11 @@ export function buildSharedUtilsMock(opts: {
     trackResolveReason: opts.trackResolveReason ?? (async () => undefined),
     recordDisableNotification: opts.recordDisableNotification ?? (async () => undefined),
     resolveDisableNotifications: opts.resolveDisableNotifications ?? (async () => undefined),
+    commandDisable: opts.commandDisable ?? {
+      disable: async () => undefined,
+      enable: async () => undefined,
+      recordNotification: async () => undefined,
+    },
   }
 }
 

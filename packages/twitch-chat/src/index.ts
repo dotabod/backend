@@ -5,12 +5,12 @@ import { lstatSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import {
   checkBotStatus,
+  commandDisable,
   type DisableReasonMetadata,
   getTwitchAPI,
   logger,
   startHeartbeat,
   supabase,
-  trackDisableReason,
 } from '@dotabod/shared-utils'
 import { use } from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
@@ -269,9 +269,7 @@ async function disableUser(
       break
   }
 
-  await trackDisableReason(user.userId, 'commandDisable', 'CHAT_PERMISSION_DENIED', metadata, {
-    disabledValue: true,
-  })
+  await commandDisable.disable(user.userId, 'CHAT_PERMISSION_DENIED', metadata)
 
   logger.error('Failed to send chat message. Disabled user', {
     providerAccountId,
