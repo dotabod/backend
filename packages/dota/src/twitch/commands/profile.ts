@@ -31,7 +31,7 @@ commandHandler.registerCommand('profile', {
 
       const { hero, playerIdx, player } = await profileLink({
         command,
-        packet: client.gsi,
+        client,
         locale: client.locale,
         args: args,
       })

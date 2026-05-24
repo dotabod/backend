@@ -29,7 +29,7 @@ commandHandler.registerCommand('dotabuff', {
 
       const { hero, playerIdx, player } = await profileLink({
         command,
-        packet: channelClient.gsi,
+        client: channelClient,
         locale: channelClient.locale,
         args,
       })

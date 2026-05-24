@@ -22,7 +22,7 @@ commandHandler.registerCommand('hero', {
 
     try {
       const { player, hero, playerIdx } = await findAccountFromCmd(
-        client.gsi,
+        client,
         args,
         client.locale,
         command,

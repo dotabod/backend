@@ -7,7 +7,7 @@ import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { isSpectator } from '../../dota/lib/isSpectator'
 import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
 import { steamSocket } from '../../steam/ws'
-import type { DelayedGames, Item, Packet, SocketClient } from '../../types'
+import type { DelayedGames, Item, SocketClient } from '../../types'
 import CustomError from '../../utils/customError'
 import { is8500Plus } from '../../utils/index'
 import { chatClient } from '../chatClient'
@@ -40,21 +40,20 @@ function formatItemList(itemList: string[]) {
 async function getItems({
   client,
   token,
-  packet,
   args,
   locale,
   command,
 }: {
   client: SocketClient
   token: string
-  packet?: Packet
   args: string[]
   locale: string
   command: string
 }) {
+  const packet = client.gsi
   const { hero, items, playerIdx } = await profileLink({
     command,
-    packet,
+    client,
     locale,
     args: args,
   })
@@ -186,7 +185,6 @@ commandHandler.registerCommand('items', {
       const res = await getItems({
         client,
         token: client.token,
-        packet: client.gsi,
         args,
         locale: client.locale,
         command,

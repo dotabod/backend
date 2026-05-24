@@ -30,7 +30,7 @@ commandHandler.registerCommand('innate', {
 
     try {
       const { hero, playerIdx } = await findAccountFromCmd(
-        channelClient.gsi,
+        channelClient,
         args,
         channelClient.locale,
         command,

@@ -1,22 +1,23 @@
 import { t } from 'i18next'
 
-import { getAccountsFromMatch } from '../../dota/lib/getAccountsFromMatch'
 import { getHeroById, getHeroByName, heroColors } from '../../dota/lib/heroes'
-import type { Packet, Players } from '../../types'
+import { MatchDataService } from '../../dota/lib/matchData'
+import type { Players, SocketClient } from '../../types'
 import CustomError from '../../utils/customError'
 
 export async function getPlayerFromArgs({
   args,
   locale,
-  packet,
+  client,
   command,
 }: {
-  packet?: Packet
+  client?: SocketClient
   args: string[]
   locale: string
   command: string
 }) {
-  const { matchPlayers: players } = await getAccountsFromMatch({ gsi: packet })
+  const packet = client?.gsi
+  const players: Players = client ? await new MatchDataService(client).getMatchPlayers() : []
   const heroIdsInMatch = players.map((player) => player.heroid)
   const heroList = heroIdsInMatch
     .map((heroId) => getHeroById(heroId))

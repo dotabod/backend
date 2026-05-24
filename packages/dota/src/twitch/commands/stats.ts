@@ -5,7 +5,7 @@ import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { isSpectator } from '../../dota/lib/isSpectator'
 import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
 import { steamSocket } from '../../steam/ws'
-import type { DelayedGames, Packet, SocketClient } from '../../types'
+import type { DelayedGames, SocketClient } from '../../types'
 import CustomError from '../../utils/customError'
 import { is8500Plus } from '../../utils/index'
 import { chatClient } from '../chatClient'
@@ -15,21 +15,20 @@ import { profileLink } from './profileLink'
 async function getStats({
   client,
   token,
-  packet,
   args,
   locale,
   command,
 }: {
   client: SocketClient
   token: string
-  packet?: Packet
   args: string[]
   locale: string
   command: string
 }) {
+  const packet = client.gsi
   const { hero, player, playerIdx } = await profileLink({
     command,
-    packet,
+    client,
     locale,
     args: args,
   })
@@ -163,7 +162,6 @@ commandHandler.registerCommand('stats', {
       const stats = await getStats({
         client,
         token: client.token,
-        packet: client.gsi,
         args,
         locale: client.locale,
         command,

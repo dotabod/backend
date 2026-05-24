@@ -16,7 +16,7 @@ commandHandler.registerCommand('d2pt', {
     } = message
 
     try {
-      const { hero, playerIdx } = await findAccountFromCmd(client.gsi, args, client.locale, command)
+      const { hero, playerIdx } = await findAccountFromCmd(client, args, client.locale, command)
       const heroName = getHeroNameOrColor(hero?.id ?? 0, playerIdx)
 
       chatClient.say(

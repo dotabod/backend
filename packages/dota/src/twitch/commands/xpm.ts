@@ -16,7 +16,7 @@ commandHandler.registerCommand('xpm', {
 
     try {
       const { player, playerIdx, hero } = await findAccountFromCmd(
-        client.gsi,
+        client,
         args,
         client.locale,
         command,

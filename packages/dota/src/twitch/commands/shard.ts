@@ -29,7 +29,7 @@ commandHandler.registerCommand('shard', {
 
     try {
       const { hero, playerIdx } = await findAccountFromCmd(
-        channelClient.gsi,
+        channelClient,
         args,
         channelClient.locale,
         command,

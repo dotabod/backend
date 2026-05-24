@@ -1,6 +1,6 @@
 import { t } from 'i18next'
 
-import type { Packet } from '../../types'
+import type { SocketClient } from '../../types'
 import CustomError from '../../utils/customError'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId'
 
@@ -8,11 +8,11 @@ interface ProfileLinkParams {
   command: string
   locale: string
   args: string[]
-  packet?: Packet
+  client?: SocketClient
 }
 
-export async function profileLink({ command, args, packet, locale }: ProfileLinkParams) {
-  const currentMatchId = packet?.map?.matchid
+export async function profileLink({ command, args, client, locale }: ProfileLinkParams) {
+  const currentMatchId = client?.gsi?.map?.matchid
   if (!currentMatchId) {
     throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
   }
@@ -21,7 +21,7 @@ export async function profileLink({ command, args, packet, locale }: ProfileLink
     throw new CustomError(t('gameNotFound', { lng: locale }))
   }
 
-  const playerData = await findAccountFromCmd(packet, args, locale, command)
+  const playerData = await findAccountFromCmd(client, args, locale, command)
 
   if (!playerData?.hero) {
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))

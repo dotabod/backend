@@ -2,7 +2,7 @@ import { t } from 'i18next'
 
 import { getSpectatorPlayers } from '../../dota/lib/getSpectatorPlayers'
 import { isSpectator } from '../../dota/lib/isSpectator'
-import type { Hero, Items, Packet, Player } from '../../types'
+import type { Hero, Items, Packet, Player, SocketClient } from '../../types'
 import CustomError from '../../utils/customError'
 import { getPlayerFromArgs } from './getPlayerFromArgs'
 
@@ -33,11 +33,12 @@ export function findSpectatorIdx(packet: Packet | undefined, heroOrAccountId: nu
 }
 
 export async function findAccountFromCmd(
-  packet: Packet | undefined,
+  client: SocketClient | undefined,
   args: string[],
   locale: string,
   command: string,
 ) {
+  const packet = client?.gsi
   let accountIdFromArgs = Number.isNaN(Number(packet?.player?.accountid))
     ? undefined
     : Number(packet?.player?.accountid)
@@ -45,7 +46,7 @@ export async function findAccountFromCmd(
   let playerIdx: number | undefined
 
   if (args.length && !isSpectator(packet)) {
-    const data = await getPlayerFromArgs({ args, packet, locale, command })
+    const data = await getPlayerFromArgs({ args, client, locale, command })
     accountIdFromArgs = Number(data?.player?.accountid)
     playerIdx = data?.playerIdx
 
@@ -65,7 +66,7 @@ export async function findAccountFromCmd(
 
   if (isSpectator(packet)) {
     if (args.length) {
-      const data = await getPlayerFromArgs({ args, packet, locale, command })
+      const data = await getPlayerFromArgs({ args, client, locale, command })
       accountIdFromArgs = Number(data?.player?.accountid)
     }
 
