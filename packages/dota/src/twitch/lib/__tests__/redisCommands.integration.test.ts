@@ -15,6 +15,15 @@ describe('!clearsharing', () => {
     expect(state.chatSayCalls[0].message).toBe(t('clearsharing.success', { lng: 'en' }))
   })
 
+  it('resolves only ACCOUNT_SHARING notifications, not unrelated commandDisable rows', async () => {
+    await commandHandler.handleMessage(makeMessage({ content: '!clearsharing' }))
+    expect(state.trackResolveReasonCalls).toHaveLength(1)
+    expect(state.trackResolveReasonCalls[0]).toMatchObject({
+      settingKey: 'commandDisable',
+      opts: { reason: 'ACCOUNT_SHARING' },
+    })
+  })
+
   it('blocks viewers (permission below mod)', async () => {
     await commandHandler.handleMessage(
       makeMessage({ content: '!clearsharing', permission: 0, userName: 'viewer' }),

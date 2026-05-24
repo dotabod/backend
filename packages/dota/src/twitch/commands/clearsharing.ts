@@ -21,8 +21,11 @@ commandHandler.registerCommand('clearsharing', {
       const redisKey = `token:${userId}:activeSteam32Ids`
       await redisClient.client.del(redisKey)
 
-      // Resolve any ACCOUNT_SHARING notifications for this user
-      await trackResolveReason(userId, DBSettings.commandDisable, false)
+      // Resolve only ACCOUNT_SHARING notifications — don't touch unrelated
+      // commandDisable notifications (CHAT_PERMISSION_DENIED, TOKEN_REVOKED).
+      await trackResolveReason(userId, DBSettings.commandDisable, false, {
+        reason: 'ACCOUNT_SHARING',
+      })
 
       // Send success message with updated warning
       const channel = message.channel.client.name
