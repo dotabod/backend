@@ -1,9 +1,9 @@
 import RedisClient from '../../../db/RedisClient'
 import { type AegisPickedUpEvent, DotaEventTypes } from '../../../types'
 import { fmtMSS, is8500Plus } from '../../../utils/index'
-import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
 import { getHeroNameOrColor } from '../../lib/heroes'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { MatchDataService } from '../../lib/matchData'
 import { say } from '../../say'
 import eventHandler from '../EventHandler'
 import { emitAegisEvent } from './emitAegisEvent'
@@ -24,26 +24,25 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     // server time
     const expireDate = dotaClient.addSecondsToNow(expireS)
 
-    const { matchPlayers } = await getAccountsFromMatch({
-      gsi: dotaClient.client.gsi,
-    })
+    const roster = await new MatchDataService(dotaClient.client).resolveRoster()
+    const players = roster.players
 
-    const foundIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
+    const foundIndex = players.findIndex((p) => p.slot === event.player_id)
     const playerIdIndex = foundIndex === -1 ? event.player_id : foundIndex
-    const heroid = matchPlayers[playerIdIndex]?.heroid
+    const heroId = players[playerIdIndex]?.heroId
     const high = is8500Plus(dotaClient.client)
     // event.player_id is NOT a dependable slot/color index — Dota reshuffles it,
     // mostly in high-immortal/ranked-roles games (~57% of 8500+ vs ~0% of confirmed
     // sub-8500). For 8500+ we only name a hero when we positively matched the
-    // player by `playerid` in the roster; otherwise we'd be indexing by raw
+    // player by `slot` in the roster; otherwise we'd be indexing by raw
     // event.player_id (possibly wrong hero) or showing a slot color (possibly
     // wrong side). For <8500 we keep the existing behavior — hero from the
     // index fallback if the roster carries one, otherwise the slot color.
     const heroName = high
-      ? foundIndex !== -1 && heroid
-        ? getHeroNameOrColor(heroid, playerIdIndex)
+      ? foundIndex !== -1 && heroId
+        ? getHeroNameOrColor(heroId, playerIdIndex)
         : null
-      : getHeroNameOrColor(heroid ?? 0, playerIdIndex)
+      : getHeroNameOrColor(heroId ?? 0, playerIdIndex)
 
     const res = {
       expireS,

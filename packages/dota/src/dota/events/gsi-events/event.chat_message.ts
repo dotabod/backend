@@ -8,7 +8,7 @@ import { chatClient } from '../../../twitch/chatClient'
 import { type ChatMessageEvent, DotaEventTypes } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
 import type { GSIHandlerType } from '../../GSIHandlerTypes'
-import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
+import { MatchDataService } from '../../lib/matchData'
 import { getHeroNameOrColor } from '../../lib/heroes'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import { server } from '../../server'
@@ -338,13 +338,14 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
     }
 
     // Get hero name
-    const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient.client.gsi })
-    let playerIdIndex = matchPlayers.findIndex((p) => p.playerid === event.player_id)
+    const roster = await new MatchDataService(dotaClient.client).resolveRoster()
+    const players = roster.players
+    let playerIdIndex = players.findIndex((p) => p.slot === event.player_id)
     const foundInMatchPlayers = playerIdIndex !== -1
     if (!foundInMatchPlayers) {
       playerIdIndex = event.player_id
     }
-    const heroName = getHeroNameOrColor(matchPlayers[playerIdIndex]?.heroid ?? 0, playerIdIndex)
+    const heroName = getHeroNameOrColor(players[playerIdIndex]?.heroId ?? 0, playerIdIndex)
     const displayHeroName = resolveTranslatedHeroName({
       heroName,
       playerId: event.player_id,

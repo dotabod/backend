@@ -103,6 +103,56 @@ vi.doMock('../../../lib/getAccountsFromMatch', () => ({
   getAccountsFromMatch: async () => ({ matchPlayers: gsiState.matchPlayers }),
 }))
 
+// Event handlers now route through `MatchDataService` directly. Mock it so the
+// existing `gsiState.matchPlayers` (legacy shape) feeds resolveRoster() after
+// a slot/heroid field rename — tests don't need to change.
+vi.doMock('../../../lib/matchData', () => {
+  class FakeMatchDataService {
+    async resolveRoster() {
+      return {
+        players: gsiState.matchPlayers.map((p) => ({
+          slot: p.playerid,
+          accountId: p.accountid || null,
+          heroId: p.heroid || null,
+          team: null,
+          playerName: null,
+          rank: null,
+          selected: null,
+        })),
+        source: 'sourcetv' as const,
+        stage: 'in-progress' as const,
+        completeness: {
+          accountIds: 'all' as const,
+          heroIds: 'all' as const,
+          teamAssignment: 'none' as const,
+          playerNames: 'none' as const,
+          ranks: 'none' as const,
+        },
+        hasAllAccountIds: false,
+        hasAllHeroes: false,
+      }
+    }
+    async getAccountIds() {
+      return gsiState.matchPlayers
+        .map((p) => p.accountid)
+        .filter((id): id is number => !!id && id > 0)
+    }
+    async getMatchPlayers() {
+      return gsiState.matchPlayers
+    }
+    async getHeroesStatus() {
+      return undefined
+    }
+    async getStreamersInMatchCount() {
+      return 0
+    }
+  }
+  return {
+    MatchDataService: FakeMatchDataService,
+    getStreamersInMatch: async () => 0,
+  }
+})
+
 // `delayedQueue.addTask` fires the callback synchronously so tests can assert
 // on the chat output without waiting on real timers. `removeTask` tracks the
 // id so tests can verify the bounty / killstreak cancellation path.

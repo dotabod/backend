@@ -201,9 +201,13 @@ export class MatchDataService {
     ]
   }
 
-  // Legacy-shape projection for callers that still pass `Players` to downstream helpers
-  // (clippingDisabledNote, notablePlayers, calculateAvg, gameMedals, smurfs, ...). Keeps caller
-  // diffs tiny during the Phase 4 migration. Field rename only — no semantic changes.
+  /**
+   * @deprecated Transitional shim. Returns the legacy snake_case `Players` shape so that
+   * downstream consumers (notablePlayers, calculateAvg, gameMedals, smurfs, lastgame, ...) can
+   * keep working unmodified while we migrate them to accept `RosterPlayer[]` directly. Delete
+   * this method once those consumers are converted to the camelCase shape and the `Players`
+   * type is retired. Prefer `resolveRoster()` or `findPlayerBySlot()` in new code.
+   */
   async getMatchPlayers(): Promise<Players> {
     const roster = await this.resolveRoster()
     return roster.players.map((p) => ({
