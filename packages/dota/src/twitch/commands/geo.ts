@@ -52,13 +52,15 @@ commandHandler.registerCommand('geo', {
         }
       }
 
-      const matchPlayers = await new MatchDataService(client).getMatchPlayers()
+      const { players: matchPlayers } = await new MatchDataService(client).resolveRoster()
 
-      if (!Array.isArray(matchPlayers) || matchPlayers.length === 0) {
+      if (matchPlayers.length === 0) {
         throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
       }
 
-      const accounts = matchPlayers.map((p) => Number(p.accountid)).filter((id) => id > 0)
+      const accounts = matchPlayers
+        .map((p) => p.accountId)
+        .filter((id): id is number => id !== null && id > 0)
 
       const accountIdToCountry = new Map<number, string>()
 
@@ -91,7 +93,7 @@ commandHandler.registerCommand('geo', {
 
       const countriesList = matchPlayers
         .map((p) => {
-          const cc = accountIdToCountry.get(Number(p.accountid))
+          const cc = p.accountId !== null ? accountIdToCountry.get(p.accountId) : undefined
           if (!cc) return '?'
           return countryCodeEmoji(cc) || cc
         })

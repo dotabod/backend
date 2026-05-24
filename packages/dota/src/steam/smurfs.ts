@@ -2,19 +2,19 @@ import { t } from 'i18next'
 
 import { getPlayers } from '../dota/lib/getPlayers'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
-import type { Players } from '../types'
+import type { RosterPlayer } from '../dota/lib/matchData'
 
 export async function smurfs(
   locale: string,
   currentMatchId?: string,
-  players?: Players,
+  players?: RosterPlayer[],
 ): Promise<string> {
   const { matchPlayers, cards } = await getPlayers({ locale, currentMatchId, players })
 
   const result: { heroName: string; lifetime_games?: number }[] = []
   matchPlayers.forEach((player, i: number) => {
     result.push({
-      heroName: getHeroNameOrColor(player.heroid || 0, i),
+      heroName: getHeroNameOrColor(player.heroId ?? 0, i),
       lifetime_games: cards[i]?.lifetime_games,
     })
   })

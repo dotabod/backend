@@ -1,11 +1,11 @@
 import { getPlayers } from '../../dota/lib/getPlayers'
-import type { Players } from '../../types'
+import type { RosterPlayer } from './matchData'
 import { getRankDetail, rankTierToMmr } from './ranks'
 
 interface Avg {
   locale: string
   currentMatchId?: string
-  players?: Players
+  players?: RosterPlayer[]
 }
 
 function calculateAverage(numbers: number[]): number {

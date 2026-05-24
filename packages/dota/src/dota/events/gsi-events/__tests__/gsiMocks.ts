@@ -133,9 +133,6 @@ vi.doMock('../../../lib/matchData', () => {
         .map((p) => p.accountid)
         .filter((id): id is number => !!id && id > 0)
     }
-    async getMatchPlayers() {
-      return gsiState.matchPlayers
-    }
     async getHeroesStatus() {
       return undefined
     }

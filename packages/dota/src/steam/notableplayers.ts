@@ -4,7 +4,8 @@ import { t } from 'i18next'
 import { calculateAvg } from '../dota/lib/calculateAvg'
 import { getPlayers } from '../dota/lib/getPlayers'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
-import type { HeroesStatus, NotablePlayer, Players, SocketClient } from '../types'
+import type { RosterPlayer } from '../dota/lib/matchData'
+import type { HeroesStatus, NotablePlayer, SocketClient } from '../types'
 import MongoDBSingleton from './MongoDBSingleton'
 
 export interface NotablePlayers {
@@ -27,7 +28,7 @@ export async function notablePlayers({
   locale: string
   twitchChannelId: string
   currentMatchId?: string
-  players?: Players
+  players?: RosterPlayer[]
   enableFlags?: boolean
   steam32Id: number | null
   heroesStatus?: HeroesStatus
@@ -38,7 +39,7 @@ export async function notablePlayers({
   const { matchPlayers, accountIds, gameMode } = heroesStatus
     ? {
         matchPlayers: players ?? [],
-        accountIds: (players ?? []).map((p) => p.accountid),
+        accountIds: (players ?? []).map((p) => p.accountId ?? 0),
         gameMode: undefined,
       }
     : await getPlayers({
@@ -98,8 +99,8 @@ export async function notablePlayers({
 
     // Using for..of loop instead of forEach to properly handle await
     for (const [i, player] of matchPlayers.entries()) {
-      const np = nps.find((np) => np.account_id === player.accountid)
-      const isCurrentPlayer = player.accountid === steam32Id
+      const np = nps.find((np) => np.account_id === player.accountId)
+      const isCurrentPlayer = player.accountId === steam32Id
 
       // Determine hero name based on available data
       let heroName = '?'
@@ -110,34 +111,34 @@ export async function notablePlayers({
         client.gsi?.hero?.id > -1
       ) {
         heroName = getHeroNameOrColor(client.gsi.hero.id, i)
-      } else if (player.playerid !== null) {
-        heroName = getHeroNameOrColor(player.heroid ?? 0, i)
+      } else if (player.slot !== null) {
+        heroName = getHeroNameOrColor(player.heroId ?? 0, i)
       }
 
       const playerData = {
-        account_id: player.accountid,
-        heroId: player.heroid ?? 0,
+        account_id: player.accountId ?? 0,
+        heroId: player.heroId ?? 0,
         position: i,
         heroName:
           heroName === '?'
-            ? matchPlayers?.[i]?.heroid && matchPlayers?.[i]?.heroid > 0
-              ? getHeroNameOrColor(matchPlayers[i].heroid, i)
+            ? matchPlayers?.[i]?.heroId && (matchPlayers?.[i]?.heroId ?? 0) > 0
+              ? getHeroNameOrColor(matchPlayers[i].heroId ?? 0, i)
               : '?'
             : heroName,
         name:
-          (await moderateText(np?.name ?? matchPlayers[i].player_name ?? `Player ${i + 1}`)) ??
+          (await moderateText(np?.name ?? matchPlayers[i].playerName ?? `Player ${i + 1}`)) ??
           `Player ${i + 1}`,
         country_code: np?.country_code ?? '',
         isMe: isCurrentPlayer,
       }
 
       // Show a player when they're a tracked pro (np), when a name was detected,
-      // or when this is a vision-detected hero (accountid 0 sentinel from the
-      // Vision API, which never provides account ids so np can never match). The
+      // or when this is a vision-detected hero (accountId null from the Vision
+      // API, which never provides account ids so np can never match). The
       // vision path is the high-MMR roster view, so a confidently-detected hero
       // must not vanish just because its name OCR came back empty.
-      const isVisionHero = player.accountid === 0 && (player.heroid ?? 0) > 0
-      if (np || matchPlayers[i].player_name || isVisionHero) proPlayers.push(playerData)
+      const isVisionHero = player.accountId === null && (player.heroId ?? 0) > 0
+      if (np || matchPlayers[i].playerName || isVisionHero) proPlayers.push(playerData)
     }
 
     let modeText: string

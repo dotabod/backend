@@ -1,22 +1,16 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
-import { lookupRosterByMatchId } from '../dota/lib/matchData'
-import type { DelayedGames, Players } from '../types'
+import { lookupRosterByMatchId, type RosterPlayer } from '../dota/lib/matchData'
+import type { DelayedGames } from '../types'
 import CustomError from '../utils/customError'
 import MongoDBSingleton from './MongoDBSingleton'
 
 const generateMessage = (
   locale: string,
   playersFromLastGame: {
-    old: Partial<{
-      heroid: number
-      accountid: number
-    }>
-    current: Partial<{
-      heroid: number
-      accountid: number
-    }>
+    old: RosterPlayer
+    current: RosterPlayer
     currentIdx: number
   }[],
 ) => {
@@ -28,8 +22,8 @@ const generateMessage = (
     .map((player, oldIdx) =>
       t('lastgame.player', {
         lng: locale,
-        currentMatchHero: getHeroNameOrColor(player.current.heroid, player.currentIdx),
-        lastMatchHero: getHeroNameOrColor(player.old.heroid, oldIdx),
+        currentMatchHero: getHeroNameOrColor(player.current.heroId ?? 0, player.currentIdx),
+        lastMatchHero: getHeroNameOrColor(player.old.heroId ?? 0, oldIdx),
       }),
     )
     .join(' · ')
@@ -39,7 +33,7 @@ interface LastgameParams {
   locale: string
   steam32Id: number
   currentMatchId?: string
-  currentPlayers?: Players
+  currentPlayers?: RosterPlayer[]
 }
 
 // Supabase is the source of truth for a user's own finished matches (written from
@@ -131,12 +125,12 @@ export default async function lastgame({
 
     const playersFromLastGame = newMatchPlayers
       .map((currentGamePlayer, i) => {
-        if (steam32Id === currentGamePlayer.accountid) {
+        if (steam32Id === currentGamePlayer.accountId) {
           return null
         }
 
         const old = oldMatchPlayers.find(
-          (player) => player.accountid === currentGamePlayer.accountid,
+          (player) => player.accountId === currentGamePlayer.accountId,
         )
         if (!old) return null
 

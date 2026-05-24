@@ -451,42 +451,12 @@ describe('MatchDataService — typed delayedGames accessors', () => {
   })
 })
 
-describe('MatchDataService — projections (getAccountIds / getMatchPlayers / getHeroesStatus)', () => {
+describe('MatchDataService — projections (getAccountIds / getHeroesStatus)', () => {
   it('getAccountIds dedupes and drops 0/null accountIds', async () => {
     mongoDoc = sourceTvDoc()
     noVisionHost()
     const ids = await new MatchDataService(makeClient()).getAccountIds()
     expect(ids).toEqual([1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009])
-  })
-
-  it('getMatchPlayers maps RosterPlayer → legacy Players shape (sourcetv)', async () => {
-    mongoDoc = sourceTvDoc()
-    noVisionHost()
-    const players = await new MatchDataService(makeClient()).getMatchPlayers()
-    expect(players.length).toBe(10)
-    expect(players[0]).toMatchObject({
-      heroid: 1,
-      accountid: 1000,
-      playerid: null, // sourcetv flat-players doc has no slot info
-    })
-    // rank + player_name absent on sourcetv rows — should not appear as null fields
-    expect('rank' in players[0]).toBe(false)
-    expect('player_name' in players[0]).toBe(false)
-  })
-
-  it('getMatchPlayers maps null heroId → undefined and null accountId → 0 (vision-heroes)', async () => {
-    mongoDoc = null
-    withVisionHost()
-    mockVision(visionHeroesPayload())
-    const players = await new MatchDataService(makeClient({ ownHeroId: 1 })).getMatchPlayers()
-    expect(players.length).toBe(10)
-    // Vision API populates accountid=0 for non-self players; normalize sets accountId=null
-    // for those, which the projection then maps back to 0 (matches legacy Vision branch).
-    const nonSelf = players.filter((p) => p.heroid !== 1)
-    expect(nonSelf.every((p) => p.accountid === 0)).toBe(true)
-    // Vision provides player_name + rank for non-self players (players[1] = hero_id 2).
-    expect(players[1].player_name).toBe('Player 2')
-    expect(players[1].rank).toBe(8550)
   })
 
   it('getHeroesStatus passes through "waiting" on vision-draft', async () => {
@@ -506,7 +476,7 @@ describe('MatchDataService — projections (getAccountIds / getMatchPlayers / ge
     mongoDoc = sourceTvDoc()
     noVisionHost()
     const svc = new MatchDataService(makeClient())
-    await Promise.all([svc.getAccountIds(), svc.getMatchPlayers(), svc.getHeroesStatus()])
+    await Promise.all([svc.getAccountIds(), svc.resolveRoster(), svc.getHeroesStatus()])
     expect(mongoCallCount).toBe(1)
   })
 })

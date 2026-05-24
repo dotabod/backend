@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock } from '../../../../__tests__/sharedMocks.ts'
-import type { Players } from '../../../../types'
+import type { RosterPlayer } from '../types'
 
 const noopLogger = {
   info: () => undefined,
@@ -56,8 +56,16 @@ vi.doMock('../../../../steam/MongoDBSingleton', () => ({
 
 const { getStreamersInMatch } = await import('../getStreamersInMatch.ts')
 
-const players = (accountIds: number[]): Players =>
-  accountIds.map((accountid) => ({ heroid: undefined, accountid, playerid: null }))
+const players = (accountIds: number[]): RosterPlayer[] =>
+  accountIds.map((accountId) => ({
+    slot: null,
+    accountId: accountId > 0 ? accountId : null,
+    heroId: null,
+    team: null,
+    playerName: null,
+    rank: null,
+    selected: null,
+  }))
 
 describe('getStreamersInMatch', () => {
   beforeEach(() => {

@@ -29,10 +29,10 @@ commandHandler.registerCommand('gm', {
       return
     }
 
-    const matchPlayers = await new MatchDataService(client).getMatchPlayers()
-    const note = clippingDisabledNote(client, matchPlayers)
+    const roster = await new MatchDataService(client).resolveRoster()
+    const note = clippingDisabledNote(client, roster.players)
 
-    gameMedals(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)
+    gameMedals(client.locale, message.channel.client.gsi?.map?.matchid, roster.players)
       .then((desc) => {
         chatClient.say(message.channel.name, withClippingNote(desc, note), message.user.messageId)
       })

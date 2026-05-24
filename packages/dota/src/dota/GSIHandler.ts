@@ -313,7 +313,7 @@ class GSIHandler implements GSIHandlerType {
   async emitNotablePlayers() {
     if (!this.client.stream_online) return
 
-    const matchPlayers = await new MatchDataService(this.client).getMatchPlayers()
+    const roster = await new MatchDataService(this.client).resolveRoster()
 
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
@@ -331,7 +331,7 @@ class GSIHandler implements GSIHandlerType {
       locale: this.client.locale,
       twitchChannelId: this.getChannelId(),
       currentMatchId: this.client.gsi?.map?.matchid,
-      players: matchPlayers,
+      players: roster.players,
       enableFlags: enableCountries,
       steam32Id: this.getSteam32(),
     })

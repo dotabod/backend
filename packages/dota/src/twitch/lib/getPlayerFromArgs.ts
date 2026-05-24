@@ -1,8 +1,8 @@
 import { t } from 'i18next'
 
 import { getHeroById, getHeroByName, heroColors } from '../../dota/lib/heroes'
-import { MatchDataService } from '../../dota/lib/matchData'
-import type { Players, SocketClient } from '../../types'
+import { MatchDataService, type RosterPlayer } from '../../dota/lib/matchData'
+import type { SocketClient } from '../../types'
 import CustomError from '../../utils/customError'
 
 export async function getPlayerFromArgs({
@@ -17,8 +17,10 @@ export async function getPlayerFromArgs({
   command: string
 }) {
   const packet = client?.gsi
-  const players: Players = client ? await new MatchDataService(client).getMatchPlayers() : []
-  const heroIdsInMatch = players.map((player) => player.heroid)
+  const players: RosterPlayer[] = client
+    ? (await new MatchDataService(client).resolveRoster()).players
+    : []
+  const heroIdsInMatch = players.map((player) => player.heroId ?? undefined)
   const heroList = heroIdsInMatch
     .map((heroId) => getHeroById(heroId))
     .map((hero) => hero?.localized_name)
@@ -51,23 +53,27 @@ export async function getPlayerFromArgs({
     playerIdx = heroColorIndex
   } else {
     if (packet?.hero?.id === hero?.id) {
-      playerIdx = players.findIndex((player) => player.heroid === hero?.id)
+      playerIdx = players.findIndex((player) => player.heroId === hero?.id)
     } else {
-      playerIdx = hero ? players.findIndex((player) => player.heroid === hero.id) : -1
+      playerIdx = hero ? players.findIndex((player) => player.heroId === hero.id) : -1
     }
   }
 
-  // if (playerIdx < 0 || playerIdx > 9) {
-  //   if (heroIdsInMatch.filter(Boolean).length > 1) {
-  //     throw new CustomError(t('invalidHero', { command, heroList, lng: locale }))
-  //   }
-
-  //   throw new CustomError(
-  //     t('invalidColorNew', { command, colorList: heroColors.join(' · '), lng: locale }),
-  //   )
-  // }
-
-  const defaultPlayer: Players[0] = {
+  // Translate the matched RosterPlayer back to the GSI-style snake_case shape the 15+ callers
+  // (hero, dotabuff, opendota, profile, stats, items, aghs, d2pt, gpm, innate, shard, xpm, apm)
+  // expect via `player.accountid` / `player.heroid`. This is the one boundary point where the
+  // internal RosterPlayer shape meets external GSI-shaped data.
+  const matched = players[playerIdx ?? -1]
+  const matchedLegacy = matched
+    ? {
+        heroid: matched.heroId ?? undefined,
+        accountid: matched.accountId ?? 0,
+        playerid: matched.slot,
+        ...(matched.rank !== null ? { rank: matched.rank } : {}),
+        ...(matched.playerName !== null ? { player_name: matched.playerName } : {}),
+      }
+    : undefined
+  const defaultPlayer = {
     heroid: hero?.id,
     accountid: Number(packet?.player?.accountid),
     playerid: null,
@@ -79,7 +85,7 @@ export async function getPlayerFromArgs({
     player: {
       ...moreData,
       ...defaultPlayer,
-      ...players[playerIdx],
+      ...matchedLegacy,
     },
   }
 }

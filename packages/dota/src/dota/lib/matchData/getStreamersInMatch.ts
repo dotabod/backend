@@ -1,6 +1,7 @@
 import { supabase } from '@dotabod/shared-utils'
-import type { Players, SocketClient } from '../../../types'
+import type { SocketClient } from '../../../types'
 import { MatchDataService } from './MatchDataService'
+import type { RosterPlayer } from './types'
 
 // Counts distinct OTHER Dotabod users in the current match. Names are never returned — only an
 // anonymized count — to avoid cross-chat witch-hunts.
@@ -23,7 +24,7 @@ export async function getStreamersInMatch({
   excludeUserId,
 }: {
   client?: SocketClient
-  players?: Players
+  players?: RosterPlayer[]
   matchId?: string
   excludeUserId: string
 }): Promise<number> {
@@ -40,7 +41,7 @@ export async function getStreamersInMatch({
   // Source 2: registered Dotabod users present in the (SourceTV) roster.
   const accountIds = (
     players?.length
-      ? players.map((p) => p.accountid)
+      ? players.map((p) => p.accountId)
       : client
         ? await new MatchDataService(client).getAccountIds()
         : []

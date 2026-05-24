@@ -4,13 +4,14 @@ import { calculateAvg } from '../dota/lib/calculateAvg'
 import { ranks } from '../dota/lib/consts'
 import { getPlayers } from '../dota/lib/getPlayers'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
-import type { Medals, Players } from '../types'
+import type { RosterPlayer } from '../dota/lib/matchData'
+import type { Medals } from '../types'
 import MongoDBSingleton from './MongoDBSingleton'
 
 export async function gameMedals(
   locale: string,
   currentMatchId?: string,
-  players?: Players,
+  players?: RosterPlayer[],
 ): Promise<string> {
   const { matchPlayers, cards } = await getPlayers({ locale, currentMatchId, players })
 
@@ -35,7 +36,7 @@ export async function gameMedals(
     const result: { heroNames: string; medal: string }[] = []
     const medalsToPlayers: Record<string, string[]> = {}
     matchPlayers.forEach((player, i: number) => {
-      const heroName = getHeroNameOrColor(player.heroid || 0, i)
+      const heroName = getHeroNameOrColor(player.heroId ?? 0, i)
       const medal = medals[i]
       if (!medalsToPlayers[medal]) {
         medalsToPlayers[medal] = [heroName]

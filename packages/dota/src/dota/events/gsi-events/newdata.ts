@@ -558,10 +558,17 @@ const _saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
     return
   }
 
-  // Preserves the legacy snake_case `Players` shape because the `dump` collection
-  // may be read by external analytics tooling outside this repo. Migrate to RosterPlayer
-  // shape once external consumers are confirmed.
-  const matchPlayers = await new MatchDataService(dotaClient.client).getMatchPlayers()
+  // Preserves the legacy snake_case shape because the `dump` collection may be read by
+  // external analytics tooling outside this repo. Inline-mapped at this single boundary
+  // point; convert to RosterPlayer shape once external consumers are confirmed migrated.
+  const roster = await new MatchDataService(dotaClient.client).resolveRoster()
+  const matchPlayers = roster.players.map((p) => ({
+    heroid: p.heroId ?? undefined,
+    accountid: p.accountId ?? 0,
+    playerid: p.slot,
+    ...(p.rank !== null ? { rank: p.rank } : {}),
+    ...(p.playerName !== null ? { player_name: p.playerName } : {}),
+  }))
 
   const keysToSave = [
     'map',

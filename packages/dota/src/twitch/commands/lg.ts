@@ -29,12 +29,12 @@ commandHandler.registerCommand('lg', {
       return
     }
 
-    const matchPlayers = await new MatchDataService(client).getMatchPlayers()
+    const roster = await new MatchDataService(client).resolveRoster()
 
     lastgame({
       currentMatchId: message.channel.client.gsi?.map?.matchid,
       locale: message.channel.client.locale,
-      currentPlayers: matchPlayers,
+      currentPlayers: roster.players,
       steam32Id: message.channel.client.steam32Id,
     })
       .then((desc) => {

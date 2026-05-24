@@ -1,7 +1,7 @@
 import { supabase } from '@dotabod/shared-utils'
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { steamSocket } from '../../../steam/ws'
-import type { Cards, DelayedGames, HeroesStatus, Players, SocketClient } from '../../../types'
+import type { Cards, DelayedGames, HeroesStatus, SocketClient } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
 import { getHeroNameOrColor, heroColors } from '../heroes'
 import { isArcade } from '../isArcade'
@@ -198,24 +198,6 @@ export class MatchDataService {
         roster.players.map((p) => p.accountId).filter((id): id is number => id !== null && id > 0),
       ),
     ]
-  }
-
-  /**
-   * @deprecated Transitional shim. Returns the legacy snake_case `Players` shape so that
-   * downstream consumers (notablePlayers, calculateAvg, gameMedals, smurfs, lastgame, ...) can
-   * keep working unmodified while we migrate them to accept `RosterPlayer[]` directly. Delete
-   * this method once those consumers are converted to the camelCase shape and the `Players`
-   * type is retired. Prefer `resolveRoster()` or `findPlayerBySlot()` in new code.
-   */
-  async getMatchPlayers(): Promise<Players> {
-    const roster = await this.resolveRoster()
-    return roster.players.map((p) => ({
-      heroid: p.heroId ?? undefined,
-      accountid: p.accountId ?? 0,
-      playerid: p.slot,
-      ...(p.rank !== null ? { rank: p.rank } : {}),
-      ...(p.playerName !== null ? { player_name: p.playerName } : {}),
-    }))
   }
 
   async getHeroesStatus(): Promise<HeroesStatus | undefined> {

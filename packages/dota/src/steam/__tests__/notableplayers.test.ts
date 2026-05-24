@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
-import type { Players } from '../../types'
+import type { RosterPlayer } from '../../dota/lib/matchData'
 
 const noopLogger = {
   info: () => undefined,
@@ -32,7 +32,7 @@ vi.doMock('../MongoDBSingleton', () => ({
 // getPlayers / calculateAvg are only reached on the non-draft path. Stub them so
 // importing notableplayers doesn't pull in their transitive deps (steam socket).
 const getPlayersMock = vi.fn(async () => ({
-  matchPlayers: [] as Players,
+  matchPlayers: [] as RosterPlayer[],
   accountIds: [] as number[],
   gameMode: undefined,
 }))
@@ -49,10 +49,11 @@ beforeEach(() => {
   getPlayersMock.mockClear()
 })
 
-const draftPlayers: Players = [
-  { heroid: undefined, accountid: 0, playerid: null, player_name: 'Dendi' },
-  { heroid: undefined, accountid: 0, playerid: null, player_name: 'Puppey' },
-  { heroid: undefined, accountid: 0, playerid: null, player_name: 'N0tail' },
+const blank = { slot: null, team: null, rank: null, selected: null }
+const draftPlayers: RosterPlayer[] = [
+  { ...blank, heroId: null, accountId: null, playerName: 'Dendi' },
+  { ...blank, heroId: null, accountId: null, playerName: 'Puppey' },
+  { ...blank, heroId: null, accountId: null, playerName: 'N0tail' },
 ]
 
 describe('notablePlayers — draft-only (heroes pending)', () => {
@@ -89,7 +90,7 @@ describe('notablePlayers — draft-only (heroes pending)', () => {
 describe('notablePlayers — normal path (heroes known)', () => {
   it('keeps the "Name (Hero)" format and avg header', async () => {
     getPlayersMock.mockResolvedValueOnce({
-      matchPlayers: [{ heroid: 1, accountid: 123, playerid: 0, player_name: 'Bob' }],
+      matchPlayers: [{ ...blank, slot: 0, heroId: 1, accountId: 123, playerName: 'Bob' }],
       accountIds: [123],
       gameMode: undefined,
     })
@@ -112,8 +113,8 @@ describe('notablePlayers — normal path (heroes known)', () => {
     // falling back to a "Player N" label rather than vanishing from the roster.
     getPlayersMock.mockResolvedValueOnce({
       matchPlayers: [
-        { heroid: 1, accountid: 0, playerid: null, player_name: 'Named' },
-        { heroid: 2, accountid: 0, playerid: null },
+        { ...blank, heroId: 1, accountId: null, playerName: 'Named' },
+        { ...blank, heroId: 2, accountId: null, playerName: null },
       ],
       accountIds: [0, 0],
       gameMode: undefined,

@@ -30,13 +30,13 @@ commandHandler.registerCommand('avg', {
 
     const avgDescriptor = ` - ${t('averageRank', { lng: client.locale })}`
 
-    const matchPlayers = await new MatchDataService(client).getMatchPlayers()
-    const note = clippingDisabledNote(client, matchPlayers)
+    const roster = await new MatchDataService(client).resolveRoster()
+    const note = clippingDisabledNote(client, roster.players)
 
     calculateAvg({
       locale: client.locale,
       currentMatchId: message.channel.client.gsi?.map?.matchid,
-      players: matchPlayers,
+      players: roster.players,
     })
       .then((avg) => {
         chatClient.say(

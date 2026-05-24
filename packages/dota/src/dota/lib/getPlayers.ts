@@ -2,10 +2,10 @@ import { t } from 'i18next'
 
 import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import { steamSocket } from '../../steam/ws'
-import type { Cards, DelayedGames, Players } from '../../types'
+import type { Cards, DelayedGames } from '../../types'
 import CustomError from '../../utils/customError'
 import { getHeroNameOrColor } from './heroes'
-import { lookupRosterByMatchId } from './matchData'
+import { lookupRosterByMatchId, type RosterPlayer } from './matchData'
 
 export async function getPlayers({
   locale,
@@ -14,7 +14,7 @@ export async function getPlayers({
 }: {
   locale: string
   currentMatchId?: string
-  players?: Players
+  players?: RosterPlayer[]
 }) {
   if (!currentMatchId) {
     throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
@@ -39,16 +39,16 @@ export async function getPlayers({
     // Use pre-supplied players when the caller already resolved them; otherwise look up
     // the historical roster from the delayedGames doc.
     const { matchPlayers, accountIds } = players?.length
-      ? { matchPlayers: players, accountIds: players.map((p) => p.accountid) }
+      ? { matchPlayers: players, accountIds: players.map((p) => p.accountId ?? 0) }
       : await lookupRosterByMatchId(currentMatchId)
 
     let cards: Cards[] = []
     // if match players has ranks, create that as cards instead of fetching them:
     cards = matchPlayers.map((player, i) => ({
-      account_id: player.accountid,
-      heroId: player.heroid,
+      account_id: player.accountId ?? 0,
+      heroId: player.heroId ?? 0,
       position: i,
-      heroName: getHeroNameOrColor(player.heroid ?? 0, i),
+      heroName: getHeroNameOrColor(player.heroId ?? 0, i),
       lifetime_games: 0,
       leaderboard_rank: player.rank ?? 0,
       rank_tier: 80,

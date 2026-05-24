@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 import { DBSettings, getValueOrDefault } from '../../settings'
-import type { Players, SocketClient } from '../../types'
+import type { RosterPlayer } from '../../dota/lib/matchData'
+import type { SocketClient } from '../../types'
 import { is8500Plus } from '../../utils/index'
 
 // 8500+/Immortal games have no Valve realtime roster, so commands like !np, !gm
@@ -8,7 +9,7 @@ import { is8500Plus } from '../../utils/index'
 // (see map.game_state.ts — clips are only created for 8500+ players). If the
 // streamer turned auto-clipping off there's nothing to show, so return a short
 // viewer-facing note explaining why; otherwise ''.
-export function clippingDisabledNote(client: SocketClient, matchPlayers: Players): string {
+export function clippingDisabledNote(client: SocketClient, matchPlayers: RosterPlayer[]): string {
   const disabled = getValueOrDefault(
     DBSettings.disableAutoClipping,
     client.settings,
@@ -21,7 +22,7 @@ export function clippingDisabledNote(client: SocketClient, matchPlayers: Players
   // streamer's own hero id, which would otherwise look like a real roster and
   // wrongly suppress the note (the exact no-clips case this note is for).
   const hasOtherPlayers = matchPlayers.some(
-    (player) => (player.heroid ?? 0) > 0 && Number(player.accountid) !== client.steam32Id,
+    (player) => (player.heroId ?? 0) > 0 && player.accountId !== client.steam32Id,
   )
   if (hasOtherPlayers) return ''
 

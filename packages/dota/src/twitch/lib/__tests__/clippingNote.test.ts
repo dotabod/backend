@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/sharedMocks.ts'
-import type { Players, SocketClient } from '../../../types'
+import type { RosterPlayer } from '../../../dota/lib/matchData'
+import type { SocketClient } from '../../../types'
 
 const noopLogger = {
   info: () => undefined,
@@ -27,11 +28,12 @@ function makeClient(over: Partial<SocketClient> = {}): SocketClient {
   } as unknown as SocketClient
 }
 
-const emptyRoster: Players = [{ heroid: undefined, accountid: 0, playerid: null }]
-const fullRoster: Players = [{ heroid: 14, accountid: 0, playerid: null }]
+const blank = { slot: null, team: null, playerName: null, rank: null, selected: null }
+const emptyRoster: RosterPlayer[] = [{ ...blank, heroId: null, accountId: null }]
+const fullRoster: RosterPlayer[] = [{ ...blank, heroId: 14, accountId: null }]
 // MatchDataService's gsi-self no-data fallback: a single self-player carrying the
 // streamer's own hero id (steam32Id 1 here). Must NOT count as a real roster.
-const selfOnlyFallback: Players = [{ heroid: 14, accountid: 1, playerid: null }]
+const selfOnlyFallback: RosterPlayer[] = [{ ...blank, heroId: 14, accountId: 1 }]
 
 describe('clippingDisabledNote', () => {
   it('returns the note for an 8500+ player with clipping off and no roster', () => {

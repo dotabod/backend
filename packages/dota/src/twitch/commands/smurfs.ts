@@ -29,9 +29,9 @@ commandHandler.registerCommand('smurfs', {
       return
     }
 
-    const matchPlayers = await new MatchDataService(client).getMatchPlayers()
+    const roster = await new MatchDataService(client).resolveRoster()
 
-    smurfs(client.locale, message.channel.client.gsi?.map?.matchid, matchPlayers)
+    smurfs(client.locale, message.channel.client.gsi?.map?.matchid, roster.players)
       .then((desc) => {
         chatClient.say(message.channel.name, desc, message.user.messageId)
       })

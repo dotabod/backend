@@ -135,9 +135,8 @@ commandHandler.registerCommand('np', {
     }
 
     const mds = new MatchDataService(client)
-    const matchPlayers = await mds.getMatchPlayers()
-    const heroesStatus = await mds.getHeroesStatus()
-    const note = clippingDisabledNote(client, matchPlayers)
+    const roster = await mds.resolveRoster()
+    const note = clippingDisabledNote(client, roster.players)
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
       client.settings,
@@ -148,10 +147,10 @@ commandHandler.registerCommand('np', {
       locale: client.locale,
       twitchChannelId,
       currentMatchId: client.gsi?.map?.matchid,
-      players: matchPlayers,
+      players: roster.players,
       enableFlags: enableCountries,
       steam32Id: client.steam32Id,
-      heroesStatus,
+      heroesStatus: roster.heroesStatus,
     })
       .then(async (desc) => {
         let description = desc.description
@@ -161,7 +160,7 @@ commandHandler.registerCommand('np', {
           client.subscription,
         )
         if (showStreamers) {
-          // Same `mds` instance memoizes the roster across getMatchPlayers + getStreamersInMatchCount,
+          // Same `mds` instance memoizes the roster across resolveRoster + getStreamersInMatchCount,
           // so this doesn't pay a second Mongo round-trip.
           const count = await mds.getStreamersInMatchCount({ excludeUserId: client.token })
           if (count > 0) {
