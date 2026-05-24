@@ -9,6 +9,9 @@ import {
   state,
 } from '../../__tests__/sharedMocks.ts'
 
+// The periodic healthcheck only scans CRITICAL types now. Secondary types
+// (predictions/polls) are still registered by initUserSubscriptions but the
+// 5-min sweep ignores them; tests reflect that scope.
 const CRITICAL = ['stream.online', 'stream.offline', 'user.update', 'channel.chat.message'] as const
 const SECONDARY = [
   'channel.prediction.begin',
@@ -19,7 +22,6 @@ const SECONDARY = [
   'channel.poll.progress',
   'channel.poll.end',
 ] as const
-const ALL = [...CRITICAL, ...SECONDARY]
 
 describe('runSubscriptionHealthCheck', () => {
   beforeEach(() => {
@@ -41,9 +43,9 @@ describe('runSubscriptionHealthCheck', () => {
     await expect(runSubscriptionHealthCheck()).rejects.toThrow('No user accounts found')
   })
 
-  it('reports no issues when every subscription already exists', async () => {
+  it('reports no issues when every critical subscription already exists', async () => {
     state.accountIds = ['111']
-    seedSubscriptions('111', ALL)
+    seedSubscriptions('111', CRITICAL)
 
     const result = await runSubscriptionHealthCheck()
 
@@ -52,16 +54,29 @@ describe('runSubscriptionHealthCheck', () => {
     expect(state.subscribeCalls).toHaveLength(0)
   })
 
-  it('fixes all missing critical and secondary subscriptions', async () => {
+  it('ignores missing secondary subscriptions (predictions/polls)', async () => {
     state.accountIds = ['111']
-    seedSubscriptions('111', []) // entry exists but has no types -> all missing
+    // Critical present, all secondary missing -> sweep should do nothing.
+    seedSubscriptions('111', CRITICAL)
+
+    const result = await runSubscriptionHealthCheck()
+
+    expect(result.usersWithIssues).toBe(0)
+    expect(result.fixedSubscriptions).toBe(0)
+    expect(state.subscribeCalls.map((c) => c.type)).not.toEqual(
+      expect.arrayContaining(SECONDARY as unknown as string[]),
+    )
+  })
+
+  it('fixes all missing critical subscriptions', async () => {
+    state.accountIds = ['111']
+    seedSubscriptions('111', []) // entry exists but has no types -> all critical missing
 
     const result = await runSubscriptionHealthCheck()
 
     expect(result.usersWithIssues).toBe(1)
     expect(result.criticalFixCount).toBe(CRITICAL.length)
-    expect(result.secondaryFixCount).toBe(SECONDARY.length)
-    expect(result.fixedSubscriptions).toBe(ALL.length)
+    expect(result.fixedSubscriptions).toBe(CRITICAL.length)
     expect(result.errorCount).toBe(0)
   })
 
@@ -97,8 +112,8 @@ describe('runSubscriptionHealthCheck', () => {
 
     const result = await runSubscriptionHealthCheck()
 
-    expect(result.errorCount).toBe(ALL.length)
-    expect(result.userErrors['twitch 500']).toBe(ALL.length)
+    expect(result.errorCount).toBe(CRITICAL.length)
+    expect(result.userErrors['twitch 500']).toBe(CRITICAL.length)
     expect(result.fixedSubscriptions).toBe(0)
   })
 
