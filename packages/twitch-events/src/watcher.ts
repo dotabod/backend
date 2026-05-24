@@ -9,7 +9,7 @@ import { stopUserSubscriptions } from './twitch/lib/revokeEvent'
 //
 // All handlers `await` their work and let failures propagate up to Realtime's
 // catch-all. The 5-min reconciliation in subscriptionHealthCheck is the
-// safety net for any delivery gap (channel drop, replica lag, deploy window).
+// long-tail safety net for any delivery gap (replica lag, deploy window).
 //
 // REPLICA IDENTITY: the UPDATE/DELETE handlers below read fields off `old`
 // (e.g. `old.provider`, `old.requires_refresh`, `old.name`, `old.displayName`).
@@ -21,149 +21,190 @@ import { stopUserSubscriptions } from './twitch/lib/revokeEvent'
 
 const IS_DEV = process.env.DOTABOD_ENV !== 'production'
 
+// supabase-js v2 channels do NOT auto-resubscribe after CHANNEL_ERROR /
+// CLOSED / TIMED_OUT — the callback fires once and the channel is dead.
+// Without explicit reconnect, a single network blip can leave the watcher
+// blind to INSERT/UPDATE/DELETE events until the process restarts. Constant
+// 5s backoff; outages of >5s are uncommon and the 5-min reconciliation in
+// subscriptionHealthCheck.ts is the long-tail safety net.
+const RECONNECT_DELAY_MS = 5000
+
 export function setupAccountWatcher(): void {
   const channelName = `${IS_DEV ? 'dev-' : ''}twitch-events`
-  // Supabase Realtime's `.on('postgres_changes')` overloads require
-  // RealtimePostgresChangesPayload-typed callbacks; typing each handler
-  // properly cascades into a wall of generics. Same loose-typing escape
-  // hatch as `packages/dota/src/db/watcher.ts:21`.
-  const channel: any = supabase.channel(channelName)
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  let activeChannel: unknown = null
 
-  logger.info('[WATCHER] Starting accounts/users watcher', { channelName })
+  const subscribe = () => {
+    reconnectTimer = null
+    // Supabase Realtime's `.on('postgres_changes')` overloads require
+    // RealtimePostgresChangesPayload-typed callbacks; typing each handler
+    // properly cascades into a wall of generics. Same loose-typing escape
+    // hatch as `packages/dota/src/db/watcher.ts:21`.
+    const channel: any = supabase.channel(channelName)
+    activeChannel = channel
 
-  channel
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'accounts' },
-      async (payload: { new: Tables<'accounts'> }) => {
-        const newObj = payload.new
-        if (newObj.provider !== 'twitch') return
-        logger.info('[WATCHER] INSERT accounts → onboarding new user', {
-          providerAccountId: newObj.providerAccountId,
-        })
-        try {
-          await handleNewUser(newObj.providerAccountId)
-        } catch (error) {
-          logger.error('[WATCHER] INSERT handleNewUser failed', {
-            providerAccountId: newObj.providerAccountId,
-            error,
-          })
-        }
-      },
-    )
-    .on(
-      'postgres_changes',
-      { event: 'UPDATE', schema: 'public', table: 'accounts' },
-      async (payload: { new: Tables<'accounts'>; old: Tables<'accounts'> }) => {
-        const newObj = payload.new
-        const oldObj = payload.old
-        if (newObj.provider !== 'twitch') return
-        // Re-auth: requires_refresh flipped true → false.
-        if (oldObj.requires_refresh === true && newObj.requires_refresh === false) {
-          if (newObj.providerAccountId === process.env.TWITCH_BOT_PROVIDERID) {
-            logger.info('[WATCHER] Bot no longer banned, clearing status')
-            botStatus.isBanned = false
-          }
-          logger.info('[WATCHER] Refresh token cleared, re-subscribing events', {
+    logger.info('[WATCHER] Starting accounts/users watcher', { channelName })
+
+    channel
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'accounts' },
+        async (payload: { new: Tables<'accounts'> }) => {
+          const newObj = payload.new
+          if (newObj.provider !== 'twitch') return
+          logger.info('[WATCHER] INSERT accounts → onboarding new user', {
             providerAccountId: newObj.providerAccountId,
           })
           try {
             await handleNewUser(newObj.providerAccountId)
           } catch (error) {
-            logger.error('[WATCHER] UPDATE handleNewUser failed', {
+            logger.error('[WATCHER] INSERT handleNewUser failed', {
               providerAccountId: newObj.providerAccountId,
               error,
             })
           }
-        }
-      },
-    )
-    .on(
-      'postgres_changes',
-      { event: 'DELETE', schema: 'public', table: 'accounts' },
-      async (payload: { old: Tables<'accounts'> }) => {
-        const oldObj = payload.old
-        if (oldObj.provider !== 'twitch') return
-        logger.info('[WATCHER] Account deleted, stopping subscriptions', {
-          providerAccountId: oldObj.providerAccountId,
-        })
-        try {
-          await stopUserSubscriptions(oldObj.providerAccountId)
-        } catch (error) {
-          logger.error('[WATCHER] DELETE stopUserSubscriptions failed', {
-            providerAccountId: oldObj.providerAccountId,
-            error,
-          })
-        }
-      },
-    )
-    .on(
-      'postgres_changes',
-      { event: 'UPDATE', schema: 'public', table: 'users' },
-      async (payload: { new: Tables<'users'>; old: Tables<'users'> }) => {
-        const newUser = payload.new
-        const oldUser = payload.old
-        if (oldUser.name === newUser.name && oldUser.displayName === newUser.displayName) {
-          return
-        }
-        logger.info('[WATCHER] User renamed', {
-          userId: newUser.id,
-          oldName: oldUser.name,
-          newName: newUser.name,
-          oldDisplayName: oldUser.displayName,
-          newDisplayName: newUser.displayName,
-        })
-        // We have userId from the users table; look up providerAccountId on the
-        // accounts side so handleNewUser can call the Twitch API by twitch id.
-        const { data: account, error: accountError } = await supabase
-          .from('accounts')
-          .select('providerAccountId')
-          .eq('userId', newUser.id)
-          .eq('provider', 'twitch')
-          .single()
-        if (accountError) {
-          // Transient DB error — surface at error level so observability picks
-          // it up. The next users UPDATE for this user (or the healthcheck
-          // cycle for missing subs) will retry the lookup.
-          logger.error('[WATCHER] DB error during user rename lookup', {
-            userId: newUser.id,
-            error: accountError,
-          })
-          return
-        }
-        if (!account?.providerAccountId) {
-          logger.warn('[WATCHER] User renamed but no twitch account row found', {
-            userId: newUser.id,
-          })
-          return
-        }
-        try {
-          // Rename-only path: refresh displayName/name via the Twitch API
-          // (inside handleNewUser) without re-running EventSub registration.
-          // The previous `!oldUser.displayName` resubscribe trigger only
-          // existed to compensate for the frontend writing `displayName=NULL`
-          // on initial signup — that's fixed by the
-          // TwitchProvider.profile() override in frontend/src/lib/auth.ts.
-          // Initial subscription is the INSERT:accounts handler's job.
-          if (!oldUser.displayName) {
-            // Observability: log if we still see legacy NULL displayName rows
-            // in production after the frontend fix has been deployed. If this
-            // doesn't fire for ~1 week post-deploy the warn can be removed.
-            logger.warn(
-              '[WATCHER] UPDATE users with legacy empty displayName (frontend not deployed?)',
-              { userId: newUser.id },
-            )
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'accounts' },
+        async (payload: { new: Tables<'accounts'>; old: Tables<'accounts'> }) => {
+          const newObj = payload.new
+          const oldObj = payload.old
+          if (newObj.provider !== 'twitch') return
+          // Re-auth: requires_refresh flipped true → false.
+          if (oldObj.requires_refresh === true && newObj.requires_refresh === false) {
+            if (newObj.providerAccountId === process.env.TWITCH_BOT_PROVIDERID) {
+              logger.info('[WATCHER] Bot no longer banned, clearing status')
+              botStatus.isBanned = false
+            }
+            logger.info('[WATCHER] Refresh token cleared, re-subscribing events', {
+              providerAccountId: newObj.providerAccountId,
+            })
+            try {
+              await handleNewUser(newObj.providerAccountId)
+            } catch (error) {
+              logger.error('[WATCHER] UPDATE handleNewUser failed', {
+                providerAccountId: newObj.providerAccountId,
+                error,
+              })
+            }
           }
-          await handleNewUser(account.providerAccountId, false)
-        } catch (error) {
-          logger.error('[WATCHER] UPDATE users handleNewUser failed', {
-            providerAccountId: account.providerAccountId,
-            error,
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'accounts' },
+        async (payload: { old: Tables<'accounts'> }) => {
+          const oldObj = payload.old
+          if (oldObj.provider !== 'twitch') return
+          logger.info('[WATCHER] Account deleted, stopping subscriptions', {
+            providerAccountId: oldObj.providerAccountId,
           })
+          try {
+            await stopUserSubscriptions(oldObj.providerAccountId)
+          } catch (error) {
+            logger.error('[WATCHER] DELETE stopUserSubscriptions failed', {
+              providerAccountId: oldObj.providerAccountId,
+              error,
+            })
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'users' },
+        async (payload: { new: Tables<'users'>; old: Tables<'users'> }) => {
+          const newUser = payload.new
+          const oldUser = payload.old
+          if (oldUser.name === newUser.name && oldUser.displayName === newUser.displayName) {
+            return
+          }
+          logger.info('[WATCHER] User renamed', {
+            userId: newUser.id,
+            oldName: oldUser.name,
+            newName: newUser.name,
+            oldDisplayName: oldUser.displayName,
+            newDisplayName: newUser.displayName,
+          })
+          // We have userId from the users table; look up providerAccountId on the
+          // accounts side so handleNewUser can call the Twitch API by twitch id.
+          const { data: account, error: accountError } = await supabase
+            .from('accounts')
+            .select('providerAccountId')
+            .eq('userId', newUser.id)
+            .eq('provider', 'twitch')
+            .single()
+          if (accountError) {
+            // Transient DB error — surface at error level so observability picks
+            // it up. The next users UPDATE for this user (or the healthcheck
+            // cycle for missing subs) will retry the lookup.
+            logger.error('[WATCHER] DB error during user rename lookup', {
+              userId: newUser.id,
+              error: accountError,
+            })
+            return
+          }
+          if (!account?.providerAccountId) {
+            logger.warn('[WATCHER] User renamed but no twitch account row found', {
+              userId: newUser.id,
+            })
+            return
+          }
+          try {
+            // Rename-only path: refresh displayName/name via the Twitch API
+            // (inside handleNewUser) without re-running EventSub registration.
+            // The previous `!oldUser.displayName` resubscribe trigger only
+            // existed to compensate for the frontend writing `displayName=NULL`
+            // on initial signup — that's fixed by the
+            // TwitchProvider.profile() override in frontend/src/lib/auth.ts.
+            // Initial subscription is the INSERT:accounts handler's job.
+            if (!oldUser.displayName) {
+              // Observability: log if we still see legacy NULL displayName rows
+              // in production after the frontend fix has been deployed. If this
+              // doesn't fire for ~1 week post-deploy the warn can be removed.
+              logger.warn(
+                '[WATCHER] UPDATE users with legacy empty displayName (frontend not deployed?)',
+                { userId: newUser.id },
+              )
+            }
+            await handleNewUser(account.providerAccountId, false)
+          } catch (error) {
+            logger.error('[WATCHER] UPDATE users handleNewUser failed', {
+              providerAccountId: account.providerAccountId,
+              error,
+            })
+          }
+        },
+      )
+      .subscribe((status: string, err?: Error) => {
+        if (status === 'SUBSCRIBED') {
+          logger.info('[WATCHER] Subscribed to Realtime channel', { channelName })
+          return
         }
-      },
-    )
-    .subscribe((status: string, err?: Error) => {
-      logger.info('[WATCHER] Subscription status', { status, err })
-    })
+        if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
+          // Don't pile up reconnect timers if the dead channel's callback fires
+          // multiple times for the same outage.
+          if (reconnectTimer) return
+          logger.warn('[WATCHER] Realtime channel down, scheduling reconnect', {
+            status,
+            err: err?.message,
+            delayMs: RECONNECT_DELAY_MS,
+          })
+          // Tear down the dead channel before re-creating it. supabase-js
+          // doesn't auto-clean closed channels and they can leak. removeChannel
+          // returns a promise but we don't block reconnect on it; any error is
+          // logged inside supabase-js itself.
+          if (activeChannel) {
+            void supabase.removeChannel(
+              activeChannel as Parameters<typeof supabase.removeChannel>[0],
+            )
+            activeChannel = null
+          }
+          reconnectTimer = setTimeout(subscribe, RECONNECT_DELAY_MS)
+        }
+      })
+  }
+
+  subscribe()
 }

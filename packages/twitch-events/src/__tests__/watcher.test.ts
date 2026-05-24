@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import {
   clearSubscriptions,
   eventSubMap,
@@ -196,6 +196,63 @@ describe('setupAccountWatcher', () => {
     expect(state.updates.some((u) => u.table === 'users')).toBe(true)
     // But initUserSubscriptions was NOT called.
     expect(state.subscribeCalls).toHaveLength(0)
+  })
+
+  describe('Realtime channel reconnect', () => {
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('re-subscribes after a CHANNEL_ERROR status', async () => {
+      vi.useFakeTimers()
+      // setupAccountWatcher in beforeEach already created the initial channel.
+      expect(state.channelCreationCount).toBe(1)
+      expect(state.channelSubscribeCallbacks).toHaveLength(1)
+
+      // Simulate the WebSocket dropping.
+      state.channelSubscribeCallbacks[0]('CHANNEL_ERROR', new Error('connection lost'))
+
+      // Watcher tears down the dead channel immediately.
+      expect(state.removeChannelCount).toBe(1)
+      // ...but does NOT recreate it synchronously (waits for the backoff).
+      expect(state.channelCreationCount).toBe(1)
+
+      // After the backoff delay, the watcher creates a fresh channel and
+      // re-attaches all four handlers.
+      await vi.advanceTimersByTimeAsync(5100)
+      expect(state.channelCreationCount).toBe(2)
+      expect(state.channelHandlers.size).toBe(4)
+    })
+
+    it('also reconnects on CLOSED and TIMED_OUT statuses', async () => {
+      vi.useFakeTimers()
+      state.channelSubscribeCallbacks[0]('CLOSED')
+      await vi.advanceTimersByTimeAsync(5100)
+      expect(state.channelCreationCount).toBe(2)
+
+      state.channelSubscribeCallbacks[1]('TIMED_OUT')
+      await vi.advanceTimersByTimeAsync(5100)
+      expect(state.channelCreationCount).toBe(3)
+    })
+
+    it('does not pile up reconnect timers if CHANNEL_ERROR fires repeatedly before the backoff elapses', async () => {
+      vi.useFakeTimers()
+      state.channelSubscribeCallbacks[0]('CHANNEL_ERROR')
+      state.channelSubscribeCallbacks[0]('CHANNEL_ERROR')
+      state.channelSubscribeCallbacks[0]('CHANNEL_ERROR')
+      // First call tears down; subsequent on the dead callback must be ignored.
+      expect(state.removeChannelCount).toBe(1)
+      await vi.advanceTimersByTimeAsync(5100)
+      // Only ONE reconnect, not three.
+      expect(state.channelCreationCount).toBe(2)
+    })
+
+    it('SUBSCRIBED status is logged and does not trigger any reconnect', () => {
+      // The initial SUBSCRIBED already fired in beforeEach (synchronous mock).
+      expect(state.channelSubscribeStatuses).toContain('SUBSCRIBED')
+      expect(state.removeChannelCount).toBe(0)
+      expect(state.channelCreationCount).toBe(1)
+    })
   })
 
   it('handler logs at error level when handleNewUser throws (so reconciliation cycle sees it)', async () => {

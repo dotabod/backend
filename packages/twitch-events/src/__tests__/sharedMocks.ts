@@ -45,6 +45,14 @@ export const state: {
     (payload: { new?: Record<string, unknown>; old?: Record<string, unknown> }) => unknown
   >
   channelSubscribeStatuses: string[]
+  // Callbacks passed to `.subscribe()`. Tests fire them with a non-SUBSCRIBED
+  // status (CHANNEL_ERROR/CLOSED/TIMED_OUT) to drive the reconnect path.
+  channelSubscribeCallbacks: Array<(status: string, err?: Error) => void>
+  // Bumped each time the watcher calls `supabase.channel(...)`. Starts at 0;
+  // setupAccountWatcher() bumps to 1, each reconnect bumps further.
+  channelCreationCount: number
+  // Bumped each time the watcher calls `supabase.removeChannel(...)`.
+  removeChannelCount: number
   // If non-empty, sbBuilder.single() on the `accounts` table shifts the next
   // entry off this queue. Lets tests script per-call lookup behavior (e.g.
   // first lookup returns null, second returns a row) and inject transient DB
@@ -77,6 +85,9 @@ export const state: {
   addModeratorCalls: [],
   channelHandlers: new Map(),
   channelSubscribeStatuses: [],
+  channelSubscribeCallbacks: [],
+  channelCreationCount: 0,
+  removeChannelCount: 0,
   accountsLookupResults: [],
   streamError: null,
 }
@@ -101,6 +112,9 @@ export function resetState() {
   state.addModeratorCalls = []
   state.channelHandlers = new Map()
   state.channelSubscribeStatuses = []
+  state.channelSubscribeCallbacks = []
+  state.channelCreationCount = 0
+  state.removeChannelCount = 0
   state.accountsLookupResults = []
   state.streamError = null
 }
@@ -169,6 +183,7 @@ function realtimeChannelMock(): RealtimeChannelMock {
     },
     subscribe: (cb) => {
       state.channelSubscribeStatuses.push('SUBSCRIBED')
+      if (cb) state.channelSubscribeCallbacks.push(cb)
       cb?.('SUBSCRIBED')
       return channel
     },
@@ -178,7 +193,14 @@ function realtimeChannelMock(): RealtimeChannelMock {
 
 const supabaseMock = {
   from: (table: string) => sbBuilder(table),
-  channel: () => realtimeChannelMock(),
+  channel: () => {
+    state.channelCreationCount++
+    return realtimeChannelMock()
+  },
+  removeChannel: (_channel: unknown) => {
+    state.removeChannelCount++
+    return 'ok' as const
+  },
 }
 
 const logger = {
