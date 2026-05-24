@@ -18,7 +18,7 @@ import { emitMinimapBlockerStatus } from './GSIHandler'
 import type { GSIServerInterface } from './GSIServerTypes'
 import { newData, processChanges } from './globalEventEmitter'
 import { gsiHandlers } from './lib/consts'
-import { getAccountsFromMatch } from './lib/getAccountsFromMatch'
+import { MatchDataService } from './lib/matchData'
 import { remindUnresolvedMatches } from './lib/remindUnresolvedMatches'
 import { deleteClipsBatch } from './lib/twitchUtils'
 import { recordOverlayFirstSeen } from './setupSignals'
@@ -183,7 +183,7 @@ class GSIServer implements GSIServerInterface {
       const dotaClient = user.gsi
       const inv = Object.values(dotaClient?.items ?? {})
       const items: Item[] = inv.slice(0, 9)
-      const { matchPlayers } = await getAccountsFromMatch({ gsi: dotaClient })
+      const roster = await new MatchDataService(user).resolveRoster()
 
       const messageToSend = {
         items: items.map((item) => item.name),
@@ -192,7 +192,7 @@ class GSIServer implements GSIServerInterface {
         abilities: dotaClient?.abilities
           ? Object.values(dotaClient?.abilities).map((ability: Ability) => ability.name)
           : [],
-        heroes: matchPlayers.map((player) => player.heroid),
+        heroes: roster.players.map((p) => p.heroId),
       }
 
       res.status(200).json(messageToSend)

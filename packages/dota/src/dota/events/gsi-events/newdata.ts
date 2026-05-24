@@ -28,7 +28,7 @@ import { checkPassiveTp } from '../../lib/checkPassiveTp'
 import { calculateManaSaved } from '../../lib/checkTreadToggle'
 import { draftStartByMatchId } from '../../lib/consts'
 import { DelayedCommands } from '../../lib/DelayedCommands'
-import { getAccountsFromMatch } from '../../lib/getAccountsFromMatch'
+import { MatchDataService } from '../../lib/matchData'
 import { getSpectatorPlayers } from '../../lib/getSpectatorPlayers'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import { isSpectator } from '../../lib/isSpectator'
@@ -558,9 +558,10 @@ const _saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
     return
   }
 
-  const { matchPlayers } = await getAccountsFromMatch({
-    gsi: dotaClient.client.gsi,
-  })
+  // Preserves the legacy snake_case `Players` shape because the `dump` collection
+  // may be read by external analytics tooling outside this repo. Migrate to RosterPlayer
+  // shape once external consumers are confirmed.
+  const matchPlayers = await new MatchDataService(dotaClient.client).getMatchPlayers()
 
   const keysToSave = [
     'map',
@@ -629,16 +630,14 @@ const _maybeSendTooltipData = async (dotaClient: GSIHandlerType) => {
 
   const inv = Object.values(items ?? {})
   const backpackItems: Item[] = inv.slice(0, 9)
-  const { matchPlayers } = await getAccountsFromMatch({
-    gsi: dotaClient.client.gsi,
-  })
+  const roster = await new MatchDataService(dotaClient.client).resolveRoster()
 
   const messageToSend = {
     items: backpackItems.map((item) => item.name),
     neutral: items?.neutral0?.name,
     hero: hero?.id,
     abilities: abilities ? Object.values(abilities).map((ability: Ability) => ability.name) : [],
-    heroes: matchPlayers.map((player) => player.heroid),
+    heroes: roster.players.map((p) => p.heroId),
   }
   return sendExtensionPubSubBroadcastMessageIfChanged(dotaClient, messageToSend)
 }
