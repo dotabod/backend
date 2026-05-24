@@ -25,7 +25,7 @@
     "cannotResolveCurrentMatch": "Cannot resolve the current ongoing match. Wait for the game to end or use !won / !lost without a match ID for pending resolutions.",
     "error": "Hindi maumpisahan ang mga pusta. $t(refreshToken)",
     "lost": "Talo tayo, gg nt {{emote}} go next",
-    "manualResolution": "Disconnected before the match ended. {{details}} Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
+    "manualResolution": "Disconnected before the match ended. {{- details}} Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
     "manualResolutionError": "Error resolving bet manually {{emote}}",
     "manualResolutionExpired": "Previous match bet expired and was refunded (mods not doing their jobs, next time use !won or !lost) {{emote}}",
     "manualResolutionSuccess_lost": "Match {{matchId}} manually resolved as LOST by @{{username}}",
@@ -35,7 +35,7 @@
     "notScored": "Hindi napuntosan ang laban {{emote}} Walang dagdag o bawas sa MMR para sa laban na {{matchId}}.",
     "noUnresolvedMatches": "No unresolved matches found {{emote}}",
     "open": "Pustahan na {{emote}}",
-    "recentMatches": "Recent matches: {{matchList}} {{emote}}",
+    "recentMatches": "Recent matches: {{- matchList}} {{emote}}",
     "remade": "Palit hero {{emote}} Taya kay {{- oldHeroName}} nabalik at bagong taya kay {{- newHeroName}} bukas {{emote2}}",
     "retroactiveAlreadyMatches": "",
     "retroactiveAlreadyMatches_lost": "Match {{matchId}} is already marked as LOST {{emote}}",
@@ -49,10 +49,10 @@
     "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
     "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
     "won": "Panalo tayo {{emote}} sundan pa",
-    "unresolvedMatches_one": "{{count}} unresolved match {{emote}} Use !won or !lost with match ID: {{matchList}}",
-    "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{matchList}}",
-    "unresolvedReminder_one": "Reminder: {{count}} match still needs resolving {{emote}} Use !won or !lost with match ID: {{matchList}}",
-    "unresolvedReminder_other": "Reminder: {{count}} matches still need resolving {{emote}} Use !won or !lost with match ID: {{matchList}}"
+    "unresolvedMatches_one": "{{count}} unresolved match {{emote}} Use !won or !lost with match ID: {{- matchList}}",
+    "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{- matchList}}",
+    "unresolvedReminder_one": "Reminder: {{count}} match still needs resolving {{emote}} Use !won or !lost with match ID: {{- matchList}}",
+    "unresolvedReminder_other": "Reminder: {{count}} matches still need resolving {{emote}} Use !won or !lost with match ID: {{- matchList}}"
   },
   "bounties": {
     "pickup": "+$t(bounties.totalGold, {\"count\": {{bountyValue}} }) galing bounty ({{totalBounties}}/4) {{emote}} Salamat {{heroNames}} {{emote2}}",
