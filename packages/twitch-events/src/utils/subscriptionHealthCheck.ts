@@ -349,20 +349,8 @@ async function fetchSubscriptionsForHealthCheck(): Promise<void> {
   logger.info('[TWITCHEVENTS] Fetched current subscriptions', { count: fetchedCount })
 }
 
-/**
- * Entry point for CLI usage
- * Can be run directly: npm run subscription-health-check
- */
-if (require.main === module) {
-  runSubscriptionHealthCheck()
-    .then((result) => {
-      // Exit with error code if critical issues were found
-      process.exit(result.criticalFixCount > 0 ? 1 : 0)
-    })
-    .catch((error) => {
-      logger.error('[TWITCHEVENTS] Health check failed', {
-        error: error instanceof Error ? error.message : String(error),
-      })
-      process.exit(1)
-    })
-}
+// CLI entry-point lives in src/scripts/runSubscriptionHealthCheck.ts so this
+// module stays pure ESM. The previous `if (require.main === module)` gate
+// here injected a CommonJS marker into the bundled dist/index.js — combined
+// with top-level await elsewhere in the bundle (e.g. handleNewUser.ts:5),
+// Node 24 refused to load the bundle with `ERR_AMBIGUOUS_MODULE_SYNTAX`.

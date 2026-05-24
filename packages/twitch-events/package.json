@@ -15,7 +15,7 @@
     "docker:development": "tsx watch src/index.ts",
     "prebuild": "rm -rf dist",
     "build": "vp pack src/index.ts -f esm -d dist --sourcemap",
-    "subscription-health-check": "tsx src/utils/subscriptionHealthCheck.ts",
+    "subscription-health-check": "tsx src/scripts/runSubscriptionHealthCheck.ts",
     "test": "vp test",
     "typecheck": "tsc --noEmit"
   },
