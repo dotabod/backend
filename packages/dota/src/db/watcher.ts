@@ -49,7 +49,12 @@ class SetupSupabase {
           const client = findUser(oldObj.id)
           if (client) {
             logger.info('[WATCHER USER] Deleting user', { name: client.name })
+            const accountId = client.Account?.providerAccountId
             await clearCacheForUser(client)
+            // User row is gone — allow a future re-onboarding under the same
+            // id to bypass the negative cache.
+            invalidTokens.delete(client.token)
+            if (accountId) invalidTokens.delete(accountId)
             return
           }
         },
@@ -177,14 +182,15 @@ class SetupSupabase {
           const oldObj = payload.old
 
           if (newObj.requires_refresh === true && oldObj.requires_refresh === false) {
-            // Persist both keyspaces: getDBUser is called with either the user.id
-            // (GSI path) or the providerAccountId (Twitch chat / tooltips path).
-            invalidTokens.add(newObj.userId)
-            if (newObj.providerAccountId) invalidTokens.add(newObj.providerAccountId)
             const client = findUser(newObj.userId)
             if (client) {
               await clearCacheForUser(client)
             }
+            // Persist both keyspaces: getDBUser is called with either the user.id
+            // (GSI path) or the providerAccountId (Twitch chat / tooltips path).
+            // Add AFTER clearCacheForUser — see ban branch for rationale.
+            invalidTokens.add(newObj.userId)
+            if (newObj.providerAccountId) invalidTokens.add(newObj.providerAccountId)
             return
           }
 
@@ -241,16 +247,32 @@ class SetupSupabase {
           // drop the in-memory GSIHandler so the next GSI POST hits
           // getDBUser's banned-check and is rejected.
           if (!oldObj.banned_at && newObj.banned_at) {
-            invalidTokens.add(newObj.id)
             const client = findUser(newObj.id)
-            const Account = client?.Account
-            if (Account?.providerAccountId) {
-              invalidTokens.add(Account.providerAccountId)
-            }
+            const accountId = client?.Account?.providerAccountId
             if (client) {
               logger.info('[WATCHER USER] Banning user', { name: client.name })
               await clearCacheForUser(client)
             }
+            // Add AFTER clearCacheForUser so the token stays in the negative
+            // cache. (Until clearCacheForUser stopped touching invalidTokens
+            // these adds were silently undone.)
+            invalidTokens.add(newObj.id)
+            if (accountId) invalidTokens.add(accountId)
+            return
+          }
+
+          // Unban: banned_at transitioned set → null. Drop the negative-cache
+          // entries so the next GSI POST / chat message can resolve normally.
+          // clearCacheForUser already ran on ban; the user just needs to be
+          // allowed through again.
+          if (oldObj.banned_at && !newObj.banned_at) {
+            invalidTokens.delete(newObj.id)
+            // We may not have a live client (it was cleared on ban). Look up
+            // the providerAccountId so both keyspaces are cleared.
+            const client = findUser(newObj.id)
+            const accountId = client?.Account?.providerAccountId
+            if (accountId) invalidTokens.delete(accountId)
+            logger.info('[WATCHER USER] Unbanning user', { userId: newObj.id })
             return
           }
 
@@ -487,9 +509,15 @@ class SetupSupabase {
 
             // Store the steam32Id before clearing cache
             const deletedSteam32Id = oldObj.steam32Id
+            const accountId = client.Account?.providerAccountId
 
             // A delete will reset their status in memory so they can reconnect anything
             await clearCacheForUser(client)
+            // Allow re-onboarding after the steam unlink (clearCacheForUser no
+            // longer touches invalidTokens, so the negative-cache entry must
+            // be dropped explicitly).
+            invalidTokens.delete(client.token)
+            if (accountId) invalidTokens.delete(accountId)
 
             // We try deleting those users so they can attempt a new connection
             if (Array.isArray(oldObj.connectedUserIds)) {
@@ -502,7 +530,10 @@ class SetupSupabase {
                   if (connectedClient.multiAccount === deletedSteam32Id) {
                     connectedClient.multiAccount = undefined
                   }
+                  const connectedAccountId = connectedClient.Account?.providerAccountId
                   await clearCacheForUser(connectedClient)
+                  invalidTokens.delete(connectedClient.token)
+                  if (connectedAccountId) invalidTokens.delete(connectedAccountId)
                 }
               }
             }

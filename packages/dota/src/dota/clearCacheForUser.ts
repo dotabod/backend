@@ -1,9 +1,16 @@
 import { getAuthProvider } from '@dotabod/shared-utils'
 import type { SocketClient } from '../types'
 import { deleteRedisData } from './GSIHandler'
-import { gsiHandlers, invalidTokens, twitchIdToToken, twitchNameToToken } from './lib/consts'
+import { gsiHandlers, twitchIdToToken, twitchNameToToken } from './lib/consts'
 
-// three types of in-memory cache exists
+// Tear down all in-memory caches for a user.
+//
+// Note: this does NOT touch `invalidTokens` — the caller decides whether the
+// token should be invalidated (ban / requires_refresh on) or re-enabled
+// (re-auth / DELETE for cleanup). Mixing both responsibilities here caused a
+// real bug: the watcher's ban branch added a token to invalidTokens immediately
+// before calling clearCacheForUser, which then deleted it — silently undoing
+// the watcher's fast-path rejection. See packages/dota/src/db/watcher.ts.
 export async function clearCacheForUser(client?: SocketClient) {
   if (!client) return
 
@@ -24,10 +31,6 @@ export async function clearCacheForUser(client?: SocketClient) {
   await deleteRedisData(client)
 
   gsiHandlers.delete(client.token)
-
-  // Also remove from invalidTokens set to allow re-authentication
-  invalidTokens.delete(client.token)
-  if (accountId) invalidTokens.delete(accountId)
 
   return true
 }

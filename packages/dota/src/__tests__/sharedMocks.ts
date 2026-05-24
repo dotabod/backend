@@ -23,6 +23,7 @@ export function buildSharedUtilsMock(opts: {
   supabase: SupabaseLike
   logger: LoggerLike
   getTwitchAPI?: () => Promise<unknown>
+  getAuthProvider?: () => unknown
   checkBotStatus?: () => Promise<boolean>
   trackDisableReason?: (
     userId: string,
@@ -64,7 +65,7 @@ export function buildSharedUtilsMock(opts: {
     getSupabaseClient: () => opts.supabase,
     logger: opts.logger,
     getTwitchAPI: opts.getTwitchAPI ?? (async () => ({})),
-    getAuthProvider: () => ({}),
+    getAuthProvider: opts.getAuthProvider ?? (() => ({})),
     getTwitchHeaders: () => ({}),
     getTwitchTokens: async () => ({ access_token: '', refresh_token: '' }),
     hasTokens: () => true,
