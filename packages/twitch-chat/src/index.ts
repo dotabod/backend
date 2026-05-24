@@ -269,21 +269,9 @@ async function disableUser(
       break
   }
 
-  // Track the disable reason before disabling
-  await trackDisableReason(user.userId, 'commandDisable', 'CHAT_PERMISSION_DENIED', metadata)
-
-  // Disable the user in database
-  await supabase.from('settings').upsert(
-    {
-      userId: user.userId,
-      key: 'commandDisable',
-      value: true,
-      updated_at: new Date().toISOString(),
-    },
-    {
-      onConflict: 'userId, key',
-    },
-  )
+  await trackDisableReason(user.userId, 'commandDisable', 'CHAT_PERMISSION_DENIED', metadata, {
+    disabledValue: true,
+  })
 
   logger.error('Failed to send chat message. Disabled user', {
     providerAccountId,

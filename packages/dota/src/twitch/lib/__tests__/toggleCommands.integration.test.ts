@@ -31,19 +31,17 @@ describe('!beta', () => {
 })
 
 describe('!toggle', () => {
-  it('disables the bot by persisting commandDisable=true from the default (off)', async () => {
+  it('disables the bot via trackDisableReason with disabledValue:true (single write)', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!toggle', userName: 'modUser' }))
-    expect(state.upsertCalls).toHaveLength(1)
-    expect(state.upsertCalls[0].values).toMatchObject({
-      key: DBSettings.commandDisable,
-      value: true,
-    })
+    // No explicit settings upsert — trackDisableReason performs the write internally.
+    expect(state.upsertCalls).toHaveLength(0)
     expect(state.chatSayCalls).toHaveLength(0)
     expect(state.trackDisableReasonCalls).toHaveLength(1)
     expect(state.trackDisableReasonCalls[0]).toMatchObject({
       settingKey: DBSettings.commandDisable,
       reason: 'MANUAL_DISABLE',
       metadata: { disabled_by: 'modUser', command: '!toggle' },
+      opts: { disabledValue: true },
     })
     expect(state.trackResolveReasonCalls).toHaveLength(0)
   })

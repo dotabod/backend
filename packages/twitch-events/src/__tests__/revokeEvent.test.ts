@@ -56,9 +56,17 @@ describe('revokeEvent', () => {
     expect(
       state.updates.some((u) => u.table === 'accounts' && u.values.requires_refresh === true),
     ).toBe(true)
+    // Single audited write via trackDisableReason with disabledValue:true —
+    // no separate settings upsert (avoids watcher double-fire).
+    expect(state.trackDisableCalls).toHaveLength(1)
+    expect(state.trackDisableCalls[0]).toMatchObject({
+      settingKey: 'commandDisable',
+      reason: 'TOKEN_REVOKED',
+      opts: { disabledValue: true },
+    })
     expect(
       state.upserts.some((u) => u.table === 'settings' && u.values.key === 'commandDisable'),
-    ).toBe(true)
+    ).toBe(false)
   })
 
   it('does not re-disable a channel that is already disabled', async () => {
@@ -69,5 +77,6 @@ describe('revokeEvent', () => {
     await new Promise((r) => realSetTimeout(r, 5))
 
     expect(state.upserts).toHaveLength(0)
+    expect(state.trackDisableCalls).toHaveLength(0)
   })
 })

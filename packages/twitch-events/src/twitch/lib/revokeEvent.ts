@@ -73,22 +73,15 @@ async function disableChannel(broadcasterId: string) {
 
   logger.info('twitch-events Disabling user', { twitchId: broadcasterId })
 
-  // Track the disable reason before disabling
-  await trackDisableReason(user.userId, 'commandDisable', 'TOKEN_REVOKED', {
-    requires_reauth: true,
-    additional_info: 'User revoked app permissions on Twitch',
-  })
-
-  await supabase.from('settings').upsert(
+  await trackDisableReason(
+    user.userId,
+    'commandDisable',
+    'TOKEN_REVOKED',
     {
-      userId: user.userId,
-      key: 'commandDisable',
-      value: true,
-      updated_at: new Date().toISOString(),
+      requires_reauth: true,
+      additional_info: 'User revoked app permissions on Twitch',
     },
-    {
-      onConflict: 'userId, key',
-    },
+    { disabledValue: true },
   )
 }
 

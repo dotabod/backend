@@ -18,28 +18,32 @@ commandHandler.registerCommand('toggle', {
     )
 
     const userId = message.channel.client.token
-    const newValue = !isBotDisabled
 
-    if (newValue) {
-      await trackDisableReason(userId, DBSettings.commandDisable, 'MANUAL_DISABLE', {
-        disabled_by: message.user.name,
-        command: '!toggle',
-        additional_info: `Manually disabled by ${message.user.name} via chat command`,
-      })
+    if (!isBotDisabled) {
+      await trackDisableReason(
+        userId,
+        DBSettings.commandDisable,
+        'MANUAL_DISABLE',
+        {
+          disabled_by: message.user.name,
+          command: '!toggle',
+          additional_info: `Manually disabled by ${message.user.name} via chat command`,
+        },
+        { disabledValue: true },
+      )
     } else {
       await trackResolveReason(userId, DBSettings.commandDisable, false)
+      await supabase.from('settings').upsert(
+        {
+          userId,
+          key: DBSettings.commandDisable,
+          value: false,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'userId, key',
+        },
+      )
     }
-
-    await supabase.from('settings').upsert(
-      {
-        userId,
-        key: DBSettings.commandDisable,
-        value: newValue,
-        updated_at: new Date().toISOString(),
-      },
-      {
-        onConflict: 'userId, key',
-      },
-    )
   },
 })
