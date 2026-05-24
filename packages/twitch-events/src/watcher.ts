@@ -138,8 +138,23 @@ export function setupAccountWatcher(): void {
           return
         }
         try {
-          // Only resubscribe events if oldUser.displayName was falsy (i.e. brand-new user).
-          await handleNewUser(account.providerAccountId, !oldUser.displayName)
+          // Rename-only path: refresh displayName/name via the Twitch API
+          // (inside handleNewUser) without re-running EventSub registration.
+          // The previous `!oldUser.displayName` resubscribe trigger only
+          // existed to compensate for the frontend writing `displayName=NULL`
+          // on initial signup — that's fixed by the
+          // TwitchProvider.profile() override in frontend/src/lib/auth.ts.
+          // Initial subscription is the INSERT:accounts handler's job.
+          if (!oldUser.displayName) {
+            // Observability: log if we still see legacy NULL displayName rows
+            // in production after the frontend fix has been deployed. If this
+            // doesn't fire for ~1 week post-deploy the warn can be removed.
+            logger.warn(
+              '[WATCHER] UPDATE users with legacy empty displayName (frontend not deployed?)',
+              { userId: newUser.id },
+            )
+          }
+          await handleNewUser(account.providerAccountId, false)
         } catch (error) {
           logger.error('[WATCHER] UPDATE users handleNewUser failed', {
             providerAccountId: account.providerAccountId,

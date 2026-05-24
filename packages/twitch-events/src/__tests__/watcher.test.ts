@@ -144,6 +144,60 @@ describe('setupAccountWatcher', () => {
     expect(state.subscribeCalls).toHaveLength(0)
   })
 
+  it('UPDATE:users handles a Twitch rename (techleed → jamesleed) via Helix reconcile', async () => {
+    // Rename flow:
+    //   1. Frontend's jwt() callback detects preferred_username changed and
+    //      writes users.displayName = 'JAMESLEED' (login is still stale).
+    //   2. That UPDATE arrives here: old.{name='techleed', displayName='TECHLEED'},
+    //      new.{name='techleed', displayName='JAMESLEED'}.
+    //   3. Handler calls handleNewUser(providerAccountId, false), which hits
+    //      /helix/users via the mocked botApi and writes back the canonical
+    //      lowercase login + display_name. The next UPDATE:users (from THIS
+    //      write) will have matching old/new and short-circuit at the guard.
+    state.streamer = { displayName: 'JAMESLEED', name: 'jamesleed' }
+    state.accountsLookupResults = [
+      { data: { providerAccountId: 'tw-rename' }, error: null }, // watcher's lookup
+      { data: { userId: 'u-rename' }, error: null }, // handleNewUser's findUserIdByProviderAccount
+    ]
+    await fire('UPDATE', 'users', {
+      new: { id: 'u-rename', name: 'techleed', displayName: 'JAMESLEED' },
+      old: { id: 'u-rename', name: 'techleed', displayName: 'TECHLEED' },
+    })
+    // handleNewUser ran and wrote the Helix-canonical name + displayName.
+    const userUpdate = state.updates.find((u) => u.table === 'users')
+    expect(userUpdate?.values.name).toBe('jamesleed')
+    expect(userUpdate?.values.displayName).toBe('JAMESLEED')
+    // EventSub subs are keyed by Twitch user-id (stable across renames) — no
+    // re-registration needed on a rename, even though displayName changed.
+    expect(state.subscribeCalls).toHaveLength(0)
+  })
+
+  it('UPDATE:users does NOT resubscribe when old displayName was empty (rename-only handler)', async () => {
+    // Pre-cleanup: the handler treated `!oldUser.displayName` as a "brand-new
+    // user" signal and forced a full EventSub re-registration via
+    // handleNewUser(..., true). That signal only existed to compensate for
+    // the frontend writing `displayName=NULL` on initial signup, which is
+    // now fixed (TwitchProvider.profile() override hits /helix/users so
+    // displayName is set from row creation). Initial subscription is the
+    // INSERT:accounts handler's job; this handler only refreshes the
+    // displayName/name fields via the Twitch API call inside handleNewUser.
+    state.streamer = { displayName: 'New', name: 'newlogin' }
+    // First lookup: watcher selects providerAccountId. Second lookup:
+    // handleNewUser → findUserIdByProviderAccount selects userId.
+    state.accountsLookupResults = [
+      { data: { providerAccountId: 'tw-u1' }, error: null },
+      { data: { userId: 'u-1' }, error: null },
+    ]
+    await fire('UPDATE', 'users', {
+      new: { id: 'u-1', name: 'newlogin', displayName: 'New' },
+      old: { id: 'u-1', name: 'newlogin', displayName: null },
+    })
+    // Profile update DID run (handleNewUser was called with resubscribe=false).
+    expect(state.updates.some((u) => u.table === 'users')).toBe(true)
+    // But initUserSubscriptions was NOT called.
+    expect(state.subscribeCalls).toHaveLength(0)
+  })
+
   it('handler logs at error level when handleNewUser throws (so reconciliation cycle sees it)', async () => {
     // Force initUserSubscriptions to return false → handleNewUser throws.
     state.streamer = { displayName: 'Broken', name: 'broken' }

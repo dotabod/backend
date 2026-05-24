@@ -48,8 +48,11 @@ export const state: {
   // If non-empty, sbBuilder.single() on the `accounts` table shifts the next
   // entry off this queue. Lets tests script per-call lookup behavior (e.g.
   // first lookup returns null, second returns a row) and inject transient DB
-  // errors. Falls back to `dbUser` (with error: null) when the queue is empty.
-  accountsLookupResults: Array<{ data: { userId: string } | null; error: Error | null }>
+  // errors. Each entry's `data` shape depends on which call site you're
+  // mocking — `findUserIdByProviderAccount` selects `userId`, the watcher's
+  // UPDATE:users handler selects `providerAccountId`. Falls back to `dbUser`
+  // (with error: null) when the queue is empty.
+  accountsLookupResults: Array<{ data: Record<string, unknown> | null; error: Error | null }>
   // When set, botApi.streams.getStreamByUserId throws this error. Lets tests
   // verify the handleNewUser path continues into subscription registration
   // even when the Twitch profile-fetch step fails.
