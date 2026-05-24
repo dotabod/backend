@@ -1,4 +1,4 @@
-import { logger, trackDisableReason } from '@dotabod/shared-utils'
+import { logger, recordDisableNotification } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { redisClient } from '../../../db/redisInstance'
 import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME, getValueOrDefault } from '../../../settings'
@@ -481,23 +481,16 @@ async function checkAccountSharing(client: SocketClient, matchId: string): Promi
       const lastLogged = accountSharingLogCache.get(logCacheKey)
 
       if (!lastLogged || currentTime - lastLogged > ACCOUNT_SHARING_LOG_INTERVAL) {
-        // Log to database for frontend visibility
-        await trackDisableReason(
-          currentToken,
-          'commandDisable', // This won't actually disable the setting, just logs the notification
-          'ACCOUNT_SHARING',
-          {
-            blocked_steam32_id: steam32Id.toString(),
-            primary_steam32_id: activeSteamIds[0],
-            all_active_steam_ids: activeSteamIds,
-            account_name: client.gsi?.player?.name || 'Unknown',
-            conflict_detected_at: new Date(currentTime).toISOString(),
-            current_match_id: matchId,
-            block_reason: 'Multiple Steam accounts sending GSI data to same token',
-          },
-        )
+        await recordDisableNotification(currentToken, 'commandDisable', 'ACCOUNT_SHARING', {
+          blocked_steam32_id: steam32Id.toString(),
+          primary_steam32_id: activeSteamIds[0],
+          all_active_steam_ids: activeSteamIds,
+          account_name: client.gsi?.player?.name || 'Unknown',
+          conflict_detected_at: new Date(currentTime).toISOString(),
+          current_match_id: matchId,
+          block_reason: 'Multiple Steam accounts sending GSI data to same token',
+        })
 
-        // Update log cache
         accountSharingLogCache.set(logCacheKey, currentTime)
       }
 
