@@ -1,5 +1,5 @@
 import type { RedisLike } from '../invalidTokens.ts'
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 
 // dbMocks installs vi.doMock('@dotabod/shared-utils') at import time, so any
 // downstream module that imports `supabase` / `logger` from shared-utils picks
@@ -10,7 +10,9 @@ const { dbState, resetDbState } = await import('../../../db/__tests__/dbMocks.ts
 
 const {
   InvalidTokensCache,
+  EPHEMERAL_TTL_MS,
   REDIS_KEY_PREFIX,
+  TTL_MS,
   TTL_SECONDS,
   hydrateInvalidTokensFromDb,
   hydrateInvalidTokensFromRedis,
@@ -119,6 +121,116 @@ describe('InvalidTokensCache (class API)', () => {
     expect(cache.has('seeded-1')).toBe(true)
     expect(cache.has('seeded-2')).toBe(true)
     expect(calls).toEqual([])
+  })
+})
+
+describe('InvalidTokensCache → in-memory TTL & lazy eviction', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'))
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('has() lazy-evicts an entry once its in-memory TTL elapses (matches Redis 24h expiry)', () => {
+    const { client } = makeFakeRedis({ isReady: false })
+    const cache = new InvalidTokensCache(() => client)
+
+    cache.add('user-X')
+    expect(cache.has('user-X')).toBe(true)
+
+    // 23h59m59s in — still cached.
+    vi.advanceTimersByTime(TTL_MS - 1000)
+    expect(cache.has('user-X')).toBe(true)
+
+    // Cross the 24h boundary — entry should be lazy-evicted on the next read.
+    vi.advanceTimersByTime(2000)
+    expect(cache.has('user-X')).toBe(false)
+  })
+
+  it('addEphemeral() uses the shorter 5m TTL so transient DB blips recover without a deploy', () => {
+    const { client } = makeFakeRedis({ isReady: false })
+    const cache = new InvalidTokensCache(() => client)
+
+    cache.addEphemeral('blip-token')
+    expect(cache.has('blip-token')).toBe(true)
+
+    // Just before the 5m horizon.
+    vi.advanceTimersByTime(EPHEMERAL_TTL_MS - 1000)
+    expect(cache.has('blip-token')).toBe(true)
+
+    // After the 5m horizon — gone.
+    vi.advanceTimersByTime(2000)
+    expect(cache.has('blip-token')).toBe(false)
+
+    // Persistent add(...) entries from another path are NOT evicted at 5m —
+    // they stay until the full 24h TTL.
+    cache.add('persistent-token')
+    vi.advanceTimersByTime(EPHEMERAL_TTL_MS)
+    expect(cache.has('persistent-token')).toBe(true)
+  })
+
+  it('pre-seeded falsy guards never expire (Number.POSITIVE_INFINITY sentinel)', () => {
+    const { client } = makeFakeRedis({ isReady: false })
+    const cache = new InvalidTokensCache(() => client)
+
+    // Jump 10 years forward.
+    vi.advanceTimersByTime(10 * 365 * 24 * 60 * 60 * 1000)
+
+    expect(cache.has('')).toBe(true)
+    expect(cache.has(null)).toBe(true)
+    expect(cache.has(undefined)).toBe(true)
+    expect(cache.has(0)).toBe(true)
+  })
+
+  it('clear() re-seeds with infinite-expiry guards even after time has moved on', () => {
+    const { client } = makeFakeRedis({ isReady: false })
+    const cache = new InvalidTokensCache(() => client)
+    cache.add('a')
+
+    vi.advanceTimersByTime(TTL_MS + 1000)
+    expect(cache.has('a')).toBe(false) // 'a' expired
+
+    cache.clear()
+    // Guards restored and still infinite.
+    vi.advanceTimersByTime(TTL_MS * 2)
+    expect(cache.has('')).toBe(true)
+    expect(cache.has(null)).toBe(true)
+  })
+
+  it('hydrate(value) gets a fresh TTL so the in-memory layer outlives Redis by at most one full TTL', () => {
+    const { client } = makeFakeRedis({ isReady: false })
+    const cache = new InvalidTokensCache(() => client)
+
+    cache.hydrate('hydrated-tok')
+    expect(cache.has('hydrated-tok')).toBe(true)
+
+    vi.advanceTimersByTime(TTL_MS - 1000)
+    expect(cache.has('hydrated-tok')).toBe(true)
+
+    vi.advanceTimersByTime(2000)
+    expect(cache.has('hydrated-tok')).toBe(false)
+  })
+
+  it('re-adding a token resets its TTL (so a fresh watcher event extends the window)', () => {
+    const { client } = makeFakeRedis({ isReady: false })
+    const cache = new InvalidTokensCache(() => client)
+
+    cache.add('rolling-tok')
+
+    // Halfway through original TTL.
+    vi.advanceTimersByTime(TTL_MS / 2)
+    // Re-add resets expiry.
+    cache.add('rolling-tok')
+
+    // Original-TTL boundary — would have been evicted without the re-add.
+    vi.advanceTimersByTime(TTL_MS / 2 + 1000)
+    expect(cache.has('rolling-tok')).toBe(true)
+
+    // Full TTL after the re-add — now evicted.
+    vi.advanceTimersByTime(TTL_MS / 2)
+    expect(cache.has('rolling-tok')).toBe(false)
   })
 })
 

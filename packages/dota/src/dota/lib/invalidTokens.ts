@@ -5,8 +5,13 @@ import { redisClient } from '../../db/redisInstance'
 // so persist the negative cache to Redis with a TTL. Hot-path `has()` stays in-memory.
 export const REDIS_KEY_PREFIX = 'dotabod:invalid_token:'
 export const TTL_SECONDS = 24 * 60 * 60
+export const TTL_MS = TTL_SECONDS * 1000
+// Transient (in-memory only) entries use a shorter horizon so a DB blip doesn't
+// silently lock a user out for the full 24h.
+export const EPHEMERAL_TTL_MS = 5 * 60 * 1000
 
 const SEED_VALUES: readonly unknown[] = ['', null, undefined, 0]
+const NEVER_EXPIRES = Number.POSITIVE_INFINITY
 
 export interface RedisLike {
   isReady: boolean
@@ -15,20 +20,28 @@ export interface RedisLike {
 }
 
 export class InvalidTokensCache {
-  private readonly mem = new Set<unknown>(SEED_VALUES)
+  // value → expiry-timestamp-ms. NEVER_EXPIRES for pre-seeded falsy guards.
+  // Using a Map (not Set) so `has()` can lazy-evict entries whose TTL elapsed,
+  // keeping the in-memory layer in lockstep with Redis instead of outliving it.
+  private readonly mem = new Map<unknown, number>()
 
-  // Lazy getter so test harnesses that monkey-patch `redisClient.client` after
-  // module init still reach the live client. The production singleton wires
-  // this to `() => redisClient.client`.
-  constructor(private readonly getClient: () => RedisLike) {}
+  constructor(private readonly getClient: () => RedisLike) {
+    this.seed()
+  }
 
   has(value: unknown): boolean {
-    return this.mem.has(value)
+    const expiry = this.mem.get(value)
+    if (expiry === undefined) return false
+    if (Date.now() >= expiry) {
+      this.mem.delete(value)
+      return false
+    }
+    return true
   }
 
   /** Persistent invalid: confirmed missing/refresh-required user. Survives restarts. */
   add(value: unknown): this {
-    this.mem.add(value)
+    this.mem.set(value, Date.now() + TTL_MS)
     if (typeof value === 'string' && value.length > 0) {
       const client = this.getClient()
       if (client.isReady) {
@@ -41,13 +54,13 @@ export class InvalidTokensCache {
   }
 
   /**
-   * Transient invalid: in-memory only. Used when a DB outage prevents us from
-   * confirming whether the token is actually bad. Bounds log spam within a
-   * process lifetime without creating a 24h cross-deploy lockout if the error
-   * was transient.
+   * Transient invalid: in-memory only with a short TTL. Used when a DB outage
+   * prevents us from confirming whether the token is actually bad. Bounds log
+   * spam during the outage; the short TTL lets recovery happen automatically
+   * after the DB heals, without waiting for a deploy.
    */
   addEphemeral(value: unknown): this {
-    this.mem.add(value)
+    this.mem.set(value, Date.now() + EPHEMERAL_TTL_MS)
     return this
   }
 
@@ -68,14 +81,22 @@ export class InvalidTokensCache {
 
   clear(): void {
     this.mem.clear()
-    // Restore the pre-seeded falsy guards so test-harness resets don't leak a
-    // production behavior change (lookup with empty/undefined token).
-    for (const v of SEED_VALUES) this.mem.add(v)
+    this.seed()
   }
 
-  /** Boot-only: seed in-memory without writing back to Redis (preserves TTL). */
+  /**
+   * Boot-only: seed in-memory without writing back to Redis (preserves TTL).
+   * We approximate the remaining lifetime as a fresh TTL — exact remaining
+   * ttl would require a per-key PTTL round trip. Worst-case drift: the
+   * in-memory entry lives up to TTL longer than the Redis entry; lazy
+   * eviction in `has()` makes this self-correcting on the next miss.
+   */
   hydrate(value: string): void {
-    this.mem.add(value)
+    this.mem.set(value, Date.now() + TTL_MS)
+  }
+
+  private seed(): void {
+    for (const v of SEED_VALUES) this.mem.set(v, NEVER_EXPIRES)
   }
 }
 
