@@ -61,6 +61,10 @@ export const state: {
   // UPDATE:users handler selects `providerAccountId`. Falls back to `dbUser`
   // (with error: null) when the queue is empty.
   accountsLookupResults: Array<{ data: Record<string, unknown> | null; error: Error | null }>
+  // Same shape as accountsLookupResults but consumed by `users.single()` calls
+  // (e.g. handleNewUser's ban check). Falls back to `{ data: null, error: null }`
+  // — benign for tests that don't care about ban status.
+  usersLookupResults: Array<{ data: Record<string, unknown> | null; error: Error | null }>
   // When set, botApi.streams.getStreamByUserId throws this error. Lets tests
   // verify the handleNewUser path continues into subscription registration
   // even when the Twitch profile-fetch step fails.
@@ -89,6 +93,7 @@ export const state: {
   channelCreationCount: 0,
   removeChannelCount: 0,
   accountsLookupResults: [],
+  usersLookupResults: [],
   streamError: null,
 }
 
@@ -116,6 +121,7 @@ export function resetState() {
   state.channelCreationCount = 0
   state.removeChannelCount = 0
   state.accountsLookupResults = []
+  state.usersLookupResults = []
   state.streamError = null
 }
 
@@ -151,12 +157,21 @@ function sbBuilder(table: string) {
     },
     eq: () => b,
     single: async () => {
-      if (table !== 'accounts') return { data: null, error: null }
-      if (state.accountsLookupResults.length > 0) {
-        // biome-ignore lint/style/noNonNullAssertion: length-guarded
-        return state.accountsLookupResults.shift()!
+      if (table === 'accounts') {
+        if (state.accountsLookupResults.length > 0) {
+          // biome-ignore lint/style/noNonNullAssertion: length-guarded
+          return state.accountsLookupResults.shift()!
+        }
+        return { data: state.dbUser, error: null }
       }
-      return { data: state.dbUser, error: null }
+      if (table === 'users') {
+        if (state.usersLookupResults.length > 0) {
+          // biome-ignore lint/style/noNonNullAssertion: length-guarded
+          return state.usersLookupResults.shift()!
+        }
+        return { data: null, error: null }
+      }
+      return { data: null, error: null }
     },
     then: (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
       if (mode === 'update') state.updates.push({ table, values })

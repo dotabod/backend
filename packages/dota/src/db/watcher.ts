@@ -235,6 +235,25 @@ class SetupSupabase {
         async (payload: { new: Tables<'users'>; old: Tables<'users'> }) => {
           const newObj: Tables<'users'> = payload.new
           const oldObj: Tables<'users'> = payload.old
+
+          // Live ban: banned_at transitioned null → set. Invalidate cached
+          // tokens for both keyspaces (user.id and providerAccountId) and
+          // drop the in-memory GSIHandler so the next GSI POST hits
+          // getDBUser's banned-check and is rejected.
+          if (!oldObj.banned_at && newObj.banned_at) {
+            invalidTokens.add(newObj.id)
+            const client = findUser(newObj.id)
+            const Account = client?.Account
+            if (Account?.providerAccountId) {
+              invalidTokens.add(Account.providerAccountId)
+            }
+            if (client) {
+              logger.info('[WATCHER USER] Banning user', { name: client.name })
+              await clearCacheForUser(client)
+            }
+            return
+          }
+
           const client = findUser(newObj.id)
           if (!client) return
 

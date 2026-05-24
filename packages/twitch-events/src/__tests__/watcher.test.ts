@@ -29,6 +29,39 @@ beforeEach(() => {
 })
 
 describe('setupAccountWatcher', () => {
+  it("UPDATE:users banned_at null→set → stops the user's Twitch subscriptions", async () => {
+    // Seed an active EventSub registration for this user so we can verify
+    // the teardown actually ran (the no-subs path early-returns inside
+    // stopUserSubscriptions and would yield a false-pass).
+    seedSubscriptions('tw-banned', ['stream.online', 'channel.chat.message'])
+    state.accountsLookupResults = [
+      { data: { providerAccountId: 'tw-banned' }, error: null }, // watcher's ban-branch lookup
+    ]
+
+    await fire('UPDATE', 'users', {
+      new: { id: 'u-banned', banned_at: '2026-05-24T00:00:00.000Z' },
+      old: { id: 'u-banned', banned_at: null },
+    })
+
+    // Each seeded sub triggers a Twitch DELETE call.
+    const deleteCalls = fetchState.calls.filter((c) => c.includes('eventsub/subscriptions?id='))
+    expect(deleteCalls).toHaveLength(2)
+    expect(eventSubMap['tw-banned']).toBeUndefined()
+    // Rename path must NOT also run for this payload (no double-handling).
+    expect(state.subscribeCalls).toHaveLength(0)
+    expect(state.updates.some((u) => u.table === 'users')).toBe(false)
+  })
+
+  it('UPDATE:users with banned_at unchanged → no teardown', async () => {
+    seedSubscriptions('tw-still', ['stream.online'])
+    await fire('UPDATE', 'users', {
+      new: { id: 'u-still', name: 'same', displayName: 'Same', banned_at: null },
+      old: { id: 'u-still', name: 'same', displayName: 'Same', banned_at: null },
+    })
+    // Sub map left intact.
+    expect(eventSubMap['tw-still']).toBeDefined()
+  })
+
   it('registers four Realtime listeners and a subscribe callback', () => {
     expect(state.channelHandlers.size).toBe(4)
     expect(state.channelHandlers.has('INSERT:accounts')).toBe(true)

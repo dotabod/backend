@@ -95,6 +95,7 @@ export default async function getDBUser({
     stream_start_date,
     beta_tester,
     locale,
+    banned_at,
     subscriptions (
       id,
       tier,
@@ -147,6 +148,16 @@ export default async function getDBUser({
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
     return { reason: 'No user or user.id found', result: null }
+  }
+
+  // Hard gate: banned user. Persist in invalidTokens so subsequent GSI POSTs
+  // short-circuit at the top of getDBUser without re-hitting the DB. The
+  // dota watcher's UPDATE:users handler adds to invalidTokens on the
+  // null→set banned_at transition so a live ban is effective immediately.
+  if (user.banned_at) {
+    invalidTokens.add(lookupToken)
+    lookingupToken.delete(lookupToken)
+    return { reason: 'User is banned', result: null }
   }
 
   // If they require a refresh, don't cache them

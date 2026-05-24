@@ -46,39 +46,74 @@ export async function handleNewUser(
     return
   }
 
+  // Ban gate runs before any Twitch API hit. If the userId lookup fails
+  // transiently (errors), the inner try lets it propagate to the outer
+  // catch — same "profile update failed" path the old code used. A null
+  // result (row genuinely missing) falls through to the existing warn.
+  let banShortCircuit = false
+
   // Step 1: pull stream + display info from Twitch and reflect it on the
   // users row. If Twitch is flaky we log + continue to Step 2 — the prior
   // throw-from-catch caused the resubscribe step to be skipped entirely,
   // leaving a user with no EventSub subs during a transient /helix outage.
   let profileUpdated = false
   try {
-    const stream = await botApi.streams.getStreamByUserId(providerAccountId)
-    const streamer = await botApi.users.getUserById(providerAccountId)
-
-    const data = {
-      displayName: streamer?.displayName,
-      name: streamer?.name,
-      stream_online: !!stream?.startDate,
-      stream_start_date: stream?.startDate.toISOString() ?? null,
-    }
-    const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([_key, value]) => Boolean(value)),
-    )
-
     const userId = await findUserIdByProviderAccount(providerAccountId)
+
     if (userId) {
-      await supabase
+      const { data: banRow, error: banError } = await supabase
         .from('users')
-        .update(filteredData as typeof data)
+        .select('banned_at')
         .eq('id', userId)
-      profileUpdated = true
+        .single()
+      if (banError) {
+        // Transient DB error — log but keep going. The watcher's UPDATE:users
+        // ban branch is the live-ban path; this lookup is a steady-state guard.
+        logger.error('[TWITCHEVENTS] handleNewUser: ban check failed', {
+          providerAccountId,
+          userId,
+          error: banError,
+        })
+      } else if (banRow?.banned_at) {
+        logger.info('[TWITCHEVENTS] handleNewUser: skipping banned user', {
+          providerAccountId,
+          userId,
+        })
+        banShortCircuit = true
+      }
+    }
+
+    if (banShortCircuit) {
+      // Skip Twitch profile fetch + users update + subscription registration.
+      // Fall through to the bottom of the function (return).
     } else {
-      // No accounts row — either the user truly doesn't exist (caller bug)
-      // or the Realtime event raced replication past our one retry. Skip
-      // the profile update; let the next reconciliation pick it up.
-      logger.warn('[TWITCHEVENTS] handleNewUser: no accounts row for providerAccountId', {
-        providerAccountId,
-      })
+      const stream = await botApi.streams.getStreamByUserId(providerAccountId)
+      const streamer = await botApi.users.getUserById(providerAccountId)
+
+      const data = {
+        displayName: streamer?.displayName,
+        name: streamer?.name,
+        stream_online: !!stream?.startDate,
+        stream_start_date: stream?.startDate.toISOString() ?? null,
+      }
+      const filteredData = Object.fromEntries(
+        Object.entries(data).filter(([_key, value]) => Boolean(value)),
+      )
+
+      if (userId) {
+        await supabase
+          .from('users')
+          .update(filteredData as typeof data)
+          .eq('id', userId)
+        profileUpdated = true
+      } else {
+        // No accounts row — either the user truly doesn't exist (caller bug)
+        // or the Realtime event raced replication past our one retry. Skip
+        // the profile update; let the next reconciliation pick it up.
+        logger.warn('[TWITCHEVENTS] handleNewUser: no accounts row for providerAccountId', {
+          providerAccountId,
+        })
+      }
     }
   } catch (error) {
     // Surface at error level so observability picks up Twitch API / DB
@@ -93,6 +128,8 @@ export async function handleNewUser(
   // Suppress unused-variable lint while keeping the flag for future call
   // sites that may want to differentiate "subscribed but profile stale".
   void profileUpdated
+
+  if (banShortCircuit) return
 
   if (resubscribeEvents) {
     // initUserSubscriptions returns false (not throws) when a critical sub

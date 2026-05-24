@@ -224,6 +224,33 @@ describe('getDBUser', () => {
     expect(res.result?.stream_start_date).toBeInstanceOf(Date)
   })
 
+  it('rejects a banned user, adds the token to invalidTokens, and surfaces the "banned" reason', async () => {
+    dbState.tableResults.users = {
+      data: {
+        id: 'user-banned',
+        name: 'BannedUser',
+        mmr: 1,
+        steam32Id: 1,
+        stream_online: false,
+        stream_start_date: null,
+        beta_tester: false,
+        locale: 'en',
+        banned_at: '2026-05-24T00:00:00.000Z',
+        subscriptions: [],
+        Account: { providerAccountId: 'tw-banned', requires_refresh: false },
+        SteamAccount: [],
+        settings: [],
+      },
+      error: null,
+    }
+    const res = await getDBUser({ token: 'tok-banned' })
+    expect(res.result).toBeNull()
+    expect(res.reason).toContain('banned')
+    expect(invalidTokens.has('tok-banned')).toBe(true)
+    // gsiHandler must NOT be created for a banned user.
+    expect(gsiHandlers.has('user-banned')).toBe(false)
+  })
+
   it('builds and caches a SocketClient on a successful users lookup', async () => {
     dbState.tableResults.users = {
       data: {

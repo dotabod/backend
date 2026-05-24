@@ -117,6 +117,26 @@ describe('handleNewUser', () => {
     expect(state.updates).toHaveLength(0)
   })
 
+  it('skips a banned user entirely (no Twitch API hit, no subscription registration)', async () => {
+    // Ban gate runs after we resolve userId via accounts → before we hit the
+    // Twitch profile API. A user with users.banned_at set must not get a
+    // profile update OR EventSub registration — they're off the platform.
+    state.dbUser = { userId: 'user-banned' }
+    state.usersLookupResults = [{ data: { banned_at: '2026-05-24T00:00:00.000Z' }, error: null }]
+    state.streamer = { displayName: 'ShouldNotBeFetched', name: 'shouldnot' }
+
+    await handleNewUser('555', true)
+
+    // No profile update.
+    expect(state.updates.some((u) => u.table === 'users')).toBe(false)
+    // No EventSub subscription calls.
+    expect(state.subscribeCalls).toHaveLength(0)
+    // Banned-skip log line fired.
+    expect(
+      state.logInfo.some((l) => l.message.includes('handleNewUser: skipping banned user')),
+    ).toBe(true)
+  })
+
   it('still attempts subscriptions when the Twitch profile-fetch step fails', async () => {
     // Old: throw-in-catch from the Twitch API try block skipped the
     // resubscribe step entirely. New: profile-fetch failures are logged and

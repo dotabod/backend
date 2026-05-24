@@ -117,6 +117,49 @@ export function setupAccountWatcher(): void {
         async (payload: { new: Tables<'users'>; old: Tables<'users'> }) => {
           const newUser = payload.new
           const oldUser = payload.old
+
+          // Live ban: banned_at transitioned null → set. Tear down EventSub
+          // subs so no further channel.chat.message / stream.online / etc
+          // events flow. The frontend jwt() callback and backend getDBUser
+          // gates already block re-auth / GSI POSTs; this branch handles
+          // the side that the gates can't reach (Twitch already accepted
+          // our sub and is streaming events to our conduit).
+          if (!oldUser.banned_at && newUser.banned_at) {
+            const { data: account, error: accountError } = await supabase
+              .from('accounts')
+              .select('providerAccountId')
+              .eq('userId', newUser.id)
+              .eq('provider', 'twitch')
+              .single()
+            if (accountError) {
+              logger.error('[WATCHER] ban: provider lookup failed', {
+                userId: newUser.id,
+                error: accountError,
+              })
+              return
+            }
+            if (!account?.providerAccountId) {
+              logger.warn('[WATCHER] ban: no twitch account row for user', {
+                userId: newUser.id,
+              })
+              return
+            }
+            logger.info('[WATCHER] User banned, stopping subscriptions', {
+              userId: newUser.id,
+              providerAccountId: account.providerAccountId,
+            })
+            try {
+              await stopUserSubscriptions(account.providerAccountId)
+            } catch (error) {
+              logger.error('[WATCHER] ban: stopUserSubscriptions failed', {
+                userId: newUser.id,
+                providerAccountId: account.providerAccountId,
+                error,
+              })
+            }
+            return
+          }
+
           if (oldUser.name === newUser.name && oldUser.displayName === newUser.displayName) {
             return
           }

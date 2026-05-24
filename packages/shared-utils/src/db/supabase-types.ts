@@ -805,6 +805,9 @@ export type Database = {
       }
       users: {
         Row: {
+          banned_at: string | null
+          banned_by: string | null
+          banned_reason: string | null
           beta_tester: boolean
           created_at: string
           displayName: string | null
@@ -826,6 +829,9 @@ export type Database = {
           youtube: string | null
         }
         Insert: {
+          banned_at?: string | null
+          banned_by?: string | null
+          banned_reason?: string | null
           beta_tester?: boolean
           created_at?: string
           displayName?: string | null
@@ -847,6 +853,9 @@ export type Database = {
           youtube?: string | null
         }
         Update: {
+          banned_at?: string | null
+          banned_by?: string | null
+          banned_reason?: string | null
           beta_tester?: boolean
           created_at?: string
           displayName?: string | null
