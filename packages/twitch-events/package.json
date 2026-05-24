@@ -28,6 +28,7 @@
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0"
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.19.19"
   }
 }

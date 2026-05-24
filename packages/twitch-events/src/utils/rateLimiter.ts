@@ -1,98 +1,10 @@
-import { fetchConduitId, getTwitchHeaders, logger } from '@dotabod/shared-utils'
-import { rateLimiter } from './rateLimiterCore'
-
-interface TwitchSubscriptionCondition {
-  broadcaster_user_id?: string
-  user_id?: string
-  [key: string]: string | undefined
-}
-
-interface TwitchSubscriptionTransport {
-  method: 'webhook' | 'websocket' | 'conduit'
-  callback?: string
-  secret?: string
-  session_id?: string
-  conduit_id?: string
-}
+import { getTwitchHeaders, logger } from '@dotabod/shared-utils'
 
 interface TwitchSubscription {
   id: string
   status: string
   type: string
   version: string
-  condition: TwitchSubscriptionCondition
-  created_at: string
-  transport: TwitchSubscriptionTransport & {
-    connected_at?: string
-  }
-  cost: number
-}
-
-interface TwitchSubscriptionResponse {
-  data: TwitchSubscription[]
-  total: number
-  total_cost: number
-  max_total_cost: number
-}
-
-async function checkSubscriptionHealth(userId: string): Promise<void> {
-  logger.info('Checking subscription health for user', { userId })
-  try {
-    const headers = await getTwitchHeaders()
-    const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
-    url.searchParams.append('user_id', userId)
-
-    const subscribeReq = await rateLimiter.schedule(() =>
-      fetch(url.toString(), {
-        method: 'GET',
-        headers,
-      }),
-    )
-
-    if (!subscribeReq.ok) {
-      throw new Error(
-        `Failed to fetch subscriptions: ${subscribeReq.status} ${await subscribeReq.text()}`,
-      )
-    }
-
-    const response = (await subscribeReq.json()) as TwitchSubscriptionResponse
-
-    console.log(response.data)
-
-    // Check if stream.online subscription exists and is active for this user
-    const sub = response.data.find(
-      (s) =>
-        s.type === 'stream.online' &&
-        s.condition.broadcaster_user_id === userId &&
-        s.status === 'enabled',
-    )
-
-    if (!sub) {
-      // Resubscribe
-      logger.warn('Missing stream.online subscription', { userId })
-      try {
-        const conduitId = await fetchConduitId()
-        // We'll need to implement resubscription elsewhere to avoid circular dependencies
-        logger.info('Need to resubscribe', { userId, conduitId })
-      } catch (conduitError) {
-        logger.error('Failed to fetch conduit ID', {
-          userId,
-          error: conduitError instanceof Error ? conduitError.message : String(conduitError),
-        })
-      }
-    } else {
-      logger.info('stream.online subscription found', {
-        userId,
-        subscriptionId: sub.id,
-        cost: sub.cost,
-      })
-    }
-  } catch (error) {
-    logger.error('Failed to check subscription health', {
-      userId,
-      error: error instanceof Error ? error.message : String(error),
-    })
-  }
 }
 
 // Check and repair subscriptions for a specific user
@@ -139,21 +51,7 @@ export async function checkAndFixUserSubscriptions(userId: string) {
   }
 }
 
-// For CLI usage
-if (require.main === module) {
-  // Get user ID from command line arguments
-  const userId = process.argv[2]
-  if (!userId) {
-    console.error('Please provide a user ID')
-    process.exit(1)
-  }
-
-  // Example usage (commented out to prevent execution)
-  await checkSubscriptionHealth(userId)
-  // 40754777
-
-  // checkAndFixUserSubscriptions(userId)
-  //   .then(() => console.log('Subscription check completed'))
-  //   .catch(console.error)
-  //   .finally(() => process.exit(0))
-}
+// (Previous ad-hoc CLI entry-point removed — see
+// src/scripts/runSubscriptionHealthCheck.ts for the supported standalone
+// invocation. Bundling a CommonJS entry-point gate into this ESM-with-TLA
+// module crashes Node 24 with ERR_AMBIGUOUS_MODULE_SYNTAX at startup.)

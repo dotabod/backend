@@ -350,7 +350,8 @@ async function fetchSubscriptionsForHealthCheck(): Promise<void> {
 }
 
 // CLI entry-point lives in src/scripts/runSubscriptionHealthCheck.ts so this
-// module stays pure ESM. The previous `if (require.main === module)` gate
-// here injected a CommonJS marker into the bundled dist/index.js — combined
-// with top-level await elsewhere in the bundle (e.g. handleNewUser.ts:5),
-// Node 24 refused to load the bundle with `ERR_AMBIGUOUS_MODULE_SYNTAX`.
+// module stays pure ESM. CJS entry-point gates here get inlined into the
+// bundled dist/index.js — combined with top-level await elsewhere in the
+// bundle (e.g. handleNewUser.ts:5), Node 24 refuses to load the bundle with
+// ERR_AMBIGUOUS_MODULE_SYNTAX. The bundlePurity test in __tests__/ guards
+// against re-introduction.
