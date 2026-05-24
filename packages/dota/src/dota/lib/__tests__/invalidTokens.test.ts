@@ -308,6 +308,23 @@ describe('InvalidTokensCache → Redis side effects', () => {
     ).toBe(true)
   })
 
+  it('add() keeps the in-memory entry even when Redis setEx rejects (no silent loss)', async () => {
+    // Contract: a Redis outage during add() must NOT lose the in-memory
+    // entry. Otherwise getDBUser would re-hit the DB for a known-bad token
+    // every chat message, defeating the cache. The Redis write is logged
+    // for observability and a future deploy re-warms via hydrate().
+    const { client } = makeFakeRedis({ isReady: true, setExThrows: true })
+    const cache = new InvalidTokensCache(() => client)
+
+    cache.add('redis-down-token')
+    await flushMicrotasks()
+
+    expect(cache.has('redis-down-token')).toBe(true)
+    expect(
+      dbState.loggerWarnCalls.some((c) => c.message === '[USER] invalidTokens redis setEx failed'),
+    ).toBe(true)
+  })
+
   it('lazy getClient re-reads the client on every call so test reassignments are visible', async () => {
     let activeClient = makeFakeRedis({ isReady: true }).client
     let activeCalls: RedisCall[] = []

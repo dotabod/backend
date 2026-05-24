@@ -409,6 +409,11 @@ cleanupMatchDataCache()
 const accountSharingLogCache = new Map<string, number>()
 const ACCOUNT_SHARING_LOG_INTERVAL = 300000 // 5 minutes
 
+/** Test-only: reset the per-token rate-limit cache used by checkAccountSharing. */
+export function __resetAccountSharingLogCacheForTests(): void {
+  accountSharingLogCache.clear()
+}
+
 // Cleanup function for account sharing log cache
 function cleanupAccountSharingLogCache() {
   const now = Date.now()
@@ -425,7 +430,7 @@ function cleanupAccountSharingLogCache() {
 cleanupAccountSharingLogCache()
 
 // Account sharing detection - blocks processing for multiple Steam accounts per token
-async function checkAccountSharing(client: SocketClient, matchId: string): Promise<boolean> {
+export async function checkAccountSharing(client: SocketClient, matchId: string): Promise<boolean> {
   if (!client.steam32Id || !matchId) return false
 
   const steam32Id = client.steam32Id
