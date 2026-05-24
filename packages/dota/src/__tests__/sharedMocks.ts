@@ -24,6 +24,13 @@ export function buildSharedUtilsMock(opts: {
   logger: LoggerLike
   getTwitchAPI?: () => Promise<unknown>
   checkBotStatus?: () => Promise<boolean>
+  trackDisableReason?: (
+    userId: string,
+    settingKey: string,
+    reason: string,
+    metadata?: Record<string, unknown>,
+  ) => Promise<void>
+  trackResolveReason?: (userId: string, settingKey: string, autoResolved?: boolean) => Promise<void>
 }) {
   return {
     supabase: opts.supabase,
@@ -39,8 +46,8 @@ export function buildSharedUtilsMock(opts: {
     checkBotStatus: opts.checkBotStatus ?? (async () => false),
     fetchConduitId: async () => '',
     updateConduitShard: async () => undefined,
-    trackDisableReason: async () => undefined,
-    trackResolveReason: async () => undefined,
+    trackDisableReason: opts.trackDisableReason ?? (async () => undefined),
+    trackResolveReason: opts.trackResolveReason ?? (async () => undefined),
   }
 }
 

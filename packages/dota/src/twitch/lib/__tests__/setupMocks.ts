@@ -75,6 +75,17 @@ export const state: {
   // Optional override for the mocked `moderateText` — return a custom redacted
   // string. Default passthrough returns the input as-is.
   moderateTextOverride: ((text?: string | string[]) => string | string[] | undefined) | null
+  trackDisableReasonCalls: Array<{
+    userId: string
+    settingKey: string
+    reason: string
+    metadata?: Record<string, unknown>
+  }>
+  trackResolveReasonCalls: Array<{
+    userId: string
+    settingKey: string
+    autoResolved?: boolean
+  }>
 } = {
   sessionMatch: null,
   olderMatch: null,
@@ -106,6 +117,8 @@ export const state: {
   chatSettingsUpdates: [],
   delayedGame: null,
   moderateTextOverride: null,
+  trackDisableReasonCalls: [],
+  trackResolveReasonCalls: [],
 }
 
 export function resetState() {
@@ -139,6 +152,8 @@ export function resetState() {
   state.chatSettingsUpdates = []
   state.delayedGame = null
   state.moderateTextOverride = null
+  state.trackDisableReasonCalls = []
+  state.trackResolveReasonCalls = []
   // Re-assert all module mocks (shared-utils, updateMmr, ranks, MongoDBSingleton)
   // in case a sibling test file replaced any of them since the last test ran.
   reinstallModuleMocks()
@@ -283,6 +298,12 @@ function reinstallSharedUtilsMock() {
       logger: loggerMock,
       getTwitchAPI: getTwitchAPIMock,
       checkBotStatus: async () => state.botBanned,
+      trackDisableReason: async (userId, settingKey, reason, metadata) => {
+        state.trackDisableReasonCalls.push({ userId, settingKey, reason, metadata })
+      },
+      trackResolveReason: async (userId, settingKey, autoResolved) => {
+        state.trackResolveReasonCalls.push({ userId, settingKey, autoResolved })
+      },
     }),
   )
 }

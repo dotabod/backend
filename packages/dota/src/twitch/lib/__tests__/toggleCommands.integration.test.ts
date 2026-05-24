@@ -32,13 +32,20 @@ describe('!beta', () => {
 
 describe('!toggle', () => {
   it('disables the bot by persisting commandDisable=true from the default (off)', async () => {
-    await commandHandler.handleMessage(makeMessage({ content: '!toggle' }))
+    await commandHandler.handleMessage(makeMessage({ content: '!toggle', userName: 'modUser' }))
     expect(state.upsertCalls).toHaveLength(1)
     expect(state.upsertCalls[0].values).toMatchObject({
       key: DBSettings.commandDisable,
       value: true,
     })
     expect(state.chatSayCalls).toHaveLength(0)
+    expect(state.trackDisableReasonCalls).toHaveLength(1)
+    expect(state.trackDisableReasonCalls[0]).toMatchObject({
+      settingKey: DBSettings.commandDisable,
+      reason: 'MANUAL_DISABLE',
+      metadata: { disabled_by: 'modUser', command: '!toggle' },
+    })
+    expect(state.trackResolveReasonCalls).toHaveLength(0)
   })
 
   it('re-enables the bot by persisting commandDisable=false when already disabled', async () => {
@@ -54,6 +61,12 @@ describe('!toggle', () => {
       value: false,
     })
     expect(state.chatSayCalls).toHaveLength(0)
+    expect(state.trackResolveReasonCalls).toHaveLength(1)
+    expect(state.trackResolveReasonCalls[0]).toMatchObject({
+      settingKey: DBSettings.commandDisable,
+      autoResolved: false,
+    })
+    expect(state.trackDisableReasonCalls).toHaveLength(0)
   })
 
   it('blocks viewers (permission below mod)', async () => {
@@ -61,6 +74,8 @@ describe('!toggle', () => {
       makeMessage({ content: '!toggle', permission: 0, userName: 'viewer' }),
     )
     expect(state.upsertCalls).toHaveLength(0)
+    expect(state.trackDisableReasonCalls).toHaveLength(0)
+    expect(state.trackResolveReasonCalls).toHaveLength(0)
   })
 })
 

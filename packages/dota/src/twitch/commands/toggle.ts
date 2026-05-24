@@ -20,17 +20,14 @@ commandHandler.registerCommand('toggle', {
     const userId = message.channel.client.token
     const newValue = !isBotDisabled
 
-    // Track the reason for the toggle
     if (newValue) {
-      // Enabling - resolve any existing disable reasons
-      await trackResolveReason(userId, DBSettings.commandDisable, false)
-    } else {
-      // Disabling - track manual disable reason
       await trackDisableReason(userId, DBSettings.commandDisable, 'MANUAL_DISABLE', {
         disabled_by: message.user.name,
         command: '!toggle',
         additional_info: `Manually disabled by ${message.user.name} via chat command`,
       })
+    } else {
+      await trackResolveReason(userId, DBSettings.commandDisable, false)
     }
 
     await supabase.from('settings').upsert(
