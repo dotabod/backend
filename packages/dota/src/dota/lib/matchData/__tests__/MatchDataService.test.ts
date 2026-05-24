@@ -32,10 +32,9 @@ vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({ supabase: supabaseStub, logger: noopLogger }),
 )
 
-// Lower-level mocks (Mongo + steam socket). We do NOT mock `getAccountsFromMatch` itself —
-// `vi.doMock()` is process-wide and would pollute sibling test files that depend on its real
-// behaviour. Instead we let the real helper run its fall-through against our controlled
-// Mongo doc / Vision fetch / GSI fixtures.
+// Lower-level mocks (Mongo + steam socket). We let the real ResolverChain run end-to-end against
+// our controlled Mongo doc / Vision fetch / GSI fixtures — no module-level mocking of the chain
+// itself.
 
 let mongoDoc: unknown = null
 let mongoCallCount = 0

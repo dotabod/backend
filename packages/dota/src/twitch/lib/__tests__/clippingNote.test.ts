@@ -29,7 +29,7 @@ function makeClient(over: Partial<SocketClient> = {}): SocketClient {
 
 const emptyRoster: Players = [{ heroid: undefined, accountid: 0, playerid: null }]
 const fullRoster: Players = [{ heroid: 14, accountid: 0, playerid: null }]
-// getAccountsFromMatch's no-data fallback: a single self-player carrying the
+// MatchDataService's gsi-self no-data fallback: a single self-player carrying the
 // streamer's own hero id (steam32Id 1 here). Must NOT count as a real roster.
 const selfOnlyFallback: Players = [{ heroid: 14, accountid: 1, playerid: null }]
 
@@ -58,8 +58,8 @@ describe('clippingDisabledNote', () => {
   })
 
   it('still shows the note when only the self-player fallback is present', () => {
-    // The no-clips case (e.g. w33haa): getAccountsFromMatch returns just the
-    // streamer's own hero, which must not be mistaken for a real roster.
+    // The no-clips case (e.g. w33haa): MatchDataService returns just the
+    // streamer's own hero (gsi-self source), which must not be mistaken for a real roster.
     const note = clippingDisabledNote(makeClient(), selfOnlyFallback)
     expect(note).toContain('auto-clipping')
   })

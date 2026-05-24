@@ -19,13 +19,12 @@ import {
 } from './resolvers'
 import type { ResolvedRoster, RosterPlayer } from './types'
 
-// One cached entry point per match for roster/Mongo/cards lookups. Dispatch is now polymorphic —
+// One cached entry point per match for roster/Mongo/cards lookups. Dispatch is polymorphic —
 // `ResolverChain` runs each `RosterResolver` in priority order and the first to claim wins. There
 // is NO post-hoc shape inference; each resolver self-tags with its source.
 //
 // Source of truth: every consumer that asks "what's in this match?" should go through this class
-// and ONLY this class. The legacy `getAccountsFromMatch` helper survives only for the Phase B
-// migration window. Does NOT touch the spectate-friend chain — see memory
+// and ONLY this class. Does NOT touch the spectate-friend chain — see memory
 // `keep-spectate-friend-path`.
 //
 // **One instance = one query.** A rejection clears the relevant memoization slot so a transient

@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
 import { commandHandler, liveGsi, makeMessage, resetState, state } from './setupMocks.ts'
 
-// gm/np/smurfs/lg call getAccountsFromMatch (owned by gsiMocks) only after an
+// gm/np/smurfs/lg call MatchDataService (owned by setupMocks) only after an
 // early steam32Id guard, so we cover that collision-safe guard branch here.
-// geo short-circuits to the Valve-disabled message before getAccountsFromMatch,
+// geo short-circuits to the Valve-disabled message before the roster lookup,
 // so its reachable paths are fully covered.
 const multiAccount = t('multiAccount', { lng: 'en', url: 'dotabod.com/dashboard/features' })
 const notPlaying = t('notPlaying', { emote: 'PauseChamp', lng: 'en' })

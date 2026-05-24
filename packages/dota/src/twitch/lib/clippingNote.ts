@@ -17,7 +17,7 @@ export function clippingDisabledNote(client: SocketClient, matchPlayers: Players
   if (!disabled || !is8500Plus(client)) return ''
 
   // Only count OTHER players' heroes: when no roster is available
-  // getAccountsFromMatch falls back to a single self-player carrying the
+  // MatchDataService falls back to a single gsi-self player carrying the
   // streamer's own hero id, which would otherwise look like a real roster and
   // wrongly suppress the note (the exact no-clips case this note is for).
   const hasOtherPlayers = matchPlayers.some(

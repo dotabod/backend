@@ -14,7 +14,7 @@ export const gsiState: {
   redisJson: Record<string, unknown>
   // Tracks writes for assertion.
   redisJsonSetCalls: Array<{ key: string; path: string; value: unknown }>
-  // What getAccountsFromMatch returns. Most tests don't care, default empty.
+  // Roster surfaced via the mocked MatchDataService. Most tests don't care, default empty.
   matchPlayers: MatchPlayer[]
   // Captured chatClient.say calls.
   chatSayCalls: Array<{ channel: string; message: string }>
@@ -99,11 +99,7 @@ vi.doMock('../../../../db/RedisClient', () => ({
 // harnesses monkey-patch the same singleton — see `installGsiMocks` below,
 // which is called in `beforeEach` to ensure gsi tests own the binding.
 
-vi.doMock('../../../lib/getAccountsFromMatch', () => ({
-  getAccountsFromMatch: async () => ({ matchPlayers: gsiState.matchPlayers }),
-}))
-
-// Event handlers now route through `MatchDataService` directly. Mock it so the
+// Event handlers route through `MatchDataService` directly. Mock it so the
 // existing `gsiState.matchPlayers` (legacy shape) feeds resolveRoster() after
 // a slot/heroid field rename — tests don't need to change.
 vi.doMock('../../../lib/matchData', () => {
