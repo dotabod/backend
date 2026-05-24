@@ -5,9 +5,14 @@ import { checkBotStatus, logger } from '@dotabod/shared-utils'
 import { fetchExistingSubscriptions, subsToCleanup } from './fetchExistingSubscriptions'
 import { subscribeToEvents } from './subscribeToEvents'
 import { deleteSubscription } from './twitch/lib/revokeEvent'
+import { setupHealthServer } from './utils/healthServer'
 import { rateLimiter } from './utils/rateLimiterCore'
+import { scheduleNonOverlapping } from './utils/scheduler'
 import { setupSocketIO } from './utils/socketUtils'
-import { setupWebhooks } from './utils/webhookUtils'
+import { runSubscriptionHealthCheck } from './utils/subscriptionHealthCheck'
+import { setupAccountWatcher } from './watcher'
+
+const HEALTH_CHECK_INTERVAL_MS = 5 * 60 * 1000
 
 const isBanned = await checkBotStatus()
 if (isBanned) {
@@ -15,7 +20,25 @@ if (isBanned) {
 }
 
 setupSocketIO()
-setupWebhooks()
+setupHealthServer()
+// Supabase Realtime listener — replaces the old HTTP webhook receiver.
+// Delivers INSERT/UPDATE/DELETE on accounts + UPDATE on users in seconds.
+setupAccountWatcher()
+
+// Safety net: every 5 minutes, scan all valid accounts and re-register any
+// missing critical EventSub subscriptions. Catches Realtime delivery gaps
+// (channel drops, replica lag, deploy windows) so the fleet stays self-healing
+// without crontab restarts. Uses an overlap-protected scheduler so a slow
+// scan can't double-fire and race on `eventSubMap` / the shared rateLimiter.
+scheduleNonOverlapping(async () => {
+  try {
+    await runSubscriptionHealthCheck()
+  } catch (error) {
+    logger.error('[HEALTHCHECK] subscription scan failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}, HEALTH_CHECK_INTERVAL_MS)
 
 void (async () => {
   try {

@@ -85,12 +85,25 @@ export const setupSocketIO = () => {
 
     socket.on('enable', (providerAccountId: string) => {
       logger.info('[TWITCHEVENTS] Enabling events for user', { providerAccountId })
-      void handleNewUser(providerAccountId, true)
+      // handleNewUser throws on critical-sub failure; without a .catch the
+      // rejection becomes an unhandledRejection (twitch-events has no
+      // process-level handler) and Node 24 crashes the single-replica service.
+      handleNewUser(providerAccountId, true).catch((error) => {
+        logger.error('[TWITCHEVENTS] socket enable handleNewUser failed', {
+          providerAccountId,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
     })
 
     socket.on('resubscribe', (providerAccountId: string) => {
       logger.info('[TWITCHEVENTS] Resubscribing to events for user', { providerAccountId })
-      void handleNewUser(providerAccountId, true)
+      handleNewUser(providerAccountId, true).catch((error) => {
+        logger.error('[TWITCHEVENTS] socket resubscribe handleNewUser failed', {
+          providerAccountId,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
     })
   })
 }

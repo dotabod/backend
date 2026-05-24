@@ -37,6 +37,23 @@ export const state: {
   streamer: { displayName: string; name: string } | null
   addModeratorError: unknown
   addModeratorCalls: string[]
+  // Supabase Realtime channel handlers registered by the watcher. Keyed by
+  // "{event}:{table}" e.g. "INSERT:accounts". Tests fire them to simulate
+  // postgres_changes events without a real Realtime connection.
+  channelHandlers: Map<
+    string,
+    (payload: { new?: Record<string, unknown>; old?: Record<string, unknown> }) => unknown
+  >
+  channelSubscribeStatuses: string[]
+  // If non-empty, sbBuilder.single() on the `accounts` table shifts the next
+  // entry off this queue. Lets tests script per-call lookup behavior (e.g.
+  // first lookup returns null, second returns a row) and inject transient DB
+  // errors. Falls back to `dbUser` (with error: null) when the queue is empty.
+  accountsLookupResults: Array<{ data: { userId: string } | null; error: Error | null }>
+  // When set, botApi.streams.getStreamByUserId throws this error. Lets tests
+  // verify the handleNewUser path continues into subscription registration
+  // even when the Twitch profile-fetch step fails.
+  streamError: Error | null
 } = {
   conduitId: 'conduit-1',
   isBanned: false,
@@ -55,6 +72,10 @@ export const state: {
   streamer: { displayName: 'Streamer', name: 'streamer' },
   addModeratorError: null,
   addModeratorCalls: [],
+  channelHandlers: new Map(),
+  channelSubscribeStatuses: [],
+  accountsLookupResults: [],
+  streamError: null,
 }
 
 export function resetState() {
@@ -75,6 +96,10 @@ export function resetState() {
   state.streamer = { displayName: 'Streamer', name: 'streamer' }
   state.addModeratorError = null
   state.addModeratorCalls = []
+  state.channelHandlers = new Map()
+  state.channelSubscribeStatuses = []
+  state.accountsLookupResults = []
+  state.streamError = null
 }
 
 // Chainable supabase mock. accounts...single() -> dbUser; settings select ->
@@ -85,7 +110,7 @@ interface SbBuilder {
   delete: () => SbBuilder
   upsert: (v: Record<string, unknown>) => Promise<{ data: null; error: null }>
   eq: () => SbBuilder
-  single: () => Promise<{ data: unknown; error: null }>
+  single: () => Promise<{ data: unknown; error: Error | null }>
   then: (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => unknown
 }
 
@@ -108,7 +133,14 @@ function sbBuilder(table: string) {
       return Promise.resolve({ data: null, error: null })
     },
     eq: () => b,
-    single: async () => ({ data: table === 'accounts' ? state.dbUser : null, error: null }),
+    single: async () => {
+      if (table !== 'accounts') return { data: null, error: null }
+      if (state.accountsLookupResults.length > 0) {
+        // biome-ignore lint/style/noNonNullAssertion: length-guarded
+        return state.accountsLookupResults.shift()!
+      }
+      return { data: state.dbUser, error: null }
+    },
     then: (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
       if (mode === 'update') state.updates.push({ table, values })
       const data = mode === 'select' && table === 'settings' ? state.dbSettings : null
@@ -117,7 +149,34 @@ function sbBuilder(table: string) {
   }
   return b
 }
-const supabaseMock = { from: (table: string) => sbBuilder(table) }
+interface RealtimeChannelMock {
+  on: (
+    type: string,
+    opts: { event: string; schema: string; table: string },
+    handler: (payload: { new?: Record<string, unknown>; old?: Record<string, unknown> }) => unknown,
+  ) => RealtimeChannelMock
+  subscribe: (cb?: (status: string, err?: Error) => void) => RealtimeChannelMock
+}
+
+function realtimeChannelMock(): RealtimeChannelMock {
+  const channel: RealtimeChannelMock = {
+    on: (_type, opts, handler) => {
+      state.channelHandlers.set(`${opts.event}:${opts.table}`, handler)
+      return channel
+    },
+    subscribe: (cb) => {
+      state.channelSubscribeStatuses.push('SUBSCRIBED')
+      cb?.('SUBSCRIBED')
+      return channel
+    },
+  }
+  return channel
+}
+
+const supabaseMock = {
+  from: (table: string) => sbBuilder(table),
+  channel: () => realtimeChannelMock(),
+}
 
 const logger = {
   info: (message: string, meta?: Record<string, unknown>) =>
@@ -157,7 +216,12 @@ vi.doMock('@dotabod/shared-utils', () => ({
 
 vi.doMock('../twitch/lib/BotApiSingleton', () => ({
   getBotInstance: () => ({
-    streams: { getStreamByUserId: async () => state.stream },
+    streams: {
+      getStreamByUserId: async () => {
+        if (state.streamError) throw state.streamError
+        return state.stream
+      },
+    },
     users: { getUserById: async () => state.streamer },
   }),
 }))
@@ -204,6 +268,7 @@ export const { revokeEvent, stopUserSubscriptions } = await import('../twitch/li
 export const { handleNewUser } = await import('../handleNewUser')
 export const { ensureBotIsModerator } = await import('../ensureBotIsModerator')
 export const { checkAndFixUserSubscriptions } = await import('../utils/rateLimiter')
+export const { setupAccountWatcher } = await import('../watcher')
 
 export function seedSubscriptions(userId: string, types: readonly (keyof TwitchEventTypes)[]) {
   eventSubMap[userId] = Object.fromEntries(
