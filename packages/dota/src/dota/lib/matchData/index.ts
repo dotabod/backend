@@ -6,6 +6,7 @@
 // the API contract.
 
 export { getStreamersInMatch } from './getStreamersInMatch'
+export { lookupRosterByMatchId } from './lookupRosterByMatchId'
 export { MatchDataService } from './MatchDataService'
 export type {
   Coverage,

@@ -29,12 +29,11 @@ import type { GSIHandlerType } from './GSIHandlerTypes'
 import { getStreamDelay } from './getStreamDelay'
 import { blockTypes, pickSates } from './lib/consts'
 import { delayedQueue } from './lib/DelayedQueue'
-import { getAccountsFromMatch } from './lib/getAccountsFromMatch'
 import getHero, { type HeroNames } from './lib/getHero'
 import { getHeroById } from './lib/heroes'
 import { isArcade } from './lib/isArcade'
 import { isSpectator } from './lib/isSpectator'
-import { getStreamersInMatch } from './lib/matchData'
+import { getStreamersInMatch, MatchDataService } from './lib/matchData'
 import { getRankDetail } from './lib/ranks'
 import {
   buildClosingScores,
@@ -314,9 +313,7 @@ class GSIHandler implements GSIHandlerType {
   async emitNotablePlayers() {
     if (!this.client.stream_online) return
 
-    const { matchPlayers } = await getAccountsFromMatch({
-      gsi: this.client.gsi,
-    })
+    const matchPlayers = await new MatchDataService(this.client).getMatchPlayers()
 
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,

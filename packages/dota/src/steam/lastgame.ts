@@ -1,7 +1,7 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { getAccountsFromMatch } from '../dota/lib/getAccountsFromMatch'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
+import { lookupRosterByMatchId } from '../dota/lib/matchData'
 import type { DelayedGames, Players } from '../types'
 import CustomError from '../utils/customError'
 import MongoDBSingleton from './MongoDBSingleton'
@@ -127,9 +127,7 @@ export default async function lastgame({
     }
 
     const newMatchPlayers = currentPlayers
-    const { matchPlayers: oldMatchPlayers } = await getAccountsFromMatch({
-      searchMatchId: oldGame.match.match_id,
-    })
+    const { matchPlayers: oldMatchPlayers } = await lookupRosterByMatchId(oldGame.match.match_id)
 
     const playersFromLastGame = newMatchPlayers
       .map((currentGamePlayer, i) => {

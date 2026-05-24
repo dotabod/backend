@@ -4,8 +4,8 @@ import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import { steamSocket } from '../../steam/ws'
 import type { Cards, DelayedGames, Players } from '../../types'
 import CustomError from '../../utils/customError'
-import { getAccountsFromMatch } from './getAccountsFromMatch'
 import { getHeroNameOrColor } from './heroes'
+import { lookupRosterByMatchId } from './matchData'
 
 export async function getPlayers({
   locale,
@@ -36,10 +36,11 @@ export async function getPlayers({
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
 
-    const { matchPlayers, accountIds } = await getAccountsFromMatch({
-      searchMatchId: currentMatchId,
-      searchPlayers: players,
-    })
+    // Use pre-supplied players when the caller already resolved them; otherwise look up
+    // the historical roster from the delayedGames doc.
+    const { matchPlayers, accountIds } = players?.length
+      ? { matchPlayers: players, accountIds: players.map((p) => p.accountid) }
+      : await lookupRosterByMatchId(currentMatchId)
 
     let cards: Cards[] = []
     // if match players has ranks, create that as cards instead of fetching them:
