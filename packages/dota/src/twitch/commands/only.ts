@@ -1,4 +1,4 @@
-import { supabase, trackResolveReason } from '@dotabod/shared-utils'
+import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { ranks } from '../../dota/lib/consts'
 import { DBSettings, getValueOrDefault } from '../../settings'
@@ -71,9 +71,6 @@ commandHandler.registerCommand('only', {
     const rankArg = args[0].toLowerCase().trim()
     if (disableCommands.includes(rankArg)) {
       const userId = message.channel.client.token
-
-      // Track resolve reason when disabling rank restriction
-      await trackResolveReason(userId, DBSettings.rankOnly, false)
 
       await supabase.from('settings').upsert(
         {
