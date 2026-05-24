@@ -80,11 +80,24 @@ export const state: {
     settingKey: string
     reason: string
     metadata?: Record<string, unknown>
+    opts?: { disabledValue?: boolean }
   }>
   trackResolveReasonCalls: Array<{
     userId: string
     settingKey: string
     autoResolved?: boolean
+    opts?: { reason?: string }
+  }>
+  recordDisableNotificationCalls: Array<{
+    userId: string
+    settingKey: string
+    reason: string
+    metadata?: Record<string, unknown>
+  }>
+  resolveDisableNotificationCalls: Array<{
+    userId: string
+    settingKey: string
+    opts?: { reason?: string; autoResolved?: boolean }
   }>
 } = {
   sessionMatch: null,
@@ -119,6 +132,8 @@ export const state: {
   moderateTextOverride: null,
   trackDisableReasonCalls: [],
   trackResolveReasonCalls: [],
+  recordDisableNotificationCalls: [],
+  resolveDisableNotificationCalls: [],
 }
 
 export function resetState() {
@@ -154,6 +169,8 @@ export function resetState() {
   state.moderateTextOverride = null
   state.trackDisableReasonCalls = []
   state.trackResolveReasonCalls = []
+  state.recordDisableNotificationCalls = []
+  state.resolveDisableNotificationCalls = []
   // Re-assert all module mocks (shared-utils, updateMmr, ranks, MongoDBSingleton)
   // in case a sibling test file replaced any of them since the last test ran.
   reinstallModuleMocks()
@@ -298,11 +315,17 @@ function reinstallSharedUtilsMock() {
       logger: loggerMock,
       getTwitchAPI: getTwitchAPIMock,
       checkBotStatus: async () => state.botBanned,
-      trackDisableReason: async (userId, settingKey, reason, metadata) => {
-        state.trackDisableReasonCalls.push({ userId, settingKey, reason, metadata })
+      trackDisableReason: async (userId, settingKey, reason, metadata, opts) => {
+        state.trackDisableReasonCalls.push({ userId, settingKey, reason, metadata, opts })
       },
-      trackResolveReason: async (userId, settingKey, autoResolved) => {
-        state.trackResolveReasonCalls.push({ userId, settingKey, autoResolved })
+      trackResolveReason: async (userId, settingKey, autoResolved, opts) => {
+        state.trackResolveReasonCalls.push({ userId, settingKey, autoResolved, opts })
+      },
+      recordDisableNotification: async (userId, settingKey, reason, metadata) => {
+        state.recordDisableNotificationCalls.push({ userId, settingKey, reason, metadata })
+      },
+      resolveDisableNotifications: async (userId, settingKey, opts) => {
+        state.resolveDisableNotificationCalls.push({ userId, settingKey, opts })
       },
     }),
   )

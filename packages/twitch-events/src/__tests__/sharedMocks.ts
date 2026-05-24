@@ -28,6 +28,13 @@ export const state: {
   dbSettings: Array<{ key: string; value: unknown }>
   upserts: Array<{ table: string; values: Record<string, unknown> }>
   updates: Array<{ table: string; values: Record<string, unknown> }>
+  trackDisableCalls: Array<{
+    userId: string
+    settingKey: string
+    reason: string
+    metadata?: Record<string, unknown>
+    opts?: { disabledValue?: boolean }
+  }>
   // botApi (handleNewUser) + getTwitchAPI moderation (ensureBotIsModerator).
   stream: { startDate: Date } | null
   streamer: { displayName: string; name: string } | null
@@ -46,6 +53,7 @@ export const state: {
   dbSettings: [],
   upserts: [],
   updates: [],
+  trackDisableCalls: [],
   stream: null,
   streamer: { displayName: 'Streamer', name: 'streamer' },
   addModeratorError: null,
@@ -65,6 +73,7 @@ export function resetState() {
   state.dbSettings = []
   state.upserts = []
   state.updates = []
+  state.trackDisableCalls = []
   state.stream = null
   state.streamer = { displayName: 'Streamer', name: 'streamer' }
   state.addModeratorError = null
@@ -127,7 +136,15 @@ vi.doMock('@dotabod/shared-utils', () => ({
   logger,
   supabase: supabaseMock,
   default: supabaseMock,
-  trackDisableReason: async () => undefined,
+  trackDisableReason: async (
+    userId: string,
+    settingKey: string,
+    reason: string,
+    metadata?: Record<string, unknown>,
+    opts?: { disabledValue?: boolean },
+  ) => {
+    state.trackDisableCalls.push({ userId, settingKey, reason, metadata, opts })
+  },
   botStatus: { isBanned: false },
   checkBotStatus: async () => state.isBanned,
   fetchConduitId: async () => state.conduitId,

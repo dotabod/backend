@@ -29,8 +29,25 @@ export function buildSharedUtilsMock(opts: {
     settingKey: string,
     reason: string,
     metadata?: Record<string, unknown>,
+    opts?: { disabledValue?: boolean },
   ) => Promise<void>
-  trackResolveReason?: (userId: string, settingKey: string, autoResolved?: boolean) => Promise<void>
+  trackResolveReason?: (
+    userId: string,
+    settingKey: string,
+    autoResolved?: boolean,
+    opts?: { reason?: string },
+  ) => Promise<void>
+  recordDisableNotification?: (
+    userId: string,
+    settingKey: string,
+    reason: string,
+    metadata?: Record<string, unknown>,
+  ) => Promise<void>
+  resolveDisableNotifications?: (
+    userId: string,
+    settingKey: string,
+    opts?: { reason?: string; autoResolved?: boolean },
+  ) => Promise<void>
 }) {
   return {
     supabase: opts.supabase,
@@ -48,6 +65,8 @@ export function buildSharedUtilsMock(opts: {
     updateConduitShard: async () => undefined,
     trackDisableReason: opts.trackDisableReason ?? (async () => undefined),
     trackResolveReason: opts.trackResolveReason ?? (async () => undefined),
+    recordDisableNotification: opts.recordDisableNotification ?? (async () => undefined),
+    resolveDisableNotifications: opts.resolveDisableNotifications ?? (async () => undefined),
   }
 }
 
