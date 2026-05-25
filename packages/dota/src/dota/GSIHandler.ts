@@ -625,6 +625,14 @@ class GSIHandler implements GSIHandlerType {
       return
     }
 
+    // Snapshot validated matchid + hero name now; openTheBet runs after the
+    // stream delay and `client.gsi` can be cleared by then (e.g. draft abandon
+    // + requeue triggers resetClientState). Without the snapshot, openTheBet
+    // would insert a `matches` row with an empty matchId and open a Twitch
+    // prediction titled "Will we win with ".
+    const validatedMatchId = client.gsi.map.matchid
+    const validatedHeroName = client.gsi.hero.name
+
     const matchId = (await redisClient.client.get(`${client.token}:matchId`)) ?? undefined
 
     if (matchId && client.gsi?.map?.matchid && matchId !== client.gsi.map.matchid) {
@@ -752,7 +760,9 @@ class GSIHandler implements GSIHandlerType {
       return
     }
 
-    delayedQueue.addTask(getStreamDelay(client.settings, client.subscription), this.openTheBet)
+    delayedQueue.addTask(getStreamDelay(client.settings, client.subscription), () =>
+      this.openTheBet(validatedMatchId, validatedHeroName),
+    )
 
     // .catch((e: any) => {
     //   logger.error(`[BETS] Could not add bet to channel`, {
@@ -774,11 +784,20 @@ class GSIHandler implements GSIHandlerType {
     // })
   }
 
-  openTheBet = async () => {
+  openTheBet = async (matchId: string, heroName: string) => {
     const { client } = this
-    const hero = getHero(client.gsi?.hero?.name)
 
-    const matchId = client?.gsi?.map?.matchid || ''
+    // Defense in depth: the only call site (openBets) captures these from
+    // validated GSI before queueing this callback. An empty matchId means
+    // something bypassed that path — refuse to insert a `matches` row that
+    // !unresolved would later render as "(Unknown, ...)" with no way to
+    // !won/!lost it.
+    if (!matchId || !heroName) {
+      this.openingBets = false
+      return
+    }
+
+    const hero = getHero(heroName as HeroNames)
     let betId: undefined | string
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings, client.subscription)
@@ -810,7 +829,7 @@ class GSIHandler implements GSIHandlerType {
         userId: client.token,
         myTeam: client.gsi?.player?.team_name ?? '',
         steam32Id: client.steam32Id,
-        hero_name: client.gsi?.hero?.name || null,
+        hero_name: heroName,
       })
 
       if (getValueOrDefault(DBSettings.streamersAnnounce, client.settings, client.subscription)) {
