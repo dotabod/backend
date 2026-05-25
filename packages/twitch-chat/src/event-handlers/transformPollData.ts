@@ -1,22 +1,28 @@
 interface PollChoice {
+  id?: string
   title: string
-  total_votes?: number
+  votes?: number
+  channel_points_votes?: number
+  bits_votes?: number
 }
 
 interface PollEvent {
+  id?: string
   title: string
   choices: PollChoice[]
-  end_date?: string
+  started_at?: string
+  ends_at?: string
+  ended_at?: string
 }
 
-export const transformPollData = (data: PollEvent) => ({
-  choices: data.choices.map((choice) => {
-    const hasVotes = 'total_votes' in choice
-    return {
-      totalVotes: hasVotes ? choice.total_votes : 0,
+export const transformPollData = (data: PollEvent) => {
+  const endDateStr = data.ends_at ?? data.ended_at
+  return {
+    choices: data.choices.map((choice) => ({
+      totalVotes: choice.votes ?? 0,
       title: choice.title,
-    }
-  }),
-  title: data.title,
-  endDate: 'end_date' in data ? new Date(data.end_date as string) : '',
-})
+    })),
+    title: data.title,
+    endDate: endDateStr ? new Date(endDateStr) : '',
+  }
+}

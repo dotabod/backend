@@ -99,4 +99,24 @@ describe('transformBetData', () => {
   it('returns undefined outcomes when none provided', () => {
     expect(transformBetData({ title: 'x' }).outcomes).toBeUndefined()
   })
+
+  it('passes null channel_points_won through (refund/loss case per Twitch spec)', () => {
+    const result = transformBetData({
+      title: 'Refund?',
+      outcomes: [
+        {
+          title: 'Yes',
+          channel_points: 100,
+          users: 1,
+          top_predictors: [
+            { user_name: 'bob', channel_points_used: 100, channel_points_won: null },
+          ],
+        },
+      ],
+    })
+
+    expect(result.outcomes?.[0].topUsers).toEqual([
+      { userDisplayName: 'bob', channelPointsUsed: 100, channelPointsWon: null },
+    ])
+  })
 })

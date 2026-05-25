@@ -1,7 +1,7 @@
 interface PredictionTopPredictor {
   user_name: string
   channel_points_used: number
-  channel_points_won: number
+  channel_points_won: number | null
 }
 
 interface PredictionOutcome {
