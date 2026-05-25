@@ -38,6 +38,7 @@
     "**/*.test.ts",
     "**/*.spec.ts",
     "packages/clip-processor-py",
-    "services"
+    "services",
+    "scripts/spectate*"
   ]
 }

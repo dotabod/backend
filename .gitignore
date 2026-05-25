@@ -20,3 +20,4 @@ dist
 **/.claude/plans/
 
 .DS_Store
+scripts/spectate*
