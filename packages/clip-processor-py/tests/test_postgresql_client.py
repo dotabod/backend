@@ -96,36 +96,18 @@ def test_update_status_rolls_back_on_error(db_client, mock_cursor):
 # --------------------------------------------------------------------------- #
 # save_clip_result / get_clip_result — JSON round-trip
 # --------------------------------------------------------------------------- #
-def test_save_clip_result_serializes_result_and_omits_empty_facets(db_client, mock_cursor):
+def test_save_clip_result_serializes_result(db_client, mock_cursor):
     result = {"players": [{"player_name": "x", "team": "Radiant", "position": 0}], "heroes": []}
     assert db_client.save_clip_result("c1", "u", result) is True
     params = mock_cursor.execute.call_args.args[1]
     assert params[0] == "c1"
     assert json.loads(params[2]) == result  # results column = json.dumps(result)
-    assert params[5] is None  # no per-player facet -> facets column is NULL
-
-
-def test_save_clip_result_extracts_facets(db_client, mock_cursor):
-    result = {"players": [{"player_name": "x", "team": "Dire", "position": 2, "facet": 1}]}
-    assert db_client.save_clip_result("c1", "u", result) is True
-    params = mock_cursor.execute.call_args.args[1]
-    facets = json.loads(params[5])
-    assert facets["dire"] == [{"position": 2, "facet": 1}]
-    assert facets["radiant"] == []
 
 
 def test_get_clip_result_returns_results_payload(db_client, mock_cursor):
     payload = {"players": [{"player_name": "x", "team": "Radiant", "position": 0}]}
-    mock_cursor.fetchone.return_value = {"results": payload, "facets": None}
+    mock_cursor.fetchone.return_value = {"results": payload}
     assert db_client.get_clip_result("c1") == payload
-
-
-def test_get_clip_result_merges_facets_into_players(db_client, mock_cursor):
-    payload = {"players": [{"player_name": "x", "team": "Radiant", "position": 0}]}
-    facets = {"radiant": [{"position": 0, "facet": 7}], "dire": []}
-    mock_cursor.fetchone.return_value = {"results": payload, "facets": facets}
-    out = db_client.get_clip_result("c1")
-    assert out["players"][0]["facet"] == 7
 
 
 def test_get_clip_result_returns_none_when_missing(db_client, mock_cursor):
@@ -238,32 +220,11 @@ def test_match_result_prefers_non_draft_and_attaches_clip_meta(db_client, mock_c
         "clip_id": "c1",
         "clip_url": "u1",
         "results": {"is_draft": False, "players": [{"player_name": "x"}]},
-        "facets": None,
     }]
     out = db_client.get_clip_result_by_match_id("m1")
     assert out["clip_id"] == "c1"
     assert out["clip_url"] == "u1"
     assert out["is_draft"] is False
-
-
-def test_match_result_merges_facets_into_players_and_heroes(db_client, mock_cursor):
-    # players are 1-indexed, heroes are 0-indexed; facets are keyed by the
-    # 1-indexed (player) position. The heroes loop adds +1 to realign, so the
-    # SAME facet must land on both the player and its corresponding hero.
-    db_client.get_latest_draft_for_match = MagicMock(return_value=None)
-    mock_cursor.fetchall.return_value = [{
-        "clip_id": "c1",
-        "clip_url": "u1",
-        "results": {
-            "is_draft": False,
-            "players": [{"player_name": "x", "team": "Radiant", "position": 1}],
-            "heroes": [{"name": "h", "team": "Radiant", "position": 0}],
-        },
-        "facets": {"radiant": [{"position": 1, "facet": 7}], "dire": []},
-    }]
-    out = db_client.get_clip_result_by_match_id("m1")
-    assert out["players"][0]["facet"] == 7
-    assert out["heroes"][0]["facet"] == 7  # +1 realignment lands on the same facet
 
 
 def test_match_result_attaches_draft_info(db_client, mock_cursor):
@@ -272,7 +233,7 @@ def test_match_result_attaches_draft_info(db_client, mock_cursor):
     )
     mock_cursor.fetchall.return_value = [{
         "clip_id": "c1", "clip_url": "u1",
-        "results": {"is_draft": False, "players": []}, "facets": None,
+        "results": {"is_draft": False, "players": []},
     }]
     out = db_client.get_clip_result_by_match_id("m1")
     assert out["draft_info"]["captains"] == {"Radiant": "Cap"}
@@ -294,24 +255,6 @@ def test_match_result_returns_none_when_nothing_found(db_client, mock_cursor):
     mock_cursor.fetchall.return_value = []
     mock_cursor.fetchone.return_value = None
     assert db_client.get_clip_result_by_match_id("m1") is None
-
-
-def test_match_result_survives_facets_missing_a_team_key(db_client, mock_cursor):
-    # Stored facets dict is missing the 'dire' key (legacy/partial payload) and a
-    # Dire player is present. facets.get('dire', []) must not raise -> still return
-    # the cached result rather than a silent cache miss.
-    db_client.get_latest_draft_for_match = MagicMock(return_value=None)
-    mock_cursor.fetchall.return_value = [{
-        "clip_id": "c1", "clip_url": "u1",
-        "results": {
-            "is_draft": False,
-            "players": [{"player_name": "x", "team": "Dire", "position": 2}],
-        },
-        "facets": {"radiant": [{"position": 1, "facet": 7}]},  # no 'dire' key
-    }]
-    out = db_client.get_clip_result_by_match_id("m1")
-    assert out is not None
-    assert out["clip_id"] == "c1"
 
 
 def test_match_result_in_game_overrides_lower_confidence_per_slot(db_client, mock_cursor):
@@ -337,8 +280,8 @@ def test_match_result_in_game_overrides_lower_confidence_per_slot(db_client, moc
     }
     # Newest first (base row = in-game), both returned by the non-draft query.
     mock_cursor.fetchall.return_value = [
-        {"clip_id": "cg", "clip_url": "ug", "results": ingame, "facets": None},
-        {"clip_id": "cp", "clip_url": "up", "results": pregame, "facets": None},
+        {"clip_id": "cg", "clip_url": "ug", "results": ingame},
+        {"clip_id": "cp", "clip_url": "up", "results": pregame},
     ]
     out = db_client.get_clip_result_by_match_id("m1")
     by_slot = {(h["team"], h["position"]): h for h in out["heroes"]}
@@ -366,8 +309,8 @@ def test_match_result_in_game_fills_missing_slot_from_pregame(db_client, mock_cu
         ],
     }
     mock_cursor.fetchall.return_value = [
-        {"clip_id": "cg", "clip_url": "ug", "results": ingame, "facets": None},
-        {"clip_id": "cp", "clip_url": "up", "results": pregame, "facets": None},
+        {"clip_id": "cg", "clip_url": "ug", "results": ingame},
+        {"clip_id": "cp", "clip_url": "up", "results": pregame},
     ]
     out = db_client.get_clip_result_by_match_id("m1")
     by_slot = {(h["team"], h["position"]): h["hero_id"] for h in out["heroes"]}
@@ -397,8 +340,8 @@ def test_match_result_carries_player_name_from_lower_score_detection(db_client, 
         ],
     }
     mock_cursor.fetchall.return_value = [
-        {"clip_id": "cn", "clip_url": "un", "results": named, "facets": None},
-        {"clip_id": "cp", "clip_url": "up", "results": pregame, "facets": None},
+        {"clip_id": "cn", "clip_url": "un", "results": named},
+        {"clip_id": "cp", "clip_url": "up", "results": pregame},
     ]
     out = db_client.get_clip_result_by_match_id("m1")
     techies = out["heroes"][0]
@@ -438,28 +381,3 @@ def test_is_queue_processing_false_when_zero(db_client, mock_cursor):
     assert db_client.is_queue_processing() is False
 
 
-# --------------------------------------------------------------------------- #
-# get_clip_result robustness (BUG TARGET #1)
-# --------------------------------------------------------------------------- #
-def test_get_clip_result_survives_facets_missing_team_key(db_client, mock_cursor):
-    # Same silent-cache-miss robustness gap as the match_id path: a facets dict
-    # lacking the player's team key raises KeyError, swallowed -> returns None.
-    mock_cursor.fetchone.return_value = {
-        "results": {"players": [{"player_name": "x", "team": "Dire", "position": 2}]},
-        "facets": {"radiant": [{"position": 1, "facet": 7}]},  # no 'dire' key
-    }
-    out = db_client.get_clip_result("c1")
-    assert out is not None
-    assert out["players"][0]["player_name"] == "x"
-
-
-def test_get_clip_result_survives_player_missing_position(db_client, mock_cursor):
-    # A player dict missing 'position'/'team' (partial detection) also raises
-    # KeyError during facet merge and silently nukes the cached result.
-    mock_cursor.fetchone.return_value = {
-        "results": {"players": [{"player_name": "x"}]},  # no team/position
-        "facets": {"radiant": [{"position": 1, "facet": 7}], "dire": []},
-    }
-    out = db_client.get_clip_result("c1")
-    assert out is not None
-    assert out["players"][0]["player_name"] == "x"

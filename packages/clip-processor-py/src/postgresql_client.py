@@ -168,10 +168,6 @@ class PostgresClient:
             except Exception:
                 pass
             try:
-                cursor.execute(f"ALTER TABLE {self.results_table} ADD COLUMN IF NOT EXISTS facets JSONB")
-            except Exception:
-                pass
-            try:
                 cursor.execute(f"ALTER TABLE {self.queue_table} ADD COLUMN IF NOT EXISTS match_id TEXT")
             except Exception:
                 pass
@@ -221,37 +217,6 @@ class PostgresClient:
             if conn:
                 self._return_connection(conn)
 
-    @staticmethod
-    def _merge_facets_into_result(result: Dict[str, Any], facets: Optional[Dict[str, Any]]) -> None:
-        """Attach stored facet info onto a result's players/heroes in place.
-
-        players carry 1-indexed positions; heroes are 0-indexed, hence the +1.
-        Rows missing team/position are skipped, and an absent team key is treated
-        as empty so a partial facets payload never discards the cached result.
-        """
-        if not facets or not isinstance(result, dict):
-            return
-
-        for player in result.get('players', []):
-            team = (player.get('team') or '').lower()
-            position = player.get('position')
-            if not team or position is None:
-                continue
-            for hero_facet in facets.get(team, []):
-                if hero_facet['position'] == position:
-                    player['facet'] = hero_facet['facet']
-                    break
-
-        for hero in result.get('heroes', []):
-            team = (hero.get('team') or '').lower()
-            if not team or hero.get('position') is None:
-                continue
-            position = hero['position'] + 1
-            for hero_facet in facets.get(team, []):
-                if hero_facet['position'] == position:
-                    hero['facet'] = hero_facet['facet']
-                    break
-
     def get_clip_result(self, clip_id: str) -> Optional[Dict[str, Any]]:
         """
         Get cached result for a clip_id if it exists.
@@ -276,7 +241,7 @@ class PostgresClient:
 
             # Query for the clip by ID
             query = f"""
-            SELECT results, facets FROM {self.results_table}
+            SELECT results FROM {self.results_table}
             WHERE clip_id = %s
             ORDER BY processed_at DESC
             LIMIT 1
@@ -288,9 +253,7 @@ class PostgresClient:
 
             if row:
                 logger.info(f"Found cached result for clip ID: {clip_id}")
-                result = row['results']
-                self._merge_facets_into_result(result, row['facets'])
-                return result
+                return row['results']
             else:
                 logger.debug(f"No cached result found for clip ID: {clip_id}")
                 return None
@@ -369,9 +332,6 @@ class PostgresClient:
                 player['rank'] = hero['rank']
             if 'player_name' in hero:
                 player['player_name'] = hero['player_name']
-            facet = hero.get('facet')
-            if isinstance(facet, dict) and 'name' in facet:
-                player['facet'] = facet['name']
             if hero.get('low_confidence'):
                 player['low_confidence'] = True
             players.append(player)
@@ -404,7 +364,7 @@ class PostgresClient:
             # in-game top-bar clip) overrides a weaker pre-game one and partial clips
             # fill each other's gaps.
             query = f"""
-            SELECT clip_id, clip_url, results, facets FROM {self.results_table}
+            SELECT clip_id, clip_url, results FROM {self.results_table}
             WHERE match_id = %s
               AND COALESCE((results->>'is_draft')::boolean, FALSE) = FALSE
             ORDER BY processed_at DESC
@@ -420,14 +380,11 @@ class PostgresClient:
                 result['clip_id'] = base['clip_id']
                 result['clip_url'] = base['clip_url']
 
-                # Override heroes/players with the per-slot highest-confidence merge,
-                # then apply stored facets to the merged players/heroes.
+                # Override heroes/players with the per-slot highest-confidence merge.
                 merged_heroes = self._merge_hero_slots([r['results'] for r in rows])
                 if merged_heroes:
                     result['heroes'] = merged_heroes
                     result['players'] = self._players_from_heroes(merged_heroes)
-
-                self._merge_facets_into_result(result, base['facets'])
 
                 # Also attach latest draft info if available
                 try:
@@ -664,33 +621,17 @@ class PostgresClient:
                 return False
             cursor = conn.cursor()
 
-            # Extract facet information from result
-            facets = {
-                'radiant': [],
-                'dire': []
-            }
-
-            if 'players' in result:
-                for player in result['players']:
-                    if 'facet' in player:
-                        facets[player['team'].lower()].append({
-                            'position': player['position'],
-                            'facet': player['facet']
-                        })
-
-            # Save result with facet information
             cursor.execute(f"""
             INSERT INTO {self.results_table} (
-                clip_id, clip_url, results, processing_time_seconds, match_id, facets, processed_at
+                clip_id, clip_url, results, processing_time_seconds, match_id, processed_at
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, NOW()
+                %s, %s, %s, %s, %s, NOW()
             )
             ON CONFLICT (clip_id) DO UPDATE SET
                     clip_url = EXCLUDED.clip_url,
                 results = EXCLUDED.results,
                 processing_time_seconds = EXCLUDED.processing_time_seconds,
                 match_id = EXCLUDED.match_id,
-                facets = EXCLUDED.facets,
                 processed_at = NOW()
             """, (
                     clip_id,
@@ -698,7 +639,6 @@ class PostgresClient:
                 json.dumps(result),
                     processing_time_seconds,
                     match_id,
-                    json.dumps(facets) if facets['radiant'] or facets['dire'] else None
                 ))
 
             conn.commit()

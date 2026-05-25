@@ -461,7 +461,6 @@ def test_process_frame_returns_empty_when_hero_bar_fails():
 
 def test_process_frame_identifies_heroes(monkeypatch):
     monkeypatch.setattr(dhd, "TESSERACT_AVAILABLE", False)
-    monkeypatch.setattr(dhd, "_LOADED_FACET_TEMPLATES", None)
     counter = itertools.count(1)
 
     def fake_matches(icon, data, **kwargs):
@@ -471,8 +470,7 @@ def test_process_frame_identifies_heroes(monkeypatch):
 
     with patch.object(dhd, "load_image", return_value=np.zeros((1080, 1920, 3), np.uint8)), \
          patch.object(dhd, "load_heroes_data", return_value=[{"id": 1}]), \
-         patch.object(dhd, "get_top_hero_matches", side_effect=fake_matches), \
-         patch.object(dhd, "load_facet_templates_singleton"):
+         patch.object(dhd, "get_top_hero_matches", side_effect=fake_matches):
         heroes = dhd.process_frame_for_heroes("f.jpg")
     assert len(heroes) == 10  # all positions resolved to distinct heroes
     assert all("team" in h and "position" in h for h in heroes)

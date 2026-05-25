@@ -22,7 +22,6 @@ LEGACY_HERO_LIST_URL = "https://stats.spectral.gg/lrg2/api/?mod=metadata&gets=he
 STEAM_HERO_IMAGE_BASE_URL = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/"
 LEGACY_HERO_IMAGE_BASE_URL = "https://courier.spectral.gg/images/dota/portraits_lg/"
 HERO_ABILITIES_URL = "https://raw.githubusercontent.com/odota/dotaconstants/refs/heads/master/build/hero_abilities.json"
-FACET_ICON_BASE_URL = "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/icons/facets/"
 REQUEST_TIMEOUT_SECONDS = 20
 
 # Alternate-portrait suffixes that exist for *some* heroes on the Spectral CDN
@@ -467,38 +466,6 @@ def download_hero_abilities():
 
         logger.info(f"Hero abilities data saved to {abilities_path}")
 
-        # Create a directory for facet icons
-        facets_dir = ASSETS_DIR / "facet_icons"
-        facets_dir.mkdir(exist_ok=True)
-
-        # Download facet icons for each hero
-        for hero_id, hero_data in abilities_data.items():
-            if 'facets' in hero_data:
-                for facet in hero_data['facets']:
-                    icon_name = facet.get('icon')
-                    if icon_name:
-                        icon_url = f"{FACET_ICON_BASE_URL}{icon_name}.png"
-                        icon_path = facets_dir / f"{icon_name}.png"
-
-                        if not icon_path.exists():
-                            try:
-                                logger.debug(f"Downloading facet icon {icon_name} from {icon_url}")
-                                response = requests.get(
-                                    icon_url,
-                                    stream=True,
-                                    timeout=REQUEST_TIMEOUT_SECONDS
-                                )
-                                response.raise_for_status()
-
-                                with open(icon_path, 'wb') as f:
-                                    for chunk in response.iter_content(chunk_size=8192):
-                                        f.write(chunk)
-
-                                logger.debug(f"Downloaded facet icon {icon_name} to {icon_path}")
-                            except Exception as e:
-                                logger.error(f"Error downloading facet icon {icon_name}: {e}")
-                                continue
-
         return abilities_data
     except Exception as e:
         logger.error(f"Error downloading hero abilities data: {e}")
@@ -524,7 +491,7 @@ def get_hero_data(refresh=True):
     hero_data_path = ASSETS_DIR / "hero_data.json"
     abilities_path = ASSETS_DIR / "hero_abilities.json"
 
-    # Load abilities data first. Refreshing keeps facets current for newly added heroes.
+    # Load abilities data first.
     abilities_data = None
     if abilities_path.exists():
         try:

@@ -46,7 +46,6 @@ def run_migrations():
         migrations = [
             ('001_initial_schema.sql', create_initial_schema),
             ('002_add_match_id.sql', add_match_id_column),
-            ('003_add_facets.sql', add_facets_column)
         ]
 
         # Check which migrations have been applied
@@ -164,19 +163,6 @@ def add_match_id_column(cursor):
     # Create index on match_id for processing_queue table
     cursor.execute("""
     CREATE INDEX IF NOT EXISTS idx_processing_queue_match_id ON processing_queue (match_id)
-    """)
-
-def add_facets_column(cursor):
-    """Add facets column to clip_results table."""
-    # Add facets column to store facet information in JSONB format
-    cursor.execute("""
-    ALTER TABLE clip_results
-    ADD COLUMN IF NOT EXISTS facets JSONB
-    """)
-
-    # Update the result column to include facet information for each hero
-    cursor.execute("""
-    COMMENT ON COLUMN clip_results.facets IS 'Stores facet information for heroes in format: {"team": "radiant/dire", "heroes": [{"position": 1, "facet": {"name": "...", "title": "...", "icon": "...", "confidence": 0.95}}]}'
     """)
 
 if __name__ == "__main__":

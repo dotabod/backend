@@ -15,7 +15,6 @@ from src import db_migration
 MIGRATION_NAMES = [
     "001_initial_schema.sql",
     "002_add_match_id.sql",
-    "003_add_facets.sql",
 ]
 
 
@@ -48,7 +47,7 @@ def test_runs_all_migrations_when_none_applied():
     with patch.object(db_migration, "db_client", db):
         assert db_migration.run_migrations() is True
     assert _applied_inserts(cursor) == MIGRATION_NAMES
-    assert conn.commit.call_count == 3
+    assert conn.commit.call_count == 2
     db._return_connection.assert_called_once_with(conn)
 
 
@@ -66,8 +65,8 @@ def test_runs_only_pending_migrations():
     cursor.fetchall.return_value = [("001_initial_schema.sql",)]
     with patch.object(db_migration, "db_client", db):
         assert db_migration.run_migrations() is True
-    assert _applied_inserts(cursor) == ["002_add_match_id.sql", "003_add_facets.sql"]
-    assert conn.commit.call_count == 2
+    assert _applied_inserts(cursor) == ["002_add_match_id.sql"]
+    assert conn.commit.call_count == 1
 
 
 def test_rolls_back_and_stops_on_migration_error():
@@ -105,10 +104,3 @@ def test_add_match_id_adds_columns_and_indexes():
     assert "ADD COLUMN IF NOT EXISTS match_id" in sql
     assert "idx_clip_results_match_id" in sql
     assert "idx_processing_queue_match_id" in sql
-
-
-def test_add_facets_adds_jsonb_column():
-    cursor = MagicMock()
-    db_migration.add_facets_column(cursor)
-    sql = " ".join(c.args[0] for c in cursor.execute.call_args_list)
-    assert "ADD COLUMN IF NOT EXISTS facets JSONB" in sql
