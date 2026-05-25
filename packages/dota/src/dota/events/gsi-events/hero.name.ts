@@ -80,19 +80,28 @@ eventHandler.registerEvent('hero:name', {
             heroName: hero?.localized_name,
           })
 
-          // Update database with new prediction ID
+          // Update database with new prediction ID + the swapped hero name.
+          // Without `hero_name` here, the matches row keeps the originally-
+          // captured hero (from openTheBet) and !unresolved / manual-resolve
+          // chat copy would refer to the wrong hero until closeBets/updateMmr
+          // overwrites it at match end.
           if (bet?.id && betData?.predictionId) {
             await supabase
               .from('matches')
               .update({
                 predictionId: bet.id,
+                hero_name: name,
                 updated_at: new Date().toISOString(),
               })
               .eq('predictionId', betData.predictionId)
           } else if (betData?.predictionId) {
             await supabase
               .from('matches')
-              .update({ predictionId: null, updated_at: new Date().toISOString() })
+              .update({
+                predictionId: null,
+                hero_name: name,
+                updated_at: new Date().toISOString(),
+              })
               .eq('predictionId', betData.predictionId)
           }
 

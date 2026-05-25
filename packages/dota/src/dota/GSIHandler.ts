@@ -138,6 +138,7 @@ class GSIHandler implements GSIHandlerType {
   } = {}
   bountyTaskId?: string
   killstreakTaskId?: string
+  openTheBetTaskId?: string
 
   endingBets = false
   openingBets = false
@@ -270,6 +271,15 @@ class GSIHandler implements GSIHandlerType {
     if (this.noTpChatter.taskId) {
       delayedQueue.removeTask(this.noTpChatter.taskId)
       this.noTpChatter.taskId = undefined
+    }
+
+    // Cancel any pending openTheBet stream-delay task so a reset on the
+    // current match doesn't fire openTwitchBet against stale captured args
+    // (would open an orphan prediction the next match then can't supersede —
+    // Twitch only allows one active prediction per channel).
+    if (this.openTheBetTaskId) {
+      delayedQueue.removeTask(this.openTheBetTaskId)
+      this.openTheBetTaskId = undefined
     }
   }
 
@@ -632,6 +642,10 @@ class GSIHandler implements GSIHandlerType {
     // prediction titled "Will we win with ".
     const validatedMatchId = client.gsi.map.matchid
     const validatedHeroName = client.gsi.hero.name
+    // team_name is set on player at this point because activity === 'playing'
+    // (checked above). Capture it for the same reason as matchId/heroName so
+    // the matches row records the team the streamer was actually on.
+    const validatedMyTeam = client.gsi.player?.team_name ?? ''
 
     const matchId = (await redisClient.client.get(`${client.token}:matchId`)) ?? undefined
 
@@ -760,8 +774,9 @@ class GSIHandler implements GSIHandlerType {
       return
     }
 
-    delayedQueue.addTask(getStreamDelay(client.settings, client.subscription), () =>
-      this.openTheBet(validatedMatchId, validatedHeroName),
+    this.openTheBetTaskId = delayedQueue.addTask(
+      getStreamDelay(client.settings, client.subscription),
+      () => this.openTheBet(validatedMatchId, validatedHeroName, validatedMyTeam),
     )
 
     // .catch((e: any) => {
@@ -784,8 +799,31 @@ class GSIHandler implements GSIHandlerType {
     // })
   }
 
-  openTheBet = async (matchId: string, heroName: string) => {
+  // Rollback the per-match Redis state openBets wrote at lines 721-725 before
+  // queueing this task. Called on every openTheBet bail path so closeBets /
+  // checkEarlyDCWinner / hero.name.ts don't read a `${token}:matchId` that
+  // points at a non-existent matches row.
+  private async abortOpenBets() {
+    this.openingBets = false
+    try {
+      await redisClient.client
+        .multi()
+        .del(`${this.client.token}:matchId`)
+        .del(`${this.client.token}:playingTeam`)
+        .del(`${this.client.token}:playingHero`)
+        .exec()
+    } catch (e) {
+      logger.error('[BETS] Error clearing redis on openTheBet abort', { e })
+    }
+  }
+
+  openTheBet = async (matchId: string, heroName: string, myTeam = '') => {
     const { client } = this
+
+    // Task is now executing — clear the id so a subsequent reset doesn't try
+    // to remove a task that already ran (or worse, remove a freshly-scheduled
+    // openTheBet for the next match that has the same id slot).
+    this.openTheBetTaskId = undefined
 
     // Defense in depth: the only call site (openBets) captures these from
     // validated GSI before queueing this callback. An empty matchId means
@@ -793,11 +831,25 @@ class GSIHandler implements GSIHandlerType {
     // !unresolved would later render as "(Unknown, ...)" with no way to
     // !won/!lost it.
     if (!matchId || !heroName) {
-      this.openingBets = false
+      await this.abortOpenBets()
       return
     }
 
+    // openBets only validates `heroName.length > 0`; getHero rejects unknown
+    // strings (modded heroes, future Valve schema). Without this guard the
+    // Twitch prediction title becomes "Will we win with " (the original bug)
+    // and the matches row stores the unknown id verbatim — !unresolved
+    // formatting can't render it either.
     const hero = getHero(heroName as HeroNames)
+    if (!hero) {
+      logger.error('[BETS] Captured heroName did not resolve via getHero', {
+        channel: client.name,
+        heroName,
+        matchId,
+      })
+      await this.abortOpenBets()
+      return
+    }
     let betId: undefined | string
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings, client.subscription)
@@ -818,26 +870,33 @@ class GSIHandler implements GSIHandlerType {
         matchId,
       })
 
+      // Don't insert a matches row when the Twitch prediction failed to open —
+      // it would be a phantom (no predictionId, chat was never told) that
+      // !unresolved later nags about. Safer to leave the user without a row
+      // than to create one we can't resolve.
+      await this.abortOpenBets()
       return
-    } finally {
-      this.openingBets = false
+    }
+    this.openingBets = false
 
-      // we fill in hero name later when match ends in case they swap heroes
-      await supabase.from('matches').insert({
-        predictionId: betId,
-        matchId,
-        userId: client.token,
-        myTeam: client.gsi?.player?.team_name ?? '',
-        steam32Id: client.steam32Id,
-        hero_name: heroName,
+    // matchId, heroName, and myTeam are snapshotted in openBets so the insert
+    // is stable even if GSI cleared during the stream delay. hero_name can
+    // still be overwritten later (closeBets/updateMmr writes the GC value at
+    // match-end; hero.name.ts mid-game-swap handler also updates it).
+    await supabase.from('matches').insert({
+      predictionId: betId,
+      matchId,
+      userId: client.token,
+      myTeam,
+      steam32Id: client.steam32Id,
+      hero_name: heroName,
+    })
+
+    if (getValueOrDefault(DBSettings.streamersAnnounce, client.settings, client.subscription)) {
+      const announceMatchId = matchId
+      delayedQueue.addTask(STREAMERS_ANNOUNCE_DELAY_MS, () => {
+        void this.emitStreamersInMatch(announceMatchId)
       })
-
-      if (getValueOrDefault(DBSettings.streamersAnnounce, client.settings, client.subscription)) {
-        const announceMatchId = matchId
-        delayedQueue.addTask(STREAMERS_ANNOUNCE_DELAY_MS, () => {
-          void this.emitStreamersInMatch(announceMatchId)
-        })
-      }
     }
 
     if (betsEnabled) {
