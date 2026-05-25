@@ -6,6 +6,7 @@ import type { SocketClient } from '../../types'
 import type { SubscriptionRow } from '../../types/subscription'
 import { canAccessFeature } from '../../utils/subscription'
 import { chatClient } from '../chatClient'
+import { prepareSuggestionSuffix, suggestionContext } from './suggestCommand'
 
 export interface UserType {
   name: string
@@ -225,8 +226,10 @@ class CommandHandler {
     // Update the command cooldown
     this.updateCooldown(commandName, options.cooldown ?? defaultCooldown, message.channel.id)
 
-    // Execute the command handler
-    await options.handler(message, args, command)
+    // Execute the command handler inside a scoped suffix context so the first
+    // chatClient.say it emits can append a suggestion to the same chat line.
+    const suffix = prepareSuggestionSuffix(commandName, message)
+    await suggestionContext.run({ suffix }, () => options.handler(message, args, command))
   }
 
   // Function for parsing a Twitch chat message to extract the command and its arguments

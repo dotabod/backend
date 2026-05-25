@@ -1,6 +1,7 @@
 import { findUserByName } from '../dota/lib/connectedStreamers'
 import { DBSettings, getValueOrDefault } from '../settings'
 import { twitchChat } from '../steam/ws'
+import { suggestionContext } from './lib/suggestionContext'
 
 // Rate limiting constants
 const MAX_WHISPERS_PER_SECOND = 3
@@ -71,7 +72,17 @@ export const chatClient = {
         if (isDisabled) return
       }
 
-      twitchChat.emit('say', user?.Account?.providerAccountId, text, reply_parent_message_id)
+      // Consume a pending command-suggestion suffix from the active command
+      // context (set by CommandHandler.handleMessage). Appended to the first
+      // outgoing message so we don't send a separate "Also try !x" line.
+      const ctx = suggestionContext.getStore()
+      let finalText = text
+      if (ctx?.suffix) {
+        finalText = `${text} · ${ctx.suffix}`
+        ctx.suffix = null
+      }
+
+      twitchChat.emit('say', user?.Account?.providerAccountId, finalText, reply_parent_message_id)
     }
   },
   whisper: (channel: string, text: string | undefined) => {

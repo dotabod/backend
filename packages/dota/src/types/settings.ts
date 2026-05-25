@@ -48,6 +48,7 @@ const defaultCommands = {
   commandLost: true,
   commandToday: true,
   commandStreamers: true,
+  commandSuggestions: true,
 } as const
 
 // Define the chatter types
