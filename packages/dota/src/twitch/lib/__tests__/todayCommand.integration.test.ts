@@ -67,6 +67,6 @@ describe('!today', () => {
 
     expect(state.chatSayCalls).toHaveLength(1)
     const summary = t('today.summary', { lng: 'en', count: 4, wins: 2, losses: 2, total: 4 })
-    expect(state.chatSayCalls[0].message).toBe(`Lina 2-1 | Pudge 0-1 · ${summary}`)
+    expect(state.chatSayCalls[0].message).toBe(`Lina 2W 1L | Pudge 1L · ${summary}`)
   })
 })

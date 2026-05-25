@@ -7,9 +7,11 @@ import commandHandler, { type MessageType } from '../lib/CommandHandler'
 // Twitch chat limit is 500 characters
 const TWITCH_CHAR_LIMIT = 500
 
-// Format a single hero stat: "Hero 3-1" or "Hero 0-2"
+// Format a single hero stat: "Hero 3W 1L", "Hero 2W", or "Hero 1L"
 function formatHeroStat(heroName: string, wins: number, losses: number): string {
-  return `${heroName} ${wins}-${losses}`
+  if (wins && losses) return `${heroName} ${wins}W ${losses}L`
+  if (wins) return `${heroName} ${wins}W`
+  return `${heroName} ${losses}L`
 }
 
 // Split message into chunks that fit within Twitch's character limit

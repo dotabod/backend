@@ -97,7 +97,7 @@ describe('!today', () => {
     await commandHandler.handleMessage(makeMessage({ content: '!today' }))
     expect(state.chatSayCalls).toHaveLength(1)
     const msg = state.chatSayCalls[0].message
-    expect(msg).toContain('Anti-Mage 1-1')
-    expect(msg).toContain('Axe 1-0')
+    expect(msg).toContain('Anti-Mage 1W 1L')
+    expect(msg).toContain('Axe 1W')
   })
 })
