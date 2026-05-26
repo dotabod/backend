@@ -2866,6 +2866,13 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
     except Exception as e:
         logger.error(f"Error processing media: {e}")
         traceback.print_exc()
+        # Clip-not-found from clip_utils.get_clip_details is transient (Twitch's
+        # public GQL lags Helix on fresh clips). Propagate the original error so
+        # the queue worker can re-queue this request instead of generic-failing
+        # it through the "no heroes detected" fall-through. Everything else stays
+        # as the soft-None failure mode it always was.
+        if isinstance(e, ValueError) and 'Clip not found or inaccessible' in str(e):
+            raise
         return None
     finally:
         # Make sure to stop the timer if not already stopped

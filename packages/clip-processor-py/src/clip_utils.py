@@ -124,15 +124,25 @@ def get_clip_details(url, max_retries=10, retry_delay=2, max_retry_delay=15):
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             }
 
-            # Use Twitch's persisted query format (more reliable than full query)
+            # Twitch periodically rotates the sha256Hash for `VideoAccessToken_Clip`
+            # (last seen returning `PersistedQueryNotFound` 2026-05-26), which made
+            # every clip lookup raise "Clip not found or inaccessible" even though
+            # the clip existed. Sending the full query body costs ~1KB extra per
+            # request and is immune to that rotation. Same operationName + shape
+            # the web player uses.
             gql_query = {
                 "operationName": "VideoAccessToken_Clip",
-                "extensions": {
-                    "persistedQuery": {
-                        "version": 1,
-                        "sha256Hash": "36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11",
-                    }
-                },
+                "query": (
+                    "query VideoAccessToken_Clip($slug: ID!) {"
+                    " clip(slug: $slug) {"
+                    " id"
+                    " playbackAccessToken("
+                    "params: {platform: \"web\", playerBackend: \"mediaplayer\", playerType: \"site\"}"
+                    ") { signature value }"
+                    " videoQualities { sourceURL quality frameRate }"
+                    " durationSeconds title broadcaster { displayName } createdAt"
+                    " } }"
+                ),
                 "variables": {"slug": clip_id},
             }
 
