@@ -116,6 +116,40 @@ def test_requeue_for_retry_returns_false_when_cap_reached(db_client, mock_cursor
 
 
 # --------------------------------------------------------------------------- #
+# fetch_recent_failed_clips — sweep eligibility query
+# --------------------------------------------------------------------------- #
+def test_fetch_recent_failed_clips_filters_correctly(db_client, mock_cursor):
+    mock_cursor.fetchall.return_value = [
+        {"request_id": "r1", "clip_id": "c1", "match_id": "m1",
+         "request_type": "clip", "retry_count": 1},
+    ]
+    rows = db_client.fetch_recent_failed_clips(window='30 minutes', max_retry_count=2)
+    assert rows == [{
+        "request_id": "r1", "clip_id": "c1", "match_id": "m1",
+        "request_type": "clip", "retry_count": 1,
+    }]
+    query, params = mock_cursor.execute.call_args.args
+    assert "status = 'failed'" in query
+    assert "request_type IN ('clip', 'clip_in_game')" in query
+    # Must skip matches that already have a successful clip_results row.
+    assert "NOT EXISTS" in query
+    assert "match_id IS NOT NULL" in query
+    # Parameters: window, max_retry_count (passed positionally to the SQL).
+    assert params == ('30 minutes', 2)
+
+
+def test_fetch_recent_failed_clips_empty_on_no_rows(db_client, mock_cursor):
+    mock_cursor.fetchall.return_value = []
+    assert db_client.fetch_recent_failed_clips() == []
+
+
+def test_fetch_recent_failed_clips_swallows_db_errors(db_client, mock_cursor):
+    # Sweep failure must NOT crash the background thread — return empty.
+    mock_cursor.execute.side_effect = RuntimeError("conn dropped")
+    assert db_client.fetch_recent_failed_clips() == []
+
+
+# --------------------------------------------------------------------------- #
 # save_clip_result / get_clip_result — JSON round-trip
 # --------------------------------------------------------------------------- #
 def test_save_clip_result_serializes_result(db_client, mock_cursor):

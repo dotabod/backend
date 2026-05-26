@@ -48,12 +48,14 @@ worker_threads = []
 try:
     from dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
     from dota_heroes import get_hero_data
+    from clip_utils import get_clip_details
     from src.postgresql_client import db_client
 except ImportError as e:
     # Try with relative import for different directory structures
     try:
         from .dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
         from .dota_heroes import get_hero_data
+        from .clip_utils import get_clip_details
         from src.postgresql_client import db_client
     except ImportError as rel_e:
         logger.error(f"Error: Could not import required modules. First error: {e}, Second error: {rel_e}")
@@ -175,6 +177,7 @@ def initialize_app():
         # Step 5: Start the worker monitoring thread
         if os.environ.get('RUN_LOCALLY') != 'true':
             start_worker_monitor()
+            start_failed_clip_sweeper()
 
         # Mark as initialized
         app_initialized = True
@@ -243,6 +246,55 @@ def start_worker_monitor():
     monitor_thread = threading.Thread(target=periodic_worker_check, daemon=True)
     monitor_thread.start()
     logger.info("Started worker monitoring thread")
+
+
+# Twitch breakages (GQL hash rotation, CloudFront 404s, ...) usually end on
+# Twitch's side, not ours. Without a sweeper, every failure during the window
+# stays permanently `failed` and we have to manually re-curl with force=true.
+# This thread retries failed-but-recent clips for matches still missing vision
+# data; the retry budget on the row caps the work, so a truly-broken clip
+# can't loop.
+FAILED_CLIP_SWEEP_INTERVAL_S = int(os.environ.get('VISION_REPLAY_SWEEP_INTERVAL_S', '300'))
+
+
+def replay_failed_clips_once() -> int:
+    """One pass of the sweeper: re-queue every eligible failed clip.
+
+    Returns the number of rows re-queued (zero when nothing eligible or all
+    rows tripped the retry cap). Pulled out of the thread loop so it's directly
+    testable without starting a background thread.
+    """
+    try:
+        rows = db_client.fetch_recent_failed_clips()
+    except Exception as e:
+        logger.error(f"[ReplaySweep] fetch failed: {e}")
+        return 0
+    if not rows:
+        logger.debug("[ReplaySweep] no eligible failed clips")
+        return 0
+    requeued = 0
+    for r in rows:
+        # delay_seconds=0 because the sweep already runs on a 5-min cadence —
+        # no point stacking another delay on top.
+        if db_client.requeue_for_retry(r['request_id'], delay_seconds=0):
+            requeued += 1
+    if requeued:
+        # Restart workers if they've gone idle since the queue was empty.
+        start_worker_thread()
+        logger.info(f"[ReplaySweep] re-queued {requeued} failed clip(s)")
+    return requeued
+
+
+def start_failed_clip_sweeper():
+    def loop():
+        while True:
+            time.sleep(FAILED_CLIP_SWEEP_INTERVAL_S)
+            replay_failed_clips_once()
+
+    thread = threading.Thread(target=loop, daemon=True, name='ReplaySweep')
+    thread.start()
+    logger.info(f"Started failed-clip sweeper (every {FAILED_CLIP_SWEEP_INTERVAL_S}s)")
+
 
 def process_queue_worker():
     """Worker thread function to process queued requests."""
@@ -425,6 +477,29 @@ def before_first_request():
 def health_check():
     """Simple health check endpoint."""
     return jsonify({'status': 'ok', 'service': 'dota-hero-detection-api'})
+
+
+# Canary that exercises the full Twitch GQL -> playback-token -> CDN-resolve path.
+# Uptime Kuma polls this every minute; if Twitch rotates the GQL operation, renames
+# a field, breaks auth, or sprays CloudFront 404s, this fails within ~3 polls and
+# we get paged before the next high-MMR streamer queues up missing clips. The 2026-05
+# incident (PersistedQueryNotFound on every clip) would have been caught here.
+@app.route('/health/twitch_gql', methods=['GET'])
+def health_twitch_gql():
+    slug = os.environ.get('VISION_CANARY_CLIP_SLUG')
+    if not slug:
+        return jsonify({'status': 'skipped', 'reason': 'no canary configured'}), 200
+    try:
+        details = get_clip_details(f'https://clips.twitch.tv/{slug}', max_retries=2)
+        if not details.get('download_url'):
+            return jsonify({'status': 'fail', 'reason': 'no download_url'}), 503
+        return jsonify({
+            'status': 'ok',
+            'broadcaster': details.get('broadcaster'),
+            'quality': details.get('selected_quality'),
+        }), 200
+    except Exception as e:
+        return jsonify({'status': 'fail', 'reason': str(e)}), 503
 
 # All other endpoints require authentication
 @app.route('/queue/debug', methods=['GET'])

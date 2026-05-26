@@ -381,6 +381,46 @@ def test_worker_clip_not_found_falls_back_to_failed_when_budget_exhausted():
     assert statuses == ["processing", "failed"]
 
 
+def test_replay_failed_clips_once_requeues_each_eligible_row():
+    db = MagicMock()
+    db.fetch_recent_failed_clips.return_value = [
+        {"request_id": "r1", "clip_id": "c1", "match_id": "m1", "request_type": "clip", "retry_count": 1},
+        {"request_id": "r2", "clip_id": "c2", "match_id": "m2", "request_type": "clip_in_game", "retry_count": 0},
+    ]
+    db.requeue_for_retry.return_value = True
+    with patch.object(api_server, "db_client", db), \
+         patch.object(api_server, "start_worker_thread") as swt:
+        requeued = api_server.replay_failed_clips_once()
+    assert requeued == 2
+    # delay_seconds=0 because the sweep cadence already throttles us.
+    assert db.requeue_for_retry.call_args_list == [
+        (("r1",), {"delay_seconds": 0}),
+        (("r2",), {"delay_seconds": 0}),
+    ]
+    swt.assert_called_once()
+
+
+def test_replay_failed_clips_once_skips_worker_start_when_nothing_requeued():
+    # Cap-exhausted rows: requeue_for_retry returns False; don't bother poking workers.
+    db = MagicMock()
+    db.fetch_recent_failed_clips.return_value = [
+        {"request_id": "r1", "clip_id": "c1", "match_id": "m1", "request_type": "clip", "retry_count": 3},
+    ]
+    db.requeue_for_retry.return_value = False
+    with patch.object(api_server, "db_client", db), \
+         patch.object(api_server, "start_worker_thread") as swt:
+        assert api_server.replay_failed_clips_once() == 0
+    swt.assert_not_called()
+
+
+def test_replay_failed_clips_once_swallows_fetch_errors():
+    # A transient DB error must not crash the sweep thread.
+    db = MagicMock()
+    db.fetch_recent_failed_clips.side_effect = RuntimeError("conn dropped")
+    with patch.object(api_server, "db_client", db):
+        assert api_server.replay_failed_clips_once() == 0
+
+
 def test_worker_other_error_does_not_requeue():
     # Non-transient errors (e.g. download/decode crashes) must not exhaust the
     # retry budget — they should fail immediately as before.

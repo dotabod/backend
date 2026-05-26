@@ -1158,6 +1158,61 @@ class PostgresClient:
             if conn:
                 self._return_connection(conn)
 
+    def fetch_recent_failed_clips(
+        self,
+        window: str = '1 hour',
+        max_retry_count: int = 3,
+    ) -> list:
+        """Return failed clip queue rows that should be auto-replayed.
+
+        Picks rows where:
+          - status='failed' and created within `window`
+          - retry budget not yet exhausted
+          - request_type is a clip variant (not stream)
+          - the match has no successful row in clip_results yet (so we don't
+            re-fetch a clip whose match was already covered by a sibling phase)
+
+        The sliding window bounds the work — once a row ages out we stop trying.
+        Order by created_at so the oldest failures get the next retry slot first.
+        """
+        if not self._initialized and not self.initialize():
+            logger.warning("PostgreSQL not initialized, can't fetch failed clips")
+            return []
+
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for fetching failed clips")
+                return []
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            query = f"""
+            SELECT q.request_id, q.clip_id, q.match_id, q.request_type,
+                   COALESCE(q.retry_count, 0) AS retry_count
+            FROM {self.queue_table} q
+            WHERE q.status = 'failed'
+              AND q.request_type IN ('clip', 'clip_in_game')
+              AND q.created_at > now() - (%s)::interval
+              AND COALESCE(q.retry_count, 0) < %s
+              AND q.match_id IS NOT NULL
+              AND NOT EXISTS (
+                SELECT 1 FROM {self.results_table} r
+                WHERE r.match_id = q.match_id
+              )
+            ORDER BY q.created_at ASC
+            """
+            cursor.execute(query, (window, max_retry_count))
+            rows = [dict(r) for r in cursor.fetchall()]
+            cursor.close()
+            return rows
+        except Exception as e:
+            logger.error(f"Error fetching recent failed clips: {e}")
+            logger.error(traceback.format_exc())
+            return []
+        finally:
+            if conn:
+                self._return_connection(conn)
+
     def get_queue_status(self, request_id: str) -> Optional[Dict[str, Any]]:
         """
         Get the current status of a queued request.

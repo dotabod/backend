@@ -30,6 +30,47 @@ def test_health_ok_without_auth(client):
 
 
 # --------------------------------------------------------------------------- #
+# /health/twitch_gql canary
+# --------------------------------------------------------------------------- #
+def test_canary_skipped_when_slug_unset(client, monkeypatch):
+    monkeypatch.delenv("VISION_CANARY_CLIP_SLUG", raising=False)
+    resp = client.get("/health/twitch_gql")
+    assert resp.status_code == 200
+    assert resp.get_json()["status"] == "skipped"
+
+
+def test_canary_ok_when_get_clip_details_returns_download_url(client, monkeypatch):
+    monkeypatch.setenv("VISION_CANARY_CLIP_SLUG", "evergreen-clip")
+    fake = {"download_url": "https://cdn/x.mp4", "broadcaster": "Dotabod", "selected_quality": "1080"}
+    with patch.object(api_server, "get_clip_details", return_value=fake):
+        resp = client.get("/health/twitch_gql")
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body["status"] == "ok"
+    assert body["broadcaster"] == "Dotabod"
+
+
+def test_canary_fails_on_missing_download_url(client, monkeypatch):
+    # Twitch returned a shape that lacks the playback path — treat as outage.
+    monkeypatch.setenv("VISION_CANARY_CLIP_SLUG", "evergreen-clip")
+    with patch.object(api_server, "get_clip_details", return_value={"broadcaster": "x"}):
+        resp = client.get("/health/twitch_gql")
+    assert resp.status_code == 503
+    assert resp.get_json()["reason"] == "no download_url"
+
+
+def test_canary_fails_on_raised_exception(client, monkeypatch):
+    # PersistedQueryNotFound, 5xx, network blip — all surface as a ValueError or
+    # similar in get_clip_details, and we want the canary to flip red.
+    monkeypatch.setenv("VISION_CANARY_CLIP_SLUG", "evergreen-clip")
+    with patch.object(api_server, "get_clip_details",
+                      side_effect=ValueError("Clip not found or inaccessible: evergreen-clip")):
+        resp = client.get("/health/twitch_gql")
+    assert resp.status_code == 503
+    assert "Clip not found" in resp.get_json()["reason"]
+
+
+# --------------------------------------------------------------------------- #
 # require_api_key
 # --------------------------------------------------------------------------- #
 def test_metrics_requires_key_when_not_local(client, monkeypatch):
