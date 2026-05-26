@@ -758,17 +758,10 @@ eventHandler.registerEvent('newdata', {
       checkNeutralItemsPromise,
     ].filter((promise) => promise !== undefined && promise !== null)
 
-    // Fix: Use Promise.allSettled instead of Promise.all to prevent one failure from stopping all operations
-    await Promise.allSettled(promisesToExecute).then((results) => {
-      // Log any rejected promises
-      results.forEach((result, index) => {
-        if (result.status === 'rejected') {
-          logger.error(`Promise at index ${index} failed in newdata handler`, {
-            reason: result.reason,
-          })
-        }
-      })
-    })
+    // Use Promise.allSettled so one failure doesn't stop the others. Each
+    // sub-promise has its own try/catch + logger inside; logging again here
+    // turned a single broken sub-promise into one error log per GSI frame.
+    await Promise.allSettled(promisesToExecute)
   },
 })
 

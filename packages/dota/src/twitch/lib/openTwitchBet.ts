@@ -1,5 +1,6 @@
 import { moderateText } from '@dotabod/profanity-filter'
 import { getTwitchAPI, logger, supabase, trackDisableReason } from '@dotabod/shared-utils'
+import { StreamNotLiveError } from '@twurple/api'
 import { t } from 'i18next'
 import { getTokenFromTwitchId } from '../../dota/lib/connectedStreamers'
 import { say } from '../../dota/say'
@@ -71,7 +72,11 @@ export const openTwitchBet = async ({
       `Predictions opened for ${heroName} on match ${client.gsi?.map?.matchid}`,
     )
   } catch (e) {
-    logger.error('[PREDICT] [BETS] Failed to create stream marker (open)', { twitchId, e })
+    if (e instanceof StreamNotLiveError) {
+      logger.info('[PREDICT] [BETS] Skipped stream marker (open) — channel offline', { twitchId })
+    } else {
+      logger.error('[PREDICT] [BETS] Failed to create stream marker (open)', { twitchId, e })
+    }
   }
 
   return await api.predictions

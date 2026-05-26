@@ -1,4 +1,5 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
+import { StreamNotLiveError } from '@twurple/api'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import type { SocketClient } from '../../types'
 import { refundTwitchBet } from './refundTwitchBets'
@@ -18,7 +19,11 @@ export async function closeTwitchBet(
       `Predictions closed, ${won ? 'won' : 'lost'} on match ${matchId}`,
     )
   } catch (e) {
-    logger.error('[PREDICT] [BETS] Failed to create stream marker (close)', { twitchId, e })
+    if (e instanceof StreamNotLiveError) {
+      logger.info('[PREDICT] [BETS] Skipped stream marker (close) — channel offline', { twitchId })
+    } else {
+      logger.error('[PREDICT] [BETS] Failed to create stream marker (close)', { twitchId, e })
+    }
   }
 
   return api.predictions

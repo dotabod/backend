@@ -100,6 +100,33 @@ describe('createReadyClip', () => {
     expect(getCreateCalls()).toBe(2)
   })
 
+  it('bails immediately without retry when Twitch returns 404 Channel offline', async () => {
+    // Twurple raises HttpStatusCodeError with statusCode 404 + body when the
+    // broadcaster isn't live. Retrying spams the error log without recourse.
+    let createCalls = 0
+    const offlineError: Error & { statusCode?: number; body?: string } = Object.assign(
+      new Error('Channel offline.'),
+      {
+        statusCode: 404,
+        body: '{"error":"Not Found","status":404,"message":"Channel offline."}',
+      },
+    )
+    const api = {
+      clips: {
+        createClip: async () => {
+          createCalls += 1
+          throw offlineError
+        },
+        getClipById: async () => ({ duration: 0 }),
+      },
+    } as any
+
+    const result = await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', {})
+
+    expect(result).toBeNull()
+    expect(createCalls).toBe(1) // no retries — does not consume maxAttempts
+  })
+
   it('catches a clip that only transcodes after several polls (draft window)', async () => {
     // Twitch transcode takes ~15s; the draft path's old 2-poll (~8s) window
     // abandoned the clip mid-transcode and failed ~100% of the time. The clip

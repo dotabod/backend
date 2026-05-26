@@ -14,6 +14,22 @@ export interface CreateReadyClipOptions {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+// Twitch responds 404 with body like {"status":404,"message":"Channel offline."}
+// when CreateClip is called against an offline broadcaster. The bot can't recover
+// from that — retrying won't bring the stream online inside the budget — so we
+// short-circuit instead of burning the remaining attempts (and erroring 3x).
+function isChannelOfflineError(err: unknown): boolean {
+  if (typeof err !== 'object' || err === null) return false
+  const e = err as { statusCode?: unknown; body?: unknown; message?: unknown }
+  if (e.statusCode !== 404) return false
+  const body = typeof e.body === 'string' ? e.body : ''
+  const message = typeof e.message === 'string' ? e.message : ''
+  return (
+    /channel offline|stream not live/i.test(body) ||
+    /channel offline|stream not live/i.test(message)
+  )
+}
+
 // Twitch's CreateClip API is asynchronous and silently fails to actually produce
 // a clip a large fraction of the time: it returns a clip ID, but the clip never
 // transcodes (duration stays 0, renditions 404) — permanently, not just briefly.
@@ -40,6 +56,13 @@ export async function createReadyClip(
         channel: accountId,
       })
     } catch (error) {
+      if (isChannelOfflineError(error)) {
+        logger.info(`${logPrefix} createClip skipped — channel offline`, {
+          ...logContext,
+          attempt,
+        })
+        return null
+      }
       logger.error(`${logPrefix} createClip failed`, {
         ...logContext,
         attempt,
