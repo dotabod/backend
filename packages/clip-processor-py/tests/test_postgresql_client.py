@@ -94,6 +94,28 @@ def test_update_status_rolls_back_on_error(db_client, mock_cursor):
 
 
 # --------------------------------------------------------------------------- #
+# requeue_for_retry — atomic retry budget
+# --------------------------------------------------------------------------- #
+def test_requeue_for_retry_returns_true_when_row_updated(db_client, mock_cursor):
+    mock_cursor.rowcount = 1
+    assert db_client.requeue_for_retry("r1", delay_seconds=42, max_retries=3) is True
+    query, params = mock_cursor.execute.call_args.args
+    assert "status = 'pending'" in query
+    assert "retry_count = COALESCE(retry_count, 0) + 1" in query
+    assert "not_before" in query and "interval '1 second'" in query
+    # max_retries is enforced in the WHERE clause, not Python, so the cap is atomic
+    assert "COALESCE(retry_count, 0) < %s" in query
+    assert params == (42, "r1", 3)
+    db_client._mock_conn.commit.assert_called_once()
+
+
+def test_requeue_for_retry_returns_false_when_cap_reached(db_client, mock_cursor):
+    # WHERE clause filtered the row out (retry_count >= max_retries) — no row updated
+    mock_cursor.rowcount = 0
+    assert db_client.requeue_for_retry("r1") is False
+
+
+# --------------------------------------------------------------------------- #
 # save_clip_result / get_clip_result — JSON round-trip
 # --------------------------------------------------------------------------- #
 def test_save_clip_result_serializes_result(db_client, mock_cursor):
@@ -183,6 +205,16 @@ def test_get_next_pending_request_returns_row(db_client, mock_cursor):
 def test_get_next_pending_request_returns_none_when_empty(db_client, mock_cursor):
     mock_cursor.fetchone.return_value = None
     assert db_client.get_next_pending_request() is None
+
+
+def test_get_next_pending_request_gates_on_not_before(db_client, mock_cursor):
+    # A re-queued row carries `not_before` set in the future; the worker poll
+    # must skip those rows so we don't immediately re-attempt while Twitch GQL
+    # is still cold.
+    mock_cursor.fetchone.return_value = None
+    db_client.get_next_pending_request()
+    query = mock_cursor.execute.call_args.args[0]
+    assert "not_before IS NULL OR not_before <= CURRENT_TIMESTAMP" in query
 
 
 def test_add_to_queue_returns_existing_duplicate(db_client, mock_cursor):

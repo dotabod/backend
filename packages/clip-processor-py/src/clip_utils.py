@@ -100,8 +100,16 @@ def _resolve_available_download_url(qualities, token):
     return candidates[0]
 
 
-def get_clip_details(url, max_retries=5, retry_delay=2):
-    """Get clip details and download URL using Twitch's API."""
+def get_clip_details(url, max_retries=10, retry_delay=2, max_retry_delay=15):
+    """Get clip details and download URL using Twitch's API.
+
+    Twitch's public GQL graph lags behind Helix by tens of seconds after a fresh
+    clip is created — Helix reports the clip ready, but `VideoAccessToken_Clip`
+    still returns `data.clip = null` for ~30s+. The earlier 5-attempt budget
+    (~26s wall time) abandoned ~half the production clips mid-lag. Wait long
+    enough to cover the observed Helix→GQL gap; capping per-delay at
+    max_retry_delay keeps the schedule from running away at high retry counts.
+    """
     clip_id = extract_clip_id(url)
 
     # Initialize retry counter
@@ -216,8 +224,9 @@ def get_clip_details(url, max_retries=5, retry_delay=2):
                 f"Error on attempt {retry_count}/{max_retries}: {e}. Waiting {retry_delay} seconds before retry."
             )
             time.sleep(retry_delay)
-            # Increase the delay for subsequent retries
-            retry_delay *= 1.5
+            # Increase the delay for subsequent retries, capped to keep the
+            # tail of a 10-attempt schedule bounded (~15s per wait, ~2min total).
+            retry_delay = min(retry_delay * 1.5, max_retry_delay)
 
     # This code should not be reached due to the raise in the loop, but just in case
     raise last_error or ValueError(

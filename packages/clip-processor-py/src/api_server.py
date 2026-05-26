@@ -359,8 +359,26 @@ def process_queue_worker():
             # Update status
             with queue_lock:
                 if error:
-                    db_client.update_queue_status(request['request_id'], 'failed')
-                    logger.error(f"[{thread_name}] Failed request {request['request_id']}: {error}")
+                    # Twitch's public GQL graph lags behind Helix by tens of seconds
+                    # after a fresh clip is created, so the worker can hit
+                    # "Clip not found or inaccessible" even though dota's Helix-side
+                    # readiness check passed. Treat that as transient and re-queue
+                    # (with a delay so we don't burn the next attempt while GQL is
+                    # still cold) instead of permanently dropping the only clip
+                    # we'll get for this match phase.
+                    is_transient_clip_unavailable = (
+                        request['request_type'] in ('clip', 'clip_in_game')
+                        and 'Clip not found or inaccessible' in error
+                    )
+                    if is_transient_clip_unavailable and db_client.requeue_for_retry(
+                        request['request_id']
+                    ):
+                        logger.warning(
+                            f"[{thread_name}] Re-queued request {request['request_id']} (transient): {error}"
+                        )
+                    else:
+                        db_client.update_queue_status(request['request_id'], 'failed')
+                        logger.error(f"[{thread_name}] Failed request {request['request_id']}: {error}")
                 else:
                     if isinstance(result, dict) and ('error' in result or not result.get('players', [])):
                         db_client.update_queue_status(request['request_id'], 'failed')

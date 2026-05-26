@@ -331,6 +331,78 @@ def test_worker_normal_clip_is_skipped_by_completed_match():
     assert statuses[-1] == "completed"
 
 
+def test_worker_clip_not_found_is_requeued_not_failed():
+    # When Twitch GQL says "Clip not found or inaccessible" the clip is usually
+    # just lagging behind Helix readiness. The worker must re-queue (transient)
+    # rather than terminally fail; otherwise we permanently drop the only clip
+    # we'll get for that match phase.
+    db = MagicMock()
+    db.requeue_for_retry.return_value = True
+    request = {
+        "request_id": "req_transient",
+        "request_type": "clip",
+        "clip_url": "https://clips.twitch.tv/abc",
+        "clip_id": "abc",
+        "debug": False,
+        "force": False,
+        "include_image": True,
+        "match_id": "m1",
+    }
+    transient = ValueError("Clip not found or inaccessible: abc")
+    with patch.object(api_server, "process_clip_request", side_effect=transient):
+        _run_worker_once(db, request)
+
+    db.requeue_for_retry.assert_called_once_with("req_transient")
+    # Must NOT mark failed — only the initial 'processing' transition is allowed.
+    statuses = [c.args[1] for c in db.update_queue_status.call_args_list]
+    assert statuses == ["processing"]
+
+
+def test_worker_clip_not_found_falls_back_to_failed_when_budget_exhausted():
+    # Once requeue_for_retry returns False (retry_count >= cap), the worker must
+    # fall through to the normal failed path so the row doesn't sit pending forever.
+    db = MagicMock()
+    db.requeue_for_retry.return_value = False
+    request = {
+        "request_id": "req_exhausted",
+        "request_type": "clip",
+        "clip_url": "https://clips.twitch.tv/abc",
+        "clip_id": "abc",
+        "debug": False,
+        "force": False,
+        "include_image": True,
+        "match_id": "m1",
+    }
+    with patch.object(api_server, "process_clip_request",
+                      side_effect=ValueError("Clip not found or inaccessible: abc")):
+        _run_worker_once(db, request)
+
+    statuses = [c.args[1] for c in db.update_queue_status.call_args_list]
+    assert statuses == ["processing", "failed"]
+
+
+def test_worker_other_error_does_not_requeue():
+    # Non-transient errors (e.g. download/decode crashes) must not exhaust the
+    # retry budget — they should fail immediately as before.
+    db = MagicMock()
+    request = {
+        "request_id": "req_real_fail",
+        "request_type": "clip",
+        "clip_url": "https://clips.twitch.tv/abc",
+        "clip_id": "abc",
+        "debug": False,
+        "force": False,
+        "include_image": True,
+    }
+    with patch.object(api_server, "process_clip_request",
+                      side_effect=RuntimeError("ffmpeg decode crashed")):
+        _run_worker_once(db, request)
+
+    db.requeue_for_retry.assert_not_called()
+    statuses = [c.args[1] for c in db.update_queue_status.call_args_list]
+    assert statuses == ["processing", "failed"]
+
+
 def test_process_clip_request_in_game_enqueues_as_clip_in_game(monkeypatch):
     # in_game=True + add_to_queue must enqueue with request_type='clip_in_game'.
     monkeypatch.setenv("RUN_LOCALLY", "false")

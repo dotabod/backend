@@ -175,6 +175,16 @@ class PostgresClient:
                 cursor.execute(f"ALTER TABLE {self.queue_table} ADD COLUMN IF NOT EXISTS only_draft BOOLEAN DEFAULT FALSE")
             except Exception:
                 pass
+            # Retry bookkeeping: re-queue transient failures (e.g. Twitch GQL not
+            # ready) instead of dropping the only chance to read the roster.
+            try:
+                cursor.execute(f"ALTER TABLE {self.queue_table} ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0")
+            except Exception:
+                pass
+            try:
+                cursor.execute(f"ALTER TABLE {self.queue_table} ADD COLUMN IF NOT EXISTS not_before TIMESTAMP")
+            except Exception:
+                pass
 
             # Create an index on clip_id for faster lookups
             create_clip_index_sql = f"""
@@ -197,7 +207,8 @@ class PostgresClient:
             create_queue_indices_sql = [
                 f"CREATE INDEX IF NOT EXISTS idx_{self.queue_table}_request_id ON {self.queue_table} (request_id);",
                 f"CREATE INDEX IF NOT EXISTS idx_{self.queue_table}_status ON {self.queue_table} (status);",
-                f"CREATE INDEX IF NOT EXISTS idx_{self.queue_table}_position ON {self.queue_table} (position);"
+                f"CREATE INDEX IF NOT EXISTS idx_{self.queue_table}_position ON {self.queue_table} (position);",
+                f"CREATE INDEX IF NOT EXISTS idx_{self.queue_table}_not_before ON {self.queue_table} (not_before);"
             ]
             for sql in create_queue_indices_sql:
                 cursor.execute(sql)
@@ -1090,6 +1101,63 @@ class PostgresClient:
             if conn:
                 self._return_connection(conn)
 
+    def requeue_for_retry(
+        self,
+        request_id: str,
+        delay_seconds: int = 60,
+        max_retries: int = 3,
+    ) -> bool:
+        """Re-queue a transiently failed request so a future worker pass can retry it.
+
+        Returns True if the row was flipped back to 'pending' (caller should NOT then
+        mark it failed); returns False if max_retries is already exceeded (caller
+        should fall through to update_queue_status(..., 'failed')).
+
+        The conditional UPDATE makes the bump atomic — concurrent workers can't
+        race the retry budget past the cap.
+        """
+        if not self._initialized and not self.initialize():
+            logger.warning("PostgreSQL not initialized, can't requeue request")
+            return False
+
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None:
+                logger.error("Failed to get database connection for requeueing")
+                return False
+            cursor = conn.cursor()
+            # Bump retry_count and flip back to pending only if we haven't blown
+            # the budget. The WHERE clause's retry_count < max_retries check is
+            # what enforces the cap atomically.
+            query = f"""
+            UPDATE {self.queue_table}
+            SET status = 'pending',
+                started_at = NULL,
+                retry_count = COALESCE(retry_count, 0) + 1,
+                not_before = CURRENT_TIMESTAMP + (%s * interval '1 second')
+            WHERE request_id = %s
+              AND COALESCE(retry_count, 0) < %s
+            """
+            cursor.execute(query, (delay_seconds, request_id, max_retries))
+            requeued = cursor.rowcount > 0
+            conn.commit()
+            cursor.close()
+            if requeued:
+                logger.info(
+                    f"Re-queued request {request_id} for retry in {delay_seconds}s"
+                )
+            return requeued
+        except Exception as e:
+            logger.error(f"Error re-queueing request {request_id}: {e}")
+            logger.error(traceback.format_exc())
+            if conn:
+                conn.rollback()
+            return False
+        finally:
+            if conn:
+                self._return_connection(conn)
+
     def get_queue_status(self, request_id: str) -> Optional[Dict[str, Any]]:
         """
         Get the current status of a queued request.
@@ -1161,9 +1229,13 @@ class PostgresClient:
                 return None
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
+            # not_before is set when a transient failure re-queues a request,
+            # so the next worker doesn't immediately re-attempt while Twitch GQL
+            # is still lagging. NULL means "ready now".
             query = f"""
             SELECT * FROM {self.queue_table}
             WHERE status = 'pending'
+              AND (not_before IS NULL OR not_before <= CURRENT_TIMESTAMP)
             ORDER BY position ASC
             LIMIT 1
             """
