@@ -2,6 +2,7 @@ import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { MULTIPLIER_PARTY } from '../../db/getWL'
 import { updateMmr } from '../../dota/lib/updateMmr'
+import { dotabuffMatchUrl } from '../../utils/index'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
@@ -46,7 +47,7 @@ commandHandler.registerCommand('fixparty', {
       message.channel.name,
       t('toggleMatch', {
         context: bet.is_party ? 'solo' : 'party',
-        url: `dotabuff.com/matches/${bet.matchId}`,
+        url: dotabuffMatchUrl(message.channel.client, bet.matchId),
         lng: message.channel.client.locale,
       }),
       message.user.messageId,

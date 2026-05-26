@@ -2,8 +2,9 @@ import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
 import { lookupRosterByMatchId, type RosterPlayer } from '../dota/lib/matchData'
-import type { DelayedGames } from '../types'
+import type { DelayedGames, SocketClient } from '../types'
 import CustomError from '../utils/customError'
+import { dotabuffMatchUrl } from '../utils/index'
 import MongoDBSingleton from './MongoDBSingleton'
 
 const generateMessage = (
@@ -32,6 +33,7 @@ const generateMessage = (
 interface LastgameParams {
   locale: string
   steam32Id: number
+  client: SocketClient
   currentMatchId?: string
   currentPlayers?: RosterPlayer[]
 }
@@ -56,6 +58,7 @@ async function getLatestFinishedMatchId(steam32Id: number): Promise<string | nul
 export default async function lastgame({
   locale,
   steam32Id,
+  client,
   currentMatchId,
   currentPlayers,
 }: LastgameParams) {
@@ -82,12 +85,8 @@ export default async function lastgame({
         : t('gameNotFound', { lng: locale })
       const lastMatchId =
         (await getLatestFinishedMatchId(steam32Id)) ?? gameHistory[0]?.match?.match_id ?? null
-      return lastMatchId
-        ? `${msg} · ${t('lastgame.link', {
-            lng: locale,
-            url: `dotabuff.com/matches/${lastMatchId}`,
-          })}`
-        : msg
+      const url = dotabuffMatchUrl(client, lastMatchId)
+      return url ? `${msg} · ${t('lastgame.link', { lng: locale, url })}` : msg
     }
     if (!gameHistory.length || gameHistory.length !== 2) {
       // Check supabase
@@ -150,10 +149,9 @@ export default async function lastgame({
             count: playersFromLastGame.length,
           })
         : ''
-    return `${totalPlayers} ${msg}. ${t('lastgame.link', {
-      lng: locale,
-      url: `dotabuff.com/matches/${oldGame.match.match_id}`,
-    })}`.trim()
+    const url = dotabuffMatchUrl(client, oldGame.match.match_id)
+    const linkSegment = url ? ` ${t('lastgame.link', { lng: locale, url })}` : ''
+    return `${totalPlayers} ${msg}.${linkSegment}`.trim()
   } finally {
     await mongo.close()
   }

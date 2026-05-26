@@ -68,6 +68,14 @@ describe('!fixparty', () => {
     )
     expect(state.chatSayCalls).toHaveLength(0)
   })
+
+  it('omits the dotabuff link for 8500+ clients', async () => {
+    state.recentList = lastMatch({ is_party: false })
+    await commandHandler.handleMessage(
+      makeMessage({ content: '!fixparty', clientOverrides: { mmr: 9000 } }),
+    )
+    expect(state.chatSayCalls[0].message).not.toContain('dotabuff.com/matches/')
+  })
 })
 
 describe('!fixdbl', () => {
@@ -83,6 +91,14 @@ describe('!fixdbl', () => {
     expect(state.updateMmrCalls[0]).toMatchObject({ newMmr: 5000 + MULTIPLIER_SOLO })
     expect(state.updateCalls).toHaveLength(1)
     expect(state.updateCalls[0].values).toMatchObject({ is_doubledown: true })
+  })
+
+  it('omits the dotabuff link for 8500+ clients', async () => {
+    state.recentList = lastMatch({ is_doubledown: false })
+    await commandHandler.handleMessage(
+      makeMessage({ content: '!fixdbl', clientOverrides: { mmr: 9000 } }),
+    )
+    expect(state.chatSayCalls[0].message).not.toContain('dotabuff.com/matches/')
   })
 })
 

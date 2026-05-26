@@ -3,6 +3,7 @@ import { t } from 'i18next'
 import { LOBBY_TYPE_RANKED } from '../../db/getWL'
 import getHero, { type HeroNames } from '../../dota/lib/getHero'
 import { DBSettings } from '../../settings'
+import { dotabuffMatchUrl } from '../../utils/index'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
@@ -96,7 +97,8 @@ commandHandler.registerCommand('lgs', {
       returnMsg.push(t('lastgamescore.double', { lng: message.channel.client.locale }))
     if (lg.lobby_type !== LOBBY_TYPE_RANKED)
       returnMsg.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))
-    returnMsg.push(`dotabuff.com/matches/${lg.matchId}`)
+    const url = dotabuffMatchUrl(message.channel.client, lg.matchId)
+    if (url) returnMsg.push(url)
 
     chatClient.say(message.channel.name, returnMsg.join(' · '), message.user.messageId)
   },

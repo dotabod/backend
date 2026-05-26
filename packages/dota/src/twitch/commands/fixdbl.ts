@@ -2,6 +2,7 @@ import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/getWL'
 import { updateMmr } from '../../dota/lib/updateMmr'
+import { dotabuffMatchUrl } from '../../utils/index'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
@@ -44,7 +45,7 @@ commandHandler.registerCommand('fixdbl', {
       message.channel.name,
       t('toggleMatch', {
         context: bet.is_doubledown ? 'single' : 'double',
-        url: `dotabuff.com/matches/${bet.matchId}`,
+        url: dotabuffMatchUrl(message.channel.client, bet.matchId),
         lng: message.channel.client.locale,
       }),
       message.user.messageId,

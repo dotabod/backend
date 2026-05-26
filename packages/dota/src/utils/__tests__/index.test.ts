@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vite-plus/test'
-import { fmtMSS, is8500Plus, steamID32toSteamID64, steamID64toSteamID32 } from '../index.ts'
+import {
+  dotabuffMatchUrl,
+  fmtMSS,
+  is8500Plus,
+  steamID32toSteamID64,
+  steamID64toSteamID32,
+} from '../index.ts'
 
 describe('steamID conversions', () => {
   it('round-trips a 32-bit id through 64-bit and back', () => {
@@ -50,5 +56,27 @@ describe('is8500Plus', () => {
     expect(
       is8500Plus(client({ mmr: 3000, steam32Id: 1, SteamAccount: [{ steam32Id: 1, mmr: 3000 }] })),
     ).toBe(false)
+  })
+})
+
+describe('dotabuffMatchUrl', () => {
+  const client = (overrides: Record<string, unknown>) => overrides as any
+  const normal = client({ mmr: 3000, steam32Id: 1, SteamAccount: [{ steam32Id: 1, mmr: 3000 }] })
+  const high = client({ mmr: 9000, SteamAccount: [] })
+
+  it('returns the canonical url for normal accounts', () => {
+    expect(dotabuffMatchUrl(normal, '12345')).toBe('dotabuff.com/matches/12345')
+    expect(dotabuffMatchUrl(normal, 67890)).toBe('dotabuff.com/matches/67890')
+  })
+
+  it('returns empty for 8500+ accounts', () => {
+    expect(dotabuffMatchUrl(high, '12345')).toBe('')
+  })
+
+  it('returns empty for falsy matchIds', () => {
+    expect(dotabuffMatchUrl(normal, null)).toBe('')
+    expect(dotabuffMatchUrl(normal, undefined)).toBe('')
+    expect(dotabuffMatchUrl(normal, '')).toBe('')
+    expect(dotabuffMatchUrl(normal, 0)).toBe('')
   })
 })

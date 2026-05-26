@@ -64,3 +64,15 @@ export const is8500Plus = (dotaClient: SocketClient) => {
   // The lowest rank is 5000
   return false
 }
+
+// Dotabuff cannot resolve matches for 8500+/Immortal players (Valve hides their
+// data from public sources), so the link 404s. Return '' to signal "skip" in
+// callsites; otherwise the canonical link.
+export function dotabuffMatchUrl(
+  client: SocketClient,
+  matchId: string | number | null | undefined,
+): string {
+  if (!matchId) return ''
+  if (is8500Plus(client)) return ''
+  return `dotabuff.com/matches/${matchId}`
+}

@@ -36,6 +36,7 @@ commandHandler.registerCommand('lg', {
       locale: message.channel.client.locale,
       currentPlayers: roster.players,
       steam32Id: message.channel.client.steam32Id,
+      client,
     })
       .then((desc) => {
         chatClient.say(message.channel.name, desc, message.user.messageId)
