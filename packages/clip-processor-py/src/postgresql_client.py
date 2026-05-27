@@ -185,6 +185,13 @@ class PostgresClient:
                 cursor.execute(f"ALTER TABLE {self.queue_table} ADD COLUMN IF NOT EXISTS not_before TIMESTAMP")
             except Exception:
                 pass
+            # Classify why a row failed so the auto-sweep can retry transient
+            # Twitch breakages (GQL hash rotation, CloudFront 404s) without also
+            # re-running decode crashes or no-players-detected payloads.
+            try:
+                cursor.execute(f"ALTER TABLE {self.queue_table} ADD COLUMN IF NOT EXISTS failure_reason TEXT")
+            except Exception:
+                pass
 
             # Create an index on clip_id for faster lookups
             create_clip_index_sql = f"""
@@ -1013,7 +1020,13 @@ class PostgresClient:
             if conn:
                 self._return_connection(conn)
 
-    def update_queue_status(self, request_id: str, status: str, result_id: Optional[str] = None) -> bool:
+    def update_queue_status(
+        self,
+        request_id: str,
+        status: str,
+        result_id: Optional[str] = None,
+        failure_reason: Optional[str] = None,
+    ) -> bool:
         """
         Update the status of a queued request.
 
@@ -1021,6 +1034,10 @@ class PostgresClient:
             request_id: The request ID
             status: New status ('pending', 'processing', 'completed', 'failed')
             result_id: ID of the result (for completed requests)
+            failure_reason: 'transient' (sweep-eligible) or 'permanent' (skip).
+                Only written when status='failed'; the auto-replay sweep
+                requires failure_reason='transient' so untagged rows are
+                excluded fail-safe.
 
         Returns:
             True if successful, False otherwise
@@ -1047,7 +1064,14 @@ class PostgresClient:
                 WHERE request_id = %s
                 """
                 cursor.execute(query, (status, now, request_id))
-            elif status in ('completed', 'failed'):
+            elif status == 'failed':
+                query = f"""
+                UPDATE {self.queue_table}
+                SET status = %s, completed_at = %s, result_id = %s, failure_reason = %s
+                WHERE request_id = %s
+                """
+                cursor.execute(query, (status, now, result_id, failure_reason, request_id))
+            elif status == 'completed':
                 query = f"""
                 UPDATE {self.queue_table}
                 SET status = %s, completed_at = %s, result_id = %s
@@ -1162,11 +1186,15 @@ class PostgresClient:
         self,
         window: str = '1 hour',
         max_retry_count: int = 3,
+        limit: int = 50,
     ) -> list:
         """Return failed clip queue rows that should be auto-replayed.
 
         Picks rows where:
           - status='failed' and created within `window`
+          - failure_reason='transient' — decode crashes and no-players-detected
+            payloads tag themselves 'permanent' and are skipped here, matching
+            the worker's "non-transient errors fail immediately" contract
           - retry budget not yet exhausted
           - request_type is a clip variant (not stream)
           - the match has no successful row in clip_results yet (so we don't
@@ -1191,6 +1219,7 @@ class PostgresClient:
                    COALESCE(q.retry_count, 0) AS retry_count
             FROM {self.queue_table} q
             WHERE q.status = 'failed'
+              AND q.failure_reason = 'transient'
               AND q.request_type IN ('clip', 'clip_in_game')
               AND q.created_at > now() - (%s)::interval
               AND COALESCE(q.retry_count, 0) < %s
@@ -1200,8 +1229,9 @@ class PostgresClient:
                 WHERE r.match_id = q.match_id
               )
             ORDER BY q.created_at ASC
+            LIMIT %s
             """
-            cursor.execute(query, (window, max_retry_count))
+            cursor.execute(query, (window, max_retry_count, limit))
             rows = [dict(r) for r in cursor.fetchall()]
             cursor.close()
             return rows

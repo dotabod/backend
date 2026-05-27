@@ -279,17 +279,17 @@ def replay_failed_clips_once() -> int:
         if db_client.requeue_for_retry(r['request_id'], delay_seconds=0):
             requeued += 1
     if requeued:
-        # Restart workers if they've gone idle since the queue was empty.
-        start_worker_thread()
         logger.info(f"[ReplaySweep] re-queued {requeued} failed clip(s)")
     return requeued
 
 
 def start_failed_clip_sweeper():
     def loop():
+        # Sweep first so a fresh deploy catches up on the previous process's
+        # shutdown backlog instead of waiting a full interval.
         while True:
-            time.sleep(FAILED_CLIP_SWEEP_INTERVAL_S)
             replay_failed_clips_once()
+            time.sleep(FAILED_CLIP_SWEEP_INTERVAL_S)
 
     thread = threading.Thread(target=loop, daemon=True, name='ReplaySweep')
     thread.start()
@@ -429,11 +429,16 @@ def process_queue_worker():
                             f"[{thread_name}] Re-queued request {request['request_id']} (transient): {error}"
                         )
                     else:
-                        db_client.update_queue_status(request['request_id'], 'failed')
-                        logger.error(f"[{thread_name}] Failed request {request['request_id']}: {error}")
+                        # transient = sweep may retry; permanent = decode/network
+                        # bug that retrying won't help.
+                        reason = 'transient' if is_transient_clip_unavailable else 'permanent'
+                        db_client.update_queue_status(request['request_id'], 'failed', failure_reason=reason)
+                        logger.error(f"[{thread_name}] Failed request {request['request_id']} ({reason}): {error}")
                 else:
                     if isinstance(result, dict) and ('error' in result or not result.get('players', [])):
-                        db_client.update_queue_status(request['request_id'], 'failed')
+                        # No-players or explicit error in payload — retrying the
+                        # same clip won't suddenly produce a roster.
+                        db_client.update_queue_status(request['request_id'], 'failed', failure_reason='permanent')
                         logger.error(f"[{thread_name}] Failed request {request['request_id']}: {result.get('error', 'No heroes detected')}")
                     else:
                         if result and isinstance(result, dict):
@@ -499,7 +504,10 @@ def health_twitch_gql():
             'quality': details.get('selected_quality'),
         }), 200
     except Exception as e:
-        return jsonify({'status': 'fail', 'reason': str(e)}), 503
+        # Public endpoint — log the full exception, keep the response body opaque
+        # (Uptime Kuma only checks status codes).
+        logger.error(f"[TwitchCanary] {slug}: {e}")
+        return jsonify({'status': 'fail', 'reason': 'twitch_gql_error'}), 503
 
 # All other endpoints require authentication
 @app.route('/queue/debug', methods=['GET'])

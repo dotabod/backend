@@ -61,13 +61,14 @@ def test_canary_fails_on_missing_download_url(client, monkeypatch):
 
 def test_canary_fails_on_raised_exception(client, monkeypatch):
     # PersistedQueryNotFound, 5xx, network blip — all surface as a ValueError or
-    # similar in get_clip_details, and we want the canary to flip red.
+    # similar in get_clip_details, and we want the canary to flip red. The
+    # response body is opaque (full exception is logged, not returned).
     monkeypatch.setenv("VISION_CANARY_CLIP_SLUG", "evergreen-clip")
     with patch.object(api_server, "get_clip_details",
                       side_effect=ValueError("Clip not found or inaccessible: evergreen-clip")):
         resp = client.get("/health/twitch_gql")
     assert resp.status_code == 503
-    assert "Clip not found" in resp.get_json()["reason"]
+    assert resp.get_json()["reason"] == "twitch_gql_error"
 
 
 # --------------------------------------------------------------------------- #

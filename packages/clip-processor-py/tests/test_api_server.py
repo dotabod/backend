@@ -361,6 +361,8 @@ def test_worker_clip_not_found_is_requeued_not_failed():
 def test_worker_clip_not_found_falls_back_to_failed_when_budget_exhausted():
     # Once requeue_for_retry returns False (retry_count >= cap), the worker must
     # fall through to the normal failed path so the row doesn't sit pending forever.
+    # Reason='transient' here is harmless: retry_count is already at the cap so
+    # the sweep's retry_count<3 filter excludes it.
     db = MagicMock()
     db.requeue_for_retry.return_value = False
     request = {
@@ -379,6 +381,8 @@ def test_worker_clip_not_found_falls_back_to_failed_when_budget_exhausted():
 
     statuses = [c.args[1] for c in db.update_queue_status.call_args_list]
     assert statuses == ["processing", "failed"]
+    failed_call = db.update_queue_status.call_args_list[-1]
+    assert failed_call.kwargs.get("failure_reason") == "transient"
 
 
 def test_replay_failed_clips_once_requeues_each_eligible_row():
@@ -388,8 +392,7 @@ def test_replay_failed_clips_once_requeues_each_eligible_row():
         {"request_id": "r2", "clip_id": "c2", "match_id": "m2", "request_type": "clip_in_game", "retry_count": 0},
     ]
     db.requeue_for_retry.return_value = True
-    with patch.object(api_server, "db_client", db), \
-         patch.object(api_server, "start_worker_thread") as swt:
+    with patch.object(api_server, "db_client", db):
         requeued = api_server.replay_failed_clips_once()
     assert requeued == 2
     # delay_seconds=0 because the sweep cadence already throttles us.
@@ -397,20 +400,17 @@ def test_replay_failed_clips_once_requeues_each_eligible_row():
         (("r1",), {"delay_seconds": 0}),
         (("r2",), {"delay_seconds": 0}),
     ]
-    swt.assert_called_once()
 
 
-def test_replay_failed_clips_once_skips_worker_start_when_nothing_requeued():
-    # Cap-exhausted rows: requeue_for_retry returns False; don't bother poking workers.
+def test_replay_failed_clips_once_returns_zero_when_nothing_requeued():
+    # Cap-exhausted rows: requeue_for_retry returns False; sweep reports 0.
     db = MagicMock()
     db.fetch_recent_failed_clips.return_value = [
         {"request_id": "r1", "clip_id": "c1", "match_id": "m1", "request_type": "clip", "retry_count": 3},
     ]
     db.requeue_for_retry.return_value = False
-    with patch.object(api_server, "db_client", db), \
-         patch.object(api_server, "start_worker_thread") as swt:
+    with patch.object(api_server, "db_client", db):
         assert api_server.replay_failed_clips_once() == 0
-    swt.assert_not_called()
 
 
 def test_replay_failed_clips_once_swallows_fetch_errors():
@@ -423,7 +423,8 @@ def test_replay_failed_clips_once_swallows_fetch_errors():
 
 def test_worker_other_error_does_not_requeue():
     # Non-transient errors (e.g. download/decode crashes) must not exhaust the
-    # retry budget — they should fail immediately as before.
+    # retry budget — they should fail immediately, AND be tagged 'permanent'
+    # so the replay sweep doesn't pick them up either.
     db = MagicMock()
     request = {
         "request_id": "req_real_fail",
@@ -441,6 +442,8 @@ def test_worker_other_error_does_not_requeue():
     db.requeue_for_retry.assert_not_called()
     statuses = [c.args[1] for c in db.update_queue_status.call_args_list]
     assert statuses == ["processing", "failed"]
+    failed_call = db.update_queue_status.call_args_list[-1]
+    assert failed_call.kwargs.get("failure_reason") == "permanent"
 
 
 def test_process_clip_request_in_game_enqueues_as_clip_in_game(monkeypatch):

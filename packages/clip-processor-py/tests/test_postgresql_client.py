@@ -80,6 +80,14 @@ def test_update_status_failed_recomputes_positions(db_client, mock_cursor):
     assert mock_cursor.execute.call_count == 2
 
 
+def test_update_status_failed_persists_failure_reason(db_client, mock_cursor):
+    # failure_reason gates the auto-replay sweep — must land on the row, not be silently dropped.
+    assert db_client.update_queue_status("r1", "failed", failure_reason="permanent") is True
+    query, params = mock_cursor.execute.call_args_list[0].args
+    assert "failure_reason" in query
+    assert "permanent" in params
+
+
 def test_update_status_other_is_bare_update(db_client, mock_cursor):
     assert db_client.update_queue_status("r1", "pending") is True
     assert mock_cursor.execute.call_count == 1
@@ -130,12 +138,17 @@ def test_fetch_recent_failed_clips_filters_correctly(db_client, mock_cursor):
     }]
     query, params = mock_cursor.execute.call_args.args
     assert "status = 'failed'" in query
+    # Permanent failures (decode crashes, no players detected) stay out of the
+    # sweep — matches the worker's "non-transient errors fail immediately" policy.
+    assert "failure_reason = 'transient'" in query
     assert "request_type IN ('clip', 'clip_in_game')" in query
     # Must skip matches that already have a successful clip_results row.
     assert "NOT EXISTS" in query
     assert "match_id IS NOT NULL" in query
-    # Parameters: window, max_retry_count (passed positionally to the SQL).
-    assert params == ('30 minutes', 2)
+    # Bound per-pass fan-in so a long outage doesn't hand us hundreds of rows at once.
+    assert "LIMIT" in query
+    # Parameters: window, max_retry_count, limit (passed positionally to the SQL).
+    assert params == ('30 minutes', 2, 50)
 
 
 def test_fetch_recent_failed_clips_empty_on_no_rows(db_client, mock_cursor):
