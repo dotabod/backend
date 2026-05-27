@@ -42,6 +42,29 @@ describe('Profanity Filter', () => {
       expect(detectEvasionTactics(text)).toBe(false)
     })
 
+    test('should not flag Dota hero names that contain "nig" / "ass" trigrams', async () => {
+      // Heroes whose localized names trip overly-loose substring checks
+      // (knight/night → "nig", enigma → "nig", assassin → "ass").
+      const heroes = [
+        'Enigma',
+        'Dragon Knight',
+        'Omniknight',
+        'Night Stalker',
+        'Chaos Knight',
+        'Phantom Assassin',
+        'Templar Assassin',
+        'Nyx Assassin',
+      ]
+
+      for (const hero of heroes) {
+        expect(await moderateText(hero)).toBe(hero)
+
+        // Also exercise the common bet-title context where heroes are interpolated.
+        const title = `Will we win with ${hero}?`
+        expect(await moderateText(title)).toBe(title)
+      }
+    })
+
     test('should detect compressed profanity', async () => {
       const compressedWords = ['fuuuuck', 'shiiiit', 'asssss', 'f*u*c*k', 'sh!t', 'b!tch']
 

@@ -464,9 +464,12 @@ export function detectEvasionTactics(text: string): boolean {
   // This helps detect cases like "f*u#c%k" that might slip through other checks
   const strippedText = stripNonAlphanumeric(text.toLowerCase())
   for (let i = 0; i <= strippedText.length - 4; i++) {
-    // Check for common profanity word patterns within a 4-10 character window
+    // Check for common profanity word patterns within a 4-10 character window.
+    // The bare `nig` trigram is intentionally omitted: it would flag legitimate
+    // words like "knight", "night", and "enigma" (e.g., Dota hero names). The
+    // stricter n-word patterns above already cover real evasion attempts.
     const window = strippedText.substring(i, i + Math.min(10, strippedText.length - i))
-    if (/fuck|shit|ass|bitch|cunt|dick|cock|pussy|nigger|nig/i.test(window)) {
+    if (/fuck|shit|ass|bitch|cunt|dick|cock|pussy|nigger/i.test(window)) {
       return true
     }
   }
