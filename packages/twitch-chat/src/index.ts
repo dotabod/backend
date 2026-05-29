@@ -5,6 +5,7 @@ import { lstatSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import {
   checkBotStatus,
+  checkSupabaseHealth,
   commandDisable,
   type DisableReasonMetadata,
   getTwitchAPI,
@@ -67,6 +68,16 @@ async function startup() {
         up: isEventsubConnected(),
         msg: isEventsubConnected() ? 'connected' : 'eventsub disconnected',
       }),
+    })
+
+    // Dependency-aware Supabase probe: the liveness ping above stays green even
+    // when the container can't reach Supabase, so every account/token lookup
+    // can fail silently (as it did in the 2026-05-29 network incident).
+    startHeartbeat({
+      url: process.env.KUMA_PUSH_URL_SUPABASE,
+      name: 'twitch-chat supabase heartbeat',
+      debounceMs: 90_000,
+      getStatus: checkSupabaseHealth,
     })
 
     // Initialize Twitch EventSub connection

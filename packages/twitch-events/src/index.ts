@@ -1,7 +1,7 @@
 process.on('SIGTERM', () => process.exit(0))
 process.on('SIGINT', () => process.exit(0))
 
-import { checkBotStatus, logger } from '@dotabod/shared-utils'
+import { checkBotStatus, checkSupabaseHealth, logger, startHeartbeat } from '@dotabod/shared-utils'
 import { fetchExistingSubscriptions, subsToCleanup } from './fetchExistingSubscriptions'
 import { subscribeToEvents } from './subscribeToEvents'
 import { deleteSubscription } from './twitch/lib/revokeEvent'
@@ -21,6 +21,19 @@ if (isBanned) {
 
 setupSocketIO()
 setupHealthServer()
+
+// Dependency-aware Supabase probe. The /webhook liveness endpoint only catches
+// a full process crash; a Supabase outage that doesn't crash the process (auth
+// failure, postgrest 5xx, DB unreachable while the socket survives) would go
+// unnoticed without this. On 2026-05-29 the watcher crash-looped on a DNS-level
+// Supabase outage — this gives the same class of failure a direct signal.
+startHeartbeat({
+  url: process.env.KUMA_PUSH_URL_SUPABASE,
+  name: 'twitch-events supabase heartbeat',
+  debounceMs: 90_000,
+  getStatus: checkSupabaseHealth,
+})
+
 // Supabase Realtime listener — replaces the old HTTP webhook receiver.
 // Delivers INSERT/UPDATE/DELETE on accounts + UPDATE on users in seconds.
 setupAccountWatcher()

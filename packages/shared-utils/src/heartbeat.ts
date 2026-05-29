@@ -4,7 +4,7 @@ type HeartbeatStatus = { up: boolean; msg?: string }
 
 type HeartbeatOptions = {
   url?: string
-  getStatus?: () => HeartbeatStatus
+  getStatus?: () => HeartbeatStatus | Promise<HeartbeatStatus>
   intervalMs?: number
   debounceMs?: number
   name?: string
@@ -27,7 +27,7 @@ export function startHeartbeat(opts: HeartbeatOptions = {}): void {
   let downSince: number | null = null
 
   const ping = async () => {
-    const { up, msg } = getStatus()
+    const { up, msg } = await getStatus()
 
     // Debounce: only report down once continuously down for debounceMs
     let report = up

@@ -1,7 +1,7 @@
 process.on('SIGTERM', () => process.exit(0))
 process.on('SIGINT', () => process.exit(0))
 
-import { startHeartbeat } from '@dotabod/shared-utils'
+import { checkSupabaseHealth, startHeartbeat } from '@dotabod/shared-utils'
 import { redisClient } from './db/redisInstance'
 import { steamSocket } from './steam/ws'
 
@@ -39,4 +39,14 @@ startHeartbeat({
     up: steamSocket.connected,
     msg: steamSocket.connected ? 'connected' : 'steam socket disconnected',
   }),
+})
+
+// Dependency-aware Supabase probe: catches the container losing its route to
+// Supabase (e.g. the docker network being recreated under it), which the
+// liveness monitors above can't see because the process stays up.
+startHeartbeat({
+  url: process.env.KUMA_PUSH_URL_SUPABASE,
+  name: 'dota supabase heartbeat',
+  debounceMs: 90_000,
+  getStatus: checkSupabaseHealth,
 })
