@@ -15,7 +15,7 @@ import {
 } from '@dotabod/shared-utils'
 import { use } from 'i18next'
 import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
-import { initializeSocket } from './conduitSetup'
+import { ensureEventSubInitialized } from './conduitSetup'
 import { clearDisableCache, DISABLE_CACHE_EXPIRY, disableUserCache } from './disableCache'
 import { isEventsubConnected } from './eventSubSocket'
 import { sendTwitchChatMessage } from './handleChat'
@@ -80,22 +80,11 @@ async function startup() {
       getStatus: checkSupabaseHealth,
     })
 
-    // Initialize Twitch EventSub connection
-    try {
-      // chat v2
-      await initializeSocket()
-      logger.info('Twitch EventSub connection initialized successfully')
-    } catch (error) {
-      logger.error('Failed to initialize Twitch EventSub connection', error)
-
-      // Try to reconnect after a delay
-      setTimeout(() => {
-        logger.info('Attempting to reconnect to Twitch EventSub...')
-        initializeSocket().catch((e) => {
-          logger.error('Reconnection to Twitch EventSub failed', e)
-        })
-      }, 30000) // Wait 30 seconds before retry
-    }
+    // Initialize Twitch EventSub connection. If twitch-events isn't reachable
+    // yet, this attempt fails — but the eventsSocket 'connect' handler in
+    // conduitSetup re-runs it whenever the link to twitch-events comes (back) up,
+    // so EventSub self-heals instead of staying dead until a manual restart.
+    await ensureEventSubInitialized('startup')
 
     // Listen for disable cache clear events from other packages
     io.on('clear-disable-cache', ({ userId }: { userId: string }) => {

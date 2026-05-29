@@ -10,7 +10,7 @@ import { onlineEvent } from './event-handlers/onlineEvent'
 import { transformBetData } from './event-handlers/transformBetData'
 import { transformPollData } from './event-handlers/transformPollData'
 import { updateUserEvent } from './event-handlers/updateUserEvent'
-import { EventsubSocket } from './eventSubSocket'
+import { EventsubSocket, isEventsubConnected } from './eventSubSocket'
 import { twitchEvent } from './events'
 import { handleChatMessage } from './handleChat'
 import { emitEvent, hasDotabodSocket } from './utils/socketManager'
@@ -20,9 +20,37 @@ const _headers = await getTwitchHeaders()
 // Create a socket client to connect to the twitch-events service
 const eventsSocket = twitchEvent
 
+// Self-heal guard. initializeSocket() fetches the conduit over the eventsSocket
+// connection to twitch-events, so it can only succeed once that link is up.
+// Historically init ran only at startup + one 30s retry, so if twitch-events
+// was down/crash-looping during both attempts, EventSub stayed dead until a
+// manual restart (2026-05-29). Driving (re)init off the 'connect' event means
+// EventSub re-establishes on its own the moment twitch-events comes back.
+let eventSubInitInFlight = false
+
+async function ensureEventSubInitialized(reason: string): Promise<void> {
+  if (eventSubInitInFlight) return
+  // A plain socket.io reconnect while EventSub is already live needs no re-init.
+  if (isEventsubConnected()) return
+  eventSubInitInFlight = true
+  try {
+    logger.info('[TWITCHCHAT] Ensuring EventSub is initialized', { reason })
+    await initializeSocket()
+  } catch (error) {
+    logger.error('[TWITCHCHAT] EventSub initialization failed', {
+      reason,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  } finally {
+    eventSubInitInFlight = false
+  }
+}
+
 // Set up event handlers for the socket
 eventsSocket.on('connect', () => {
   logger.info('[TWITCHCHAT] Connected to twitch-events service')
+  // Recover EventSub whenever we (re)gain the link to twitch-events.
+  void ensureEventSubInitialized('eventsSocket connect')
 })
 
 eventsSocket.on('connect_error', (error) => {
@@ -397,4 +425,4 @@ async function initializeSocket() {
   }
 }
 
-export { initializeSocket }
+export { ensureEventSubInitialized, initializeSocket }
