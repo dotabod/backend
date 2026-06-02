@@ -185,9 +185,6 @@ export type Database = {
           },
         ]
       }
-      // Hand-maintained until the next `supabase gen types` regeneration picks it
-      // up from the live DB. Source of truth: the CosmeticLoadout model in
-      // frontend/prisma/schema.prisma (applied via `prisma db push`).
       cosmetic_loadouts: {
         Row: {
           heroId: number
@@ -600,6 +597,230 @@ export type Database = {
           },
         ]
       }
+      nowpayments_invoices: {
+        Row: {
+          actually_paid: number | null
+          created_at: string
+          hosted_invoice_url: string
+          id: string
+          last_webhook_at: string | null
+          metadata: Json | null
+          nowpayments_id: string
+          pay_amount: number | null
+          pay_currency: string | null
+          payment_id: string | null
+          price_amount: number
+          price_currency: string
+          status: string
+          stripe_customer_id: string
+          stripe_invoice_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actually_paid?: number | null
+          created_at?: string
+          hosted_invoice_url: string
+          id?: string
+          last_webhook_at?: string | null
+          metadata?: Json | null
+          nowpayments_id: string
+          pay_amount?: number | null
+          pay_currency?: string | null
+          payment_id?: string | null
+          price_amount: number
+          price_currency: string
+          status: string
+          stripe_customer_id: string
+          stripe_invoice_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actually_paid?: number | null
+          created_at?: string
+          hosted_invoice_url?: string
+          id?: string
+          last_webhook_at?: string | null
+          metadata?: Json | null
+          nowpayments_id?: string
+          pay_amount?: number | null
+          pay_currency?: string | null
+          payment_id?: string | null
+          price_amount?: number
+          price_currency?: string
+          status?: string
+          stripe_customer_id?: string
+          stripe_invoice_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'nowpayments_invoices_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      opennode_charges: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          hostedCheckoutUrl: string | null
+          id: string
+          last_webhook_at: string | null
+          metadata: Json | null
+          openNodeChargeId: string
+          status: string
+          stripeCustomerId: string
+          stripeInvoiceId: string
+          updated_at: string
+          userId: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency: string
+          hostedCheckoutUrl?: string | null
+          id?: string
+          last_webhook_at?: string | null
+          metadata?: Json | null
+          openNodeChargeId: string
+          status: string
+          stripeCustomerId: string
+          stripeInvoiceId: string
+          updated_at?: string
+          userId: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          hostedCheckoutUrl?: string | null
+          id?: string
+          last_webhook_at?: string | null
+          metadata?: Json | null
+          openNodeChargeId?: string
+          status?: string
+          stripeCustomerId?: string
+          stripeInvoiceId?: string
+          updated_at?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'opennode_charges_userId_fkey'
+            columns: ['userId']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      paypal_orders: {
+        Row: {
+          amount: number
+          capture_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          last_webhook_at: string | null
+          metadata: Json | null
+          payer_id: string | null
+          paypal_order_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          capture_id?: string | null
+          created_at?: string
+          currency: string
+          id?: string
+          last_webhook_at?: string | null
+          metadata?: Json | null
+          payer_id?: string | null
+          paypal_order_id: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          capture_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          last_webhook_at?: string | null
+          metadata?: Json | null
+          payer_id?: string | null
+          paypal_order_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'paypal_orders_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      paypal_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          last_webhook_at: string | null
+          metadata: Json | null
+          payer_id: string | null
+          paypal_subscription_id: string
+          plan_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_webhook_at?: string | null
+          metadata?: Json | null
+          payer_id?: string | null
+          paypal_subscription_id: string
+          plan_id: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_webhook_at?: string | null
+          metadata?: Json | null
+          payer_id?: string | null
+          paypal_subscription_id?: string
+          plan_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'paypal_subscriptions_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       ScheduledMessage: {
         Row: {
           createdAt: string
@@ -848,13 +1069,17 @@ export type Database = {
           banned_reason: string | null
           beta_tester: boolean
           created_at: string
+          currentViewers: number | null
           displayName: string | null
           email: string | null
           emailVerified: string | null
           followers: number | null
+          hideFromLeaderboard: boolean
           id: string
           image: string | null
           kick: number | null
+          kickUsername: string | null
+          lastStreamCheck: string | null
           locale: string
           mmr: number
           name: string
@@ -863,8 +1088,14 @@ export type Database = {
           stream_delay: number | null
           stream_online: boolean
           stream_start_date: string | null
+          streamCategory: string | null
+          streamPlatform: string | null
+          streamStartedAt: string | null
+          streamTitle: string | null
+          twitchUsername: string | null
           updated_at: string
           youtube: string | null
+          youtubeChannelId: string | null
         }
         Insert: {
           banned_at?: string | null
@@ -872,13 +1103,17 @@ export type Database = {
           banned_reason?: string | null
           beta_tester?: boolean
           created_at?: string
+          currentViewers?: number | null
           displayName?: string | null
           email?: string | null
           emailVerified?: string | null
           followers?: number | null
+          hideFromLeaderboard?: boolean
           id?: string
           image?: string | null
           kick?: number | null
+          kickUsername?: string | null
+          lastStreamCheck?: string | null
           locale?: string
           mmr?: number
           name?: string
@@ -887,8 +1122,14 @@ export type Database = {
           stream_delay?: number | null
           stream_online?: boolean
           stream_start_date?: string | null
+          streamCategory?: string | null
+          streamPlatform?: string | null
+          streamStartedAt?: string | null
+          streamTitle?: string | null
+          twitchUsername?: string | null
           updated_at?: string
           youtube?: string | null
+          youtubeChannelId?: string | null
         }
         Update: {
           banned_at?: string | null
@@ -896,13 +1137,17 @@ export type Database = {
           banned_reason?: string | null
           beta_tester?: boolean
           created_at?: string
+          currentViewers?: number | null
           displayName?: string | null
           email?: string | null
           emailVerified?: string | null
           followers?: number | null
+          hideFromLeaderboard?: boolean
           id?: string
           image?: string | null
           kick?: number | null
+          kickUsername?: string | null
+          lastStreamCheck?: string | null
           locale?: string
           mmr?: number
           name?: string
@@ -911,8 +1156,14 @@ export type Database = {
           stream_delay?: number | null
           stream_online?: boolean
           stream_start_date?: string | null
+          streamCategory?: string | null
+          streamPlatform?: string | null
+          streamStartedAt?: string | null
+          streamTitle?: string | null
+          twitchUsername?: string | null
           updated_at?: string
           youtube?: string | null
+          youtubeChannelId?: string | null
         }
         Relationships: []
       }
@@ -945,13 +1196,13 @@ export type Database = {
       get_grouped_bets: {
         Args: { channel_id: string; start_date: string }
         Returns: {
-          won: boolean
-          lobby_type: number
-          is_party: boolean
-          is_doubledown: boolean
-          _count_won: number
-          _count_is_party: number
           _count_is_doubledown: number
+          _count_is_party: number
+          _count_won: number
+          is_doubledown: boolean
+          is_party: boolean
+          lobby_type: number
+          won: boolean
         }[]
       }
     }
@@ -988,21 +1239,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, 'public'>]
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        Database[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      Database[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -1014,3 +1269,121 @@ export type Tables<
       ? R
       : never
     : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema['Enums']
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema['CompositeTypes']
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      DisableReason: [
+        'TOKEN_REVOKED',
+        'MANUAL_DISABLE',
+        'STREAM_OFFLINE',
+        'CHAT_PERMISSION_DENIED',
+        'SUBSCRIPTION_INSUFFICIENT',
+        'API_ERROR',
+        'INVALID_TOKEN',
+        'CACHE_CLEARED',
+        'BOT_BANNED',
+        'GAME_STATE',
+        'RANK_RESTRICTION',
+        'ACCOUNT_SHARING',
+      ],
+      MessageStatus: ['PENDING', 'DELIVERED', 'FAILED', 'CANCELLED'],
+      SubscriptionStatus: [
+        'ACTIVE',
+        'CANCELED',
+        'INCOMPLETE',
+        'INCOMPLETE_EXPIRED',
+        'PAST_DUE',
+        'PAUSED',
+        'TRIALING',
+        'UNPAID',
+      ],
+      SubscriptionTier: ['FREE', 'PRO'],
+      TransactionType: ['RECURRING', 'LIFETIME'],
+    },
+  },
+} as const
