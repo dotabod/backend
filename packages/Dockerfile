@@ -1,5 +1,12 @@
 FROM node:24-slim AS base
 
+# `vp pack` (vite-plus >= 0.1.23) initializes a Rust HTTP client that reads the
+# system CA trust store; node:*-slim (debian-slim) ships without it, so the
+# build panics with "No CA certificates were loaded from the system". Install it.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 RUN corepack enable && corepack prepare pnpm@11.2.2 --activate
 
 # BUILD_CONTEXT like "packages/twitch-chat" or "packages/twitch-events"
