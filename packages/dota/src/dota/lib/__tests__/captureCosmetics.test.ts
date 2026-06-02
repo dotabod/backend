@@ -50,7 +50,7 @@ describe('captureCosmetics', () => {
     expect(table).toBe('cosmetic_loadouts')
     expect(values).toMatchObject({ userId: 'user-token-1', matchId: '777', heroId: 74 })
     expect((values.items as unknown[]).length).toBe(3)
-    expect(options).toEqual({ onConflict: 'userId' })
+    expect(options).toEqual({ onConflict: 'userId,heroId' })
   })
 
   it('writes nothing without a hero or match', async () => {

@@ -214,7 +214,7 @@ export type Database = {
           {
             foreignKeyName: 'cosmetic_loadouts_userId_fkey'
             columns: ['userId']
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: 'users'
             referencedColumns: ['id']
           },

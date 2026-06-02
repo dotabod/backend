@@ -94,7 +94,7 @@ describe('!set — equipped cosmetics', () => {
     expect(table).toBe('cosmetic_loadouts')
     expect(values).toMatchObject({ userId: 'user-token-1', matchId: '777', heroId: 74 })
     expect((values.items as unknown[]).length).toBe(4)
-    expect(options).toEqual({ onConflict: 'userId' })
+    expect(options).toEqual({ onConflict: 'userId,heroId' })
   })
 
   it('says not playing when there is no match', async () => {
