@@ -1,6 +1,6 @@
 // Database utilities
 export { default as supabase, getSupabaseClient } from './db/supabase'
-export type { Database, Tables } from './db/supabase-types'
+export type { Database, Json, Tables } from './db/supabase-types'
 
 // Disable reason tracking
 export * from './disableReason/index'

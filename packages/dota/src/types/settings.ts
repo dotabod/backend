@@ -26,6 +26,7 @@ const defaultCommands = {
   commandMmr: true,
   commandRosh: true,
   commandItems: true,
+  commandSet: true,
   commandVersion: true,
   commandOnline: true,
   commandResetwl: true,

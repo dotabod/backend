@@ -124,6 +124,10 @@
   "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
   "gpm_zero": "Live GPM for {{- heroName}}: {{num}}",
   "gpm_other": "Live GPM for {{- heroName}}: {{num}}. {{heroKills}} from hero kills, {{creepKills}} from creep kills.",
+  "cosmetics": {
+    "empty": "{{- heroName}} has no cosmetics equipped",
+    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}"
+  },
   "heroItems": {
     "empty": "(2m delay) No items found for {{- heroName}}",
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"

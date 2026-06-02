@@ -516,6 +516,10 @@ export interface Packet {
   hero?: Hero
   abilities?: Abilities
   items?: Items
+  // Cosmetic items equipped on the played hero, keyed wearable0/wearable1/…
+  // (value = item definition index). Styles arrive as style0/style1/… in the
+  // same object. Only present in player (own-hero) mode.
+  wearables?: Record<string, number>
   buildings?: {
     // only providing information for own towers in a game, of for all towers if a spectator
     radiant?: Buildings

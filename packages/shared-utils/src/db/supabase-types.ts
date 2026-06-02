@@ -185,6 +185,44 @@ export type Database = {
           },
         ]
       }
+      // Hand-maintained until the next `supabase gen types` regeneration picks it
+      // up from the live DB. Source of truth: the CosmeticLoadout model in
+      // frontend/prisma/schema.prisma (applied via `prisma db push`).
+      cosmetic_loadouts: {
+        Row: {
+          heroId: number
+          heroName: string
+          items: Json
+          matchId: string
+          updated_at: string
+          userId: string
+        }
+        Insert: {
+          heroId: number
+          heroName: string
+          items: Json
+          matchId: string
+          updated_at?: string
+          userId: string
+        }
+        Update: {
+          heroId?: number
+          heroName?: string
+          items?: Json
+          matchId?: string
+          updated_at?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'cosmetic_loadouts_userId_fkey'
+            columns: ['userId']
+            isOneToOne: true
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       disable_notifications: {
         Row: {
           acknowledged: boolean
