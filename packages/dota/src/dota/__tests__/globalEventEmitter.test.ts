@@ -5,11 +5,12 @@ import * as path from 'node:path'
 import { gameEnd } from '../../__tests__/fixtures/gameEnd'
 import { events, newData, processChanges } from '../globalEventEmitter'
 
-// The 18 listener names registered by dota/events/gsiEventLoader.ts in
+// The 19 listener names registered by dota/events/gsiEventLoader.ts in
 // production. Hardcoded so the test file is self-contained and doesn't
 // trigger handler imports (which need redis/supabase/twitch).
 const LISTENER_NAMES = [
   'hero:alive',
+  'hero:id',
   'hero:name',
   'hero:smoked',
   'map:game_state',
@@ -208,6 +209,7 @@ describe('gameEnd fixture replay — regression baseline', () => {
     expect(callCountsByName()).toMatchInlineSnapshot(`
       {
         "hero:alive": 1,
+        "hero:id": 1,
         "hero:name": 1,
         "hero:smoked": 1,
         "map:game_state": 6,

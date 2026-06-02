@@ -30,10 +30,11 @@ describe('resolveCosmetics', () => {
     expect(hair).toMatchObject({ name: 'Iceforged Hair', slot: 'head', marketable: true })
     expect(hair?.icon).toBeTruthy()
 
-    // Non-marketable item still resolves (name/slot) but has no market data.
+    // Untradable item: not marketable (so no market link), but the VPK-derived
+    // Steam CDN icon still covers it — that's the whole point of the VPK pass.
     const pauldrons = items.find((i) => i.defindex === 23683)
     expect(pauldrons).toMatchObject({ slot: 'shoulder', marketable: false })
-    expect(pauldrons?.icon).toBeUndefined()
+    expect(pauldrons?.icon).toContain('/apps/570/icons/')
   })
 
   it('ignores style entries', () => {

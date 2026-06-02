@@ -1,7 +1,6 @@
-import { type Json, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { resolveCosmetics } from '../../dota/lib/cosmetics'
+import { captureCosmetics } from '../../dota/lib/captureCosmetics'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
@@ -29,7 +28,9 @@ commandHandler.registerCommand('set', {
     }
 
     const heroName = getHeroNameOrColor(heroId)
-    const items = resolveCosmetics(client.gsi?.wearables)
+    // Re-snapshots the loadout (normally already captured automatically on the
+    // hero:id event); also gives us the resolved item count for the reply.
+    const items = await captureCosmetics(client)
 
     if (!items.length) {
       chatClient.say(
@@ -39,20 +40,6 @@ commandHandler.registerCommand('set', {
       )
       return
     }
-
-    // Snapshot the resolved loadout so dotabod.com/<name>/set can render it
-    // later — cosmetics don't change mid-match, so a point-in-time capture is fine.
-    await supabase.from('cosmetic_loadouts').upsert(
-      {
-        userId: client.token,
-        matchId: String(matchId),
-        heroId,
-        heroName,
-        items: items as unknown as Json,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'userId' },
-    )
 
     chatClient.say(
       channel,
