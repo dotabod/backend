@@ -67,6 +67,9 @@ jobs:
         if: ${{ steps.count.outputs.lines != '0' }}
         uses: peter-evans/create-pull-request@v8.1.1
         with:
+          # PAT (not GITHUB_TOKEN) so the created PR triggers the CI + Autofix
+          # workflows — pushes/PRs made with GITHUB_TOKEN don't fire workflows.
+          token: ${{ secrets.GHA_PAT }}
           title: '[CI] New Crowdin Translations'
           body: The latest approved translations from Crowdin
           base: ${{ env.BASE_BRANCH }}

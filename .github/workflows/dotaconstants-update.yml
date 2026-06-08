@@ -40,6 +40,9 @@ jobs:
         if: steps.scan.outputs.should_update == 'true'
         uses: peter-evans/create-pull-request@v8.1.1
         with:
+          # PAT (not GITHUB_TOKEN) so the created PR triggers the CI + Autofix
+          # workflows — pushes/PRs made with GITHUB_TOKEN don't fire workflows.
+          token: ${{ secrets.GHA_PAT }}
           title: 'chore(dota): update dotaconstants for patch-relevant changes'
           body: |
             Automated dotaconstants refresh.

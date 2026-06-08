@@ -1,0 +1,55 @@
+name: Autofix
+
+# Runs `vp check --fix` on every PR and pushes the formatting/lint fixes back to
+# the PR branch, so formatting never becomes a merge blocker. The push uses
+# GHA_PAT (not the default GITHUB_TOKEN) so it re-triggers CI on the fixed code.
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: autofix-${{ github.event.pull_request.head.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    # Fork PRs can't be pushed to from here (no write access to the fork), so
+    # only auto-fix branches that live in this repo.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GHA_PAT }}
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.2.2
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          retry_wait_seconds: 10
+          command: pnpm install --frozen-lockfile
+      - name: Build workspace deps
+        run: pnpm --filter @dotabod/shared-utils --filter @dotabod/profanity-filter run build
+      # `|| true`: commit whatever was auto-fixed even if unfixable lint/type
+      # errors remain — those are still reported by the CI workflow's gate.
+      - name: Auto-format
+        run: pnpm exec vp check --fix || true
+      - name: Commit and push fixes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "style: auto-format via vp check --fix"
+            git push
+          fi
