@@ -67,8 +67,8 @@ importers:
         specifier: ^1.19.1
         version: 1.27.0
       dotaconstants:
-        specifier: github:dotabod/dotaconstants#102b7bfbc6f267529493066d8f551684f746e1bc
-        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/102b7bfbc6f267529493066d8f551684f746e1bc
+        specifier: github:dotabod/dotaconstants#70fffb95a5951dae2ea80b183c8c1170a52da6f1
+        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/70fffb95a5951dae2ea80b183c8c1170a52da6f1
       express:
         specifier: ^4.21.2
         version: 4.22.2
@@ -1558,8 +1558,8 @@ packages:
     resolution: {gitHosted: true, tarball: https://codeload.github.com/dotabod/node-dota2/tar.gz/4a1a09537d5bead430c36427b9a50b770abe56fc}
     version: 7.0.3
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/102b7bfbc6f267529493066d8f551684f746e1bc:
-    resolution: {gitHosted: true, integrity: sha512-muUaaSAwnSgjlwEU6IXPfvVtv/VYeAPp9mgEdO7viAACL/XqX/ki5/uK835eUIWbFowcO+dv2r4ZYZVHQ/YAZw==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/102b7bfbc6f267529493066d8f551684f746e1bc}
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/70fffb95a5951dae2ea80b183c8c1170a52da6f1:
+    resolution: {gitHosted: true, integrity: sha512-muUaaSAwnSgjlwEU6IXPfvVtv/VYeAPp9mgEdO7viAACL/XqX/ki5/uK835eUIWbFowcO+dv2r4ZYZVHQ/YAZw==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/70fffb95a5951dae2ea80b183c8c1170a52da6f1}
     version: 10.8.3
 
   dunder-proto@1.0.1:
@@ -3649,7 +3649,7 @@ snapshots:
       steam-resources: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45
       winston: 3.19.0
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/102b7bfbc6f267529493066d8f551684f746e1bc: {}
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/70fffb95a5951dae2ea80b183c8c1170a52da6f1: {}
 
   dunder-proto@1.0.1:
     dependencies:
