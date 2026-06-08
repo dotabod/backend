@@ -28,7 +28,7 @@
     "lost": "We have lost, gg nt {{emote}} go next",
     "manualResolution": "Disconnected before the match ended. {{- details}} Mods, use !won or !lost to resolve the bet manually and count the WL {{emote}}",
     "manualResolutionError": "Error resolving bet manually {{emote}}",
-    "manualResolutionExpired": "Previous match bet expired and was refunded (mods not doing their jobs, next time use !won or !lost) {{emote}}",
+    "manualResolutionExpired": "Trận cược trước đã hết hạn và được hoàn trả (mod không hoàn thành nhiệm vụ, lần sau hãy dùng !won hoặc!lost) {{emote}}",
     "manualResolutionSuccess_lost": "Match {{matchId}} manually resolved as LOST by @{{username}}",
     "manualResolutionSuccess_won": "Match {{matchId}} manually resolved as WON by @{{username}}",
     "noPendingResolution": "No pending bet resolution needed {{emote}}",
