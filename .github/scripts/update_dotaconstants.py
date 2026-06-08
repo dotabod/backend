@@ -104,21 +104,6 @@ def get_changed_patch_relevant_files(current_sha: str, latest_sha: str) -> list[
   return changed_files
 
 
-def update_lockfile(current_sha: str, latest_sha: str) -> None:
-  text = PNPM_LOCK_PATH.read_text(encoding='utf-8')
-  # pnpm lockfile references the git-hosted tarball with the full SHA in
-  # multiple places (specifier line, package key, resolution block). Replace
-  # every occurrence atomically.
-  updated_text = text.replace(current_sha, latest_sha)
-  occurrences = text.count(current_sha)
-  if occurrences == 0:
-    fail('no dotaconstants SHA occurrences found in pnpm-lock.yaml')
-  if updated_text == text:
-    fail('SHA replacement produced no changes')
-  PNPM_LOCK_PATH.write_text(updated_text, encoding='utf-8')
-  print(f'replaced {occurrences} occurrence(s) of {current_sha[:7]} → {latest_sha[:7]}')
-
-
 def main() -> None:
   token = os.getenv('GITHUB_TOKEN')
   current_sha = extract_current_sha()
@@ -146,8 +131,11 @@ def main() -> None:
     write_output('reason', 'no_patch_relevant_changes')
     return
 
+  # This script only DETECTS whether a refresh is warranted and exposes
+  # latest_sha. The workflow performs the actual bump with pnpm (updating both
+  # packages/dota/package.json and pnpm-lock.yaml, with correct tarball
+  # integrity) — a naive SHA string-replace can't compute the new integrity.
   print(f'patch-relevant updates detected: {changed_files_output}')
-  update_lockfile(current_sha, latest_sha)
   write_output('should_update', 'true')
   write_output('reason', 'patch_relevant_changes')
 
