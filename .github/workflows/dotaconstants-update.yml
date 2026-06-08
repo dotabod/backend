@@ -17,6 +17,8 @@ concurrency:
 jobs:
   update-dotaconstants:
     runs-on: ubuntu-latest
+    # `prod` environment scopes the GHA_PAT secret used to create the PR.
+    environment: prod
     env:
       UPDATE_BRANCH: ci/update-dotaconstants
       BASE_BRANCH: master

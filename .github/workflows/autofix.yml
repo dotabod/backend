@@ -16,6 +16,8 @@ concurrency:
 jobs:
   format:
     runs-on: ubuntu-latest
+    # `prod` environment scopes the GHA_PAT secret used to push fixes back.
+    environment: prod
     # Fork PRs can't be pushed to from here (no write access to the fork), so
     # only auto-fix branches that live in this repo.
     if: github.event.pull_request.head.repo.full_name == github.repository
