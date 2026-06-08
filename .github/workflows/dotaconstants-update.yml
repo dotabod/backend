@@ -31,12 +31,36 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Detect patch-relevant changes and update lockfiles
+      - name: Detect patch-relevant changes
         id: scan
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           python .github/scripts/update_dotaconstants.py
+
+      - name: Setup pnpm
+        if: steps.scan.outputs.should_update == 'true'
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.2.2
+
+      - name: Setup Node
+        if: steps.scan.outputs.should_update == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # Pin to the exact detected SHA (not the floating branch ref) so the bump
+      # is deterministic regardless of pnpm's git-ref cache. This updates both
+      # packages/dota/package.json and pnpm-lock.yaml (correct tarball integrity)
+      # in one shot, keeping the manifest and lockfile in sync.
+      - name: Bump dotaconstants to latest SHA
+        if: steps.scan.outputs.should_update == 'true'
+        run: |
+          pnpm --filter @dotabod/dota update \
+            "dotaconstants@github:dotabod/dotaconstants#${{ steps.scan.outputs.latest_sha }}" \
+            --lockfile-only
 
       - name: Create Pull Request
         if: steps.scan.outputs.should_update == 'true'
@@ -57,7 +81,8 @@ jobs:
             - `build/hero_abilities.json`
             - `build/aghs_desc.json`
 
-            Updated lockfiles:
+            Updated:
+            - `packages/dota/package.json`
             - `pnpm-lock.yaml`
 
             Comparison:
@@ -66,7 +91,8 @@ jobs:
             - Changed relevant files: `${{ steps.scan.outputs.changed_files }}`
           base: ${{ env.BASE_BRANCH }}
           branch: ${{ env.UPDATE_BRANCH }}
-          commit-message: 'chore(dota): refresh dotaconstants lockfile pins'
+          commit-message: 'chore(dota): refresh dotaconstants pin'
           delete-branch: true
           add-paths: |
+            packages/dota/package.json
             pnpm-lock.yaml
