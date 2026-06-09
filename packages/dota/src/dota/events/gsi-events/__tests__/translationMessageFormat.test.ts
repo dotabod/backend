@@ -14,6 +14,10 @@ describe('translation message formatting', () => {
     await i18next.init({
       lng: 'en',
       fallbackLng: 'en',
+      // Match the production runtime + initTestI18n config so this narrow init
+      // never leaves the shared i18next singleton without prod options.
+      returnEmptyString: false,
+      returnNull: false,
       resources: {
         en: {
           translation: {

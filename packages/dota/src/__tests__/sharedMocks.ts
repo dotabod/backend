@@ -95,6 +95,16 @@ export async function initTestI18n() {
     await i18next.init({
       lng: 'en',
       fallbackLng: 'en',
+      // Mirror the production runtime config (dota/src/dota/index.ts). With
+      // returnEmptyString:false an empty i18next plural variant falls back to
+      // the base key instead of resolving to "". This matters because the
+      // crowdin-download workflow's i18next-parser step auto-generates empty
+      // CLDR plural placeholders (e.g. cosmetics.list_one / list_other) for
+      // every locale on each sync — keyed off `t('cosmetics.list', { count })`.
+      // Prod tolerates those via this flag; the harness must too, or
+      // `t()` on a counted key returns "" and diverges from real behavior.
+      returnEmptyString: false,
+      returnNull: false,
       resources: { en: { translation: enTranslation } },
     })
     return
@@ -105,6 +115,10 @@ export async function initTestI18n() {
   // raw keys like "aegis.expired". Merge the full English bundle back in so
   // `t()` resolves real strings regardless of bun's file-execution order.
   i18next.addResourceBundle('en', 'translation', enTranslation, true, true)
+  // Re-assert the prod options too: a prior initializer may have created the
+  // singleton without them (see the narrow init in translationMessageFormat.test.ts).
+  i18next.options.returnEmptyString = false
+  i18next.options.returnNull = false
 }
 
 // A Pro subscription bypasses `canAccessFeature` gates everywhere settings/
