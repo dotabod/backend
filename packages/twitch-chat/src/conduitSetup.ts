@@ -63,17 +63,35 @@ eventsSocket.on('disconnect', (reason) => {
   logger.info('[TWITCHCHAT] Disconnected from twitch-events service', { reason })
 })
 
+// Watchdog: the connect-driven self-heal above can miss a recovery when the link
+// to twitch-events flaps mid-init. If the socket drops while getConduitId() is
+// waiting, eventSubInitInFlight stays true; the reconnect's
+// ensureEventSubInitialized() then bails on that guard, and by the time the
+// stale attempt times out and clears the guard there's no 'connect' event left
+// to retrigger init — EventSub stays dead until a manual restart (seen
+// 2026-06-09). This interval reconciles that state unconditionally: link up but
+// EventSub down with no init in flight means we wedged, so re-init.
+const EVENTSUB_WATCHDOG_MS = 30_000
+setInterval(() => {
+  if (eventsSocket.connected && !isEventsubConnected() && !eventSubInitInFlight) {
+    logger.warn('[TWITCHCHAT] Watchdog: twitch-events link up but EventSub down, re-initializing')
+    void ensureEventSubInitialized('watchdog')
+  }
+}, EVENTSUB_WATCHDOG_MS)
+
 // Function to fetch conduit ID via socket.io
 async function getConduitId(forceRefresh = false): Promise<string> {
   return new Promise((resolve, reject) => {
-    // Set timeout for the request
-    const timeout = setTimeout(() => {
-      reject(new Error('Timeout waiting for conduit data'))
-    }, 15000)
-
-    // Set up one-time listeners for the response
-    eventsSocket.once('conduitData', (data) => {
+    // Remove both listeners on any settle so repeated watchdog-driven retries
+    // (while twitch-events is down) don't leak handlers / trip MaxListeners.
+    const cleanup = () => {
       clearTimeout(timeout)
+      eventsSocket.off('conduitData', onData)
+      eventsSocket.off('conduitError', onError)
+    }
+
+    const onData = (data: { conduitId?: string }) => {
+      cleanup()
       if (data?.conduitId) {
         logger.info('[TWITCHCHAT] Received conduit ID', {
           conduitId: `${data.conduitId.substring(0, 8)}...`,
@@ -82,13 +100,21 @@ async function getConduitId(forceRefresh = false): Promise<string> {
       } else {
         reject(new Error('Invalid conduit data received'))
       }
-    })
+    }
 
-    eventsSocket.once('conduitError', (error) => {
-      clearTimeout(timeout)
+    const onError = (error: { error?: string }) => {
+      cleanup()
       logger.error('[TWITCHCHAT] Error getting conduit ID', { error })
       reject(new Error(error.error || 'Unknown error getting conduit ID'))
-    })
+    }
+
+    const timeout = setTimeout(() => {
+      cleanup()
+      reject(new Error('Timeout waiting for conduit data'))
+    }, 15000)
+
+    eventsSocket.on('conduitData', onData)
+    eventsSocket.on('conduitError', onError)
 
     // Request the conduit data
     logger.info('[TWITCHCHAT] Requesting conduit data', { forceRefresh })
