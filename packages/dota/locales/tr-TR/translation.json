@@ -101,11 +101,18 @@
   "commands_everyone": "Herkes kullanabilir: {{commandList}}",
   "commands_mods": "Sadece mod komutları: {{commandList}}",
   "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
+  "commandSuggestion": "Also try {{cmd}}",
   "connections": {
     "gsi_one": "{{count}} yayıncı Dotabod GSI'ya bağlı",
     "gsi_other": "{{count}} yayıncı Dotabod GSI'ya bağlı",
     "overlay_one": "Arayüzü {{count}} yayıncı kullanıyor",
     "overlay_other": "Arayüzü {{count}} yayıncı kullanıyor"
+  },
+  "cosmetics": {
+    "empty": "{{- heroName}} has no cosmetics equipped",
+    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
+    "list_one": "",
+    "list_other": ""
   },
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",

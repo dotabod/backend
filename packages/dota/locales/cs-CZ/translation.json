@@ -107,6 +107,7 @@
   "commands_everyone": "Všichni mohou použít: {{commandList}}",
   "commands_mods": "Pouze pro moderátory: {{commandList}}",
   "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
+  "commandSuggestion": "Also try {{cmd}}",
   "connections": {
     "gsi_one": "{{count}} streamer connected to Dotabod GSI",
     "gsi_few": "{{count}} streamers connected to Dotabod GSI",
@@ -116,6 +117,14 @@
     "overlay_few": "{{count}} streamers using the overlay",
     "overlay_many": "{{count}} streamers using the overlay",
     "overlay_other": "{{count}} streameři využívají overlay"
+  },
+  "cosmetics": {
+    "empty": "{{- heroName}} has no cosmetics equipped",
+    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
+    "list_one": "",
+    "list_few": "",
+    "list_many": "",
+    "list_other": ""
   },
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Nyní hraje: {{artist}} - {{title}}{{album}} {{url}}",

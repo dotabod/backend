@@ -101,11 +101,18 @@
   "commands_everyone": "Mindenki számára elérhető parancsok: {{commandList}}",
   "commands_mods": "Moderátor parancsok: {{commandList}}",
   "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
+  "commandSuggestion": "Also try {{cmd}}",
   "connections": {
     "gsi_one": "{{count}} streamer connected to Dotabod GSI",
     "gsi_other": "{{count}} streamers connected to Dotabod GSI",
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_other": "{{count}} streamers using the overlay"
+  },
+  "cosmetics": {
+    "empty": "{{- heroName}} has no cosmetics equipped",
+    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
+    "list_one": "",
+    "list_other": ""
   },
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",

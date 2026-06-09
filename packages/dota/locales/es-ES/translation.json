@@ -104,6 +104,7 @@
   "commands_everyone": "Todos pueden usar: {{commandList}}",
   "commands_mods": "Mod sólo comandos: {{commandList}}",
   "commandsPage": "Para ver la lista de comandos de {{- channel}}'s, visita {{- url}}",
+  "commandSuggestion": "Also try {{cmd}}",
   "connections": {
     "gsi_one": "{{count}} Streamer conectado a Dotabod GSI",
     "gsi_many": "",
@@ -111,6 +112,13 @@
     "overlay_one": "{{count}} Streamer usando este overlay",
     "overlay_many": "",
     "overlay_other": "{{count}} Streamers usando este overlay"
+  },
+  "cosmetics": {
+    "empty": "{{- heroName}} has no cosmetics equipped",
+    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
+    "list_one": "",
+    "list_many": "",
+    "list_other": ""
   },
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Ahora reproduciendo: {{artist}} - {{title}}{{album}} {{url}}",

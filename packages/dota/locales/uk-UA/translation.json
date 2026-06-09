@@ -107,6 +107,7 @@
   "commands_everyone": "Кожен може використовувати: {{commandList}}",
   "commands_mods": "Команди лише для модераторів: {{commandList}}",
   "commandsPage": "Для перегляду списку команд {{- channel}} відвідайте {{- url}}",
+  "commandSuggestion": "Also try {{cmd}}",
   "connections": {
     "gsi_one": "{{count}} стрімер підключений до Dotabod GSI",
     "gsi_few": "{{count}} стрімери підключені до Dotabod GSI",
@@ -116,6 +117,14 @@
     "overlay_few": "{{count}} стрімери використовують оверлей",
     "overlay_many": "{{count}} стрімери використовують оверлей",
     "overlay_other": "{{count}} стрімери використовують оверлей"
+  },
+  "cosmetics": {
+    "empty": "{{- heroName}} has no cosmetics equipped",
+    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
+    "list_one": "",
+    "list_few": "",
+    "list_many": "",
+    "list_other": ""
   },
   "countryPlayerList": "Грає з гравцями з {{- countries}}",
   "currentSong": "Зараз відтворюється: {{artist}} - {{title}}{{album}} {{url}}",

@@ -17,6 +17,7 @@
   "altAccount": "{{emote}} alt account detected {{emote2}}",
   "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Average rank this game",
+  "commandSuggestion": "Also try {{cmd}}",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "{{channel}} is no longer a beta tester. Type !beta to join again",
@@ -111,6 +112,10 @@
   "gameNotFound": "Game was not found",
   "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
+  "cosmetics": {
+    "empty": "{{- heroName}} has no cosmetics equipped",
+    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}"
+  },
   "heroItems": {
     "empty": "(2m delay) No items found for {{- heroName}}",
     "list": "(2m delay) {{- heroName}} has: {{- itemNames}}"

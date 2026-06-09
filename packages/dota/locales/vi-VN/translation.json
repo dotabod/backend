@@ -4,19 +4,19 @@
     "blocked": "Multiple people are using Dotabod GSI files for this stream. Account \"{{accountName}}\" is blocked. Use !clearsharing to reset, but ensure only one person has the GSI file."
   },
   "aegis": {
-    "denied": "{{- heroName}} denied the aegis {{emote}}",
-    "deniedUnknown": "Aegis denied {{emote}}",
-    "expired": "{{- heroName}}'s aegis expired {{emote}}",
-    "expiredUnknown": "Aegis expired {{emote}}",
-    "pickup": "{{- heroName}} picked up the aegis!",
-    "pickupUnknown": "Aegis picked up!",
-    "snatched": "{{- heroName}} snatched the aegis {{emote}}",
-    "snatchedUnknown": "Aegis snatched PepeLaugh"
+    "denied": "{{- heroName}} phá khiên {{emote}}",
+    "deniedUnknown": "Đã phá khiên {{emote}}",
+    "expired": "Khiên của {{- heroName}} đã mất {{emote}}",
+    "expiredUnknown": "Mất khiên {{emote}}",
+    "pickup": "{{- heroName}} đã nhặt khiên! ",
+    "pickupUnknown": "Đã nhặt khiên! ",
+    "snatched": "{{- heroName}} đã cướp khiên {{emote}}",
+    "snatchedUnknown": "Đã cướp khiên PepeLaugh"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
   "altAccount": "{{emote}} alt account detected {{emote2}}",
-  "apm_other": "Live APM for {{- heroName}}: {{count}} {{emote}}",
-  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
+  "apm_other": "{{- heroName}}: {{count}} {{emote}}",
+  "autoTranslate": "[Dịch] {{- heroName}} nói: {{- message}}",
   "averageRank": "Average rank this game",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
@@ -58,7 +58,7 @@
     "totalGold": "{{count}} gold"
   },
   "chatters": {
-    "died": "{{- heroName}} died with passive {{itemNames}} {{emote}}",
+    "died": "{{itemNames}}{{itemNames}}",
     "firstBloodDeath": "{{- heroName}} giving up first blood {{emote}}",
     "midas": "{{emote}} Use your midas",
     "noTp": "{{channel}} where's your tp {{emote}}",
@@ -98,9 +98,15 @@
   "commands_everyone": "Everyone can use: {{commandList}}",
   "commands_mods": "Mod only commands: {{commandList}}",
   "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
+  "commandSuggestion": "Also try {{cmd}}",
   "connections": {
     "gsi_other": "{{count}} streamers connected to Dotabod GSI",
     "overlay_other": "{{count}} streamers using the overlay"
+  },
+  "cosmetics": {
+    "empty": "{{- heroName}} has no cosmetics equipped",
+    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
+    "list_other": ""
   },
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",

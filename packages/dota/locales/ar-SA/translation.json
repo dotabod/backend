@@ -113,6 +113,7 @@
   "commands_everyone": "يمك للجميع أستخدام: {{commandList}}",
   "commands_mods": "التعديل على الأوامر فقط: {{commandList}}",
   "commandsPage": "لرؤية {{- channel}} أوامر، زور {{- url}}",
+  "commandSuggestion": "Also try {{cmd}}",
   "connections": {
     "gsi_zero": "{{count}} streamers connected to Dotabod GSI",
     "gsi_one": "{{count}} المسئول عن البث متصلون بDotabod GSI",
@@ -126,6 +127,16 @@
     "overlay_few": "{{count}} streamers using the overlay",
     "overlay_many": "{{count}} streamers using the overlay",
     "overlay_other": "{{count}} streamers using the overlay"
+  },
+  "cosmetics": {
+    "empty": "{{- heroName}} has no cosmetics equipped",
+    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
+    "list_zero": "",
+    "list_one": "",
+    "list_two": "",
+    "list_few": "",
+    "list_many": "",
+    "list_other": ""
   },
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "يلعب الآن: {{artist}} - {{title}}{{album}}{{url}}",
