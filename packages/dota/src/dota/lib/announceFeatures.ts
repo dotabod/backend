@@ -101,6 +101,10 @@ export async function dispatchFeatureAnnouncements(
   data: unknown,
 ): Promise<void> {
   const client = dotaClient.client
+  // EventHandler already gates events on stream_online; this explicit guard keeps the
+  // dispatcher correct if ever called from another path, and never persists a
+  // featureAnnounced flag (which would suppress the notice forever) for an offline streamer.
+  if (!client.stream_online) return
   if (!isPlayingMatch(client.gsi)) return
 
   const matchId = client.gsi?.map?.matchid

@@ -114,6 +114,8 @@
   },
   "cosmetics": {
     "captured": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "captured_one": "{{- heroName}} set captured! {{count}} cosmetic → {{- url}}",
+    "captured_other": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
     "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
     "list_one": "",

@@ -80,13 +80,15 @@ function makeDotaClient(opts: {
   matchid?: string
   settings?: Setting[]
   playing?: boolean
+  stream_online?: boolean
 }): any {
-  const { token, matchid = 'm1', settings = [], playing = true } = opts
+  const { token, matchid = 'm1', settings = [], playing = true, stream_online = true } = opts
   return {
     client: {
       name: 'streamer',
       token,
       locale: 'en',
+      stream_online,
       subscription: undefined,
       settings,
       gsi: {
@@ -210,6 +212,17 @@ describe('feature announcer', () => {
     )
 
     expect(sayMock).not.toHaveBeenCalled()
+  })
+
+  it('does nothing (and persists no flag) when the stream is offline', async () => {
+    const token = freshToken()
+    await dispatchFeatureAnnouncements(
+      makeDotaClient({ token, stream_online: false }),
+      'hero:id',
+      INVOKER_ID,
+    )
+    expect(sayMock).not.toHaveBeenCalled()
+    expect(settingsInserted.size).toBe(0)
   })
 
   it('does not announce or cache on a transient upsert error, and retries next trigger', async () => {
