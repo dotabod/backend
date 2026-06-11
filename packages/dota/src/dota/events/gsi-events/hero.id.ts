@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { redisClient } from '../../../db/redisInstance'
-import { DBSettings, getValueOrDefault } from '../../../settings'
+import { isFeatureEnabled } from '../../lib/announceFeatures'
 import { captureCosmetics } from '../../lib/captureCosmetics'
 import { getHeroNameOrColor } from '../../lib/heroes'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
@@ -17,30 +17,19 @@ eventHandler.registerEvent('hero:id', {
     if (!heroId || heroId <= 0) return
     if (!isPlayingMatch(dotaClient.client.gsi)) return
 
-    // Always snapshot the loadout to the DB, online or not.
+    // Snapshot the loadout on every pick/swap. (This handler only runs while live —
+    // EventHandler gates events on stream_online — so capture is effectively live-only.)
     const items = await captureCosmetics(dotaClient.client)
 
     const client = dotaClient.client
-    // Only announce while live, and only when we actually captured something
-    // (a hero with just base parts resolves to no items).
+    // Only announce when we actually captured something (a hero with just base parts
+    // resolves to no items). The stream_online check is belt-and-suspenders.
     if (!client.stream_online) return
     if (!items.length) return
 
-    // Cosmetic-set announcements are a "new feature": an explicit per-feature
-    // choice always wins; otherwise the streamer's autoOptInNewFeatures master
-    // toggle decides the default (on). cosmeticsAnnounce is null until the
-    // streamer explicitly flips it.
-    const perFeature = getValueOrDefault(
-      DBSettings.cosmeticsAnnounce,
-      client.settings,
-      client.subscription,
-    ) as boolean | null
-    const autoOptIn = getValueOrDefault(
-      DBSettings.autoOptInNewFeatures,
-      client.settings,
-      client.subscription,
-    ) as boolean
-    if ((perFeature ?? autoOptIn) !== true) return
+    // Cosmetic-set announcements are a "new feature": an explicit per-feature choice
+    // wins, else the autoOptInNewFeatures master decides. Shared with the announcer.
+    if (!isFeatureEnabled(client, 'cosmeticsAnnounce')) return
 
     // Announce at most once per match+hero. hero:id can re-fire on a GSI
     // reconnect; storing+comparing the stamp is self-correcting across matches

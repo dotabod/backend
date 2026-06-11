@@ -17,10 +17,16 @@ const loggerMock = {
 // notifications insert.
 const settingsInserted = new Set<string>()
 const notificationInserts: Array<Record<string, unknown>> = []
+let nextUpsertError: unknown = null
 const supabaseMock = {
   from: (table: string) => ({
     upsert: (values: { userId: string; key: string }) => ({
       select: () => {
+        if (nextUpsertError) {
+          const error = nextUpsertError
+          nextUpsertError = null
+          return Promise.resolve({ data: null, error })
+        }
         const k = `${values.userId}:${values.key}`
         const firstTime = !settingsInserted.has(k)
         settingsInserted.add(k)
@@ -100,6 +106,7 @@ describe('feature announcer', () => {
     notificationInserts.length = 0
     settingsInserted.clear()
     registeredTriggers.length = 0
+    nextUpsertError = null
     for (const k of Object.keys(redisStore)) delete redisStore[k]
   })
 
@@ -203,6 +210,26 @@ describe('feature announcer', () => {
     )
 
     expect(sayMock).not.toHaveBeenCalled()
+  })
+
+  it('does not announce or cache on a transient upsert error, and retries next trigger', async () => {
+    const token = freshToken()
+    nextUpsertError = { message: 'db down' }
+    await dispatchFeatureAnnouncements(
+      makeDotaClient({ token, matchid: 'm1' }),
+      'hero:id',
+      INVOKER_ID,
+    )
+    expect(sayMock).not.toHaveBeenCalled()
+    expect(notificationInserts).toHaveLength(0)
+
+    // Error cleared; the next trigger succeeds (the in-memory cache must NOT block it).
+    await dispatchFeatureAnnouncements(
+      makeDotaClient({ token, matchid: 'm2' }),
+      'hero:id',
+      INVOKER_ID,
+    )
+    expect(sayMock).toHaveBeenCalledTimes(1)
   })
 
   it('isFeatureEnabled: untouched follows master, explicit choice wins', () => {

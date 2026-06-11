@@ -68,9 +68,15 @@ async function announceFeatureOnce(
     )
     .select('key')
 
-  // Either it's now recorded (first time) or it was already recorded — never look again.
+  // A transient write error: don't cache or claim it — allow a retry on the next trigger
+  // (otherwise the in-memory cache would block this streamer until the process restarts).
+  if (error) {
+    logger.error('[feature-announce] settings flag upsert failed', { id: feature.id, error })
+    return false
+  }
+  // Recorded now (first time) or already recorded earlier — never look again.
   markHandled(cacheKey)
-  if (error || !data?.length) return false // already announced ever, or write failed
+  if (!data?.length) return false // already announced ever
 
   const { error: notifyError } = await supabase
     .from('notifications')
