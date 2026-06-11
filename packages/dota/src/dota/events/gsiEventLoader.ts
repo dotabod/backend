@@ -17,3 +17,7 @@ import './gsi-events/player.deaths'
 import './gsi-events/player.kill_list'
 import './gsi-events/player.killstreak'
 import './gsi-events/saveHeroesForMatchId'
+import { registerFeatureAnnouncers } from '../lib/announceFeatures'
+
+// Registry-driven "this feature is new" chat announcements (hooks its own GSI listeners).
+registerFeatureAnnouncers()
