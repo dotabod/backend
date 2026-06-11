@@ -128,6 +128,13 @@ export const defaultSettingsStructure = {
   battlepass: false,
   chatter: true,
   chatters: defaultChatters,
+  // Master switch: when on (default), features released after a streamer's last
+  // visit are enabled by default. Per-feature settings (e.g. cosmeticsAnnounce)
+  // override this once explicitly set. See isNewFeatureEnabled-style gating.
+  autoOptInNewFeatures: true,
+  // New-feature toggle for cosmetic-set announcements. null = follow
+  // autoOptInNewFeatures; true/false = explicit streamer choice (always wins).
+  cosmeticsAnnounce: null as boolean | null,
   customMmr: '[currentmmr] | [currentrank] | Next rank at [nextmmr] [wins]',
   'minimap-blocker': true,
   minimapRight: false,

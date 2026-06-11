@@ -113,10 +113,18 @@
     "overlay_other": "{{count}} streamers using the overlay"
   },
   "cosmetics": {
+    "captured": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
     "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
     "list_one": "",
     "list_other": ""
+  },
+  "newFeatures": {
+    "announce": {
+      "cosmetics": "🆕 New dotabod feature — your hero's cosmetic set now posts in chat when you pick (or type !set). Manage or opt out of new features → {{- url}}"
+    },
+    "cosmetics": "cosmetic set announcements",
+    "notice": "🆕 {{- feature}} just turned on automatically — Dotabod enables new features by default. Don't want new stuff on by default? Opt out anytime → {{- url}}"
   },
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
