@@ -1,9 +1,8 @@
 import { t } from 'i18next'
 
 import { type ChatEventData, ChatMessageType, type DotaEvent, DotaEventTypes } from '../../../types'
-import { getRedisNumberValue, is8500Plus } from '../../../utils/index'
+import { getRedisNumberValue } from '../../../utils/index'
 import { delayedQueue } from '../../lib/DelayedQueue'
-import { getHeroNameOrColor } from '../../lib/heroes'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import { MatchDataService } from '../../lib/matchData'
 import { say } from '../../say'
@@ -33,34 +32,18 @@ eventHandler.registerEvent(`event:${DotaEventTypes.GenericEvent}`, {
       }
 
       if (data.type === ChatMessageType.ChatMessageSmokeActivated) {
-        // Dota only surfaces SMOKE_ACTIVATED for the viewer's own team, but gate on
-        // team anyway so we never leak/misreport an enemy smoke (and skip when
-        // spectating, where team_name is 'spectator' and won't match a slot-derived side).
-        const streamerTeam = dotaClient.client.gsi?.player?.team_name
-        const activatorTeam = data.playerid1 <= 4 ? 'radiant' : 'dire'
-        if (!streamerTeam || activatorTeam !== streamerTeam) return
+        // Dota only surfaces SMOKE_ACTIVATED to the viewer's own team, and this handler
+        // runs only for an actively-playing streamer (isPlayingMatch excludes spectators),
+        // so every such event is one of OUR smokes — no team filtering needed. (Deriving a
+        // team from playerid1 would be wrong anyway: slots are reshuffled at high MMR.)
 
-        // Resolve the activator's hero from their slot (playerid1), mirroring
-        // event.tip.ts: 8500+ only names a hero when positively matched by slot.
-        const { players } = await new MatchDataService(dotaClient.client).resolveRoster()
-        const found = players.findIndex((p) => p.slot === data.playerid1)
-        const idx = found === -1 ? data.playerid1 : found
-        const high = is8500Plus(dotaClient.client)
-        const heroId = players[idx]?.heroId
-        const heroName = high
-          ? found !== -1 && heroId
-            ? getHeroNameOrColor(heroId, idx)
-            : null
-          : getHeroNameOrColor(heroId ?? 0, idx)
-
-        // Did the streamer cast it themselves? Then they're with the team by definition.
+        // Did the streamer cast it themselves? Then they're in it by definition.
         const streamerCastIt =
           (await getRedisNumberValue(`${dotaClient.getToken()}:playingHeroSlot`)) === data.playerid1
 
-        // Send exactly ONE message, decided after the smoke buff has had a moment to
-        // settle: rib the streamer if they weren't actually in it, otherwise the normal
-        // heads-up. The delay is what lets us read `hero.smoked` to pick the right line.
-        delayedQueue.addTask(SMOKE_FOMO_DELAY_MS, () => {
+        // Decide ONE message after the smoke buff settles (~3s): rib the streamer if they
+        // weren't actually in it, otherwise name the hero who popped it.
+        delayedQueue.addTask(SMOKE_FOMO_DELAY_MS, async () => {
           const { client } = dotaClient
           if (!client.stream_online) return
           if (!isPlayingMatch(client.gsi)) return
@@ -68,14 +51,25 @@ eventHandler.registerEvent(`event:${DotaEventTypes.GenericEvent}`, {
           // Caught out: a teammate smoked, the streamer is alive, but never got the buff.
           const caughtOut =
             !streamerCastIt && client.gsi?.hero?.alive !== false && !client.gsi?.hero?.smoked
+          if (caughtOut) {
+            say(client, t('chatters.smokeWithoutYou', { emote: 'HAH', lng: client.locale }), {
+              chattersKey: 'smokeActivated',
+            })
+            return
+          }
 
-          const message = caughtOut
-            ? t('chatters.smokeWithoutYou', { emote: 'HAH', lng: client.locale })
-            : heroName
+          // Grouped up (or cast it): name the activator's hero, tier-aware (8500+ stays
+          // anonymous). resolveHeroNameForSlot does the roster lookup + bounded color fallback.
+          const { name: heroName } = await new MatchDataService(client).resolveHeroNameForSlot({
+            eventPlayerId: data.playerid1,
+          })
+          say(
+            client,
+            heroName
               ? t('chatters.smokeActivated', { emote: 'Shush', heroName, lng: client.locale })
-              : t('chatters.smokeActivatedUnknown', { emote: 'Shush', lng: client.locale })
-
-          say(client, message, { chattersKey: 'smokeActivated' })
+              : t('chatters.smokeActivatedUnknown', { emote: 'Shush', lng: client.locale }),
+            { chattersKey: 'smokeActivated' },
+          )
         })
         return
       }
