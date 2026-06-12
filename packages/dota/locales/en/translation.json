@@ -68,6 +68,9 @@
     "midas": "{{emote}} Use your midas",
     "noTp": "{{channel}} where's your tp {{emote}}",
     "pause": "{{emote}} Who paused the game?",
+    "smokeActivated": "{{- heroName}} activated Smoke of Deceit! {{emote}}",
+    "smokeActivatedUnknown": "{{emote}} An ally activated Smoke of Deceit!",
+    "smokeWithoutYou": "team smoking without you {{emote}}",
     "smoked": "{{emote}} {{- heroName}} is smoked!",
     "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Thanks to this death you finally got a tp. And it only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"

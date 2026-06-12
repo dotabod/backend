@@ -575,6 +575,80 @@ describe('hero:smoked', () => {
   })
 })
 
+describe('event:generic_event - smoke activated', () => {
+  const smokeEvent = (playerid1: number) => ({
+    game_time: 600,
+    event_type: 'generic_event',
+    data: JSON.stringify({
+      type: 'CHAT_MESSAGE_SMOKE_ACTIVATED',
+      value: 0,
+      playerid1,
+      playerid2: -1,
+      time: 537,
+    }),
+  })
+
+  it('sends one message — roasts the streamer — when the team smokes without them', async () => {
+    const handler = makeGsiHandler()
+    handler.client.gsi.player.team_name = 'radiant'
+    handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: false, alive: true }
+    registerHandler(handler)
+    // Teammate in slot 0 casts it; the streamer is slot 1 and never got the buff.
+    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
+
+    events.emit('event:generic_event', smokeEvent(0), handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toContain('without you')
+  })
+
+  it('announces but does not roast when the streamer is in the smoke', async () => {
+    const handler = makeGsiHandler()
+    handler.client.gsi.player.team_name = 'radiant'
+    handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: true, alive: true }
+    registerHandler(handler)
+    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
+
+    events.emit('event:generic_event', smokeEvent(0), handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toContain('Smoke of Deceit')
+  })
+
+  it('does not roast when the streamer cast the smoke themselves', async () => {
+    const handler = makeGsiHandler()
+    handler.client.gsi.player.team_name = 'radiant'
+    handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: false, alive: true }
+    registerHandler(handler)
+    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '0'
+
+    events.emit('event:generic_event', smokeEvent(0), handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toContain('Smoke of Deceit')
+  })
+
+  it('does not chat when the activator is on the enemy team', async () => {
+    const handler = makeGsiHandler()
+    handler.client.gsi.player.team_name = 'radiant'
+    registerHandler(handler)
+    // Activator in dire slot 5 — opposite side; Dota would not surface this to
+    // the streamer, and we must never leak it even if it did.
+    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 5 }]
+
+    events.emit('event:generic_event', smokeEvent(5), handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(0)
+  })
+})
+
 describe('player:kill_streak', () => {
   it('chats killstreak.won when streak rises above 3', async () => {
     const handler = makeGsiHandler()

@@ -59,6 +59,7 @@ const FEATURE_TIERS: Record<
   'chatters.midas': SUBSCRIPTION_TIERS.PRO,
   'chatters.pause': SUBSCRIPTION_TIERS.FREE,
   'chatters.smoke': SUBSCRIPTION_TIERS.FREE,
+  'chatters.smokeActivated': SUBSCRIPTION_TIERS.FREE,
   'chatters.passiveDeath': SUBSCRIPTION_TIERS.PRO,
   'chatters.roshPickup': SUBSCRIPTION_TIERS.PRO,
   'chatters.roshDeny': SUBSCRIPTION_TIERS.PRO,
