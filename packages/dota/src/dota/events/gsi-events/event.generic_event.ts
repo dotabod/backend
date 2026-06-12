@@ -32,10 +32,13 @@ eventHandler.registerEvent(`event:${DotaEventTypes.GenericEvent}`, {
       }
 
       if (data.type === ChatMessageType.ChatMessageSmokeActivated) {
-        // Dota only surfaces SMOKE_ACTIVATED to the viewer's own team, and this handler
-        // runs only for an actively-playing streamer (isPlayingMatch excludes spectators),
-        // so every such event is one of OUR smokes — no team filtering needed. (Deriving a
-        // team from playerid1 would be wrong anyway: slots are reshuffled at high MMR.)
+        // Dota only surfaces SMOKE_ACTIVATED to the viewer's own team, but gate on team
+        // anyway so we never leak or misreport an enemy smoke — and so we skip spectating,
+        // where team_name is 'spectator' and won't match a slot-derived side. The GSI event
+        // slot is the stable team convention (0-4 radiant, 5-9 dire; cf. normalize.ts).
+        const streamerTeam = dotaClient.client.gsi?.player?.team_name
+        const activatorTeam = data.playerid1 <= 4 ? 'radiant' : 'dire'
+        if (!streamerTeam || activatorTeam !== streamerTeam) return
 
         // Did the streamer cast it themselves? Then they're in it by definition.
         const streamerCastIt =

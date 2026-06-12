@@ -75,6 +75,8 @@ const FEATURE_TIERS: Record<
   'chatters.neutralItems': SUBSCRIPTION_TIERS.PRO,
   'chatters.dotapatch': SUBSCRIPTION_TIERS.FREE,
   'chatters.chattingSpamEmote': SUBSCRIPTION_TIERS.FREE,
+  autoOptInNewFeatures: SUBSCRIPTION_TIERS.FREE,
+  cosmeticsAnnounce: SUBSCRIPTION_TIERS.FREE,
   aegis: SUBSCRIPTION_TIERS.PRO,
   betsInfo: SUBSCRIPTION_TIERS.PRO,
   customMmr: SUBSCRIPTION_TIERS.PRO,
