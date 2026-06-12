@@ -63,6 +63,9 @@ const defaultChatters = {
   smoke: {
     enabled: true,
   },
+  smokeActivated: {
+    enabled: true,
+  },
   passiveDeath: {
     enabled: true,
   },

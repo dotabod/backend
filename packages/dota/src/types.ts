@@ -404,6 +404,7 @@ export enum ChatMessageType {
   ChatMessageSafeToLeave = 'CHAT_MESSAGE_SAFE_TO_LEAVE',
   ChatMessageScanUsed = 'CHAT_MESSAGE_SCAN_USED',
   ChatMessageSentryWardKilled = 'CHAT_MESSAGE_SENTRY_WARD_KILLED',
+  ChatMessageSmokeActivated = 'CHAT_MESSAGE_SMOKE_ACTIVATED',
   ChatMessageSpectatorsWatchingThisGame = 'CHAT_MESSAGE_SPECTATORS_WATCHING_THIS_GAME',
   ChatMessageStreakKill = 'CHAT_MESSAGE_STREAK_KILL',
   ChatMessageSuperCreeps = 'CHAT_MESSAGE_SUPER_CREEPS',
