@@ -139,6 +139,10 @@ vi.doMock('../../../lib/matchData', () => {
     async getStreamersInMatchCount() {
       return 0
     }
+    async resolveHeroNameForSlot({ eventPlayerId }: { eventPlayerId: number }) {
+      const p = gsiState.matchPlayers.find((mp) => mp.playerid === eventPlayerId)
+      return { name: p?.heroid ? `hero_${p.heroid}` : null, resolvedFromRoster: !!p }
+    }
   }
   return {
     MatchDataService: FakeMatchDataService,

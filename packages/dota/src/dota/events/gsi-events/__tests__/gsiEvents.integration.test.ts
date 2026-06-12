@@ -634,6 +634,23 @@ describe('event:generic_event - smoke activated', () => {
     expect(gsiState.chatSayCalls[0].message).toContain('Smoke of Deceit')
   })
 
+  it('announces (does not roast) when the streamer is dead', async () => {
+    const handler = makeGsiHandler()
+    handler.client.gsi.player.team_name = 'radiant'
+    handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: false, alive: false }
+    registerHandler(handler)
+    // Teammate smoked while the streamer is dead — dead isn't "caught out", so announce.
+    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
+
+    events.emit('event:generic_event', smokeEvent(0), handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toContain('Smoke of Deceit')
+    expect(gsiState.chatSayCalls[0].message).not.toContain('without you')
+  })
+
   it('does not chat when the activator is on the enemy team', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
