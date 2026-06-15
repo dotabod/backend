@@ -72,7 +72,10 @@
     "midas": "{{emote}} Используй свой Midas",
     "noTp": "{{channel}} где твое ТП? {{emote}}",
     "pause": "{{emote}} Кто поставил паузу?",
+    "smokeActivated": "{{- heroName}} activated Smoke of Deceit! {{emote}}",
+    "smokeActivatedUnknown": "{{emote}} An ally activated Smoke of Deceit!",
     "smoked": "{{emote}} {{- heroName}} в смоках!",
+    "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}} молодец, наконец-то купил ТП спустя $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Спасибо смерти за данное тебе ТП. Это заняло всего лишь $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
@@ -119,8 +122,11 @@
     "overlay_other": "{{count}} стримеров использует оверлей"
   },
   "cosmetics": {
+    "captured_one": "{{- heroName}} set captured! {{count}} cosmetic → {{- url}}",
+    "captured_few": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "captured_many": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "captured_other": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
-    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
     "list_one": "",
     "list_few": "",
     "list_many": "",
@@ -214,6 +220,11 @@
   "muted": "Больше не будет автоматически писать об игровых событиях, но все равно будет отвечать на команды. Введите !unmute для отмены",
   "neutralItems": {
     "tierAvailable": "Доступны нейтральные предметы {{tier}}-го разряда! Время посетить лес PogChamp"
+  },
+  "newFeatures": {
+    "announce": {
+      "cosmetics": "🆕 New dotabod feature — your hero's cosmetic set now posts in chat when you pick (or type !set). Manage or opt out of new features → {{- url}}"
+    }
   },
   "noAghs": "У {{- heroName}} нет улучшения аганима.",
   "noHero": "Герой не найден",

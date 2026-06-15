@@ -69,7 +69,10 @@
     "midas": "{{emote}} Usa tu midas",
     "noTp": "{{channel}} dónde está tu tp {{emote}}",
     "pause": "{{emote}} ¿Quién ha pausado el juego?",
+    "smokeActivated": "{{- heroName}} activated Smoke of Deceit! {{emote}}",
+    "smokeActivatedUnknown": "{{emote}} An ally activated Smoke of Deceit!",
     "smoked": "¡Calladito! {{- heroName}} esta escondido.",
+    "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}} buen trabajo, por fin obtuvo un tp después de $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Gracias a su muerte finalmente conseguiste un tp y solo te tomó $t(seconds, {\"count\": {{seconds}} }){{emote}}"
   },
@@ -114,8 +117,10 @@
     "overlay_other": "{{count}} Streamers usando este overlay"
   },
   "cosmetics": {
+    "captured_one": "{{- heroName}} set captured! {{count}} cosmetic → {{- url}}",
+    "captured_many": "",
+    "captured_other": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
-    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
     "list_one": "",
     "list_many": "",
     "list_other": ""
@@ -198,6 +203,11 @@
   "muted": "Se deshabilitó el auto chat para eventos de juego, pero los comandos seguirán funcionando. Escribe !unmute para deshacer",
   "neutralItems": {
     "tierAvailable": "¡Los ítems neutrales de Tier {{tier}} están ahora disponibles! Hora de chequear la jungla PogChamp"
+  },
+  "newFeatures": {
+    "announce": {
+      "cosmetics": "🆕 New dotabod feature — your hero's cosmetic set now posts in chat when you pick (or type !set). Manage or opt out of new features → {{- url}}"
+    }
   },
   "noAghs": "{{- heroName}} No tiene una mejora de Aghanim.",
   "noHero": "No se ha encontrado el héroe",
