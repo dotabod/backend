@@ -17,7 +17,6 @@
   "altAccount": "{{emote}} alt account detected {{emote2}}",
   "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
   "averageRank": "Karaniwang rango sa larong ito",
-  "commandSuggestion": "Also try {{cmd}}",
   "betaFeature": "[beta feature]",
   "betaTester": "$t(betaTester_on)",
   "betaTester_off": "Si {{channel}} ay hindi na beta tester. Itype ang !beta para sumali ulit",
@@ -65,6 +64,9 @@
     "midas": "{{emote}} Midas midas din",
     "noTp": "{{channel}} nasan tp mo {{emote}}",
     "pause": "{{emote}} Sino nag pause ng laro?",
+    "smokeActivated": "{{- heroName}} activated Smoke of Deceit! {{emote}}",
+    "smokeActivatedUnknown": "{{emote}} An ally activated Smoke of Deceit!",
+    "smokeWithoutYou": "team smoking without you {{emote}}",
     "smoked": "{{emote}} naka-smoke si {{- heroName}}!",
     "tpFound": "{{channel}} nice job sa wakas ng ka tp ka rin pagkatapos ng $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Buti namatay ka nagka-tp ka rin sa wakas. Umabot lang ng $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
@@ -100,11 +102,24 @@
   "commands_everyone": "Lahat kayang gumamit: {{commandList}}",
   "commands_mods": "Mod lang na commands: {{commandList}}",
   "commandsPage": "To view {{- channel}}'s commands, visit {{- url}}",
+  "commandSuggestion": "Also try {{cmd}}",
   "connections": {
     "gsi_one": "{{count}} streamer connected to Dotabod GSI",
     "gsi_other": "{{count}} streamers konektado sa Dotabod GSI",
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_other": "{{count}} streamers gamit ang overlay"
+  },
+  "cosmetics": {
+    "empty": "{{- heroName}} has no cosmetics equipped",
+    "captured_one": "{{- heroName}} set captured! {{count}} cosmetic → {{- url}}",
+    "captured_other": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "list_one": "",
+    "list_other": ""
+  },
+  "newFeatures": {
+    "announce": {
+      "cosmetics": "🆕 New dotabod feature — your hero's cosmetic set now posts in chat when you pick (or type !set). Manage or opt out of new features → {{- url}}"
+    }
   },
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
@@ -116,10 +131,6 @@
   "gameNotFound": "Walang nakitang laro",
   "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
-  "cosmetics": {
-    "empty": "{{- heroName}} has no cosmetics equipped",
-    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}"
-  },
   "heroItems": {
     "empty": "(2m delay) Walang gamit na nakita para kay {{- heroName}}",
     "list": "(2m delay) {{- heroName}} merong: {{- itemNames}}"

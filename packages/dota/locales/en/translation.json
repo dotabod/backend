@@ -70,8 +70,8 @@
     "pause": "{{emote}} Who paused the game?",
     "smokeActivated": "{{- heroName}} activated Smoke of Deceit! {{emote}}",
     "smokeActivatedUnknown": "{{emote}} An ally activated Smoke of Deceit!",
-    "smokeWithoutYou": "team smoking without you {{emote}}",
     "smoked": "{{emote}} {{- heroName}} is smoked!",
+    "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Thanks to this death you finally got a tp. And it only took $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
@@ -123,11 +123,6 @@
     "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
     "list_one": "",
     "list_other": ""
-  },
-  "newFeatures": {
-    "announce": {
-      "cosmetics": "🆕 New dotabod feature — your hero's cosmetic set now posts in chat when you pick (or type !set). Manage or opt out of new features → {{- url}}"
-    }
   },
   "countryPlayerList": "Playing with players from {{- countries}}",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
@@ -205,6 +200,11 @@
   "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
   "neutralItems": {
     "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+  },
+  "newFeatures": {
+    "announce": {
+      "cosmetics": "🆕 New dotabod feature — your hero's cosmetic set now posts in chat when you pick (or type !set). Manage or opt out of new features → {{- url}}"
+    }
   },
   "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "No hero found",

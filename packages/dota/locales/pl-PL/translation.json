@@ -72,7 +72,10 @@
     "midas": "{{emote}} Użyj midasa",
     "noTp": "{{channel}} gdzie Twój TP {{emote}}",
     "pause": "{{emote}} Kto zapauzował grę?",
+    "smokeActivated": "{{- heroName}} activated Smoke of Deceit! {{emote}}",
+    "smokeActivatedUnknown": "{{emote}} An ally activated Smoke of Deceit!",
     "smoked": "{{emote}} {{- heroName}} użył smoke!",
+    "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}} dobra robota, w końcu masz TP po $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Dzięki tej śmierci w końcu masz tp. I zajęło to tylko $t(seconds, {\"count\": {{seconds}} }) {{emote}}\n"
   },
@@ -119,8 +122,11 @@
     "overlay_other": "Aktualnie {{count}} streamerów używa nakładki"
   },
   "cosmetics": {
+    "captured_one": "{{- heroName}} set captured! {{count}} cosmetic → {{- url}}",
+    "captured_few": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "captured_many": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "captured_other": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
-    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
     "list_one": "",
     "list_few": "",
     "list_many": "",
@@ -214,6 +220,11 @@
   "muted": "Nie będę już dłużej automatycznie czatować na wydarzenia w grze, ale nadal będę reagować na komendy. Wpisz !unmute, aby cofnąć",
   "neutralItems": {
     "tierAvailable": "Dostępne są neutralne przedmioty poziomu {{tier}}! Czas odwiedzić dżunglę PogChamp"
+  },
+  "newFeatures": {
+    "announce": {
+      "cosmetics": "🆕 New dotabod feature — your hero's cosmetic set now posts in chat when you pick (or type !set). Manage or opt out of new features → {{- url}}"
+    }
   },
   "noAghs": "{{- heroName}} nie ma ulepszeń aghanima.",
   "noHero": "Nie znaleziono bohatera",
