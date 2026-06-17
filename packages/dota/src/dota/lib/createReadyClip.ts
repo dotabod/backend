@@ -30,6 +30,20 @@ function isChannelOfflineError(err: unknown): boolean {
   )
 }
 
+// Twurple's AuthProvider throws when the broadcaster's token is missing the
+// clips:edit scope: "...does not have any of the requested scopes (clips:edit)
+// and can not be upgraded." That's a permanent per-user auth state — the streamer
+// has to re-authorize — so retrying inside the loop can't recover it and just
+// re-logs the same error 2-3x per game state. Short-circuit like the offline case.
+function isMissingScopeError(err: unknown): boolean {
+  if (typeof err !== 'object' || err === null) return false
+  const message =
+    typeof (err as { message?: unknown }).message === 'string'
+      ? (err as { message: string }).message
+      : ''
+  return /requested scopes|can not be upgraded/i.test(message)
+}
+
 // Twitch's CreateClip API is asynchronous and silently fails to actually produce
 // a clip a large fraction of the time: it returns a clip ID, but the clip never
 // transcodes (duration stays 0, renditions 404) — permanently, not just briefly.
@@ -58,6 +72,13 @@ export async function createReadyClip(
     } catch (error) {
       if (isChannelOfflineError(error)) {
         logger.info(`${logPrefix} createClip skipped — channel offline`, {
+          ...logContext,
+          attempt,
+        })
+        return null
+      }
+      if (isMissingScopeError(error)) {
+        logger.warn(`${logPrefix} createClip skipped — token missing clips:edit scope`, {
           ...logContext,
           attempt,
         })

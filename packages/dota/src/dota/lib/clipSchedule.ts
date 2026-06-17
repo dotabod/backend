@@ -72,7 +72,11 @@ async function createAndSubmitClip(payload: ClipTaskPayload): Promise<void> {
     const clipId = await createReadyClip(api, accountId, opts, logPrefix, logContext)
 
     if (!clipId) {
-      logger.error(`${logPrefix} no usable clip after retries; skipping vision submission`, {
+      // Twitch's CreateClip API silently fails to transcode a large fraction of
+      // the time (see createReadyClip). The feature degrades gracefully here —
+      // we just skip vision submission — so this is expected flakiness, not an
+      // error worth paging on.
+      logger.warn(`${logPrefix} no usable clip after retries; skipping vision submission`, {
         ...logContext,
       })
       return

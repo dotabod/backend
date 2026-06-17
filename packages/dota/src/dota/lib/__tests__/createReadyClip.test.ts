@@ -127,6 +127,30 @@ describe('createReadyClip', () => {
     expect(createCalls).toBe(1) // no retries — does not consume maxAttempts
   })
 
+  it('bails immediately without retry when the token is missing the clips:edit scope', async () => {
+    // Twurple's AuthProvider raises this when the broadcaster never granted
+    // clips:edit. It "can not be upgraded" mid-loop, so retrying just spams the
+    // error log — short-circuit instead.
+    let createCalls = 0
+    const scopeError = new Error(
+      'This token does not have any of the requested scopes (clips:edit) and can not be upgraded.',
+    )
+    const api = {
+      clips: {
+        createClip: async () => {
+          createCalls += 1
+          throw scopeError
+        },
+        getClipById: async () => ({ duration: 0 }),
+      },
+    } as any
+
+    const result = await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', {})
+
+    expect(result).toBeNull()
+    expect(createCalls).toBe(1) // no retries — does not consume maxAttempts
+  })
+
   it('catches a clip that only transcodes after several polls (draft window)', async () => {
     // Twitch transcode takes ~15s; the draft path's old 2-poll (~8s) window
     // abandoned the clip mid-transcode and failed ~100% of the time. The clip
