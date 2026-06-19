@@ -334,3 +334,41 @@ describe('!avg', () => {
     expect(state.chatSayCalls[0].message).toBe(multiAccount)
   })
 })
+
+describe('auto-clipping disabled at 8500+ (no readable game data)', () => {
+  // At 8500+ Valve provides no realtime roster, so !np/!gm/!avg read hero & rank
+  // data only from the auto-clip vision pipeline. With clipping off there's
+  // nothing to read, so each must reply with ONLY the explanation — no junk
+  // "[heroes not found]: …" / "…: Unknown" dump (and no "Also try" suffix).
+  const clippingDisabled = t('clippingDisabled', { lng: 'en' })
+  // mmr 9000 → is8500Plus; gsi undefined → every roster resolver no-ops → empty
+  // roster → clippingDisabledNote fires.
+  const noData = {
+    mmr: 9000,
+    settings: [{ key: 'disableAutoClipping', value: true }],
+    gsi: undefined,
+  } as any
+
+  it('!np replies with only the clipping-disabled note', async () => {
+    await commandHandler.handleMessage(makeMessage({ content: '!np', clientOverrides: noData }))
+    await flushAsync()
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toBe(clippingDisabled)
+    expect(state.chatSayCalls[0].message).not.toContain('heroes not found')
+  })
+
+  it('!gm replies with only the clipping-disabled note', async () => {
+    await commandHandler.handleMessage(makeMessage({ content: '!gm', clientOverrides: noData }))
+    await flushAsync()
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toBe(clippingDisabled)
+    expect(state.chatSayCalls[0].message).not.toContain('Unknown')
+  })
+
+  it('!avg replies with only the clipping-disabled note', async () => {
+    await commandHandler.handleMessage(makeMessage({ content: '!avg', clientOverrides: noData }))
+    await flushAsync()
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toBe(clippingDisabled)
+  })
+})

@@ -14,7 +14,7 @@ vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase: {}, lo
 
 await initTestI18n()
 
-const { clippingDisabledNote, withClippingNote } = await import('../clippingNote.ts')
+const { clippingDisabledNote } = await import('../clippingNote.ts')
 
 function makeClient(over: Partial<SocketClient> = {}): SocketClient {
   return {
@@ -64,15 +64,5 @@ describe('clippingDisabledNote', () => {
     // streamer's own hero (gsi-self source), which must not be mistaken for a real roster.
     const note = clippingDisabledNote(makeClient(), selfOnlyFallback)
     expect(note).toContain('auto-clipping')
-  })
-})
-
-describe('withClippingNote', () => {
-  it('appends the note as a postfix when present', () => {
-    expect(withClippingNote('No notable players', 'nope')).toBe('No notable players · nope')
-  })
-
-  it('returns the text unchanged when the note is empty', () => {
-    expect(withClippingNote('No notable players', '')).toBe('No notable players')
   })
 })

@@ -4,7 +4,6 @@ import { type ChatEventData, ChatMessageType, type DotaEvent, DotaEventTypes } f
 import { getRedisNumberValue } from '../../../utils/index'
 import { delayedQueue } from '../../lib/DelayedQueue'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
-import { MatchDataService } from '../../lib/matchData'
 import { say } from '../../say'
 import eventHandler from '../EventHandler'
 
@@ -40,39 +39,28 @@ eventHandler.registerEvent(`event:${DotaEventTypes.GenericEvent}`, {
         const activatorTeam = data.playerid1 <= 4 ? 'radiant' : 'dire'
         if (!streamerTeam || activatorTeam !== streamerTeam) return
 
-        // Did the streamer cast it themselves? Then they're in it by definition.
+        // Did the streamer cast it themselves? Then they're in it by definition — the
+        // hero:smoked handler will say "<hero> is smoked!", so there's nothing to roast.
         const streamerCastIt =
           (await getRedisNumberValue(`${dotaClient.getToken()}:playingHeroSlot`)) === data.playerid1
+        if (streamerCastIt) return
 
-        // Decide ONE message after the smoke buff settles (~3s): rib the streamer if they
-        // weren't actually in it, otherwise name the hero who popped it.
+        // This handler only does the FOMO roast. When the streamer DID make the smoke, the
+        // hero:smoked handler already announces it ("<hero> is smoked!") — staying silent here
+        // is what keeps the two paths from double-posting. After the buff settles (~3s), roast
+        // only if a teammate smoked and the streamer got left behind.
         delayedQueue.addTask(SMOKE_FOMO_DELAY_MS, async () => {
           const { client } = dotaClient
           if (!client.stream_online) return
           if (!isPlayingMatch(client.gsi)) return
 
           // Caught out: a teammate smoked, the streamer is alive, but never got the buff.
-          const caughtOut =
-            !streamerCastIt && client.gsi?.hero?.alive !== false && !client.gsi?.hero?.smoked
+          const caughtOut = client.gsi?.hero?.alive !== false && !client.gsi?.hero?.smoked
           if (caughtOut) {
             say(client, t('chatters.smokeWithoutYou', { emote: 'HAH', lng: client.locale }), {
               chattersKey: 'smokeActivated',
             })
-            return
           }
-
-          // Grouped up (or cast it): name the activator's hero, tier-aware (8500+ stays
-          // anonymous). resolveHeroNameForSlot does the roster lookup + bounded color fallback.
-          const { name: heroName } = await new MatchDataService(client).resolveHeroNameForSlot({
-            eventPlayerId: data.playerid1,
-          })
-          say(
-            client,
-            heroName
-              ? t('chatters.smokeActivated', { emote: 'Shush', heroName, lng: client.locale })
-              : t('chatters.smokeActivatedUnknown', { emote: 'Shush', lng: client.locale }),
-            { chattersKey: 'smokeActivated' },
-          )
         })
         return
       }
