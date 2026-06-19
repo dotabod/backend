@@ -128,6 +128,60 @@ vi.doMock('../utils/socketManager', () => ({
   },
 }))
 
+// Minimal controllable stand-in for the `ws` WebSocket so EventsubSocket tests
+// can drive open/message/close/error synchronously with no real network. Tests
+// reach the live instance via FakeWebSocket.latest() and reset between cases.
+export class FakeWebSocket {
+  static readonly CONNECTING = 0
+  static readonly OPEN = 1
+  static readonly CLOSING = 2
+  static readonly CLOSED = 3
+  static instances: FakeWebSocket[] = []
+  static reset() {
+    FakeWebSocket.instances = []
+  }
+  static latest(): FakeWebSocket {
+    return FakeWebSocket.instances[FakeWebSocket.instances.length - 1]
+  }
+  url: string
+  readyState: number = FakeWebSocket.CONNECTING
+  private handlers: Record<string, Array<(ev: unknown) => void>> = {}
+  constructor(url: string) {
+    this.url = url
+    FakeWebSocket.instances.push(this)
+  }
+  addEventListener(type: string, cb: (ev: unknown) => void) {
+    const list = this.handlers[type] ?? (this.handlers[type] = [])
+    list.push(cb)
+  }
+  removeAllListeners() {
+    this.handlers = {}
+  }
+  close() {
+    if (this.readyState !== FakeWebSocket.CLOSED) this.readyState = FakeWebSocket.CLOSING
+  }
+  send() {}
+  private fire(type: string, ev: Record<string, unknown>) {
+    for (const cb of this.handlers[type] ?? []) cb({ target: this, ...ev })
+  }
+  open() {
+    this.readyState = FakeWebSocket.OPEN
+    this.fire('open', {})
+  }
+  message(obj: unknown) {
+    this.fire('message', { data: JSON.stringify(obj) })
+  }
+  error(message: string) {
+    this.fire('error', { message, type: 'error' })
+  }
+  serverClose(code = 1006, wasClean = false) {
+    this.readyState = FakeWebSocket.CLOSED
+    this.fire('close', { code, reason: '', wasClean })
+  }
+}
+
+vi.doMock('ws', () => ({ default: FakeWebSocket }))
+
 // Route fetch through state so each test controls the HTTP response.
 globalThis.fetch = (async (url: string, options: RequestInit | undefined) => {
   state.fetchCalls.push({ url, options })
@@ -149,5 +203,8 @@ export const { offlineEvent } = await import('../event-handlers/offlineEvent')
 export const { updateUserEvent } = await import('../event-handlers/updateUserEvent')
 export const { sendTwitchChatMessage, handleChatMessage, clearDedupeCache } =
   await import('../handleChat')
+// EventSub socket SUT — imported here (after the `ws` mock above) so the tests
+// drive the controllable FakeWebSocket instead of a real connection.
+export const { EventsubSocket, isEventsubConnected } = await import('../eventSubSocket')
 
 export const flushMacrotasks = () => new Promise<void>((r) => setTimeout(r, 5))
