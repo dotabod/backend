@@ -72,7 +72,10 @@
     "midas": "{{emote}} Використай Midas",
     "noTp": "Хтось бачить ТП у {{channel}}? {{emote}}",
     "pause": "{{emote}} Хто поставив паузу?",
+    "smokeActivated": "{{- heroName}} activated Smoke of Deceit! {{emote}}",
+    "smokeActivatedUnknown": "{{emote}} An ally activated Smoke of Deceit!",
     "smoked": "{{emote}} {{- heroName}} в смоці!",
+    "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}} нафідив заради ТП після $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Завдяки цій смерті ви нарешті отримали TP всього лиш за $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
@@ -119,8 +122,11 @@
     "overlay_other": "{{count}} стрімери використовують оверлей"
   },
   "cosmetics": {
+    "captured_one": "{{- heroName}} set captured! {{count}} cosmetic → {{- url}}",
+    "captured_few": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "captured_many": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "captured_other": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
-    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
     "list_one": "",
     "list_few": "",
     "list_many": "",
@@ -214,6 +220,11 @@
   "muted": "Dotabod не буде автоматично сповіщати про ігрові події, але все ще буде відповідати на команди. Введіть !unmute для скасування дій",
   "neutralItems": {
     "tierAvailable": "Tier {{tier}} нейтральні елементи зараз доступні! Я в ліс до кінця гри PogChamp"
+  },
+  "newFeatures": {
+    "announce": {
+      "cosmetics": "🆕 New dotabod feature — your hero's cosmetic set now posts in chat when you pick (or type !set). Manage or opt out of new features → {{- url}}"
+    }
   },
   "noAghs": "{{- heroName}} бродиться без аганіму",
   "noHero": "Герой не знайдений",
