@@ -66,7 +66,10 @@
     "midas": "{{emote}} Använd din midas",
     "noTp": "{{channel}} var är din tp {{emote}}",
     "pause": "{{emote}} Vem pausade matchen?",
+    "smokeActivated": "{{- heroName}} activated Smoke of Deceit! {{emote}}",
+    "smokeActivatedUnknown": "{{emote}} An ally activated Smoke of Deceit!",
     "smoked": "{{emote}} {{- heroName}} är smoked!",
+    "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}} bra jobbat att äntligen skaffa en tp efter $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Tack vare denna död fick du äntligen en tp. Och det tog bara $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
@@ -109,8 +112,9 @@
     "overlay_other": "{{count}} streamare använder overlayn"
   },
   "cosmetics": {
+    "captured_one": "{{- heroName}} set captured! {{count}} cosmetic → {{- url}}",
+    "captured_other": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
-    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
     "list_one": "",
     "list_other": ""
   },
@@ -188,6 +192,11 @@
   "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
   "neutralItems": {
     "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+  },
+  "newFeatures": {
+    "announce": {
+      "cosmetics": "🆕 New dotabod feature — your hero's cosmetic set now posts in chat when you pick (or type !set). Manage or opt out of new features → {{- url}}"
+    }
   },
   "noAghs": "{{- heroName}} har ingen aghs uppgradering.",
   "noHero": "Ingen hjälte hittades",
