@@ -360,6 +360,14 @@ export class EventsubSocket extends EventEmitter {
     const ws = this.eventsub
     try {
       ws?.removeAllListeners()
+      // Closing a still-CONNECTING socket makes `ws` abort the handshake and emit
+      // an 'error' on a LATER tick (process.nextTick) — after this try/catch has
+      // already returned, so it can't be caught here. With every listener removed
+      // that is an unhandled 'error' event, which crashes the whole process (no
+      // uncaughtException handler). The leaked sockets we dispose during a storm
+      // are exactly the ones stuck reconnect-looping in CONNECTING, so keep a noop
+      // error sink attached through close() to absorb the aborted-handshake error.
+      ws?.addEventListener('error', () => {})
       if (ws && ws.readyState !== WebSocket.CLOSED && ws.readyState !== WebSocket.CLOSING) {
         ws.close()
       }

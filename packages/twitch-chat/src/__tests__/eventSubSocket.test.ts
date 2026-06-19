@@ -50,6 +50,24 @@ describe('EventsubSocket lifecycle', () => {
     expect(FakeWebSocket.instances).toHaveLength(1) // no reconnect
   })
 
+  it('dispose() on a still-CONNECTING socket survives the aborted handshake', async () => {
+    // Constructed but never open()ed, so the underlying ws is still CONNECTING —
+    // exactly the state the leaked, reconnect-looping sockets are in when a
+    // re-init disposes them.
+    const sock = new EventsubSocket()
+    expect(FakeWebSocket.latest().readyState).toBe(FakeWebSocket.CONNECTING)
+
+    sock.dispose()
+    // ws aborts the pending upgrade and emits 'error' on a later tick — after
+    // dispose()'s try/catch has returned, so it can't sink it there. Without a
+    // retained error listener this is an unhandled 'error' that crashes the
+    // process; dispose() must leave a sink so advancing the timer is harmless.
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(sock.isDisposed).toBe(true)
+    expect(FakeWebSocket.instances).toHaveLength(1) // no reconnect
+  })
+
   it('dispose() cancels a pending reconnect timer', async () => {
     const sock = new EventsubSocket()
     FakeWebSocket.latest().serverClose(1006) // schedules a reconnect

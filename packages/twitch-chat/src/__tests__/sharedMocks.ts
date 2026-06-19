@@ -158,11 +158,31 @@ export class FakeWebSocket {
     this.handlers = {}
   }
   close() {
-    if (this.readyState !== FakeWebSocket.CLOSED) this.readyState = FakeWebSocket.CLOSING
+    if (this.readyState === FakeWebSocket.CLOSED || this.readyState === FakeWebSocket.CLOSING)
+      return
+    if (this.readyState === FakeWebSocket.CONNECTING) {
+      // Mirror `ws`: closing a pending upgrade aborts the handshake and emits an
+      // 'error' (then 'close') on a LATER tick. An unhandled 'error' crashes the
+      // real process — drive it through a timer so tests can observe it.
+      this.readyState = FakeWebSocket.CLOSING
+      setTimeout(() => {
+        this.fire('error', {
+          message: 'WebSocket was closed before the connection was established',
+          type: 'error',
+        })
+      }, 0)
+      return
+    }
+    this.readyState = FakeWebSocket.CLOSING
   }
   send() {}
   private fire(type: string, ev: Record<string, unknown>) {
-    for (const cb of this.handlers[type] ?? []) cb({ target: this, ...ev })
+    const list = this.handlers[type] ?? []
+    // Mirror Node's EventEmitter: an 'error' with no listener throws.
+    if (type === 'error' && list.length === 0) {
+      throw new Error(String((ev as { message?: string }).message ?? 'Unhandled error'))
+    }
+    for (const cb of list) cb({ target: this, ...ev })
   }
   open() {
     this.readyState = FakeWebSocket.OPEN
