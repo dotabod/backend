@@ -28,6 +28,10 @@ const eventsSocket = twitchEvent
 // EventSub re-establishes on its own the moment twitch-events comes back.
 let eventSubInitInFlight = false
 
+// The one live EventsubSocket. initializeSocket() disposes this before creating
+// its replacement so re-init paths can never accumulate sockets.
+let currentSocket: EventsubSocket | null = null
+
 async function ensureEventSubInitialized(reason: string): Promise<void> {
   if (eventSubInitInFlight) return
   // A plain socket.io reconnect while EventSub is already live needs no re-init.
@@ -303,9 +307,20 @@ async function initializeSocket() {
       conduitId: `${conduitId.substring(0, 8)}...`,
     })
 
+    // Exactly one live EventsubSocket at a time. Every re-init path (startup,
+    // eventsSocket reconnect, watchdog, session_silenced) used to leak the
+    // previous socket; thousands accumulated over ~10 days of uptime, each
+    // reconnect-looping, and their combined connection rate got the bot 429'd by
+    // Twitch (connection storm, 2026-06-19). Disposing the prior socket here —
+    // only once we have a fresh conduit and are about to replace it — makes
+    // every re-init idempotent. (If getConduitId() throws above we keep the
+    // existing socket rather than tearing down a working connection.)
+    currentSocket?.dispose()
+
     const mySocket = new EventsubSocket({
       disableAutoReconnect: false, // Ensure auto reconnect is enabled
     })
+    currentSocket = mySocket
 
     mySocket.on('connected', async (session_id: string) => {
       logger.info('[TWITCHCHAT] Socket connected (initial)', {
@@ -330,26 +345,15 @@ async function initializeSocket() {
       })
     })
 
-    // Safety net: if Twitch goes silent and the close path doesn't recover the
-    // socket (we've seen the connection get stuck with eventsubConnected=false
-    // and no log activity), force a full re-init.
-    let silencedRecoveryInFlight = false
+    // Safety net: when Twitch goes silent the socket disables its own reconnect
+    // (so it can't fight its replacement over the single conduit shard) and we
+    // do one guarded re-init here. ensureEventSubInitialized's in-flight guard,
+    // plus the dispose-on-reinit above, mean repeated silences can't pile up
+    // sockets the way the old direct initializeSocket() call did.
     mySocket.on('session_silenced', () => {
-      if (silencedRecoveryInFlight) {
-        logger.warn('[TWITCHCHAT] session_silenced fired again while recovery in flight')
-        return
-      }
-      silencedRecoveryInFlight = true
-      logger.warn('[TWITCHCHAT] session_silenced — forcing full re-init in 5s')
+      logger.warn('[TWITCHCHAT] session_silenced — re-initializing in 5s')
       setTimeout(() => {
-        initializeSocket()
-          .then(() => logger.info('[TWITCHCHAT] Re-init after silence completed'))
-          .catch((e) =>
-            logger.error('[TWITCHCHAT] Re-init after silence failed', { error: e?.message }),
-          )
-          .finally(() => {
-            silencedRecoveryInFlight = false
-          })
+        void ensureEventSubInitialized('session_silenced')
       }, 5000)
     })
 
