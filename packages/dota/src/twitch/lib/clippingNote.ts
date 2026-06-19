@@ -28,8 +28,3 @@ export function clippingDisabledNote(client: SocketClient, matchPlayers: RosterP
 
   return t('clippingDisabled', { lng: client.locale })
 }
-
-// Append the note as a " · " postfix when present.
-export function withClippingNote(text: string, note: string): string {
-  return note ? `${text} · ${note}` : text
-}

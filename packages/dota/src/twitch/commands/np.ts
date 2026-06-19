@@ -8,7 +8,7 @@ import type { NotablePlayers } from '../../steam/notableplayers'
 import { notablePlayers } from '../../steam/notableplayers'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
-import { clippingDisabledNote, withClippingNote } from '../lib/clippingNote'
+import { clippingDisabledNote } from '../lib/clippingNote'
 
 commandHandler.registerCommand('np', {
   dbkey: DBSettings.commandNP,
@@ -137,6 +137,12 @@ commandHandler.registerCommand('np', {
     const mds = new MatchDataService(client)
     const roster = await mds.resolveRoster()
     const note = clippingDisabledNote(client, roster.players)
+    // No clip/vision data to read at 8500+ with auto-clipping off — the note IS
+    // the whole reply; don't prepend the empty "[heroes not found]: …" roster.
+    if (note) {
+      chatClient.sayWithoutSuggestion(channel, note, message.user.messageId)
+      return
+    }
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
       client.settings,
@@ -167,15 +173,12 @@ commandHandler.registerCommand('np', {
             description = `${description} · ${t('streamersSuffix', { count, lng: client.locale })}`
           }
         }
-        chatClient.say(channel, withClippingNote(description, note), message.user.messageId)
+        chatClient.say(channel, description, message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(
           channel,
-          withClippingNote(
-            e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-            note,
-          ),
+          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
           message.user.messageId,
         )
       })
