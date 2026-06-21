@@ -38,19 +38,31 @@ export function setupAccountWatcher(): void {
     // Don't pile up reconnect timers if the dead channel's callback fires
     // multiple times for the same outage.
     if (reconnectTimer) return
+    // Claim the guard and detach the dead channel BEFORE touching
+    // removeChannel(). supabase-js tears the channel down synchronously and
+    // re-fires THIS status callback with CLOSED on the same stack — which
+    // re-enters scheduleReconnect. If reconnectTimer / activeChannel were
+    // still unset at that point, the re-entrant call sails past the guard,
+    // calls removeChannel again, re-fires CLOSED again, and recurses until the
+    // stack overflows and the process crashes. (Prod 2026-06-21: one Realtime
+    // blip → ~390-deep recursion → RangeError thrown inside the winston
+    // console transport → twitch-events restart, taking the conduit down and
+    // cascading xhr/conduit-timeout errors into twitch-chat.) Setting state
+    // first makes the re-entrant call hit `if (reconnectTimer) return`.
+    reconnectTimer = setTimeout(subscribe, RECONNECT_DELAY_MS)
+    const deadChannel = activeChannel
+    activeChannel = null
     logger.warn('[WATCHER] Realtime channel down, scheduling reconnect', {
       status,
       err: err?.message,
       delayMs: RECONNECT_DELAY_MS,
     })
-    if (activeChannel) {
+    if (deadChannel) {
       // Tear down the dead channel before re-creating it. supabase-js
       // doesn't auto-clean closed channels and they can leak. removeChannel
       // returns a promise but we don't block reconnect on it.
-      void supabase.removeChannel(activeChannel as Parameters<typeof supabase.removeChannel>[0])
-      activeChannel = null
+      void supabase.removeChannel(deadChannel as Parameters<typeof supabase.removeChannel>[0])
     }
-    reconnectTimer = setTimeout(subscribe, RECONNECT_DELAY_MS)
   }
 
   const subscribe = () => {
