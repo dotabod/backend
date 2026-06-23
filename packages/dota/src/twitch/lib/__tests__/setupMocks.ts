@@ -58,6 +58,10 @@ export const state: {
   cancelPredictionCalls: Array<{ twitchId: string; predictionId: string }>
   getPredictionsCalls: PredictionsCall[]
   getPredictionsError: unknown
+  // When > 0, the next N getPredictions calls throw a transient
+  // ERR_STREAM_PREMATURE_CLOSE before one finally succeeds — exercises the
+  // retryTransient wrapper around the Twitch predictions API.
+  getPredictionsTransientFailures: number
   loggerErrorCalls: Array<{ message: string; meta: Record<string, unknown> }>
   emitWLUpdateCalls: number
   channelId: string | null
@@ -126,6 +130,7 @@ export const state: {
   cancelPredictionCalls: [],
   getPredictionsCalls: [],
   getPredictionsError: null,
+  getPredictionsTransientFailures: 0,
   loggerErrorCalls: [],
   emitWLUpdateCalls: 0,
   channelId: null,
@@ -164,6 +169,7 @@ export function resetState() {
   state.cancelPredictionCalls = []
   state.getPredictionsCalls = []
   state.getPredictionsError = null
+  state.getPredictionsTransientFailures = 0
   state.loggerErrorCalls = []
   state.emitWLUpdateCalls = 0
   state.channelId = null
@@ -285,6 +291,14 @@ const getTwitchAPIMock = async () => ({
   predictions: {
     getPredictions: async (twitchId: string, opts: { limit: number }) => {
       state.getPredictionsCalls.push({ twitchId, opts })
+      if (state.getPredictionsTransientFailures > 0) {
+        state.getPredictionsTransientFailures -= 1
+        const err = new Error(
+          'Invalid response body while trying to fetch https://api.twitch.tv/helix/predictions: Premature close',
+        ) as Error & { code: string }
+        err.code = 'ERR_STREAM_PREMATURE_CLOSE'
+        throw err
+      }
       if (state.getPredictionsError) throw state.getPredictionsError
       return { data: state.predictions }
     },

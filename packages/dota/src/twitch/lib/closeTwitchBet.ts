@@ -3,6 +3,7 @@ import { StreamNotLiveError } from '@twurple/api'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import type { SocketClient } from '../../types'
 import { refundTwitchBet } from './refundTwitchBets'
+import { retryTransient } from './retryTransient'
 
 export async function closeTwitchBet(
   won: boolean,
@@ -26,10 +27,9 @@ export async function closeTwitchBet(
     }
   }
 
-  return api.predictions
-    .getPredictions(twitchId, {
-      limit: 1,
-    })
+  return retryTransient(() => api.predictions.getPredictions(twitchId, { limit: 1 }), {
+    label: 'closeTwitchBet:getPredictions',
+  })
     .then(async ({ data: predictions }) => {
       if (!Array.isArray(predictions) || !predictions.length) {
         logger.info('[PREDICT] Close bets - no predictions found', {
@@ -61,11 +61,17 @@ export async function closeTwitchBet(
         return
       }
 
-      return api.predictions
-        .resolvePrediction(twitchId || '', predictions[0].id, won ? wonOutcome.id : lossOutcome.id)
-        .catch((e) => {
-          logger.error('[BETS] Could not resolve prediction', { token: twitchId, error: e })
-        })
+      return retryTransient(
+        () =>
+          api.predictions.resolvePrediction(
+            twitchId || '',
+            predictions[0].id,
+            won ? wonOutcome.id : lossOutcome.id,
+          ),
+        { label: 'closeTwitchBet:resolvePrediction' },
+      ).catch((e) => {
+        logger.error('[BETS] Could not resolve prediction', { token: twitchId, error: e })
+      })
     })
     .catch((e) => {
       logger.error('[BETS] Could not get predictions', { token: twitchId, error: e })

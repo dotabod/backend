@@ -7,6 +7,7 @@ import { updateMmr } from '../../dota/lib/updateMmr'
 import { steamSocket } from '../../steam/ws'
 import type { MatchMinimalDetailsResponse, SocketClient } from '../../types'
 import { chatClient } from '../chatClient'
+import { retryTransient } from './retryTransient'
 
 interface SessionMatch {
   id: string
@@ -180,9 +181,10 @@ async function closeTwitchBetById(
 
     // Fetch recent predictions and find the one matching our ID
     // We fetch more than 1 since the current game might have a different prediction
-    const { data: predictions } = await api.predictions.getPredictions(twitchId, {
-      limit: 10,
-    })
+    const { data: predictions } = await retryTransient(
+      () => api.predictions.getPredictions(twitchId, { limit: 10 }),
+      { label: 'resolveMatch:getPredictions' },
+    )
 
     if (!Array.isArray(predictions) || !predictions.length) {
       logger.info('[BETS] Retroactive resolution - no predictions found', {
@@ -220,10 +222,14 @@ async function closeTwitchBetById(
 
     const [wonOutcome, lossOutcome] = prediction.outcomes
 
-    await api.predictions.resolvePrediction(
-      twitchId,
-      predictionId,
-      won ? wonOutcome.id : lossOutcome.id,
+    await retryTransient(
+      () =>
+        api.predictions.resolvePrediction(
+          twitchId,
+          predictionId,
+          won ? wonOutcome.id : lossOutcome.id,
+        ),
+      { label: 'resolveMatch:resolvePrediction' },
     )
 
     logger.info('[BETS] Retroactive resolution - prediction resolved successfully', {

@@ -1,4 +1,5 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
+import { retryTransient } from './retryTransient'
 
 export const refundTwitchBet = async (twitchId: string, specificPredictionId?: string) => {
   const api = await getTwitchAPI(twitchId)
@@ -6,9 +7,10 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
   try {
     // Always fetch predictions to verify status before canceling
     // Fetch more if we have a specific ID to find it in history
-    const { data: predictions } = await api.predictions.getPredictions(twitchId, {
-      limit: specificPredictionId ? 10 : 1,
-    })
+    const { data: predictions } = await retryTransient(
+      () => api.predictions.getPredictions(twitchId, { limit: specificPredictionId ? 10 : 1 }),
+      { label: 'refundTwitchBet:getPredictions' },
+    )
 
     if (!Array.isArray(predictions) || !predictions.length) {
       logger.info('[PREDICT] No predictions found', {
@@ -49,7 +51,9 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
       status: prediction.status,
     })
 
-    await api.predictions.cancelPrediction(twitchId, prediction.id)
+    await retryTransient(() => api.predictions.cancelPrediction(twitchId, prediction.id), {
+      label: 'refundTwitchBet:cancelPrediction',
+    })
     return prediction.id
   } catch (e) {
     logger.error('[PREDICT] Error refunding twitch bet', { twitchId, e })
