@@ -115,9 +115,9 @@
     "overlay_other": "{{count}} streamers using the overlay"
   },
   "cosmetics": {
-    "captured": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
-    "captured_one": "{{- heroName}} set captured! {{count}} cosmetic → {{- url}}",
-    "captured_other": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "captured": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
+    "captured_one": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetic saved → {{- url}}",
+    "captured_other": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
     "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
     "list_one": "",

@@ -9,6 +9,7 @@ import {
   GLOBAL_DELAY,
   gameInProgressClipByMatchId,
 } from '../../lib/consts'
+import { announceCapturedCosmetics } from '../../lib/announceCosmetics'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import eventHandler from '../EventHandler'
 
@@ -17,6 +18,13 @@ eventHandler.registerEvent('map:game_state', {
     // Early returns for invalid conditions
     if (!dotaClient.client.stream_online) return
     if (!isPlayingMatch(dotaClient.client.gsi, false)) return
+
+    // Release the held cosmetic-set announcement once the hero is visible to everyone
+    // (strategy phase on). The pick fired hero:id back in hero selection, where the reveal is
+    // intentionally held to avoid stream snipers; this is where it actually posts. Runs before
+    // the clip gates below so it isn't limited to high-MMR / auto-clip users, self-gates on the
+    // game state, and self-dedups against the hero:id trigger.
+    await announceCapturedCosmetics(dotaClient.client)
 
     if (
       ![

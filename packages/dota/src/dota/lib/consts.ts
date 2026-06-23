@@ -39,6 +39,16 @@ const dontBlockStates = [
 export const pickSates = ['DOTA_GAMERULES_STATE_HERO_SELECTION']
 const draftStates = ['DOTA_GAMERULES_STATE_PLAYER_DRAFT']
 
+// From strategy time onward every hero is locked in and shown to all ten players, so naming
+// the streamer's hero in chat no longer helps stream snipers. Before this window (hero
+// selection / draft) we hold any hero-revealing chat — the same pick the picks blocker hides
+// behind its overlay. Mirrors the non-blocked active states (playingStates + strategy time).
+export const heroRevealableStates = [
+  'DOTA_GAMERULES_STATE_STRATEGY_TIME',
+  'DOTA_GAMERULES_STATE_PRE_GAME',
+  'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+]
+
 export const blockTypes = [
   { type: 'draft', states: draftStates },
   { type: 'picks', states: pickSates },
