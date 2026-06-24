@@ -16,6 +16,7 @@ import type { SteamMatchDetails } from './types/SteamMatchDetails'
 import CustomError from './utils/customError'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch'
 import { logger } from './utils/logger'
+import { computeReconnectDelay } from './utils/reconnectBackoff'
 import { retryCustom } from './utils/retry'
 
 interface steamUserDetails {
@@ -109,6 +110,13 @@ class Dota {
   private steamClient: Steam.SteamClient
   private steamUser
   public dota2
+  // Steam-CM reconnect backoff. node-steam has no built-in reconnect, so we
+  // drive it — but reconnecting immediately on every disconnect storms Steam's
+  // login servers and gets the account rate-limited (TryAnotherCM /
+  // InvalidPassword / InvalidParam), which the storm then keeps alive forever.
+  // See utils/reconnectBackoff.ts.
+  private reconnectAttempts = 0
+  private reconnectTimer: NodeJS.Timeout | undefined
 
   constructor() {
     this.steamClient = new Steam.SteamClient()
@@ -333,18 +341,24 @@ class Dota {
   handleLogOnResponse(logonResp: { eresult: number }) {
     // @ts-expect-error no types exist
     if (logonResp.eresult === Steam.EResult.OK) {
+      // Healthy logon — clear any pending backoff so the next disconnect retries
+      // promptly instead of inheriting an escalated delay.
+      this.resetReconnectBackoff()
       logger.info('[STEAM] Logged on.')
       this.dota2.launch()
     } else {
       this.logSteamError(logonResp.eresult)
+      // A rejected logon (TryAnotherCM / InvalidPassword / rate-limit) closes
+      // the socket and also surfaces as 'error'; scheduleReconnect() coalesces
+      // so we never stack two reconnects for the same failure.
+      this.scheduleReconnect()
     }
   }
 
   handleLoggedOff(eresult: number) {
-    // @ts-expect-error no types exist
-    if (this.isProduction()) this.steamClient.connect()
     logger.info('[STEAM] Logged off from Steam.', { eresult })
     this.logSteamError(eresult)
+    this.scheduleReconnect()
   }
 
   handleClientError(error: unknown) {
@@ -353,9 +367,38 @@ class Dota {
     this.dota2.exit()
     if (!this.isProduction()) {
       this.exit().catch((e) => logger.error('err steam error', { e }))
+      return
     }
-    // @ts-expect-error no types exist
-    if (this.isProduction()) this.steamClient.connect()
+    this.scheduleReconnect()
+  }
+
+  // Reconnect to a Steam CM after an exponential, jittered backoff. Coalesced:
+  // while a reconnect is already pending this is a no-op, so the many events a
+  // single disconnect fires (error + loggedOff + failed logOnResponse) advance
+  // the backoff exactly once per cycle.
+  private scheduleReconnect() {
+    if (!this.isProduction()) return
+    if (this.reconnectTimer) return
+
+    this.reconnectAttempts += 1
+    const delayMs = computeReconnectDelay(this.reconnectAttempts)
+    logger.info('[STEAM] scheduling steam reconnect', {
+      attempt: this.reconnectAttempts,
+      delayMs,
+    })
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = undefined
+      // @ts-expect-error no types exist
+      this.steamClient.connect()
+    }, delayMs)
+  }
+
+  private resetReconnectBackoff() {
+    this.reconnectAttempts = 0
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = undefined
+    }
   }
 
   handleServerUpdate(servers: unknown) {
@@ -634,6 +677,7 @@ class Dota {
   public exit(): Promise<boolean> {
     return new Promise((resolve) => {
       clearInterval(this.interval)
+      this.resetReconnectBackoff()
       this.dota2.exit()
       logger.info('[STEAM] Manually closed dota')
       // @ts-expect-error disconnect is there
