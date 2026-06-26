@@ -1,23 +1,23 @@
 {
-  "2mdelay": "(2m delay)",
+  "2mdelay": "(2dk gecikme)",
   "accountSharing": {
-    "blocked": "Multiple people are using Dotabod GSI files for this stream. Account \"{{accountName}}\" is blocked. Use !clearsharing to reset, but ensure only one person has the GSI file."
+    "blocked": "Bu yayın için birden fazla kişi Dotabod GSI dosyaları kullanıyor. \"{{accountName}}\" hesabı engellendi. Sıfırlamak için !clearsharing komutunu kullanın, ancak GSI dosyasının yalnızca bir kişide olduğundan emin olun."
   },
   "aegis": {
     "denied": "{{- heroName}} aegis'i denyladı {{emote}}",
     "deniedUnknown": "Aegis denied {{emote}}",
     "expired": "{{- heroName}} Aegis'in süresi bitti {{emote}}",
-    "expiredUnknown": "Aegis expired {{emote}}",
+    "expiredUnknown": "Aegis'in süresi bitti {{emote}}",
     "pickup": "{{- heroName}} Aegis'i aldı!",
-    "pickupUnknown": "Aegis picked up!",
+    "pickupUnknown": "Aegis alındı!",
     "snatched": "{{- heroName}} Aegis'i çaldı {{emote}}",
-    "snatchedUnknown": "Aegis snatched PepeLaugh"
+    "snatchedUnknown": "Aegis çalındı PepeLaugh"
   },
   "aghs": "{{- heroName}} aghs: {{- title}} · {{- description}}",
-  "altAccount": "{{emote}} alt account detected {{emote2}}",
+  "altAccount": "{{emote}} yan hesap tespit edildi. {{emote2}}",
   "apm_one": "{{- heroName}} için anlık APM: {{count}} {{emote}}",
   "apm_other": "{{- heroName}} için anlık APM: {{count}} {{emote}}",
-  "autoTranslate": "[Translation] {{- heroName}} said: {{- message}}",
+  "autoTranslate": "[Çeviri] {{- heroName}}: {{- message}}",
   "averageRank": "Oyunun ortalama sıralaması",
   "betaFeature": "Beta özellikleri",
   "betaTester": "$t(betaTester_on)",
@@ -40,16 +40,16 @@
     "recentMatches": "Recent matches: {{- matchList}} {{emote}}",
     "remade": "Kahraman değiştirildi {{emote}} İddalar {{- oldHeroName}} için iade edildi ve yeni idda {{- newHeroName}} için açıldı {{emote2}}",
     "retroactiveAlreadyMatches": "",
-    "retroactiveAlreadyMatches_lost": "Match {{matchId}} is already marked as LOST {{emote}}",
-    "retroactiveAlreadyMatches_won": "Match {{matchId}} is already marked as WON {{emote}}",
+    "retroactiveAlreadyMatches_lost": "{{matchId}} numaralı maç zaten KAYIP olarak işaretlendi {{emote}}",
+    "retroactiveAlreadyMatches_won": "{{matchId}} numaralı maç zaten KAZANILDI olarak işaretlendi {{emote}}",
     "retroactiveCorrection": "",
-    "retroactiveCorrection_lost": "Match {{matchId}} corrected from WON to LOST by @{{username}}",
-    "retroactiveCorrection_won": "Match {{matchId}} corrected from LOST to WON by @{{username}}",
-    "retroactiveMatchExpired": "Match {{matchId}} is too old to resolve (must be from current stream) {{emote}}",
-    "retroactiveMatchNotFound": "Match {{matchId}} not found in current stream {{emote}}",
+    "retroactiveCorrection_lost": "{{matchId}} numaralı maçın KAZANILDI durumu @{{username}} tarafından KAYBEDİLDİ olarak düzeltildi",
+    "retroactiveCorrection_won": "{{matchId}} numaralı maçın KAYBEDİLDİ durumu @{{username}} tarafından KAZANILDI olarak düzeltildi",
+    "retroactiveMatchExpired": "{{matchId}} eşleşmesi çözümlenemeyecek kadar eski (mevcut yayından olmalı) {{emote}}",
+    "retroactiveMatchNotFound": "Mevcut yayında {{matchId}} eşleşmesi bulunamadı {{emote}}",
     "retroactiveResolutionSuccess": "",
-    "retroactiveResolutionSuccess_lost": "Match {{matchId}} manually marked as LOST by @{{username}}",
-    "retroactiveResolutionSuccess_won": "Match {{matchId}} manually marked as WON by @{{username}}",
+    "retroactiveResolutionSuccess_lost": "{{matchId}} numaralı maç @{{username}} tarafından manuel olarak KAYBEDİLDİ olarak işaretlendi",
+    "retroactiveResolutionSuccess_won": "{{matchId}} numaralı maç @{{username}} tarafından manuel olarak KAZANILDI olarak işaretlendi",
     "unresolvedMatches_one": "{{count}} unresolved match {{emote}} Use !won or !lost with match ID: {{- matchList}}",
     "unresolvedMatches_other": "{{count}} unresolved matches {{emote}} Use !won or !lost with match ID: {{- matchList}}",
     "unresolvedReminder_one": "Reminder: {{count}} match still needs resolving {{emote}} Use !won or !lost with match ID: {{- matchList}}",
@@ -66,8 +66,6 @@
     "midas": "{{emote}} Midas kullan",
     "noTp": "{{channel}} Tp nerede {{emote}}",
     "pause": "{{emote}} Oyunu kim durdurdu?",
-    "smokeActivated": "{{- heroName}} activated Smoke of Deceit! {{emote}}",
-    "smokeActivatedUnknown": "{{emote}} An ally activated Smoke of Deceit!",
     "smoked": "{{emote}} {{- heroName}} smoke bastı!",
     "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}} helal olsun sonunda $t(seconds, {\"count\": {{seconds}} }) saniye sonra tp aldın {{emote}}",
@@ -112,8 +110,8 @@
     "overlay_other": "Arayüzü {{count}} yayıncı kullanıyor"
   },
   "cosmetics": {
-    "captured_one": "{{- heroName}} set captured! {{count}} cosmetic → {{- url}}",
-    "captured_other": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "captured_one": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetic saved → {{- url}}",
+    "captured_other": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
     "list_one": "",
     "list_other": ""
@@ -285,8 +283,8 @@
     "toUnknown": "We tipping someone {{emote}}"
   },
   "today": {
-    "noGames": "No games played yet today",
-    "single": "{{- heroName}} {{wins}}-{{losses}} today",
+    "noGames": "Bugün henüz oyun oynanmadı",
+    "single": "Bugün {{- heroName}} ile {{wins}}-{{losses}}",
     "summary_one": "{{wins}}W {{losses}}L ({{count}} game)",
     "summary_other": "{{wins}}W {{losses}}L ({{count}} games)"
   },

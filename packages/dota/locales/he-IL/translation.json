@@ -72,8 +72,6 @@
     "midas": "{{emote}} Use your midas",
     "noTp": "{{channel}} where's your tp {{emote}}",
     "pause": "{{emote}} Who paused the game?",
-    "smokeActivated": "{{- heroName}} activated Smoke of Deceit! {{emote}}",
-    "smokeActivatedUnknown": "{{emote}} An ally activated Smoke of Deceit!",
     "smoked": "{{emote}} {{- heroName}} is smoked!",
     "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
@@ -122,10 +120,10 @@
     "overlay_other": "{{count}} streamers using the overlay"
   },
   "cosmetics": {
-    "captured_one": "{{- heroName}} set captured! {{count}} cosmetic → {{- url}}",
-    "captured_two": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
-    "captured_many": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
-    "captured_other": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "captured_one": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetic saved → {{- url}}",
+    "captured_two": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
+    "captured_many": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
+    "captured_other": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
     "list_one": "",
     "list_two": "",

@@ -66,8 +66,6 @@
     "midas": "{{emote}} Använd din midas",
     "noTp": "{{channel}} var är din tp {{emote}}",
     "pause": "{{emote}} Vem pausade matchen?",
-    "smokeActivated": "{{- heroName}} activated Smoke of Deceit! {{emote}}",
-    "smokeActivatedUnknown": "{{emote}} An ally activated Smoke of Deceit!",
     "smoked": "{{emote}} {{- heroName}} är smoked!",
     "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}} bra jobbat att äntligen skaffa en tp efter $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
@@ -112,8 +110,8 @@
     "overlay_other": "{{count}} streamare använder overlayn"
   },
   "cosmetics": {
-    "captured_one": "{{- heroName}} set captured! {{count}} cosmetic → {{- url}}",
-    "captured_other": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "captured_one": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetic saved → {{- url}}",
+    "captured_other": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
     "list_one": "",
     "list_other": ""
