@@ -26,7 +26,7 @@
     "@twurple/api": "7.2.1",
     "@twurple/ebs-helper": "^7.2.1",
     "@twurple/eventsub-base": "^7.2.1",
-    "axios": "1.7.9",
+    "axios": "1.16.0",
     "chokidar": "^4.0.3",
     "cors": "^2.8.5",
     "country-code-emoji": "^2.3.0",
