@@ -22,7 +22,7 @@ jobs:
     # only auto-fix branches that live in this repo.
     if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ secrets.GHA_PAT }}

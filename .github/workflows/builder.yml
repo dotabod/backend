@@ -16,7 +16,7 @@ jobs:
     outputs:
       services: ${{ steps.select.outputs.services }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -85,7 +85,7 @@ jobs:
       matrix:
         service: ${{ fromJSON(needs.changes.outputs.services) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Extract branch name
         shell: bash
