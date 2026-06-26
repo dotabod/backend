@@ -35,10 +35,10 @@ importers:
     dependencies:
       '@dotabod/profanity-filter':
         specifier: workspace:*
-        version: link:../profanity-filter
+        version: file:packages/profanity-filter(@sinclair/typebox@0.34.49)(exact-mirror@1.0.0)(file-type@22.0.1)(openapi-types@12.1.3)(typescript@5.9.3)
       '@dotabod/shared-utils':
         specifier: workspace:*
-        version: link:../shared-utils
+        version: file:packages/shared-utils
       '@redis/json':
         specifier: ^1.0.7
         version: 1.0.7(@redis/client@1.6.1)
@@ -67,8 +67,8 @@ importers:
         specifier: ^1.19.1
         version: 1.27.0
       dotaconstants:
-        specifier: github:dotabod/dotaconstants#70fffb95a5951dae2ea80b183c8c1170a52da6f1
-        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/70fffb95a5951dae2ea80b183c8c1170a52da6f1
+        specifier: github:dotabod/dotaconstants#bb2002a0cc8a07e47ef15964f84829de7441eb0d
+        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/bb2002a0cc8a07e47ef15964f84829de7441eb0d
       express:
         specifier: ^4.21.2
         version: 4.22.2
@@ -181,7 +181,7 @@ importers:
     dependencies:
       '@dotabod/shared-utils':
         specifier: workspace:*
-        version: link:../shared-utils
+        version: file:packages/shared-utils
       dota2:
         specifier: https://github.com/dotabod/node-dota2
         version: https://codeload.github.com/dotabod/node-dota2/tar.gz/4a1a09537d5bead430c36427b9a50b770abe56fc
@@ -230,7 +230,7 @@ importers:
     dependencies:
       '@dotabod/shared-utils':
         specifier: workspace:*
-        version: link:../shared-utils
+        version: file:packages/shared-utils
       i18next:
         specifier: ^24.2.0
         version: 24.2.3(typescript@5.9.3)
@@ -255,7 +255,7 @@ importers:
     dependencies:
       '@dotabod/shared-utils':
         specifier: workspace:*
-        version: link:../shared-utils
+        version: file:packages/shared-utils
       '@twurple/api':
         specifier: 7.2.1
         version: 7.2.1(@twurple/auth@7.2.1)
@@ -344,6 +344,12 @@ packages:
   '@doctormckay/user-agents@1.0.0':
     resolution: {integrity: sha512-F+sL1YmebZTY2CnjoR9BXFEULpq7y8dxyLx48LZVa0BSDseXdLG/DtPISfM1iNv1XKCeiBzVNfAT/MOQ69v1Zw==}
 
+  '@dotabod/profanity-filter@file:packages/profanity-filter':
+    resolution: {directory: packages/profanity-filter, type: directory}
+
+  '@dotabod/shared-utils@file:packages/shared-utils':
+    resolution: {directory: packages/shared-utils, type: directory}
+
   '@emnapi/core@1.10.0':
     resolution: {integrity: sha512-yq6OkJ4p82CAfPl0u9mQebQHKPJkY7WrIuk205cTYnYe+k2Z8YBh11FrbRG/H6ihirqcacOgl2BIO8oyMQLeXw==}
 
@@ -362,6 +368,12 @@ packages:
 
   '@napi-rs/wasm-runtime@1.1.4':
     resolution: {integrity: sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow==}
+    peerDependencies:
+      '@emnapi/core': ^1.7.1
+      '@emnapi/runtime': ^1.7.1
+
+  '@napi-rs/wasm-runtime@1.1.6':
+    resolution: {integrity: sha512-ZLv/JdUfkvOy9eCnnBaGfiO+XimbjebAeO+MRQqD/B+FR1tnRN0tpKSJHRbE8sFfS6aqsXZ67TQjfwfsxULVbg==}
     peerDependencies:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
@@ -1068,27 +1080,54 @@ packages:
     resolution: {integrity: sha512-7eyheXfAGwkB9bZewJPs+N3UYt6kra2JG6mIxNEgbkvcO15PLD1e75PTIUEYYl3zrifm3GrpShVl7QZxKrXO/w==}
     engines: {node: '>=20.0.0'}
 
+  '@supabase/auth-js@2.108.2':
+    resolution: {integrity: sha512-tNaQmBgodDZwgB40mRwVbxFy8IDYwjdpcZ0BYrWiwlULCSQoJj4QoG4zgJT7QRPXcqipefNOzvO/qAu4dF98ag==}
+    engines: {node: '>=20.0.0'}
+
   '@supabase/functions-js@2.106.1':
     resolution: {integrity: sha512-XbOPnR2mW7jp/EcW447xmGwCa+/Wc00Hkw8t4tUIJjRsHQ4xAESsLKcyLRhRJjJoUnJVXUlC+w0wUxUCM7CG2A==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/functions-js@2.108.2':
+    resolution: {integrity: sha512-RNUX8EiBy3iLwAX19jtRzLyePnl11/fHcgwDHLnpKcDSXt/5qBnh3LUwAtIjT21Q66QsmNUR2esrHziLCpNubw==}
     engines: {node: '>=20.0.0'}
 
   '@supabase/phoenix@0.4.2':
     resolution: {integrity: sha512-YSAGnmDAfuleFCVt3CeurQZAhxRfXWeZIIkwp7NhYzQ1UwW6ePSnzsFAiUm/mbCkfoCf70QQHKW/K6RKh52a4A==}
 
+  '@supabase/phoenix@0.4.4':
+    resolution: {integrity: sha512-Gt0pqoXuIqX/8dvG0OKp/wMCobXNH3klNbUPBNyOfN0YA1IswrM3HyWFMOPk1Jy+BRaIyDPcFx4jLBwHNmlyfQ==}
+
   '@supabase/postgrest-js@2.106.1':
     resolution: {integrity: sha512-Qbn6d2lqiqeaBX1Uko0e/hL90dtQGRN6CG2wMVQtJpRFstlVW45qmUTyTOsiB8dYUWu1fWYo4YzJuDbokGv3tQ==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/postgrest-js@2.108.2':
+    resolution: {integrity: sha512-GQ28/Y8hk3CFmkb3kXH1h/AQx6JIYSQfO0CJMRVBcEKZoNy6C45cXAZ4fcJvRC5Id0cs6xnkUV0+c0rIocigsw==}
     engines: {node: '>=20.0.0'}
 
   '@supabase/realtime-js@2.106.1':
     resolution: {integrity: sha512-eQCYri5E8KsjpDgC7g28cOOS2britjUWdNSJluFMainqrMRepzjOnaxqXc3RoAz7H0dxmBrfLUNF6NGP8C+YaA==}
     engines: {node: '>=20.0.0'}
 
+  '@supabase/realtime-js@2.108.2':
+    resolution: {integrity: sha512-aAGxCSUemZvQIibnCdvNvgaKib28I4rfrNjKbQ9cG1uBLwUsI7hVpGXgEbypCCDhLjQlDTAiJlu7rgljYUT73g==}
+    engines: {node: '>=20.0.0'}
+
   '@supabase/storage-js@2.106.1':
     resolution: {integrity: sha512-HWcLIhqinhWKpOQ3WzglR2unjW0eh9J7yOu3IZrZNIEkraK4La/HDvTqndljGsNw0itPtyHhuKBxRoPG1VUARw==}
     engines: {node: '>=20.0.0'}
 
+  '@supabase/storage-js@2.108.2':
+    resolution: {integrity: sha512-TVZPQxXGxY2+A6yTtm77zUHsh70lBhYUEaJL8RQC+BghcX/ygiMG/rmXrNVBce30/WAeNPa8FiG8HbqlGeV05g==}
+    engines: {node: '>=20.0.0'}
+
   '@supabase/supabase-js@2.106.1':
     resolution: {integrity: sha512-gP4HurGkGu7Z3xoOCjtAI17BKKp7jpsmwY0Ssbsks9XQRzJ7ZhK7LxfLdBSYgUdgZCQgjRK+Mr7+cl4Gxrk0Rw==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/supabase-js@2.108.2':
+    resolution: {integrity: sha512-hFhnPveb5JQg4a0QYicM0swT253YHMdfeRAl2BKHOlI5VAzuHxUGSr8RbwNLYNPauWOgQMS1H8sz8bvYlgwUfQ==}
     engines: {node: '>=20.0.0'}
 
   '@tokenizer/inflate@0.4.1':
@@ -1137,6 +1176,9 @@ packages:
 
   '@tybys/wasm-util@0.10.2':
     resolution: {integrity: sha512-RoBvJ2X0wuKlWFIjrwffGw1IqZHKQqzIchKaadZZfnNpsAYp2mM0h36JtPCjNDAHGgYez/15uMBpfGwchhiMgg==}
+
+  '@tybys/wasm-util@0.10.3':
+    resolution: {integrity: sha512-F3fo1MYrRJYL3zER0OUOmkutjr1Vp23m7OsSgp7nq4SP6OqX6C/56XFIPAl5bt3zaBRjmW7SGz3u/6LwFpYcOg==}
 
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
@@ -1414,6 +1456,9 @@ packages:
   axios@1.16.1:
     resolution: {integrity: sha512-caYkukvroVPO8KrzuJEb50Hm07KwfBZPEC3VeFHTsqWHvKTsy54hjJz9BS/cdaypROE2rH6xvm9mHX4fgWkr3A==}
 
+  axios@1.18.1:
+    resolution: {integrity: sha512-3nTvFlvpn9Zu/RkHUqtc7/+al4UpRW5az71ap5zccp6e8RAYEzhMTecX8Dz1wWDYrPpUoB1HAQEGEAEvUr7S9g==}
+
   axios@1.7.9:
     resolution: {integrity: sha512-LhLcE7Hbiryz8oMDdDptSrWowmB4Bl6RCt6sIJKpRB4XtVf0iEgewX3au/pJqm+Py1kCASkb/FFKjxQaLtxJvw==}
 
@@ -1444,8 +1489,8 @@ packages:
     resolution: {integrity: sha512-3grm+/2tUOvu2cjJkvsIxrv/wVpfXQW4PsQHYm7yk4vfpu7Ekl6nEsYBoJUL6qDwZUx8wUhQ8tR2qz+ad9c9OA==}
     engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
 
-  brace-expansion@1.1.14:
-    resolution: {integrity: sha512-MWPGfDxnyzKU7rNOW9SP/c50vi3xrmrua/+6hfPbCS2ABNWfx24vPidzvC7krjU/RTo235sV776ymlsMtGKj8g==}
+  brace-expansion@1.1.15:
+    resolution: {integrity: sha512-EwOCDEex4quD37XhqM3omwtMoJjr//isUZz1JopUNWms+4Z2ViyM/k1YIRePpoVNnQhENnxtFjLaxNHrT7xIUg==}
 
   brace-expansion@5.0.6:
     resolution: {integrity: sha512-kLpxurY4Z4r9sgMsyG0Z9uzsBlgiU/EFKhj/h91/8yHu0edo7XuixOIH3VcJ8kkxs6/jPzoI6U9Vj3WqbMQ94g==}
@@ -1619,12 +1664,12 @@ packages:
     engines: {node: '>=8'}
 
   dota2@https://codeload.github.com/dotabod/node-dota2/tar.gz/4a1a09537d5bead430c36427b9a50b770abe56fc:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/dotabod/node-dota2/tar.gz/4a1a09537d5bead430c36427b9a50b770abe56fc}
+    resolution: {gitHosted: true, integrity: sha512-iWo37QWJZXV7nfBKVe1D1OCs10ltkSR67GN2DTVz+PDH0+apWbXajSfEfuK5LYY6sU7U64/LomN+Yer15fo+Jw==, tarball: https://codeload.github.com/dotabod/node-dota2/tar.gz/4a1a09537d5bead430c36427b9a50b770abe56fc}
     version: 7.0.3
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/70fffb95a5951dae2ea80b183c8c1170a52da6f1:
-    resolution: {gitHosted: true, integrity: sha512-muUaaSAwnSgjlwEU6IXPfvVtv/VYeAPp9mgEdO7viAACL/XqX/ki5/uK835eUIWbFowcO+dv2r4ZYZVHQ/YAZw==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/70fffb95a5951dae2ea80b183c8c1170a52da6f1}
-    version: 10.8.3
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/bb2002a0cc8a07e47ef15964f84829de7441eb0d:
+    resolution: {gitHosted: true, integrity: sha512-TKfZzQWrXGOLZ4aS7kX69P9GjVWegE+mxPkq7ksE8RTGhFfhIYx0MwUilMLIMmnMqEZdY2LxjXUiln30aHFLxw==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/bb2002a0cc8a07e47ef15964f84829de7441eb0d}
+    version: 10.8.12
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -1635,6 +1680,21 @@ packages:
 
   elysia@1.4.28:
     resolution: {integrity: sha512-Vrx8sBnvq8squS/3yNBzR1jBXI+SgmnmvwawPjNuEHndUe5l1jV2Gp6JJ4ulDkEB8On6bWmmuyPpA+bq4t+WYg==}
+    peerDependencies:
+      '@sinclair/typebox': '>= 0.34.0 < 1'
+      '@types/bun': '>= 1.2.0'
+      exact-mirror: '>= 0.0.9'
+      file-type: '>= 20.0.0'
+      openapi-types: '>= 12.0.0'
+      typescript: '>= 5.0.0'
+    peerDependenciesMeta:
+      '@types/bun':
+        optional: true
+      typescript:
+        optional: true
+
+  elysia@1.4.29:
+    resolution: {integrity: sha512-GwMRGGwSdjfPt+w3LA0fqTuYJtS8uVRJicvoar98/HrO5qdFKDc9CwjIb6Kja+v39lkY+58hr2JvdR9jQzlUuA==}
     peerDependencies:
       '@sinclair/typebox': '>= 0.34.0 < 1'
       '@types/bun': '>= 1.2.0'
@@ -1778,6 +1838,10 @@ packages:
     resolution: {integrity: sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==}
     engines: {node: '>= 6'}
 
+  form-data@4.0.6:
+    resolution: {integrity: sha512-vKatAh4SlVfgbv+YtmhiRjhEMJsYpsG1Y2rMQtR+SVSbytsSD1YGzDIcrAJmdFec88u/+VoGmxnl+80gL1tRCQ==}
+    engines: {node: '>= 6'}
+
   formatly@0.3.0:
     resolution: {integrity: sha512-9XNj/o4wrRFyhSMJOvsuyMwy8aUfBaZ1VrqHVfohyXf0Sw0e+yfKG+xZaY3arGCOMdwFsqObtzVOc1gU9KiT9w==}
     engines: {node: '>=18.3.0'}
@@ -1838,6 +1902,10 @@ packages:
 
   hasown@2.0.3:
     resolution: {integrity: sha512-ej4AhfhfL2Q2zpMmLo7U1Uv9+PyhIZpgQLGT1F9miIGmiCJIoCgSmczFdrc97mWT4kVY72KA+WnnhJ5pghSvSg==}
+    engines: {node: '>= 0.4'}
+
+  hasown@2.0.4:
+    resolution: {integrity: sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==}
     engines: {node: '>= 0.4'}
 
   http-errors@2.0.1:
@@ -2492,7 +2560,7 @@ packages:
     deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   steam-resources@https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45}
+    resolution: {gitHosted: true, integrity: sha512-bcksZjb/Sa6Q7A5Uh+GWiU5AfoW6u12B1lk7VN+yWNO4AOqpAGK6F0eiEILuS1ngjxHzX57M3IHCahncsLGYig==, tarball: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45}
     version: 1.2.2
 
   steam-session@1.9.4:
@@ -2520,7 +2588,7 @@ packages:
       - steam-resources
 
   steam@https://codeload.github.com/dotabod/node-steam/tar.gz/e9aa23d43a7a06090a2d96eb4e39aa889c7b8cbb:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/dotabod/node-steam/tar.gz/e9aa23d43a7a06090a2d96eb4e39aa889c7b8cbb}
+    resolution: {gitHosted: true, integrity: sha512-0kny/0AfwRcRv4qghIkpFJ2MVCMC8gjVd/EakCRIIbC5WI9J4nl8N4NTT75HxGW6p/Gf/nxCiFLgUxvH5b2x2Q==, tarball: https://codeload.github.com/dotabod/node-steam/tar.gz/e9aa23d43a7a06090a2d96eb4e39aa889c7b8cbb}
     version: 1.4.1
     engines: {node: '>=4.1.1'}
 
@@ -2569,6 +2637,10 @@ packages:
 
   tinyglobby@0.2.16:
     resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
+    engines: {node: '>=12.0.0'}
+
+  tinyglobby@0.2.17:
+    resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
     engines: {node: '>=12.0.0'}
 
   tinypool@2.1.0:
@@ -2848,6 +2920,38 @@ snapshots:
 
   '@doctormckay/user-agents@1.0.0': {}
 
+  '@dotabod/profanity-filter@file:packages/profanity-filter(@sinclair/typebox@0.34.49)(exact-mirror@1.0.0)(file-type@22.0.1)(openapi-types@12.1.3)(typescript@5.9.3)':
+    dependencies:
+      '@2toad/profanity': 3.3.0
+      axios: 1.18.1
+      bad-words: 4.0.0
+      curse-filter: 6.0.0
+      elysia: 1.4.29(@sinclair/typebox@0.34.49)(exact-mirror@1.0.0)(file-type@22.0.1)(openapi-types@12.1.3)(typescript@5.9.3)
+      leo-profanity: 1.9.0
+      naughty-words: 1.2.0
+      obscenity: 0.4.6
+      profanity-util: 0.2.0
+      russian-bad-words: 0.5.0
+      washyourmouthoutwithsoap: 1.0.2
+    transitivePeerDependencies:
+      - '@sinclair/typebox'
+      - '@types/bun'
+      - debug
+      - exact-mirror
+      - file-type
+      - openapi-types
+      - supports-color
+      - typescript
+
+  '@dotabod/shared-utils@file:packages/shared-utils':
+    dependencies:
+      '@supabase/supabase-js': 2.108.2
+      '@twurple/api': 7.2.1(@twurple/auth@7.2.1)
+      '@twurple/auth': 7.2.1
+      winston: 3.19.0
+    transitivePeerDependencies:
+      - encoding
+
   '@emnapi/core@1.10.0':
     dependencies:
       '@emnapi/wasi-threads': 1.2.1
@@ -2875,6 +2979,13 @@ snapshots:
       '@emnapi/core': 1.10.0
       '@emnapi/runtime': 1.10.0
       '@tybys/wasm-util': 0.10.2
+    optional: true
+
+  '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
+    dependencies:
+      '@emnapi/core': 1.10.0
+      '@emnapi/runtime': 1.10.0
+      '@tybys/wasm-util': 0.10.3
     optional: true
 
   '@oxc-parser/binding-android-arm-eabi@0.130.0':
@@ -3238,7 +3349,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.10.0
       '@emnapi/runtime': 1.10.0
-      '@napi-rs/wasm-runtime': 1.1.4(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      '@napi-rs/wasm-runtime': 1.1.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
     optional: true
 
   '@rolldown/binding-win32-arm64-msvc@1.0.2':
@@ -3264,13 +3375,27 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@supabase/auth-js@2.108.2':
+    dependencies:
+      tslib: 2.8.1
+
   '@supabase/functions-js@2.106.1':
+    dependencies:
+      tslib: 2.8.1
+
+  '@supabase/functions-js@2.108.2':
     dependencies:
       tslib: 2.8.1
 
   '@supabase/phoenix@0.4.2': {}
 
+  '@supabase/phoenix@0.4.4': {}
+
   '@supabase/postgrest-js@2.106.1':
+    dependencies:
+      tslib: 2.8.1
+
+  '@supabase/postgrest-js@2.108.2':
     dependencies:
       tslib: 2.8.1
 
@@ -3279,7 +3404,17 @@ snapshots:
       '@supabase/phoenix': 0.4.2
       tslib: 2.8.1
 
+  '@supabase/realtime-js@2.108.2':
+    dependencies:
+      '@supabase/phoenix': 0.4.4
+      tslib: 2.8.1
+
   '@supabase/storage-js@2.106.1':
+    dependencies:
+      iceberg-js: 0.8.1
+      tslib: 2.8.1
+
+  '@supabase/storage-js@2.108.2':
     dependencies:
       iceberg-js: 0.8.1
       tslib: 2.8.1
@@ -3291,6 +3426,14 @@ snapshots:
       '@supabase/postgrest-js': 2.106.1
       '@supabase/realtime-js': 2.106.1
       '@supabase/storage-js': 2.106.1
+
+  '@supabase/supabase-js@2.108.2':
+    dependencies:
+      '@supabase/auth-js': 2.108.2
+      '@supabase/functions-js': 2.108.2
+      '@supabase/postgrest-js': 2.108.2
+      '@supabase/realtime-js': 2.108.2
+      '@supabase/storage-js': 2.108.2
 
   '@tokenizer/inflate@0.4.1':
     dependencies:
@@ -3418,6 +3561,11 @@ snapshots:
       - encoding
 
   '@tybys/wasm-util@0.10.2':
+    dependencies:
+      tslib: 2.8.1
+    optional: true
+
+  '@tybys/wasm-util@0.10.3':
     dependencies:
       tslib: 2.8.1
     optional: true
@@ -3652,6 +3800,16 @@ snapshots:
       - debug
       - supports-color
 
+  axios@1.18.1:
+    dependencies:
+      follow-redirects: 1.16.0
+      form-data: 4.0.6
+      https-proxy-agent: 5.0.1
+      proxy-from-env: 2.1.0
+    transitivePeerDependencies:
+      - debug
+      - supports-color
+
   axios@1.7.9:
     dependencies:
       follow-redirects: 1.16.0
@@ -3691,7 +3849,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  brace-expansion@1.1.14:
+  brace-expansion@1.1.15:
     dependencies:
       balanced-match: 1.0.2
       concat-map: 0.0.1
@@ -3846,7 +4004,7 @@ snapshots:
       steam-resources: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45
       winston: 3.19.0
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/70fffb95a5951dae2ea80b183c8c1170a52da6f1: {}
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/bb2002a0cc8a07e47ef15964f84829de7441eb0d: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -3857,6 +4015,18 @@ snapshots:
   ee-first@1.1.1: {}
 
   elysia@1.4.28(@sinclair/typebox@0.34.49)(exact-mirror@1.0.0)(file-type@22.0.1)(openapi-types@12.1.3)(typescript@5.9.3):
+    dependencies:
+      '@sinclair/typebox': 0.34.49
+      cookie: 1.1.1
+      exact-mirror: 1.0.0
+      fast-decode-uri-component: 1.0.1
+      file-type: 22.0.1
+      memoirist: 0.4.0
+      openapi-types: 12.1.3
+    optionalDependencies:
+      typescript: 5.9.3
+
+  elysia@1.4.29(@sinclair/typebox@0.34.49)(exact-mirror@1.0.0)(file-type@22.0.1)(openapi-types@12.1.3)(typescript@5.9.3):
     dependencies:
       '@sinclair/typebox': 0.34.49
       cookie: 1.1.1
@@ -4057,6 +4227,14 @@ snapshots:
       hasown: 2.0.3
       mime-types: 2.1.35
 
+  form-data@4.0.6:
+    dependencies:
+      asynckit: 0.4.0
+      combined-stream: 1.0.8
+      es-set-tostringtag: 2.1.0
+      hasown: 2.0.4
+      mime-types: 2.1.35
+
   formatly@0.3.0:
     dependencies:
       fd-package-json: 2.0.0
@@ -4118,6 +4296,10 @@ snapshots:
       has-symbols: 1.1.0
 
   hasown@2.0.3:
+    dependencies:
+      function-bind: 1.1.2
+
+  hasown@2.0.4:
     dependencies:
       function-bind: 1.1.2
 
@@ -4353,7 +4535,7 @@ snapshots:
 
   minimatch@3.1.5:
     dependencies:
-      brace-expansion: 1.1.14
+      brace-expansion: 1.1.15
 
   minimist@1.2.8: {}
 
@@ -4927,6 +5109,11 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
 
+  tinyglobby@0.2.17:
+    dependencies:
+      fdir: 6.5.0(picomatch@4.0.4)
+      picomatch: 4.0.4
+
   tinypool@2.1.0: {}
 
   toidentifier@1.0.1: {}
@@ -5040,7 +5227,7 @@ snapshots:
       picomatch: 4.0.4
       postcss: 8.5.15
       rolldown: 1.0.2
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
     optionalDependencies:
       '@types/node': 22.19.19
       fsevents: 2.3.3
