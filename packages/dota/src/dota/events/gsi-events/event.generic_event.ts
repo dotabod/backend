@@ -2,6 +2,7 @@ import { t } from 'i18next'
 
 import { type ChatEventData, ChatMessageType, type DotaEvent, DotaEventTypes } from '../../../types'
 import { getRedisNumberValue } from '../../../utils/index'
+import { isFeatureEnabled } from '../../lib/announceFeatures'
 import { delayedQueue } from '../../lib/DelayedQueue'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import { say } from '../../say'
@@ -54,12 +55,15 @@ eventHandler.registerEvent(`event:${DotaEventTypes.GenericEvent}`, {
           if (!client.stream_online) return
           if (!isPlayingMatch(client.gsi)) return
 
+          // Follow the new-feature opt-in (same gate as cosmetics): respect an explicit
+          // smokeActivated choice, else the autoOptInNewFeatures master. Replaces the old
+          // per-chatter toggle so opting out of new features also silences this roast.
+          if (!isFeatureEnabled(client, 'smokeActivated')) return
+
           // Caught out: a teammate smoked, the streamer is alive, but never got the buff.
           const caughtOut = client.gsi?.hero?.alive !== false && !client.gsi?.hero?.smoked
           if (caughtOut) {
-            say(client, t('chatters.smokeWithoutYou', { emote: 'HAH', lng: client.locale }), {
-              chattersKey: 'smokeActivated',
-            })
+            say(client, t('chatters.smokeWithoutYou', { emote: 'HAH', lng: client.locale }))
           }
         })
         return
