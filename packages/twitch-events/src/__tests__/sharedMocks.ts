@@ -53,6 +53,12 @@ export const state: {
   channelCreationCount: number
   // Bumped each time the watcher calls `supabase.removeChannel(...)`.
   removeChannelCount: number
+  // When true, removeChannel() synchronously re-fires the most-recent
+  // subscribe callback with 'CLOSED' — replicating real supabase-js, which
+  // tears the channel down on the same stack and re-emits CLOSED. Off by
+  // default so the other reconnect tests keep their simple semantics; the
+  // re-entrancy regression test flips it on.
+  removeChannelRefiresClosed: boolean
   // If non-empty, sbBuilder.single() on the `accounts` table shifts the next
   // entry off this queue. Lets tests script per-call lookup behavior (e.g.
   // first lookup returns null, second returns a row) and inject transient DB
@@ -98,6 +104,7 @@ export const state: {
   channelSubscribeCallbacks: [],
   channelCreationCount: 0,
   removeChannelCount: 0,
+  removeChannelRefiresClosed: false,
   accountsLookupResults: [],
   usersLookupResults: [],
   streamError: null,
@@ -128,6 +135,7 @@ export function resetState() {
   state.channelSubscribeCallbacks = []
   state.channelCreationCount = 0
   state.removeChannelCount = 0
+  state.removeChannelRefiresClosed = false
   state.accountsLookupResults = []
   state.usersLookupResults = []
   state.streamError = null
@@ -231,6 +239,14 @@ const supabaseMock = {
   },
   removeChannel: (_channel: unknown) => {
     state.removeChannelCount++
+    // Real supabase-js tears the channel down synchronously and re-fires the
+    // status callback with CLOSED on the same stack. Replicate that so the
+    // watcher's reconnect path is exercised against the actual re-entrancy
+    // that crashed prod, not a sanitized no-op.
+    if (state.removeChannelRefiresClosed) {
+      const cb = state.channelSubscribeCallbacks.at(-1)
+      cb?.('CLOSED')
+    }
     return 'ok' as const
   },
 }

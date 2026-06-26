@@ -1,10 +1,10 @@
-import crypto from 'node:crypto'
 import fs from 'node:fs'
 // @ts-expect-error no types
 import Dota2 from 'dota2'
 import { Long } from 'mongodb'
 import retry from 'retry'
-import Steam from 'steam'
+// @ts-expect-error no types exist for steam-user
+import SteamUser from 'steam-user'
 // @ts-expect-error no types
 import steamErrors from 'steam-errors'
 import { hasSteamData } from './hasSteamData'
@@ -14,15 +14,15 @@ import type { Cards, DelayedGames } from './types/index'
 import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails'
 import type { SteamMatchDetails } from './types/SteamMatchDetails'
 import CustomError from './utils/customError'
+import {
+  patchNodeDota2GcForSteamUser,
+  type SteamLogOnDetails,
+  type SteamUserClient,
+} from './utils/dota2SteamUser'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch'
 import { logger } from './utils/logger'
+import { computeReconnectDelay } from './utils/reconnectBackoff'
 import { retryCustom } from './utils/retry'
-
-interface steamUserDetails {
-  account_name: string
-  password: string
-  sha_sentryfile?: Buffer
-}
 
 interface CacheEntry {
   timestamp: number
@@ -31,6 +31,30 @@ interface CacheEntry {
 
 const MAX_CACHE_SIZE = 5000
 const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+
+// Where steam-user persists its CM server list + machine auth token, and where
+// we persist the Steam refresh token across restarts (a Docker volume in prod).
+const VOLUME_DIR = './src/steam/volumes'
+const REFRESH_TOKEN_PATH = `${VOLUME_DIR}/refresh_token`
+
+// A Steam refresh token is a JWT (~200-day lifetime). Decode its `exp` claim so
+// we can skip an obviously-expired token and log in with password instead of
+// burning a reconnect cycle on a guaranteed rejection. Defensive: any parsing
+// failure returns false so steam-user gets to make the final call.
+function isRefreshTokenExpired(token: string): boolean {
+  try {
+    const [, payload] = token.split('.')
+    if (!payload) return false
+    const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as {
+      exp?: number
+    }
+    if (!claims.exp) return false
+    // Treat tokens within 1h of expiry as expired to avoid mid-session lapses.
+    return claims.exp * 1000 < Date.now() + 60 * 60 * 1000
+  } catch {
+    return false
+  }
+}
 
 // Fetches data from MongoDB
 const fetchDataFromMongo = async (match_id: string) => {
@@ -106,28 +130,36 @@ class Dota {
   private interval: NodeJS.Timeout | undefined
   private static instance: Dota
   private cache: Map<number, CacheEntry> = new Map()
-  private steamClient: Steam.SteamClient
-  private steamUser
+  private user: SteamUserClient
   public dota2
+  // steam-user owns CM reconnection (autoRelogin). This backoff only paces
+  // re-logon attempts after a *fatal* logon error (e.g. a rejected refresh
+  // token) so we don't hammer Steam's auth servers and trip a login
+  // rate-limit. See utils/reconnectBackoff.ts and the 2026 auth migration.
+  private reconnectAttempts = 0
+  private reconnectTimer: NodeJS.Timeout | undefined
 
   constructor() {
-    this.steamClient = new Steam.SteamClient()
-    // @ts-expect-error no types exist
-    this.steamUser = new Steam.SteamUser(this.steamClient)
-    this.dota2 = new Dota2.Dota2Client(this.steamClient, false, false)
+    // Drive the connection with the maintained `steam-user` (modern
+    // refresh-token auth + auto-reconnect). Our `dotabod/node-dota2` fork is
+    // hard-wired to node-steam v1's GC interface, so we patch it to talk to
+    // steam-user through a thin shim (see utils/dota2SteamUser.ts). Valve
+    // deprecated node-steam v1's legacy password CM logon in 2026, which is why
+    // the old SteamClient path could no longer log in.
+    this.user = new SteamUser({
+      dataDirectory: VOLUME_DIR,
+      autoRelogin: true,
+      renewRefreshTokens: true,
+    })
+
+    patchNodeDota2GcForSteamUser()
+    this.dota2 = new Dota2.Dota2Client(this.user, false, false)
     this.dota2.setMaxListeners(12)
 
-    const details = this.getUserDetails()
-
-    this.loadServerList()
-    this.loadSentry(details)
-
-    this.setupClientEventHandlers(details)
     this.setupUserEventHandlers()
     this.setupDotaEventHandlers()
 
-    // @ts-expect-error no types exist
-    this.steamClient.connect()
+    this.logOn()
   }
 
   // Check if the Dota2 game coordinator is ready
@@ -137,8 +169,7 @@ class Dota {
 
   // Check if the Steam client is logged on
   private isSteamClientLoggedOn(): boolean {
-    // @ts-expect-error no types exist
-    return this.steamClient.loggedOn
+    return Boolean(this.user.loggedOn)
   }
 
   private checkAccounts = async () => {
@@ -288,90 +319,143 @@ class Dota {
       )
   }
 
-  getUserDetails() {
+  private getCredentials(): { accountName: string; password: string } {
     const usernames = process.env.STEAM_USER?.split('|') ?? []
     const passwords = process.env.STEAM_PASS?.split('|') ?? []
     if (!usernames.length || !passwords.length) {
       throw new Error('STEAM_USER or STEAM_PASS not set')
     }
 
-    return {
-      account_name: usernames[0],
-      password: passwords[0],
+    return { accountName: usernames[0], password: passwords[0] }
+  }
+
+  // Prefer a saved refresh token (modern auth, survives restarts without
+  // re-hitting the auth servers); fall back to username/password, which
+  // steam-user exchanges for a fresh refresh token via the modern flow.
+  private getLogOnDetails(): SteamLogOnDetails {
+    const refreshToken = this.loadRefreshToken()
+    if (refreshToken) {
+      logger.info('[STEAM] Logging on with saved refresh token')
+      return { refreshToken }
+    }
+
+    const { accountName, password } = this.getCredentials()
+    logger.info('[STEAM] Logging on with username + password')
+    return { accountName, password, machineName: 'dotabod' }
+  }
+
+  private logOn() {
+    this.user.logOn(this.getLogOnDetails())
+  }
+
+  private loadRefreshToken(): string | undefined {
+    const token = process.env.STEAM_REFRESH_TOKEN?.trim() || this.readTokenFile()
+    if (token && isRefreshTokenExpired(token)) {
+      logger.info('[STEAM] Saved refresh token expired; using password login')
+      return undefined
+    }
+    return token
+  }
+
+  private readTokenFile(): string | undefined {
+    try {
+      return fs.readFileSync(REFRESH_TOKEN_PATH, 'utf8').trim() || undefined
+    } catch {
+      return undefined
     }
   }
 
-  loadServerList() {
-    const serverPath = './src/steam/volumes/servers.json'
-    if (fs.existsSync(serverPath)) {
-      try {
-        Steam.servers = JSON.parse(fs.readFileSync(serverPath).toString())
-      } catch (_e) {
-        // Ignore
-      }
+  private saveRefreshToken(token: string) {
+    try {
+      fs.mkdirSync(VOLUME_DIR, { recursive: true })
+      fs.writeFileSync(REFRESH_TOKEN_PATH, token)
+      logger.info('[STEAM] Saved refresh token')
+    } catch (e) {
+      logger.error('[STEAM] Failed to persist refresh token', { e })
     }
   }
 
-  loadSentry(details: steamUserDetails) {
-    const sentryPath = './src/steam/volumes/sentry'
-    if (fs.existsSync(sentryPath)) {
-      const sentry = fs.readFileSync(sentryPath)
-      if (sentry.length) details.sha_sentryfile = sentry
+  private clearRefreshToken() {
+    try {
+      fs.rmSync(REFRESH_TOKEN_PATH, { force: true })
+    } catch {
+      // ignore
     }
   }
 
-  setupClientEventHandlers(details: steamUserDetails) {
-    this.steamClient.on('connected', () => {
-      this.steamUser.logOn(details)
-    })
-    this.steamClient.on('logOnResponse', this.handleLogOnResponse.bind(this))
-    this.steamClient.on('loggedOff', this.handleLoggedOff.bind(this))
-    this.steamClient.on('error', this.handleClientError.bind(this))
-    this.steamClient.on('servers', this.handleServerUpdate.bind(this))
+  private setupUserEventHandlers() {
+    this.user.on('loggedOn', this.handleLoggedOn.bind(this))
+    this.user.on('refreshToken', (token) => this.saveRefreshToken(token))
+    this.user.on('disconnected', this.handleDisconnected.bind(this))
+    this.user.on('error', this.handleError.bind(this))
   }
 
-  handleLogOnResponse(logonResp: { eresult: number }) {
-    // @ts-expect-error no types exist
-    if (logonResp.eresult === Steam.EResult.OK) {
-      logger.info('[STEAM] Logged on.')
-      this.dota2.launch()
-    } else {
-      this.logSteamError(logonResp.eresult)
-    }
+  private handleLoggedOn() {
+    this.user.loggedOn = true
+    // Healthy logon — clear any pending backoff so the next fatal error retries
+    // promptly instead of inheriting an escalated delay.
+    this.resetReconnectBackoff()
+    logger.info('[STEAM] Logged on.', { steamID: this.user.steamID?.toString() })
+    this.dota2.launch()
   }
 
-  handleLoggedOff(eresult: number) {
-    // @ts-expect-error no types exist
-    if (this.isProduction()) this.steamClient.connect()
-    logger.info('[STEAM] Logged off from Steam.', { eresult })
-    this.logSteamError(eresult)
-  }
-
-  handleClientError(error: unknown) {
-    logger.info('[STEAM] steam error', { error })
-    // Exit dota2 to stop its internal timers (like _sendClientHello) before reconnecting
+  // Non-fatal drop. steam-user (autoRelogin) reconnects on its own and re-emits
+  // 'loggedOn'; we just stop the GC hello timers until it does.
+  private handleDisconnected(eresult: number, msg?: string) {
+    this.user.loggedOn = false
+    logger.info('[STEAM] Disconnected from Steam.', { eresult, msg })
     this.dota2.exit()
+  }
+
+  // Fatal logon error (autoRelogin won't recover it): log it, stop the GC, then
+  // — in production — re-attempt logon behind exponential backoff so a rejected
+  // token or transient auth failure can't become a login-rate-limit storm.
+  private handleError(error: { eresult?: number; message?: string }) {
+    this.user.loggedOn = false
+    const eresult = error?.eresult
+    logger.info('[STEAM] steam error', { eresult, message: error?.message })
+    if (eresult) this.logSteamError(eresult)
+
+    // Stop dota2's internal timers (like _sendClientHello) before reconnecting.
+    this.dota2.exit()
+
+    // A rejected refresh token surfaces as InvalidPassword; it can't be reused,
+    // so drop it and let the retry fall back to username/password.
+    if (eresult === (SteamUser.EResult?.InvalidPassword ?? 5)) {
+      this.clearRefreshToken()
+    }
+
     if (!this.isProduction()) {
       this.exit().catch((e) => logger.error('err steam error', { e }))
+      return
     }
-    // @ts-expect-error no types exist
-    if (this.isProduction()) this.steamClient.connect()
+    this.scheduleReconnect()
   }
 
-  handleServerUpdate(servers: unknown) {
-    fs.writeFileSync('./src/steam/volumes/servers.json', JSON.stringify(servers))
+  // Re-attempt logon after an exponential, jittered backoff. Coalesced: while a
+  // re-logon is already pending this is a no-op.
+  private scheduleReconnect() {
+    if (!this.isProduction()) return
+    if (this.reconnectTimer) return
+
+    this.reconnectAttempts += 1
+    const delayMs = computeReconnectDelay(this.reconnectAttempts)
+    logger.info('[STEAM] scheduling steam re-logon', {
+      attempt: this.reconnectAttempts,
+      delayMs,
+    })
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = undefined
+      this.logOn()
+    }, delayMs)
   }
 
-  setupUserEventHandlers() {
-    this.steamUser.on('updateMachineAuth', this.handleMachineAuth.bind(this))
-  }
-
-  // @ts-expect-error no types exist
-  handleMachineAuth(sentry, callback) {
-    const hashedSentry = crypto.createHash('sha1').update(sentry.bytes).digest()
-    fs.writeFileSync('./src/steam/volumes/sentry', Uint8Array.from(hashedSentry))
-    logger.info('[STEAM] sentryfile saved')
-    callback({ sha_file: hashedSentry })
+  private resetReconnectBackoff() {
+    this.reconnectAttempts = 0
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = undefined
+    }
   }
 
   setupDotaEventHandlers() {
@@ -634,12 +718,16 @@ class Dota {
   public exit(): Promise<boolean> {
     return new Promise((resolve) => {
       clearInterval(this.interval)
+      this.resetReconnectBackoff()
       this.dota2.exit()
       logger.info('[STEAM] Manually closed dota')
-      // @ts-expect-error disconnect is there
-      this.steamClient.disconnect()
+      try {
+        this.user.logOff()
+      } catch {
+        // logOff throws if we're not currently logged on — safe to ignore.
+      }
       logger.info('[STEAM] Manually closed steam')
-      this.steamClient.removeAllListeners()
+      this.user.removeAllListeners()
       this.dota2.removeAllListeners()
       logger.info('[STEAM] Removed all listeners from dota and steam')
       resolve(true)

@@ -5,7 +5,7 @@ import { DBSettings } from '../../settings'
 import { gameMedals } from '../../steam/medals'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
-import { clippingDisabledNote, withClippingNote } from '../lib/clippingNote'
+import { clippingDisabledNote } from '../lib/clippingNote'
 
 commandHandler.registerCommand('gm', {
   aliases: ['medals', 'ranks'],
@@ -31,18 +31,21 @@ commandHandler.registerCommand('gm', {
 
     const roster = await new MatchDataService(client).resolveRoster()
     const note = clippingDisabledNote(client, roster.players)
+    // No clip/vision data to read at 8500+ with auto-clipping off — the note IS
+    // the whole reply; don't prepend the all-"Unknown" medal dump.
+    if (note) {
+      chatClient.sayWithoutSuggestion(message.channel.name, note, message.user.messageId)
+      return
+    }
 
     gameMedals(client.locale, message.channel.client.gsi?.map?.matchid, roster.players)
       .then((desc) => {
-        chatClient.say(message.channel.name, withClippingNote(desc, note), message.user.messageId)
+        chatClient.say(message.channel.name, desc, message.user.messageId)
       })
       .catch((e) => {
         chatClient.say(
           message.channel.name,
-          withClippingNote(
-            e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-            note,
-          ),
+          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
           message.user.messageId,
         )
       })

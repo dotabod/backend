@@ -2,6 +2,21 @@ import { EventEmitter } from 'node:events'
 import { logger } from '@dotabod/shared-utils'
 import WebSocket from 'ws'
 
+// Cap the reconnect backoff factor. The generic branch used to grow this
+// unbounded; combined with leaked sockets that pushed it into the hundreds
+// (delays of tens of seconds) while thousands of instances hammered Twitch in
+// aggregate and got the bot 429'd (connection storm, 2026-06-19).
+const MAX_BACKOFF = 10
+// When Twitch rate-limits the websocket upgrade (HTTP 429) we must back off hard
+// rather than immediately retrying, or we feed the very storm that caused it.
+const RATE_LIMIT_COOLDOWN_MS = 30_000
+
+// Spread reconnects across 50%–100% of the base delay so many sockets (or many
+// processes) can't reconnect in lockstep and thunder the endpoint.
+function withJitter(baseMs: number): number {
+  return Math.round(baseMs * (0.5 + Math.random() * 0.5))
+}
+
 type EventsubSocketOptions = {
   url?: string
   connect?: boolean
@@ -54,7 +69,15 @@ export class EventsubSocket extends EventEmitter {
     is_reconnecting?: boolean
   }
   private silenceHandler?: NodeJS.Timeout
+  private reconnectTimer?: NodeJS.Timeout
   private silenceTime = 10
+  // Once disposed, every callback short-circuits and no new connect is made, so
+  // a replaced socket can't keep reconnecting, re-registering the shard, or
+  // writing the shared eventsubConnected flag in the background.
+  private disposed = false
+  // Set when the last upgrade failed with HTTP 429 so handleClose can apply the
+  // rate-limit cooldown instead of an immediate reconnect.
+  private got429 = false
 
   constructor({
     url = 'wss://eventsub.wss.twitch.tv/ws',
@@ -73,6 +96,7 @@ export class EventsubSocket extends EventEmitter {
   }
 
   private connect(url = this.mainUrl, isReconnect = false): void {
+    if (this.disposed) return
     this.counter++
     this.eventsub = new WebSocket(url) as WebSocket & { counter?: number }
     this.eventsub.counter = this.counter
@@ -84,7 +108,9 @@ export class EventsubSocket extends EventEmitter {
   }
 
   private handleOpen(): void {
+    if (this.disposed) return
     this.backoff = 0
+    this.got429 = false
     logger.info('[EVENTSUB] WebSocket open', {
       counter: this.eventsub.counter,
       url: this.mainUrl,
@@ -92,6 +118,7 @@ export class EventsubSocket extends EventEmitter {
   }
 
   private handleClose(close: WebSocket.CloseEvent, _isReconnect: boolean): void {
+    if (this.disposed) return
     const reasonText = this.closeCodes[close.code] || 'Unknown'
     const isStale = close.target !== this.eventsub
     const wsId = this.eventsub.twitch_websocket_id
@@ -119,15 +146,37 @@ export class EventsubSocket extends EventEmitter {
       counter: this.eventsub.counter,
     })
 
+    // A socket told to stay down (e.g. after session_silenced — the conduitSetup
+    // backstop owns recovery from there) must not reconnect itself, or we end up
+    // with two live sockets fighting over the single conduit shard.
+    if (this.disableAutoReconnect) {
+      logger.warn('[EVENTSUB] Auto-reconnect disabled — staying down', { code: close.code })
+      return
+    }
+
+    this.backoff = Math.min(this.backoff + 1, MAX_BACKOFF)
+
+    // HTTP 429 on the upgrade surfaces as an error then a 1006 close. Back off
+    // hard so a single socket can't pile onto Twitch's rate limit.
+    if (this.got429) {
+      this.got429 = false
+      const delay = withJitter(RATE_LIMIT_COOLDOWN_MS)
+      logger.warn('[EVENTSUB] Reconnecting after 429 (rate limited)', {
+        delayMs: delay,
+        twitchWsId: wsId,
+      })
+      this.scheduleReconnect(delay)
+      return
+    }
+
     if (close.code === 4003) {
-      // Use exponential backoff for 4003 error (connection unused)
-      this.backoff = Math.min(this.backoff + 1, 5) // Cap backoff factor at 5
-      const reconnectDelay = this.backoff * this.backoffStack
+      // Connection unused — Twitch closes a session with no active shard.
+      const delay = withJitter(this.backoff * this.backoffStack)
       logger.info('[EVENTSUB] Reconnecting after 4003 (connection unused)', {
         backoff: this.backoff,
-        delayMs: reconnectDelay,
+        delayMs: delay,
       })
-      setTimeout(() => this.connect(this.mainUrl, true), reconnectDelay)
+      this.scheduleReconnect(delay)
       return
     }
 
@@ -136,37 +185,47 @@ export class EventsubSocket extends EventEmitter {
       // session_reconnect handed off, in which case the stale check above
       // already skipped us. Reaching this branch means it's the *current*
       // socket — we must reconnect or we'll be stuck silent.
+      const delay = withJitter(this.backoff * this.backoffStack)
       logger.warn(
         '[EVENTSUB] 4004 on live socket — reconnect grace expired without handoff, retrying',
-        { backoff: this.backoff, twitchWsId: wsId },
+        { backoff: this.backoff, delayMs: delay, twitchWsId: wsId },
       )
-      this.backoff++
-      setTimeout(() => this.connect(this.mainUrl, true), this.backoff * this.backoffStack)
+      this.scheduleReconnect(delay)
       return
     }
 
-    if (!this.disableAutoReconnect) {
-      this.backoff++
-      logger.info('[EVENTSUB] Scheduling reconnect', {
-        code: close.code,
-        backoff: this.backoff,
-        delayMs: this.backoff * this.backoffStack,
-      })
-      setTimeout(() => this.connect(this.mainUrl, true), this.backoff * this.backoffStack)
-    } else {
-      logger.warn('[EVENTSUB] Auto-reconnect disabled — staying down', { code: close.code })
-    }
+    const delay = withJitter(this.backoff * this.backoffStack)
+    logger.info('[EVENTSUB] Scheduling reconnect', {
+      code: close.code,
+      backoff: this.backoff,
+      delayMs: delay,
+    })
+    this.scheduleReconnect(delay)
+  }
+
+  // Single reconnect path: only ever one pending timer per socket, and it's
+  // cleared on dispose so a replaced socket can't resurrect itself.
+  private scheduleReconnect(delayMs: number): void {
+    clearTimeout(this.reconnectTimer)
+    this.reconnectTimer = setTimeout(() => this.connect(this.mainUrl, true), delayMs)
   }
 
   private handleError(err: WebSocket.ErrorEvent): void {
+    if (this.disposed) return
+    // ws surfaces a rejected upgrade as "Unexpected server response: 429".
+    // Flag it so the following close applies the rate-limit cooldown.
+    const rateLimited = typeof err.message === 'string' && err.message.includes('429')
+    if (rateLimited) this.got429 = true
     logger.error('[EVENTSUB] WebSocket error', {
       message: err.message,
       type: err.type,
       counter: this.eventsub.counter,
+      rateLimited,
     })
   }
 
   private handleMessage(message: WebSocket.MessageEvent): void {
+    if (this.disposed) return
     const data = JSON.parse(message.data as string)
     const { metadata, payload } = data
     const { message_type } = metadata
@@ -244,6 +303,7 @@ export class EventsubSocket extends EventEmitter {
   }
 
   private silence(keepalive_timeout_seconds?: number): void {
+    if (this.disposed) return
     if (keepalive_timeout_seconds) {
       this.silenceTime = keepalive_timeout_seconds + 1
     }
@@ -252,6 +312,7 @@ export class EventsubSocket extends EventEmitter {
     eventsubConnected = true
     clearTimeout(this.silenceHandler)
     this.silenceHandler = setTimeout(() => {
+      if (this.disposed) return
       eventsubConnected = false
       logger.warn('[EVENTSUB] session_silenced — no keepalive in window', {
         silenceTimeSec: this.silenceTime,
@@ -260,6 +321,10 @@ export class EventsubSocket extends EventEmitter {
         counter: this.eventsub.counter,
         willClose: this.silenceReconnect,
       })
+      // The conduitSetup session_silenced backstop owns recovery (a single
+      // guarded re-init that disposes this socket). Disable self-reconnect so
+      // closing below doesn't also spin up a competing socket.
+      this.disableAutoReconnect = true
       this.emit('session_silenced')
       if (this.silenceReconnect) {
         this.close()
@@ -273,5 +338,45 @@ export class EventsubSocket extends EventEmitter {
 
   public close(): void {
     this.eventsub.close()
+  }
+
+  public get isDisposed(): boolean {
+    return this.disposed
+  }
+
+  /**
+   * Permanently retire this socket: stop reconnecting, drop every timer and
+   * listener, and close the underlying websocket. Idempotent. Call this before
+   * replacing a socket so retired instances can't keep reconnecting,
+   * re-registering the conduit shard, or writing the shared connection flag in
+   * the background — the leak that produced the 2026-06-19 connection storm.
+   */
+  public dispose(): void {
+    if (this.disposed) return
+    this.disposed = true
+    this.disableAutoReconnect = true
+    clearTimeout(this.silenceHandler)
+    clearTimeout(this.reconnectTimer)
+    const ws = this.eventsub
+    try {
+      ws?.removeAllListeners()
+      // Closing a still-CONNECTING socket makes `ws` abort the handshake and emit
+      // an 'error' on a LATER tick (process.nextTick) — after this try/catch has
+      // already returned, so it can't be caught here. With every listener removed
+      // that is an unhandled 'error' event, which crashes the whole process (no
+      // uncaughtException handler). The leaked sockets we dispose during a storm
+      // are exactly the ones stuck reconnect-looping in CONNECTING, so keep a noop
+      // error sink attached through close() to absorb the aborted-handshake error.
+      ws?.addEventListener('error', () => {})
+      if (ws && ws.readyState !== WebSocket.CLOSED && ws.readyState !== WebSocket.CLOSING) {
+        ws.close()
+      }
+    } catch (error) {
+      logger.warn('[EVENTSUB] Error while disposing socket', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+    this.removeAllListeners()
+    logger.info('[EVENTSUB] Socket disposed', { counter: ws?.counter })
   }
 }

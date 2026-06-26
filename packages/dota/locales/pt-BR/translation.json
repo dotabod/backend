@@ -70,6 +70,7 @@
     "noTp": "{{channel}} cadê seu tp? {{emote}}",
     "pause": "{{emote}} Quem pausou o jogo?",
     "smoked": "{{emote}} {{- heroName}} acabou de usar fumaça!",
+    "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}} bom trabalho comprando um tp FINALMENTE depois de $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Graças a essa morte você finalmente conseguiu um tp. Levou apenas $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
@@ -114,8 +115,10 @@
     "overlay_other": "{{count}} streamers usando o overlay"
   },
   "cosmetics": {
+    "captured_one": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetic saved → {{- url}}",
+    "captured_many": "",
+    "captured_other": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
-    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
     "list_one": "",
     "list_many": "",
     "list_other": ""
@@ -198,6 +201,11 @@
   "muted": "Não vou mais conversar automaticamente nos eventos do jogo, mas continuarei respondendo aos comandos. Digite !unmute para desfazer",
   "neutralItems": {
     "tierAvailable": "Fichas neutras de classe {{tier}} estão disponíveis agora! Hora de checar a floresta PogChamp"
+  },
+  "newFeatures": {
+    "announce": {
+      "cosmetics": "🆕 New dotabod feature — your hero's cosmetic set now posts in chat when you pick (or type !set). Manage or opt out of new features → {{- url}}"
+    }
   },
   "noAghs": "Não há aprimoramento de cetro de Aghanim para {{- heroName}}.",
   "noHero": "Nenhum herói encontrado",

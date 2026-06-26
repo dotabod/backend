@@ -85,6 +85,14 @@ export const chatClient = {
       twitchChat.emit('say', user?.Account?.providerAccountId, finalText, reply_parent_message_id)
     }
   },
+  // Like `say`, but drops any pending command-suggestion suffix first. For
+  // "nothing to show" replies (e.g. the auto-clipping-disabled note) where a
+  // trailing "Also try !x" would point viewers at an equally-dataless sibling.
+  sayWithoutSuggestion: (channel: string, text: string, reply_parent_message_id?: string): void => {
+    const ctx = suggestionContext.getStore()
+    if (ctx) ctx.suffix = null
+    chatClient.say(channel, text, reply_parent_message_id)
+  },
   whisper: (channel: string, text: string | undefined) => {
     whisperQueue.push({ channel, text: text || 'Empty whisper message, monka' })
     void processQueue()

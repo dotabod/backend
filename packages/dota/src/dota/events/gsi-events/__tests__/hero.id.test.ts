@@ -1,8 +1,10 @@
-// The hero:id handler snapshots the played hero's cosmetics to the DB on every pick/swap,
-// then announces the captured set in chat each match. Whether it announces follows the
-// new-feature gate: an explicit cosmeticsAnnounce wins, else the autoOptInNewFeatures master
-// (default on). The one-time "this feature is new" notice lives elsewhere now
-// (announceFeatures.ts), so this test only covers the per-match set announce.
+// The hero:id handler hands off to announceCapturedCosmetics: it snapshots the played hero's
+// cosmetics and announces the captured set in chat — but only once the hero is publicly visible
+// (strategy phase onward), so a pick is never tipped to stream snipers. Whether it announces
+// follows the new-feature gate: an explicit cosmeticsAnnounce wins, else the autoOptInNewFeatures
+// master (default on). The one-time "this feature is new" notice lives elsewhere
+// (announceFeatures.ts). These tests drive the handler directly, bypassing the stream_online gate
+// in EventHandler, so they also exercise the anti-snipe state gate end-to-end.
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock, initTestI18n } from '../../../../__tests__/sharedMocks'
 
@@ -63,9 +65,21 @@ const INVOKER_ID = 74
 type Setting = { key: string; value: unknown }
 
 function makeDotaClient(
-  overrides: { stream_online?: boolean; matchid?: string; settings?: Setting[] } = {},
+  overrides: {
+    stream_online?: boolean
+    matchid?: string
+    settings?: Setting[]
+    gameState?: string
+  } = {},
 ): { client: any } {
-  const { stream_online = true, matchid = '777', settings = [] } = overrides
+  const {
+    stream_online = true,
+    matchid = '777',
+    settings = [],
+    // Default to a state where every hero is locked in and visible, so the anti-snipe gate
+    // lets the announce through. Hero-selection cases pass an unsafe state explicitly.
+    gameState = 'DOTA_GAMERULES_STATE_STRATEGY_TIME',
+  } = overrides
   return {
     client: {
       name: 'streamer',
@@ -76,7 +90,7 @@ function makeDotaClient(
       settings,
       gsi: {
         player: { activity: 'playing' },
-        map: { matchid },
+        map: { matchid, game_state: gameState },
         hero: { id: INVOKER_ID },
       },
     },
@@ -103,7 +117,7 @@ describe('hero:id — cosmetic set announce', () => {
     expect(captureMock).toHaveBeenCalledTimes(1)
     expect(sayMock).toHaveBeenCalledTimes(1)
     const [cosmetics] = messages()
-    expect(cosmetics).toContain('Invoker set captured!')
+    expect(cosmetics).toContain('Playing Invoker Pog new card unlocked')
     expect(cosmetics).toContain('4 cosmetics')
     expect(cosmetics).toContain('dotabod.com/streamer/set')
     expect(redisStore[`${TOKEN}:cosmeticsAnnounced`]).toBe(`777:${INVOKER_ID}`)
@@ -146,7 +160,7 @@ describe('hero:id — cosmetic set announce', () => {
       INVOKER_ID,
     )
 
-    expect(messages().some((m) => m.includes('Invoker set captured!'))).toBe(true)
+    expect(messages().some((m) => m.includes('Playing Invoker Pog new card unlocked'))).toBe(true)
   })
 
   it('stays silent when explicitly disabled even with the master toggle on', async () => {
@@ -159,10 +173,22 @@ describe('hero:id — cosmetic set announce', () => {
     expect(sayMock).not.toHaveBeenCalled()
   })
 
-  it('captures but stays silent while offline', async () => {
+  it('skips capture and stays silent while offline (live-only feature)', async () => {
     await registeredHandler!(makeDotaClient({ stream_online: false }), INVOKER_ID)
 
-    expect(captureMock).toHaveBeenCalledTimes(1)
+    expect(captureMock).not.toHaveBeenCalled()
+    expect(sayMock).not.toHaveBeenCalled()
+  })
+
+  it('holds the reveal during hero selection so it never tips stream snipers', async () => {
+    await registeredHandler!(
+      makeDotaClient({ gameState: 'DOTA_GAMERULES_STATE_HERO_SELECTION' }),
+      INVOKER_ID,
+    )
+
+    // Nothing leaks before strategy phase — no snapshot, no chat. The strategy-time
+    // map:game_state trigger is what releases the announcement once everyone's locked in.
+    expect(captureMock).not.toHaveBeenCalled()
     expect(sayMock).not.toHaveBeenCalled()
   })
 

@@ -63,9 +63,6 @@ const defaultChatters = {
   smoke: {
     enabled: true,
   },
-  smokeActivated: {
-    enabled: true,
-  },
   passiveDeath: {
     enabled: true,
   },
@@ -138,6 +135,9 @@ export const defaultSettingsStructure = {
   // New-feature toggle for cosmetic-set announcements. null = follow
   // autoOptInNewFeatures; true/false = explicit streamer choice (always wins).
   cosmeticsAnnounce: null as boolean | null,
+  // New-feature toggle for the "team smoked without you" FOMO roast. Same tri-state
+  // as cosmeticsAnnounce: null = follow autoOptInNewFeatures; true/false = explicit choice.
+  smokeActivated: null as boolean | null,
   customMmr: '[currentmmr] | [currentrank] | Next rank at [nextmmr] [wins]',
   'minimap-blocker': true,
   minimapRight: false,

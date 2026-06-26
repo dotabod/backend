@@ -79,6 +79,7 @@
     "noTp": "{{channel}}أين الـ TP الخاص بك؟{{emote}}",
     "pause": "{{emote}}من أوقف اللاعبة مؤقتا؟",
     "smoked": "{{emote}}{{- heroName}} استخدم سموك",
+    "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}}عمل رائع احصل على tp  بعد$t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "شكرا على هذه النهاية اخيرا لقد حصلت على tp، واخذت فقط$t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
@@ -129,8 +130,13 @@
     "overlay_other": "{{count}} streamers using the overlay"
   },
   "cosmetics": {
+    "captured_zero": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
+    "captured_one": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetic saved → {{- url}}",
+    "captured_two": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
+    "captured_few": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
+    "captured_many": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
+    "captured_other": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
-    "list": "{{- heroName}} has {{count}} equipped cosmetics → {{- url}}",
     "list_zero": "",
     "list_one": "",
     "list_two": "",
@@ -239,6 +245,11 @@
   "muted": "Will no longer auto chat on game events, but will still respond to commands. Type !unmute to undo",
   "neutralItems": {
     "tierAvailable": "Tier {{tier}} neutral items are now available! Time to check the jungle PogChamp"
+  },
+  "newFeatures": {
+    "announce": {
+      "cosmetics": "🆕 New dotabod feature — your hero's cosmetic set now posts in chat when you pick (or type !set). Manage or opt out of new features → {{- url}}"
+    }
   },
   "noAghs": "{{- heroName}} has no aghs upgrade.",
   "noHero": "No hero found",

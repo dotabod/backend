@@ -604,7 +604,7 @@ describe('event:generic_event - smoke activated', () => {
     expect(gsiState.chatSayCalls[0].message).toContain('without you')
   })
 
-  it('announces but does not roast when the streamer is in the smoke', async () => {
+  it('stays silent when the streamer is in the smoke (hero:smoked announces instead)', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
     handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: true, alive: true }
@@ -615,11 +615,12 @@ describe('event:generic_event - smoke activated', () => {
     events.emit('event:generic_event', smokeEvent(0), handler.getToken())
     await flushAsync()
 
-    expect(gsiState.chatSayCalls).toHaveLength(1)
-    expect(gsiState.chatSayCalls[0].message).toContain('Smoke of Deceit')
+    // The "<hero> is smoked!" callout is owned by the hero:smoked handler; this handler only
+    // roasts when the streamer is left behind, so it says nothing for an in-smoke streamer.
+    expect(gsiState.chatSayCalls).toHaveLength(0)
   })
 
-  it('does not roast when the streamer cast the smoke themselves', async () => {
+  it('stays silent when the streamer cast the smoke themselves', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
     handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: false, alive: true }
@@ -630,25 +631,24 @@ describe('event:generic_event - smoke activated', () => {
     events.emit('event:generic_event', smokeEvent(0), handler.getToken())
     await flushAsync()
 
-    expect(gsiState.chatSayCalls).toHaveLength(1)
-    expect(gsiState.chatSayCalls[0].message).toContain('Smoke of Deceit')
+    // A self-caster is in the smoke by definition — hero:smoked covers it; no roast here.
+    expect(gsiState.chatSayCalls).toHaveLength(0)
   })
 
-  it('announces (does not roast) when the streamer is dead', async () => {
+  it('stays silent when the streamer is dead (not "caught out")', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
     handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: false, alive: false }
     registerHandler(handler)
-    // Teammate smoked while the streamer is dead — dead isn't "caught out", so announce.
+    // Teammate smoked while the streamer is dead — a dead player wasn't left behind and
+    // never gets the buff, so neither path has anything to say.
     gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
 
     events.emit('event:generic_event', smokeEvent(0), handler.getToken())
     await flushAsync()
 
-    expect(gsiState.chatSayCalls).toHaveLength(1)
-    expect(gsiState.chatSayCalls[0].message).toContain('Smoke of Deceit')
-    expect(gsiState.chatSayCalls[0].message).not.toContain('without you')
+    expect(gsiState.chatSayCalls).toHaveLength(0)
   })
 
   it('does not chat when the activator is on the enemy team', async () => {
@@ -663,6 +663,28 @@ describe('event:generic_event - smoke activated', () => {
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(0)
+  })
+
+  it('does not double-post when a teammate smokes the streamer (hero:smoked + team event)', async () => {
+    const handler = makeGsiHandler()
+    handler.client.gsi.player.team_name = 'radiant'
+    handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: true, alive: true }
+    registerHandler(handler)
+    gsiState.redisGet[`${handler.getToken()}:playingHero`] = 'npc_dota_hero_lina'
+    // Teammate in slot 0 popped it; the streamer (slot 1) is in the smoke.
+    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
+
+    // The same activation reaches both paths: the hero buff flip and the team chat event.
+    events.emit('hero:smoked', true, handler.getToken())
+    events.emit('event:generic_event', smokeEvent(0), handler.getToken())
+    await flushAsync()
+
+    // Exactly one message — the "is smoked!" callout — and no activator/FOMO line.
+    expect(gsiState.chatSayCalls).toHaveLength(1)
+    expect(gsiState.chatSayCalls[0].message).toContain('is smoked')
+    expect(gsiState.chatSayCalls[0].message).not.toContain('Smoke of Deceit')
+    expect(gsiState.chatSayCalls[0].message).not.toContain('without you')
   })
 })
 
