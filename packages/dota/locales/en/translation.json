@@ -68,7 +68,6 @@
     "midas": "{{emote}} Use your midas",
     "noTp": "{{channel}} where's your tp {{emote}}",
     "pause": "{{emote}} Who paused the game?",
-    "smokeWithoutYou": "team smoking without you {{emote}}",
     "smoked": "{{emote}} {{- heroName}} is smoked!",
     "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}} nice job finally getting a tp after $t(seconds, {\"count\": {{seconds}} }) {{emote}}",

@@ -5,13 +5,13 @@
   },
   "aegis": {
     "denied": "{{- heroName}} уничтожает аегис {{emote}}",
-    "deniedUnknown": "Aegis denied {{emote}}",
+    "deniedUnknown": "Aegis уничножен {{emote}}",
     "expired": "Аегис у {{- heroName}} закончился {{emote}}",
-    "expiredUnknown": "Aegis expired {{emote}}",
+    "expiredUnknown": "Aegis закончился {{emote}}",
     "pickup": "{{- heroName}} подбирает аегис!",
-    "pickupUnknown": "Aegis picked up!",
+    "pickupUnknown": "Aegis поднят!",
     "snatched": "{{- heroName}} крадёт аегис {{emote}}",
-    "snatchedUnknown": "Aegis snatched PepeLaugh"
+    "snatchedUnknown": "Aegis украден PepeLaugh"
   },
   "aghs": "{{- heroName}} аганим: {{- title}} · {{- description}}",
   "altAccount": "{{emote}} обнаружен альтернативный аккаунт {{emote2}}",
@@ -39,7 +39,7 @@
     "notScored": "Матч не засчитан {{emote}} Рейтинг для матча {{matchId}} не будет изменен.",
     "noUnresolvedMatches": "Не найдено незавершённых матчей {{emote}}",
     "open": "Ставки открыты {{emote}}",
-    "recentMatches": "Recent matches: {{- matchList}} {{emote}}",
+    "recentMatches": "Недавние матчи: {{- matchList}} {{emote}}",
     "remade": "Обменялись героями {{emote}} Ставка на {{- oldHeroName}} отменена и новая на {{- newHeroName}} открыта {{emote2}}",
     "retroactiveAlreadyMatches": "",
     "retroactiveAlreadyMatches_lost": "Match {{matchId}} is already marked as LOST {{emote}}",
@@ -72,17 +72,15 @@
     "midas": "{{emote}} Используй свой Midas",
     "noTp": "{{channel}} где твое ТП? {{emote}}",
     "pause": "{{emote}} Кто поставил паузу?",
-    "smokeActivated": "{{- heroName}} activated Smoke of Deceit! {{emote}}",
-    "smokeActivatedUnknown": "{{emote}} An ally activated Smoke of Deceit!",
     "smoked": "{{emote}} {{- heroName}} в смоках!",
-    "smokeWithoutYou": "team smoking without you {{emote}}",
+    "smokeWithoutYou": "Команда в смоках без тебя {{emote}}",
     "tpFound": "{{channel}} молодец, наконец-то купил ТП спустя $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Спасибо смерти за данное тебе ТП. Это заняло всего лишь $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
   "chattersRank": "ранг @{{username}} {{rank}}",
   "chattersRankUnknown": "ранг @{{username}} неизвестен. Верифицируйте Dotabod, чтобы получить свой ранг! {{- url}}",
   "chatTranslation": {
-    "legacyHeroLabel": "Hero {{playerId}}",
+    "legacyHeroLabel": "Герой {{playerId}}",
     "message": "{{- message}} (translation of in-game chat)",
     "playerLabel": "Player {{playerId}}",
     "speakerLabel": "{{- heroName}} (P{{playerId}})",
@@ -122,10 +120,10 @@
     "overlay_other": "{{count}} стримеров использует оверлей"
   },
   "cosmetics": {
-    "captured_one": "{{- heroName}} set captured! {{count}} cosmetic → {{- url}}",
-    "captured_few": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
-    "captured_many": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
-    "captured_other": "{{- heroName}} set captured! {{count}} cosmetics → {{- url}}",
+    "captured_one": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetic saved → {{- url}}",
+    "captured_few": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
+    "captured_many": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
+    "captured_other": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
     "empty": "{{- heroName}} has no cosmetics equipped",
     "list_one": "",
     "list_few": "",
@@ -226,11 +224,11 @@
       "cosmetics": "🆕 New dotabod feature — your hero's cosmetic set now posts in chat when you pick (or type !set). Manage or opt out of new features → {{- url}}"
     }
   },
-  "noAghs": "У {{- heroName}} нет улучшения аганима.",
+  "noAghs": "{{- heroName}} не имеет аганима.",
   "noHero": "Герой не найден",
   "noLastMatch": "Не найдена последняя игра {{emote}}",
   "noNotable": "Нет отмеченных игроков",
-  "noShard": "У {{- heroName}} нет улучшения шарда.",
+  "noShard": "{{- heroName}} не имеет шард.",
   "notablePlayersNoHeroes": "heroes not found",
   "notablePlayersWaitingHeroes": "waiting on heroes",
   "notLive": "Стрим офлайн {{emote}} . На самом деле онлайн? Модераторы, напишите !online",
@@ -315,16 +313,16 @@
   "streamersInMatchAnnounce_few": "By the way, {{count}} other Dotabod streamers are in this match",
   "streamersInMatchAnnounce_many": "By the way, {{count}} other Dotabod streamers are in this match",
   "streamersInMatchAnnounce_other": "By the way, {{count}} other Dotabod streamers are in this match",
-  "streamersSuffix_one": "{{count}} other streamer in match",
-  "streamersSuffix_few": "{{count}} other streamers in match",
-  "streamersSuffix_many": "{{count}} other streamers in match",
-  "streamersSuffix_other": "{{count}} other streamers in match",
+  "streamersSuffix_one": "{{count}} другой стример в матче",
+  "streamersSuffix_few": "{{count}} других стримеров в матче",
+  "streamersSuffix_many": "{{count}} других стримеров в матче",
+  "streamersSuffix_other": "{{count}} других стримеров в матче",
   "subscriptionRequired": "✨ Разблокируйте эту команду и другие функции с Dotabod Pro. Посетите dotabod.com, чтобы подписаться или dotabod.com/{{channel}}/gift чтобы подарить стримеру!",
   "tip": {
     "from": "Благодарность от {{- heroName}} {{emote}}",
-    "fromUnknown": "We got tipped {{emote}}",
+    "fromUnknown": "Нас поблагодарили {{emote}}",
     "to": "Мы поблагодарили {{- heroName}} {{emote}}",
-    "toUnknown": "We tipping someone {{emote}}"
+    "toUnknown": "Мы поблагодарили кого-то {{emote}}"
   },
   "today": {
     "noGames": "No games played yet today",
