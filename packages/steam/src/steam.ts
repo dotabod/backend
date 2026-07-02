@@ -31,6 +31,11 @@ interface CacheEntry {
 
 const MAX_CACHE_SIZE = 5000
 const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+// Grace period after a `disconnected` event for steam-user's autoRelogin to
+// re-emit `loggedOn` on its own before we force a re-logon ourselves. A healthy
+// autoRelogin recovers in ~2s; this is generous headroom without leaving the GC
+// dark for long. See handleDisconnected / armReloginWatchdog.
+const RELOGIN_GRACE_MS = 60_000
 
 // Where steam-user persists its CM server list + machine auth token, and where
 // we persist the Steam refresh token across restarts (a Docker volume in prod).
@@ -138,6 +143,11 @@ class Dota {
   // rate-limit. See utils/reconnectBackoff.ts and the 2026 auth migration.
   private reconnectAttempts = 0
   private reconnectTimer: NodeJS.Timeout | undefined
+  // Fallback for when steam-user's autoRelogin silently stalls after a
+  // `disconnected` event (observed 2026-07-02: a NoConnection drop that never
+  // recovered for ~2h — no `loggedOn`, no `error` — leaving the GC dead until a
+  // manual restart). Armed on disconnect, cleared on `loggedOn`.
+  private disconnectWatchdog: NodeJS.Timeout | undefined
 
   constructor() {
     // Drive the connection with the maintained `steam-user` (modern
@@ -392,19 +402,51 @@ class Dota {
 
   private handleLoggedOn() {
     this.user.loggedOn = true
-    // Healthy logon — clear any pending backoff so the next fatal error retries
-    // promptly instead of inheriting an escalated delay.
+    // Healthy logon — clear any pending backoff and the relogin watchdog so the
+    // next fatal error retries promptly instead of inheriting an escalated delay.
     this.resetReconnectBackoff()
+    this.clearReloginWatchdog()
     logger.info('[STEAM] Logged on.', { steamID: this.user.steamID?.toString() })
     this.dota2.launch()
   }
 
   // Non-fatal drop. steam-user (autoRelogin) reconnects on its own and re-emits
-  // 'loggedOn'; we just stop the GC hello timers until it does.
+  // 'loggedOn'; we just stop the GC hello timers until it does — but we also arm
+  // a watchdog because autoRelogin can silently stall (see armReloginWatchdog).
   private handleDisconnected(eresult: number, msg?: string) {
     this.user.loggedOn = false
     logger.info('[STEAM] Disconnected from Steam.', { eresult, msg })
     this.dota2.exit()
+    this.armReloginWatchdog()
+  }
+
+  // steam-user's autoRelogin usually re-emits `loggedOn` within seconds of a
+  // `disconnected`, and unlike a fatal `error` a plain disconnect schedules no
+  // reconnect of our own. But autoRelogin can hang mid-handshake and emit
+  // neither `loggedOn` nor `error`, wedging the account offline indefinitely. So
+  // if we're still not logged on after the grace window, drive the re-logon
+  // ourselves — via the same coalesced, backed-off path as a fatal error, so it
+  // can never turn into a login-rate-limit storm.
+  private armReloginWatchdog() {
+    if (!this.isProduction()) return
+    // A reconnect is already pending (fatal-error path) or a watchdog is already
+    // ticking — either will recover us; don't stack timers.
+    if (this.reconnectTimer || this.disconnectWatchdog) return
+    this.disconnectWatchdog = setTimeout(() => {
+      this.disconnectWatchdog = undefined
+      if (this.user.loggedOn) return // autoRelogin already recovered us
+      logger.warn('[STEAM] autoRelogin stalled; forcing re-logon', {
+        graceMs: RELOGIN_GRACE_MS,
+      })
+      this.scheduleReconnect()
+    }, RELOGIN_GRACE_MS)
+  }
+
+  private clearReloginWatchdog() {
+    if (this.disconnectWatchdog) {
+      clearTimeout(this.disconnectWatchdog)
+      this.disconnectWatchdog = undefined
+    }
   }
 
   // Fatal logon error (autoRelogin won't recover it): log it, stop the GC, then
@@ -415,6 +457,10 @@ class Dota {
     const eresult = error?.eresult
     logger.info('[STEAM] steam error', { eresult, message: error?.message })
     if (eresult) this.logSteamError(eresult)
+
+    // The error path owns recovery via scheduleReconnect below, so stand down any
+    // disconnect watchdog to avoid a redundant, racing re-logon attempt.
+    this.clearReloginWatchdog()
 
     // Stop dota2's internal timers (like _sendClientHello) before reconnecting.
     this.dota2.exit()
