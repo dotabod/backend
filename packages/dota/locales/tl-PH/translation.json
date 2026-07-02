@@ -64,8 +64,8 @@
     "midas": "{{emote}} Midas midas din",
     "noTp": "{{channel}} nasan tp mo {{emote}}",
     "pause": "{{emote}} Sino nag pause ng laro?",
-    "smokeWithoutYou": "team smoking without you {{emote}}",
     "smoked": "{{emote}} naka-smoke si {{- heroName}}!",
+    "smokeWithoutYou": "team smoking without you {{emote}}",
     "tpFound": "{{channel}} nice job sa wakas ng ka tp ka rin pagkatapos ng $t(seconds, {\"count\": {{seconds}} }) {{emote}}",
     "tpFromDeath": "Buti namatay ka nagka-tp ka rin sa wakas. Umabot lang ng $t(seconds, {\"count\": {{seconds}} }) {{emote}}"
   },
