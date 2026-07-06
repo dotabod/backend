@@ -67,8 +67,8 @@ importers:
         specifier: ^1.19.1
         version: 1.27.0
       dotaconstants:
-        specifier: github:dotabod/dotaconstants#bb2002a0cc8a07e47ef15964f84829de7441eb0d
-        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/bb2002a0cc8a07e47ef15964f84829de7441eb0d
+        specifier: github:dotabod/dotaconstants#98113e6f57f4b04d3c337401480aabad20470199
+        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/98113e6f57f4b04d3c337401480aabad20470199
       express:
         specifier: ^4.21.2
         version: 4.22.2
@@ -1667,9 +1667,9 @@ packages:
     resolution: {gitHosted: true, integrity: sha512-iWo37QWJZXV7nfBKVe1D1OCs10ltkSR67GN2DTVz+PDH0+apWbXajSfEfuK5LYY6sU7U64/LomN+Yer15fo+Jw==, tarball: https://codeload.github.com/dotabod/node-dota2/tar.gz/4a1a09537d5bead430c36427b9a50b770abe56fc}
     version: 7.0.3
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/bb2002a0cc8a07e47ef15964f84829de7441eb0d:
-    resolution: {gitHosted: true, integrity: sha512-TKfZzQWrXGOLZ4aS7kX69P9GjVWegE+mxPkq7ksE8RTGhFfhIYx0MwUilMLIMmnMqEZdY2LxjXUiln30aHFLxw==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/bb2002a0cc8a07e47ef15964f84829de7441eb0d}
-    version: 10.8.12
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/98113e6f57f4b04d3c337401480aabad20470199:
+    resolution: {gitHosted: true, integrity: sha512-aTMLwRmwQoLqraa4eBQkVTfjBLEaPKh60MhNo3rPt+SMp1IA11Le40f3h/j7xzLGPXSEqkfVW5q3lNnx9C5ReQ==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/98113e6f57f4b04d3c337401480aabad20470199}
+    version: 10.8.15
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -2249,6 +2249,11 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  nanoid@3.3.15:
+    resolution: {integrity: sha512-y7Wygv/7mEOvxTuEQDB8StXdMRBWf1kR/tlhAzBRUFkB2jfcLOAxO/SHmOO2zgz1pVgK29/kyupn059/bCHdjA==}
+    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+
   naughty-words@1.2.0:
     resolution: {integrity: sha512-0iadX6fN+3NsfvIRtWmmpEX9VsoIQ6n9FwyIxmew9w5yzFNqMgs/Ky0eAC/z5xXSHtqlVoByiovdROikwH9SXQ==}
 
@@ -2373,6 +2378,10 @@ packages:
     resolution: {integrity: sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==}
     engines: {node: '>=12'}
 
+  picomatch@4.0.5:
+    resolution: {integrity: sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==}
+    engines: {node: '>=12'}
+
   pixelmatch@7.2.0:
     resolution: {integrity: sha512-xhcb4yHu9sM/G7foGzoLtXYcC0zHEaOXXjRKhGup0fw78Nf2Tkiapv4EQyMzrbcmQPsllAI7DbFY2UT7PlI9Pg==}
     hasBin: true
@@ -2383,6 +2392,10 @@ packages:
 
   postcss@8.5.15:
     resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
+    engines: {node: ^10 || ^12 || >=14}
+
+  postcss@8.5.16:
+    resolution: {integrity: sha512-vuwillviilfKZsg0VGj5R/YwwcHx4SLsIOI/7K6mQkWx+l5cUHTjj5g0AasTBcyXsbfTgrwsUNmVUb5xVwyPwg==}
     engines: {node: ^10 || ^12 || >=14}
 
   profanity-util@0.2.0:
@@ -2560,7 +2573,7 @@ packages:
     deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   steam-resources@https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45:
-    resolution: {gitHosted: true, integrity: sha512-bcksZjb/Sa6Q7A5Uh+GWiU5AfoW6u12B1lk7VN+yWNO4AOqpAGK6F0eiEILuS1ngjxHzX57M3IHCahncsLGYig==, tarball: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45}
     version: 1.2.2
 
   steam-session@1.9.4:
@@ -2588,7 +2601,7 @@ packages:
       - steam-resources
 
   steam@https://codeload.github.com/dotabod/node-steam/tar.gz/e9aa23d43a7a06090a2d96eb4e39aa889c7b8cbb:
-    resolution: {gitHosted: true, integrity: sha512-0kny/0AfwRcRv4qghIkpFJ2MVCMC8gjVd/EakCRIIbC5WI9J4nl8N4NTT75HxGW6p/Gf/nxCiFLgUxvH5b2x2Q==, tarball: https://codeload.github.com/dotabod/node-steam/tar.gz/e9aa23d43a7a06090a2d96eb4e39aa889c7b8cbb}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/dotabod/node-steam/tar.gz/e9aa23d43a7a06090a2d96eb4e39aa889c7b8cbb}
     version: 1.4.1
     engines: {node: '>=4.1.1'}
 
@@ -4004,7 +4017,7 @@ snapshots:
       steam-resources: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45
       winston: 3.19.0
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/bb2002a0cc8a07e47ef15964f84829de7441eb0d: {}
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/98113e6f57f4b04d3c337401480aabad20470199: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -4179,6 +4192,10 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.4):
     optionalDependencies:
       picomatch: 4.0.4
+
+  fdir@6.5.0(picomatch@4.0.5):
+    optionalDependencies:
+      picomatch: 4.0.5
 
   fecha@4.2.3: {}
 
@@ -4562,6 +4579,8 @@ snapshots:
 
   nanoid@3.3.12: {}
 
+  nanoid@3.3.15: {}
+
   naughty-words@1.2.0: {}
 
   negotiator@0.6.3: {}
@@ -4729,6 +4748,8 @@ snapshots:
 
   picomatch@4.0.4: {}
 
+  picomatch@4.0.5: {}
+
   pixelmatch@7.2.0:
     dependencies:
       pngjs: 7.0.0
@@ -4738,6 +4759,12 @@ snapshots:
   postcss@8.5.15:
     dependencies:
       nanoid: 3.3.12
+      picocolors: 1.1.1
+      source-map-js: 1.2.1
+
+  postcss@8.5.16:
+    dependencies:
+      nanoid: 3.3.15
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -5111,8 +5138,8 @@ snapshots:
 
   tinyglobby@0.2.17:
     dependencies:
-      fdir: 6.5.0(picomatch@4.0.4)
-      picomatch: 4.0.4
+      fdir: 6.5.0(picomatch@4.0.5)
+      picomatch: 4.0.5
 
   tinypool@2.1.0: {}
 
@@ -5224,8 +5251,8 @@ snapshots:
   vite@8.0.14(@types/node@22.19.19)(jiti@2.7.0)(yaml@2.9.0):
     dependencies:
       lightningcss: 1.32.0
-      picomatch: 4.0.4
-      postcss: 8.5.15
+      picomatch: 4.0.5
+      postcss: 8.5.16
       rolldown: 1.0.2
       tinyglobby: 0.2.17
     optionalDependencies:
