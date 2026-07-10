@@ -64,6 +64,18 @@ LABEL org.opencontainers.image.source="https://github.com/dotabod/backend" \
 WORKDIR /app
 COPY --from=builder /deploy/ ./
 
+# GC liveness probe (steam only; no-ops for other services via SERVICE_CONTEXT).
+# The build context is the repo root, so this path exists for every service
+# build even though only steam is probed. See packages/steam/healthcheck.mjs.
+COPY packages/steam/healthcheck.mjs ./healthcheck.mjs
+
 ENV DOTABOD_ENV=$DOTABOD_ENV
 ENV COMMIT_HASH=$COMMIT_HASH
+# Lets the shared healthcheck tell which service this image is.
+ENV SERVICE_CONTEXT=$BUILD_CONTEXT
+# Reports `unhealthy` when steam's GC has been dead/stale (visibility + alerting;
+# the app self-restarts via process.exit once the GC is unrecoverable). Other
+# services short-circuit to exit 0.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
+  CMD node healthcheck.mjs
 CMD ["sh", "-c", "exec node ${CPU_PROF:+--cpu-prof --cpu-prof-dir=/tmp/profiles} dist/index.js"]

@@ -37,6 +37,7 @@
     "**/coverage",
     "**/*.test.ts",
     "**/*.spec.ts",
+    "**/healthcheck.mjs",
     "packages/clip-processor-py",
     "services",
     "scripts/spectate*"

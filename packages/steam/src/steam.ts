@@ -20,6 +20,7 @@ import {
   type SteamUserClient,
 } from './utils/dota2SteamUser'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch'
+import { type GcEvent, GcWatchdog } from './utils/gcWatchdog'
 import { logger } from './utils/logger'
 import { computeReconnectDelay } from './utils/reconnectBackoff'
 import { retryCustom } from './utils/retry'
@@ -31,16 +32,24 @@ interface CacheEntry {
 
 const MAX_CACHE_SIZE = 5000
 const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
-// Grace period after a `disconnected` event for steam-user's autoRelogin to
-// re-emit `loggedOn` on its own before we force a re-logon ourselves. A healthy
-// autoRelogin recovers in ~2s; this is generous headroom without leaving the GC
-// dark for long. See handleDisconnected / armReloginWatchdog.
-const RELOGIN_GRACE_MS = 60_000
+
+// How long the Dota GC may stay continuously not-ready — through login stalls,
+// unanswered ClientHellos, or a degraded Valve GC — before we stop nursing the
+// (unmaintained, hidden-timer-laden) node-dota2 connection and exit for a clean
+// restart. See utils/gcWatchdog.ts and the 2026-07 GC-handshake redesign.
+const GC_DEAD_EXIT_MS = 180_000
+// Cadence of the liveness tick that drives the watchdog + health file between
+// events (so a silently-stuck state still escalates and the healthcheck stays
+// fresh).
+const GC_TICK_MS = 15_000
 
 // Where steam-user persists its CM server list + machine auth token, and where
 // we persist the Steam refresh token across restarts (a Docker volume in prod).
 const VOLUME_DIR = './src/steam/volumes'
 const REFRESH_TOKEN_PATH = `${VOLUME_DIR}/refresh_token`
+// GC liveness snapshot the Docker HEALTHCHECK reads (node-only image: no curl).
+// See healthcheck.mjs and writeGcHealth().
+const GC_HEALTH_PATH = `${VOLUME_DIR}/gc-health.json`
 
 // A Steam refresh token is a JWT (~200-day lifetime). Decode its `exp` claim so
 // we can skip an obviously-expired token and log in with password instead of
@@ -143,11 +152,17 @@ class Dota {
   // rate-limit. See utils/reconnectBackoff.ts and the 2026 auth migration.
   private reconnectAttempts = 0
   private reconnectTimer: NodeJS.Timeout | undefined
-  // Fallback for when steam-user's autoRelogin silently stalls after a
-  // `disconnected` event (observed 2026-07-02: a NoConnection drop that never
-  // recovered for ~2h — no `loggedOn`, no `error` — leaving the GC dead until a
-  // manual restart). Armed on disconnect, cleared on `loggedOn`.
-  private disconnectWatchdog: NodeJS.Timeout | undefined
+  // Single authority for GC liveness. Replaces the old trio of overlapping
+  // recovery paths (hello-timeout self-relaunch, disconnect watchdog, implicit
+  // reconnect) that raced node-dota2's hidden knock timers into a double loop
+  // (2026-07-10). Pure decision logic lives in utils/gcWatchdog.ts; this class
+  // performs the effects it asks for.
+  private readonly gc = new GcWatchdog({ deadExitMs: GC_DEAD_EXIT_MS })
+  private gcTick: NodeJS.Timeout | undefined
+  // Coalesces our own GC relaunch so exit()/launch() can't overlap and fork a
+  // second knock loop. True from when we call launch() until `ready`/`unready`
+  // or the next relaunch resolves it.
+  private relaunchPending = false
 
   constructor() {
     // Drive the connection with the maintained `steam-user` (modern
@@ -169,7 +184,63 @@ class Dota {
     this.setupUserEventHandlers()
     this.setupDotaEventHandlers()
 
+    // Drive the watchdog + health file between events so a silently-stuck GC
+    // still escalates. Unref so it never keeps the process alive on its own.
+    this.gcTick = setInterval(() => this.feedWatchdog({ type: 'tick' }), GC_TICK_MS)
+    this.gcTick.unref?.()
+    this.writeGcHealth()
+
     this.logOn()
+  }
+
+  // Funnel every GC-relevant event through the single watchdog and perform the
+  // one action it returns. This is the only place that relaunches or exits for
+  // GC liveness.
+  private feedWatchdog(event: GcEvent) {
+    const action = this.gc.step(event)
+    if (action.type === 'relaunch') {
+      this.relaunchGc(action.reason)
+    } else if (action.type === 'exit') {
+      logger.error('[STEAM] GC unrecoverable; exiting for clean restart', {
+        reason: action.reason,
+      })
+      this.writeGcHealth()
+      // Non-zero so Docker's restart policy (unless-stopped / on-failure) brings
+      // us back in a fresh process — the only reliably-clean state for the
+      // node-dota2 connection.
+      process.exit(1)
+    }
+    this.writeGcHealth()
+  }
+
+  // Clean re-knock: stop node-dota2's current hello loop, then start exactly one
+  // new one. Guarded so two relaunches can never run concurrently.
+  private relaunchGc(reason: string) {
+    if (this.relaunchPending) return
+    if (!this.isSteamClientLoggedOn()) return
+    this.relaunchPending = true
+    logger.info('[STEAM] relaunching GC', { reason })
+    this.dota2.exit()
+    // A short beat between exit() and launch() lets node-dota2 tear its interval
+    // down before we start a fresh one, so we never stack two knock loops.
+    setTimeout(() => {
+      this.relaunchPending = false
+      if (this.isSteamClientLoggedOn()) this.dota2.launch()
+    }, 1_000)
+  }
+
+  // Snapshot GC liveness to disk for the Docker HEALTHCHECK (prod image has node
+  // but no curl/wget, so a file is simpler than a probe port). Best-effort.
+  private writeGcHealth() {
+    try {
+      fs.mkdirSync(VOLUME_DIR, { recursive: true })
+      fs.writeFileSync(
+        GC_HEALTH_PATH,
+        JSON.stringify({ gcReady: this.gc.isReady(), updatedAt: Date.now() }),
+      )
+    } catch {
+      // ignore — health file is advisory
+    }
   }
 
   // Check if the Dota2 game coordinator is ready
@@ -402,65 +473,36 @@ class Dota {
 
   private handleLoggedOn() {
     this.user.loggedOn = true
-    // Healthy logon — clear any pending backoff and the relogin watchdog so the
-    // next fatal error retries promptly instead of inheriting an escalated delay.
+    // Healthy logon — clear any pending login backoff so the next fatal error
+    // retries promptly instead of inheriting an escalated delay.
     this.resetReconnectBackoff()
-    this.clearReloginWatchdog()
+    this.feedWatchdog({ type: 'loggedOn' })
     logger.info('[STEAM] Logged on.', { steamID: this.user.steamID?.toString() })
     this.dota2.launch()
   }
 
   // Non-fatal drop. steam-user (autoRelogin) reconnects on its own and re-emits
-  // 'loggedOn'; we just stop the GC hello timers until it does — but we also arm
-  // a watchdog because autoRelogin can silently stall (see armReloginWatchdog).
+  // 'loggedOn'; we stop the GC hello timers until it does. If autoRelogin stalls
+  // (observed 2026-07-02: a NoConnection drop that never recovered), the GC
+  // watchdog's dead-exit ceiling catches it — a stuck not-ready state exits the
+  // process after GC_DEAD_EXIT_MS and Docker restarts us clean. No separate
+  // relogin timer to race.
   private handleDisconnected(eresult: number, msg?: string) {
     this.user.loggedOn = false
     logger.info('[STEAM] Disconnected from Steam.', { eresult, msg })
     this.dota2.exit()
-    this.armReloginWatchdog()
-  }
-
-  // steam-user's autoRelogin usually re-emits `loggedOn` within seconds of a
-  // `disconnected`, and unlike a fatal `error` a plain disconnect schedules no
-  // reconnect of our own. But autoRelogin can hang mid-handshake and emit
-  // neither `loggedOn` nor `error`, wedging the account offline indefinitely. So
-  // if we're still not logged on after the grace window, drive the re-logon
-  // ourselves — via the same coalesced, backed-off path as a fatal error, so it
-  // can never turn into a login-rate-limit storm.
-  private armReloginWatchdog() {
-    if (!this.isProduction()) return
-    // A reconnect is already pending (fatal-error path) or a watchdog is already
-    // ticking — either will recover us; don't stack timers.
-    if (this.reconnectTimer || this.disconnectWatchdog) return
-    this.disconnectWatchdog = setTimeout(() => {
-      this.disconnectWatchdog = undefined
-      if (this.user.loggedOn) return // autoRelogin already recovered us
-      logger.warn('[STEAM] autoRelogin stalled; forcing re-logon', {
-        graceMs: RELOGIN_GRACE_MS,
-      })
-      this.scheduleReconnect()
-    }, RELOGIN_GRACE_MS)
-  }
-
-  private clearReloginWatchdog() {
-    if (this.disconnectWatchdog) {
-      clearTimeout(this.disconnectWatchdog)
-      this.disconnectWatchdog = undefined
-    }
+    this.feedWatchdog({ type: 'disconnected' })
   }
 
   // Fatal logon error (autoRelogin won't recover it): log it, stop the GC, then
   // — in production — re-attempt logon behind exponential backoff so a rejected
-  // token or transient auth failure can't become a login-rate-limit storm.
+  // token or transient auth failure can't become a login-rate-limit storm. If
+  // the retries never take, the GC watchdog's dead-exit ceiling is the backstop.
   private handleError(error: { eresult?: number; message?: string }) {
     this.user.loggedOn = false
     const eresult = error?.eresult
     logger.info('[STEAM] steam error', { eresult, message: error?.message })
     if (eresult) this.logSteamError(eresult)
-
-    // The error path owns recovery via scheduleReconnect below, so stand down any
-    // disconnect watchdog to avoid a redundant, racing re-logon attempt.
-    this.clearReloginWatchdog()
 
     // Stop dota2's internal timers (like _sendClientHello) before reconnecting.
     this.dota2.exit()
@@ -506,7 +548,15 @@ class Dota {
 
   setupDotaEventHandlers() {
     this.dota2.on('hellotimeout', this.handleHelloTimeout.bind(this))
-    this.dota2.on('unready', () => logger.info('[STEAM] disconnected from dota game coordinator'))
+    this.dota2.on('ready', () => {
+      this.relaunchPending = false
+      this.feedWatchdog({ type: 'gcReady' })
+    })
+    this.dota2.on('unready', () => {
+      this.relaunchPending = false
+      logger.info('[STEAM] disconnected from dota game coordinator')
+      this.feedWatchdog({ type: 'gcUnready' })
+    })
     // Right when we start, check for accounts
     // This will run every 30 seconds otherwise
     if (this.isProduction()) {
@@ -527,12 +577,14 @@ class Dota {
     })
   }
 
+  // node-dota2 emits this after ~30s of unanswered ClientHellos but does NOT
+  // stand its own knock timer down — so we must NOT blindly exit()+launch() here
+  // (that races its hidden interval into a second loop). Hand it to the single
+  // watchdog, which decides whether to relaunch (spacing-guarded) or, once the
+  // GC has been dead past the ceiling, exit for a clean restart.
   handleHelloTimeout() {
-    this.dota2.exit()
-    setTimeout(() => {
-      if (this.isSteamClientLoggedOn()) this.dota2.launch()
-    }, 30000)
     logger.info('[STEAM] hello time out!')
+    this.feedWatchdog({ type: 'helloTimeout' })
   }
 
   // @ts-expect-error no types exist
@@ -764,6 +816,7 @@ class Dota {
   public exit(): Promise<boolean> {
     return new Promise((resolve) => {
       clearInterval(this.interval)
+      clearInterval(this.gcTick)
       this.resetReconnectBackoff()
       this.dota2.exit()
       logger.info('[STEAM] Manually closed dota')
