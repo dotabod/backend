@@ -215,18 +215,25 @@ class Dota {
 
   // Clean re-knock: stop node-dota2's current hello loop, then start exactly one
   // new one. Guarded so two relaunches can never run concurrently.
+  //
+  // exit()+launch() are called back-to-back and synchronously. This matters: the
+  // double-loop bug comes from a *gap* between them. node-dota2's `launch()` does
+  // an unconditional `_gcClientHelloIntervalId = setInterval(...)`, while its
+  // GCConnectionStatus handler *also* creates an interval whenever the id is
+  // null. If any GC message is processed between our exit() (which nulls the id)
+  // and our launch(), the status handler spawns its own knock loop that launch()
+  // then orphans by overwriting the reference. `clearInterval` is synchronous
+  // and no message can be dispatched between two synchronous calls, so closing
+  // the gap eliminates the race entirely (the old 30s setTimeout was the leak).
   private relaunchGc(reason: string) {
     if (this.relaunchPending) return
     if (!this.isSteamClientLoggedOn()) return
-    this.relaunchPending = true
     logger.info('[STEAM] relaunching GC', { reason })
+    // Held only across the synchronous exit→launch so re-entrancy from a
+    // nested emit can't double-fire; cleared on the next ready/unready.
+    this.relaunchPending = true
     this.dota2.exit()
-    // A short beat between exit() and launch() lets node-dota2 tear its interval
-    // down before we start a fresh one, so we never stack two knock loops.
-    setTimeout(() => {
-      this.relaunchPending = false
-      if (this.isSteamClientLoggedOn()) this.dota2.launch()
-    }, 1_000)
+    this.dota2.launch()
   }
 
   // Snapshot GC liveness to disk for the Docker HEALTHCHECK (prod image has node
@@ -578,10 +585,11 @@ class Dota {
   }
 
   // node-dota2 emits this after ~30s of unanswered ClientHellos but does NOT
-  // stand its own knock timer down — so we must NOT blindly exit()+launch() here
-  // (that races its hidden interval into a second loop). Hand it to the single
-  // watchdog, which decides whether to relaunch (spacing-guarded) or, once the
-  // GC has been dead past the ceiling, exit for a clean restart.
+  // stand its own knock timer down. The old handler re-launched on a 30s
+  // setTimeout, and that gap is what let a second knock loop spawn (see
+  // relaunchGc). Hand it to the single watchdog instead, which decides whether
+  // to relaunch (spacing-guarded, gap-free) or, once the GC has been dead past
+  // the ceiling, exit for a clean restart.
   handleHelloTimeout() {
     logger.info('[STEAM] hello time out!')
     this.feedWatchdog({ type: 'helloTimeout' })
