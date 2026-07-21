@@ -9,7 +9,7 @@ import {
   twitchNameToToken,
 } from '../dota/lib/consts'
 import type { SocketClient } from '../types'
-import { isSubscriptionActive } from '../types/subscription'
+import { isSubscriptionActive, type SubscriptionRow } from '../types/subscription'
 
 export default async function getDBUser({
   token,
@@ -183,7 +183,8 @@ export default async function getDBUser({
   let subscription: SocketClient['subscription'] | undefined
   if (Array.isArray(user.subscriptions) && user.subscriptions.length > 0) {
     const activeSubscription =
-      user.subscriptions.find((sub) => isSubscriptionActive(sub)) || user.subscriptions[0]
+      user.subscriptions.find((sub: SubscriptionRow) => isSubscriptionActive(sub)) ||
+      user.subscriptions[0]
     subscription = {
       ...activeSubscription,
     }

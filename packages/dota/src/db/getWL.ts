@@ -59,7 +59,7 @@ export async function getWL({ lng, channelId, mmrEnabled, startDate, currentGame
   }
   const unranked: { win: number; lose: number } = { win: 0, lose: 0 }
 
-  matches.forEach((match) => {
+  matches.forEach((match: Database['public']['Functions']['get_grouped_bets']['Returns'][0]) => {
     const isRanked = match.lobby_type === LOBBY_TYPE_RANKED
     const stats = isRanked ? ranked : unranked
     const multiplier = isRanked ? (match.is_party ? MULTIPLIER_PARTY : MULTIPLIER_SOLO) : 0

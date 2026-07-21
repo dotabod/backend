@@ -43,7 +43,7 @@ const generateLogQuery = (user: Awaited<ReturnType<typeof fetchUserByName>>) => 
   if (!user) return
 
   const steamAccountQueries = user.steam_accounts
-    .map((account) => `steam32Id:${account.steam32Id} or`)
+    .map((account: { steam32Id: number }) => `steam32Id:${account.steam32Id} or`)
     .join(' ')
 
   return `
@@ -297,15 +297,23 @@ async function fixWins(token: string, twitchChatId: string, currentMatchId?: str
     .order('created_at', { ascending: false })
     .range(0, 10)
 
+  type BrokenMatch = {
+    id: string
+    matchId: string
+    myTeam: string
+    userId: string
+    hero_name: string | null
+  }
+
   chatClient.whisper(
     twitchChatId,
-    matches?.map((b) => b.matchId).join(', ') || 'No broken games found',
+    matches?.map((b: BrokenMatch) => b.matchId).join(', ') || 'No broken games found',
   )
 
   if (!matches) return
 
   await Promise.all(
-    matches.map(async (bet) => {
+    matches.map(async (bet: BrokenMatch) => {
       const heroId = bet?.hero_name ? heroes[bet.hero_name as keyof typeof heroes]?.id || 0 : 0
       const sockets = await server.io.in(bet.userId).fetchSockets()
       if (!Array.isArray(sockets) || !sockets.length) return

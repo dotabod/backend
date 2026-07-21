@@ -336,7 +336,7 @@ const commandHandler = new CommandHandler()
 
 // Add a user to the list of users that are allowed to bypass the cooldown
 const { data } = await supabase.from('admin').select('users(name)').eq('role', 'admin')
-const names = data?.map((user) => user.users?.name ?? '') ?? []
+const names = data?.map((user: { users: { name: string } | null }) => user.users?.name ?? '') ?? []
 commandHandler.addUserToBypassList(names.filter(Boolean))
 
 export default commandHandler

@@ -1,7 +1,8 @@
 {
   "name": "@dotabod/shared-utils",
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "type": "module",
   "module": "src/index.ts",

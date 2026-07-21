@@ -27,15 +27,28 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-      - name: Install dependencies
+      # `injectWorkspacePackages: true` (pnpm-workspace.yaml) hard-copies each workspace
+      # dep's `files` into consumers' node_modules at install time — it's a static
+      # snapshot, not a symlink, and pnpm never re-syncs it on a later `pnpm install`
+      # even with --force (nothing in the lockfile changed). So shared-utils/profanity-filter
+      # must be built *before* the full install that populates their consumers, or
+      # consumers get an injected copy with no dist/ and fail to resolve at runtime.
+      - name: Install shared-utils + profanity-filter (for build)
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          retry_wait_seconds: 10
+          command: pnpm install --frozen-lockfile --filter @dotabod/shared-utils --filter @dotabod/profanity-filter
+      - name: Build workspace deps for tests
+        run: pnpm --filter @dotabod/shared-utils --filter @dotabod/profanity-filter run build
+      - name: Install remaining dependencies
         uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3
           retry_wait_seconds: 10
           command: pnpm install --frozen-lockfile
-      - name: Build workspace deps for tests
-        run: pnpm --filter @dotabod/shared-utils --filter @dotabod/profanity-filter run build
       - name: Lint + format check
         run: pnpm exec vp check
       - name: Typecheck
