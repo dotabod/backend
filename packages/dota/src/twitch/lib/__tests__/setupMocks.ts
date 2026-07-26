@@ -76,6 +76,7 @@ export const state: {
   chatSettingsUpdates: Array<{ channelId: string; settings: Record<string, unknown> }>
   // Result returned by the mocked MongoDB `delayedGames` findOne (ranked, spectators, ...).
   delayedGame: Record<string, unknown> | null
+  gameMedalsResult: string
   // Optional override for the mocked `moderateText` — return a custom redacted
   // string. Default passthrough returns the input as-is.
   moderateTextOverride: ((text?: string | string[]) => string | string[] | undefined) | null
@@ -144,6 +145,7 @@ export const state: {
   subscriberOnlyMode: false,
   chatSettingsUpdates: [],
   delayedGame: null,
+  gameMedalsResult: '[Archon 1 avg] Axe: Archon 1',
   moderateTextOverride: null,
   trackDisableReasonCalls: [],
   trackResolveReasonCalls: [],
@@ -183,6 +185,7 @@ export function resetState() {
   state.subscriberOnlyMode = false
   state.chatSettingsUpdates = []
   state.delayedGame = null
+  state.gameMedalsResult = '[Archon 1 avg] Axe: Archon 1'
   state.moderateTextOverride = null
   state.trackDisableReasonCalls = []
   state.trackResolveReasonCalls = []
@@ -417,6 +420,10 @@ function reinstallModuleMocks() {
       }),
       close: async () => undefined,
     },
+  }))
+
+  vi.doMock('../../../steam/medals', () => ({
+    gameMedals: async () => state.gameMedalsResult,
   }))
 }
 

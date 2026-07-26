@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
 import { flushAsync } from '../../../__tests__/sharedMocks.ts'
-import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
+import { LOBBY_TYPE_RANKED } from '../../../db/getWL.ts'
+import { commandHandler, liveGsi, makeMessage, resetState, state } from './setupMocks.ts'
 
 // Integration tests that exercise individual chat command handlers via
 // `commandHandler.handleMessage()`. Companion to `CommandHandler.integration.test.ts`
@@ -332,6 +333,36 @@ describe('!avg', () => {
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(multiAccount)
+  })
+})
+
+describe('!gm', () => {
+  it('keeps the medals and reports an unranked match', async () => {
+    state.delayedGame = {
+      match: { match_id: '7777777777', lobby_type: 0 },
+    }
+
+    await commandHandler.handleMessage(
+      makeMessage({ content: '!gm', clientOverrides: { gsi: liveGsi() } }),
+    )
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toBe(
+      `${state.gameMedalsResult} · ${t('ranked', { context: 'no', lng: 'en' })}`,
+    )
+  })
+
+  it('keeps the existing medals response for a ranked match', async () => {
+    state.delayedGame = {
+      match: { match_id: '7777777777', lobby_type: LOBBY_TYPE_RANKED },
+    }
+
+    await commandHandler.handleMessage(
+      makeMessage({ content: '!gm', clientOverrides: { gsi: liveGsi() } }),
+    )
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toBe(state.gameMedalsResult)
   })
 })
 

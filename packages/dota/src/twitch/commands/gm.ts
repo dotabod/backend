@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import { LOBBY_TYPE_RANKED } from '../../db/getWL'
 import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { gameMedals } from '../../steam/medals'
@@ -29,7 +30,8 @@ commandHandler.registerCommand('gm', {
       return
     }
 
-    const roster = await new MatchDataService(client).resolveRoster()
+    const matchData = new MatchDataService(client)
+    const roster = await matchData.resolveRoster()
     const note = clippingDisabledNote(client, roster.players)
     // No clip/vision data to read at 8500+ with auto-clipping off — the note IS
     // the whole reply; don't prepend the all-"Unknown" medal dump.
@@ -38,16 +40,25 @@ commandHandler.registerCommand('gm', {
       return
     }
 
-    gameMedals(client.locale, message.channel.client.gsi?.map?.matchid, roster.players)
-      .then((desc) => {
-        chatClient.say(message.channel.name, desc, message.user.messageId)
-      })
-      .catch((e) => {
-        chatClient.say(
-          message.channel.name,
-          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-          message.user.messageId,
-        )
-      })
+    try {
+      const lobbyType = await matchData.getLobbyType().catch(() => null)
+      const desc = await gameMedals(
+        client.locale,
+        message.channel.client.gsi?.map?.matchid,
+        roster.players,
+      )
+      const unrankedNote =
+        lobbyType !== null && lobbyType !== LOBBY_TYPE_RANKED
+          ? ` · ${t('ranked', { context: 'no', lng: client.locale })}`
+          : ''
+
+      chatClient.say(message.channel.name, `${desc}${unrankedNote}`, message.user.messageId)
+    } catch (e) {
+      chatClient.say(
+        message.channel.name,
+        e instanceof Error ? e.message : t('gameNotFound', { lng: message.channel.client.locale }),
+        message.user.messageId,
+      )
+    }
   },
 })
