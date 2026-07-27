@@ -1,6 +1,58 @@
 version: 2
+
+# Dependabot generated ~200 Discord notifications over 3 years by opening one PR
+# per dependency. Everything below is batched into a single weekly PR per
+# ecosystem instead. `groups` needs both `applies-to` values: security updates
+# are raised regardless of schedule and are grouped separately from version
+# updates.
+#
+# npm/uv/pip get `open-pull-requests-limit: 0` — version updates stay off (the
+# workspace is pinned deliberately), but GitHub raises security updates whether
+# or not the ecosystem is configured, so they're declared here to keep those
+# grouped rather than one-PR-per-CVE.
 updates:
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
-      interval: 'daily'
+      interval: 'weekly'
+    groups:
+      actions:
+        applies-to: version-updates
+        patterns: ['*']
+      actions-security:
+        applies-to: security-updates
+        patterns: ['*']
+
+  # `directories` + globstar, not `directory: '/'` — past security PRs came from
+  # packages/dota as well as the root, and a root-only entry wouldn't group them.
+  - package-ecosystem: 'npm'
+    directories:
+      - '/'
+      - '/packages/**'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 0
+    groups:
+      npm-security:
+        applies-to: security-updates
+        patterns: ['*']
+
+  - package-ecosystem: 'uv'
+    directory: '/packages/clip-processor-py'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 0
+    groups:
+      uv-security:
+        applies-to: security-updates
+        patterns: ['*']
+
+  - package-ecosystem: 'pip'
+    directory: '/packages/clip-processor-py'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 0
+    groups:
+      pip-security:
+        applies-to: security-updates
+        patterns: ['*']
