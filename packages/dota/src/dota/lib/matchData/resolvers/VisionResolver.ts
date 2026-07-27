@@ -40,6 +40,27 @@ const defaultVisionFetcher: VisionFetcher = async (matchId) => {
   }
 }
 
+// The streamer's own hero is known for certain from GSI, so if the OCR roster doesn't contain
+// it, exactly one slot was misread. Rather than publish a confident wrong hero, rewrite the
+// least-confident slot to the GSI hero — that slot is overwhelmingly the culprit, because the
+// portrait the detector had to read is the one partly covered by the streamer's own HUD.
+//
+// Measured over 460 in-game slots (2 days of production): the roster contained the GSI hero in
+// 45/46 rosters. In the one miss (match 8916275620) Topson's Oracle was published as Queen of
+// Pain, and that slot scored 0.416 — the lowest of all 460. A plain score threshold can't fix
+// this: a *correct* slot elsewhere scored 0.386, so any cutoff that kills the bad read also
+// kills good ones. Anchoring on GSI is exact where a threshold is a guess.
+function correctSelfHeroWithGsi(heroes: VisionApiHero[], selfHeroId: number | undefined) {
+  if (!selfHeroId || selfHeroId <= 0) return heroes
+  if (heroes.some((h) => h.hero_id === selfHeroId)) return heroes
+
+  let weakest = 0
+  for (let i = 1; i < heroes.length; i++) {
+    if ((heroes[i].match_score ?? 1) < (heroes[weakest].match_score ?? 1)) weakest = i
+  }
+  return heroes.map((h, i) => (i === weakest ? { ...h, hero_id: selfHeroId } : h))
+}
+
 // Handles both vision-derived sources:
 //   - `vision-heroes` when the API returned a non-empty `heroes[]`
 //   - `vision-draft`  when only `draft_player_order` is present (heroes_status: 'waiting' | 'failed')
@@ -56,7 +77,8 @@ export class VisionResolver extends RosterResolver {
     if (!data) return null
 
     if (Array.isArray(data.heroes) && data.heroes.length > 0) {
-      const matchPlayers: Players = data.heroes.map((hero) => ({
+      const heroes = correctSelfHeroWithGsi(data.heroes, gsi?.hero?.id)
+      const matchPlayers: Players = heroes.map((hero) => ({
         heroid: hero.hero_id,
         rank: hero.rank,
         player_name: hero.hero_id === gsi?.hero?.id ? gsi?.player?.name : hero.player_name,

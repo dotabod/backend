@@ -520,11 +520,18 @@ class PostgresClient:
                 return None
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-            # First check for a completed non-draft result
+            # First check for a completed non-draft result.
+            #
+            # A row only counts as "completed" if it actually carries heroes. A draft
+            # attempt on a frame the detector rejects still writes a row shaped like
+            # {is_draft: false, heroes: absent} — without the heroes check that empty
+            # row short-circuits the later strategy clip, throwing away a capture that
+            # did contain the roster panel (observed on match 8916340932).
             query = f"""
             SELECT clip_id FROM {self.results_table}
             WHERE match_id = %s
               AND COALESCE((results->>'is_draft')::boolean, FALSE) = FALSE
+              AND jsonb_array_length(COALESCE(results->'heroes', '[]'::jsonb)) > 0
             ORDER BY processed_at DESC
             LIMIT 1
             """

@@ -44,6 +44,42 @@ Open in Chrome DevTools → Performance → Load profile. Source maps resolve fr
 
 **Rollback to a prior image:** look up a previous master digest with `gh api "/orgs/dotabod/packages/container/<service>/versions?per_page=5" --jq '.[] | select(.metadata.container.tags == ["master"]) | .name'`, then paste `sha256-<digest>` (dash, not colon) in Coolify's image tag/hash field and Redeploy.
 
+## Vision roster pipeline (`!np` / `!gm`)
+
+Chat rosters are assembled from up to **three Twitch clips**, each read by a different detector
+and each carrying different data. Most "wrong roster" bugs are really "which clip landed?".
+
+| clip     | fires at                | endpoint          | contains                   |
+| -------- | ----------------------- | ----------------- | -------------------------- |
+| draft    | `PLAYER_DRAFT` +46s     | `/detect_draft`   | names only, **no heroes**  |
+| strategy | `STRATEGY_TIME` +43.75s | `/detect`         | **names + ranks + heroes** |
+| in-game  | `GAME_IN_PROGRESS` +60s | `/detect_in_game` | heroes only, **no names**  |
+
+Only the **strategy/loadout panel** carries names + ranks + heroes together — miss it and nothing
+downstream recovers names. Scheduling: `packages/dota/src/dota/events/gsi-events/map.game_state.ts`.
+
+Non-obvious constraints, all verified against production data — re-deriving them costs hours:
+
+- **The draft name strip is not in slot order.** Three verified alignments give three different
+  permutations; only draft index 0 (Radiant captain) is stable. Draft↔roster merging must go
+  through the fuzzy _name_ matcher (`_align_players_with_draft`), never a positional join. An
+  in-game result with `draft_alignment.mapping == {}` is correct behaviour, not a bug — the
+  in-game top bar shows no names to match on.
+- **In-game hero confidence runs low** (mean ~0.66; only ~20% of slots reach the 0.75
+  `HERO_CONFIDENCE_THRESHOLD`), and no clean cutoff exists — a measured _wrong_ read scored 0.416
+  while a _correct_ one scored 0.386. Don't add score gates; anchor on GSI, which knows the
+  streamer's own hero exactly (`correctSelfHeroWithGsi` in `VisionResolver.ts`).
+- **Draft rows in `processing_queue` are always `status='failed'`**, even when they succeed. Check
+  `clip_results` for the real outcome.
+- `- GLOBAL_DELAY` at the `scheduleClip` sites intentionally cancels the `+ GLOBAL_DELAY` inside
+  `getStreamDelay()` — that 7s is for chat, not clips.
+
+Debugging tools live in `scripts/clip-debug/` (`query_match.sh` for a match's full clip history,
+`scan_clip.py` to see what a clip's frames actually contain plus the `STRATEGY TIME` countdown
+that tells you where it landed). The **`dota-vision-roster-debug` skill** has the full workflow,
+the DB/API recipes, and a list of plausible-sounding fixes that measurement has already
+disproved — read it before changing clip timing or alignment code.
+
 <!--VITE PLUS START-->
 
 # Using Vite+, the Unified Toolchain for the Web

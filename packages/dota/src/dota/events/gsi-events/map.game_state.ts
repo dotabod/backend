@@ -100,7 +100,14 @@ eventHandler.registerEvent('map:game_state', {
     }
 
     if ('DOTA_GAMERULES_STATE_STRATEGY_TIME' === gameState) {
-      const CLIP_DELAY_MS = 50000 // 50 seconds
+      // The roster panel (names + ranks + heroes — the only screen carrying all three)
+      // is up for the ~30s of strategy time, and a Twitch clip covers a ~30s window
+      // ending at the createClip call. Measured across 6 of Topson's games, 50s put
+      // the clip's first frame at 0:07-0:11 remaining: the panel occupied only the
+      // leading ~9s of the clip, so any drift past that lost it entirely (2 of 6
+      // missed outright). 43.75s centres the first frame at ~0:15 remaining, which
+      // widens the tolerance from ±9s to ±15s in both directions.
+      const CLIP_DELAY_MS = 43750
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
 
       await scheduleClip(CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, {

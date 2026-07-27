@@ -54,6 +54,19 @@ def test_match_processing_not_found(db_client, mock_cursor):
     assert mock_cursor.execute.call_count == 4
 
 
+def test_completed_query_requires_heroes(db_client, mock_cursor):
+    """The 'completed' probe must ignore non-draft rows that carry no heroes.
+
+    A draft attempt on a rejected frame still writes {is_draft: false} with no
+    heroes. Counting that as completed short-circuits the later strategy clip and
+    throws away the only capture of the roster panel (seen on match 8916340932).
+    """
+    mock_cursor.fetchone.side_effect = [None, None, None, None]
+    db_client.check_for_match_processing("m1")
+    completed_sql = " ".join(mock_cursor.execute.call_args_list[0][0][0].split())
+    assert "jsonb_array_length(COALESCE(results->'heroes', '[]'::jsonb)) > 0" in completed_sql
+
+
 # --------------------------------------------------------------------------- #
 # update_queue_status — per-status branch
 # --------------------------------------------------------------------------- #
