@@ -57,6 +57,14 @@ jobs:
           sudo chown -R $(id -u):$(id -g) packages/**/locales/*
           i18next -c 'services/crowdin/src/i18next-parser.config.js'
 
+      # Crowdin emits these files without a trailing newline. Everything else in
+      # the repo has one, so leaving them bare made every 6-hourly run look like
+      # a real change and open a PR even when no translation moved. Idempotent.
+      - name: Normalize trailing newlines
+        run: |
+          find packages/*/locales -name '*.json' -exec sh -c \
+            'for f do [ -n "$(tail -c 1 "$f")" ] && printf "\n" >> "$f"; done' sh {} +
+
       - name: Count lines
         id: count
         run: |

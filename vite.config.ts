@@ -8,6 +8,11 @@ export default defineConfig({
     outExtensions: () => ({ js: '.js' }),
   },
   fmt: {
+    // Crowdin writes locale JSON with no trailing newline; oxfmt adds one back.
+    // Formatting them created a push loop between the crowdin-download and
+    // autofix workflows (new PR every 6h, forever). These files are generated —
+    // don't format them.
+    ignorePatterns: ['**/locales/**/*.json'],
     singleQuote: true,
     semi: false,
     useTabs: false,
