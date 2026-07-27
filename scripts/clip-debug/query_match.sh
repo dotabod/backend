@@ -11,9 +11,13 @@ set -euo pipefail
 MATCH_ID="${1:?usage: query_match.sh <matchId>}"
 APP_UUID="jw4o88gkk8ogkccowk4s84ck"
 
-DB_CONTAINER=$(ssh oracle "sudo docker ps --format '{{.Names}}' | grep '^db-${APP_UUID}'")
+# `|| true` matters: under `set -e` a non-matching grep exits non-zero and would kill the
+# script here, so the friendly message below would never print — which is exactly the case
+# it exists for (the container suffix changes on every redeploy).
+DB_CONTAINER=$(ssh oracle "sudo docker ps --format '{{.Names}}' | grep '^db-${APP_UUID}'" || true)
 if [ -z "$DB_CONTAINER" ]; then
   echo "could not find clip-processor db container for ${APP_UUID}" >&2
+  echo "check it is running: ssh oracle 'sudo docker ps | grep ${APP_UUID}'" >&2
   exit 1
 fi
 

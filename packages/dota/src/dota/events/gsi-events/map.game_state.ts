@@ -102,11 +102,18 @@ eventHandler.registerEvent('map:game_state', {
     if ('DOTA_GAMERULES_STATE_STRATEGY_TIME' === gameState) {
       // The roster panel (names + ranks + heroes — the only screen carrying all three)
       // is up for the ~30s of strategy time, and a Twitch clip covers a ~30s window
-      // ending at the createClip call. Measured across 6 of Topson's games, 50s put
-      // the clip's first frame at 0:07-0:11 remaining: the panel occupied only the
-      // leading ~9s of the clip, so any drift past that lost it entirely (2 of 6
-      // missed outright). 43.75s centres the first frame at ~0:15 remaining, which
-      // widens the tolerance from ±9s to ±15s in both directions.
+      // ending at the createClip call, so a SMALLER value fires earlier and leaves MORE
+      // countdown remaining in frame 0.
+      //
+      // Measured across 6 of Topson's games, the previous 50000 put frame 0 at 0:07-0:11
+      // remaining: the panel occupied only the leading ~9s of the clip, so any drift past
+      // that lost it entirely (2 of 6 missed outright). 43750 targets ~0:15, widening the
+      // tolerance from ±9s to ±15s in both directions.
+      //
+      // To retune: read frame 0's STRATEGY TIME clock over several games
+      // (scripts/clip-debug/scan_clip.py writes the crop), then
+      //   new = current - (15 - median_clock) * 1000
+      // and update the measured range above, since it goes stale with the constant.
       const CLIP_DELAY_MS = 43750
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
 

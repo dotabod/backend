@@ -65,8 +65,9 @@ Debug crops then live in the container at `/app/temp/debug/` (`top_bar_full.jpg`
 
 `scan_clip.py` writes `$TMPDIR/<slug>_clock.png` — an upscaled crop of the `STRATEGY TIME`
 countdown from frame 0. It counts **down** from ~30, so it tells you exactly where a strategy
-clip landed relative to the roster panel. Measured hits read 0:07-0:11; anything past 0:00 means
-the clip missed the panel and only the draft/in-game clips have usable data.
+clip landed relative to the roster panel. Above 0:00 means the panel was on screen; past 0:00
+means the clip missed it and only the draft/in-game clips have usable data.
 
 This is the fastest way to tell a timing problem from a detection problem — check it before
-reading any detection code.
+reading any detection code. Interpret the number against the `CLIP_DELAY_MS` that was live when
+the clip was taken (`map.game_state.ts`), since that constant gets retuned.

@@ -123,8 +123,9 @@ def main() -> None:
     print(
         f"clock crop:    {tempfile.gettempdir()}/{args.slug}_clock.png\n"
         "  Read the STRATEGY TIME countdown in that crop — it counts DOWN from ~30 to 0 and is\n"
-        "  the ground truth for where a strategy clip landed. Measured hits sat at 0:07-0:11;\n"
-        "  anything past 0:00 means the clip missed the roster panel entirely."
+        "  the ground truth for where a strategy clip landed. Above 0:00 means the roster panel\n"
+        "  was on screen; past 0:00 means the clip missed it. Compare the number against the\n"
+        "  CLIP_DELAY_MS in effect when the clip was taken (map.game_state.ts), not a fixed range."
     )
 
 
