@@ -2364,6 +2364,118 @@ def _compute_draft_name_boxes(frame_width, frame_height):
     return boxes
 
 
+def _compute_top_bar_name_boxes(frame_width, frame_height):
+    """Name boxes for the ALL PICK / pick-phase top bar.
+
+    Dota has two draft screens that put player names in different places:
+
+    * Team Draft / captains — names on the mid-screen player cards (~y 480 at 1080p). That is
+      what `_compute_draft_name_boxes` targets.
+    * All Pick / pick phase — names in the TOP BAR under each portrait (~y 82-108 at 1080p),
+      while y 480 is the hero-selection grid. Scanning the card band here OCRs hero portraits
+      and yields garbage, which is why All Pick drafts used to return no names at all.
+
+    Layout is ten slots: five left of the centre clock from x=196, five right from x=1090, each
+    ~124 wide on a 125 pitch. Unlike the card strip this is positionally meaningful — box i is
+    top-bar slot i (Radiant 0-4 then Dire 0-4), the same geometry the in-game hero detector
+    reads.
+
+    Env overrides mirror the card-band ones so this can be retuned without a deploy.
+    """
+    BASE_W = int(os.environ.get("DRAFT_BASE_WIDTH", 1920))
+    BASE_H = int(os.environ.get("DRAFT_BASE_HEIGHT", 1080))
+
+    Y_START = int(os.environ.get("TOPBAR_Y_START", 82))
+    Y_END = int(os.environ.get("TOPBAR_Y_END", 108))
+    X_LEFT = int(os.environ.get("TOPBAR_X_LEFT", 196))
+    X_RIGHT = int(os.environ.get("TOPBAR_X_RIGHT", 1090))
+    PITCH = int(os.environ.get("TOPBAR_PITCH", 125))
+    NAME_WIDTH = int(os.environ.get("TOPBAR_NAME_WIDTH", 124))
+
+    scale_x = frame_width / float(BASE_W)
+    scale_y = frame_height / float(BASE_H)
+
+    y_start = int(round(Y_START * scale_y))
+    y_end = int(round(Y_END * scale_y))
+
+    boxes = []
+    for start in (X_LEFT, X_RIGHT):
+        cur_x = start
+        for _ in range(5):
+            x1 = int(round(cur_x * scale_x))
+            x2 = int(round((cur_x + NAME_WIDTH) * scale_x))
+            boxes.append((x1, y_start, x2, y_end))
+            cur_x += PITCH
+    return boxes
+
+
+def _is_plausible_name(text):
+    """Whether an OCR'd string looks like a player name rather than UI noise."""
+    return bool(text) and len(text.strip()) >= 2 and bool(re.search(r"[A-Za-zА-Яа-я]", text))
+
+
+def _looks_like_ocr_noise(text):
+    """Whether a 'plausible' string is really an empty-slot artifact.
+
+    Tesseract reads faint UI edges as short repeated glyphs — 'ee', 'ии', 'oo'. These pass the
+    plausibility bar, so a band aimed at empty slots can out-count a band reading real names
+    (seen on a Team Draft frame: 8 top-bar reads, of which 5 were 'ee', versus 7 genuine card
+    names). Scoring bands on non-noise names instead prevents that mis-selection.
+    """
+    s = (text or "").strip()
+    return len(s) <= 2 or len(set(s.lower())) == 1
+
+
+def _score_names(names):
+    """Count names that are both plausible and not obvious OCR noise."""
+    return sum(1 for n in names if _is_plausible_name(n) and not _looks_like_ocr_noise(n))
+
+
+def _ocr_name_boxes(frame, boxes):
+    """OCR a list of name boxes, returning one (possibly None) string per box."""
+    h, w = frame.shape[:2]
+    names = []
+    for idx, (x1, y1, x2, y2) in enumerate(boxes):
+        x1c, y1c = max(0, x1), max(0, y1)
+        x2c, y2c = min(w, x2), min(h, y2)
+        if x2c <= x1c or y2c <= y1c:
+            names.append(None)
+            continue
+        text, _ = _ocr_text_from_region(frame[y1c:y2c, x1c:x2c], lang="eng+rus",
+                                        debug_name=f"namebox{idx+1}")
+        names.append(text.strip() if text else None)
+    return names
+
+
+def _read_draft_names(frame, debug=False):
+    """Read player names from whichever draft layout this frame is showing.
+
+    Runs both candidate bands and keeps the one yielding more plausible names, because neither
+    covers both screens: measured over 39 production clips, the card band alone produced a
+    usable roster (>=5 names) for 82% and the top bar for 87%, but best-of-both reached 92% —
+    4 clips were readable only via the top bar and 2 only via the cards. The remaining misses
+    are pre-name screens (e.g. the IMMORTAL DRAFT splash) with nothing to read.
+
+    Returns (names, layout) where layout is 'top_bar' or 'cards'. The top_bar list is
+    slot-indexed (Radiant 0-4, Dire 0-4); the cards list is not — see the draft ordering note
+    in processDraft.
+    """
+    h, w = frame.shape[:2]
+    card_names = _ocr_name_boxes(frame, _compute_draft_name_boxes(w, h))
+    top_names = _ocr_name_boxes(frame, _compute_top_bar_name_boxes(w, h))
+
+    n_cards = _score_names(card_names)
+    n_top = _score_names(top_names)
+
+    if debug:
+        logger.info(f"draft name bands: cards={n_cards}/{len(card_names)} "
+                    f"top_bar={n_top}/{len(top_names)}")
+
+    if n_top > n_cards:
+        return top_names, "top_bar"
+    return card_names, "cards"
+
+
 def _ocr_text_from_region(img_bgr, lang="eng+rus", debug_name=None):
     """Run OCR on a small region using conservative preprocessing.
 
@@ -2432,32 +2544,25 @@ def isFrameDraft(frame):
     try:
         h, w = frame.shape[:2]
 
-        # Compute boxes per provided constraints
-        boxes = _compute_draft_name_boxes(w, h)
-
-        # Extract text from each box
-        extracted = []
-        for idx, (x1, y1, x2, y2) in enumerate(boxes):
-            # Clamp to bounds
-            x1c, y1c = max(0, x1), max(0, y1)
-            x2c, y2c = min(w, x2), min(h, y2)
-            if x2c <= x1c or y2c <= y1c:
-                extracted.append((None, 0.0))
-                continue
-            roi = frame[y1c:y2c, x1c:x2c]
-            text, conf = _ocr_text_from_region(roi, lang="eng+rus", debug_name=f"box{idx+1}")
-            extracted.append((text, conf))
+        # Try both draft layouts — a frame is a draft screen if EITHER band reads names.
+        # Gating on the card band alone rejected every All Pick draft, whose names live in the
+        # top bar (the card band lands on the hero grid there and reads portrait noise).
+        extracted, layout = _read_draft_names(frame, debug=True)
+        boxes = (
+            _compute_top_bar_name_boxes(w, h) if layout == "top_bar"
+            else _compute_draft_name_boxes(w, h)
+        )
 
         # Optional debug visualization
         vis = frame.copy()
         detected_count = 0
         for idx, (x1, y1, x2, y2) in enumerate(boxes):
-            text, conf = extracted[idx]
-            ok = bool(text) and len(text) >= 2 and re.search(r"[A-Za-zА-Яа-я]", text)
+            text = extracted[idx]
+            ok = _is_plausible_name(text)
             detected_count += 1 if ok else 0
             color = (0, 200, 0) if ok else (0, 0, 200)
             cv2.rectangle(vis, (x1, y1), (x2, y2), color, 1)
-            label = f"{idx+1}:{(text or '').strip()[:18]} ({conf:.0f})"
+            label = f"{idx+1}:{(text or '').strip()[:18]}"
             cv2.putText(vis, label, (x1, max(0, y1-5)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
 
             # Save individual ROI with annotation
@@ -2465,20 +2570,12 @@ def isFrameDraft(frame):
             x2c, y2c = min(w, x2), min(h, y2)
             if x2c > x1c and y2c > y1c:
                 roi = frame[y1c:y2c, x1c:x2c]
-                save_debug_image(roi, f"draft_name_box_{idx+1}", f"{text or 'None'} (conf {conf:.1f})")
+                save_debug_image(roi, f"draft_name_box_{idx+1}", f"{text or 'None'}")
 
-        save_debug_image(vis, "draft_name_boxes", f"Detected {detected_count}/{len(boxes)}")
+        save_debug_image(vis, "draft_name_boxes",
+                         f"Detected {detected_count}/{len(boxes)} ({layout})")
 
-        # Evaluate heuristic: count plausible names
-        def plausible(s):
-            if not s:
-                return False
-            # At least 2 chars and contains a letter
-            if len(s) < 2:
-                return False
-            return bool(re.search(r"[A-Za-zА-Яа-я]", s))
-
-        names = [t for (t, c) in extracted if plausible(t)]
+        names = [t for t in extracted if _is_plausible_name(t)]
 
         # Require minimum number of detected names
         min_required = max(3, len(boxes) // 2)  # at least half, but not less than 3
@@ -2529,32 +2626,28 @@ def processDraft(frame, debug=False):
         else:
             logger.warning("pytesseract not available; cannot OCR captain names on draft")
 
-        # Also extract draft-phase lane names from the fixed name strip
+        # Also extract draft-phase player names, from whichever layout this frame shows.
         try:
-            h, w = frame.shape[:2]
-            boxes = _compute_draft_name_boxes(w, h)
-            lane_names = []
-            for idx, (x1, y1, x2, y2) in enumerate(boxes):
-                x1c, y1c = max(0, x1), max(0, y1)
-                x2c, y2c = min(w, x2), min(h, y2)
-                if x2c <= x1c or y2c <= y1c:
-                    lane_names.append(None)
-                    continue
-                roi = frame[y1c:y2c, x1c:x2c]
-                name, conf = _ocr_text_from_region(roi, lang="eng+rus", debug_name=f"draftlane_box{idx+1}")
-                # Keep None if not plausible
-                if name and len(name) >= 2 and re.search(r"[A-Za-zА-Яа-я]", name):
-                    lane_names.append(name)
-                else:
-                    lane_names.append(None)
+            raw_names, layout = _read_draft_names(frame, debug=debug)
+            names = [n if _is_plausible_name(n) else None for n in raw_names]
 
-            result['draft_lane_names'] = lane_names
+            result['draft_lane_names'] = names
+            result['draft_name_layout'] = layout
 
-            # Compose draft player order: [RadiantCaptain, DireCaptain, lane_names...]
-            draft_order = [result['captains']['Radiant'], result['captains']['Dire']] + lane_names
-            # Pad or trim to exactly 10 entries
-            draft_order = (draft_order + [None] * 10)[:10]
-            result['draft_player_order'] = draft_order
+            if layout == "top_bar":
+                # The top bar is already slot-indexed (Radiant 0-4 then Dire 0-4) and holds all
+                # ten players, so it IS the draft order — no captain prefix, no reshuffle. This
+                # is the same physical bar the in-game hero detector reads, which makes these
+                # indices comparable across the two clips.
+                draft_order = names
+            else:
+                # The card strip carries eight lane names and reads captains separately, and its
+                # order is NOT slot order — verified across three matches, the draft->slot map
+                # came out as three different permutations with only index 0 (Radiant captain)
+                # stable. Downstream must fuzzy-match these by name rather than by position.
+                draft_order = [result['captains']['Radiant'], result['captains']['Dire']] + names
+
+            result['draft_player_order'] = (draft_order + [None] * 10)[:10]
         except Exception as e:
             logger.debug(f"Error extracting draft lane names: {e}")
 

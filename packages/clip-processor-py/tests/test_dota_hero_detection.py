@@ -132,6 +132,84 @@ def test_compute_draft_name_boxes_scales_with_resolution(monkeypatch):
 
 
 # --------------------------------------------------------------------------- #
+# _compute_top_bar_name_boxes (All Pick layout)
+# --------------------------------------------------------------------------- #
+def test_top_bar_boxes_are_ten_slots_split_around_the_clock(monkeypatch):
+    for k in ("DRAFT_BASE_WIDTH", "DRAFT_BASE_HEIGHT", "TOPBAR_Y_START", "TOPBAR_Y_END",
+              "TOPBAR_X_LEFT", "TOPBAR_X_RIGHT", "TOPBAR_PITCH", "TOPBAR_NAME_WIDTH"):
+        monkeypatch.delenv(k, raising=False)
+    boxes = dhd._compute_top_bar_name_boxes(1920, 1080)
+    # Ten slots: five left of the centre clock, five right. Slot order is meaningful here
+    # (Radiant 0-4 then Dire 0-4), unlike the card strip.
+    assert len(boxes) == 10
+    assert boxes[0] == (196, 82, 320, 108)
+    assert boxes[1][0] == 196 + 125
+    assert boxes[5][0] == 1090  # first Dire slot jumps past the clock
+    assert all(b[0] < 960 for b in boxes[:5])
+    assert all(b[0] > 960 for b in boxes[5:])
+
+
+def test_top_bar_boxes_scale_with_resolution(monkeypatch):
+    for k in ("DRAFT_BASE_WIDTH", "DRAFT_BASE_HEIGHT"):
+        monkeypatch.delenv(k, raising=False)
+    half = dhd._compute_top_bar_name_boxes(960, 540)
+    assert half[0] == (98, 41, 160, 54)
+
+
+# --------------------------------------------------------------------------- #
+# name plausibility / band selection
+# --------------------------------------------------------------------------- #
+def test_repeated_glyph_reads_are_treated_as_noise():
+    # Tesseract renders faint empty-slot edges as short repeated glyphs. These pass the bare
+    # plausibility check, so scoring has to exclude them or a band aimed at empty slots can
+    # out-count one reading real names.
+    for junk in ("ee", "ии", "oo", "И", "  aa  "):
+        assert dhd._looks_like_ocr_noise(junk)
+    for real in ("Ame", "Тарган Жак", "takizawa-", "BurNIng"):
+        assert not dhd._looks_like_ocr_noise(real)
+
+
+def test_score_names_counts_only_real_names():
+    names = ["INFERNAL", "ee", "ee", "Юрец", None, "ии"]
+    assert dhd._score_names(names) == 2
+
+
+def test_read_draft_names_picks_the_band_with_more_real_names(monkeypatch):
+    # Simulates the Team Draft case that motivated noise-aware scoring: the top bar returned
+    # MORE raw strings (8) than the cards (7), but five were 'ee' artifacts.
+    card_names = ["Юрец пез", "www", "Son of Shore", "fortniteMan", "dualrazee", "Immersion", "Nyx"]
+    top_names = ["INFERNAL", "ee", "ee", "ye ТОРО", "Юрец", "ee", "ee", "ee"]
+
+    calls = []
+
+    def fake_ocr(frame, boxes):
+        calls.append(len(boxes))
+        return card_names if len(calls) == 1 else top_names
+
+    monkeypatch.setattr(dhd, "_ocr_name_boxes", fake_ocr)
+    names, layout = dhd._read_draft_names(np.zeros((1080, 1920, 3), np.uint8))
+    assert layout == "cards"
+    assert names == card_names
+
+
+def test_read_draft_names_prefers_top_bar_on_all_pick(monkeypatch):
+    card_names = ["OS kan", "ou Bate", None, None, None, None, None, None]
+    top_names = ["Ame", "Тарган Жак", "BurNIng", "Bach", "takizawa-",
+                 "Bengan", "keetai", "ponlo", "ChodΣX", "Manem"]
+
+    calls = []
+
+    def fake_ocr(frame, boxes):
+        calls.append(len(boxes))
+        return card_names if len(calls) == 1 else top_names
+
+    monkeypatch.setattr(dhd, "_ocr_name_boxes", fake_ocr)
+    names, layout = dhd._read_draft_names(np.zeros((1080, 1920, 3), np.uint8))
+    assert layout == "top_bar"
+    assert names == top_names
+
+
+# --------------------------------------------------------------------------- #
 # extract_hero_bar
 # --------------------------------------------------------------------------- #
 def test_extract_hero_bar_succeeds_on_large_frame():
@@ -537,15 +615,35 @@ def test_is_frame_draft_false_when_no_names():
 
 
 def test_process_draft_extracts_captains_and_order(monkeypatch):
+    """Team Draft (card) layout: captains are read separately and prefix the draft order."""
     monkeypatch.setattr(dhd, "TESSERACT_AVAILABLE", True)
     frame = np.zeros((1080, 1920, 3), np.uint8)
+    lanes = [f"Laner{i}" for i in range(8)]
     with patch.object(dhd, "extract_player_name", side_effect=["RadCap", "DireCap"]), \
-         patch.object(dhd, "_ocr_text_from_region", return_value=("Laner", 80.0)):
+         patch.object(dhd, "_read_draft_names", return_value=(lanes, "cards")):
         result = dhd.processDraft(frame)
     assert result["is_draft"] is True
     assert result["captains"] == {"Radiant": "RadCap", "Dire": "DireCap"}
     assert len(result["draft_player_order"]) == 10
     assert result["draft_player_order"][:2] == ["RadCap", "DireCap"]
+    assert result["draft_name_layout"] == "cards"
+
+
+def test_process_draft_top_bar_layout_is_already_slot_ordered(monkeypatch):
+    """All Pick (top-bar) layout carries all ten players in slot order.
+
+    No captain prefix here: prepending captains would shift every slot by two and destroy the
+    one property that makes this layout valuable — index i is top-bar slot i, the same indexing
+    the in-game hero detector uses.
+    """
+    monkeypatch.setattr(dhd, "TESSERACT_AVAILABLE", True)
+    frame = np.zeros((1080, 1920, 3), np.uint8)
+    slots = [f"P{i}" for i in range(10)]
+    with patch.object(dhd, "extract_player_name", side_effect=["RadCap", "DireCap"]), \
+         patch.object(dhd, "_read_draft_names", return_value=(slots, "top_bar")):
+        result = dhd.processDraft(frame)
+    assert result["draft_player_order"] == slots
+    assert result["draft_name_layout"] == "top_bar"
 
 
 def test_process_draft_returns_early_when_bar_fails():
