@@ -2459,21 +2459,60 @@ def _read_draft_names(frame, debug=False):
     Returns (names, layout) where layout is 'top_bar' or 'cards'. The top_bar list is
     slot-indexed (Radiant 0-4, Dire 0-4); the cards list is not — see the draft ordering note
     in processDraft.
+
+    The result is memoized per frame. Reading both bands costs ~3.5s, and a draft clip calls
+    this twice — once to decide the frame IS a draft, then again to pull the names out — so
+    without the cache the two-band read doubles to ~7s of OCR per clip. That regression showed
+    up in production as draft-request latency climbing from ~139s to ~436s and the queue
+    backing up behind it, since draft requests are by far the slowest work in the pipeline.
     """
+    cache_key = _frame_cache_key(frame)
+    if cache_key in _DRAFT_NAMES_CACHE:
+        return _DRAFT_NAMES_CACHE[cache_key]
+
     h, w = frame.shape[:2]
     card_names = _ocr_name_boxes(frame, _compute_draft_name_boxes(w, h))
-    top_names = _ocr_name_boxes(frame, _compute_top_bar_name_boxes(w, h))
-
     n_cards = _score_names(card_names)
+
+    # The card strip covers ~3/4 of drafts, so when it reads a full roster the top bar can't
+    # beat it (it has 10 slots vs 8, but a complete card read already answers the question).
+    # Skipping the second pass there keeps the common case at its original one-band cost.
+    if n_cards >= 8:
+        result = (card_names, "cards")
+        _cache_draft_names(frame, result)
+        if debug:
+            logger.info(f"draft name bands: cards={n_cards}/{len(card_names)} (top_bar skipped)")
+        return result
+
+    top_names = _ocr_name_boxes(frame, _compute_top_bar_name_boxes(w, h))
     n_top = _score_names(top_names)
 
     if debug:
         logger.info(f"draft name bands: cards={n_cards}/{len(card_names)} "
                     f"top_bar={n_top}/{len(top_names)}")
 
-    if n_top > n_cards:
-        return top_names, "top_bar"
-    return card_names, "cards"
+    result = (top_names, "top_bar") if n_top > n_cards else (card_names, "cards")
+    _cache_draft_names(frame, result)
+    return result
+
+
+# Frame -> (names, layout). Keyed by content hash rather than set as an attribute, because
+# numpy arrays have no __dict__ and reject attribute assignment. Bounded because the worker is
+# long-lived and processes a clip every few seconds; only the current frame is ever re-read.
+_DRAFT_NAMES_CACHE = {}
+_DRAFT_NAMES_CACHE_MAX = 8
+
+
+def _frame_cache_key(frame):
+    """Cheap content key for a frame: shape plus a hash of a strided sample of its bytes."""
+    view = frame[::16, ::16]
+    return (frame.shape, hash(view.tobytes()))
+
+
+def _cache_draft_names(frame, result):
+    if len(_DRAFT_NAMES_CACHE) >= _DRAFT_NAMES_CACHE_MAX:
+        _DRAFT_NAMES_CACHE.clear()
+    _DRAFT_NAMES_CACHE[_frame_cache_key(frame)] = result
 
 
 def _ocr_text_from_region(img_bgr, lang="eng+rus", debug_name=None):
@@ -2553,11 +2592,11 @@ def isFrameDraft(frame):
             else _compute_draft_name_boxes(w, h)
         )
 
-        # Optional debug visualization
+        # Optional debug visualization. Zip rather than index by box: a stubbed or partial OCR
+        # result can be shorter than the box list, and the box count differs per layout.
         vis = frame.copy()
         detected_count = 0
-        for idx, (x1, y1, x2, y2) in enumerate(boxes):
-            text = extracted[idx]
+        for idx, ((x1, y1, x2, y2), text) in enumerate(zip(boxes, extracted)):
             ok = _is_plausible_name(text)
             detected_count += 1 if ok else 0
             color = (0, 200, 0) if ok else (0, 0, 200)

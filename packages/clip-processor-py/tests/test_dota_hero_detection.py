@@ -35,6 +35,16 @@ def _reset_heroes_singleton():
     dhd._LOADED_HEROES_DATA = saved
 
 
+@pytest.fixture(autouse=True)
+def _reset_draft_names_cache():
+    # _read_draft_names memoizes by frame content, and most tests here build frames from
+    # np.zeros(...) — identical content, so one test's stubbed OCR result would otherwise be
+    # served to the next.
+    dhd._DRAFT_NAMES_CACHE.clear()
+    yield
+    dhd._DRAFT_NAMES_CACHE.clear()
+
+
 # --------------------------------------------------------------------------- #
 # PerformanceTimer
 # --------------------------------------------------------------------------- #
