@@ -7,6 +7,11 @@ export interface CreateReadyClipOptions {
   // Per clip, how many times to poll for transcode completion.
   pollAttempts: number
   pollIntervalMs: number
+  // Optional delay after creating a clip before the first poll. Helix reports
+  // duration > 0 from capture metadata before the renditions actually exist on
+  // the CDN (~10-13s observed), so polling immediately can submit a clip whose
+  // files all still 404.
+  initialDelayMs?: number
   // Optional wall-clock budget across all attempts (keeps draft retries
   // inside the draft screen window). Unset = no deadline.
   deadlineMs?: number
@@ -93,6 +98,11 @@ export async function createReadyClip(
     }
 
     logger.info(`${logPrefix} clip created`, { ...logContext, clipId, attempt })
+
+    // Give Twitch's transcode a head start before the first poll — see
+    // initialDelayMs on CreateReadyClipOptions. The deadline check inside the
+    // poll loop still bounds the total wait.
+    if (opts.initialDelayMs) await sleep(opts.initialDelayMs)
 
     for (let poll = 1; poll <= opts.pollAttempts; poll++) {
       if (overDeadline()) return null

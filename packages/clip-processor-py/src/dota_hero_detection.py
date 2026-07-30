@@ -221,6 +221,9 @@ HERO_CONFIDENCE_THRESHOLD = float(os.environ.get("HERO_CONFIDENCE_THRESHOLD", 0.
 # A frame must yield at least this many strong (>= threshold) slots to count as a live
 # Dota HUD; otherwise it's rejected as not-a-match (e.g. streamer alt-tabbed).
 MIN_VALID_SLOTS = int(os.environ.get("MIN_VALID_SLOTS", 8))
+# The pick-screen fallback (colour gate failed, but the All Pick top bar is readable)
+# emits a names+ranks roster only when at least this many of the 10 slots resolve.
+MIN_PICK_SCREEN_SLOTS = int(os.environ.get("MIN_PICK_SCREEN_SLOTS", 8))
 # Number of extra frames to pull from a clip when re-scanning low-confidence slots.
 RESCAN_FRAME_COUNT = int(os.environ.get("RESCAN_FRAME_COUNT", 3))
 
@@ -2409,6 +2412,48 @@ def _compute_top_bar_name_boxes(frame_width, frame_height):
     return boxes
 
 
+def _compute_top_bar_rank_boxes(frame_width, frame_height):
+    """Rank boxes for the ALL PICK / pick-phase top bar.
+
+    Same ten slots as `_compute_top_bar_name_boxes` (Radiant 0-4, Dire 0-4), but aimed at
+    the "Rank N" banner above the name band. Measured against a real 1080p pick-screen
+    frame: the banner text sits at y ~56-66, so the band is y 50-72 (the earlier 60-82
+    estimate would have clipped the text and caught the top of the name band).
+
+    The x range is inset on both sides: the Immortal medal at the right edge of each slot
+    carries its own leaderboard number, which a full-width read OCRs as extra digits
+    ('4 Rank 30', '7 Rank 301'), and the left edge catches portrait noise that breaks line
+    segmentation (the 'Rank 111' slot read 'akank 111 a' full-width vs clean when inset).
+    """
+    BASE_W = int(os.environ.get("DRAFT_BASE_WIDTH", 1920))
+    BASE_H = int(os.environ.get("DRAFT_BASE_HEIGHT", 1080))
+
+    Y_START = int(os.environ.get("TOPBAR_RANK_Y_START", 50))
+    Y_END = int(os.environ.get("TOPBAR_RANK_Y_END", 72))
+    X_LEFT = int(os.environ.get("TOPBAR_X_LEFT", 196))
+    X_RIGHT = int(os.environ.get("TOPBAR_X_RIGHT", 1090))
+    PITCH = int(os.environ.get("TOPBAR_PITCH", 125))
+    NAME_WIDTH = int(os.environ.get("TOPBAR_NAME_WIDTH", 124))
+    X_INSET_LEFT = int(os.environ.get("TOPBAR_RANK_X_INSET_LEFT", 20))
+    X_INSET_RIGHT = int(os.environ.get("TOPBAR_RANK_X_INSET_RIGHT", 24))
+
+    scale_x = frame_width / float(BASE_W)
+    scale_y = frame_height / float(BASE_H)
+
+    y_start = int(round(Y_START * scale_y))
+    y_end = int(round(Y_END * scale_y))
+
+    boxes = []
+    for start in (X_LEFT, X_RIGHT):
+        cur_x = start
+        for _ in range(5):
+            x1 = int(round((cur_x + X_INSET_LEFT) * scale_x))
+            x2 = int(round((cur_x + NAME_WIDTH - X_INSET_RIGHT) * scale_x))
+            boxes.append((x1, y_start, x2, y_end))
+            cur_x += PITCH
+    return boxes
+
+
 def _is_plausible_name(text):
     """Whether an OCR'd string looks like a player name rather than UI noise."""
     return bool(text) and len(text.strip()) >= 2 and bool(re.search(r"[A-Za-zА-Яа-я]", text))
@@ -2515,8 +2560,114 @@ def _cache_draft_names(frame, result):
     _DRAFT_NAMES_CACHE[_frame_cache_key(frame)] = result
 
 
-def _ocr_text_from_region(img_bgr, lang="eng+rus", debug_name=None):
+# Rank-band OCR config: the whitelist keeps the "Rank"/"Ранг" label so the read can be
+# anchored on it — the Immortal medal at the slot's right edge carries its own
+# leaderboard number, and a bare digit read can't tell those digits apart from the rank.
+_TOPBAR_RANK_CONFIG = r'--oem 3 --psm 7 -c tessedit_char_whitelist="RankАНГ0123456789 "'
+_TOPBAR_RANK_ANCHOR = re.compile(r"(?:r\s*a\s*n\s*k|р\s*а\s*н\s*г)\D*(\d+)", re.IGNORECASE)
+
+
+def _parse_top_bar_rank(text, confidence):
+    """Validate one rank-band OCR read, returning the rank int or None.
+
+    Rejects rather than mangles (unlike extract_rank_text, which truncates digits until
+    the value fits — silently turning a spurious 88888 into 8): the read must carry the
+    Rank/Ранг anchor (otherwise the digits could be the medal's leaderboard number),
+    must be 1-4 digits, and must land in 1-5000. Low-confidence reads are dropped too —
+    at 8500+ MMR these ranks reach chat with no cross-check.
+    """
+    min_conf = float(os.environ.get("TOPBAR_RANK_MIN_CONF", 10))
+    if not text or confidence < min_conf:
+        return None
+    m = _TOPBAR_RANK_ANCHOR.search(text)
+    if not m:
+        return None
+    digits = m.group(1)
+    if not 1 <= len(digits) <= 4:
+        return None
+    rank = int(digits)
+    return rank if 1 <= rank <= 5000 else None
+
+
+def _read_top_bar_ranks(frame):
+    """Read the "Rank N" banner of each All Pick top-bar slot (Radiant 0-4, Dire 0-4).
+
+    Returns a 10-element list of rank ints / None. Slots with no banner (unranked or
+    hidden) or an unreadable one come back None — a bad read is dropped, never guessed.
+    Not memoized: it runs once per clip, on the colour-gate failure path only.
+    """
+    h, w = frame.shape[:2]
+    ranks = []
+    for idx, (x1, y1, x2, y2) in enumerate(_compute_top_bar_rank_boxes(w, h)):
+        x1c, y1c = max(0, x1), max(0, y1)
+        x2c, y2c = min(w, x2), min(h, y2)
+        if x2c <= x1c or y2c <= y1c:
+            ranks.append(None)
+            continue
+        text, conf = _ocr_text_from_region(frame[y1c:y2c, x1c:x2c], lang="eng+rus",
+                                           debug_name=f"rankbox{idx+1}",
+                                           config=_TOPBAR_RANK_CONFIG, upscale=4)
+        ranks.append(_parse_top_bar_rank(text, conf))
+    return ranks
+
+
+def _read_pick_screen_roster(frame_path, debug=False):
+    """Build heroes[] entries (name + rank, sentinel hero identity) from a pick screen.
+
+    Used when the colour-bar gate fails: on an All Pick pick screen there are no colour
+    bars yet, but the top bar shows all ten player names and rank banners. Returns
+    slot-indexed entries with hero_id 0 / match_score 0.0 / detection_source
+    'pick_screen', or None when the frame isn't a readable pick screen. The sentinel
+    scores lose to any real in-game read in _merge_hero_slots, while the name and rank
+    persist — they're tracked per-slot independently of the identity winner.
+    """
+    if not frame_path:
+        return None
+    frame = load_image(frame_path)
+    if frame is None:
+        return None
+    names, layout = _read_draft_names(frame)  # memoized, so a repeat read is free
+    if layout != "top_bar":
+        # Card-band names aren't slot-indexed, so they can't be mapped to team/position.
+        return None
+    if sum(1 for n in names if n) < MIN_PICK_SCREEN_SLOTS:
+        return None
+    ranks = _read_top_bar_ranks(frame)
+
+    heroes = []
+    for idx in range(10):
+        name = names[idx] if idx < len(names) else None
+        rank = ranks[idx] if idx < len(ranks) else None
+        if not name and rank is None:
+            continue
+        hero = {
+            'team': 'Radiant' if idx < 5 else 'Dire',
+            'position': idx % 5,
+            'hero_id': 0,
+            'hero_name': None,
+            'hero_localized_name': None,
+            'match_score': 0.0,
+            'detection_source': 'pick_screen',
+        }
+        if name:
+            hero['player_name'] = name
+        if rank is not None:
+            hero['rank'] = rank
+        heroes.append(hero)
+
+    if debug:
+        logger.info(f"pick-screen roster: {len(heroes)} slots, "
+                    f"ranks={[h.get('rank') for h in heroes]}")
+    return heroes
+
+
+def _ocr_text_from_region(img_bgr, lang="eng+rus", debug_name=None, config=None, upscale=1):
     """Run OCR on a small region using conservative preprocessing.
+
+    `config` overrides the default `--oem 3 --psm 7` tesseract config (e.g. a char
+    whitelist), and `upscale` magnifies the region with INTER_CUBIC before OCR — rank
+    digits are ~9-11px tall at 1080p, well under tesseract's comfort zone, so the rank
+    band reads far better at 3-4x. Both default to the long-standing name-box behaviour.
 
     Returns tuple (text, avg_confidence). If OCR unavailable, returns (None, 0).
     """
@@ -2524,6 +2675,9 @@ def _ocr_text_from_region(img_bgr, lang="eng+rus", debug_name=None):
         return None, 0.0
 
     try:
+        if upscale and upscale != 1:
+            img_bgr = cv2.resize(img_bgr, None, fx=upscale, fy=upscale,
+                                 interpolation=cv2.INTER_CUBIC)
         gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
 
         # Levels adjustment and thresholding; try both polarities and pick best
@@ -2539,7 +2693,7 @@ def _ocr_text_from_region(img_bgr, lang="eng+rus", debug_name=None):
             thr = cv2.morphologyEx(thr, cv2.MORPH_OPEN, kernel)
 
             data = pytesseract.image_to_data(
-                thr, config=r"--oem 3 --psm 7", lang=lang, output_type=pytesseract.Output.DICT
+                thr, config=config or r"--oem 3 --psm 7", lang=lang, output_type=pytesseract.Output.DICT
             )
             texts = [t for t in data.get('text', []) if t and t.strip()]
             confs = [c for t, c in zip(data.get('text', []), data.get('conf', [])) if t and t.strip() and c > 0]
@@ -2994,16 +3148,40 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
             return result
         else:
             logger.error("No heroes identified in any frames")
+            # The colour gate finds nothing on an All Pick pick screen (heroes aren't
+            # picked yet, so there are no colour bars), but that frame carries every
+            # player name and rank in the top bar — the richest roster view in the
+            # pipeline. Recover it instead of discarding the clip. This third OCR band
+            # only ever runs here, on the gate-failure path, never on the success path.
+            pick_heroes = _read_pick_screen_roster(best_frame_info.get('frame_path'), debug=debug)
+            if pick_heroes:
+                players = build_players_from_heroes(pick_heroes)
+                return {
+                    'heroes': pick_heroes,
+                    'players': players,
+                    'is_draft': False,
+                    'detection_source': 'pick_screen',
+                    # Names are known but heroes aren't picked yet — lets consumers
+                    # render the roster without a "(?)" hero suffix, same convention
+                    # as draft results.
+                    'heroes_status': 'waiting',
+                    'source_type': source_type,
+                    'source': media_source,
+                }
             return None
     except Exception as e:
         logger.error(f"Error processing media: {e}")
         traceback.print_exc()
         # Clip-not-found from clip_utils.get_clip_details is transient (Twitch's
-        # public GQL lags Helix on fresh clips). Propagate the original error so
-        # the queue worker can re-queue this request instead of generic-failing
-        # it through the "no heroes detected" fall-through. Everything else stays
-        # as the soft-None failure mode it always was.
-        if isinstance(e, ValueError) and 'Clip not found or inaccessible' in str(e):
+        # public GQL lags Helix on fresh clips), and so is all-renditions-404
+        # (Helix reports the clip ready before CloudFront has the files).
+        # Propagate both so the queue worker can re-queue this request instead
+        # of generic-failing it through the "no heroes detected" fall-through.
+        # Everything else stays as the soft-None failure mode it always was.
+        if isinstance(e, ValueError) and (
+            'Clip not found or inaccessible' in str(e)
+            or 'Clip renditions not yet available' in str(e)
+        ):
             raise
         return None
     finally:

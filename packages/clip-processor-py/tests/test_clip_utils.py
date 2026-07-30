@@ -97,19 +97,26 @@ def test_clip_uri_fallback_when_all_qualities_404():
     assert details["download_url"].startswith(URL_720)
 
 
-def test_returns_highest_when_every_candidate_404():
+def test_raises_when_every_candidate_404():
+    # All renditions 404 = clip still transcoding. get_clip_details retries the
+    # whole GQL+probe cycle, then raises the transient marker error so the
+    # queue worker re-queues instead of failing permanently on a dead URL.
     qualities = [
         {"quality": "1080", "sourceURL": URL_1080},
         {"quality": "720", "sourceURL": URL_720},
     ]
     token = make_token(URL_720)
-    with patch("clip_utils.requests") as mock_requests:
+    with patch("clip_utils.requests") as mock_requests, \
+         patch("clip_utils.time.sleep"):
         mock_requests.RequestException = Exception
         mock_requests.post.return_value = gql_response(qualities, token)
-        mock_requests.get.side_effect = [probe(404), probe(404)]
-        details = clip_utils.get_clip_details(f"https://clips.twitch.tv/{CLIP_SLUG}")
-    assert details["selected_quality"] == "1080"
-    assert details["download_url"].startswith(URL_1080)
+        # 2 advertised candidates probed per attempt, 3 attempts.
+        mock_requests.get.side_effect = [probe(404), probe(404)] * 3
+        with pytest.raises(ValueError, match="Clip renditions not yet available"):
+            clip_utils.get_clip_details(
+                f"https://clips.twitch.tv/{CLIP_SLUG}", max_retries=3
+            )
+    assert mock_requests.post.call_count == 3
 
 
 # --------------------------------------------------------------------------- #
@@ -184,7 +191,10 @@ def test_resolve_falls_back_to_clip_uri_when_advertised_404():
     assert quality == "720"  # parsed from /720/index.mp4
 
 
-def test_resolve_returns_highest_when_every_candidate_404():
+def test_resolve_raises_when_every_candidate_404():
+    # Returning the highest candidate as a "last resort" handed the caller a
+    # URL it knew was dead; the all-404 branch now raises a distinct transient
+    # error instead.
     qualities = [
         {"quality": "1080", "sourceURL": URL_1080},
         {"quality": "720", "sourceURL": URL_720},
@@ -193,8 +203,8 @@ def test_resolve_returns_highest_when_every_candidate_404():
     with patch("clip_utils.requests") as mock_requests:
         mock_requests.RequestException = Exception
         mock_requests.get.side_effect = [probe(404), probe(404)]
-        url, quality = clip_utils._resolve_available_download_url(qualities, token)
-    assert quality == "1080"
+        with pytest.raises(ValueError, match="Clip renditions not yet available"):
+            clip_utils._resolve_available_download_url(qualities, token)
 
 
 def test_resolve_raises_when_no_candidates():

@@ -358,11 +358,41 @@ def test_worker_clip_not_found_is_requeued_not_failed():
     assert statuses == ["processing"]
 
 
+def test_worker_all_renditions_404_is_requeued_not_failed():
+    # All renditions 404 means Helix reported the clip ready (duration > 0, from
+    # capture metadata) before CloudFront had the files — the clip was simply
+    # submitted while Twitch was still transcoding. Same transient class as
+    # "Clip not found or inaccessible": re-queue, never permanently drop.
+    db = MagicMock()
+    db.requeue_for_retry.return_value = True
+    request = {
+        "request_id": "req_renditions_404",
+        "request_type": "clip",
+        "clip_url": "https://clips.twitch.tv/abc",
+        "clip_id": "abc",
+        "debug": False,
+        "force": False,
+        "include_image": True,
+        "match_id": "m1",
+    }
+    transient = ValueError(
+        "Clip renditions not yet available (all candidates returned 404); "
+        "clip is likely still transcoding"
+    )
+    with patch.object(api_server, "process_clip_request", side_effect=transient):
+        _run_worker_once(db, request)
+
+    db.requeue_for_retry.assert_called_once_with("req_renditions_404")
+    # Must NOT mark failed — only the initial 'processing' transition is allowed.
+    statuses = [c.args[1] for c in db.update_queue_status.call_args_list]
+    assert statuses == ["processing"]
+
+
 def test_worker_clip_not_found_falls_back_to_failed_when_budget_exhausted():
     # Once requeue_for_retry returns False (retry_count >= cap), the worker must
     # fall through to the normal failed path so the row doesn't sit pending forever.
     # Reason='transient' here is harmless: retry_count is already at the cap so
-    # the sweep's retry_count<3 filter excludes it.
+    # the sweep's retry_count<6 filter excludes it.
     db = MagicMock()
     db.requeue_for_retry.return_value = False
     request = {

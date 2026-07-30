@@ -5,10 +5,19 @@ import { type CreateReadyClipOptions, createReadyClip } from './createReadyClip'
 import { delayedQueue } from './DelayedQueue'
 
 // Heroes stay on the HUD all game, so retry generously with no deadline.
+// Helix reports duration > 0 from capture metadata ~10-13s before the
+// renditions actually exist on the CDN, and the old schedule (polls at
+// t≈0/5/10s, final sleep skipped) submitted inside that window — every
+// rendition 404'd and the clip was lost. The initial delay pushes the first
+// poll well past the observed failure window; submission then lands ~20s+
+// after creation, which transcode lag has never been seen to outlast at this
+// scale (the ~25min recovery case is covered by the vision API's retry
+// sweeper instead).
 export const GAMEPLAY_CLIP_OPTS: CreateReadyClipOptions = {
   maxAttempts: 3,
-  pollAttempts: 3,
+  pollAttempts: 4,
   pollIntervalMs: 5000,
+  initialDelayMs: 20000,
 }
 
 // The draft screen is only visible briefly, so keep the retry budget time-boxed,

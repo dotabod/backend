@@ -85,7 +85,9 @@ export class VisionResolver extends RosterResolver {
         accountid: hero.hero_id === gsi?.hero?.id ? Number(gsi?.player?.accountid) : 0,
         playerid: hero.hero_id === gsi?.hero?.id ? Number(gsi?.player?.id) : hero.player_id || null,
       }))
-      return { source: 'vision-heroes', matchPlayers }
+      // Pass heroes_status through so a pick-screen roster (sentinel hero_ids, real names/ranks)
+      // can render without a (?) suffix while hero identity is still unknown.
+      return { source: 'vision-heroes', matchPlayers, heroesStatus: data.heroes_status }
     }
 
     const draftNames = (data.draft_player_order ?? []).filter(

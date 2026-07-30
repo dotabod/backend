@@ -63,6 +63,28 @@ describe('createReadyClip', () => {
     expect(getCreateCalls()).toBe(1)
   })
 
+  it('waits initialDelayMs after creating the clip before the first poll', async () => {
+    // Helix reports duration > 0 before the renditions exist on the CDN, so the
+    // gameplay path defers the first poll past that observed ~10-13s window.
+    const { api, getGetCalls } = fakeApi({
+      clipIds: ['clip-a'],
+      durations: { 'clip-a': 29 },
+    })
+
+    const start = Date.now()
+    const result = await createReadyClip(
+      api,
+      'acct',
+      { ...FAST_OPTS, initialDelayMs: 50 },
+      '[Test]',
+      {},
+    )
+
+    expect(result).toBe('clip-a')
+    expect(getGetCalls()).toHaveLength(1) // ready on the first (delayed) poll
+    expect(Date.now() - start).toBeGreaterThanOrEqual(40)
+  })
+
   it('recreates a new clip when the first never transcodes', async () => {
     const { api, getCreateCalls } = fakeApi({
       clipIds: ['dud', 'good'],

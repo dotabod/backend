@@ -1136,7 +1136,7 @@ class PostgresClient:
         self,
         request_id: str,
         delay_seconds: int = 60,
-        max_retries: int = 3,
+        max_retries: int = 6,
     ) -> bool:
         """Re-queue a transiently failed request so a future worker pass can retry it.
 
@@ -1191,8 +1191,8 @@ class PostgresClient:
 
     def fetch_recent_failed_clips(
         self,
-        window: str = '1 hour',
-        max_retry_count: int = 3,
+        window: str = '2 hours',
+        max_retry_count: int = 6,
         limit: int = 50,
     ) -> list:
         """Return failed clip queue rows that should be auto-replayed.
@@ -1209,6 +1209,13 @@ class PostgresClient:
 
         The sliding window bounds the work — once a row ages out we stop trying.
         Order by created_at so the oldest failures get the next retry slot first.
+
+        Budget sizing: recovering a clip that was submitted while Twitch was
+        still transcoding has been observed to take ~25 min, but the old
+        budget (retry_count < 3 over 1h) only gave ~15 min of practical
+        coverage at the 300s sweep cadence. 6 retries over 2h covers the
+        observed lag with headroom; max_retries on requeue_for_retry must stay
+        in step with max_retry_count or the wider budget here is dead code.
         """
         if not self._initialized and not self.initialize():
             logger.warning("PostgreSQL not initialized, can't fetch failed clips")

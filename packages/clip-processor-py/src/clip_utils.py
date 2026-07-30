@@ -51,8 +51,9 @@ def _resolve_available_download_url(qualities, token):
     was never produced, so CloudFront returns 404. Probe candidates highest->lowest
     with a tiny Range request and fall back to the token's signed clip_uri (which is
     guaranteed to exist). Returns (download_url, quality) for the first candidate
-    that does not 404; if every candidate 404s or cannot be probed, returns the
-    highest so the caller's existing error handling still fires.
+    that does not 404; if every candidate 404s or cannot be probed, raises a
+    ValueError marking the clip as still transcoding (transient) so the caller
+    can retry later instead of downloading from a URL we know is dead.
     """
     candidates = []  # (download_url, quality)
     for q in qualities:
@@ -94,10 +95,17 @@ def _resolve_available_download_url(qualities, token):
         except requests.RequestException as e:
             logger.warning(f"Probe failed for quality {quality}: {e}; trying next candidate")
 
-    logger.error(
-        "All candidate renditions returned 404 or failed to probe; using highest as last resort"
+    # Every candidate 404'd (or couldn't be probed) — the clip is almost
+    # certainly still transcoding: Helix reports duration > 0 from capture
+    # metadata before the renditions exist on CloudFront. Raise a distinct
+    # error instead of returning a URL we know is dead, so the queue worker
+    # can classify this as transient and retry rather than burning four
+    # escalating downloads in download_single_frame and failing permanently.
+    logger.error("All candidate renditions returned 404 or failed to probe")
+    raise ValueError(
+        "Clip renditions not yet available (all candidates returned 404); "
+        "clip is likely still transcoding"
     )
-    return candidates[0]
 
 
 def get_clip_details(url, max_retries=10, retry_delay=2, max_retry_delay=15):

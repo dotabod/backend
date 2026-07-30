@@ -167,6 +167,77 @@ def test_top_bar_boxes_scale_with_resolution(monkeypatch):
 
 
 # --------------------------------------------------------------------------- #
+# _compute_top_bar_rank_boxes (All Pick rank band)
+# --------------------------------------------------------------------------- #
+def test_top_bar_rank_boxes_align_with_name_slots(monkeypatch):
+    for k in ("DRAFT_BASE_WIDTH", "DRAFT_BASE_HEIGHT", "TOPBAR_RANK_Y_START", "TOPBAR_RANK_Y_END",
+              "TOPBAR_X_LEFT", "TOPBAR_X_RIGHT", "TOPBAR_PITCH", "TOPBAR_NAME_WIDTH",
+              "TOPBAR_RANK_X_INSET_LEFT", "TOPBAR_RANK_X_INSET_RIGHT"):
+        monkeypatch.delenv(k, raising=False)
+    boxes = dhd._compute_top_bar_rank_boxes(1920, 1080)
+    assert len(boxes) == 10
+    # Measured against a real 1080p pick screen: "Rank N" sits at y 50-72, above the
+    # y 82-108 name band, inset from the medal/portrait at the slot edges.
+    assert boxes[0] == (216, 50, 296, 72)
+    assert boxes[5][0] == 1090 + 20  # Dire slots jump past the clock, same as names
+    name_boxes = dhd._compute_top_bar_name_boxes(1920, 1080)
+    for rank_box, name_box in zip(boxes, name_boxes):
+        assert rank_box[0] >= name_box[0] and rank_box[2] <= name_box[2]
+        assert rank_box[3] <= name_box[1]  # rank band sits above the name band
+
+
+def test_top_bar_rank_boxes_scale_with_resolution(monkeypatch):
+    for k in ("DRAFT_BASE_WIDTH", "DRAFT_BASE_HEIGHT"):
+        monkeypatch.delenv(k, raising=False)
+    half = dhd._compute_top_bar_rank_boxes(960, 540)
+    assert half[0] == (108, 25, 148, 36)
+
+
+# --------------------------------------------------------------------------- #
+# _parse_top_bar_rank (rank digit validation)
+# --------------------------------------------------------------------------- #
+def test_parse_top_bar_rank_accepts_anchored_ranks(monkeypatch):
+    monkeypatch.delenv("TOPBAR_RANK_MIN_CONF", raising=False)
+    assert dhd._parse_top_bar_rank("Rank 30", 92.0) == 30
+    assert dhd._parse_top_bar_rank("Rank 344", 96.0) == 344
+    # Medal leaderboard digits beside the banner text are not the rank.
+    assert dhd._parse_top_bar_rank("4 Rank 30", 92.0) == 30
+    assert dhd._parse_top_bar_rank("Rank 301 7", 40.0) == 301
+    # OCR sometimes splits the label.
+    assert dhd._parse_top_bar_rank("Ra nk 111", 87.0) == 111
+    assert dhd._parse_top_bar_rank("Ранг 12", 80.0) == 12
+
+
+def test_parse_top_bar_rank_rejects_instead_of_mangling(monkeypatch):
+    monkeypatch.delenv("TOPBAR_RANK_MIN_CONF", raising=False)
+    # No anchor: bare digits could be the medal's leaderboard number.
+    assert dhd._parse_top_bar_rank("29", 90.0) is None
+    assert dhd._parse_top_bar_rank(None, 90.0) is None
+    # extract_rank_text would truncate these to fit; the pick-screen read must drop them.
+    assert dhd._parse_top_bar_rank("Rank 88888", 90.0) is None
+    assert dhd._parse_top_bar_rank("Rank 6000", 90.0) is None
+    assert dhd._parse_top_bar_rank("Rank 0", 90.0) is None
+    assert dhd._parse_top_bar_rank("Rank", 90.0) is None
+    # Low-confidence reads are dropped.
+    assert dhd._parse_top_bar_rank("Rank 344", 5.0) is None
+
+
+def test_read_top_bar_ranks_uses_whitelist_config_and_upscale(monkeypatch):
+    calls = []
+
+    def fake_ocr(region, lang=None, debug_name=None, config=None, upscale=1):
+        calls.append((config, upscale, region.shape))
+        return ("Rank 344", 96.0) if len(calls) == 6 else (None, 0.0)
+
+    monkeypatch.setattr(dhd, "_ocr_text_from_region", fake_ocr)
+    ranks = dhd._read_top_bar_ranks(np.zeros((1080, 1920, 3), np.uint8))
+    assert ranks == [None, None, None, None, None, 344, None, None, None, None]
+    assert all(c[0] == dhd._TOPBAR_RANK_CONFIG and c[1] == 4 for c in calls)
+    # Source crops are the measured band: 22px tall, 80px wide at 1080p.
+    assert all(c[2] == (22, 80, 3) for c in calls)
+
+
+# --------------------------------------------------------------------------- #
 # name plausibility / band selection
 # --------------------------------------------------------------------------- #
 def test_repeated_glyph_reads_are_treated_as_noise():
@@ -432,6 +503,17 @@ def test_process_media_returns_none_when_no_heroes():
         assert dhd.process_media("http://clip", source_type="clip") is None
 
 
+def test_process_media_propagates_renditions_not_yet_available():
+    # All-renditions-404 (clip still transcoding) must propagate like
+    # "Clip not found or inaccessible" so the queue worker re-queues the
+    # request instead of recording a permanent failure.
+    with patch.object(dhd, "get_clip_details", side_effect=ValueError(
+            "Clip renditions not yet available (all candidates returned 404); "
+            "clip is likely still transcoding")):
+        with pytest.raises(ValueError, match="Clip renditions not yet available"):
+            dhd.process_media("http://clip", source_type="clip")
+
+
 def test_process_media_only_draft_returns_draft_result():
     with patch.object(dhd, "get_clip_details", return_value={"id": "c1"}), \
          patch.object(dhd, "download_single_frame", return_value="frame0.jpg"), \
@@ -460,6 +542,79 @@ def test_process_media_rejects_invalid_hud():
          patch.object(dhd, "process_frames_for_heroes", return_value=(heroes, info)), \
          patch.object(dhd, "is_valid_hud", return_value=False):
         assert dhd.process_media("http://clip", source_type="clip") is None
+
+
+# --------------------------------------------------------------------------- #
+# process_media pick-screen fallback (colour gate failed, top bar readable)
+# --------------------------------------------------------------------------- #
+def _pick_screen_names():
+    return (["PaSTiL", "123", "my role my te...", None, "Stoic",
+             "Malr1ne", "kiyotaka", "spoiled", "lantana", "panto"], "top_bar")
+
+
+def _pick_screen_patches(names, ranks=None):
+    info = {"frame_index": 0, "frame_path": "best.jpg", "match_score": 0.4, "detected_colors": {}}
+    return (
+        patch.object(dhd, "get_clip_details", return_value={"id": "c1", "duration": 30}),
+        patch.object(dhd, "download_single_frame", return_value="frame0.jpg"),
+        patch.object(dhd, "load_image", return_value=np.zeros((1080, 1920, 3), np.uint8)),
+        patch.object(dhd, "process_frames_for_heroes", return_value=([], info)),
+        patch.object(dhd, "_read_draft_names", return_value=names),
+        patch.object(dhd, "_read_top_bar_ranks", return_value=ranks or [None] * 10),
+    )
+
+
+def test_process_media_pick_screen_fallback_builds_roster():
+    ranks = [None, None, None, None, None, 30, 344, 345, 301, 111]
+    patches = _pick_screen_patches(_pick_screen_names(), ranks)
+    with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5]:
+        result = dhd.process_media("http://clip", source_type="clip")
+    assert result is not None
+    assert result["detection_source"] == "pick_screen"
+    assert result["is_draft"] is False
+    assert result["heroes_status"] == "waiting"
+    assert result["players"]  # the queue worker discards results with empty players[]
+    heroes = result["heroes"]
+    assert len(heroes) == 9  # one Radiant slot resolved neither name nor rank
+    dire0 = next(h for h in heroes if h["team"] == "Dire" and h["position"] == 0)
+    assert dire0["player_name"] == "Malr1ne" and dire0["rank"] == 30
+    # Sentinel identity: loses to any real in-game read in the per-slot merge.
+    assert dire0["hero_id"] == 0 and dire0["match_score"] == 0.0
+    assert dire0["detection_source"] == "pick_screen"
+    rad0 = next(h for h in heroes if h["team"] == "Radiant" and h["position"] == 0)
+    assert rad0["player_name"] == "PaSTiL" and "rank" not in rad0
+
+
+def test_process_media_pick_screen_fallback_needs_enough_names():
+    sparse = (["Ame", None, None, None, None, None, None, None, None, None], "top_bar")
+    patches = _pick_screen_patches(sparse)
+    with patches[0], patches[1], patches[2], patches[3], patches[4], \
+         patch.object(dhd, "_read_top_bar_ranks") as rank_read:
+        # The rank band is real OCR cost — it must not run when the roster won't resolve.
+        assert dhd.process_media("http://clip", source_type="clip") is None
+    rank_read.assert_not_called()
+
+
+def test_process_media_pick_screen_fallback_skips_card_layout():
+    # Card-band names aren't slot-indexed, so they can't map to team/position slots.
+    cards = (["Ame", "Bach", "BurNIng", "ponlo", "keetai", "ChodΣX", "Manem", "takizawa-"], "cards")
+    patches = _pick_screen_patches(cards)
+    with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5]:
+        assert dhd.process_media("http://clip", source_type="clip") is None
+
+
+def test_process_media_success_path_never_reads_pick_screen():
+    heroes, info = _heroes_and_info()
+    with patch.object(dhd, "get_clip_details", return_value={"id": "c1", "duration": 30}), \
+         patch.object(dhd, "download_single_frame", return_value="frame0.jpg"), \
+         patch.object(dhd, "load_image", return_value=np.zeros((120, 1920, 3), np.uint8)), \
+         patch.object(dhd, "process_frames_for_heroes", return_value=(heroes, info)), \
+         patch.object(dhd, "is_valid_hud", return_value=True), \
+         patch.object(dhd, "extract_team_captains_from_frame", return_value={}), \
+         patch.object(dhd, "_read_pick_screen_roster") as pick_read:
+        result = dhd.process_media("http://clip", source_type="clip")
+    assert result is not None
+    pick_read.assert_not_called()
 
 
 # --------------------------------------------------------------------------- #
