@@ -61,6 +61,44 @@ describe('VisionResolver', () => {
     expect(out?.heroesStatus).toBe('failed')
   })
 
+  it('passes heroes_status through on the vision-heroes path (pick-screen roster)', async () => {
+    // Pick-screen fallback payload: sentinel hero_ids, real names/ranks, heroes waiting.
+    const r = new VisionResolver(async () => ({
+      match_id: '12345',
+      heroes: Array.from({ length: 10 }, (_, i) => ({
+        hero_id: 0,
+        hero_name: '',
+        hero_localized_name: '',
+        match_score: 0,
+        position: i % 5,
+        player_name: `p${i}`,
+        team: i < 5 ? 'radiant' : 'dire',
+        variant: '',
+      })),
+      heroes_status: 'waiting',
+    }))
+    const out = await r.resolve(ctx('12345'))
+    expect(out?.source).toBe('vision-heroes')
+    expect(out?.heroesStatus).toBe('waiting')
+  })
+
+  it('leaves heroesStatus undefined for a normal vision-heroes roster', async () => {
+    const r = new VisionResolver(async () => ({
+      match_id: '12345',
+      heroes: Array.from({ length: 10 }, (_, i) => ({
+        hero_id: i + 1,
+        hero_name: `h${i}`,
+        hero_localized_name: `Hero ${i}`,
+        match_score: 0,
+        position: i,
+        team: i < 5 ? 'radiant' : 'dire',
+        variant: '',
+      })),
+    }))
+    const out = await r.resolve(ctx('12345'))
+    expect(out?.heroesStatus).toBeUndefined()
+  })
+
   it('defers when neither heroes nor draft names are present', async () => {
     const r = new VisionResolver(async () => ({
       match_id: '12345',
