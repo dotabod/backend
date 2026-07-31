@@ -32,6 +32,7 @@ const CRITICAL_SUBSCRIPTION_TYPES: (keyof TwitchEventTypes)[] = [
   'stream.online',
   'stream.offline',
   'user.update',
+  'channel.chat.message',
 ] as const
 
 /**
