@@ -3,8 +3,8 @@ name: Update dotaconstants (low-noise)
 on:
   workflow_dispatch:
   schedule:
-    # Weekly check to avoid noisy update churn.
-    - cron: '30 6 * * 1'
+    # Daily check; the create-pull-request step is a no-op unless patch-relevant files changed.
+    - cron: '30 6 * * *'
 
 permissions:
   contents: write
