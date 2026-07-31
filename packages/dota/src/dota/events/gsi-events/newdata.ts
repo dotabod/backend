@@ -360,8 +360,6 @@ async function saveMatchData(client: SocketClient) {
             lobbyType: String(delayedData.match.lobby_type),
             timestamp: Date.now(),
           })
-
-          await chatterMatchFound(client)
         }
       } catch (error) {
         if (!(error instanceof CustomError)) {
@@ -709,6 +707,16 @@ eventHandler.registerEvent('newdata', {
       await Promise.all([
         redisClient.client.set(`${dotaClient.client.token}:playingHeroSlot`, purchaser),
         saveMatchData(dotaClient.client),
+        // Items only exist once the streamer has loaded into the match with picks locked
+        // in, so this is a per-match, MMR-agnostic "match found" signal — unlike the
+        // steamServerId/lobbyType chain above, it doesn't depend on the (permanently
+        // disabled) ENABLE_SPECTATE_FRIEND_GAME flow. The .catch keeps a failure here from
+        // rejecting this Promise.all and blocking the cache update below.
+        dotaClient.client.steam32Id
+          ? chatterMatchFound(dotaClient.client).catch((error) => {
+              logger.error('[AUTO_COMMANDS] Error triggering chatterMatchFound', { error })
+            })
+          : Promise.resolve(),
       ])
       // Update cache with the new value
       playingHeroSlotCache.set(dotaClient.client.token, purchaser)
