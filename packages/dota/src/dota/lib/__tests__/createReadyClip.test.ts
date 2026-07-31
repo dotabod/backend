@@ -23,17 +23,22 @@ function fakeApi(opts: {
 }) {
   let createCalls = 0
   const getCalls: string[] = []
+  // Clip creation goes through `callApi` rather than `clips.createClip` because
+  // Twurple can't send Twitch's `duration` parameter; capture the queries so tests
+  // can assert what was actually requested.
+  const createQueries: Array<Record<string, string>> = []
   const api = {
+    callApi: async ({ query }: { query: Record<string, string> }) => {
+      createCalls += 1
+      createQueries.push(query)
+      if (opts.createThrowsOn?.includes(createCalls)) {
+        throw new Error('createClip boom')
+      }
+      const id = opts.clipIds[createCalls - 1]
+      if (id === undefined) throw new Error('ran out of fake clip ids')
+      return { data: [{ id }] }
+    },
     clips: {
-      createClip: async () => {
-        createCalls += 1
-        if (opts.createThrowsOn?.includes(createCalls)) {
-          throw new Error('createClip boom')
-        }
-        const id = opts.clipIds[createCalls - 1]
-        if (id === undefined) throw new Error('ran out of fake clip ids')
-        return id
-      },
       getClipById: async (id: string) => {
         getCalls.push(id)
         const duration = opts.durations[id] ?? 0
@@ -42,6 +47,7 @@ function fakeApi(opts: {
     },
   }
   return {
+    createQueries,
     api: api as any,
     getCreateCalls: () => createCalls,
     getGetCalls: () => getCalls,
@@ -61,6 +67,28 @@ describe('createReadyClip', () => {
 
     expect(result).toBe('clip-a')
     expect(getCreateCalls()).toBe(1)
+  })
+
+  it('sends durationSeconds to Twitch so the clip is wider than the 30s default', async () => {
+    const { api, createQueries } = fakeApi({
+      clipIds: ['clip-a'],
+      durations: { 'clip-a': 60 },
+    })
+
+    await createReadyClip(api, 'acct', { ...FAST_OPTS, durationSeconds: 60 }, '[Test]', {})
+
+    expect(createQueries[0]).toEqual({ broadcaster_id: 'acct', duration: '60' })
+  })
+
+  it('omits duration entirely when unset, leaving Twitch on its default', async () => {
+    const { api, createQueries } = fakeApi({
+      clipIds: ['clip-a'],
+      durations: { 'clip-a': 29 },
+    })
+
+    await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', {})
+
+    expect(createQueries[0]).toEqual({ broadcaster_id: 'acct' })
   })
 
   it('waits initialDelayMs after creating the clip before the first poll', async () => {
@@ -134,11 +162,11 @@ describe('createReadyClip', () => {
       },
     )
     const api = {
+      callApi: async () => {
+        createCalls += 1
+        throw offlineError
+      },
       clips: {
-        createClip: async () => {
-          createCalls += 1
-          throw offlineError
-        },
         getClipById: async () => ({ duration: 0 }),
       },
     } as any
@@ -158,11 +186,11 @@ describe('createReadyClip', () => {
       'This token does not have any of the requested scopes (clips:edit) and can not be upgraded.',
     )
     const api = {
+      callApi: async () => {
+        createCalls += 1
+        throw scopeError
+      },
       clips: {
-        createClip: async () => {
-          createCalls += 1
-          throw scopeError
-        },
         getClipById: async () => ({ duration: 0 }),
       },
     } as any
@@ -179,8 +207,8 @@ describe('createReadyClip', () => {
     // here reports duration 0 for the first 3 polls, then transcodes on the 4th.
     let polls = 0
     const api = {
+      callApi: async () => ({ data: [{ id: 'slow' }] }),
       clips: {
-        createClip: async () => 'slow',
         getClipById: async (_id: string) => {
           polls += 1
           return { duration: polls >= 4 ? 30 : 0 }
@@ -207,11 +235,11 @@ describe('createReadyClip', () => {
     let createCalls = 0
     const perClipPolls: Record<string, number> = {}
     const api = {
+      callApi: async () => {
+        createCalls += 1
+        return { data: [{ id: `clip-${createCalls}` }] }
+      },
       clips: {
-        createClip: async () => {
-          createCalls += 1
-          return `clip-${createCalls}`
-        },
         getClipById: async (id: string) => {
           perClipPolls[id] = (perClipPolls[id] ?? 0) + 1
           // Each fresh clip needs 4 polls to transcode; 2 polls never reaches it.

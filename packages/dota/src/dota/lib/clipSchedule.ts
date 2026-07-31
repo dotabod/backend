@@ -13,11 +13,17 @@ import { delayedQueue } from './DelayedQueue'
 // after creation, which transcode lag has never been seen to outlast at this
 // scale (the ~25min recovery case is covered by the vision API's retry
 // sweeper instead).
+// 60s (Twitch's max) rather than the 30s default: the roster panel is only up for
+// ~30s, and a 30s clip aimed even slightly late misses it entirely — 9 of 11 of one
+// streamer's strategy clips landed on the pick screen instead. `duration` extends
+// the window backward from the same end anchor, so this costs nothing but doubles
+// the room for the aim to be wrong.
 export const GAMEPLAY_CLIP_OPTS: CreateReadyClipOptions = {
   maxAttempts: 3,
   pollAttempts: 4,
   pollIntervalMs: 5000,
   initialDelayMs: 20000,
+  durationSeconds: 60,
 }
 
 // The draft screen is only visible briefly, so keep the retry budget time-boxed,

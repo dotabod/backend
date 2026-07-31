@@ -255,6 +255,46 @@ def test_score_names_counts_only_real_names():
     assert dhd._score_names(names) == 2
 
 
+# --------------------------------------------------------------------------- #
+# _sample_clip_frames — spreading candidate frames across the clip
+# --------------------------------------------------------------------------- #
+def _stub_frame_sampling(monkeypatch, returns):
+    """Stub download_clip/extract_frames and record the frame_interval requested."""
+    seen = {}
+
+    def fake_extract(path, clip_details=None, frame_interval=None):
+        seen["interval"] = frame_interval
+        return returns
+
+    monkeypatch.setattr(dhd, "download_clip", lambda details: "/tmp/clip.mp4")
+    monkeypatch.setattr(dhd, "extract_frames", fake_extract)
+    return seen
+
+
+def test_sample_clip_frames_spreads_interval_over_the_duration(monkeypatch):
+    # A 60s clip at the default count should sample well inside the ~30s the roster
+    # panel is on screen, so a clip aimed late still contains it.
+    seen = _stub_frame_sampling(monkeypatch, ["/tmp/f1.jpg", "/tmp/f2.jpg"])
+
+    out = dhd._sample_clip_frames({"duration": 60}, count=8)
+    assert out == ["/tmp/f1.jpg", "/tmp/f2.jpg"]
+    assert seen["interval"] == 7  # 60 // 8, comfortably finer than the panel window
+
+
+def test_sample_clip_frames_falls_back_when_duration_unknown(monkeypatch):
+    seen = _stub_frame_sampling(monkeypatch, [])
+    dhd._sample_clip_frames({}, count=8)
+    assert seen["interval"] == 5
+
+
+def test_sample_clip_frames_never_returns_a_zero_interval(monkeypatch):
+    # A very short clip must not produce frame_interval=0, which would loop forever
+    # building timestamps in extract_frames.
+    seen = _stub_frame_sampling(monkeypatch, [])
+    dhd._sample_clip_frames({"duration": 5}, count=8)
+    assert seen["interval"] >= 1
+
+
 def test_read_draft_names_picks_the_band_with_more_real_names(monkeypatch):
     # Simulates the Team Draft case that motivated noise-aware scoring: the top bar returned
     # MORE raw strings (8) than the cards (7), but five were 'ee' artifacts.

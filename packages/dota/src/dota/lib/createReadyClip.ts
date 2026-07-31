@@ -15,9 +15,40 @@ export interface CreateReadyClipOptions {
   // Optional wall-clock budget across all attempts (keeps draft retries
   // inside the draft screen window). Unset = no deadline.
   deadlineMs?: number
+  // Published clip length in seconds (Twitch accepts 5-60, default 30). The
+  // capture window is anchored to the API call and `duration` extends BACKWARD
+  // from it, so a longer clip buys tolerance for aiming slightly late without
+  // moving the target.
+  durationSeconds?: number
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// Twurple 7.4's `clips.createClip` hardcodes its query to `broadcaster_id` +
+// `has_delay` — a parameter Twitch removed and documents as never having had an
+// effect. It has no way to send `duration`, which Twitch added on 2025-12-19
+// (float, 5-60, default 30). Calling the endpoint directly through the client's
+// public `callApi` is the only way to widen the clip, and it keeps Twurple's
+// auth/scope/token-refresh handling.
+async function createClipWithDuration(
+  api: ApiClient,
+  accountId: string,
+  durationSeconds: number | undefined,
+): Promise<string> {
+  const query: Record<string, string> = { broadcaster_id: accountId }
+  if (durationSeconds !== undefined) query.duration = String(durationSeconds)
+
+  const result = await api.callApi<{ data: Array<{ id: string }> }>({
+    type: 'helix',
+    url: 'clips',
+    method: 'POST',
+    userId: accountId,
+    scopes: ['clips:edit'],
+    canOverrideScopedUserContext: true,
+    query,
+  })
+  return result.data[0].id
+}
 
 // Twitch responds 404 with body like {"status":404,"message":"Channel offline."}
 // when CreateClip is called against an offline broadcaster. The bot can't recover
@@ -70,10 +101,7 @@ export async function createReadyClip(
 
     let clipId: string
     try {
-      clipId = await api.clips.createClip({
-        createAfterDelay: true,
-        channel: accountId,
-      })
+      clipId = await createClipWithDuration(api, accountId, opts.durationSeconds)
     } catch (error) {
       if (isChannelOfflineError(error)) {
         logger.info(`${logPrefix} createClip skipped — channel offline`, {

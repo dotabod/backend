@@ -226,6 +226,10 @@ MIN_VALID_SLOTS = int(os.environ.get("MIN_VALID_SLOTS", 8))
 MIN_PICK_SCREEN_SLOTS = int(os.environ.get("MIN_PICK_SCREEN_SLOTS", 8))
 # Number of extra frames to pull from a clip when re-scanning low-confidence slots.
 RESCAN_FRAME_COUNT = int(os.environ.get("RESCAN_FRAME_COUNT", 3))
+# Frames sampled across a clip before choosing which one to analyse. Clips are now 60s
+# (Twitch's max) while the roster panel is only up for ~30s, so reading frame 0 alone
+# makes the result depend on capture timing being right.
+SAMPLE_FRAME_COUNT = int(os.environ.get("SAMPLE_FRAME_COUNT", 8))
 
 # Mapping of known heroes
 HEROES_FILE = HEROES_DIR / "hero_data.json"
@@ -1755,6 +1759,21 @@ def process_frame_for_in_game_heroes(frame_path, debug=False, frame=None):
         logger.info(f"In-game frame processing completed in {duration:.3f} seconds")
 
 
+def _sample_clip_frames(clip_details, count=None):
+    """Extract frames spread across a clip, for picking the best one to analyse.
+
+    Returns [] rather than raising when the clip can't be downloaded — the caller still
+    has frame 0 and should carry on.
+    """
+    count = count or SAMPLE_FRAME_COUNT
+    clip_path = download_clip(clip_details)
+    duration = clip_details.get('duration') or 0
+    # A 60s clip at count=8 lands ~7s apart, comfortably finer than the ~30s the
+    # roster panel is on screen.
+    interval = max(1, int(duration / count)) if duration else 5
+    return extract_frames(clip_path, clip_details=clip_details, frame_interval=interval)
+
+
 def build_players_from_heroes(heroes):
     """Project detected heroes into the user-facing players[] view (1-indexed
     position). Optional rank/player_name/low_confidence are included only
@@ -3033,6 +3052,28 @@ def process_media(media_source, source_type="clip", debug=False, min_score=0.4, 
                 'source_type': source_type,
                 'source': media_source,
             }
+
+        # Widen to several frames across the clip before scoring. Reading only frame 0
+        # makes the result hostage to capture timing: the roster panel is up for ~30s of
+        # a 60s clip, so a clip aimed slightly late has the panel later in the file even
+        # though frame 0 shows the pick screen or gameplay. process_frames_for_heroes
+        # already scores a list and keeps the best, so this just gives it candidates.
+        #
+        # Cheap by construction: sampling reuses the clip download the low-confidence
+        # rescan below already performs, and colour-bar scoring is a fast template
+        # compare — no OCR runs until a winning frame is chosen.
+        if source_type == "clip" and clip_details is not None and len(frame_paths) <= 1:
+            try:
+                performance_timer.start('sample_frames')
+                sampled = _sample_clip_frames(clip_details)
+                performance_timer.stop('sample_frames')
+                if sampled:
+                    # Keep frame 0 first so an unchanged clip still scores identically.
+                    frame_paths = list(dict.fromkeys(frame_paths + sampled))
+                    logger.info(f"Sampled {len(frame_paths)} frames across the clip")
+            except Exception as e:
+                # Sampling is an optimisation; frame 0 alone still works.
+                logger.warning(f"Could not sample extra frames, using frame 0 only: {e}")
 
         # Use all frames for color bar detection and hero identification
         logger.info(f"Analyzing all frames for hero color bars")
