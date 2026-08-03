@@ -12,7 +12,9 @@ import { normalize } from './internal/normalize'
 import {
   GsiSelfResolver,
   GsiSpectatorResolver,
+  type RawRoster,
   ResolverChain,
+  type ResolverContext,
   SourceTvResolver,
   type VisionFetcher,
   VisionResolver,
@@ -54,6 +56,7 @@ import type { ResolvedRoster, RosterPlayer } from './types'
  */
 export class MatchDataService {
   private readonly chain: ResolverChain
+  private readonly visionResolver: VisionResolver
 
   constructor(
     private readonly client: SocketClient,
@@ -65,12 +68,15 @@ export class MatchDataService {
     // `getDelayedGameDoc` means resolver lookups + `mds.getDelayedGameDoc()` + `getAverageMmr()`
     // etc. all dedupe to one Mongo I/O per instance lifetime. The fetcher's `matchId` arg is
     // ignored here because the class already knows its own; a unit-test stub WILL use the arg.
+    // `visionResolver` is kept as its own field (not just buried in the chain) so `fetchRoster`
+    // can reuse it for the name-backfill pass below without constructing a second instance.
+    this.visionResolver = new VisionResolver(opts?.visionFetcher)
     this.chain =
       opts?.chain ??
       new ResolverChain([
         new GsiSpectatorResolver(),
         new SourceTvResolver((_matchId) => this.getDelayedGameDoc()),
-        new VisionResolver(opts?.visionFetcher),
+        this.visionResolver,
         new GsiSelfResolver(),
       ])
   }
@@ -294,7 +300,8 @@ export class MatchDataService {
   // --- Internals ---
 
   private async fetchRoster(): Promise<ResolvedRoster> {
-    const raw = await this.chain.resolve({ gsi: this.client.gsi, matchId: this.matchId })
+    const ctx: ResolverContext = { gsi: this.client.gsi, matchId: this.matchId }
+    const raw = await this.chain.resolve(ctx)
     if (!raw) {
       return normalize({
         source: 'none',
@@ -303,12 +310,56 @@ export class MatchDataService {
         gsi: this.client.gsi,
       })
     }
+    const backfilled = await this.backfillNamesFromVision(raw, ctx)
     return normalize({
-      source: raw.source,
-      matchPlayers: raw.matchPlayers,
-      heroesStatus: raw.heroesStatus,
+      source: backfilled.source,
+      matchPlayers: backfilled.matchPlayers,
+      heroesStatus: backfilled.heroesStatus,
       gsi: this.client.gsi,
     })
+  }
+
+  // Steam/GSI/SourceTV rosters carry real account_ids (needed for `notablePlayers` DB lookups
+  // and rank tracking) but only show a name for players the resolver itself knows by identity —
+  // everyone else renders as `Player N`. Vision's OCR read of the strategy panel has no
+  // account_ids but does carry a name for every slot it detected. Backfill missing names from it,
+  // matched by heroId (the only key both shapes share) — never overwrite an account-linked
+  // source's own name, so a tracked pro's real name always wins over an OCR'd handle.
+  private async backfillNamesFromVision(raw: RawRoster, ctx: ResolverContext): Promise<RawRoster> {
+    if (raw.source === 'vision-heroes' || raw.source === 'vision-draft') return raw
+    const hasMissingName = raw.matchPlayers.some(
+      (p) =>
+        typeof p.heroid === 'number' &&
+        p.heroid > 0 &&
+        !(typeof p.player_name === 'string' && p.player_name.length > 0),
+    )
+    if (!hasMissingName) return raw
+
+    const vision = await this.visionResolver.resolve(ctx)
+    if (!vision || vision.source !== 'vision-heroes') return raw
+
+    const nameByHeroId = new Map<number, string>()
+    for (const p of vision.matchPlayers) {
+      if (
+        typeof p.heroid === 'number' &&
+        p.heroid > 0 &&
+        typeof p.player_name === 'string' &&
+        p.player_name.length > 0
+      ) {
+        nameByHeroId.set(p.heroid, p.player_name)
+      }
+    }
+    if (nameByHeroId.size === 0) return raw
+
+    return {
+      ...raw,
+      matchPlayers: raw.matchPlayers.map((p) => {
+        if (typeof p.player_name === 'string' && p.player_name.length > 0) return p
+        if (typeof p.heroid !== 'number' || p.heroid <= 0) return p
+        const name = nameByHeroId.get(p.heroid)
+        return name ? { ...p, player_name: name } : p
+      }),
+    }
   }
 
   private async fetchCards(): Promise<Cards[]> {
