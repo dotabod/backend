@@ -2582,8 +2582,26 @@ def _cache_draft_names(frame, result):
 # Rank-band OCR config: the whitelist keeps the "Rank"/"Ранг" label so the read can be
 # anchored on it — the Immortal medal at the slot's right edge carries its own
 # leaderboard number, and a bare digit read can't tell those digits apart from the rank.
-_TOPBAR_RANK_CONFIG = r'--oem 3 --psm 7 -c tessedit_char_whitelist="RankАНГ0123456789 "'
-_TOPBAR_RANK_ANCHOR = re.compile(r"(?:r\s*a\s*n\s*k|р\s*а\s*н\s*г)\D*(\d+)", re.IGNORECASE)
+# Whitelist both cases of both alphabets. The Cyrillic half previously listed only
+# uppercase "АНГ", so a Russian client's "Ранг 2 726" lost its lowercase "анг" and
+# degraded to "an"/"ann"/"aan" — which the anchor below then rejected, discarding a
+# perfectly good rank. Measured on one Russian frame: 0 of 10 slots parsed.
+_TOPBAR_RANK_CONFIG = (
+    r'--oem 3 --psm 7 -c tessedit_char_whitelist="RankРрАаНнГг0123456789 "'
+)
+# Tolerate how this small font degrades: the leading R/Р is often dropped and the n
+# doubled ("Ran", "ann", "aan"), so anchor on the trailing "n"/"н" of the word rather
+# than demanding the whole of it. Still an anchor, not a bare-digit match — the
+# Immortal medal at the slot's right edge carries its own leaderboard number, and
+# without a word anchor those digits are indistinguishable from the rank.
+# The digits group matches either a thousands-separated four-digit standing
+# ("2 726" -> 2726) or a plain run. Matching the separated form as an explicit
+# 1-then-3 shape rather than a greedy [\d\s]* keeps a trailing medal number out of
+# the rank: "Rank 301 7" is rank 301 beside medal 7, not 3017.
+_TOPBAR_RANK_ANCHOR = re.compile(
+    r"(?:[rр]?\s*[aаoо]\s*[nн]+\s*[kкgг]?|[rр]\s*[aа]\s*[nн])\s*(\d\s\d{3}|\d+)",
+    re.IGNORECASE,
+)
 
 
 def _parse_top_bar_rank(text, confidence):
@@ -2594,6 +2612,10 @@ def _parse_top_bar_rank(text, confidence):
     Rank/Ранг anchor (otherwise the digits could be the medal's leaderboard number),
     must be 1-4 digits, and must land in 1-5000. Low-confidence reads are dropped too —
     at 8500+ MMR these ranks reach chat with no cross-check.
+
+    Dota renders four-digit standings with a thin-space thousands separator, which OCR
+    reproduces as a real space ("Ранг 2 726"). Those inner spaces are stripped rather
+    than treated as a delimiter — splitting on them yields 2 or 726 instead of 2726.
     """
     min_conf = float(os.environ.get("TOPBAR_RANK_MIN_CONF", 10))
     if not text or confidence < min_conf:
@@ -2601,7 +2623,7 @@ def _parse_top_bar_rank(text, confidence):
     m = _TOPBAR_RANK_ANCHOR.search(text)
     if not m:
         return None
-    digits = m.group(1)
+    digits = re.sub(r"\s+", "", m.group(1))
     if not 1 <= len(digits) <= 4:
         return None
     rank = int(digits)

@@ -208,6 +208,35 @@ def test_parse_top_bar_rank_accepts_anchored_ranks(monkeypatch):
     assert dhd._parse_top_bar_rank("Ранг 12", 80.0) == 12
 
 
+def test_parse_top_bar_rank_reads_cyrillic_clients(monkeypatch):
+    """Russian clients render "Ранг", and this small font degrades it badly.
+
+    The whitelist previously carried only uppercase "АНГ", so lowercase "анг" was
+    dropped and the label collapsed to "an"/"ann"/"aan" — which the anchor rejected,
+    discarding a perfectly readable rank. Measured on one Russian frame: 0 of 10 slots.
+    """
+    monkeypatch.delenv("TOPBAR_RANK_MIN_CONF", raising=False)
+    assert dhd._parse_top_bar_rank("Ранг 3 123", 96.0) == 3123
+    assert dhd._parse_top_bar_rank("ранг2 524", 93.0) == 2524
+    assert dhd._parse_top_bar_rank("ааранг 3889", 96.0) == 3889
+    # Leading R/Р dropped and n doubled — still anchored.
+    assert dhd._parse_top_bar_rank("an 2 948", 72.0) == 2948
+    assert dhd._parse_top_bar_rank("aan 1129", 90.0) == 1129
+
+
+def test_parse_top_bar_rank_joins_thousands_separator(monkeypatch):
+    """Dota renders four-digit standings with a thin space: "Ранг 2 726" is 2726.
+
+    Splitting on that space yields 2 or 726 — both plausible-looking ranks, which is
+    what makes the bug dangerous rather than merely lossy.
+    """
+    monkeypatch.delenv("TOPBAR_RANK_MIN_CONF", raising=False)
+    assert dhd._parse_top_bar_rank("Ранг 2 726", 84.0) == 2726
+    assert dhd._parse_top_bar_rank("Rank 1 679", 90.0) == 1679
+    # But a trailing single digit is the medal's number, not a separator group.
+    assert dhd._parse_top_bar_rank("Rank 301 7", 40.0) == 301
+
+
 def test_parse_top_bar_rank_rejects_instead_of_mangling(monkeypatch):
     monkeypatch.delenv("TOPBAR_RANK_MIN_CONF", raising=False)
     # No anchor: bare digits could be the medal's leaderboard number.
