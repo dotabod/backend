@@ -53,6 +53,7 @@ export function extractPlayersFromMongoDoc(doc: DelayedGames | null): Players {
       heroid: a.heroid,
       accountid: Number(a.accountid),
       playerid: null,
+      player_name: a.player_name,
     }))
   }
 

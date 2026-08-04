@@ -560,6 +560,7 @@ export interface DelayedGames {
   players: {
     accountid: string
     heroid: number
+    player_name?: string
   }[]
   teams: {
     players: {
