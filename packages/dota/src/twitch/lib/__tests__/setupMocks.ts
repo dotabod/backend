@@ -56,6 +56,13 @@ export const state: {
   predictions: Prediction[]
   resolvePredictionCalls: Array<{ twitchId: string; predictionId: string; outcomeId: string }>
   cancelPredictionCalls: Array<{ twitchId: string; predictionId: string }>
+  createPredictionCalls: Array<{
+    twitchId: string
+    opts: { title: string; outcomes: string[]; autoLockAfter: number }
+  }>
+  // When set, the mocked createPrediction throws this instead of succeeding —
+  // simulates a Twitch API failure (e.g. an HttpStatusCodeError with a JSON `.body`).
+  createPredictionError: unknown
   getPredictionsCalls: PredictionsCall[]
   getPredictionsError: unknown
   // When > 0, the next N getPredictions calls throw a transient
@@ -128,6 +135,8 @@ export const state: {
   predictions: [],
   resolvePredictionCalls: [],
   cancelPredictionCalls: [],
+  createPredictionCalls: [],
+  createPredictionError: null,
   getPredictionsCalls: [],
   getPredictionsError: null,
   getPredictionsTransientFailures: 0,
@@ -167,6 +176,8 @@ export function resetState() {
   state.predictions = []
   state.resolvePredictionCalls = []
   state.cancelPredictionCalls = []
+  state.createPredictionCalls = []
+  state.createPredictionError = null
   state.getPredictionsCalls = []
   state.getPredictionsError = null
   state.getPredictionsTransientFailures = 0
@@ -310,6 +321,14 @@ const getTwitchAPIMock = async () => ({
       state.cancelPredictionCalls.push({ twitchId, predictionId })
       return {}
     },
+    createPrediction: async (
+      twitchId: string,
+      opts: { title: string; outcomes: string[]; autoLockAfter: number },
+    ) => {
+      state.createPredictionCalls.push({ twitchId, opts })
+      if (state.createPredictionError) throw state.createPredictionError
+      return { id: 'new-prediction-id' }
+    },
   },
   asUser: async (
     _twitchId: string,
@@ -430,6 +449,7 @@ export const resolveMatchRetroactively = resolveMatchModule.resolveMatchRetroact
 export const findMostRecentResolvedMatch = resolveMatchModule.findMostRecentResolvedMatch
 export const { closeTwitchBet } = await import('../closeTwitchBet')
 export const { refundTwitchBet } = await import('../refundTwitchBets')
+export const { openTwitchBet } = await import('../openTwitchBet')
 const { gsiHandlers } = await import('../../../dota/lib/consts')
 const { steamSocket } = await import('../../../steam/ws')
 const { chatClient } = await import('../../chatClient')

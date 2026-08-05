@@ -86,4 +86,11 @@ describe('getRankDetail', () => {
     expect((d as any).mmrToNextRank).toBe(54)
     expect((d as any).winsToNextRank).toBe(3) // ceil(54 / 25)
   })
+
+  it('routes to the leaderboard lookup at the exact top-of-range boundary, matching mmrToRankTier(5619) === 80 (immortal)', async () => {
+    const detail = await getRankDetail(5619)
+    expect(detail).not.toBeNull()
+    // The leaderboard-branch shape carries `standing`; the in-range shape doesn't.
+    expect(detail && 'standing' in detail).toBe(true)
+  })
 })
