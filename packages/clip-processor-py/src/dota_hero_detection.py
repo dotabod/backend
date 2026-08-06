@@ -1530,6 +1530,19 @@ def process_frame_for_heroes(frame_path, debug=False):
         # Store rank banners and text for each position when in debug mode
         rank_data = {}
 
+        # Read every rank badge off the full frame by matching Radiance glyphs, ahead of
+        # the Tesseract fallback below. Tesseract is at its worst on the four-digit
+        # standings this path sees most: on a verified Russian frame it read
+        # "Ранг: 3 761" as 3762, while glyph matching got all ten right. Slot order here
+        # is _compute_top_bar_rank_boxes order — Radiant 0-4 then Dire 0-4.
+        font_ranks = [None] * 10
+        if os.environ.get("EXTRACT_RANK_BANNERS", "").lower() in ("1", "true", "yes"):
+            performance_timer.start('rank_font_exact')
+            fh, fw = frame.shape[:2]
+            for idx, box in enumerate(_compute_top_bar_rank_boxes(fw, fh)):
+                font_ranks[idx] = _read_rank_font_exact(frame, *box)
+            performance_timer.stop('rank_font_exact')
+
         for team, position, hero_icon in hero_icons:
             # Only extract rank banner once during debugging, not twice
             if debug and os.environ.get("EXTRACT_RANK_BANNERS", "").lower() in ("1", "true", "yes"):
@@ -1549,16 +1562,19 @@ def process_frame_for_heroes(frame_path, debug=False):
                         'rank_text': None
                     }
 
-                    # Extract rank text using OCR if available
-                    if TESSERACT_AVAILABLE:
+                    # Prefer the glyph-matched read; fall back to OCR per slot.
+                    slot = position if team == "Radiant" else 5 + position
+                    rank_number = font_ranks[slot]
+                    rank_text = f"Rank {rank_number}" if rank_number is not None else None
+                    if rank_number is None and TESSERACT_AVAILABLE:
                         performance_timer.start('extract_rank_text')
                         rank_number, rank_text = extract_rank_text(rank_banner, debug=debug)
                         performance_timer.stop('extract_rank_text')
 
-                        if rank_number:
-                            logger.debug(f"Rank detected for {team} position {position+1}: {rank_number}")
-                            rank_data[position_key]['rank_number'] = rank_number
-                            rank_data[position_key]['rank_text'] = rank_text
+                    if rank_number:
+                        logger.debug(f"Rank detected for {team} position {position+1}: {rank_number}")
+                        rank_data[position_key]['rank_number'] = rank_number
+                        rank_data[position_key]['rank_text'] = rank_text
 
             # Get top matches for this hero position, not just the best match
             performance_timer.start('get_top_hero_matches')
@@ -1589,6 +1605,7 @@ def process_frame_for_heroes(frame_path, debug=False):
             for hero in identified_heroes:
                 team = hero['team']
                 position = hero['position']
+                slot = position if team == "Radiant" else 5 + position
 
                 # Extract player name for this hero position
                 performance_timer.start('extract_player_name')
@@ -1624,10 +1641,16 @@ def process_frame_for_heroes(frame_path, debug=False):
                         # Store the shape of the rank banner
                         hero['rank_banner_shape'] = rank_banner.shape[:2]
 
-                        # Extract rank number using OCR if available
-                        performance_timer.start('extract_rank_text')
-                        rank_number, rank_text = extract_rank_text(rank_banner, debug=debug)
-                        performance_timer.stop('extract_rank_text')
+                        # Prefer the glyph-matched read; only pay for Tesseract on the
+                        # slots it declined. Most declines are slots with no badge drawn
+                        # at all (unranked / "Not Calibrated"), which Tesseract also
+                        # rejects, so this is a small cost for a meaningful accuracy win.
+                        rank_number = font_ranks[slot]
+                        rank_text = f"Rank {rank_number}" if rank_number is not None else None
+                        if rank_number is None:
+                            performance_timer.start('extract_rank_text')
+                            rank_number, rank_text = extract_rank_text(rank_banner, debug=debug)
+                            performance_timer.stop('extract_rank_text')
 
                         # Store the rank information
                         if rank_number is not None:

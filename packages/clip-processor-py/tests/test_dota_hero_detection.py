@@ -332,6 +332,66 @@ def test_read_top_bar_ranks_uses_whitelist_config_and_upscale(monkeypatch):
     assert all(c[2] == (22, 80, 3) for c in calls)
 
 
+def test_process_frame_for_heroes_prefers_font_exact_ranks(monkeypatch):
+    """The strategy-panel path reads ranks with glyph matching before OCR.
+
+    This path produces ~44% of all rosters, and it used to call extract_rank_text
+    exclusively. Tesseract misreads the four-digit standings it sees most — on a
+    verified Russian frame it turned "Ранг: 3 761" into 3762 — so the matcher has to
+    be consulted first here, not only on the pick-screen path.
+    """
+    monkeypatch.setenv("EXTRACT_RANK_BANNERS", "1")
+    monkeypatch.setattr(dhd, "load_image", lambda *a, **k: np.zeros((1080, 1920, 3), np.uint8))
+    monkeypatch.setattr(dhd, "load_heroes_data", lambda *a, **k: {"1": {}})
+    monkeypatch.setattr(dhd, "extract_hero_bar",
+                        lambda *a, **k: (True, np.zeros((118, 1920, 3), np.uint8), 960))
+    monkeypatch.setattr(dhd, "extract_hero_icons",
+                        lambda *a, **k: [("Radiant", 0, np.zeros((72, 128, 3), np.uint8))])
+    monkeypatch.setattr(dhd, "get_top_hero_matches", lambda *a, **k: [
+        {"hero_id": 1, "hero_localized_name": "Anti-Mage", "match_score": 0.9, "variant": "base"}
+    ])
+    monkeypatch.setattr(dhd, "resolve_hero_duplicates", lambda cands, **k: [
+        dict(cands[0][0], team="Radiant", position=0)
+    ])
+    monkeypatch.setattr(dhd, "extract_player_name", lambda *a, **k: "Ame")
+    monkeypatch.setattr(dhd, "crop_rank_banner",
+                        lambda *a, **k: np.zeros((15, 73, 3), np.uint8))
+    monkeypatch.setattr(dhd, "_read_rank_font_exact", lambda *a, **k: 3761)
+
+    def _boom(*a, **k):  # pragma: no cover - must not run
+        raise AssertionError("extract_rank_text should not run when the matcher answers")
+
+    monkeypatch.setattr(dhd, "extract_rank_text", _boom)
+
+    heroes = dhd.process_frame_for_heroes("frame.jpg")
+    assert [h.get("rank") for h in heroes] == [3761]
+
+
+def test_process_frame_for_heroes_falls_back_to_ocr_ranks(monkeypatch):
+    """A slot the matcher declines still gets its Tesseract attempt on this path."""
+    monkeypatch.setenv("EXTRACT_RANK_BANNERS", "1")
+    monkeypatch.setattr(dhd, "load_image", lambda *a, **k: np.zeros((1080, 1920, 3), np.uint8))
+    monkeypatch.setattr(dhd, "load_heroes_data", lambda *a, **k: {"1": {}})
+    monkeypatch.setattr(dhd, "extract_hero_bar",
+                        lambda *a, **k: (True, np.zeros((118, 1920, 3), np.uint8), 960))
+    monkeypatch.setattr(dhd, "extract_hero_icons",
+                        lambda *a, **k: [("Dire", 2, np.zeros((72, 128, 3), np.uint8))])
+    monkeypatch.setattr(dhd, "get_top_hero_matches", lambda *a, **k: [
+        {"hero_id": 1, "hero_localized_name": "Lion", "match_score": 0.9, "variant": "base"}
+    ])
+    monkeypatch.setattr(dhd, "resolve_hero_duplicates", lambda cands, **k: [
+        dict(cands[0][0], team="Dire", position=2)
+    ])
+    monkeypatch.setattr(dhd, "extract_player_name", lambda *a, **k: "Ame")
+    monkeypatch.setattr(dhd, "crop_rank_banner",
+                        lambda *a, **k: np.zeros((15, 73, 3), np.uint8))
+    monkeypatch.setattr(dhd, "_read_rank_font_exact", lambda *a, **k: None)
+    monkeypatch.setattr(dhd, "extract_rank_text", lambda *a, **k: (344, "Rank 344"))
+
+    heroes = dhd.process_frame_for_heroes("frame.jpg")
+    assert [h.get("rank") for h in heroes] == [344]
+
+
 # --------------------------------------------------------------------------- #
 # name plausibility / band selection
 # --------------------------------------------------------------------------- #
