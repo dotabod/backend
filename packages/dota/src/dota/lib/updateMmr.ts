@@ -153,13 +153,32 @@ export async function updateMmr({
 
   const client = findUser(foundToken)
 
-  if (client && tellChat) {
-    tellChatNewMMR({
-      streamDelay: getValueOrDefault(DBSettings.streamDelay, client.settings, client.subscription),
-      locale: client.locale,
-      token: client.token,
-      mmr,
-      oldMmr: currentMmr,
-    })
+  if (client) {
+    // Keep the in-memory client in sync immediately, same as the !steam32Id
+    // branch above — otherwise the next updateMmr() call (e.g. a second !won
+    // typed seconds later) reads this stale value until the Supabase
+    // realtime `steam_accounts` watcher round-trips and overwrites it,
+    // silently clobbering whichever update loses the race.
+    const steamIdx = client.SteamAccount.findIndex((s) => s.steam32Id === steam32Id)
+    if (steamIdx !== -1) {
+      client.SteamAccount[steamIdx].mmr = mmr
+    }
+    if (client.steam32Id === steam32Id) {
+      client.mmr = mmr
+    }
+
+    if (tellChat) {
+      tellChatNewMMR({
+        streamDelay: getValueOrDefault(
+          DBSettings.streamDelay,
+          client.settings,
+          client.subscription,
+        ),
+        locale: client.locale,
+        token: client.token,
+        mmr,
+        oldMmr: currentMmr,
+      })
+    }
   }
 }

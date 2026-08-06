@@ -111,8 +111,8 @@ export const openTwitchBet = async ({
           logger.info('[PREDICT] [BETS] Channel points not enabled for', {
             twitchId,
           })
+          return
         }
-        return
       } catch (_e) {
         // just means couldn't json parse the message for the case above
       }

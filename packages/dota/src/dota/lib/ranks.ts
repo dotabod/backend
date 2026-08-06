@@ -163,8 +163,8 @@ export async function getRankDetail(mmr: string | number, steam32Id?: number | n
 
   if (!mmrNum || mmrNum < 0) return null
 
-  // Higher than max mmr? Lets check leaderboards
-  if (mmrNum > ranks[ranks.length - 1].range[1]) {
+  // At or higher than max mmr? Lets check leaderboards
+  if (mmrNum >= ranks[ranks.length - 1].range[1]) {
     return lookupLeaderRank(mmrNum, steam32Id)
   }
 
