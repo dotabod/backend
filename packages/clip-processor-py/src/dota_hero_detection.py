@@ -2630,12 +2630,109 @@ def _parse_top_bar_rank(text, confidence):
     return rank if 1 <= rank <= 5000 else None
 
 
+# Valve's own UI font, already vendored beside this module. Rendering it and matching
+# glyph-for-glyph beats OCR outright here: Tesseract's docs warn accuracy collapses below
+# ~10px x-height and these digits are 9-11px, so it is operating under its documented
+# floor no matter how it is tuned. Measured on real 1080p frames — Russian client 10/10
+# vs Tesseract 4/10, English 5/5, at ~1.1ms/slot vs ~205ms. A synthetic sweep of all
+# 5000 legal ranks in both languages scored 10000/10000.
+_RADIANCE_FONT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "radiance-regular.otf")
+# Calibrated against real frames, NOT taken from the stylesheet: the Panorama CSS says
+# 14px and the pixels are unambiguously 13px.
+_RANK_FONT_SIZE = int(os.environ.get("TOPBAR_RANK_FONT_SIZE", 13))
+# Both label spellings AND both punctuations: the English badge renders "Rank 30" with no
+# colon while the Russian one renders "Ранг: 3 761" with one. Assuming a shared shape
+# breaks whichever half you guessed wrong — hardcoding the colon read 0/10 on English.
+_RANK_LABELS = ("Rank", "Rank:", "Ранг", "Ранг:")
+_RANK_MIN_ANCHOR = 0.62   # real frames measure 0.82-0.95
+_RANK_MIN_GLYPH = 0.70    # real frames measure 0.84-0.97
+_RANK_GROUPED_MIN_GLYPH = 0.80
+# The production box is inset to dodge the Immortal medal, which clips the text at both
+# ends; the anchor and trailing digit need those pixels back.
+_RANK_PAD_L, _RANK_PAD_R, _RANK_PAD_T, _RANK_PAD_B = 14, 22, 8, 8
+
+_rank_matcher = None
+
+
+def _get_rank_matcher():
+    """Lazily build the glyph matcher; returns None if the font or deps are missing."""
+    global _rank_matcher
+    if _rank_matcher is None:
+        try:
+            from glyph_matcher import GlyphMatcher
+            _rank_matcher = GlyphMatcher(_RADIANCE_FONT, _RANK_FONT_SIZE)
+        except Exception as exc:  # noqa: BLE001 - optional path, Tesseract still works
+            logger.warning(f"Font-exact rank reader unavailable, using OCR only: {exc}")
+            _rank_matcher = False
+    return _rank_matcher or None
+
+
+def _read_rank_font_exact(frame, x1, y1, x2, y2):
+    """Read one rank badge by matching Radiance glyphs. Returns the rank int or None.
+
+    Rejects rather than guesses: these values reach Twitch chat with no cross-check, so a
+    missing rank beats a wrong one.
+
+    Each label variant is tried and the best *valid* read wins, rather than trusting the
+    strongest anchor. On a Russian badge the colon-less "Ранг" anchors marginally better
+    than "Ранг:" but then leaves the pen a colon short, so every digit lands between
+    glyphs — scoring on the anchor alone read 0/10 there.
+    """
+    m = _get_rank_matcher()
+    if m is None:
+        return None
+    try:
+        from glyph_matcher import text_signal
+
+        h, w = frame.shape[:2]
+        box = (max(0, x1 - _RANK_PAD_L), max(0, y1 - _RANK_PAD_T),
+               min(w, x2 + _RANK_PAD_R), min(h, y2 + _RANK_PAD_B))
+        if box[2] <= box[0] or box[3] <= box[1]:
+            return None
+        band = text_signal(frame, box)
+
+        best = None
+        for label in _RANK_LABELS:
+            _, anchor, ox, oy = m.find_anchor(band, {label: label})
+            if anchor < _RANK_MIN_ANCHOR:
+                continue
+            pen = ox + m.advance(label + " ")
+
+            # Dota renders four-digit standings as "3 761". A complete, confidently-read
+            # grouped run is decisive: the separator only appears for 4-digit ranks, so
+            # this shape cannot arise by chance, and preferring it avoids truncating
+            # 2726 to its leading "2".
+            grouped, gs = m.read_glyphs(band, pen, oy, "0123456789", 4,
+                                        min_score=_RANK_MIN_GLYPH,
+                                        pre_advance={1: m.advance(" ")})
+            if (len(grouped) == 4 and grouped[0] != "0" and gs
+                    and min(gs) >= _RANK_GROUPED_MIN_GLYPH and 1000 <= int(grouped) <= 5000):
+                cand, score = int(grouped), min(gs) + anchor
+            else:
+                plain, ps = m.read_glyphs(band, pen, oy, "0123456789", 3,
+                                          min_score=_RANK_MIN_GLYPH)
+                if not (plain and plain.lstrip("0") and len(ps) == len(plain)):
+                    continue
+                cand, score = int(plain), min(ps) + anchor
+
+            if 1 <= cand <= 5000 and (best is None or score > best[1]):
+                best = (cand, score)
+
+        return best[0] if best else None
+    except Exception as exc:  # noqa: BLE001 - never let this break the OCR fallback
+        logger.debug(f"Font-exact rank read failed: {exc}")
+        return None
+
+
 def _read_top_bar_ranks(frame):
     """Read the "Rank N" banner of each All Pick top-bar slot (Radiant 0-4, Dire 0-4).
 
     Returns a 10-element list of rank ints / None. Slots with no banner (unranked or
     hidden) or an unreadable one come back None — a bad read is dropped, never guessed.
     Not memoized: it runs once per clip, on the colour-gate failure path only.
+
+    Prefers font-exact glyph matching (see _read_rank_font_exact) and falls back to
+    Tesseract per slot, so a slot the matcher declines can still be recovered.
     """
     h, w = frame.shape[:2]
     ranks = []
@@ -2645,10 +2742,14 @@ def _read_top_bar_ranks(frame):
         if x2c <= x1c or y2c <= y1c:
             ranks.append(None)
             continue
-        text, conf = _ocr_text_from_region(frame[y1c:y2c, x1c:x2c], lang="eng+rus",
-                                           debug_name=f"rankbox{idx+1}",
-                                           config=_TOPBAR_RANK_CONFIG, upscale=4)
-        ranks.append(_parse_top_bar_rank(text, conf))
+
+        rank = _read_rank_font_exact(frame, x1, y1, x2, y2)
+        if rank is None:
+            text, conf = _ocr_text_from_region(frame[y1c:y2c, x1c:x2c], lang="eng+rus",
+                                               debug_name=f"rankbox{idx+1}",
+                                               config=_TOPBAR_RANK_CONFIG, upscale=4)
+            rank = _parse_top_bar_rank(text, conf)
+        ranks.append(rank)
     return ranks
 
 

@@ -251,6 +251,72 @@ def test_parse_top_bar_rank_rejects_instead_of_mangling(monkeypatch):
     assert dhd._parse_top_bar_rank("Rank 344", 5.0) is None
 
 
+# --------------------------------------------------------------------------- #
+# font-exact rank reading (Radiance glyph matching)
+# --------------------------------------------------------------------------- #
+def _render_rank_badge(label, value, size=13):
+    """Draw a rank badge the way Dota does: light Radiance text on a dark plate."""
+    from PIL import Image, ImageDraw, ImageFont
+
+    grouped = f"{value}" if value < 1000 else f"{value // 1000} {value % 1000:03d}"
+    font = ImageFont.truetype(dhd._RADIANCE_FONT, size)
+    img = Image.new("RGB", (200, 34), (60, 40, 45))
+    ImageDraw.Draw(img).text((10, 8), f"{label} {grouped}", font=font, fill=(210, 190, 160))
+    return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+
+
+@pytest.mark.parametrize("label", ["Rank", "Rank:", "Ранг", "Ранг:"])
+@pytest.mark.parametrize("value", [1, 30, 344, 999, 1000, 2726, 3761, 5000])
+def test_read_rank_font_exact_reads_both_languages(label, value):
+    """Both label spellings and both punctuations must work.
+
+    English renders "Rank 30" with no colon; Russian renders "Ранг: 3 761" with one.
+    Hardcoding either shape reads 0/10 on the other half of the player base.
+    """
+    frame = _render_rank_badge(label, value)
+    h, w = frame.shape[:2]
+    assert dhd._read_rank_font_exact(frame, 10, 8, w - 10, h - 8) == value
+
+
+def test_read_rank_font_exact_joins_the_thousands_separator():
+    """A 4-digit rank renders as "2 726"; truncating to the leading 2 is the bug."""
+    frame = _render_rank_badge("Ранг:", 2726)
+    h, w = frame.shape[:2]
+    assert dhd._read_rank_font_exact(frame, 10, 8, w - 10, h - 8) == 2726
+
+
+def test_read_rank_font_exact_rejects_rather_than_guesses():
+    """Noise must yield None. These ranks reach chat with no cross-check."""
+    noise = np.random.default_rng(0).integers(0, 255, (34, 200, 3), dtype=np.uint8)
+    assert dhd._read_rank_font_exact(noise, 10, 8, 190, 26) is None
+    # A degenerate box can't be read.
+    blank = np.zeros((34, 200, 3), np.uint8)
+    assert dhd._read_rank_font_exact(blank, 50, 20, 40, 10) is None
+
+
+def test_read_top_bar_ranks_falls_back_to_ocr(monkeypatch):
+    """A slot the glyph matcher declines still gets a Tesseract attempt.
+
+    The two readers fail on different things, so per-slot fallback recovers more than
+    either alone — that is the whole reason the OCR path is kept.
+    """
+    monkeypatch.setattr(dhd, "_read_rank_font_exact", lambda *a, **k: None)
+    monkeypatch.setattr(dhd, "_ocr_text_from_region", lambda *a, **k: ("Rank 123", 90.0))
+    ranks = dhd._read_top_bar_ranks(np.zeros((1080, 1920, 3), np.uint8))
+    assert ranks == [123] * 10
+
+
+def test_read_top_bar_ranks_prefers_font_exact(monkeypatch):
+    """When the matcher answers, OCR is not consulted at all."""
+    monkeypatch.setattr(dhd, "_read_rank_font_exact", lambda *a, **k: 2726)
+
+    def _boom(*a, **k):  # pragma: no cover - must not run
+        raise AssertionError("OCR should not be called when font matching succeeds")
+
+    monkeypatch.setattr(dhd, "_ocr_text_from_region", _boom)
+    assert dhd._read_top_bar_ranks(np.zeros((1080, 1920, 3), np.uint8)) == [2726] * 10
+
+
 def test_read_top_bar_ranks_uses_whitelist_config_and_upscale(monkeypatch):
     calls = []
 
