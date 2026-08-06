@@ -18,13 +18,20 @@ RUN apt-get update && \
 # Set working directory
 WORKDIR /app
 
-# Copy requirements and setup files
-COPY setup.py requirements.txt ./
+# Install third-party dependencies from the pinned list alone, before any source is
+# copied in. This layer then only rebuilds when requirements.txt changes, so a
+# source-only deploy reuses it instead of re-downloading ~40s of wheels (opencv alone is
+# 42MB). Coolify has killed a build partway through that download.
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the src directory first for proper installation
+# Now the source and the editable install that links it. Every dependency is already
+# satisfied above, so this resolves without hitting the network. Dependency resolution
+# is deliberately left on rather than passing --no-deps: if setup.py ever gains a
+# package that requirements.txt lacks, it gets installed here instead of going missing
+# at runtime.
+COPY setup.py ./
 COPY src/ ./src/
-
-# Install dependencies with the src directory available
 RUN pip install --no-cache-dir -e .
 
 # Copy the rest of the application code
