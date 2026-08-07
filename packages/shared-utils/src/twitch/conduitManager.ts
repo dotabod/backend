@@ -188,9 +188,6 @@ export async function fetchConduitId(forceRefresh = false): Promise<string | nul
       lastFetchTime = now
       return cachedConduitId
     } catch (error) {
-      // Reset fetch promise so we can try again next time
-      fetchPromise = null
-
       logger.error('[CONDUIT_MANAGER] Error obtaining conduit ID', {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
@@ -198,6 +195,10 @@ export async function fetchConduitId(forceRefresh = false): Promise<string | nul
 
       // Return null to indicate failure
       return null
+    } finally {
+      // Clear the in-flight handle once settled so the next call after cache
+      // expiry starts a real refetch instead of reusing this stale promise
+      fetchPromise = null
     }
   })()
 

@@ -178,6 +178,30 @@ describe('getDBUser', () => {
     expect(res.reason).toContain('No user')
   })
 
+  it('returns "No Account found" without throwing or wedging the lookup token when the users row has no Account', async () => {
+    dbState.tableResults.users = {
+      data: {
+        id: 'user-noacct',
+        name: 'NoAccount',
+        mmr: 1,
+        steam32Id: 1,
+        stream_online: false,
+        stream_start_date: null,
+        beta_tester: false,
+        locale: 'en',
+        subscriptions: [],
+        Account: [],
+        SteamAccount: [],
+        settings: [],
+      },
+      error: null,
+    }
+    const res = await getDBUser({ token: 'tok-noacct' })
+    expect(res.result).toBeUndefined()
+    expect(res.reason).toContain('No Account found')
+    expect(lookingupToken.has('tok-noacct')).toBe(false)
+  })
+
   it('does not cache an account that requires a token refresh', async () => {
     dbState.tableResults.users = {
       data: {

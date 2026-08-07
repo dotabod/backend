@@ -63,7 +63,7 @@ export async function checkAltAccount(
     }
 
     const followageDate = follow.followDate
-    const timeDifference = accountCreationDate.getTime() - followageDate.getTime()
+    const timeDifference = followageDate.getTime() - accountCreationDate.getTime()
     const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24))
     const isAlt = daysDifference >= 0 && daysDifference < 10
 

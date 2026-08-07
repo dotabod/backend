@@ -73,4 +73,28 @@ describe('fetchExistingSubscriptions', () => {
     expect(subsToCleanup).toContain('webhook-1')
     expect(subsToCleanup).toContain('orphan-1')
   })
+
+  it('does not queue app-level auth grant/revoke subscriptions for cleanup', async () => {
+    fetchState.queue = [
+      {
+        json: {
+          data: [
+            sub({
+              id: 'auth-grant-1',
+              type: 'user.authorization.grant',
+              condition: { client_id: 'cid' },
+            }),
+            sub({
+              id: 'auth-revoke-1',
+              type: 'user.authorization.revoke',
+              condition: { client_id: 'cid' },
+            }),
+          ],
+          pagination: {},
+        },
+      },
+    ]
+    await fetchExistingSubscriptions()
+    expect(subsToCleanup).toHaveLength(0)
+  })
 })

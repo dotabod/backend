@@ -45,6 +45,9 @@ class MongoDBSingleton {
           if (operation.retry(error as Error)) {
             return
           }
+          // Clear the cached promise so future connect() calls can retry with a
+          // fresh attempt instead of returning this rejection forever
+          this.clientPromise = null
           reject(error)
         }
       })

@@ -162,7 +162,7 @@ export default async function getDBUser({
 
   // If they require a refresh, don't cache them
   const Account = Array.isArray(user?.Account) ? user.Account[0] : user.Account
-  if (Account.requires_refresh) {
+  if (Account?.requires_refresh) {
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
     return { reason: 'Account requires refresh', result: null }

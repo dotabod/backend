@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { resetUtilsState } from './setupMocks.ts'
 
 // The module reads TWITCH_CONDUIT_ID once at import time; clear it first so the
@@ -80,6 +80,26 @@ describe('fetchConduitId', () => {
 
     await expect(fetchConduitId(false)).resolves.toBe('cache-1')
     expect(fetchCallCount).toBe(callsAfterFirst)
+  })
+
+  it('refetches after the 24h cache expiry instead of reusing the settled fetch promise', async () => {
+    fetchQueue = [
+      { json: { data: [{ id: 'stale-1', shard_count: 1 }] } },
+      { json: { data: [{ id: 'fresh-1', shard_count: 1 }] } },
+    ]
+    await expect(fetchConduitId(true)).resolves.toBe('stale-1')
+    expect(fetchCallCount).toBe(1)
+
+    // Jump past CACHE_TIMEOUT (24h). The bug: the settled fetch promise was
+    // never cleared on success, so this call returned the stale id forever.
+    const realNow = Date.now()
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(realNow + 25 * 60 * 60 * 1000)
+    try {
+      await expect(fetchConduitId(false)).resolves.toBe('fresh-1')
+      expect(fetchCallCount).toBe(2)
+    } finally {
+      nowSpy.mockRestore()
+    }
   })
 })
 

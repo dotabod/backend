@@ -52,6 +52,12 @@ export async function fetchExistingSubscriptions() {
           | string
           | undefined
 
+        // App-level auth subs (condition: { client_id }) have no broadcaster but
+        // must be kept — deleting them silently breaks the grant/revoke pipeline
+        if (sub.type === 'user.authorization.grant' || sub.type === 'user.authorization.revoke') {
+          return
+        }
+
         if (!broadcasterId || sub.transport.method === 'webhook') {
           subsToCleanup.push(sub.id)
           return
