@@ -178,6 +178,7 @@ def initialize_app():
         if os.environ.get('RUN_LOCALLY') != 'true':
             start_worker_monitor()
             start_failed_clip_sweeper()
+            start_temp_cleanup_sweeper()
 
         # Mark as initialized
         app_initialized = True
@@ -294,6 +295,47 @@ def start_failed_clip_sweeper():
     thread = threading.Thread(target=loop, daemon=True, name='ReplaySweep')
     thread.start()
     logger.info(f"Started failed-clip sweeper (every {FAILED_CLIP_SWEEP_INTERVAL_S}s)")
+
+
+# download_clip()/extract_frames() (clip_utils.py) cache every downloaded clip
+# .mp4 and extracted frame .jpg under TEMP_DIR forever, keyed on "does the file
+# already exist", so retries within a clip's processing window can reuse them
+# without re-downloading. Nothing else ever evicts them — left alone this grows
+# without bound (it's what filled the disk on 2026-08-06/07). Neither file is
+# read by any downstream consumer (packages/dota's VisionResolver only reads
+# players/heroes off the response), so a TTL well past the retry window (~1h,
+# see the replay-sweep budget above) is safe.
+TEMP_FILE_TTL_S = int(os.environ.get('VISION_TEMP_FILE_TTL_S', '7200'))
+TEMP_CLEANUP_INTERVAL_S = int(os.environ.get('VISION_TEMP_CLEANUP_INTERVAL_S', '300'))
+
+
+def cleanup_old_temp_files() -> int:
+    """One pass: delete clip .mp4s and frame .jpgs older than TEMP_FILE_TTL_S."""
+    now = time.time()
+    removed = 0
+    for file_path in list(TEMP_DIR.glob('*.mp4')) + list(IMAGE_DIR.glob('*.jpg')):
+        try:
+            if now - file_path.stat().st_mtime > TEMP_FILE_TTL_S:
+                file_path.unlink()
+                removed += 1
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            logger.warning(f"[TempCleanup] failed to remove {file_path}: {e}")
+    return removed
+
+
+def start_temp_cleanup_sweeper():
+    def loop():
+        while True:
+            removed = cleanup_old_temp_files()
+            if removed:
+                logger.info(f"[TempCleanup] removed {removed} stale clip/frame file(s)")
+            time.sleep(TEMP_CLEANUP_INTERVAL_S)
+
+    thread = threading.Thread(target=loop, daemon=True, name='TempCleanup')
+    thread.start()
+    logger.info(f"Started temp file cleanup sweeper (every {TEMP_CLEANUP_INTERVAL_S}s, TTL {TEMP_FILE_TTL_S}s)")
 
 
 def process_queue_worker():

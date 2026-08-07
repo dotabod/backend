@@ -5,6 +5,8 @@ These pin behavior before `process_queue_worker` (145 lines) and
 `process_clip_request` (243 lines) get decomposed.
 """
 
+import os
+import time
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -596,3 +598,57 @@ def test_clip_request_force_skips_cache_and_processes():
     db.get_clip_result.assert_not_called()
     pcu.assert_called_once()
     assert result["players"] == [{"player_name": "x"}]
+
+
+# --------------------------------------------------------------------------- #
+# cleanup_old_temp_files
+# --------------------------------------------------------------------------- #
+def test_cleanup_old_temp_files_removes_only_stale_files(tmp_path):
+    frames_dir = tmp_path / "frames"
+    frames_dir.mkdir()
+    old_mp4 = tmp_path / "old.mp4"
+    new_mp4 = tmp_path / "new.mp4"
+    old_jpg = frames_dir / "old_frame_00000.jpg"
+    new_jpg = frames_dir / "new_frame_00000.jpg"
+    for f in (old_mp4, new_mp4, old_jpg, new_jpg):
+        f.write_bytes(b"x")
+
+    stale = time.time() - 10_000
+    os.utime(old_mp4, (stale, stale))
+    os.utime(old_jpg, (stale, stale))
+
+    with patch.object(api_server, "TEMP_DIR", tmp_path), \
+         patch.object(api_server, "IMAGE_DIR", frames_dir), \
+         patch.object(api_server, "TEMP_FILE_TTL_S", 3600):
+        removed = api_server.cleanup_old_temp_files()
+
+    assert removed == 2
+    assert not old_mp4.exists()
+    assert not old_jpg.exists()
+    assert new_mp4.exists()
+    assert new_jpg.exists()
+
+
+def test_cleanup_old_temp_files_empty_dirs_remove_nothing(tmp_path):
+    frames_dir = tmp_path / "frames"
+    frames_dir.mkdir()
+    with patch.object(api_server, "TEMP_DIR", tmp_path), \
+         patch.object(api_server, "IMAGE_DIR", frames_dir):
+        assert api_server.cleanup_old_temp_files() == 0
+
+
+def test_cleanup_old_temp_files_survives_file_removed_mid_pass(tmp_path):
+    # A file can vanish between glob() and unlink() (e.g. a concurrent request
+    # re-processing the same clip); the sweep must not crash on that race.
+    frames_dir = tmp_path / "frames"
+    frames_dir.mkdir()
+    old_mp4 = tmp_path / "old.mp4"
+    old_mp4.write_bytes(b"x")
+    stale = time.time() - 10_000
+    os.utime(old_mp4, (stale, stale))
+
+    with patch.object(api_server, "TEMP_DIR", tmp_path), \
+         patch.object(api_server, "IMAGE_DIR", frames_dir), \
+         patch.object(api_server, "TEMP_FILE_TTL_S", 3600), \
+         patch("pathlib.Path.unlink", side_effect=FileNotFoundError):
+        assert api_server.cleanup_old_temp_files() == 0
