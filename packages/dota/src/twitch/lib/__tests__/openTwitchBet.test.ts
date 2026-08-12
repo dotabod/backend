@@ -1,9 +1,18 @@
 import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { twitchIdToToken } from '../../../dota/lib/consts'
-import { makeClient, openTwitchBet, resetState, state } from './setupMocks'
+import {
+  isPredictionAlreadyActiveError,
+  makeClient,
+  openTwitchBet,
+  resetState,
+  state,
+} from './setupMocks'
 
-function twitchApiError(body: Record<string, unknown>) {
-  return Object.assign(new Error('Twitch API error'), { body: JSON.stringify(body) })
+function twitchApiError(body: Record<string, unknown>, statusCode = 400) {
+  return Object.assign(new Error('Twitch API error'), {
+    statusCode,
+    body: JSON.stringify(body),
+  })
 }
 
 describe('openTwitchBet', () => {
@@ -32,6 +41,28 @@ describe('openTwitchBet', () => {
     })
     // Must not be misclassified as the "channel points not enabled" case.
     expect(state.trackDisableReasonCalls).toHaveLength(0)
+  })
+
+  it('recognizes and quietly propagates the structured active-prediction conflict', async () => {
+    const error = twitchApiError({
+      status: 400,
+      error: 'Bad Request',
+      message: 'prediction event already active, only one allowed at a time',
+    })
+    state.createPredictionError = error
+
+    expect(isPredictionAlreadyActiveError(error)).toBe(true)
+    await expect(openTwitchBet({ heroName: 'Slark', client: makeClient() })).rejects.toBe(error)
+    expect(state.loggerErrorCalls).toHaveLength(0)
+  })
+
+  it('does not classify the same message without Twitch HTTP 400 status', () => {
+    const error = twitchApiError(
+      { message: 'prediction event already active, only one allowed at a time' },
+      409,
+    )
+
+    expect(isPredictionAlreadyActiveError(error)).toBe(false)
   })
 
   it('swallows the error and disables bets when channel points are not enabled', async () => {

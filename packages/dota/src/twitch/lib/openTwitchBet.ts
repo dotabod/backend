@@ -7,6 +7,23 @@ import { say } from '../../dota/say'
 import { DBSettings, defaultSettings, getValueOrDefault } from '../../settings'
 import type { SocketClient } from '../../types'
 
+export function isPredictionAlreadyActiveError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false
+
+  const { statusCode, body } = error as { statusCode?: unknown; body?: unknown }
+  if (statusCode !== 400 || typeof body !== 'string') return false
+
+  try {
+    const parsedBody = JSON.parse(body) as { message?: unknown }
+    return (
+      typeof parsedBody.message === 'string' &&
+      parsedBody.message.includes('prediction event already active')
+    )
+  } catch {
+    return false
+  }
+}
+
 // Disable the bet in settings for this user
 async function disableBetsForTwitchId(twitchId: string, errorMessage: string) {
   const token = getTokenFromTwitchId(twitchId)
@@ -86,6 +103,8 @@ export const openTwitchBet = async ({
       autoLockAfter,
     })
     .catch(async (e) => {
+      if (isPredictionAlreadyActiveError(e)) throw e
+
       try {
         if (e.stack?.includes('The user context for the user')) {
           await supabase

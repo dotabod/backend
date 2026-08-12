@@ -7,7 +7,7 @@ import { DBSettings, getValueOrDefault } from '../settings'
 import { notablePlayers } from '../steam/notableplayers'
 import { steamSocket } from '../steam/ws'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet'
-import { openTwitchBet } from '../twitch/lib/openTwitchBet'
+import { isPredictionAlreadyActiveError, openTwitchBet } from '../twitch/lib/openTwitchBet'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets'
 import type { MatchMinimalDetailsResponse } from '../types'
 import {
@@ -886,6 +886,7 @@ class GSIHandler implements GSIHandlerType {
       return
     }
     let betId: undefined | string
+    let predictionAlreadyActive = false
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings, client.subscription)
 
@@ -899,18 +900,26 @@ class GSIHandler implements GSIHandlerType {
         betId = bet?.id
       }
     } catch (e) {
-      logger.error('[BETS] Error opening twitch bet', {
-        channel: client.name,
-        e: (e as Error)?.message || e,
-        matchId,
-      })
+      if (isPredictionAlreadyActiveError(e)) {
+        predictionAlreadyActive = true
+        logger.info('[BETS] Twitch prediction already active; tracking match only', {
+          channel: client.name,
+          matchId,
+        })
+      } else {
+        logger.error('[BETS] Error opening twitch bet', {
+          channel: client.name,
+          e: (e as Error)?.message || e,
+          matchId,
+        })
 
-      // Don't insert a matches row when the Twitch prediction failed to open —
-      // it would be a phantom (no predictionId, chat was never told) that
-      // !unresolved later nags about. Safer to leave the user without a row
-      // than to create one we can't resolve.
-      await this.abortOpenBets()
-      return
+        // Don't insert a matches row when the Twitch prediction failed to open —
+        // it would be a phantom (no predictionId, chat was never told) that
+        // !unresolved later nags about. Safer to leave the user without a row
+        // than to create one we can't resolve.
+        await this.abortOpenBets()
+        return
+      }
     }
     this.openingBets = false
 
@@ -919,7 +928,7 @@ class GSIHandler implements GSIHandlerType {
     // still be overwritten later (closeBets/updateMmr writes the GC value at
     // match-end; hero.name.ts mid-game-swap handler also updates it).
     await supabase.from('matches').insert({
-      predictionId: betId,
+      predictionId: predictionAlreadyActive ? null : betId,
       matchId,
       userId: client.token,
       myTeam,
@@ -934,7 +943,7 @@ class GSIHandler implements GSIHandlerType {
       })
     }
 
-    if (betsEnabled) {
+    if (betsEnabled && !predictionAlreadyActive) {
       say(client, t('bets.open', { emote: 'peepoGamble', lng: client.locale }), {
         delay: false,
         key: DBSettings.tellChatBets,
@@ -1156,6 +1165,38 @@ class GSIHandler implements GSIHandlerType {
         logger.error('err toggleHandler', { e })
       }
 
+      let predictionId: string | null = null
+      if (betsEnabled) {
+        try {
+          const predictionResponse = await supabase
+            .from('matches')
+            .select('predictionId')
+            .eq('matchId', matchId.toString())
+            .eq('userId', this.client.token)
+            .single()
+
+          if (
+            !predictionResponse.error &&
+            typeof predictionResponse.data?.predictionId === 'string' &&
+            predictionResponse.data.predictionId.length > 0
+          ) {
+            predictionId = predictionResponse.data.predictionId
+          } else {
+            logger.info('[BETS] Skipping Twitch closure because predictionId is unavailable', {
+              channel,
+              matchId,
+              error: predictionResponse.error?.message,
+            })
+          }
+        } catch (error) {
+          logger.info('[BETS] Skipping Twitch closure because predictionId is unreadable', {
+            channel,
+            matchId,
+            error: (error as Error)?.message || error,
+          })
+        }
+      }
+
       delayedQueue.addTask(getStreamDelay(this.client.settings, this.client.subscription), () => {
         const message = won
           ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
@@ -1163,8 +1204,8 @@ class GSIHandler implements GSIHandlerType {
 
         say(this.client, message, { delay: false, chattersKey: 'matchOutcome' })
 
-        if (!betsEnabled) {
-          logger.debug('Bets are not enabled, stopping here', {
+        if (!betsEnabled || !predictionId) {
+          logger.debug('Bets are not enabled or no prediction was opened, stopping here', {
             name: this.client.name,
           })
           this.resetClientState().catch(() => {

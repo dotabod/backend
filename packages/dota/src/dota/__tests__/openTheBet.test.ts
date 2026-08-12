@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../__tests__/sharedMocks'
 
 type InsertCall = { table: string; values: Record<string, unknown> }
+type UpdateCall = { table: string; values: Record<string, unknown> }
 type OpenBetCall = { heroName: string | undefined; matchidAtCallTime: string | undefined }
 type DelayedTask = {
   id: string
@@ -16,12 +17,20 @@ type DelayedTask = {
 }
 
 const supabaseInserts: InsertCall[] = []
+const supabaseUpdates: UpdateCall[] = []
 const steamAccountSelectCalls: number[] = []
 const loggerErrorCalls: Array<{ message: string; meta?: Record<string, unknown> }> = []
+const loggerInfoCalls: Array<{ message: string; meta?: Record<string, unknown> }> = []
 const openBetCalls: OpenBetCall[] = []
+const closeBetCalls: unknown[][] = []
+const sayCalls: Array<{ message: string; options?: Record<string, unknown> }> = []
 const heldTasks: DelayedTask[] = []
 const removedTaskIds: string[] = []
 const openTwitchBetControl: { throwOnNextCall: Error | null } = { throwOnNextCall: null }
+const matchPredictionLookup: {
+  data: { predictionId: string | null } | null
+  error: { message: string } | null
+} = { data: null, error: null }
 // Existing rows the supabase mock returns from a `.select(...).eq.eq.is(...)`
 // chain (the openBets duplicate-bet check at line 712-718). Default: empty.
 const existingBetRows: Array<Record<string, unknown>> = []
@@ -52,7 +61,10 @@ const supabaseMock = {
         }
         return Promise.resolve({ data: null, error: null })
       },
-      update: () => builder,
+      update: (values: Record<string, unknown>) => {
+        supabaseUpdates.push({ table, values })
+        return builder
+      },
       upsert: () => Promise.resolve({ data: null, error: null }),
       eq: () => builder,
       is: () => Promise.resolve({ data: existingBetRows.slice(), error: null }),
@@ -61,7 +73,10 @@ const supabaseMock = {
       gte: () => builder,
       order: () => builder,
       limit: () => Promise.resolve({ data: existingBetRows.slice(), error: null }),
-      single: () => Promise.resolve({ data: null, error: { message: 'not found' } }),
+      single: () => {
+        if (table === 'matches') return Promise.resolve({ ...matchPredictionLookup })
+        return Promise.resolve({ data: null, error: { message: 'not found' } })
+      },
       maybeSingle: () => {
         if (table === 'steam_accounts') steamAccountSelectCalls.push(Date.now())
         return Promise.resolve({ ...steamAccountLookup })
@@ -75,7 +90,9 @@ const supabaseMock = {
 }
 
 const loggerMock = {
-  info: () => undefined,
+  info: (message: string, meta?: Record<string, unknown>) => {
+    loggerInfoCalls.push({ message, meta })
+  },
   error: (message: string, meta?: Record<string, unknown>) => {
     loggerErrorCalls.push({ message, meta })
   },
@@ -94,6 +111,19 @@ vi.doMock('../../steam/ws', () => ({
 }))
 
 vi.doMock('../../twitch/lib/openTwitchBet', () => ({
+  isPredictionAlreadyActiveError: (error: unknown) => {
+    if (typeof error !== 'object' || error === null) return false
+    const candidate = error as { statusCode?: unknown; body?: unknown }
+    if (candidate.statusCode !== 400 || typeof candidate.body !== 'string') return false
+    try {
+      const body = JSON.parse(candidate.body) as { message?: unknown }
+      return (
+        typeof body.message === 'string' && body.message.includes('prediction event already active')
+      )
+    } catch {
+      return false
+    }
+  },
   openTwitchBet: async ({ heroName, client }: { heroName?: string; client: any }) => {
     openBetCalls.push({
       heroName,
@@ -105,6 +135,18 @@ vi.doMock('../../twitch/lib/openTwitchBet', () => ({
       throw e
     }
     return { id: 'bet-id-1' }
+  },
+}))
+
+vi.doMock('../../twitch/lib/closeTwitchBet', () => ({
+  closeTwitchBet: async (...args: unknown[]) => {
+    closeBetCalls.push(args)
+  },
+}))
+
+vi.doMock('../say', () => ({
+  say: (_client: unknown, message: string, options?: Record<string, unknown>) => {
+    sayCalls.push({ message, options })
   },
 }))
 
@@ -191,6 +233,9 @@ const redisStore: Record<string, string> = {}
     }
     return chain
   },
+  json: {
+    get: async () => null,
+  },
 }
 
 const { server } = await import('../server')
@@ -252,9 +297,13 @@ function makeHandler(client: Client) {
 describe('openTheBet — Arteezy stale-GSI regression', () => {
   beforeEach(() => {
     supabaseInserts.length = 0
+    supabaseUpdates.length = 0
     steamAccountSelectCalls.length = 0
     loggerErrorCalls.length = 0
+    loggerInfoCalls.length = 0
     openBetCalls.length = 0
+    closeBetCalls.length = 0
+    sayCalls.length = 0
     heldTasks.length = 0
     removedTaskIds.length = 0
     existingBetRows.length = 0
@@ -264,6 +313,8 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     steamAccountInsertResult.error = null
     steamAccountInsertResult.throwError = null
     openTwitchBetControl.throwOnNextCall = null
+    matchPredictionLookup.data = null
+    matchPredictionLookup.error = null
     for (const k of Object.keys(redisStore)) delete redisStore[k]
   })
 
@@ -420,6 +471,86 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     expect(openBetCalls.length).toBe(1)
     expect(supabaseInserts.length).toBe(0)
     expect(handler.openingBets).toBe(false)
+  })
+
+  it('records an active-prediction conflict once and keeps the match guard without announcing bets', async () => {
+    const client = makeClient({
+      gsi: liveGsi({ map: { matchid: '8825999999', win_team: 'none' } }),
+    })
+    const handler = makeHandler(client)
+    openTwitchBetControl.throwOnNextCall = Object.assign(new Error('Twitch API error'), {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: 'prediction event already active, only one allowed at a time',
+      }),
+    })
+
+    await handler.openBets(handler.client)
+    await heldTasks[0].invoke()
+
+    expect(openBetCalls).toHaveLength(1)
+    expect(supabaseInserts).toContainEqual({
+      table: 'matches',
+      values: expect.objectContaining({
+        matchId: '8825999999',
+        predictionId: null,
+      }),
+    })
+    expect(redisStore['token-arteezy:matchId']).toBe('8825999999')
+    expect(redisStore['token-arteezy:playingTeam']).toBe('radiant')
+    expect(redisStore['token-arteezy:playingHero']).toBe('npc_dota_hero_nevermore')
+    expect(sayCalls).toHaveLength(0)
+    expect(loggerErrorCalls).toHaveLength(0)
+    expect(loggerInfoCalls.filter((call) => call.meta?.event === 'open_bets')).toHaveLength(0)
+    expect(
+      loggerInfoCalls.filter(
+        (call) => call.message === '[BETS] Twitch prediction already active; tracking match only',
+      ),
+    ).toHaveLength(1)
+
+    await handler.openBets(handler.client)
+
+    expect(openBetCalls).toHaveLength(1)
+    expect(heldTasks).toHaveLength(1)
+  })
+
+  it('updates the match but skips Twitch closure when its predictionId is null', async () => {
+    const client = makeClient({
+      gsi: liveGsi({
+        map: {
+          matchid: '8825999999',
+          win_team: 'radiant',
+          radiant_score: 42,
+          dire_score: 31,
+        },
+        player: {
+          accountid: 86745912,
+          activity: 'playing',
+          team_name: 'radiant',
+          kills: 10,
+          deaths: 2,
+          assists: 15,
+        },
+      }),
+    })
+    const handler = makeHandler(client)
+    redisStore['token-arteezy:matchId'] = '8825999999'
+    redisStore['token-arteezy:playingTeam'] = 'radiant'
+    redisStore['token-arteezy:playingHero'] = 'npc_dota_hero_nevermore'
+    matchPredictionLookup.data = { predictionId: null }
+
+    await handler.closeBets('radiant')
+
+    expect(supabaseUpdates).toContainEqual({
+      table: 'matches',
+      values: expect.objectContaining({ won: true }),
+    })
+    expect(heldTasks).toHaveLength(1)
+
+    await heldTasks[0].invoke()
+
+    expect(closeBetCalls).toHaveLength(0)
+    expect(redisStore['token-arteezy:matchId']).toBeUndefined()
   })
 
   it('snapshots myTeam at openBets time so the matches insert keeps the team even if GSI clears', async () => {
