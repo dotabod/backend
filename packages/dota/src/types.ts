@@ -363,6 +363,7 @@ export enum ChatMessageType {
   ChatMessageCanQuitWithoutAbandon = 'CHAT_MESSAGE_CAN_QUIT_WITHOUT_ABANDON',
   ChatMessageCantPauseTooEarly = 'CHAT_MESSAGE_CANT_PAUSE_TOO_EARLY',
   ChatMessageCantpauseyet = 'CHAT_MESSAGE_CANTPAUSEYET',
+  ChatMessageCantUnpauseTeam = 'CHAT_MESSAGE_CANTUNPAUSETEAM',
   ChatMessageCantUseActionItem = 'CHAT_MESSAGE_CANT_USE_ACTION_ITEM',
   ChatMessageCourierLost = 'CHAT_MESSAGE_COURIER_LOST',
   ChatMessageCourierRespawned = 'CHAT_MESSAGE_COURIER_RESPAWNED',

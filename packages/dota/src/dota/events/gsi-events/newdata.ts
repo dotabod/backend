@@ -39,6 +39,7 @@ import eventHandler from '../EventHandler'
 // import { minimapParser } from '../minimap/parser'
 import { selectNewEvents } from './selectNewEvents'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './sendExtensionPubSubBroadcastMessageIfChanged'
+import { shouldLogUnknownGsiEvent } from './unknownEventDiagnostics'
 
 // Define a type for the global timeouts
 declare global {
@@ -877,13 +878,21 @@ function handleNewEvents(data: Packet, dotaClient: GSIHandlerType) {
       const shouldLogUnknownEventType = !validEventTypes.has(event.event_type)
       const shouldLogUnknownChatMessageType =
         typeof dataType === 'string' && !chatMessageTypesSet.has(dataType)
+      const unknownDiagnosticKeys = [
+        shouldLogUnknownEventType ? `event:${event.event_type}` : null,
+        shouldLogUnknownChatMessageType ? `message:${dataType}` : null,
+      ].filter((key): key is string => key !== null)
+      const shouldLogDiagnostic = unknownDiagnosticKeys
+        .map((key) => shouldLogUnknownGsiEvent(key))
+        .some(Boolean)
 
       events.emit(`event:${event.event_type}`, event, dotaClient.client.token)
-      if (shouldLogUnknownEventType || shouldLogUnknownChatMessageType) {
+      if (shouldLogDiagnostic) {
         logger.info('[NEWEVENT]', {
           event,
           dataWasObject,
           dataWasJsonParsed,
+          unknownDiagnosticKeys,
         })
       }
     })
