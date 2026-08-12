@@ -54,6 +54,7 @@ import { server } from './server'
 // Delay before the "other streamers in match" announce, giving co-players' openBets time to insert
 // their own `matches` rows (players load into a game at slightly different times).
 const STREAMERS_ANNOUNCE_DELAY_MS = 90_000
+const MULTI_ACCOUNT_REVALIDATION_COOLDOWN_MS = 30_000
 
 // Finally, we have a user and a GSI client
 interface MMR {
@@ -144,6 +145,7 @@ class GSIHandler implements GSIHandlerType {
   openingBets = false
   creatingSteamAccount = false
   checkingEarlyDCWinner = false
+  multiAccountRevalidatedAt?: number
   treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
   disabled = false
 
@@ -295,6 +297,7 @@ class GSIHandler implements GSIHandlerType {
     // Reset multiAccount property to ensure it's cleared when state is reset
     if (this.client) {
       this.client.multiAccount = undefined
+      this.multiAccountRevalidatedAt = undefined
     }
   }
 
@@ -408,9 +411,10 @@ class GSIHandler implements GSIHandlerType {
 
     // Set a flag to prevent concurrent calls
     this.creatingSteamAccount = true
+    let steam32Id: number | null | undefined
 
     try {
-      const steam32Id = steamID64toSteamID32(this.client.gsi.player.steamid)
+      steam32Id = steamID64toSteamID32(this.client.gsi.player.steamid)
       if (!steam32Id) {
         this.creatingSteamAccount = false
         return
@@ -425,12 +429,19 @@ class GSIHandler implements GSIHandlerType {
           steam32Id,
           multiAccount: undefined,
         })
+        this.multiAccountRevalidatedAt = undefined
         this.emitBadgeUpdate()
         return
       }
 
       const isMultiAccount = this.client.multiAccount === steam32Id
-      if (isMultiAccount) return
+      if (
+        isMultiAccount &&
+        this.multiAccountRevalidatedAt !== undefined &&
+        Date.now() - this.multiAccountRevalidatedAt < MULTI_ACCOUNT_REVALIDATION_COOLDOWN_MS
+      ) {
+        return
+      }
 
       // Continue to create this act in db
       // Default to the mmr from `users` table for this brand new steam account
@@ -438,20 +449,34 @@ class GSIHandler implements GSIHandlerType {
       const mmr = this.client.SteamAccount.length ? 0 : this.getMmr()
 
       this.creatingSteamAccount = true
-      const { data: res } = await supabase
+      const { data: res, error } = await supabase
         .from('steam_accounts')
         .select('id, userId, mmr, connectedUserIds')
         .eq('steam32Id', steam32Id)
-        .single()
+        .maybeSingle()
+
+      if (error) {
+        if (isMultiAccount) this.multiAccountRevalidatedAt = Date.now()
+        logger.error('Error in updateSteam32Id', { error, name: this.client.name })
+        return
+      }
 
       if (res?.id) {
         await this.handleExistingAccount(res, steam32Id)
       } else {
-        await this.createNewSteamAccount(mmr, steam32Id)
+        const created = await this.createNewSteamAccount(mmr, steam32Id)
+        if (!created) {
+          this.client.multiAccount = steam32Id
+          this.multiAccountRevalidatedAt = Date.now()
+        }
       }
 
       this.creatingSteamAccount = false
     } catch (error) {
+      if (steam32Id) {
+        this.client.multiAccount = steam32Id
+        this.multiAccountRevalidatedAt = Date.now()
+      }
       logger.error('Error in updateSteam32Id', { error, name: this.client.name })
     } finally {
       // Ensure flag is reset even if an error occurs
@@ -475,6 +500,8 @@ class GSIHandler implements GSIHandlerType {
         .eq('id', this.client.token)
 
       Object.assign(this.client, { mmr: res.mmr, steam32Id })
+      this.client.multiAccount = undefined
+      this.multiAccountRevalidatedAt = undefined
 
       // Update local SteamAccount list if not present
       if (!this.client.SteamAccount.find((act) => act.steam32Id === steam32Id)) {
@@ -487,6 +514,7 @@ class GSIHandler implements GSIHandlerType {
       }
     } else {
       this.client.multiAccount = steam32Id
+      this.multiAccountRevalidatedAt = Date.now()
       const uniqueUserIds = Array.from(
         new Set([...(res?.connectedUserIds ?? []), this.client.token]),
       )
@@ -504,12 +532,17 @@ class GSIHandler implements GSIHandlerType {
     logger.info('[STEAM32ID] Adding steam32Id', { name: this.client.name })
 
     const name = this.client.gsi?.player?.name || null
-    await supabase.from('steam_accounts').insert({
+    const { error } = await supabase.from('steam_accounts').insert({
       mmr,
       steam32Id,
       userId: this.client.token,
       name,
     })
+
+    if (error) {
+      logger.error('Error creating steam account', { error, name: this.client.name, steam32Id })
+      return false
+    }
 
     await supabase
       .from('users')
@@ -524,7 +557,9 @@ class GSIHandler implements GSIHandlerType {
     })
 
     Object.assign(this.client, { mmr, steam32Id, multiAccount: undefined })
+    this.multiAccountRevalidatedAt = undefined
     this.emitBadgeUpdate()
+    return true
   }
 
   async updateMMR({

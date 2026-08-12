@@ -133,6 +133,23 @@ const { redisClient } = await import('../../../../db/redisInstance')
 }
 
 const { checkAccountSharing, __resetAccountSharingLogCacheForTests } = await import('../newdata')
+const { events, newData, processChanges, recoverMultiAccount } =
+  await import('../../../globalEventEmitter')
+const { gsiHandlers } = await import('../../../lib/consts')
+const eventHandler = (await import('../../EventHandler')).default
+
+let gameplayHandlerCalls = 0
+let winTeamHandlerCalls = 0
+eventHandler.registerEvent('test:multi-account-gameplay', {
+  handler: () => {
+    gameplayHandlerCalls++
+  },
+})
+eventHandler.registerEvent('map:win_team', {
+  handler: () => {
+    winTeamHandlerCalls++
+  },
+})
 
 const baseClient = () =>
   ({
@@ -145,6 +162,86 @@ const baseClient = () =>
 beforeEach(() => {
   resetState()
   __resetAccountSharingLogCacheForTests()
+  gsiHandlers.clear()
+  gameplayHandlerCalls = 0
+  winTeamHandlerCalls = 0
+})
+
+describe('newdata multi-account recovery gate', () => {
+  it('runs Steam recovery for a blocked client and returns before gameplay processing if blocked', async () => {
+    let recoveryCalls = 0
+    let gameplayCalls = 0
+    const token = 'blocked-token'
+    const handler: any = {
+      disabled: false,
+      client: {
+        token,
+        name: 'blocked',
+        stream_online: true,
+        multiAccount: 440614454,
+        settings: [],
+        gsi: {},
+      },
+      updateSteam32Id: async () => {
+        recoveryCalls++
+      },
+      setupOBSBlockers: async () => {
+        gameplayCalls++
+      },
+    }
+    gsiHandlers.set(token, handler)
+
+    events.emit('newdata', {}, token)
+    events.emit('test:multi-account-gameplay', {}, token)
+    await new Promise<void>((resolve) => setTimeout(resolve, 0))
+
+    expect(recoveryCalls).toBe(1)
+    expect(gameplayCalls).toBe(0)
+    expect(gameplayHandlerCalls).toBe(0)
+  })
+
+  it('recovers before dispatching a one-shot win transition from the same request', async () => {
+    const token = 'recovering-token'
+    const order: string[] = []
+    const handler: any = {
+      disabled: false,
+      client: {
+        token,
+        name: 'recovering',
+        stream_online: true,
+        multiAccount: 440614454,
+        settings: [],
+        gsi: {},
+      },
+      updateSteam32Id: async () => {
+        order.push('recover')
+        handler.client.multiAccount = undefined
+      },
+      setupOBSBlockers: async () => undefined,
+    }
+    gsiHandlers.set(token, handler)
+
+    const req = {
+      body: {
+        auth: { token },
+        previously: { map: { win_team: 'none' } },
+        map: { win_team: 'radiant' },
+      },
+    } as never
+    const res = { status: () => ({ json: () => undefined }) } as never
+
+    await recoverMultiAccount(req, res, () => {
+      processChanges('previously')(req, res, () => {
+        processChanges('added')(req, res, () => {
+          newData(req, res)
+        })
+      })
+    })
+    order.push(winTeamHandlerCalls ? 'win' : 'missing-win')
+
+    expect(order).toEqual(['recover', 'win'])
+    expect(winTeamHandlerCalls).toBe(1)
+  })
 })
 
 describe('checkAccountSharing', () => {

@@ -16,6 +16,8 @@ type DelayedTask = {
 }
 
 const supabaseInserts: InsertCall[] = []
+const steamAccountSelectCalls: number[] = []
+const loggerErrorCalls: Array<{ message: string; meta?: Record<string, unknown> }> = []
 const openBetCalls: OpenBetCall[] = []
 const heldTasks: DelayedTask[] = []
 const removedTaskIds: string[] = []
@@ -23,6 +25,15 @@ const openTwitchBetControl: { throwOnNextCall: Error | null } = { throwOnNextCal
 // Existing rows the supabase mock returns from a `.select(...).eq.eq.is(...)`
 // chain (the openBets duplicate-bet check at line 712-718). Default: empty.
 const existingBetRows: Array<Record<string, unknown>> = []
+const steamAccountLookup: {
+  data: Record<string, unknown> | null
+  error: { code?: string; message: string } | null
+} = { data: null, error: null }
+const steamAccountInsertResult: {
+  data: Record<string, unknown> | null
+  error: { code?: string; message: string } | null
+  throwError: Error | null
+} = { data: null, error: null, throwError: null }
 
 const supabaseMock = {
   from: (table: string) => {
@@ -33,6 +44,12 @@ const supabaseMock = {
       select: () => builder,
       insert: (values: Record<string, unknown>) => {
         supabaseInserts.push({ table, values })
+        if (table === 'steam_accounts') {
+          if (steamAccountInsertResult.throwError) {
+            return Promise.reject(steamAccountInsertResult.throwError)
+          }
+          return Promise.resolve({ ...steamAccountInsertResult })
+        }
         return Promise.resolve({ data: null, error: null })
       },
       update: () => builder,
@@ -45,6 +62,10 @@ const supabaseMock = {
       order: () => builder,
       limit: () => Promise.resolve({ data: existingBetRows.slice(), error: null }),
       single: () => Promise.resolve({ data: null, error: { message: 'not found' } }),
+      maybeSingle: () => {
+        if (table === 'steam_accounts') steamAccountSelectCalls.push(Date.now())
+        return Promise.resolve({ ...steamAccountLookup })
+      },
       match: () => Promise.resolve({ data: null, error: null }),
       then: (onF: any) => Promise.resolve({ data: existingBetRows.slice(), error: null }).then(onF),
     }
@@ -55,7 +76,9 @@ const supabaseMock = {
 
 const loggerMock = {
   info: () => undefined,
-  error: () => undefined,
+  error: (message: string, meta?: Record<string, unknown>) => {
+    loggerErrorCalls.push({ message, meta })
+  },
   warn: () => undefined,
   debug: () => undefined,
 }
@@ -213,6 +236,10 @@ function liveGsi(overrides: Record<string, any> = {}) {
   }
 }
 
+function steam64(steam32Id: number) {
+  return (76561197960265728n + BigInt(steam32Id)).toString()
+}
+
 function makeHandler(client: Client) {
   const handler = createGSIHandler(client) as any
   // ctor disabled the handler because stream_online was false; flip both
@@ -225,15 +252,23 @@ function makeHandler(client: Client) {
 describe('openTheBet — Arteezy stale-GSI regression', () => {
   beforeEach(() => {
     supabaseInserts.length = 0
+    steamAccountSelectCalls.length = 0
+    loggerErrorCalls.length = 0
     openBetCalls.length = 0
     heldTasks.length = 0
     removedTaskIds.length = 0
     existingBetRows.length = 0
+    steamAccountLookup.data = null
+    steamAccountLookup.error = null
+    steamAccountInsertResult.data = null
+    steamAccountInsertResult.error = null
+    steamAccountInsertResult.throwError = null
     openTwitchBetControl.throwOnNextCall = null
     for (const k of Object.keys(redisStore)) delete redisStore[k]
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     supabaseInserts.length = 0
     openBetCalls.length = 0
     heldTasks.length = 0
@@ -440,5 +475,201 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     await heldTasks[0].invoke()
     expect(supabaseInserts.length).toBe(0)
     expect(openBetCalls.length).toBe(0)
+  })
+})
+
+describe('updateSteam32Id — stale multi-account recovery', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-12T00:00:00.000Z'))
+    supabaseInserts.length = 0
+    steamAccountSelectCalls.length = 0
+    loggerErrorCalls.length = 0
+    steamAccountLookup.data = null
+    steamAccountLookup.error = null
+    steamAccountInsertResult.data = null
+    steamAccountInsertResult.error = null
+    steamAccountInsertResult.throwError = null
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function makeBlockedHandler(steam32Id = 440614454) {
+    const client = makeClient({
+      multiAccount: steam32Id,
+      steam32Id: null,
+      SteamAccount: [],
+      gsi: liveGsi({ player: { steamid: steam64(steam32Id), name: 'Dota Account' } }),
+    })
+    return makeHandler(client)
+  }
+
+  it('does not query again within the 30-second conflict cooldown', async () => {
+    const handler = makeBlockedHandler()
+    handler.multiAccountRevalidatedAt = Date.now() - 29_999
+
+    await handler.updateSteam32Id()
+
+    expect(steamAccountSelectCalls).toHaveLength(0)
+    expect(handler.client.multiAccount).toBe(440614454)
+  })
+
+  it('after 30 seconds creates the link when the Steam row is gone', async () => {
+    const handler = makeBlockedHandler()
+    handler.multiAccountRevalidatedAt = Date.now() - 30_000
+
+    await handler.updateSteam32Id()
+
+    expect(steamAccountSelectCalls).toHaveLength(1)
+    expect(supabaseInserts).toContainEqual({
+      table: 'steam_accounts',
+      values: expect.objectContaining({ steam32Id: 440614454, userId: 'token-arteezy' }),
+    })
+    expect(handler.client.multiAccount).toBeUndefined()
+    expect(handler.multiAccountRevalidatedAt).toBeUndefined()
+    expect(handler.client.steam32Id).toBe(440614454)
+  })
+
+  it('after 30 seconds restores the local account when ownership transferred to this user', async () => {
+    const handler = makeBlockedHandler()
+    handler.multiAccountRevalidatedAt = Date.now() - 30_000
+    steamAccountLookup.data = {
+      id: 'steam-row',
+      userId: 'token-arteezy',
+      mmr: 6123,
+      connectedUserIds: [],
+    }
+
+    await handler.updateSteam32Id()
+
+    expect(handler.client.multiAccount).toBeUndefined()
+    expect(handler.multiAccountRevalidatedAt).toBeUndefined()
+    expect(handler.client.steam32Id).toBe(440614454)
+    expect(handler.client.mmr).toBe(6123)
+    expect(handler.client.SteamAccount).toContainEqual(
+      expect.objectContaining({ steam32Id: 440614454, mmr: 6123 }),
+    )
+    expect(supabaseInserts.filter((call) => call.table === 'steam_accounts')).toHaveLength(0)
+  })
+
+  it('retains a real conflict and restarts the cooldown', async () => {
+    const handler = makeBlockedHandler()
+    handler.multiAccountRevalidatedAt = Date.now() - 30_000
+    steamAccountLookup.data = {
+      id: 'steam-row',
+      userId: 'different-user',
+      mmr: 5000,
+      connectedUserIds: [],
+    }
+
+    await handler.updateSteam32Id()
+
+    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
+    expect(steamAccountSelectCalls).toHaveLength(1)
+
+    await handler.updateSteam32Id()
+    expect(steamAccountSelectCalls).toHaveLength(1)
+  })
+
+  it('on a transient Supabase error retains the conflict and never inserts', async () => {
+    const handler = makeBlockedHandler()
+    handler.multiAccountRevalidatedAt = Date.now() - 30_000
+    steamAccountLookup.error = { code: '503', message: 'database unavailable' }
+
+    await handler.updateSteam32Id()
+
+    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
+    expect(supabaseInserts.filter((call) => call.table === 'steam_accounts')).toHaveLength(0)
+    expect(loggerErrorCalls.some((call) => call.message === 'Error in updateSteam32Id')).toBe(true)
+  })
+
+  it('keeps the claimant blocked when recreating the missing Steam row fails', async () => {
+    const handler = makeBlockedHandler()
+    handler.multiAccountRevalidatedAt = Date.now() - 30_000
+    steamAccountInsertResult.error = { code: '23505', message: 'duplicate key value' }
+
+    await handler.updateSteam32Id()
+
+    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
+    expect(handler.client.steam32Id).toBeNull()
+    expect(handler.client.SteamAccount).toEqual([])
+    expect(loggerErrorCalls.some((call) => call.message === 'Error creating steam account')).toBe(
+      true,
+    )
+  })
+
+  it('blocks a first-time claimant when a uniqueness race rejects the Steam insert', async () => {
+    const client = makeClient({
+      multiAccount: undefined,
+      steam32Id: null,
+      SteamAccount: [],
+      gsi: liveGsi({ player: { steamid: steam64(440614454), name: 'Dota Account' } }),
+    })
+    const handler = makeHandler(client)
+    steamAccountInsertResult.error = { code: '23505', message: 'duplicate key value' }
+
+    await handler.updateSteam32Id()
+
+    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
+    expect(handler.client.steam32Id).toBeNull()
+    expect(handler.client.SteamAccount).toEqual([])
+  })
+
+  it('keeps a stale claimant blocked when the Steam insert throws', async () => {
+    const handler = makeBlockedHandler()
+    handler.multiAccountRevalidatedAt = Date.now() - 30_000
+    steamAccountInsertResult.throwError = new Error('network unavailable')
+
+    await handler.updateSteam32Id()
+
+    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
+    expect(handler.client.steam32Id).toBeNull()
+    expect(handler.client.SteamAccount).toEqual([])
+  })
+
+  it('blocks a first-time claimant when the Steam insert throws', async () => {
+    const client = makeClient({
+      multiAccount: undefined,
+      steam32Id: null,
+      SteamAccount: [],
+      gsi: liveGsi({ player: { steamid: steam64(440614454), name: 'Dota Account' } }),
+    })
+    const handler = makeHandler(client)
+    steamAccountInsertResult.throwError = new Error('network unavailable')
+
+    await handler.updateSteam32Id()
+
+    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
+    expect(handler.client.steam32Id).toBeNull()
+    expect(handler.client.SteamAccount).toEqual([])
+  })
+
+  it('starts the cooldown when a conflict is newly assigned', async () => {
+    const client = makeClient({
+      multiAccount: undefined,
+      steam32Id: null,
+      SteamAccount: [],
+      gsi: liveGsi({ player: { steamid: steam64(440614454), name: 'Dota Account' } }),
+    })
+    const handler = makeHandler(client)
+    steamAccountLookup.data = {
+      id: 'steam-row',
+      userId: 'different-user',
+      mmr: 5000,
+      connectedUserIds: [],
+    }
+
+    await handler.updateSteam32Id()
+
+    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
   })
 })

@@ -22,7 +22,7 @@ import {
 import CustomError from '../../../utils/customError'
 import { getRedisNumberValue, is8500Plus } from '../../../utils/index'
 import type { GSIHandlerType } from '../../GSIHandlerTypes'
-import { events } from '../../globalEventEmitter'
+import { consumeMultiAccountRecovery, events } from '../../globalEventEmitter'
 import { checkPassiveMidas } from '../../lib/checkMidas'
 import { checkPassiveTp } from '../../lib/checkPassiveTp'
 import { calculateManaSaved } from '../../lib/checkTreadToggle'
@@ -649,10 +649,21 @@ const _maybeSendTooltipData = async (dotaClient: GSIHandlerType) => {
 
 // Catch all
 eventHandler.registerEvent('newdata', {
+  allowMultiAccount: true,
   handler: async (dotaClient, data: Packet) => {
+    const recoveryAttemptedBeforeDispatch = consumeMultiAccountRecovery(data)
+    const wasMultiAccountBlocked = !!dotaClient.client.multiAccount
+    if (wasMultiAccountBlocked && !recoveryAttemptedBeforeDispatch) {
+      await dotaClient.updateSteam32Id()
+    }
+    if (dotaClient.client.multiAccount) return
+
     // New users who don't have a steam account saved yet
     // This needs to run first so we have client.steamid on multiple acts
-    const updateSteam32IdPromise = dotaClient.updateSteam32Id()
+    const updateSteam32IdPromise =
+      wasMultiAccountBlocked || recoveryAttemptedBeforeDispatch
+        ? Promise.resolve()
+        : dotaClient.updateSteam32Id()
 
     // In case they connect to a game in progress and we missed the start event
     const setupOBSBlockersPromise = dotaClient.setupOBSBlockers(data.map?.game_state ?? '')

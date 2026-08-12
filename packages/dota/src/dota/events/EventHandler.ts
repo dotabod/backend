@@ -4,6 +4,7 @@ import { gsiHandlers } from '../lib/consts'
 
 interface EventOptions<T = unknown> {
   handler: (dotaClient: GSIHandlerType, data: T) => Promise<void> | void
+  allowMultiAccount?: boolean
 }
 
 class EventHandler {
@@ -22,7 +23,7 @@ class EventHandler {
       if (!client.client.stream_online) return
 
       // dont send events if someone is sharing a computer for another steam account
-      if (client.client.multiAccount) return
+      if (client.client.multiAccount && !options.allowMultiAccount) return
 
       // check if options.handler is a promise first
       // the global emitter is untyped; each registration declares the payload type

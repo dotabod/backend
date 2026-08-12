@@ -18,6 +18,8 @@ import {
   resetWatcherState,
   seedClient,
   startWatcher,
+  twitchIdToToken,
+  twitchNameToToken,
   watcherState,
 } from './watcherMocks.ts'
 
@@ -199,5 +201,184 @@ describe('dota watcher: DELETE:users', () => {
     expect(invalidTokens.has('u-del')).toBe(false)
     expect(invalidTokens.has('tw-del')).toBe(false)
     expect(gsiHandlers.has('u-del')).toBe(false)
+  })
+})
+
+describe('dota watcher: steam account relationship invalidation', () => {
+  it('DELETE clears a cached connected claimant even when the row owner is absent', async () => {
+    const { client, handler } = seedClient({
+      userId: 'claimant',
+      providerAccountId: 'tw-claimant',
+      name: 'claimant-name',
+      multiAccount: 440614454,
+      multiAccountRevalidatedAt: 123,
+    })
+    invalidTokens.add('claimant')
+    invalidTokens.add('tw-claimant')
+
+    await fire('*', 'steam_accounts', {
+      eventType: 'DELETE',
+      old: {
+        id: 'steam-row',
+        userId: 'missing-owner',
+        steam32Id: 440614454,
+        connectedUserIds: ['claimant'],
+      },
+      new: {},
+    })
+
+    expect(gsiHandlers.has('claimant')).toBe(false)
+    expect(client.multiAccount).toBeUndefined()
+    expect(handler.multiAccountRevalidatedAt).toBeUndefined()
+    expect(invalidTokens.has('claimant')).toBe(false)
+    expect(invalidTokens.has('tw-claimant')).toBe(false)
+    expect(twitchIdToToken.has('tw-claimant')).toBe(false)
+    expect(twitchNameToToken.has('claimant-name')).toBe(false)
+    expect(watcherState.clearCacheCalls.map((call) => call.token)).toEqual(['claimant'])
+  })
+
+  it('DELETE clears the owner and connected claimants independently and is idempotent', async () => {
+    seedClient({ userId: 'owner', providerAccountId: 'tw-owner' })
+    seedClient({
+      userId: 'claimant',
+      providerAccountId: 'tw-claimant',
+      multiAccount: 12345,
+    })
+    for (const token of ['owner', 'tw-owner', 'claimant', 'tw-claimant']) {
+      invalidTokens.add(token)
+    }
+
+    const payload = {
+      eventType: 'DELETE',
+      old: {
+        id: 'steam-row',
+        userId: 'owner',
+        steam32Id: 12345,
+        connectedUserIds: ['claimant'],
+      },
+      new: {},
+    }
+    await fire('*', 'steam_accounts', payload)
+    await fire('*', 'steam_accounts', payload)
+
+    expect(gsiHandlers.has('owner')).toBe(false)
+    expect(gsiHandlers.has('claimant')).toBe(false)
+    expect(watcherState.clearCacheCalls.map((call) => call.token).sort()).toEqual([
+      'claimant',
+      'owner',
+    ])
+    for (const token of ['owner', 'tw-owner', 'claimant', 'tw-claimant']) {
+      expect(invalidTokens.has(token)).toBe(false)
+    }
+  })
+
+  it('ownership-transfer UPDATE clears the previous owner and promoted claimant', async () => {
+    seedClient({ userId: 'old-owner', providerAccountId: 'tw-old-owner' })
+    seedClient({
+      userId: 'new-owner',
+      providerAccountId: 'tw-new-owner',
+      multiAccount: 777,
+      multiAccountRevalidatedAt: 123,
+    })
+
+    await fire('*', 'steam_accounts', {
+      eventType: 'UPDATE',
+      old: {
+        id: 'steam-row',
+        userId: 'old-owner',
+        steam32Id: 777,
+        connectedUserIds: ['new-owner'],
+        mmr: 5000,
+        name: 'account',
+        leaderboard_rank: null,
+      },
+      new: {
+        id: 'steam-row',
+        userId: 'new-owner',
+        steam32Id: 777,
+        connectedUserIds: [],
+        mmr: 5000,
+        name: 'account',
+        leaderboard_rank: null,
+      },
+    })
+
+    expect(gsiHandlers.has('old-owner')).toBe(false)
+    expect(gsiHandlers.has('new-owner')).toBe(false)
+    expect(watcherState.clearCacheCalls.map((call) => call.token).sort()).toEqual([
+      'new-owner',
+      'old-owner',
+    ])
+  })
+
+  it('connectedUserIds removal clears only the removed claimant', async () => {
+    seedClient({
+      userId: 'owner',
+      steamAccounts: [{ steam32Id: 777, mmr: 5000, name: 'account', leaderboard_rank: null }],
+    })
+    seedClient({ userId: 'removed', multiAccount: 777 })
+    seedClient({ userId: 'remaining', multiAccount: 777 })
+
+    await fire('*', 'steam_accounts', {
+      eventType: 'UPDATE',
+      old: {
+        id: 'steam-row',
+        userId: 'owner',
+        steam32Id: 777,
+        connectedUserIds: ['removed', 'remaining'],
+        mmr: 5000,
+        name: 'account',
+        leaderboard_rank: null,
+      },
+      new: {
+        id: 'steam-row',
+        userId: 'owner',
+        steam32Id: 777,
+        connectedUserIds: ['remaining'],
+        mmr: 5000,
+        name: 'account',
+        leaderboard_rank: null,
+      },
+    })
+
+    expect(gsiHandlers.has('owner')).toBe(true)
+    expect(gsiHandlers.has('removed')).toBe(false)
+    expect(gsiHandlers.has('remaining')).toBe(true)
+    expect(watcherState.clearCacheCalls.map((call) => call.token)).toEqual(['removed'])
+  })
+
+  it('ordinary MMR/profile UPDATE refreshes local data without evicting clients', async () => {
+    const { client } = seedClient({
+      userId: 'owner',
+      steamAccounts: [{ steam32Id: 777, mmr: 5000, name: 'old', leaderboard_rank: null }],
+    })
+    seedClient({ userId: 'claimant', multiAccount: 777 })
+
+    await fire('*', 'steam_accounts', {
+      eventType: 'UPDATE',
+      old: {
+        id: 'steam-row',
+        userId: 'owner',
+        steam32Id: 777,
+        connectedUserIds: ['claimant'],
+        mmr: 5000,
+        name: 'old',
+        leaderboard_rank: null,
+      },
+      new: {
+        id: 'steam-row',
+        userId: 'owner',
+        steam32Id: 777,
+        connectedUserIds: ['claimant'],
+        mmr: 5100,
+        name: 'new',
+        leaderboard_rank: 123,
+      },
+    })
+
+    expect(gsiHandlers.has('owner')).toBe(true)
+    expect(gsiHandlers.has('claimant')).toBe(true)
+    expect(watcherState.clearCacheCalls).toHaveLength(0)
+    expect(client.SteamAccount[0]).toMatchObject({ mmr: 5100, name: 'new', leaderboard_rank: 123 })
   })
 })

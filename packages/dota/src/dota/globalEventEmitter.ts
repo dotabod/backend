@@ -1,7 +1,9 @@
 import { EventEmitter } from 'node:events'
 import type { NextFunction, Request, Response } from 'express'
+import { gsiHandlers } from './lib/consts'
 
 export const events = new EventEmitter()
+const multiAccountRecoveryPackets = new WeakSet<object>()
 
 // I dont think we need 20, but just in case. Default is 11
 events.setMaxListeners(20)
@@ -65,6 +67,28 @@ export function processChanges(section: string) {
     }
     next()
   }
+}
+
+export async function recoverMultiAccount(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const token = req.body?.auth?.token as string | undefined
+  const handler = token ? gsiHandlers.get(token) : undefined
+
+  if (handler?.client.multiAccount) {
+    await handler.updateSteam32Id()
+    multiAccountRecoveryPackets.add(req.body)
+  }
+
+  next()
+}
+
+export function consumeMultiAccountRecovery(packet: object): boolean {
+  const recovered = multiAccountRecoveryPackets.has(packet)
+  multiAccountRecoveryPackets.delete(packet)
+  return recovered
 }
 
 export function newData(req: Request, res: Response) {

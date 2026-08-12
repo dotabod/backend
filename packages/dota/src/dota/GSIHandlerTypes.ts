@@ -28,6 +28,7 @@ export interface GSIHandlerType {
   openingBets: boolean
   creatingSteamAccount: boolean
   checkingEarlyDCWinner: boolean
+  multiAccountRevalidatedAt?: number
   treadsData: { treadToggles: number; manaSaved: number; manaAtLastToggle: number }
   disabled: boolean
 

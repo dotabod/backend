@@ -16,7 +16,7 @@ import type { Ability, Item } from '../types'
 import { initDotaPatchChecker } from './DotaPatchChecker'
 import { emitMinimapBlockerStatus } from './GSIHandler'
 import type { GSIServerInterface } from './GSIServerTypes'
-import { newData, processChanges } from './globalEventEmitter'
+import { newData, processChanges, recoverMultiAccount } from './globalEventEmitter'
 import { gsiHandlers } from './lib/consts'
 import { MatchDataService } from './lib/matchData'
 import { remindUnresolvedMatches } from './lib/remindUnresolvedMatches'
@@ -106,6 +106,7 @@ class GSIServer implements GSIServerInterface {
         next()
       },
       validateToken,
+      recoverMultiAccount,
       processChanges('previously'),
       processChanges('added'),
       newData,

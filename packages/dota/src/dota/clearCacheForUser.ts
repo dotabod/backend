@@ -19,7 +19,9 @@ export async function clearCacheForUser(client?: SocketClient) {
 
   // mark the client as disabled while we cleanup everything
   // just so new items won't get added while we do this
-  gsiHandlers.get(client.token)?.disable()
+  const handler = gsiHandlers.get(client.token)
+  handler?.disable()
+  if (handler) handler.multiAccountRevalidatedAt = undefined
 
   const accountId = client.Account?.providerAccountId ?? ''
   twitchIdToToken.delete(accountId)

@@ -126,6 +126,8 @@ vi.doMock('@dotabod/shared-utils', () =>
 vi.doMock('../../dota/clearCacheForUser', () => ({
   clearCacheForUser: async (client?: {
     token: string
+    name?: string
+    multiAccount?: number
     Account?: { providerAccountId?: string }
   }) => {
     if (!client) return
@@ -133,7 +135,15 @@ vi.doMock('../../dota/clearCacheForUser', () => ({
       token: client.token,
       accountId: client.Account?.providerAccountId,
     })
-    const { gsiHandlers } = await import('../../dota/lib/consts')
+    client.multiAccount = undefined
+    const { gsiHandlers, twitchIdToToken, twitchNameToToken } =
+      await import('../../dota/lib/consts')
+    const handler = gsiHandlers.get(client.token)
+    if (handler) handler.multiAccountRevalidatedAt = undefined
+    if (client.Account?.providerAccountId) {
+      twitchIdToToken.delete(client.Account.providerAccountId)
+    }
+    if (client.name) twitchNameToToken.delete(client.name)
     gsiHandlers.delete(client.token)
     return true
   },
@@ -226,20 +236,30 @@ export function seedClient(opts: {
   token?: string
   name?: string
   providerAccountId?: string
+  multiAccount?: number
+  multiAccountRevalidatedAt?: number
+  steamAccounts?: Array<{
+    mmr: number
+    leaderboard_rank: number | null
+    name: string | null
+    steam32Id: number
+  }>
 }) {
   const token = opts.token ?? opts.userId
   const client: any = {
     token,
     name: opts.name ?? `user-${opts.userId}`,
     Account: opts.providerAccountId ? { providerAccountId: opts.providerAccountId } : undefined,
-    SteamAccount: [],
+    SteamAccount: opts.steamAccounts ?? [],
     settings: [],
+    multiAccount: opts.multiAccount,
   }
   const handler: any = {
     client,
     token,
     disable: () => undefined,
     getChannelId: () => null,
+    multiAccountRevalidatedAt: opts.multiAccountRevalidatedAt,
   }
   gsiHandlers.set(token, handler)
   if (opts.providerAccountId) twitchIdToToken.set(opts.providerAccountId, token)

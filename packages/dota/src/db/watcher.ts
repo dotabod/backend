@@ -3,7 +3,7 @@ import { getAuthProvider, getTwitchAPI, logger, supabase } from '@dotabod/shared
 import { t } from 'i18next'
 import { clearCacheForUser } from '../dota/clearCacheForUser'
 import findUser from '../dota/lib/connectedStreamers'
-import { gsiHandlers, invalidTokens } from '../dota/lib/consts'
+import { gsiHandlers, invalidTokens, twitchIdToToken, twitchNameToToken } from '../dota/lib/consts'
 import { getRankDetail } from '../dota/lib/ranks'
 import { server } from '../dota/server'
 import { DBSettings } from '../settings'
@@ -35,6 +35,30 @@ class SetupSupabase {
     if (!client) return
 
     toggleDotabod(userId, enable, client.name, client.locale)
+  }
+
+  clearSteamUsers = async (userIds: Iterable<string>) => {
+    for (const userId of new Set(userIds)) {
+      if (!userId) continue
+
+      const client = findUser(userId)
+      const accountIds = new Set<string>()
+      if (client?.Account?.providerAccountId) accountIds.add(client.Account.providerAccountId)
+      for (const [accountId, token] of twitchIdToToken) {
+        if (token === userId) accountIds.add(accountId)
+      }
+
+      if (client) await clearCacheForUser(client)
+
+      invalidTokens.delete(userId)
+      for (const accountId of accountIds) {
+        twitchIdToToken.delete(accountId)
+        invalidTokens.delete(accountId)
+      }
+      for (const [name, token] of twitchNameToToken) {
+        if (token === userId) twitchNameToToken.delete(name)
+      }
+    }
   }
 
   init() {
@@ -497,49 +521,41 @@ class SetupSupabase {
         }) => {
           const newObj: Tables<'steam_accounts'> = payload.new
           const oldObj: Tables<'steam_accounts'> = payload.old
-          const client = findUser(newObj.userId || oldObj.userId)
-
-          // Just here to update local memory
-          if (!client) return
 
           if (payload.eventType === 'DELETE') {
             logger.info('[WATCHER STEAM] Deleting steam account for', {
-              name: client.name,
+              userId: oldObj.userId,
             })
 
-            // Store the steam32Id before clearing cache
-            const deletedSteam32Id = oldObj.steam32Id
-            const accountId = client.Account?.providerAccountId
-
-            // A delete will reset their status in memory so they can reconnect anything
-            await clearCacheForUser(client)
-            // Allow re-onboarding after the steam unlink (clearCacheForUser no
-            // longer touches invalidTokens, so the negative-cache entry must
-            // be dropped explicitly).
-            invalidTokens.delete(client.token)
-            if (accountId) invalidTokens.delete(accountId)
-
-            // We try deleting those users so they can attempt a new connection
-            if (Array.isArray(oldObj.connectedUserIds)) {
-              for (const connectedToken of oldObj.connectedUserIds) {
-                const connectedClient = gsiHandlers.get(connectedToken)?.client
-
-                // If client exists, clear its cache
-                if (connectedClient) {
-                  // Explicitly clear multiAccount if it matches the deleted account
-                  if (connectedClient.multiAccount === deletedSteam32Id) {
-                    connectedClient.multiAccount = undefined
-                  }
-                  const connectedAccountId = connectedClient.Account?.providerAccountId
-                  await clearCacheForUser(connectedClient)
-                  invalidTokens.delete(connectedClient.token)
-                  if (connectedAccountId) invalidTokens.delete(connectedAccountId)
-                }
-              }
-            }
+            await this.clearSteamUsers([
+              oldObj.userId,
+              ...(Array.isArray(oldObj.connectedUserIds) ? oldObj.connectedUserIds : []),
+            ])
 
             return
           }
+
+          if (payload.eventType === 'UPDATE') {
+            const oldConnectedUserIds = new Set(oldObj.connectedUserIds ?? [])
+            const newConnectedUserIds = new Set(newObj.connectedUserIds ?? [])
+            const affectedUserIds = new Set<string>()
+
+            for (const userId of oldConnectedUserIds) {
+              if (!newConnectedUserIds.has(userId)) affectedUserIds.add(userId)
+            }
+
+            if (oldObj.userId !== newObj.userId) {
+              affectedUserIds.add(oldObj.userId)
+              affectedUserIds.add(newObj.userId)
+            }
+
+            if (affectedUserIds.size) await this.clearSteamUsers(affectedUserIds)
+          }
+
+          const client = findUser(newObj.userId)
+
+          // Just here to update local memory
+          if (!client) return
 
           logger.debug('[WATCHER STEAM] Updating steam accounts for', {
             name: client.name,
