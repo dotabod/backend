@@ -67,8 +67,8 @@ importers:
         specifier: ^1.19.1
         version: 1.27.0
       dotaconstants:
-        specifier: github:dotabod/dotaconstants#ada287904831eb51d7e08fced1923db9ad46df88
-        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/ada287904831eb51d7e08fced1923db9ad46df88
+        specifier: github:dotabod/dotaconstants#11bc2943c519f379f46d1c41eb86bd9b7a11f8ac
+        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/11bc2943c519f379f46d1c41eb86bd9b7a11f8ac
       express:
         specifier: ^4.21.2
         version: 4.22.2
@@ -372,12 +372,12 @@ packages:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
 
-  '@napi-rs/wasm-runtime@1.2.1':
-    resolution: {integrity: sha512-KjZdi8Q1wh89gsVmghvbrMgWl6ZWmRmHV6wjB7/g4Zf0dyO+hH3neZUtuDNPO00qq5YE5RITVWvrIZKRaAmzGQ==}
+  '@napi-rs/wasm-runtime@1.2.3':
+    resolution: {integrity: sha512-UMduMbqO5s5zF2NkNacMT/yK5Y5QiKvWr2+50bzIIxFDwVJ2h49b+oyjaCGPhJxd2/gC2x39EHv/gHVuu36x2Q==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
     peerDependencies:
-      '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.3
-      '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.3
+      '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
+      '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.4
 
   '@oxc-parser/binding-android-arm-eabi@0.130.0':
     resolution: {integrity: sha512-h/xYU8/7ADWzVSf5I+YalLpj33LOy9CI/zgbJNIZ5eunRBG+Czqa3lZsvuPHHf3rOt6z1c5+UzoxjbAzAvhwVw==}
@@ -1668,9 +1668,9 @@ packages:
     resolution: {gitHosted: true, integrity: sha512-iWo37QWJZXV7nfBKVe1D1OCs10ltkSR67GN2DTVz+PDH0+apWbXajSfEfuK5LYY6sU7U64/LomN+Yer15fo+Jw==, tarball: https://codeload.github.com/dotabod/node-dota2/tar.gz/4a1a09537d5bead430c36427b9a50b770abe56fc}
     version: 7.0.3
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/ada287904831eb51d7e08fced1923db9ad46df88:
-    resolution: {gitHosted: true, integrity: sha512-XymDiRrFyfNUrGuqyjQcJF+1piWAHIk38ooyNmBlqcWC1YWiZaJ/nsLwA8mZjBcx2FMrnhsmd2JR6jXIp+gsdw==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/ada287904831eb51d7e08fced1923db9ad46df88}
-    version: 10.8.18
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/11bc2943c519f379f46d1c41eb86bd9b7a11f8ac:
+    resolution: {gitHosted: true, integrity: sha512-33nfGAajthgsbbkIj8Svs+BtA/m6kXkm9xJHzcoZa59o132dIJcFN22QcGGhczIDSz/nS3E/L0cVIpTD5CRglg==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/11bc2943c519f379f46d1c41eb86bd9b7a11f8ac}
+    version: 10.8.22
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -2324,8 +2324,8 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@3.3.16:
-    resolution: {integrity: sha512-bzlKTyNJ7+LdGIIwy8ijFpIqEQIvafahV7eYykJ8Cvh42EdJeODoJ6gUJXpQJvej1BddH8OqTXZNE/KfbWAu8Q==}
+  nanoid@3.3.18:
+    resolution: {integrity: sha512-DTg4MJbGMWkfi6VZFdNt2/caMbQy4Ou+Op/hJQvGEWcnVfoA1QA+xzRKAzw9jD6+GVOOeYr/mIcuDSdug6F6+w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -2469,8 +2469,8 @@ packages:
     resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.5.25:
-    resolution: {integrity: sha512-DTPx3RWSSnWyzLxQnlH0rJP+EW5ekl16ZU4/psbIhA0e53kJfdgaN5vKM+xP7yJtXVu+nfdVFmlgFDEKAe4Pyw==}
+  postcss@8.5.26:
+    resolution: {integrity: sha512-u82N74LFzG8ca+dD8puPnplTXoGH4fTPpVGuIbt36G3qvNlkvfD0lEAZSxaly3KX8TS/L1A1gsCEmvKmBcVbkQ==}
     engines: {node: ^10 || ^12 || >=14}
 
   profanity-util@0.2.0:
@@ -3069,7 +3069,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.2
     optional: true
 
-  '@napi-rs/wasm-runtime@1.2.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
+  '@napi-rs/wasm-runtime@1.2.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
       '@emnapi/core': 1.10.0
       '@emnapi/runtime': 1.10.0
@@ -3437,7 +3437,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.10.0
       '@emnapi/runtime': 1.10.0
-      '@napi-rs/wasm-runtime': 1.2.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      '@napi-rs/wasm-runtime': 1.2.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
     optional: true
 
   '@rolldown/binding-win32-arm64-msvc@1.0.2':
@@ -4092,7 +4092,7 @@ snapshots:
       steam-resources: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45
       winston: 3.19.0
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/ada287904831eb51d7e08fced1923db9ad46df88: {}
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/11bc2943c519f379f46d1c41eb86bd9b7a11f8ac: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -4703,7 +4703,7 @@ snapshots:
 
   nanoid@3.3.12: {}
 
-  nanoid@3.3.16: {}
+  nanoid@3.3.18: {}
 
   naughty-words@1.2.0: {}
 
@@ -4886,9 +4886,9 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postcss@8.5.25:
+  postcss@8.5.26:
     dependencies:
-      nanoid: 3.3.16
+      nanoid: 3.3.18
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -5376,7 +5376,7 @@ snapshots:
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.5
-      postcss: 8.5.25
+      postcss: 8.5.26
       rolldown: 1.0.2
       tinyglobby: 0.2.17
     optionalDependencies:
