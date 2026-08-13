@@ -70,10 +70,11 @@ jobs:
             exit 0
           fi
 
-          if [ "$(gh pr view "$PR_NUMBER" --json autoMergeRequest \
+          if [ "$(gh pr view "$PR_NUMBER" -R "$GITHUB_REPOSITORY" --json autoMergeRequest \
             --jq '.autoMergeRequest != null')" = 'true' ]; then
             echo "Auto-merge is already enabled for PR #$PR_NUMBER"
             exit 0
           fi
 
-          gh pr merge "$PR_NUMBER" --auto --squash --match-head-commit "$TESTED_HEAD_SHA"
+          gh pr merge "$PR_NUMBER" -R "$GITHUB_REPOSITORY" --auto --squash \
+            --match-head-commit "$TESTED_HEAD_SHA"
