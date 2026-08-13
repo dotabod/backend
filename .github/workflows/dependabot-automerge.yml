@@ -1,0 +1,79 @@
+name: Dependabot Automerge
+
+# workflow_run executes from the trusted default branch with access to Actions
+# secrets. Never check out or execute the Dependabot PR's code in this workflow.
+on:
+  workflow_run:
+    workflows: ['CI', 'Docker Image CI']
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Squash and merge tested Dependabot PR
+        env:
+          GH_TOKEN: ${{ secrets.GHA_PAT }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+          TESTED_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ -z "$PR_NUMBER" ]; then
+            PR_NUMBER=$(
+              gh api "repos/$GITHUB_REPOSITORY/commits/$TESTED_HEAD_SHA/pulls" \
+                --jq '[.[] | select(.state == "open")][0].number // empty'
+            )
+          fi
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo 'The completed workflow is not associated with an open pull request'
+            exit 0
+          fi
+
+          IFS=$'\t' read -r author base head draft state < <(
+            gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+              --jq '[.user.login, .base.ref, .head.sha, (.draft | tostring), .state] | @tsv'
+          )
+
+          if [ "$author" != 'dependabot[bot]' ] || [ "$base" != 'master' ]; then
+            echo "PR #$PR_NUMBER is not a Dependabot PR targeting master"
+            exit 0
+          fi
+
+          if [ "$draft" != 'false' ] || [ "$state" != 'open' ]; then
+            echo "PR #$PR_NUMBER is not an open, non-draft PR"
+            exit 0
+          fi
+
+          if [ "$head" != "$TESTED_HEAD_SHA" ]; then
+            echo "PR #$PR_NUMBER changed after CI started; waiting for CI on $head"
+            exit 0
+          fi
+
+          workflow_runs=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$TESTED_HEAD_SHA&per_page=100")
+          ci_conclusion=$(jq -r \
+            '[.workflow_runs[] | select(.name == "CI" and .event == "pull_request")] |
+            sort_by(.created_at) | last | .conclusion // empty' <<< "$workflow_runs")
+          docker_conclusion=$(jq -r \
+            '[.workflow_runs[] | select(.name == "Docker Image CI" and .event == "push")] |
+            sort_by(.created_at) | last | .conclusion // empty' <<< "$workflow_runs")
+
+          if [ "$ci_conclusion" != 'success' ] || [ "$docker_conclusion" != 'success' ]; then
+            echo "Waiting for successful checks on $TESTED_HEAD_SHA: " \
+              "CI=${ci_conclusion:-pending}, Docker=${docker_conclusion:-pending}"
+            exit 0
+          fi
+
+          if [ "$(gh pr view "$PR_NUMBER" --json autoMergeRequest \
+            --jq '.autoMergeRequest != null')" = 'true' ]; then
+            echo "Auto-merge is already enabled for PR #$PR_NUMBER"
+            exit 0
+          fi
+
+          gh pr merge "$PR_NUMBER" --auto --squash --match-head-commit "$TESTED_HEAD_SHA"

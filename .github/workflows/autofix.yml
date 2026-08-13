@@ -18,9 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     # `prod` environment scopes the GHA_PAT secret used to push fixes back.
     environment: prod
-    # Fork PRs can't be pushed to from here (no write access to the fork), so
-    # only auto-fix branches that live in this repo.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Fork PRs can't be pushed to from here. Dependabot PRs also cannot access
+    # GHA_PAT, and CI already runs the same formatting/lint checks without fixes.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v7
         with:
