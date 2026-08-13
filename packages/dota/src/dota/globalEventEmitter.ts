@@ -1,9 +1,11 @@
 import { EventEmitter } from 'node:events'
 import type { NextFunction, Request, Response } from 'express'
 import { gsiHandlers } from './lib/consts'
+import { isPlayingMatch } from './lib/isPlayingMatch'
 
 export const events = new EventEmitter()
 const multiAccountRecoveryPackets = new WeakSet<object>()
+const killListSnapshots = new WeakMap<object, { matchId: string; values: Record<string, number> }>()
 
 // I dont think we need 20, but just in case. Default is 11
 events.setMaxListeners(20)
@@ -82,6 +84,65 @@ export function processChanges(section: string) {
     }
     next()
   }
+}
+
+function getKillListDeltaKeys(body: Record<string, any>): Set<string> {
+  const keys = new Set<string>()
+  const current = body.player?.kill_list
+
+  for (const section of ['previously', 'added']) {
+    const changed = body[section]?.player?.kill_list
+    if (changed === true && current && typeof current === 'object') {
+      for (const key of Object.keys(current)) keys.add(key)
+    } else if (changed && typeof changed === 'object') {
+      for (const key of Object.keys(changed)) keys.add(key)
+    }
+  }
+
+  return keys
+}
+
+export function processUnmarkedKillListChanges(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): void {
+  const token = req.body?.auth?.token as string | undefined
+  const handler = token ? gsiHandlers.get(token) : undefined
+  const current = req.body?.player?.kill_list
+
+  if (!handler || !isPlayingMatch(req.body) || !current || typeof current !== 'object') {
+    next()
+    return
+  }
+
+  const matchId = String(req.body?.map?.matchid ?? '')
+  const previous = killListSnapshots.get(handler)
+  const currentValues = Object.fromEntries(
+    Object.entries(current).filter((entry): entry is [string, number] => {
+      return typeof entry[1] === 'number'
+    }),
+  )
+
+  killListSnapshots.set(handler, { matchId, values: currentValues })
+
+  if (!previous || previous.matchId !== matchId) {
+    next()
+    return
+  }
+
+  const markedKeys = getKillListDeltaKeys(req.body)
+  const unmarkedIncreases = Object.fromEntries(
+    Object.entries(currentValues).filter(([key, value]) => {
+      return !markedKeys.has(key) && value > (previous.values[key] ?? 0)
+    }),
+  )
+
+  if (Object.keys(unmarkedIncreases).length > 0) {
+    events.emit('player:kill_list', unmarkedIncreases, token)
+  }
+
+  next()
 }
 
 export async function recoverMultiAccount(

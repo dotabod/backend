@@ -3,7 +3,13 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 
 import { gameEnd } from '../../__tests__/fixtures/gameEnd'
-import { events, newData, processChanges } from '../globalEventEmitter'
+import {
+  events,
+  newData,
+  processChanges,
+  processUnmarkedKillListChanges,
+} from '../globalEventEmitter'
+import { gsiHandlers } from '../lib/consts'
 
 // The 19 listener names registered by dota/events/gsiEventLoader.ts in
 // production. Hardcoded so the test file is self-contained and doesn't
@@ -56,6 +62,7 @@ function runPost(body: Record<string, unknown>) {
   const noop = () => undefined
   processChanges('previously')(req, res, noop)
   processChanges('added')(req, res, noop)
+  processUnmarkedKillListChanges(req, res, noop)
   newData(req, res)
 }
 
@@ -76,12 +83,106 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  gsiHandlers.delete('tkn')
   events.removeAllListeners()
   for (const [name, listeners] of savedListeners) {
     for (const listener of listeners) {
       events.on(name as string, listener as any)
     }
   }
+})
+
+describe('unmarked kill-list fallback', () => {
+  function installHandlerSnapshot() {
+    const handler = {
+      client: { stream_online: true },
+      disabled: false,
+      getToken: () => 'tkn',
+    } as never
+    gsiHandlers.set('tkn', handler)
+  }
+
+  it('emits a positive increase when the one-shot kill-list marker packet was skipped', () => {
+    installHandlerSnapshot()
+    runPost({
+      player: {
+        activity: 'playing',
+        team_name: 'radiant',
+        kill_list: { victimid_2: 1, victimid_7: 1 },
+      },
+      map: { matchid: 'match-1', customgamename: '' },
+    })
+
+    runPost({
+      previously: { player: { gold: 100 } },
+      player: {
+        activity: 'playing',
+        team_name: 'radiant',
+        kill_list: { victimid_2: 2, victimid_7: 1 },
+      },
+      map: { matchid: 'match-1', customgamename: '' },
+    })
+
+    expect(spies.get('player:kill_list')).toEqual([{ args: [{ victimid_2: 2 }, 'tkn'] }])
+  })
+
+  it('does not duplicate a normally marked kill-list dispatch', () => {
+    installHandlerSnapshot()
+    runPost({
+      player: { activity: 'playing', team_name: 'radiant', kill_list: {} },
+      map: { matchid: 'match-1', customgamename: '' },
+    })
+
+    runPost({
+      added: { player: { kill_list: { victimid_8: true } } },
+      player: {
+        activity: 'playing',
+        team_name: 'radiant',
+        kill_list: { victimid_8: 1 },
+      },
+      map: { matchid: 'match-1', customgamename: '' },
+    })
+
+    expect(spies.get('player:kill_list')).toEqual([{ args: [{ victimid_8: 1 }, 'tkn'] }])
+  })
+
+  it('seeds a reconnect snapshot without treating its cumulative counts as new kills', () => {
+    installHandlerSnapshot()
+    runPost({
+      added: { player: { kill_list: true } },
+      player: {
+        activity: 'playing',
+        team_name: 'radiant',
+        kill_list: { victimid_8: 3 },
+      },
+      map: { matchid: 'match-1', customgamename: '' },
+    })
+
+    expect(spies.get('player:kill_list')).toEqual([{ args: [{ victimid_8: 3 }, 'tkn'] }])
+  })
+
+  it('does not carry a previous match snapshot into a new match', () => {
+    installHandlerSnapshot()
+    runPost({
+      player: {
+        activity: 'playing',
+        team_name: 'radiant',
+        kill_list: { victimid_8: 1 },
+      },
+      map: { matchid: 'match-1', customgamename: '' },
+    })
+
+    runPost({
+      player: {
+        activity: 'playing',
+        team_name: 'radiant',
+        kill_list: { victimid_8: 2 },
+      },
+      map: { matchid: 'match-2', customgamename: '' },
+    })
+
+    expect(spies.get('player:kill_list')).toEqual([])
+  })
 })
 
 describe('recursiveEmit dispatch — scalar leaf cases', () => {

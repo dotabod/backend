@@ -14,6 +14,10 @@ export function emitAegisEvent(res: AegisRes, token: string, client: SocketClien
   const tellChatAegis = getValueOrDefault(DBSettings.aegis, client.settings, client.subscription)
   if (!tellChatAegis) return
 
-  const { eventPlayerId: _eventPlayerId, ...socketPayload } = res
+  const {
+    eventPlayerId: _eventPlayerId,
+    holderKillCountAtPickup: _holderKillCountAtPickup,
+    ...socketPayload
+  } = res
   server.io.to(token).emit('aegis-picked-up', socketPayload)
 }

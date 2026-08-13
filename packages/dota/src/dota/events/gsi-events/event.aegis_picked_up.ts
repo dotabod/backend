@@ -48,6 +48,8 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
       expireS,
       playerId: playerIdIndex,
       eventPlayerId: event.player_id,
+      holderKillCountAtPickup:
+        dotaClient.client.gsi?.player?.kill_list?.[`victimid_${event.player_id}`] ?? 0,
       expireTime: fmtMSS(expireTime),
       expireDate,
       snatched: event.snatched,

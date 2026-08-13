@@ -14,9 +14,10 @@ eventHandler.registerEvent('player:kill_list', {
     const redisClient = RedisClient.getInstance()
     const redisJson = await redisClient.getJson<AegisRes>(`${dotaClient.getToken()}:aegis`)
     if (typeof redisJson?.eventPlayerId !== 'number') return
+    if (typeof redisJson.holderKillCountAtPickup !== 'number') return
 
     const victimKey = `victimid_${redisJson.eventPlayerId}`
-    if ((kill_list[victimKey] ?? 0) <= 0) return
+    if ((kill_list[victimKey] ?? 0) <= redisJson.holderKillCountAtPickup) return
 
     try {
       await redisClient.client.json.del(`${dotaClient.getToken()}:aegis`)
