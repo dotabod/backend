@@ -117,6 +117,40 @@ describe('recursiveEmit dispatch — scalar leaf cases', () => {
 })
 
 describe('recursiveEmit dispatch — object subtree cases', () => {
+  it('projects an exact object listener payload to only changed keys', () => {
+    runPost({
+      previously: { player: { kill_list: { victimid_2: 0 } } },
+      player: { kill_list: { victimid_2: 1, victimid_7: 4 } },
+    })
+    expect(spies.get('player:kill_list')).toEqual([{ args: [{ victimid_2: 1 }, 'tkn'] }])
+  })
+
+  it('projects newly added object fields to the exact object listener', () => {
+    runPost({
+      added: { player: { kill_list: { victimid_8: true } } },
+      player: { kill_list: { victimid_3: 2, victimid_8: 1 } },
+    })
+    expect(spies.get('player:kill_list')).toEqual([{ args: [{ victimid_8: 1 }, 'tkn'] }])
+  })
+
+  it('treats added object === true as the complete new object delta', () => {
+    runPost({
+      added: { player: { kill_list: true } },
+      player: { kill_list: { victimid_3: 2, victimid_8: 1 } },
+    })
+    expect(spies.get('player:kill_list')).toEqual([
+      { args: [{ victimid_3: 2, victimid_8: 1 }, 'tkn'] },
+    ])
+  })
+
+  it('continues dispatching unchanged scalar listener payloads', () => {
+    runPost({
+      previously: { player: { deaths: 2 } },
+      player: { deaths: 3 },
+    })
+    expect(spies.get('player:deaths')).toEqual([{ args: [3, 'tkn'] }])
+  })
+
   it('does not fire any listener for items:* subtree (no listeners registered there)', () => {
     runPost({
       previously: { items: { slot0: { name: 'foo', purchaser: 1 } } },
@@ -216,6 +250,7 @@ describe('gameEnd fixture replay — regression baseline', () => {
         "map:win_team": 1,
         "newdata": 12,
         "player:deaths": 1,
+        "player:kill_list": 1,
         "player:kill_streak": 1,
       }
     `)

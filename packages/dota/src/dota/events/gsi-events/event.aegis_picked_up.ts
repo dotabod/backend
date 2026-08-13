@@ -47,6 +47,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     const res = {
       expireS,
       playerId: playerIdIndex,
+      eventPlayerId: event.player_id,
       expireTime: fmtMSS(expireTime),
       expireDate,
       snatched: event.snatched,

@@ -33,6 +33,17 @@ function emitAll(prefix: string, obj: Record<string, any>, token: string) {
   })
 }
 
+function projectChangedValues(
+  changed: Record<string, any>,
+  body: Record<string, any>,
+): Record<string, any> {
+  return Object.fromEntries(
+    Object.keys(changed)
+      .filter((key) => body[key] != null)
+      .map((key) => [key, body[key]]),
+  )
+}
+
 function recursiveEmit(
   prefix: string,
   changed: Record<string, any>,
@@ -44,12 +55,16 @@ function recursiveEmit(
     if (!known!.has(name)) return
     if (typeof changed[key] === 'object') {
       if (body[key] != null) {
+        if (events.listenerCount(name) > 0) {
+          events.emit(name, projectChangedValues(changed[key], body[key]), token)
+        }
         recursiveEmit(`${name}:`, changed[key], body[key], token)
       }
     } else if (body[key] != null) {
       if (typeof body[key] === 'object') {
         // Edge case on added:item/ability:x where added shows true at the top
         // level and doesn't contain each of the child keys
+        if (events.listenerCount(name) > 0) events.emit(name, body[key], token)
         emitAll(`${name}:`, body[key], token)
       } else {
         events.emit(name, body[key], token)

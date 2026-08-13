@@ -14,6 +14,8 @@ export const gsiState: {
   redisJson: Record<string, unknown>
   // Tracks writes for assertion.
   redisJsonSetCalls: Array<{ key: string; path: string; value: unknown }>
+  redisJsonDelCalls: string[]
+  redisJsonDelError: Error | null
   // Roster surfaced via the mocked MatchDataService. Most tests don't care, default empty.
   matchPlayers: MatchPlayer[]
   // Captured chatClient.say calls.
@@ -27,6 +29,8 @@ export const gsiState: {
   redisGet: {},
   redisJson: {},
   redisJsonSetCalls: [],
+  redisJsonDelCalls: [],
+  redisJsonDelError: null,
   matchPlayers: [],
   chatSayCalls: [],
   ioEmitCalls: [],
@@ -38,6 +42,8 @@ export function resetGsiState() {
   gsiState.redisGet = {}
   gsiState.redisJson = {}
   gsiState.redisJsonSetCalls = []
+  gsiState.redisJsonDelCalls = []
+  gsiState.redisJsonDelError = null
   gsiState.matchPlayers = []
   gsiState.chatSayCalls = []
   gsiState.ioEmitCalls = []
@@ -77,6 +83,12 @@ const fakeRedisClient = {
       gsiState.redisJsonSetCalls.push({ key, path, value: snapshot })
       gsiState.redisJson[key] = snapshot
       return 'OK'
+    },
+    del: async (key: string) => {
+      gsiState.redisJsonDelCalls.push(key)
+      if (gsiState.redisJsonDelError) throw gsiState.redisJsonDelError
+      delete gsiState.redisJson[key]
+      return 1
     },
   },
 }
@@ -229,6 +241,7 @@ await import('../map.win_team')
 await import('../hero.smoked')
 await import('../player.killstreak')
 await import('../player.deaths')
+await import('../player.kill_list')
 
 export { events, gsiHandlers }
 

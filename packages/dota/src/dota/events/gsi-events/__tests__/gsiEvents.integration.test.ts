@@ -38,6 +38,25 @@ describe('event:aegis_picked_up', () => {
     expect(gsiState.chatSayCalls[0].message.toLowerCase()).toContain('aegis')
   })
 
+  it('stores the raw event player ID separately from normalized display placement', async () => {
+    const handler = makeGsiHandler()
+    registerHandler(handler)
+    gsiState.matchPlayers = [
+      { heroid: 1, accountid: 101, playerid: 0 },
+      { heroid: 2, accountid: 102, playerid: 1 },
+      { heroid: 5, accountid: 99999, playerid: 8 },
+    ]
+
+    events.emit('event:aegis_picked_up', { player_id: 8, game_time: 600 }, handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.redisJsonSetCalls[0].value).toMatchObject({
+      playerId: 2,
+      eventPlayerId: 8,
+    })
+    expect(gsiState.ioEmitCalls[0].payload).not.toHaveProperty('eventPlayerId')
+  })
+
   it('uses the player-slot color when sub-8500 and no hero is resolved', async () => {
     const handler = makeGsiHandler()
     registerHandler(handler)
@@ -132,6 +151,94 @@ describe('event:aegis_picked_up', () => {
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(0)
+  })
+})
+
+describe('player:kill_list', () => {
+  it('clears aegis when the holder victim key gains a positive kill count', async () => {
+    const handler = makeGsiHandler()
+    registerHandler(handler)
+    const key = `${handler.getToken()}:aegis`
+    gsiState.redisJson[key] = {
+      expireS: 300,
+      playerId: 2,
+      eventPlayerId: 8,
+      expireTime: '15:00',
+      expireDate: new Date(),
+      snatched: false,
+      heroName: 'Pudge',
+    }
+
+    events.emit('player:kill_list', { victimid_8: 1 }, handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.redisJsonDelCalls).toEqual([key])
+    expect(gsiState.ioEmitCalls).toEqual([
+      { token: handler.getToken(), event: 'aegis-picked-up', payload: {} },
+    ])
+  })
+
+  it('does not clear aegis for an unrelated kill count equal to the normalized player ID', async () => {
+    const handler = makeGsiHandler()
+    registerHandler(handler)
+    const key = `${handler.getToken()}:aegis`
+    gsiState.redisJson[key] = {
+      expireS: 300,
+      playerId: 2,
+      eventPlayerId: 8,
+      expireTime: '15:00',
+      expireDate: new Date(),
+      snatched: false,
+      heroName: 'Pudge',
+    }
+
+    events.emit('player:kill_list', { victimid_3: 2 }, handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.redisJsonDelCalls).toHaveLength(0)
+    expect(gsiState.ioEmitCalls).toHaveLength(0)
+  })
+
+  it('leaves legacy aegis records without an event player ID to expire normally', async () => {
+    const handler = makeGsiHandler()
+    registerHandler(handler)
+    const key = `${handler.getToken()}:aegis`
+    gsiState.redisJson[key] = {
+      expireS: 300,
+      playerId: 2,
+      expireTime: '15:00',
+      expireDate: new Date(),
+      snatched: false,
+      heroName: 'Pudge',
+    }
+
+    events.emit('player:kill_list', { victimid_2: 1 }, handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.redisJsonDelCalls).toHaveLength(0)
+    expect(gsiState.ioEmitCalls).toHaveLength(0)
+  })
+
+  it('does not emit an overlay clear when redis deletion fails', async () => {
+    const handler = makeGsiHandler()
+    registerHandler(handler)
+    const key = `${handler.getToken()}:aegis`
+    gsiState.redisJson[key] = {
+      expireS: 300,
+      playerId: 2,
+      eventPlayerId: 8,
+      expireTime: '15:00',
+      expireDate: new Date(),
+      snatched: false,
+      heroName: 'Pudge',
+    }
+    gsiState.redisJsonDelError = new Error('redis unavailable')
+
+    events.emit('player:kill_list', { victimid_8: 1 }, handler.getToken())
+    await flushAsync()
+
+    expect(gsiState.redisJsonDelCalls).toEqual([key])
+    expect(gsiState.ioEmitCalls).toHaveLength(0)
   })
 })
 

@@ -4,7 +4,11 @@ import getDBUser from '../db/getDBUser'
 import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts'
 import { recordGsiFirstSeen } from './setupSignals'
 
-export function validateToken(req: Request, res: Response, next: NextFunction) {
+export async function validateToken(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   const forwardedIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
 
   // Sent from dota gsi config file
@@ -36,44 +40,35 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
   }
 
   pendingCheckAuth.set(token, true)
-  getDBUser({ token, ip: forwardedIp })
-    .then(({ result: client }) => {
-      if (client?.token) {
-        // Record first-seen for the setup wizard's Step 2 verify-state, regardless of
-        // stream state. This is the signal that the cfg file is installed and Dota 2 is
-        // running. Cached + idempotent upsert under the hood.
-        recordGsiFirstSeen(client.token)
+  try {
+    const { result: client } = await getDBUser({ token, ip: forwardedIp })
+    if (client?.token) {
+      // Record first-seen for the setup wizard's Step 2 verify-state, regardless of
+      // stream state. This is the signal that the cfg file is installed and Dota 2 is
+      // running. Cached + idempotent upsert under the hood.
+      recordGsiFirstSeen(client.token)
 
-        if (!client.stream_online) {
-          pendingCheckAuth.delete(token)
-          res.status(200).json({
-            error: 'Stream offline',
-          })
-          return
-        }
-
-        client.gsi = req.body
-        pendingCheckAuth.delete(token)
-
-        next()
+      if (!client.stream_online) {
+        res.status(200).json({
+          error: 'Stream offline',
+        })
         return
       }
 
-      invalidTokens.add(token)
-      pendingCheckAuth.delete(token)
-      res.status(200).json({ error: 'Invalid token, skipping auth check' })
+      client.gsi = req.body
+      next()
+      return
+    }
+
+    invalidTokens.add(token)
+    res.status(200).json({ error: 'Invalid token, skipping auth check' })
+  } catch (e) {
+    logger.info('[GSI] io.use Error checking auth 48', { token, e })
+    invalidTokens.add(token)
+    res.status(200).json({
+      error: 'Invalid token, skipping auth check',
     })
-    .catch((e) => {
-      logger.info('[GSI] io.use Error checking auth 48', { token, e })
-      invalidTokens.add(token)
-      pendingCheckAuth.delete(token)
-      res.status(200).json({
-        error: 'Invalid token, skipping auth check',
-      })
-    })
-    // TODO: idk if finally runs when next() is called in a .then() earlier
-    // So adding the .deletes to .then and .catch until i figure that out lol
-    .finally(() => {
-      pendingCheckAuth.delete(token)
-    })
+  } finally {
+    pendingCheckAuth.delete(token)
+  }
 }

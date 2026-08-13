@@ -6,7 +6,6 @@ import { server } from '../../server'
 import eventHandler from '../EventHandler'
 import type { AegisRes } from './AegisRes'
 
-// TODO: check kill list value
 eventHandler.registerEvent('player:kill_list', {
   handler: async (dotaClient, kill_list: Player['kill_list']) => {
     if (!dotaClient.client.stream_online) return
@@ -14,16 +13,16 @@ eventHandler.registerEvent('player:kill_list', {
 
     const redisClient = RedisClient.getInstance()
     const redisJson = await redisClient.getJson<AegisRes>(`${dotaClient.getToken()}:aegis`)
-    if (typeof redisJson?.playerId !== 'number') return
+    if (typeof redisJson?.eventPlayerId !== 'number') return
 
-    // Remove aegis icon from the player we just killed
-    if (Object.values(kill_list).includes(redisJson.playerId)) {
-      try {
-        void redisClient.client.json.del(`${dotaClient.getToken()}:aegis`)
-      } catch (e) {
-        logger.error('err redisClient aegis del', { e })
-      }
+    const victimKey = `victimid_${redisJson.eventPlayerId}`
+    if ((kill_list[victimKey] ?? 0) <= 0) return
+
+    try {
+      await redisClient.client.json.del(`${dotaClient.getToken()}:aegis`)
       server.io.to(dotaClient.getToken()).emit('aegis-picked-up', {})
+    } catch (e) {
+      logger.error('err redisClient aegis del', { e })
     }
   },
 })
