@@ -63,6 +63,7 @@ jobs:
             --lockfile-only
 
       - name: Create Pull Request
+        id: cpr
         if: steps.scan.outputs.should_update == 'true'
         uses: peter-evans/create-pull-request@v8.1.1
         with:
@@ -96,3 +97,18 @@ jobs:
           add-paths: |
             packages/dota/package.json
             pnpm-lock.yaml
+
+      - name: Enable Pull Request Automerge
+        if: steps.cpr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ secrets.GHA_PAT }}
+          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+          PR_HEAD_SHA: ${{ steps.cpr.outputs.pull-request-head-sha }}
+        run: |
+          if [ "$(gh pr view "$PR_NUMBER" --json autoMergeRequest \
+            --jq '.autoMergeRequest != null')" = "true" ]; then
+            echo "Auto-merge is already enabled for PR #$PR_NUMBER"
+            exit 0
+          fi
+
+          gh pr merge "$PR_NUMBER" --auto --squash --match-head-commit "$PR_HEAD_SHA"
