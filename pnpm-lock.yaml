@@ -67,8 +67,8 @@ importers:
         specifier: ^1.19.1
         version: 1.27.0
       dotaconstants:
-        specifier: github:dotabod/dotaconstants#e91a90034612f46db34ff3b94d188e66cf83f6bf
-        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/e91a90034612f46db34ff3b94d188e66cf83f6bf
+        specifier: github:dotabod/dotaconstants#edf7e257f8485b956662ba28fa8c7fb619fa47ff
+        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/edf7e257f8485b956662ba28fa8c7fb619fa47ff
       express:
         specifier: ^4.21.2
         version: 4.22.2
@@ -1662,9 +1662,9 @@ packages:
     resolution: {gitHosted: true, integrity: sha512-iWo37QWJZXV7nfBKVe1D1OCs10ltkSR67GN2DTVz+PDH0+apWbXajSfEfuK5LYY6sU7U64/LomN+Yer15fo+Jw==, tarball: https://codeload.github.com/dotabod/node-dota2/tar.gz/4a1a09537d5bead430c36427b9a50b770abe56fc}
     version: 7.0.3
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/e91a90034612f46db34ff3b94d188e66cf83f6bf:
-    resolution: {gitHosted: true, integrity: sha512-YWstUxL7Zb8BIA4uYGWBBjDmOFkOvH4wddhS9Ngc1Nj/x+Yya5vkckKAt7qZMFdLbfmagpvwVVdiep40EsRD8g==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/e91a90034612f46db34ff3b94d188e66cf83f6bf}
-    version: 10.8.23
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/edf7e257f8485b956662ba28fa8c7fb619fa47ff:
+    resolution: {gitHosted: true, integrity: sha512-2ICJevOVvx52skdt+NGSvqqAO/H+yeVhNVWk39um+WPVxlQWmQQXN0xlrpv1SmCfTkjmDqiPCiW2z6A34uo2Zg==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/edf7e257f8485b956662ba28fa8c7fb619fa47ff}
+    version: 10.8.24
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -3991,7 +3991,7 @@ snapshots:
       steam-resources: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45
       winston: 3.19.0
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/e91a90034612f46db34ff3b94d188e66cf83f6bf: {}
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/edf7e257f8485b956662ba28fa8c7fb619fa47ff: {}
 
   dunder-proto@1.0.1:
     dependencies:
