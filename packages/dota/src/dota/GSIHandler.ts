@@ -887,6 +887,7 @@ class GSIHandler implements GSIHandlerType {
     }
     let betId: undefined | string
     let predictionAlreadyActive = false
+    let predictionOpenFailed = false
 
     const betsEnabled = getValueOrDefault(DBSettings.bets, client.settings, client.subscription)
 
@@ -907,18 +908,12 @@ class GSIHandler implements GSIHandlerType {
           matchId,
         })
       } else {
+        predictionOpenFailed = true
         logger.error('[BETS] Error opening twitch bet', {
           channel: client.name,
           e: (e as Error)?.message || e,
           matchId,
         })
-
-        // Don't insert a matches row when the Twitch prediction failed to open —
-        // it would be a phantom (no predictionId, chat was never told) that
-        // !unresolved later nags about. Safer to leave the user without a row
-        // than to create one we can't resolve.
-        await this.abortOpenBets()
-        return
       }
     }
     this.openingBets = false
@@ -928,7 +923,7 @@ class GSIHandler implements GSIHandlerType {
     // still be overwritten later (closeBets/updateMmr writes the GC value at
     // match-end; hero.name.ts mid-game-swap handler also updates it).
     await supabase.from('matches').insert({
-      predictionId: predictionAlreadyActive ? null : betId,
+      predictionId: betId ?? null,
       matchId,
       userId: client.token,
       myTeam,
@@ -943,7 +938,7 @@ class GSIHandler implements GSIHandlerType {
       })
     }
 
-    if (betsEnabled && !predictionAlreadyActive) {
+    if (betsEnabled && !predictionAlreadyActive && !predictionOpenFailed) {
       say(client, t('bets.open', { emote: 'peepoGamble', lng: client.locale }), {
         delay: false,
         key: DBSettings.tellChatBets,

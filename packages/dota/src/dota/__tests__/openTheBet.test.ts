@@ -454,11 +454,10 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     expect(handler.openingBets).toBe(false)
   })
 
-  it('does not insert a matches row when openTwitchBet throws (no phantom row without a Twitch prediction)', async () => {
-    // Code-review finding: the old finally-block insert ran even when
-    // openTwitchBet rejected (e.g. Twitch ACTIVE_PREDICTION conflict from the
-    // stale-task cascade, scope revoked, 5xx). That produced rows the
-    // streamer's chat was never told about — phantom unresolved matches.
+  it('keeps match history when openTwitchBet throws without announcing a prediction', async () => {
+    // Match history is useful independently of Twitch predictions. A revoked
+    // scope or transient Twitch 5xx must not erase a real streamed match, but
+    // chat must also never be told that a prediction opened when it did not.
     const client = makeClient({
       gsi: liveGsi({ map: { matchid: '8825999999', win_team: 'none' } }),
     })
@@ -469,7 +468,15 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     await heldTasks[0].invoke()
 
     expect(openBetCalls.length).toBe(1)
-    expect(supabaseInserts.length).toBe(0)
+    expect(supabaseInserts).toContainEqual({
+      table: 'matches',
+      values: expect.objectContaining({
+        matchId: '8825999999',
+        predictionId: null,
+      }),
+    })
+    expect(redisStore['token-arteezy:matchId']).toBe('8825999999')
+    expect(sayCalls).toHaveLength(0)
     expect(handler.openingBets).toBe(false)
   })
 
