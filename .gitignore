@@ -1,3 +1,4 @@
+.codex/config.toml
 .env*
 !.env.example
 .idea
