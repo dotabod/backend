@@ -67,8 +67,8 @@ importers:
         specifier: ^1.19.1
         version: 1.27.0
       dotaconstants:
-        specifier: github:dotabod/dotaconstants#a96a7d39eefa2c5260d46accde4e660f08ebf77a
-        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/a96a7d39eefa2c5260d46accde4e660f08ebf77a
+        specifier: github:dotabod/dotaconstants#c43f23421fe676b92d3375d0c57fe7ef412528ae
+        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/c43f23421fe676b92d3375d0c57fe7ef412528ae
       express:
         specifier: ^4.21.2
         version: 4.22.2
@@ -1658,9 +1658,9 @@ packages:
     resolution: {gitHosted: true, integrity: sha512-iWo37QWJZXV7nfBKVe1D1OCs10ltkSR67GN2DTVz+PDH0+apWbXajSfEfuK5LYY6sU7U64/LomN+Yer15fo+Jw==, tarball: https://codeload.github.com/dotabod/node-dota2/tar.gz/4a1a09537d5bead430c36427b9a50b770abe56fc}
     version: 7.0.3
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/a96a7d39eefa2c5260d46accde4e660f08ebf77a:
-    resolution: {gitHosted: true, integrity: sha512-GbVujR/XDvMSLPJL+8xtJf5+ycS4iFzvhX3BzMs5TxBEvUoTfB1enqCtuvcTXuzXXo17NlXzzfc2BfpCnQa8YA==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/a96a7d39eefa2c5260d46accde4e660f08ebf77a}
-    version: 10.8.25
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/c43f23421fe676b92d3375d0c57fe7ef412528ae:
+    resolution: {gitHosted: true, integrity: sha512-f5+7yz0rKdjNOa7PbVp15jVom/TacrvrCzdYya3ifiDcJU+v07MOrlASdTvUZ9TsK0QpN1tQFAPtXl0FfrLFHg==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/c43f23421fe676b92d3375d0c57fe7ef412528ae}
+    version: 10.8.26
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -2356,6 +2356,10 @@ packages:
 
   picomatch@4.0.5:
     resolution: {integrity: sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==}
+    engines: {node: '>=12'}
+
+  picomatch@4.0.7:
+    resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
     engines: {node: '>=12'}
 
   pixelmatch@7.2.0:
@@ -3987,7 +3991,7 @@ snapshots:
       steam-resources: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45
       winston: 3.19.0
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/a96a7d39eefa2c5260d46accde4e660f08ebf77a: {}
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/c43f23421fe676b92d3375d0c57fe7ef412528ae: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -4693,6 +4697,8 @@ snapshots:
 
   picomatch@4.0.5: {}
 
+  picomatch@4.0.7: {}
+
   pixelmatch@7.2.0:
     dependencies:
       pngjs: 7.0.0
@@ -5183,7 +5189,7 @@ snapshots:
   vite@8.0.14(@types/node@22.20.1)(jiti@2.7.0)(yaml@2.9.0):
     dependencies:
       lightningcss: 1.33.0
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       postcss: 8.5.26
       rolldown: 1.0.2
       tinyglobby: 0.2.17
