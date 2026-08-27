@@ -34,7 +34,7 @@ export type Prediction = {
 
 export type PredictionsCall = { twitchId: string; opts: { limit: number } }
 
-export type OpenDotaProfile = {
+export type DotabodRankProfile = {
   rank_tier: number
   leaderboard_rank: number
 } | null
@@ -75,7 +75,7 @@ export const state: {
   loggerInfoCalls: Array<{ message: string; meta: Record<string, unknown> }>
   groupedBets: GroupedBet[]
   groupedBetsError: unknown
-  openDotaProfile: OpenDotaProfile
+  dotabodRankProfile: DotabodRankProfile
   rankTitle: string
   rankDescription: string | null
   botBanned: boolean
@@ -146,7 +146,7 @@ export const state: {
   loggerInfoCalls: [],
   groupedBets: [],
   groupedBetsError: null,
-  openDotaProfile: null,
+  dotabodRankProfile: null,
   rankTitle: 'Immortal',
   rankDescription: null,
   botBanned: false,
@@ -187,7 +187,7 @@ export function resetState() {
   state.loggerInfoCalls = []
   state.groupedBets = []
   state.groupedBetsError = null
-  state.openDotaProfile = null
+  state.dotabodRankProfile = null
   state.rankTitle = 'Immortal'
   state.rankDescription = null
   state.botBanned = false
@@ -410,7 +410,7 @@ function reinstallModuleMocks() {
   // the dota source, so we re-export them as-is from the real module.
   vi.doMock('../../../dota/lib/ranks', () => ({
     ...realRanks,
-    getOpenDotaProfile: async () => state.openDotaProfile,
+    getDotabodRankProfile: async () => state.dotabodRankProfile,
     getRankTitle: () => state.rankTitle,
     getRankDescription: async () => state.rankDescription,
   }))
@@ -562,7 +562,7 @@ function installTwitchMocks() {
   }
 
   // Inject a stub socket.io server so commands that talk to the overlay
-  // (count, refresh, online, resetwl, hero) don't throw "Server not initialized".
+  // (count, refresh, online, resetwl) don't throw "Server not initialized".
   // fetchSockets returns [] so overlay-dependent paths take their empty branch.
   server.setServer({
     io: {

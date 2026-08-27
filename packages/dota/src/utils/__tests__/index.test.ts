@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test'
 import {
-  dotabuffMatchUrl,
+  dotabodMatchHistoryUrl,
+  dotabodProfileUrl,
   fmtMSS,
   is8500Plus,
   steamID32toSteamID64,
@@ -59,24 +60,26 @@ describe('is8500Plus', () => {
   })
 })
 
-describe('dotabuffMatchUrl', () => {
+describe('Dotabod profile URLs', () => {
   const client = (overrides: Record<string, unknown>) => overrides as any
   const normal = client({ mmr: 3000, steam32Id: 1, SteamAccount: [{ steam32Id: 1, mmr: 3000 }] })
   const high = client({ mmr: 9000, SteamAccount: [] })
 
-  it('returns the canonical url for normal accounts', () => {
-    expect(dotabuffMatchUrl(normal, '12345')).toBe('dotabuff.com/matches/12345')
-    expect(dotabuffMatchUrl(normal, 67890)).toBe('dotabuff.com/matches/67890')
+  it('normalizes channel names for profile and match-history routes', () => {
+    expect(dotabodProfileUrl('Streamer')).toBe('dotabod.com/streamer')
+    expect(dotabodMatchHistoryUrl({ ...normal, name: '#Streamer' })).toBe(
+      'dotabod.com/streamer/matches',
+    )
   })
 
-  it('returns empty for 8500+ accounts', () => {
-    expect(dotabuffMatchUrl(high, '12345')).toBe('')
+  it('returns the first-party URL for 8500+ accounts', () => {
+    expect(dotabodMatchHistoryUrl({ ...high, name: 'streamer' })).toBe(
+      'dotabod.com/streamer/matches',
+    )
   })
 
-  it('returns empty for falsy matchIds', () => {
-    expect(dotabuffMatchUrl(normal, null)).toBe('')
-    expect(dotabuffMatchUrl(normal, undefined)).toBe('')
-    expect(dotabuffMatchUrl(normal, '')).toBe('')
-    expect(dotabuffMatchUrl(normal, 0)).toBe('')
+  it('returns empty when the channel name is missing', () => {
+    expect(dotabodProfileUrl('')).toBe('')
+    expect(dotabodMatchHistoryUrl({ ...normal, name: '' })).toBe('')
   })
 })

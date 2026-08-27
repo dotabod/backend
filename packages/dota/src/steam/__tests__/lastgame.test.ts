@@ -44,22 +44,21 @@ await initTestI18n()
 const lastgame = (await import('../lastgame.ts')).default
 
 const normalClient = {
+  name: 'streamer',
   mmr: 3000,
   steam32Id: 86745912,
   SteamAccount: [{ steam32Id: 86745912, mmr: 3000 }],
 } as any
 
 const highMmrClient = {
+  name: 'streamer',
   mmr: 9000,
   steam32Id: 86745912,
   SteamAccount: [{ steam32Id: 86745912, mmr: 9000 }],
 } as any
 
 describe('lastgame — not-playing "last game" link', () => {
-  it('uses the Supabase match id, not the stale delayedGames cache', async () => {
-    // The 8500+ bug: delayedGames holds a stale older match for Immortal players
-    // (Valve realtime API never saves their recent games), so the link must come
-    // from Supabase, the source of truth for their finished matches.
+  it('links match history when Supabase has a finished match', async () => {
     supabaseMatchRow = { matchId: 8821057580 }
     delayedGamesRows = [{ match: { match_id: '8516216993' } }]
 
@@ -71,11 +70,10 @@ describe('lastgame — not-playing "last game" link', () => {
       currentPlayers: [],
     })
 
-    expect(desc).toContain('dotabuff.com/matches/8821057580')
-    expect(desc).not.toContain('8516216993')
+    expect(desc).toContain('dotabod.com/streamer/matches')
   })
 
-  it('falls back to the delayedGames cache when Supabase has nothing', async () => {
+  it('links match history when only the delayedGames cache has a match', async () => {
     supabaseMatchRow = null
     delayedGamesRows = [{ match: { match_id: '8516216993' } }]
 
@@ -87,10 +85,10 @@ describe('lastgame — not-playing "last game" link', () => {
       currentPlayers: [],
     })
 
-    expect(desc).toContain('dotabuff.com/matches/8516216993')
+    expect(desc).toContain('dotabod.com/streamer/matches')
   })
 
-  it('omits the dotabuff link entirely for 8500+ clients', async () => {
+  it('keeps the first-party match-history link for 8500+ clients', async () => {
     supabaseMatchRow = { matchId: 8821057580 }
     delayedGamesRows = [{ match: { match_id: '8516216993' } }]
 
@@ -102,6 +100,6 @@ describe('lastgame — not-playing "last game" link', () => {
       currentPlayers: [],
     })
 
-    expect(desc).not.toContain('dotabuff.com/matches/')
+    expect(desc).toContain('dotabod.com/streamer/matches')
   })
 })

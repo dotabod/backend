@@ -4,7 +4,6 @@ import { redisClient } from '../../../db/redisInstance'
 import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME, getValueOrDefault } from '../../../settings'
 import MongoDBSingleton from '../../../steam/MongoDBSingleton'
 import { steamSocket } from '../../../steam/ws'
-import { getWinProbability2MinAgo } from '../../../stratz/livematch'
 import commandHandler from '../../../twitch/lib/CommandHandler' // Import commandHandler here
 import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId'
 import {
@@ -33,21 +32,12 @@ import { getSpectatorPlayers } from '../../lib/getSpectatorPlayers'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import { isSpectator } from '../../lib/isSpectator'
 import { say } from '../../say'
-import { server } from '../../server'
 import eventHandler from '../EventHandler'
 // minimap overlay is unused in prod — disabled to skip per-tick parse; revive by uncommenting
 // import { minimapParser } from '../minimap/parser'
 import { selectNewEvents } from './selectNewEvents'
 import { sendExtensionPubSubBroadcastMessageIfChanged } from './sendExtensionPubSubBroadcastMessageIfChanged'
 import { shouldLogUnknownGsiEvent } from './unknownEventDiagnostics'
-
-// Define a type for the global timeouts
-declare global {
-  var timeoutMap: Record<string, NodeJS.Timeout | null>
-}
-
-// Initialize the global map if it doesn't exist
-global.timeoutMap = global.timeoutMap || {}
 
 async function chatterMatchFound(client: SocketClient) {
   if (!client.stream_online) return
@@ -737,8 +727,6 @@ eventHandler.registerEvent('newdata', {
       return
     }
 
-    const showProbabilityPromise = null // showProbability(dotaClient)
-
     const {
       powerTreads: { enabled: treadsChatterEnabled },
     } = getValueOrDefault(
@@ -768,7 +756,6 @@ eventHandler.registerEvent('newdata', {
     const promisesToExecute = [
       updateSteam32IdPromise,
       setupOBSBlockersPromise,
-      showProbabilityPromise,
       saveMatchDataPromise,
       handleNewEventsPromise,
       openBetsPromise,
@@ -784,62 +771,6 @@ eventHandler.registerEvent('newdata', {
     await Promise.allSettled(promisesToExecute)
   },
 })
-
-async function _showProbability(dotaClient: GSIHandlerType) {
-  const winChanceEnabled = getValueOrDefault(
-    DBSettings.winProbabilityOverlay,
-    dotaClient.client.settings,
-    dotaClient.client.subscription,
-  )
-
-  if (winChanceEnabled) {
-    const updateInterval = getValueOrDefault(
-      DBSettings.winProbabilityOverlayIntervalMinutes,
-      dotaClient.client.settings,
-      dotaClient.client.subscription,
-    )
-
-    if (
-      dotaClient.client.gsi?.map?.clock_time &&
-      (dotaClient.client.gsi?.map?.clock_time || 0) % (updateInterval * 60) === 0
-    ) {
-      const matchDetails = await getWinProbability2MinAgo(
-        Number.parseInt(dotaClient.client.gsi?.map?.matchid, 10),
-      )
-
-      // Fix: Check if matchDetails is not an error object before accessing data
-      if ('data' in matchDetails && matchDetails.data?.live?.match) {
-        const lastWinRate = matchDetails.data.live.match.liveWinRateValues?.slice(-1).pop()
-        if (
-          lastWinRate &&
-          !matchDetails.data.live.match.completed &&
-          matchDetails.data.live.match.isUpdating
-        ) {
-          const isRadiant = dotaClient.client.gsi?.player?.team_name === 'radiant'
-          const winRate = Math.floor(
-            (isRadiant ? lastWinRate.winRate : 1 - lastWinRate.winRate) * 100,
-          )
-          server.io.to(dotaClient.client.token).emit('update-radiant-win-chance', {
-            value: winRate,
-            time: lastWinRate?.time * 60, // time in seconds
-          })
-
-          // Use clearTimeout to prevent memory leaks if this function is called multiple times
-          const timeoutKey = `winChanceTimeout_${dotaClient.client.token}`
-          const existingTimeout = global.timeoutMap[timeoutKey]
-          if (existingTimeout) {
-            clearTimeout(existingTimeout)
-          }
-
-          global.timeoutMap[timeoutKey] = setTimeout(() => {
-            server.io.to(dotaClient.client.token).emit('update-radiant-win-chance', null)
-            global.timeoutMap[timeoutKey] = null
-          }, 10 * 1000)
-        }
-      }
-    }
-  }
-}
 
 function handleNewEvents(data: Packet, dotaClient: GSIHandlerType) {
   // Deduped against already-seen events by `${game_time}-${event_type}`.

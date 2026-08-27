@@ -113,6 +113,7 @@
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_other": "{{count}} streamers using the overlay"
   },
+  "dotabodProfileNotFound": "No tracked Dotabod profile found for {{- player}}.",
   "cosmetics": {
     "captured": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
     "captured_one": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetic saved → {{- url}}",

@@ -973,7 +973,7 @@ class GSIHandler implements GSIHandlerType {
       const player = match?.players?.find(
         (player) => player.account_id === Number(this.client.gsi?.player?.accountid),
       )
-      const stratzTeam =
+      const gcTeam =
         player?.team_number === DotaGcTeam.DOTA_GC_TEAM_GOOD_GUYS
           ? 'radiant'
           : player?.team_number === DotaGcTeam.DOTA_GC_TEAM_BAD_GUYS
@@ -981,7 +981,7 @@ class GSIHandler implements GSIHandlerType {
             : null
       const myTeam: 'radiant' | 'dire' | null =
         typeof player?.team_number === 'number'
-          ? (stratzTeam ?? null)
+          ? (gcTeam ?? null)
           : (((await redisClient.client.get(`${this.client.token}:playingTeam`)) as
               | 'radiant'
               | 'dire'

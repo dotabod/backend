@@ -52,7 +52,7 @@ describe('!fixparty', () => {
     await commandHandler.handleMessage(makeMessage({ content: '!fixparty' }))
 
     expect(state.chatSayCalls[0].message).toBe(
-      t('toggleMatch', { context: 'party', url: 'dotabuff.com/matches/7777777777', lng: 'en' }),
+      t('toggleMatch', { context: 'party', url: 'dotabod.com/streamer/matches', lng: 'en' }),
     )
     // togglePartyMmr: solo->party half-delta (PARTY/2=10), was solo so +delta,
     // but a win subtracts it -> 5000 - 10 (client mmr defaults to 5000).
@@ -69,12 +69,12 @@ describe('!fixparty', () => {
     expect(state.chatSayCalls).toHaveLength(0)
   })
 
-  it('omits the dotabuff link for 8500+ clients', async () => {
+  it('keeps the first-party match-history link for 8500+ clients', async () => {
     state.recentList = lastMatch({ is_party: false })
     await commandHandler.handleMessage(
       makeMessage({ content: '!fixparty', clientOverrides: { mmr: 9000 } }),
     )
-    expect(state.chatSayCalls[0].message).not.toContain('dotabuff.com/matches/')
+    expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer/matches')
   })
 })
 
@@ -84,7 +84,7 @@ describe('!fixdbl', () => {
     await commandHandler.handleMessage(makeMessage({ content: '!fixdbl' }))
 
     expect(state.chatSayCalls[0].message).toBe(
-      t('toggleMatch', { context: 'double', url: 'dotabuff.com/matches/7777777777', lng: 'en' }),
+      t('toggleMatch', { context: 'double', url: 'dotabod.com/streamer/matches', lng: 'en' }),
     )
     // solo win newly marked doubledown -> +MULTIPLIER_SOLO (5000 + 25).
     expect(state.updateMmrCalls).toHaveLength(1)
@@ -93,12 +93,12 @@ describe('!fixdbl', () => {
     expect(state.updateCalls[0].values).toMatchObject({ is_doubledown: true })
   })
 
-  it('omits the dotabuff link for 8500+ clients', async () => {
+  it('keeps the first-party match-history link for 8500+ clients', async () => {
     state.recentList = lastMatch({ is_doubledown: false })
     await commandHandler.handleMessage(
       makeMessage({ content: '!fixdbl', clientOverrides: { mmr: 9000 } }),
     )
-    expect(state.chatSayCalls[0].message).not.toContain('dotabuff.com/matches/')
+    expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer/matches')
   })
 })
 

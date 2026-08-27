@@ -1,8 +1,8 @@
 import { t } from 'i18next'
 
+import { getHeroWinLoss } from '../../db/getHeroWinLoss'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
-import { server } from '../../dota/server'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler, { type MessageType } from '../lib/CommandHandler'
@@ -21,20 +21,33 @@ commandHandler.registerCommand('hero', {
     if (!gsi || !client.gsi?.map?.matchid) return handleNotPlaying(message)
 
     try {
-      const { player, hero, playerIdx } = await findAccountFromCmd(
+      const { ourHero, player, hero, playerIdx } = await findAccountFromCmd(
         client,
         args,
         client.locale,
         command,
       )
 
-      await getHeroMsg({
+      const steam32Id = Number(player?.accountid ?? (ourHero ? client.steam32Id : undefined))
+      const records = await getHeroWinLoss({
         heroId: hero?.id ?? 0,
+        isStreamer:
+          ourHero ||
+          steam32Id === client.steam32Id ||
+          client.SteamAccount.some((account) => account.steam32Id === steam32Id),
+        steam32Id,
+        token: client.token,
+      })
+      if (!records) {
+        chatClient.say(channel, t('gameNotFound', { lng: locale }), message.user.messageId)
+        return
+      }
+
+      speakHeroStats({
+        ...records,
         channel,
         hasHero: !!hero?.id,
         heroNameOrColor: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
-        steam32Id: player?.accountid,
-        token: client.token,
         lng: locale,
         message,
       })
@@ -48,13 +61,6 @@ commandHandler.registerCommand('hero', {
     }
   },
 })
-
-type heroRecords =
-  | {
-      win: number
-      lose: number
-    }
-  | undefined
 
 function handleNotPlaying(message: MessageType) {
   chatClient.say(
@@ -110,48 +116,4 @@ function speakHeroStats({
     }),
     message.user.messageId,
   )
-}
-
-async function getHeroMsg({
-  channel,
-  steam32Id,
-  heroNameOrColor,
-  token,
-  hasHero,
-  lng,
-  heroId,
-  message,
-}: {
-  heroNameOrColor: string
-  hasHero: boolean
-  channel: string
-  heroId: number
-  steam32Id: string | number | undefined
-  token: string
-  lng: string
-  message: MessageType
-}) {
-  if (!steam32Id) {
-    chatClient.say(channel, t('overlayMissing', { command: '!hero', lng }), message.user.messageId)
-    return
-  }
-
-  const sockets = await server.io.in(token).fetchSockets()
-  if (sockets.length === 0) {
-    chatClient.say(channel, t('overlayMissing', { command: '!hero', lng }), message.user.messageId)
-    return
-  }
-
-  sockets[0]
-    .timeout(15000)
-    .emit(
-      'requestHeroData',
-      { allTime: false, heroId, steam32Id },
-      (_err: unknown, response: heroRecords) => {
-        if (!response) return
-
-        const { win, lose } = response
-        speakHeroStats({ win, lose, hasHero, heroNameOrColor, channel, lng, message })
-      },
-    )
 }

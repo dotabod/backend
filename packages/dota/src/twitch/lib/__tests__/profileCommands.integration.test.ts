@@ -12,34 +12,37 @@ beforeEach(() => {
 })
 
 describe('!opendota', () => {
-  it('chats the broadcaster opendota URL with no args', async () => {
+  it('keeps the legacy command but links the broadcaster Dotabod profile', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!opendota' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('opendota.com/players/99999')
+    expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer')
+    expect(state.chatSayCalls[0].message).not.toContain('opendota.com')
   })
 
-  it('falls back to notPlaying when there is no steam id and no live match', async () => {
+  it('still links the Dotabod profile when no steam account is connected', async () => {
     await commandHandler.handleMessage(
       makeMessage({ content: '!opendota', clientOverrides: { steam32Id: null } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toBe(notPlaying)
+    expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer')
   })
 
-  it('chats the player opendota URL from a live match when args are given', async () => {
+  it('links the broadcaster Dotabod profile from a live match when args are given', async () => {
     await commandHandler.handleMessage(
       makeMessage({ content: '!opendota me', clientOverrides: { gsi: liveGsi() } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('opendota.com/players/99999')
+    expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer')
+    expect(state.chatSayCalls[0].message).not.toContain('opendota.com')
   })
 })
 
 describe('!profile', () => {
-  it('chats the broadcaster dotabuff URL with no args', async () => {
+  it('chats the broadcaster Dotabod profile with no args', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!profile' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('dotabuff.com/players/99999')
+    expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer')
+    expect(state.chatSayCalls[0].message).not.toContain('dotabuff.com')
   })
 
   it('blocks when the stream is offline', async () => {

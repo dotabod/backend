@@ -65,14 +65,16 @@ export const is8500Plus = (dotaClient: SocketClient) => {
   return false
 }
 
-// Dotabuff cannot resolve matches for 8500+/Immortal players (Valve hides their
-// data from public sources), so the link 404s. Return '' to signal "skip" in
-// callsites; otherwise the canonical link.
-export function dotabuffMatchUrl(
-  client: SocketClient,
-  matchId: string | number | null | undefined,
-): string {
-  if (!matchId) return ''
-  if (is8500Plus(client)) return ''
-  return `dotabuff.com/matches/${matchId}`
+function normalizeDotabodUsername(username: string): string {
+  return username.replace(/^#/, '').trim().toLowerCase()
+}
+
+export function dotabodProfileUrl(username: string): string {
+  const normalized = normalizeDotabodUsername(username)
+  return normalized ? `dotabod.com/${normalized}` : ''
+}
+
+export function dotabodMatchHistoryUrl(client: Pick<SocketClient, 'name'>): string {
+  const profile = dotabodProfileUrl(client.name)
+  return profile ? `${profile}/matches` : ''
 }

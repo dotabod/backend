@@ -97,11 +97,24 @@ describe('!hero', () => {
     expect(state.chatSayCalls[0].message).toBe(t('notPlaying', { emote: 'PauseChamp', lng: 'en' }))
   })
 
-  it('reports overlayMissing when no overlay socket is connected', async () => {
+  it('uses tracked match history when no overlay socket is connected', async () => {
+    state.recentList = [
+      { matchId: '1', hero_name: 'npc_dota_hero_antimage', won: true },
+      { matchId: '2', hero_name: 'npc_dota_hero_antimage', won: true },
+      { matchId: '3', hero_name: 'npc_dota_hero_antimage', won: false },
+    ]
     await commandHandler.handleMessage(
       makeMessage({ content: '!hero', clientOverrides: { gsi: liveGsi() } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toBe(t('overlayMissing', { command: '!hero', lng: 'en' }))
+    expect(state.chatSayCalls[0].message).toBe(
+      t('herostats.winrateStreamer', {
+        lng: 'en',
+        heroName: 'Anti-Mage',
+        winrate: 67,
+        timeperiod: t('herostats.timeperiod.days', { count: 30, lng: 'en' }),
+        count: 3,
+      }),
+    )
   })
 })

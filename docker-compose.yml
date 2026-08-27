@@ -102,7 +102,6 @@ services:
       - MONGO_URL
       - DOTABOD_ENV
       - STEAM_WEB_API
-      - STRATZ_TOKEN
       - TWITCH_BOT_PROVIDERID
       - TWITCH_CLIENT_ID
       - TWITCH_CLIENT_SECRET

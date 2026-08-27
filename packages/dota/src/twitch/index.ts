@@ -15,7 +15,7 @@ import { io as socketIo } from 'socket.io-client'
 import getDBUser from '../db/getDBUser'
 import findUser, { getTokenFromTwitchId } from '../dota/lib/connectedStreamers'
 import { plebMode } from '../dota/lib/consts'
-import { getOpenDotaProfile, getRankTitle } from '../dota/lib/ranks'
+import { getDotabodRankProfile, getRankTitle } from '../dota/lib/ranks'
 import { server } from '../dota/server'
 import { DBSettings, getValueOrDefault } from '../settings'
 import { twitchChat } from '../steam/ws'
@@ -42,7 +42,7 @@ twitchChat.on('disconnect', (reason, details) => {
 // Function to check if a user meets the rank requirement
 async function getUserRankTier(twitchUsername: string): Promise<number> {
   try {
-    const profile = await getOpenDotaProfile(twitchUsername)
+    const profile = await getDotabodRankProfile(twitchUsername)
     return profile?.rank_tier || 0
   } catch (_error) {
     return 0

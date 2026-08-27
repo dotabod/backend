@@ -4,7 +4,7 @@ import { getHeroNameOrColor } from '../dota/lib/heroes'
 import { lookupRosterByMatchId, type RosterPlayer } from '../dota/lib/matchData'
 import type { DelayedGames, SocketClient } from '../types'
 import CustomError from '../utils/customError'
-import { dotabuffMatchUrl } from '../utils/index'
+import { dotabodMatchHistoryUrl } from '../utils/index'
 import MongoDBSingleton from './MongoDBSingleton'
 
 const generateMessage = (
@@ -85,7 +85,7 @@ export default async function lastgame({
         : t('gameNotFound', { lng: locale })
       const lastMatchId =
         (await getLatestFinishedMatchId(steam32Id)) ?? gameHistory[0]?.match?.match_id ?? null
-      const url = dotabuffMatchUrl(client, lastMatchId)
+      const url = lastMatchId ? dotabodMatchHistoryUrl(client) : ''
       return url ? `${msg} · ${t('lastgame.link', { lng: locale, url })}` : msg
     }
     if (!gameHistory.length || gameHistory.length !== 2) {
@@ -149,7 +149,7 @@ export default async function lastgame({
             count: playersFromLastGame.length,
           })
         : ''
-    const url = dotabuffMatchUrl(client, oldGame.match.match_id)
+    const url = dotabodMatchHistoryUrl(client)
     const linkSegment = url ? ` ${t('lastgame.link', { lng: locale, url })}` : ''
     return `${totalPlayers} ${msg}.${linkSegment}`.trim()
   } finally {

@@ -2,8 +2,10 @@ import { t } from 'i18next'
 
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
+import { dotabodProfileUrl } from '../../utils/index'
 import { chatClient } from '../chatClient'
 import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import { getDotabodProfileUrl } from '../lib/getDotabodProfile'
 import { profileLink } from './profileLink'
 
 commandHandler.registerCommand('opendota', {
@@ -14,13 +16,13 @@ commandHandler.registerCommand('opendota', {
     } = message
 
     try {
-      if (!args.length && channelClient.steam32Id) {
+      if (!args.length) {
         chatClient.say(
           channelName,
           t('profileUrl', {
             channel: channelClient.name,
             lng: channelClient.locale,
-            url: `opendota.com/players/${channelClient.steam32Id}`,
+            url: dotabodProfileUrl(channelClient.name),
           }),
           message.user.messageId,
         )
@@ -35,15 +37,28 @@ commandHandler.registerCommand('opendota', {
       })
 
       if (player?.accountid) {
+        const url = await getDotabodProfileUrl(channelClient, Number(player.accountid))
+        if (!url) {
+          chatClient.say(
+            channelName,
+            t('dotabodProfileNotFound', {
+              lng: channelClient.locale,
+              player: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
+            }),
+            message.user.messageId,
+          )
+          return
+        }
+
         chatClient.say(
           channelName,
           t('profileUrl', {
             channel:
-              player?.accountid === channelClient.steam32Id
+              Number(player?.accountid) === channelClient.steam32Id
                 ? channelClient.name
                 : getHeroNameOrColor(hero?.id ?? 0, playerIdx),
             lng: channelClient.locale,
-            url: `opendota.com/players/${player.accountid.toString()}`,
+            url,
           }),
           message.user.messageId,
         )

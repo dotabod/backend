@@ -1,7 +1,7 @@
 import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { getOpenDotaProfile, getRankDescription, getRankTitle } from '../../dota/lib/ranks'
+import { getDotabodRankProfile, getRankDescription, getRankTitle } from '../../dota/lib/ranks'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler, { type MessageType } from '../lib/CommandHandler'
@@ -21,20 +21,20 @@ commandHandler.registerCommand('mmr', {
       const username = args[0].toLowerCase().replace(/^@/, '')
       logger.debug('[MMR] Looking up username', { username, channel })
 
-      const openDotaProfile = await getOpenDotaProfile(username)
-      logger.debug('[MMR] OpenDota profile result', {
+      const rankProfile = await getDotabodRankProfile(username)
+      logger.debug('[MMR] Dotabod rank profile result', {
         username,
-        found: openDotaProfile !== null,
-        profile: openDotaProfile,
+        found: rankProfile !== null,
+        profile: rankProfile,
       })
 
-      if (openDotaProfile !== null) {
+      if (rankProfile !== null) {
         chatClient.say(
           channel,
           t('chattersRank', {
             rank:
-              getRankTitle(openDotaProfile.rank_tier) +
-              (openDotaProfile.leaderboard_rank > 0 ? ` #${openDotaProfile.leaderboard_rank}` : ''),
+              getRankTitle(rankProfile.rank_tier) +
+              (rankProfile.leaderboard_rank > 0 ? ` #${rankProfile.leaderboard_rank}` : ''),
             username,
             lng: message.channel.client.locale,
           }),

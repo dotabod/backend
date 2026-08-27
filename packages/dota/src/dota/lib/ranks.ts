@@ -281,7 +281,7 @@ export function estimateMMR(leaderboard_rank: number, region: Region): number {
   return Math.round(baseMMR)
 }
 // Cache for profile data with expiration
-const profileCache = new Map<
+const rankProfileCache = new Map<
   string,
   { data: { rank_tier: number; leaderboard_rank: number } | null; timestamp: number }
 >()
@@ -289,13 +289,13 @@ const profileCache = new Map<
 const RANK_CACHE_TTL = 30 * 60 * 1000 // 30 minutes in milliseconds for users with rank
 const NO_RANK_CACHE_TTL = 30 * 1000 // 30 seconds in milliseconds for users without rank
 
-export async function getOpenDotaProfile(twitchUsername: string): Promise<{
+export async function getDotabodRankProfile(twitchUsername: string): Promise<{
   rank_tier: number
   leaderboard_rank: number
 } | null> {
   // Check if we have a valid cached result
   const cacheKey = twitchUsername.toLowerCase()
-  const cachedResult = profileCache.get(cacheKey)
+  const cachedResult = rankProfileCache.get(cacheKey)
   const now = Date.now()
 
   if (cachedResult) {
@@ -319,7 +319,7 @@ export async function getOpenDotaProfile(twitchUsername: string): Promise<{
 
     if (!userData) {
       // Cache null results for a short time
-      profileCache.set(cacheKey, { data: null, timestamp: now })
+      rankProfileCache.set(cacheKey, { data: null, timestamp: now })
       return null
     }
 
@@ -349,7 +349,7 @@ export async function getOpenDotaProfile(twitchUsername: string): Promise<{
 
     if (!steamAccount) {
       // Cache null results for a short time
-      profileCache.set(cacheKey, { data: null, timestamp: now })
+      rankProfileCache.set(cacheKey, { data: null, timestamp: now })
       return null
     }
 
@@ -360,12 +360,12 @@ export async function getOpenDotaProfile(twitchUsername: string): Promise<{
     }
 
     // Cache the result (longer for users with rank, shorter for those without)
-    profileCache.set(cacheKey, { data: result, timestamp: now })
+    rankProfileCache.set(cacheKey, { data: result, timestamp: now })
     return result
   } catch (error) {
-    logger.error('Error fetching OpenDota profile:', error)
-    // Cache errors for a short time to prevent hammering the API
-    profileCache.set(cacheKey, { data: null, timestamp: now })
+    logger.error('Error fetching Dotabod rank profile:', error)
+    // Cache errors briefly to avoid hammering the database.
+    rankProfileCache.set(cacheKey, { data: null, timestamp: now })
     return null
   }
 }

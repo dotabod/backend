@@ -2,7 +2,7 @@ import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { MULTIPLIER_PARTY } from '../../db/getWL'
 import { updateMmr } from '../../dota/lib/updateMmr'
-import { dotabuffMatchUrl } from '../../utils/index'
+import { dotabodMatchHistoryUrl } from '../../utils/index'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
@@ -27,7 +27,7 @@ commandHandler.registerCommand('fixparty', {
   handler: async (message, _args) => {
     const { data } = await supabase
       .from('matches')
-      .select('matchId, won, is_party, id, is_doubledown')
+      .select('won, is_party, id, is_doubledown')
       .eq('userId', message.channel.client.token)
       .not('won', 'is', null)
       .order('created_at', { ascending: false })
@@ -47,7 +47,7 @@ commandHandler.registerCommand('fixparty', {
       message.channel.name,
       t('toggleMatch', {
         context: bet.is_party ? 'solo' : 'party',
-        url: dotabuffMatchUrl(message.channel.client, bet.matchId),
+        url: dotabodMatchHistoryUrl(message.channel.client),
         lng: message.channel.client.locale,
       }),
       message.user.messageId,

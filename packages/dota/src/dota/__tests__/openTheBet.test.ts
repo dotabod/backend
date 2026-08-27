@@ -193,7 +193,7 @@ vi.doMock('../lib/ranks', async () => {
   return {
     ...real,
     getRankDetail: async () => null,
-    getOpenDotaProfile: async () => null,
+    getDotabodRankProfile: async () => null,
     getRankTitle: () => 'Immortal',
     getRankDescription: async () => null,
   }

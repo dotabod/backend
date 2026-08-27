@@ -150,7 +150,7 @@ describe('!wl', () => {
 
 describe('!mmr', () => {
   it('chats chattersRank when a username profile is found', async () => {
-    state.openDotaProfile = { rank_tier: 75, leaderboard_rank: 0 }
+    state.dotabodRankProfile = { rank_tier: 75, leaderboard_rank: 0 }
     state.rankTitle = 'Immortal'
     await commandHandler.handleMessage(makeMessage({ content: '!mmr someguy' }))
     expect(state.chatSayCalls).toHaveLength(1)
@@ -159,7 +159,7 @@ describe('!mmr', () => {
   })
 
   it('appends a leaderboard rank when present', async () => {
-    state.openDotaProfile = { rank_tier: 80, leaderboard_rank: 42 }
+    state.dotabodRankProfile = { rank_tier: 80, leaderboard_rank: 42 }
     state.rankTitle = 'Immortal'
     await commandHandler.handleMessage(makeMessage({ content: '!mmr someguy' }))
     expect(state.chatSayCalls).toHaveLength(1)
@@ -233,19 +233,19 @@ describe('!gpm', () => {
 })
 
 describe('!dotabuff', () => {
-  it('chats a profile URL with no args when steam32Id is known', async () => {
+  it('keeps the legacy command but links the broadcaster Dotabod profile', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!dotabuff' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toContain('dotabuff.com/players/99999')
+    expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer')
+    expect(state.chatSayCalls[0].message).not.toContain('dotabuff.com')
   })
 
-  it('falls through to the profileLink path when no steam32Id and no match', async () => {
+  it('still links the Dotabod profile when no steam account is connected', async () => {
     await commandHandler.handleMessage(
       makeMessage({ content: '!dotabuff', clientOverrides: { steam32Id: null } }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    // profileLink throws notPlaying → caught by handler → chat error.
-    expect(state.chatSayCalls[0].message).toBe(notPlaying)
+    expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer')
   })
 })
 

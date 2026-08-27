@@ -1,6 +1,6 @@
 // Tests the pure rank-math helpers in ranks.ts. We only assert the functions
 // NOT overridden by twitch/lib/__tests__/setupMocks.ts (which process-wide
-// mock.module's ranks to stub getRankTitle/getRankDescription/getOpenDotaProfile).
+// mock.module's ranks to stub getRankTitle/getRankDescription/getDotabodRankProfile).
 // rankTierToMmr/mmrToRankTier/estimateMMR/getRankDetail are preserved real via
 // that harness's spread, so they're stable no matter the suite run order.
 import { describe, expect, it, vi } from 'vite-plus/test'

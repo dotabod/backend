@@ -1,22 +1,7 @@
-import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
-import { getWinProbability2MinAgo } from '../../stratz/livematch'
-import { is8500Plus } from '../../utils/index'
+import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
-
-const WinRateCache: {
-  [id: string]: {
-    winRate: number
-    emote: string
-    gameTime: number
-    remainingCooldown: number
-  } | null
-} = {}
-
-const API_COOLDOWN_SEC = 60
-const apiCooldown: { [key: string]: number } = {}
 
 commandHandler.registerCommand('winprobability', {
   aliases: ['win%', 'wp'],
@@ -37,69 +22,10 @@ commandHandler.registerCommand('winprobability', {
       return
     }
 
-    // PRESERVED — gated, not dead. Branches below come back if ENABLE_SPECTATE_FRIEND_GAME is
-    // re-enabled with bot-friend management. See memory `keep-spectate-friend-path`.
-    if (!ENABLE_SPECTATE_FRIEND_GAME || is8500Plus(client)) {
-      chatClient.say(
-        channel,
-        t('matchDataValveDisabled', { emote: 'PoroSad', lng: message.channel.client.locale }),
-        message.user.messageId,
-      )
-      return
-    }
-
-    if (!apiCooldown[channel] || Date.now() - apiCooldown[channel] >= API_COOLDOWN_SEC * 1000) {
-      try {
-        apiCooldown[channel] = Date.now()
-        const matchDetails = await getWinProbability2MinAgo(Number.parseInt(matchId, 10))
-        if ('error' in matchDetails) {
-          logger.error('Error fetching win probability:', matchDetails.error)
-          WinRateCache[channel] = null
-          return
-        }
-
-        const lastWinRate = matchDetails?.data.live.match?.liveWinRateValues.slice(-1).pop()
-        if (
-          lastWinRate &&
-          !matchDetails?.data.live.match?.completed &&
-          matchDetails?.data.live.match?.isUpdating
-        ) {
-          const isRadiant = client.gsi?.player?.team_name === 'radiant'
-          const winRate = Math.floor(
-            (isRadiant ? lastWinRate.winRate : 1 - lastWinRate.winRate) * 100,
-          )
-          WinRateCache[channel] = {
-            winRate,
-            emote: winRate > 50 ? 'Pog' : 'BibleThump',
-            gameTime: lastWinRate.time,
-            remainingCooldown: Math.floor(
-              (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[channel])) / 1000,
-            ),
-          }
-        } else {
-          WinRateCache[channel] = null
-        }
-      } catch (error) {
-        logger.error('Error fetching win probability:', error)
-        WinRateCache[channel] = null
-      }
-    }
-
-    if (WinRateCache[channel]) {
-      WinRateCache[channel]!.remainingCooldown = Math.floor(
-        (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[channel])) / 1000,
-      )
-    }
-
-    const response = WinRateCache[channel]
-      ? t('winprobability.winProbability', WinRateCache[channel]!)
-      : t('winprobability.winProbabilityDataNotAvailable', {
-          lng: message.channel.client.locale,
-          remainingCooldown: Math.floor(
-            (API_COOLDOWN_SEC * 1000 - (Date.now() - apiCooldown[channel])) / 1000,
-          ),
-        })
-
-    chatClient.say(channel, response, message.user.messageId)
+    chatClient.say(
+      channel,
+      t('matchDataValveDisabled', { emote: 'PoroSad', lng: message.channel.client.locale }),
+      message.user.messageId,
+    )
   },
 })
