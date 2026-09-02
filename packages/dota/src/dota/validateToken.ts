@@ -49,6 +49,10 @@ export async function validateToken(
       recordGsiFirstSeen(client.token)
 
       if (!client.stream_online) {
+        // Buffer offline packets separately from live state. This lets the online transition
+        // recover immediately without exposing the previous match through chat or tooltips.
+        client.pendingGsi = req.body
+        client.pendingGsiUpdatedAt = Date.now()
         res.status(200).json({
           error: 'Stream offline',
         })
@@ -56,6 +60,9 @@ export async function validateToken(
       }
 
       client.gsi = req.body
+      client.gsiUpdatedAt = Date.now()
+      client.pendingGsi = undefined
+      client.pendingGsiUpdatedAt = undefined
       next()
       return
     }

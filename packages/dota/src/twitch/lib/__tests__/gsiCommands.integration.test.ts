@@ -13,7 +13,16 @@ const notPlaying = t('notPlaying', { emote: 'PauseChamp', lng: 'en' })
 const gameNotFound = t('gameNotFound', { lng: 'en' })
 
 const playingGsi = (extra: Record<string, unknown> = {}) =>
-  ({ map: { matchid: '7777777777' }, hero: { id: HERO_ID }, player: {}, ...extra }) as any
+  ({
+    map: {
+      matchid: '7777777777',
+      game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+      win_team: 'none',
+    },
+    hero: { id: HERO_ID },
+    player: { activity: 'playing' },
+    ...extra,
+  }) as any
 
 beforeEach(() => {
   resetState()
@@ -71,7 +80,7 @@ describe('!aghs', () => {
     await commandHandler.handleMessage(
       makeMessage({
         content: '!aghs',
-        clientOverrides: { gsi: { map: { matchid: '7777777777' }, hero: { id: 0 } } as any },
+        clientOverrides: { gsi: playingGsi({ hero: { id: 0 } }) },
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
@@ -114,7 +123,10 @@ describe('!innate', () => {
     await commandHandler.handleMessage(
       makeMessage({
         content: '!innate',
-        clientOverrides: { gsi: { map: { matchid: '7777777777' }, hero: { id: 0 } } as any },
+        clientOverrides: {
+          gsi: playingGsi({ hero: { id: 0 } }),
+          gsiUpdatedAt: Date.now(),
+        } as any,
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
@@ -123,10 +135,27 @@ describe('!innate', () => {
 
   it("reports the hero's innate for a valid hero in a live match", async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!innate', clientOverrides: { gsi: playingGsi() } }),
+      makeMessage({
+        content: '!innate',
+        clientOverrides: { gsi: playingGsi(), gsiUpdatedAt: Date.now() } as any,
+      }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain(heroName)
     expect(state.chatSayCalls[0].message).toContain('Persecutor')
   })
+
+  it.each(['!aghs', '!shard', '!innate'])(
+    '%s reports notPlaying instead of using a stale hero',
+    async (content) => {
+      await commandHandler.handleMessage(
+        makeMessage({
+          content,
+          clientOverrides: { gsi: playingGsi(), gsiUpdatedAt: Date.now() - 120_000 } as any,
+        }),
+      )
+      expect(state.chatSayCalls).toHaveLength(1)
+      expect(state.chatSayCalls[0].message).toBe(notPlaying)
+    },
+  )
 })

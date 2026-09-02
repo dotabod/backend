@@ -1,5 +1,6 @@
 import { t } from 'i18next'
 
+import { getCurrentMatchId } from '../../dota/lib/getCurrentMatchId'
 import { chatClient } from '../chatClient'
 import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
@@ -10,7 +11,7 @@ commandHandler.registerCommand('match', {
     const {
       channel: { name: channel, client },
     } = message
-    const matchId = client.gsi?.map?.matchid
+    const matchId = getCurrentMatchId(client)
 
     if (!matchId) {
       chatClient.say(

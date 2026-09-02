@@ -51,6 +51,8 @@ export const state: {
   upsertCalls: Array<{ values: Record<string, unknown>; options?: unknown }>
   updateMmrCalls: Array<Record<string, unknown>>
   chatSayCalls: Array<{ channel: string; message: string; messageId?: string }>
+  socketEmitCalls: Array<{ room: string; event: string; args: unknown[] }>
+  streamStatusEffectCalls: Array<'socket' | 'update'>
   steamSocketResponse: { matches: unknown[] } | null
   steamSocketError: unknown
   predictions: Prediction[]
@@ -130,6 +132,8 @@ export const state: {
   upsertCalls: [],
   updateMmrCalls: [],
   chatSayCalls: [],
+  socketEmitCalls: [],
+  streamStatusEffectCalls: [],
   steamSocketResponse: null,
   steamSocketError: null,
   predictions: [],
@@ -171,6 +175,8 @@ export function resetState() {
   state.upsertCalls = []
   state.updateMmrCalls = []
   state.chatSayCalls = []
+  state.socketEmitCalls = []
+  state.streamStatusEffectCalls = []
   state.steamSocketResponse = null
   state.steamSocketError = null
   state.predictions = []
@@ -237,6 +243,7 @@ function createSupabaseFromBuilder() {
       if (mode === 'update' && col === 'id') {
         updateWhereId = val
         state.updateCalls.push({ values: updateValues, whereId: updateWhereId })
+        state.streamStatusEffectCalls.push('update')
         return Promise.resolve({ data: null, error: null })
       }
       return builder
@@ -566,7 +573,12 @@ function installTwitchMocks() {
   // fetchSockets returns [] so overlay-dependent paths take their empty branch.
   server.setServer({
     io: {
-      to: () => ({ emit: () => undefined }),
+      to: (room: string) => ({
+        emit: (event: string, ...args: unknown[]) => {
+          state.socketEmitCalls.push({ room, event, args })
+          if (event === 'refresh-settings') state.streamStatusEffectCalls.push('socket')
+        },
+      }),
       in: () => ({ fetchSockets: async () => [] }),
       fetchSockets: async () => [],
     },
@@ -583,7 +595,7 @@ installTwitchMocks()
 export type Client = Parameters<typeof resolveMatchRetroactively>[0]
 
 export function makeClient(overrides: Partial<Client> = {}): Client {
-  return {
+  const client = {
     name: 'streamer',
     token: 'token-abc',
     stream_online: true,
@@ -607,6 +619,12 @@ export function makeClient(overrides: Partial<Client> = {}): Client {
     gsi: undefined,
     ...overrides,
   } as Client
+
+  if (client.gsi && !('gsiUpdatedAt' in overrides)) {
+    client.gsiUpdatedAt = Date.now()
+  }
+
+  return client
 }
 
 export const baseMatchRow = (overrides: Partial<SessionMatchRow> = {}): SessionMatchRow => ({
@@ -625,8 +643,12 @@ export const baseMatchRow = (overrides: Partial<SessionMatchRow> = {}): SessionM
 // merges so callers can override player/hero (e.g. set player.xpm).
 export const liveGsi = (extra: Record<string, unknown> = {}) =>
   ({
-    map: { matchid: '7777777777' },
-    player: { accountid: 99999 },
+    map: {
+      matchid: '7777777777',
+      game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+      win_team: 'none',
+    },
+    player: { accountid: 99999, activity: 'playing' },
     hero: { id: 1 },
     ...extra,
   }) as any

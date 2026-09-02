@@ -143,6 +143,23 @@ describe('sendTwitchChatMessage', () => {
     expect(res.data[0]).toEqual({ message_id: 'real-id', is_sent: true })
   })
 
+  it('fits oversized command replies within Twitch limits while preserving a trailing link', async () => {
+    const link = ' · dota2.com/hero/invoker · Also try !hero'
+    await sendTwitchChatMessage({
+      broadcaster_id: 'b-long',
+      sender_id: 's1',
+      message: `Invoker innate: ${'x'.repeat(600)}${link}`,
+    })
+
+    const body = state.fetchCalls[0].options?.body
+    expect(typeof body).toBe('string')
+    if (typeof body !== 'string') throw new Error('Expected string request body')
+    const request = JSON.parse(body) as { message: string }
+    expect(request.message).toHaveLength(500)
+    expect(request.message).toContain('…')
+    expect(request.message.endsWith(link)).toBe(true)
+  })
+
   it('flags rate limiting on a 429 response', async () => {
     state.fetchImpl = async () => ({
       ok: false,

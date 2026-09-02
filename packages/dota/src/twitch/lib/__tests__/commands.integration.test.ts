@@ -372,3 +372,29 @@ describe('auto-clipping disabled at 8500+ (no readable game data)', () => {
     expect(state.chatSayCalls[0].message).toBe(clippingDisabled)
   })
 })
+
+describe('stale roster GSI', () => {
+  const staleGsi = {
+    map: {
+      matchid: '7777777777',
+      game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+      win_team: 'none',
+    },
+    player: { activity: 'playing' },
+  } as any
+
+  it.each(['!np', '!gm', '!avg'])(
+    '%s reports gameNotFound instead of reusing the prior match',
+    async (content) => {
+      await commandHandler.handleMessage(
+        makeMessage({
+          content,
+          clientOverrides: { gsi: staleGsi, gsiUpdatedAt: Date.now() - 120_000 } as any,
+        }),
+      )
+      await flushAsync()
+      expect(state.chatSayCalls).toHaveLength(1)
+      expect(state.chatSayCalls[0].message).toBe(t('gameNotFound', { lng: 'en' }))
+    },
+  )
+})

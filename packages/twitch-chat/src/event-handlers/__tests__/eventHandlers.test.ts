@@ -68,6 +68,11 @@ describe('offlineEvent', () => {
     await drain()
     expect(state.userUpdates).toHaveLength(1)
     expect(state.userUpdates[0].values).toMatchObject({ stream_online: false })
+    expect(state.logInfo).toContainEqual({
+      message: 'updated offline event',
+      meta: { twitchId: 'b1' },
+    })
+    expect(state.logInfo.some((entry) => entry.message === 'updated online event')).toBe(false)
   })
 
   it('ignores a false-positive offline shortly after going online', async () => {

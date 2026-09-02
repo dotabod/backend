@@ -3,6 +3,7 @@ import DOTA_HERO_ABILITIES from 'dotaconstants/build/hero_abilities.json' with {
 import { t } from 'i18next'
 import type { GSIHandlerType } from '../../dota/GSIHandlerTypes'
 import { gsiHandlers } from '../../dota/lib/consts'
+import { getCurrentMatchId } from '../../dota/lib/getCurrentMatchId'
 import { getHeroById, getHeroNameOrColor, withHeroLink } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
@@ -19,7 +20,7 @@ commandHandler.registerCommand('innate', {
 
     const gsiHandler = gsiHandlers.get(channelClient.token)
 
-    if (!isValidGSIHandler(gsiHandler, channelClient.gsi?.map?.matchid)) {
+    if (!isValidGSIHandler(gsiHandler, getCurrentMatchId(channelClient))) {
       chatClient.say(
         channelName,
         t('notPlaying', { emote: 'PauseChamp', lng: channelClient.locale }),

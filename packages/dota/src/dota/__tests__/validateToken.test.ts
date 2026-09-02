@@ -48,7 +48,14 @@ function makeResponse(): {
 }
 
 function makeClient(token = 'token-1', streamOnline = true) {
-  return { token, stream_online: streamOnline, gsi: undefined }
+  return {
+    token,
+    stream_online: streamOnline,
+    gsi: undefined,
+    gsiUpdatedAt: undefined as number | undefined,
+    pendingGsi: undefined,
+    pendingGsiUpdatedAt: undefined as number | undefined,
+  }
 }
 
 function deferred<T>() {
@@ -71,6 +78,8 @@ beforeEach(() => {
 
 describe('validateToken cleanup', () => {
   it('releases pending auth after a successful online lookup and assigns GSI', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-02T12:00:00.000Z'))
     const request = makeRequest()
     const { response, jsonCalls } = makeResponse()
     const client = makeClient()
@@ -80,24 +89,36 @@ describe('validateToken cleanup', () => {
     await validateToken(request, response, next as NextFunction)
 
     expect(client.gsi).toBe(request.body)
+    expect(client.gsiUpdatedAt).toBe(Date.now())
+    expect(client.pendingGsi).toBeUndefined()
+    expect(client.pendingGsiUpdatedAt).toBeUndefined()
     expect(recordGsiFirstSeenMock).toHaveBeenCalledWith('token-1')
     expect(next).toHaveBeenCalledOnce()
     expect(jsonCalls).toEqual([])
     expect(pendingCheckAuth.has('token-1')).toBe(false)
+    vi.useRealTimers()
   })
 
-  it('releases pending auth after an offline lookup while preserving the HTTP 200 response', async () => {
+  it('caches the latest GSI while offline without dispatching game events', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-02T12:00:00.000Z'))
     const request = makeRequest()
     const { response, statusCalls, jsonCalls } = makeResponse()
     const next = vi.fn()
-    getDBUserMock.mockResolvedValue({ result: makeClient('token-1', false) })
+    const client = makeClient('token-1', false)
+    getDBUserMock.mockResolvedValue({ result: client })
 
     await validateToken(request, response, next as NextFunction)
 
     expect(statusCalls).toEqual([200])
     expect(jsonCalls).toEqual([{ error: 'Stream offline' }])
+    expect(client.pendingGsi).toBe(request.body)
+    expect(client.pendingGsiUpdatedAt).toBe(Date.now())
+    expect(client.gsi).toBeUndefined()
+    expect(client.gsiUpdatedAt).toBeUndefined()
     expect(next).not.toHaveBeenCalled()
     expect(pendingCheckAuth.has('token-1')).toBe(false)
+    vi.useRealTimers()
   })
 
   it('caches an invalid lookup and releases pending auth', async () => {

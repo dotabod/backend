@@ -87,15 +87,71 @@ describe('!match', () => {
     expect(state.chatSayCalls[0].message).toBe(t('gameNotFound', { lng: 'en' }))
   })
 
-  it('chats the match id when GSI has one', async () => {
+  it('chats the match id when fresh GSI says a match is active', async () => {
     await commandHandler.handleMessage(
       makeMessage({
         content: '!match',
-        clientOverrides: { gsi: { map: { matchid: '7777777777' } } } as any,
+        clientOverrides: {
+          gsi: {
+            map: {
+              matchid: '7777777777',
+              game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+              win_team: 'none',
+            },
+            player: { activity: 'playing' },
+          },
+          gsiUpdatedAt: Date.now(),
+        } as any,
       }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('7777777777')
+  })
+
+  it.each([
+    ['zero match id', { map: { matchid: '0' }, player: { activity: 'playing' } }, Date.now()],
+    [
+      'post-game state',
+      {
+        map: {
+          matchid: '7777777777',
+          game_state: 'DOTA_GAMERULES_STATE_POST_GAME',
+          win_team: 'radiant',
+        },
+        player: { activity: 'playing' },
+      },
+      Date.now(),
+    ],
+    [
+      'stale packet',
+      {
+        map: {
+          matchid: '7777777777',
+          game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+          win_team: 'none',
+        },
+        player: { activity: 'playing' },
+      },
+      Date.now() - 120_000,
+    ],
+    [
+      'packet without a server receive timestamp',
+      {
+        map: {
+          matchid: '7777777777',
+          game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+          win_team: 'none',
+        },
+        player: { activity: 'playing' },
+      },
+      undefined,
+    ],
+  ])('reports gameNotFound for a %s', async (_label, gsi, gsiUpdatedAt) => {
+    await commandHandler.handleMessage(
+      makeMessage({ content: '!match', clientOverrides: { gsi, gsiUpdatedAt } as any }),
+    )
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toBe(t('gameNotFound', { lng: 'en' }))
   })
 
   it('blocks when the stream is offline (onlyOnline gate)', async () => {

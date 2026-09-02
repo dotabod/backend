@@ -6,6 +6,19 @@ import { emitChatMessage, hasDotabodSocket } from './utils/socketManager'
 // Cache for deduplicating chat messages
 const messageDedupeCache = new Map<string, number>()
 const DEDUPE_WINDOW_MS = 5000 // 5 seconds
+const TWITCH_CHAT_MESSAGE_LIMIT = 500
+
+function fitTwitchChatMessage(message: string): string {
+  if (message.length <= TWITCH_CHAT_MESSAGE_LIMIT) return message
+
+  const trailingLink = message.match(/ · (?:https?:\/\/)?\S+\.\S+(?: · .*)?$/)?.[0] ?? ''
+  const availableTextLength = TWITCH_CHAT_MESSAGE_LIMIT - trailingLink.length - 1
+  if (availableTextLength <= 0) {
+    return `${message.slice(0, TWITCH_CHAT_MESSAGE_LIMIT - 1)}…`
+  }
+
+  return `${message.slice(0, availableTextLength)}…${trailingLink}`
+}
 
 // Test seam: clears the module-level dedupe cache so suites don't leak state.
 export function clearDedupeCache() {
@@ -90,6 +103,8 @@ interface SendChatMessageParams {
 export async function sendTwitchChatMessage(
   params: SendChatMessageParams,
 ): Promise<TwitchChatMessageResponse> {
+  const message = fitTwitchChatMessage(params.message)
+
   // Check if this broadcaster is currently being disabled to prevent race condition
   if (isBroadcasterBeingDisabled(params.broadcaster_id)) {
     logger.info('[DISABLE_CACHE] Skipping chat message for broadcaster being disabled', {
@@ -148,7 +163,7 @@ export async function sendTwitchChatMessage(
   const options = {
     method: 'POST',
     headers: { ...headers, 'Content-Type': 'application/json' },
-    body: JSON.stringify(params),
+    body: JSON.stringify({ ...params, message }),
   }
 
   try {

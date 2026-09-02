@@ -2,6 +2,7 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { MatchDataService } from '../../dota/lib/matchData'
+import { getCurrentMatchId } from '../../dota/lib/getCurrentMatchId'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import type { NotablePlayers } from '../../steam/notableplayers'
@@ -131,6 +132,11 @@ commandHandler.registerCommand('np', {
         t('notLive', { emote: 'PauseChamp', lng: message.channel.client.locale }),
         message.user.messageId,
       )
+      return
+    }
+
+    if (client.gsi && !getCurrentMatchId(client)) {
+      chatClient.say(channel, t('gameNotFound', { lng: client.locale }), message.user.messageId)
       return
     }
 

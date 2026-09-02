@@ -43,6 +43,12 @@ describe('!online / !offline', () => {
     await commandHandler.handleMessage(makeMessage({ content: '!online' }))
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.updateCalls).toHaveLength(0)
+    expect(state.socketEmitCalls).toContainEqual({
+      room: 'token-abc',
+      event: 'refresh-settings',
+      args: ['mutate'],
+    })
+    expect(state.streamStatusEffectCalls).toEqual(['socket'])
   })
 
   it('persists stream_online=false when toggling offline from an online stream', async () => {
@@ -52,6 +58,12 @@ describe('!online / !offline', () => {
       stream_online: false,
       stream_start_date: null,
     })
+    expect(state.socketEmitCalls).toContainEqual({
+      room: 'token-abc',
+      event: 'refresh-settings',
+      args: ['mutate'],
+    })
+    expect(state.streamStatusEffectCalls).toEqual(['update', 'socket'])
   })
 
   it('blocks viewers (permission below mod)', async () => {

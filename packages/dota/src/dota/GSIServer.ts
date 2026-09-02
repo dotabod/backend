@@ -23,6 +23,7 @@ import {
   recoverMultiAccount,
 } from './globalEventEmitter'
 import { gsiHandlers } from './lib/consts'
+import { isGsiFresh } from './lib/getCurrentMatchId'
 import { MatchDataService } from './lib/matchData'
 import { remindUnresolvedMatches } from './lib/remindUnresolvedMatches'
 import { deleteClipsBatch } from './lib/twitchUtils'
@@ -182,7 +183,7 @@ class GSIServer implements GSIServerInterface {
       }
 
       const { result: user } = await getDBUser({ twitchId: channelId })
-      if (!user?.gsi) {
+      if (!user?.stream_online || !isGsiFresh(user)) {
         res.status(200).json({ status: 'ok' })
         return
       }

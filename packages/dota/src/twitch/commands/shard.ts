@@ -2,6 +2,7 @@ import DOTA_AGHS from 'dotaconstants/build/aghs_desc.json' with { type: 'json' }
 import { t } from 'i18next'
 import type { GSIHandlerType } from '../../dota/GSIHandlerTypes'
 import { gsiHandlers } from '../../dota/lib/consts'
+import { getCurrentMatchId } from '../../dota/lib/getCurrentMatchId'
 import { getHeroById, getHeroNameOrColor, withHeroLink } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
@@ -18,7 +19,7 @@ commandHandler.registerCommand('shard', {
 
     const gsiHandler = gsiHandlers.get(channelClient.token)
 
-    if (!isValidGSIHandler(gsiHandler, channelClient.gsi?.map?.matchid)) {
+    if (!isValidGSIHandler(gsiHandler, getCurrentMatchId(channelClient))) {
       chatClient.say(
         channelName,
         t('notPlaying', { emote: 'PauseChamp', lng: channelClient.locale }),

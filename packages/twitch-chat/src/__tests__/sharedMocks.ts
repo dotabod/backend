@@ -30,6 +30,7 @@ export const state: {
   fetchImpl: (url: string, options: RequestInit | undefined) => Promise<FetchResponse>
   fetchThrows: unknown
   logError: Array<{ message: string; meta: Record<string, unknown> }>
+  logInfo: Array<{ message: string; meta: Record<string, unknown> }>
   // supabase: accounts.select(...).single() result, and captured users.update() calls.
   dbAccount: { userId: string } | null
   accountError: unknown
@@ -45,6 +46,7 @@ export const state: {
   }),
   fetchThrows: null,
   logError: [],
+  logInfo: [],
   dbAccount: { userId: 'user-1' },
   accountError: null,
   userUpdates: [],
@@ -62,6 +64,7 @@ export function resetState() {
   })
   state.fetchThrows = null
   state.logError = []
+  state.logInfo = []
   state.dbAccount = { userId: 'user-1' }
   state.accountError = null
   state.userUpdates = []
@@ -101,7 +104,8 @@ const supabaseMock = { from: () => createSupabaseBuilder() }
 
 vi.doMock('@dotabod/shared-utils', () => ({
   logger: {
-    info: () => undefined,
+    info: (message: string, meta?: Record<string, unknown>) =>
+      state.logInfo.push({ message, meta: meta ?? {} }),
     warn: () => undefined,
     debug: () => undefined,
     error: (message: string, meta?: Record<string, unknown>) =>
