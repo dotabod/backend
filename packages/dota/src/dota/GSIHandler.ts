@@ -130,7 +130,7 @@ class GSIHandler implements GSIHandlerType {
   // Server could reboot and lose these in memory
   // But that's okay they will get reset based on current match state
 
-  blockCache: string | null = null
+  blockCache: BlockType | undefined
   events: DotaEvent[] = []
   bountyHeroNames: string[] = []
   noTpChatter: {
@@ -287,6 +287,7 @@ class GSIHandler implements GSIHandlerType {
 
   public async resetClientState() {
     await deleteRedisData(this.client)
+    this.blockCache = undefined
     this.mapBlocker.resetData()
     this.resetPlayerData()
     this.resetBetData()
@@ -1646,6 +1647,10 @@ class GSIHandler implements GSIHandlerType {
       // Check what needs to be blocked
       const matchingBlocker = blockTypes.find((blocker) => blocker.states.includes(state ?? ''))
       const hasValidBlocker = !!matchingBlocker
+      const isMainScreenState = [
+        'DOTA_GAMERULES_STATE_INIT',
+        'DOTA_GAMERULES_STATE_POST_GAME',
+      ].includes(state ?? '')
 
       // Refresh the unresolved-match cache on every GSI tick while playing —
       // not only on the state transition into 'playing'. Capturing once at
@@ -1655,8 +1660,21 @@ class GSIHandler implements GSIHandlerType {
         this.captureInGameSnapshot()
       }
 
-      if (matchingBlocker && this.blockCache !== matchingBlocker.type) {
-        this.emitBlockEvent({ state, blockType: matchingBlocker.type })
+      const emittedBlockType =
+        isMainScreenState && matchingBlocker?.type === 'empty' ? null : matchingBlocker?.type
+
+      if (matchingBlocker && this.blockCache !== emittedBlockType) {
+        this.emitBlockEvent({ state, blockType: emittedBlockType ?? null })
+
+        // POST_GAME and INIT are valid no-block states, but they are also the final reliable
+        // signals for clients that leave before GSI sends a packet without map data. Start the
+        // normal match resolution path here so Redis state cannot survive until the next match.
+        if (isMainScreenState && matchingBlocker.type === 'empty') {
+          const trackedMatchId = await redisClient.client.get(`${this.client.token}:matchId`)
+          if (trackedMatchId) {
+            await this.closeBets()
+          }
+        }
 
         if (matchingBlocker.type === 'playing') {
           emitMinimapBlockerStatus(this.client)

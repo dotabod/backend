@@ -24,6 +24,7 @@ const loggerInfoCalls: Array<{ message: string; meta?: Record<string, unknown> }
 const openBetCalls: OpenBetCall[] = []
 const closeBetCalls: unknown[][] = []
 const sayCalls: Array<{ message: string; options?: Record<string, unknown> }> = []
+const ioEmitCalls: Array<{ token: string; event: string; payload: unknown }> = []
 const heldTasks: DelayedTask[] = []
 const removedTaskIds: string[] = []
 const openTwitchBetControl: { throwOnNextCall: Error | null } = { throwOnNextCall: null }
@@ -241,7 +242,11 @@ const redisStore: Record<string, string> = {}
 const { server } = await import('../server')
 server.setServer({
   io: {
-    to: () => ({ emit: () => undefined }),
+    to: (token: string) => ({
+      emit: (event: string, payload: unknown) => {
+        ioEmitCalls.push({ token, event, payload })
+      },
+    }),
     in: () => ({ fetchSockets: async () => [] }),
     fetchSockets: async () => [],
   },
@@ -304,6 +309,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     openBetCalls.length = 0
     closeBetCalls.length = 0
     sayCalls.length = 0
+    ioEmitCalls.length = 0
     heldTasks.length = 0
     removedTaskIds.length = 0
     existingBetRows.length = 0
@@ -613,6 +619,157 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     await heldTasks[0].invoke()
     expect(supabaseInserts.length).toBe(0)
     expect(openBetCalls.length).toBe(0)
+  })
+
+  it('returns the overlay to the main screen and starts cleanup when a match reaches post-game', async () => {
+    const client = makeClient({
+      gsi: liveGsi({
+        map: {
+          matchid: '8978976957',
+          win_team: 'none',
+          game_state: 'DOTA_GAMERULES_STATE_POST_GAME',
+        },
+      }),
+    })
+    const handler = makeHandler(client)
+    handler.blockCache = 'playing'
+    redisStore['token-arteezy:matchId'] = '8978976957'
+    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue(undefined)
+
+    await handler.setupOBSBlockers('DOTA_GAMERULES_STATE_POST_GAME')
+
+    expect(ioEmitCalls).toContainEqual({
+      token: 'token-arteezy',
+      event: 'block',
+      payload: {
+        matchId: '8978976957',
+        state: 'DOTA_GAMERULES_STATE_POST_GAME',
+        team: 'radiant',
+        type: null,
+      },
+    })
+    expect(closeBets).toHaveBeenCalledOnce()
+  })
+
+  it('keeps strategy time as an empty overlay state without starting match cleanup', async () => {
+    const client = makeClient({
+      gsi: liveGsi({
+        map: {
+          matchid: '8978976957',
+          win_team: 'none',
+          game_state: 'DOTA_GAMERULES_STATE_STRATEGY_TIME',
+        },
+      }),
+    })
+    const handler = makeHandler(client)
+    handler.blockCache = 'strategy-2'
+    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue(undefined)
+
+    await handler.setupOBSBlockers('DOTA_GAMERULES_STATE_STRATEGY_TIME')
+
+    expect(ioEmitCalls).toContainEqual({
+      token: 'token-arteezy',
+      event: 'block',
+      payload: {
+        matchId: '8978976957',
+        state: 'DOTA_GAMERULES_STATE_STRATEGY_TIME',
+        team: 'radiant',
+        type: 'empty',
+      },
+    })
+    expect(closeBets).not.toHaveBeenCalled()
+  })
+
+  it('starts post-game cleanup when the overlay reconnect reset the blocker cache', async () => {
+    const client = makeClient({
+      gsi: liveGsi({
+        map: {
+          matchid: '8978976957',
+          win_team: 'none',
+          game_state: 'DOTA_GAMERULES_STATE_POST_GAME',
+        },
+      }),
+    })
+    const handler = makeHandler(client)
+    handler.blockCache = undefined
+    redisStore['token-arteezy:matchId'] = '8978976957'
+    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue(undefined)
+
+    await handler.setupOBSBlockers('DOTA_GAMERULES_STATE_POST_GAME')
+
+    expect(closeBets).toHaveBeenCalledOnce()
+  })
+
+  it('leaves an empty strategy state for the main screen when the match ends early', async () => {
+    const client = makeClient({
+      gsi: liveGsi({
+        map: {
+          matchid: '8978976957',
+          win_team: 'none',
+          game_state: 'DOTA_GAMERULES_STATE_STRATEGY_TIME',
+        },
+      }),
+    })
+    const handler = makeHandler(client)
+
+    await handler.setupOBSBlockers('DOTA_GAMERULES_STATE_STRATEGY_TIME')
+    ioEmitCalls.length = 0
+    client.gsi.map.game_state = 'DOTA_GAMERULES_STATE_POST_GAME'
+    redisStore['token-arteezy:matchId'] = '8978976957'
+    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue(undefined)
+
+    await handler.setupOBSBlockers('DOTA_GAMERULES_STATE_POST_GAME')
+
+    expect(ioEmitCalls).toContainEqual({
+      token: 'token-arteezy',
+      event: 'block',
+      payload: {
+        matchId: '8978976957',
+        state: 'DOTA_GAMERULES_STATE_POST_GAME',
+        team: 'radiant',
+        type: null,
+      },
+    })
+    expect(closeBets).toHaveBeenCalledOnce()
+  })
+
+  it('returns to the main screen and cleans up when GSI jumps from a match to init', async () => {
+    const client = makeClient({
+      gsi: liveGsi({
+        map: {
+          matchid: '8978976957',
+          win_team: 'none',
+          game_state: 'DOTA_GAMERULES_STATE_INIT',
+        },
+      }),
+    })
+    const handler = makeHandler(client)
+    handler.blockCache = undefined
+    redisStore['token-arteezy:matchId'] = '8978976957'
+    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue(undefined)
+
+    await handler.setupOBSBlockers('DOTA_GAMERULES_STATE_INIT')
+
+    expect(ioEmitCalls).toContainEqual({
+      token: 'token-arteezy',
+      event: 'block',
+      payload: {
+        matchId: '8978976957',
+        state: 'DOTA_GAMERULES_STATE_INIT',
+        team: 'radiant',
+        type: null,
+      },
+    })
+    expect(closeBets).toHaveBeenCalledOnce()
+  })
+
+  it('invalidates the blocker cache during a forced stale-match reset', async () => {
+    const handler = makeHandler(makeClient({ gsi: liveGsi() }))
+    handler.blockCache = 'playing'
+
+    await handler.resetClientState()
+
+    expect(handler.blockCache).toBeUndefined()
   })
 })
 

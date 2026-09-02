@@ -73,7 +73,7 @@ async function handleSocketConnection(socket: Socket) {
     }
     handler.emitBadgeUpdate()
     handler.emitWLUpdate()
-    handler.blockCache = null
+    handler.blockCache = undefined
   }
 }
 
