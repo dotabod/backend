@@ -398,3 +398,72 @@ describe('stale roster GSI', () => {
     },
   )
 })
+
+describe('spectator roster GSI', () => {
+  const spectatorGsi = {
+    map: {
+      matchid: '7777777777',
+      game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+      win_team: 'none',
+    },
+    player: {
+      activity: 'watching',
+      team_name: 'spectator',
+      team2: {
+        player0: { accountid: 100, name: 'Radiant Player' },
+      },
+      team3: {
+        player5: { accountid: 200, name: 'Dire Player' },
+      },
+    },
+    hero: {
+      team2: { player0: { id: 1, selected_unit: true } },
+      team3: { player5: { id: 2 } },
+    },
+  } as any
+
+  it('!np reads the same fresh spectator roster shown on the overlay', async () => {
+    state.notablePlayers = [
+      { account_id: 100, name: 'Radiant Player', country_code: '' },
+      { account_id: 200, name: 'Dire Player', country_code: '' },
+    ]
+
+    await commandHandler.handleMessage(
+      makeMessage({
+        content: '!np',
+        clientOverrides: { gsi: spectatorGsi, gsiUpdatedAt: Date.now() } as any,
+      }),
+    )
+    await flushAsync()
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toContain('Radiant Player')
+    expect(state.chatSayCalls[0].message).toContain('Dire Player')
+  })
+})
+
+describe('Hero Demo roster commands', () => {
+  const heroDemoGsi = {
+    map: {
+      customgamename: 'hero_demo',
+      matchid: '0',
+      game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+      win_team: 'none',
+    },
+    player: { accountid: 99999, activity: 'playing' },
+    hero: { id: 1 },
+  } as any
+
+  it.each(['!np', '!gm', '!avg'])(
+    '%s explains why public match data is unavailable',
+    async (content) => {
+      await commandHandler.handleMessage(
+        makeMessage({ content, clientOverrides: { gsi: heroDemoGsi } }),
+      )
+      await flushAsync()
+
+      expect(state.chatSayCalls).toHaveLength(1)
+      expect(state.chatSayCalls[0].message).toBe(t('customGameNoRoster', { lng: 'en' }))
+    },
+  )
+})

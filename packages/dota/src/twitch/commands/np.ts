@@ -2,7 +2,7 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { MatchDataService } from '../../dota/lib/matchData'
-import { getCurrentMatchId } from '../../dota/lib/getCurrentMatchId'
+import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/getCurrentMatchId'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import type { NotablePlayers } from '../../steam/notableplayers'
@@ -135,8 +135,14 @@ commandHandler.registerCommand('np', {
       return
     }
 
-    if (client.gsi && !getCurrentMatchId(client)) {
-      chatClient.say(channel, t('gameNotFound', { lng: client.locale }), message.user.messageId)
+    if (client.gsi && !getCurrentRosterMatchId(client)) {
+      chatClient.say(
+        channel,
+        t(isCurrentCustomGame(client) ? 'customGameNoRoster' : 'gameNotFound', {
+          lng: client.locale,
+        }),
+        message.user.messageId,
+      )
       return
     }
 

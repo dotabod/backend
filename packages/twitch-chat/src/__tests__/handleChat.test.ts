@@ -123,11 +123,74 @@ describe('sendTwitchChatMessage', () => {
   })
 
   it('drops a duplicate message sent within the dedupe window', async () => {
-    const params = { broadcaster_id: 'b-dupe', sender_id: 's1', message: 'dupe-case' }
+    const params = {
+      broadcaster_id: 'b-dupe',
+      sender_id: 's1',
+      message: 'dupe-case',
+      reply_parent_message_id: 'same-command',
+    }
     await sendTwitchChatMessage(params)
     const res = await sendTwitchChatMessage(params)
     expect(res.data[0].drop_reason?.code).toBe('duplicate_message')
     expect(state.fetchCalls).toHaveLength(1)
+  })
+
+  it('sends identical unthreaded messages when no source command can be identified', async () => {
+    const params = { broadcaster_id: 'b-unthreaded', sender_id: 's1', message: 'same text' }
+
+    await sendTwitchChatMessage(params)
+    const res = await sendTwitchChatMessage(params)
+
+    expect(res.data[0].is_sent).toBe(true)
+    expect(state.fetchCalls).toHaveLength(2)
+  })
+
+  it('sends identical replies to different chat messages', async () => {
+    const base = { broadcaster_id: 'b-replies', sender_id: 's1', message: 'Game was not found' }
+
+    await sendTwitchChatMessage({ ...base, reply_parent_message_id: 'message-1' })
+    const res = await sendTwitchChatMessage({ ...base, reply_parent_message_id: 'message-2' })
+
+    expect(res.data[0].is_sent).toBe(true)
+    expect(state.fetchCalls).toHaveLength(2)
+  })
+
+  it('retries Twitch duplicate rejection with an invisible disambiguator', async () => {
+    let attempt = 0
+    state.fetchImpl = async () => {
+      attempt++
+      return {
+        ok: true,
+        json: async () =>
+          attempt === 1
+            ? {
+                data: [
+                  {
+                    message_id: '',
+                    is_sent: false,
+                    drop_reason: { code: 'msg_duplicate', message: 'duplicate' },
+                  },
+                ],
+              }
+            : { data: [{ message_id: 'retry-id', is_sent: true }] },
+      }
+    }
+
+    const res = await sendTwitchChatMessage({
+      broadcaster_id: 'b-twitch-dupe',
+      sender_id: 's1',
+      message: 'Same command response',
+      reply_parent_message_id: 'message-1',
+    })
+
+    expect(res.data[0]).toEqual({ message_id: 'retry-id', is_sent: true })
+    expect(state.fetchCalls).toHaveLength(2)
+    const retryBody = state.fetchCalls[1].options?.body
+    expect(typeof retryBody).toBe('string')
+    if (typeof retryBody !== 'string') throw new Error('Expected string request body')
+    expect((JSON.parse(retryBody) as { message: string }).message).toBe(
+      `Same command response \u034f`,
+    )
   })
 
   it('returns the API response on success', async () => {

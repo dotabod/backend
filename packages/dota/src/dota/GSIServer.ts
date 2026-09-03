@@ -35,7 +35,18 @@ import { validateToken } from './validateToken'
 const clipsToDeleteQueue = new Map<string, Set<string>>()
 let isProcessingDeleteQueue = false // Simple lock
 const _CLIP_DELETE_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
+const STALE_OVERLAY_CHECK_INTERVAL_MS = 15_000
 // --- End Clip Deletion Queue ---
+
+function emitInactiveOverlayState(io: Server, token: string) {
+  io.to(token).emit('block', {
+    type: null,
+    state: 'GSI_STALE',
+    team: null,
+    matchId: null,
+  })
+  io.to(token).emit('notable-players', [])
+}
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
   const { token } = socket.handshake.auth
@@ -74,6 +85,17 @@ async function handleSocketConnection(socket: Socket) {
     handler.emitBadgeUpdate()
     handler.emitWLUpdate()
     handler.blockCache = undefined
+    if (isGsiFresh(handler.client)) {
+      await handler.setupOBSBlockers(handler.client.gsi?.map?.game_state ?? '')
+    } else {
+      socket.emit('block', {
+        type: null,
+        state: 'GSI_STALE',
+        team: null,
+        matchId: null,
+      })
+      socket.emit('notable-players', [])
+    }
   }
 }
 
@@ -225,6 +247,25 @@ class GSIServer implements GSIServerInterface {
 
     // Set up the repeating timer for cleaning up resubscribe timestamps
     setInterval(cleanupResubscribeTimestamps, RESUBSCRIBE_CLEANUP_TIMEOUT)
+
+    // Dota does not always send an INIT/POST_GAME packet when leaving a spectator or custom
+    // game. Once its heartbeat expires, clear the browser source instead of leaving the last
+    // match visible indefinitely. A fresh packet will repopulate the blocker on the next tick.
+    setInterval(() => {
+      for (const handler of gsiHandlers.values()) {
+        if (
+          handler.disabled ||
+          !handler.client.stream_online ||
+          !handler.blockCache ||
+          isGsiFresh(handler.client)
+        ) {
+          continue
+        }
+
+        emitInactiveOverlayState(this.io, handler.client.token)
+        handler.blockCache = undefined
+      }
+    }, STALE_OVERLAY_CHECK_INTERVAL_MS)
 
     // Nudge mods once per unresolved match while the stream is live
     setInterval(() => {

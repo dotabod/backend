@@ -85,6 +85,7 @@ export const state: {
   chatSettingsUpdates: Array<{ channelId: string; settings: Record<string, unknown> }>
   // Result returned by the mocked MongoDB `delayedGames` findOne (ranked, spectators, ...).
   delayedGame: Record<string, unknown> | null
+  notablePlayers: Array<{ account_id: number; name: string; country_code: string }>
   // Optional override for the mocked `moderateText` — return a custom redacted
   // string. Default passthrough returns the input as-is.
   moderateTextOverride: ((text?: string | string[]) => string | string[] | undefined) | null
@@ -157,6 +158,7 @@ export const state: {
   subscriberOnlyMode: false,
   chatSettingsUpdates: [],
   delayedGame: null,
+  notablePlayers: [],
   moderateTextOverride: null,
   trackDisableReasonCalls: [],
   trackResolveReasonCalls: [],
@@ -200,6 +202,7 @@ export function resetState() {
   state.subscriberOnlyMode = false
   state.chatSettingsUpdates = []
   state.delayedGame = null
+  state.notablePlayers = []
   state.moderateTextOverride = null
   state.trackDisableReasonCalls = []
   state.trackResolveReasonCalls = []
@@ -437,8 +440,11 @@ function reinstallModuleMocks() {
   vi.doMock('../../../steam/MongoDBSingleton', () => ({
     default: {
       connect: async () => ({
-        collection: () => ({
+        collection: (name: string) => ({
           findOne: async () => state.delayedGame,
+          find: () => ({
+            toArray: async () => (name === 'notablePlayers' ? state.notablePlayers : []),
+          }),
         }),
       }),
       close: async () => undefined,

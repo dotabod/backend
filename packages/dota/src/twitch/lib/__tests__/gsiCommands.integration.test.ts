@@ -24,6 +24,37 @@ const playingGsi = (extra: Record<string, unknown> = {}) =>
     ...extra,
   }) as any
 
+const heroDemoGsi = () =>
+  ({
+    map: {
+      customgamename: 'hero_demo',
+      matchid: '0',
+      game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+      win_team: 'none',
+    },
+    hero: { id: HERO_ID },
+    player: { accountid: 99999, activity: 'playing' },
+  }) as any
+
+const spectatorGsi = () =>
+  ({
+    map: {
+      matchid: '8980144969',
+      game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+      win_team: 'none',
+    },
+    player: {
+      activity: 'watching',
+      team_name: 'spectator',
+      team2: { player0: { accountid: 99999 } },
+      team3: {},
+    },
+    hero: {
+      team2: { player0: { id: HERO_ID, selected_unit: true } },
+      team3: {},
+    },
+  }) as any
+
 beforeEach(() => {
   resetState()
   commandHandler.cooldowns.clear()
@@ -156,6 +187,28 @@ describe('!innate', () => {
       )
       expect(state.chatSayCalls).toHaveLength(1)
       expect(state.chatSayCalls[0].message).toBe(notPlaying)
+    },
+  )
+
+  it.each(['!aghs', '!shard', '!innate'])(
+    '%s uses the selected hero while spectating a live match',
+    async (content) => {
+      await commandHandler.handleMessage(
+        makeMessage({ content, clientOverrides: { gsi: spectatorGsi() } }),
+      )
+      expect(state.chatSayCalls).toHaveLength(1)
+      expect(state.chatSayCalls[0].message).toContain(heroName)
+    },
+  )
+
+  it.each(['!aghs', '!shard', '!innate'])(
+    '%s uses the current hero in Hero Demo instead of saying not playing',
+    async (content) => {
+      await commandHandler.handleMessage(
+        makeMessage({ content, clientOverrides: { gsi: heroDemoGsi() } }),
+      )
+      expect(state.chatSayCalls).toHaveLength(1)
+      expect(state.chatSayCalls[0].message).toContain(heroName)
     },
   )
 })

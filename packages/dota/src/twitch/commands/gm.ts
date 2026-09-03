@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { MatchDataService } from '../../dota/lib/matchData'
-import { getCurrentMatchId } from '../../dota/lib/getCurrentMatchId'
+import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/getCurrentMatchId'
 import { DBSettings } from '../../settings'
 import { gameMedals } from '../../steam/medals'
 import { chatClient } from '../chatClient'
@@ -30,10 +30,12 @@ commandHandler.registerCommand('gm', {
       return
     }
 
-    if (client.gsi && !getCurrentMatchId(client)) {
+    if (client.gsi && !getCurrentRosterMatchId(client)) {
       chatClient.say(
         message.channel.name,
-        t('gameNotFound', { lng: client.locale }),
+        t(isCurrentCustomGame(client) ? 'customGameNoRoster' : 'gameNotFound', {
+          lng: client.locale,
+        }),
         message.user.messageId,
       )
       return

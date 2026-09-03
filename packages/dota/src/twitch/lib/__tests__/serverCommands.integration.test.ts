@@ -129,4 +129,55 @@ describe('!hero', () => {
       }),
     )
   })
+
+  it.each([
+    [
+      'spectating',
+      {
+        map: {
+          matchid: '8980144969',
+          game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+          win_team: 'none',
+        },
+        player: {
+          activity: 'watching',
+          team_name: 'spectator',
+          team2: { player0: { accountid: 99999 } },
+          team3: {},
+        },
+        hero: {
+          team2: { player0: { id: 1, selected_unit: true } },
+          team3: {},
+        },
+      },
+    ],
+    [
+      'Hero Demo',
+      {
+        map: {
+          customgamename: 'hero_demo',
+          matchid: '0',
+          game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+          win_team: 'none',
+        },
+        player: { accountid: 99999, activity: 'playing' },
+        hero: { id: 1 },
+      },
+    ],
+  ])('uses the selected hero history while %s', async (_label, gsi) => {
+    state.recentList = [
+      { matchId: '1', hero_name: 'npc_dota_hero_antimage', won: true },
+      { matchId: '2', hero_name: 'npc_dota_hero_antimage', won: false },
+    ]
+
+    await commandHandler.handleMessage(
+      makeMessage({ content: '!hero', clientOverrides: { gsi } as any }),
+    )
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toContain('Anti-Mage')
+    expect(state.chatSayCalls[0].message).not.toBe(
+      t('notPlaying', { emote: 'PauseChamp', lng: 'en' }),
+    )
+  })
 })

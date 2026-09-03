@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { calculateAvg } from '../../dota/lib/calculateAvg'
-import { getCurrentMatchId } from '../../dota/lib/getCurrentMatchId'
+import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/getCurrentMatchId'
 import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
@@ -29,10 +29,12 @@ commandHandler.registerCommand('avg', {
       return
     }
 
-    if (client.gsi && !getCurrentMatchId(client)) {
+    if (client.gsi && !getCurrentRosterMatchId(client)) {
       chatClient.say(
         message.channel.name,
-        t('gameNotFound', { lng: client.locale }),
+        t(isCurrentCustomGame(client) ? 'customGameNoRoster' : 'gameNotFound', {
+          lng: client.locale,
+        }),
         message.user.messageId,
       )
       return

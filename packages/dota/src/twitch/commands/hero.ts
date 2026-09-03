@@ -2,7 +2,7 @@ import { t } from 'i18next'
 
 import { getHeroWinLoss } from '../../db/getHeroWinLoss'
 import { gsiHandlers } from '../../dota/lib/consts'
-import { getCurrentMatchId } from '../../dota/lib/getCurrentMatchId'
+import { hasCurrentGameContext } from '../../dota/lib/getCurrentMatchId'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
@@ -19,7 +19,7 @@ commandHandler.registerCommand('hero', {
     } = message
 
     const gsi = gsiHandlers.get(client.token)
-    if (!gsi || !getCurrentMatchId(client)) return handleNotPlaying(message)
+    if (!gsi || !hasCurrentGameContext(client)) return handleNotPlaying(message)
 
     try {
       const { ourHero, player, hero, playerIdx } = await findAccountFromCmd(

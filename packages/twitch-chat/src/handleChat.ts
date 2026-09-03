@@ -7,6 +7,7 @@ import { emitChatMessage, hasDotabodSocket } from './utils/socketManager'
 const messageDedupeCache = new Map<string, number>()
 const DEDUPE_WINDOW_MS = 5000 // 5 seconds
 const TWITCH_CHAT_MESSAGE_LIMIT = 500
+const DUPLICATE_DISAMBIGUATOR = ' \u034f'
 
 function fitTwitchChatMessage(message: string): string {
   if (message.length <= TWITCH_CHAT_MESSAGE_LIMIT) return message
@@ -20,8 +21,16 @@ function fitTwitchChatMessage(message: string): string {
   return `${message.slice(0, availableTextLength)}…${trailingLink}`
 }
 
+function makeDistinctTwitchChatMessage(message: string): string {
+  if (message.length + DUPLICATE_DISAMBIGUATOR.length <= TWITCH_CHAT_MESSAGE_LIMIT) {
+    return `${message}${DUPLICATE_DISAMBIGUATOR}`
+  }
+
+  return `${message.slice(0, TWITCH_CHAT_MESSAGE_LIMIT - DUPLICATE_DISAMBIGUATOR.length)}${DUPLICATE_DISAMBIGUATOR}`
+}
+
 // Test seam: clears the module-level dedupe cache so suites don't leak state.
-export function clearDedupeCache() {
+export function clearDedupeCache(): void {
   messageDedupeCache.clear()
 }
 
@@ -41,7 +50,12 @@ function extractUserInfo(
   }[],
   broadcasterUserId: string,
   chatterUserId: string,
-) {
+): {
+  isMod: boolean
+  isBroadcaster: boolean
+  isSubscriber: boolean
+  userId: string
+} {
   return {
     isMod: badges.some(
       (badge) => badge.set_id === 'moderator' || badge.set_id === 'lead_moderator',
@@ -127,10 +141,14 @@ export async function sendTwitchChatMessage(
     }
   }
 
-  // Check for duplicate messages within the dedupe window
-  const dedupeKey = `${params.broadcaster_id}:${params.message}`
+  // Check for duplicate replies within the dedupe window. The parent message is the only proof
+  // that two sends came from the same command event; unthreaded messages must not be collapsed
+  // merely because their text matches.
+  const dedupeKey = params.reply_parent_message_id
+    ? `${params.broadcaster_id}:${params.reply_parent_message_id}:${params.message}`
+    : undefined
   const now = Date.now()
-  const lastSent = messageDedupeCache.get(dedupeKey)
+  const lastSent = dedupeKey ? messageDedupeCache.get(dedupeKey) : undefined
 
   if (lastSent && now - lastSent < DEDUPE_WINDOW_MS) {
     logger.info('[DEDUPE] Dropping duplicate chat message', {
@@ -154,7 +172,7 @@ export async function sendTwitchChatMessage(
   }
 
   // Record this message in the cache
-  messageDedupeCache.set(dedupeKey, now)
+  if (dedupeKey) messageDedupeCache.set(dedupeKey, now)
 
   const url = 'https://api.twitch.tv/helix/chat/messages'
   // Only the bot can send messages
@@ -203,7 +221,37 @@ export async function sendTwitchChatMessage(
       }
     }
 
-    return response.json() as Promise<TwitchChatMessageResponse>
+    const result = (await response.json()) as TwitchChatMessageResponse
+    if (result.data?.[0]?.drop_reason?.code !== 'msg_duplicate') {
+      return result
+    }
+
+    const distinctMessage = makeDistinctTwitchChatMessage(message)
+    logger.info('[DEDUPE] Retrying Twitch duplicate response with disambiguated text', {
+      broadcaster_id: params.broadcaster_id,
+      message: params.message,
+    })
+
+    const retryResponse = await fetch(url, {
+      ...options,
+      body: JSON.stringify({ ...params, message: distinctMessage }),
+    })
+    if (!retryResponse.ok) {
+      return {
+        data: [
+          {
+            message_id: '',
+            is_sent: false,
+            drop_reason: {
+              code: retryResponse.status === 429 ? 'rate_limited' : 'send_error',
+              message: `Failed to send disambiguated chat message: ${retryResponse.status} ${retryResponse.statusText}`,
+            },
+          },
+        ],
+      }
+    }
+
+    return retryResponse.json() as Promise<TwitchChatMessageResponse>
   } catch (error) {
     // If it's not an HTTP error we already handled, log and return a formatted error
     logger.error('Error sending chat message', { error, broadcaster_id: params.broadcaster_id })

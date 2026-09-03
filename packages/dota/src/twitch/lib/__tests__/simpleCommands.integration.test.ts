@@ -81,10 +81,10 @@ describe('!steam', () => {
 })
 
 describe('!match', () => {
-  it('reports gameNotFound when there is no live match', async () => {
+  it('reports that no current match id exists when there is no live match', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!match' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toBe(t('gameNotFound', { lng: 'en' }))
+    expect(state.chatSayCalls[0].message).toBe(t('currentMatchIdNotFound', { lng: 'en' }))
   })
 
   it('chats the match id when fresh GSI says a match is active', async () => {
@@ -106,6 +106,51 @@ describe('!match', () => {
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('7777777777')
+  })
+
+  it('chats the live match id while the streamer is spectating', async () => {
+    await commandHandler.handleMessage(
+      makeMessage({
+        content: '!match',
+        clientOverrides: {
+          gsi: {
+            map: {
+              matchid: '8980144969',
+              game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+              win_team: 'none',
+            },
+            player: { activity: 'watching', team_name: 'spectator', team2: {} },
+            hero: { team2: {} },
+          },
+          gsiUpdatedAt: Date.now(),
+        } as any,
+      }),
+    )
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toBe(t('matchId', { lng: 'en', matchId: '8980144969' }))
+  })
+
+  it('explains that Hero Demo does not expose a public match id', async () => {
+    await commandHandler.handleMessage(
+      makeMessage({
+        content: '!match',
+        clientOverrides: {
+          gsi: {
+            map: {
+              customgamename: 'hero_demo',
+              matchid: '0',
+              game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+              win_team: 'none',
+            },
+            player: { activity: 'playing' },
+            hero: { id: 1 },
+          },
+          gsiUpdatedAt: Date.now(),
+        } as any,
+      }),
+    )
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toBe(t('customGameNoMatchId', { lng: 'en' }))
   })
 
   it.each([
@@ -146,12 +191,12 @@ describe('!match', () => {
       },
       undefined,
     ],
-  ])('reports gameNotFound for a %s', async (_label, gsi, gsiUpdatedAt) => {
+  ])('reports that no current match id exists for a %s', async (_label, gsi, gsiUpdatedAt) => {
     await commandHandler.handleMessage(
       makeMessage({ content: '!match', clientOverrides: { gsi, gsiUpdatedAt } as any }),
     )
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toBe(t('gameNotFound', { lng: 'en' }))
+    expect(state.chatSayCalls[0].message).toBe(t('currentMatchIdNotFound', { lng: 'en' }))
   })
 
   it('blocks when the stream is offline (onlyOnline gate)', async () => {

@@ -131,6 +131,9 @@
     "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
   },
   "gameNotFound": "Game was not found",
+  "currentMatchIdNotFound": "No current match ID was found.",
+  "customGameNoMatchId": "Hero Demo and custom games do not have a public match ID.",
+  "customGameNoRoster": "Hero Demo and custom games do not have public roster data.",
   "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
   "gpm_zero": "Live GPM for {{- heroName}}: {{num}}",
